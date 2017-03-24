@@ -68,26 +68,26 @@ let __set_unit_tests: Prims.unit -> Prims.unit =
 let __clear_unit_tests: Prims.unit -> Prims.unit =
   fun uu____128  -> FStar_ST.write __unit_tests__ false
 let as_bool: option_val -> Prims.bool =
-  fun uu___45_133  ->
-    match uu___45_133 with
+  fun uu___47_133  ->
+    match uu___47_133 with
     | Bool b -> b
     | uu____135 -> failwith "Impos: expected Bool"
 let as_int: option_val -> Prims.int =
-  fun uu___46_138  ->
-    match uu___46_138 with
+  fun uu___48_138  ->
+    match uu___48_138 with
     | Int b -> b
     | uu____140 -> failwith "Impos: expected Int"
 let as_string: option_val -> Prims.string =
-  fun uu___47_143  ->
-    match uu___47_143 with
+  fun uu___49_143  ->
+    match uu___49_143 with
     | String b -> b
     | uu____145 -> failwith "Impos: expected String"
-let as_list as_t uu___48_161 =
-  match uu___48_161 with
+let as_list as_t uu___50_161 =
+  match uu___50_161 with
   | List ts -> FStar_All.pipe_right ts (FStar_List.map as_t)
   | uu____168 -> failwith "Impos: expected List"
-let as_option as_t uu___49_185 =
-  match uu___49_185 with
+let as_option as_t uu___51_185 =
+  match uu___51_185 with
   | Unset  -> None
   | v1 -> let uu____189 = as_t v1 in Some uu____189
 let fstar_options: option_val FStar_Util.smap Prims.list FStar_ST.ref =
@@ -361,8 +361,8 @@ let get_z3timeout: Prims.unit -> Prims.int =
 let get_no_positivity: Prims.unit -> Prims.bool =
   fun uu____750  -> lookup_opt "__no_positivity" as_bool
 let dlevel: Prims.string -> debug_level_t =
-  fun uu___50_753  ->
-    match uu___50_753 with
+  fun uu___52_753  ->
+    match uu___52_753 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -847,8 +847,8 @@ and validate_cardinality: Prims.string -> Prims.string =
          (let uu____1654 = specs () in display_usage_aux uu____1654);
          FStar_All.exit (Prims.parse_int "1"))
 let settable: Prims.string -> Prims.bool =
-  fun uu___51_1663  ->
-    match uu___51_1663 with
+  fun uu___53_1663  ->
+    match uu___53_1663 with
     | "admit_smt_queries"
       |"cardinality"
        |"debug"

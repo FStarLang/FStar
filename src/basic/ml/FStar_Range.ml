@@ -132,7 +132,7 @@ let file_idx_of_file f = (fileToIndex fileIndexTable f) mod maxFileIndex
 let file_of_file_idx n = indexToFile fileIndexTable n
 
 let mk_range f (b:int_t) (e:int_t) = mk_file_idx_range (file_idx_of_file f) b e
-let file_of_range r = file_of_file_idx (file_idx_of_range r)
+let file_of_range r = FStar_Common.try_convert_file_name_to_mixed (file_of_file_idx (file_idx_of_range r))
 
 let start_of_range r = mk_pos (start_line_of_range r) (start_col_of_range r)
 let end_of_range r = mk_pos (end_line_of_range r) (end_col_of_range r)

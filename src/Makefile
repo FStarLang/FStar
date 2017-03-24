@@ -68,9 +68,6 @@ nuget-clean:
 
 $(FSYACC) $(FSLEX): nuget-restore
 
-wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
-	sloccount $^
-
 # --------------------------------------------------------------------
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
@@ -146,9 +143,9 @@ clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output
 	mkdir boot_fstis u_boot_fsts u_ocaml-output
 
-u_extract_misc:$(addprefix u_boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
+u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
 					 FStar.Format.fst)
-	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst) \

@@ -1,5 +1,5 @@
 open Prims
-let uu___191: Prims.unit = FStar_Version.dummy ()
+let uu___193: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit -> (FStar_Getopt.parse_cmdline_res* Prims.string Prims.list) =
   fun uu____6  -> FStar_Options.parse_cmd_line ()
@@ -142,8 +142,7 @@ let go uu____146 =
                  else ();
                  (let filename = FStar_List.hd filenames in
                   let filename1 =
-                    FStar_Parser_Dep.try_convert_file_name_to_windows
-                      filename in
+                    FStar_Common.try_convert_file_name_to_mixed filename in
                   (let uu____189 =
                      let uu____190 = FStar_Options.verify_module () in
                      uu____190 <> [] in
