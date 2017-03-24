@@ -943,8 +943,8 @@ let pure_or_ghost_pre_and_post env comp =
               else let ct = Env.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with
                             | (wp, _)::_ ->
-                              let us_r, _ = Env.lookup_lid env Const.as_requires in
-                              let us_e, _ = Env.lookup_lid env Const.as_ensures in
+                              let us_r, _ = fst <| Env.lookup_lid env Const.as_requires in
+                              let us_e, _ = fst <| Env.lookup_lid env Const.as_ensures in
                               let r = ct.result_typ.pos in
                               let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_requires r) Delta_equational None) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_ensures r) Delta_equational None) us_e in

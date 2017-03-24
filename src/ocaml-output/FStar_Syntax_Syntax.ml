@@ -1145,13 +1145,28 @@ let lid_of_fv: fv -> FStar_Ident.lident = fun fv  -> (fv.fv_name).v
 let range_of_fv: fv -> FStar_Range.range =
   fun fv  ->
     let uu____4329 = lid_of_fv fv in FStar_Ident.range_of_lid uu____4329
+let set_range_of_fv: fv -> FStar_Range.range -> fv =
+  fun fv  ->
+    fun r  ->
+      let uu___100_4336 = fv in
+      let uu____4337 =
+        let uu___101_4341 = fv.fv_name in
+        let uu____4346 =
+          let uu____4347 = lid_of_fv fv in
+          FStar_Ident.set_lid_range uu____4347 r in
+        { v = uu____4346; ty = (uu___101_4341.ty); p = (uu___101_4341.p) } in
+      {
+        fv_name = uu____4337;
+        fv_delta = (uu___100_4336.fv_delta);
+        fv_qual = (uu___100_4336.fv_qual)
+      }
 let has_simple_attribute: term Prims.list -> Prims.string -> Prims.bool =
   fun l  ->
     fun s  ->
       FStar_List.existsb
-        (fun uu___96_4340  ->
-           match uu___96_4340 with
-           | { n = Tm_constant (FStar_Const.Const_string (data,uu____4344));
-               tk = uu____4345; pos = uu____4346; vars = uu____4347;_} when
+        (fun uu___96_4371  ->
+           match uu___96_4371 with
+           | { n = Tm_constant (FStar_Const.Const_string (data,uu____4375));
+               tk = uu____4376; pos = uu____4377; vars = uu____4378;_} when
                (FStar_Util.string_of_unicode data) = s -> true
-           | uu____4352 -> false) l
+           | uu____4383 -> false) l

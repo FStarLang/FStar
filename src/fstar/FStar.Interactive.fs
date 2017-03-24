@@ -374,7 +374,7 @@ let rec go (line_col:(int*int))
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
   | Info(file, row, col) ->
-    let iopt = FStar.TypeChecker.Common.info_at_pos file row col in
+    let iopt = FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
     (match iopt with
      | None ->
        Util.print_string "\n#done-nok\n"
