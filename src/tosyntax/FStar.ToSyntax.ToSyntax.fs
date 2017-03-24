@@ -1972,9 +1972,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
       }
     in
     let lift_wp, lift = match l.lift_op with
-        | NonReifiableLift t -> Some ([],desugar_term env t), None
-        | ReifiableLift (wp, t) -> Some ([],desugar_term env wp), Some([], desugar_term env t)
-        | LiftForFree t -> None, Some ([],desugar_term env t)
+        | NonReifiableLift t -> Some (desugar_term env t), None
+        | ReifiableLift (wp, t) -> Some (desugar_term env wp), Some (desugar_term env t)
+        | LiftForFree t -> None, Some (desugar_term env t)
     in
     let se = Sig_sub_effect({sub_eff_univs = [];
                              sub_eff_binders = [];

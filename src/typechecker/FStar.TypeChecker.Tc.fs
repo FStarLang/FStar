@@ -687,7 +687,7 @@ and cps_and_elaborate env ed =
           sub_eff_binders = [] ;
           sub_eff_source = label_to_comp_typ Const.effect_PURE_lid ;
           sub_eff_target = label_to_comp_typ ed.mname ;
-          sub_eff_lift_wp = Some ([], apply_close lift_from_pure_wp) ;
+          sub_eff_lift_wp = Some (apply_close lift_from_pure_wp) ;
           sub_eff_lift = None //Some ([], apply_close return_elab)
       } in
       Some (Sig_sub_effect (lift_from_pure, Range.dummyRange))
@@ -911,7 +911,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
           failwith "Impossible"
       | lift, Some lift_wp ->
           (* Covers both the "classic" format and the reifiable case. *)
-          lift, (check_and_gen env lift_wp expected_k; failwith "SUB EFFECT CODE NEEDS TO BE FIXED!")
+          lift, tc_check_trivial_guard env lift_wp expected_k
       | Some lift, None ->
           let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
           let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
@@ -931,7 +931,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
         let wp_a_typ = S.bv_to_name wp_a in
         let repr_f = repr_type source a_typ wp_a_typ in
         let repr_result =
-          let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
+          let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env lift_wp in
           let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
           let target = sub.sub_eff_target.comp_typ_name in
           repr_type target a_typ lift_wp_a in
@@ -942,7 +942,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
         let expected_k, _, _ =
           tc_tot_or_gtot_term env expected_k in
 //          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
-        let lift = check_and_gen env lift expected_k in
+        let lift = tc_check_trivial_guard env lift expected_k in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
     in
