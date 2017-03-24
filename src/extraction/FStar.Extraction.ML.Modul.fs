@@ -36,6 +36,8 @@ module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module Util = FStar.Extraction.ML.Util
+module TcUtil = FStar.TypeChecker.Util
+module TcEnv = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -120,7 +122,7 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (function
                     | Sig_datacon(d, _, t, l', nparams, _, _, _) when Ident.lid_equals l l' ->
-                        let bs', body = U.arrow_formals t in
+                        let bs', body = TcUtil.arrow_formals env.tcenv t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
                         let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
@@ -147,7 +149,7 @@ let extract_bundle env se =
     let extract_one_family env ind =
        let env, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
-       let indices, _ = U.arrow_formals ind.ityp in
+       let indices, _ = TcUtil.arrow_formals env.tcenv ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i, 0)) in
        let tbody = match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
             | Some (RecordType (ns, ids)) ->
@@ -253,7 +255,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_declare_typ(lid, _, t, quals, _)  when Term.is_arity g t -> //lid is a type
           if quals |> BU.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
-          else let bs, _ = U.arrow_formals t in
+          else let bs, _ = TcUtil.arrow_formals g.tcenv t in
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
@@ -298,7 +300,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_declare_typ(lid, _, t, quals, r) ->
          if quals |> List.contains Assumption
          then let always_fail =
-                  let imp = match U.arrow_formals t with
+                  let imp = match TcUtil.arrow_formals g.tcenv t with
                     | [], t -> fail_exp lid t
                     | bs, t -> U.abs bs (fail_exp lid t) None in
                   Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);

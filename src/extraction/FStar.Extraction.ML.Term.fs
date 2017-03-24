@@ -37,6 +37,7 @@ module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
+module TcUtil = FStar.TypeChecker.Util
 
 exception Un_extractable
 
@@ -105,7 +106,7 @@ let effect_as_etag =
         match BU.smap_try_find cache l.str with
             | Some l -> l
             | None ->
-                let res = match TypeChecker.Env.lookup_effect_abbrev g.tcenv [S.U_zero] l with
+                let res = match TcEnv.lookup_effect_abbrev g.tcenv [S.U_zero] l with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
                 BU.smap_add cache l.str res;
@@ -140,7 +141,7 @@ let rec is_arity env t =
     | Tm_bvar _ -> false
     | Tm_type _ -> true
     | Tm_arrow(_, c) ->
-      is_arity env (FStar.Syntax.Util.comp_result c)
+      is_arity env (TcEnv.result_typ env.tcenv c)
     | Tm_fvar _ ->
       let t = N.normalize [N.AllowUnboundUniverses; N.EraseUniverses; N.UnfoldUntil Delta_constant] env.tcenv t in
       begin match (SS.compress t).n with
@@ -185,9 +186,9 @@ let rec is_type_aux env t =
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
 
     | Tm_fvar fv ->
-      if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
+      if TcEnv.is_type_constructor env.tcenv fv.fv_name.v
       then true
-      else let (_, t) = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
+      else let (_, t) = TcEnv.lookup_lid env.tcenv fv.fv_name.v in
            is_arity env t
 
     | Tm_uvar (_, t)
@@ -428,14 +429,14 @@ and term_as_mlty' env t =
             let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
             let ed = TcEnv.get_effect_decl env.tcenv eff in
             if ed.qualifiers |> List.contains Reifiable
-            then let t = FStar.TypeChecker.Util.reify_comp env.tcenv (U.lcomp_of_comp c) U_unknown in
+            then let t = TcUtil.reify_comp env.tcenv (TcEnv.lcomp_of_comp env.tcenv c) in
                  (* let _ = printfn "Translating comp type %s as %s\n" *)
                  (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
                  let res = term_as_mlty' env t in
                  (* let _ = printfn "Translated comp type %s as %s ... to %s\n" *)
                  (*        (Print.comp_to_string c) (Print.term_to_string t) (Code.string_of_mlty env.currentModule res) in *)
                  res
-            else term_as_mlty' env (U.comp_result c) in
+            else term_as_mlty' env (TcEnv.result_typ env.tcenv c) in
         let erase = effect_as_etag env (U.comp_effect_name c) in
         let _, t = List.fold_right (fun (_, t) (tag, t') -> (E_PURE, MLTY_Fun(t, tag, t'))) mlbs (erase, t_ret) in
         t
@@ -473,7 +474,7 @@ and arg_as_mlty (g:env) (a, _) : mlty =
     else erasedContent
 
 and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
-    let formals, t = U.arrow_formals fv.fv_name.ty in
+    let formals, t = TcUtil.arrow_formals g.tcenv fv.fv_name.ty in
     let mlargs = List.map (arg_as_mlty g) args in
     let mlargs =
         let n_args = List.length args in
@@ -806,7 +807,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
-              let ed = TypeChecker.Env.get_effect_decl g.tcenv m in
+              let ed = TcEnv.get_effect_decl g.tcenv m in
               if ed.qualifiers |> List.contains Reifiable |> not
               then term_as_mlexpr' g t
               else //this should be interpreted as a bind
@@ -1005,7 +1006,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_ascribed(e0, tc, f) ->
           let t = match tc with
             | Inl t -> term_as_mlty g t
-            | Inr c -> term_as_mlty g (U.comp_result c) in
+            | Inr c -> term_as_mlty g (TcEnv.result_typ g.tcenv c) in
           let f = match f with
             | None -> failwith "Ascription node with an empty effect label"
             | Some l -> effect_as_etag g l in
@@ -1064,7 +1065,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   //      NOT, e.g., (x:int -> St Type)
                    let tbinders, tbody =
                         match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
-                            | None -> bs, U.comp_result c
+                            | None -> bs, TcEnv.result_typ g.tcenv c
                             | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
 
                    let n_tbinders = List.length tbinders in
@@ -1263,7 +1264,7 @@ let fresh = let c = mk_ref 0 in
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
-    let _, fstar_disc_type = TypeChecker.Env.lookup_lid env.tcenv discName in
+    let _, fstar_disc_type = TcEnv.lookup_lid env.tcenv discName in
     let wildcards = match (SS.compress fstar_disc_type).n with
         | Tm_arrow (binders, _) ->
             binders

@@ -40,9 +40,6 @@ module TcUtil = FStar.TypeChecker.Util
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
-let subst_lcomp_opt s l = match l with
-    | Some (Inl l) -> Some (Inl (U.lcomp_of_comp <| SS.subst_comp s (l.comp())))
-    | _ -> l
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
@@ -678,7 +675,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> snd)
                 | Tm_ascribed(_, Inl t, _) -> Some t
-                | Tm_ascribed(_, Inr c, _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, Inr c, _) -> Some (Env.result_typ env.tcenv c)
                 | _ -> None in
 
             begin match head_type with
@@ -712,9 +709,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           in
 
           let codomain_eff lc = match lc with
-            | Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
+            | Inl lc -> SS.subst_comp opening (lc.lcomp_as_comp()) |> Some
             | Inr (eff, flags) ->
-                let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
+                let new_uvar () = new_uvar Range.dummyRange [] (U.ktype0) |> fst in
                 if Ident.lid_equals eff Const.effect_Tot_lid
                 then S.mk_Total (new_uvar()) |> Some
                 else if Ident.lid_equals eff Const.effect_GTot_lid
@@ -1368,7 +1365,7 @@ let encode_free_var env fv tt t_norm quals =
                 let args, comp = curried_arrow_formals_comp t_norm in
                 if encode_non_total_function_typ
                 then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
-                else args, (None, U.comp_result comp) in
+                else args, (None, Env.result_typ env.tcenv comp) in
               let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
               let vtok_tm = match formals with
                 | [] -> mkFreeV(vname, Term_sort)
@@ -1486,14 +1483,14 @@ let encode_top_level_let :
                     let formals, c = SS.open_comp formals c in
                     let nformals = List.length formals in
                     let nbinders = List.length binders in
-                    let tres = U.comp_result c in
+                    let tres = Env.result_typ env.tcenv c in
                     if nformals < nbinders && U.is_total_comp c (* explicit currying *)
                     then let bs0, rest = BU.first_N nformals binders in
                             let c =
                                 let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
                                 SS.subst_comp subst c in
                             let body = U.abs rest body lopt in
-                            (bs0, body, bs0, U.comp_result c), false
+                            (bs0, body, bs0, Env.result_typ env.tcenv c), false
                     else if nformals > nbinders (* eta-expand before translating it *)
                     then let binders, body = eta_expand binders formals body tres in
                             (binders, body, formals, tres), false
@@ -1516,7 +1513,7 @@ let encode_top_level_let :
                 match (SS.compress t_norm).n with
                 | Tm_arrow(formals, c) ->
                     let formals, c = SS.open_comp formals c in
-                    let tres = U.comp_result c in
+                    let tres = Env.result_typ env.tcenv c in
                     let binders, body = eta_expand [] formals e tres in
                     (binders, body, formals, tres), false
                 | _ -> ([], e, [], t_norm), false
@@ -1778,7 +1775,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env.tcenv tm in
           let lb_typ =
             let formals, comp = U.arrow_formals_comp lb.lbtyp in
-            let reified_typ = FStar.TypeChecker.Util.reify_comp ({env.tcenv with lax=true}) (U.lcomp_of_comp comp) U_unknown in
+            let reified_typ = TcUtil.reify_comp ({env.tcenv with lax=true}) (Env.lcomp_of_comp env.tcenv comp) in
             U.arrow formals (S.mk_Total reified_typ) in
           let lb = {lb with lbdef=tm'; lbtyp=lb_typ} in
           (* printfn "%s: Reified %s\nto %s\n"  *)
@@ -1817,7 +1814,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  let xxsym, xx = fresh_fvar "x" Term_sort in
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
                     let _, data_t = Env.lookup_datacon env.tcenv l in
-                    let args, res = U.arrow_formals data_t in
+                    let args, res = TcUtil.arrow_formals env.tcenv data_t in
                     let indices = match (SS.compress res).n with
                         | Tm_app(_, indices) -> indices
                         | _ -> [] in
@@ -1855,7 +1852,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         let formals, res = match (SS.compress k).n with
                 | Tm_arrow(formals, kres) ->
-                  tps@formals, U.comp_result kres
+                  tps@formals, Env.result_typ env.tcenv kres
                 | _ ->
                   tps, k in
 
@@ -1910,7 +1907,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_datacon(d, _, t, _, n_tps, quals, _, drange) ->
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
-        let formals, t_res = U.arrow_formals t in
+        let formals, t_res = TcUtil.arrow_formals env.tcenv t in
         let fuel_var, fuel_tm = fresh_fvar "f" Fuel_sort in
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
         let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
