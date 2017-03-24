@@ -215,7 +215,6 @@ type decl' =
   | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of effect_decl
-  | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc
@@ -230,7 +229,7 @@ and decl = {
 }
 and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
-  | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
+  | DefineEffect   of ident * list<binder> * term * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
@@ -645,10 +644,8 @@ let decl_to_string (d:decl) = match d.d with
   | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
   | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

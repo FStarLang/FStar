@@ -8,4 +8,4 @@ type t0 = Map.t int int
 
 let eq_int : eqtype = int
 
-total  new_effect_for_free STMAP = STATE_h (Map.t int int)
+total  new_effect STMAP = STATE_h (Map.t int int)

@@ -79,6 +79,16 @@ let move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
             | Right hnp -> give_witness hnp
           )))
 
+val forall_impl_intro :
+  #a:Type ->
+  #p:(a -> GTot Type) ->
+  #q:(a -> GTot Type) ->
+  $f:(x:a -> (squash(p x)) -> Lemma (q x)) ->
+  Lemma (forall x. p x ==> q x)
+let forall_impl_intro #a #p #q $f =
+  let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
+  forall_intro (move_requires f')
+
 // Thanks KM, CH and SZ
 val impl_intro_gen
   (#p: Type0)

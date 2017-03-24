@@ -488,8 +488,6 @@ and p_rawDecl d = match d.d with
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
-  | NewEffectForFree (ne) ->
-    str "new_effect_for_free" ^^ space ^^ p_newEffect ne
   | Pragma p ->
     p_pragma p
   | Fsdoc doc ->
@@ -587,22 +585,17 @@ and p_letbinding (pat, e) =
 and p_newEffect = function
   | RedefineEffect (lid, bs, t) ->
     p_effectRedefinition lid bs t
-  | DefineEffect (lid, bs, t, eff_decls, action_decls) ->
-    p_effectDefinition lid bs t eff_decls action_decls
+  | DefineEffect (lid, bs, t, eff_decls) ->
+    p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
     surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
 
-and p_effectDefinition uid bs t eff_decls action_decls =
+and p_effectDefinition uid bs t eff_decls =
   braces_with_nesting (
     group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
-    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls) ^^
-    p_actionDecls action_decls
+    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls)
     )
-
-and p_actionDecls = function
-  | [] -> empty
-  | l -> break1 ^^ prefix2 (str "and actions") (separate_break_map semi p_effectDecl l)
 
 and p_effectDecl d = match d.d with
   | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
