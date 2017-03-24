@@ -187,7 +187,7 @@ let rec is_type_aux env t =
     | Tm_fvar fv ->
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
       then true
-      else let (_, t) = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
+      else let (_, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
            is_arity env t
 
     | Tm_uvar (_, t)
@@ -1268,7 +1268,7 @@ let fresh = let c = mk_ref 0 in
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
-    let _, fstar_disc_type = TypeChecker.Env.lookup_lid env.tcenv discName in
+    let _, fstar_disc_type = fst <| TypeChecker.Env.lookup_lid env.tcenv discName in
     let wildcards = match (SS.compress fstar_disc_type).n with
         | Tm_arrow (binders, _) ->
             binders
