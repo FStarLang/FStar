@@ -101,12 +101,6 @@ type identifier_info = {
     identifier:either<bv, fv>;
     identifier_ty:typ
 }
-let info_as_string info = 
-    let id_string, range = match info.identifier with 
-        | Inl bv -> Print.nm_to_string bv, FStar.Syntax.Syntax.range_of_bv bv
-        | Inr fv -> Print.lid_to_string (FStar.Syntax.Syntax.lid_of_fv fv), FStar.Syntax.Syntax.range_of_fv fv in
-    BU.format3 "(defined at %s) %s : %s"
-        (Range.string_of_range range) id_string (Print.term_to_string info.identifier_ty)
 let rec insert_col_info col info col_infos =
     match col_infos with 
     | [] -> [col, info]
@@ -133,10 +127,12 @@ let mk_info id ty = {
     identifier_ty=ty;
 }
 let file_info_table : file_info = BU.smap_create 50 //50 files
+open FStar.Range
 let insert_identifier_info id ty range =
     let info = mk_info id ty in
-    let fn = Range.file_of_range range in
-    let start = Range.start_of_range range in 
+    let use_range = {range with def_range=range.use_range} in //key the lookup table from the use range
+    let fn = Range.file_of_range use_range in
+    let start = Range.start_of_range use_range in 
     let row, col = Range.line_of_pos start, Range.col_of_pos start in
     match BU.smap_try_find file_info_table fn with
     | None -> 
@@ -152,7 +148,7 @@ let insert_identifier_info id ty range =
       | Some col_infos ->
         col_infos := insert_col_info col info !col_infos
       end
-let info_at_pos (fn:string) (row:int) (col:int) : option<string> =
+let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
     match BU.smap_try_find file_info_table fn with
     | None -> None
     | Some rows -> 
@@ -161,7 +157,7 @@ let info_at_pos (fn:string) (row:int) (col:int) : option<string> =
       | Some cols -> 
         match find_nearest_preceding_col_info col !cols with
         | None -> None
-        | Some ci -> Some (info_as_string ci)
+        | Some ci -> Some ci//(info_as_string ci)
 let insert_bv bv ty = insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
 let insert_fv fv ty = insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)
 
