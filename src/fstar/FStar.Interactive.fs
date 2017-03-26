@@ -125,6 +125,8 @@ type input_chunks =
   | Pop  of string
   | Code of string * (string * string)
   | Info of string * int * int
+  | InfoFQN of string
+  | Completions of string
 
 
 type interactive_state = {
@@ -202,13 +204,28 @@ let rec read_chunk () =
               false, 1, 0
         in
         Push lc)
-  else if Util.starts_with l "#info" then
+  else if Util.starts_with l "#info " then
       match Util.split l " " with
       | [_; file; row; col] ->
         Util.clear_string_builder s.chunk;
         Info (file, Util.int_of_string row, Util.int_of_string col)
       | _ ->
         Util.print_error ("Unrecognized \"#info\" request: " ^l);
+        exit 1
+  else if Util.starts_with l "#info-fqn " then
+      match Util.split l " " with
+      | [_; fqn] ->
+        InfoFQN (fqn)
+      | _ ->
+        Util.print_error ("Unrecognized \"#info\" request: " ^l);
+        exit 1
+  else if Util.starts_with l "#completions " then
+      match Util.split l " " with
+      | [_; prefix; "#"] -> // Extra "#" marks the end of the input.  FIXME protocol could take more structured messages.
+        Util.clear_string_builder s.chunk;
+        Completions (prefix)
+      | _ ->
+        Util.print_error ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
   else
@@ -380,6 +397,56 @@ let rec go (line_col:(int*int))
        Util.print_string "\n#done-nok\n"
      | Some s ->
        Util.print1 "%s\n#done-ok\n" s);
+    go line_col filename stack curmod env ts
+  | InfoFQN(fqn) -> // FIXME this implementation is horrible
+    // FIXME and it crashes on Prims.HasEq_bool
+    let lidents = FStar.TypeChecker.Env.lidents (snd env) in
+    (match List.tryFind (fun lid -> lid.str = fqn) lidents with
+     | None -> Util.print_string "\n#done-nok\n"
+     | Some lid -> let (univ, typ), range = lookup_lid (snd env) lid in
+     let loc_str = FStar.TypeChecker.Err.format_info (snd env) fqn typ range in
+     Util.print1 "%s\n#done-ok\n" loc_str);
+    go line_col filename stack curmod env ts
+  | Completions(search_term) ->
+    // FIXME offer non-fully-qualified completions
+    //   "Som" should complete to "Some" and "Prim.Som" should complete to "Prims.Some".
+    // FIXME a regular expression might be faster than this explicit matching
+    let rec measure_anchored_match search_term candidate =
+      match search_term, candidate with
+      | [], _ -> Some (0)
+      | _, [] -> None
+      | hs :: ts, hc :: tc ->
+        if Util.starts_with hc hs then
+           match ts with
+           | [] -> Some (String.length hs)
+           | _ -> measure_anchored_match ts tc |>
+                    Option.map (fun len -> String.length hc + 1 + len)
+        else None in
+    let rec locate_match needle candidate =
+      match measure_anchored_match needle candidate with
+      | Some n -> Some (0, n)
+      | None ->
+        match candidate with
+        | [] -> None
+        | hc :: tc ->
+          locate_match needle tc |>
+            Option.map (fun (start, len) -> (String.length hc + 1 + start, len)) in
+    let locate_match_in_lident needle lident =
+      // Util.print2 "Testing %s against %s\n"
+      //             (concat_l "::" needle)
+      //             (concat_l "::" (List.map FStar.Ident.text_of_id (lident.ns @ [lident.ident])));
+      let candidate = List.map FStar.Ident.text_of_id (lident.ns @ [lident.ident]) in
+      locate_match needle candidate |>
+        Option.map (fun (start, len) -> (lident, start, len)) in
+    let needle = Util.split search_term "." in
+    let lidents = FStar.TypeChecker.Env.lidents (snd env) in
+    let matches = List.filter_map (locate_match_in_lident needle) lidents in
+    List.iter (fun (lid, start, len) ->
+                 Util.print3 "%s %s %s\n"
+                             (string start) (string (start + len))
+                             (FStar.Ident.string_of_lid lid))
+              matches;
+    Util.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
       // This shrinks all internal stacks by 1
