@@ -355,6 +355,31 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
     in
     aux env.scope_mods
 
+let namespace_is_open env lid =
+  List.existsb (function
+                | Open_module_or_namespace (ns, Open_namespace) -> lid_equals lid ns
+                | _ -> false) env.scope_mods
+
+let shorten_module_path env ids is_full_path =
+  // FIXME this could be faster (module_is_defined and namespace_is_open are slow)
+  let rec aux revns id =
+    let lid = FStar.Ident.lid_of_ns_and_id (List.rev revns) id in
+    if namespace_is_open env lid
+    then Some []
+    else match revns with
+         | [] -> None
+         | ns_last_id :: ns_rev_prefix ->
+           aux ns_rev_prefix ns_last_id |>
+             Option.map (fun short_rev_ids -> id :: short_rev_ids) in
+  if is_full_path && module_is_defined env (FStar.Ident.lid_of_ids ids)
+  then [] // FIXME is that right? If m is defined then all names in m are accessible?
+  else match List.rev ids with
+       | [] -> []
+       | ns_last_id :: ns_rev_prefix ->
+         match aux ns_rev_prefix ns_last_id with
+         | None -> ids
+         | Some short_rev_ids -> List.rev short_rev_ids
+
 (* Generic name resolution. *)
 
 let resolve_in_open_namespaces''

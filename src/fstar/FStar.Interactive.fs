@@ -409,44 +409,46 @@ let rec go (line_col:(int*int))
        Util.print1 "%s\n#done-ok\n" loc_str);
     go line_col filename stack curmod env ts
   | Completions(search_term) ->
-    // FIXME offer non-fully-qualified completions
-    //   "Som" should complete to "Some" and "Prim.Som" should complete to "Prims.Some".
     // FIXME a regular expression might be faster than this explicit matching
     let rec measure_anchored_match search_term candidate =
       match search_term, candidate with
-      | [], _ -> Some (0)
+      | [], _ -> Some ([], 0)
       | _, [] -> None
       | hs :: ts, hc :: tc ->
-        if Util.starts_with hc hs then
+        let hc_text = FStar.Ident.text_of_id hc in
+        if Util.starts_with hc_text hs then
            match ts with
-           | [] -> Some (String.length hs)
+           | [] -> Some (candidate, String.length hs)
            | _ -> measure_anchored_match ts tc |>
-                    Option.map (fun len -> String.length hc + 1 + len)
+                    Option.map (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
         else None in
     let rec locate_match needle candidate =
       match measure_anchored_match needle candidate with
-      | Some n -> Some (0, n)
+      | Some (matched, n) -> Some ([], matched, n)
       | None ->
         match candidate with
         | [] -> None
         | hc :: tc ->
           locate_match needle tc |>
-            Option.map (fun (start, len) -> (String.length hc + 1 + start, len)) in
+            Option.map (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
+    let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
     let locate_match_in_lident needle lident =
-      // Util.print2 "Testing %s against %s\n"
-      //             (concat_l "::" needle)
-      //             (concat_l "::" (List.map FStar.Ident.text_of_id (lident.ns @ [lident.ident])));
-      let candidate = List.map FStar.Ident.text_of_id (lident.ns @ [lident.ident]) in
-      locate_match needle candidate |>
-        Option.map (fun (start, len) -> (lident, start, len)) in
+      locate_match needle (lident.ns @ [lident.ident]) |>
+        Option.map
+          (fun (prefix, matched, match_len) ->
+           let naked_match = match matched with [_] -> true | _ -> false in
+           let short_prefix = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
+           let short_prefix_str = str_of_ids short_prefix ^ (if short_prefix == [] then "" else ".") in
+           let fqn = str_of_ids (prefix @ matched) in
+           (short_prefix_str ^ (str_of_ids matched), fqn, String.length short_prefix_str, match_len)) in
     let needle = Util.split search_term "." in
     let lidents = FStar.TypeChecker.Env.lidents (snd env) in
     let matches = List.filter_map (locate_match_in_lident needle) lidents in
-    List.iter (fun (lid, start, len) ->
-                 Util.print3 "%s %s %s\n"
-                             (string start) (string (start + len))
-                             (FStar.Ident.string_of_lid lid))
-              matches;
+    List.iter (fun (candidate, fqn, match_start, match_len) ->
+               Util.print4 "%s %s %s %s\n"
+                 (string match_start) (string (match_start + match_len))
+                 candidate fqn)
+              (List.sort matches);
     Util.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
