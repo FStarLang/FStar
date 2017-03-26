@@ -432,23 +432,26 @@ let rec go (line_col:(int*int))
           locate_match needle tc |>
             Option.map (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
     let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
-    let locate_match_in_lident needle lident =
+    let match_lident_against needle lident =
       locate_match needle (lident.ns @ [lident.ident]) |>
         Option.map
           (fun (prefix, matched, match_len) ->
            let naked_match = match matched with [_] -> true | _ -> false in
-           let short_prefix = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
-           let short_prefix_str = str_of_ids short_prefix ^ (if short_prefix == [] then "" else ".") in
-           let fqn = str_of_ids (prefix @ matched) in
-           (short_prefix_str ^ (str_of_ids matched), fqn, String.length short_prefix_str, match_len)) in
+           let stripped_ns, shortened = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
+           (str_of_ids stripped_ns,
+            str_of_ids shortened,
+            str_of_ids matched,
+            match_len)) in
     let needle = Util.split search_term "." in
     let lidents = FStar.TypeChecker.Env.lidents (snd env) in
-    let matches = List.filter_map (locate_match_in_lident needle) lidents in
-    List.iter (fun (candidate, fqn, match_start, match_len) ->
-               Util.print4 "%s %s %s %s\n"
-                 (string match_start) (string (match_start + match_len))
-                 candidate fqn)
-              (List.sort matches);
+    let matches = List.filter_map (match_lident_against needle) lidents in
+    List.iter (fun (stripped_ns, prefix, matched, match_len) ->
+               let candidate, match_len =
+                 if prefix = "" then (matched, match_len)
+                 else (prefix ^ "." ^ matched, String.length prefix + match_len + 1) in
+               Util.print3 "%s %s %s\n"
+                 (string match_len) stripped_ns candidate)
+              matches;
     Util.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->

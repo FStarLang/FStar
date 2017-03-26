@@ -365,20 +365,21 @@ let shorten_module_path env ids is_full_path =
   let rec aux revns id =
     let lid = FStar.Ident.lid_of_ns_and_id (List.rev revns) id in
     if namespace_is_open env lid
-    then Some []
+    then Some (List.rev (id :: revns), [])
     else match revns with
          | [] -> None
-         | ns_last_id :: ns_rev_prefix ->
-           aux ns_rev_prefix ns_last_id |>
-             Option.map (fun short_rev_ids -> id :: short_rev_ids) in
+         | ns_last_id :: rev_ns_prefix ->
+           aux rev_ns_prefix ns_last_id |>
+             Option.map (fun (stripped_ids, rev_kept_ids) ->
+                         (stripped_ids, id :: rev_kept_ids)) in
   if is_full_path && module_is_defined env (FStar.Ident.lid_of_ids ids)
-  then [] // FIXME is that right? If m is defined then all names in m are accessible?
+  then (ids, []) // FIXME is that right? If m is defined then all names in m are accessible?
   else match List.rev ids with
-       | [] -> []
+       | [] -> ([], [])
        | ns_last_id :: ns_rev_prefix ->
          match aux ns_rev_prefix ns_last_id with
-         | None -> ids
-         | Some short_rev_ids -> List.rev short_rev_ids
+         | None -> ([], ids)
+         | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
 
 (* Generic name resolution. *)
 
