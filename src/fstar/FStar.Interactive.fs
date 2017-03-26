@@ -438,20 +438,20 @@ let rec go (line_col:(int*int))
           (fun (prefix, matched, match_len) ->
            let naked_match = match matched with [_] -> true | _ -> false in
            let stripped_ns, shortened = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
-           (str_of_ids stripped_ns,
-            str_of_ids shortened,
+           (str_of_ids shortened,
             str_of_ids matched,
+            str_of_ids stripped_ns,
             match_len)) in
     let needle = Util.split search_term "." in
     let lidents = FStar.TypeChecker.Env.lidents (snd env) in
     let matches = List.filter_map (match_lident_against needle) lidents in
-    List.iter (fun (stripped_ns, prefix, matched, match_len) ->
+    List.iter (fun (prefix, matched, stripped_ns, match_len) ->
                let candidate, match_len =
                  if prefix = "" then (matched, match_len)
                  else (prefix ^ "." ^ matched, String.length prefix + match_len + 1) in
                Util.print3 "%s %s %s\n"
                  (string match_len) stripped_ns candidate)
-              matches;
+              (List.sort matches);
     Util.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
