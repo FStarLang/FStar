@@ -323,7 +323,9 @@ let lookup_default_id
     find_in_module env lid k_global_def k_not_found
 
 let module_is_defined env lid =
-    lid_equals lid (current_module env) ||
+    (match env.curmodule with
+     | None -> false
+     | Some m -> lid_equals lid (current_module env)) ||
     List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
 let resolve_module_name env lid (honor_ns: bool) : option<lident> =
