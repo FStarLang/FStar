@@ -398,14 +398,15 @@ let rec go (line_col:(int*int))
      | Some s ->
        Util.print1 "%s\n#done-ok\n" s);
     go line_col filename stack curmod env ts
-  | InfoFQN(fqn) -> // FIXME this implementation is horrible
-    // FIXME and it crashes on Prims.HasEq_bool
+  | InfoFQN(fqn) ->
+    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split fqn ".")) in
     let lidents = FStar.TypeChecker.Env.lidents (snd env) in
-    (match List.tryFind (fun lid -> lid.str = fqn) lidents with
-     | None -> Util.print_string "\n#done-nok\n"
-     | Some lid -> let (univ, typ), range = lookup_lid (snd env) lid in
-     let loc_str = FStar.TypeChecker.Err.format_info (snd env) fqn typ range in
-     Util.print1 "%s\n#done-ok\n" loc_str);
+    (match try_lookup_lid (snd env) lid with
+     | None ->
+       Util.print_string "\n#done-nok\n" // FIXME this happens for Prims.HasEq_bool. Why?
+     | Some ((_, typ), range) ->
+       let loc_str = FStar.TypeChecker.Err.format_info (snd env) fqn typ range in
+       Util.print1 "%s\n#done-ok\n" loc_str);
     go line_col filename stack curmod env ts
   | Completions(search_term) ->
     // FIXME offer non-fully-qualified completions
