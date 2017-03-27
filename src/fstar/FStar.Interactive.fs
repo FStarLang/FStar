@@ -124,8 +124,7 @@ type input_chunks =
   | Push of bool * int * int //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
-  | Info of string * int * int
-  | InfoFQN of string
+  | Info of string * bool * option<(string * int * int)>
   | Completions of string
 
 
@@ -206,16 +205,12 @@ let rec read_chunk () =
         Push lc)
   else if Util.starts_with l "#info " then
       match Util.split l " " with
-      | [_; file; row; col] ->
+      | [_; symbol] ->
         Util.clear_string_builder s.chunk;
-        Info (file, Util.int_of_string row, Util.int_of_string col)
-      | _ ->
-        Util.print_error ("Unrecognized \"#info\" request: " ^l);
-        exit 1
-  else if Util.starts_with l "#info-fqn " then
-      match Util.split l " " with
-      | [_; fqn] ->
-        InfoFQN (fqn)
+        Info (symbol, true, None)
+      | [_; symbol; file; row; col] ->
+        Util.clear_string_builder s.chunk;
+        Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
         Util.print_error ("Unrecognized \"#info\" request: " ^l);
         exit 1
@@ -390,23 +385,21 @@ let rec go (line_col:(int*int))
            (filename:string) 
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
-  | Info(file, row, col) ->
-    let iopt = FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
-    (match iopt with
-     | None ->
-       Util.print_string "\n#done-nok\n"
-     | Some s ->
-       Util.print1 "%s\n#done-ok\n" s);
-    go line_col filename stack curmod env ts
-  | InfoFQN(fqn) ->
-    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split fqn ".")) in
-    let lidents = FStar.TypeChecker.Env.lidents (snd env) in
-    (match try_lookup_lid (snd env) lid with
-     | None ->
-       Util.print_string "\n#done-nok\n" // FIXME this happens for Prims.HasEq_bool. Why?
-     | Some ((_, typ), range) ->
-       let loc_str = FStar.TypeChecker.Err.format_info (snd env) fqn typ range in
-       Util.print1 "%s\n#done-ok\n" loc_str);
+  | Info(symbol, fqn_only, pos_opt) ->
+    let info_at_pos_opt = match pos_opt with
+      | None -> None
+      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
+    let info_opt = match info_at_pos_opt with
+      | Some _ -> info_at_pos_opt
+      | None -> // Use name lookup as a fallback
+        if symbol = "" then None // FIXME obey fqn_only
+        else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
+             try_lookup_lid (snd env) lid // FIXME This only works for fully qualified name
+               |> Util.map_option (fun ((_, typ), range) ->
+                                   FStar.TypeChecker.Err.format_info (snd env) symbol typ range) in
+    (match info_opt with
+     | None -> Util.print_string "\n#done-nok\n"
+     | Some s -> Util.print1 "%s\n#done-ok\n" s);
     go line_col filename stack curmod env ts
   | Completions(search_term) ->
     // FIXME a regular expression might be faster than this explicit matching
