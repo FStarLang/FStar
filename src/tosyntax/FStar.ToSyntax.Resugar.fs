@@ -77,6 +77,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
     | U_name u -> mk (A.Uvar(u)) r
     | U_unif _ -> mk A.Wild r
     | U_bvar x -> 
+      (* This case can happen when trying to print a subterm of a term that is not opened.*)
       let id = I.mk_ident ("uu__univ_bvar_" + string_of_int x, r) in
       mk (A.Uvar(id)) r
 
@@ -217,8 +218,10 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_delayed _ ->
       failwith "This case is impossible after compress"
 
-    | Tm_bvar _ ->
-      failwith "This case is impossible, if all binders are properly opened"
+    | Tm_bvar x ->
+      (* this case can happen when printing a subterm of a term that is not opened *)
+      let l = FStar.Ident.lid_of_ids [bv_as_unique_ident x] in
+      mk (A.Var l)
 
     | Tm_name x -> //a lower-case identifier
       //this is is too simplistic
