@@ -79,16 +79,16 @@ let gs : gensym_t =
     gensym =
       (fun uu____57  ->
          FStar_Util.incr ctr;
-         (let _0_170 =
-            let _0_169 =
-              let _0_168 = FStar_Util.string_of_int (FStar_ST.read n_resets)
+         (let _0_192 =
+            let _0_191 =
+              let _0_190 = FStar_Util.string_of_int (FStar_ST.read n_resets)
                  in
-              let _0_167 =
-                let _0_166 = FStar_Util.string_of_int (FStar_ST.read ctr)  in
-                Prims.strcat "_" _0_166  in
-              Prims.strcat _0_168 _0_167  in
-            Prims.strcat "_" _0_169  in
-          (_0_170, (Prims.parse_int "0"))));
+              let _0_189 =
+                let _0_188 = FStar_Util.string_of_int (FStar_ST.read ctr)  in
+                Prims.strcat "_" _0_188  in
+              Prims.strcat _0_190 _0_189  in
+            Prims.strcat "_" _0_191  in
+          (_0_192, (Prims.parse_int "0"))));
     reset =
       (fun uu____66  ->
          FStar_ST.write ctr (Prims.parse_int "0"); FStar_Util.incr n_resets)
@@ -98,10 +98,10 @@ let reset_gensym : Prims.unit -> Prims.unit = fun uu____78  -> gs.reset ()
 let rec gensyms : Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
-    | _0_171 when _0_171 = (Prims.parse_int "0") -> []
+    | _0_193 when _0_193 = (Prims.parse_int "0") -> []
     | n ->
-        let _0_173 = gensym ()  in
-        let _0_172 = gensyms (n - (Prims.parse_int "1"))  in _0_173 :: _0_172
+        let _0_195 = gensym ()  in
+        let _0_194 = gensyms (n - (Prims.parse_int "1"))  in _0_195 :: _0_194
   
 let mlpath_of_lident :
   FStar_Ident.lident -> (Prims.string Prims.list * Prims.string) =
@@ -109,9 +109,9 @@ let mlpath_of_lident :
     if FStar_Ident.lid_equals x FStar_Syntax_Const.failwith_lid
     then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
     else
-      (let _0_174 =
+      (let _0_196 =
          FStar_List.map (fun x  -> x.FStar_Ident.idText) x.FStar_Ident.ns  in
-       (_0_174, ((x.FStar_Ident.ident).FStar_Ident.idText)))
+       (_0_196, ((x.FStar_Ident.ident).FStar_Ident.idText)))
   
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
@@ -574,14 +574,14 @@ let bv_as_mlident : FStar_Syntax_Syntax.bv -> mlident =
        in
     if uu____1459
     then
-      let _0_177 =
-        let _0_176 =
-          let _0_175 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index
+      let _0_199 =
+        let _0_198 =
+          let _0_197 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index
              in
-          Prims.strcat "_" _0_175  in
-        Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText _0_176
+          Prims.strcat "_" _0_197  in
+        Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText _0_198
          in
-      (_0_177, (Prims.parse_int "0"))
+      (_0_199, (Prims.parse_int "0"))
     else
       (((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText),
         (Prims.parse_int "0"))

@@ -1,7 +1,7 @@
 open Prims
 let is_cache_file : Prims.string -> Prims.bool =
   fun fn  ->
-    let _0_292 = FStar_Util.get_file_extension fn  in _0_292 = ".cache"
+    let _0_300 = FStar_Util.get_file_extension fn  in _0_300 = ".cache"
   
 type fragment =
   | Empty 

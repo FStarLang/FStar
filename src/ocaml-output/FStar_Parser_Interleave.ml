@@ -26,18 +26,18 @@ let interleave :
       let is_let x d =
         match d.FStar_Parser_AST.d with
         | FStar_Parser_AST.TopLevelLet (uu____70,defs) ->
-            let _0_331 = FStar_Parser_AST.lids_of_let defs  in
-            FStar_All.pipe_right _0_331 (FStar_Util.for_some (id_eq_lid x))
+            let _0_339 = FStar_Parser_AST.lids_of_let defs  in
+            FStar_All.pipe_right _0_339 (FStar_Util.for_some (id_eq_lid x))
         | FStar_Parser_AST.Tycon (uu____79,tys) ->
-            let _0_332 =
+            let _0_340 =
               FStar_All.pipe_right tys
                 (FStar_List.map
                    (fun uu____98  -> match uu____98 with | (x,uu____103) -> x))
                in
-            FStar_All.pipe_right _0_332
+            FStar_All.pipe_right _0_340
               (FStar_Util.for_some
-                 (fun uu___127_106  ->
-                    match uu___127_106 with
+                 (fun uu___126_106  ->
+                    match uu___126_106 with
                     | FStar_Parser_AST.TyconAbbrev
                         (id',uu____108,uu____109,uu____110) ->
                         x.FStar_Ident.idText = id'.FStar_Ident.idText
@@ -75,17 +75,17 @@ let interleave :
       let rec aux out iface impl =
         match iface with
         | [] ->
-            let _0_333 =
+            let _0_341 =
               FStar_All.pipe_right (FStar_List.rev out) FStar_List.flatten
                in
-            FStar_List.append _0_333 impl
+            FStar_List.append _0_341 impl
         | d::ds ->
             (match d.FStar_Parser_AST.d with
              | FStar_Parser_AST.Tycon (uu____234,tys) when
                  FStar_All.pipe_right tys
                    (FStar_Util.for_some
-                      (fun uu___128_251  ->
-                         match uu___128_251 with
+                      (fun uu___127_251  ->
+                         match uu___127_251 with
                          | (FStar_Parser_AST.TyconAbstract
                             uu____255,uu____256) -> true
                          | uu____264 -> false))
@@ -111,36 +111,36 @@ let interleave :
                        ->
                        Prims.raise
                          (FStar_Errors.Error
-                            (let _0_335 =
-                               let _0_334 = FStar_Parser_AST.decl_to_string d
+                            (let _0_343 =
+                               let _0_342 = FStar_Parser_AST.decl_to_string d
                                   in
                                FStar_Util.format1
                                  "%s is repeated in the implementation"
-                                 _0_334
+                                 _0_342
                                 in
-                             (_0_335, r)))
+                             (_0_343, r)))
                    | Some i ->
                        Prims.raise
                          (FStar_Errors.Error
-                            (let _0_337 =
-                               let _0_336 = FStar_Parser_AST.decl_to_string d
+                            (let _0_345 =
+                               let _0_344 = FStar_Parser_AST.decl_to_string d
                                   in
                                FStar_Util.format1
                                  "%s in the interface is implemented with a 'type'"
-                                 _0_336
+                                 _0_344
                                 in
-                             (_0_337, (i.FStar_Parser_AST.drange)))));
+                             (_0_345, (i.FStar_Parser_AST.drange)))));
                   (let uu____286 = prefix_until_let x iface  in
                    match uu____286 with
                    | Some uu____294 ->
                        Prims.raise
                          (FStar_Errors.Error
-                            (let _0_338 =
+                            (let _0_346 =
                                FStar_Util.format2
                                  "'val %s' and 'let %s' cannot both be provided in an interface"
                                  x.FStar_Ident.idText x.FStar_Ident.idText
                                 in
-                             (_0_338, (d.FStar_Parser_AST.drange))))
+                             (_0_346, (d.FStar_Parser_AST.drange))))
                    | None  ->
                        let lopt = prefix_until_let x impl  in
                        (match lopt with
@@ -168,16 +168,16 @@ let interleave :
                             then
                               Prims.raise
                                 (FStar_Errors.Error
-                                   (let _0_340 =
-                                      let _0_339 =
+                                   (let _0_348 =
+                                      let _0_347 =
                                         FStar_Range.string_of_range
                                           let_x.FStar_Parser_AST.drange
                                          in
                                       FStar_Util.format2
                                         "Assumed declaration %s is defined at %s"
-                                        x.FStar_Ident.idText _0_339
+                                        x.FStar_Ident.idText _0_347
                                        in
-                                    (_0_340, (d.FStar_Parser_AST.drange))))
+                                    (_0_348, (d.FStar_Parser_AST.drange))))
                             else
                               (let remaining_iface_vals =
                                  FStar_All.pipe_right ds
@@ -201,20 +201,20 @@ let interleave :
                                | Some d ->
                                    Prims.raise
                                      (FStar_Errors.Error
-                                        (let _0_343 =
-                                           let _0_342 =
+                                        (let _0_351 =
+                                           let _0_350 =
                                              FStar_Parser_AST.decl_to_string
                                                d
                                               in
-                                           let _0_341 =
+                                           let _0_349 =
                                              FStar_Parser_AST.decl_to_string
                                                let_x
                                               in
                                            FStar_Util.format2
                                              "%s is out of order with %s"
-                                             _0_342 _0_341
+                                             _0_350 _0_349
                                             in
-                                         (_0_343,
+                                         (_0_351,
                                            (d.FStar_Parser_AST.drange))))
                                | uu____364 ->
                                    (match let_x.FStar_Parser_AST.d with

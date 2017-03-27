@@ -175,7 +175,7 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 let ml_comp t r =
   mk_Comp ({comp_typ_name=set_lid_range Const.effect_ML_lid r;
             comp_univs=[U_unknown];
-            effect_args=[as_arg t];
+            effect_args=[as_arg t ; as_arg tun];
             flags=[MLEFFECT]})
 
 let comp_effect_name c = match c.n with

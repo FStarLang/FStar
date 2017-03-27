@@ -386,7 +386,7 @@ and comp_to_string c =
     | Comp c ->
         let basic =
           if (Options.print_effect_args())
-          then U.format3 "%s (%s) %s (attributes %s)"
+          then U.format3 "%s %s (attributes %s)"
                             (sli c.comp_typ_name)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
                             (c.flags |> List.map cflags_to_string |> String.concat " ")

@@ -390,7 +390,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   in
 
   //generalize and close
-  let t = U.arrow ed.binders (S.mk_Total ed.signature) in
+  let t = U.maybe_tot_arrow ed.binders ed.signature in
   let (univs, t) = TcUtil.generalize_universes env0 t in
   let signature = match effect_params, (SS.compress t).n with
     | [], _ -> t
@@ -881,7 +881,9 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
     let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
         let se_let = U.action_as_lb ne.mname a in
-        Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
+        Env.push_sigelt env se_let, se_let::ses) (env, [se])
+    in
+    let env = TcUtil.build_lattice env se in
     [se], env, []
 
   | Sig_sub_effect(sub, r) ->
@@ -1138,7 +1140,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     then
       let for_export_bundle se (out, hidden) = match se with
         | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
-          let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
+          let dec = Sig_declare_typ(l, us, U.maybe_tot_arrow bs t, Assumption::New::quals, r) in
           dec::out, hidden
 
         (* logically, each constructor just becomes an uninterpreted function *)

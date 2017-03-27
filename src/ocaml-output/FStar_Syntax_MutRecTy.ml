@@ -63,9 +63,9 @@ let disentangle_abbrevs_from_bundle :
                 let not_unfolded_yet = FStar_Util.mk_ref type_abbrev_sigelts
                    in
                 let remove_not_unfolded lid =
-                  let _0_739 =
-                    let _0_738 = FStar_ST.read not_unfolded_yet  in
-                    FStar_All.pipe_right _0_738
+                  let _0_755 =
+                    let _0_754 = FStar_ST.read not_unfolded_yet  in
+                    FStar_All.pipe_right _0_754
                       (FStar_List.filter
                          (fun uu___201_141  ->
                             match uu___201_141 with
@@ -87,7 +87,7 @@ let disentangle_abbrevs_from_bundle :
                                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                             | uu____171 -> true))
                      in
-                  FStar_ST.write not_unfolded_yet _0_739  in
+                  FStar_ST.write not_unfolded_yet _0_755  in
                 let rec unfold_abbrev_fv t fv =
                   let replacee x =
                     match x with
@@ -116,8 +116,8 @@ let disentangle_abbrevs_from_bundle :
                         -> Some tm
                     | uu____261 -> None  in
                   let uu____265 =
-                    let _0_740 = FStar_ST.read rev_unfolded_type_abbrevs  in
-                    FStar_Util.find_map _0_740 replacee_term  in
+                    let _0_756 = FStar_ST.read rev_unfolded_type_abbrevs  in
+                    FStar_Util.find_map _0_756 replacee_term  in
                   match uu____265 with
                   | Some x -> x
                   | None  ->
@@ -126,12 +126,12 @@ let disentangle_abbrevs_from_bundle :
                       (match uu____281 with
                        | Some se ->
                            let uu____284 =
-                             let _0_741 = FStar_ST.read in_progress  in
+                             let _0_757 = FStar_ST.read in_progress  in
                              FStar_List.existsb
                                (fun x  ->
                                   FStar_Ident.lid_equals x
                                     (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
-                               _0_741
+                               _0_757
                               in
                            if uu____284
                            then
@@ -168,11 +168,11 @@ let disentangle_abbrevs_from_bundle :
                             failwith
                               "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
                          in
-                      ((let _0_743 =
-                          let _0_742 = FStar_ST.read in_progress  in lid ::
-                            _0_742
+                      ((let _0_759 =
+                          let _0_758 = FStar_ST.read in_progress  in lid ::
+                            _0_758
                            in
-                        FStar_ST.write in_progress _0_743);
+                        FStar_ST.write in_progress _0_759);
                        (match () with
                         | () ->
                             (remove_not_unfolded lid;
@@ -203,21 +203,21 @@ let disentangle_abbrevs_from_bundle :
                                       ((false, [lb']), rng, [lid], quals,
                                         attr)
                                      in
-                                  ((let _0_745 =
-                                      let _0_744 =
+                                  ((let _0_761 =
+                                      let _0_760 =
                                         FStar_ST.read
                                           rev_unfolded_type_abbrevs
                                          in
-                                      sigelt' :: _0_744  in
+                                      sigelt' :: _0_760  in
                                     FStar_ST.write rev_unfolded_type_abbrevs
-                                      _0_745);
+                                      _0_761);
                                    (match () with
                                     | () ->
-                                        ((let _0_746 =
+                                        ((let _0_762 =
                                             FStar_List.tl
                                               (FStar_ST.read in_progress)
                                              in
-                                          FStar_ST.write in_progress _0_746);
+                                          FStar_ST.write in_progress _0_762);
                                          (match () with | () -> tm'))))))))
                   | uu____370 ->
                       failwith

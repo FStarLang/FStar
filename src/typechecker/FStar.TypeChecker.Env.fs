@@ -31,6 +31,7 @@ open FStar.TypeChecker.Common
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
+module C = FStar.Syntax.Const
 module I  = FStar.Ident
 
 module S = FStar.Syntax.Syntax
@@ -265,8 +266,8 @@ let set_current_module env lid = {env with curmodule=lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
 let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (text_of_lid lid)
 
-let name_not_found (l:lid) =
-  format1 "Name \"%s\" not found" l.str
+let name_not_found (origin:string) (l:lid) =
+  format2 "Name \"%s\" not found (from %s)" l.str origin
 
 let variable_not_found v =
   format1 "Variable \"%s\" not found" (Print.bv_to_string v)
@@ -465,10 +466,10 @@ let lookup_type_of_let se lid = match se with
 let effect_signature se =
     match se with
     | Sig_new_effect(ne, _) ->
-        Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)))
+        Some (inst_tscheme (ne.univs, U.maybe_tot_arrow ne.binders ne.signature))
 
     | Sig_effect_abbrev (lid, us, binders, _, _, _, _) ->
-        Some (inst_tscheme (us, U.arrow binders (mk_Total teff)))
+        Some (inst_tscheme (us, U.maybe_tot_arrow binders teff))
 
     | _ -> None
 
@@ -559,7 +560,7 @@ let try_lookup_lid env l =
 
 let lookup_lid env l =
     match try_lookup_lid env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> raise (Error(name_not_found "lookup_lid" l, range_of_lid l))
     | Some (us, t) -> (us, t)
 
 let lookup_univ env x =
@@ -580,13 +581,13 @@ let lookup_val_decl env lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_declare_typ(_, uvs, t, _, _), None)) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> raise (Error(name_not_found "lookup_val_decl" lid, range_of_lid lid))
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> raise (Error(name_not_found "lookup_datacon" lid, range_of_lid lid))
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
@@ -627,7 +628,7 @@ let try_lookup_effect_lid env (ftv:lident) : option<typ> =
 
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
-    | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
+    | None -> raise (Error(name_not_found "lookup_effect_lid" ftv, range_of_lid ftv))
     | Some k -> k
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
@@ -764,22 +765,23 @@ let is_type_constructor env lid =
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
   | Some (Inr (Sig_inductive_typ (_, _, tps, _, _, _, _, _), _)) -> List.length tps
-  | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+  | _ -> raise (Error(name_not_found "num_inductive_ty_params" lid, range_of_lid lid))
 
 ////////////////////////////////////////////////////////////
 // Utilities on computation types                         //
 ////////////////////////////////////////////////////////////
 let comp_to_comp_typ (env:env) c =
-    let c =
-        match c.n with
-        | Total (t, None) ->
-            let u = env.universe_of env t in
-            S.mk_Total' t (Some u)
-        | GTotal (t, None) ->
-            let u = env.universe_of env t in
-            S.mk_GTotal' t (Some u)
-        | _ -> c in
-    U.comp_to_comp_typ c
+  let c =
+    match c.n with
+    | Total (t, None) ->
+      let u = env.universe_of env t in
+      S.mk_Total' t (Some u)
+    | GTotal (t, None) ->
+      let u = env.universe_of env t in
+      S.mk_GTotal' t (Some u)
+    | _ -> c
+  in
+  U.comp_to_comp_typ c
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ env comp in
@@ -787,10 +789,10 @@ let rec unfold_effect_abbrev env comp =
   | None -> c
   | Some (binders, cdef) ->
     let binders, cdef = SS.open_comp binders cdef in
-    if List.length binders <> List.length c.effect_args + 1
+    if List.length binders <> List.length c.effect_args
     then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
-                                (BU.string_of_int (List.length c.effect_args + 1))
+                                (BU.string_of_int (List.length c.effect_args))
                                 (Print.comp_to_string (S.mk_Comp c))
                             , comp.pos));
     let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders c.effect_args in
@@ -804,7 +806,12 @@ let result_typ env comp =
     | GTotal (t, _) -> t
     | _ ->
       let ct = unfold_effect_abbrev env comp in
-      fst <| List.nth ct.effect_args (List.length ct.effect_args - 2)
+      if Ident.lid_equals ct.comp_typ_name C.effect_Tot_lid ||
+          Ident.lid_equals ct.comp_typ_name C.effect_GTot_lid
+      then
+        fst <| List.hd ct.effect_args 
+      else
+        fst <| List.nth ct.effect_args (List.length ct.effect_args - 2)
 
 let rec non_informative env t =
     match (unrefine t).n with
@@ -823,12 +830,17 @@ let rec non_informative env t =
 let comp_as_normal_comp_typ env c =
     let ct = unfold_effect_abbrev env c in
     let rec aux = function
-        | []
-        | [_] -> failwith "Expected at least two arguments to comp_typ"
-        | [res; wp] -> [], res, wp
-        | hd::rest ->
-          let i, res, wp = aux rest in
-          hd::i, res, wp
+      | [] ->
+        failwith (BU.format1 "Expected at least two arguments to comp_typ (%s)"
+                              (Ident.text_of_lid ct.comp_typ_name))
+      | [res] ->
+        failwith (BU.format2 "Expected at least two arguments to comp_typ (%s) got %s"
+                              (Ident.text_of_lid ct.comp_typ_name)
+                              (Print.term_to_string (fst res)))
+      | [res; wp] -> [], res, wp
+      | hd::rest ->
+        let i, res, wp = aux rest in
+        hd::i, res, wp
     in
     let indices, result, wp = aux ct.effect_args in
     { nct_name = ct.comp_typ_name;
@@ -848,15 +860,38 @@ let normal_comp_typ_as_comp (env:env) nct =
     S.mk_Comp ct
 
 let lcomp_of_comp env c0 =
+  let ct0 = comp_to_comp_typ env c0 in
+  if Ident.lid_equals ct0.comp_typ_name C.effect_Tot_lid ||
+     Ident.lid_equals ct0.comp_typ_name C.effect_GTot_lid
+  then
+    (* In the 200~ first lines of prims.fst we need to handle Tot specially *)
+    {
+      lcomp_name = ct0.comp_typ_name ;
+      lcomp_univs = ct0.comp_univs ;
+      lcomp_indices = [] ;
+      lcomp_res_typ = fst <| List.hd ct0.effect_args ;
+      lcomp_cflags = ct0.flags ;
+      lcomp_as_comp = (fun () -> c0)
+    }
+  else
     let nct = comp_as_normal_comp_typ env c0 in
-    {lcomp_name = nct.nct_name;
-     lcomp_univs= nct.nct_univs;
-     lcomp_indices=nct.nct_indices;
-     lcomp_res_typ=fst nct.nct_result;
-     lcomp_cflags=nct.nct_flags;
-     lcomp_as_comp=(fun () -> c0)}
+    {
+      lcomp_name = nct.nct_name;
+      lcomp_univs= nct.nct_univs;
+      lcomp_indices=nct.nct_indices;
+      lcomp_res_typ=fst nct.nct_result;
+      lcomp_cflags=nct.nct_flags;
+      lcomp_as_comp=(fun () -> c0)
+    }
 
 let set_result_typ env c t =
+  let ct = comp_to_comp_typ env c in
+  if Ident.lid_equals ct.comp_typ_name C.effect_Tot_lid ||
+     Ident.lid_equals ct.comp_typ_name C.effect_GTot_lid
+  then
+    (* In the 200~ first lines of prims.fst we need to handle Tot specially *)
+    mk_Comp ({ ct with effect_args = [as_arg t] })
+  else
     let nct = comp_as_normal_comp_typ env c in
     let nct = { nct with nct_result=S.as_arg t} in
     normal_comp_typ_as_comp env nct
@@ -896,7 +931,7 @@ let effect_decl_opt env l =
 
 let get_effect_decl env l =
   match effect_decl_opt env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> raise (Error(name_not_found "get_effect_decl" l, range_of_lid l))
     | Some md -> md
 
 let join env l1 l2 : (lident * mlift * mlift) =

@@ -58,11 +58,11 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let t, guard =
              let t, _, g = tc_tot_or_gtot_term env' t in
              t, Rel.discharge_guard env' (Rel.conj_guard guard_params (Rel.conj_guard guard_indices g)) in
-         let k = U.arrow indices (S.mk_Total t) in
+         let k = U.maybe_tot_arrow indices t in
          let t_type, u = U.type_u() in
          Rel.force_trivial_guard env' (Rel.teq env' t t_type);
 
-(*close*)let t_tc = U.arrow (tps@indices) (S.mk_Total t) in
+(*close*)let t_tc = U.maybe_tot_arrow (tps@indices) t in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
          let fv_tc = S.lid_as_fv tc Delta_constant None in
@@ -135,7 +135,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
             arguments
             us in
 
-(*close*)let t = U.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
+(*close*)let t = U.maybe_tot_arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) result in
                         //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
          Sig_datacon(c, [], t, tc_lid, ntps, quals, [], r),
          g
@@ -160,12 +160,12 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
         //and generalize their universes together
         let binders = tcs |> List.map (fun (se, _) ->
             match se with
-            | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (U.arrow tps <| mk_Total k)
+            | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (U.maybe_tot_arrow tps k)
             | _ -> failwith "Impossible")  in
         let binders' = datas |> List.map (function
             | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t
             | _ -> failwith "Impossible") in
-        let t = U.arrow (binders@binders') (S.mk_Total Common.t_unit) in
+        let t = U.maybe_tot_arrow (binders@binders') Common.t_unit in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in
