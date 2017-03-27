@@ -370,8 +370,8 @@ let shorten_module_path env ids is_full_path =
          | [] -> None
          | ns_last_id :: rev_ns_prefix ->
            aux rev_ns_prefix ns_last_id |>
-             Option.map (fun (stripped_ids, rev_kept_ids) ->
-                         (stripped_ids, id :: rev_kept_ids)) in
+             BU.map_option (fun (stripped_ids, rev_kept_ids) ->
+                            (stripped_ids, id :: rev_kept_ids)) in
   if is_full_path && module_is_defined env (FStar.Ident.lid_of_ids ids)
   then (ids, []) // FIXME is that right? If m is defined then all names in m are accessible?
   else match List.rev ids with

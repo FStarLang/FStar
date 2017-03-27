@@ -420,7 +420,7 @@ let rec go (line_col:(int*int))
            match ts with
            | [] -> Some (candidate, String.length hs)
            | _ -> measure_anchored_match ts tc |>
-                    Option.map (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
+                    Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
         else None in
     let rec locate_match needle candidate =
       match measure_anchored_match needle candidate with
@@ -430,28 +430,33 @@ let rec go (line_col:(int*int))
         | [] -> None
         | hc :: tc ->
           locate_match needle tc |>
-            Option.map (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
+            Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
     let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
     let match_lident_against needle lident =
-      locate_match needle (lident.ns @ [lident.ident]) |>
-        Option.map
-          (fun (prefix, matched, match_len) ->
-           let naked_match = match matched with [_] -> true | _ -> false in
-           let stripped_ns, shortened = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
-           (str_of_ids shortened,
-            str_of_ids matched,
-            str_of_ids stripped_ns,
-            match_len)) in
+      locate_match needle (lident.ns @ [lident.ident]) in
+    let shorten_namespace (prefix, matched, match_len) =
+      let naked_match = match matched with [_] -> true | _ -> false in
+      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
+      (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
+    let prepare_candidate (prefix, matched, stripped_ns, match_len) =
+      if prefix = "" then
+        (matched, stripped_ns, match_len)
+      else
+        (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
     let needle = Util.split search_term "." in
     let lidents = FStar.TypeChecker.Env.lidents (snd env) in
-    let matches = List.filter_map (match_lident_against needle) lidents in
-    List.iter (fun (prefix, matched, stripped_ns, match_len) ->
-               let candidate, match_len =
-                 if prefix = "" then (matched, match_len)
-                 else (prefix ^ "." ^ matched, String.length prefix + match_len + 1) in
-               Util.print3 "%s %s %s\n"
-                 (string match_len) stripped_ns candidate)
-              (List.sort matches);
+    let matches = List.filter_map (fun lid ->
+                                   lid |> match_lident_against needle
+                                       |> Util.map_option shorten_namespace
+                                       |> Util.map_option prepare_candidate)
+                                  lidents in
+    List.iter (fun (candidate, ns, match_len) ->
+               Util.print3 "%s %s %s\n" (string match_len) ns candidate)
+              (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
+                               match String.compare cd1 cd2 with
+                               | 0 -> String.compare ns1 ns2
+                               | n -> n)
+                              matches);
     Util.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
