@@ -444,7 +444,8 @@ let rec go (line_col:(int*int))
                                        |> Util.map_option prepare_candidate)
                                   lidents in
     List.iter (fun (candidate, ns, match_len) ->
-               Util.print3 "%s %s %s\n" (string match_len) ns candidate)
+               Util.print3 "%s %s %s\n"
+               (Util.string_of_int match_len) ns candidate)
               (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                                match String.compare cd1 cd2 with
                                | 0 -> String.compare ns1 ns2
