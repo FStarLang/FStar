@@ -108,11 +108,11 @@ let rec progress e =
 
 let len = List.Tot.length
 
-let app_len = ListProperties.append_length
+let app_len = List.Tot.append_length
 
-let app_nil = ListProperties.append_l_nil
+let app_nil = List.Tot.append_l_nil
 
-let list_assoc = ListProperties.append_assoc
+let list_assoc = List.Tot.append_assoc
 
 (* g' @ (t::g) = (g' @ [t]) @ g /\ lookup (g' @ (t::g)) (len g') = t *)
 val list_assoc_a: g:env -> g':env -> t:typ -> Lemma (requires True) (ensures ((g' @ (t::g)) = ((g' @ [t]) @ g) /\

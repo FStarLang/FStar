@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.All
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
@@ -43,6 +44,7 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | LightOff
 
 type memo<'a> = ref<option<'a>>
 
@@ -206,6 +208,7 @@ type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
+val new_fv_set: unit -> set<lident>
 val new_uv_set: unit -> uvars
 val new_universe_uvar_set: unit -> set<universe_uvar>
 val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
@@ -411,6 +414,7 @@ val no_names:          freenames
 val no_uvs:            uvars
 val no_universe_uvars: set<universe_uvar>
 val no_universe_names: fifo_set<univ_name>
+val no_fvars:          set<lident>
 
 val freenames_of_list:    list<bv> -> freenames
 val freenames_of_binders: binders -> freenames
@@ -446,6 +450,7 @@ val fv_eq:          fv -> fv -> bool
 val fv_eq_lid:      fv -> lident -> bool
 val range_of_fv:    fv -> range
 val lid_of_fv:      fv -> lid
+val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool

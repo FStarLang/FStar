@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
+open FStar.All
 
 open Prims
 open FStar
@@ -690,21 +691,24 @@ let rec arrow_formals k =
     bs, comp_result c
 
 let abs_formals t =
-    let rec aux t what =
+    let subst_lcomp_opt s l = match l with
+        | Some (Inl l) ->
+          let l = {l with res_typ=Subst.subst s l.res_typ;
+                          comp=(fun () -> Subst.subst_comp s (l.comp()))} in
+          Some (Inl l)
+        | _ -> l
+    in
+    let rec aux t abs_body_lcomp =
         match (unascribe <| Subst.compress t).n with
         | Tm_abs(bs, t, what) ->
             let bs',t, what = aux t what in
             bs@bs', t, what
-        | _ -> [], t, what
+        | _ -> [], t, abs_body_lcomp
     in
-    let bs, t, what = aux t None in
-    (* TODO : what should be open, no ? *)
-    (*let what = match what with
-        | Some (Inr lc) -> Subst.open_lc bs what
-        | _ -> what
-    in*)
-    let bs, t = Subst.open_term bs t in
-    bs, t, what
+    let bs, t, abs_body_lcomp = aux t None in
+    let bs, t, opening = Subst.open_term' bs t in
+    let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
+    bs, t, abs_body_lcomp
 
 let mk_letbinding lbname univ_vars typ eff def =
     {lbname=lbname;
@@ -883,8 +887,10 @@ let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
 let teq = fvar_const Const.eq2_lid
-
-let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
+    let eq_inst = mk_Tm_uinst teq [u] in
+    mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
     let t_has_type = fvar_const Const.has_type_lid in //TODO: Fix the U_zeroes below!

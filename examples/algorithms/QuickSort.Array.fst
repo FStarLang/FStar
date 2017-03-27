@@ -17,7 +17,6 @@
 module QuickSort.Array
 open FStar.Array
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Heap
 open FStar.ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
@@ -172,7 +171,7 @@ let rec sort #a f i j x =
 (* ghost *)    let lo = slice (sel h3 x) i pivot in
 (* ghost *)    let hi = slice (sel h3 x) (pivot + 1) j in
 (* ghost *)    let pv = index (sel h1 x) pivot in
-(* ghost *)    SeqProperties.sorted_concat_lemma f lo pv hi;
+(* ghost *)    Seq.sorted_concat_lemma f lo pv hi;
 (* ghost *)    lemma_slice_cons_pv (sel h3 x) i pivot j pv;
 
 (* ghost *)    lemma_weaken_frame_right (sel h2 x) (sel h1 x) i pivot j;

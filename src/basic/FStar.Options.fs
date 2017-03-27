@@ -17,10 +17,10 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
-open FStar.Version
 
 type debug_level_t =
   | Low
@@ -41,7 +41,7 @@ type options =
     | Reset
     | Restore
 
-// VALS_HACK_HERE
+
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -125,6 +125,7 @@ let init () =
         ("no_default_includes"          , Bool false);
         ("no_extract"                   , List []);
         ("no_location_info"             , Bool false);
+        ("no_warn_top_level_effects"    , Bool true);
         ("odir"                         , Unset);
         ("prims"                        , Unset);
         ("pretype"                      , Bool true);
@@ -133,6 +134,7 @@ let init () =
         ("print_bound_var_types"        , Bool false);
         ("print_effect_args"            , Bool false);
         ("print_fuels"                  , Bool false);
+        ("print_full_names"             , Bool false);
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
         ("print_z3_statistics"          , Bool false);
@@ -151,11 +153,13 @@ let init () =
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
-        ("no_warn_top_level_effects"    , Bool true);
+        ("warn_default_effects"         , Bool false);
         ("z3refresh"                    , Bool false);
         ("z3rlimit"                     , Int 5);
         ("z3seed"                       , Int 0);
-        ("z3timeout"                    , Int 5)] in
+        ("z3timeout"                    , Int 5);
+        ("z3cliopt"                     , List []);
+        ("__no_positivity"              , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -210,13 +214,16 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
+let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
+let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
+
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
@@ -235,11 +242,13 @@ let get_verify_all              ()      = lookup_opt "verify_all"               
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"   as_bool
+let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     as_bool
+let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
+let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -263,9 +272,16 @@ let include_path_base_dirs =
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
+// See comment in the interface file
+let _version = FStar.Util.mk_ref ""
+let _platform = FStar.Util.mk_ref ""
+let _compiler = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref ""
+let _commit = FStar.Util.mk_ref ""
+
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  version platform compiler date commit)
+                                  !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
   Util.print_string "fstar.exe [options] file[s]\n";
@@ -402,12 +418,6 @@ let rec specs () : list<Getopt.opt> =
         "Only extract modules in the specified namespace");
 
        ( noshort,
-        "fs_typ_app",
-        ZeroArgs (fun () -> Bool true),
-        "Allow the use of t<t1,...,tn> syntax for type applications;
-        brittle since it clashes with the integer less-than operator");
-
-       ( noshort,
         "fstar_home",
         OneArg (String,
                 "[dir]"),
@@ -496,8 +506,8 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "MLish",
-        ZeroArgs(fun () -> Bool true),//ml_ish := true; full_context_dependency := false),
-        "Introduce unification variables that are only dependent on the type variables in the context");
+        ZeroArgs(fun () -> Bool true),
+        "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
 
        ( noshort,
         "n_cores",
@@ -554,6 +564,11 @@ let rec specs () : list<Getopt.opt> =
         "Print the fuel amounts used for each successful query");
 
        ( noshort,
+        "print_full_names",
+        ZeroArgs (fun () -> Bool true),
+        "Print full names of variables");
+
+       ( noshort,
         "print_implicits",
         ZeroArgs(fun () -> Bool true),
         "Print implicit arguments");
@@ -571,7 +586,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "prn",
         ZeroArgs (fun () -> Bool true),
-        "Print real names (you may want to use this in conjunction with log_queries)");
+        "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "record_hints",
@@ -654,9 +669,14 @@ let rec specs () : list<Getopt.opt> =
          "Display version number");
 
        ( noshort,
-        "no_warn_top_level_effects",
-        ZeroArgs (fun () -> Bool false),
-        "Top-level effects are checked by default; turn this flag on to prevent warning when this happens");
+         "warn_default_effects",
+         ZeroArgs (fun _ -> Bool true),
+         "Warn when (a -> b) is desugared to (a -> Tot b)");
+
+       ( noshort,
+         "z3cliopt",
+         OneArg ((fun s -> List (get_z3cliopt() @ [s] |> List.map String)), "[option]"),
+         "Z3 command line options");
 
        ( noshort,
         "z3refresh",
@@ -680,6 +700,12 @@ let rec specs () : list<Getopt.opt> =
          OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
+
+       ( noshort,
+        "__no_positivity",
+        ZeroArgs (fun () -> Bool true),
+        "Don't check positivity of inductive types");
+
 
   ] in
      ( 'h',
@@ -728,6 +754,7 @@ let settable = function
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
+    | "print_full_names"
     | "print_implicits"
     | "print_universes"
     | "print_z3_statistics"
@@ -873,14 +900,14 @@ let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
-let fs_typ_app    (filename:string) = get_fs_typ_app () && List.contains filename !light_off_files
+let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
 let indent                       () = get_indent                      ()
-let initial_fuel                 () = get_initial_fuel                ()
-let initial_ifuel                () = get_initial_ifuel               ()
+let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
+let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in                          ()
 let lax                          () = get_lax                         ()
@@ -890,6 +917,7 @@ let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
 let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
+let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.contains s
@@ -900,7 +928,7 @@ let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
-let print_real_names             () = get_prn                         ()
+let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
@@ -915,21 +943,24 @@ let use_hints                    () = get_use_hints                   ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"
+let warn_default_effects         () = get_warn_default_effects        ()
 let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
+let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
+let no_positivity                () = get_no_positivity               ()
 
 
 let should_extract m =
   not (no_extract m) && (extract_all () ||
   (match get_extract_module () with
-  | [] -> 
-    (match get_extract_namespace () with 
+  | [] ->
+    (match get_extract_namespace () with
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))

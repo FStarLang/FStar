@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.All
 open FStar.Getopt
 
 //let __test_norm_all = Util.mk_ref false
@@ -50,7 +51,6 @@ val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
 
-(* Only used with F# *)
 val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
@@ -90,6 +90,7 @@ val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
 val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
+val set_ml_ish                  : unit    -> unit
 val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
@@ -124,9 +125,21 @@ val use_hints                   : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
+val warn_default_effects        : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
+val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
+val no_positivity               : unit    -> bool
+
+// HACK ALERT! This is to ensure we have no dependency from Options to Version,
+// otherwise, since Version is regenerated all the time, this invalidates the
+// whole build tree. A classy technique I learned from the OCaml compiler.
+val _version: ref<string>
+val _platform: ref<string>
+val _compiler: ref<string>
+val _date: ref<string>
+val _commit: ref<string>

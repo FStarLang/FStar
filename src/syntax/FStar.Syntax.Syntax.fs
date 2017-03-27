@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.All
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
@@ -40,6 +41,7 @@ type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
+  | LightOff
 
 type memo<'a> = ref<option<'a>>
 
@@ -345,7 +347,7 @@ type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
-// VALS_HACK_HERE
+
 
 let contains_reflectable (l: list<qualifier>): bool =
     Util.for_some (function Reflectable _ -> true | _ -> false) l
@@ -363,6 +365,8 @@ let order_bv x y =
   then x.index - y.index
   else i
 
+let order_fv x y = String.compare x.str y.str
+
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr fv -> range_of_lid fv.fv_name.v
@@ -378,6 +382,7 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
+let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
 let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)
                                            (fun (x, _) -> Unionfind.uvar_id x)
 let new_universe_uvar_set () : set<universe_uvar> =
@@ -388,6 +393,7 @@ let new_universe_names_fifo_set () : fifo_set<univ_name> =
                  (fun x -> Util.hashcode (Ident.text_of_id x))
 
 let no_names  = new_bv_set()
+let no_fvars  = new_fv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
 let no_universe_names = new_universe_names_fifo_set ()
@@ -411,7 +417,7 @@ let mk (t:'a) = fun (topt:option<'b>) r -> {
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
-let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
+let mk_Tm_app (t1:typ) (args:list<arg>) k p =
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) k p
@@ -499,7 +505,7 @@ let freshen_bv bv =
     else {bv with index=next_id()}
 let new_univ_name ropt =
     let id = next_id() in
-    mk_ident ("'uu___" ^ Util.string_of_int id, range_of_ropt ropt)
+    mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
@@ -517,7 +523,8 @@ let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
-
+let set_range_of_fv (fv:fv) (r:Range.range) = 
+    {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function
     | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->

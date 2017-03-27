@@ -10,7 +10,7 @@ ULIB=../ulib
 
 ifeq ($(OS),Windows_NT)
   FSC     = fsc
-  MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g')\")/MSBuild.exe
+  MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g' | tr -d '\r')\")/MSBuild.exe
   UNAME   = Windows_NT
   FSTAR   = ../bin/fstar.exe
   RUNTIME =
@@ -68,9 +68,6 @@ nuget-clean:
 
 $(FSYACC) $(FSLEX): nuget-restore
 
-wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
-	sloccount $^
-
 # --------------------------------------------------------------------
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
@@ -79,23 +76,16 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 #   -- we use automatic dependence analysis based on files in ulib, u_boot_fsts and boot_fstis
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
 #   -- fs_typ_app parses list<foo> as valid syntax, for overlap with F# syntax
-FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --MLish --lax --fs_typ_app --no_location_info \
+FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_info \
 		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis
 
 # JP: these modules are meant to be fsti's (realized in ML); but, the compiler
 # currently works in non-universes mode so this is not possible. These files are
 # in ulib/ as fstis, though, so the --no_extract argument will go away once the
 # F* compiler bootstraps in universes.
-# NUM=FStar.Int8 FStar.UInt8 FStar.Int16 FStar.UInt16 FStar.Int32 FStar.UInt32 FStar.Int64 FStar.UInt64
 
-# U_STDLIB=$(addprefix $(ULIB)/, FStar.FunctionalExtensionality.fst FStar.PropositionalExtensionality.fst FStar.PredicateExtensionality.fst \
-# 			       FStar.TSet.fst FStar.Set.fst \
-# 			       FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-# 			       FStar.Char.fsti FStar.Float.fsti FStar.Mul.fst FStar.Int.fst $(addsuffix .fst,$(NUM)) FStar.BaseTypes.fsti)
 U_BOOT_BASIC_FSTI=$(addprefix boot_fstis/FStar., string.fsti list.fst util.fsti platform.fsti bytes.fst range.fsti version.fsti getopt.fsti unionfind.fsti Pprint.fsti)
 U_ALL_INTERFACES=$(U_BOOT_BASIC_FSTI) boot_fstis/FStar.Parser.Parse.fsti
-
-# $(U_STDLIB)
 
 # SI: does it have to go prettyprint.fsti->FStar.Pprint.fsti?
 boot_fstis/FStar.Pprint.fsti: prettyprint/prettyprint.fsi
@@ -115,14 +105,13 @@ boot_fstis/FStar.list.fst: basic/list.fsi
 
 boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 	cp $^ $@
-	$(SED) -i 's/val/assume val/g' $@
-	$(SED) -i 's/new/assume new/g' $@
 
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
 	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@
 	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@
 	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@
@@ -141,36 +130,22 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
-	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse open FStar.BaseTypes type bytes = array<byte>/' $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>/' $@
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
-prep_u_extract_ocaml: $(U_ALL_INTERFACES)
+prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
-	$(SED) -i "s/type term' =/type term' : Type0 =/g"      u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/and pat' =/and pat' : Type0 =/g"          u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/and comp' =/and comp' : Type0 =/g"        u_boot_fsts/FStar.Syntax.Syntax.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i 's/type env =/type env : Type0 =/g'          u_boot_fsts/FStar.TypeChecker.Env.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i 's/and solver_t =/and solver_t : Type0 =/g'  u_boot_fsts/FStar.TypeChecker.Env.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i 's/and guard_t =/and guard_t : Type0 =/g'    u_boot_fsts/FStar.TypeChecker.Env.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type term' =/type term': Type0 =/g"       u_boot_fsts/FStar.SMTEncoding.Term.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type term' =/type term': Type0 =/g"       u_boot_fsts/FStar.SMTEncoding.Term.fst* #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type term' =/type term': Type0 =/g"       u_boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type pattern' =/type pattern': Type0 =/g" u_boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type decl' =/type decl': Type0 =/g"       u_boot_fsts/FStar.Parser.AST.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type mlexpr' =/type mlexpr': Type0 =/g"   u_boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i "s/type mlsig1 =/type mlsig1: Type0 =/g"     u_boot_fsts/FStar.Extraction.ML.Syntax.fst #TODO, fix up universe generalization for mutual recursive types, issue #806
-	$(SED) -i 's/module FStar.Parser.Lexhelp/module FStar.Parser.Lexhelp open FStar.Mul/' u_boot_fsts/FStar.Parser.Lexhelp.fst #uses * for multiplication only
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output
 	mkdir boot_fstis u_boot_fsts u_ocaml-output
 
-u_extract_misc:$(addprefix u_boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
+u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
 					 FStar.Format.fst)
-	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst) \
@@ -195,10 +170,13 @@ u_extract_dmff: u_boot_fsts/FStar.TypeChecker.DMFF.fst
 u_extract_tcterm: u_boot_fsts/FStar.TypeChecker.TcTerm.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcTerm
 
+u_extract_tcinductive: u_boot_fsts/FStar.TypeChecker.TcInductive.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcInductive
+
 u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Tc
 
-u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tc
+u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tcinductive u_extract_tc
 
 u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
@@ -208,6 +186,9 @@ u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
+u_extract_uz: $(addprefix u_boot_fsts/FStar.SMTEncoding., Util.fst Z3.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
+
 
 u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
 	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Encode
@@ -215,17 +196,29 @@ u_extract_encode: u_boot_fsts/FStar.SMTEncoding.Encode.fst
 u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
 	$(FSTARBOOT) $^ --extract_module FStar.SMTEncoding.Solver
 
-u_extract_smtencoding: u_extract_encode u_extract_solver
+u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_solver
 
 u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
 	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
-u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
-	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
-	       u_extract_extraction u_extract_fstar
+u_extract_all:
+	u_extract_misc \
+	u_extract_syntax \
+	u_extract_parser \
+	u_extract_typechecker \
+	u_extract_tosyntax \
+	u_extract_smtencoding \
+	u_extract_extraction \
+	u_extract_fstar
+
+uz:
+	make prep
+	+make u_extract_uz
+	cp u_ocaml-output/*.ml ocaml-output/
+	+make -C ocaml-output
 
 ocaml: clean_u_extract_ocaml
-	make prep_u_extract_ocaml
+	make prep
 	+make u_extract_misc u_extract_syntax u_extract_parser \
               u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
 	      u_extract_extraction u_extract_fstar
@@ -255,7 +248,11 @@ ifeq ($(OS),Windows_NT)
 endif
 	+make -C ocaml-output
 	+make fstar-ocaml
-	+make uregressions
+	+make uregressions interactive-test
+
+# Interactive mode regressions
+interactive-test:
+	+make -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:

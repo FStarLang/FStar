@@ -26,6 +26,9 @@ let forall_intro_squash_gtot #a #p $f =
 val forall_intro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
 
+val forall_intro'  : #a:Type -> #p:(a -> GTot Type) -> f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+let forall_intro' #a #p f = forall_intro f
+
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
                   ($f: (x:a -> y:b x -> Lemma (p x y)))
@@ -76,6 +79,31 @@ let move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
             | Right hnp -> give_witness hnp
           )))
 
+val forall_impl_intro :
+  #a:Type ->
+  #p:(a -> GTot Type) ->
+  #q:(a -> GTot Type) ->
+  $f:(x:a -> (squash(p x)) -> Lemma (q x)) ->
+  Lemma (forall x. p x ==> q x)
+let forall_impl_intro #a #p #q $f =
+  let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
+  forall_intro (move_requires f')
+
+// Thanks KM, CH and SZ
+val impl_intro_gen
+  (#p: Type0)
+  (#q: (h: squash p) -> Tot Type0)
+  (f: (x: squash p) -> Lemma (q ()))
+: Lemma (p ==> q ())
+let impl_intro_gen #p #q f =
+  let g () : Lemma
+    (requires p)
+    (ensures (p ==> q ()))
+  =
+   give_proof #(q ()) (f (get_proof p))
+  in
+  move_requires g ()
+
 val ghost_lemma: #a:Type -> #p:(a -> GTot Type0) -> #q:(a -> unit -> GTot Type0) ->
   $f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
 let ghost_lemma #a #p #q $f =
@@ -91,6 +119,16 @@ let ghost_lemma #a #p #q $f =
             | Right hnp -> give_witness hnp
           ))))
  in forall_intro lem
+ 
+let or_elim
+  (#l #r: Type0)
+  (#goal: (squash (l \/ r) -> Tot Type0))
+  (hl: squash l -> Lemma (goal ()))
+  (hr: squash r -> Lemma (goal ()))
+: Lemma
+  ((l \/ r) ==> goal ())
+= impl_intro_gen #l #(fun _ -> goal ()) hl;
+  impl_intro_gen #r #(fun _ -> goal ()) hr
 
 ////////////////////////////////////////////////////////////////////////////////
 (* the most standard variant of excluded middle is provable by SMT *)

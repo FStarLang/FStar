@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -44,6 +45,7 @@ val resolve_implicits         : guard_t -> guard_t
 val unrefine   : env -> typ -> typ
 val try_teq    : env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
+val teq_nosmt  : env -> typ -> typ -> bool
 val try_subtype: env -> typ -> typ -> option<guard_t>
 val try_subtype': env -> typ -> typ -> bool -> option<guard_t>
 val sub_comp   : env -> comp -> comp -> option<guard_t>

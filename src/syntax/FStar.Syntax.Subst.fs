@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
+open FStar.All
 
 open FStar
 open FStar.Range
@@ -25,7 +26,7 @@ open FStar.Util
 open FStar.Ident
 module U = FStar.Util
 
-// VALS_HACK_HERE
+
 
 ///////////////////////////////////////////////////////////////////////////
 // A few utility functions for working with lists of parallel substitutions

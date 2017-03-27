@@ -20,6 +20,7 @@
 *)
 #light "off"
 module FStar.Fsdoc.Generator
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -119,7 +120,6 @@ let string_of_decl' d =
   | Open l -> "open " ^ l.str
   | Include l -> "include " ^ l.str
   | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
-  | KindAbbrev(i, _, _) -> "kind " ^ i.idText
   | TopLevelLet(_, pats) ->
         let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in
         let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
@@ -132,10 +132,8 @@ let string_of_decl' d =
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
   | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc (comm,_) -> comm

@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
+open FStar.All
 open Prims
 open FStar
 open FStar.Util
@@ -26,4 +27,5 @@ val names: term -> set<bv>
 val uvars: term -> set<(uvar*typ)>
 val univs: term -> set<universe_uvar>
 val univnames: term -> set<univ_name>
+val fvars: term -> set<Ident.lident>
 val names_of_binders: binders -> set<bv>

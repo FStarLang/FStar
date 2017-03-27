@@ -14,7 +14,6 @@ open FStar.Heap
 let init_print = print_string "\ninitializing...\n\n"
 
 open FStar.Seq
-open FStar.SeqProperties
 open Platform.Bytes
 open SHA1
 open CntFormat

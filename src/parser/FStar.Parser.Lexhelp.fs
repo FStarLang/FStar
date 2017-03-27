@@ -29,7 +29,8 @@
 #light "off"
 
 module FStar.Parser.Lexhelp
-
+open FStar.All
+open FStar.Mul
 open FStar
 open FStar.Util
 open FStar.Range
@@ -39,7 +40,7 @@ open FStar.Parser.Parse
 open FStar.BaseTypes
 
 let intern_string : string -> string =
-  let strings = Util.smap_create 100 in 
+  let strings = Util.smap_create 100 in
   fun s ->
     match Util.smap_try_find strings s with
       | Some res -> res
@@ -144,7 +145,6 @@ let keywords =
     ALWAYS, "begin"      ,BEGIN;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
-    ALWAYS, "effect_actions",ACTIONS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -156,7 +156,6 @@ let keywords =
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;
-    ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
     ALWAYS, "include"    ,INCLUDE;
     ALWAYS, "inline"     ,INLINE;
@@ -169,7 +168,6 @@ let keywords =
     ALWAYS, "mutable"    ,MUTABLE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
-    ALWAYS, "new_effect_for_free", NEW_EFFECT_FOR_FREE;
     ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;

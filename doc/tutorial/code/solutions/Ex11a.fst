@@ -1,9 +1,10 @@
 module Ex11a
+open FStar.ST
 //robot
 
 open FStar.Heap
-open FStar.HyperHeap
 open FStar.Set
+open FStar.HyperHeap
 
 
 let only (#t:eqtype) (i:t) =

@@ -268,11 +268,11 @@ assume val sel_elemT: b:elemB -> ST elem
 
 val seq_head_snoc: #a:Type -> xs:Seq.seq a -> x:a ->
   Lemma (requires True)
-        (ensures Seq.length (SeqProperties.snoc xs x) > 0 /\
-                 seq_head (SeqProperties.snoc xs x) == xs)
+        (ensures Seq.length (Seq.snoc xs x) > 0 /\
+                 seq_head (Seq.snoc xs x) == xs)
 let seq_head_snoc #a xs x =
   Seq.lemma_len_append xs (Seq.create 1 x);
-  Seq.lemma_eq_intro (seq_head (SeqProperties.snoc xs x)) xs
+  Seq.lemma_eq_intro (seq_head (Seq.snoc xs x)) xs
 
 #reset-options "--z3rlimit 100 --print_fuels --initial_fuel 1 --initial_ifuel 1"
 
@@ -292,7 +292,7 @@ let update #i st l a v =
   //assert (sel_elem h0 v == sel_elem h1 v);
   if mac_log then
     let v = sel_elemT v in
-    let vs = SeqProperties.snoc l v in
+    let vs = Seq.snoc l v in
     Seq.lemma_index_app2 l (Seq.create 1 v) (Seq.length vs - 1);
     seq_head_snoc l v;
     //assert (Seq.index vs (Seq.length vs - 1) == v');
@@ -440,7 +440,7 @@ val add:
   (ensures (fun h0 l1 h1 ->
     modifies_1 a h0 h1 /\ 
     acc_inv st l1 a h1 /\
-    (mac_log ==> reveal l1 = SeqProperties.snoc (reveal l0) (encode (sel_word h0 w)))))
+    (mac_log ==> reveal l1 = Seq.snoc (reveal l0) (encode (sel_word h0 w)))))
 
 let add #i st l0 a w =
   push_frame();
@@ -450,6 +450,6 @@ let add #i st l0 a w =
   let l1 = update st l0 a e in
   let h = ST.get() in
 //  let msg = esel_word h w in
-//  let l1 = Ghost.elift2 (fun log msg -> SeqProperties.snoc log (encode_16 msg)) l0 msg in
+//  let l1 = Ghost.elift2 (fun log msg -> Seq.snoc log (encode_16 msg)) l0 msg in
   pop_frame();
   l1

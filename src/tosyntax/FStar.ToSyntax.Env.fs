@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.ToSyntax.Env
+open FStar.All
 
 
 open FStar
@@ -88,7 +89,6 @@ type env = {
   includes:             BU.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   sigmap:               BU.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
-  default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
@@ -98,7 +98,7 @@ type foundname =
   | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
 
-// VALS_HACK_HERE
+
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
 
@@ -121,7 +121,6 @@ let empty_env () = {curmodule=None;
                     includes=new_sigmap();
                     sigaccum=[];
                     sigmap=new_sigmap();
-                    default_result_effect=Const.effect_Tot_lid;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false}
@@ -129,14 +128,6 @@ let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->
     lid_equals m Const.all_lid) env.modules
-
-let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
-let default_ml env =
-  if has_all_in_scope env then
-    { env with default_result_effect=Const.effect_ML_lid }
-  else
-    env
-
 
 let set_bv_range bv r =
     let id = {bv.ppname with idRange=r} in
@@ -496,11 +487,35 @@ let is_effect_name env lid =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
+(* Same as [try_lookup_effect_name], but also traverses effect
+abbrevs. TODO: once indexed effects are in, also track how indices and
+other arguments are instantiated. *)
+let try_lookup_root_effect_name env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+	| Some (Sig_effect_abbrev (l', _, _, _, _, _, _), _) ->
+	  let rec aux new_name =
+	      match BU.smap_try_find (sigmap env) new_name.str with
+	      | None -> None
+	      | Some (s, _) ->
+	        begin match s with
+                | Sig_new_effect_for_free (ne, _)
+		| Sig_new_effect(ne, _)
+		  -> Some (set_lid_range ne.mname (range_of_lid l))
+		| Sig_effect_abbrev (_, _, _, cmp, _, _, _) ->
+                  let l'' = U.comp_effect_name cmp in
+		  aux l''
+	        | _ -> None
+		end
+	  in aux l'
+	| Some (_, l') -> Some l'
+	| _ -> None
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
-      | (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
-      | _ -> None in
+      | (Sig_declare_typ(lid, _, _, quals, _), _) ->
+          Some quals
+      | _ ->
+          None in
   match resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def with
     | Some quals -> quals
     | _ -> []
@@ -530,11 +545,18 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
+let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
+let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
+
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
   match try_lookup_name any_val exclude_interf env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
+let try_lookup_lid_no_resolve (env: env) l =
+  let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
+  in
+  try_lookup_lid env' l
 
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid = function
@@ -707,9 +729,6 @@ let exported_id_set_new () =
     | Exported_id_term_type -> term_type_set
     | Exported_id_field -> field_set
 
-let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
-let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
-
 let unique any_val exclude_if env lid =
   (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)
   let filter_scope_mods = function
@@ -737,7 +756,7 @@ let push_bv env x =
 
 let push_top_level_rec_binding env (x:ident) dd =
   let l = qualify env x in
-  if unique false true env l
+  if unique false true env l || Options.interactive ()
   then push_scope_mod env (Rec_binding (x,l,dd))
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
@@ -760,8 +779,8 @@ let push_sigelt env s =
         | _ -> false, false in
       let lids = lids_of_sigelt s in
       begin match BU.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | None -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
-        | Some l -> err l
+        | Some l when not (Options.interactive ()) -> err l
+        | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
   let env, lss = match s with
@@ -850,7 +869,8 @@ let check_admits env =
     | Sig_declare_typ(l, u, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
-          BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+          if not (Options.interactive ()) then
+            BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
           BU.smap_add (sigmap env) l.str (Sig_declare_typ(l, u, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
@@ -905,42 +925,30 @@ let finish env modul =
     sigaccum=[];
   }
 
-type env_stack_ops = {
-    push: env -> env;
-    mark: env -> env;
-    reset_mark: env -> env;
-    commit_mark: env -> env;
-    pop:env -> env
-}
+let stack: ref<(list<env>)> = BU.mk_ref []
+let push env =
+  push_record_cache();
+  stack := env::!stack;
+  {env with sigmap=BU.smap_copy (sigmap env)}
 
-let stack_ops =
-    let stack = BU.mk_ref [] in
-    let push env =
-        push_record_cache();
-        stack := env::!stack;
-        {env with sigmap=BU.smap_copy (sigmap env)} in
-    let pop env = match !stack with
-        | env::tl ->
-         pop_record_cache();
-         stack := tl;
-         env
-        | _ -> failwith "Impossible: Too many pops" in
-    let commit_mark env =
-        commit_record_cache();
-        match !stack with
-         | _::tl -> stack := tl; env
-         | _ -> failwith "Impossible: Too many pops" in
-    { push=push;
-      pop=pop;
-      mark=push;
-      reset_mark=pop;
-      commit_mark=commit_mark;}
+let pop () =
+  match !stack with
+  | env::tl ->
+    pop_record_cache();
+    stack := tl;
+    env
+  | _ -> failwith "Impossible: Too many pops"
 
-let push (env:env) = stack_ops.push env
-let mark env = stack_ops.mark env
-let reset_mark env = stack_ops.reset_mark env
-let commit_mark env = stack_ops.commit_mark env
-let pop env = stack_ops.pop env
+let commit_mark (env: env) =
+  commit_record_cache();
+  match !stack with
+  | _::tl ->
+    stack := tl;
+    env
+  | _ -> failwith "Impossible: Too many pops"
+
+let mark x = push x
+let reset_mark () = pop ()
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
@@ -949,7 +957,7 @@ let export_interface (m:lident) env =
             | l::_ -> l.nsstr=m.str
             | _ -> false in
     let sm = sigmap env in
-    let env = pop env in
+    let env = pop () in
     let keys = BU.smap_keys sm in
     let sm' = sigmap env in
     keys |> List.iter (fun k ->
@@ -997,19 +1005,17 @@ let prepare_module_or_interface intf admitted env mname =
       sigmap=env.sigmap;
       scope_mods = List.map (fun lid -> Open_module_or_namespace (lid, Open_namespace)) open_ns;
       iface=intf;
-      admitted_iface=admitted;
-      default_result_effect=
-        (if lid_equals mname Const.all_lid || has_all_in_scope env
-         then Const.effect_ML_lid
-         else Const.effect_Tot_lid) } in
+      admitted_iface=admitted }
+  in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
-    | None -> prep env, false
+    | None ->
+        prep env, false
     | Some (_, m) ->
-      if not m.is_interface || intf
-      then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-      prep (push env), true //push a context so that we can pop it when we're done
+        if not (Options.interactive ()) && (not m.is_interface || intf)
+        then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
+        //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+        prep (push env), true //push a context so that we can pop it when we're done
 
 let enter_monad_scope env mname =
   match env.curmonad with

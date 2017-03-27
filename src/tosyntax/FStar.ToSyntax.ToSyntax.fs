@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.ToSyntax.ToSyntax
+open FStar.All
 
 open FStar
 open FStar.Util
@@ -32,7 +33,7 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 
-// VALS_HACK_HERE
+
 
 let trans_aqual = function
   | Some AST.Implicit -> Some S.imp_tag
@@ -67,6 +68,7 @@ let trans_qual r maybe_effect_id = function
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
   | AST.ResetOptions sopt -> S.ResetOptions sopt
+  | AST.LightOff -> S.LightOff
 
 let as_imp = function
     | Hash -> Some S.imp_tag
@@ -345,51 +347,51 @@ let rec sum_to_universe u n =
 let int_to_universe n = sum_to_universe U_zero n
 
 let rec desugar_maybe_non_constant_universe t
-    : either<int, Syntax.universe>  (* level of universe or desugared universe *)
-    =
-    match (unparen t).tm with
-        (* TODO : Check how this unification works *)
-        (* The unification might introduce universe variables *)
-    | Wild -> Inr (U_unif (Unionfind.fresh None))
-    | Uvar u -> Inr (U_name u)
+  : either<int, Syntax.universe>  (* level of universe or desugared universe *)
+=
+  match (unparen t).tm with
+      (* TODO : Check how this unification works *)
+      (* The unification might introduce universe variables *)
+  | Wild -> Inr (U_unif (Unionfind.fresh None))
+  | Uvar u -> Inr (U_name u)
 
-    | Const (Const_int (repr, _)) ->
-        (* TODO : That might be a little dangerous... *)
-        let n = int_of_string repr in
-        if n < 0
-        then raise (Error("Negative universe constant  are not supported : "
-                          ^ repr, t.range)) ;
-        Inl n
-    | Op (op_plus, [t1 ; t2]) ->
-        assert (op_plus = "+") ;
-        let u1 = desugar_maybe_non_constant_universe t1 in
-        let u2 = desugar_maybe_non_constant_universe t2 in
-        begin match u1, u2 with
-            | Inl n1, Inl n2 -> Inl (n1+n2)
-            | Inl n, Inr u
-            | Inr u, Inl n -> Inr (sum_to_universe u n)
-            | Inr u1, Inr u2 ->
-                raise(Error("This universe might contain a sum of two universe variables "
-                            ^ term_to_string t,
-                            t.range))
-        end
-    | App _ ->
-        let rec aux t univargs  =
-            match (unparen t).tm with
-                | App(t, targ, _) ->
-                    let uarg = desugar_maybe_non_constant_universe targ in
-                    aux t (uarg::univargs)
-                | Var max_lid ->
-                    assert (Ident.text_of_lid max_lid = "max") ;
-                    if List.existsb (function Inr _ -> true | _ -> false) univargs
-                    then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
-                    else
-                        let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
-                        Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
-                (* TODO : Might not be the best place to raise the error... *)
-                | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
-        in aux t []
-    | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
+  | Const (Const_int (repr, _)) ->
+      (* TODO : That might be a little dangerous... *)
+      let n = int_of_string repr in
+      if n < 0
+      then raise (Error("Negative universe constant  are not supported : "
+                        ^ repr, t.range)) ;
+      Inl n
+  | Op (op_plus, [t1 ; t2]) ->
+      assert (op_plus = "+") ;
+      let u1 = desugar_maybe_non_constant_universe t1 in
+      let u2 = desugar_maybe_non_constant_universe t2 in
+      begin match u1, u2 with
+          | Inl n1, Inl n2 -> Inl (n1+n2)
+          | Inl n, Inr u
+          | Inr u, Inl n -> Inr (sum_to_universe u n)
+          | Inr u1, Inr u2 ->
+              raise(Error("This universe might contain a sum of two universe variables "
+                          ^ term_to_string t,
+                          t.range))
+      end
+  | App _ ->
+      let rec aux t univargs  =
+        match (unparen t).tm with
+        | App(t, targ, _) ->
+            let uarg = desugar_maybe_non_constant_universe targ in
+            aux t (uarg::univargs)
+        | Var max_lid ->
+            assert (Ident.text_of_lid max_lid = "max") ;
+            if List.existsb (function Inr _ -> true | _ -> false) univargs
+            then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
+            else
+              let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
+              Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
+        (* TODO : Might not be the best place to raise the error... *)
+        | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
+      in aux t []
+  | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
 
 let rec desugar_universe t : Syntax.universe =
     let u = desugar_maybe_non_constant_universe t in
@@ -441,11 +443,11 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
   in
 
   begin match is_mut, p.pat with
-  | false, _
-  | true, PatVar _ ->
-      ()
-  | true, _ ->
-      raise (Error ("let-mutable is for variables only", p.prange))
+      | false, _
+      | true, PatVar _ ->
+          ()
+      | true, _ ->
+          raise (Error ("let-mutable is for variables only", p.prange))
   end;
   let push_bv_maybe_mut = if is_mut then push_bv_mutable else push_bv in
 
@@ -609,8 +611,8 @@ and desugar_machine_integer env repr (signedness, width) range =
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
-and desugar_name mk setpos (env: env_t) (l: lid) : S.term =
-    let tm, mut = fail_or env (Env.try_lookup_lid env) l in
+and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
+    let tm, mut = fail_or env ((if resolve then Env.try_lookup_lid else Env.try_lookup_lid_no_resolve) env) l in
     let tm = setpos tm in
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
@@ -683,12 +685,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
-        begin match try_lookup_effect_defn env eff_name with
+      (* TODO : would it be possible to normalize the effect name at that point so that *)
+      (* we get back the original effect definition instead of an effect abbreviation *)
+      begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
-            S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
+          S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
         | None ->
-            failwith "immpossible special_effect_combinator"
-        end
+          failwith (BU.format2 "Member %s of effect %s is not accessible \
+                                (using an effect abbreviation instead of the original effect ?)"
+                               (Ident.text_of_lid eff_name)
+                               txt)
+      end
 
     | Assign (ident, t2) ->
       let t2 = desugar_term env t2 in
@@ -699,16 +706,23 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Var l
     | Name l ->
-      desugar_name mk setpos env l
+      desugar_name mk setpos env true l
 
     | Projector (l, i) ->
-      let found =
-        Option.isSome (Env.try_lookup_datacon env l) ||
-        Option.isSome (Env.try_lookup_effect_defn env l)
+      let name =
+        match Env.try_lookup_datacon env l with
+        | Some _ -> Some (true, l)
+        | None ->
+          match Env.try_lookup_root_effect_name env l with
+          | Some new_name -> Some (false, new_name)
+          | _ -> None
       in
-      if found
-      then desugar_name mk setpos env (mk_field_projector_name_from_ident l i)
-      else raise (Error (BU.format1 "Data constructor or effect %s not found" l.str, top.range))
+      begin match name with
+      | Some (resolve, new_name) ->
+        desugar_name mk setpos env resolve (mk_field_projector_name_from_ident new_name i)
+      | _ ->
+        raise (Error (BU.format1 "Data constructor or effect %s not found" l.str, top.range))
+      end
 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
@@ -716,7 +730,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         raise (Error (BU.format1 "Data constructor %s not found" lid.str, top.range))
       | _ ->
         let lid' = U.mk_discriminator lid in
-        desugar_name mk setpos env lid'
+        desugar_name mk setpos env true lid'
       end
 
     | Construct(l, args) ->
@@ -758,12 +772,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let bs, t = uncurry binders t in
       let rec aux env bs = function
         | [] ->
-          let cod = desugar_comp top.range true env t in
+          let cod = desugar_comp top.range env t in
           setpos <| U.arrow (List.rev bs) cod
 
         | hd::tl ->
-          let mlenv = default_ml env in
-          let bb = desugar_binder mlenv hd in
+          let bb = desugar_binder env hd in
           let b, env = as_binder env hd.aqual bb in
           aux env (b::bs) tl in
       aux env [] bs
@@ -785,7 +798,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
-      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))@binders in //close over the free type variables
+      let binders = (ftv |> List.map (fun a ->
+                        mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))
+                    @binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
 
@@ -876,15 +891,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           else match un_function p def with
                 | Some (p, def) -> destruct_app_pattern env top_level p, def
                 | _ -> begin match p.pat with
-                                | PatAscribed({pat=PatVar(id,_)}, t) ->
-                                  if top_level
-                                  then (Inr (qualify env id), [], Some t), def
-                                  else (Inl id, [], Some t), def
-                                | PatVar(id, _) ->
-                                  if top_level
-                                  then (Inr (qualify env id), [], None), def
-                                  else (Inl id, [], None), def
-                                | _ -> raise (Error("Unexpected let binding", p.prange))
+                        | PatAscribed({pat=PatVar(id,_)}, t) ->
+                            if top_level
+                            then (Inr (qualify env id), [], Some t), def
+                            else (Inl id, [], Some t), def
+                        | PatVar(id, _) ->
+                            if top_level
+                            then (Inr (qualify env id), [], None), def
+                            else (Inl id, [], None), def
+                        | _ -> raise (Error("Unexpected let binding", p.prange))
                       end)
         in
 
@@ -927,13 +942,24 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               match result_t with
               | None -> def
               | Some t ->
-                if is_comp_type env t
-                then begin match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
-                     | None -> ()
-                     | Some p ->
-                        raise (Error ("Computation type annotations are only permitted on let-bindings without inlined patterns; replace this pattern with a variable", p.prange))
-                end;
-                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
+                let t =
+                    if is_comp_type env t
+                    then let _ =
+                            match args |> List.tryFind (fun x -> not (is_var_pattern x)) with
+                            | None -> ()
+                            | Some p ->
+                              raise (Error ("Computation type annotations are only permitted on let-bindings \
+                                             without inlined patterns; \
+                                             replace this pattern with a variable", p.prange)) in
+                         t
+                    else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
+                    && Option.isSome (Env.try_lookup_effect_name env C.effect_ML_lid) //ML is in scope (not still in prims, e.g)
+                    && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
+                    then AST.ml_comp t
+                    else AST.tot_comp t
+                in
+                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr
+            in
             let def = match args with
                  | [] -> def
                  | _ -> mk_term (un_curry_abs args def) top.range top.level in
@@ -1008,11 +1034,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      let env = Env.default_ml env in
-      let c = desugar_comp t.range true env t in
-      let annot = if U.is_ml_comp c
-                  then Inl (U.comp_result c)
-                  else Inr c in
+      let annot = if is_comp_type env t
+                  then Inr (desugar_comp t.range env t)
+                  else Inl (desugar_term env t) in
       mk <| Tm_ascribed(desugar_term env e, annot, None)
 
     | Record(_, []) ->
@@ -1081,7 +1105,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
 
-and desugar_comp r default_ok env t =
+and desugar_comp r env t =
     let fail : string -> 'a = fun msg -> raise (Error(msg, r)) in
     let is_requires (t, _) = match (unparen t).tm with
         | Requires _ -> true
@@ -1125,18 +1149,21 @@ and desugar_comp r default_ok env t =
              //we have an explicit effect annotation ... no need to add anything
              (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
 
-            | Name l when ((l.ident.idText="Type"
-                            || l.ident.idText="Type0"
-                            || l.ident.idText="Effect")
-                           && default_ok) ->
-              //the default effect for Type_level is always Tot
+            | Name l when (l.ident.idText="Type"
+                           || l.ident.idText="Type0"
+                           || l.ident.idText="Effect") ->
+              //the default effect for Type is always Tot
               (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
 
-            | _  when default_ok -> //add the default effect
-             (Ident.set_lid_range env.default_result_effect head.range, []), [t, Nothing]
-
             | _ ->
-             fail (BU.format1 "%s is not an effect" (AST.term_to_string t)) in
+             let default_effect =
+               if Options.ml_ish ()
+               then Const.effect_ML_lid
+               else (if Options.warn_default_effects()
+                     then FStar.Errors.warn head.range "Using default effect Tot";
+                     Const.effect_Tot_lid) in
+             (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
+    in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
     then fail (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
@@ -1481,7 +1508,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                             desugar_attributes env cattributes
                          | _ -> t, []
                  in
-                 let c = desugar_comp t.range false env' t in
+                 let c = desugar_comp t.range env' t in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
                  Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), cattributes @ comp_flags c, rng)
@@ -1518,30 +1545,34 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let tcs = List.rev tcs in
       let tps_sigelts = tcs |> List.collect (function
         | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), binders, t, quals) -> //type abbrevs in mutual type definitions
-	    let t =
-	      let env, tpars = typars_of_binders env binders in
-	      let env_tps, tpars = push_tparams env tpars in
-	      let t = desugar_typ env_tps t in
-	      let tpars = Subst.close_binders tpars in
-	      Subst.close tpars t
-            in
+	      let t =
+	          let env, tpars = typars_of_binders env binders in
+	          let env_tps, tpars = push_tparams env tpars in
+	          let t = desugar_typ env_tps t in
+	          let tpars = Subst.close_binders tpars in
+	          Subst.close tpars t
+          in
           [[], mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
+          let mk_tot t =
+            let tot = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range t.level in
+            mk_term (App(tot, t, Nothing)) t.range t.level in
           let tycon = (tname, tpars, k) in
           let env_tps, tps = push_tparams env tpars in
           let data_tpars = List.map (fun (x, _) -> (x, Some (S.Implicit true))) tps in
+          let tot_tconstr = mk_tot tconstr in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, topt, _, of_notation) ->
                 let t =
                   if of_notation
                   then match topt with
-                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tconstr)) t.range t.level
+                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tot_tconstr)) t.range t.level
                     | None -> tconstr
                   else match topt with
                     | None -> failwith "Impossible"
                     | Some t -> t in
-                let t = desugar_term (default_total env_tps) (close env_tps t) in
+                let t = desugar_term env_tps (close env_tps t) in
                 let name = qualify env id in
                 let quals = tags |> List.collect (function
                     | RecordType fns -> [RecordConstructor fns]
@@ -1582,14 +1613,49 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls actions for_free =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
-    let eff_k = desugar_term (Env.default_total env) eff_kind in
-    let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
+    let eff_t = desugar_term env eff_typ in
+
+    (* An effect for free has a type of the shape "a:Type -> Effect" *)
+    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
+
+    let mandatory_members =
+      let rr_members = ["repr" ; "return" ; "bind"] in
+      if for_free then rr_members
+      else
+        (* the first 3 are optional but must not be counted as actions *)
+        rr_members @ [
+          "return_wp";
+          "bind_wp";
+          "if_then_else";
+          "ite_wp";
+          "stronger";
+          "close_wp";
+          "assert_p";
+          "assume_p";
+          "null_wp";
+          "trivial"
+        ]
+    in
+
+    let name_of_eff_decl decl =
+      match decl.d with
+      | Tycon(_, [TyconAbbrev(name, _, _, _), _]) -> Ident.text_of_id name
+      | _ -> failwith "Malformed effect member declaration."
+    in
+
+    let mandatory_members_decls, actions =
+      List.partition (fun decl -> List.mem (name_of_eff_decl decl) mandatory_members) eff_decls
+    in
+
+    let env, decls = mandatory_members_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
-        env, List.hd ses::out) (env, []) in
+        env, List.hd ses::out)
+      (env, [])
+    in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with
         | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
@@ -1619,7 +1685,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
               and its cps-type with arrows inserted in the right place (see \
               examples).", d.drange))
     ) in
-    let eff_k = Subst.close binders eff_k in
+    let eff_t = Subst.close binders eff_t in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
@@ -1634,7 +1700,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           cattributes  = [];
           univs       = [];
           binders     = binders;
-          signature   = eff_k;
+          signature   = eff_t;
           ret_wp      = dummy_tscheme;
           bind_wp     = dummy_tscheme;
           if_then_else= dummy_tscheme;
@@ -1651,8 +1717,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           actions     = actions;
         }, d.drange)
       else
-        let rr =  qualifiers |> List.contains S.Reifiable
-               || qualifiers |> S.contains_reflectable in
+        let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
         let un_ts = [], Syntax.tun in
         Sig_new_effect({
           mname       = mname;
@@ -1660,7 +1725,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           cattributes  = [];
           univs       = [];
           binders     = binders;
-          signature   = eff_k;
+          signature   = eff_t;
           ret_wp      = lookup "return_wp";
           bind_wp     = lookup "bind_wp";
           if_then_else= lookup "if_then_else";
@@ -1676,20 +1741,22 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           return_repr = (if rr then lookup "return" else un_ts);
           actions     = actions;
         }, d.drange)
-      in
+    in
     let env = push_sigelt env0 se in
     let env = actions |> List.fold_left (fun env a ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        push_sigelt env (U.action_as_lb mname a)) env in
+        push_sigelt env (U.action_as_lb mname a)) env
+    in
     let env =
-        if quals |> List.contains Reflectable
-        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
-             push_sigelt env refl_decl
-        else env in
+      if quals |> List.contains Reflectable
+      then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+            let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
+            push_sigelt env refl_decl
+      else env
+    in
     env, [se]
 
-and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (build_sigelt:eff_decl -> Range.range -> sigelt) =
+and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1750,7 +1817,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (bu
                 })
                 ed.actions;
     } in
-    let se = build_sigelt ed d.drange in
+    let se =
+      (* An effect for free has a type of the shape "a:Type -> Effect" *)
+      let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
+      if for_free then Sig_new_effect_for_free (ed, d.drange) else Sig_new_effect (ed, d.drange)
+    in
     let monad_env = env in
     let env = push_sigelt env0 se in
     let env = ed.actions |> List.fold_left (fun env a ->
@@ -1769,6 +1840,8 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
   match d.d with
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
+    if p = LightOff
+    then Options.set_ml_ish();
     env, [se]
 
   | Fsdoc _ -> env, []
@@ -1914,29 +1987,13 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 
-  | KindAbbrev(id, binders, k) ->
-    let env_k, binders = desugar_binders env binders in
-    let k = desugar_term env_k k in
-    let name = Env.qualify env id in
-    let se = mk_typ_abbrev name [] binders tun k [name] [] d.drange in
-    let env = push_sigelt env se in
-    env, [se]
-
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect(ed, range))
+    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn
 
-  | NewEffectForFree (RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect_for_free(ed, range))
-
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
-    let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions true
-
-  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
-    let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions false
+    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with
@@ -1964,10 +2021,17 @@ let open_prims_all =
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool =
-  let env = match curmod with
-    | None -> env
-    | Some(prev_mod) ->  Env.finish_module_or_interface env prev_mod in
+let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
+  let env = match curmod, m with
+    | None, _ ->
+        env
+    | Some ({ name = prev_lid }), Module (current_lid, _)
+      when lid_equals prev_lid current_lid && Options.interactive () ->
+        // If we're in the interactive mode reading the contents of an fst after
+        // desugaring the corresponding fsti, don't finish the fsti
+        env
+    | Some prev_mod, _ ->
+        Env.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       Env.prepare_module_or_interface true admitted env mname, mname, decls, true
@@ -1992,7 +2056,9 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
       | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in
-  let x, y, _ = desugar_modul_common curmod env m in
+  let x, y, pop_when_done = desugar_modul_common curmod env m in
+  if pop_when_done then
+    ignore (pop ());
   x,y
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =

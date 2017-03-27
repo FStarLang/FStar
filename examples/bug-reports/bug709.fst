@@ -8,7 +8,7 @@ let bind_st (s:Type) (a:Type) (b:Type)
             (f:st s a) (g:a -> Tot (st s b)) : st s b =
   fun s0 -> let x, s1 = f s0 in g x s1
 
-new_effect_for_free {
+new_effect {
   STATE (s:Type) : a:Type -> Effect
   with repr     = st s
      ; bind     = bind_st s

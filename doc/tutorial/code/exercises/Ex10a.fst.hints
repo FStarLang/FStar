@@ -1,5 +1,5 @@
 [
-  "ºgÉæ\u000fDòË,ÑË9\u0003˜‚G",
+  "(æÁAøÌN¡t)>MÖÜúm",
   [
     [
       "Ex10a.entry",
@@ -72,14 +72,6 @@
       0
     ],
     [
-      "Ex10a.revoke",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
-      0
-    ],
-    [
       "Ex10a.safe_delete",
       1,
       2,
@@ -118,10 +110,10 @@
         "disc_equation_Prims.Some", "eq2-interp", "equation_Ex10a.canRead",
         "equation_Ex10a.canRead_t", "equation_Ex10a.db",
         "equation_FStar.ST.ref",
-        "equation_with_fuel_FStar.List.Tot.tryFind.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.tryFind.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
-        "interpretation_Tm_abs_80a1794b5fbb6422b5f4d011b6357843",
+        "interpretation_Tm_abs_928dc2ad90e939fe9c5b6ca765f2e743",
         "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_Prims.Cons_a",

@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.ToSyntax.Env
+open FStar.All
 
 
 open FStar
@@ -87,7 +88,6 @@ type env = {
   includes:             BU.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
   sigmap:               BU.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
-  default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
@@ -103,15 +103,18 @@ val fail_or2: (ident -> option<'a>) -> ident -> 'a
 val qualify: env -> ident -> lident
 
 val empty_env: unit -> env
-val default_total: env -> env
-val default_ml: env -> env
-
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val try_lookup_lid: env -> lident -> option<(term*bool)>
+val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
+(* [try_lookup_root_effect_name] is the same as
+[try_lookup_effect_name], but also traverses effect abbrevs. TODO:
+once indexed effects are in, also track how indices and other
+arguments are instantiated. *)
+val try_lookup_root_effect_name: env -> lident -> option<lident>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
 val belongs_to_record: env -> lident -> record_or_dc -> bool
@@ -129,10 +132,10 @@ val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
 
-val pop: env -> env
+val pop: unit -> env
 val push: env -> env
 val mark: env -> env
-val reset_mark: env -> env
+val reset_mark: unit -> env
 val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring

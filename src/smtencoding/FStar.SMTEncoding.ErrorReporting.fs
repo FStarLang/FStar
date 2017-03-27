@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.ErrorReporting
+open FStar.All
 open FStar
 open FStar.BaseTypes
 open FStar.Util
@@ -236,6 +237,11 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, pats, iopt, sorts, body) ->
           let labels, body = aux default_msg ropt post_name_opt labels body in
           labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
+
+        (* TODO (KM) : I am not sure whether we should label the let-bounded expressions here *)
+        | Let(es, body) ->
+          let labels, body = aux default_msg ropt post_name_opt labels body in
+          labels, Term.mkLet (es, body) q.rng
     in
     aux "assertion failed" None None [] q
 
@@ -282,6 +288,8 @@ let detail_errors env
               sort_labels results
 
             | hd::tl ->
+	      BU.print1 "%s, " (BU.string_of_int (List.length active));
+	      FStar.SMTEncoding.Z3.refresh();
               let result, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
               if BU.is_left result //hd is provable
               then linear_check (hd::eliminated) errors tl
@@ -290,6 +298,7 @@ let detail_errors env
     print_banner ();
     Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
+    BU.print_string "\n";
     res |> List.iter print_result;
     []
 //    let dummy, _, _ = all_labels |> List.hd in

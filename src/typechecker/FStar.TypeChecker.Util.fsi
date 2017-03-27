@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Util
+open FStar.All
 
 open FStar
 open FStar.TypeChecker
@@ -83,10 +84,6 @@ val mk_toplevel_definition: env -> lident -> term -> sigelt * term
 //decorating terms with monadic operators
 val maybe_lift: env -> term -> lident -> lident -> typ -> term
 val maybe_monadic: env -> term -> lident -> typ -> term
-
-//reification
-val reify_comp: env -> lcomp -> universe -> term
-val effect_repr: env -> comp -> universe -> option<term>
 
 //qualifiers
 val check_sigelt_quals: env -> sigelt -> unit

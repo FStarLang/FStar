@@ -21,6 +21,7 @@
     (not module names).
 *)
 module FStar.Parser.Dep
+open FStar.All
 
 open FStar
 open FStar.Parser
@@ -50,7 +51,7 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
-//VALS_HACK_HERE
+
 
 let check_and_strip_suffix (f: string): option<string> =
   let suffixes = [ ".fsti"; ".fst"; ".fsi"; ".fs" ] in
@@ -102,6 +103,8 @@ let lowercase_module_name f =
     (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
+  //try to convert the cygwin paths to windows paths
+  let include_directories = List.map FStar.Common.try_convert_file_name_to_mixed include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -249,10 +252,8 @@ let collect_one
   let auto_open =
     if basename filename = "prims.fst" then
       []
-    else if starts_with (String.lowercase (basename filename)) "fstar." then
-      [ Const.fstar_ns_lid; Const.prims_lid ]
     else
-      [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ]
+      [ Const.fstar_ns_lid; Const.prims_lid ]
   in
   List.iter (record_open false) auto_open;
 
@@ -310,9 +311,6 @@ let collect_one
         record_module_alias ident lid
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
-    | KindAbbrev (_, binders, t) ->
-        collect_term t;
-        collect_binders binders
     | Main t
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
@@ -327,7 +325,6 @@ let collect_one
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree ed
     | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _
@@ -357,11 +354,10 @@ let collect_one
         List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls, actions) ->
+    | DefineEffect (_, binders, t, decls) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls;
-        collect_decls actions
+        collect_decls decls
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t
@@ -395,7 +391,8 @@ let collect_one
         collect_constant c
     | Op (s, ts) ->
         if s = "@" then
-          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.append") Range.dummyRange));
+          (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
+          collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
         List.iter collect_term ts
     | Tvar _
     | AST.Uvar _ ->
@@ -658,7 +655,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
-  ) (smap_keys graph) in
+  ) (FStar.List.sortWith (fun x y -> String.compare x y) (smap_keys graph)) in
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   List.iter (fun (m, r) ->
@@ -683,7 +680,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     format. *)
 let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
+    let deps = List.map (fun s -> replace_chars s ' ' "\\ ") deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 

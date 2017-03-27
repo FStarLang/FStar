@@ -4,6 +4,34 @@ open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
+val pow2_values: x:nat -> Lemma
+  (requires True)
+  (ensures (let p = pow2 x in
+   match x with
+   | 0  -> p=1
+   | 1  -> p=2
+   | 8  -> p=256
+   | 16 -> p=65536
+   | 31 -> p=2147483648
+   | 32 -> p=4294967296
+   | 63 -> p=9223372036854775808
+   | 64 -> p=18446744073709551616
+   | 128 -> p=0x100000000000000000000000000000000
+   | _  -> True))
+  [SMTPat (pow2 x)]
+let pow2_values x =
+   match x with
+   | 0  -> assert_norm (pow2 0 == 1)
+   | 1  -> assert_norm (pow2 1 == 2)
+   | 8  -> assert_norm (pow2 8 == 256)
+   | 16 -> assert_norm (pow2 16 == 65536)
+   | 31 -> assert_norm (pow2 31 == 2147483648)
+   | 32 -> assert_norm (pow2 32 == 4294967296)
+   | 63 -> assert_norm (pow2 63 == 9223372036854775808)
+   | 64 -> assert_norm (pow2 64 == 18446744073709551616)
+   | 128 -> assert_norm (pow2 128 = 0x100000000000000000000000000000000)
+   | _  -> ()
+
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
  * a copy-paste of this module. *)
 
@@ -226,7 +254,7 @@ val seq_slice_lemma: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> t1:nat{t1 >= s1 && 
   Lemma (equal (slice (slice a s1 t1) s2 t2) (slice a (s1 + s2) (s1 + t2)))
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#set-options "--initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 20"
 
 val from_vec_propriety: #n:pos -> a:bv_t n -> s:nat{s < n} ->
   Lemma (requires True)
@@ -553,7 +581,7 @@ let logor_disjoint #n a b m =
   assert (b < pow2 m); // To trigger pattern above
   assert (forall (i:nat{i < n - m}).{:pattern (index (to_vec b) i)}
     index (to_vec b) i == false);
-  SeqProperties.lemma_split (logor_vec (to_vec a) (to_vec b)) (n - m);
+  Seq.lemma_split (logor_vec (to_vec a) (to_vec b)) (n - m);
   Seq.lemma_eq_intro
     (logor_vec (to_vec a) (to_vec b))
     (append (slice (to_vec a) 0 (n - m)) (slice (to_vec b) (n - m) n));
@@ -569,7 +597,7 @@ val logand_mask: #n:pos -> a:uint_t n -> m:pos{m < n} ->
   Lemma (pow2 m < pow2 n /\ logand #n a (pow2 m - 1) == a % pow2 m)
 let logand_mask #n a m =
   pow2_lt_compat n m;
-  SeqProperties.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
+  Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
   Seq.lemma_eq_intro
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));

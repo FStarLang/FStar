@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Const
@@ -23,6 +24,7 @@ open FStar.Util
 
 val db_to_string      : bv -> string
 val bv_to_string      : bv -> string
+val nm_to_string      : bv -> string
 val lid_to_string     : lid -> string
 val term_to_string    : term -> string
 val uvar_to_string    : FStar.Unionfind.uvar<'a> -> string

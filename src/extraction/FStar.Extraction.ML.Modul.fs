@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
+open FStar.All
 open FStar
 open FStar.Util
 open FStar.Syntax.Syntax
@@ -140,7 +141,7 @@ let extract_bundle env se =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in
         let fvv = mkFvvar ctor.dname ctor.dtyp in
-        extend_fv env fvv tys false false,
+        fst (extend_fv env fvv tys false false),
         (lident_as_mlsymbol ctor.dname, argTypes mlt) in
 
     let extract_one_family env ind =
@@ -208,10 +209,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_new_effect(ed, _) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
-            let mangled_name = snd ml_name in
-            let g = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
+            let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
             let lb = {
-                mllb_name=(mangled_name, 0);
+                mllb_name=mangled_name;
                 mllb_tysc=None;
                 mllb_add_unit=false;
                 mllb_def=tm;
@@ -223,7 +223,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             | Tm_uinst (tm, _) -> extract_fv tm
             | Tm_fvar fv ->
               let mlp = mlpath_of_lident fv.fv_name.v in
-              let _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
+              let _, _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
               with_ty MLTY_Top <| MLE_Name mlp, tysc
             | _ -> failwith "Not an fv" in
 
@@ -270,8 +270,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   let g, ml_lb =
                     if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                     then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                         let env = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                         env, {ml_lb with mllb_name=(snd mname, 0)}
+                         let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                         env, {ml_lb with mllb_name=(snd mname,0)}
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in
@@ -329,20 +329,26 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
-       | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
-       | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
+       | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+         g, []
+       | Sig_pragma (p, _) ->
+         if p = S.LightOff
+         then Options.set_ml_ish();
          g, []
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
-let rec extract (g:env) (m:modul) : env * list<mllib> =
+let extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
+  let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with currentModule = name}  in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
-  if m.name.str <> "Prims" && not m.is_interface && Options.should_extract m.name.str then begin
+  let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
+  if m.name.str <> "Prims" && (is_kremlin || not m.is_interface) && Options.should_extract m.name.str then begin
     BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
     g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
-  end else
+  end else begin
     g, []
+  end

@@ -1,4 +1,0 @@
-Beginning of file1
-1234567890 abcdefghifklmnopqrstuvwxyz
-Un peu de francais ne fait jamais de mal.
-End of file1

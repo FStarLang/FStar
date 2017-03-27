@@ -2,7 +2,7 @@
 #require "zarith";;
 #require "batteries";;
 #load "../../ulib/ml/prims.cmo";;
-#load "out/FStar_List_Tot.cmo";;
+#load "out/FStar_List_Tot_Base.cmo";;
 #load "out/Huffman.cmo";;
 
 open Huffman;;
