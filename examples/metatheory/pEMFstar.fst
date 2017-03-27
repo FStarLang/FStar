@@ -1,5 +1,6 @@
 module PEMFstar
 
+module L = FStar.List.Tot
 
 type universe_level = nat
 
@@ -32,32 +33,83 @@ and const =
   | EqElim : const
 
 
-let cnat = Const Nat
-let czero = Const Zero
-let csucc = Const Succ
-let cnat_elim = Const NatElim
-let ceq = Const Eq
-let crefl = Const Refl
-let ceq_elim = Const EqElim
+let cnat = Const Nat []
+let czero = Const Zero []
+let csucc = Const Succ []
+(* TODO : put the right universes *)
+let cnat_elim = Const NatElim []
+let ceq = Const Eq []
+let crefl = Const Refl []
+let ceq_elim = Const EqElim []
 let arr t1 t2 = Prod t1 (Tot_ t2)
 let app e1 e2 = App e1 e2
 let type_0 = Type_ 0
 let succ n = app csucc n
-let refl e = app refl e
-let eq t e1 e2 = eq `app` t `app` e1 `app` e2
+let refl e = app crefl e
+let eq t e1 e2 = ceq `app` t `app` e1 `app` e2
 
 
 
-(* Derived term (one hole term contexts) *)
-type dterm =
-  | Hole : dterm
-  | DApp1 : dterm -> term -> dterm
-  | DApp2 : term -> dterm -> dterm
-  | 
+(* Derived term (n hole term contexts) *)
+type dterm : nat -> Type =
+  | Term : term -> dterm 0
+  | Hole : dterm 1
+  | DApp : #n1:nat -> #n2:nat -> dterm n1 -> dterm n2 -> dterm (n1 + n2)
+  | DLam : #n1:nat -> #n2:nat -> dterm n1 -> dterm n2 -> dterm (n1 + n2)
+  | DProd : #n1:nat -> #n2:nat -> dterm n1 -> dcomp n2 -> dterm (n1 + n2)
+  | DRefine : #n1:nat -> #n2:nat -> dterm n1 -> dterm n2 -> dterm (n1 + n2)
+
+(* Derived computation (n hole computation context) *)
+and dcomp : nat -> Type =
+  | DTot : #n:nat -> dterm n -> dcomp n
+  | DPure : #n1:nat -> #n2:nat -> dterm n1 -> dterm n2 -> dcomp (n1 + n2)
+
+let sum = L.fold_left (+) 0
+let rec first_N (#a:Type) (n:nat) (l:list a) : list a * list a =
+  if n = 0 then [], l
+  else
+    match l with
+    | [] -> [], l
+    | x :: xs -> let l1, l2 = first_N (n-1) xs in x :: l1, l2
+
+let (<|) f x = f x
+
+(* Operadic composition for derived term *)
+let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k))
+  : Pure (dterm (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k))
+    (requires (b2t <| L.length l >= n))
+    (ensures (fun (c', l') -> snd (first_N n l) == l'))
+= match c with
+  | Term t -> c, l
+  | Hole -> let x :: xs = l in x, xs
+  | DApp #n1 #n2 c1 c2 ->
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DApp c1' c2', l
+  | DProd c1 c2 ->
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended_comp c2 l in
+    DProd c1' c2', l
+  | DRefine #n1 #n2 c1 c2 ->
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DRefine c1' c2', l
+
+and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k))
+  : Pure (dcomp (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k))
+    (requires (L.length l >= n))
+    (ensures (fun (c', l') -> snd (first_N n l) == l'))
+= match c with
+  | DTot c -> let c', l = dterm_comp_extended c l in DTot c', l
+  | DPure c1 c2 ->
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DPure c1' c2', l
 
 
-
-
+(* let dterm_comp (#n:nat) (c:dterm n) (l:list (k:nat & dterm k){L.length l == n}) *)
+(*   : dterm (sum <| L.map dfst l) *)
+(* = dterm_comp_extended *)
 
 
 
@@ -517,28 +569,28 @@ and typing_const : env -> const -> term -> Type =
   | TyEqElim : typing_const EqElim eq_elim_type
 
 
-let typing_equiv (g:env) (t1 t2 : term) =
-    (tt:term -> typing g t1 tt -> typing g t2 tt) * (tt:term -> typing g t2 tt -> typing g t1 tt)
+(* let typing_equiv (g:env) (t1 t2 : term) = *)
+(*     (tt:term -> typing g t1 tt -> typing g t2 tt) * (tt:term -> typing g t2 tt -> typing g t1 tt) *)
 
-let rec def_eq_well_typed #g #t1 #t2 (deq:def_eq t1 t2)
-  : Tot (typing_equiv g t1 t2)
-= match deq with
-  | DEqRefl _ -> let id (t:term) (x:typing g t1 t) = x in id, id
-  | DEqSymm deq -> let (a,b) = def_eq_well_typed deq in (b,a)
-  | DEqTrans deq1 deq2 ->
-    let (a1, b1) = def_eq_well_typed deq1 in
-    let (a2, b2) = def_eq_well_typed deq2 in
-    (fun t x -> a2 t (a1 t x)), (fun t x -> b1 t (b2 t x))
-  | DEqApp deq1 deq2 ->
-    let (a1, b1) = def_eq_well_typed deq1 in
-    let (a2, b2) = def_eq_well_typed deq2 in
-    let a tt (x:typing g t1 t) =
-      match x with
-      | TyApp #g #t #e1 #c #e2 he1 he2 ->
-        TyApp (a1 he1) (a2 he2)
-      | TyConv 
-      let TyApp ()
+(* let rec def_eq_well_typed #g #t1 #t2 (deq:def_eq t1 t2) *)
+(*   : Tot (typing_equiv g t1 t2) *)
+(* = match deq with *)
+(*   | DEqRefl _ -> let id (t:term) (x:typing g t1 t) = x in id, id *)
+(*   | DEqSymm deq -> let (a,b) = def_eq_well_typed deq in (b,a) *)
+(*   | DEqTrans deq1 deq2 -> *)
+(*     let (a1, b1) = def_eq_well_typed deq1 in *)
+(*     let (a2, b2) = def_eq_well_typed deq2 in *)
+(*     (fun t x -> a2 t (a1 t x)), (fun t x -> b1 t (b2 t x)) *)
+(*   | DEqApp deq1 deq2 -> *)
+(*     let (a1, b1) = def_eq_well_typed deq1 in *)
+(*     let (a2, b2) = def_eq_well_typed deq2 in *)
+(*     let a tt (x:typing g t1 t) = *)
+(*       match x with *)
+(*       | TyApp #g #t #e1 #c #e2 he1 he2 -> *)
+(*         TyApp (a1 he1) (a2 he2) *)
+(*       | TyConv  *)
+(*       let TyApp () *)
 
-let rec typing_type_well_typed #g #e #t (d:typing g e t) : u:universe & typing g t (Type_ u)
-= match d with
-  |
+(* let rec typing_type_well_typed #g #e #t (d:typing g e t) : u:universe & typing g t (Type_ u) *)
+(* = match d with *)
+(*   | *)
