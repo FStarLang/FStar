@@ -129,6 +129,23 @@ let mul_commute_ascription : tactic unit
       apply_lemma (quote lemma_mul_comm)
     | _ -> fail "Not an equality"
 
+let rec unfold_definition_and_simplify_eq (tm:term) 
+  : tactic unit 
+  = fun () -> 
+      let _, goal_t = cur_goal () in  // G |- x=e ==> P
+      match term_as_formula goal_t with
+      | Some (App hd arg) ->
+        if term_eq hd tm then trivial ()
+      | _ -> begin
+        match destruct_equality_implication goal_t with
+        | None -> fail "Not an equality implication"
+        | Some (_, rhs) ->
+          let eq_h = implies_intro () in  // G, eq_h:x=e |- P
+          rewrite eq_h; // G, eq_h:x=e |- P[e/x]
+          clear ();     // G |- P[e/x]
+          visit (unfold_definition_and_simplify_eq tm)
+       end
+
 ////////////////////////////////////////////////////////////////////////////////
 // End of tactic code 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,17 +159,25 @@ let simple_equality_assertions =
   assert_by_tactic rewrite_all_equalities
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z))
 
+
 let visible_boolean (x:int) = true
+let explicitly_trigger_normalizer =
+  assert_by_tactic (seq split trivial) (visible_boolean 0 /\ visible_boolean 1) //without the "trivial", the visible_boolean will go to Z3
+
 unfold let unfoldable_predicate (x:int) = True
+let implicitly_unfolfed_before_preprocessing =
+  assert_by_tactic smt
+                   (unfoldable_predicate 0 /\ visible_boolean 2) //only "b2t (visible_boolean 2)" goes to SMT
+
+let visible_predicate (x:int) = True
 let simple_equality_assertions_within_a_function () =
   assert_by_tactic rewrite_all_equalities
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)); //identical to one of the queries above, but now inside a function, which produces a slightly different VC
   assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); (* gets solved before it even reaches the tactic, although it should not *)
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ unfoldable_predicate x)
+                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized
+  assert_by_tactic (fun () -> visit (unfold_definition_and_simplify_eq (quote visible_predicate)))
+                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away
 
-  
 let local_let_bindings =
   assert_by_tactic trivial (let x = 10 in x + 0 == 10)
 
@@ -187,7 +212,7 @@ let test_apply_ascription (x:nat) (y:nat) =
   <: Tot unit
   by (fun () -> visit mul_commute_ascription)
 
-(* this fails, rightfully, since the top-level goal is not 
+(* this fails, rightfully, since the top-level goal is not *)
 (* let test_apply_ascription_fail (x:nat) (y:nat) = *)
 (*   assert (op_Multiply x y == op_Multiply y x) *)
 (*   <: Tot unit *)

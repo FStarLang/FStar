@@ -458,11 +458,11 @@ let gen_wps_for_free
           let guard_free =  S.fv_to_tm (S.lid_as_fv Const.guard_free Delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
-          U.close_forall binders pattern_guarded_body
+          U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
     let body  = U.abs gamma (
-      U.mk_forall k (U.mk_imp
+      U.mk_forall_no_univ k (U.mk_imp
         equiv
         (U.mk_app (S.bv_to_name wp) (args_of_binders wp_args @ [ S.as_arg (S.bv_to_name k) ])))
     ) ret_gtot_type in
@@ -475,7 +475,7 @@ let gen_wps_for_free
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     let x = S.gen_bv "x" None S.tun in
-    let body = U.mk_forall x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
+    let body = U.mk_forall_no_univ x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in

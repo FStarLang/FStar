@@ -69,7 +69,7 @@ effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
 let tactic (a:Type) = unit -> Tac a
 
 (* working around #885 *)
-let fail_ (a:Type) (msg:string) : tac a = fun s0 -> Failed #a "No message for now" s0
+let fail_ (a:Type) (msg:string) : tac a = fun s0 -> Failed #a msg s0
 let fail (#a:Type) (msg:string) = TAC?.reflect (fail_ a msg)
 
 let or_else (#a:Type) (t1:tactic a) (t2:tactic a)
@@ -140,3 +140,5 @@ let exact (t:term) : Tac unit = TAC?.reflect (exact_ t)
 
 assume val apply_lemma_ : term -> tac unit
 let apply_lemma (t:term) : Tac unit = TAC?.reflect (apply_lemma_ t)
+
+abstract let embed (#a:Type0) (x:a) : Tot a = a

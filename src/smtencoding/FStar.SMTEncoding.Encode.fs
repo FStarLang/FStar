@@ -2369,7 +2369,7 @@ let encode_query use_env_msg tcenv q
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux bindings in
-        U.close_forall (List.rev closing) q, bindings
+        U.close_forall_no_univs (List.rev closing) q, bindings
     in
     let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
     if debug tcenv Options.Low

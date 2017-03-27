@@ -662,6 +662,11 @@ let is_reify_head = function
     | _ ->
       false
 
+let is_fstar_tactics_quote t =
+    match (U.un_uinst t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote_lid
+    | _ -> false
+
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
@@ -683,6 +688,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
+
+          | Tm_app({n=Tm_fvar fv}, _)
+            when S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid ->
+            rebuild cfg env stack t //embedded terms should not be normalized
+
+          | Tm_app(hd, args)
+            when is_fstar_tactics_quote hd ->
+            let args = closures_as_args_delayed cfg env args in
+            let t = {t with n=Tm_app(hd, args)} in
+            let t = reduce_primops cfg t in
+            rebuild cfg env stack t //quoted terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)

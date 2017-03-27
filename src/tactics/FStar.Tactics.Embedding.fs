@@ -31,7 +31,8 @@ let fstar_tactics_binder = mk_tactic_lid_as_term "binder"
 let fstar_tactics_binders= mk_tactic_lid_as_term "binders"
 let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
 let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
-let fstar_tactics_formula  = mk_tactic_lid_as_term "formula"
+let fstar_tactics_formula= mk_tactic_lid_as_term "formula"
+let fstar_tactics_embed  = mk_tactic_lid_as_term "embed"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))
 let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
@@ -51,9 +52,27 @@ let fstar_tactics_App = fstar_tactics_lid_as_data_tm "App"
 let fstar_tactics_Name = fstar_tactics_lid_as_data_tm "Name"
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
+
+let protect_embedded_term (t:typ) (x:term) =
+    S.mk_Tm_app fstar_tactics_embed [S.iarg t; S.as_arg x] None x.pos
+
+let un_protect_embedded_term : term -> term =
+    let embed_lid = fstar_tactics_lid "embed" in
+    fun (t:term) ->
+        let head, args = U.head_and_args t in
+        match (SS.compress head).n, args with
+        | Tm_fvar fv, [_; (x, _)]
+            when S.fv_eq_lid fv embed_lid ->
+          x
+        | _ ->
+          failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
+
 exception Unembed_failed of string
-let embed_binder (b:binder) : term = S.bv_to_name (fst b)
+let embed_binder (b:binder) : term =
+    protect_embedded_term fstar_tactics_binder (S.bv_to_name (fst b))
+
 let unembed_binder (t:term) : binder =
+    let t = un_protect_embedded_term t in
     let t = U.unascribe t in
     match t.n with
     | Tm_name bv -> S.mk_binder bv
@@ -127,9 +146,12 @@ let embed_binders l = embed_list l embed_binder fstar_tactics_binder
 let unembed_binders t = unembed_list t unembed_binder
 
 let embed_env (env:Env.env) : term =
-    embed_list (Env.all_binders env) embed_binder fstar_tactics_binder
+    protect_embedded_term
+        fstar_tactics_env
+        (embed_list (Env.all_binders env) embed_binder fstar_tactics_binder)
 
-let unembed_env (env:Env.env) (embedded_env:term) : Env.env =
+let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
+    let embedded_env = un_protect_embedded_term protected_embedded_env in
     let binders = unembed_list embedded_env unembed_binder in
     printfn "Unembedding environment: %s" (Print.binders_to_string ", " binders);
     List.fold_left (fun env b ->
@@ -137,19 +159,25 @@ let unembed_env (env:Env.env) (embedded_env:term) : Env.env =
         | None -> Env.push_binders env [b]
         | _ -> env) env binders
 
+let embed_term (t:term) : term =
+    protect_embedded_term fstar_tactics_term t
+
+let unembed_term (t:term) : term =
+    un_protect_embedded_term t
+
 let embed_goal (g:goal) : term =
-    embed_pair (g.context, g.goal_ty) embed_env fstar_tactics_env (fun x -> x) fstar_tactics_term
+    embed_pair (g.context, g.goal_ty)
+                embed_env fstar_tactics_env
+                embed_term fstar_tactics_term
 
 let unembed_goal (env:Env.env) (t:term) : goal =
-    let env, goal_ty = unembed_pair t (unembed_env env) (fun x -> x) in
+    let env, goal_ty = unembed_pair t (unembed_env env) unembed_term in
     {
       context = env;
       goal_ty = goal_ty;
       witness = None //TODO: sort this out for proof-relevant goals
     }
 
-let embed_term (t:term) : term = t
-let unembed_term (t:term) : term = t
 
 let embed_goals (l:list<goal>) : term = embed_list l embed_goal fstar_tactics_goal
 let unembed_goals (env:Env.env) (egs:term) : list<goal> = unembed_list egs (unembed_goal env)
@@ -236,7 +264,7 @@ let embed_formula (f:formula) : term =
             else failwith ("Unrecognized connective" ^ (Ident.string_of_lid l)) in
         match args with
         | [] -> hd
-        | _ -> S.mk_Tm_app hd args None Range.dummyRange
+        | _ -> S.mk_Tm_app hd (List.map (fun (x, _) -> S.as_arg (embed_term x)) args) None Range.dummyRange
     in
     match f with
     | Connective (U.QAll(binders, qpats, typ)) -> //patterns are not encoded to a user tactic; TODO, fix?

@@ -659,7 +659,7 @@ and tc_value env (e:term) : term
     check_smt_pat env e bs c;
     let u = S.U_max (uc::us) in
     let t = mk (Tm_type u) None top.pos in
-    let g = Rel.conj_guard g (Rel.close_guard bs f) in
+    let g = Rel.conj_guard g (Rel.close_guard_univs us bs f) in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_type u ->
@@ -680,7 +680,7 @@ and tc_value env (e:term) : term
     let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_phi in
     let e = {U.refine (fst x) phi with pos=top.pos} in
     let t = mk (Tm_type u) None top.pos in
-    let g = Rel.conj_guard f1 (Rel.close_guard [x] f2) in
+    let g = Rel.conj_guard f1 (Rel.close_guard_univs [u] [x] f2) in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_abs(bs, body, _) ->
@@ -969,7 +969,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 //                | Some tac -> Rel.map_guard guard (Common.mk_by_tactic tac) in
     let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
-                else let guard = Rel.close_guard (bs@letrec_binders) (Rel.conj_guard g guard) in
+                else let guard = Rel.close_guard env (bs@letrec_binders) (Rel.conj_guard g guard) in
                      guard in
 
     let tfun_computed = U.arrow bs cbody in
@@ -1469,7 +1469,7 @@ and tc_eqn scrutinee env branch
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
     TcUtil.close_comp env pat_bvs c_weak,
-    Rel.close_guard binders g_when_weak,
+    Rel.close_guard env binders g_when_weak,
     g_branch
   in
 
@@ -1652,7 +1652,7 @@ and check_inner_let env e =
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
-       let g2 = Rel.close_guard xb
+       let g2 = Rel.close_guard env xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
        let guard = Rel.conj_guard g1 g2 in
 
@@ -1735,7 +1735,7 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
-          let guard = Rel.conj_guard g_lbs (Rel.close_guard (List.map S.mk_binder bvs) g2) in
+          let guard = Rel.conj_guard g_lbs (Rel.close_guard env (List.map S.mk_binder bvs) g2) in
           let cres = TcUtil.close_comp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
@@ -1885,7 +1885,7 @@ and tc_binders env bs =
         | b::bs ->
           let b, env', g, u = tc_binder env b in
           let bs, env', g', us = aux env' bs in
-          b::bs, env', Rel.conj_guard g (Rel.close_guard [b] g'), u::us in
+          b::bs, env', Rel.conj_guard g (Rel.close_guard_univs [u] [b] g'), u::us in
     aux env bs
 
 and tc_pats env pats =

@@ -49,8 +49,8 @@ type squash (p:Type) : Type0 = x:unit{p}
 (*
  * Squashed versions of truth and falsehood
  *)
-irreducible type l_True = squash c_True
-irreducible type l_False = squash c_False
+type l_True = squash c_True
+type l_False = squash c_False
 
 (* An SMT-pattern to control unfolding inductives;
    In a proof, you can say `allow_inversion (option a)`
@@ -67,14 +67,14 @@ type equals (#a:Type) (x:a) : a -> Type =
 *)
 //TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
-irreducible type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
+type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
 
 (* Heterogeneous equality *)
 type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
   | HRefl : h_equals x x
 
 (* A proof-irrelevant version of h_equals *)
-irreducible type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
+type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
 
 unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
 
@@ -86,7 +86,7 @@ type c_and  (p:Type) (q:Type) =
   | And   : p -> q -> c_and p q
 
 (* '/\'  : specialized to Type#0 *)
-irreducible type l_and (p:Type0) (q:Type0) = squash (c_and p q)
+type l_and (p:Type0) (q:Type0) = squash (c_and p q)
 
 (* constructive disjunction *)
 type c_or   (p:Type) (q:Type) =
@@ -94,17 +94,17 @@ type c_or   (p:Type) (q:Type) =
   | Right : q -> c_or p q
 
 (* '\/'  : specialized to Type#0 *)
-irreducible type l_or (p:Type0) (q:Type0) = squash (c_or p q)
+type l_or (p:Type0) (q:Type0) = squash (c_or p q)
 
 (* '==>' : specialized to Type#0 *)
-irreducible type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
+type l_imp (p:Type0) (q:Type0) = squash (p -> GTot q)
                                          (* ^^^ NB: The GTot effect is primitive;            *)
 				         (*         elaborated using GHOST a few lines below *)
 (* infix binary '<==>' *)
-irreducible type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
+type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 
 (* prefix unary '~' *)
-irreducible type l_not (p:Type) = l_imp p False
+type l_not (p:Type) = l_imp p False
 
 unfold type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
@@ -115,7 +115,7 @@ assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 assume type has_type : #a:Type -> a -> Type -> Type0
   
 (* forall (x:a). p x : specialized to Type#0 *)
-irreducible type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
+type l_Forall (#a:Type) (p:a -> GTot Type0) = squash (x:a -> GTot (p x))
 
 (* The type of squashed types *)
 type prop = a:Type0{ forall (x:a). x === () }
@@ -128,7 +128,7 @@ unopteq type dtuple2 (a:Type)
             -> dtuple2 a b
 
 (* exists (x:a). p x : specialized to Type#0 *)
-irreducible type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
+type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 assume new type range : Type0
 assume val range_0:range

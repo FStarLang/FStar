@@ -38,6 +38,91 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
+(* ------------------------------------------------*)
+(* <guard_formula ops> Operations on guard_formula *)
+(* ------------------------------------------------*)
+let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let guard_form g = g.guard_f
+
+let is_trivial g = match g with
+    | {guard_f=Trivial; deferred=[]} -> true
+    | _ -> false
+
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+
+let abstract_guard x g = match g with
+    | None
+    | Some ({guard_f=Trivial}) -> g
+    | Some g ->
+      let f = match g.guard_f with
+        | NonTrivial f -> f
+        | _ -> failwith "impossible" in
+      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (mk_Total U.ktype0 |> U.lcomp_of_comp |> Inl))})
+
+let apply_guard g e = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) (Some U.ktype0.n) f.pos}
+
+let map_guard g map = match g.guard_f with
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
+
+let trivial t = match t with
+  | Trivial -> ()
+  | NonTrivial _ -> failwith "impossible"
+
+let conj_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g
+  | g, Trivial -> g
+  | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
+
+let check_trivial t = match t.n with
+    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
+    | _ -> NonTrivial t
+
+let imp_guard_f g1 g2 = match g1, g2 with
+  | Trivial, g -> g
+  | g, Trivial -> Trivial
+  | NonTrivial f1, NonTrivial f2 ->
+    let imp = U.mk_imp f1 f2 in check_trivial imp
+
+let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
+                           deferred=g1.deferred@g2.deferred;
+                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
+                           implicits=g1.implicits@g2.implicits}
+let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
+let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
+
+let close_guard_univs us bs g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      let f =
+          List.fold_right2 (fun u b f ->
+              if Syntax.is_null_binder b then f
+              else U.mk_forall u (fst b) f)
+        us bs f in
+    {g with guard_f=NonTrivial f}
+
+let close_forall env bs f =
+    List.fold_right (fun b f ->
+            if Syntax.is_null_binder b then f
+            else let u = env.universe_of env (fst b).sort in
+                 U.mk_forall u (fst b) f)
+    bs f
+
+let close_guard env binders g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      {g with guard_f=NonTrivial (close_forall env binders f)}
+
+(* ------------------------------------------------*)
+(* </guard_formula ops>                            *)
+(* ------------------------------------------------*)
+
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
@@ -253,9 +338,11 @@ let problem_using_guard orig lhs rel rhs elt reason = {
      rank=None;
      scope=p_scope orig;
 }
-let guard_on_element problem x phi =
+let guard_on_element wl problem x phi =
     match problem.element with
-        | None ->   U.mk_forall x phi
+        | None ->
+          let u = wl.tcenv.universe_of wl.tcenv x.sort in
+          U.mk_forall u x phi
         | Some e -> Subst.subst [NT(x,e)] phi
 let explain env d s =
     if Env.debug env <| Options.Other "ExplainRel"
@@ -864,7 +951,9 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                 let sub_probs, tcs, f = aux scope args qs in
                 let f = match bopt with
                     | None -> U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst)))
-                    | Some b -> U.mk_conj_l (U.mk_forall (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
+                    | Some b ->
+                      let u_b = env.universe_of env (fst b).sort in
+                      U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
 
                 probs@sub_probs, tc::tcs, f in
 
@@ -1417,7 +1506,9 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let env = Env.push_bv env hd1 in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
-                   let phi = U.mk_conj (p_guard prob |> fst) (U.close_forall [(hd1,imp)] phi) in
+                   let phi =
+                        U.mk_conj (p_guard prob |> fst)
+                                  (close_forall env [(hd1,imp)] phi) in
                    if debug env <| Options.Other "Rel"
                    then BU.print2 "Formula is %s\n\thd1=%s\n" (Print.term_to_string phi) (Print.bv_to_string hd1);
                    Inl (prob::sub_probs, phi)
@@ -1462,7 +1553,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                     | Some t -> U.mk_has_type t1 t t2
                                     | None ->
                                     let x = S.new_bv None t1 in
-                                    U.mk_forall x (U.mk_has_type t1 (S.bv_to_name x) t2) in
+                                    let u_x = env.universe_of env t1 in
+                                    U.mk_forall u_x x (U.mk_has_type t1 (S.bv_to_name x) t2) in
                              if problem.relation = SUB
                              then has_type_guard t1 t2
                              else has_type_guard t2 t1 in
@@ -2004,7 +2096,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
         let env = Env.push_bv env x1 in
-        let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element problem x1 in
+        let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element wl problem x1 in
         let fallback () =
             let impl =
                 if problem.relation = EQ
@@ -2018,7 +2110,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
                     | Failed _ -> fallback()
                     | Success _ ->
-                      let guard = U.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
+                      let guard =
+                        U.mk_conj (p_guard base_prob |> fst)
+                                  (p_guard ref_prob |> fst |> guard_on_element wl problem x1) in
                       let wl = solve_prob orig (Some guard) [] wl in
                       let wl = {wl with ctr=wl.ctr+1} in
                       solve env (attempt [base_prob] wl)
@@ -2069,7 +2163,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
                         | Some (y, phi) ->
                           let y' = {y with sort = t1} in
-                          let impl = guard_on_element problem y' phi in
+                          let impl = guard_on_element wl problem y' phi in
                           let base_prob =
                             TProb <| mk_problem problem.scope orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
                           let guard = U.mk_conj (p_guard base_prob |> fst) impl in
@@ -2304,70 +2398,6 @@ let guard_to_string (env:env) g =
       BU.format4 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t univ_ineqs={%s};\n\t implicits={%s}}\n"
         form carry (ineqs_to_string g.univ_ineqs) imps
 
-(* ------------------------------------------------*)
-(* <guard_formula ops> Operations on guard_formula *)
-(* ------------------------------------------------*)
-let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); implicits=[]}
-
-let guard_form g = g.guard_f
-
-let is_trivial g = match g with
-    | {guard_f=Trivial; deferred=[]} -> true
-    | _ -> false
-
-let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
-
-let abstract_guard x g = match g with
-    | None
-    | Some ({guard_f=Trivial}) -> g
-    | Some g ->
-      let f = match g.guard_f with
-        | NonTrivial f -> f
-        | _ -> failwith "impossible" in
-      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (mk_Total U.ktype0 |> U.lcomp_of_comp |> Inl))})
-
-let apply_guard g e = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) (Some U.ktype0.n) f.pos}
-
-let map_guard g map = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
-
-let trivial t = match t with
-  | Trivial -> ()
-  | NonTrivial _ -> failwith "impossible"
-
-let conj_guard_f g1 g2 = match g1, g2 with
-  | Trivial, g
-  | g, Trivial -> g
-  | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
-
-let check_trivial t = match t.n with
-    | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
-    | _ -> NonTrivial t
-
-let imp_guard_f g1 g2 = match g1, g2 with
-  | Trivial, g -> g
-  | g, Trivial -> Trivial
-  | NonTrivial f1, NonTrivial f2 ->
-    let imp = U.mk_imp f1 f2 in check_trivial imp
-
-let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
-                           deferred=g1.deferred@g2.deferred;
-                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
-                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
-                           implicits=g1.implicits@g2.implicits}
-let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
-let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
-
-let close_guard binders g = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f -> {g with guard_f=U.close_forall binders f |> NonTrivial}
-
-(* ------------------------------------------------*)
-(* </guard_formula ops>                            *)
-(* ------------------------------------------------*)
 let new_t_problem env lhs rel rhs elt loc =
  let reason = if debug env <| Options.Other "ExplainRel"
               then BU.format3 "Top-level:\n%s\n\t%s\n%s"

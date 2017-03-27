@@ -337,12 +337,6 @@ let un_squash t =
     | _ ->
       None
 
-let maybe_squash env p =
-    let q = N.normalize [N.UnfoldUntil Delta_constant] env p in
-    match un_squash q with
-    | None -> p //mk_squash p
-    | _ -> p
-
 (* imp_intro:
         corresponds to
         val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
@@ -352,11 +346,11 @@ let imp_intro : tac<binder> =
     match U.destruct_typ_as_formula goal.goal_ty with
     | Some (U.BaseConn(l, [(lhs, _); (rhs, _)]))
         when Ident.lid_equals l SC.imp_lid ->
-      let name = S.new_bv None (maybe_squash goal.context lhs) in
+      let name = S.new_bv None lhs in //(maybe_squash goal.context lhs) in
       let new_goal = {
         context = Env.push_bv goal.context name;
         witness = None;
-        goal_ty = maybe_squash goal.context rhs;
+        goal_ty = rhs; //maybe_squash goal.context rhs;
       } in
       bind dismiss (fun _ ->
       bind (add_goals [new_goal]) (fun _ ->
@@ -399,47 +393,47 @@ let apply_lemma (tm:term)
             if not (U.is_lemma t)
             then fail "apply_lemma: not a lemma"
             else let bs, comp = U.arrow_formals_comp t in
-                 let uvs, implicits, subst = 
+                 let uvs, implicits, subst =
                     List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                             let b_t = SS.subst subst b.sort in
                             let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
-                            (u, aq)::uvs, 
-                            FStar.TypeChecker.Rel.conj_guard guard g_u, 
+                            (u, aq)::uvs,
+                            FStar.TypeChecker.Rel.conj_guard guard g_u,
                             S.NT(b, u)::subst)
                     ([], guard, [])
                     bs
                  in
                  let uvs = List.rev uvs in
                  let comp = SS.subst_comp subst comp in
-                 let pre, post = 
+                 let pre, post =
                       let c = U.comp_to_comp_typ comp in
                       match c.effect_args with
                       | pre::post::_ -> fst pre, fst post
                       | _ -> failwith "Impossible: not a lemma" in
-                 match Rel.try_teq false goal.context post goal.goal_ty with 
+                 match Rel.try_teq false goal.context post goal.goal_ty with
                  | None -> fail "apply_lemma: does not unify with goal"
-                 | Some g -> 
+                 | Some g ->
                    let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
                    let solution = S.mk_Tm_app tm uvs None goal.context.range in
-                   let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) -> 
+                   let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
                         let hd, _ = U.head_and_args tm in
                         match (SS.compress hd).n with
                         | Tm_uvar _ -> true //still unresolved
                         | _ -> false) in
                    solve goal solution;
-                   let sub_goals = 
+                   let sub_goals =
                         {goal with witness=None; goal_ty=pre} //pre-condition is proof irrelevant
                         ::(implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
                                 {context=goal.context;
                                  witness=Some term;
-                                 goal_ty=typ})) 
+                                 goal_ty=typ}))
                    in
                    bind (add_implicits g.implicits) (fun _ ->
                    bind dismiss (fun _ ->
                    add_goals sub_goals))
-         with 
+         with
             _ -> fail "apply_lemma: ill-typed term")
-       
+
 let exact (tm:term)
     : tac<unit>
     = with_cur_goal "exact" (fun goal ->
@@ -512,8 +506,10 @@ let revert : tac<unit>
                     }
                 | _ ->
                     { goal with
-                    context = env';
-                    goal_ty = U.mk_forall x goal.goal_ty
+                        context = env';
+                        goal_ty = U.mk_forall (FStar.TypeChecker.TcTerm.universe_of env' x.sort)
+                                              x
+                                              goal.goal_ty
                     } in
             bind dismiss (fun _ ->
             add_goals [new_goal]))

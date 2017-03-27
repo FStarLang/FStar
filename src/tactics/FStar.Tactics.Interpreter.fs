@@ -98,8 +98,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "merge_"   1 (mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "rewrite_" 2 (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "smt_"     1 (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "exact_"   2 (mk_tactic_interpretation_1 ps exact E.embed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "apply_lemma_" 2 (mk_tactic_interpretation_1 ps apply_lemma E.embed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "exact_"   2 (mk_tactic_interpretation_1 ps exact E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "apply_lemma_" 2 (mk_tactic_interpretation_1 ps apply_lemma E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "visit_"   2 (mk_tactic_interpretation_1 ps visit
                                                 (unembed_tactic_0 E.unembed_unit)
                                                 E.embed_unit
@@ -116,12 +116,19 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "term_as_formula" 1 (mk_pure_interpretation_1 E.term_as_formula
                                             E.unembed_term
                                             (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "quote"           2 (fun nm [_; (y, _)] -> Some y);
+      mk "quote"           2 (fun nm [_; (y, _)] ->
+                                printfn "Reached quote: %s" (Print.term_to_string y);
+                                Some (E.embed_term y));
       mk "binders_of_env"  1 (fun nm [(env, _)] ->
                                 let env = E.unembed_env ps.main_context env in
                                 Some (E.embed_binders (Env.all_binders env)));
-      mk "type_of_binder"  1 (fun nm [(b, _)] -> let b, _ = E.unembed_binder b in Some b.sort);
+      mk "type_of_binder"  1 (fun nm [(b, _)] -> let b, _ = E.unembed_binder b in Some (E.embed_term b.sort));
       mk "term_eq"         2 (fun nm [(t1, _); (t2, _)] ->
+                                let t1 = E.unembed_term t1 in
+                                let t2 = E.unembed_term t2 in
+                                printfn "Comparing %s and %s"
+                                    (Print.term_to_string t1)
+                                    (Print.term_to_string t2);
                                 match FStar.Syntax.Util.eq_tm t1 t2 with
                                 | U.Equal -> Some (E.embed_bool true)
                                 | _ -> Some (E.embed_bool false))
