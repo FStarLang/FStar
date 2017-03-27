@@ -124,7 +124,8 @@ type input_chunks =
   | Push of bool * int * int //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
-  | Info of string * int * int
+  | Info of string * bool * option<(string * int * int)>
+  | Completions of string
 
 
 type interactive_state = {
@@ -202,13 +203,24 @@ let rec read_chunk () =
               false, 1, 0
         in
         Push lc)
-  else if Util.starts_with l "#info" then
+  else if Util.starts_with l "#info " then
       match Util.split l " " with
-      | [_; file; row; col] ->
+      | [_; symbol] ->
         Util.clear_string_builder s.chunk;
-        Info (file, Util.int_of_string row, Util.int_of_string col)
+        Info (symbol, true, None)
+      | [_; symbol; file; row; col] ->
+        Util.clear_string_builder s.chunk;
+        Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
         Util.print_error ("Unrecognized \"#info\" request: " ^l);
+        exit 1
+  else if Util.starts_with l "#completions " then
+      match Util.split l " " with
+      | [_; prefix; "#"] -> // Extra "#" marks the end of the input.  FIXME protocol could take more structured messages.
+        Util.clear_string_builder s.chunk;
+        Completions (prefix)
+      | _ ->
+        Util.print_error ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
   else
@@ -373,13 +385,73 @@ let rec go (line_col:(int*int))
            (filename:string) 
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
-  | Info(file, row, col) ->
-    let iopt = FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
-    (match iopt with
-     | None ->
-       Util.print_string "\n#done-nok\n"
-     | Some s ->
-       Util.print1 "%s\n#done-ok\n" s);
+  | Info(symbol, fqn_only, pos_opt) ->
+    let info_at_pos_opt = match pos_opt with
+      | None -> None
+      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
+    let info_opt = match info_at_pos_opt with
+      | Some _ -> info_at_pos_opt
+      | None -> // Use name lookup as a fallback
+        if symbol = "" then None // FIXME obey fqn_only
+        else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
+             try_lookup_lid (snd env) lid // FIXME This only works for fully qualified name
+               |> Util.map_option (fun ((_, typ), range) ->
+                                   FStar.TypeChecker.Err.format_info (snd env) symbol typ range) in
+    (match info_opt with
+     | None -> Util.print_string "\n#done-nok\n"
+     | Some s -> Util.print1 "%s\n#done-ok\n" s);
+    go line_col filename stack curmod env ts
+  | Completions(search_term) ->
+    // FIXME a regular expression might be faster than this explicit matching
+    let rec measure_anchored_match search_term candidate =
+      match search_term, candidate with
+      | [], _ -> Some ([], 0)
+      | _, [] -> None
+      | hs :: ts, hc :: tc ->
+        let hc_text = FStar.Ident.text_of_id hc in
+        if Util.starts_with hc_text hs then
+           match ts with
+           | [] -> Some (candidate, String.length hs)
+           | _ -> measure_anchored_match ts tc |>
+                    Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
+        else None in
+    let rec locate_match needle candidate =
+      match measure_anchored_match needle candidate with
+      | Some (matched, n) -> Some ([], matched, n)
+      | None ->
+        match candidate with
+        | [] -> None
+        | hc :: tc ->
+          locate_match needle tc |>
+            Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
+    let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
+    let match_lident_against needle lident =
+      locate_match needle (lident.ns @ [lident.ident]) in
+    let shorten_namespace (prefix, matched, match_len) =
+      let naked_match = match matched with [_] -> true | _ -> false in
+      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
+      (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
+    let prepare_candidate (prefix, matched, stripped_ns, match_len) =
+      if prefix = "" then
+        (matched, stripped_ns, match_len)
+      else
+        (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
+    let needle = Util.split search_term "." in
+    let lidents = FStar.TypeChecker.Env.lidents (snd env) in
+    let matches = List.filter_map (fun lid ->
+                                   lid |> match_lident_against needle
+                                       |> Util.map_option shorten_namespace
+                                       |> Util.map_option prepare_candidate)
+                                  lidents in
+    List.iter (fun (candidate, ns, match_len) ->
+               Util.print3 "%s %s %s\n"
+               (Util.string_of_int match_len) ns candidate)
+              (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
+                               match String.compare cd1 cd2 with
+                               | 0 -> String.compare ns1 ns2
+                               | n -> n)
+                              matches);
+    Util.print_string "#done-ok\n";
     go line_col filename stack curmod env ts
   | Pop msg ->
       // This shrinks all internal stacks by 1
