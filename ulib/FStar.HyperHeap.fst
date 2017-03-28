@@ -233,17 +233,17 @@ abstract val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
 let lemma_disjoint_parents pr r ps s = ()
 
 (* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
-let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
-  Map.contains m i && (FStar.Classical.excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
+let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool  =
+  Map.contains m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
   (* AR: in master this is the code *)
-  Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
+  (* Map.contains m i && Heap.contains (Map.sel m i) (as_ref r) *)
 
 (*
  * AR: using this from HyperStack:weak_contains,
  * Map.contains covered by weak_live_region in HyperStack
  *)
 let weak_contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
-  Heap.contains (Map.sel m i) (as_ref r)
+  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   ~ (Heap.contains (Map.sel m0 i) (as_ref r))

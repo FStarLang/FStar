@@ -256,11 +256,11 @@ let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) =
   | [] -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton r.id) (regions_of_some_refs tl)
 
-let rec refs_in_region (r:rid) (rs:some_refs) : GTot (TSet.set Heap.aref) =
+let rec refs_in_region (r:rid) (rs:some_refs) : GTot (Set.set nat) =
   match rs with
-  | [] -> TSet.empty
+  | []         -> Set.empty
   | (Ref x)::tl ->
-    TSet.union (if x.id=r then TSet.singleton (as_aref x) else TSet.empty)
+    Set.union (if x.id=r then Set.singleton (as_addr x) else Set.empty)
                (refs_in_region r tl)
 
 unfold let mods (rs:some_refs) h0 h1 =
@@ -276,23 +276,28 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
    
 ////////////////////////////////////////////////////////////////////////////////
-#set-options "--initial_fuel 0 --max_fuel 0"
+#set-options "--initial_fuel 0 --max_fuel 0 --log_queries"
 let f (a:Type0) (b:Type0) (x:reference a) (x':reference a) 
 			  (y:reference b) (z:reference nat) 
 			  (h0:mem) (h1:mem) = 
   assume (h0 `contains` x);
   assume (h0 `contains` x');  
-  assume (~ (as_ref x == as_ref x'));
+  assume (as_addr x <> as_addr x');
   assume (x.id == x'.id);
   assume (x.id <> y.id);
   assume (x.id <> z.id);
-  assume (mods [Ref x; Ref y; Ref z] h0 h1);
+  assert (normalize_term (refs_in_region x.id [Ref x; Ref y; Ref z]) == normalize_term (Set.singleton (as_addr x)))
+
+
+  //assume (mods [Ref x; Ref y; Ref z] h0 h1);
  //--------------------------------------------------------------------------------
-  assert (modifies (Set.union (Set.singleton x.id)
-			      (Set.union (Set.singleton y.id)
-					 (Set.singleton z.id))) h0 h1);
-  assert (sel h0 x' == sel h1 x');
-  assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1)
+  (* assert (modifies (Set.union (Set.singleton x.id) *)
+  (* 			      (Set.union (Set.singleton y.id) *)
+  (* 					 (Set.singleton z.id))) h0 h1); *)
+  (* assert (modifies_ref x.id (Set.singleton (as_addr x)) h0 h1); *)
+  (* () *)
+
+  //assert (sel h0 x' == sel h1 x')
 
 (* let f2 (a:Type0) (b:Type0) (x:reference a) (y:reference b) *)
 (* 			   (h0:mem) (h1:mem) =  *)

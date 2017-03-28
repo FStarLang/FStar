@@ -31,11 +31,11 @@ abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
   (requires (fun h -> contains h s1 /\ contains h s2))
   (ensures  (fun h0 s h1 -> contains h0 s1 /\ contains h0 s2 /\ contains h1 s
     /\ sel h1 s == Seq.append (sel h0 s1) (sel h0 s2)
-    /\ modifies !{} h0 h1))
+    /\ modifies Set.empty h0 h1))
 let op_At_Bar #a s1 s2 =
   let s1' = !s1 in
   let s2' = !s2 in
-  alloc (Seq.append s1' s2')
+  ST.alloc (Seq.append s1' s2')
 
 abstract val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
@@ -44,7 +44,7 @@ abstract val of_seq: #a:Type -> s:seq a -> ST (array a)
                              /\ modifies Set.empty h0 h1
                              /\ sel h1 x==s)))
 let of_seq #a s =
-  alloc s
+  ST.alloc s
 
 abstract val to_seq: #a:Type -> s:array a -> ST (seq a)
   (requires (fun h -> contains h s))
@@ -63,7 +63,7 @@ abstract val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (*                            /\ modifies Set.empty h0 h1 *)
   (*                            /\ sel h1 x==Seq.create n init))) *)
 let create #a n init =
-  alloc (Seq.create n init)
+  ST.alloc (Seq.create n init)
 
 abstract val index : #a:Type -> x:array a -> n:nat -> ST a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
@@ -92,7 +92,7 @@ let length #a x =
 
 abstract val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures  (fun h0 u h1 -> modifies (TSet.singleton (Ref x)) h0 h1 /\ sel h1 x==f (sel h0 x)))
+  (ensures  (fun h0 u h1 -> modifies (Set.singleton (addr_of x)) h0 h1 /\ sel h1 x==f (sel h0 x)))
 let op #a f x =
   let s = !x in
   let s' = f s in
@@ -105,15 +105,10 @@ val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                                       /\ contains h1 x
                                       /\ (h1==Heap.upd h0 x (Seq.swap (sel h0 x) i j))))
 let swap #a x i j =
-  let h0 = get () in
   let tmpi = index x i in
   let tmpj = index x j in
   upd x j tmpi;
-  upd x i tmpj;
-  //let h1 = get () in
-  //let s1 = sel h1 x in
-  ()
-  //cut (b2t(equal h1 (Heap.upd h0 x s1)))
+  upd x i tmpj
 
 (* Helper functions for stateful array manipulation *)
 val copy_aux:
