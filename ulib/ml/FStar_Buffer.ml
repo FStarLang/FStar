@@ -37,7 +37,7 @@ let upd (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
 let sub b i len = {content = b.content; idx = b.idx+i; length = len}
 let offset b i  = {content = b.content; idx = b.idx+i; length = b.length-i}
 let blit a idx_a b idx_b len = Array.blit a.content (idx_a+a.idx) b.content (idx_b+b.idx) len
-let fill a z len = Array.fill a.content 0 len z
+let fill a z len = Array.fill a.content a.idx len z
 let split a i = (sub a 0 i, sub a i (a.length - i))
 let of_seq s l = ()
 let copy b l = {content = Array.sub b.content b.idx l; idx = 0; length = l}
