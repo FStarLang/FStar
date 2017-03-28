@@ -38,8 +38,6 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
-
-
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
@@ -1443,7 +1441,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
             | (MisMatch _, _) -> //heads definitely do not match
-                let may_relate head = match head.n with
+                let may_relate head =
+                    match (U.un_uinst head).n with
                     | Tm_name _
                     | Tm_match _ -> true
                     | Tm_fvar tc -> tc.fv_delta = Delta_equational
@@ -2151,18 +2150,20 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 
     let solve_sub c1 edge c2 =
         let r = Env.get_range env in
-        if problem.relation = EQ
-        then let wp = match c1.effect_args with
+        let lift_c1 () =
+             let wp = match c1.effect_args with
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (BU.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
-             let c1 = {
+             {
                 comp_univs=c1.comp_univs;
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift c1.result_typ wp)];
+                effect_args=[as_arg (edge.mlift.mlift_wp c1.result_typ wp)];
                 flags=c1.flags
-             } in
-             solve_eq c1 c2
+             }
+        in
+        if problem.relation = EQ
+        then solve_eq (lift_c1 ()) c2
         else let is_null_wp_2 = c2.flags |> BU.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
                 | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
@@ -2172,19 +2173,38 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl = Env.get_effect_decl env c2.effect_name in
-                  let g =
-                     if env.lax then
-                        U.t_true
-                     else if is_null_wp_2
-                     then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
-                          mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
-                                    [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1]))
-                             (Some U.ktype0.n) r
-                     else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
-                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift c1.result_typ wpc1])) (Some U.ktype0.n) r  in
-                  let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
-                  let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob |> fst) g) [] wl in
-                  solve env (attempt [base_prob] wl)
+                  if c2_decl.qualifiers |> List.contains Reifiable
+                  then let c1_repr =
+                           N.normalize [N.UnfoldUntil Delta_constant; N.WHNF] env
+                                       (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
+                       in
+                       let c2_repr =
+                           N.normalize [N.UnfoldUntil Delta_constant; N.WHNF] env
+                                       (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
+                       in
+                       let prob =
+                           TProb (sub_prob c1_repr problem.relation c2_repr
+                                      (BU.format2 "sub effect repr: %s <: %s"
+                                                    (Print.term_to_string c1_repr)
+                                                    (Print.term_to_string c2_repr)))
+                       in
+                       let wl = solve_prob orig (Some (p_guard prob |> fst)) [] wl in
+                       solve env (attempt [prob] wl)
+                  else
+                      let g =
+                         if env.lax then
+                            U.t_true
+                         else if is_null_wp_2
+                         then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
+                              mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
+                                        [as_arg c1.result_typ; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
+                                 (Some U.ktype0.n) r
+                         else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
+                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1])) 
+                                 (Some U.ktype0.n) r in
+                      let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
+                      let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob |> fst) g) [] wl in
+                      solve env (attempt [base_prob] wl)
     in
 
     if BU.physical_equality c1 c2
@@ -2209,30 +2229,30 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 
                | GTotal _, Comp _
                | Total _,  Comp _ ->
-                 solve_c env ({problem with lhs=mk_Comp <| N.comp_to_comp_typ env c1}) wl
+                 solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
 
                | Comp _, GTotal _
                | Comp _, Total _ ->
-                 solve_c env ({problem with rhs=mk_Comp <| N.comp_to_comp_typ env c2}) wl
+                 solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
 
                | Comp _, Comp _ ->
                  if (U.is_ml_comp c1 && U.is_ml_comp c2)
                     || (U.is_total_comp c1 && (U.is_total_comp c2 || U.is_ml_comp c2))
                  then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
-                 else let c1_comp = N.comp_to_comp_typ env c1 in
-                      let c2_comp = N.comp_to_comp_typ env c2 in
+                 else let c1_comp = Env.comp_to_comp_typ env c1 in
+                      let c2_comp = Env.comp_to_comp_typ env c2 in
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
                       then solve_eq c1_comp c2_comp
                       else
-                         let c1 = N.unfold_effect_abbrev env c1 in
-                         let c2 = N.unfold_effect_abbrev env c2 in
+                         let c1 = Env.unfold_effect_abbrev env c1 in
+                         let c2 = Env.unfold_effect_abbrev env c2 in
                          if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                          begin match Env.monad_leq env c1.effect_name c2.effect_name with
                            | None ->
                              if U.is_ghost_effect c1.effect_name
                              && U.is_pure_effect c2.effect_name
                              && U.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
-                             then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=fun r t -> t} in
+                             then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=identity_mlift} in
                                   solve_sub c1 edge c2
                              else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
                                              (Print.lid_to_string c1.effect_name)

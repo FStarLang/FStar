@@ -2,13 +2,13 @@ module ExceptionsWithState
 let pre = int -> Type0
 let post (a:Type) = option (a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
-unfold let return_wp (a:Type) (x:a) (n0:int) (post:post a) = 
+unfold let return_wp (a:Type) (x:a) (n0:int) (post:post a) =
   forall y. y==Some (x, n0) ==> post y
 
 //working around #517 by adding an explicit 'val'
 unfold val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
 let bind_wp r a b f g =
-    fun n0 post -> f n0 (function 
+    fun n0 post -> f n0 (function
         | None -> post None
 	| Some (x, n1) -> g x n1 post)
 
@@ -50,11 +50,11 @@ let repr (a:Type) (wp:wp a) =
 
 unfold val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
 		 -> (f:repr a wp0)
-		 -> (wp1:(a -> Tot (wp b))) 
-		 -> (g:(x:a -> Tot (repr b (wp1 x)))) 
+		 -> (wp1:(a -> Tot (wp b)))
+		 -> (g:(x:a -> Tot (repr b (wp1 x))))
 		 -> Tot (repr b (bind_wp range_0 a b wp0 wp1))
-let bind a b wp0 f wp1 g  
-  = fun n0 -> admit(); match f n0 with 
+let bind a b wp0 f wp1 g
+  = fun n0 -> admit(); match f n0 with
 		    | None -> None
 		    | Some (x, n1) -> g x n1
 let return (a:Type) (x:a)
@@ -89,18 +89,17 @@ reifiable reflectable new_effect {
      ; assume_p     = assume_p
      ; null_wp      = null_wp
      ; trivial      = trivial
-  and effect_actions
-      raise = (fun _ _ -> None), raise_cps_type
+     ; raise = (fun _ _ -> None), raise_cps_type
 }
 
 unfold let lift_pure_exnst (a:Type) (wp:pure_wp a) (h0:int) (p:post a) = wp (fun a -> p (Some (a, h0)))
 sub_effect PURE ~> ExnState = lift_pure_exnst
 
 let lift_state_exnst_wp (a:Type) (wp:IntST.wp a) (h0:int) (p:post a) = wp h0 (function (x, h1) -> p (Some (x, h1)))
-let lift_state_exnst (a:Type) (wp:IntST.wp a) (f:IntST.repr a wp) 
+let lift_state_exnst (a:Type) (wp:IntST.wp a) (f:IntST.repr a wp)
   : (repr a (lift_state_exnst_wp a wp))
   = fun h0 -> admit(); Some (f h0)
-  
+
 sub_effect IntST.STATE ~> ExnState {
   lift_wp = lift_state_exnst_wp;
   lift = lift_state_exnst
@@ -110,16 +109,16 @@ effect ExnSt (a:Type) (req:pre) (ens:int -> option (a * int) -> GTot Type0) =
        ExnState a
          (fun (h0:int) (p:post a) -> req h0 /\ (forall r. (req h0 /\ ens h0 r) ==> p r))
 
-effect S (a:Type) = 
+effect S (a:Type) =
        ExnState a (fun h0 p -> forall x. p x)
 
 val div_intrinsic : i:nat -> j:int -> ExnSt int
   (requires (fun h -> True))
-  (ensures (fun h0 x -> match x with 
-		     | None -> j=0 
+  (ensures (fun h0 x -> match x with
+		     | None -> j=0
 		     | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
 let div_intrinsic i j =
-  if j=0 
+  if j=0
   then (IntST.incr (); ExnState.raise int) //despite the incr (implicitly lifted), the state is reset
   else i / j
 

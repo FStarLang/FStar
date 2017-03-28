@@ -51,7 +51,6 @@ open FStar_String
 %start inputFragment
 %start term
 %token ABSTRACT
-%token ACTIONS
 %token AMP
 %token AND
 %token ASSERT
@@ -126,7 +125,6 @@ open FStar_String
 %token <string> NAME
 %token NEW
 %token NEW_EFFECT
-%token NEW_EFFECT_FOR_FREE
 %token NOEQUALITY
 %token NOEXTRACT
 %token OF
@@ -181,7 +179,6 @@ open FStar_String
 %token UNDERSCORE
 %token UNFOLD
 %token UNFOLDABLE
-%token <string> UNIVAR
 %token UNIV_HASH
 %token UNOPTEQUALITY
 %token VAL
@@ -332,13 +329,6 @@ loption_separated_nonempty_list_COMMA_appTerm__:
     {let x = $1 in
     ( x )}
 
-loption_separated_nonempty_list_SEMICOLON_effectDecl__:
-  
-    {    ( [] )}
-| separated_nonempty_list_SEMICOLON_effectDecl_
-    {let x = $1 in
-    ( x )}
-
 loption_separated_nonempty_list_SEMICOLON_tuplePattern__:
   
     {    ( [] )}
@@ -387,13 +377,6 @@ list_atomicTerm_:
   
     {    ( [] )}
 | atomicTerm list_atomicTerm_
-    {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
-list_atomicUniverse_:
-  
-    {    ( [] )}
-| atomicUniverse list_atomicUniverse_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -454,6 +437,14 @@ nonempty_list_atomicTerm_:
     {let x = $1 in
     ( [ x ] )}
 | atomicTerm nonempty_list_atomicTerm_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
+nonempty_list_atomicUniverse_:
+  atomicUniverse
+    {let x = $1 in
+    ( [ x ] )}
+| atomicUniverse nonempty_list_atomicUniverse_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -731,9 +722,6 @@ rawDecl:
 | SUB_EFFECT subEffect
     {let (_1, se) = ((), $2) in
       ( SubEffect se )}
-| NEW_EFFECT_FOR_FREE newEffect
-    {let (_1, ne) = ((), $2) in
-      ( NewEffectForFree ne )}
 | FSDOC_STANDALONE
     {let doc = $1 in
       ( Fsdoc doc )}
@@ -813,38 +801,25 @@ letbinding:
 newEffect:
   effectRedefinition
     {let ed = $1 in
-       ( ed )}
+    ( ed )}
 | effectDefinition
     {let ed = $1 in
-       ( ed )}
+    ( ed )}
 
 effectRedefinition:
   uident EQUALS simpleTerm
     {let (lid, _2, t) = ($1, (), $3) in
-      ( RedefineEffect(lid, [], t) )}
+    ( RedefineEffect(lid, [], t) )}
 
 effectDefinition:
-  LBRACE uident binders COLON kind WITH separated_nonempty_list_SEMICOLON_effectDecl_ actionDecls RBRACE
-    {let (_1, lid, bs, _4, k, _6, eds, actions, _9) = ((), $2, $3, (), $5, (), $7, $8, ()) in
-      (
-         DefineEffect(lid, bs, k, eds, actions)
-      )}
-
-actionDecls:
-  
-    {      ( [] )}
-| AND ACTIONS loption_separated_nonempty_list_SEMICOLON_effectDecl__
-    {let (_1, _2, xs0) = ((), (), $3) in
-let actions =
-  let xs = xs0 in
-      ( xs )
-in
-      ( actions )}
+  LBRACE uident binders COLON tmArrow_tmNoEq_ WITH separated_nonempty_list_SEMICOLON_effectDecl_ RBRACE
+    {let (_1, lid, bs, _4, typ, _6, eds, _8) = ((), $2, $3, (), $5, (), $7, ()) in
+    ( DefineEffect(lid, bs, typ, eds) )}
 
 effectDecl:
   lident EQUALS simpleTerm
     {let (lid, _2, t) = ($1, (), $3) in
-     ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -1934,9 +1909,6 @@ in
 | universe
     {let u = $1 in
                ( u )}
-| univar
-    {let u = $1 in
-             ( UnivApp, u )}
 
 indexingTerm:
   atomicTermNotQUident nonempty_list_dotOperator_
@@ -2281,7 +2253,7 @@ universeFrom:
                            rhs parseState 2)) ;
          mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
        )}
-| ident list_atomicUniverse_
+| ident nonempty_list_atomicUniverse_
     {let (max, us) = ($1, $2) in
       (
         if text_of_id max <> text_of_lid max_lid
@@ -2305,20 +2277,12 @@ atomicUniverse:
                        lhs(parseState)));
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       )}
-| univar
+| lident
     {let u = $1 in
-             ( u )}
+             ( mk_term (Uvar u) u.idRange Expr )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
     ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
-
-univar:
-  UNIVAR
-    {let id = $1 in
-      (
-        let pos = rhs parseState 1 in
-        mk_term (Uvar (mk_ident (id, pos))) pos Expr
-      )}
 
 some_fsTypeArgs_:
   fsTypeArgs

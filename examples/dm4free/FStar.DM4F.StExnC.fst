@@ -35,13 +35,12 @@ let raise (a:Type) : stexnc a = fun s0 -> (None, (s0, 1))
  * Define the new effect using DM4F. We don't mark it as reflectable
  * so we know the invariant of exception-counting is enforced
  *)
-reifiable new_effect_for_free {
+reifiable new_effect {
   STEXNC: a:Type -> Effect
   with repr    = stexnc
      ; return  = return
      ; bind    = bind
-  and effect_actions
-       raise   = raise
+     ; raise   = raise
 }
 
 (* A lift from Pure *)
@@ -81,7 +80,7 @@ let div_intrinsic i j =
   if j = 0 then STEXNC?.raise int
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : SC int =
+ let div_extrinsic (i:nat) (j:int) : SC int =
   if j = 0 then STEXNC?.raise int
   else i / j
 
