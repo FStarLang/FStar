@@ -42,6 +42,11 @@ let gte (a:uint32) (b:uint32) : bool = a >= b
 let lt (a:uint32) (b:uint32) : bool = a < b
 let lte (a:uint32) (b:uint32) : bool =  a <= b
 
+let eq_mask (a:uint32) (b:uint32) : uint32 =
+  if a = b then -1 else 0
+let gte_mask (a:uint32) (b:uint32) : uint32 =
+  if a >= b then -1 else 0
+
 (* Infix notations *)
 let op_Plus_Hat = add
 let op_Plus_Question_Hat = add_underspec
