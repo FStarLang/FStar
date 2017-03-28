@@ -409,6 +409,14 @@ let rec go (line_col:(int*int))
       //determines it the candidate may match the search term
       //and, if so, provides an integer measure of the degree of the match
       //Q: isn't the output list<ident> always the same as the candidate?
+        // About the degree of the match, cpitclaudel says:
+        //      Because we're measuring the length of the match and we allow partial
+        //      matches. Say we're matching FS.Li.app against FStar.List.Append. Then
+        //      the length we want is (length "FStar" + 1 + length "List" + 1 + length
+        //      "app"), not (length "FStar" + 1 + length "List" + 1 + length
+        //      "append"). This length is used to know how much of the candidate to
+        //      highlight in the company-mode popup (we want to display the candidate
+        //      as FStar.List.append.
       = fun search_term candidate ->
           match search_term, candidate with
           | [], _ -> Some ([], 0)
@@ -417,7 +425,7 @@ let rec go (line_col:(int*int))
             let hc_text = FStar.Ident.text_of_id hc in
             if Util.starts_with hc_text hs then
                match ts with
-               | [] -> Some (candidate, String.length hs) //Why is this String.length hs, rather than String.length hc_text?
+               | [] -> Some (candidate, String.length hs)
                | _ -> measure_anchored_match ts tc |>
                         Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
             else None in
@@ -460,23 +468,15 @@ let rec go (line_col:(int*int))
             : list<(list<ident> * list<ident> * int)>
             =
             let dsenv = fst env in
-            let module_name = Ident.text_of_lid m in
-            match Util.smap_try_find dsenv.trans_exported_ids module_name with
-            | None -> []
-            | Some exported_id_set ->
-              let matched_length = String.length id in
-              let names = !(exported_id_set DsEnv.Exported_id_term_type) in
-                  names |>
-                  Util.set_elements |>
-                  List.filter_map (fun n ->
-                    if Util.starts_with n id
-                    then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
-                         match DsEnv.resolve_to_fully_qualified_name dsenv lid with
-                         | None ->
-                           None
-                         | Some fqn ->
-                           Some (fqn.ns, [fqn.ident], matched_length)
-                    else None)
+            let exported_names = DsEnv.transitive_exported_ids dsenv m in
+            let matched_length = String.length id in
+            exported_names |>
+            List.filter_map (fun n ->
+            if Util.starts_with n id
+            then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
+                 Option.map (fun fqn -> fqn.ns, [fqn.ident], matched_length)
+                            (DsEnv.resolve_to_fully_qualified_name dsenv lid)
+            else None)
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
@@ -488,12 +488,10 @@ let rec go (line_col:(int*int))
             | [] -> case_b_find_matches_in_env ()
             | _ ->
               let l = Ident.lid_of_path ns Range.dummyRange in
-              printfn "Trying to resolve module name %A" ns;
               match FStar.ToSyntax.Env.resolve_module_name (fst env) l true with
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->
-                printfn "Module name resolved to %s" (Ident.string_of_lid m);
                 case_a_find_transitive_includes m id
         in
         matched_ids |>

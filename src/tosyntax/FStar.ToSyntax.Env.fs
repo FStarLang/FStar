@@ -101,7 +101,11 @@ type foundname =
 
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
-
+let transitive_exported_ids env lid =
+    let module_name = Ident.string_of_lid lid in
+    match BU.smap_try_find env.trans_exported_ids module_name with
+    | None -> []
+    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"

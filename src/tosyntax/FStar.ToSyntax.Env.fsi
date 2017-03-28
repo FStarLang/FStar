@@ -145,6 +145,8 @@ val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //p
 val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
 
+val transitive_exported_ids: env -> lident -> list<string>
+
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
 (* private *) val check_admits: env -> unit
