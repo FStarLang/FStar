@@ -422,7 +422,7 @@ let name_binders_inner prefix_opt outer_names start sorts =
 let name_macro_binders sorts =
     let names, binders, n = name_binders_inner (Some "__") [] 0 sorts in
     List.rev names, binders
-
+   
 let termToSmt t =
     let remove_guard_free pats =
         pats |> List.map (fun ps ->
@@ -440,7 +440,7 @@ let termToSmt t =
       | App(op, []) -> op_to_string op
       | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
       | Labeled(t, _, _) -> aux n names t
-      | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
+      | LblPos(t, s) -> BU.format2 "(label_pos %s %s)" (aux n names t) s
       | Quant(qop, pats, wopt, sorts, body) ->
         let names, binders, n = name_binders_inner None names n sorts in
         let binders = binders |> String.concat " " in
@@ -462,6 +462,36 @@ let termToSmt t =
         else s
     in
     aux 0 [] t
+
+(* ------ lean code ------ -*)
+let caption_to_string_lean = function
+    | None -> ""
+    | Some c ->
+        let hd, suffix = match BU.splitlines c with
+            | [] -> failwith "Impossible"
+            | [hd] -> hd, ""
+            | hd::_ -> hd, "..." in
+        format2 "-- %s%s\n" hd suffix
+
+let name_binders_inner_lean prefix_opt outer_names start sorts =
+    let names, binders, n = sorts |> List.fold_left (fun (names, binders, n) s ->
+        let prefix = match s with
+            | Term_sort -> "@x"
+            | _ -> "@u" in
+        let prefix =
+            match prefix_opt with
+            | None -> prefix
+            | Some p -> p ^ prefix in
+        let nm = prefix ^ string_of_int n in
+        let names = (nm,s)::names in
+        let b = BU.format2 "(%s : %s)" nm (strSort s) in
+        names, b::binders, n+1)
+        (outer_names, [], start)  in
+    names, List.rev binders, n
+
+let name_macro_binders_lean sorts =
+    let names, binders, n = name_binders_inner_lean (Some "__") [] 0 sorts in
+    List.rev names, binders
 
 let termToLean t =
     let remove_guard_free pats =
@@ -480,7 +510,7 @@ let termToLean t =
       | App(op, []) -> op_to_string op
       | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
       | Labeled(t, _, _) -> aux n names t
-      | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
+      | LblPos(t, s) -> BU.format2 "(label_pos %s %s)" (aux n names t) s
       | Quant(qop, pats, wopt, sorts, body) ->
         let names, binders, n = name_binders_inner None names n sorts in
         let binders = binders |> String.concat " " in
@@ -489,19 +519,115 @@ let termToLean t =
             match pats with
             | [[]]
             | [] -> ""
-            | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
+            | _ -> pats |> 
+            List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
         begin match pats, wopt with
             | [[]], None
-            | [], None ->  BU.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
+            | [], None ->  BU.format3 "(%s (%s)\n %s) -- no pats\n" (qop_to_string qop) binders (aux n names body)
             | _ -> BU.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
         end
     and aux n names t =
         let s = aux' n names t in
         if t.rng <> norng
-        then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
+        then BU.format3 "\n -- def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
         else s
     in
     aux 0 [] t
+    
+let rec declToLean z3options decl =
+  let escape (s:string) = BU.replace_char s '\'' '_' in
+  match decl with
+  | DefPrelude -> mkPreludeLean z3options
+  | Caption c ->
+    format1 "\n-- %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
+  | DeclFun(f,argsorts,retsort,c) ->
+    let l = List.map strSort argsorts in
+    format4 "%s constant %s %s : %s" (caption_to_string_lean c) f (String.concat " " l) (strSort retsort)
+  | DefineFun(f,arg_sorts,retsort,body,c) ->
+    let names, binders = name_macro_binders arg_sorts in
+    let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
+    format5 "%sdef %s %s : %s\n := %s)" (caption_to_string_lean c) f (String.concat " " binders) (strSort retsort) (termToLean body)
+  | Assume(t,c,Some n) ->
+    format3 "%s constant %s : %s" (caption_to_string_lean c) (escape n) (termToLean t)
+  | Assume(t,c,None) ->
+    format2 "%s constant : (%s)" (caption_to_string_lean c) (termToLean t)
+  | Eval t ->
+    format1 "-- (eval %s)" (termToSmt t)
+  | Echo s ->
+    format1 "-- (echo \"%s\")" s
+  | CheckSat -> "-- (check-sat)"
+  | GetUnsatCore -> "-- (echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
+  | Push -> "-- (push)"
+  | Pop -> "-- (pop)"
+  | SetOption (s, v) -> format2 "-- (set-option :%s %s)" s v
+  | PrintStats -> "" (* this is a no-op in Lean "(get-info :all-statistics)" *)
+ and mkPreludeLean z3options =
+   let basic = z3options ^
+                 "@[smt2] constant Ref : Type\n\
+                  @[smt2] constant Ref_constr_id : Ref -> Int\n\
+                 \n\
+                 @[smt2] constant FString : Type\n\
+                 @[smt2] constant FString_constr_id : FString -> Int\n\
+                 \n\
+                 @[smt2] constant Term : Type\n\
+                 @[smt2] constant Term_constr_id : Term -> Int\n\
+                 @[smt2] constant declare-datatypes () ((Fuel \n\
+                                         (ZFuel) \n\
+                                         (SFuel (prec Fuel)))))\n\
+                 @[smt2] constant MaxIFuel : Fuel\n\
+                 @[smt2] constant MaxFuel : Fuel\n\
+                 @[smt2] constant PreType : Term -> Term\n\
+                 @[smt2] constant Valid : Term -> Bool\n\
+                 @[smt2] constant HasTypeFuel : Fuel -> Term -> Term -> Bool\n\
+                 @[smt2] def HasTypeZ (x : Term) (t Term) : Bool :=\n\
+                     (HasTypeFuel ZFuel x t))\n\
+                 @[smt2] def HasType (x : Term) (t : Term) : Bool :=\n\
+                     (HasTypeFuel MaxIFuel x t))\n\
+                 ;;fuel irrelevance\n\
+                 @[smt2] axiom fuel_eq : forall (f : Fuel) (x : Term) (t : Term),\n\
+ 		                pattern (HasTypeFuel (SFuel f) x t = HasTypeZ x t)\n\
+ 		                        (HasTypeFuel (SFuel f) x t)\n\
+                 @[smt2] def IsTyped (x : Term) : Bool :=\n\
+                     exists (t : Term), HasTypeZ x t\n\
+                 @[smt2] constant ApplyTF : Term -> Fuel -> Term\n\
+                 @[smt2] constant ApplyTT : Term -> Term -> Term\n\
+                 @[smt2] constant Rank : Term -> Int\n\
+                 @[smt2] constant Closure : Term -> Term\n\
+                 @[smt2] constant ConsTerm : Term -> Term -> Term\n\
+                 @[smt2] constant ConsFuel : Fuel -> Term -> Term\n\
+                 @[smt2] constant Precedes : Term -> Term -> Term\n\
+                 @[smt2] def Reify (x : Term) : Term := x)\n\
+                 (assert (forall ((t Term))\n\
+                             (! (implies (exists ((e Term)) (HasType e t))\n\
+                                         (Valid t))\n\
+                                 :pattern ((Valid t)))))\n\
+                 (assert (forall ((t1 Term) (t2 Term))\n\
+                      (! (iff (Valid (Precedes t1 t2)) \n\
+                              (< (Rank t1) (Rank t2)))\n\
+                         :pattern ((Precedes t1 t2)))))\n\
+                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
+                          (Precedes t1 t2))\n\
+                 (declare-fun Range_const () Term)\n" in
+    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
+                                  ("Tm_type",  [], Term_sort, 2, true);
+                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
+                                  ("Tm_uvar",  [("Tm_uvar_fst", Int_sort, true)],  Term_sort, 5, true);
+                                  ("Tm_unit",  [], Term_sort, 6, true);
+                                  ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
+                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);
+                                  ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, 9, true);
+                                  ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, 10, true);
+                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
+    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToLean z3options) |> String.concat "\n" in
+    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
+                                    (is-LexCons t))\n\
+                        (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
+                                     (iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n\
+                                          (or (Valid (Precedes x1 y1))\n\
+                                              (and (= x1 y1)\n\
+                                                   (Valid (Precedes x2 y2)))))))\n" in
+    basic ^ bcons ^ lex_ordering
+(* ------ end lean code ------ -*)
 
 let caption_to_string = function
     | None -> ""
@@ -607,34 +733,6 @@ and mkPrelude z3options =
                                              (and (= x1 y1)\n\
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
-
-let rec declToLean z3options decl =
-  let escape (s:string) = BU.replace_char s '\'' '_' in
-  match decl with
-  | DefPrelude -> mkPrelude z3options
-  | Caption c ->
-    format1 "\n-- %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
-  | DeclFun(f,argsorts,retsort,c) ->
-    let l = List.map strSort argsorts in
-    format4 "%s constant %s (%s) : %s" (caption_to_string c) f (String.concat " " l) (strSort retsort)
-  | DefineFun(f,arg_sorts,retsort,body,c) ->
-    let names, binders = name_macro_binders arg_sorts in
-    let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
-    format5 "%sdef %s (%s) : %s\n := %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt body)
-  | Assume(t,c,Some n) ->
-    format3 "%s(assert (!\n%s\n:named %s))" (caption_to_string c) (termToSmt t) (escape n)
-  | Assume(t,c,None) ->
-    format2 "%s(assert %s)" (caption_to_string c) (termToSmt t)
-  | Eval t ->
-    format1 "(eval %s)" (termToSmt t)
-  | Echo s ->
-    format1 "(echo \"%s\")" s
-  | CheckSat -> "(check-sat)"
-  | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-  | Push -> "(push)"
-  | Pop -> "(pop)"
-  | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
-  | PrintStats -> "" (* this is a no-op in Lean "(get-info :all-statistics)" *)
     
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng

@@ -529,6 +529,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
   let lean_file = match !lean_output with
   | None -> let lean_file = BU.open_file_for_writing "out.lean" in lean_output := Some lean_file; lean_file
   | Some f -> f in
+  BU.append_to_file lean_file "---------------------- query -----------------------";
   BU.append_to_file lean_file lean_input ;
   if Options.log_queries() then query_logging.write_to_log input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
