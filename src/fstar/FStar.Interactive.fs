@@ -392,11 +392,21 @@ let rec go (line_col:(int*int))
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
-        if symbol = "" then None // FIXME obey fqn_only
+        if symbol = "" then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
-             try_lookup_lid (snd env) lid // FIXME This only works for fully qualified name
+             let fqn = // Figure out fully qualified name, if query allows it
+                if fqn_only then lid
+                else match (FStar.ToSyntax.Env.try_lookup_lid (fst env) lid) with
+                            | None -> lid
+                            | Some (term, _mut) ->
+                              (match term.n with
+                               | Syntax.Syntax.Tm_fvar fv ->
+                                 FStar.Syntax.Syntax.lid_of_fv fv
+                               | _ -> lid) in
+             FStar.TypeChecker.Env.try_lookup_lid (snd env) fqn
                |> Util.map_option (fun ((_, typ), range) ->
-                                   FStar.TypeChecker.Err.format_info (snd env) symbol typ range) in
+                                  FStar.TypeChecker.Err.format_info
+                                     (snd env) (FStar.Ident.string_of_lid fqn) typ range) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
      | Some s -> Util.print1 "%s\n#done-ok\n" s);
