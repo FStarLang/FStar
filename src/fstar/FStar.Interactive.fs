@@ -386,6 +386,7 @@ let rec go (line_col:(int*int))
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
   | Info(symbol, fqn_only, pos_opt) ->
+    let dsenv, tcenv = env in
     let info_at_pos_opt = match pos_opt with
       | None -> None
       | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
@@ -394,7 +395,10 @@ let rec go (line_col:(int*int))
       | None -> // Use name lookup as a fallback
         if symbol = "" then None // FIXME obey fqn_only
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
-             try_lookup_lid (snd env) lid // FIXME This only works for fully qualified name
+             let lid = match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+                       | None -> lid
+                       | Some lid -> lid in
+             try_lookup_lid (snd env) lid
                |> Util.map_option (fun ((_, typ), range) ->
                                    FStar.TypeChecker.Err.format_info (snd env) symbol typ range) in
     (match info_opt with
@@ -464,23 +468,34 @@ let rec go (line_col:(int*int))
         //   transitively exported by L.M.N
         //In case (b), we find all lidents in the type-checking environment
         //   and rank them by potential matches to the needle
-        let case_a_find_transitive_includes (m:lident) (id:string)
+        let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
             : list<(list<ident> * list<ident> * int)>
             =
             let dsenv = fst env in
             let exported_names = DsEnv.transitive_exported_ids dsenv m in
-            let matched_length = String.length id in
+            let matched_length =
+              List.fold_left
+                (fun out s -> String.length s + out + 1)
+                (String.length id)
+                orig_ns
+            in
             exported_names |>
             List.filter_map (fun n ->
             if Util.starts_with n id
             then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
-                 Option.map (fun fqn -> fqn.ns, [fqn.ident], matched_length)
+                 Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[fqn.ident], matched_length)
                             (DsEnv.resolve_to_fully_qualified_name dsenv lid)
             else None)
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
-          = List.filter_map (match_lident_against needle) all_lidents_in_env
+          = let dsenv, _ = env in 
+            let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
+            //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
+            matches |> List.filter (fun (ns, id, _) -> 
+              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with 
+              | None -> false
+              | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
         in
         let ns, id = Util.prefix needle in
         let matched_ids =
@@ -492,13 +507,13 @@ let rec go (line_col:(int*int))
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->
-                case_a_find_transitive_includes m id
+                case_a_find_transitive_includes ns m id
         in
         matched_ids |>
         List.map (fun x -> prepare_candidate (shorten_namespace x))
     in
     List.iter (fun (candidate, ns, match_len) ->
-               Util.print3 "%s %s %s\n"
+               Util.print3 "%s %s %s \n"
                (Util.string_of_int match_len) ns candidate)
               (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                                match String.compare cd1 cd2 with
