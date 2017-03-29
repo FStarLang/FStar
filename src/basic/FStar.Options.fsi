@@ -122,6 +122,7 @@ val trace_error                 : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_tactics                 : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool

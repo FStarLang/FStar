@@ -4,6 +4,7 @@ open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
+open FStar.TypeChecker.Env
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -74,8 +75,8 @@ let name_tac n t = {t with tac_name=n; kernel=false}
 let run t p = t.tac_f p
 
 let debug p msg =
-    printfn "TAC (ngoals=%d, maingoal=%s, rest=%s):\n\tTAC>> %s\n"
-        (List.length p.goals)
+    BU.print4 "TAC (ngoals=%s, maingoal=%s, rest=%s):\n\tTAC>> %s\n"
+        (BU.string_of_int (List.length p.goals))
         (match p.goals with [] -> "[]" | _ -> Print.term_to_string (List.hd p.goals).goal_ty)
         (match p.goals with [] -> "" | _ -> List.tl p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat ";;")
         msg
@@ -107,7 +108,7 @@ let bind (t1:tac<'a>)
 let get : tac<proofstate> = kernel_tac "get" (fun p -> Success(p, p))
 
 let fail msg = kernel_tac "fail" (fun p ->
-    printfn ">>>>>%s" msg;
+    BU.print1 ">>>>>%s\n" msg;
     Failed(msg, p))
 
 let show = kernel_tac "show" (fun p -> debug p "debug"; Success((), p))
@@ -253,10 +254,10 @@ let rec map (t:tac<'a>): tac<(list<'a>)> =
 (* map_goal_term f:
         A trusted tactic that maps each goal.goal_ty to (f goal.goal_ty)
  *)
-let private map_goal_term (f:term -> term) : tac<unit> =
+let map_goal_term (f:term -> term) : tac<unit> =
     let aux =
         with_cur_goal "map_goal" (fun g ->
-        replace {g with goal_ty=f g.goal_ty})
+        replace ({g with goal_ty=f g.goal_ty}))
     in
     bind (map aux) (fun _ -> ret ())
 
@@ -314,7 +315,7 @@ let intros : tac<binders>
 //                    (Print.term_to_string body);
            bind dismiss (fun _ ->
            bind (add_goals [new_goal]) (fun _ ->
-           printfn "intros: %s" (Print.binders_to_string ", " bs);
+           BU.print1 "intros: %s\n" (Print.binders_to_string ", " bs);
            ret bs))
          | _ ->
            fail "Cannot intro this goal, expected a forall")
@@ -354,7 +355,7 @@ let imp_intro : tac<binder> =
       } in
       bind dismiss (fun _ ->
       bind (add_goals [new_goal]) (fun _ ->
-      printfn "imp_intro: %s" (Print.bv_to_string name);
+      BU.print1 "imp_intro: %s\n" (Print.bv_to_string name);
       ret (S.mk_binder name)))
     | _ ->
       fail "Cannot intro this goal, expected an '==>'")
@@ -441,7 +442,7 @@ let exact (tm:term)
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
             if Rel.teq_nosmt goal.context t goal.goal_ty
             then let _ = solve goal tm in
-                 replace {goal with witness=None; goal_ty=U.t_true}
+                 replace ({goal with witness=None; goal_ty=U.t_true})
             else
                  let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
                             (Print.term_to_string tm)
@@ -455,7 +456,7 @@ let exact (tm:term)
 
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal "rewrite" (fun goal ->
-      printfn "+++Rewrite %s : %s" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort);
+      BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort);
       match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
       | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
                 when Ident.lid_equals l SC.eq2_lid ->
@@ -494,7 +495,7 @@ let revert : tac<unit>
       | None -> fail "Cannot clear_hd; empty context"
       | Some (x, env') ->
         let fns = FStar.Syntax.Free.names goal.goal_ty in
-        printfn "reverting %s" (Print.bv_to_string x);
+        BU.print1 "reverting %s\n" (Print.bv_to_string x);
         if not (Util.set_mem x fns)
         then clear_hd x
         else let new_goal =
@@ -606,7 +607,7 @@ let rec visit (callback:tac<unit>)
                       | Tm_meta _ ->
                         map_meta (visit callback)
                       | _ ->
-                        printfn "Not a formula, split to smt %s" (Print.term_to_string goal.goal_ty);
+                        BU.print1 "Not a formula, split to smt %s\n" (Print.term_to_string goal.goal_ty);
                         smt
                       end
 
@@ -620,7 +621,7 @@ let rec visit (callback:tac<unit>)
                       bind (visit callback) (fun _ ->
                       bind (revert_all_hd (List.map fst binders)) (fun _ ->
                       with_cur_goal "inner" (fun goal ->
-                      printfn "After reverting intros, goal is %s" (goal_to_string goal);
+                      BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal);
                       ret()))))
 
                     | Some (U.BaseConn(l, _))

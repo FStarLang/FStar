@@ -22,8 +22,37 @@ type name = bv
 
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
+let quote (nm:Ident.lid) (args:S.args) = 
+  match args with
+  | [_; (y, _)] -> Some (E.embed_term y)
+  | _ -> None
+
+let binders_of_env ps (nm:Ident.lid) (args:S.args) =    
+  match args with 
+  | [(embedded_env, _)] -> 
+    let env = E.unembed_env ps.main_context embedded_env in
+    Some (E.embed_binders (Env.all_binders env))
+  | _ -> None
+  
+let type_of_binder (nm:Ident.lid) (args:S.args) = 
+  match args with 
+  | [(embedded_binder, _)] -> 
+    let b, _ = E.unembed_binder embedded_binder in
+    Some (E.embed_term b.sort)
+  | _ -> None
+
+let term_eq (nm:Ident.lid) (args:S.args) = 
+  match args with 
+  | [(embedded_t1, _); (embedded_t2, _)] ->
+    let t1 = E.unembed_term embedded_t1 in
+    let t2 = E.unembed_term embedded_t2 in
+    (match FStar.Syntax.Util.eq_tm t1 t2 with
+     | U.Equal -> Some (E.embed_bool true)
+     | _ -> Some (E.embed_bool false))
+  | _ -> None
+
 let mk_pure_interpretation_1 (f:'a -> 'b) (unembed_a:term -> 'a) (embed_b:'b -> term) nm (args:args) :option<term> =
-    printfn "Reached %s, args are: %s"
+    BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args);
     match args with
@@ -39,7 +68,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
   *)
   match args with
   | [(embedded_state, _)] ->
-    printfn "Reached %s, args are: %s"
+    BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
@@ -55,7 +84,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
-    printfn "Reached %s, goals are: %s"
+    BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
@@ -71,7 +100,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (embedded_state, _)] ->
-    printfn "Reached %s, goals are: %s"
+    BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
@@ -116,24 +145,13 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "term_as_formula" 1 (mk_pure_interpretation_1 E.term_as_formula
                                             E.unembed_term
                                             (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "quote"           2 (fun nm [_; (y, _)] ->
-                                printfn "Reached quote: %s" (Print.term_to_string y);
-                                Some (E.embed_term y));
-      mk "binders_of_env"  1 (fun nm [(env, _)] ->
-                                let env = E.unembed_env ps.main_context env in
-                                Some (E.embed_binders (Env.all_binders env)));
-      mk "type_of_binder"  1 (fun nm [(b, _)] -> let b, _ = E.unembed_binder b in Some (E.embed_term b.sort));
-      mk "term_eq"         2 (fun nm [(t1, _); (t2, _)] ->
-                                let t1 = E.unembed_term t1 in
-                                let t2 = E.unembed_term t2 in
-                                printfn "Comparing %s and %s"
-                                    (Print.term_to_string t1)
-                                    (Print.term_to_string t2);
-                                match FStar.Syntax.Util.eq_tm t1 t2 with
-                                | U.Equal -> Some (E.embed_bool true)
-                                | _ -> Some (E.embed_bool false))
+      mk "quote"           2 quote;
+      mk "binders_of_env"  1 (binders_of_env ps);
+      mk "type_of_binder"  1 type_of_binder;
+      mk "term_eq"         2 term_eq;
     ]
 
+//F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
     bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_tac_b
@@ -141,11 +159,11 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
                           None
                           Range.dummyRange in
     let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
-                 printfn "Starting normalizer with %s" (Print.term_to_string tm);
+                 BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
                  Options.set_option "debug_level" (Options.List [Options.String "Norm"]);
     let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
             Options.set_option "debug_level" (Options.List []);
-            printfn "Reduced tactic: got %s" (Print.term_to_string result);
+            BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
     match E.unembed_result proof_state.main_context result unembed_b with
     | Inl (b, (goals, smt_goals)) ->
         bind dismiss (fun _ ->
@@ -158,14 +176,6 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (add_goals goals) (fun _ ->
         bind (add_smt_goals smt_goals) (fun _ ->
         fail msg))))
-
-
-and unembed_tactic<'a,'b> (embed_a:'a -> term) (unembed_b:term -> 'b) (embedded_a_tac_b:term) (a:'a) : tac<'b> =
-    let tm = S.mk_Tm_app embedded_a_tac_b
-                         [S.as_arg (embed_a a)]
-                         None
-                         Range.dummyRange in
-    unembed_tactic_0 unembed_b tm
 
 let evaluate_user_tactic : tac<unit>
     = with_cur_goal "evaluate_user_tactic" (fun goal ->
@@ -188,14 +198,14 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
             FStar.Syntax.Const.prims_lid
     || BU.starts_with (Ident.string_of_lid (Env.current_module env)) "FStar."
     then [env, goal]
-    else let _ = printfn "About to preprocess %s\n" (Print.term_to_string goal) in
+    else let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
          let p = proofstate_of_goal_ty env goal in
          match run (visit evaluate_user_tactic) p with
          | Success (_, p2) ->
            (p2.goals @ p2.smt_goals) |> List.map (fun g ->
-             printfn "Got goal: %s" (goal_to_string g);
+             BU.print1 "Got goal: %s\n" (goal_to_string g);
              g.context, g.goal_ty)
          | Failed (msg, _) ->
-           printfn "Tactic failed: %s" msg;
-           printfn "Got goal: %s" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
+           BU.print1 "Tactic failed: %s\n" msg;
+           BU.print1 "Got goal: %s\n" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
            [env, goal]

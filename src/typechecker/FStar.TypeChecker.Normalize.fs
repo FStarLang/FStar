@@ -1429,7 +1429,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     let scrutinee = t in
     let norm_and_rebuild_match () =
       log cfg (fun () ->
-          printfn "match is irreducible: scrutinee=%s\nbranches=%s\n"
+          BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
                 (Print.term_to_string scrutinee)
                 (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
       let whnf = List.contains WHNF cfg.steps in

@@ -6,8 +6,8 @@ let give_witness #a x = return_squash x
 
 val impl_to_arrow : #a:Type0 -> #b:Type0 -> impl:(a ==> b) -> sx:squash a -> GTot (squash b)
 let impl_to_arrow #a #b impl sx =
-  bind_squash impl (fun f ->
-  bind_squash sx (fun x -> 
+  bind_squash #(a -> GTot b) impl (fun f ->
+  bind_squash sx (fun x ->
   return_squash (f x)))
 
 val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
@@ -35,7 +35,7 @@ let forall_intro_squash_gtot #a #p $f =
 //This one seems more generally useful than the one above
 val forall_intro_squash_gtot_join  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (squash (p x))) -> Tot (forall (x:a). p x)
 let forall_intro_squash_gtot_join #a #p $f =
-  join_squash 
+  join_squash
     (bind_squash #(x:a -> GTot (p x)) #(forall (x:a). p x)
 	      (squash_double_arrow #a #p (return_squash f))
 	      (fun f -> lemma_forall_intro_gtot #a #p f))

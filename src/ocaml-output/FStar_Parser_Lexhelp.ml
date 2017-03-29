@@ -240,6 +240,7 @@ let keywords:
   (ALWAYS, "assert", FStar_Parser_Parse.ASSERT);
   (ALWAYS, "assume", FStar_Parser_Parse.ASSUME);
   (ALWAYS, "begin", FStar_Parser_Parse.BEGIN);
+  (ALWAYS, "by", FStar_Parser_Parse.BY);
   (FSHARP, "default", FStar_Parser_Parse.DEFAULT);
   (ALWAYS, "effect", FStar_Parser_Parse.EFFECT);
   (ALWAYS, "else", FStar_Parser_Parse.ELSE);
@@ -290,19 +291,19 @@ let keywords:
   (ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE)]
 let stringKeywords: Prims.string Prims.list =
   FStar_List.map
-    (fun uu____425  -> match uu____425 with | (uu____429,w,uu____431) -> w)
+    (fun uu____428  -> match uu____428 with | (uu____432,w,uu____434) -> w)
     keywords
 let unreserve_words: Prims.string Prims.list =
   FStar_List.choose
-    (fun uu____436  ->
-       match uu____436 with
-       | (mode,keyword,uu____443) ->
+    (fun uu____439  ->
+       match uu____439 with
+       | (mode,keyword,uu____446) ->
            if mode = FSHARP then Some keyword else None) keywords
 let kwd_table: FStar_Parser_Parse.token FStar_Util.smap =
   let tab = FStar_Util.smap_create (Prims.parse_int "1000") in
   FStar_List.iter
-    (fun uu____453  ->
-       match uu____453 with
+    (fun uu____456  ->
+       match uu____456 with
        | (mode,keyword,token) -> FStar_Util.smap_add tab keyword token)
     keywords;
   tab
@@ -315,8 +316,8 @@ type lexargs =
   contents: Prims.string;}
 let mkLexargs:
   ((Prims.unit -> Prims.string)* Prims.string* Prims.string) -> lexargs =
-  fun uu____500  ->
-    match uu____500 with
+  fun uu____503  ->
+    match uu____503 with
     | (srcdir,filename,contents) ->
         { getSourceDirectory = srcdir; filename; contents }
 let kwd_or_id:
@@ -324,31 +325,31 @@ let kwd_or_id:
   fun args  ->
     fun r  ->
       fun s  ->
-        let uu____522 = kwd s in
-        match uu____522 with
+        let uu____525 = kwd s in
+        match uu____525 with
         | Some v1 -> v1
         | None  ->
             (match s with
              | "__SOURCE_DIRECTORY__" ->
-                 let uu____525 =
-                   let uu____526 = args.getSourceDirectory () in
-                   FStar_Bytes.string_as_unicode_bytes uu____526 in
-                 FStar_Parser_Parse.STRING uu____525
+                 let uu____528 =
+                   let uu____529 = args.getSourceDirectory () in
+                   FStar_Bytes.string_as_unicode_bytes uu____529 in
+                 FStar_Parser_Parse.STRING uu____528
              | "__SOURCE_FILE__" ->
-                 let uu____527 =
-                   let uu____528 = FStar_Range.file_of_range r in
-                   FStar_Bytes.string_as_unicode_bytes uu____528 in
-                 FStar_Parser_Parse.STRING uu____527
+                 let uu____530 =
+                   let uu____531 = FStar_Range.file_of_range r in
+                   FStar_Bytes.string_as_unicode_bytes uu____531 in
+                 FStar_Parser_Parse.STRING uu____530
              | "__LINE__" ->
-                 let uu____529 =
-                   let uu____532 =
-                     let uu____533 =
-                       let uu____534 = FStar_Range.start_of_range r in
-                       FStar_Range.line_of_pos uu____534 in
-                     FStar_All.pipe_left FStar_Util.string_of_int uu____533 in
-                   (uu____532, false) in
-                 FStar_Parser_Parse.INT uu____529
-             | uu____535 ->
+                 let uu____532 =
+                   let uu____535 =
+                     let uu____536 =
+                       let uu____537 = FStar_Range.start_of_range r in
+                       FStar_Range.line_of_pos uu____537 in
+                     FStar_All.pipe_left FStar_Util.string_of_int uu____536 in
+                   (uu____535, false) in
+                 FStar_Parser_Parse.INT uu____532
+             | uu____538 ->
                  if FStar_Util.starts_with s FStar_Ident.reserved_prefix
                  then
                    Prims.raise
@@ -356,5 +357,5 @@ let kwd_or_id:
                         ((Prims.strcat FStar_Ident.reserved_prefix
                             " is a reserved prefix for an identifier"), r))
                  else
-                   (let uu____537 = intern_string s in
-                    FStar_Parser_Parse.IDENT uu____537))
+                   (let uu____540 = intern_string s in
+                    FStar_Parser_Parse.IDENT uu____540))
