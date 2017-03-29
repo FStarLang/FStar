@@ -565,7 +565,8 @@ let equality_ops : list<primitive_step> =
 let reduce_primops cfg tm =
     if not <| List.contains Primops cfg.steps
     then tm
-    else let head, args = U.head_and_args tm in
+    else begin
+         let head, args = U.head_and_args tm in
          match (U.un_uinst head).n with
          | Tm_fvar fv -> begin
            match List.tryFind (fun ps -> S.fv_eq_lid fv ps.name) cfg.primitive_steps with
@@ -578,9 +579,10 @@ let reduce_primops cfg tm =
                   | Some reduced -> reduced
            end
          | _ -> tm
+   end
 
 let reduce_equality cfg tm =
-    reduce_primops ({cfg with primitive_steps=equality_ops}) tm
+    reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
 
 let maybe_simplify cfg tm =
     let steps = cfg.steps in
@@ -1588,10 +1590,11 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=[]}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps@equality_ops}
 
 let normalize_with_primitive_steps ps s e t =
-    let c = {config s e with primitive_steps=built_in_primitive_steps@equality_ops@ps} in
+    let c = config s e in
+    let c = {config s e with primitive_steps=c.primitive_steps@ps} in
     norm c [] [] t
 let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
