@@ -116,12 +116,14 @@ type bgproc = {
 type query_log = {
     get_module_name: unit -> string;
     set_module_name: string -> unit;
-    append_to_log:   string -> unit;
+    write_to_log:   string -> unit;
     close_log:       unit -> unit;
     log_file_name:   unit -> string
 }
 
+
 let query_logging =
+    let query_number = BU.mk_ref 0 in
     let log_file_opt : ref<option<file_handle>> = BU.mk_ref None in
     let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
@@ -151,6 +153,25 @@ let query_logging =
         | None -> new_log_file()
         | Some fh -> fh in
     let append_to_log str = BU.append_to_file (get_log_file()) str in
+    let write_to_new_log str =
+      let dir_name = match !current_file_name with
+        | None ->
+          let dir_name = match !current_module_name with
+            | None -> failwith "current module not set"
+            | Some n -> BU.format1 "queries-%s" n in
+          BU.mkdir_clean dir_name;
+          current_file_name := Some dir_name;
+          dir_name
+        | Some n -> n in
+      let qnum = !query_number in
+      query_number := !query_number + 1;
+      let file_name = BU.format1 "query-%s.smt2" (BU.string_of_int qnum) in
+      let file_name = BU.concat_dir_filename dir_name file_name in
+      write_file file_name str in
+    let write_to_log str =
+      if (Options.n_cores() > 1) then write_to_new_log str
+      else append_to_log str
+      in
     let close_log () = match !log_file_opt with
         | None -> ()
         | Some fh -> BU.close_file fh; log_file_opt := None in
@@ -159,7 +180,7 @@ let query_logging =
         | Some n -> n in
      {set_module_name=set_module_name;
       get_module_name=get_module_name;
-      append_to_log=append_to_log;
+      write_to_log=write_to_log;
       close_log=close_log;
       log_file_name=log_file_name}
 
@@ -502,7 +523,7 @@ let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_lab
          | Inr (_, ek) -> cb (Inr ([],ek), time) //if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time) in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if Options.log_queries() then query_logging.append_to_log input;
+  if Options.log_queries() then query_logging.write_to_log input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
 
 

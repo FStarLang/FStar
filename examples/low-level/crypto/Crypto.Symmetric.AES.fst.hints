@@ -1216,7 +1216,7 @@
         "function_token_typing_FStar.Heap.emp",
         "function_token_typing_FStar.HyperHeap.root",
         "function_token_typing_FStar.List.Tot.Base.test_sort",
-        "int_inversion", "int_typing", "kinding_FStar.UInt8.t_@tok",
+        "int_inversion", "kinding_FStar.UInt8.t_@tok",
         "lemma_FStar.Buffer.lemma_modifies_1_trans",
         "lemma_FStar.Buffer.no_upd_lemma_1",
         "lemma_FStar.HyperStack.lemma_equal_domains_trans",
@@ -1240,8 +1240,8 @@
         "typing_Crypto.Symmetric.AES.v",
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
         "typing_FStar.HyperStack.__proj__HS__item__h",
-        "typing_FStar.HyperStack.is_in", "typing_FStar.Mul.op_Star",
-        "typing_FStar.UInt.fits", "typing_FStar.UInt32.v", "unit_inversion"
+        "typing_FStar.HyperStack.is_in", "typing_FStar.UInt.fits",
+        "typing_FStar.UInt32.v", "unit_inversion"
       ],
       0
     ],
@@ -1400,6 +1400,7 @@
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
         "refinement_interpretation_Tm_refine_1b5d9020cc8f44163e9c491b867a8c24",
+        "refinement_interpretation_Tm_refine_814770d986f06f66b84225be16b5517a",
         "refinement_interpretation_Tm_refine_a2e6366d2de5a2469cf7063420642cdc",
         "refinement_interpretation_Tm_refine_b1c7ea296fe1f86aca9852f8e875c557",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",

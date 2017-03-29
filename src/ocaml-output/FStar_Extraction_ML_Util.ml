@@ -42,27 +42,27 @@ let rec subst_aux:
     Prims.list ->
     FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty
   =
-  fun subst  ->
+  fun subst1  ->
     fun t  ->
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Var x ->
           let uu____73 =
             FStar_Util.find_opt
               (fun uu____79  -> match uu____79 with | (y,uu____83) -> y = x)
-              subst in
+              subst1 in
           (match uu____73 with | Some ts -> Prims.snd ts | None  -> t)
       | FStar_Extraction_ML_Syntax.MLTY_Fun (t1,f,t2) ->
           let uu____94 =
-            let uu____98 = subst_aux subst t1 in
-            let uu____99 = subst_aux subst t2 in (uu____98, f, uu____99) in
+            let uu____98 = subst_aux subst1 t1 in
+            let uu____99 = subst_aux subst1 t2 in (uu____98, f, uu____99) in
           FStar_Extraction_ML_Syntax.MLTY_Fun uu____94
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,path) ->
           let uu____104 =
-            let uu____108 = FStar_List.map (subst_aux subst) args in
+            let uu____108 = FStar_List.map (subst_aux subst1) args in
             (uu____108, path) in
           FStar_Extraction_ML_Syntax.MLTY_Named uu____104
       | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
-          let uu____113 = FStar_List.map (subst_aux subst) ts in
+          let uu____113 = FStar_List.map (subst_aux subst1) ts in
           FStar_Extraction_ML_Syntax.MLTY_Tuple uu____113
       | FStar_Extraction_ML_Syntax.MLTY_Top  ->
           FStar_Extraction_ML_Syntax.MLTY_Top
@@ -88,10 +88,10 @@ let udelta_unfold:
       FStar_Extraction_ML_Syntax.mlty Prims.option
   =
   fun g  ->
-    fun uu___107_140  ->
-      match uu___107_140 with
-      | FStar_Extraction_ML_Syntax.MLTY_Named (args,n) ->
-          let uu____146 = FStar_Extraction_ML_UEnv.lookup_ty_const g n in
+    fun uu___112_140  ->
+      match uu___112_140 with
+      | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
+          let uu____146 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1 in
           (match uu____146 with
            | Some ts -> let uu____150 = subst ts args in Some uu____150
            | uu____151 -> None)
@@ -110,8 +110,8 @@ let eff_leq:
          ,FStar_Extraction_ML_Syntax.E_IMPURE ) -> true
       | uu____161 -> false
 let eff_to_string: FStar_Extraction_ML_Syntax.e_tag -> Prims.string =
-  fun uu___108_166  ->
-    match uu___108_166 with
+  fun uu___113_166  ->
+    match uu___113_166 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -192,16 +192,16 @@ let rec type_leq_c:
                 match xs with
                 | [] -> body
                 | uu____275 ->
-                    let e =
+                    let e1 =
                       match body.FStar_Extraction_ML_Syntax.expr with
-                      | FStar_Extraction_ML_Syntax.MLE_Fun (ys,body) ->
+                      | FStar_Extraction_ML_Syntax.MLE_Fun (ys,body1) ->
                           FStar_Extraction_ML_Syntax.MLE_Fun
-                            ((FStar_List.append xs ys), body)
+                            ((FStar_List.append xs ys), body1)
                       | uu____293 ->
                           FStar_Extraction_ML_Syntax.MLE_Fun (xs, body) in
                     let uu____297 =
                       (mk_ty_fun ()) xs body.FStar_Extraction_ML_Syntax.mlty in
-                    FStar_Extraction_ML_Syntax.with_ty uu____297 e in
+                    FStar_Extraction_ML_Syntax.with_ty uu____297 e1 in
               (match e with
                | Some
                    {
@@ -221,7 +221,7 @@ let rec type_leq_c:
                         let uu____326 = type_leq unfold_ty t2 t2' in
                         (if uu____326
                          then
-                           let body =
+                           let body1 =
                              let uu____334 =
                                type_leq unfold_ty t2
                                  FStar_Extraction_ML_Syntax.ml_unit_ty in
@@ -239,11 +239,11 @@ let rec type_leq_c:
                                let uu____342 =
                                  let uu____345 =
                                    (mk_ty_fun ()) [x]
-                                     body.FStar_Extraction_ML_Syntax.mlty in
+                                     body1.FStar_Extraction_ML_Syntax.mlty in
                                  FStar_Extraction_ML_Syntax.with_ty uu____345 in
                                FStar_All.pipe_left uu____342
                                  (FStar_Extraction_ML_Syntax.MLE_Fun
-                                    ([x], body)) in
+                                    ([x], body1)) in
                              Some uu____341 in
                            (true, uu____339)
                          else (false, None))
@@ -255,11 +255,11 @@ let rec type_leq_c:
                                uu____367 in
                            type_leq_c unfold_ty uu____365 t2 t2' in
                          match uu____361 with
-                         | (ok,body) ->
+                         | (ok,body1) ->
                              let res =
-                               match body with
-                               | Some body ->
-                                   let uu____383 = mk_fun [x] body in
+                               match body1 with
+                               | Some body2 ->
+                                   let uu____383 = mk_fun [x] body2 in
                                    Some uu____383
                                | uu____388 -> None in
                              (ok, res)))
@@ -280,12 +280,12 @@ let rec type_leq_c:
               else
                 (let uu____430 = unfold_ty t in
                  match uu____430 with
-                 | Some t -> type_leq_c unfold_ty e t t'
+                 | Some t1 -> type_leq_c unfold_ty e t1 t'
                  | None  ->
                      let uu____440 = unfold_ty t' in
                      (match uu____440 with
                       | None  -> (false, None)
-                      | Some t' -> type_leq_c unfold_ty e t t'))
+                      | Some t'1 -> type_leq_c unfold_ty e t t'1))
           | (FStar_Extraction_ML_Syntax.MLTY_Tuple
              ts,FStar_Extraction_ML_Syntax.MLTY_Tuple ts') ->
               let uu____455 = FStar_List.forall2 (type_leq unfold_ty) ts ts' in
@@ -295,12 +295,12 @@ let rec type_leq_c:
           | (FStar_Extraction_ML_Syntax.MLTY_Named uu____466,uu____467) ->
               let uu____471 = unfold_ty t in
               (match uu____471 with
-               | Some t -> type_leq_c unfold_ty e t t'
+               | Some t1 -> type_leq_c unfold_ty e t1 t'
                | uu____481 -> (false, None))
           | (uu____484,FStar_Extraction_ML_Syntax.MLTY_Named uu____485) ->
               let uu____489 = unfold_ty t' in
               (match uu____489 with
-               | Some t' -> type_leq_c unfold_ty e t t'
+               | Some t'1 -> type_leq_c unfold_ty e t t'1
                | uu____499 -> (false, None))
           | uu____502 -> (false, None)
 and type_leq:
@@ -313,18 +313,18 @@ and type_leq:
       fun t2  ->
         let uu____510 = type_leq_c g None t1 t2 in
         FStar_All.pipe_right uu____510 Prims.fst
-let is_type_abstraction uu___109_536 =
-  match uu___109_536 with
+let is_type_abstraction uu___114_536 =
+  match uu___114_536 with
   | (FStar_Util.Inl uu____542,uu____543)::uu____544 -> true
   | uu____556 -> false
 let is_xtuple:
   (Prims.string Prims.list* Prims.string) -> Prims.int Prims.option =
   fun uu____568  ->
     match uu____568 with
-    | (ns,n) ->
+    | (ns,n1) ->
         if ns = ["Prims"]
         then
-          (match n with
+          (match n1 with
            | "Mktuple2" -> Some (Prims.parse_int "2")
            | "Mktuple3" -> Some (Prims.parse_int "3")
            | "Mktuple4" -> Some (Prims.parse_int "4")
@@ -340,7 +340,7 @@ let resugar_exp:
     match e.FStar_Extraction_ML_Syntax.expr with
     | FStar_Extraction_ML_Syntax.MLE_CTor (mlp,args) ->
         (match is_xtuple mlp with
-         | Some n ->
+         | Some n1 ->
              FStar_All.pipe_left
                (FStar_Extraction_ML_Syntax.with_ty
                   e.FStar_Extraction_ML_Syntax.mlty)
@@ -349,8 +349,8 @@ let resugar_exp:
     | uu____592 -> e
 let record_field_path:
   FStar_Ident.lident Prims.list -> Prims.string Prims.list =
-  fun uu___110_597  ->
-    match uu___110_597 with
+  fun uu___115_597  ->
+    match uu___115_597 with
     | f::uu____601 ->
         let uu____603 = FStar_Util.prefix f.FStar_Ident.ns in
         (match uu____603 with
@@ -366,10 +366,10 @@ let is_xtuple_ty:
   (Prims.string Prims.list* Prims.string) -> Prims.int Prims.option =
   fun uu____647  ->
     match uu____647 with
-    | (ns,n) ->
+    | (ns,n1) ->
         if ns = ["Prims"]
         then
-          (match n with
+          (match n1 with
            | "tuple2" -> Some (Prims.parse_int "2")
            | "tuple3" -> Some (Prims.parse_int "3")
            | "tuple4" -> Some (Prims.parse_int "4")
@@ -385,7 +385,7 @@ let resugar_mlty:
     match t with
     | FStar_Extraction_ML_Syntax.MLTY_Named (args,mlp) ->
         (match is_xtuple_ty mlp with
-         | Some n -> FStar_Extraction_ML_Syntax.MLTY_Tuple args
+         | Some n1 -> FStar_Extraction_ML_Syntax.MLTY_Tuple args
          | uu____669 -> t)
     | uu____671 -> t
 let codegen_fsharp: Prims.unit -> Prims.bool =
@@ -402,11 +402,11 @@ let flatten_ns: Prims.string Prims.list -> Prims.string =
 let flatten_mlpath: (Prims.string Prims.list* Prims.string) -> Prims.string =
   fun uu____690  ->
     match uu____690 with
-    | (ns,n) ->
+    | (ns,n1) ->
         let uu____698 = codegen_fsharp () in
         if uu____698
-        then FStar_String.concat "." (FStar_List.append ns [n])
-        else FStar_String.concat "_" (FStar_List.append ns [n])
+        then FStar_String.concat "." (FStar_List.append ns [n1])
+        else FStar_String.concat "_" (FStar_List.append ns [n1])
 let mlpath_of_lid:
   FStar_Ident.lident -> (Prims.string Prims.list* Prims.string) =
   fun l  ->
@@ -423,7 +423,7 @@ let rec erasableType:
       else
         (let uu____722 = unfold_ty t in
          match uu____722 with
-         | Some t -> erasableType unfold_ty t
+         | Some t1 -> erasableType unfold_ty t1
          | None  -> false)
 let rec eraseTypeDeep:
   unfold_t ->

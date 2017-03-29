@@ -206,11 +206,11 @@ extract-krml-test:
 
 krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	# -bundle Crypto_KrmlTest=Flag,Crypto.*
-	$(KRML) crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst \
-		spartan_aes/aes.o crypto/spartan_stub.c \
-	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
-	       	$(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
-		-tmpdir tmp -add-include '"testlib.h"' -o $@
+	$(KRML) spartan_aes/aes.o crypto/spartan_stub.c \
+                -no-prefix Crypto.KrmlTest \
+                $(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
+                -tmpdir tmp -add-include '"testlib.h"' -o $@ \
+                crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 	./krml-test.exe
 
 test-perf.exe: crypto/test_perf.c krml-test.exe

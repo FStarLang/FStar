@@ -77,6 +77,18 @@ val smap_remove: smap<'value> -> string -> unit
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 
+type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
+val imap_create: int -> imap<'value>
+val imap_clear:imap<'value> -> unit
+val imap_add: imap<'value> -> int -> 'value -> unit
+val imap_of_list: list<(int*'value)> -> imap<'value>
+val imap_try_find: imap<'value> -> int -> option<'value>
+val imap_fold: imap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
+val imap_remove: imap<'value> -> int -> unit
+(* The list may contain duplicates. *)
+val imap_keys: imap<'value> -> list<int>
+val imap_copy: imap<'value> -> imap<'value>
+
 val format: string -> list<string> -> string
 val format1: string -> string -> string
 val format2: string -> string -> string -> string
@@ -129,6 +141,8 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
+val mkdir_clean: string -> unit (* creates a new dir with user read/write or delete content of dir if exists *)
+val concat_dir_filename: string -> string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader

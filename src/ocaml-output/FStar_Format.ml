@@ -43,8 +43,8 @@ let combine: doc -> doc Prims.list -> doc =
       | Doc sep ->
           let select uu____80 =
             match uu____80 with | Doc d -> if d = "" then None else Some d in
-          let docs = FStar_List.choose select docs in
-          Doc (FStar_String.concat sep docs)
+          let docs1 = FStar_List.choose select docs in
+          Doc (FStar_String.concat sep docs1)
 let cat1: doc -> doc -> doc = fun d1  -> fun d2  -> reduce [d1; break1; d2]
 let reduce1: doc Prims.list -> doc = fun docs  -> combine break1 docs
 let nest: Prims.int -> doc -> doc =
@@ -52,7 +52,7 @@ let nest: Prims.int -> doc -> doc =
 let align: doc Prims.list -> doc =
   fun docs  ->
     let uu____110 = combine hardline docs in
-    match uu____110 with | Doc doc -> Doc doc
+    match uu____110 with | Doc doc1 -> Doc doc1
 let hbox: doc -> doc = fun d  -> d
 let pretty: Prims.int -> doc -> Prims.string =
-  fun sz  -> fun uu____120  -> match uu____120 with | Doc doc -> doc
+  fun sz  -> fun uu____120  -> match uu____120 with | Doc doc1 -> doc1

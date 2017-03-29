@@ -62,7 +62,7 @@ type effects = {
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
-type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)>
+type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
@@ -136,10 +136,10 @@ val get_range      : env -> Range.range
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
-val try_lookup_bv          : env -> bv -> option<typ>
-val lookup_bv              : env -> bv -> typ
-val try_lookup_lid         : env -> lident -> option<(universes * typ)>
-val lookup_lid             : env -> lident -> (universes * typ)
+val try_lookup_bv          : env -> bv -> option<typ> * Range.range
+val lookup_bv              : env -> bv -> typ * Range.range
+val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
+val lookup_lid             : env -> lident -> (universes * typ) * Range.range
 val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)

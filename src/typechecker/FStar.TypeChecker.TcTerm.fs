@@ -613,34 +613,43 @@ and tc_value env (e:term) : term
     e, S.mk_Total t |> U.lcomp_of_comp, (Rel.conj_guard g0 g1)
 
   | Tm_name x ->
-    let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
-    let e = S.bv_to_name ({x with sort=t}) in
+    let t, rng = 
+        if env.use_bv_sorts 
+        then x.sort, S.range_of_bv x 
+        else Env.lookup_bv env x in
+    let x = S.set_range_of_bv ({x with sort=t}) rng in
+    FStar.TypeChecker.Common.insert_bv x t;
+    let e = S.bv_to_name x in
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
     let tc = if Env.should_verify env then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
-    let us', t = Env.lookup_lid env fv.fv_name.v in
+    let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    let fv' = S.set_range_of_fv fv' range in
+    FStar.TypeChecker.Common.insert_fv fv' t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_fvar fv ->
-    let us, t = Env.lookup_lid env fv.fv_name.v in
+    let (us, t), range = Env.lookup_lid env fv.fv_name.v in
     if Env.debug env <| Options.Other "Range"
-    then BU.print5 "Lookup up fvar %s at location %s (lid range = %s, %s); got type %s"
+    then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got type %s"
             (Print.lid_to_string (lid_of_fv fv))
             (Range.string_of_range e.pos)
-            (Range.string_of_range (range_of_lid (lid_of_fv fv)))
-            (Range.string_of_use_range (range_of_lid (lid_of_fv fv)))
+            (Range.string_of_range range)
+            (Range.string_of_use_range range)
             (Print.term_to_string t);
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
+    let fv' = S.set_range_of_fv fv' range in
+    FStar.TypeChecker.Common.insert_fv fv' t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
@@ -2006,7 +2015,7 @@ let rec universe_of_aux env e =
    | Tm_meta(t, _) -> universe_of_aux env t
    | Tm_name n -> n.sort
    | Tm_fvar fv ->
-     let _, t = Env.lookup_lid env fv.fv_name.v in
+     let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
    | Tm_ascribed(_, (Inl t, _), _) -> t
    | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
@@ -2015,7 +2024,7 @@ let rec universe_of_aux env e =
    | Tm_constant sc -> tc_constant e.pos sc
    //slightly subtle, since fv is a type-scheme; instantiate it with us
    | Tm_uinst({n=Tm_fvar fv}, us) ->
-     let us', t = Env.lookup_lid env fv.fv_name.v in
+     let (us', t), _ = Env.lookup_lid env fv.fv_name.v in
      if List.length us <> List.length us'
      then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
      else List.iter2 (fun u' u -> match u' with

@@ -12,7 +12,7 @@ let interleave:
         | FStar_Parser_AST.Val (y,uu____28) ->
             x.FStar_Ident.idText = y.FStar_Ident.idText
         | uu____29 -> false in
-      let is_type x d =
+      let is_type1 x d =
         match d.FStar_Parser_AST.d with
         | FStar_Parser_AST.Tycon (uu____37,tys) ->
             FStar_All.pipe_right tys
@@ -33,7 +33,7 @@ let interleave:
               FStar_All.pipe_right tys
                 (FStar_List.map
                    (fun uu____101  ->
-                      match uu____101 with | (x,uu____106) -> x)) in
+                      match uu____101 with | (x1,uu____106) -> x1)) in
             FStar_All.pipe_right uu____91
               (FStar_Util.for_some
                  (fun uu___126_110  ->
@@ -45,17 +45,17 @@ let interleave:
         | uu____120 -> false in
       let prefix_until_let x ds =
         FStar_All.pipe_right ds (FStar_Util.prefix_until (is_let x)) in
-      let aux_ml iface impl =
-        let rec interleave_vals vals impl =
+      let aux_ml iface1 impl1 =
+        let rec interleave_vals vals impl2 =
           match vals with
-          | [] -> impl
+          | [] -> impl2
           | { FStar_Parser_AST.d = FStar_Parser_AST.Val (x,uu____170);
               FStar_Parser_AST.drange = uu____171;
               FStar_Parser_AST.doc = uu____172;
               FStar_Parser_AST.quals = uu____173;
               FStar_Parser_AST.attrs = uu____174;_}::remaining_vals ->
               let d = FStar_List.hd vals in
-              let lopt = prefix_until_let x impl in
+              let lopt = prefix_until_let x impl2 in
               (match lopt with
                | None  ->
                    Prims.raise
@@ -63,19 +63,19 @@ let interleave:
                         ((Prims.strcat "No definition found for "
                             x.FStar_Ident.idText),
                           (d.FStar_Parser_AST.drange)))
-               | Some (prefix,let_x,rest_impl) ->
-                   let impl =
-                     FStar_List.append prefix
+               | Some (prefix1,let_x,rest_impl) ->
+                   let impl3 =
+                     FStar_List.append prefix1
                        (FStar_List.append [d; let_x] rest_impl) in
-                   interleave_vals remaining_vals impl)
-          | uu____207::remaining_vals -> interleave_vals remaining_vals impl in
-        interleave_vals iface impl in
-      let rec aux out iface impl =
-        match iface with
+                   interleave_vals remaining_vals impl3)
+          | uu____207::remaining_vals -> interleave_vals remaining_vals impl2 in
+        interleave_vals iface1 impl1 in
+      let rec aux out iface1 impl1 =
+        match iface1 with
         | [] ->
             let uu____230 =
               FStar_All.pipe_right (FStar_List.rev out) FStar_List.flatten in
-            FStar_List.append uu____230 impl
+            FStar_List.append uu____230 impl1
         | d::ds ->
             (match d.FStar_Parser_AST.d with
              | FStar_Parser_AST.Tycon (uu____240,tys) when
@@ -93,9 +93,9 @@ let interleave:
                         (d.FStar_Parser_AST.drange)))
              | FStar_Parser_AST.Val (x,t) ->
                  ((let uu____278 =
-                     FStar_All.pipe_right impl
+                     FStar_All.pipe_right impl1
                        (FStar_List.tryFind
-                          (fun d  -> (is_val x d) || (is_type x d))) in
+                          (fun d1  -> (is_val x d1) || (is_type1 x d1))) in
                    match uu____278 with
                    | None  -> ()
                    | Some
@@ -128,7 +128,7 @@ let interleave:
                            (uu____302, (i.FStar_Parser_AST.drange)) in
                          FStar_Errors.Error uu____299 in
                        Prims.raise uu____298);
-                  (let uu____304 = prefix_until_let x iface in
+                  (let uu____304 = prefix_until_let x iface1 in
                    match uu____304 with
                    | Some uu____312 ->
                        let uu____323 =
@@ -141,7 +141,7 @@ let interleave:
                          FStar_Errors.Error uu____324 in
                        Prims.raise uu____323
                    | None  ->
-                       let lopt = prefix_until_let x impl in
+                       let lopt = prefix_until_let x impl1 in
                        (match lopt with
                         | None  ->
                             let uu____347 =
@@ -149,14 +149,14 @@ let interleave:
                                 (FStar_List.contains
                                    FStar_Parser_AST.Assumption) in
                             if uu____347
-                            then aux ([d] :: out) ds impl
+                            then aux ([d] :: out) ds impl1
                             else
                               Prims.raise
                                 (FStar_Errors.Error
                                    ((Prims.strcat "No definition found for "
                                        x.FStar_Ident.idText),
                                      (d.FStar_Parser_AST.drange)))
-                        | Some (prefix,let_x,rest_impl) ->
+                        | Some (prefix1,let_x,rest_impl) ->
                             let uu____364 =
                               FStar_All.pipe_right d.FStar_Parser_AST.quals
                                 (FStar_List.contains
@@ -179,26 +179,26 @@ let interleave:
                               (let remaining_iface_vals =
                                  FStar_All.pipe_right ds
                                    (FStar_List.collect
-                                      (fun d  ->
-                                         match d.FStar_Parser_AST.d with
-                                         | FStar_Parser_AST.Val (x,uu____381)
-                                             -> [x]
+                                      (fun d1  ->
+                                         match d1.FStar_Parser_AST.d with
+                                         | FStar_Parser_AST.Val
+                                             (x1,uu____381) -> [x1]
                                          | uu____382 -> [])) in
                                let uu____383 =
-                                 FStar_All.pipe_right prefix
+                                 FStar_All.pipe_right prefix1
                                    (FStar_List.tryFind
-                                      (fun d  ->
+                                      (fun d1  ->
                                          FStar_All.pipe_right
                                            remaining_iface_vals
                                            (FStar_Util.for_some
-                                              (fun x  -> is_let x d)))) in
+                                              (fun x1  -> is_let x1 d1)))) in
                                match uu____383 with
-                               | Some d ->
+                               | Some d1 ->
                                    let uu____392 =
                                      let uu____393 =
                                        let uu____396 =
                                          let uu____397 =
-                                           FStar_Parser_AST.decl_to_string d in
+                                           FStar_Parser_AST.decl_to_string d1 in
                                          let uu____398 =
                                            FStar_Parser_AST.decl_to_string
                                              let_x in
@@ -206,7 +206,7 @@ let interleave:
                                            "%s is out of order with %s"
                                            uu____397 uu____398 in
                                        (uu____396,
-                                         (d.FStar_Parser_AST.drange)) in
+                                         (d1.FStar_Parser_AST.drange)) in
                                      FStar_Errors.Error uu____393 in
                                    Prims.raise uu____392
                                | uu____400 ->
@@ -216,10 +216,10 @@ let interleave:
                                         let def_lids =
                                           FStar_Parser_AST.lids_of_let defs in
                                         let iface_prefix_opt =
-                                          FStar_All.pipe_right iface
+                                          FStar_All.pipe_right iface1
                                             (FStar_Util.prefix_until
-                                               (fun d  ->
-                                                  match d.FStar_Parser_AST.d
+                                               (fun d1  ->
+                                                  match d1.FStar_Parser_AST.d
                                                   with
                                                   | FStar_Parser_AST.Val
                                                       (y,uu____429) ->
@@ -233,7 +233,7 @@ let interleave:
                                                   | uu____432 -> true)) in
                                         let uu____433 =
                                           match iface_prefix_opt with
-                                          | None  -> (iface, [])
+                                          | None  -> (iface1, [])
                                           | Some
                                               (all_vals_for_defs,first_non_val,rest_iface)
                                               ->
@@ -243,13 +243,13 @@ let interleave:
                                         (match uu____433 with
                                          | (all_vals_for_defs,rest_iface) ->
                                              let hoist =
-                                               FStar_List.append prefix
+                                               FStar_List.append prefix1
                                                  (FStar_List.append
                                                     all_vals_for_defs 
                                                     [let_x]) in
                                              aux (hoist :: out) rest_iface
                                                rest_impl)
                                     | uu____473 -> failwith "Impossible")))))
-             | uu____475 -> aux ([d] :: out) ds impl) in
+             | uu____475 -> aux ([d] :: out) ds impl1) in
       let uu____477 = FStar_Options.ml_ish () in
       if uu____477 then aux_ml iface impl else aux [] iface impl
