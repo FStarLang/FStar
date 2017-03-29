@@ -136,7 +136,7 @@ val get_range      : env -> Range.range
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
-val try_lookup_bv          : env -> bv -> option<typ> * Range.range
+val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range

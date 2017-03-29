@@ -456,7 +456,7 @@ let exact (tm:term)
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal "rewrite" (fun goal ->
       printfn "+++Rewrite %s : %s" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort);
-      match U.destruct_typ_as_formula (Env.lookup_bv goal.context (fst h)) with
+      match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
       | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
                 when Ident.lid_equals l SC.eq2_lid ->
         (match (SS.compress x).n with
