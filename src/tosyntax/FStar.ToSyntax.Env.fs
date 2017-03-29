@@ -101,7 +101,11 @@ type foundname =
 
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
-
+let transitive_exported_ids env lid =
+    let module_name = Ident.string_of_lid lid in
+    match BU.smap_try_find env.trans_exported_ids module_name with
+    | None -> []
+    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -581,6 +585,14 @@ let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * boo
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
+let resolve_to_fully_qualified_name (env:env) (l:lident) =
+    match try_lookup_lid env l with
+    | None -> None
+    | Some (e, _) ->
+      match (Subst.compress e).n with
+      | Tm_fvar fv -> Some fv.fv_name.v
+      | _ -> None
+
 let try_lookup_lid_no_resolve (env: env) l =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
   in
@@ -871,7 +883,7 @@ let push_include env ns =
             let ex = cur_exports k in
             let () = ex := BU.set_difference (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
-            let () = trans_ex := BU.set_union (!ex) ns_ex in
+            let () = trans_ex := BU.set_union (!trans_ex) ns_ex in
             ()
           in
           List.iter update_exports all_exported_id_kinds
