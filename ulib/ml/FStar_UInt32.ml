@@ -3,6 +3,7 @@ type t = uint32
                 
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
+let n = Prims.parse_int "32"
 let v (x:uint32) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0

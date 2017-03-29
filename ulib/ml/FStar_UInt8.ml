@@ -4,6 +4,7 @@ type t = uint8
               
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
+let n = Prims.parse_int "8"
 let v (x:uint8) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0

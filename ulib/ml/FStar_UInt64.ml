@@ -4,6 +4,7 @@ type t = uint64
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
+let n = Prims.parse_int "64"
 let v (x:uint64) : Prims.int = Prims.parse_int (Stdint.Uint64.to_string x)
 
 let zero = Stdint.Uint64.zero
