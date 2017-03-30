@@ -1,5 +1,5 @@
 [
-  "-„ﬂRBù0©S\rnYº†]N",
+  "C•é\nI˜’¢\u0019R%R{i;F",
   [
     [
       "FStar.Classical.give_witness",
@@ -12,6 +12,8 @@
       ],
       0
     ],
+    [ "FStar.Classical.impl_to_arrow", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Classical.arrow_to_impl", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.forall_intro_gtot", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Classical.lemma_forall_intro_gtot",
@@ -28,6 +30,14 @@
     [ "FStar.Classical.gtot_to_lemma", 1, 0, 0, [ "@query" ], 0 ],
     [ "FStar.Classical.lemma_to_squash_gtot", 1, 0, 0, [ "@query" ], 0 ],
     [ "FStar.Classical.forall_intro_squash_gtot", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.forall_intro_squash_gtot_join",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [
       "FStar.Classical.forall_intro",
       1,
