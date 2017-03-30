@@ -96,18 +96,6 @@ let lowercase_module_name f =
   | None ->
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
-//try to convert filename passed from the editor to windows path
-//on cygwin emacs this is required
-let try_convert_file_name_to_windows (s:string) :string =
-  try
-    let _, t_out, _ = run_proc "which" "cygpath" "" in
-    if not (trim_string t_out = "/usr/bin/cygpath") then s
-    else
-      let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
-      trim_string t_out
-  with
-    | _ -> s
-
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
     all normalized to lowercase. The first component of the pair is the
@@ -116,7 +104,7 @@ let try_convert_file_name_to_windows (s:string) :string =
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
   //try to convert the cygwin paths to windows paths
-  let include_directories = List.map try_convert_file_name_to_windows include_directories in
+  let include_directories = List.map FStar.Common.try_convert_file_name_to_mixed include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -337,7 +325,6 @@ let collect_one
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
-    | NewEffectForFree ed
     | NewEffect ed ->
         collect_effect_decl ed
     | Fsdoc _
@@ -367,11 +354,10 @@ let collect_one
         List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
 
   and collect_effect_decl = function
-    | DefineEffect (_, binders, t, decls, actions) ->
+    | DefineEffect (_, binders, t, decls) ->
         collect_binders binders;
         collect_term t;
-        collect_decls decls;
-        collect_decls actions
+        collect_decls decls
     | RedefineEffect (_, binders, t) ->
         collect_binders binders;
         collect_term t
@@ -443,9 +429,13 @@ let collect_one
     | TryWith (t, bs) ->
         collect_term t;
         collect_branches bs
-    | Ascribed (t1, t2) ->
+    | Ascribed (t1, t2, None) ->
         collect_term t1;
         collect_term t2
+    | Ascribed (t1, t2, Some tac) ->
+        collect_term t1;
+        collect_term t2;
+        collect_term tac
     | Record (t, idterms) ->
         iter_opt t collect_term;
         List.iter (fun (_, t) -> collect_term t) idterms

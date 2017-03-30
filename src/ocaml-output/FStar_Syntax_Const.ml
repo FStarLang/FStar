@@ -49,11 +49,14 @@ let kunary:
   =
   fun k  ->
     fun k'  ->
-      mk
-        (FStar_Syntax_Syntax.Tm_arrow
-           (let _0_63 =
-              let _0_61 = FStar_Syntax_Syntax.null_binder k in [_0_61] in
-            let _0_62 = FStar_Syntax_Syntax.mk_Total k' in (_0_63, _0_62)))
+      let uu____26 =
+        let uu____27 =
+          let uu____35 =
+            let uu____37 = FStar_Syntax_Syntax.null_binder k in [uu____37] in
+          let uu____38 = FStar_Syntax_Syntax.mk_Total k' in
+          (uu____35, uu____38) in
+        FStar_Syntax_Syntax.Tm_arrow uu____27 in
+      mk uu____26
 let kbin:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -62,14 +65,18 @@ let kbin:
   fun k1  ->
     fun k2  ->
       fun k'  ->
-        mk
-          (FStar_Syntax_Syntax.Tm_arrow
-             (let _0_68 =
-                let _0_66 = FStar_Syntax_Syntax.null_binder k1 in
-                let _0_65 =
-                  let _0_64 = FStar_Syntax_Syntax.null_binder k2 in [_0_64] in
-                _0_66 :: _0_65 in
-              let _0_67 = FStar_Syntax_Syntax.mk_Total k' in (_0_68, _0_67)))
+        let uu____49 =
+          let uu____50 =
+            let uu____58 =
+              let uu____60 = FStar_Syntax_Syntax.null_binder k1 in
+              let uu____61 =
+                let uu____63 = FStar_Syntax_Syntax.null_binder k2 in
+                [uu____63] in
+              uu____60 :: uu____61 in
+            let uu____64 = FStar_Syntax_Syntax.mk_Total k' in
+            (uu____58, uu____64) in
+          FStar_Syntax_Syntax.Tm_arrow uu____50 in
+        mk uu____49
 let ktern:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -80,18 +87,21 @@ let ktern:
     fun k2  ->
       fun k3  ->
         fun k'  ->
-          mk
-            (FStar_Syntax_Syntax.Tm_arrow
-               (let _0_75 =
-                  let _0_73 = FStar_Syntax_Syntax.null_binder k1 in
-                  let _0_72 =
-                    let _0_71 = FStar_Syntax_Syntax.null_binder k2 in
-                    let _0_70 =
-                      let _0_69 = FStar_Syntax_Syntax.null_binder k3 in
-                      [_0_69] in
-                    _0_71 :: _0_70 in
-                  _0_73 :: _0_72 in
-                let _0_74 = FStar_Syntax_Syntax.mk_Total k' in (_0_75, _0_74)))
+          let uu____78 =
+            let uu____79 =
+              let uu____87 =
+                let uu____89 = FStar_Syntax_Syntax.null_binder k1 in
+                let uu____90 =
+                  let uu____92 = FStar_Syntax_Syntax.null_binder k2 in
+                  let uu____93 =
+                    let uu____95 = FStar_Syntax_Syntax.null_binder k3 in
+                    [uu____95] in
+                  uu____92 :: uu____93 in
+                uu____89 :: uu____90 in
+              let uu____96 = FStar_Syntax_Syntax.mk_Total k' in
+              (uu____87, uu____96) in
+            FStar_Syntax_Syntax.Tm_arrow uu____79 in
+          mk uu____78
 let true_lid: FStar_Ident.lident = pconst "l_True"
 let false_lid: FStar_Ident.lident = pconst "l_False"
 let and_lid: FStar_Ident.lident = pconst "l_and"
@@ -117,6 +127,8 @@ let exp_unit: FStar_Syntax_Syntax.term =
   mk (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_unit)
 let cons_lid: FStar_Ident.lident = pconst "Cons"
 let nil_lid: FStar_Ident.lident = pconst "Nil"
+let some_lid: FStar_Ident.lident = pconst "Some"
+let none_lid: FStar_Ident.lident = pconst "None"
 let assume_lid: FStar_Ident.lident = pconst "_assume"
 let assert_lid: FStar_Ident.lident = pconst "_assert"
 let list_append_lid: FStar_Ident.lident = p2l ["FStar"; "List"; "append"]
@@ -183,3 +195,12 @@ let range_0: FStar_Ident.lident = pconst "range_0"
 let guard_free: FStar_Ident.lident = pconst "guard_free"
 let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
+let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
+  fun s  ->
+    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] [s])
+      FStar_Range.dummyRange
+let tactic_lid: FStar_Ident.lident = fstar_tactics_lid "tactic"
+let by_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "by_tactic"
+let reify_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "reify_tactic"
+let fstar_tactics_embed_lid: FStar_Ident.lident = fstar_tactics_lid "embed"
+let fstar_tactics_quote_lid: FStar_Ident.lident = fstar_tactics_lid "quote"

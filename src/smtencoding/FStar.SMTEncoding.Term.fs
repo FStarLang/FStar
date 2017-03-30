@@ -90,6 +90,8 @@ type term' =
                   * option<int>      //an optional weight; seldom used
                   * list<sort>       //sorts of each bound variable
                   * term             //body
+  | Let        of list<term> // bound terms
+                * term       // body
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
 and pat  = term
@@ -144,6 +146,7 @@ let rec freevars t = match t.tm with
   | Quant(_, _, _, _, t)
   | Labeled(t, _, _)
   | LblPos(t, _) -> freevars t
+  | Let (es, body) -> List.collect freevars (body::es)
 
 //memo-ized
 let free_variables t = match !t.freevars with
@@ -183,28 +186,30 @@ let op_to_string = function
   | Var s -> s
 
 let weightToSmt = function
-    | None -> ""
-    | Some i -> BU.format1 ":weight %s\n" (string_of_int i)
+  | None -> ""
+  | Some i -> BU.format1 ":weight %s\n" (string_of_int i)
 
 let rec hash_of_term' t = match t with
-    | Integer i ->  i
-    | BoundV i  -> "@"^string_of_int i
-    | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
-    | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
-    | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
-    | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
-    | Quant(qop, pats, wopt, sorts, body) ->
-                "("
-              ^ (qop_to_string qop)
-              ^ " ("
-              ^ (List.map strSort sorts |> String.concat " ")
-              ^ ")(! "
-              ^ (hash_of_term body)
-              ^ " "
-              ^ (weightToSmt wopt)
-              ^ " "
-              ^ (pats |> List.map (fun pats -> (List.map hash_of_term pats |> String.concat " ")) |> String.concat "; ")
-              ^ "))"
+  | Integer i ->  i
+  | BoundV i  -> "@"^string_of_int i
+  | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
+  | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
+  | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
+  | LblPos(t, r) -> "(! " ^hash_of_term t^ " :lblpos " ^r^ ")"
+  | Quant(qop, pats, wopt, sorts, body) ->
+      "("
+    ^ (qop_to_string qop)
+    ^ " ("
+    ^ (List.map strSort sorts |> String.concat " ")
+    ^ ")(! "
+    ^ (hash_of_term body)
+    ^ " "
+    ^ (weightToSmt wopt)
+    ^ " "
+    ^ (pats |> List.map (fun pats -> (List.map hash_of_term pats |> String.concat " ")) |> String.concat "; ")
+    ^ "))"
+  | Let (es, body) ->
+    "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
 and hash_of_term tm = hash_of_term' tm.tm
 
 let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
@@ -217,33 +222,33 @@ let mkFreeV x r     = mk (FreeV x) r
 let mkApp' f r      = mk (App f) r
 let mkApp (s, args) r = mk (App (Var s, args)) r
 let mkNot t r       = match t.tm with
-    | App(TrueOp, _)  -> mkFalse r
-    | App(FalseOp, _) -> mkTrue r
-    | _ -> mkApp'(Not, [t]) r
+  | App(TrueOp, _)  -> mkFalse r
+  | App(FalseOp, _) -> mkTrue r
+  | _ -> mkApp'(Not, [t]) r
 let mkAnd (t1, t2) r = match t1.tm, t2.tm with
-    | App(TrueOp, _), _ -> t2
-    | _, App(TrueOp, _) -> t1
-    | App(FalseOp, _), _
-    | _, App(FalseOp, _) -> mkFalse r
-    | App(And, ts1), App(And, ts2) -> mkApp'(And, ts1@ts2) r
-    | _, App(And, ts2) -> mkApp'(And, t1::ts2) r
-    | App(And, ts1), _ -> mkApp'(And, ts1@[t2]) r
-    | _ -> mkApp'(And, [t1;t2]) r
+  | App(TrueOp, _), _ -> t2
+  | _, App(TrueOp, _) -> t1
+  | App(FalseOp, _), _
+  | _, App(FalseOp, _) -> mkFalse r
+  | App(And, ts1), App(And, ts2) -> mkApp'(And, ts1@ts2) r
+  | _, App(And, ts2) -> mkApp'(And, t1::ts2) r
+  | App(And, ts1), _ -> mkApp'(And, ts1@[t2]) r
+  | _ -> mkApp'(And, [t1;t2]) r
 let mkOr (t1, t2) r = match t1.tm, t2.tm with
-    | App(TrueOp, _), _
-    | _, App(TrueOp, _) -> mkTrue r
-    | App(FalseOp, _), _ -> t2
-    | _, App(FalseOp, _) -> t1
-    | App(Or, ts1), App(Or, ts2) -> mkApp'(Or, ts1@ts2) r
-    | _, App(Or, ts2) -> mkApp'(Or, t1::ts2) r
-    | App(Or, ts1), _ -> mkApp'(Or, ts1@[t2]) r
-    | _ -> mkApp'(Or, [t1;t2]) r
+  | App(TrueOp, _), _
+  | _, App(TrueOp, _) -> mkTrue r
+  | App(FalseOp, _), _ -> t2
+  | _, App(FalseOp, _) -> t1
+  | App(Or, ts1), App(Or, ts2) -> mkApp'(Or, ts1@ts2) r
+  | _, App(Or, ts2) -> mkApp'(Or, t1::ts2) r
+  | App(Or, ts1), _ -> mkApp'(Or, ts1@[t2]) r
+  | _ -> mkApp'(Or, [t1;t2]) r
 let mkImp (t1, t2) r = match t1.tm, t2.tm with
-    | _, App(TrueOp, _)
-    | App(FalseOp, _), _ -> mkTrue r
-    | App(TrueOp, _), _ -> t2
-    | _, App(Imp, [t1'; t2']) -> mkApp'(Imp, [mkAnd(t1, t1') r; t2']) r
-    | _ -> mkApp'(Imp, [t1; t2]) r
+  | _, App(TrueOp, _)
+  | App(FalseOp, _), _ -> mkTrue r
+  | App(TrueOp, _), _ -> t2
+  | _, App(Imp, [t1'; t2']) -> mkApp'(Imp, [mkAnd(t1, t1') r; t2']) r
+  | _ -> mkApp'(Imp, [t1; t2]) r
 
 let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
 let mkMinus t r = mkApp'(Minus, [t]) r
@@ -259,68 +264,87 @@ let mkDiv = mk_bin_op Div
 let mkMul = mk_bin_op Mul
 let mkMod = mk_bin_op Mod
 let mkITE (t1, t2, t3) r =
+  match t1.tm with
+  | App(TrueOp, _) -> t2
+  | App(FalseOp, _) -> t3
+  | _ -> begin
     match t2.tm, t3.tm with
-        | App(TrueOp,_), App(TrueOp, _) -> mkTrue r
-        | App(TrueOp,_), _ -> mkImp (mkNot t1 t1.rng, t3) r
-        | _, App(TrueOp, _) -> mkImp(t1, t2) r
-        | _, _ ->  mkApp'(ITE, [t1; t2; t3]) r
+    | App(TrueOp,_), App(TrueOp, _) -> mkTrue r
+    | App(TrueOp,_), _ -> mkImp (mkNot t1 t1.rng, t3) r
+    | _, App(TrueOp, _) -> mkImp(t1, t2) r
+    | _, _ ->  mkApp'(ITE, [t1; t2; t3]) r
+  end
 let mkCases t r = match t with
-    | [] -> failwith "Impos"
-    | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
+  | [] -> failwith "Impos"
+  | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
 
 let mkQuant (qop, pats, wopt, vars, body) r =
-    if List.length vars = 0 then body
-    else match body.tm with
-            | App(TrueOp, _) -> body
-            | _ -> mk (Quant(qop,pats,wopt,vars,body)) r
+  if List.length vars = 0 then body
+  else
+    match body.tm with
+    | App(TrueOp, _) -> body
+    | _ -> mk (Quant(qop,pats,wopt,vars,body)) r
+
+let mkLet (es, body) r =
+  if List.length es = 0 then body
+  else mk (Let (es,body)) r
 
 (*****************************************************)
 (* abstracting free names; instantiating bound vars  *)
 (*****************************************************)
 let abstr fvs t = //fvs is a subset of the free vars of t; the result closes over fvs
-    let nvars = List.length fvs in
-    let index_of fv = match BU.try_find_index (fv_eq fv) fvs with
-        | None -> None
-        | Some i -> Some (nvars - (i + 1)) in
-    let rec aux ix t =
-        match !t.freevars with
-            | Some [] -> t
-            | _ ->
-            begin match t.tm with
-                | Integer _
-                | BoundV _ -> t
-                | FreeV x ->
-                  begin match index_of x with
-                    | None -> t
-                    | Some i -> mkBoundV (i + ix) t.rng
-                  end
-                | App(op, tms) -> mkApp'(op, List.map (aux ix) tms) t.rng
-                | Labeled(t, r1, r2) -> mk (Labeled(aux ix t, r1, r2)) t.rng
-                | LblPos(t, r) -> mk (LblPos(aux ix t, r)) t.rng
-                | Quant(qop, pats, wopt, vars, body) ->
-                  let n = List.length vars in
-                  mkQuant(qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body) t.rng
-           end in
-    aux 0 t
+  let nvars = List.length fvs in
+  let index_of fv = match BU.try_find_index (fv_eq fv) fvs with
+    | None -> None
+    | Some i -> Some (nvars - (i + 1))
+  in
+  let rec aux ix t =
+    match !t.freevars with
+    | Some [] -> t
+    | _ ->
+      begin match t.tm with
+        | Integer _
+        | BoundV _ -> t
+        | FreeV x ->
+          begin match index_of x with
+            | None -> t
+            | Some i -> mkBoundV (i + ix) t.rng
+          end
+        | App(op, tms) -> mkApp'(op, List.map (aux ix) tms) t.rng
+        | Labeled(t, r1, r2) -> mk (Labeled(aux ix t, r1, r2)) t.rng
+        | LblPos(t, r) -> mk (LblPos(aux ix t, r)) t.rng
+        | Quant(qop, pats, wopt, vars, body) ->
+          let n = List.length vars in
+          mkQuant(qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body) t.rng
+        | Let (es, body) ->
+          let ix, es_rev = List.fold_left (fun (ix, l) e -> ix+1, aux ix e::l) (ix, []) es in
+          mkLet (List.rev es_rev, aux ix body) t.rng
+      end
+  in
+  aux 0 t
 
 let inst tms t =
-    let tms = List.rev tms in //forall x y . t   ... y is an index 0 in t
-    let n = List.length tms in //instantiate the first n BoundV's with tms, in order
-    let rec aux shift t = match t.tm with
-        | Integer _
-        | FreeV _ -> t
-        | BoundV i ->
-          if 0 <= i - shift && i - shift < n
-          then List.nth tms (i - shift)
-          else t
-        | App(op, tms) -> mkApp'(op, List.map (aux shift) tms) t.rng
-        | Labeled(t, r1, r2) -> mk (Labeled(aux shift t, r1, r2)) t.rng
-        | LblPos(t, r) -> mk (LblPos(aux shift t, r)) t.rng
-        | Quant(qop, pats, wopt, vars, body) ->
-          let m = List.length vars in
-          let shift = shift + m in
-          mkQuant(qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body) t.rng in
-   aux 0 t
+  let tms = List.rev tms in //forall x y . t   ... y is an index 0 in t
+  let n = List.length tms in //instantiate the first n BoundV's with tms, in order
+  let rec aux shift t = match t.tm with
+    | Integer _
+    | FreeV _ -> t
+    | BoundV i ->
+      if 0 <= i - shift && i - shift < n
+      then List.nth tms (i - shift)
+      else t
+    | App(op, tms) -> mkApp'(op, List.map (aux shift) tms) t.rng
+    | Labeled(t, r1, r2) -> mk (Labeled(aux shift t, r1, r2)) t.rng
+    | LblPos(t, r) -> mk (LblPos(aux shift t, r)) t.rng
+    | Quant(qop, pats, wopt, vars, body) ->
+      let m = List.length vars in
+      let shift = shift + m in
+      mkQuant(qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body) t.rng
+    | Let (es, body) ->
+      let shift, es_rev = List.fold_left (fun (ix, es) e -> shift+1, aux shift e::es) (shift, []) es in
+      mkLet (List.rev es_rev, aux shift body) t.rng
+  in
+  aux 0 t
 
 let subst (t:term) (fv:fv) (s:term) = inst [s] (abstr [fv] t)
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
@@ -331,6 +355,10 @@ let mkForall' (pats, wopt, vars, body) r = mkQuant' (Forall, pats, wopt, vars, b
 let mkForall (pats, vars, body) r = mkQuant' (Forall, pats, None, vars, body) r
 let mkExists (pats, vars, body) r = mkQuant' (Exists, pats, None, vars, body) r
 
+let mkLet' (bindings, body) r =
+  let vars, es = List.split bindings in
+  mkLet (es, abstr vars body) r
+
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
@@ -339,13 +367,13 @@ let fresh_token (tok_name, sort) id =
     Assume(mkEq(mkInteger' id norng, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[]) norng]) norng) norng, Some "fresh token", Some a_name)
 
 let fresh_constructor (name, arg_sorts, sort, id) =
-    let id = string_of_int id in
-    let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV("x_" ^ string_of_int i, s) norng) in
-    let bvar_names = List.map fv_of_term bvars in
-    let capp = mkApp(name, bvars) norng in
-    let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
-    let a_name = "constructor_distinct_" ^name in
-    Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng, Some "Constructor distinct", Some a_name)
+  let id = string_of_int id in
+  let bvars = arg_sorts |> List.mapi (fun i s -> mkFreeV("x_" ^ string_of_int i, s) norng) in
+  let bvar_names = List.map fv_of_term bvars in
+  let capp = mkApp(name, bvars) norng in
+  let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
+  let a_name = "constructor_distinct_" ^name in
+  Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng, Some "Constructor distinct", Some a_name)
 
 let injective_constructor (name, fields, sort) =
     let n_bvars = List.length fields in
@@ -424,44 +452,71 @@ let name_macro_binders sorts =
     List.rev names, binders
 
 let termToSmt t =
-    let remove_guard_free pats =
-        pats |> List.map (fun ps ->
-        ps |> List.map (fun tm ->
-                match tm.tm with
-                | App(Var "Prims.guard_free", [{tm=BoundV _}]) -> tm
-                | App(Var "Prims.guard_free", [p]) -> p
-                | _ -> tm))
-    in
-    let rec aux' n (names:list<fv>) t = match t.tm with
-      | Integer i     -> i
-      | BoundV i ->
-        List.nth names i |> fst
-      | FreeV x -> fst x
-      | App(op, []) -> op_to_string op
-      | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
-      | Labeled(t, _, _) -> aux n names t
-      | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
-      | Quant(qop, pats, wopt, sorts, body) ->
-        let names, binders, n = name_binders_inner None names n sorts in
-        let binders = binders |> String.concat " " in
-        let pats = remove_guard_free pats in
-        let pats_str =
-            match pats with
-            | [[]]
-            | [] -> ""
-            | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
-        begin match pats, wopt with
-            | [[]], None
-            | [], None ->  BU.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
-            | _ -> BU.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
-        end
-    and aux n names t =
-        let s = aux' n names t in
-        if t.rng <> norng
-        then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
-        else s
-    in
-    aux 0 [] t
+  let remove_guard_free pats =
+    pats |> List.map (fun ps ->
+      ps |> List.map (fun tm ->
+        match tm.tm with
+        | App(Var "Prims.guard_free", [{tm=BoundV _}]) -> tm
+        | App(Var "Prims.guard_free", [p]) -> p
+        | _ -> tm))
+  in
+  let rec aux' n (names:list<fv>) t = match t.tm with
+    | Integer i     -> i
+    | BoundV i ->
+      List.nth names i |> fst
+    | FreeV x -> fst x
+    | App(op, []) -> op_to_string op
+    | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
+    | Labeled(t, _, _) -> aux n names t
+    | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
+    | Quant(qop, pats, wopt, sorts, body) ->
+      let names, binders, n = name_binders_inner None names n sorts in
+      let binders = binders |> String.concat " " in
+      let pats = remove_guard_free pats in
+      let pats_str =
+        match pats with
+        | [[]]
+        | [] -> ""
+        | _ ->
+          pats
+          |> List.map (fun pats ->
+            format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p ->
+              format1 "%s" (aux n names p)) pats)))
+          |> String.concat "\n"
+      in
+      begin match pats, wopt with
+        | [[]], None
+        | [], None -> BU.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
+        | _ -> BU.format5 "(%s (%s)\n (! %s\n %s %s))"
+                          (qop_to_string qop)
+                          binders
+                          (aux n names body)
+                          (weightToSmt wopt)
+                          pats_str
+      end
+    | Let (es, body) ->
+      (* binders are reversed but according to the smt2 standard *)
+      (* substitution should occur in parallel and order should not matter *)
+      let names, binders, n =
+        List.fold_left (fun (names0, binders, n0) e ->
+          let nm = "@lb" ^ string_of_int n0 in
+          let names0 = (nm, Term_sort)::names0 in
+          let b = BU.format2 "(%s %s)" nm (aux n names e) in
+          names0, b::binders, n0+1)
+        (names, [], n)
+        es
+      in
+      BU.format2 "(let (%s) %s)"
+                 (String.concat " " binders)
+                 (aux n names body)
+
+  and aux n names t =
+    let s = aux' n names t in
+    if t.rng <> norng
+    then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
+    else s
+  in
+  aux 0 [] t
 
 
 let caption_to_string = function
@@ -655,6 +710,7 @@ let rec print_smt_term (t:term) :string = match t.tm with
   | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
   | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
   | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
 
 and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
 

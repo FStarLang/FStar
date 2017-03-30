@@ -68,9 +68,6 @@ nuget-clean:
 
 $(FSYACC) $(FSLEX): nuget-restore
 
-wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
-	sloccount $^
-
 # --------------------------------------------------------------------
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
@@ -114,6 +111,7 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@
 	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@
 	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@
@@ -140,14 +138,17 @@ rename_as_fst:
 
 prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
+	#fix up a use of polymorphic recursion in F#, which has a different syntax than F*
+	$(SED) -i 's/^and unembed_tactic_0.*//g' u_boot_fsts/FStar.Tactics.Interpreter.fst
+	$(SED) -i 's/^\/\/F\* version: and unembed_tactic_0/and unembed_tactic_0/g' u_boot_fsts/FStar.Tactics.Interpreter.fst
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output
 	mkdir boot_fstis u_boot_fsts u_ocaml-output
 
-u_extract_misc:$(addprefix u_boot_fsts/, FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
+u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
 					 FStar.Format.fst)
-	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst) \
@@ -186,6 +187,12 @@ u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
+u_extract_tactics:$(addprefix u_boot_fsts/FStar.Tactics., Basic.fst Embedding.fst Interpreter.fst)
+	# cp tactics/FStar.Tactics.Basic.fs u_boot_fsts/FStar.Tactics.Basic.fst
+	# cp tactics/FStar.Tactics.Embedding.fs u_boot_fsts/FStar.Tactics.Embedding.fst
+	# cp tactics/FStar.Tactics.Interpreter.fs u_boot_fsts/FStar.Tactics.Interpreter.fst
+	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics
+
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
 u_extract_uz: $(addprefix u_boot_fsts/FStar.SMTEncoding., Util.fst Z3.fst)
@@ -203,9 +210,7 @@ u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_sol
 u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
 	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
-u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
-	       u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
-	       u_extract_extraction u_extract_fstar
+u_extract_all: u_extract_misc u_extract_syntax u_extract_parser	u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction u_extract_tactics u_extract_fstar
 
 uz:
 	make prep
@@ -215,9 +220,7 @@ uz:
 
 ocaml: clean_u_extract_ocaml
 	make prep
-	+make u_extract_misc u_extract_syntax u_extract_parser \
-              u_extract_typechecker u_extract_tosyntax u_extract_smtencoding \
-	      u_extract_extraction u_extract_fstar
+	+make u_extract_all
 	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)

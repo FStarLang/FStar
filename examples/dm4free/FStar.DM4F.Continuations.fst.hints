@@ -1,5 +1,5 @@
 [
-  "\"Ö@Öç¾zíÍ\r„?=Uº",
+  "ØfJªW+täæH©uê-~",
   [
     [ "FStar.DM4F.Continuations.cont", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Continuations.uu___is_L", 1, 2, 1, [ "@query" ], 0 ],
@@ -130,6 +130,7 @@
         "typing_Tm_abs_e58661430758d6e7c0b4744e93f41fc5"
       ],
       0
-    ]
+    ],
+    [ "FStar.DM4F.Continuations.excluded_middle", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

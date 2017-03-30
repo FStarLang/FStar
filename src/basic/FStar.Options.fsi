@@ -51,7 +51,6 @@ val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
 
-(* Only used with F# *)
 val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
@@ -123,6 +122,7 @@ val trace_error                 : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_tactics                 : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool

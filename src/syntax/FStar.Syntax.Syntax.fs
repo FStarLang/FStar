@@ -80,7 +80,7 @@ type term' =
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right; with monadic application in monad_name *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
-  | Tm_ascribed   of term * either<term,comp> * option<lident>   (* an effect label is the third arg, filled in by the type-checker *)
+  | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e; monadic bind in monad_name *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
@@ -88,6 +88,7 @@ type term' =
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
+and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
   | Pat_constant of sconst
   | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
@@ -505,7 +506,7 @@ let freshen_bv bv =
     else {bv with index=next_id()}
 let new_univ_name ropt =
     let id = next_id() in
-    mk_ident ("'uu___" ^ Util.string_of_int id, range_of_ropt ropt)
+    mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
@@ -523,7 +524,8 @@ let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
-
+let set_range_of_fv (fv:fv) (r:Range.range) = 
+    {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function
     | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->

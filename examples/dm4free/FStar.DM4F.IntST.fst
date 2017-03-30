@@ -4,7 +4,7 @@ open FStar.DM4F.ST
 
 // A simple variant of state with a single integer as the state
 // Here is where all the DM4F magic happens
-reifiable reflectable new_effect_for_free STINT = STATE_h int
+reifiable reflectable new_effect STINT = STATE_h int
 // Some abbreviations
 let repr = STINT?.repr
 let post = STINT?.post
@@ -46,7 +46,7 @@ let incr_intrinsic' u =
 // Or, we can give increment the weakest possible spec and prove
 // properties extrinsically (after the fact) using reification
 
-reifiable val incr : unit -> StNull unit
+ val incr : unit -> StNull unit
 let incr u =
   let n = STINT?.get() in
   STINT?.put (n + 1)
@@ -56,18 +56,18 @@ let incr_increases (s0:int) = assert (snd (reify (incr ()) s0) = s0 + 1)
 (* Using this extrinsic style we can also prove information-flow
    control properties of increment and decrement *)
 
-reifiable let decr () : StNull unit =
+ let decr () : StNull unit =
   let n = STINT?.get () in
   STINT?.put (n - 1)
 
-reifiable let ifc (h:bool) : StNull int =
+ let ifc (h:bool) : StNull int =
   if h then (incr(); let y = STINT?.get() in decr(); y)
        else STINT?.get() + 1
 
 let ni_ifc = assert (forall h0 h1 s0. reify (ifc h0) s0 = reify (ifc h1) s0)
 
-// Although we have STINT?.get and STINT?.put now as actions,
-// we can also "rederive" them using reflection
+(* Although we have STINT?.get and STINT?.put now as actions, *)
+(* we can also "rederive" them using reflection *)
 
 val action_get: (u:unit) -> repr int (fun n post -> post (n, n))
 let action_get () i = (i, i)
@@ -75,10 +75,10 @@ let action_get () i = (i, i)
 val action_put: x:int -> repr unit (fun n post -> post ((), x))
 let action_put x i = ((), x)
 
-reifiable val get' : unit -> STINT int (fun z post -> post (z, z))
+ val get' : unit -> STINT int (fun z post -> post (z, z))
 let get' () = STINT?.reflect (action_get ())
 
-reifiable val put': x:int -> STINT unit (fun z post -> post ((), x))
+ val put': x:int -> STINT unit (fun z post -> post ((), x))
 let put' x = STINT?.reflect (action_put x)
 
 let assert_after_reify (_:unit) : StNull unit =
@@ -131,15 +131,15 @@ let refine_st (#a:Type)
     STINT?.reflect g
 
 (* This is a little annoying but we need an explicit pre/post effect *)
-reifiable val incr_pre_post : unit ->
+ val incr_pre_post : unit ->
   StInt unit (requires (fun _ -> True))
              (ensures (fun _ _ _ -> True))
 let incr_pre_post u =
   let n = STINT?.get() in
   STINT?.put (n + 1)
 
-let refine_st_incr_test (_:unit) : StNull unit =
-  let n0 = STINT?.get() in
-  refine_st incr_pre_post ();
-  let n1 = STINT?.get() in
-  assert(n1 == n0 + 1)
+(* let refine_st_incr_test (_:unit) : StNull unit = *)
+(*   let n0 = STINT?.get() in *)
+(*   refine_st incr_pre_post (); *)
+(*   let n1 = STINT?.get() in *)
+(*   assert(n1 == n0 + 1) *)

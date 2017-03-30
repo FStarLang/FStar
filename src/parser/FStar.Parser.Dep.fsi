@@ -39,5 +39,3 @@ val print : list<(string * list<string>)> * 'a * smap<(list<string> * 'b)> -> un
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-
-val try_convert_file_name_to_windows: string -> string

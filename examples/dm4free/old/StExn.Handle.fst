@@ -2,13 +2,13 @@ module StExn.Handle
 let pre = int -> Type0
 let post (a:Type) = (option a * int) -> Type0
 let wp (a:Type) = int -> post a -> Type0
-unfold let return_wp (a:Type) (x:a) (n0:int) (post:post a) = 
+unfold let return_wp (a:Type) (x:a) (n0:int) (post:post a) =
   forall y. y==(Some x, n0) ==> post y
 
 //working around #517 by adding an explicit 'val'
 unfold val bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:wp a) -> (g:(a -> Tot (wp b))) -> Tot (wp b)
 let bind_wp r a b f g =
-    fun n0 post -> f n0 (function 
+    fun n0 post -> f n0 (function
 	| (None, n1) -> post (None, n1)
 	| (Some x, n1) -> g x n1 post)
 
@@ -48,13 +48,13 @@ unfold let trivial       (a:Type)
 let repr (a:Type) (wp:wp a) =
     n0:int -> PURE (option a * int) (wp n0)
 
-unfold val bind: (a:Type) -> (b:Type) -> (wp0:wp a) 
+unfold val bind: (a:Type) -> (b:Type) -> (wp0:wp a)
 		 -> (f:repr a wp0)
-		 -> (wp1:(a -> Tot (wp b))) 
-		 -> (g:(x:a -> Tot (repr b (wp1 x)))) 
+		 -> (wp1:(a -> Tot (wp b)))
+		 -> (g:(x:a -> Tot (repr b (wp1 x))))
 		 -> Tot (repr b (bind_wp range_0 a b wp0 wp1))
-let bind a b wp0 f wp1 g  
-  = fun n0 -> admit(); match f n0 with 
+let bind a b wp0 f wp1 g
+  = fun n0 -> admit(); match f n0 with
 		    | None, n1 -> None, n1
 		    | Some x, n1 -> g x n1
 let return (a:Type) (x:a)
@@ -72,34 +72,33 @@ let get_cps_type = (u: unit) -> Tot (repr int (fun n0 post -> post (Some n0, n0)
 let raise_cps_type = a:Type0 -> Tot (repr a (fun h0 (p:post a) -> p (None, h0 + 1)))
 
 
-//adding a reflect do define a handler below, 
+//adding a reflect do define a handler below,
 //but want to restrict it so that it is private to this module
 //although we don't have syntax for that yet ...
 reifiable reflectable new_effect {
   StateExn : a:Type -> wp:wp a -> Effect
   with //repr is new; it's the reprentation of ST as a value type
-       repr         = repr
-       //bind_wp is exactly as it is currently
-       //produced by the *-translation of bind above
-     ; bind_wp      = bind_wp
-       //bind is new, it is the elaboration of the bind above
-     ; bind         = bind
-      //return_wp is a renaming of the current return, it is the *-translation of the return above
-     ; return_wp    = return_wp
-      //return is new; it is the elaboration of the return above
-     ; return       = return
-     //the remaining are just as what we have now
-     ; if_then_else = if_then_else
-     ; ite_wp       = ite_wp
-     ; stronger     = stronger
-     ; close_wp     = close_wp
-     ; assert_p     = assert_p
-     ; assume_p     = assume_p
-     ; null_wp      = null_wp
-     ; trivial      = trivial
-  and effect_actions
+      repr         = repr
+      //bind_wp is exactly as it is currently
+      //produced by the *-translation of bind above
+    ; bind_wp      = bind_wp
+      //bind is new, it is the elaboration of the bind above
+    ; bind         = bind
+    //return_wp is a renaming of the current return, it is the *-translation of the return above
+    ; return_wp    = return_wp
+    //return is new; it is the elaboration of the return above
+    ; return       = return
+    //the remaining are just as what we have now
+    ; if_then_else = if_then_else
+    ; ite_wp       = ite_wp
+    ; stronger     = stronger
+    ; close_wp     = close_wp
+    ; assert_p     = assert_p
+    ; assume_p     = assume_p
+    ; null_wp      = null_wp
+    ; trivial      = trivial
     //these are new
-      get  = (fun _ n0 -> Some n0, n0), get_cps_type
+    ; get  = (fun _ n0 -> Some n0, n0), get_cps_type
     ; raise = (fun _ h -> None, h + 1), raise_cps_type
 }
 
@@ -110,7 +109,7 @@ effect StExn (a:Type) (req:pre) (ens:int -> option a -> int -> GTot Type0) =
        StateExn a
          (fun (h0:int) (p:post a) -> req h0 /\ (forall (r:option a) (h1:int). (req h0 /\ ens h0 r h1) ==> p (r, h1))) (* WP *)
 
-effect S (a:Type) = 
+effect S (a:Type) =
        StateExn a (fun h0 p -> forall x. p x)
 
 //let f = StateExn.reflect (fun h0 -> None, h0); this rightfully fails, since StateExn is not reflectable
@@ -132,36 +131,36 @@ let lemma_div_extrinsic (i:nat) (j:int) :
          | None, 1 -> j = 0
 	 | Some z, 0 -> j <> 0 /\ z = i / j) = ()
 
-val try_div': i:nat -> j:nat -> Tot (repr int (fun h0 post -> 
+val try_div': i:nat -> j:nat -> Tot (repr int (fun h0 post ->
 		       if j = 0
 		       then post (Some 0, h0 + 1)
                        else post (Some (i / j), h0)))
-let try_div' i j h0 = 
-     match reify (div_intrinsic i j) h0 with 
+let try_div' i j h0 =
+     match reify (div_intrinsic i j) h0 with
      | None, h1 -> assert (h0 + 1 = h1); assert (j = 0); Some 0, h1
      | Some x, h1 -> assert (x = i / j); assert (h0 = h1); Some x, h1
 
-val try_div: i:nat -> j:nat -> StExn int 
+val try_div: i:nat -> j:nat -> StExn int
   (requires (fun h -> True))
-  (ensures (fun h0 x h1 -> if j=0 
+  (ensures (fun h0 x h1 -> if j=0
 		        then x=Some 0 /\ h1 = h0 + 1
 			else x=Some (i/j) /\ h0 = h1))
-let try_div i j = StateExn.reflect (try_div' i j)			
+let try_div i j = StateExn.reflect (try_div' i j)
 
 //unfortunately, this yet doesn't work with type-inference:
 (*
-let try_div i j = 
-  StateExn.reflect (fun h0 -> match reify (div_intrinsic i j) h0 with 
+let try_div i j =
+  StateExn.reflect (fun h0 -> match reify (div_intrinsic i j) h0 with
 			      | None, h1 -> Some 0, h1
 			      | x -> x)
 *)
 
 //Also, tried packaging up this reflect/reify pattern into a handler
-val handle: #a:Type0 -> #wp:wp a -> $f:(unit -> StateExn a wp) 
-	  -> def:a 
-	  -> StateExn a (fun h0 post -> 
-			  wp h0 (fun (x, h1) -> 
-				   match x with 
+val handle: #a:Type0 -> #wp:wp a -> $f:(unit -> StateExn a wp)
+	  -> def:a
+	  -> StateExn a (fun h0 post ->
+			  wp h0 (fun (x, h1) ->
+				   match x with
 				   | None -> post (Some def, h1)
 				   |  _ -> post (x, h1)))
 //but this fails to verify because the WPs are too abstract,

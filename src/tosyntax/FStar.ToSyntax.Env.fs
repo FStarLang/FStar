@@ -101,7 +101,11 @@ type foundname =
 
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
-
+let transitive_exported_ids env lid =
+    let module_name = Ident.string_of_lid lid in
+    match BU.smap_try_find env.trans_exported_ids module_name with
+    | None -> []
+    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -323,7 +327,9 @@ let lookup_default_id
     find_in_module env lid k_global_def k_not_found
 
 let module_is_defined env lid =
-    lid_equals lid (current_module env) ||
+    (match env.curmodule with
+     | None -> false
+     | Some m -> lid_equals lid (current_module env)) ||
     List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
 let resolve_module_name env lid (honor_ns: bool) : option<lident> =
@@ -352,6 +358,32 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
 
     in
     aux env.scope_mods
+
+let namespace_is_open env lid =
+  List.existsb (function
+                | Open_module_or_namespace (ns, Open_namespace) -> lid_equals lid ns
+                | _ -> false) env.scope_mods
+
+let shorten_module_path env ids is_full_path =
+  // FIXME this could be faster (module_is_defined and namespace_is_open are slow)
+  let rec aux revns id =
+    let lid = FStar.Ident.lid_of_ns_and_id (List.rev revns) id in
+    if namespace_is_open env lid
+    then Some (List.rev (id :: revns), [])
+    else match revns with
+         | [] -> None
+         | ns_last_id :: rev_ns_prefix ->
+           aux rev_ns_prefix ns_last_id |>
+             BU.map_option (fun (stripped_ids, rev_kept_ids) ->
+                            (stripped_ids, id :: rev_kept_ids)) in
+  if is_full_path && module_is_defined env (FStar.Ident.lid_of_ids ids)
+  then (ids, []) // FIXME is that right? If m is defined then all names in m are accessible?
+  else match List.rev ids with
+       | [] -> ([], [])
+       | ns_last_id :: ns_rev_prefix ->
+         match aux ns_rev_prefix ns_last_id with
+         | None -> ([], ids)
+         | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
 
 (* Generic name resolution. *)
 
@@ -487,6 +519,28 @@ let is_effect_name env lid =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
+(* Same as [try_lookup_effect_name], but also traverses effect
+abbrevs. TODO: once indexed effects are in, also track how indices and
+other arguments are instantiated. *)
+let try_lookup_root_effect_name env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+	| Some (Sig_effect_abbrev (l', _, _, _, _, _, _), _) ->
+	  let rec aux new_name =
+	      match BU.smap_try_find (sigmap env) new_name.str with
+	      | None -> None
+	      | Some (s, _) ->
+	        begin match s with
+                | Sig_new_effect_for_free (ne, _)
+		| Sig_new_effect(ne, _)
+		  -> Some (set_lid_range ne.mname (range_of_lid l))
+		| Sig_effect_abbrev (_, _, _, cmp, _, _, _) ->
+                  let l'' = U.comp_effect_name cmp in
+		  aux l''
+	        | _ -> None
+		end
+	  in aux l'
+	| Some (_, l') -> Some l'
+	| _ -> None
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
@@ -523,11 +577,26 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
+let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
+let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
+
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
   match try_lookup_name any_val exclude_interf env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
+let resolve_to_fully_qualified_name (env:env) (l:lident) =
+    match try_lookup_lid env l with
+    | None -> None
+    | Some (e, _) ->
+      match (Subst.compress e).n with
+      | Tm_fvar fv -> Some fv.fv_name.v
+      | _ -> None
+
+let try_lookup_lid_no_resolve (env: env) l =
+  let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
+  in
+  try_lookup_lid env' l
 
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid = function
@@ -700,9 +769,6 @@ let exported_id_set_new () =
     | Exported_id_term_type -> term_type_set
     | Exported_id_field -> field_set
 
-let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
-let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
-
 let unique any_val exclude_if env lid =
   (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)
   let filter_scope_mods = function
@@ -817,7 +883,7 @@ let push_include env ns =
             let ex = cur_exports k in
             let () = ex := BU.set_difference (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
-            let () = trans_ex := BU.set_union (!ex) ns_ex in
+            let () = trans_ex := BU.set_union (!trans_ex) ns_ex in
             ()
           in
           List.iter update_exports all_exported_id_kinds
