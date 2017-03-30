@@ -273,10 +273,14 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,Inl t,eff_name) ->
-                        U.format3 "(%s <: [%s] %s)" (term_to_string e) (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
-  | Tm_ascribed(e,Inr c,_) ->
-                        U.format2 "(%s <: %s)" (term_to_string e) (comp_to_string c)
+  | Tm_ascribed(e,(annot, topt),eff_name) ->
+    let annot = match annot with
+        | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
+        | Inr c -> comp_to_string c in
+    let topt = match topt with
+        | None -> ""
+        | Some t -> U.format1 "by %s" (term_to_string t) in
+    U.format3 "(%s <: %s %s)" (term_to_string e) annot topt
   | Tm_match(head, branches) ->
     U.format2 "(match %s with\n\t| %s)"
       (term_to_string head)

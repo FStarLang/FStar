@@ -562,7 +562,7 @@ and cps_and_elaborate env ed =
         | Some (Inl lc) ->
           if U.is_pure_or_ghost_lcomp lc
           then
-            let g_opt = Rel.try_teq env lc.res_typ U.ktype0 in
+            let g_opt = Rel.try_teq true env lc.res_typ U.ktype0 in
             match g_opt with
             | Some g' -> Rel.force_trivial_guard env g'
             | None -> fail ()

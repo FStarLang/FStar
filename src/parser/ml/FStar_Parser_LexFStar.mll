@@ -55,6 +55,7 @@
     Hashtbl.add keywords "assert"        ASSERT      ;
     Hashtbl.add keywords "assume"        ASSUME      ;
     Hashtbl.add keywords "begin"         BEGIN       ;
+    Hashtbl.add keywords "by"            BY          ;
     Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "effect"        EFFECT      ;
     Hashtbl.add keywords "else"          ELSE        ;

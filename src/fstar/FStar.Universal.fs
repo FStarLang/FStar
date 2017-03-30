@@ -68,7 +68,7 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
 let tc_prims () : (Syntax.modul * int)
                   * DsEnv.env
                   * TcEnv.env =
-  let solver = if Options.lax() then SMT.dummy else SMT.solver in
+  let solver = if Options.lax() then SMT.dummy else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
   let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
   let prims_filename = Options.prims () in

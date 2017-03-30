@@ -125,6 +125,7 @@ type token =
   | COLON
   | CHAR of (char)
   | BYTEARRAY of (bytes)
+  | BY
   | BEGIN
   | BAR_RBRACK
   | BAR
@@ -260,6 +261,7 @@ type tokenId =
     | TOKEN_COLON
     | TOKEN_CHAR
     | TOKEN_BYTEARRAY
+    | TOKEN_BY
     | TOKEN_BEGIN
     | TOKEN_BAR_RBRACK
     | TOKEN_BAR
@@ -279,7 +281,8 @@ type nonTerminalId =
     | NONTERM_option_FSDOC_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
-    | NONTERM_option___anonymous_6_
+    | NONTERM_option___anonymous_5_
+    | NONTERM_option___anonymous_7_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
@@ -291,7 +294,7 @@ type nonTerminalId =
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_4_
-    | NONTERM_list___anonymous_7_
+    | NONTERM_list___anonymous_8_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_constructorDecl_
@@ -408,7 +411,7 @@ type nonTerminalId =
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
-    | NONTERM_reverse_left_flexible_list_BAR___anonymous_5_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
