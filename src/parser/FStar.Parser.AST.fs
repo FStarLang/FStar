@@ -143,19 +143,12 @@ type knd = term
 type typ = term
 type expr = term
 
-// Documentation comment. May appear appear as follows:
-//  - Immediately before a top-level declaration
-//  - Immediately after a type constructor or record field
-//  - In the middle of a file, as a standalone documentation declaration
-(* KM : Would need some range information on fsdocs to be able to print them correctly *)
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
-
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<fsdoc>)>
-  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<fsdoc> * bool)> (* using 'of' notion *)
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term * option<S.fsdoc>)>
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * option<S.fsdoc> * bool)> (* using 'of' notion *)
 
 type qualifier =
   | Private
@@ -185,7 +178,7 @@ type attributes_ = list<term>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
-  | Doc of fsdoc
+  | Doc of S.fsdoc
 
 type lift_op =
   | NonReifiableLift of term
@@ -210,20 +203,20 @@ type decl' =
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
   | Main of term
-  | Tycon of bool * list<(tycon * option<fsdoc>)>
+  | Tycon of bool * list<(tycon * option<S.fsdoc>)>
     (* bool is for effect *)
   | Val of ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | NewEffect of effect_decl
   | SubEffect of lift
   | Pragma of pragma
-  | Fsdoc of fsdoc
+  | Fsdoc of S.fsdoc
   | Assume of ident * term
 
 and decl = {
   d:decl';
   drange:range;
-  doc:option<fsdoc>;
+  doc:option<S.fsdoc>;
   quals: qualifiers;
   attrs: attributes_
 }
@@ -258,6 +251,10 @@ let mk_decl d r decorations =
   let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
   { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
+
+let sigelt_of_decl (d: decl) (e: S.sigelt') =
+  { S.elt = e; S.sigrng = d.drange; S.doc = d.doc }
+
 
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
@@ -507,9 +504,6 @@ let compile_op' s =
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-let string_of_fsdoc (comment,keywords) =
-    comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
 
 let string_of_let_qualifier = function
   | NoLetQualifier -> ""
