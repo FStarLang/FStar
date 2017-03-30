@@ -93,7 +93,7 @@ let pop (m0:mem{poppable m0}) : GTot mem =
 noeq type reference (a:Type) =
   | MkRef : id:rid -> ref:HH.rref id a -> reference a
 
-let is_mm (#a:Type) (r:reference a) = HH.is_mm r.ref
+let is_mm (#a:Type) (r:reference a) :GTot bool = HH.is_mm r.ref
 
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
 let stackref (a:Type) = s:reference a { is_stack_region s.id && not (is_mm s) }
@@ -122,6 +122,10 @@ let weak_live_region (m:mem) (i:rid) =
 let contains (#a:Type) (m:mem) (s:reference a) =
   live_region m s.id
   /\ HH.contains_ref s.ref m.h
+
+let does_not_contain (#a:Type) (h:mem) (r:reference a) =
+  ~ (live_region h r.id) \/
+  HH.does_not_contain_ref r.ref h.h
 
 private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
   (requires (weak_live_region m r))
@@ -218,20 +222,24 @@ let lemma_upd_1 #a (h:mem) (x:reference a) (v:a) : Lemma
   [SMTPat (upd h x v); SMTPatT (contains h x)]
   = ()
 
-let lemma_upd_2 #a (h:mem) (x:reference a) (v:a) : Lemma
-  (requires (~(contains h x) /\ frameOf x = h.tip))
-  (ensures (~(contains h x)
-	    /\ frameOf x = h.tip
+(*
+ * AR: this precondition used to be ~ (contains h x), which is weaker than ~ (contains_not_necessarily_well_typed)
+ * TODO: it's a pattern that if you want to say does not contain, use contains_not_necessarily_well_typed
+ * perhaps factor it out systematically
+ *)
+let lemma_upd_2 (#a:Type) (h:mem) (x:reference a) (v:a) : Lemma
+  (requires (frameOf x = h.tip /\ does_not_contain h x))
+  (ensures (frameOf x = h.tip
 	    /\ modifies_one h.tip h (upd h x v)
 	    /\ modifies_ref h.tip Set.empty h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (~(contains h x))]
+  [SMTPat (upd h x v); SMTPatT (does_not_contain h x)]
   = ()
 
 val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:reference a -> x':reference a' -> Lemma
-  (requires (contains h x /\ ~(contains h x')))
+  (requires (contains h x /\ does_not_contain h x'))
   (ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x')))
-  [SMTPat (contains h x); SMTPat (~(contains h x'))]
+  [SMTPat (contains h x); SMTPat (does_not_contain h x')]
 let lemma_live_1 #a #a' h x x' = ()
 
 let above_tip_is_live (#a:Type) (m:mem) (x:reference a) : Lemma

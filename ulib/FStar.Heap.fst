@@ -32,27 +32,27 @@ abstract let compare_addrs (#a:Type) (#b:Type) (r1:ref a) (r2:ref b)
   :(b:bool{b = (addr_of r1 = addr_of r2)})
   = r1.addr = r2.addr
 
-abstract let contains_a_well_typed (#a:Type0) (h:heap) (r:ref a)
+abstract let contains (#a:Type0) (h:heap) (r:ref a)
   = Some? (h.memory r.addr) /\ dfst (Some?.v (h.memory r.addr)) == a
 
 (* Select. *)
-private abstract let sel_tot (#a:Type) (h:heap) (r:ref a{h `contains_a_well_typed` r}) :a
+private abstract let sel_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) :a
   = let Some (| _, x |) = h.memory r.addr in
     x
 
 abstract let sel (#a:Type) (h:heap) (r:ref a) :GTot a
-  = if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains_a_well_typed` r) then
+  = if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r) then
       sel_tot #a h r
     else r.init
 
 (* Update. *)
-private abstract let upd_tot (#a:Type) (h:heap) (r:ref a{h `contains_a_well_typed` r}) (x:a) :heap
+private abstract let upd_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) (x:a) :heap
   = { h with memory = (fun r' -> if r.addr = r'
 			      then Some (| a, x |)
                               else h.memory r') }
 
 abstract let upd (#a:Type) (h:heap) (r:ref a) (x:a) :GTot heap
-  = if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains_a_well_typed` r)
+  = if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
     then upd_tot h r x
     else
       if r.addr >= h.next_addr
@@ -76,8 +76,14 @@ abstract let alloc_mm (#a:Type) (h:heap) (x:a)
   = let r = { addr = h.next_addr; init = x; mm = true } in
     r, upd #a h r x
 
-abstract let contains (#a:Type) (h:heap) (r:ref a) :Type0 = Some? (h.memory r.addr)
+private let contains_not_necessarily_well_typed (#a:Type) (h:heap) (r:ref a) :Type0 = Some? (h.memory r.addr)
 
+abstract let does_not_contain (#a:Type) (h:heap) (r:ref a) :Type0 = ~ (contains_not_necessarily_well_typed h r)
+
+(*
+ * AR: the precondition here is stronger, we only require h `contains_not_necessarily_well_typed`
+ * but i am trying a discipline where contains_not_necessarily_well_typed is not exported
+ *)
 abstract let free_mm (#a:Type) (h:heap) (r:ref a{h `contains` r /\ is_mm r})
   :GTot heap
   = { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
@@ -87,13 +93,13 @@ abstract let free_mm (#a:Type) (h:heap) (r:ref a{h `contains` r /\ is_mm r})
 (*
  * update of a well-typed reference
  *)
-private let lemma_upd_contains_a_well_typed
+private let lemma_upd_contains
   (#a:Type) (h0:heap) (r:ref a) (x:a)
-  :Lemma (h0 `contains_a_well_typed` r ==>
+  :Lemma (h0 `contains` r ==>
           (let h1 = upd h0 r x in
            (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
 	   (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
-	   (forall (b:Type) (r':ref b). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r')))
+	   (forall (b:Type) (r':ref b). h0 `contains_not_necessarily_well_typed` r' ==> h1 `contains_not_necessarily_well_typed` r')))
   = ()
 
 (*
@@ -103,13 +109,13 @@ private let lemma_upd_contains_a_well_typed
  * and that (r':ref b) s.t. r'.addr = r.addr
  * in h0, r' is well-typed, but in h1 it's not
  *)
-private let lemma_upd_contains
+private let lemma_upd_contains_not_necessarily_well_typed
   (#a:Type) (h0:heap) (r:ref a) (x:a)
-  :Lemma (h0 `contains` r ==>
+  :Lemma (h0 `contains_not_necessarily_well_typed` r ==>
           (let h1 = upd h0 r x in
-           (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
-	   (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
-	   (forall (b:Type) (r':ref b). (r'.addr <> r.addr /\ h0 `contains_a_well_typed` r') ==> h1 `contains_a_well_typed` r')))
+           (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')           /\
+	   (forall (b:Type) (r':ref b). (r'.addr <> r.addr /\ h0 `contains` r') ==> h1 `contains` r') /\
+	   (forall (b:Type) (r':ref b). h0 `contains_not_necessarily_well_typed` r' ==> h1 `contains_not_necessarily_well_typed` r')))
   = ()
 
 (*
@@ -117,11 +123,11 @@ private let lemma_upd_contains
  *)
 private let lemma_upd_unmapped
   (#a:Type) (h0:heap) (r:ref a) (x:a)
-  :Lemma (~ (h0 `contains` r) ==>
+  :Lemma (~ (h0 `contains_not_necessarily_well_typed` r) ==>
           (let h1 = upd h0 r x in
            (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
 	   (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
-	   (forall (b:Type) (r':ref b). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r')))
+	   (forall (b:Type) (r':ref b). h0 `contains_not_necessarily_well_typed` r' ==> h1 `contains_not_necessarily_well_typed` r')))
   = ()
 
 (*
@@ -130,66 +136,70 @@ private let lemma_upd_unmapped
 private let lemma_alloc
   (#a:Type) (h0:heap) (x:a)
   :Lemma (let (r, h1) = alloc h0 x in
+          ~ (h0 `contains_not_necessarily_well_typed` r) /\
+	  h1 `contains` r                                /\
           not (is_mm r)                                                              /\
           (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
-	  (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
-	  (forall (b:Type) (r':ref b). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r'))
+          (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
+	  (forall (b:Type) (r':ref b). h0 `contains_not_necessarily_well_typed` r' ==> h1 `contains_not_necessarily_well_typed` r'))
   = ()
 
 private let lemma_alloc_mm
   (#a:Type) (h0:heap) (x:a)
   :Lemma (let (r, h1) = alloc_mm h0 x in
+          ~ (h0 `contains_not_necessarily_well_typed` r) /\
+	  h1 `contains` r                                /\
           is_mm r                                                                    /\
           (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
 	  (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
-	  (forall (b:Type) (r':ref b). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r'))
+	  (forall (b:Type) (r':ref b). h0 `contains_not_necessarily_well_typed` r' ==> h1 `contains_not_necessarily_well_typed` r'))
   = ()
 
 private let lemma_free_mm (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r})
   :Lemma (let h1 = free_mm h0 r in
-          (~ (h1 `contains` r)) /\
+          (~ (h1 `contains_not_necessarily_well_typed` r)) /\
 	  (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==>
-	                          ((sel h0 r' == sel h1 r'                /\
+	                          ((sel h0 r' == sel h1 r'                 /\
 				   (h0 `contains` r' ==> h1 `contains` r') /\
-				   (h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r')))))
+				   (h0 `contains_not_necessarily_well_typed` r' ==> h1 `contains_not_necessarily_well_typed` r')))))
   = ()
 
 (** **)
 
-let contains_a_well_typed_implies_contains
+let contains_implies_not_does_not_contain
   (#a:Type) (h:heap) (r:ref a)
-  :Lemma (requires (h `contains_a_well_typed` r))
-         (ensures  (h `contains` r))
-	 [SMTPatOr [[SMTPat (h `contains_a_well_typed` r)]; [SMTPat (h `contains` r)]]]
+  :Lemma (requires (h `contains` r))
+         (ensures  (~ (h `does_not_contain` r)))
+	 [SMTPatOr [[SMTPat (h `contains` r)]; [SMTPat (h `does_not_contain` r)]]]
   = ()
 
-let contains_addr_of
+let does_not_contain_addr_of
   (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b)
-  :Lemma (requires (h `contains` r1 /\ ~ (h `contains` r2)))
+  :Lemma (requires (h `does_not_contain` r1 /\ ~ (h `does_not_contain` r2)))
          (ensures  (addr_of r1 <> addr_of r2))
-         [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
+         [SMTPat (h `does_not_contain` r1); SMTPat (h `does_not_contain` r2)]
   = ()
 
 (*
  * this is as from the previous heap, the pattern also
  *)
 let fresh (s:set nat) (h0:heap) (h1:heap) =
-  forall (a:Type) (r:ref a).{:pattern (h0 `contains` r)}
-                       mem (addr_of r) s ==> ~ (h0 `contains` r) /\ (h1 `contains` r)
+  forall (a:Type) (r:ref a).{:pattern (h0 `contains_not_necessarily_well_typed` r)}
+                       mem (addr_of r) s ==> (h0 `does_not_contain` r) /\ (h1 `contains` r)
 
 let only x = singleton (addr_of x)
 
 let alloc_lemma (#a:Type) (h0:heap) (x:a)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc h0 x in
-                    h1 == upd h0 r x /\ ~ (h0 `contains` r) /\ h1 `contains_a_well_typed` r /\ not (is_mm r)))
+                    h1 == upd h0 r x /\ h0 `does_not_contain` r /\ h1 `contains` r /\ not (is_mm r)))
 	 [SMTPat (alloc h0 x)]
   = ()
 
 let alloc_mm_lemma (#a:Type) (h0:heap) (x:a)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc_mm h0 x in
-                    h1 == upd h0 r x /\ ~ (h0 `contains` r) /\ h1 `contains_a_well_typed` r /\ is_mm r))
+                    h1 == upd h0 r x /\ h0 `does_not_contain` r /\ h1 `contains` r /\ is_mm r))
 	 [SMTPat (alloc_mm h0 x)]
   = ()
 
@@ -199,14 +209,23 @@ let free_mm_lemma_sel (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ 
 	 [SMTPat (sel (free_mm h0 r) r')]
   = ()
 
-let free_mm_contains (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
+let free_mm_does_not_contain_same (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r})
+  :Lemma (requires True)
+         (ensures  ((free_mm h0 r) `does_not_contain` r))
+	 [SMTPat ((free_mm h0 r) `does_not_contain` r)]
+  = ()
+
+let free_mm_contains_diff (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
   :Lemma (requires True)
          (ensures  (let h1 = free_mm h0 r in
-	            ((~ (h1 `contains` r)) /\
-	             (addr_of r' <> addr_of r ==>
-		      ((h0 `contains` r' ==> h1 `contains` r') /\
-		       (h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r'))))))
-	 [SMTPatOr [[SMTPat ((free_mm h0 r) `contains` r')]; [SMTPat ((free_mm h0 r) `contains_a_well_typed` r')]]]
+	            (addr_of r' <> addr_of r /\ h0 `contains` r') ==> h1 `contains` r'))
+	 [SMTPat ((free_mm h0 r) `contains` r')]
+  = ()
+
+let sel_same_addr (#a:Type) (h:heap) (r1:ref a) (r2:ref a)
+  :Lemma (requires (h `contains` r1 /\ addr_of r1 = addr_of r2))
+         (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
+	 [SMTPat (sel h r1); SMTPat (sel h r2)]
   = ()
 
 let sel_upd1 (#a:Type) (h:heap) (r:ref a) (x:a) (r':ref a)
@@ -233,7 +252,7 @@ let sel_upd2 (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b) (x:b)
 (*   assert (FStar.FunctionalExtensionality.feq (upd h r (sel h r)).memory h.memory) *)
 
 let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
-  forall (a:Type0) (r:ref a). h1 `contains` r <==> h2 `contains` r
+  forall (a:Type0) (r:ref a). h1 `contains_not_necessarily_well_typed` r <==> h2 `contains_not_necessarily_well_typed` r
 
 (* Empty. *)
 let emp :heap = {
@@ -243,43 +262,44 @@ let emp :heap = {
 
 let in_dom_emp (#a:Type) (r:ref a)
   :Lemma (requires True)
-         (ensures  (~ (emp `contains` r)))
-	 [SMTPat (emp `contains` r)]
+         (ensures  (emp `does_not_contain` r))
+	 [SMTPat (emp `does_not_contain` r)]
   = ()
 
 (*
  * see the 3 private lemmas for the behavior of update above
  *)
-let upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
-  :Lemma (requires True)
-         (ensures  (((upd h r x) `contains_a_well_typed` r) /\
-	            (h `contains` r' ==> (upd h r x) `contains` r')))
-	 [SMTPat ((upd h r x) `contains` r')]
-  = ()
+(* let upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b) *)
+(*   :Lemma (requires True) *)
+(*          (ensures  (((upd h r x) `contains` r) /\ *)
+(* 	            (h `contains_not_necessarily_well_typed` r' ==> (upd h r x) `contains_not_necessarily_well_typed` r'))) *)
+(* 	 [SMTPat ((upd h r x) `contains_not_necessarily_well_typed` r')] *)
+(*   = () *)
 
 let upd_contains_a_well_typed (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
   :Lemma (requires True)
-         (ensures  (((upd h r x) `contains_a_well_typed` r) /\
+         (ensures  (((upd h r x) `contains` r) /\
 
-	            ((h `contains_a_well_typed` r' /\  //if h contains_a_well_typed r' and
+	            ((h `contains` r' /\  //if h contains_a_well_typed r' and
 
-                      ((h `contains_a_well_typed` r) \/  //either h contains_a_well_typed r
-		       (~ (h `contains` r))          \/  //or h does not contain r
+                      ((h `contains` r) \/  //either h contains_a_well_typed r
+		       (h `does_not_contain` r)          \/  //or h does not contain r
 		       (addr_of r <> addr_of r')))             //or r'.addr <> r.addr
-		     ==> (upd h r x) `contains_a_well_typed` r')))  //then updated heap contains_a_well_typed r'
-         [SMTPat ((upd h r x) `contains_a_well_typed` r')]
+		     ==> (upd h r x) `contains` r')))  //then updated heap contains_a_well_typed r'
+         [SMTPat ((upd h r x) `contains` r')]
   = ()
 
 let modifies (s:set nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
-                         ~ (mem (addr_of r) s) /\ h0 `contains` r ==>
-                         sel h1 r == sel h0 r) /\
-  (forall (a:Type) (r:ref a).{:pattern (h1 `contains` r)}
-                        h0 `contains` r ==> h1 `contains` r) /\
-  (forall (a:Type) (r:ref a).{:pattern (h1 `contains_a_well_typed` r)}
-                        (~ (mem (addr_of r) s) /\ h0 `contains_a_well_typed` r) ==> h1 `contains_a_well_typed` r)
+                         ((~ (mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
+  (forall (a:Type) (r:ref a).{:pattern (contains h1 r)}
+                        h0 `contains` r ==> h1 `contains` r)
+  (* (forall (a:Type) (r:ref a).{:pattern (h1 `contains_not_necessarily_well_typed` r)} *)
+  (*                       h0 `contains_not_necessarily_well_typed` r ==> h1 `contains_not_necessarily_well_typed` r) /\ *)
+  (* (forall (a:Type) (r:ref a).{:pattern (h1 `contains` r)} *)
+  (*                       (~ (mem (addr_of r) s) /\ h0 `contains` r) ==> h1 `contains` r) *)
 
-private let upd_modifies (#a:Type) (h:heap) (r:ref a) (x:a)
+private let upd_modifies (#a:Type) (h:heap) (r:ref a{h `contains` r \/ h `does_not_contain` r}) (x:a)
   :Lemma (modifies (Set.singleton (addr_of r)) h (upd h r x))
   = ()
 

@@ -39,7 +39,7 @@ let op_At_Bar #a s1 s2 =
 
 abstract val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (~ (contains h0 x)
+  (ensures  (fun h0 x h1 -> (h0 `does_not_contain` x
                              /\ contains h1 x
                              /\ modifies Set.empty h0 h1
                              /\ sel h1 x==s)))
@@ -54,7 +54,7 @@ let to_seq #a s =
 
 abstract val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (~ (contains h0 x)
+  (ensures  (fun h0 x h1 -> (h0 `does_not_contain` x
                              /\ contains h1 x
                              /\ modifies Set.empty h0 h1
                              /\ sel h1 x==Seq.create n init)))
@@ -133,7 +133,7 @@ val copy:
      (requires (fun h -> contains h s
 			 /\ Seq.length (sel h s) > 0))
      (ensures (fun h0 r h1 -> (modifies Set.empty h0 h1)
-				     /\ ~ (contains h0 r)
+				     /\ h0 `does_not_contain` r
 				     /\ (contains h1 r)
 				     /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
@@ -207,7 +207,7 @@ val sub :
     (ensures (fun h0 t h1 ->
       (contains h1 t)
       /\ (contains h0 s)
-      /\ ~ (contains h0 t)
+      /\ h0 `does_not_contain` t
       /\ (modifies Set.empty h0 h1)
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))

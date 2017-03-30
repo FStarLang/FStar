@@ -44,7 +44,8 @@ assume val recall: #a:Type -> r:ref a -> STATE unit
 
 assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                            (fun h -> True)
-                                           (fun h0 r h1 -> ~ (contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
+                                           (fun h0 r h1 -> h0 `does_not_contain` r /\ h1 `contains` r /\
+					                h1==upd h0 r init)
 
 assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)

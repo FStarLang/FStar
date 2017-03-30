@@ -176,7 +176,7 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 
 unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = Map.sel m0.h i in
-    ~ (Heap.contains region_i (HH.as_ref x.ref))
+    Heap.does_not_contain region_i (HH.as_ref x.ref)
   /\ i `is_in` m0.h
   /\ i = x.id
   /\ m1 == upd m0 x init
