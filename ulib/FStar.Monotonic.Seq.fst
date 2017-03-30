@@ -90,7 +90,7 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 	               m_contains r h1
 		     /\ modifies_one i h0 h1
 		     (* AR: before merge: /\ modifies_rref i (Set.singleton (addr_of (as_rref r))) h0 h1 *)
-		     /\ modifies_rref i !{HH.as_ref r_ashsref.ref} h0.h h1.h
+		     /\ modifies_rref i (Set.singleton (addr_of r_ashsref.ref)) h0.h h1.h
 		     /\ m_sel h1 r == Seq.snoc (m_sel h0 r) x
 		     /\ witnessed (at_least (Seq.length (m_sel h0 r)) x r)))
   =
@@ -152,7 +152,7 @@ let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
 		     (* AR: before merge: /\ modifies_rref rgn (Set.singleton (addr_of (as_rref r))) h0 h1 *)
-		     /\ modifies_rref rgn !{HH.as_ref r_ashsref.ref} h0.h h1.h
+		     /\ modifies_rref rgn (Set.singleton (addr_of r_ashsref.ref)) h0.h h1.h
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
 		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
@@ -448,7 +448,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
        (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 
 		   modifies_one i h0 h1 /\
 		   (* AR: before merge: modifies_rref i Set.empty h0 h1 /\ *)
-		   modifies_rref i TSet.empty h0.h h1.h /\
+		   modifies_rref i Set.empty h0.h h1.h /\
 		   m_fresh c h0 h1 /\
 		   m_sel h1 c = init /\
 		   Map.contains h1.h i))
@@ -469,7 +469,7 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
           let c_ashsref = MR.as_hsref c in
 	  modifies_one i h0 h1 /\
 	  (* AR: before merge: modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\ *)
-	  modifies_rref i !{HH.as_ref c_ashsref.ref} h0.h h1.h /\
+	  modifies_rref i (Set.singleton (addr_of c_ashsref.ref)) h0.h h1.h /\
 	  m_sel h1 c = m_sel h0 c + 1))
   = m_recall c; m_recall log;
     let n = m_read c + 1 in

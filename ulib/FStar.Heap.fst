@@ -3,8 +3,6 @@ module FStar.Heap
 open FStar.Classical
 open FStar.Set
 
-#set-options "--lax" (* see bug#907 *)
-
 (* Heap is a tuple of a source of freshness (the no. of the next 
    reference to be allocated) and a mapping of allocated raw 
    references (represented as natural numbers) to types and values. *)
@@ -22,10 +20,13 @@ private let consistent (h0:heap) (h1:heap)
 (* References: address * initial value *)
 abstract noeq type ref (a:Type0) = {
   addr: nat;
-  init: a
+  init: a;
+  mm:   bool;  //manually managed flag
 }  
 
 abstract let addr_of (#a:Type) (r:ref a) :GTot nat = r.addr
+
+abstract let is_mm (#a:Type) (r:ref a) :GTot bool = r.mm
 
 abstract let compare_addrs (#a:Type) (#b:Type) (r1:ref a) (r2:ref b)
   :(b:bool{b = (addr_of r1 = addr_of r2)})
@@ -67,11 +68,19 @@ abstract let upd (#a:Type) (h:heap) (r:ref a) (x:a) :GTot heap
 
 (* Allocate. *)
 abstract let alloc (#a:Type) (h:heap) (x:a) :GTot (ref a * heap)
-  = let r = { addr = h.next_addr; init = x } in
+  = let r = { addr = h.next_addr; init = x; mm = false } in
+    r, upd #a h r x
+
+abstract let alloc_mm (#a:Type) (h:heap) (x:a)
+  :Ghost (ref a * heap) (requires True) (ensures (fun (r, _) -> is_mm r))
+  = let r = { addr = h.next_addr; init = x; mm = true } in
     r, upd #a h r x
 
 abstract let contains (#a:Type) (h:heap) (r:ref a) :Type0 = Some? (h.memory r.addr)
 
+abstract let free_mm (#a:Type) (h:heap) (r:ref a{h `contains` r /\ is_mm r})
+  :GTot heap
+  = { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
 
 (** some lemmas that summarize the behavior **)
 
@@ -116,14 +125,33 @@ private let lemma_upd_unmapped
   = ()
 
 (*
- * alloc behaves just like upd of an unmapped reference
+ * alloc and alloc_mm behaves just like upd of an unmapped reference
  *)
 private let lemma_alloc
   (#a:Type) (h0:heap) (x:a)
   :Lemma (let (r, h1) = alloc h0 x in
+          not (is_mm r)                                                              /\
           (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
 	  (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
 	  (forall (b:Type) (r':ref b). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r'))
+  = ()
+
+private let lemma_alloc_mm
+  (#a:Type) (h0:heap) (x:a)
+  :Lemma (let (r, h1) = alloc_mm h0 x in
+          is_mm r                                                                    /\
+          (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
+	  (forall (b:Type) (r':ref b). h0 `contains` r' ==> h1 `contains` r')             /\
+	  (forall (b:Type) (r':ref b). h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r'))
+  = ()
+
+private let lemma_free_mm (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r})
+  :Lemma (let h1 = free_mm h0 r in
+          (~ (h1 `contains` r)) /\
+	  (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==>
+	                          ((sel h0 r' == sel h1 r'                /\
+				   (h0 `contains` r' ==> h1 `contains` r') /\
+				   (h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r')))))
   = ()
 
 (** **)
@@ -154,8 +182,31 @@ let only x = singleton (addr_of x)
 let alloc_lemma (#a:Type) (h0:heap) (x:a)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc h0 x in
-                    h1 == upd h0 r x /\ ~ (h0 `contains` r) /\ h1 `contains_a_well_typed` r))
+                    h1 == upd h0 r x /\ ~ (h0 `contains` r) /\ h1 `contains_a_well_typed` r /\ not (is_mm r)))
 	 [SMTPat (alloc h0 x)]
+  = ()
+
+let alloc_mm_lemma (#a:Type) (h0:heap) (x:a)
+  :Lemma (requires True)
+         (ensures  (let r, h1 = alloc_mm h0 x in
+                    h1 == upd h0 r x /\ ~ (h0 `contains` r) /\ h1 `contains_a_well_typed` r /\ is_mm r))
+	 [SMTPat (alloc_mm h0 x)]
+  = ()
+
+let free_mm_lemma_sel (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
+  :Lemma (requires True)
+         (ensures  (addr_of r' <> addr_of r ==> sel h0 r' == sel (free_mm h0 r) r'))
+	 [SMTPat (sel (free_mm h0 r) r')]
+  = ()
+
+let free_mm_contains (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
+  :Lemma (requires True)
+         (ensures  (let h1 = free_mm h0 r in
+	            ((~ (h1 `contains` r)) /\
+	             (addr_of r' <> addr_of r ==>
+		      ((h0 `contains` r' ==> h1 `contains` r') /\
+		       (h0 `contains_a_well_typed` r' ==> h1 `contains_a_well_typed` r'))))))
+	 [SMTPatOr [[SMTPat ((free_mm h0 r) `contains` r')]; [SMTPat ((free_mm h0 r) `contains_a_well_typed` r')]]]
   = ()
 
 let sel_upd1 (#a:Type) (h:heap) (r:ref a) (x:a) (r':ref a)
@@ -242,7 +293,7 @@ let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
  * AR: we don't have a public definition of heap equality, which is non-ideal
  * as it requires lemmas like upd_upd_same_ref below
  *)
-abstract let equal (h1:heap) (h2:heap) =
+abstract let equal (h1:heap) (h2:heap) :Type0 =
   h1.next_addr = h2.next_addr /\
   FStar.FunctionalExtensionality.feq h1.memory h2.memory
 

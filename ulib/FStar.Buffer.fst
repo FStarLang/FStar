@@ -47,7 +47,7 @@ let content #a (b:buffer a) :
 
 (* Lifting from buffer to reference *)
 let as_ref #a (b:buffer a) = as_ref (content b)
-let as_aref #a (b:buffer a) = as_aref (content b)
+let as_addr #a (b:buffer a) = as_addr (content b)
 let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
 //17-01-04 rename to region?
 

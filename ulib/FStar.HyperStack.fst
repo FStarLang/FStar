@@ -90,15 +90,17 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   HS h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
-unopteq type reference (a:Type) =
-  | MkRef : id:rid -> mm:bool -> ref:HH.rref id a -> reference a
+noeq type reference (a:Type) =
+  | MkRef : id:rid -> ref:HH.rref id a -> reference a
+
+let is_mm (#a:Type) (r:reference a) = HH.is_mm r.ref
 
 //adding (not s.mm) to stackref and ref so as to keep their semantics as is
-let stackref (a:Type) = s:reference a { is_stack_region s.id && not s.mm }
-let ref (a:Type) = s:reference a{is_eternal_region s.id && not s.mm}
+let stackref (a:Type) = s:reference a { is_stack_region s.id && not (is_mm s) }
+let ref (a:Type) = s:reference a{is_eternal_region s.id && not (is_mm s)}
 
-let mmstackref (a:Type) = s:reference a {is_stack_region s.id && s.mm }
-let mmref (a:Type) = s:reference a{is_eternal_region s.id && s.mm}
+let mmstackref (a:Type) = s:reference a {is_stack_region s.id && is_mm s }
+let mmref (a:Type) = s:reference a{is_eternal_region s.id && is_mm s}
 
 (*
  * The Map.contains conjunct is necessary to prove that upd
@@ -134,7 +136,7 @@ let weak_live_region_implies_eternal_or_in_map r m = ()
  *)
 let weak_contains (#a:Type) (m:mem) (s:reference a) =
   weak_live_region m s.id /\
-  (if s.mm then HH.weak_contains_ref s.ref m.h else True)
+  (if is_mm s then HH.weak_contains_ref s.ref m.h else True)
 
 let upd (#a:Type) (m:mem) (s:reference a{live_region m s.id}) (v:a)
   : GTot mem

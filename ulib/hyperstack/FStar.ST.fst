@@ -131,12 +131,10 @@ assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
 
-let remove_reference (#a:Type) (r:reference a{r.mm}) (m:mem{r.id `is_in` m.h}) :GTot mem =
-  let h = Map.sel m.h r.id in
-  //d' = (Heap.domain h) \ {r}
-  let d' = TSet.intersect (Heap.domain h) (TSet.complement (TSet.singleton (Heap.Ref (HH.as_ref r.ref)))) in
-  let h' = Heap.restrict h d' in
-  HS (Map.upd m.h r.id h') m.tip
+let remove_reference (#a:Type) (r:reference a) (m:mem{m `contains` r /\ is_mm r}) :GTot mem =
+  let h_0 = Map.sel m.h r.id in
+  let h_1 = Heap.free_mm h_0 (HH.as_ref r.ref) in
+  HS (Map.upd m.h r.id h_1) m.tip
 
 assume val sfree: #a:Type -> r:mmstackref a -> StackInline unit
     (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
@@ -461,7 +459,7 @@ let mm_tests _ =
   //check that the heap does not contain the reference
   let m = get () in
   let h = Map.sel m.h m.tip in
-  let _ = assert (not (Heap.contains h (HH.as_ref r1.ref))) in
+  let _ = assert (~ (Heap.contains h (HH.as_ref r1.ref))) in
 
   let r2 = salloc_mm 2 in
   let _ = pop_frame () in
@@ -478,7 +476,7 @@ let mm_tests _ =
   //check that the heap does not contain the reference
   let m = get () in
   let h = Map.sel m.h id in
-  let _ = assert (not (Heap.contains h (HH.as_ref r3.ref))) in
+  let _ = assert (~ (Heap.contains h (HH.as_ref r3.ref))) in
 
   //this fails because the reference is no longer live
   //let _ = !r3 in
