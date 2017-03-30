@@ -7,11 +7,9 @@ open FStar.List
 open FStar.Util
 open FStar.Range
 open FStar.Options
-open FStar.Syntax.Syntax
-open FStar.Syntax.Const
-open FStar.Syntax.Util
 open FStar.Parser.AST
 open FStar.Parser.Util
+open FStar.Parser.Const
 open FStar.Const
 open FStar.Ident
 open FStar.String

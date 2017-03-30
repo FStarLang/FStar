@@ -14,7 +14,7 @@
   limitations under the License.
 *)
 #light "off"
-module FStar.ToSyntax.Resugar //we should rename FStar.ToSyntax to something else
+module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 
 open FStar.All
 open FStar.Syntax.Syntax

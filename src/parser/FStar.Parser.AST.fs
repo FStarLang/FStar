@@ -18,10 +18,7 @@ module FStar.Parser.AST
 open FStar.All
 //open FStar.Absyn
 open FStar.Errors
-module C = FStar.Syntax.Const
-module U = FStar.Syntax.Util
-module P = FStar.Syntax.Print
-module S = FStar.Syntax.Syntax
+module C = FStar.Parser.Const
 //open FStar.Absyn.Syntax
 open FStar.Range
 open FStar.Ident
@@ -278,7 +275,7 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
   let x =
-    let i = FStar.Syntax.Syntax.next_id () in
+    let i = C.next_id () in
     Ident.gen r1 in
   mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
@@ -302,12 +299,12 @@ let mkLexList r elts =
   List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
 
 let ml_comp t =
-    let ml = mk_term (Name FStar.Syntax.Const.effect_ML_lid) t.range Expr in
+    let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 
 let tot_comp t =
-    let ml = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range Expr in
+    let ml = mk_term (Name C.effect_Tot_lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 
@@ -370,11 +367,11 @@ let mkFsTypApp t args r =
 
   (* TODO : is this valid or should it use Construct ? *)
 let mkTuple args r =
-  let cons = FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r in
+  let cons = C.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r =
-  let cons = FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r in
+  let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkRefinedBinder id t should_bind_var refopt m implicit =
@@ -526,7 +523,7 @@ let rec term_to_string (x:term) = match x.tm with
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
-  | Const c -> P.const_to_string c
+  | Const c -> C.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id
   | Uvar id -> id.idText
@@ -606,7 +603,7 @@ and aqual_to_string = function
 
 and pat_to_string x = match x.pat with
   | PatWild -> "_"
-  | PatConst c -> P.const_to_string c
+  | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq)
   | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) i.idText

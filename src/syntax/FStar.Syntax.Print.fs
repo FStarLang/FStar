@@ -27,8 +27,9 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
 module U = FStar.Util
-
-
+module Resugar = FStar.Syntax.Resugar
+module ToDocument = FStar.Parser.ToDocument
+module Pp = FStar.Pprint
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -290,8 +291,15 @@ let rec term_to_string x =
     then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
     else term_to_string t
   | _ -> tag_of_term x
+and pat_to_string x = match x.v with 
 
-and  pat_to_string x = match x.v with
+(* let term_to_string x = 
+  let e = Resugar.resugar_term x in
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string 1.0 100 d
+
+let rec pat_to_string x = match x.v with *)
+
     | Pat_cons(l, pats) -> U.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
     | Pat_dot_term (x, _) ->
       if Options.print_bound_var_types()

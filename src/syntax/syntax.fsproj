@@ -61,6 +61,8 @@
     <Compile Include="FStar.Syntax.InstFV.fsi" />
     <Compile Include="FStar.Syntax.InstFV.fs" />
     <Compile Include="FStar.Syntax.Util.fs" />
+    <Compile Include="FStar.Syntax.Resugar.fsi" />
+    <Compile Include="FStar.Syntax.Resugar.fs" />
     <Compile Include="FStar.Syntax.Print.fsi" />
     <Compile Include="FStar.Syntax.Print.fs" />
     <Compile Include="FStar.Syntax.MutRecTy.fsi" />
@@ -70,6 +72,16 @@
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\parser\parser.fsproj">
+      <Name>parser</Name>
+      <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
+      <Name>prettyprint</Name>
+      <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

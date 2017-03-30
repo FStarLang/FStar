@@ -31,7 +31,7 @@ open FStar.Const
 open FStar.Pprint
 open FStar.Range
 
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 module BU = FStar.Util
 
 
@@ -172,8 +172,8 @@ let matches_var t x =
         | Var y -> x.idText = text_of_lid y
         | _ -> false
 
-let is_tuple_constructor = FStar.Syntax.Util.is_tuple_data_lid'
-let is_dtuple_constructor = FStar.Syntax.Util.is_dtuple_data_lid'
+let is_tuple_constructor = C.is_tuple_data_lid'
+let is_dtuple_constructor = C.is_dtuple_data_lid'
 
 let is_list_structure cons_lid nil_lid =
   let rec aux e = match (unparen e).tm with

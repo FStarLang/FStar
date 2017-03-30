@@ -74,7 +74,6 @@
     <Compile Include="FStar.ToSyntax.Env.fs" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fsi" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fs" />
-    <Compile Include="FStar.ToSyntax.Resugar.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\parser\parser.fsproj">

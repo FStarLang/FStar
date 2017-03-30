@@ -76,6 +76,7 @@
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
+    <Compile Include="FStar.Parser.Const.fs" />
     <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
     <Compile Include="parse.fs" />
@@ -95,16 +96,6 @@
     <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
       <Name>prettyprint</Name>
       <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\syntax\syntax.fsproj">
-      <Name>syntax</Name>
-      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\typechecker\typechecker.fsproj">
-      <Name>typechecker</Name>
-      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
       <Private>True</Private>
     </ProjectReference>
     <Reference Include="FSharp.PowerPack">
