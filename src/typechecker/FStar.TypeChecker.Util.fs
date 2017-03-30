@@ -128,7 +128,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
       let e = SS.compress e in
       match e.n with
       | Tm_meta(e, _) -> aux must_check_ty vars e
-      | Tm_ascribed(e, t, _) -> t, true
+      | Tm_ascribed(e, t, _) -> fst t, true
 
       | Tm_abs(bs, body, _) ->
         let scope, bs, must_check_ty = bs |> List.fold_left (fun (scope, bs, must_check_ty) (a, imp) ->
@@ -846,7 +846,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
      | Some ed -> ed.qualifiers |> List.contains Reifiable
      | _ -> false) in
   let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
-             then Rel.try_teq env lc.res_typ t, false
+             then Rel.try_teq true env lc.res_typ t, false
              else Rel.try_subtype env lc.res_typ t, true in
   match gopt with
     | None, _ ->
@@ -1198,7 +1198,7 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
   let env = Env.set_range env e.pos in
   let check env t1 t2 =
     if env.use_eq
-    then Rel.try_teq env t1 t2
+    then Rel.try_teq true env t1 t2
     else match Rel.try_subtype env t1 t2 with
             | None -> None
             | Some f -> Some <| apply_guard f e in

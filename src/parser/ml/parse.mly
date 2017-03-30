@@ -61,6 +61,7 @@ open FStar_String
 %token BAR
 %token BAR_RBRACK
 %token BEGIN
+%token BY
 %token <bytes> BYTEARRAY
 %token <char> CHAR
 %token COLON
@@ -235,7 +236,19 @@ let x =
 in
     ( Some x )}
 
-option___anonymous_6_:
+option___anonymous_5_:
+  
+    {    ( None )}
+| BY typ
+    {let (_10, tactic0) = ((), $2) in
+let x =
+  let tactic = tactic0 in
+  let _1 = _10 in
+                                                            (tactic)
+in
+    ( Some x )}
+
+option___anonymous_7_:
   
     {    ( None )}
 | LBRACE noSeqTerm RBRACE
@@ -354,10 +367,10 @@ let x =
 in
     ( x :: xs )}
 
-list___anonymous_7_:
+list___anonymous_8_:
   
     {    ( [] )}
-| DOT qlident list___anonymous_7_
+| DOT qlident list___anonymous_8_
     {let (_10, id0, xs) = ((), $2, $3) in
 let x =
   let id = id0 in
@@ -1412,9 +1425,9 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| tmIff SUBTYPE typ
-    {let (e, _2, t) = ($1, (), $3) in
-      ( mk_term (Ascribed(e,{t with level=Expr})) (rhs2 parseState 1 3) Expr )}
+| tmIff SUBTYPE typ option___anonymous_5_
+    {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
+      ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
     {let (e1, _10, e0, _30, _3, e3) = ($1, (), $3, (), (), $6) in
 let op_expr =
@@ -1467,7 +1480,7 @@ in
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
          mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
       )}
-| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_5_
+| MATCH term WITH reverse_left_flexible_list_BAR___anonymous_6_
     {let (_1, e, _3, xs0) = ((), $2, (), $4) in
 let pbs =
   let xs = xs0 in
@@ -1855,7 +1868,7 @@ tmNoEq:
               ( e )}
 
 refineOpt:
-  option___anonymous_6_
+  option___anonymous_7_
     {let phi_opt = $1 in
                                                     (phi_opt)}
 
@@ -2059,7 +2072,7 @@ in
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT
     {let (_1, e0, _3, el, _5) = ((), $2, (), $4, ()) in
       ( mkDTuple (e0::el) (rhs2 parseState 1 5) )}
-| projectionLHS list___anonymous_7_
+| projectionLHS list___anonymous_8_
     {let (e, field_projs) = ($1, $2) in
       ( fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs )}
 | BEGIN term END
@@ -2088,7 +2101,7 @@ projectionLHS:
       (
         let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level})) (rhs2 parseState 1 4) level
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
         in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       )}
 | LBRACK_BAR right_flexible_list_SEMICOLON_noSeqTerm_ BAR_RBRACK
@@ -2335,7 +2348,7 @@ right_flexible_nonempty_list_SEMICOLON_simpleDef_:
     {let (x, _2, xs) = ($1, (), $3) in
                                            ( x :: xs )}
 
-reverse_left_flexible_list_BAR___anonymous_5_:
+reverse_left_flexible_list_BAR___anonymous_6_:
   
     {   ( [] )}
 | patternBranch
@@ -2345,7 +2358,7 @@ let x =
                                                                      (pb)
 in
    ( [x] )}
-| reverse_left_flexible_list_BAR___anonymous_5_ BAR patternBranch
+| reverse_left_flexible_list_BAR___anonymous_6_ BAR patternBranch
     {let (xs, _2, pb0) = ($1, (), $3) in
 let x =
   let pb = pb0 in

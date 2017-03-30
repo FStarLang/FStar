@@ -914,12 +914,19 @@ let lcomp_of_comp c0 =
      cflags = flags;
      comp = fun() -> c0}
 
-let mk_forall (x:bv) (body:typ) : typ =
-  mk (Tm_app(tforall, [ iarg (x.sort);
-                        as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
+let mk_forall_aux fa x body =
+  mk (Tm_app(fa, [ iarg (x.sort);
+                   as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
 
-let rec close_forall bs f =
-  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f
+let mk_forall_no_univ (x:bv) (body:typ) : typ =
+  mk_forall_aux tforall x body
+
+let mk_forall (u:universe) (x:bv) (body:typ) : typ =
+  let tforall = mk_Tm_uinst tforall [u] in
+  mk_forall_aux tforall x body
+
+let close_forall_no_univs bs f =
+  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ (fst b) f) bs f
 
 let rec is_wild_pat p =
     match p.v with

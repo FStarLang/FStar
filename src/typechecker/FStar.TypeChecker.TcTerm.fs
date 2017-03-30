@@ -73,7 +73,7 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
                                         (Print.bv_to_string x) (N.term_to_string env head) in
                        raise (Error(msg, Env.get_range env)) in
                    let s = TcUtil.new_uvar env (fst <| U.type_u()) in
-                   match Rel.try_teq env t s with
+                   match Rel.try_teq true env t s with
                     | Some g -> Rel.force_trivial_guard env g; s
                     | _ -> fail ()
          end in
@@ -340,24 +340,28 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e = mk (Tm_meta(e, m)) (Some c.res_typ.n) top.pos in
     e, c, g
 
-  | Tm_ascribed (e, Inr expected_c, _) ->
+  | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
     let expected_c, _, g = tc_comp env0 expected_c in
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c'.comp()) in
-    let e = mk (Tm_ascribed(e, Inl t_res, Some (U.comp_effect_name expected_c))) (Some t_res.n) top.pos in
+    let e = mk (Tm_ascribed(e, (Inl t_res, None), Some (U.comp_effect_name expected_c))) (Some t_res.n) top.pos in
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
+    let topt = tc_tactic_opt env0 topt in
+    let f = match topt with
+            | None -> f
+            | Some tactic -> Rel.map_guard f (Common.mk_by_tactic tactic) in
     let e, c, f2 = comp_check_expected_typ env e lc in
     e, c, Rel.conj_guard f f2
 
-  | Tm_ascribed (e, Inl t, _) ->
+  | Tm_ascribed (e, (Inl t, topt), _) ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, Inl t, Some c.eff_name)) (Some t.n) top.pos) c in
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) (Some t.n) top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
   | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
@@ -387,7 +391,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             (* We constrain this unification variable to be of the shape Type u *)
             (* for some new unification variable u *)
             let t, u = U.type_u () in
-            let g_opt = Rel.try_teq env c'.res_typ t in
+            let g_opt = Rel.try_teq true env c'.res_typ t in
             begin match g_opt with
             | Some g' -> Rel.force_trivial_guard env g'
             | None ->
@@ -432,7 +436,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let e, c, g = tc_tot_or_gtot_term env_no_ex e in
           if not <| U.is_total_lcomp c
           then Err.add_errors env ["Expected Tot, got a GTot computation", e.pos];
-          match Rel.try_teq env_no_ex c.res_typ expected_repr_typ with
+          match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
           | None -> Err.add_errors env [BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
                     e, Rel.conj_guard g g0
           | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0)
@@ -518,7 +522,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-        mk (Tm_ascribed(e, Inl cres.res_typ, Some cres.eff_name)) None e.pos
+        mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) None e.pos
       in
       //see issue #594: if the scrutinee is impure, then explicitly sequence it with an impure let binding
       //                to protect it from the normalizer optimizing it away
@@ -557,6 +561,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
 
+and tc_tactic_opt env topt =
+    match topt with
+    | None -> None
+    | Some tactic ->
+      let tactic, _, _ = tc_check_tot_or_gtot_term env tactic Common.t_tactic_unit in
+      Some tactic
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)
 (*   Values have no special status, except that we structure the code to promote a value type t to a Tot t  *)
@@ -658,7 +668,7 @@ and tc_value env (e:term) : term
     check_smt_pat env e bs c;
     let u = S.U_max (uc::us) in
     let t = mk (Tm_type u) None top.pos in
-    let g = Rel.conj_guard g (Rel.close_guard bs f) in
+    let g = Rel.conj_guard g (Rel.close_guard_univs us bs f) in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_type u ->
@@ -679,7 +689,7 @@ and tc_value env (e:term) : term
     let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_phi in
     let e = {U.refine (fst x) phi with pos=top.pos} in
     let t = mk (Tm_type u) None top.pos in
-    let g = Rel.conj_guard f1 (Rel.close_guard [x] f2) in
+    let g = Rel.conj_guard f1 (Rel.close_guard_univs [u] [x] f2) in
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_abs(bs, body, _) ->
@@ -841,6 +851,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
         * binders             (* let rec binders, suitably guarded with termination check, if any *)
         * option<comp>        (* the expected comp type for the body *)
+        * option<term>        (* a tactic to apply when checking the expected computation type *)
         * Env.env             (* environment for the body *)
         * term                (* the body itself *)
         * guard_t)            (* accumulated guard from checking the binders *)
@@ -852,13 +863,13 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
               | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type"
           in
           let bs, envbody, g, _ = tc_binders env bs in
-          let copt, body, g = match (SS.compress body).n with
-              | Tm_ascribed(e, Inr c, _) ->
+          let copt, tacopt, body, g = match (SS.compress body).n with
+              | Tm_ascribed(e, (Inr c, tacopt), _) ->
                 let c, _, g' = tc_comp envbody c in
-                Some c, body, Rel.conj_guard g g'
-              | _ -> None, body, g
+                Some c, tc_tactic_opt envbody tacopt, body, Rel.conj_guard g g'
+              | _ -> None, None, body, g
           in
-          None, bs, [], copt, envbody, body, g
+          None, bs, [], copt, tacopt, envbody, body, g
 
       | Some t ->
           let t = SS.compress t in
@@ -870,13 +881,13 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
                 let bs, envbody, g, _ = tc_binders env bs in
                 let envbody, _ = Env.clear_expected_typ envbody in
-                Some (t, true), bs, [], None, envbody, body, g
+                Some (t, true), bs, [], None, None, envbody, body, g
 
               (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
               (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
               | Tm_refine (b, _) ->
-                let _, bs, bs', copt, env, body, g = as_function_typ norm b.sort in
-                Some (t, false), bs, bs', copt, env, body, g
+                let _, bs, bs', copt, tacopt, env, body, g = as_function_typ norm b.sort in
+                Some (t, false), bs, bs', copt, tacopt, env, body, g
 
               | Tm_arrow(bs_expected, c_expected) ->
                 let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
@@ -929,15 +940,15 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
                 let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
-                Some (t, false), bs, letrecs, Some c, envbody, body, g
+                Some (t, false), bs, letrecs, Some c, None, envbody, body, g
 
               | _ -> (* expected type is not a function;
                         try normalizing it first;
                         otherwise synthesize a type and check it against the given type *)
                 if not norm
                 then as_function_typ true (unfold_whnf env t)
-                else let _, bs, _, c_opt, envbody, body, g = expected_function_typ env None body in
-                      Some (t, false), bs, [], c_opt, envbody, body, g in
+                else let _, bs, _, c_opt, tacopt, envbody, body, g = expected_function_typ env None body in
+                      Some (t, false), bs, [], c_opt, tacopt, envbody, body, g in
           as_function_typ false t
     in
 
@@ -949,7 +960,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (match topt with | None -> "None" | Some t -> Print.term_to_string t)
           (if env.top_level then "true" else "false");
 
-    let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g = expected_function_typ env topt body in
+    let tfun_opt, bs, letrec_binders, c_opt, tacopt, envbody, body, g = expected_function_typ env topt body in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
 
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
@@ -962,9 +973,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
     let guard = Rel.conj_guard guard_body guard in
+//    let guard = match tacopt with
+//                | None -> guard
+//                | Some tac -> Rel.map_guard guard (Common.mk_by_tactic tac) in
     let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
-                else let guard = Rel.close_guard (bs@letrec_binders) (Rel.conj_guard g guard) in
+                else let guard = Rel.close_guard env (bs@letrec_binders) (Rel.conj_guard g guard) in
                      guard in
 
     let tfun_computed = U.arrow bs cbody in
@@ -1464,7 +1478,7 @@ and tc_eqn scrutinee env branch
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
     TcUtil.close_comp env pat_bvs c_weak,
-    Rel.close_guard binders g_when_weak,
+    Rel.close_guard env binders g_when_weak,
     g_branch
   in
 
@@ -1647,7 +1661,7 @@ and check_inner_let env e =
        let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
-       let g2 = Rel.close_guard xb
+       let g2 = Rel.close_guard env xb
                       (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
        let guard = Rel.conj_guard g1 g2 in
 
@@ -1730,7 +1744,7 @@ and check_inner_let_rec env top =
           let bvs = lbs |> List.map (fun lb -> left (lb.lbname)) in
 
           let e2, cres, g2 = tc_term env e2 in
-          let guard = Rel.conj_guard g_lbs (Rel.close_guard (List.map S.mk_binder bvs) g2) in
+          let guard = Rel.conj_guard g_lbs (Rel.close_guard env (List.map S.mk_binder bvs) g2) in
           let cres = TcUtil.close_comp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
@@ -1880,7 +1894,7 @@ and tc_binders env bs =
         | b::bs ->
           let b, env', g, u = tc_binder env b in
           let bs, env', g', us = aux env' bs in
-          b::bs, env', Rel.conj_guard g (Rel.close_guard [b] g'), u::us in
+          b::bs, env', Rel.conj_guard g (Rel.close_guard_univs [u] [b] g'), u::us in
     aux env bs
 
 and tc_pats env pats =
@@ -2003,8 +2017,8 @@ let rec universe_of_aux env e =
    | Tm_fvar fv ->
      let (_, t), _ = Env.lookup_lid env fv.fv_name.v in
      t
-   | Tm_ascribed(_, Inl t, _) -> t
-   | Tm_ascribed(_, Inr c, _) -> U.comp_result c
+   | Tm_ascribed(_, (Inl t, _), _) -> t
+   | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
    //also easy, since we can quickly recompute the type
    | Tm_type u -> S.mk (Tm_type (U_succ u)) None e.pos
    | Tm_constant sc -> tc_constant e.pos sc
