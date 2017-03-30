@@ -18,19 +18,33 @@
 #light "off"
 module FStar.Unionfind
 
+open FStar.Util
+
 type pa_t<'a> = ref<data<'a>>
 and data<'a> =
     | PArray of array<'a>
     | PDiff of int * 'a * pa_t<'a>
 
-type puf_t<'a> = { mutable parent: pa_t<int>; ranks: pa_t<int> }
-type puf<'a> = puf_t<'a>
+type puf_t<'a when 'a : not struct> = { mutable parent: pa_t<(either<int, 'a>)>; ranks: pa_t<int> ; count: ref<int>}
+type puf<'a when 'a : not struct> = puf_t<'a>
+type p_uvar = int
 
-val puf_create: int -> puf<'a>
-val puf_fresh: 'a -> puf<'a> -> puf<'a>
-val puf_find: puf<'a> -> int -> int
-val puf_union: puf<'a> -> int -> int -> puf<'a>
-val puf_reroot: puf<'a> -> unit
+val puf_empty: unit -> puf<'a>
+val puf_fresh: puf<'a> -> 'a -> p_uvar
+val puf_find: puf<'a> -> p_uvar -> 'a * int
+val puf_union: puf<'a> -> p_uvar -> p_uvar -> puf<'a>
+
+val puf_test: unit -> unit
+
+// type uf_t<'a> = ref<puf_t<'a>>
+// type p_uvar<'a> = { elem: 'a; id: int }
+
+// val p_uvar_id : p_uvar<'a> -> int
+// val p_fresh : uf_t<'a> -> 'a -> p_uvar<'a>
+// val p_find : p_uvar<'a> -> 'a
+// val p_change: p_uvar<'a> -> 'a -> unit
+// val p_equivalent: p_uvar<'a> -> p_uvar<'a> -> bool
+// val p_union : p_uvar<'a> -> p_uvar<'a> -> unit
 
 type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
 and contents<'a when 'a : not struct> =

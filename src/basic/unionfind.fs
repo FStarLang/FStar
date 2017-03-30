@@ -19,6 +19,7 @@
 module FStar.Unionfind
 
 open FStar.All
+open FStar.Util
 
 (* Persistent union-find implementation adapted from
    https://www.lri.fr/~filliatr/puf/ *)
@@ -60,7 +61,7 @@ let pa_set t i v =
     match !t with
         | PArray a ->
             let old = a.[i] in
-            if old = v then t else
+            // if old = v then t else
                 begin
                     a.[i] <- v;
                     let res = ref (PArray a) in
@@ -69,53 +70,155 @@ let pa_set t i v =
                 end
         | PDiff _ -> failwith "Impossible"
 
+(* apply impure function from Array to a persistent array *)
+let impure f t =
+  pa_reroot t;
+  match !t with PArray a -> f a | PDiff _ -> failwith "Impossible"
+
+let pa_length t = impure Array.length t
+
+
+(* very inefficient strategy for growing the array *)
+let pa_new t x =
+    pa_reroot t;
+    match !t with
+        | PArray a ->
+            let new_el = Array.make 1 x in
+            t :=  PArray (Array.append a new_el)
+        | PDiff _ -> failwith "Impossible"
+
+(* double the array whenever its bounds are reached *)
+let pa_new_double t x l empty =
+    pa_reroot t;
+    (Util.print2 "Length and number of elems are %s %s\n" (sprintf "%i" (pa_length t)) (sprintf "%i" l));
+    match !t with
+        | PArray a ->
+            if (pa_length t = l) then begin
+                let arr_tail = Array.make l empty in
+                arr_tail.[0] <- x;
+                t := PArray (Array.append a arr_tail)
+            end else
+            a.[l] <- x
+        | PDiff _ -> failwith "Impossible"
+
 
 (* Union-find implementation based on persistent arrays *)
-type puf_t<'a> = {
-    mutable parent: pa_t<int>;
+type puf_t<'a when 'a : not struct> = {
+    (* array of parents of each node
+       contains either path or root element *)
+    mutable parent: pa_t<(either<int, 'a>)>;
     ranks: pa_t<int>;
-}
+    (* keep track of how many elements are allocated in the array *)
+    count: ref<int> }
+type puf<'a when 'a : not struct> = puf_t<'a>
+type p_uvar = int
 
-type puf<'a> = puf_t<'a>
+let puf_empty () =
+    { parent = pa_create 2 (Inl -1) ;
+      ranks = pa_create 2 0;
+      count = ref 0 }
 
-let puf_create n =
-    { ranks = pa_create n 0;
-      parent = pa_init n (fun i -> i) }
-
+let puf_fresh h x =
+    // pa_new h.parent (Inr x);
+    // pa_new h.ranks 0;
+    let count = !(h.count) in
+    pa_new_double h.parent (Inr x) count (Inl -1);
+    pa_new_double h.ranks 0 count 0;
+    h.count := count + 1;
+    count
 
 (* implements path compression, returns new array *)
 let rec puf_find_aux f i =
-    let fi = pa_get f i in
-    if fi = i then
-        f, i
-    else
-        let f, r = puf_find_aux f fi in
-        let f = pa_set f i r in
-        f, r
+    match (pa_get f i) with
+        | Inl fi ->
+            let f, r, id = puf_find_aux f fi in
+            let f = pa_set f i r in
+            f, r, id
+        | Inr x -> f, Inr x, i
 
 let puf_find h x =
-    let f, rx = puf_find_aux h.parent x in
+    let f, rx, i = puf_find_aux h.parent x in
         h.parent <- f;
-        rx
+        match rx with
+            | Inr r -> r, i
+            | Inl _ -> failwith "Impossible"
 
 let puf_union h x y =
-    let rx = puf_find h x in
-    let ry = puf_find h y in
-    if rx <> ry then begin
-        let rxc = pa_get h.ranks rx in
-        let ryc = pa_get h.ranks ry in
+    let rx, ix = puf_find h x in
+    let ry, iy = puf_find h y in
+    if not (LanguagePrimitives.PhysicalEquality rx ry) then begin
+        let rxc = pa_get h.ranks ix in
+        let ryc = pa_get h.ranks iy in
         if rxc > ryc then
-            { parent = pa_set h.parent ry rx; ranks = h.ranks}
+            { parent = pa_set h.parent iy (Inl ix); ranks = h.ranks; count = h.count}
         else if rxc < ryc then
-            { parent = pa_set h.parent rx ry; ranks = h.ranks}
+            { parent = pa_set h.parent ix (Inl iy); ranks = h.ranks; count = h.count}
         else
-            { parent = pa_set h.parent ry rx;
-              ranks = pa_set h.parent ry rx; }
+            { parent = pa_set h.parent iy (Inl ix);
+              ranks = pa_set h.ranks ix (rxc+1);
+              count = h.count }
         end else
             h
 
-let puf_reroot h =
-    pa_reroot h.parent
+let puf_test () =
+    let (u: puf_t<string>) = puf_empty () in
+    let u_a = puf_fresh u "a" in
+    let u_b = puf_fresh u "b" in
+    let u_c = puf_fresh u "c" in
+    (Util.print1 "There are %s elements\n" (sprintf "%i" !(u.count)));
+    let u_d = puf_fresh u "d" in
+    let u_e = puf_fresh u "e" in
+    let u_f = puf_fresh u "f" in
+    let u_g = puf_fresh u "g" in
+    let u_h = puf_fresh u "h" in
+    let le, ie = puf_find u u_e in
+    let u = puf_union u u_a u_b in
+    let u = puf_union u u_b u_c in
+    let la, ia = puf_find u u_a in
+    let lc, ic = puf_find u u_c in
+    (Util.print2 "Rep and id of e are %s %s\n" le (sprintf "%i" ie));
+    (Util.print2 "Rep and id of a are %s %s\n" la (sprintf "%i" ia));
+    (Util.print2 "Rep and id of c are %s %s\n" lc (sprintf "%i" ic));
+    let u_i = puf_fresh u "i" in
+    (Util.print2 "Id of i and count are %s %s\n" (sprintf "%i" u_i) (sprintf "%i" !(u.count)));
+    let li, ii = puf_find u u_i in
+    (Util.print2 "Rep and id of i are %s %s\n" li (sprintf "%i" ii));
+    let u = puf_union u u_b u_i in
+    let li, ii = puf_find u u_i in
+    (Util.print2 "Rep and id of i are %s %s\n" li (sprintf "%i" ii));
+    (Util.print1 "There are %s elements\n" (sprintf "%i" !(u.count)))
+
+
+(* Stateful interface to persistent unionfind *)
+// type uf_t<'a> = ref<puf_t<'a>>
+// type p_uvar<'a> = { elem: 'a; id: int; uf: uf_t<'a> }
+
+// let p_uvar_id uv =
+//     let f, rx, id = puf_find_aux (!uv.uf).parent uv.id in
+//     id
+
+// let p_fresh uf x =
+//     let length = pa_length <| (!uf).parent in
+//     pa_new (!uf).parent (Inr x);
+//     pa_new (!uf).ranks 0;
+//     { elem = x; id = length; uf = uf }
+
+// let p_find x =
+//     let f = puf_find !x.uf x.id
+
+// let p_change uv c =
+//     let f, rx, id = puf_find_aux (!uv.uf).parent uv.id in
+
+// let p_change uv c =
+//     match !(uv.uf).[id] with
+//         | Inl i -> p_change
+
+// let p_equivalent (x: p_uvar<'a>) (y: p_uvar<'a>): bool =
+//     let curr_uf = !p_uf.uf in
+//     (puf_find curr_uf x.id) = (puf_find curr_uf y.id)
+
+// let p_union (x: p_uvar<'a>) (y: p_uvar<'a>): unit =
+//     p_uf.uf := puf_union (!p_uf.uf) x.id y.id
 
 (* Unionfind with path compression but without ranks *)
 (* Provides transacational updates, based on a suggeestion from Francois Pottier *)
@@ -217,3 +320,34 @@ let change x a =
 
 let equivalent x y =
   LanguagePrimitives.PhysicalEquality (rep x) (rep y)
+
+
+// type uf_t<'a> = { uf: ref<puf_t>; elems: array<'a> }
+// and p_uvar<'a> = { elem: 'a; id: int }
+
+// let p_counter = ref 0
+// let (p_uf: uf_t<'a>) = { uf = ref (puf_create 0); elems = Array.empty }
+
+// let p_uvar_id uv =
+//     uv.id
+
+// let p_fresh x =
+//     p_counter := !p_counter + 1;
+//     let length = pa_length <| (!p_uf.uf).parent in
+//     pa_new (!p_uf.uf).parent length;
+//     pa_new (!p_uf.uf).ranks 0;
+//     { elem = x; id = !p_counter }
+
+// let p_find x =
+//     let f = puf_find (!p_uf.uf) x.id in
+//     Array. get p_uf.elems f
+
+// let p_change (uv: p_uvar<'a>) (c: 'a): unit =
+//     p_uf.elems.[uv.id] <- c
+
+// let p_equivalent (x: p_uvar<'a>) (y: p_uvar<'a>): bool =
+//     let curr_uf = !p_uf.uf in
+//     (puf_find curr_uf x.id)= (puf_find curr_uf y.id)
+
+// let p_union (x: p_uvar<'a>) (y: p_uvar<'a>): unit =
+//     p_uf.uf := puf_union (!p_uf.uf) x.id y.id
