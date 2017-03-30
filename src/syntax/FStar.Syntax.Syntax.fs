@@ -33,6 +33,16 @@ type withinfo_t<'a,'t> = {
   p: Range.range;
 }
 
+// Documentation comment. May appear appear as follows:
+//  - Immediately before a top-level declaration
+//  - Immediately after a type constructor or record field
+//  - In the middle of a file, as a standalone documentation declaration
+(* KM : Would need some range information on fsdocs to be able to print them correctly *)
+type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
+
+let string_of_fsdoc (comment,keywords) =
+    comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
+
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 (* Term language *)
@@ -280,15 +290,16 @@ type eff_decl = {
     //actions for the effect
     actions     :list<action>
 }
-and sigelt =
+
+and sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for ths type
+                       * list<lident>              //data constructors for this type
                        * list<qualifier>
-                       * Range.range
+// JP: the comment below seems out of date -- Sig_tycons is gone?!
 (* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
@@ -297,43 +308,40 @@ and sigelt =
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<qualifier>
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-                       * Range.range
   | Sig_datacon        of lident
-                       * univ_names                 //universe variables
+                       * univ_names                 //universe variables of the inductive type it belongs to
                        * typ
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
                        * list<qualifier>
                        * list<lident>               //mutually defined types
-                       * Range.range
-  | Sig_declare_typ       of lident
+  | Sig_declare_typ    of lident
                        * univ_names
                        * typ
                        * list<qualifier>
-                       * Range.range
   | Sig_let            of letbindings
-                       * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
                        * list<attribute>
   | Sig_main           of term
-                       * Range.range
   | Sig_assume         of lident
                        * formula
                        * list<qualifier>
-                       * Range.range
-  | Sig_new_effect     of eff_decl * Range.range
-  | Sig_new_effect_for_free of eff_decl * Range.range // in this case, most fields have a dummy value
-                                                      // and are reconstructed using the DMFF theory
-  | Sig_sub_effect     of sub_eff * Range.range
+  | Sig_new_effect     of eff_decl
+  | Sig_new_effect_for_free of eff_decl
+  | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names
                        * binders
                        * comp
                        * list<qualifier>
                        * list<cflags>
-                       * Range.range
-  | Sig_pragma         of pragma * Range.range
+  | Sig_pragma         of pragma
+and sigelt = {
+    elt: sigelt';
+    doc: option<fsdoc>;
+    sigrng: Range.range;
+}
 
 type sigelts = list<sigelt>
 
@@ -440,6 +448,7 @@ let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
+let mk_sigelt (e: sigelt') = { elt = e; doc = None; sigrng = Range.dummyRange }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

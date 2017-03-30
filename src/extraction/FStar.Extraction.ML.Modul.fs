@@ -115,11 +115,11 @@ let print_ifamily i =
 
 let bundle_as_inductive_families env ses quals : list<inductive_family> =
     ses |> List.collect
-        (function
-            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas, quals, r) ->
+        (fun se -> match se.elt with
+            | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas, quals) ->
                 let bs, t = SS.open_term bs t in
-                let datas = ses |> List.collect (function
-                    | Sig_datacon(d, _, t, l', nparams, _, _, _) when Ident.lid_equals l l' ->
+                let datas = ses |> List.collect (fun se -> match se.elt with
+                    | Sig_datacon(d, _, t, l', nparams, _, _) when Ident.lid_equals l l' ->
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
                         let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
@@ -160,12 +160,12 @@ let extract_bundle env se =
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
 
 
-    match se with
-        | Sig_bundle([Sig_datacon(l, _, t, _, _, _, _, _)], [ExceptionConstructor], _, r) ->
+    match se.elt with
+        | Sig_bundle([{elt = Sig_datacon(l, _, t, _, _, _, _)}], [ExceptionConstructor], _) ->
           let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
           env, [MLM_Exn ctor]
 
-        | Sig_bundle(ses, quals, _, r) ->
+        | Sig_bundle(ses, quals, _) ->
           let ifams = bundle_as_inductive_families env ses quals in
 //          ifams |> List.iter print_ifamily;
           let env, td = BU.fold_map extract_one_family env ifams in
@@ -201,13 +201,13 @@ let extract_bundle env se =
 
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
-     match se with
+     match se.elt with
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ ->
           extract_bundle g se
 
-        | Sig_new_effect(ed, _) when (ed.qualifiers |> List.contains Reifiable) ->
+        | Sig_new_effect(ed) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
             let lb = {
@@ -249,18 +249,18 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect _ ->
           g, []
 
-        | Sig_declare_typ(lid, _, t, quals, _)  when Term.is_arity g t -> //lid is a type
+        | Sig_declare_typ(lid, _, t, quals)  when Term.is_arity g t -> //lid is a type
           if quals |> BU.for_some (function Assumption -> true | _ -> false) |> not
           then g, []
           else let bs, _ = U.arrow_formals t in
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
-        | Sig_let((false, [lb]), _, _, quals, _) when Term.is_arity g lb.lbtyp ->
+        | Sig_let((false, [lb]), _, quals, _) when Term.is_arity g lb.lbtyp ->
           extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
 
-        | Sig_let (lbs, r, _, quals, attrs) ->
-          let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None r in
+        | Sig_let (lbs, _, quals, attrs) ->
+          let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
             | MLE_Let((flavor, _, bindings), _) ->
@@ -288,27 +288,27 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None
               ) attrs in
-              g, [MLM_Loc (Util.mlloc_of_range r); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
+              g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
 
             | _ ->
               failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
           end
 
-       | Sig_declare_typ(lid, _, t, quals, r) ->
+       | Sig_declare_typ(lid, _, t, quals) ->
          if quals |> List.contains Assumption
          then let always_fail =
                   let imp = match U.arrow_formals t with
                     | [], t -> fail_exp lid t
                     | bs, t -> U.abs bs (fail_exp lid t) None in
-                  Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
-                                    lbunivs=[];
-                                    lbtyp=t;
-                                    lbeff=FStar.Syntax.Const.effect_ML_lid;
-                                    lbdef=imp}]), r, [], quals, []) in
+                  { se with elt = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
+                                                    lbunivs=[];
+                                                    lbtyp=t;
+                                                    lbeff=FStar.Syntax.Const.effect_ML_lid;
+                                                    lbdef=imp}]), [], quals, []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
-                    g, [MLM_Loc (Util.mlloc_of_range r); Term.ind_discriminator_body g lid l]
+                    g, [MLM_Loc (Util.mlloc_of_range se.sigrng); Term.ind_discriminator_body g lid l]
 
                   | _ ->
                     begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
@@ -320,9 +320,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     end
          else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
 
-       | Sig_main(e, r) ->
+       | Sig_main(e) ->
          let ml_main, _, _ = Term.term_as_mlexpr g e in
-         g, [MLM_Loc (Util.mlloc_of_range r); MLM_Top ml_main]
+         g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Top ml_main]
 
        | Sig_new_effect_for_free _ ->
            failwith "impossible -- removed by tc.fs"
@@ -331,7 +331,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_sub_effect  _
        | Sig_effect_abbrev _ -> //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
          g, []
-       | Sig_pragma (p, _) ->
+       | Sig_pragma (p) ->
          if p = S.LightOff
          then Options.set_ml_ish();
          g, []

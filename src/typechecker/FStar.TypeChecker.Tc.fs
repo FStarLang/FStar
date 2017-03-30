@@ -617,15 +617,15 @@ and cps_and_elaborate env ed =
 
   // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
-  sigelts := Sig_pragma (SetOptions "--admit_smt_queries true", Range.dummyRange) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
   let return_elab = register "return_elab" return_elab in
-  sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries false")) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
-  sigelts := Sig_pragma (SetOptions "--admit_smt_queries true", Range.dummyRange) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
   let bind_elab = register "bind_elab" bind_elab in
-  sigelts := Sig_pragma (SetOptions "--admit_smt_queries false", Range.dummyRange) :: !sigelts;
+  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries false")) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     // We need to reverse-engineer what tc_eff_decl wants here...
@@ -714,7 +714,7 @@ and cps_and_elaborate env ed =
           lift_wp = Some ([], apply_close lift_from_pure_wp) ;
           lift = None //Some ([], apply_close return_elab)
       } in
-      Some (Sig_sub_effect (lift_from_pure, Range.dummyRange))
+      Some (mk_sigelt (Sig_sub_effect (lift_from_pure)))
     end else None
   in
 
@@ -737,9 +737,9 @@ and tc_lex_t env ses quals lids =
         | _ -> assert false
     end;
     begin match ses with
-      | [Sig_inductive_typ(lex_t, [], [], t, _, _, [], r);
-         Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _, r1);
-         Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _, r2)]
+      | [{ elt = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r } as se ;
+         { elt = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1 } as se1;
+         { elt = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2 } as se2]
          when (lid_equals lex_t Const.lex_t_lid
             && lid_equals lex_top Const.lextop_lid
             && lid_equals lex_cons Const.lexcons_lid) ->
@@ -747,12 +747,12 @@ and tc_lex_t env ses quals lids =
         let u = S.new_univ_name (Some r) in
         let t = mk (Tm_type(U_name u)) None r in
         let t = Subst.close_univ_vars [u] t in
-        let tc = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], [], r) in
+        let tc = { se with elt = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []) } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], [], r1) in
+        let dc_lextop = { se1 with elt = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []) } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -763,10 +763,10 @@ and tc_lex_t env ses quals lids =
             let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
-        Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids, Env.get_range env)
+        let dc_lexcons = { se2 with elt = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []) } in
+        { elt = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; doc = None } // FIXME: Doc
       | _ ->
-        failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (Sig_bundle(ses, [], lids, Range.dummyRange))))
+        failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, [], lids)))))
     end
 
 and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
@@ -774,7 +774,7 @@ and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    Sig_assume(lid, phi, quals, r)
+    { elt = Sig_assume(lid, phi, quals); sigrng = r; doc = None } // FIXME: Doc
 
 and tc_inductive env ses quals lids =
     let env0 = env in
@@ -795,9 +795,9 @@ and tc_inductive env ses quals lids =
          let b = TcInductive.check_positivity ty env in
          if not b then
            let lid, r =
-             match ty with
-             | Sig_inductive_typ (lid, _, _, _, _, _, _, r) -> lid, r
-             | _                                            -> failwith "Impossible!"
+             match ty.elt with
+             | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid, ty.sigrng
+             | _                                         -> failwith "Impossible!"
            in
            Errors.report r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
          else ()
@@ -809,9 +809,9 @@ and tc_inductive env ses quals lids =
     let skip_prims_type (_:unit) :bool =
         let lid =
             let ty = List.hd tcs in
-            match ty with
-                | Sig_inductive_typ (lid, _, _, _, _, _, _, _) -> lid
-                | _                                            -> failwith "Impossible"
+            match ty.elt with
+                | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid
+                | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
         let types_to_skip = [ "c_False"; "c_True"; "equals"; "h_equals"; "c_and"; "c_or"; ] in
@@ -828,7 +828,7 @@ and tc_inductive env ses quals lids =
           if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
           else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
         in
-        (Sig_bundle(tcs@datas, quals, lids, Env.get_range env0))::ses, data_ops_ses
+        { elt = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; doc = None }::ses, data_ops_ses // FIXME: Doc
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
@@ -837,12 +837,13 @@ and tc_inductive env ses quals lids =
 and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
   let env = set_hint_correlator env se in
   TcUtil.check_sigelt_quals env se;
-  match se with
+  let r = se.sigrng in
+  match se.elt with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
 
-  | Sig_bundle(ses, quals, lids, r) when (lids |> BU.for_some (lid_equals Const.lex_t_lid)) ->
+  | Sig_bundle(ses, quals, lids) when (lids |> BU.for_some (lid_equals Const.lex_t_lid)) ->
     //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
     //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
     (*
@@ -854,13 +855,13 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let se = tc_lex_t env ses quals lids  in
     [se], Env.push_sigelt env se, []
 
-  | Sig_bundle(ses, quals, lids, r) ->
+  | Sig_bundle(ses, quals, lids) ->
     let env = Env.set_range env r in
     let ses,projectors_ses = tc_inductive env ses quals lids  in
     let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
     ses, env, projectors_ses
 
-  | Sig_pragma(p, r) ->
+  | Sig_pragma(p) ->
     let set_options t s = match Options.set_options t s with
       | Getopt.Success -> ()
       | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
@@ -885,22 +886,22 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     end
 
 
-  | Sig_new_effect_for_free (ne, r) ->
+  | Sig_new_effect_for_free (ne) ->
       (* This is only an elaboration rule not a typechecking one *)
 
       // Let the power of Dijkstra generate everything "for free", then defer
       // the rest of the job to [tc_decl].
       let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
       let effect_and_lift_ses = match lift_from_pure_opt with
-          | Some lift -> [ Sig_new_effect (ne, r) ; lift ]
-          | None -> [ Sig_new_effect (ne, r) ]
+          | Some lift -> [ { se with elt = Sig_new_effect (ne) } ; lift ]
+          | None -> [ { se with elt = Sig_new_effect (ne) } ]
       in
 
       [], env, ses @ effect_and_lift_ses
 
-  | Sig_new_effect(ne, r) ->
+  | Sig_new_effect(ne) ->
     let ne = tc_eff_decl env ne in
-    let se = Sig_new_effect(ne, r) in
+    let se = { se with elt = Sig_new_effect(ne) } in
     let env = Env.push_sigelt env se in
     (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
     let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
@@ -908,7 +909,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
         Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
     [se], env, []
 
-  | Sig_sub_effect(sub, r) ->
+  | Sig_sub_effect(sub) ->
     let ed_src = Env.get_effect_decl env sub.source in
     let ed_tgt = Env.get_effect_decl env sub.target in
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -975,11 +976,11 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     // Restore the proper lax flag!
     let env = { env with lax = lax } in
     let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
-    let se = Sig_sub_effect(sub, r) in
+    let se = { se with elt = Sig_sub_effect(sub) } in
     let env = Env.push_sigelt env se in
     [se], env, []
 
-  | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
+  | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags) ->
     assert (uvs = []);
     let env0 = env in
     let env = Env.set_range env r in
@@ -1001,17 +1002,17 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
                                   (Print.lid_to_string lid)
                                   (List.length uvs |> BU.string_of_int)
                                   (Print.term_to_string t), r)));
-    let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
+    let se = { se with elt = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags) } in
     let env = Env.push_sigelt env0 se in
     [se], env, []
 
-  | Sig_declare_typ (_, _, _, quals, _)
-  | Sig_let (_, _, _, quals, _)
+  | Sig_declare_typ (_, _, _, quals)
+  | Sig_let (_, _, quals, _)
       when quals |> BU.for_some (function OnlyName -> true | _ -> false) ->
       (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
       [], env, []
 
-  | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
+  | Sig_declare_typ(lid, uvs, t, quals) -> //NS: No checks on the qualifiers?
     let env = Env.set_range env r in
     //assert (uvs = []);
     let uvs, t =
@@ -1023,26 +1024,26 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
             let t = N.normalize [N.NoFullNorm; N.Beta] env t in
             uvs, SS.close_univ_vars uvs t
     in
-    let se = Sig_declare_typ(lid, uvs, t, quals, r) in
+    let se = { se with elt = Sig_declare_typ(lid, uvs, t, quals) } in
     let env = Env.push_sigelt env se in
     [se], env, []
 
-  | Sig_assume(lid, phi, quals, r) ->
+  | Sig_assume(lid, phi, quals) ->
     let se = tc_assume env lid phi quals r in
     let env = Env.push_sigelt env se in
     [se], env, []
 
-  | Sig_main(e, r) ->
+  | Sig_main(e) ->
     let env = Env.set_range env r in
     let env = Env.set_expected_typ env Common.t_unit in
     let e, c, g1 = tc_term env e in
     let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
     Rel.force_trivial_guard env (Rel.conj_guard g1 g);
-    let se = Sig_main(e, r) in
+    let se = { se with elt = Sig_main(e) } in
     let env = Env.push_sigelt env se in
     [se], env, []
 
-  | Sig_let(lbs, r, lids, quals, attrs) ->
+  | Sig_let(lbs, lids, quals, attrs) ->
     let env = Env.set_range env r in
     let check_quals_eq l qopt q = match qopt with
       | None -> Some q
@@ -1121,7 +1122,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
             | q ->
                 Some q
           ) quals in
-          Sig_let(lbs, r, lids, quals, attrs), lbs
+          { se with elt = Sig_let(lbs, lids, quals, attrs) }, lbs
       | _ -> failwith "impossible"
     in
 
@@ -1173,23 +1174,23 @@ let for_export hidden se : list<sigelt> * list<lident> =
       | Discriminator l -> hidden |> BU.for_some (lid_equals l)
       | _ -> false
    in
-   match se with
+   match se.elt with
   | Sig_pragma         _ -> [], hidden
 
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible"
 
-  | Sig_bundle(ses, quals, _, r) ->
+  | Sig_bundle(ses, quals, _) ->
     if is_abstract quals
     then
-      let for_export_bundle se (out, hidden) = match se with
-        | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
-          let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
+      let for_export_bundle se (out, hidden) = match se.elt with
+        | Sig_inductive_typ(l, us, bs, t, _, _, quals) ->
+          let dec = { se with elt = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals) } in
           dec::out, hidden
 
         (* logically, each constructor just becomes an uninterpreted function *)
-        | Sig_datacon(l, us, t, _, _, _, _, r) ->
-          let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
+        | Sig_datacon(l, us, t, _, _, _, _) ->
+          let dec = { se with elt = Sig_declare_typ(l, us, t, [Assumption]) } in
           dec::out, l::hidden
 
         | _ ->
@@ -1198,14 +1199,14 @@ let for_export hidden se : list<sigelt> * list<lident> =
       List.fold_right for_export_bundle ses ([], hidden)
     else [se], hidden
 
-  | Sig_assume(_, _, quals, _) ->
+  | Sig_assume(_, _, quals) ->
     if is_abstract quals
     then [], hidden
     else [se], hidden
 
-  | Sig_declare_typ(l, us, t, quals, r) ->
+  | Sig_declare_typ(l, us, t, quals) ->
     if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
-    then [Sig_declare_typ(l, us, t, [Assumption], r)], l::hidden
+    then [{se with elt = Sig_declare_typ(l, us, t, [Assumption]) }], l::hidden
     else if quals |> BU.for_some (function
       | Assumption
       | Projector _
@@ -1222,18 +1223,21 @@ let for_export hidden se : list<sigelt> * list<lident> =
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _ -> [se], hidden
 
-  | Sig_let((false, [lb]), _, _, quals, _) when (quals |> BU.for_some is_hidden_proj_or_disc) ->
+  | Sig_let((false, [lb]), _, quals, _) when (quals |> BU.for_some is_hidden_proj_or_disc) ->
     let fv = right lb.lbname in
     let lid = fv.fv_name.v in
     if hidden |> BU.for_some (S.fv_eq_lid fv)
     then [], hidden //this projector definition already has a declare_typ
-    else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+    else let dec = { elt = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption]);
+                     sigrng = Ident.range_of_lid lid;
+                     doc = se.doc } in
           [dec], lid::hidden
 
-  | Sig_let(lbs, r, l, quals, _) ->
+  | Sig_let(lbs, l, quals, _) ->
     if is_abstract quals
-    then snd lbs |> List.map (fun lb ->
-          Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
+    then (snd lbs |>  List.map (fun lb ->
+           { se with elt = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals) }),
+          hidden)
     else [se], hidden
 
 let tc_decls env ses =
@@ -1319,26 +1323,26 @@ let check_exports env (modul:modul) exports =
         check_term lid univs t;
         Errors.message_prefix.clear_prefix()
     in
-    let rec check_sigelt = function
-        | Sig_bundle(ses, quals, _, _) ->
+    let rec check_sigelt = fun se -> match se.elt with
+        | Sig_bundle(ses, quals, _) ->
           if not (quals |> List.contains Private)
           then ses |> List.iter check_sigelt
-        | Sig_inductive_typ (l, univs, binders, typ, _, _, _, r) ->
-          let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None r in
+        | Sig_inductive_typ (l, univs, binders, typ, _, _, _) ->
+          let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None se.sigrng in
           check_term l univs t
-        | Sig_datacon(l , univs, t, _, _, _, _, _) ->
+        | Sig_datacon(l , univs, t, _, _, _, _) ->
           check_term l univs t
-        | Sig_declare_typ(l, univs, t, quals, _) ->
+        | Sig_declare_typ(l, univs, t, quals) ->
           if not (quals |> List.contains Private)
           then check_term l univs t
-        | Sig_let((_, lbs), _, _, quals, _) ->
+        | Sig_let((_, lbs), _, quals, _) ->
           if not (quals |> List.contains Private)
           then lbs |> List.iter (fun lb ->
                let fv = right lb.lbname in
                check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
-        | Sig_effect_abbrev(l, univs, binders, comp, quals, flags, r) ->
+        | Sig_effect_abbrev(l, univs, binders, comp, quals, flags) ->
           if not (quals |> List.contains Private)
-          then let arrow = S.mk (Tm_arrow(binders, comp)) None r in
+          then let arrow = S.mk (Tm_arrow(binders, comp)) None se.sigrng in
                check_term l univs arrow
         | Sig_main _
         | Sig_assume _
@@ -1380,15 +1384,15 @@ let check_module env m =
   then BU.print1 "%s\n" (Print.modul_to_string m);
   if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
   then begin
-    let normalize_toplevel_lets = function
-        | Sig_let ((b, lbs), r, ids, qs, attrs) ->
+    let normalize_toplevel_lets = fun se -> match se.elt with
+        | Sig_let ((b, lbs), ids, qs, attrs) ->
             let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }
             in
-            Sig_let ((b, List.map update lbs), r, ids, qs, attrs)
-        | se -> se
+            { se with elt = Sig_let ((b, List.map update lbs), ids, qs, attrs) }
+        | _ -> se
     in
     let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
     BU.print1 "%s\n" (Print.modul_to_string normalized_module)

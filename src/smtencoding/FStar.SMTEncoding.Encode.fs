@@ -1833,7 +1833,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | _ -> Caption (BU.format1 "<Start encoding %s>" nm)::g@[Caption (BU.format1 "</end encoding %s>" nm)], e
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
-    match se with
+    match se.elt with
      | Sig_new_effect_for_free _ ->
          failwith "impossible -- removed by tc.fs"
      | Sig_pragma _
@@ -1841,7 +1841,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_effect_abbrev _
      | Sig_sub_effect _ -> [], env
 
-     | Sig_new_effect(ed, _) ->
+     | Sig_new_effect(ed) ->
        if ed.qualifiers |> List.contains Reifiable |> not
        then [], env
        else (* The basic idea:
@@ -1895,11 +1895,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let env, decls2 = BU.fold_map encode_action env ed.actions in
             List.flatten decls2, env
 
-     | Sig_declare_typ(lid, _, _, _, _) when (lid_equals lid Const.precedes_lid) ->
+     | Sig_declare_typ(lid, _, _, _) when (lid_equals lid Const.precedes_lid) ->
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid in
         [], env
 
-     | Sig_declare_typ(lid, _, t, quals, _) ->
+     | Sig_declare_typ(lid, _, t, quals) ->
         let will_encode_definition = not (quals |> BU.for_some (function
             | Assumption | Projector _ | Discriminator _ | Irreducible -> true
             | _ -> false)) in
@@ -1913,22 +1913,22 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              @ primitive_type_axioms env.tcenv lid tname tsym,
              env
 
-     | Sig_assume(l, f, _, _) ->
+     | Sig_assume(l, f, _) ->
         let f, decls = encode_formula f env in
         let g = [Term.Assume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), Some (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
-     | Sig_let(lbs, r, _, quals, _) when (quals |> List.contains S.Irreducible) ->
+     | Sig_let(lbs, _, quals, _) when (quals |> List.contains S.Irreducible) ->
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
-        then let val_decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, quals, r) in
+        then let val_decl = { elt = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, quals); sigrng = se.sigrng; doc = None } in // FIXME: Doc
              let decls, env = encode_sigelt' env val_decl in
              env, decls
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=BU.Inr b2t}]), _, _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=BU.Inr b2t}]), _, _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -1940,16 +1940,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 Some "b2t_def")] in
        decls, env
 
-    | Sig_let(_, _, _, quals, _) when (quals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
+    | Sig_let(_, _, quals, _) when (quals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
-    | Sig_let(_, _, lids, quals, _) when (lids |> BU.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
+    | Sig_let(_, lids, quals, _) when (lids |> BU.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
                                     && quals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
-    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
+    | Sig_let((false, [lb]), _, quals, _) when (quals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
      let fv = BU.right lb.lbname in
@@ -1958,14 +1958,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Some _ ->
           [], env //already encoded
         | None ->
-          let se = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, quals, Ident.range_of_lid l) in
+          let se = { elt = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, quals); sigrng = Ident.range_of_lid l; doc = None } in // FIXME: Doc
           encode_sigelt env se
      end
 
-    | Sig_let((is_rec, bindings), _, _, quals, _) ->
+    | Sig_let((is_rec, bindings), _, quals, _) ->
       encode_top_level_let env (is_rec, bindings) quals
 
-    | Sig_bundle(ses, _, _, _) ->
+    | Sig_bundle(ses, _, _) ->
        let g, env = encode_signature env ses in
        let g', inversions = g |> List.partition (function
         | Term.Assume(_, Some "inversion axiom", _) -> false
@@ -1975,7 +1975,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> false) in
        decls@rest@inversions, env
 
-     | Sig_inductive_typ(t, _, tps, k, _, datas, quals, _) ->
+     | Sig_inductive_typ(t, _, tps, k, _, datas, quals) ->
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
             if is_logical
@@ -2078,9 +2078,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @aux in
         g, env
 
-    | Sig_datacon(d, _, _, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
+    | Sig_datacon(d, _, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
-    | Sig_datacon(d, _, t, _, n_tps, quals, _, drange) ->
+    | Sig_datacon(d, _, t, _, n_tps, quals, _) ->
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = U.arrow_formals t in
@@ -2171,7 +2171,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Errors.warn drange (BU.format2 "Constructor %s builds an unexpected type %s\n"
+                  Errors.warn se.sigrng (BU.format2 "Constructor %s builds an unexpected type %s\n"
                         (Print.lid_to_string d) (Print.term_to_string head));
                   [], [] in
         let decls2, elim = encode_elim () in
