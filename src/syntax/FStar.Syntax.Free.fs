@@ -152,11 +152,14 @@ let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
             union n (union n1 n2) )
             (free_names_and_uvars t use_cache)
 
-      | Tm_ascribed(t1, Inl t2, _) ->
-        union (free_names_and_uvars t1 use_cache) (free_names_and_uvars t2 use_cache)
-
-      | Tm_ascribed(t1, Inr c, _) ->
-        union (free_names_and_uvars t1 use_cache) (free_names_and_uvars_comp c use_cache)
+      | Tm_ascribed(t1, asc, _) ->
+        let u1 = free_names_and_uvars t1 use_cache in
+        let u2 = match fst asc with
+         | Inl t2 -> free_names_and_uvars t2 use_cache
+         | Inr c2 -> free_names_and_uvars_comp c2 use_cache in
+        (match snd asc with
+         | None -> union u1 u2
+         | Some tac -> union (union u1 u2) (free_names_and_uvars tac use_cache))
 
       | Tm_let(lbs, t) ->
         snd lbs |> List.fold_left (fun n lb ->

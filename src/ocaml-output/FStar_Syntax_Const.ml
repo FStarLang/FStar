@@ -127,6 +127,8 @@ let exp_unit: FStar_Syntax_Syntax.term =
   mk (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_unit)
 let cons_lid: FStar_Ident.lident = pconst "Cons"
 let nil_lid: FStar_Ident.lident = pconst "Nil"
+let some_lid: FStar_Ident.lident = pconst "Some"
+let none_lid: FStar_Ident.lident = pconst "None"
 let assume_lid: FStar_Ident.lident = pconst "_assume"
 let assert_lid: FStar_Ident.lident = pconst "_assert"
 let list_append_lid: FStar_Ident.lident = p2l ["FStar"; "List"; "append"]
@@ -193,3 +195,12 @@ let range_0: FStar_Ident.lident = pconst "range_0"
 let guard_free: FStar_Ident.lident = pconst "guard_free"
 let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
+let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
+  fun s  ->
+    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] [s])
+      FStar_Range.dummyRange
+let tactic_lid: FStar_Ident.lident = fstar_tactics_lid "tactic"
+let by_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "by_tactic"
+let reify_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "reify_tactic"
+let fstar_tactics_embed_lid: FStar_Ident.lident = fstar_tactics_lid "embed"
+let fstar_tactics_quote_lid: FStar_Ident.lident = fstar_tactics_lid "quote"

@@ -63,7 +63,7 @@ type effects = {
 }
 
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
-
+type goal = term
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -99,8 +99,9 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    solve        :option<(unit -> string)> -> env -> typ -> unit;
-    is_trivial   :env -> typ -> bool;
+    preprocess   :env -> goal -> list<(env * goal)>;  //a hook for a tactic; still too simple
+    solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
+    is_trivial   :env -> goal -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
@@ -135,6 +136,7 @@ val get_range      : env -> Range.range
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
+val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
@@ -173,6 +175,7 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 val push_sigelt        : env -> sigelt -> env
 val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env
+val pop_bv             : env -> option<(bv * env)>
 val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
 val push_module        : env -> modul -> env
@@ -182,6 +185,7 @@ val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 val set_current_module : env -> lident -> env
 val finish_module      : (env -> modul -> env)
+val eq_gamma           : env -> env -> bool
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>

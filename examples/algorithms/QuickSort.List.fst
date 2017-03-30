@@ -82,6 +82,7 @@ type is_permutation (a:eqtype) (l:list a) (m:list a) =
 val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
   Tot (m:list a{sorted f m /\ is_permutation a l m})
   (decreases (length l))
+#set-options "--z3rlimit 10"
 let rec quicksort #a f = function
   | [] -> []
   | pivot::tl ->

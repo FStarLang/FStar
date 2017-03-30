@@ -4,6 +4,15 @@ open FStar.Squash
 val give_witness: #a:Type -> a -> Lemma (ensures a)
 let give_witness #a x = return_squash x
 
+val impl_to_arrow : #a:Type0 -> #b:Type0 -> impl:(a ==> b) -> sx:squash a -> GTot (squash b)
+let impl_to_arrow #a #b impl sx =
+  bind_squash #(a -> GTot b) impl (fun f ->
+  bind_squash sx (fun x ->
+  return_squash (f x)))
+
+val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
+let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (return_squash x)))
+
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 val forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Tot (squash (forall (x:a). p x))
 let forall_intro_gtot #a #p $f = return_squash #(forall (x:a). p x) ()
@@ -23,11 +32,21 @@ let forall_intro_squash_gtot #a #p $f =
 	      (squash_double_arrow #a #p (return_squash f))
 	      (fun f -> lemma_forall_intro_gtot #a #p f)
 
+//This one seems more generally useful than the one above
+val forall_intro_squash_gtot_join  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (squash (p x))) -> Tot (forall (x:a). p x)
+let forall_intro_squash_gtot_join #a #p $f =
+  join_squash
+    (bind_squash #(x:a -> GTot (p x)) #(forall (x:a). p x)
+	      (squash_double_arrow #a #p (return_squash f))
+	      (fun f -> lemma_forall_intro_gtot #a #p f))
+
 val forall_intro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
 
 val forall_intro'  : #a:Type -> #p:(a -> GTot Type) -> f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro' #a #p f = forall_intro f
+
+(* val forall_elim : #a:Type -> #p:(a -> GTot Type) -> (forall (x:a). p x) -> v:a -> Lemma (p v) *)
 
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
