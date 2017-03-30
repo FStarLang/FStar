@@ -629,7 +629,7 @@ assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p () = ()
 val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
