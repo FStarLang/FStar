@@ -1833,7 +1833,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | _ -> Caption (BU.format1 "<Start encoding %s>" nm)::g@[Caption (BU.format1 "</end encoding %s>" nm)], e
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
-    match se.elt with
+    match se.sigel with
      | Sig_new_effect_for_free _ ->
          failwith "impossible -- removed by tc.fs"
      | Sig_pragma _
@@ -1922,7 +1922,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
-        then let val_decl = { elt = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, quals); sigrng = se.sigrng; doc = None } in // FIXME: Doc
+        then let val_decl = { sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, quals); sigrng = se.sigrng; sigdoc = None } in // FIXME: Doc
              let decls, env = encode_sigelt' env val_decl in
              env, decls
         else env, []) env (snd lbs) in
@@ -1958,7 +1958,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Some _ ->
           [], env //already encoded
         | None ->
-          let se = { elt = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, quals); sigrng = Ident.range_of_lid l; doc = None } in // FIXME: Doc
+          let se = { sigel = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, quals); sigrng = Ident.range_of_lid l; sigdoc = None } in // FIXME: Doc
           encode_sigelt env se
      end
 

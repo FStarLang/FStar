@@ -488,7 +488,7 @@ let eff_decl_to_string for_free ed =
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]
 
-let rec sigelt_to_string (x: sigelt) = match x.elt with
+let rec sigelt_to_string (x: sigelt) = match x.sigel with
   | Sig_pragma(LightOff) -> "#light \"off\""
   | Sig_pragma(ResetOptions None) -> "#reset-options"
   | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
@@ -543,7 +543,7 @@ let rec sigelt_to_string (x: sigelt) = match x.elt with
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
-let rec sigelt_to_string_short (x: sigelt) = match x.elt with
+let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 

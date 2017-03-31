@@ -115,10 +115,10 @@ let print_ifamily i =
 
 let bundle_as_inductive_families env ses quals : list<inductive_family> =
     ses |> List.collect
-        (fun se -> match se.elt with
+        (fun se -> match se.sigel with
             | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas, quals) ->
                 let bs, t = SS.open_term bs t in
-                let datas = ses |> List.collect (fun se -> match se.elt with
+                let datas = ses |> List.collect (fun se -> match se.sigel with
                     | Sig_datacon(d, _, t, l', nparams, _, _) when Ident.lid_equals l l' ->
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
@@ -160,8 +160,8 @@ let extract_bundle env se =
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
 
 
-    match se.elt with
-        | Sig_bundle([{elt = Sig_datacon(l, _, t, _, _, _, _)}], [ExceptionConstructor], _) ->
+    match se.sigel with
+        | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _, _)}], [ExceptionConstructor], _) ->
           let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
           env, [MLM_Exn ctor]
 
@@ -201,7 +201,7 @@ let extract_bundle env se =
 
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
-     match se.elt with
+     match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ ->
@@ -300,11 +300,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   let imp = match U.arrow_formals t with
                     | [], t -> fail_exp lid t
                     | bs, t -> U.abs bs (fail_exp lid t) None in
-                  { se with elt = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
-                                                    lbunivs=[];
-                                                    lbtyp=t;
-                                                    lbeff=FStar.Syntax.Const.effect_ML_lid;
-                                                    lbdef=imp}]), [], quals, []) } in
+                  { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
+                                                      lbunivs=[];
+                                                      lbtyp=t;
+                                                      lbeff=FStar.Syntax.Const.effect_ML_lid;
+                                                      lbdef=imp}]), [], quals, []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
