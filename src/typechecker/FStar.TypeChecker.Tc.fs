@@ -966,57 +966,123 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 //          printfn "LIFT: Checking %s against expected type %s\n" (Print.term_to_string lift) (Print.term_to_string expected_k);
         let lift = check_and_gen env lift expected_k in
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
-        Some lift
-    in
-    let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
-    let se = { se with sigel = Sig_sub_effect(sub) } in
-    [se], []
+          Some lift
+      in
+      // Restore the proper lax flag!
+      let env = { env with lax = lax } in
+      let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
+      let se = Sig_sub_effect(sub, r) in
+      let env = Env.push_sigelt env se in
+      [se], env, []
 
-  | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags) ->
-    assert (uvs = []);
-    let env0 = env in
-    let env = Env.set_range env r in
-    let tps, c = SS.open_comp tps c in
-    let tps, env, us = tc_tparams env tps in
-    let c, u, g = tc_comp env c in
-    Rel.force_trivial_guard env g;
-    let tps = SS.close_binders tps in
-    let c = SS.close_comp tps c in
-    let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
-    let tps, c = match tps, (SS.compress t).n with
-      | [], Tm_arrow(_, c) -> [], c
-      | _,  Tm_arrow(tps, c) -> tps, c
-      | _ -> failwith "Impossible" in
-    if List.length uvs <> 1
-    && not (Ident.lid_equals lid Const.effect_Lemma_lid)
-    then (let _, t = Subst.open_univ_vars uvs t in
-          raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
-                                  (Print.lid_to_string lid)
-                                  (List.length uvs |> BU.string_of_int)
-                                  (Print.term_to_string t), r)));
-    let se = { se with sigel = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags) } in
-    [se], []
+    | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
+      assert (uvs = []);
+      let env0 = env in
+      let env = Env.set_range env r in
+      let tps, c = SS.open_comp tps c in
+      let tps, env, us = tc_tparams env tps in
+      let c, u, g = tc_comp env c in
+      Rel.force_trivial_guard env g;
+      let tps = SS.close_binders tps in
+      let c = SS.close_comp tps c in
+      let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
+      let tps, c = match tps, (SS.compress t).n with
+        | [], Tm_arrow(_, c) -> [], c
+        | _,  Tm_arrow(tps, c) -> tps, c
+        | _ -> failwith "Impossible" in
+      if List.length uvs <> 1
+      && not (Ident.lid_equals lid Const.effect_Lemma_lid)
+      then (let _, t = Subst.open_univ_vars uvs t in
+            raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+                                    (Print.lid_to_string lid)
+                                    (List.length uvs |> BU.string_of_int)
+                                    (Print.term_to_string t), r)));
+      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
+      let env = Env.push_sigelt env0 se in
+      [se], env, []
 
-  | Sig_declare_typ (_, _, _, quals)
-  | Sig_let (_, _, quals, _)
-      when quals |> BU.for_some (function OnlyName -> true | _ -> false) ->
-      (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
-      [], []
+    | Sig_declare_typ (_, _, _, quals, _)
+    | Sig_let (_, _, _, quals, _)
+        when quals |> BU.for_some (function OnlyName -> true | _ -> false) ->
+        (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
+        [], env, []
 
-  | Sig_declare_typ(lid, uvs, t, quals) -> //NS: No checks on the qualifiers?
-    let env = Env.set_range env r in
-    //assert (uvs = []);
-    let uvs, t =
-        if uvs = []
-        then check_and_gen env t (fst (U.type_u()))
-        else
-            let uvs, t = SS.open_univ_vars uvs t in
-            let t = tc_check_trivial_guard env t (fst (U.type_u())) in
-            let t = N.normalize [N.NoFullNorm; N.Beta] env t in
-            uvs, SS.close_univ_vars uvs t
-    in
-    let se = { se with sigel = Sig_declare_typ(lid, uvs, t, quals) } in
-    [se], []
+    | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
+      let env = Env.set_range env r in
+      //assert (uvs = []);
+      let uvs, t =
+          if uvs = []
+          then check_and_gen env t (fst (U.type_u()))
+          else
+              let uvs, t = SS.open_univ_vars uvs t in
+              uvs, SS.close_univ_vars uvs  <| tc_check_trivial_guard env t (fst (U.type_u()))
+      in
+      let se = Sig_declare_typ(lid, uvs, t, quals, r) in
+      let env = Env.push_sigelt env se in
+      [se], env, []
+
+    | Sig_assume(lid, phi, quals, r) ->
+      let se = tc_assume env lid phi quals r in
+      let env = Env.push_sigelt env se in
+      [se], env, []
+
+    | Sig_main(e, r) ->
+      let env = Env.set_range env r in
+      let env = Env.set_expected_typ env Common.t_unit in
+      let e, c, g1 = tc_term env e in
+      let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
+      Rel.force_trivial_guard env (Rel.conj_guard g1 g);
+      let se = Sig_main(e, r) in
+      let env = Env.push_sigelt env se in
+      [se], env, []
+
+      (* lbs - a list of mutual recursive let bindings
+       * lids - label ids
+       * qualifiers - function qualifiers (like visibility)
+       * attributes - external qualifiers for use by external programs like kremlin
+       * *)
+    | Sig_let(lbs, r, lids, quals, attrs) ->
+      let env = Env.set_range env r in
+      let check_quals_eq l qopt q = match qopt with
+        | None -> Some q
+        | Some q' ->
+          if List.length q = List.length q'
+          && List.forall2 U.qualifier_equal q q'
+          then Some q
+          else raise (Error(BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
+                                (Print.lid_to_string l)
+                                (Print.quals_to_string q)
+                                (Print.quals_to_string q'), r))
+      in
+
+      (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
+            (b) Generalize the type of lb only if none of the lbs have val decls
+         in more detail: if we have a val declaration with the same name, we look for it and create
+         a new lb with the type information. Otherwise, we do nothing
+       *)
+      let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
+            let lbname = right lb.lbname in //this is definitely not a local let binding
+            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
+              | None ->
+                  if lb.lbunivs <> []
+                  then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
+                  else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+
+              | Some ((uvs,tval), quals) ->
+                let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
+                let _ = match lb.lbtyp.n with
+                  | Tm_unknown -> ()
+                  | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
+                in
+                if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
+                then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
+                false, //explicit annotation provided; do not generalize
+                mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
+                quals_opt
+            in
+            gen, lb::lbs, quals_opt)
+            (true, [], (if quals=[] then None else Some quals))
+      in
 
   | Sig_assume(lid, phi, quals) ->
     let se = tc_assume env lid phi quals r in
@@ -1072,18 +1138,20 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
           (true, [], (if quals=[] then None else Some quals))
     in
 
-    let quals = match quals_opt with
-      | None -> [Visible_default]
-      | Some q ->
-        if q |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
-        then q
-        else Visible_default::q //the default visibility for a let binding is Unfoldable
-    in
-
-    let lbs' = List.rev lbs' in
-
-    (* 2. Turn the top-level lb into a Tm_let with a unit body *)
-    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
+      (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
+      (* remark: the expected type in environment does not correspond to the expected type of the let binding which
+       * is stored as an annotation
+       * this makes sense since there might be mutually defined let bindings which are checked simultanously*)
+      let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
+         | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
+            //propagate the MaskedEffect tag to the qualifiers
+            let quals = match e.n with
+                | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
+                | _ -> quals
+            in
+            Sig_let(lbs, r, lids, quals, attrs), lbs
+        | _ -> failwith "impossible"
+      in
 
     (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
     let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
@@ -1114,23 +1182,9 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       | _ -> failwith "impossible"
     in
 
-    // CPC doc: Actually I don't need the let-val pairing; It's enough to register the docs of the val independently, since they won't be overwritten when the let is desugared with no docs.
-
-    (* 4. Record the type of top-level lets, and log if requested *)
-    snd lbs |> List.iter (fun lb ->
-        let fv = right lb.lbname in
-        Common.insert_fv fv lb.lbtyp);
-
-    if log env
-    then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-          let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
-              | None -> true
-              | _ -> false in
-          if should_log
-          then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
-          else "") |> String.concat "\n");
-
-    [se], []
+      (* se corresponds now to the type checked let binding and we add it to the environment *)
+      let env = Env.push_sigelt env se in
+      [se], env, []
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -1159,93 +1213,66 @@ let for_export hidden se : list<sigelt> * list<lident> =
    *)
    let is_abstract quals = quals |> BU.for_some (function Abstract-> true | _ -> false) in
    let is_hidden_proj_or_disc q = match q with
-      | Projector(l, _)
-      | Discriminator l -> hidden |> BU.for_some (lid_equals l)
-      | _ -> false
-   in
-   match se.sigel with
-  | Sig_pragma         _ -> [], hidden
+        | Projector(l, _)
+        | Discriminator l -> hidden |> BU.for_some (lid_equals l)
+        | _ -> false in
+   match se with
+    | Sig_pragma         _ -> [], hidden
 
-  | Sig_inductive_typ _
-  | Sig_datacon _ -> failwith "Impossible"
+    | Sig_inductive_typ _
+    | Sig_datacon _ -> failwith "Impossible"
 
-  | Sig_bundle(ses, quals, _) ->
-    if is_abstract quals
-    then
-      let for_export_bundle se (out, hidden) = match se.sigel with
-        | Sig_inductive_typ(l, us, bs, t, _, _, quals) ->
-          let dec = { se with sigel = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals) } in
-          dec::out, hidden
+    | Sig_bundle(ses, quals, _, r) ->
+      if is_abstract quals
+      then List.fold_right (fun se (out, hidden) -> match se with
+            | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) ->
+              let dec = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals, r) in
+              dec::out, hidden
+            | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
+              let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
+              dec::out, l::hidden
+            | _ ->
+              out, hidden) ses ([], hidden)
+      else [se], hidden
 
-        (* logically, each constructor just becomes an uninterpreted function *)
-        | Sig_datacon(l, us, t, _, _, _, _) ->
-          let dec = { se with sigel = Sig_declare_typ(l, us, t, [Assumption]) } in
-          dec::out, l::hidden
+    | Sig_assume(_, _, quals, _) ->
+      if is_abstract quals
+      then [], hidden
+      else [se], hidden
 
-        | _ ->
-          out, hidden
-      in
-      List.fold_right for_export_bundle ses ([], hidden)
-    else [se], hidden
+      (* we want to check that the declaration name was not used before *)
+    | Sig_declare_typ(l, us, t, quals, r) ->
+      if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
+      then [Sig_declare_typ(l, us, t, [Assumption], r)], l::hidden
+      else if quals |> BU.for_some (function
+        | Assumption
+        | Projector _
+        | Discriminator _ -> true
+        | _ -> false)
+      then [se], hidden //Assumptions, Intepreted proj/disc are retained
+      else [], hidden   //other declarations vanish
+                        //they will be replaced by the definitions that must follow
 
-  | Sig_assume(_, _, quals) ->
-    if is_abstract quals
-    then [], hidden
-    else [se], hidden
+    | Sig_main  _ -> [], hidden
 
-  | Sig_declare_typ(l, us, t, quals) ->
-    if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
-    then [{se with sigel = Sig_declare_typ(l, us, t, [Assumption]) }], l::hidden
-    else if quals |> BU.for_some (function
-      | Assumption
-      | Projector _
-      | Discriminator _ -> true
-      | _ -> false)
-    then [se], hidden //Assumptions, Intepreted proj/disc are retained
-    else [], hidden   //other declarations vanish
-                      //they will be replaced by the definitions that must follow
+    | Sig_new_effect     _
+    | Sig_new_effect_for_free _
+    | Sig_sub_effect     _
+    | Sig_effect_abbrev  _ -> [se], hidden
 
-  | Sig_main  _ -> [], hidden
+    | Sig_let((false, [lb]), _, _, quals, _) when (quals |> BU.for_some is_hidden_proj_or_disc) ->
+      let fv = right lb.lbname in
+      let lid = fv.fv_name.v in
+      if hidden |> BU.for_some (S.fv_eq_lid fv)
+      then [], hidden //this projector definition already has a declare_typ
+      else let dec = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+           [dec], lid::hidden
 
-  | Sig_new_effect     _
-  | Sig_new_effect_for_free _
-  | Sig_sub_effect     _
-  | Sig_effect_abbrev  _ -> [se], hidden
-
-  | Sig_let((false, [lb]), _, quals, _) when (quals |> BU.for_some is_hidden_proj_or_disc) ->
-    let fv = right lb.lbname in
-    let lid = fv.fv_name.v in
-    if hidden |> BU.for_some (S.fv_eq_lid fv)
-    then [], hidden //this projector definition already has a declare_typ
-    else let dec = { sigel = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption]);
-                     sigrng = Ident.range_of_lid lid } in
-          [dec], lid::hidden
-
-  | Sig_let(lbs, l, quals, _) ->
-    if is_abstract quals
-    then (snd lbs |>  List.map (fun lb ->
-           { se with sigel = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals) }),
-          hidden)
-    else [se], hidden
-
-(* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
-(* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
-let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
-  match se.sigel with
-  | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (p) ->
-    (match p with
-     | ResetOptions _ -> env.solver.refresh (); env
-     | _ -> env)
-  | Sig_new_effect_for_free _ -> env
-  | Sig_new_effect (ne) ->
-    let env = Env.push_sigelt env se in
-    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
-  | Sig_declare_typ (_, _, _, quals)
-  | Sig_let (_, _, quals, _) when quals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
-  | _ -> Env.push_sigelt env se
-
+    | Sig_let(lbs, r, l, quals, _) ->
+      if is_abstract quals
+      then snd lbs |> List.map (fun lb ->
+           Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
+      else [se], hidden
 
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
