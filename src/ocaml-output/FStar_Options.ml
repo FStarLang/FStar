@@ -725,7 +725,7 @@ let rec specs:
         "Print full names (deprecated; use --print_full_names instead)");
       (FStar_Getopt.noshort, "record_hints",
         (FStar_Getopt.ZeroArgs ((fun uu____1424  -> Bool true))),
-        "Record a database of hints for efficient proof replay (implies --z3refresh)");
+        "Record a database of hints for efficient proof replay");
       (FStar_Getopt.noshort, "reuse_hint_for",
         (FStar_Getopt.OneArg
            (((fun _0_38  -> String _0_38)),
@@ -1196,7 +1196,7 @@ let z3_exe: Prims.unit -> Prims.string =
 let z3_cliopt: Prims.unit -> Prims.string Prims.list =
   fun uu____2161  -> get_z3cliopt ()
 let z3_refresh: Prims.unit -> Prims.bool =
-  fun uu____2164  -> (get_z3refresh ()) || (record_hints ())
+  fun uu____2164  -> get_z3refresh ()
 let z3_rlimit: Prims.unit -> Prims.int = fun uu____2167  -> get_z3rlimit ()
 let z3_seed: Prims.unit -> Prims.int = fun uu____2170  -> get_z3seed ()
 let z3_timeout: Prims.unit -> Prims.int = fun uu____2173  -> get_z3timeout ()
