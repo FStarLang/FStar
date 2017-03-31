@@ -737,9 +737,9 @@ and tc_lex_t env ses quals lids =
         | _ -> assert false
     end;
     begin match ses with
-      | [{ elt = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r } as se ;
-         { elt = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1 } as se1;
-         { elt = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2 } as se2]
+      | [{ elt = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r; doc = d };
+         { elt = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1; doc = d1 };
+         { elt = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2; doc = d2 }]
          when (lid_equals lex_t Const.lex_t_lid
             && lid_equals lex_top Const.lextop_lid
             && lid_equals lex_cons Const.lexcons_lid) ->
@@ -747,12 +747,14 @@ and tc_lex_t env ses quals lids =
         let u = S.new_univ_name (Some r) in
         let t = mk (Tm_type(U_name u)) None r in
         let t = Subst.close_univ_vars [u] t in
-        let tc = { se with elt = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []) } in
+        let tc = { elt = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []);
+                   sigrng = r; doc = d } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { se1 with elt = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []) } in
+        let dc_lextop = { elt = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []);
+                          sigrng = r1; doc = d1 } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -763,7 +765,8 @@ and tc_lex_t env ses quals lids =
             let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { se2 with elt = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []) } in
+        let dc_lexcons = { elt = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []);
+                           sigrng = r2; doc = d2 } in
         { elt = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; doc = None } // FIXME: Doc
       | _ ->
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, [], lids)))))
