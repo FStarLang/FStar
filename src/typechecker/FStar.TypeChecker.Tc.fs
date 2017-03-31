@@ -1131,10 +1131,18 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
       | _ -> failwith "impossible"
     in
 
+    (* 3.5 Fetch docs for the first let from the corresponding val and put them
+       on [se] if it doesn't already have docs (this is the common case: one
+       docstring, followed by one val (which the docstring applies to), followed
+       by one let. *)
+    let se = match se.doc, val_docs with
+        | None, (Some d)::_ -> { se with doc = Some d }
+        | _ -> se in
+
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_identifier_info (Inr fv) lb.lbtyp (range_of_fv fv) se.doc); // FIXME: Doc?
+        Common.insert_fv fv lb.lbtyp se.doc);
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
