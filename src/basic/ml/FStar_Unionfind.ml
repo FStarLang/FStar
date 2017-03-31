@@ -1,91 +1,140 @@
 (* Persistent union-find implementation adapted from
    https://www.lri.fr/~filliatr/puf/ *)
 
+module U = FStar_Util
+
+(* Persistent arrays *)
 type 'a pa_t = 'a data ref
 and 'a data =
   | PArray of 'a array
   | PDiff of int * 'a * 'a pa_t
 
 let pa_create n v = ref (PArray (Array.make n v))
-let pa_make = pa_create
 
 let pa_init n f = ref (PArray (Array.init n f))
 
-(* we rewrite it using CPS to avoid a possible stack overflow *)
 let rec pa_rerootk t k = match !t with
   | PArray _ -> k ()
   | PDiff (i, v, t') ->
-    pa_rerootk t' (fun () -> begin match !t' with
+      pa_rerootk t' (fun () -> begin match !t' with
         | PArray a as n ->
-          let v' = a.(i) in
-          a.(i) <- v;
-          t := n;
-          t' := PDiff (i, v', t)
-        | PDiff _ -> assert false end; k())
+            let v' = a.(i) in
+            a.(i) <- v;
+            t := n;
+            t' := PDiff (i, v', t)
+        | PDiff _ -> failwith "Impossible" end; k())
 
 let pa_reroot t = pa_rerootk t (fun () -> ())
 
 let pa_get t i = match !t with
-  | PArray a ->
-    a.(i)
+  | PArray a -> a.(i)
   | PDiff _ ->
-    pa_reroot t;
-    begin match !t with PArray a -> a.(i) | PDiff _ -> assert false end
+      pa_reroot t;
+      begin match !t with
+        | PArray a -> a.(i)
+        | PDiff _ -> failwith "Impossible" end
 
 let pa_set t i v =
   pa_reroot t;
   match !t with
   | PArray a as n ->
-    let old = a.(i) in
-    if old == v then
-      t
-    else begin
-      a.(i) <- v;
-      let res = ref n in
-      t := PDiff (i, old, res);
-      res
-    end
-  | PDiff _ ->
-    assert false
+      let old = a.(i) in
+      if old == v then
+        t
+      else begin
+        a.(i) <- v;
+        let res = ref n in
+        t := PDiff (i, old, res);
+        res
+      end
+  | PDiff _ -> failwith "Impossible"
+
+(* apply impure function from Array to a persistent array *)
+let impure f t =
+  pa_reroot t;
+  match !t with PArray a -> f a | PDiff _ -> failwith "Impossible"
+
+let pa_length t = impure Array.length t
+
+(* double the array whenever its bounds are reached *)
+let pa_new_double t x l empty =
+  pa_reroot t;
+  match !t with
+    | PArray a ->
+      if (pa_length t == l) then begin
+        let arr_tail = Array.make l empty in
+        arr_tail.(0) <- x;
+        t := PArray (Array.append a arr_tail)
+      end else
+        a.(l) <- x
+    | PDiff _ -> failwith "Impossible"
 
 
-type puf_t = {
-  mutable father: int pa_t; (* mutable to allow path compression *)
-  c: int pa_t; (* ranks *)
+(* Union-find implementation based on persistent arrays *)
+type 'a puf_t = {
+  mutable parent: (int, 'a) U.either pa_t; (* mutable to allow path compression *)
+  ranks: int pa_t;
+  (* keep track of how many elements are allocated in the array *)
+  count: int ref
 }
+type 'a puf = 'a puf_t
+type 'a p_uvar = P of int
 
-let puf_create n =
-  { c = pa_create n 0;
-    father = pa_init n (fun i -> i) }
+let puf_empty () =
+    { parent = pa_create 2 (U.Inl (-1)) ;
+      ranks = pa_create 2 0;
+      count = ref 0 }
+
+let puf_fresh (h: 'a puf) (x: 'a) =
+    let count = !(h.count) in
+    pa_new_double h.parent (U.Inr x) count (U.Inl (-1));
+    pa_new_double h.ranks 0 count 0;
+    h.count := count + 1;
+    P count
+
+(* implements path compression, returns new array *)
+let rec puf_find_aux f i =
+    match (pa_get f i) with
+        | U.Inl fi ->
+            let f, r, id = puf_find_aux f fi in
+            let f = pa_set f i r in
+            f, r, id
+        | U.Inr x -> f, U.Inr x, i
 
 (* return both rep and previous version of parent array *)
-let rec puf_find_aux f i =
-  let fi = pa_get f i in
-  if fi == i then
-    f, i
-  else
-    let f, r = puf_find_aux f fi in
-    let f = pa_set f i r in
-    f, r
+let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
+    let x = match x with | P a -> a in
+    let f, rx, i = puf_find_aux h.parent x in
+        h.parent <- f;
+        match rx with
+            | U.Inr r -> r, i
+            | U.Inl _ -> failwith "Impossible"
 
-let puf_find h x =
-  let f,rx = puf_find_aux h.father x in h.father <- f; rx
+(* only return the rep *)
+let puf_find (h: 'a puf) (x: 'a p_uvar) =
+    let v, _ = puf_find_i h x in
+    v
 
-let puf_union h x y =
-  let rx = puf_find h x in
-  let ry = puf_find h y in
-  if rx != ry then begin
-    let rxc = pa_get h.c rx in
-    let ryc = pa_get h.c ry in
-    if rxc > ryc then
-      { h with father = pa_set h.father ry rx }
-    else if rxc < ryc then
-      { h with father = pa_set h.father rx ry }
-    else
-      { c = pa_set h.c rx (rxc + 1);
-        father = pa_set h.father ry rx }
-  end else
-    h
+let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
+    let rx, ix = puf_find_i h x in
+    let ry, iy = puf_find_i h y in
+    if rx != ry then begin
+        let rxc = pa_get h.ranks ix in
+        let ryc = pa_get h.ranks iy in
+        if rxc > ryc then
+            { parent = pa_set h.parent iy (U.Inl ix);
+              ranks = h.ranks;
+              count = h.count}
+        else if rxc < ryc then
+            { parent = pa_set h.parent ix (U.Inl iy);
+              ranks = h.ranks;
+              count = h.count}
+        else
+            { parent = pa_set h.parent iy (U.Inl ix);
+              ranks = pa_set h.ranks ix (rxc+1);
+              count = h.count }
+        end else
+            h
 
 
 (* Unionfind with path compression but without ranks *)

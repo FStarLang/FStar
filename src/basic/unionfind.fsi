@@ -27,7 +27,7 @@ and data<'a> =
 
 type puf_t<'a when 'a : not struct> = { mutable parent: pa_t<(either<int, 'a>)>; ranks: pa_t<int> ; count: ref<int>}
 type puf<'a when 'a : not struct> = puf_t<'a>
-type p_uvar<'a> = U of int
+type p_uvar<'a> = P of int
 
 val puf_empty: unit -> puf<'a>
 val puf_fresh: puf<'a> -> 'a -> p_uvar<'a>

@@ -97,7 +97,7 @@ let pa_new_double t x l empty =
                 arr_tail.[0] <- x;
                 t := PArray (Array.append a arr_tail)
             end else
-            a.[l] <- x
+                a.[l] <- x
         | PDiff _ -> failwith "Impossible"
 
 
@@ -110,7 +110,7 @@ type puf_t<'a when 'a : not struct> = {
     (* keep track of how many elements are allocated in the array *)
     count: ref<int> }
 type puf<'a when 'a : not struct> = puf_t<'a>
-type p_uvar<'a> = U of int
+type p_uvar<'a> = P of int
 
 let puf_empty () =
     { parent = pa_create 2 (Inl -1) ;
@@ -122,7 +122,7 @@ let puf_fresh (h: puf<'a>) (x: 'a) =
     pa_new_double h.parent (Inr x) count (Inl -1);
     pa_new_double h.ranks 0 count 0;
     h.count := count + 1;
-    (U count): p_uvar<'a>
+    (P count): p_uvar<'a>
 
 (* implements path compression, returns new array *)
 let rec puf_find_aux f i =
@@ -135,7 +135,7 @@ let rec puf_find_aux f i =
 
 (* return both the rep and its id in the array *)
 let puf_find_i (h: puf<'a>) (x: p_uvar<'a>) =
-    let x = match x with | U a -> a in
+    let x = match x with | P a -> a in
     let f, rx, i = puf_find_aux h.parent x in
         h.parent <- f;
         match rx with
@@ -188,7 +188,7 @@ let puf_test () =
     (Util.print1 "Rep of a is %s\n" la);
     (Util.print1 "Rep of c is %s\n" lc);
     let u_i = (puf_fresh u "i") in
-    let u_i2 = match u_i with | U a -> a in
+    let u_i2 = match u_i with | P a -> a in
     (Util.print2 "Id of i and count are %s %s\n" (sprintf "%i" u_i2) (sprintf "%i" !(u.count)));
     let li = puf_find u u_i in
     (Util.print1 "Rep of i is %s\n" li);
