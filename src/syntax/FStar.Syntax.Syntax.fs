@@ -263,6 +263,7 @@ type action = {
     action_univs:univ_names;
     action_defn:term;
     action_typ: typ;
+    action_doc: option<fsdoc>
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;

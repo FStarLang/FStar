@@ -1015,8 +1015,9 @@ let destruct_typ_as_formula f : option<connective> =
                 a.action_typ
                 Const.effect_Tot_lid
                 a.action_defn in
-                // CPC @ a.action_defn.pos
-    mk_sigelt (Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []))
+    { elt = Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []);
+      sigrng = a.action_defn.pos;
+      doc = a.action_doc }
 
 (* Some reification utilities *)
 let mk_reify t =

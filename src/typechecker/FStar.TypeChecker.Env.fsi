@@ -141,9 +141,9 @@ val lookup_bv              : env -> bv -> typ * Range.range
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * (Range.range * option<fsdoc>))>
 val lookup_lid             : env -> lident -> (universes * typ) * (Range.range * option<fsdoc>)
 val lookup_univ            : env -> univ_name -> bool
-val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
-val lookup_val_decl        : env -> lident -> (universes * typ)
-val lookup_datacon         : env -> lident -> universes * typ
+val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier> * option<fsdoc>)>
+val lookup_val_decl        : env -> lident -> (universes * typ * option<fsdoc>)
+val lookup_datacon         : env -> lident -> universes * typ * option<fsdoc>
 (* the boolean tells if the lident was actually a inductive *)
 val datacons_of_typ        : env -> lident -> (bool * list<lident>)
 val typ_of_datacon         : env -> lident -> lident

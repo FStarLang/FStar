@@ -50,7 +50,7 @@ let mk_term_projector_name lid (a:bv) =
     escape <| BU.format2 "%s_%s" lid.str a.ppname.idText
 let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (lid.str)) in
-    let _, t = Env.lookup_datacon env lid in
+    let _, t, _ = Env.lookup_datacon env lid in
     match (SS.compress t).n with
         | Tm_arrow(bs, c) ->
           let binders, _ = SS.open_comp bs c in
@@ -1989,7 +1989,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             else
                  let xxsym, xx = fresh_fvar "x" Term_sort in
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
-                    let _, data_t = Env.lookup_datacon env.tcenv l in
+                    let _, data_t, _ = Env.lookup_datacon env.tcenv l in
                     let args, res = U.arrow_formals data_t in
                     let indices = match (SS.compress res).n with
                         | Tm_app(_, indices) -> indices

@@ -247,7 +247,7 @@ let pat_as_exps allow_implicits env p
         match p.v with
            | Pat_cons(fv, pats) ->
                let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-               let _, t = Env.lookup_datacon env fv.fv_name.v in
+               let _, t, _ = Env.lookup_datacon env fv.fv_name.v in
                let f, _ = U.arrow_formals t in
                let rec aux formals pats = match formals, pats with
                 | [], [] -> []
@@ -1362,7 +1362,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbdef = def;
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
-  // [Inline] triggers a "Impossible: locally nameless" error
+  // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [ Unfold_for_unification_and_vcgen ], [])) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
 
