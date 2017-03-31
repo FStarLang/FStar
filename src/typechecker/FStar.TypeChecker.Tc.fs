@@ -995,6 +995,11 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let env = Env.push_sigelt env se in
       [se], env, []
 
+      (* lbs - a list of mutual recursive let bindings
+       * lids - label ids
+       * qualifiers - function qualifiers (like visibility)
+       * attributes - external qualifiers for use by external programs like kremlin
+       * *)
     | Sig_let(lbs, r, lids, quals, attrs) ->
       let env = Env.set_range env r in
       let check_quals_eq l qopt q = match qopt with
@@ -1011,6 +1016,8 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
 
       (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
             (b) Generalize the type of lb only if none of the lbs have val decls
+         in more detail: if we have a val declaration with the same name, we look for it and create
+         a new lb with the type information. Otherwise, we do nothing
        *)
       let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
             let lbname = right lb.lbname in //this is definitely not a local let binding
@@ -1050,6 +1057,9 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
       let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
       (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
+      (* remark: the expected type in environment does not correspond to the expected type of the let binding which
+       * is stored as an annotation
+       * this makes sense since there might be mutually defined let bindings which are checked simultanously*)
       let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
          | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
             //propagate the MaskedEffect tag to the qualifiers
@@ -1071,6 +1081,7 @@ and tc_decl env se: list<sigelt> * _ * list<sigelt> =
             then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
             else "") |> String.concat "\n");
 
+      (* se corresponds now to the type checked let binding and we add it to the environment *)
       let env = Env.push_sigelt env se in
       [se], env, []
 
@@ -1128,6 +1139,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       then [], hidden
       else [se], hidden
 
+      (* we want to check that the declaration name was not used before *)
     | Sig_declare_typ(l, us, t, quals, r) ->
       if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
       then [Sig_declare_typ(l, us, t, [Assumption], r)], l::hidden

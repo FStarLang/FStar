@@ -209,7 +209,8 @@ u_extract_all: u_extract_misc u_extract_syntax u_extract_parser \
 
 uz:
 	make prep
-	+make u_extract_uz
+#	+make u_extract_uz
+	+make u_extract_tcterm
 	cp u_ocaml-output/*.ml ocaml-output/
 	+make -C ocaml-output
 
