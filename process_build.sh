@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 CURRENT_VERSION=$(head -n 1 version.txt)
 
 echo "** Clean up existing packages first **"
-# TO DO: Clean up existing zip files and ocaml-output etc
+# TO DO: Clean up existing zip files 
 
 echo "** Clean up log files **"
 if [[ -f src/ocaml-output/fstar/MicroBenchMarkOutput.log ]]; then
@@ -123,8 +123,9 @@ fi
 
 # TO DO:
 # Find location of releases and figure out how to only keep 4 recent builds - update fstarlang.org
-# Clean up old zip files and ocaml-output dir etc
-# Push all changes to ocaml output -- handled by nightly build
+# Clean up old zip files etc
+# slack notification on failure?
+
 
 # Manual steps on major releases
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt 
