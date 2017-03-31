@@ -487,7 +487,7 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let lids_of_sigelt (se: sigelt) = match se.elt with
+let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_let(_, lids, _, _)
   | Sig_bundle(_, _, lids) -> lids
   | Sig_inductive_typ (lid, _, _,  _, _, _, _)
@@ -505,7 +505,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
-let quals_of_sigelt (x: sigelt) = match x.elt with
+let quals_of_sigelt (x: sigelt) = match x.sigel with
   | Sig_bundle(_, quals, _)
   | Sig_inductive_typ (_, _, _,  _, _, _, quals)
   | Sig_effect_abbrev  (_, _, _, _, quals, _)
@@ -522,7 +522,7 @@ let quals_of_sigelt (x: sigelt) = match x.elt with
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let docs_of_sigelt (x: sigelt) = x.doc
+let docs_of_sigelt (x: sigelt) = x.sigdoc
 
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bv  x

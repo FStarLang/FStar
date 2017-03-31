@@ -1448,7 +1448,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       then err "duplicate qualifiers";
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
-      match se.elt with
+      match se.sigel with
       | Sig_let((is_rec, _), _, _, _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
@@ -1560,7 +1560,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
-            let decl = { elt = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name; doc = None }  in // FIXME: Doc
+            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name; sigdoc = None }  in // FIXME: Doc
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1597,7 +1597,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
-                let impl = { elt = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; doc = None } in // FIXME: Doc
+                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; sigdoc = None } in // FIXME: Doc
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1642,7 +1642,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
-          let decl = { elt = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name; doc = None } in // FIXME: Doc
+          let decl = { sigel = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name; sigdoc = None } in // FIXME: Doc
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1673,14 +1673,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
-              let impl = { elt = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; doc = None } in // FIXME: doc
+              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; sigdoc = None } in // FIXME: doc
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
     in
     discriminator_ses @ projectors_ses
 
-let mk_data_operations iquals env tcs se = match se.elt with
+let mk_data_operations iquals env tcs se = match se.sigel with
   | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, quals, _) when not (lid_equals constr_lid C.lexcons_lid) ->
 
     let univ_opening, uvs = SS.univ_var_opening uvs in
@@ -1690,7 +1690,7 @@ let mk_data_operations iquals env tcs se = match se.elt with
     let inductive_tps, typ0, should_refine =
         let tps_opt = BU.find_map tcs (fun se ->
             if lid_equals typ_lid (must (U.lid_of_sigelt se))
-            then match se.elt with
+            then match se.sigel with
                   | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _) ->
                       assert (List.length uvs = List.length uvs') ;
                       Some (tps, typ0, List.length constrs > 1)

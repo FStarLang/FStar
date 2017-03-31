@@ -360,8 +360,8 @@ and sigelt' =
                        * list<cflags>
   | Sig_pragma         of pragma
 and sigelt = {
-    elt: sigelt';
-    doc: option<fsdoc>;
+    sigel: sigelt';
+    sigdoc: option<fsdoc>;
     sigrng: Range.range;
 }
 

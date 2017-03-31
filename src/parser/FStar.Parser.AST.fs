@@ -253,7 +253,7 @@ let mk_decl d r decorations =
   { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
 
 let sigelt_of_decl (d: decl) (e: S.sigelt') =
-  { S.elt = e; S.sigrng = d.drange; S.doc = d.doc }
+  { S.sigel = e; S.sigrng = d.drange; S.sigdoc = d.doc }
 
 
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}

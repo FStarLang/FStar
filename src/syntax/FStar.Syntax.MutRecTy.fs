@@ -44,7 +44,7 @@ let disentangle_abbrevs_from_bundle
     : sigelt * list<sigelt> =
 
     (* Gather the list of type abbrevs *)
-   let type_abbrev_sigelts = sigelts |> List.collect begin fun x -> match x.elt with
+   let type_abbrev_sigelts = sigelts |> List.collect begin fun x -> match x.sigel with
        | Sig_let ((false, [ { lbname= Inr _ } ]), _, _, _) -> [x]
        | Sig_let (_, _, _, _) ->
          failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible"
@@ -55,12 +55,12 @@ let disentangle_abbrevs_from_bundle
    match type_abbrev_sigelts with
    | [] ->
      (* if there are no type abbreviations, then do not change anything. *)
-     { elt = Sig_bundle (sigelts, quals, members);
-       doc = doc;
+     { sigel = Sig_bundle (sigelts, quals, members);
+       sigdoc = doc;
        sigrng = rng }, []
    | _ ->
 
-    let type_abbrevs = type_abbrev_sigelts |> List.map begin fun x -> match x.elt with
+    let type_abbrevs = type_abbrev_sigelts |> List.map begin fun x -> match x.sigel with
         | Sig_let ((_, [ { lbname = Inr fv } ] ), _, _, _) -> fv.fv_name.v
         | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible"
     end
@@ -86,7 +86,7 @@ let disentangle_abbrevs_from_bundle
         let not_unfolded_yet = U.mk_ref type_abbrev_sigelts in
 
         let remove_not_unfolded lid =
-            not_unfolded_yet := !not_unfolded_yet |> List.filter begin fun x -> match x.elt with
+            not_unfolded_yet := !not_unfolded_yet |> List.filter begin fun x -> match x.sigel with
                 | Sig_let ((_, [ { lbname = Inr fv } ] ), _, _, _) ->
                   not (lid_equals lid fv.fv_name.v)
                 | _ -> true
@@ -96,14 +96,14 @@ let disentangle_abbrevs_from_bundle
         (* Replace a free variable corresponding to a type
         abbreviation, with memoization. *)
         let rec unfold_abbrev_fv (t: term) (fv : S.fv) : term =
-            let replacee (x: sigelt) = match x.elt with
+            let replacee (x: sigelt) = match x.sigel with
                 | Sig_let ((_, [ { lbname = Inr fv' } ] ), _, _, _)
                   when lid_equals fv'.fv_name.v fv.fv_name.v ->
                   Some x
                 | _ -> None
             in
             let replacee_term (x: sigelt) = match replacee x with
-                | Some { elt = Sig_let ((_, [ { lbdef = tm } ] ), _, _, _) } -> Some tm
+                | Some { sigel = Sig_let ((_, [ { lbdef = tm } ] ), _, _, _) } -> Some tm
                 | _ -> None
             in
             match U.find_map !rev_unfolded_type_abbrevs replacee_term with
@@ -119,7 +119,7 @@ let disentangle_abbrevs_from_bundle
                   end
 
         (* Start unfolding in a type abbreviation that has not occurred before. *)
-        and unfold_abbrev (x: sigelt) = match x.elt with
+        and unfold_abbrev (x: sigelt) = match x.sigel with
             | Sig_let ((false, [lb]), _, quals, attr) ->
 	        (* eliminate some qualifiers for definitions *)
 	        let quals = quals |> List.filter begin function
@@ -136,7 +136,7 @@ let disentangle_abbrevs_from_bundle
                 let tm' = inst unfold_abbrev_fv lb.lbdef in
                 let lb' = { lb with lbtyp = ty' ; lbdef = tm' } in
                 let sigelt' = Sig_let ((false, [lb']), [lid], quals, attr) in
-                let () = rev_unfolded_type_abbrevs := { x with elt = sigelt' } :: !rev_unfolded_type_abbrevs in
+                let () = rev_unfolded_type_abbrevs := { x with sigel = sigelt' } :: !rev_unfolded_type_abbrevs in
                 let () = in_progress := List.tl !in_progress in (* pop *)
                 tm'
             | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
@@ -159,7 +159,7 @@ let disentangle_abbrevs_from_bundle
       
       let inductives_with_abbrevs_unfolded =
 
-          let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x.elt with
+          let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x.sigel with
               | Sig_let ((_, [ { lbname = Inr fv' ; lbdef = tm } ] ), _, _, _) when (lid_equals fv'.fv_name.v fv.fv_name.v) ->
                 Some tm
               | _ -> None
@@ -171,17 +171,17 @@ let disentangle_abbrevs_from_bundle
               | _ -> t
           in
 
-          let unfold_in_sig (x: sigelt) = match x.elt with
+          let unfold_in_sig (x: sigelt) = match x.sigel with
               | Sig_inductive_typ (lid, univs, bnd, ty, mut, dc, quals) ->
                 let bnd' = inst_binders unfold_fv bnd in
                 let ty'  = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
-                [{ x with elt = Sig_inductive_typ (lid, univs, bnd', ty', mut', dc, quals) }]
+                [{ x with sigel = Sig_inductive_typ (lid, univs, bnd', ty', mut', dc, quals) }]
 
               | Sig_datacon (lid, univs, ty, res, npars, quals, mut) ->
                 let ty' = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
-                [{ x with elt = Sig_datacon (lid, univs, ty', res, npars, quals, mut') }]
+                [{ x with sigel = Sig_datacon (lid, univs, ty', res, npars, quals, mut') }]
 
               | Sig_let (_, _, _, _) ->
                 []
@@ -197,8 +197,8 @@ let disentangle_abbrevs_from_bundle
       let new_members = filter_out_type_abbrevs members
       in
 
-      let new_bundle = { elt = Sig_bundle (inductives_with_abbrevs_unfolded, quals, new_members);
-                         doc = doc;
+      let new_bundle = { sigel = Sig_bundle (inductives_with_abbrevs_unfolded, quals, new_members);
+                         sigdoc = doc;
                          sigrng = rng }
       in
 

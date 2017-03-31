@@ -1313,9 +1313,9 @@ let mk_data_discriminators quals env t tps k datas =
     in
     datas |> List.map (fun d ->
         let disc_name = U.mk_discriminator d in
-        { elt = Sig_declare_typ(disc_name, [], Syntax.tun, quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d]);
+        { sigel = Sig_declare_typ(disc_name, [], Syntax.tun, quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d]);
           sigrng = range_of_lid disc_name;
-          doc = None }) // FIXME: Doc
+          sigdoc = None }) // FIXME: Doc
 
 let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
@@ -1341,9 +1341,9 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
             in
             quals (OnlyName :: S.Projector(lid, x.ppname) :: iquals)
         in
-        let decl = { elt = Sig_declare_typ(field_name, [], Syntax.tun, quals);
+        let decl = { sigel = Sig_declare_typ(field_name, [], Syntax.tun, quals);
                      sigrng = range_of_lid field_name;
-                     doc = None } in // FIXME: Doc
+                     sigdoc = None } in // FIXME: Doc
         if only_decl
         then [decl] //only the signature
         else
@@ -1359,12 +1359,12 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                 lbeff=C.effect_Tot_lid;
                 lbdef=tun
             } in
-            let impl = { elt = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []);
+            let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []);
                          sigrng = p;
-                         doc = None } in // FIXME: Doc
+                         sigdoc = None } in // FIXME: Doc
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projector_names iquals env (inductive_tps, se) = match se.elt with
+let mk_data_projector_names iquals env (inductive_tps, se) = match se.sigel with
   | Sig_datacon(lid, _, t, _, n, quals, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
     let formals, _ = U.arrow_formals t in
@@ -1401,9 +1401,9 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng doc =
         lbtyp=U.arrow typars (S.mk_Total k);
         lbeff=C.effect_Tot_lid;
     } in
-    { elt = Sig_let((false, [lb]), lids, quals, []);
+    { sigel = Sig_let((false, [lb]), lids, quals, []);
       sigrng = rng;
-      doc = doc }
+      sigdoc = doc }
 
 let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let rng = d.drange in
@@ -1446,8 +1446,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let qlid = qualify _env id in
       let typars = Subst.close_binders typars in
       let k = Subst.close typars k in
-      let se = { elt = Sig_inductive_typ(qlid, [], typars, k, mutuals, [], quals);
-                 sigrng = rng; doc = d.doc } in
+      let se = { sigel = Sig_inductive_typ(qlid, [], typars, k, mutuals, [], quals);
+                 sigrng = rng; sigdoc = d.doc } in
       let _env = Env.push_top_level_rec_binding _env id S.Delta_constant in
       let _env2 = Env.push_top_level_rec_binding _env' id S.Delta_constant in
       _env, _env2, se, tconstr
@@ -1464,7 +1464,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
             | _ -> kopt in
         let tc = TyconAbstract(id, bs, kopt) in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
-        let se = match se.elt with
+        let se = match se.sigel with
            | Sig_inductive_typ(l, _, typars, k, [], [], quals) ->
              let quals = if quals |> List.contains S.Assumption
                          then quals
@@ -1474,9 +1474,9 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in
-             { elt = Sig_declare_typ(l, [], t, quals);
+             { sigel = Sig_declare_typ(l, [], t, quals);
                sigrng = se.sigrng;
-               doc = None } // FIXME: Doc
+               sigdoc = None } // FIXME: Doc
            | _ -> se in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
@@ -1519,8 +1519,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                  let c = desugar_comp t.range env' t in
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
-                 { elt = Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), cattributes @ comp_flags c);
-                   sigrng = rng; doc = d.doc }
+                 { sigel = Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), cattributes @ comp_flags c);
+                   sigrng = rng; sigdoc = d.doc }
             else let t = desugar_typ env' t in
                  let nm = qualify env id in
                  mk_typ_abbrev nm [] typars k t [nm] quals rng d.doc in
@@ -1553,7 +1553,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let tps_sigelts = tcs |> List.collect (function
-        | Inr ({ elt = Sig_inductive_typ(id, uvs, tpars, k, _, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
+        | Inr ({ sigel = Sig_inductive_typ(id, uvs, tpars, k, _, _, _) }, binders, t, quals) -> //type abbrevs in mutual type definitions
 	      let t =
 	          let env, tpars = typars_of_binders env binders in
 	          let env_tps, tpars = push_tparams env tpars in
@@ -1563,7 +1563,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           in
           [[], mk_typ_abbrev id uvs tpars k t [id] quals rng d.doc]
 
-        | Inl ({ elt = Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags) }, constrs, tconstr, quals) ->
+        | Inl ({ sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags) }, constrs, tconstr, quals) ->
           let mk_tot t =
             let tot = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range t.level in
             mk_term (App(tot, t, Nothing)) t.range t.level in
@@ -1587,14 +1587,14 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
                 let ntps = List.length data_tpars in
-                (name, (tps, { elt = Sig_datacon(name, univs, U.arrow data_tpars (mk_Total (t |> U.name_function_binders)),
+                (name, (tps, { sigel = Sig_datacon(name, univs, U.arrow data_tpars (mk_Total (t |> U.name_function_binders)),
                                                  tname, ntps, quals, mutuals);
                                sigrng = rng;
-                               doc = d.doc }))))
+                               sigdoc = d.doc }))))
           in
-          ([], { elt = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags);
+          ([], { sigel = Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags);
                  sigrng = rng;
-                 doc = d.doc })::constrs
+                 sigdoc = d.doc })::constrs
         | _ -> failwith "impossible")
       in
       let sigelts = tps_sigelts |> List.map snd in
@@ -1603,7 +1603,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = tps_sigelts |> List.collect (mk_data_projector_names quals env) in
-      let discs = sigelts |> List.collect (fun se -> match se.elt with
+      let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals) when (List.length constrs > 1)->
           let quals = if List.contains S.Abstract quals
                       then S.Private::quals

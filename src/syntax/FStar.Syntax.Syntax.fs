@@ -338,8 +338,8 @@ and sigelt' =
                        * list<cflags>
   | Sig_pragma         of pragma
 and sigelt = {
-    elt: sigelt';
-    doc: option<fsdoc>;
+    sigel: sigelt';
+    sigdoc: option<fsdoc>;
     sigrng: Range.range;
 }
 
@@ -448,7 +448,7 @@ let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
-let mk_sigelt (e: sigelt') = { elt = e; doc = None; sigrng = Range.dummyRange }
+let mk_sigelt (e: sigelt') = { sigel = e; sigdoc = None; sigrng = Range.dummyRange }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

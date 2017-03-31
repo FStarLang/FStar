@@ -737,9 +737,9 @@ and tc_lex_t env ses quals lids =
         | _ -> assert false
     end;
     begin match ses with
-      | [{ elt = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r; doc = d };
-         { elt = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1; doc = d1 };
-         { elt = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2; doc = d2 }]
+      | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r; sigdoc = d };
+         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1; sigdoc = d1 };
+         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2; sigdoc = d2 }]
          when (lid_equals lex_t Const.lex_t_lid
             && lid_equals lex_top Const.lextop_lid
             && lid_equals lex_cons Const.lexcons_lid) ->
@@ -747,14 +747,14 @@ and tc_lex_t env ses quals lids =
         let u = S.new_univ_name (Some r) in
         let t = mk (Tm_type(U_name u)) None r in
         let t = Subst.close_univ_vars [u] t in
-        let tc = { elt = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []);
-                   sigrng = r; doc = d } in
+        let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []);
+                   sigrng = r; sigdoc = d } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { elt = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []);
-                          sigrng = r1; doc = d1 } in
+        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []);
+                          sigrng = r1; sigdoc = d1 } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -765,9 +765,9 @@ and tc_lex_t env ses quals lids =
             let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { elt = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []);
-                           sigrng = r2; doc = d2 } in
-        { elt = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; doc = None } // FIXME: Doc
+        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []);
+                           sigrng = r2; sigdoc = d2 } in
+        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; sigdoc = None } // FIXME: Doc
       | _ ->
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, [], lids)))))
     end
@@ -777,7 +777,7 @@ and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    { elt = Sig_assume(lid, phi, quals); sigrng = r; doc = None } // FIXME: Doc
+    { sigel = Sig_assume(lid, phi, quals); sigrng = r; sigdoc = None } // FIXME: Doc
 
 and tc_inductive env ses quals lids =
     let env0 = env in
@@ -798,7 +798,7 @@ and tc_inductive env ses quals lids =
          let b = TcInductive.check_positivity ty env in
          if not b then
            let lid, r =
-             match ty.elt with
+             match ty.sigel with
              | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
@@ -812,7 +812,7 @@ and tc_inductive env ses quals lids =
     let skip_prims_type (_:unit) :bool =
         let lid =
             let ty = List.hd tcs in
-            match ty.elt with
+            match ty.sigel with
                 | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid
                 | _                                         -> failwith "Impossible"
         in
@@ -831,7 +831,7 @@ and tc_inductive env ses quals lids =
           if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
           else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
         in
-        { elt = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; doc = None }::ses, data_ops_ses // FIXME: Doc
+        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = None }::ses, data_ops_ses // FIXME: Doc
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
@@ -841,7 +841,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
   let env = set_hint_correlator env se in
   TcUtil.check_sigelt_quals env se;
   let r = se.sigrng in
-  match se.elt with
+  match se.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
@@ -896,15 +896,15 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
       // the rest of the job to [tc_decl].
       let ses, ne, lift_from_pure_opt = cps_and_elaborate env ne in
       let effect_and_lift_ses = match lift_from_pure_opt with
-          | Some lift -> [ { se with elt = Sig_new_effect (ne) } ; lift ]
-          | None -> [ { se with elt = Sig_new_effect (ne) } ]
+          | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
+          | None -> [ { se with sigel = Sig_new_effect (ne) } ]
       in
 
       [], env, ses @ effect_and_lift_ses
 
   | Sig_new_effect(ne) ->
     let ne = tc_eff_decl env ne in
-    let se = { se with elt = Sig_new_effect(ne) } in
+    let se = { se with sigel = Sig_new_effect(ne) } in
     let env = Env.push_sigelt env se in
     (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
     let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
@@ -979,7 +979,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     // Restore the proper lax flag!
     let env = { env with lax = lax } in
     let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
-    let se = { se with elt = Sig_sub_effect(sub) } in
+    let se = { se with sigel = Sig_sub_effect(sub) } in
     let env = Env.push_sigelt env se in
     [se], env, []
 
@@ -1005,7 +1005,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
                                   (Print.lid_to_string lid)
                                   (List.length uvs |> BU.string_of_int)
                                   (Print.term_to_string t), r)));
-    let se = { se with elt = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags) } in
+    let se = { se with sigel = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags) } in
     let env = Env.push_sigelt env0 se in
     [se], env, []
 
@@ -1027,7 +1027,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
             let t = N.normalize [N.NoFullNorm; N.Beta] env t in
             uvs, SS.close_univ_vars uvs t
     in
-    let se = { se with elt = Sig_declare_typ(lid, uvs, t, quals) } in
+    let se = { se with sigel = Sig_declare_typ(lid, uvs, t, quals) } in
     let env = Env.push_sigelt env se in
     [se], env, []
 
@@ -1042,7 +1042,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let e, c, g1 = tc_term env e in
     let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
     Rel.force_trivial_guard env (Rel.conj_guard g1 g);
-    let se = { se with elt = Sig_main(e) } in
+    let se = { se with sigel = Sig_main(e) } in
     let env = Env.push_sigelt env se in
     [se], env, []
 
@@ -1125,7 +1125,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
             | q ->
                 Some q
           ) quals in
-          { se with elt = Sig_let(lbs, lids, quals, attrs) }, lbs
+          { se with sigel = Sig_let(lbs, lids, quals, attrs) }, lbs
       | _ -> failwith "impossible"
     in
 
@@ -1177,7 +1177,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       | Discriminator l -> hidden |> BU.for_some (lid_equals l)
       | _ -> false
    in
-   match se.elt with
+   match se.sigel with
   | Sig_pragma         _ -> [], hidden
 
   | Sig_inductive_typ _
@@ -1186,14 +1186,14 @@ let for_export hidden se : list<sigelt> * list<lident> =
   | Sig_bundle(ses, quals, _) ->
     if is_abstract quals
     then
-      let for_export_bundle se (out, hidden) = match se.elt with
+      let for_export_bundle se (out, hidden) = match se.sigel with
         | Sig_inductive_typ(l, us, bs, t, _, _, quals) ->
-          let dec = { se with elt = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals) } in
+          let dec = { se with sigel = Sig_declare_typ(l, us, U.arrow bs (S.mk_Total t), Assumption::New::quals) } in
           dec::out, hidden
 
         (* logically, each constructor just becomes an uninterpreted function *)
         | Sig_datacon(l, us, t, _, _, _, _) ->
-          let dec = { se with elt = Sig_declare_typ(l, us, t, [Assumption]) } in
+          let dec = { se with sigel = Sig_declare_typ(l, us, t, [Assumption]) } in
           dec::out, l::hidden
 
         | _ ->
@@ -1209,7 +1209,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
 
   | Sig_declare_typ(l, us, t, quals) ->
     if quals |> BU.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
-    then [{se with elt = Sig_declare_typ(l, us, t, [Assumption]) }], l::hidden
+    then [{se with sigel = Sig_declare_typ(l, us, t, [Assumption]) }], l::hidden
     else if quals |> BU.for_some (function
       | Assumption
       | Projector _
@@ -1231,15 +1231,15 @@ let for_export hidden se : list<sigelt> * list<lident> =
     let lid = fv.fv_name.v in
     if hidden |> BU.for_some (S.fv_eq_lid fv)
     then [], hidden //this projector definition already has a declare_typ
-    else let dec = { elt = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption]);
+    else let dec = { sigel = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption]);
                      sigrng = Ident.range_of_lid lid;
-                     doc = se.doc } in
+                     sigdoc = se.sigdoc } in
           [dec], lid::hidden
 
   | Sig_let(lbs, l, quals, _) ->
     if is_abstract quals
     then (snd lbs |>  List.map (fun lb ->
-           { se with elt = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals) }),
+           { se with sigel = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals) }),
           hidden)
     else [se], hidden
 
@@ -1326,7 +1326,7 @@ let check_exports env (modul:modul) exports =
         check_term lid univs t;
         Errors.message_prefix.clear_prefix()
     in
-    let rec check_sigelt = fun se -> match se.elt with
+    let rec check_sigelt = fun se -> match se.sigel with
         | Sig_bundle(ses, quals, _) ->
           if not (quals |> List.contains Private)
           then ses |> List.iter check_sigelt
@@ -1387,14 +1387,14 @@ let check_module env m =
   then BU.print1 "%s\n" (Print.modul_to_string m);
   if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
   then begin
-    let normalize_toplevel_lets = fun se -> match se.elt with
+    let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids, qs, attrs) ->
             let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }
             in
-            { se with elt = Sig_let ((b, List.map update lbs), ids, qs, attrs) }
+            { se with sigel = Sig_let ((b, List.map update lbs), ids, qs, attrs) }
         | _ -> se
     in
     let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
