@@ -536,6 +536,15 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
+let binders_of_datacons env lid =
+  match lookup_qname env lid with
+  | Some (Inr({ sigel = Sig_datacon(_, _, dc_typ, _, _, _, _) } as se, _), _) ->
+    let dc_typ = Subst.compress dc_typ in
+    let binders, _ = arrow_formals dc_typ in
+    Util.print2 "Looking at [%s] with tag [%s]\n" (Print.sigelt_to_string se) (Print.tag_of_term dc_typ);
+    Some binders
+  | _ -> None
+
 let lookup_definition delta_levels env lid =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
@@ -703,6 +712,56 @@ let num_inductive_ty_params env lid =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) -> List.length tps
   | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+
+type match_info_branch_kind = | Record | Variant | Tuple
+
+type match_info_branch = { // TODO Unify with Pattern?
+  mib_name: lid;
+  mib_kind: match_info_branch_kind;
+  mib_vars: list< (string * typ) >
+}
+
+let is_tuple_constructor cs_name = // FIXME =S
+  List.mem (string_of_lid cs_name)
+    ["Prims.Mktuple2";
+     "Prims.Mktuple3";
+     "Prims.Mktuple4";
+     "Prims.Mktuple5";
+     "Prims.Mktuple6";
+     "Prims.Mktuple7";
+     "Prims.Mktuple8"]
+
+let try_lookup_match_info env typ =
+  let hd, args = Syntax.Util.head_and_args typ in
+  let hd_lid_opt = match (Subst.compress typ).n with // FIXME unuinst
+                   | Tm_fvar fv -> Some fv.fv_name.v
+                   | _ -> None in
+  let constructor_match_info cs_lid =
+    let binders = match binders_of_datacons env cs_lid with
+                  | None -> []
+                  | Some binders -> binders in
+    let bvs = List.map fst binders in
+    let arg_terms = List.map fst args in
+    let substs = List.map Syntax.Syntax.NT (List.zip bvs arg_terms) in
+    let substituted = subst_binders substs binders in
+    { mib_name = cs_lid;
+      mib_kind = (match bvs with
+                  | bv :: _ when Syntax.Util.is_field_name bv.ppname -> Record
+                  | _ when is_tuple_constructor cs_lid -> Tuple
+                  | _ -> Variant);
+      mib_vars = List.map (fun bv ->
+                     // Util.print2 "Type %s has head %s\n"
+                     // (Print.term_to_string bv.sort)
+                     // (match (Subst.compress bv.sort).n with
+                     //  | Tm_name _ -> "Tm_name"
+                     //  | Tm_app (hd, args) -> "Tm_app of " ^ (Print.tag_of_term (Subst.compress hd))
+                     //  | t -> (Print.tag_of_term (Subst.compress bv.sort)));
+                           let id = Syntax.Util.unmangle_field_name bv.ppname in
+                           (id.idText, bv.sort)) (List.map fst substituted) } in
+  match hd_lid_opt |> Util.map_option (datacons_of_typ env) with
+  | Some (true, constructors) ->
+    Some (List.map constructor_match_info constructors)
+  | _ -> None
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //

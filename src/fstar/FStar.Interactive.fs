@@ -124,8 +124,9 @@ type input_chunks =
   | Push of bool * int * int //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
-  | Info of string * bool * option<(string * int * int)>
+  | Info of string * option<(string * int * int)>
   | Completions of string
+  | ShowMatch of string
 
 
 type interactive_state = {
@@ -207,10 +208,10 @@ let rec read_chunk () =
       match Util.split l " " with
       | [_; symbol] ->
         Util.clear_string_builder s.chunk;
-        Info (symbol, true, None)
+        Info (symbol, None)
       | [_; symbol; file; row; col] ->
         Util.clear_string_builder s.chunk;
-        Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
+        Info (symbol, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
         Util.print_error ("Unrecognized \"#info\" request: " ^l);
         exit 1
@@ -222,6 +223,9 @@ let rec read_chunk () =
       | _ ->
         Util.print_error ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
+  else if Util.starts_with l "#show-match " then
+      let typ = Util.substring_from l (String.length "#show-match ") in
+      ShowMatch typ
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
@@ -385,21 +389,20 @@ let rec go (line_col:(int*int))
            (filename:string)
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
-  | Info(symbol, fqn_only, pos_opt) ->
+  | Info(symbol, pos_opt) ->
     let dsenv, tcenv = env in
     let info_at_pos_opt = match pos_opt with
       | None -> None
-      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
+      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos tcenv file row col in
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
-        if symbol = "" then None
+        if symbol = "" || dsenv.curmodule = None then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
-             let lid = if fqn_only then lid
-                       else match DsEnv.resolve_to_fully_qualified_name dsenv lid with
-                            | None -> lid
-                            | Some lid -> lid in
-             try_lookup_lid (snd env) lid
+             let lid = match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+                       | None -> lid
+                       | Some lid -> lid in
+             try_lookup_lid tcenv lid
                |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
@@ -407,8 +410,36 @@ let rec go (line_col:(int*int))
        let name, doc =
          match name_or_lid with
          | Inl name -> name, None
-         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
-       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info (snd env) name typ rng doc));
+         | Inr lid -> (Ident.string_of_lid lid,
+                       DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
+       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info tcenv name typ rng doc));
+    go line_col filename stack curmod env ts
+  | ShowMatch (type_str) ->
+    let dsenv, tcenv = env in
+    let dummy_decl = Util.format1 "let __show_match_dummy__ : Type = (%s)" type_str in
+    let dummy_fragment = {frag_text=dummy_decl; frag_line=0; frag_col=0} in
+
+    let env_mark = mark env in
+    let results =
+      match curmod, FStar.Parser.ParseIt.parse (Inr dummy_fragment) with
+      | Some _, Inl (Inr decls, _) ->
+        (try
+           let dsenv', decls = FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls in
+           let ses, exported, tcenv' = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+           match ses with
+           | [{ sigel = FStar.Syntax.Syntax.Sig_let((_, [{lbdef = def}]), _, _, _) }] ->
+             Util.print1 "Type: [%s]\n" (FStar.Syntax.Print.term_to_string def);
+             TypeChecker.Env.try_lookup_match_info tcenv def
+           | _ -> None
+         with | FStar.Errors.Error _
+              | FStar.Errors.Err _ -> None)
+      | _ -> None in
+    (match results with
+     | Some mi ->
+       Util.print1 "%s\n#done-ok\n" (TypeChecker.Err.format_match_info mi)
+     | None -> Util.print_string "\n#done-nok\n");
+
+    let env = reset_mark env_mark in
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user

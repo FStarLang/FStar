@@ -387,6 +387,10 @@ let shorten_module_path env ids is_full_path =
          | None -> ([], ids)
          | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
 
+let shorten_lid env lid =
+    let (_, short) = shorten_module_path env lid.ns true in
+    lid_of_ns_and_id short lid.ident
+
 (* Generic name resolution. *)
 
 let resolve_in_open_namespaces''
