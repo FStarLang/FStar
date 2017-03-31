@@ -277,6 +277,28 @@ let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
+
+type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
+let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
+let imap_clear<'value> (s:imap<'value>) = s.Clear()
+let imap_add (m:imap<'value>) k (v:'value) = ignore <| m.Remove(k); m.Add(k,v)
+let imap_of_list<'value> (l:list<int*'value>) =
+    let s = imap_create (List.length l) in
+    List.iter (fun (x,y) -> imap_add s x y) l;
+    s
+let imap_try_find (m:imap<'value>) k = m.TryFind(k)
+let imap_fold (m:imap<'value>) f a =
+    let out = ref a in
+    for entry in m do
+        out := f entry.Key entry.Value !out;
+    !out
+let imap_remove (m:imap<'value>) k = m.Remove k |> ignore
+let imap_keys (m:imap<'value>) = imap_fold m (fun k v keys -> k::keys) []
+let imap_copy (m:imap<'value>) =
+    let n = imap_create (m.Count) in
+    imap_fold m (fun k v () -> imap_add n k v) ();
+    n
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf

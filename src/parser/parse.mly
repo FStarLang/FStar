@@ -54,7 +54,6 @@ open FStar_String
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
-%token <string> UNIVAR
 %token <string> TILDE
 
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
@@ -78,7 +77,7 @@ open FStar_String
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token ACTIONS TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND
+%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
 %token AND ASSERT BEGIN ELSE END
 %token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
@@ -93,7 +92,7 @@ open FStar_String
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT NEW_EFFECT_FOR_FREE SUB_EFFECT SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
 %token BACKTICK UNIV_HASH
@@ -222,8 +221,6 @@ rawDecl:
       { NewEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
-  | NEW_EFFECT_FOR_FREE ne=newEffect
-      { NewEffectForFree ne }
   | doc=FSDOC_STANDALONE
       { Fsdoc doc }
 
@@ -283,29 +280,21 @@ letbinding:
 newEffect:
   | ed=effectRedefinition
   | ed=effectDefinition
-       { ed }
+    { ed }
 
 effectRedefinition:
   | lid=uident EQUALS t=simpleTerm
-      { RedefineEffect(lid, [], t) }
+    { RedefineEffect(lid, [], t) }
 
 effectDefinition:
-  | LBRACE lid=uident bs=binders COLON k=kind
+  | LBRACE lid=uident bs=binders COLON typ=tmArrow(tmNoEq)
     	   WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
-         actions=actionDecls
     RBRACE
-      {
-         DefineEffect(lid, bs, k, eds, actions)
-      }
-
-actionDecls:
-  |   { [] }
-  | AND ACTIONS actions=separated_list(SEMICOLON, effectDecl)
-      { actions }
+    { DefineEffect(lid, bs, typ, eds) }
 
 effectDecl:
   | lid=lident EQUALS t=simpleTerm
-     { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
+    { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -537,8 +526,8 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=typ
-      { mk_term (Ascribed(e,{t with level=Expr})) (rhs2 parseState 1 3) Expr }
+  | e=tmIff SUBTYPE t=typ tactic_opt=option(BY tactic=typ {tactic})
+      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
@@ -755,7 +744,6 @@ appTerm:
 argTerm:
   | x=pair(maybeHash, indexingTerm) { x }
   | u=universe { u }
-  | u=univar { UnivApp, u }
 
 %inline maybeHash:
   |      { Nothing }
@@ -824,7 +812,7 @@ projectionLHS:
       {
         let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level})) (rhs2 parseState 1 4) level
+          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
         in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK
@@ -927,7 +915,7 @@ universeFrom:
                            rhs parseState 2)) ;
          mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
        }
-  | max=ident us=list(atomicUniverse)
+  | max=ident us=nonempty_list(atomicUniverse)
       {
         if text_of_id max <> text_of_lid max_lid
         then errorR(Error("A lower case ident " ^ text_of_id max ^
@@ -948,16 +936,9 @@ atomicUniverse:
                        lhs(parseState)));
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       }
-  | u=univar { u }
+  | u=lident { mk_term (Uvar u) u.idRange Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
-
-univar:
-  | id=UNIVAR
-      {
-        let pos = rhs parseState 1 in
-        mk_term (Uvar (mk_ident (id, pos))) pos Expr
-      }
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */

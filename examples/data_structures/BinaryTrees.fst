@@ -157,10 +157,9 @@ let rec remove (x:int) (t:tree{count x t > 0}) : Tot tree (decreases t) =
 
 #set-options "--max_fuel 10"
 let rec count_remove_root (t:tree{Node? t}) :
-    Lemma (ensures ((count (Node?.root t) (remove_root t)
-                  = count (Node?.root t)              t - 1) /\
-                 (forall y. y <> Node?.root t ==>
-                    count y (remove_root t) = count y t))) =
+    Lemma (ensures (let r = Node?.root t in
+                   (count r (remove_root t) = count r t - 1) /\
+                   (forall y. y <> r ==> count y (remove_root t) = count y t))) =
   match t with
   | Node n t1 t2 -> if Leaf? t1 then () else count_remove_root t1
 

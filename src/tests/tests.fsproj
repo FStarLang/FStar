@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -41,15 +41,6 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\..\..\FStar\bin\FSharp.PowerPack.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\..\..\FStar\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
-    </Reference>
-    <Reference Include="FsLexYacc.Runtime">
-      <HintPath>..\..\..\..\FStar\bin\FsLexYacc.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
@@ -63,9 +54,20 @@
     <Compile Include="util.fs" />
     <Compile Include="norm.fs" />
     <Compile Include="unif.fs" />
+    <Compile Include="tactics.fs" />
     <Compile Include="test.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FSharp.PowerPack">
+      <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Compatibility">
+      <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
+    </Reference>
+    <Reference Include="FsLexYacc.Runtime">
+      <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
@@ -89,6 +91,11 @@
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tactics\tactics.fsproj">
+      <Name>tactics</Name>
+      <Project>{82336f31-a87c-4403-a2f4-2b90b4f0996b}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\tosyntax\tosyntax.fsproj">

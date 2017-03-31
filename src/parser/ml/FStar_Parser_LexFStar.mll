@@ -55,9 +55,9 @@
     Hashtbl.add keywords "assert"        ASSERT      ;
     Hashtbl.add keywords "assume"        ASSUME      ;
     Hashtbl.add keywords "begin"         BEGIN       ;
+    Hashtbl.add keywords "by"            BY          ;
     Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "effect"        EFFECT      ;
-    Hashtbl.add keywords "effect_actions" ACTIONS    ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
     Hashtbl.add keywords "ensures"       ENSURES     ;
@@ -81,7 +81,6 @@
     Hashtbl.add keywords "mutable"       MUTABLE     ;
     Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
-    Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
     Hashtbl.add keywords "noextract"     NOEXTRACT   ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
@@ -281,7 +280,6 @@ let tvar_char              = letter | digit | '\'' | '_'
 let constructor = constructor_start_char ident_char*
 let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
-let univar      = '\'' 'u' tvar_char+
 
 rule token = parse
  | "\xef\xbb\xbf"   (* UTF-8 byte order mark, some compiler files have them *)
@@ -313,8 +311,6 @@ rule token = parse
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
      { NAME id }
- | univar as id
-     { UNIVAR id }
  | tvar as id
      { TVAR id }
  | (integer | xinteger) as x

@@ -134,6 +134,7 @@ let init () =
         ("print_bound_var_types"        , Bool false);
         ("print_effect_args"            , Bool false);
         ("print_fuels"                  , Bool false);
+        ("print_full_names"             , Bool false);
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
         ("print_z3_statistics"          , Bool false);
@@ -149,6 +150,7 @@ let init () =
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
         ("use_hints"                    , Bool false);
+        ("use_tactics"                  , Bool false);
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
@@ -220,6 +222,7 @@ let get_print_before_norm       ()      = lookup_opt "print_before_norm"        
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
+let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
@@ -236,6 +239,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_tactics             ()      = lookup_opt "use_tactics"              as_bool
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -562,6 +566,11 @@ let rec specs () : list<Getopt.opt> =
         "Print the fuel amounts used for each successful query");
 
        ( noshort,
+        "print_full_names",
+        ZeroArgs (fun () -> Bool true),
+        "Print full names of variables");
+
+       ( noshort,
         "print_implicits",
         ZeroArgs(fun () -> Bool true),
         "Print implicit arguments");
@@ -579,7 +588,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "prn",
         ZeroArgs (fun () -> Bool true),
-        "Print real names (you may want to use this in conjunction with log_queries)");
+        "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "record_hints",
@@ -638,6 +647,11 @@ let rec specs () : list<Getopt.opt> =
         "use_hints",
         ZeroArgs (fun () -> Bool true),
         "Use a previously recorded hints database for proof replay");
+
+       ( noshort,
+        "use_tactics",
+        ZeroArgs (fun () -> Bool true),
+        "Pre-process a verification condition using a user-provided tactic (a flag to support migration to tactics gradually)");
 
        ( noshort,
         "verify_all",
@@ -747,6 +761,7 @@ let settable = function
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
+    | "print_full_names"
     | "print_implicits"
     | "print_universes"
     | "print_z3_statistics"
@@ -758,6 +773,7 @@ let settable = function
     | "trace_error"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
+    | "use_tactics"
     | "__temp_no_proj"
     | "no_warn_top_level_effects"
     | "reuse_hint_for"
@@ -920,7 +936,7 @@ let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
-let print_real_names             () = get_prn                         ()
+let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
@@ -932,6 +948,7 @@ let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_tactics                  () = get_use_tactics                 ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"

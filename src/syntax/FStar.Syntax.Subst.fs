@@ -332,8 +332,11 @@ let push_subst s t =
 
     | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
-    | Tm_ascribed(t0, Inl t1, lopt) -> mk (Tm_ascribed(subst' s t0, Inl (subst' s t1), lopt))
-    | Tm_ascribed(t0, Inr c, lopt) -> mk (Tm_ascribed(subst' s t0, Inr (subst_comp' s c), lopt))
+    | Tm_ascribed(t0, (annot, topt), lopt) ->
+      let annot = match annot with
+        | Inl t -> Inl (subst' s t)
+        | Inr c -> Inr (subst_comp' s c) in
+      mk (Tm_ascribed(subst' s t0, (annot, U.map_opt topt (subst' s)), lopt))
 
     | Tm_abs(bs, body, lopt) ->
         let n = List.length bs in

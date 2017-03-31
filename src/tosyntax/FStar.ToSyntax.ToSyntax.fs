@@ -100,7 +100,7 @@ let rec is_comp_type env t =
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
     | Paren t
-    | Ascribed(t, _)
+    | Ascribed(t, _, _)
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
 
@@ -182,8 +182,10 @@ and free_type_vars env t = match (unparen t).tm with
   | Requires (t, _)
   | Ensures (t, _)
   | NamedTyp(_, t)
-  | Paren t
-  | Ascribed(t, _) -> free_type_vars env t
+  | Paren t -> free_type_vars env t
+  | Ascribed(t, t', tacopt) ->
+    let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
+    List.collect (free_type_vars env) ts
 
   | Construct(_, ts) -> List.collect (fun (t, _) -> free_type_vars env t) ts
 
@@ -347,51 +349,51 @@ let rec sum_to_universe u n =
 let int_to_universe n = sum_to_universe U_zero n
 
 let rec desugar_maybe_non_constant_universe t
-    : either<int, Syntax.universe>  (* level of universe or desugared universe *)
-    =
-    match (unparen t).tm with
-        (* TODO : Check how this unification works *)
-        (* The unification might introduce universe variables *)
-    | Wild -> Inr (U_unif (Unionfind.fresh None))
-    | Uvar u -> Inr (U_name u)
+  : either<int, Syntax.universe>  (* level of universe or desugared universe *)
+=
+  match (unparen t).tm with
+      (* TODO : Check how this unification works *)
+      (* The unification might introduce universe variables *)
+  | Wild -> Inr (U_unif (Unionfind.fresh None))
+  | Uvar u -> Inr (U_name u)
 
-    | Const (Const_int (repr, _)) ->
-        (* TODO : That might be a little dangerous... *)
-        let n = int_of_string repr in
-        if n < 0
-        then raise (Error("Negative universe constant  are not supported : "
-                          ^ repr, t.range)) ;
-        Inl n
-    | Op (op_plus, [t1 ; t2]) ->
-        assert (op_plus = "+") ;
-        let u1 = desugar_maybe_non_constant_universe t1 in
-        let u2 = desugar_maybe_non_constant_universe t2 in
-        begin match u1, u2 with
-            | Inl n1, Inl n2 -> Inl (n1+n2)
-            | Inl n, Inr u
-            | Inr u, Inl n -> Inr (sum_to_universe u n)
-            | Inr u1, Inr u2 ->
-                raise(Error("This universe might contain a sum of two universe variables "
-                            ^ term_to_string t,
-                            t.range))
-        end
-    | App _ ->
-        let rec aux t univargs  =
-            match (unparen t).tm with
-                | App(t, targ, _) ->
-                    let uarg = desugar_maybe_non_constant_universe targ in
-                    aux t (uarg::univargs)
-                | Var max_lid ->
-                    assert (Ident.text_of_lid max_lid = "max") ;
-                    if List.existsb (function Inr _ -> true | _ -> false) univargs
-                    then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
-                    else
-                        let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
-                        Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
-                (* TODO : Might not be the best place to raise the error... *)
-                | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
-        in aux t []
-    | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
+  | Const (Const_int (repr, _)) ->
+      (* TODO : That might be a little dangerous... *)
+      let n = int_of_string repr in
+      if n < 0
+      then raise (Error("Negative universe constant  are not supported : "
+                        ^ repr, t.range)) ;
+      Inl n
+  | Op (op_plus, [t1 ; t2]) ->
+      assert (op_plus = "+") ;
+      let u1 = desugar_maybe_non_constant_universe t1 in
+      let u2 = desugar_maybe_non_constant_universe t2 in
+      begin match u1, u2 with
+          | Inl n1, Inl n2 -> Inl (n1+n2)
+          | Inl n, Inr u
+          | Inr u, Inl n -> Inr (sum_to_universe u n)
+          | Inr u1, Inr u2 ->
+              raise(Error("This universe might contain a sum of two universe variables "
+                          ^ term_to_string t,
+                          t.range))
+      end
+  | App _ ->
+      let rec aux t univargs  =
+        match (unparen t).tm with
+        | App(t, targ, _) ->
+            let uarg = desugar_maybe_non_constant_universe targ in
+            aux t (uarg::univargs)
+        | Var max_lid ->
+            assert (Ident.text_of_lid max_lid = "max") ;
+            if List.existsb (function Inr _ -> true | _ -> false) univargs
+            then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
+            else
+              let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
+              Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
+        (* TODO : Might not be the best place to raise the error... *)
+        | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
+      in aux t []
+  | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
 
 let rec desugar_universe t : Syntax.universe =
     let u = desugar_maybe_non_constant_universe t in
@@ -611,8 +613,8 @@ and desugar_machine_integer env repr (signedness, width) range =
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
-and desugar_name mk setpos (env: env_t) (l: lid) : S.term =
-    let tm, mut = fail_or env (Env.try_lookup_lid env) l in
+and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
+    let tm, mut = fail_or env ((if resolve then Env.try_lookup_lid else Env.try_lookup_lid_no_resolve) env) l in
     let tm = setpos tm in
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
@@ -685,12 +687,17 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
-        begin match try_lookup_effect_defn env eff_name with
+      (* TODO : would it be possible to normalize the effect name at that point so that *)
+      (* we get back the original effect definition instead of an effect abbreviation *)
+      begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
-            S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
+          S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
         | None ->
-            failwith "immpossible special_effect_combinator"
-        end
+          failwith (BU.format2 "Member %s of effect %s is not accessible \
+                                (using an effect abbreviation instead of the original effect ?)"
+                               (Ident.text_of_lid eff_name)
+                               txt)
+      end
 
     | Assign (ident, t2) ->
       let t2 = desugar_term env t2 in
@@ -701,16 +708,23 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Var l
     | Name l ->
-      desugar_name mk setpos env l
+      desugar_name mk setpos env true l
 
     | Projector (l, i) ->
-      let found =
-        Option.isSome (Env.try_lookup_datacon env l) ||
-        Option.isSome (Env.try_lookup_effect_defn env l)
+      let name =
+        match Env.try_lookup_datacon env l with
+        | Some _ -> Some (true, l)
+        | None ->
+          match Env.try_lookup_root_effect_name env l with
+          | Some new_name -> Some (false, new_name)
+          | _ -> None
       in
-      if found
-      then desugar_name mk setpos env (mk_field_projector_name_from_ident l i)
-      else raise (Error (BU.format1 "Data constructor or effect %s not found" l.str, top.range))
+      begin match name with
+      | Some (resolve, new_name) ->
+        desugar_name mk setpos env resolve (mk_field_projector_name_from_ident new_name i)
+      | _ ->
+        raise (Error (BU.format1 "Data constructor or effect %s not found" l.str, top.range))
+      end
 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
@@ -718,7 +732,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         raise (Error (BU.format1 "Data constructor %s not found" lid.str, top.range))
       | _ ->
         let lid' = U.mk_discriminator lid in
-        desugar_name mk setpos env lid'
+        desugar_name mk setpos env true lid'
       end
 
     | Construct(l, args) ->
@@ -946,7 +960,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
-                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr
+                mk_term (Ascribed(def, t, None)) (Range.union_ranges t.range def.range) Expr
             in
             let def = match args with
                  | [] -> def
@@ -1021,11 +1035,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         U.branch (pat, wopt, b) in
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
-    | Ascribed(e, t) ->
+    | Ascribed(e, t, tac_opt) ->
       let annot = if is_comp_type env t
                   then Inr (desugar_comp t.range env t)
                   else Inl (desugar_term env t) in
-      mk <| Tm_ascribed(desugar_term env e, annot, None)
+      let tac_opt = BU.map_opt tac_opt (desugar_term env) in
+      mk <| Tm_ascribed(desugar_term env e, (annot, tac_opt), None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))
@@ -1601,14 +1616,49 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind eff_decls actions for_free =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
-    let eff_k = desugar_term env eff_kind in
-    let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
+    let eff_t = desugar_term env eff_typ in
+
+    (* An effect for free has a type of the shape "a:Type -> Effect" *)
+    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
+
+    let mandatory_members =
+      let rr_members = ["repr" ; "return" ; "bind"] in
+      if for_free then rr_members
+      else
+        (* the first 3 are optional but must not be counted as actions *)
+        rr_members @ [
+          "return_wp";
+          "bind_wp";
+          "if_then_else";
+          "ite_wp";
+          "stronger";
+          "close_wp";
+          "assert_p";
+          "assume_p";
+          "null_wp";
+          "trivial"
+        ]
+    in
+
+    let name_of_eff_decl decl =
+      match decl.d with
+      | Tycon(_, [TyconAbbrev(name, _, _, _), _]) -> Ident.text_of_id name
+      | _ -> failwith "Malformed effect member declaration."
+    in
+
+    let mandatory_members_decls, actions =
+      List.partition (fun decl -> List.mem (name_of_eff_decl decl) mandatory_members) eff_decls
+    in
+
+    let env, decls = mandatory_members_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
-        env, List.hd ses::out) (env, []) in
+        env, List.hd ses::out)
+      (env, [])
+    in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with
         | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
@@ -1638,7 +1688,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
               and its cps-type with arrows inserted in the right place (see \
               examples).", d.drange))
     ) in
-    let eff_k = Subst.close binders eff_k in
+    let eff_t = Subst.close binders eff_t in
     let lookup s =
         let l = Env.qualify env (mk_ident(s, d.drange)) in
         [], Subst.close binders <| fail_or env (try_lookup_definition env) l in
@@ -1653,7 +1703,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           cattributes  = [];
           univs       = [];
           binders     = binders;
-          signature   = eff_k;
+          signature   = eff_t;
           ret_wp      = dummy_tscheme;
           bind_wp     = dummy_tscheme;
           if_then_else= dummy_tscheme;
@@ -1670,8 +1720,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           actions     = actions;
         }, d.drange)
       else
-        let rr =  qualifiers |> List.contains S.Reifiable
-               || qualifiers |> S.contains_reflectable in
+        let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
         let un_ts = [], Syntax.tun in
         Sig_new_effect({
           mname       = mname;
@@ -1679,7 +1728,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           cattributes  = [];
           univs       = [];
           binders     = binders;
-          signature   = eff_k;
+          signature   = eff_t;
           ret_wp      = lookup "return_wp";
           bind_wp     = lookup "bind_wp";
           if_then_else= lookup "if_then_else";
@@ -1695,20 +1744,22 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_kind e
           return_repr = (if rr then lookup "return" else un_ts);
           actions     = actions;
         }, d.drange)
-      in
+    in
     let env = push_sigelt env0 se in
     let env = actions |> List.fold_left (fun env a ->
         //printfn "Pushing action %s\n" a.action_name.str;
-        push_sigelt env (U.action_as_lb mname a)) env in
+        push_sigelt env (U.action_as_lb mname a)) env
+    in
     let env =
-        if quals |> List.contains Reflectable
-        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
-             push_sigelt env refl_decl
-        else env in
+      if quals |> List.contains Reflectable
+      then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+            let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
+            push_sigelt env refl_decl
+      else env
+    in
     env, [se]
 
-and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (build_sigelt:eff_decl -> Range.range -> sigelt) =
+and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1769,7 +1820,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (bu
                 })
                 ed.actions;
     } in
-    let se = build_sigelt ed d.drange in
+    let se =
+      (* An effect for free has a type of the shape "a:Type -> Effect" *)
+      let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
+      if for_free then Sig_new_effect_for_free (ed, d.drange) else Sig_new_effect (ed, d.drange)
+    in
     let monad_env = env in
     let env = push_sigelt env0 se in
     let env = ed.actions |> List.fold_left (fun env a ->
@@ -1937,19 +1992,11 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
 
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect(ed, range))
+    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn
 
-  | NewEffectForFree (RedefineEffect(eff_name, eff_binders, defn)) ->
+  | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (fun ed range -> Sig_new_effect_for_free(ed, range))
-
-  | NewEffectForFree (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
-    let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions true
-
-  | NewEffect (DefineEffect(eff_name, eff_binders, eff_kind, eff_decls, actions)) ->
-    let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions false
+    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with

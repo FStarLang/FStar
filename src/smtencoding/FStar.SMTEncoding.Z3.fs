@@ -282,10 +282,10 @@ let doZ3Exe =
         doZ3Exe' fresh input
 
 let z3_options () =
-    "(set-option :global-decls false)\
-     (set-option :smt.mbqi false)\
-     (set-option :auto_config false)\
-     (set-option :produce-unsat-cores true)"
+    "(set-option :global-decls false)\n\
+     (set-option :smt.mbqi false)\n\
+     (set-option :auto_config false)\n\
+     (set-option :produce-unsat-cores true)\n"
 
 type job<'a> = {
     job:unit -> 'a;
@@ -371,16 +371,11 @@ let init () =
       aux n_cores
     else ()
 
-
-let enqueue fresh j =
-    if not fresh
-    then run_job j
-    else begin
-        BU.monitor_enter job_queue;
-        job_queue := !job_queue@[j];
-        BU.monitor_pulse job_queue;
-        BU.monitor_exit job_queue
-    end
+let enqueue j =
+    BU.monitor_enter job_queue;
+    job_queue := !job_queue@[j];
+    BU.monitor_pulse job_queue;
+    BU.monitor_exit job_queue
 
 let finish () =
     let rec aux () =
@@ -412,11 +407,11 @@ let bg_scope : ref<list<decl>> = BU.mk_ref []
 // new queries are pushed
 let push msg    =
     fresh_scope := [Term.Caption msg; Term.Push]::!fresh_scope;
-    bg_scope := [Term.Caption msg; Term.Push]@ !bg_scope
+    bg_scope := !bg_scope @ [Term.Push; Term.Caption msg]
 
 let pop msg      =
     fresh_scope := List.tl !fresh_scope;
-    bg_scope := [Term.Pop; Term.Caption msg]@ !bg_scope
+    bg_scope := !bg_scope @ [Term.Caption msg; Term.Pop]
 
 //giveZ3 decls: adds decls to the stack of declarations
 //              to be actually given to Z3 only when the next
@@ -429,25 +424,13 @@ let giveZ3 decls =
     | hd::tl -> fresh_scope := (hd@decls)::tl
     | _ -> failwith "Impossible"
    end;
-   bg_scope := List.rev decls @ !bg_scope
-
-//bgtheory fresh: gets that current sequence of decls
-//                to be fed to Z3 as the background theory
-//                for some query
-let bgtheory fresh =
-    if fresh
-    then (bg_scope := [];
-          List.rev !fresh_scope |> List.flatten)
-    else let bg = !bg_scope in
-         bg_scope := [];
-         List.rev bg
+   bg_scope := !bg_scope @ decls
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
     if (Options.n_cores() < 2) then
-      bg_z3_proc.refresh();
-      let theory = bgtheory true in
-      bg_scope := List.rev theory
+        bg_z3_proc.refresh();
+        bg_scope := List.flatten (List.rev !fresh_scope)
 
 //mark, reset_mark, commit_mark:
 //    setting rollback points for the interactive mode
@@ -471,59 +454,74 @@ let commit_mark msg =
         | _ -> failwith "Impossible"
     end
 
-let ask (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
-  (* the fresh variable controls if we accumulate theory by using a single Z3 process
-     or using a "fresh" process for every obligation and giving it the whole theory.
-     A single Z3 process cannot work with multi-core although a single thread
-     can operate in the fresh mode.
-     In the future, a new parameter fresh should be added to FStar with this option, right now
-     this argument is automatically set to false for 1 thread and true for > 1 *)
-  let fresh = (Options.n_cores() > 1) in
-  let filter_assertions theory = match core with
-    | None -> theory, false
-    | Some core ->
-      let theory', n_retained, n_pruned =
-          List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
-            | Assume(_, _, Some name) ->
-              if List.contains name core
-              then d::theory, n_retained+1, n_pruned
-              else if BU.starts_with name "@"
-              then d::theory, n_retained, n_pruned
-              else theory, n_retained, n_pruned+1
-            | _ -> d::theory, n_retained, n_pruned)
-          theory ([], 0, 0) in
-      let missed_assertions th core =
-        let missed =
-            core |> List.filter (fun nm ->
-              th |> BU.for_some (function Assume(_, _, Some nm') -> nm=nm' | _ -> false) |> not)
-            |> String.concat ", " in
-        let included = th |> List.collect (function Assume(_, _, Some nm) -> [nm] | _ -> []) |> String.concat ", " in
-        BU.format2 "missed={%s}; included={%s}" missed included in
-      if Options.hint_info ()
-      && Options.debug_any()
-      then begin
-           let n = List.length core in
-           let missed = if n <> n_retained then missed_assertions theory' core else "" in
-           BU.print3 "Hint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                         (BU.string_of_int n_retained)
-                         (if n <> n_retained
-                          then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                               (BU.string_of_int n) missed
-                          else "")
-                         (BU.string_of_int n_pruned)
-      end;
-      theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true in
-  let theory = bgtheory fresh in
-  let theory = theory@[Term.Push]@qry@[Term.Pop] in
-  let theory, used_unsat_core = filter_assertions theory in
-  let cb (uc_errs, time) =
+let filter_assertions core theory = match core with
+| None -> theory, false
+| Some core ->
+    let theory', n_retained, n_pruned =
+        List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
+        | Assume(_, _, Some name) ->
+            if List.contains name core
+            then d::theory, n_retained+1, n_pruned
+            else if BU.starts_with name "@"
+            then d::theory, n_retained, n_pruned
+            else theory, n_retained, n_pruned+1
+        | _ -> d::theory, n_retained, n_pruned)
+        theory ([], 0, 0) in
+    let missed_assertions th core =
+    let missed =
+        core |> List.filter (fun nm ->
+            th |> BU.for_some (function Assume(_, _, Some nm') -> nm=nm' | _ -> false) |> not)
+        |> String.concat ", " in
+    let included = th |> List.collect (function Assume(_, _, Some nm) -> [nm] | _ -> []) |> String.concat ", " in
+    BU.format2 "missed={%s}; included={%s}" missed included in
+    if Options.hint_info ()
+    && Options.debug_any()
+    then begin
+        let n = List.length core in
+        let missed = if n <> n_retained then missed_assertions theory' core else "" in
+        BU.print3 "Hint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
+                        (BU.string_of_int n_retained)
+                        (if n <> n_retained
+                        then BU.format2 " (expected %s (%s); replay may be inaccurate)"
+                            (BU.string_of_int n) missed
+                        else "")
+                        (BU.string_of_int n_pruned)
+    end ;
+    theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
+
+let mk_cb used_unsat_core cb (uc_errs, time) =
     if used_unsat_core
     then match uc_errs with
-         | Inl _ -> cb (uc_errs, time)
-         | Inr (_, ek) -> cb (Inr ([],ek), time) //if we filtered the theory, then the error message is unreliable
-    else cb (uc_errs, time) in
-  let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if Options.log_queries() then query_logging.write_to_log input;
-  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
+        | Inl _ -> cb (uc_errs, time)
+        | Inr (_, ek) -> cb (Inr ([],ek), time) // if we filtered the theory, then the error message is unreliable
+    else cb (uc_errs, time)
 
+let mk_input theory = 
+    let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
+    if Options.log_queries() then query_logging.write_to_log r ;
+    r
 
+let ask_1_core (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
+    let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
+    let theory, used_unsat_core = filter_assertions core theory in
+    let cb = mk_cb used_unsat_core cb in
+    let input = mk_input theory in
+    bg_scope := [] ; // Now consumed.
+    run_job ({job=z3_job false label_messages input; callback=cb})
+
+let ask_n_cores (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =     
+    let theory = List.flatten (match scope with 
+        | Some s -> (List.rev s)
+        | None   -> bg_scope := [] ; // Not needed; discard.
+                    (List.rev !fresh_scope)) in
+    let theory = theory@[Term.Push]@qry@[Term.Pop] in
+    let theory, used_unsat_core = filter_assertions core theory in
+    let cb = mk_cb used_unsat_core cb in
+    let input = mk_input theory in
+    enqueue ({job=z3_job true label_messages input; callback=cb})
+
+let ask (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
+    if Options.n_cores() = 1 then
+        ask_1_core core label_messages qry cb
+    else
+        ask_n_cores core label_messages qry scope cb

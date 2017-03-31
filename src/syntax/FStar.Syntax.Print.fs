@@ -46,7 +46,7 @@ let fv_to_string fv = lid_to_string fv.fv_name.v
 let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
-    if (Options.print_real_names())
+    if Options.print_real_names()
     then bv_to_string bv
     else bv.ppname.idText
 
@@ -258,7 +258,7 @@ let rec term_to_string x =
   | Tm_fvar f ->        fv_to_string f
   | Tm_uvar (u, _) ->   uvar_to_string u
   | Tm_constant c ->    const_to_string c
-  | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type(%s)" (univ_to_string u) else "Type"
+  | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2, lc) ->
     begin match lc with
@@ -273,10 +273,14 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,Inl t,eff_name) ->
-                        U.format3 "(%s <: [%s] %s)" (term_to_string e) (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
-  | Tm_ascribed(e,Inr c,_) ->
-                        U.format2 "(%s <: %s)" (term_to_string e) (comp_to_string c)
+  | Tm_ascribed(e,(annot, topt),eff_name) ->
+    let annot = match annot with
+        | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
+        | Inr c -> comp_to_string c in
+    let topt = match topt with
+        | None -> ""
+        | Some t -> U.format1 "by %s" (term_to_string t) in
+    U.format3 "(%s <: %s %s)" (term_to_string e) annot topt
   | Tm_match(head, branches) ->
     U.format2 "(match %s with\n\t| %s)"
       (term_to_string head)
@@ -489,6 +493,7 @@ let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions None, _) -> "#reset-options"
   | Sig_pragma(ResetOptions (Some s), _) -> U.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s, _) -> U.format1 "#set-options \"%s\"" s
+  | Sig_pragma(LightOff, _) -> "#light \"off\""
   | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) ->
     U.format4 "%stype %s %s : %s"
              (quals_to_string' quals)

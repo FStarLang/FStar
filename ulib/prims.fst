@@ -186,7 +186,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
         PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). pre /\ post x ==> p x)) // pure_wp
+             (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
@@ -272,7 +272,7 @@ sub_effect PURE ~> DIV  = purewp_id
 
 effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
        DIV a
-           (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
+           (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
 
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
@@ -389,7 +389,7 @@ new_effect {
 }
 effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
        EXN a
-         (fun (p:ex_post a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
+         (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r)) (* WP *)
 
 unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
@@ -629,7 +629,7 @@ assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p () = ()
 val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()

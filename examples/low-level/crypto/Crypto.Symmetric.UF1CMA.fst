@@ -23,7 +23,7 @@ module RR = FStar.Monotonic.RRef
 module MAC = Crypto.Symmetric.MAC
 
 
-//16-12-19 should go to HyperStack? 
+//16-12-19 should go to HyperStack?
 
 
 // should go elsewhere
@@ -34,7 +34,7 @@ type alg = macAlg
 let alg_of_id = macAlg_of_id
 
 (** Length of the single-use part of the key *)
-let keylen (i:id) = 
+let keylen (i:id) =
   match aeadAlg_of_id i with
   | AES_128_GCM       -> 16ul
   | AES_256_GCM       -> 16ul
@@ -48,7 +48,7 @@ let skeylen (i:id) =  // can't refine with {skeyed i} here
   | _                 ->  0ul // dummy; never allocated.
 
 (** Does the algorithm use a static key? *)
-let skeyed (i:id) = 
+let skeyed (i:id) =
   match aeadAlg_of_id i with
   | AES_128_GCM       -> true
   | AES_256_GCM       -> true
@@ -59,7 +59,7 @@ type skey (rgn:rid) (i:id) =
 
 //16-10-16 can't make it abstract?
 (** Conditionally-allocated abstract key (accessed only in this module) *)
-let akey (rgn:rid) (i:id) = 
+let akey (rgn:rid) (i:id) =
   o:option (skey rgn i) {Some? o <==> skeyed i}
   // using a sum type for KreMLin. Was: if skeyed i then skey rgn i else unit
 
@@ -154,7 +154,7 @@ noeq type state (i:id) =
     log: log_ref i region ->
     state i
 
-let live_ak #r (#i:id) m (ak:akey r (fst i)) = 
+let live_ak #r (#i:id) m (ak:akey r (fst i)) =
   skeyed (fst i) ==> live m (get_skey #r #(fst i) ak)
 
 let mac_is_fresh (i:id) (region:erid) m0 (st:state i) m1 =
@@ -182,8 +182,8 @@ val alloc: region:erid -> i:id
   -> k:lbuffer (UInt32.v (keylen (fst i))){frameOf k == region}
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
-  (ensures  (fun m0 st m1 -> 
-    genPost i region m0 st m1 /\ 
+  (ensures  (fun m0 st m1 ->
+    genPost i region m0 st m1 /\
     Buffer.modifies_1 k m0 m1 ))
 let alloc region i ak k =
   let h0 = ST.get () in
@@ -200,7 +200,7 @@ let alloc region i ak k =
   assert(modifies_ref region TSet.empty h0 hz);
   MAC.encode_r r rb;
   let h2 = ST.get () in
-  if skeyed (fst i) 
+  if skeyed (fst i)
   then lemma_reveal_modifies_1 (MAC.as_buffer r) h1 h2
   else  lemma_reveal_modifies_2 (MAC.as_buffer r) rb h1 h2;
   lemma_intro_modifies_1 k h0 h2;
@@ -212,21 +212,21 @@ let alloc region i ak k =
     begin
     log_cmp_monotonic i;
     let log = RR.m_alloc #(log i) #log_cmp region (snd i, None) in
-    let h4 = ST.get() in 
+    let h4 = ST.get() in
     lemma_intro_modifies_1 k h0 h4;
     State #i #region r s log
     end
   else
-    let h4 = ST.get() in 
+    let h4 = ST.get() in
     lemma_intro_modifies_1 k h0 h4;
     State #i #region r s ()
 
 
 val gen: region:erid -> i:id -> ak:akey region (fst i) -> ST (state i)
   (requires (fun m0 -> live_ak m0 ak))
-  (ensures (fun m0 st m1 -> 
-    genPost i region m0 st m1 /\ 
-    modifies_one region m0 m1 /\ 
+  (ensures (fun m0 st m1 ->
+    genPost i region m0 st m1 /\
+    modifies_one region m0 m1 /\
     modifies_ref region TSet.empty m0 m1 ))
 let gen region i ak =
   let len = keylen (fst i) in
@@ -234,7 +234,7 @@ let gen region i ak =
   let h1 = ST.get() in
   random (UInt32.v len) k;
   let st =  alloc region i ak k in
-  let h3 = ST.get() in 
+  let h3 = ST.get() in
   lemma_reveal_modifies_1 k h1 h3;
   st
 
@@ -243,12 +243,12 @@ val coerce: region:erid -> i:id{~(authId i)}
   -> k:lbuffer (UInt32.v (keylen (fst i))){frameOf k == region}
   -> ST (state i)
   (requires (fun m0 -> live m0 k /\ live_ak m0 ak))
-  (ensures (fun m0 st m1 -> 
-    genPost i region m0 st m1 /\ 
+  (ensures (fun m0 st m1 ->
+    genPost i region m0 st m1 /\
     modifies_1 k m0 m1))
 let coerce region i ak k =
-  alloc region i ak k 
-  
+  alloc region i ak k
+
 
 (** Hash accumulators (several per instance)
 
@@ -310,7 +310,7 @@ val start: #i:id -> st:state i -> StackInline (accBuffer i)
   (ensures  (fun h0 a h1 ->
     Buffer.frameOf (MAC.as_buffer a.a) == h1.tip /\
     ~(h0 `Buffer.contains` (MAC.as_buffer (abuf a))) /\
-    (mac_log ==> 
+    (mac_log ==>
       HS.sel h1 (alog a) = Seq.createEmpty /\
       ~(h0 `HS.contains` (alog a))) /\
     acc_inv st a h1 /\
@@ -364,7 +364,7 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
      else
        Buffer.modifies_1 (MAC.as_buffer acc.a) h0 h1) ))
 
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 200"
 let update #i st acc w =
   let h0 = ST.get () in
   if mac_log then
@@ -543,7 +543,7 @@ let verify #i st acc tag =
       MAC.frame_sel_elem h2 h3 st.r;
       MAC.frame_sel_elem h0 h2 acc.a;
       RR.m_recall #st.region #(log i) #(log_cmp #i) (ilog st.log);
-      modifies_verify_aux (ilog st.log) (alog acc) (MAC.as_buffer acc.a) computed 
+      modifies_verify_aux (ilog st.log) (alog acc) (MAC.as_buffer acc.a) computed
         h0 h1 h2 h3;
       let t = read_word 16ul computed in
       let vs = !(alog acc) in

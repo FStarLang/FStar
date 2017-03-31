@@ -83,7 +83,7 @@ type term' =
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
-  | Tm_ascribed   of term * either<term,comp> * option<lident>   (* an effect label is the third arg, filled in by the type-checker *)
+  | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
@@ -91,6 +91,7 @@ type term' =
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
+and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
   | Pat_constant of sconst
   | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
@@ -450,6 +451,7 @@ val fv_eq:          fv -> fv -> bool
 val fv_eq_lid:      fv -> lident -> bool
 val range_of_fv:    fv -> range
 val lid_of_fv:      fv -> lid
+val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool

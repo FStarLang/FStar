@@ -287,6 +287,20 @@ let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 
+type 'value imap = (Z.t, 'value) BatHashtbl.t
+let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
+let imap_clear (s:('value imap)) = BatHashtbl.clear s
+let imap_add (m:'value imap) k (v:'value) = BatHashtbl.add m k v
+let imap_of_list (l: (Z.t * 'value) list) =
+  let s = BatHashtbl.create (BatList.length l) in
+  FStar_List.iter (fun (x,y) -> imap_add s x y) l;
+  s
+let imap_try_find (m:'value imap) k = BatHashtbl.find_option m k
+let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
+let imap_remove (m:'value imap) k = BatHashtbl.remove m k
+let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
+let imap_copy (m:'value imap) = BatHashtbl.copy m
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
@@ -345,8 +359,8 @@ let replace_chars (s:string) (c:char) (by:string) =
   BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let splitlines s = BatString.nsplit s "\n"
-let split s sep = BatString.nsplit s sep
+let split s sep = if s = "" then [""] else BatString.nsplit s sep
+let splitlines s = split s "\n"
 
 let iof = int_of_float
 let foi = float_of_int
@@ -833,7 +847,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out filename) json
+  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
     try

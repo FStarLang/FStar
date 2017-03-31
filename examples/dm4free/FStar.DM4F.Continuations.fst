@@ -12,9 +12,9 @@ let bind (ans:Type) (a:Type) (b:Type) (m : cont ans a) (f : a -> Tot (cont ans b
 (* let bind1 a b m f : Tot (cont b) = fun k -> bind a b m f k *)
 
 (* Sum type with explicit type anotations to bypass current lack of implicit arguments *)
-noeq type either : Type 'ua -> Type 'ub -> Type u#(1 + max 'ua 'ub) =
-| L : (a:Type 'ua) -> (b:Type 'ub) -> a -> either a b
-| R : (a:Type 'ua) -> (b:Type 'ub) -> b -> either a b
+noeq type either : Type u#a -> Type u#b -> Type u#(1 + max a b) =
+| L : (a:Type u#a) -> (b:Type u#b) -> a -> either a b
+| R : (a:Type u#a) -> (b:Type u#b) -> b -> either a b
 
 // Excluded-middle relative to ans : cont (either a (a -> M ans))
 // This could eventually be an action for CONT
@@ -48,12 +48,11 @@ let reset (ans:Type) (h:(unit -> Tot (cont ans ans))) (k: ans -> M ans) : M ans 
   let h1 = (h0 id <: M ans) in
   k h1
 
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   CONT (ans:Type) : a:Type -> Effect
   with repr = cont ans
      ; return = return ans
      ; bind = bind ans
-  and effect_actions
 //    callcc = callcc ans
 //    em     = em ans
 //    shift  = shift ans
@@ -61,7 +60,7 @@ reifiable reflectable new_effect_for_free {
 }
 
 
-reifiable reflectable new_effect_for_free CONTINUATION = CONT False
+reifiable reflectable new_effect CONTINUATION = CONT False
 
 (*
 let repr (a:Type)
@@ -100,9 +99,95 @@ let em2 (a:Type) : CONTINUATION?.repr (either a (a -> Tot False)) (em_wp a)
       end
 
 
-(*
-// TODO : to be investigated ./FStar.DM4F.Continuations.fst(19,2-19,3): (Error) assertion failed
-reifiable let excluded_middle (a:Type)
+
+ let excluded_middle (a:Type)
   : CONTINUATION (either a (a -> Tot False)) (em_wp a)
   = CONTINUATION?.reflect (em2 a)
-*)
+
+let callcc_wp (a b:Type)
+  (f : ((a ->  (b -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0) ->  (a -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0))
+  (k : a -> (False -> Type0) -> Type0)
+  : (False -> Type0) -> Type0 =
+  let g (x:a) (k0: b -> (False -> Type0) -> Type0) : (False -> Type0) -> Type0 = k x in
+  let fg : (a -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0 = f g in
+  fg k
+
+
+(* Something does not verify here wrt to Pure.bind ; Hope it is only a monotonicity problem *)
+#set-options "--admit_smt_queries true"
+let callcc_ (a:Type) (b:Type)
+  (specf : ((a ->  (b -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0) ->  (a -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0))
+  (f : (speccont:(a ->  (b -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0) ->
+        cont:(xa:a -> CONTINUATION?.repr b (speccont xa)) ->
+        CONTINUATION?.repr a (specf speccont)))
+  : CONTINUATION?.repr a (callcc_wp a b specf) =
+  fun (speck:(a -> (False -> Type0) -> Type0))
+    (k : (xa:a -> PURE False (speck xa))) ->
+    let specg (x:a) (speck0:b -> (False -> Type0) -> Type0) : (False -> Type0) -> Type0 = speck x in
+    let g0 (xa:a) : CONTINUATION?.repr b (specg xa) =
+      fun (speck0:b -> (False -> Type0) -> Type0)
+        (k0:(xb:b) -> PURE False (speck0 xb)) ->
+        k xa
+    in
+    (* let g (xa:a) : CONTINUATION a (specg xa) = CONTINUATION?.reflect (g0 xa) in *)
+    let fg : CONTINUATION?.repr a (specf specg) = f specg g0 in
+    fg speck k
+    (* reify (fg ()) speck k *)
+#set-options "--admit_smt_queries false"
+
+
+(* TODO : To be investigated *)
+(* ./FStar.DM4F.Continuations.fst(143,21-143,22) : (Error) Expected expression of type "(CONTINUATION_repr a (specf speccont))"; got expression "a" of type "Type" *)
+
+(* TODO : Also, replacing CONTINUATION by CONTINUATION?.repr as the result of f results in z3 warning about multiple undefined symbols... *)
+(* let callcc_elab (a b:Type) *)
+(*   (specf : ((a ->  (b -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0) ->  (a -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0)) *)
+(*   (f : (speccont:(a ->  (b -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0) -> *)
+(*         cont:(xa:a -> CONTINUATION b (speccont xa)) -> *)
+(*         CONTINUATION a (specf speccont))) *)
+(*         : CONTINUATION a (callcc_wp a b specf) = *)
+(*   let f0  (speccont:(a ->  (b -> (False -> Type0) -> Type0) -> (False -> Type0) -> Type0)) *)
+(*           (cont:(xa:a -> CONTINUATION?.repr b (speccont xa))) *)
+(*           : CONTINUATION?.repr a (specf speccont) *)
+(*           = *)
+(*           let cont0 (xa:a) : CONTINUATION b (speccont xa) = CONTINUATION?.reflect (cont xa) in *)
+(*           reify (f speccont cont0) *)
+(*   in CONTINUATION?.reflect (callcc_ a b specf f0) *)
+
+
+
+
+
+
+
+(* To be done when we have true indexed effects *)
+
+
+(* let callcc_wp (ans a b:Type) *)
+(*   (f : ((a ->  (b -> (ans -> Type0) -> Type0) -> (ans -> Type0) -> Type0) ->  (a -> (ans -> Type0) -> Type0) -> (ans -> Type0) -> Type0)) *)
+(*   (k : a -> (ans -> Type0) -> Type0) *)
+(*   : (ans -> Type0) -> Type0 = *)
+(*   let g (x:a) (k0: b -> (ans -> Type0) -> Type0) : (ans -> Type0) -> Type0 = k x in *)
+(*   let fg : (a -> (ans -> Type0) -> Type0) -> (ans -> Type0) -> Type0 = f g in *)
+(*   fg k *)
+
+
+(* let callcc (ans:Type) (a:Type) (b:Type) *)
+(*   (specf : ((a ->  (b -> (ans -> Type0) -> Type0) -> (ans -> Type0) -> Type0) ->  (a -> (ans -> Type0) -> Type0) -> (ans -> Type0) -> Type0)) *)
+(*   (f : (speccont:(a ->  (b -> (ans -> Type0) -> Type0) -> (ans -> Type0) -> Type0) -> *)
+(*         cont:(xa:a -> CONT ans b (speccont xa)) -> *)
+(*         CONT ans a (specf speccont))) *)
+(*   : CONT?.repr ans a = *)
+(*   fun (speck:(a -> (ans -> Type0) -> Type0)) *)
+(*     (k : (xa:a -> PURE ans (speck xa))) -> *)
+(*     let specg (x:a) (speck0:b -> (ans -> Type0) -> Type0) : (ans -> Type0) -> Type0 = speck x in *)
+(*     let g0 (xa:a) : CONT?.repr ans a (specg xa) = *)
+(*       fun (speck0:b -> (ans -> Type0) -> Type0) *)
+(*         (k0:(xb:b) -> PURE ans (speck0 xb)) -> *)
+(*         k xa *)
+(*     in *)
+(*     let g (xa:a) : CONT ans a (specg xa) = CONT?.reflect (g0 xa) in *)
+(*     let fg () : CONT ans a (specf specg) = f specg g in *)
+(*     reify (fg ()) speck k *)
+
+

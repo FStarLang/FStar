@@ -445,11 +445,11 @@ and p_fsdoc (doc, kwd_args) =
       | [] -> empty
       | kwd_args ->
         let process_kwd_arg (kwd, arg) =
-          (* Is there some separator between the keyword and the argument ? rarrow ? *)
           str "@" ^^ str kwd ^^ space ^^ str arg
         in
         hardline ^^ separate_map hardline process_kwd_arg kwd_args ^^ hardline
   in
+  (* TODO : these newlines should not always be there *)
   hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
 and p_rawDecl d = match d.d with
@@ -488,8 +488,6 @@ and p_rawDecl d = match d.d with
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
-  | NewEffectForFree (ne) ->
-    str "new_effect_for_free" ^^ space ^^ p_newEffect ne
   | Pragma p ->
     p_pragma p
   | Fsdoc doc ->
@@ -559,7 +557,7 @@ and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
   let sep = if use_of then str "of" else colon in
   let uid_doc = p_uident uid in
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
+  optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
 and p_letbinding (pat, e) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
@@ -587,22 +585,17 @@ and p_letbinding (pat, e) =
 and p_newEffect = function
   | RedefineEffect (lid, bs, t) ->
     p_effectRedefinition lid bs t
-  | DefineEffect (lid, bs, t, eff_decls, action_decls) ->
-    p_effectDefinition lid bs t eff_decls action_decls
+  | DefineEffect (lid, bs, t, eff_decls) ->
+    p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
     surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
 
-and p_effectDefinition uid bs t eff_decls action_decls =
+and p_effectDefinition uid bs t eff_decls =
   braces_with_nesting (
     group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
-    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls) ^^
-    p_actionDecls action_decls
+    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls)
     )
-
-and p_actionDecls = function
-  | [] -> empty
-  | l -> break1 ^^ prefix2 (str "and actions") (separate_break_map semi p_effectDecl l)
 
 and p_effectDecl d = match d.d with
   | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
@@ -814,8 +807,10 @@ and p_term e = match (unparen e).tm with
 and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
 
 and p_noSeqTerm' e = match (unparen e).tm with
-  | Ascribed (e, t) ->
+  | Ascribed (e, t, None) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
+  | Ascribed (e, t, Some tac) ->
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t ^/^ str "by" ^/^ p_typ tac)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2)

@@ -287,7 +287,7 @@ let gen_wps_for_free
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
-      ) (Inr result_comp)
+      ) (Inr result_comp, None)
     ) (Some (Inl (U.lcomp_of_comp result_comp)))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
@@ -458,11 +458,11 @@ let gen_wps_for_free
           let guard_free =  S.fv_to_tm (S.lid_as_fv Const.guard_free Delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
-          U.close_forall binders pattern_guarded_body
+          U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
     let body  = U.abs gamma (
-      U.mk_forall k (U.mk_imp
+      U.mk_forall_no_univ k (U.mk_imp
         equiv
         (U.mk_app (S.bv_to_name wp) (args_of_binders wp_args @ [ S.as_arg (S.bv_to_name k) ])))
     ) ret_gtot_type in
@@ -475,7 +475,7 @@ let gen_wps_for_free
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     let x = S.gen_bv "x" None S.tun in
-    let body = U.mk_forall x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
+    let body = U.mk_forall_no_univ x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in
@@ -704,8 +704,8 @@ and star_type' env t =
   | Tm_meta (t, m) ->
       mk (Tm_meta (star_type' env t, m))
 
-  | Tm_ascribed (e, Inl t, something) ->
-      mk (Tm_ascribed (star_type' env e, Inl (star_type' env t), something))
+  | Tm_ascribed (e, (Inl t, None), something) ->
+      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None), something))
 
   | Tm_ascribed _ ->
       raise (Err (BU.format1 "Tm_ascribed is outside of the definition language: %s"
@@ -789,7 +789,7 @@ let mk_return env (t: typ) (e: term) =
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
   let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
-  U.abs [ S.mk_binder p ] body None
+  U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
 
@@ -963,7 +963,7 @@ and infer (env: env) (e: term): nm * term * term =
       let u_body, u_what =
           let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
           (* TODO : consider removing this ascription *)
-          U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
+          U.ascribe u_body (Inr comp, None), Some (Inl (U.lcomp_of_comp comp))
       in
 
       let s_body = close s_binders s_body in
@@ -976,21 +976,9 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      // Can't trust the [t] type to still carry an M annotation... because the
-      // F* type-checker silently drops it. So, for now, we have a whitelist of
-      // combinators that we know for sure don't return an M.
-      let _, t = Env.lookup_lid env.env lid in
-      let txt = text_of_lid lid in
-//      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None";
-//                              "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation"; "op_Equality" ] in
-//      // BU.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
-//      if List.existsb (fun s -> BU.starts_with txt ("Prims." ^ s)) allowed_prefixes then
-        // Need to erase universes here! This is an F* type that is fully annotated.
-        N (normalize t), e, e
-//      else
-//        raise (Err (BU.format1 "The %s constructor has not been whitelisted \
-//          for the definition language; if this is a function application, \
-//          consider using [inline]" txt))
+      let _, t = fst <| Env.lookup_lid env.env lid in
+      // Need to erase universes here! This is an F* type that is fully annotated.
+      N (normalize t), e, e
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
@@ -1137,17 +1125,21 @@ and mk_match env e0 branches f =
       ) s_branches in
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
-    let s_e = U.abs [ S.mk_binder p ] (mk (Tm_match (s_e0, s_branches))) None in
+    let s_e =
+      U.abs [ S.mk_binder p ]
+            (mk (Tm_match (s_e0, s_branches)))
+            (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
+    in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
-    mk (Tm_ascribed (s_e, Inl t1_star, None)) ,
+    mk (Tm_ascribed (s_e, (Inl t1_star, None), None)) ,
     mk (Tm_match (u_e0, u_branches))
   end else begin
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
     let t1_star = t1 in
     N t1,
-    mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), Inl t1_star, None)),
+    mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), (Inl t1_star, None), None)),
     mk (Tm_match (u_e0, u_branches))
   end
 
@@ -1190,11 +1182,11 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       // e2* p
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
-      let s_e2 = U.abs x_binders s_e2 None in
+      let s_e2 = U.abs x_binders s_e2 (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))) in
       // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
-      U.abs [ S.mk_binder p ] body None,
+      U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 

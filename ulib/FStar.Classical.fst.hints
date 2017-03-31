@@ -1,5 +1,5 @@
 [
-  "œﬁÒ∑`\u00139\u007fˆ\u001bß\u0010§_˘Œ",
+  "-„ﬂRBù0©S\rnYº†]N",
   [
     [
       "FStar.Classical.give_witness",
@@ -79,6 +79,7 @@
       ],
       0
     ],
+    [ "FStar.Classical.forall_impl_intro", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Classical.impl_intro_gen",
       1,

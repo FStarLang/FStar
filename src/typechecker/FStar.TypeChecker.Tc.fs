@@ -32,6 +32,7 @@ open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.TcTerm
 module S  = FStar.Syntax.Syntax
+module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
@@ -526,25 +527,59 @@ and cps_and_elaborate env ed =
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
 
+  (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
+  (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
   let lift_from_pure_wp =
       match (SS.compress return_wp).n with
       | Tm_abs (b1 :: b2 :: bs, body, what) ->
-          let b1,b2, body =
-              match SS.open_term [b1 ; b2] (U.abs bs body None) with
-                  | [b1 ; b2], body -> b1, b2, body
-                  | _ -> failwith "Impossible : open_term not preserving binders arity"
-          in
-          // WARNING : pushing b1 and b2 in env might break the well-typedness invariant
-          let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
-          let wp_b1 = N.normalize [ N.Beta ] env0 (mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ]))) in
-          let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
-          (* TODO : Should check that what' is Tot Type0 *)
+        let b1,b2, body =
+          match SS.open_term [b1 ; b2] (U.abs bs body None) with
+          | [b1 ; b2], body -> b1, b2, body
+          | _ -> failwith "Impossible : open_term not preserving binders arity"
+        in
+        (* WARNING : pushing b1 and b2 in env might break the well-typedness *)
+        (* invariant but we need them for normalization *)
+        let env0 = push_binders (DMFF.get_env dmff_env) [b1 ; b2] in
+        let wp_b1 =
+          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
+          N.normalize [ N.Beta ] env0 raw_wp_b1
+        in
+        let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
+
+        (* We check that what' is Tot Type0 *)
+        let fail () =
+          let error_msg =
+            BU.format2 "The body of return_wp (%s) should be of type Type0 but is of type %s"
+              (Print.term_to_string body)
+              (match what' with
+               | None -> "None"
+               | Some (Inl lc) -> Print.lcomp_to_string lc
+               | Some (Inr (lid, _)) -> FStar.Ident.text_of_lid lid)
+          in failwith error_msg
+        in
+        begin match what' with
+        | None -> fail ()
+        | Some (Inl lc) ->
+          if U.is_pure_or_ghost_lcomp lc
+          then
+            let g_opt = Rel.try_teq true env lc.res_typ U.ktype0 in
+            match g_opt with
+            | Some g' -> Rel.force_trivial_guard env g'
+            | None -> fail ()
+          else fail ()
+        | Some (Inr (lid, _)) ->
+          if not (U.is_pure_effect lid) then fail ()
+        end ;
+
+        let wp =
           let t2 = (fst b2).sort in
           let pure_wp_type = DMFF.double_star t2 in
-          let wp = S.gen_bv "wp" None pure_wp_type in
-          // fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a
-          let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-          U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
+          S.gen_bv "wp" None pure_wp_type
+        in
+
+        (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
+        let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
+        U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
       | _ ->
           failwith "unexpected shape for return"
   in
@@ -894,34 +929,41 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let lift, lift_wp =
       match sub.lift, sub.lift_wp with
       | None, None ->
-          failwith "Impossible"
+        failwith "Impossible"
       | lift, Some (_, lift_wp) ->
-          (* Covers both the "classic" format and the reifiable case. *)
-          lift, check_and_gen env lift_wp expected_k
+        (* Covers both the "classic" format and the reifiable case. *)
+        lift, check_and_gen env lift_wp expected_k
+      (* Sub-effect for free case *)
       | Some (what, lift), None ->
-          let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
-          let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
-          let _ = recheck_debug "lift-wp" env lift_wp in
-          let _ = recheck_debug "lift-elab" env lift_elab in
-          Some ([], lift_elab), ([], lift_wp)
+        if Env.debug env (Options.Other "ED") then
+            BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
+        let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+        let lift, comp, _ = tc_term env lift in
+        (* TODO : Check that comp is pure ? *)
+        let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
+        let _ = recheck_debug "lift-wp" env lift_wp in
+        let _ = recheck_debug "lift-elab" env lift_elab in
+        Some ([], lift_elab), ([], lift_wp)
     in
     let lax = env.lax in
-    let env = {env with lax=true} in //we do not expect the lift to verify, since that requires internalizing monotonicity of WPs
+    (* we do not expect the lift to verify, *)
+    (* since that requires internalizing monotonicity of WPs *)
+    let env = {env with lax=true} in
     let lift = match lift with
-      | None -> None
-      | Some (_, lift) ->
-        let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
-        let wp_a = S.new_bv None wp_a_src in
-        let a_typ = S.bv_to_name a in
-        let wp_a_typ = S.bv_to_name wp_a in
-        let repr_f = repr_type sub.source a_typ wp_a_typ in
-        let repr_result =
-          let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
-          let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
-          repr_type sub.target a_typ lift_wp_a in
-        let expected_k =
-          U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
-                      (S.mk_Total repr_result) in
+    | None -> None
+    | Some (_, lift) ->
+      let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
+      let wp_a = S.new_bv None wp_a_src in
+      let a_typ = S.bv_to_name a in
+      let wp_a_typ = S.bv_to_name wp_a in
+      let repr_f = repr_type sub.source a_typ wp_a_typ in
+      let repr_result =
+        let lift_wp = N.normalize [N.EraseUniverses; N.AllowUnboundUniverses] env (snd lift_wp) in
+        let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+        repr_type sub.target a_typ lift_wp_a in
+      let expected_k =
+        U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
+                    (S.mk_Total repr_result) in
 //          printfn "LIFT: Expected type for lift = %s\n" (Print.term_to_string expected_k);
         let expected_k, _, _ =
           tc_tot_or_gtot_term env expected_k in
@@ -1062,11 +1104,32 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
               | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
               | _ -> quals
           in
+          // drop inline_for_extraction unless pure (otherwise, this now
+          // generates beta-redexes that kreMLin is particularly unhappy with)
+          let quals = List.choose (function
+            | Inline_for_extraction ->
+                if not (List.for_all (fun lb ->
+                  let ok = is_pure_or_ghost_function lb.lbtyp in
+                  if not ok then
+                    BU.print1_warning "Dropping inline_for_extraction from %s because it is not a pure function\n"
+                      (SP.lbname_to_string lb.lbname);
+                  ok
+                ) (snd lbs)) then
+                  None
+                else
+                  Some Inline_for_extraction
+            | q ->
+                Some q
+          ) quals in
           Sig_let(lbs, r, lids, quals, attrs), lbs
       | _ -> failwith "impossible"
     in
 
-    (* 4. Print the type of top-level lets, if requested *)
+    (* 4. Record the type of top-level lets, and log if requested *)
+    snd lbs |> List.iter (fun lb ->
+        let fv = right lb.lbname in
+        Common.insert_identifier_info (Inr fv) lb.lbtyp (range_of_fv fv));
+
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
           let should_log = match Env.try_lookup_val_decl env (right lb.lbname).fv_name.v with
@@ -1319,7 +1382,7 @@ let check_module env m =
   then begin
     let normalize_toplevel_lets = function
         | Sig_let ((b, lbs), r, ids, qs, attrs) ->
-            let n = N.normalize [N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
+            let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }

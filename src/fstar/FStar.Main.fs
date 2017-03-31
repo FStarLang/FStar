@@ -109,7 +109,7 @@ let go _ =
           let filename = List.hd filenames in
 
 
-          let filename = FStar.Parser.Dep.try_convert_file_name_to_windows filename in
+          let filename = FStar.Common.try_convert_file_name_to_mixed filename in
 
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
