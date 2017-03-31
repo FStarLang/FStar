@@ -154,10 +154,13 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
+    (* The trace need to be saved first so that it is not overwritten *)
+    (* by another exception handler in OCaml (only one global trace is kept) *)
+    let trace = Util.trace_of_exn e in
     (begin
         if FStar.Errors.handleable e then FStar.Errors.handle_err false e;
         if (Options.trace_error()) then
-          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
         else if not (FStar.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
      end;

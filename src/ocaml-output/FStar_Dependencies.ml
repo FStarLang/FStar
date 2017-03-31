@@ -18,18 +18,19 @@ let find_deps_if_needed :
                      "Dependency analysis failed; reverting to using only the files provided";
                    files)
               | uu____50 ->
-                  let deps = FStar_List.rev deps  in
-                  let deps =
+                  let deps1 = FStar_List.rev deps  in
+                  let deps2 =
                     let uu____56 =
-                      let _0_300 = FStar_Util.basename (FStar_List.hd deps)
-                         in
-                      _0_300 = "prims.fst"  in
+                      let uu____57 =
+                        let uu____58 = FStar_List.hd deps1  in
+                        FStar_Util.basename uu____58  in
+                      uu____57 = "prims.fst"  in
                     if uu____56
-                    then FStar_List.tl deps
+                    then FStar_List.tl deps1
                     else
                       (FStar_Util.print_error
                          "dependency analysis did not find prims.fst?!";
                        FStar_All.exit (Prims.parse_int "1"))
                      in
-                  deps))
+                  deps2))
   

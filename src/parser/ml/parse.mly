@@ -847,11 +847,16 @@ effectDecl:
      ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
-  quident SQUIGGLY_RARROW quident EQUALS simpleTerm
-    {let (src_eff, _2, tgt_eff, _4, lift) = ($1, (), $3, (), $5) in
-      ( { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } )}
-| quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS simpleTerm RBRACE
-    {let (src_eff, _2, tgt_eff, _4, x0, _20, y0, _7) = ($1, (), $3, (), $5, (), $7, ()) in
+  binders COLON appTerm SQUIGGLY_RARROW appTerm liftDefinition
+    {let (effect_binders, _2, msource, _4, mdest, lift_op) = ($1, (), $3, (), $5, $6) in
+      ( { effect_binders ; msource ; mdest ; lift_op } )}
+
+liftDefinition:
+  EQUALS simpleTerm
+    {let (_1, lift) = ((), $2) in
+    ( NonReifiableLift lift )}
+| LBRACE IDENT EQUALS simpleTerm RBRACE
+    {let (_1, x0, _20, y0, _4) = ((), $2, (), $4, ()) in
 let lift2_opt =
       ( None )
 in
@@ -865,10 +870,8 @@ in
        match lift2_opt with
        | None ->
           begin match lift1 with
-          | ("lift", lift) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift }
-          | ("lift_wp", lift_wp) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
+          | ("lift", lift) -> LiftForFree lift
+          | ("lift_wp", lift_wp) -> NonReifiableLift lift_wp
           | _ ->
              raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
           end
@@ -879,10 +882,10 @@ in
 	          | "lift", "lift_wp" -> tm2, tm1
 	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
-          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
+          ReifiableLift (lift, lift_wp)
      )}
-| quident SQUIGGLY_RARROW quident LBRACE IDENT EQUALS simpleTerm SEMICOLON IDENT EQUALS simpleTerm RBRACE
-    {let (src_eff, _2, tgt_eff, _4, x0, _20, y0, _1000, id000, _200, y00, _7) = ($1, (), $3, (), $5, (), $7, (), $9, (), $11, ()) in
+| LBRACE IDENT EQUALS simpleTerm SEMICOLON IDENT EQUALS simpleTerm RBRACE
+    {let (_1, x0, _20, y0, _1000, id000, _200, y00, _4) = ((), $2, (), $4, (), $6, (), $8, ()) in
 let lift2_opt =
   let y0 = y00 in
   let _20 = _200 in
@@ -912,10 +915,8 @@ in
        match lift2_opt with
        | None ->
           begin match lift1 with
-          | ("lift", lift) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift }
-          | ("lift_wp", lift_wp) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
+          | ("lift", lift) -> LiftForFree lift
+          | ("lift_wp", lift_wp) -> NonReifiableLift lift_wp
           | _ ->
              raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
           end
@@ -926,7 +927,7 @@ in
 	          | "lift", "lift_wp" -> tm2, tm1
 	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
-          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
+          ReifiableLift (lift, lift_wp)
      )}
 
 qualifier:

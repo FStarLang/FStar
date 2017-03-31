@@ -580,15 +580,15 @@ let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names * comp =
     let s, us' = univ_var_opening us in
     us', subst_comp s c
 
+let univ_var_closing (us:univ_names) =
+  let n = List.length us - 1 in
+  us |> List.mapi (fun i u -> UD(u, n - i))
+
 let close_univ_vars (us:univ_names) (t:term) : term =
-    let n = List.length us - 1 in
-    let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
-    subst s t
+  subst (univ_var_closing us) t
 
 let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
-    let n = List.length us - 1 in
-    let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
-    subst_comp s c
+  subst_comp (univ_var_closing us) c
 
 let open_let_rec lbs (t:term) =
     if is_top_level lbs then lbs, t //top-level let recs are not opened
@@ -651,5 +651,34 @@ let opening_of_binders (bs:binders) =
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
 
 
-let open_sub_eff: sub_eff -> sub_eff = fun _ -> failwith ""
-let  close_sub_eff: sub_eff -> sub_eff = fun _ -> failwith ""
+let open_sub_eff (se:sub_eff) : univ_names * binders * sub_eff =
+  let univ_sub, univ_names = univ_var_opening se.sub_eff_univs in
+  let binders = subst_binders univ_sub se.sub_eff_binders in
+  let binders, binders_sub = open_binders' binders in
+  let sub = shift_subst (List.length binders_sub) univ_sub @ binders_sub in
+  let sub_ts = [sub], None in
+  let se = {
+      sub_eff_univs = univ_names ;
+      sub_eff_binders = binders ;
+      sub_eff_source = subst_comp_typ' sub_ts se.sub_eff_source ;
+      sub_eff_target = subst_comp_typ' sub_ts se.sub_eff_target ;
+      sub_eff_lift_wp = U.map_opt se.sub_eff_lift_wp (subst sub) ;
+      sub_eff_lift = U.map_opt se.sub_eff_lift (subst sub) ;
+    }
+  in
+  univ_names, binders, se
+
+
+let close_sub_eff (se : sub_eff) : sub_eff =
+  let univ_sub = univ_var_closing se.sub_eff_univs in
+  let binders = subst_binders univ_sub se.sub_eff_binders in
+  let binders_sub = closing_subst binders in
+  let sub = shift_subst (List.length binders_sub) univ_sub @ binders_sub in
+  let sub_ts = [sub], None in
+  { se with
+    sub_eff_binders = close_binders binders ;
+    sub_eff_source = subst_comp_typ' sub_ts se.sub_eff_source ;
+    sub_eff_target = subst_comp_typ' sub_ts se.sub_eff_target ;
+    sub_eff_lift_wp = U.map_opt se.sub_eff_lift_wp (subst sub) ;
+    sub_eff_lift = U.map_opt se.sub_eff_lift (subst sub) ;
+  }

@@ -516,7 +516,7 @@ let rec sigelt_to_string x = match x with
   | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
   | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
   | Sig_sub_effect (se, r) -> // TODO: THIS HAS TO BE FIXED! the code is just written to support compilation
-    let se = Subst.open_sub_eff se in
+    (* let se = Subst.open_sub_eff se in *)
     let lift_wp = match se.sub_eff_lift_wp, se.sub_eff_lift with
       // TODO pretty-print this better
       | None, None ->

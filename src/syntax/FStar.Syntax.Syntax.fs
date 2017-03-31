@@ -483,14 +483,15 @@ let is_implicit = function Some (Implicit _) -> true | _ -> false
 let as_implicit = function true -> Some imp_tag | _ -> None
 
 let pat_bvs (p:pat) : list<bv> =
-    let rec aux b p = match p.v with
-        | Pat_dot_term _
-        | Pat_constant _ -> b
-        | Pat_wild x
-        | Pat_var x -> x::b
-        | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
-        | Pat_disj(p::_) -> aux b p
-        | Pat_disj [] -> failwith "impossible" in
+  let rec aux b p = match p.v with
+    | Pat_dot_term _
+    | Pat_constant _ -> b
+    | Pat_wild x
+    | Pat_var x -> x::b
+    | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
+    | Pat_disj(p::_) -> aux b p
+    | Pat_disj [] -> failwith "impossible"
+  in
   List.rev <| aux [] p
 
 (* Gen sym *)

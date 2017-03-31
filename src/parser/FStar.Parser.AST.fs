@@ -192,9 +192,14 @@ type lift_op =
   | ReifiableLift    of term * term //lift_wp, lift
   | LiftForFree      of term
 
+(* sub_effect (x1:t1) .. (xn:tn) (a:Type) : M y1 .. yj a ~> N z1 .. zl *)
 type lift = {
-  msource: lid;
-  mdest:   lid;
+  (* binders (x1:t1) .. (xn:tn) (a:Type) *)
+  effect_binders: list<binder>;
+  (* M y1 .. yj a *)
+  msource: term;
+  (* N z1 .. zl *)
+  mdest:   term;
   lift_op: lift_op;
 }
 

@@ -226,6 +226,10 @@ let head_and_args t =
         | _ -> t, args in
     aux [] t
 
+let split_universes =
+  let is_universe (_, imp) = imp = UnivApp in
+  BU.take is_universe
+
 let close env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
@@ -1155,8 +1159,7 @@ and desugar_comp r env t =
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
     then fail (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
-    let is_universe (_, imp) = imp = UnivApp in
-    let universes, args = BU.take is_universe args in
+    let universes, args = split_universes args in
     let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
     let first_arg, rest = List.hd args, List.tl args in
     let first_typ = desugar_typ env (fst first_arg) in
@@ -1782,6 +1785,44 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (bu
         else env in
     env, [se]
 
+and desugar_subeffect env l =
+  let env, effect_binders = desugar_binders env l.effect_binders in
+
+  let desugar_subeffect_comp_typ (t:AST.term)=
+    let head, args = head_and_args t in
+    let m = match head.tm with
+      (* TODO : maybe we should look up the name m in the environment to make sure it is defined *)
+      | Name m -> m
+      | _ -> failwith (BU.format1 "Sub effecting must happen between effects, found %s" (term_to_string head))
+    in
+    let univ_args, effect_args = split_universes args in
+    let univ_args = List.map (fun (u, _) -> desugar_universe u) univ_args in
+    let effect_args = desugar_args env effect_args in
+    {
+      comp_typ_name = m ;
+      comp_univs = univ_args ;
+      effect_args = effect_args ;
+      flags = []
+    }
+  in
+
+  let src = desugar_subeffect_comp_typ l.msource in
+  let dst = desugar_subeffect_comp_typ l.mdest in
+
+  let lift_wp, lift = match l.lift_op with
+    | NonReifiableLift t -> Some (desugar_term env t), None
+    | ReifiableLift (wp, t) -> Some (desugar_term env wp), Some (desugar_term env t)
+    | LiftForFree t -> None, Some (desugar_term env t)
+  in
+  Subst.close_sub_eff ({
+    sub_eff_univs = [];
+    sub_eff_binders = effect_binders;
+    sub_eff_source = src;
+    sub_eff_target = dst;
+    sub_eff_lift_wp = lift_wp;
+    sub_eff_lift = lift
+  })
+
 and desugar_decl env (d:decl) : (env_t * sigelts) =
   let trans_qual = trans_qual d.drange in
   match d.d with
@@ -1951,37 +1992,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     desugar_effect env d quals eff_name eff_binders eff_kind eff_decls actions false
 
   | SubEffect l ->
-    (* TODO : implement indexed effects *)
-
-    (* let lookup l = match Env.try_lookup_effect_name env l with *)
-    (*     | None -> raise (Error("Effect name " ^Print.lid_to_string l^ " not found", d.drange)) *)
-    (*     | Some l -> l *)
-    (* in *)
-    let src = {
-        comp_typ_name = l.msource ;
-        comp_univs = [] ;
-        effect_args = [] ;
-        flags = []
-      }
-    in
-    let dst = {
-        comp_typ_name = l.mdest ;
-        comp_univs = [] ;
-        effect_args = [] ;
-        flags = []
-      }
-    in
-    let lift_wp, lift = match l.lift_op with
-        | NonReifiableLift t -> Some (desugar_term env t), None
-        | ReifiableLift (wp, t) -> Some (desugar_term env wp), Some (desugar_term env t)
-        | LiftForFree t -> None, Some (desugar_term env t)
-    in
-    let se = Sig_sub_effect({sub_eff_univs = [];
-                             sub_eff_binders = [];
-                             sub_eff_source = src;
-                             sub_eff_target = dst;
-                             sub_eff_lift_wp = lift_wp;
-                             sub_eff_lift = lift }, d.drange) in
+    let se = Sig_sub_effect (desugar_subeffect env l, d.drange) in
     env, [se]
 
  let desugar_decls env decls =

@@ -297,20 +297,20 @@ let inst_tscheme_with_range (r:range) (t:tscheme) =
     us, Subst.set_use_range r t
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
-    match ed.binders with
-        | [] ->
-          let univs = ed.univs@us in
-          if List.length insts <> List.length univs
-          then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
-                            (string_of_int <| List.length univs) (string_of_int <| List.length insts)
-                            (Print.lid_to_string ed.mname) (Print.term_to_string t));
-          inst_tscheme_with (ed.univs@us, t) insts
-        | _  -> failwith (BU.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
+  match ed.binders with
+  | [] ->
+    let univs = ed.univs@us in
+    if List.length insts <> List.length univs
+    then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
+                      (string_of_int <| List.length univs) (string_of_int <| List.length insts)
+                      (Print.lid_to_string ed.mname) (Print.term_to_string t));
+    inst_tscheme_with (ed.univs@us, t) insts
+  | _  -> failwith (BU.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
 type tri =
-    | Yes
-    | No
-    | Maybe
+  | Yes
+  | No
+  | Maybe
 
 let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace check! *)
     let cur = current_module env in

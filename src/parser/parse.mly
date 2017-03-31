@@ -307,10 +307,13 @@ effectDecl:
      { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
-  | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
-      { { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift } }
-  | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident
-    LBRACE
+  | effect_binders=binders COLON msource=appTerm SQUIGGLY_RARROW mdest=appTerm lift_op=liftDefinition
+      { { effect_binders ; msource ; mdest ; lift_op } }
+
+liftDefinition:
+  | EQUALS lift=simpleTerm
+    { NonReifiableLift lift }
+  | LBRACE
       lift1=separated_pair(IDENT, EQUALS, simpleTerm)
       lift2_opt=ioption(separated_pair(SEMICOLON id=IDENT {id}, EQUALS, simpleTerm))
       /* might be nice for homogeneity if possible : ioption(SEMICOLON) */
@@ -319,10 +322,8 @@ subEffect:
        match lift2_opt with
        | None ->
           begin match lift1 with
-          | ("lift", lift) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = LiftForFree lift }
-          | ("lift_wp", lift_wp) ->
-             { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
+          | ("lift", lift) -> LiftForFree lift
+          | ("lift_wp", lift_wp) -> NonReifiableLift lift_wp
           | _ ->
              raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
           end
@@ -333,7 +334,7 @@ subEffect:
 	          | "lift", "lift_wp" -> tm2, tm1
 	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
-          { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
+          ReifiableLift (lift, lift_wp)
      }
 
 

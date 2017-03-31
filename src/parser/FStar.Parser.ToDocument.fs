@@ -487,7 +487,7 @@ and p_rawDecl d = match d.d with
   | NewEffect(ne) ->
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
-    str "sub_effect" ^^ space ^^ p_subEffect se
+    str "sub_effect" ^/+^ p_subEffect se
   | NewEffectForFree (ne) ->
     str "new_effect_for_free" ^^ space ^^ p_newEffect ne
   | Pragma p ->
@@ -612,18 +612,20 @@ and p_effectDecl d = match d.d with
                               (decl_to_string d))
 
 and p_subEffect lift =
-  let lift_op_doc =
-    let lifts =
-      match lift.lift_op with
-        | NonReifiableLift t -> ["lift_wp", t]
-        | ReifiableLift (t1, t2) -> ["lif_wp", t1 ; "lift", t2]
-        | LiftForFree t -> ["lift", t]
-    in
-    let p_lift (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm t) in
-    separate_break_map semi p_lift lifts
+  group (p_binders true lift.effect_binders) ^/^
+  prefix2 (colon ^^ space ^^ p_appTerm lift.msource ^^ space ^^ str "~>") (p_appTerm lift.mdest) ^^
+    space ^^ braces_with_nesting (p_liftDefinition lift.lift_op)
+
+and p_liftDefinition lift_op =
+  let lifts =
+    match lift_op with
+    | NonReifiableLift t -> ["lift_wp", t]
+    | ReifiableLift (t1, t2) -> ["lif_wp", t1 ; "lift", t2]
+    | LiftForFree t -> ["lift", t]
   in
-  prefix2 (p_quident lift.msource ^^ space ^^ str "~>") (p_quident lift.mdest) ^^
-    space ^^ braces_with_nesting lift_op_doc
+  let p_lift (kwd, t) = prefix2 (str kwd ^^ space ^^ equals) (p_simpleTerm t) in
+  separate_break_map semi p_lift lifts
+
 
 
 (* ****************************************************************************)
