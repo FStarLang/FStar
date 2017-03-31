@@ -84,22 +84,15 @@ let write_input in_write input =
   output_string in_write input;
   flush in_write
 
-(*let cnt = ref 0*)
-
 let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
-  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
-  output_string fc input;
-  close_out fc;*)
   let cmd = prog^" "^args in
   let (to_chd_r, to_chd_w) = Unix.pipe () in
   let (from_chd_r, from_chd_w) = Unix.pipe () in
   Unix.set_close_on_exec to_chd_w;
   Unix.set_close_on_exec from_chd_r;
   let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
-  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
                                to_chd_r from_chd_w Unix.stderr
   in
-  (*cnt := !cnt +1;*)
   Unix.close from_chd_w;
   Unix.close to_chd_r;
   let cin = Unix.in_channel_of_descr from_chd_r in
@@ -656,7 +649,7 @@ let mkdir_clean nm =
     let open Sys in
     Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
   let open Unix in
-  umask 0o002;
+  ignore (umask 0o002);
   try mkdir nm 0o777
   with Unix_error (EEXIST,_,_) ->
     remove_all_in_dir nm
@@ -903,3 +896,21 @@ let read_hints (filename: string): hints_db option =
    | Sys_error _ ->
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
+
+let get_num_cores () : int =
+  try match Sys.os_type with
+  | "Win32" -> Pervasives.int_of_string (Sys.getenv "NUMBER_OF_PROCESSORS")
+  | _ ->
+      let i = Unix.open_process_in "getconf _NPROCESSORS_ONLN" in
+      let close () = ignore (Unix.close_process_in i) in
+      try
+        let sin = Scanf.Scanning.from_channel i in
+        Scanf.bscanf sin "%d" (fun n -> close (); n) with e -> close (); raise e
+  with
+  | Not_found | Sys_error _ | Failure _ | Scanf.Scan_failure _
+  | End_of_file | Unix.Unix_error (_, _, _) ->
+      (* on failure, print a message and return 1 *)
+      print1_warning "Failed to obtain number of cores on you system %s and reverting to 1 core. Please open an issue asking for support for your system." (Sys.os_type);
+      1
+
+

@@ -173,6 +173,7 @@ val normalize_file_path: string -> string
 val basename: string -> string
 val getcwd: unit -> string
 val readdir: string -> list<string>
+val get_num_cores: unit -> int
 
 open Prims
 val file_exists: string -> Tot<bool>

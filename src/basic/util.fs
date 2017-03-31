@@ -170,6 +170,7 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stderr = proc.StandardError.ReadToEnd() in
   result, stdout, stderr
 
+let get_num_cores () : int = Environment.ProcessorCount
 let get_file_extension (fn: string) :string = (Path.GetExtension fn).[1..]
 let is_path_absolute p = System.IO.Path.IsPathRooted(p)
 let join_paths p0 p1 = System.IO.Path.Combine(p0, p1)
