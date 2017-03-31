@@ -27,12 +27,12 @@ and data<'a> =
 
 type puf_t<'a when 'a : not struct> = { mutable parent: pa_t<(either<int, 'a>)>; ranks: pa_t<int> ; count: ref<int>}
 type puf<'a when 'a : not struct> = puf_t<'a>
-type p_uvar = int
+type p_uvar<'a> = U of int
 
 val puf_empty: unit -> puf<'a>
-val puf_fresh: puf<'a> -> 'a -> p_uvar
-val puf_find: puf<'a> -> p_uvar -> 'a * int
-val puf_union: puf<'a> -> p_uvar -> p_uvar -> puf<'a>
+val puf_fresh: puf<'a> -> 'a -> p_uvar<'a>
+val puf_find: puf<'a> -> p_uvar<'a> -> 'a
+val puf_union: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> puf<'a>
 
 val puf_test: unit -> unit
 

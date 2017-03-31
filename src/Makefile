@@ -127,6 +127,7 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	$(SED) -i 's/.*| PDiff.*//g' $@
 	$(SED) -i 's/type puf_t.*//g' $@
 	$(SED) -i 's/type puf.*/assume new type puf : Type0 -> Type0/g' $@
+	$(SED) -i 's/type p_uvar.*/assume new type p_uvar : Type0 -> Type0/g' $@
 	$(SED) -i 's/type cell.*//g' $@
 	$(SED) -i 's/and contents.*//g' $@
 	$(SED) -i 's/.*| Data.*//g' $@

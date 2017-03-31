@@ -77,7 +77,6 @@ let impure f t =
 
 let pa_length t = impure Array.length t
 
-
 (* very inefficient strategy for growing the array *)
 let pa_new t x =
     pa_reroot t;
@@ -111,21 +110,19 @@ type puf_t<'a when 'a : not struct> = {
     (* keep track of how many elements are allocated in the array *)
     count: ref<int> }
 type puf<'a when 'a : not struct> = puf_t<'a>
-type p_uvar = int
+type p_uvar<'a> = U of int
 
 let puf_empty () =
     { parent = pa_create 2 (Inl -1) ;
       ranks = pa_create 2 0;
       count = ref 0 }
 
-let puf_fresh h x =
-    // pa_new h.parent (Inr x);
-    // pa_new h.ranks 0;
+let puf_fresh (h: puf<'a>) (x: 'a) =
     let count = !(h.count) in
     pa_new_double h.parent (Inr x) count (Inl -1);
     pa_new_double h.ranks 0 count 0;
     h.count := count + 1;
-    count
+    (U count): p_uvar<'a>
 
 (* implements path compression, returns new array *)
 let rec puf_find_aux f i =
@@ -136,23 +133,34 @@ let rec puf_find_aux f i =
             f, r, id
         | Inr x -> f, Inr x, i
 
-let puf_find h x =
+(* return both the rep and its id in the array *)
+let puf_find_i (h: puf<'a>) (x: p_uvar<'a>) =
+    let x = match x with | U a -> a in
     let f, rx, i = puf_find_aux h.parent x in
         h.parent <- f;
         match rx with
             | Inr r -> r, i
             | Inl _ -> failwith "Impossible"
 
-let puf_union h x y =
-    let rx, ix = puf_find h x in
-    let ry, iy = puf_find h y in
+(* only return the rep *)
+let puf_find (h: puf<'a>) (x: p_uvar<'a>) =
+    let v, _ = puf_find_i h x in
+    v
+
+let puf_union (h: puf<'a>) (x: p_uvar<'a>) (y: p_uvar<'a>) =
+    let rx, ix = puf_find_i h x in
+    let ry, iy = puf_find_i h y in
     if not (LanguagePrimitives.PhysicalEquality rx ry) then begin
         let rxc = pa_get h.ranks ix in
         let ryc = pa_get h.ranks iy in
         if rxc > ryc then
-            { parent = pa_set h.parent iy (Inl ix); ranks = h.ranks; count = h.count}
+            { parent = pa_set h.parent iy (Inl ix);
+              ranks = h.ranks;
+              count = h.count}
         else if rxc < ryc then
-            { parent = pa_set h.parent ix (Inl iy); ranks = h.ranks; count = h.count}
+            { parent = pa_set h.parent ix (Inl iy);
+              ranks = h.ranks;
+              count = h.count}
         else
             { parent = pa_set h.parent iy (Inl ix);
               ranks = pa_set h.ranks ix (rxc+1);
@@ -171,23 +179,24 @@ let puf_test () =
     let u_f = puf_fresh u "f" in
     let u_g = puf_fresh u "g" in
     let u_h = puf_fresh u "h" in
-    let le, ie = puf_find u u_e in
+    let le= puf_find u u_e in
     let u = puf_union u u_a u_b in
     let u = puf_union u u_b u_c in
-    let la, ia = puf_find u u_a in
-    let lc, ic = puf_find u u_c in
-    (Util.print2 "Rep and id of e are %s %s\n" le (sprintf "%i" ie));
-    (Util.print2 "Rep and id of a are %s %s\n" la (sprintf "%i" ia));
-    (Util.print2 "Rep and id of c are %s %s\n" lc (sprintf "%i" ic));
-    let u_i = puf_fresh u "i" in
-    (Util.print2 "Id of i and count are %s %s\n" (sprintf "%i" u_i) (sprintf "%i" !(u.count)));
-    let li, ii = puf_find u u_i in
-    (Util.print2 "Rep and id of i are %s %s\n" li (sprintf "%i" ii));
+    let la = puf_find u u_a in
+    let lc = puf_find u u_c in
+    (Util.print1 "Rep of e is %s\n" le);
+    (Util.print1 "Rep of a is %s\n" la);
+    (Util.print1 "Rep of c is %s\n" lc);
+    let u_i = (puf_fresh u "i") in
+    let u_i2 = match u_i with | U a -> a in
+    (Util.print2 "Id of i and count are %s %s\n" (sprintf "%i" u_i2) (sprintf "%i" !(u.count)));
+    let li = puf_find u u_i in
+    (Util.print1 "Rep of i is %s\n" li);
     let u = puf_union u u_b u_i in
-    let li, ii = puf_find u u_i in
-    (Util.print2 "Rep and id of i are %s %s\n" li (sprintf "%i" ii));
+    let li = puf_find u u_i in
+    (Util.print1 "Rep of i is %s\n" li);
     (Util.print1 "There are %s elements\n" (sprintf "%i" !(u.count)))
-
+    // ()
 
 (* Stateful interface to persistent unionfind *)
 // type uf_t<'a> = ref<puf_t<'a>>
