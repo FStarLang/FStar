@@ -104,11 +104,13 @@ let rec decr_delta_depth = function
 (*          -- the source range of its use                                         *)
 (*          -- the source range of its defining occurrence                         *)
 (*          -- its type                                                            *)
+(*          -- its documentation (only for free variables)                         *)
 (***********************************************************************************)
 
 type identifier_info = {
     identifier:either<bv, fv>;
-    identifier_ty:typ
+    identifier_ty:typ;
+    identifier_doc:option<fsdoc>
 }
 let rec insert_col_info col info col_infos =
     match col_infos with 
@@ -131,14 +133,15 @@ type row_info =
     BU.imap<ref<col_info>>
 type file_info = 
     BU.smap<row_info>
-let mk_info id ty = {
+let mk_info id ty doc = {
     identifier=id;
     identifier_ty=ty;
+    identifier_doc=doc;
 }
 let file_info_table : file_info = BU.smap_create 50 //50 files
 open FStar.Range
-let insert_identifier_info id ty range =
-    let info = mk_info id ty in
+let insert_identifier_info id ty range doc =
+    let info = mk_info id ty doc in
     let use_range = {range with def_range=range.use_range} in //key the lookup table from the use range
     let fn = Range.file_of_range use_range in
     let start = Range.start_of_range use_range in 
@@ -167,7 +170,5 @@ let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
         match find_nearest_preceding_col_info col !cols with
         | None -> None
         | Some ci -> Some ci//(info_as_string ci)
-let insert_bv bv ty = insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
-let insert_fv fv ty = insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)
-
-
+let insert_bv bv ty = insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv) None
+let insert_fv fv ty doc = insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv) doc

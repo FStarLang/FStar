@@ -626,7 +626,7 @@ and tc_value env (e:term) : term
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
-    let (us', t), range = Env.lookup_lid env fv.fv_name.v in
+    let (us', t), (range, doc) = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
@@ -634,12 +634,12 @@ and tc_value env (e:term) : term
             | _ -> failwith "Impossible") us' us;
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
     let fv' = S.set_range_of_fv fv' range in
-    FStar.TypeChecker.Common.insert_fv fv' t;
+    FStar.TypeChecker.Common.insert_fv fv' t doc;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_fvar fv ->
-    let (us, t), range = Env.lookup_lid env fv.fv_name.v in
+    let (us, t), (range, doc) = Env.lookup_lid env fv.fv_name.v in
     if Env.debug env <| Options.Other "Range"
     then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got type %s"
             (Print.lid_to_string (lid_of_fv fv))
@@ -649,7 +649,7 @@ and tc_value env (e:term) : term
             (Print.term_to_string t);
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
     let fv' = S.set_range_of_fv fv' range in
-    FStar.TypeChecker.Common.insert_fv fv' t;
+    FStar.TypeChecker.Common.insert_fv fv' t doc;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
