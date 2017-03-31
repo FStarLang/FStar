@@ -22,6 +22,8 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Util
 open FStar.Const
+open FStar.Parser.AST
+
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -37,8 +39,8 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
 let resugar_arg_qual (q:option<S.arg_qualifier>) : option<A.arg_qualifier> =
   match q with
     | None -> None
-    | Some (Implicit b) -> Some A.Implicit  //TODO: how should we map this flag back to the surface?
-    | Some Equality -> Some A.Equality
+    | Some (S.Implicit b) -> Some A.Implicit  //TODO: how should we map this flag back to the surface?
+    | Some S.Equality -> Some A.Equality
 
 let rec universe_to_int n u =
   match u with 
@@ -78,7 +80,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
     | U_unif _ -> mk A.Wild r
     | U_bvar x -> 
       (* This case can happen when trying to print a subterm of a term that is not opened.*)
-      let id = I.mk_ident ("uu__univ_bvar_" + string_of_int x, r) in
+      let id = I.mk_ident (strcat "uu__univ_bvar_" (string_of_int x), r) in
       mk (A.Uvar(id)) r
 
     | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
@@ -166,8 +168,9 @@ let rec resugar_term_as_op(t:S.term) : option<string> =
         | Some op ->
           Some(snd op)
         | _ ->
-          let str = if fv.fv_name.v.nsstr.Length=0 then fv.fv_name.v.str 
-              else fv.fv_name.v.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
+          let length = String.length(fv.fv_name.v.nsstr) in
+          let str = if length=0 then fv.fv_name.v.str 
+              else BU.substring_from fv.fv_name.v.str (length+1) in 
           if BU.starts_with str "dtuple" then Some "dtuple"
           else if BU.starts_with str "tuple" then Some "tuple"
           else if BU.starts_with str "try_with" then Some "try_with"
@@ -176,8 +179,9 @@ let rec resugar_term_as_op(t:S.term) : option<string> =
   in
   match (SS.compress t).n with 
     | Tm_fvar fv -> 
-      let s = if fv.fv_name.v.nsstr.Length=0 then fv.fv_name.v.str 
-              else fv.fv_name.v.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
+      let length = String.length(fv.fv_name.v.nsstr) in
+      let s = if length=0 then fv.fv_name.v.str 
+              else BU.substring_from fv.fv_name.v.str (length+1) in 
       begin match string_to_op s with
         | Some t -> Some t
         | _ -> fallback fv
@@ -208,12 +212,6 @@ let rec resugar_term (t : S.term) : A.term =
         // make a Var term'
         A.Var (lid_of_path [a] r)
     in
-    let resugar_sequence (e:A.term) : A.term =  match e.tm with
-      | A.Let(_, [p, t1], t2) ->
-        mk (A.Seq(t1, t2))
-      | _ -> 
-        failwith "This case is impossible for sequence" 
-    in
     match (SS.compress t).n with //always call compress before case-analyzing a S.term
     | Tm_delayed _ ->
       failwith "This case is impossible after compress"
@@ -234,8 +232,9 @@ let rec resugar_term (t : S.term) : A.term =
       //should be A.Var if lowercase
       //and A.Name if uppercase
       let a = fv.fv_name.v in
-      let s = if fv.fv_name.v.nsstr.Length=0 then a.str 
-          else a.str.Substring(fv.fv_name.v.nsstr.Length+1) in 
+      let length = String.length(fv.fv_name.v.nsstr) in
+      let s = if length=0 then a.str 
+          else BU.substring_from a.str (length+1) in 
       let is_prefix = I.reserved_prefix ^ "is_" in
       if BU.starts_with s is_prefix then
         let rest = BU.substring_from s (String.length is_prefix) in
@@ -243,12 +242,14 @@ let rec resugar_term (t : S.term) : A.term =
       else if BU.starts_with s U.field_projector_prefix then
         let rest = BU.substring_from s (String.length U.field_projector_prefix) in
         let r = BU.split rest U.field_projector_sep in
-          if r.Length = 2 then
-            let l = lid_of_path [r.[0]] t.pos in
-            let r = I.mk_ident (r.[1], t.pos) in
+        begin match r with 
+          | [fst; snd] -> 
+            let l = lid_of_path [fst] t.pos in
+            let r = I.mk_ident (snd, t.pos) in
             mk (A.Projector(l, r ))
-          else
+          | _ ->
             failwith "not implemented yet"
+        end
        else if (lid_equals a C.assert_lid 
             || lid_equals a C.assume_lid
             || Char.uppercase (String.get s 0) <> String.get s 0) then
@@ -302,7 +303,7 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_refine(x, phi) ->
       (* bv * term -> binder * term *)
       let x, phi = SS.open_term [S.mk_binder x] phi in
-      let (b, _) = x.Head in 
+      let (b, _) = List.hd x in 
       let b = resugar_bv_as_binder b t.pos in
       mk (A.Refine(b, resugar_term phi))
 
@@ -347,7 +348,7 @@ let rec resugar_term (t : S.term) : A.term =
           end
 
         | Some ref_read when (ref_read = C.sread_lid.str) ->
-          let (t, _) = args.Head in
+          let (t, _) = List.hd args in
           begin match (SS.compress t).n with
             | Tm_fvar fv when (U.field_projector_contains_constructor fv.fv_name.v.str) ->
               let f = lid_of_path [fv.fv_name.v.str] t.pos in
@@ -410,7 +411,7 @@ let rec resugar_term (t : S.term) : A.term =
             | _ -> failwith "wrong args format to QForall"
           end
         | Some "alloc" ->
-          let (e, _ ) = args.Head in
+          let (e, _ ) = List.hd args in
           resugar_term e
 
         | Some op ->
@@ -459,7 +460,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
           | Inl bv -> 
             let x, term = SS.open_term [S.mk_binder bv] term in
-            let (bv, _) = x.Head in 
+            let (bv, _) = List.hd x in 
             mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
         in
         if is_pat_app then
@@ -506,7 +507,12 @@ let rec resugar_term (t : S.term) : A.term =
               end
           | Sequence ->
               let term = resugar_term e in
-              resugar_sequence term
+              begin match term.tm with
+                | A.Let(_, [p, t1], t2) ->
+                   mk (A.Seq(t1, t2))
+                | _ -> 
+                   failwith "This case is impossible for sequence" 
+              end
           | Primop (* doesn't seem to be generated by desugar *)
           | Masked_effect (* doesn't seem to be generated by desugar *)
           | Meta_smt_pat -> (* nothing special, just resugar the term *)
@@ -542,7 +548,7 @@ let rec resugar_term (t : S.term) : A.term =
         mk (A.Ascribed(resugar_term e, mk (A.Construct(name,[resugar_term t, A.Nothing]))))
       end
     
-    | Tm_unknown _ -> mk A.Wild
+    | Tm_unknown -> mk A.Wild
 
 and resugar_comp (c:S.comp) : A.term =
   let mk (a:A.term') : A.term =
@@ -622,7 +628,8 @@ and resugar_bv_as_pat (x:S.bv) qual: A.pattern =
   match (SS.compress x.sort).n with
   //| Tm_type U_unknown
   | Tm_unknown ->
-    if (x.ppname.idText.Equals I.reserved_prefix ) then
+    let i = String.compare x.ppname.idText I.reserved_prefix in
+    if i = 0 then
       mk (A.PatWild)
     else
       mk (A.PatVar(bv_as_unique_ident x, resugar_arg_qual qual))
@@ -644,7 +651,7 @@ and resugar_match_pat (p:S.pat) : A.pattern =
     | Pat_cons (fv, []) ->
       mk (A.PatName fv.fv_name.v)
 
-    | Pat_cons(fv, args) when fv.fv_name.v.str.Equals C.cons_lid ->
+    | Pat_cons(fv, args) when lid_equals fv.fv_name.v C.cons_lid ->
       let args = List.map(fun (p, b) -> aux p) args in
       mk (A.PatList(args))
 
