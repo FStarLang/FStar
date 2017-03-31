@@ -85,8 +85,8 @@ open FStar_String
 %token EXISTS
 %token FALSE
 %token FORALL
-%token <FStar_Parser_AST.fsdoc> FSDOC
-%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
+%token <FStar_Syntax_Syntax.fsdoc> FSDOC
+%token <FStar_Syntax_Syntax.fsdoc> FSDOC_STANDALONE
 %token FUN
 %token FUNCTION
 %token HASH
