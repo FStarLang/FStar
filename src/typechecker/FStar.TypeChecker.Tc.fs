@@ -891,11 +891,10 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
 
     let uvs, bs, sub = SS.open_sub_eff sub in
     let env = Env.push_univ_vars env uvs in
-    let env = Env.push_binders env bs in
+    let effect_binders, env, _ = tc_tparams env0 bs in
 
     BU.print1 "After opening a sub effect %s\n" (Print.sigelt_to_string (Sig_sub_effect (sub, r))) ;
 
-    (* TODO : implement indexed effects *)
     let source = sub.sub_eff_source.comp_typ_name in
     let target = sub.sub_eff_target.comp_typ_name in
     let ed_src = Env.get_effect_decl env source in
@@ -928,7 +927,6 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     in
 
     (* we do not expect the lift to verify, since that requires internalizing monotonicity of WPs *)
-    let lax = env.lax in
     let env = {env with lax=true} in
 
     let repr_type eff_name effect_args wp =
@@ -945,7 +943,6 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     in
 
     let tc_lift lift =
-      let source = sub.sub_eff_source.comp_typ_name in
       let wp_a = S.new_bv None src_wp in
       let wp_a_typ = S.bv_to_name wp_a in
       let binders_to_names = List.map (fun (bv, _) -> S.bv_to_name bv) in
@@ -965,14 +962,38 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
 
     let lift = BU.map_opt lift tc_lift in
 
-    (* Restore the proper lax flag! *)
-    let env = { env with lax = lax } in
+    (* Restore the original env *)
+    let env = env0 in
 
-    let sub = {sub with sub_eff_lift_wp=Some lift_wp; sub_eff_lift=lift} in
+    (* TODO : generalize properly the whole definition *)
+    let univs =
+      (* forall effect_binders. wp:src_wp -> M_src args wp -> Tot (M_tgt (lift_wp wp)) *)
+      let t =
+        let wp_a = S.new_bv None src_wp in
+        let wp_a_typ = S.bv_to_name wp_a in
+        let complete_effect ct wp =
+          S.mk (Comp ({ ct with effect_args = ct.effect_args @ [as_arg wp] })) None Range.dummyRange
+        in
+        let src_eff = U.arrow [S.null_binder Common.t_unit] (complete_effect sub.sub_eff_source wp_a_typ) in
+        let tgt_eff =
+          let lifted_wp = mk_Tm_app lift_wp [as_arg wp_a_typ] None  Range.dummyRange in
+          complete_effect sub.sub_eff_target lifted_wp in
+        U.arrow (effect_binders@[S.mk_binder wp_a ; S.null_binder src_eff]) tgt_eff
+      in
+      TcUtil.generalize_universes env0 t |> fst
+    in
+
+    let sub = { sub with
+        sub_eff_univs = univs ;
+        sub_eff_binders = effect_binders ;
+        sub_eff_lift_wp = Some lift_wp ;
+        sub_eff_lift = lift
+      }
+    in
     let sub = SS.close_sub_eff sub in
     let se = Sig_sub_effect(sub, r) in
 
-    let env = Env.push_sigelt env0 se in
+    let env = Env.push_sigelt env se in
     let env = TcUtil.build_lattice env se in
     [se], env, []
 
