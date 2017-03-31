@@ -441,7 +441,7 @@ let try_lookup_lid_aux env lid =
       begin match se with // FIXME why does this branch not use rng?
         | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
         | _ -> effect_signature (fst se)
-      end |> Util.map_option (fun (us_t, rng) -> (us_t, (rng, doc)))
+      end |> BU.map_option (fun (us_t, rng) -> (us_t, (rng, doc)))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
       | Some ((us, t), r_d) -> Some ((us, {t with pos=range_of_lid lid}), r_d)
