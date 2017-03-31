@@ -1314,7 +1314,7 @@ let mk_data_discriminators quals env t tps k datas =
     datas |> List.map (fun d ->
         let disc_name = U.mk_discriminator d in
         { sigel = Sig_declare_typ(disc_name, [], Syntax.tun, quals [(* S.Logic ; *) S.OnlyName ; S.Discriminator d]);
-          sigrng = range_of_lid disc_name;
+          sigrng = range_of_lid disc_name; // FIXME (CPC): Isn't that range wrong?
           sigdoc = None }) // FIXME: Doc
 
 let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
@@ -1474,9 +1474,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in
-             { sigel = Sig_declare_typ(l, [], t, quals);
-               sigrng = se.sigrng;
-               sigdoc = None } // FIXME: Doc
+             { se with sigel = Sig_declare_typ(l, [], t, quals) }
            | _ -> se in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
@@ -1671,7 +1669,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     in
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d -> match d.d with
-        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), _]) when not for_free ->
+        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and its cps'd type.
             {
@@ -1679,9 +1677,10 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
               action_unqualified_name = name;
               action_univs=[];
               action_defn=Subst.close binders (desugar_term env def);
-              action_typ=Subst.close binders (desugar_typ env cps_type)
+              action_typ=Subst.close binders (desugar_typ env cps_type);
+              action_doc=doc
             }
-        | Tycon(_, [TyconAbbrev(name, _, _, defn), _]) when for_free ->
+        | Tycon(_, [TyconAbbrev(name, _, _, defn), doc]) when for_free ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
             {
@@ -1689,7 +1688,8 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
               action_unqualified_name = name;
               action_univs=[];
               action_defn=Subst.close binders (desugar_term env defn);
-              action_typ=S.tun
+              action_typ=S.tun;
+              action_doc=doc
             }
         | _ ->
             raise (Error("Malformed action declaration; if this is an \"effect \
@@ -1829,7 +1829,8 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;
                     action_defn =snd (sub ([], action.action_defn)) ;
-                    action_typ =snd (sub ([], action.action_typ))
+                    action_typ =snd (sub ([], action.action_typ));
+                    action_doc = d.doc
                 })
                 ed.actions;
     } in

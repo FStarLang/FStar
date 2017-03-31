@@ -283,9 +283,9 @@ let inst_tscheme : tscheme -> universes * term = function
       let us' = us |> List.map (fun _ -> new_u_univ()) in
       inst_tscheme_with (us, t) us'
 
-let inst_tscheme_with_range (r:range) (t:tscheme) =
+let inst_tscheme_with_range (r:range) (t:tscheme) (doc:option<fsdoc>) =
     let us, t = inst_tscheme t in
-    us, Subst.set_use_range r t
+    us, Subst.set_use_range r t, doc
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
     match ed.binders with
@@ -325,7 +325,8 @@ let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * 
     then match BU.smap_try_find (gamma_cache env) lid.str with
       | None ->
         BU.find_map env.gamma (function
-          | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
+          | Binding_lid(l,t) ->
+            if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
           | Binding_sig (_, { sigel = Sig_bundle(ses, _, _) }) ->
               BU.find_map ses (fun se ->
                 if lids_of_sigelt se |> BU.for_some (lid_equals lid)
@@ -454,9 +455,9 @@ let try_lookup_lid_aux env lid =
 //        val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 //        val lookup_lid             : env -> lident -> (universes * typ)
 //        val lookup_univ            : env -> univ_name -> bool
-//        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
-//        val lookup_val_decl        : env -> lident -> (universes * typ)
-//        val lookup_datacon         : env -> lident -> universes * typ
+//        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier> * option<fsdoc>)>
+//        val lookup_val_decl        : env -> lident -> universes * typ * option<fsdoc>
+//        val lookup_datacon         : env -> lident -> universes * typ * option<fsdoc>
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
@@ -512,20 +513,20 @@ let lookup_univ env x =
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, q) }, None), _) ->
-      Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, q); sigdoc = doc }, None), _) ->
+      Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q,doc)
     | _ -> None
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, _) }, None), _) ->
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, _); sigdoc = doc }, None), _) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t) doc
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _, _) }, None), _) ->
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _, _); sigdoc = doc }, None), _) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t) doc
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let datacons_of_typ env lid =
@@ -629,7 +630,7 @@ let lookup_effect_quals env l =
 
 let lookup_projector env lid i =
     let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (Print.lid_to_string lid)) in
-    let _, t = lookup_datacon env lid in
+    let _, t, _ = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow(binders, _) ->
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!

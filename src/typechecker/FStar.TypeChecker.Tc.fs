@@ -767,21 +767,21 @@ and tc_lex_t env ses quals lids =
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []);
                            sigrng = r2; sigdoc = d2 } in
-        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; sigdoc = None } // FIXME: Doc
+        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; sigdoc = d } // FIXME: Doc
       | _ ->
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, [], lids)))))
     end
 
-and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) (doc:option<fsdoc>) :sigelt =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    { sigel = Sig_assume(lid, phi, quals); sigrng = r; sigdoc = None } // FIXME: Doc
+    { sigel = Sig_assume(lid, phi, quals); sigrng = r; sigdoc = doc }
 
-and tc_inductive env ses quals lids =
+and tc_inductive env ses quals lids doc =
     let env0 = env in
-    let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
+    let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids doc in
     (* we have a well-typed inductive;
             we still need to check whether or not it supports equality
             and whether it is strictly positive
@@ -831,7 +831,7 @@ and tc_inductive env ses quals lids =
           if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
           else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
         in
-        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = None }::ses, data_ops_ses // FIXME: Doc
+        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = doc }::ses, data_ops_ses // FIXME: Doc
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
@@ -860,7 +860,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
 
   | Sig_bundle(ses, quals, lids) ->
     let env = Env.set_range env r in
-    let ses,projectors_ses = tc_inductive env ses quals lids  in
+    let ses,projectors_ses = tc_inductive env ses quals lids se.sigdoc in
     let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
     ses, env, projectors_ses
 
@@ -1032,7 +1032,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     [se], env, []
 
   | Sig_assume(lid, phi, quals) ->
-    let se = tc_assume env lid phi quals r in
+    let se = tc_assume env lid phi quals r se.doc in
     let env = Env.push_sigelt env se in
     [se], env, []
 
@@ -1062,16 +1062,17 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
 
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls
+          (c) Collect docstrings
       *)
-    let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
+    let should_generalize, lbs', quals_opt, val_docs = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt, docs) lb ->
           let lbname = right lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
+          let gen, lb, quals_opt, doc = match Env.try_lookup_val_decl env lbname.fv_name.v with
             | None ->
                 if lb.lbunivs <> []
-                then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
-                else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+                then false, lb, quals_opt, None // we already have generalized universes (e.g. elaborated term)
+                else gen, lb, quals_opt, None //no annotation found; use whatever was in the let binding
 
-            | Some ((uvs,tval), quals) ->
+            | Some ((uvs,tval), quals, doc) ->
               let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
               let _ = match lb.lbtyp.n with
                 | Tm_unknown -> ()
@@ -1081,10 +1082,11 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
               then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
               false, //explicit annotation provided; do not generalize
               mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
-              quals_opt
+              quals_opt,
+              doc
           in
-          gen, lb::lbs, quals_opt)
-          (true, [], (if quals=[] then None else Some quals))
+          gen, lb::lbs, quals_opt, doc::docs)
+          (true, [], (if quals=[] then None else Some quals), [])
     in
 
     let quals = match quals_opt with
