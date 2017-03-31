@@ -42,7 +42,8 @@ else
         EXTRA_OPTS = -thread -ccopt -fPIC
         EXTRA_LIBS = -L.
         ARCH = x86_64
-        OPENSSL_CONF = ./config
+	# The HACL* test engine directly links with the .o files
+        OPENSSL_CONF = ./config -fPIC
     endif
 endif
 
