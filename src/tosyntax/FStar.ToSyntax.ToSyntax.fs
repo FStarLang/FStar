@@ -848,14 +848,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        in
        aux env [] None binders
 
-    | App({tm=Var a; range=rng}, phi, _) when (lid_equals a C.assert_lid
-                                   || lid_equals a C.assume_lid) ->
-      let phi = desugar_formula env phi in
-      let a = Ident.set_lid_range a rng in
-      mk (Tm_app(fvar a Delta_equational None,
-                 [as_arg phi;
-                  as_arg <| mk (Tm_constant(Const_unit))]))
-
     | App (_, _, UnivApp) ->
        let rec aux universes e = match (unparen e).tm with
            | App(e, t, UnivApp) ->
@@ -865,6 +857,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 let head = desugar_term env e in
                 mk (Tm_uinst(head, universes))
        in aux [] top
+
     | App _ ->
       let rec aux args e = match (unparen e).tm with
         | App(e, t, imp) when imp <> UnivApp ->
