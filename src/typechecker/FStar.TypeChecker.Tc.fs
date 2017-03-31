@@ -1132,7 +1132,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_identifier_info (Inr fv) lb.lbtyp (range_of_fv fv));
+        Common.insert_identifier_info (Inr fv) lb.lbtyp (range_of_fv fv) se.doc); // FIXME: Doc?
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->

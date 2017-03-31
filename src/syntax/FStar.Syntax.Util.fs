@@ -522,7 +522,7 @@ let quals_of_sigelt (x: sigelt) = match x.sigel with
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let docs_of_sigelt (x: sigelt) = x.sigdoc
+let doc_of_sigelt (x: sigelt) = x.sigdoc
 
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bv  x

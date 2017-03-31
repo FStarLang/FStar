@@ -393,18 +393,18 @@ let rec go (line_col:(int*int))
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
-        if symbol = "" then None // FIXME obey fqn_only
+        if symbol = "" then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
              let lid = if fqn_only then lid
                        else match DsEnv.resolve_to_fully_qualified_name dsenv lid with
                             | None -> lid
                             | Some lid -> lid in
              try_lookup_lid (snd env) lid
-               |> Util.map_option (fun ((_, typ), range) ->
-                                   FStar.TypeChecker.Err.format_info (snd env) symbol typ range) in
+               |> Util.map_option (fun ((_, typ), (r, d)) -> (Syntax.Print.lid_to_string lid, typ, r, d)) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
-     | Some s -> Util.print1 "%s\n#done-ok\n" s);
+     | Some (id, typ, rng, doc) ->
+       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info (snd env) id typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user

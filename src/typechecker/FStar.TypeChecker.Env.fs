@@ -406,41 +406,44 @@ let effect_signature se =
     | _ -> None
 
 let try_lookup_lid_aux env lid =
-  let mapper (lr, rng) = 
+  let mapper (lr, rng) =
+    let doc = match lr with
+              | Inl _ -> None
+              | Inr (se, _) -> doc_of_sigelt se in
     match lr with
     | Inl t ->
-      Some (t, rng)
+      Some (t, (rng, None)) // FIXME: Doc
 
     | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _, _) }, None) ->
-      Some (inst_tscheme (uvs, t), rng)
+      Some (inst_tscheme (uvs, t), (rng, doc))
 
     | Inr ({sigel = Sig_declare_typ (l, uvs, t, qs) }, None) ->
       if in_cur_mod env l = Yes
       then if qs |> List.contains Assumption || env.is_iface
-           then Some (inst_tscheme (uvs, t), rng)
+           then Some (inst_tscheme (uvs, t), (rng, doc))
            else None
-      else Some (inst_tscheme (uvs, t), rng)
+      else Some (inst_tscheme (uvs, t), (rng, doc))
 
     | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _, _) }, None) ->
       begin match tps with
-        | [] -> Some (inst_tscheme (uvs, k), rng)
-        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
+        | [] -> Some (inst_tscheme (uvs, k), (rng, doc))
+        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), (rng, doc))
       end
 
     | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _, _) }, Some us) ->
       begin match tps with
-        | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
-        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
+        | [] -> Some (inst_tscheme_with (uvs, k) us, (rng, doc))
+        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, (rng, doc))
       end
 
     | Inr se ->
-      begin match se with
+      begin match se with // FIXME why does this branch not use rng?
         | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
         | _ -> effect_signature (fst se)
-      end
+      end |> Util.map_option (fun (us_t, rng) -> (us_t, (rng, doc)))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
-      | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
+      | Some ((us, t), r_d) -> Some ((us, {t with pos=range_of_lid lid}), r_d)
       | None -> None
 
 ////////////////////////////////////////////////////////////////
@@ -489,15 +492,15 @@ let lookup_bv env bv =
 let try_lookup_lid env l =
     match try_lookup_lid_aux env l with
     | None -> None
-    | Some ((us, t), r) ->
+    | Some ((us, t), (r, d)) ->
       let use_range = range_of_lid l in
       let r = Range.set_use_range r use_range in
-      Some ((us, Subst.set_use_range use_range t), r)
+      Some ((us, Subst.set_use_range use_range t), (r, d))
 
 let lookup_lid env l =
     match try_lookup_lid env l with
     | None -> raise (Error(name_not_found l, range_of_lid l))
-    | Some ((us, t), r) -> (us, t), r
+    | Some v -> v
 
 let lookup_univ env x =
     List.find (function
