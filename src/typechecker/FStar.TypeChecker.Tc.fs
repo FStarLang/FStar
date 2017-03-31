@@ -1032,7 +1032,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     [se], env, []
 
   | Sig_assume(lid, phi, quals) ->
-    let se = tc_assume env lid phi quals r se.doc in
+    let se = tc_assume env lid phi quals r se.sigdoc in
     let env = Env.push_sigelt env se in
     [se], env, []
 
@@ -1135,14 +1135,14 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
        on [se] if it doesn't already have docs (this is the common case: one
        docstring, followed by one val (which the docstring applies to), followed
        by one let. *)
-    let se = match se.doc, val_docs with
-        | None, (Some d)::_ -> { se with doc = Some d }
+    let se = match se.sigdoc, val_docs with
+        | None, (Some d)::_ -> { se with sigdoc = Some d }
         | _ -> se in
 
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_fv fv lb.lbtyp se.doc);
+        Common.insert_fv fv lb.lbtyp se.sigdoc);
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
