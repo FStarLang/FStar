@@ -593,7 +593,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "record_hints",
         ZeroArgs (fun () -> Bool true),
-        "Record a database of hints for efficient proof replay (implies --z3refresh)");
+        "Record a database of hints for efficient proof replay");
 
        ( noshort,
         "reuse_hint_for",
@@ -959,7 +959,6 @@ let z3_exe                       () = match get_smt () with
                                     | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
-                                    || record_hints                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
