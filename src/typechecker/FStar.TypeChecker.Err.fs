@@ -32,10 +32,13 @@ module BU = FStar.Util //basic util
 open FStar.TypeChecker.Common
 
 let format_info env name typ range (doc: option<fsdoc>) =
-    BU.format3 "(defined at %s) %s : %s"
+    BU.format4 "(defined at %s) %s: %s%s"
         (Range.string_of_range range)
         name
         (Normalize.term_to_string env typ)
+        (match doc with
+         | Some (comment, _) -> BU.format1 "#doc %s" comment
+         | None -> "")
 
 let info_at_pos env file row col =
     match TypeChecker.Common.info_at_pos file row col with
