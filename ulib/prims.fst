@@ -623,14 +623,14 @@ let dfst #a #b t = Mkdtuple2?._1 t
 val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
 let dsnd #a #b t = Mkdtuple2?._2 t
 
-assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
+assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> p))
-let _assert p () = ()
+val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
+let _assert p = ()
 val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
