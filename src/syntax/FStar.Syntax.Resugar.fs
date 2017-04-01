@@ -394,7 +394,10 @@ let rec resugar_term (t : S.term) : A.term =
                     let resugar_pats pats = List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats in
                     let pats = match m with 
                       | Meta_pattern pats -> resugar_pats pats
-                      | _ -> failwith "wrong pattern format for QForall" 
+                      | Meta_labeled (s, r, _) -> 
+                        // this case can occur in typechecker when a failure is wrapped in meta_labeled
+                        [[mk (name s r)]]
+                      | _ -> failwith "wrong pattern format for QForall/QExists" 
                     in
                     pats, body
                   | _ -> [], resugar_term body
@@ -403,7 +406,7 @@ let rec resugar_term (t : S.term) : A.term =
                 let xs = xs |> List.rev in
                 if op = "forall" then mk (A.QForall(xs, pats, body)) else mk (A.QExists(xs, pats, body))   
                     
-            | _ -> failwith "expect Tm_abs for QForall"
+            | _ -> failwith "expect Tm_abs for QForall/QExists"
           in
           begin match args with 
             | [(b, _)]
