@@ -140,6 +140,9 @@ rename_as_fst:
 
 prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
+	#$(SED) -i 's/A.term_to_string/\/\/A.term_to_string/' u_boot_fsts/Fstar.Syntax.Print.fst
+	#$(SED) -i 's/\/\/let d = ToDocument.term_to_document/let d = ToDocument.term_to_document/' u_boot_fsts/FStar.Syntax.Print.fst
+	#$(SED) -i 's/\/\/Pp.pretty_string 1.0 100 d/Pp.pretty_string 1.0 100 d/' u_boot_fsts/FStar.Syntax.Print.fst
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output
