@@ -45,6 +45,8 @@ val init                        : unit    -> unit  //sets the current options to
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
+val with_saved_options          : (unit -> 'a) -> 'a // Save options, run, and restore
+
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit

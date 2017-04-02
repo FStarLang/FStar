@@ -31,28 +31,28 @@ module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
 open FStar.TypeChecker.Common
 
-let format_match_info match_info =
-    let rec typ_marker typ =
-        let fmt fv = Util.format1 "<<%s>>" (Ident.string_of_lid fv.fv_name.v) in
-        match (Subst.compress typ).n with // FIXME this is just an approximation
-        | Tm_fvar fv -> fmt fv
-        | Tm_app (fn, _) -> typ_marker fn
-        | Tm_uinst (t, _) -> typ_marker t
-        | _ -> "" in
-    BU.concat_l "\n"
-      (List.map (fun { mib_name = name; mib_kind = kind; mib_vars = vars } ->
-                 let vars = List.map (fun (arg, typ) ->
-                                      (arg, Util.format2 "${%s%s}" arg (typ_marker typ)))
-                                     vars in
-                 match kind with
-                 | Variant ->
-                   Util.concat_l " " (Ident.string_of_lid name :: List.map snd vars)
-                 | Record ->
-                   let format_field (name, place) = name ^ " = " ^ place in
-                   "{ " ^ (Util.concat_l "; " (List.map format_field vars)) ^ " }"
-                 | Tuple ->
-                   "(" ^ (Util.concat_l ", " (List.map snd vars)) ^ ")")
-                match_info)
+let format_match_info typ_lid match_info =
+    let format_var (var, typ, closed) =
+        // [typ] is the actual type; [closed] is [typ] wrapped to be reparseable
+        let typ, closed = Print.term_to_string typ, Print.term_to_string closed in
+        var, Util.format3 "${%s<<<%s|||%s>>>}" var typ closed in
+    let format_branch { mib_name = name; mib_kind = kind; mib_vars = vars } =
+        let vars = List.map format_var vars in
+        match kind with
+        | Nil -> "[]"
+        | Cons -> "(" ^ (Util.concat_l " :: " (List.map snd vars)) ^ ")"
+        | Record -> let format_field (name, place) = name ^ " = " ^ place in
+                    "{ " ^ (Util.concat_l "; " (List.map format_field vars)) ^ " }"
+        | Tuple -> "(" ^ (Util.concat_l ", " (List.map snd vars)) ^ ")"
+        | Variant -> "(" ^ Util.concat_l " " (Ident.string_of_lid name :: List.map snd vars) ^ ")" in
+    Options.with_saved_options
+      (fun () ->
+       Options.set_option "print_full_name" (Options.Bool true);
+       Options.set_option "print_bound_var_indices" (Options.Bool false); // Not reparseable
+       Options.set_option "print_bound_var_types" (Options.Bool false); // Not reparseable
+       Options.set_option "print_implicits" (Options.Bool true);
+       Options.set_option "print_universes" (Options.Bool false);
+       BU.concat_l "\n" (Ident.string_of_lid typ_lid :: List.map format_branch match_info))
 
 let format_info env name typ range (doc: option<string>) =
     BU.format4 "(defined at %s) %s: %s%s"

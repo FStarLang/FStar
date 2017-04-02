@@ -416,7 +416,7 @@ let rec go (line_col:(int*int))
     go line_col filename stack curmod env ts
   | ShowMatch (type_str) ->
     let dsenv, tcenv = env in
-    let dummy_decl = Util.format1 "let __show_match_dummy__ : Type = (%s)" type_str in
+    let dummy_decl = Util.format1 "let __show_match_dummy__ = (%s)" type_str in
     let dummy_fragment = {frag_text=dummy_decl; frag_line=0; frag_col=0} in
 
     let env_mark = mark env in
@@ -428,15 +428,20 @@ let rec go (line_col:(int*int))
            let ses, exported, tcenv' = FStar.TypeChecker.Tc.tc_decls tcenv decls in
            match ses with
            | [{ sigel = FStar.Syntax.Syntax.Sig_let((_, [{lbdef = def}]), _, _, _) }] ->
-             Util.print1 "Type: [%s]\n" (FStar.Syntax.Print.term_to_string def);
              TypeChecker.Env.try_lookup_match_info tcenv def
+               |> Util.map_option
+                    (fun (typ_name, branches) ->
+                      (DsEnv.shorten_lid dsenv typ_name,
+                       List.map (fun mib -> { mib with mib_name =
+                                              DsEnv.shorten_lid dsenv mib.mib_name })
+                                branches))
            | _ -> None
          with | FStar.Errors.Error _
               | FStar.Errors.Err _ -> None)
       | _ -> None in
     (match results with
-     | Some mi ->
-       Util.print1 "%s\n#done-ok\n" (TypeChecker.Err.format_match_info mi)
+     | Some (typ_lid, mi) ->
+       Util.print1 "%s\n#done-ok\n" (TypeChecker.Err.format_match_info typ_lid mi)
      | None -> Util.print_string "\n#done-nok\n");
 
     let env = reset_mark env_mark in

@@ -162,13 +162,13 @@ val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> int
 
-type match_info_branch_kind = | Record | Variant | Tuple
+type match_info_branch_kind = | Nil | Cons | Tuple | Record | Variant
 type match_info_branch = { // TODO Unify with Pattern?
   mib_name: lid;
   mib_kind: match_info_branch_kind;
-  mib_vars: list<(string * typ)>
+  mib_vars: list<(string * typ * typ)>
 }
-val try_lookup_match_info  : env -> typ -> option<(list<match_info_branch>)>
+val try_lookup_match_info  : env -> typ -> option<(lid * list<match_info_branch>)>
 
 (* Universe instantiation *)
 

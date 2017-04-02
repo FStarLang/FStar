@@ -541,7 +541,6 @@ let binders_of_datacons env lid =
   | Some (Inr({ sigel = Sig_datacon(_, _, dc_typ, _, _, _, _) } as se, _), _) ->
     let dc_typ = Subst.compress dc_typ in
     let binders, _ = arrow_formals dc_typ in
-    Util.print2 "Looking at [%s] with tag [%s]\n" (Print.sigelt_to_string se) (Print.tag_of_term dc_typ);
     Some binders
   | _ -> None
 
@@ -713,55 +712,96 @@ let num_inductive_ty_params env lid =
   | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) -> List.length tps
   | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-type match_info_branch_kind = | Record | Variant | Tuple
+type match_info_branch_kind = | Nil | Cons | Tuple | Record | Variant
 
 type match_info_branch = { // TODO Unify with Pattern?
   mib_name: lid;
   mib_kind: match_info_branch_kind;
-  mib_vars: list< (string * typ) >
+  mib_vars: list< (string * typ * typ) >
 }
 
-let is_tuple_constructor cs_name = // FIXME =S
-  List.mem (string_of_lid cs_name)
-    ["Prims.Mktuple2";
-     "Prims.Mktuple3";
-     "Prims.Mktuple4";
-     "Prims.Mktuple5";
-     "Prims.Mktuple6";
-     "Prims.Mktuple7";
-     "Prims.Mktuple8"]
+(** Enumerate branches of a match on type [typ].
 
+    [typ] should be an inductive type (e.g. [list]), possibly eta-expanded
+    (e.g. [fun a -> (list a@0)]).  The result is a list of match branches, each
+    of which has a constructor (an [lident]) and multiple arguments (a name and
+    a type).  We want the types of the variables to be re-parsable, so we close
+    the types of the arguments (hence constructor [Mktuple2] of type [tuple2 int
+    'a] has arguments [x:int] and [y:fun a -> a@0]).  This way the UI can send
+    us closed (and thus parseable) terms. *)
 let try_lookup_match_info env typ =
-  let hd, args = Syntax.Util.head_and_args typ in
-  let hd_lid_opt = match (Subst.compress typ).n with // FIXME unuinst
-                   | Tm_fvar fv -> Some fv.fv_name.v
-                   | _ -> None in
-  let constructor_match_info cs_lid =
-    let binders = match binders_of_datacons env cs_lid with
+  let rec open_term typ : term = // Go from [fun a -> tuple2 a@0 int] to [tuple2 a@0 int]
+    let _, t, _ = abs_formals typ in
+    t in
+
+  let rec close_term t = // Go from [tuple2 a@0 int] -> [fun a -> tuple2 a@0 int]
+    let binders = S.binders_of_freenames (FStar.Syntax.Free.names t) in
+    U.abs binders t None in
+
+  let get_mib_kind constructor_name explicits =
+      match (string_of_lid constructor_name) with
+      | "Prims.Nil" -> Nil
+      | "Prims.Cons" -> Cons
+      | "Prims.Mktuple2" | "Prims.Mktuple3" | "Prims.Mktuple4"
+      | "Prims.Mktuple5" | "Prims.Mktuple6" | "Prims.Mktuple7" | "Prims.Mktuple8" -> Tuple
+      | _ -> match explicits with
+             | (bv, _) :: _ when Syntax.Util.is_field_name bv.ppname -> Record
+             | _ -> Variant in
+
+  let rec mksubsts args binders = // Pair up arguments to [tuple2] and parameters of [Mktuple2]
+    match args, binders with
+    | [], _ -> []
+    | _, [] -> failwith "Too many arguments for this type."
+    | (t, _)::args, (bv, _)::binders -> Syntax.Syntax.NT (bv, t) :: mksubsts args binders in
+
+  let constructor_match_info args cs_lid = // for args=['a; int]
+    let binders = match binders_of_datacons env cs_lid with // [a@0, b@1, x:a@0, y:b@1] (args of Mktuple2)
                   | None -> []
                   | Some binders -> binders in
-    let bvs = List.map fst binders in
-    let arg_terms = List.map fst args in
-    let substs = List.map Syntax.Syntax.NT (List.zip bvs arg_terms) in
-    let substituted = subst_binders substs binders in
+    let substs = mksubsts args binders in // [b@1 → int]
+    let substituted = subst_binders substs binders in // [a@0, int, x:a@0, y:int]
+    let is_implicit (_, ql) = S.is_implicit ql in
+    let implicits, explicits = List.partition is_implicit substituted in // [a@0, int], [x:a@0, y:int]
+    assert (List.length args <= List.length implicits);
     { mib_name = cs_lid;
-      mib_kind = (match bvs with
-                  | bv :: _ when Syntax.Util.is_field_name bv.ppname -> Record
-                  | _ when is_tuple_constructor cs_lid -> Tuple
-                  | _ -> Variant);
-      mib_vars = List.map (fun bv ->
-                     // Util.print2 "Type %s has head %s\n"
-                     // (Print.term_to_string bv.sort)
-                     // (match (Subst.compress bv.sort).n with
-                     //  | Tm_name _ -> "Tm_name"
-                     //  | Tm_app (hd, args) -> "Tm_app of " ^ (Print.tag_of_term (Subst.compress hd))
-                     //  | t -> (Print.tag_of_term (Subst.compress bv.sort)));
+      mib_kind = get_mib_kind cs_lid explicits;
+      mib_vars = List.map (fun bv -> // bv.sort is [a@0] for x and [int] for y
                            let id = Syntax.Util.unmangle_field_name bv.ppname in
-                           (id.idText, bv.sort)) (List.map fst substituted) } in
-  match hd_lid_opt |> Util.map_option (datacons_of_typ env) with
-  | Some (true, constructors) ->
-    Some (List.map constructor_match_info constructors)
-  | _ -> None
+                           (id.idText, bv.sort, close_term bv.sort)) (List.map fst explicits) } in
+
+  let head_lid_and_args typ : option<(lid * list<arg>)> =
+    let hd, args = Syntax.Util.head_and_args typ in
+    match Syntax.Util.un_uinst hd with
+    | { n = Tm_fvar fv } -> Some (fv.fv_name.v, args)
+    | _ -> None in
+
+  let binders_and_datacons_of_typ env lid =
+    match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, binders, _, _, dcs, _) }, _), _) ->
+      Some (binders, dcs)
+    | _ -> None in
+
+  let rec analyze_inductive_type (typ: typ) =
+    match head_lid_and_args typ with
+    | None -> None
+    | Some (hd, args) ->
+      match binders_and_datacons_of_typ env hd with
+      | Some (binders, constructors) -> Some (hd, binders, args, constructors)
+      | _ -> None in // FIXME this would be the right point to resolve type aliases:
+                    // Something like
+                    //   match lookup_qname env lid with
+                    //   | Some (Inr({ sigel = Sig_declare_typ(_, _, typ, _) } as se, _), _) -> …
+                    // But one would be have to be careful with type substitutions.
+
+  analyze_inductive_type (open_term typ)
+    |> Util.map_option (fun (hd, _binders, args, constructors) ->
+                        // FIXME `binders' here are the binders of the inductive
+                        // type; since these are shared by all constructors, one
+                        // should be able to create a substitution once and for
+                        // all by zipping them with `args'.  That didn't work
+                        // when I tried, though: the constructors has #.'a and
+                        // #.'b, while the parent type had 'a and 'b
+                        (hd, List.map (constructor_match_info args) constructors))
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
