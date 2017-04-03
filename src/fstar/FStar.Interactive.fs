@@ -27,6 +27,7 @@ open FStar.TypeChecker.Env
 
 module DsEnv   = FStar.ToSyntax.Env
 module TcEnv   = FStar.TypeChecker.Env
+module SS      = FStar.Syntax.Syntax
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
@@ -388,6 +389,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
 let rec go (line_col:(int*int))
            (filename:string)
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
+  let (dsenv: DsEnv.env), (tcenv: TcEnv.env) = env in
   match shift_chunk () with
   | Info(symbol, pos_opt) ->
     let dsenv, tcenv = env in
@@ -397,7 +399,7 @@ let rec go (line_col:(int*int))
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
-        if symbol = "" || dsenv.curmodule = None then None
+        if symbol = "" || DsEnv.try_current_module dsenv = None then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
              let lid = match DsEnv.resolve_to_fully_qualified_name dsenv lid with
                        | None -> lid
@@ -415,7 +417,6 @@ let rec go (line_col:(int*int))
        Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info tcenv name typ rng doc));
     go line_col filename stack curmod env ts
   | ShowMatch (type_str) ->
-    let dsenv, tcenv = env in
     let dummy_decl = Util.format1 "let __show_match_dummy__ = (%s)" type_str in
     let dummy_fragment = {frag_text=dummy_decl; frag_line=0; frag_col=0} in
 
@@ -427,8 +428,8 @@ let rec go (line_col:(int*int))
            let dsenv', decls = FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls in
            let ses, exported, tcenv' = FStar.TypeChecker.Tc.tc_decls tcenv decls in
            match ses with
-           | [{ sigel = FStar.Syntax.Syntax.Sig_let((_, [{lbdef = def}]), _, _, _) }] ->
-             TypeChecker.Env.try_lookup_match_info tcenv def
+           | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _, _) }] ->
+             TypeChecker.Env.try_lookup_match_info (snd env) def
                |> Util.map_option
                     (fun (typ_name, branches) ->
                       (DsEnv.shorten_lid dsenv typ_name,
@@ -512,7 +513,6 @@ let rec go (line_col:(int*int))
         let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
             : list<(list<ident> * list<ident> * int)>
             =
-            let dsenv = fst env in
             let exported_names = DsEnv.transitive_exported_ids dsenv m in
             let matched_length =
               List.fold_left
@@ -530,11 +530,10 @@ let rec go (line_col:(int*int))
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
-          = let dsenv, _ = env in 
-            let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
+          = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
-            matches |> List.filter (fun (ns, id, _) -> 
-              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with 
+            matches |> List.filter (fun (ns, id, _) ->
+              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
               | None -> false
               | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
         in

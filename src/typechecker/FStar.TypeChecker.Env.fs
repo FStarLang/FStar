@@ -538,7 +538,7 @@ let typ_of_datacon env lid =
 
 let binders_of_datacons env lid =
   match lookup_qname env lid with
-  | Some (Inr({ sigel = Sig_datacon(_, _, dc_typ, _, _, _, _) } as se, _), _) ->
+  | Some (Inr({ sigel = Sig_datacon(_, _, dc_typ, _, _, _, _) }, _), _) ->
     let dc_typ = Subst.compress dc_typ in
     let binders, _ = arrow_formals dc_typ in
     Some binders
@@ -729,7 +729,7 @@ type match_info_branch = { // TODO Unify with Pattern?
     the types of the arguments (hence constructor [Mktuple2] of type [tuple2 int
     'a] has arguments [x:int] and [y:fun a -> a@0]).  This way the UI can send
     us closed (and thus parseable) terms. *)
-let try_lookup_match_info env typ =
+let try_lookup_match_info env (t: typ) =
   let rec open_term typ : term = // Go from [fun a -> tuple2 a@0 int] to [tuple2 a@0 int]
     let _, t, _ = abs_formals typ in
     t in
@@ -793,15 +793,15 @@ let try_lookup_match_info env typ =
                     //   | Some (Inr({ sigel = Sig_declare_typ(_, _, typ, _) } as se, _), _) -> …
                     // But one would be have to be careful with type substitutions.
 
-  analyze_inductive_type (open_term typ)
-    |> Util.map_option (fun (hd, _binders, args, constructors) ->
-                        // FIXME `binders' here are the binders of the inductive
-                        // type; since these are shared by all constructors, one
-                        // should be able to create a substitution once and for
-                        // all by zipping them with `args'.  That didn't work
-                        // when I tried, though: the constructors has #.'a and
-                        // #.'b, while the parent type had 'a and 'b
-                        (hd, List.map (constructor_match_info args) constructors))
+  analyze_inductive_type (open_term t)
+    |> BU.map_option (fun (hd, _binders, args, constructors) ->
+                      // FIXME `binders' here holds the binders of the inductive
+                      // type; since these are shared by all constructors, one
+                      // should be able to create a substitution once and for
+                      // all by zipping them with `args'.  That didn't work when
+                      // I tried, though: the constructors has #.'a and #.'b,
+                      // while the parent type had 'a and 'b
+                      (hd, List.map (constructor_match_info args) constructors))
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //

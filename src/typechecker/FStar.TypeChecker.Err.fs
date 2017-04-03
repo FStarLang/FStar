@@ -35,16 +35,16 @@ let format_match_info typ_lid match_info =
     let format_var (var, typ, closed) =
         // [typ] is the actual type; [closed] is [typ] wrapped to be reparseable
         let typ, closed = Print.term_to_string typ, Print.term_to_string closed in
-        var, Util.format3 "${%s<<<%s|||%s>>>}" var typ closed in
+        var, BU.format3 "${%s<<<%s|||%s>>>}" var typ closed in
     let format_branch { mib_name = name; mib_kind = kind; mib_vars = vars } =
         let vars = List.map format_var vars in
         match kind with
         | Nil -> "[]"
-        | Cons -> "(" ^ (Util.concat_l " :: " (List.map snd vars)) ^ ")"
+        | Cons -> "(" ^ (BU.concat_l " :: " (List.map snd vars)) ^ ")"
         | Record -> let format_field (name, place) = name ^ " = " ^ place in
-                    "{ " ^ (Util.concat_l "; " (List.map format_field vars)) ^ " }"
-        | Tuple -> "(" ^ (Util.concat_l ", " (List.map snd vars)) ^ ")"
-        | Variant -> "(" ^ Util.concat_l " " (Ident.string_of_lid name :: List.map snd vars) ^ ")" in
+                    "{ " ^ (BU.concat_l "; " (List.map format_field vars)) ^ " }"
+        | Tuple -> "(" ^ (BU.concat_l ", " (List.map snd vars)) ^ ")"
+        | Variant -> "(" ^ BU.concat_l " " (Ident.string_of_lid name :: List.map snd vars) ^ ")" in
     Options.with_saved_options
       (fun () ->
        Options.set_option "print_full_name" (Options.Bool true);

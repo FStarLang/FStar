@@ -111,6 +111,7 @@ let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
+let try_current_module env = env.curmodule
 let qual = qual_id
 let qualify env id =
     match env.curmonad with
