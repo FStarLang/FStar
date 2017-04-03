@@ -1802,60 +1802,89 @@ let mlift_of_sub_eff env sub : mlift =
     //3. Then, we build (sigma sub_eff_target) (sigma sub_eff_lift_wp nct.wp)
     //step 1
     let sigma =
-        let skeleton = (sub.sub_eff_univs,
-                        S.mk (Tm_arrow(sub.sub_eff_binders, S.mk_Total Common.t_unit)) None Range.dummyRange) in
-        let univ_meta_vars, skel = Env.inst_tscheme skeleton in
-        let univ_meta_vars_subst, _ =
-            List.fold_right
-                   (fun univ (out, i) -> S.UN(i, univ)::out, i+1)
-                   univ_meta_vars
-                   ([], List.length sub.sub_eff_binders) in
-        let _term, _typ, _guard, index_meta_var_subst = maybe_instantiate env S.tun skel in
-        univ_meta_vars_subst @ index_meta_var_subst
+      let skeleton =
+        sub.sub_eff_univs,
+        S.mk (Tm_arrow(sub.sub_eff_binders, S.mk_Total Common.t_unit)) None Range.dummyRange
+      in
+      let univ_meta_vars, skel = Env.inst_tscheme skeleton in
+      let univ_meta_vars_subst, _ =
+        List.fold_right
+          (fun univ (out, i) -> S.UN(i, univ)::out, i+1)
+          univ_meta_vars
+          ([], List.length sub.sub_eff_binders)
+      in
+      let _term, _typ, _guard, index_meta_var_subst = maybe_instantiate env S.tun skel in
+      univ_meta_vars_subst @ index_meta_var_subst
     in
-    //step 2
-    let formal_source = SS.subst_comp sigma (S.mk_Comp sub.sub_eff_source) in
-    let actual_source_no_wp =
+
+    (* step 2 *)
+    (* Involving the actual wp in the following unification problem would just lead *)
+    (* to unnecessary computations but Rel.sub_comp assumes that the comp types are *)
+    (* well formed so we provide a dummy wp *)
+    let _ =
+      let dummy_wp = as_arg S.tun in
+      let formal_source =
+        let ct = { sub.sub_eff_source with
+            effect_args = sub.sub_eff_source.effect_args @ [dummy_wp]
+          }
+        in
+        SS.subst_comp sigma (S.mk_Comp ct)
+      in
+      let actual_source =
         let ct = {
             comp_typ_name=nct.nct_name;
             comp_univs=nct.nct_univs;
-            effect_args=nct.nct_indices@[nct.nct_result]; //NOTICE NO nct.wp here INTENTIONAL!
+            effect_args=nct.nct_indices@[nct.nct_result ; dummy_wp];
             flags=nct.nct_flags
-        } in
-        S.mk_Comp ct in
-    begin match Rel.sub_comp ({env with use_eq=true}) formal_source actual_source_no_wp with
+          }
+        in
+        S.mk_Comp ct
+      in
+
+      match Rel.sub_comp ({env with use_eq=true}) formal_source actual_source with
         | None -> fail ()
         | Some g -> Rel.force_trivial_guard env g
-    end;
+    in
+
     let target_nct =
-        let target_wp =
-            S.mk_Tm_app (SS.subst sigma (BU.must sub.sub_eff_lift_wp))
-                         [nct.nct_wp] None Range.dummyRange in
-        let target_comp_no_wp = SS.subst_comp sigma (S.mk_Comp sub.sub_eff_target) |> U.comp_to_comp_typ in
-        let target_comp_typ =
-            {target_comp_no_wp with
-             effect_args=target_comp_no_wp.effect_args@[S.as_arg target_wp]} in
-        Env.comp_as_normal_comp_typ env (S.mk_Comp target_comp_typ)
+      let target_wp =
+        S.mk_Tm_app (SS.subst sigma (BU.must sub.sub_eff_lift_wp))
+          [nct.nct_wp]
+          None
+          Range.dummyRange
+      in
+      let target_comp_no_wp =
+        SS.subst_comp sigma (S.mk_Comp sub.sub_eff_target) |> U.comp_to_comp_typ
+      in
+      let target_comp_typ =
+        { target_comp_no_wp with
+          effect_args=target_comp_no_wp.effect_args@[S.as_arg target_wp]
+        }
+      in
+      Env.comp_as_normal_comp_typ env (S.mk_Comp target_comp_typ)
     in
     target_nct
-in //end mlift
-   mlift
+  in //end mlift
+
+  mlift
 
 let extend_effect_lattice env sub_eff =
     let compose_edges e1 e2 : edge =
        {msource=e1.msource;
         mtarget=e2.mtarget;
-        mlift=(fun nct -> e2.mlift (e1.mlift nct))} in
+        mlift=(fun env nct -> e2.mlift env (e1.mlift env nct))} in
 
-    let edge =
-      {msource=sub_eff.sub_eff_source.comp_typ_name;
-       mtarget=sub_eff.sub_eff_target.comp_typ_name;
-       mlift=mlift_of_sub_eff env sub_eff} in
+    let edge = {
+        msource = sub_eff.sub_eff_source.comp_typ_name;
+        mtarget = sub_eff.sub_eff_target.comp_typ_name;
+        mlift = mlift_of_sub_eff sub_eff
+      }
+    in
 
     let id_edge l = {
        msource=l;
        mtarget=l;
-       mlift=(fun nct -> nct);
+       mlift=(fun _ nct -> nct);
     } in
 
     let print_mlift l =
