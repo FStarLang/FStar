@@ -131,6 +131,7 @@ let init () =
         ("pretype"                      , Bool true);
         ("prims_ref"                    , Unset);
         ("print_before_norm"            , Bool false);
+        ("print_bound_var_indices"      , Bool true);
         ("print_bound_var_types"        , Bool false);
         ("print_effect_args"            , Bool false);
         ("print_fuels"                  , Bool false);
@@ -219,6 +220,7 @@ let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects"
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
+let get_print_bound_var_indices ()      = lookup_opt "print_bound_var_indices"  as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
@@ -551,6 +553,11 @@ let rec specs () : list<Getopt.opt> =
         "Do not normalize types before printing (for debugging)");
 
        ( noshort,
+        "print_bound_var_indices",
+        ZeroArgs(fun () -> Bool true),
+        "Print the indices of bound variables");
+
+       ( noshort,
         "print_bound_var_types",
         ZeroArgs(fun () -> Bool true),
         "Print the types of bound variables");
@@ -758,6 +765,7 @@ let settable = function
     | "max_ifuel"
     | "min_fuel"
     | "print_before_norm"
+    | "print_bound_var_indices"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
@@ -934,6 +942,7 @@ let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
 let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
+let print_bound_var_indices      () = get_print_bound_var_indices     ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()
