@@ -37,6 +37,7 @@ module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
+module BU      = FStar.Util
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -132,7 +133,7 @@ let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module a
                                     * DsEnv.env
                                     * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
-  let check_mods () =
+  let check_mods fmods () =
       let env, all_mods =
           fmods |> List.fold_left (fun (env, all_mods) m ->
                     let (m, env), elapsed_ms =
@@ -144,8 +145,45 @@ let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module a
   | [m] when (Options.should_verify m.name.str //if we're verifying this module
               && (FStar.Options.record_hints() //and if we're recording or using hints
                   || FStar.Options.use_hints())) ->
-    SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mods
-  | _ -> check_mods() //don't add a hints file for modules that are not actually verified
+    SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) (check_mods fmods)
+  | [m] when not (Options.should_verify m.name.str) ->
+
+    let get_lax_cache_file_name (fn:string) :string =
+      let fn = FStar.Util.normalize_file_path fn in
+      FStar.Util.format1 "%s.lax.out" fn
+    in
+
+    let use_cache fn cache_fn :bool =
+      BU.file_exists cache_fn &&
+        (BU.is_before (BU.get_file_last_modification_time fn) (BU.get_file_last_modification_time cache_fn))
+    in
+
+    let fn = FStar.Parser.ParseIt.find_file fn in
+    let cache_fn = get_lax_cache_file_name fn in
+
+    let fmods, serialize =
+      if use_cache fn cache_fn then
+        let _ = FStar.Util.print_string ("Using the cache file: " ^ cache_fn ^ ", loading module\n") in
+        match FStar.Util.load_value_from_file cache_fn with
+        | Some m -> [ { m with lax_deserialized=true } ], false
+        | None   ->
+          let _ = FStar.Util.print_string ("Failed to load the module from the cache file: " ^ cache_fn ^ "\n") in
+          fmods, true
+      else
+        let _ = FStar.Util.print_string ("Not using the cache file: " ^ cache_fn ^ "\n") in
+        fmods, true
+    in
+    let l, dsenv, env = check_mods fmods () in
+    let _ =
+      if serialize then
+        let _ = if not (List.length l = 1) then failwith "Impossible, expected a single module" else () in
+        let m, _ = List.hd l in
+        let _ = FStar.Util.print_string ("Serializing the cache file: " ^ cache_fn ^ "\n") in
+        FStar.Util.save_value_to_file cache_fn m
+      else ()
+    in
+    l, dsenv, env
+  | _ -> check_mods fmods () //don't add a hints file for modules that are not actually verified
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)

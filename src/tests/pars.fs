@@ -20,7 +20,8 @@ let tcenv_ref = ref None
 let test_mod_ref = ref (Some ({name=test_lid;
                                 declarations=[];
                                 exports=[];
-                                is_interface=false}))
+                                is_interface=false;
+                                lax_deserialized=false}))
 
 let parse_mod mod_name dsenv =
     match ParseIt.parse (Inl mod_name) with

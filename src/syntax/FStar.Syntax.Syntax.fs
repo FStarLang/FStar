@@ -341,7 +341,8 @@ type modul = {
   name: lident;
   declarations: sigelts;
   exports: sigelts;
-  is_interface:bool
+  is_interface:bool;
+  lax_deserialized:bool
 }
 type path = list<string>
 type subst_t = list<subst_elt>

@@ -1262,6 +1262,13 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
+let prepare_env_for_tc_decls env modul =
+  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+  let msg = "Internals for " ^ name in
+  let _ = env.solver.push msg in
+  let env = Env.set_current_module env modul.name in
+  env
+
 let tc_partial_modul env modul =
   let verify = Options.should_verify modul.name.str in
   let action = if verify then "Verifying" else "Lax-checking" in
@@ -1269,14 +1276,10 @@ let tc_partial_modul env modul =
   if Options.debug_any () then
     BU.print3 "%s %s of %s\n" action label modul.name.str;
 
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
-  let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
-  //AR: the interactive mode calls this function, because of which there is an extra solver push.
+  //AR: the interactive mode calls this function (tc_partial_modul), because of which there is an extra solver push (in prepare_env_for_tc_decls)
   //    the interactive mode does not call finish_partial_modul, so this push is not popped.
   //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
-  env.solver.push msg;
-  let env = Env.set_current_module env modul.name in
+  let env = prepare_env_for_tc_decls env modul in
   let ses, exports, env = tc_decls env modul.declarations in
   {modul with declarations=ses}, exports, env
 
@@ -1352,11 +1355,10 @@ let check_exports env (modul:modul) exports =
     else List.iter check_sigelt exports
 
 
-let finish_partial_modul env modul exports =
-  let modul = {modul with exports=exports; is_interface=modul.is_interface} in
+let finish_partial_modul env modul =
   let env = Env.finish_module env modul in
   if not (Options.lax())
-  then check_exports env modul exports;
+  then check_exports env modul modul.exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
   env.solver.refresh();
@@ -1365,8 +1367,18 @@ let finish_partial_modul env modul exports =
   modul, env
 
 let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul in
-  finish_partial_modul env modul non_private_decls
+  let modul, env =
+    if not (modul.lax_deserialized) then
+      let modul, non_private_decls, env = tc_partial_modul env modul in
+      let modul = {modul with exports=non_private_decls; is_interface=modul.is_interface} in
+      modul, env
+    else
+      let _ = BU.print_string "Tc: module is deserialized\n" in
+      let _ = if not (env.lax) then failwith "Impossible, expected lax flag in the env" else () in
+      let env = prepare_env_for_tc_decls env modul in
+      modul, List.fold_left (fun env s -> Env.push_sigelt env s) env modul.declarations
+  in
+  finish_partial_modul env modul
 
 let check_module env m =
   if Options.debug_any()

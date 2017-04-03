@@ -2038,7 +2038,8 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
     name = mname;
     declarations = sigelts;
     exports = [];
-    is_interface=intf
+    is_interface=intf;
+    lax_deserialized=false;
   } in
   env, modul, pop_when_done
 
