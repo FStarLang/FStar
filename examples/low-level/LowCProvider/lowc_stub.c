@@ -117,7 +117,7 @@ CAMLprim value ocaml_AEAD_create(value alg, value key) {
                 };
         }
         else
-                ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+                ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None };
 
         AEAD_ST* st = malloc(sizeof(AEAD_ST));
         st->x00 = FStar_HyperHeap_root;

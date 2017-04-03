@@ -1766,7 +1766,7 @@ and cps_and_elaborate:
                                                                then
                                                                  let g_opt =
                                                                    FStar_TypeChecker_Rel.try_teq
-                                                                    env1
+                                                                    true env1
                                                                     lc.FStar_Syntax_Syntax.res_typ
                                                                     FStar_Syntax_Util.ktype0 in
                                                                  (match g_opt

@@ -63,6 +63,7 @@ type effects = {
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type goal = term
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -98,6 +99,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
+    preprocess   :env -> goal -> list<(env * goal)>;  //a hook for a tactic; still too simple
     solve        :option<(unit -> string)> -> env -> typ -> unit;
     is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
@@ -1013,6 +1015,11 @@ let push_local_binding env b = {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
+let pop_bv env =
+    match env.gamma with
+    | Binding_var x::rest -> Some (x, {env with gamma=rest})
+    | _ -> None
+
 let push_binders env (bs:binders) =
     List.fold_left (fun env (x, _) -> push_bv env x) env bs
 
@@ -1114,6 +1121,24 @@ let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
 
+let print_gamma env =
+    env.gamma |> List.map (function
+        | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
+        | Binding_univ u -> "Binding_univ " ^ u.idText
+        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)
+        | Binding_sig (ls, _) -> "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+        | Binding_sig_inst (ls, _, _) -> "Binding_sig_inst " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", "))
+    |> String.concat "::\n"
+    |> BU.print1 "%s\n"
+
+let eq_gamma env env' =
+    if BU.physical_equality env.gamma env'.gamma
+    then true
+    else let g = all_binders env in
+         let g' = all_binders env' in
+         List.length g = List.length g'
+         && List.forall2 (fun (b1, _) (b2, _) -> S.bv_eq b1 b2) g g'
+
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let lidents env : list<lident> =
@@ -1133,6 +1158,7 @@ let dummy_solver = {
     commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
+    preprocess=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());

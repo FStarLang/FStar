@@ -1051,7 +1051,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                  end
             end
 
-        | Tm_ascribed(e0, tc, f) ->
+        | Tm_ascribed(e0, (tc, _), f) ->
           let t = match tc with
             | Inl t -> term_as_mlty g t
             | Inr c -> term_as_mlty g (U.comp_result c) in

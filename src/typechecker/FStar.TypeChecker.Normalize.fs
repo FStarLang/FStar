@@ -34,6 +34,7 @@ module SS = FStar.Syntax.Subst
 //basic util
 module BU = FStar.Util
 module FC = FStar.Const
+module SC = FStar.Syntax.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
@@ -57,7 +58,6 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
-  (* | UnfoldIf of S.fv -> *)
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -66,6 +66,13 @@ type step =
   | CompressUvars
   | NoFullNorm
 and steps = list<step>
+
+type primitive_step = {
+    name:Ident.lid;
+    arity:int;
+    strong_reduction_ok:bool;
+    interpretation:(args -> option<term>)
+}
 
 type closure =
   | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
@@ -81,7 +88,8 @@ let closure_to_string = function
 type cfg = {
     steps: steps;
     tcenv: Env.env;
-    delta_level: list<Env.delta_level>  // Controls how much unfolding of definitions should be performed
+    delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
+    primitive_steps:list<primitive_step>
 }
 
 type branches = list<(pat * option<term> * term)>
@@ -97,7 +105,7 @@ type stack_elt =
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Steps    of steps * list<Env.delta_level>
+ | Steps    of steps * list<primitive_step> * list<Env.delta_level>
  | Debug    of term
 
 type stack = list<stack_elt>
@@ -122,7 +130,7 @@ let stack_elt_to_string = function
     | App (t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
     | Meta (m,_) -> "Meta"
     | Let  _ -> "Let"
-    | Steps (s, _) -> "Steps"
+    | Steps (_, _, _) -> "Steps"
     | Debug t -> BU.format1 "Debug %s" (Print.term_to_string t)
     // | _ -> "Match"
 
@@ -283,11 +291,14 @@ let rec closure_as_term cfg env t =
              let phi = closure_as_term_delayed cfg env phi in
              mk (Tm_refine(List.hd x |> fst, phi)) t.pos
 
-           | Tm_ascribed(t1, Inl t2, lopt) ->
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inl <| closure_as_term_delayed cfg env t2, lopt)) t.pos
-
-           | Tm_ascribed(t1, Inr c, lopt) ->
-             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, Inr <| close_comp cfg env c, lopt)) t.pos
+           | Tm_ascribed(t1, (annot,tacopt), lopt) ->
+             let annot = match annot with
+                | Inl t -> Inl (closure_as_term_delayed cfg env t)
+                | Inr c -> Inr (close_comp cfg env c) in
+             let tacopt = BU.map_opt tacopt (closure_as_term_delayed cfg env) in
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1,
+                             (annot, tacopt),
+                             lopt)) t.pos
 
            | Tm_meta(t', Meta_pattern args) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t',
@@ -416,134 +427,165 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (* Simplification steps are not part of definitional equality      *)
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
-let arith_ops =
+let built_in_primitive_steps : list<primitive_step> =
+    let const_as_tm c p = mk (Tm_constant c) p in
+    let interp_math_op (f:int -> int -> FC.sconst) : args -> option<term> =
+        fun args ->
+          match args with
+          | [(a1, _); (a2, _)] -> begin
+            match (SS.compress a1).n, (SS.compress a2).n with
+            | Tm_constant (FC.Const_int(i, None)), Tm_constant (FC.Const_int(j, None)) ->
+              Some (const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos)
+            | _ ->
+              None
+            end
+          | _ -> failwith "Unexpected number of arguments"
+    in
+    let interp_bounded_op (f:int -> int -> FC.sconst) : args -> option<term> =
+        fun args ->
+          match args with
+          | [(a1, _); (a2, _)] -> begin
+             //Note: it's ok to do a deep pattern match on fvars and constants
+             //      they are never wrapped by Tm_delayed nodes
+             match (SS.compress a1).n, (SS.compress a2).n with
+             | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)]),
+               Tm_app ({n=Tm_fvar fv2}, [({n=Tm_constant (FC.Const_int (j, None))}, _)])
+                when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
+                     BU.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
+               // Machine integers are represented as applications, e.g.
+               // [FStar.UInt8.uint_to_t 0xff], so as to get proper
+               // bounds checking. Maintain that invariant.
+               let n = const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos in
+               Some (mk_app (mk (Tm_fvar fv1) a2.pos) [ n, None ])
+             | _ -> None
+            end
+          | _ -> failwith "Unexpected number of arguments"
+    in
+    let as_primitive_step arity mk (l, f) = {name=l; arity=arity; strong_reduction_ok=true; interpretation=mk f} in
     let int_as_const  : int -> FC.sconst = fun i -> FC.Const_int (BU.string_of_int i, None) in
     let bool_as_const : bool -> FC.sconst = fun b -> FC.Const_bool b in
-    [(Const.op_Addition,    (fun x y -> int_as_const (x + y)));
-     (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
-     (Const.op_Multiply,    (fun x y -> int_as_const (Prims.op_Multiply x y)));
-     (Const.op_Division,    (fun x y -> int_as_const (x / y)));
-     (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
-     (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
-     (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
-     (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-     (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] @
-     List.flatten (List.map (fun m -> [
-       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
-       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
-       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (Prims.op_Multiply x y))
-     ]) [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])
+    let basic_arith =
+        List.map (as_primitive_step 2 interp_math_op)
+            [(Const.op_Addition, (fun x y -> int_as_const (x + y)));
+             (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
+             (Const.op_Multiply,    (fun x y -> int_as_const (Prims.op_Multiply x y)));
+             (Const.op_Division,    (fun x y -> int_as_const (x / y)));
+             (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
+             (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
+             (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
+             (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
+             (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] in
+    let bounded_arith =
+        List.map (as_primitive_step 2 interp_bounded_op)
+                 (List.flatten (List.map (fun m -> [
+                       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
+                       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
+                       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (Prims.op_Multiply x y))
+                     ])
+                     [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])) in
+    let unary_string_ops =
+        let mk x = mk x Range.dummyRange in
+        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
+        let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
+        let interp (args:args) : option<term> =
+            match args with
+            | [(a, _)] -> begin
+              match (SS.compress a).n with
+              | Tm_constant (FC.Const_string(bytes, _)) ->
+                let s = BU.string_of_bytes bytes in
+                let char_t = name SC.char_lid in
+                let nil_char =
+                    S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
+                                [S.iarg char_t]
+                                None Range.dummyRange in
+                Some (FStar.List.fold_right (fun c a ->
+                            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
+                                        [S.iarg char_t;
+                                         S.as_arg (mk (Tm_constant (Const_char c)));
+                                         S.as_arg a]
+                                        None Range.dummyRange)
+                            (list_of_string s)
+                            nil_char)
+               | _ ->
+                 None
+               end
 
-let un_ops =
-    let mk x = mk x Range.dummyRange in
-    let name x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant None)) in
-    let ctor x = mk (Tm_fvar (lid_as_fv (Const.p2l x) Delta_constant (Some Data_ctor))) in
-    [Const.p2l ["FStar"; "String"; "list_of_string"],
-     (fun s -> FStar.List.fold_right (fun c a ->
-                 mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Cons"]) [U_zero], [(name ["FStar"; "Char"; "char"], Some (S.Implicit true));
-                                                      (mk (Tm_constant (Const_char c)), None);
-                                                      (a, None)]))
-               ) (list_of_string s) (mk (Tm_app (mk_Tm_uinst (ctor ["Prims"; "Nil"]) [U_zero], [name ["FStar"; "Char"; "char"], Some (S.Implicit true)]))))]
+            | _ -> failwith "Unexpected number of arguments"
+         in
+         [{ name = Const.p2l ["FStar"; "String"; "list_of_string"];
+            arity = 1;
+            strong_reduction_ok=true;
+            interpretation=interp}]
+      in
+      basic_arith@bounded_arith@unary_string_ops
 
-
-let reduce_equality tm =
-    let is_decidable_equality t =
-        match (U.un_uinst t).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv Const.op_Eq
-        | _ -> false
+let equality_ops : list<primitive_step> =
+    let interp_bool (args:args) : option<term> =
+        match args with
+        | [(_typ, _); (a1, _); (a2, _)] ->
+            (match U.eq_tm a1 a2 with
+            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) a2.pos)
+            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) a2.pos)
+            | _ -> None)
+        | _ ->
+            failwith "Unexpected number of arguments"
     in
-    let is_propositional_equality t =
-        match (U.un_uinst t).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv Const.eq2_lid
-        | _ -> false
+    let interp_prop (args:args) : option<term> =
+        match args with
+        | [(_typ, _); (a1, _); (a2, _)]    //eq2
+        | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
+            (match U.eq_tm a1 a2 with
+            | U.Equal -> Some U.t_true
+            | U.NotEqual -> Some U.t_false
+            | _ -> None)
+        | _ ->
+            failwith "Unexpected number of arguments"
     in
-    match tm.n with
-    | Tm_app(op_eq_inst, [(_typ, _); (a1, _); (a2, _)])
-        when is_decidable_equality op_eq_inst ->
-        //By typability, hasEq _typ. So, (a1, a2) are representations of 0-order terms.
-        //We syntactically compare them, and trust that the compilation of
-        //Prims.op_Equality (=) to OCaml's built-in polymorphic equality corresponds to this check
-        let tt =
-            match U.eq_tm a1 a2 with
-            | U.Equal -> mk (Tm_constant (FC.Const_bool true)) tm.pos
-            | U.NotEqual -> mk (Tm_constant (FC.Const_bool false)) tm.pos
-            | _ -> tm in
-//        if not (BU.physical_equality tt tm)
-//        then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string tt);
-        tt
+    let decidable_equality =
+        {name = Const.op_Eq;
+         arity = 3;
+         strong_reduction_ok=true;
+         interpretation=interp_bool}
+    in
+    let propositional_equality =
+        {name = Const.eq2_lid;
+         arity = 3;
+         strong_reduction_ok=true;
+         interpretation = interp_prop}
+    in
+    let hetero_propositional_equality =
+        {name = Const.eq3_lid;
+         arity = 4;
+         strong_reduction_ok=true;
+         interpretation = interp_prop}
+    in
 
-    | Tm_app(eq2_inst, [_; (a1, _); (a2, _)])
-    | Tm_app(eq2_inst, [(a1, _); (a2, _)]) //TODO: remove this case, see S.mk_eq, which seems to drop its type argument
-        when is_propositional_equality eq2_inst ->
-        //As an optimization, we simplify decidable instances of propositional equality
-        let tt =
-            match U.eq_tm a1 a2 with
-            | U.Equal -> U.t_true
-            | U.NotEqual -> U.t_false
-            | _ -> tm in
-//        if not (BU.physical_equality tt tm)
-//        then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string tt);
-        tt
+    [decidable_equality;propositional_equality; hetero_propositional_equality]
 
-    | _ -> tm
-
-
-let find_fv (fv:term) (ops:list<(Ident.lident * 'a)>) : option<(Ident.lident * 'a)> =
-    match fv.n with
-    | Tm_fvar fv -> List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops
-    | _ -> None
-
-let reduce_primops steps tm =
-    if not <| List.contains Primops steps
+let reduce_primops cfg tm =
+    if not <| List.contains Primops cfg.steps
     then tm
-    else match tm.n with
-         | Tm_app(fv, [(a1, _); (a2, _)]) -> //Arithmetic operators
-            begin match find_fv fv arith_ops with
+    else begin
+         let head, args = U.head_and_args tm in
+         match (U.un_uinst head).n with
+         | Tm_fvar fv -> begin
+           match List.tryFind (fun ps -> S.fv_eq_lid fv ps.name) cfg.primitive_steps with
+           | None -> tm
+           | Some prim_step ->
+             if List.length args < prim_step.arity
+             then tm //partial application; can't step
+             else match prim_step.interpretation args with
                   | None -> tm
-                  | Some (_, op) ->
-                    let norm i j =
-                        let c = op (BU.int_of_string i) (BU.int_of_string j) in
-                        mk (Tm_constant c) tm.pos
-                    in
-                    begin match (SS.compress a1).n, (SS.compress a2).n with
-                          | Tm_app (head1, [ arg1, _ ]), Tm_app (head2, [ arg2, _ ]) ->
-                            begin match (SS.compress head1).n,
-                                        (SS.compress head2).n,
-                                        (SS.compress arg1).n,
-                                        (SS.compress arg2).n with
-                                  | Tm_fvar fv1,
-                                    Tm_fvar fv2,
-                                    Tm_constant (FC.Const_int (i, None)),
-                                    Tm_constant (FC.Const_int (j, None))
-                                        when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
-                                             BU.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
-                                    // Machine integers are represented as applications, e.g.
-                                    // [FStar.UInt8.uint_to_t 0xff], so as to get proper
-                                    // bounds checking. Maintain that invariant.
-                                    mk_app (mk (Tm_fvar fv1) tm.pos) [ norm i j, None ]
-                                  | _ ->
-                                    tm
-                            end
-                          | Tm_constant (FC.Const_int(i, None)), Tm_constant (FC.Const_int(j, None)) ->
-                            norm i j
-                          | _ -> tm
-                    end
-            end
+                  | Some reduced -> reduced
+           end
+         | _ -> tm
+   end
 
-         | Tm_app(fv, [(a1, _)]) -> //Unary operators. e.g., list_of_string
-            begin match find_fv fv un_ops with
-            | None -> tm
-            | Some (_, op) ->
-              begin match (SS.compress a1).n with
-                | Tm_constant (FC.Const_string(b, _)) ->
-                    op (Bytes.unicode_bytes_as_string b)
-                | _ -> tm
-              end
-            end
+let reduce_equality cfg tm =
+    reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
 
-         | _ -> reduce_equality tm
-
-let maybe_simplify steps tm =
+let maybe_simplify cfg tm =
+    let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid ->  Some true
@@ -551,7 +593,7 @@ let maybe_simplify steps tm =
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
     if not <| List.contains Simplify steps
-    then reduce_primops steps tm
+    then reduce_primops cfg tm
     else match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
@@ -594,7 +636,7 @@ let maybe_simplify steps tm =
                                 | _ -> tm
                        end
                     | _ -> tm
-              else reduce_equality tm
+              else reduce_equality cfg tm
             | _ -> tm
 
 (********************************************************************************************************************)
@@ -615,6 +657,17 @@ let get_norm_request args =
     | [_; (tm, _)]
     | [(tm, _)] -> tm
     | _ -> failwith "Impossible"
+
+let is_reify_head = function
+    | App({n=Tm_constant FC.Const_reify}, _, _)::_ ->
+      true
+    | _ ->
+      false
+
+let is_fstar_tactics_quote t =
+    match (U.un_uinst t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote_lid
+    | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
@@ -638,6 +691,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
+          | Tm_app({n=Tm_fvar fv}, _)
+            when S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid ->
+            rebuild cfg env stack t //embedded terms should not be normalized
+
+          | Tm_app(hd, args)
+            when is_fstar_tactics_quote hd ->
+            let args = closures_as_args_delayed cfg env args in
+            let t = {t with n=Tm_app(hd, args)} in
+            let t = reduce_primops cfg t in
+            rebuild cfg env stack t //quoted terms should not be normalized, but they may have free variables
+
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
@@ -645,7 +709,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let tm = get_norm_request args in
             let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
-            let stack' = Debug t :: Steps (cfg.steps, cfg.delta_level)::stack in
+            let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
@@ -653,6 +717,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
             let t = S.mk(Tm_app(t', a2::rest)) None t.pos in
             norm cfg env stack t
+
+          | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [a])
+                when (cfg.steps |> List.contains Reify &&
+                      is_reify_head stack) ->
+            norm cfg env (List.tl stack) (fst a)
 
           | Tm_app({n=Tm_constant FC.Const_reify}, [a])
                 when (cfg.steps |> List.contains Reify) ->
@@ -703,10 +772,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack t
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
                  begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
-                    | None -> begin
-                        log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
-                        rebuild cfg env stack t
-                      end
+                    | None ->
+                      log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
+                      rebuild cfg env stack t
+
                     | Some (us, t) ->
                       log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
@@ -796,8 +865,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
-                | Steps (s, dl) :: stack ->
-                  norm ({cfg with steps=s; delta_level=dl}) env stack t
+                | Steps (s, ps, dl) :: stack ->
+                  norm ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
 
                 | MemoLazy r :: stack ->
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
@@ -818,6 +887,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
+                       let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+                       let cfg = {cfg with primitive_steps=List.filter (fun ps -> ps.strong_reduction_ok) cfg.primitive_steps} in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -848,7 +919,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
 
-          | Tm_ascribed(t1, tc, l) ->
+          | Tm_ascribed(t1, (tc, tacopt), l) ->
             begin match stack with
               | Match _ :: _
               | Arg _ :: _
@@ -861,7 +932,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let tc = match tc with
                     | Inl t -> Inl (norm cfg env [] t)
                     | Inr c -> Inr (norm_comp cfg env c) in
-                rebuild cfg env stack (mk (Tm_ascribed(t1, tc, l)) t.pos)
+                let tacopt = BU.map_opt tacopt (norm cfg env []) in
+                rebuild cfg env stack (mk (Tm_ascribed(t1, (tc, tacopt), l)) t.pos)
             end
 
           | Tm_match(head, branches) ->
@@ -937,7 +1009,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
 
                   let t = norm cfg env [] t in
-                  let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                  let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
                   let cfg =
                     if cfg.steps |> List.contains PureSubtermsWithinComputations
                     then
@@ -1131,7 +1203,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     || U.is_ghost_effect m)
                 && cfg.steps |> List.contains PureSubtermsWithinComputations
                 then
-                  let stack = Steps(cfg.steps, cfg.delta_level)::stack in
+                  let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
                   let cfg =
                     { cfg with
                       steps=[PureSubtermsWithinComputations;
@@ -1295,8 +1367,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
     rebuild cfg env stack t
 
-  | Steps (s, dl) :: stack ->
-    rebuild ({cfg with steps=s; delta_level=dl}) env stack t
+  | Steps (s, ps, dl) :: stack ->
+    rebuild ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
 
   | Meta(m, r)::stack ->
     let t = mk (Tm_meta(t, m)) r in
@@ -1350,7 +1422,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
   | App(head, aq, r)::stack ->
     let t = S.extend_app head (t,aq) None r in
-    rebuild cfg env stack (maybe_simplify cfg.steps t)
+    rebuild cfg env stack (maybe_simplify cfg t)
 
   | Match(env, branches, r) :: stack ->
     log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));
@@ -1358,6 +1430,10 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     //see tc.fs, the case of Tm_match and the comment related to issue #594
     let scrutinee = t in
     let norm_and_rebuild_match () =
+      log cfg (fun () ->
+          BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
+                (Print.term_to_string scrutinee)
+                (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
       let whnf = List.contains WHNF cfg.steps in
       let cfg_exclude_iota_zeta =
         let new_delta =
@@ -1514,9 +1590,13 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps@equality_ops}
 
-let normalize s e t = norm (config s e) [] [] t
+let normalize_with_primitive_steps ps s e t =
+    let c = config s e in
+    let c = {config s e with primitive_steps=c.primitive_steps@ps} in
+    norm c [] [] t
+let normalize s e t = normalize_with_primitive_steps [] s e t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe env u = norm_universe (config [] env) [] u
 let ghost_to_pure env c = ghost_to_pure_aux (config [] env) [] c

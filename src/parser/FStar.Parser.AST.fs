@@ -94,7 +94,7 @@ type term' =
   | If        of term * term * term
   | Match     of term * list<branch>
   | TryWith   of term * list<branch>
-  | Ascribed  of term * term
+  | Ascribed  of term * term * option<term>
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
   | Product   of list<binder> * term                 (* function space *)
@@ -551,8 +551,10 @@ let rec term_to_string (x:term) = match x.tm with
         (p |> pat_to_string)
         (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
         (e |> term_to_string)) branches)
-  | Ascribed(t1, t2) ->
+  | Ascribed(t1, t2, None) ->
     Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
+  | Ascribed(t1, t2, Some tac) ->
+    Util.format3 "(%s : %s by %s)" (t1|> term_to_string) (t2|> term_to_string) (tac |> term_to_string)
   | Record(Some e, fields) ->
     Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
   | Record(None, fields) ->

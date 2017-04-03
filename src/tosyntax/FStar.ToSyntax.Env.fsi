@@ -124,6 +124,8 @@ val try_lookup_definition: env -> lident -> option<term>
 val is_effect_name: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>
+val resolve_module_name: env:env -> lid:lident -> honor_ns:bool -> option<lident>
+val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
 
 val push_bv: env -> ident -> env * bv
 val push_bv_mutable: env -> ident -> env * bv
@@ -142,6 +144,8 @@ val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
+
+val transitive_exported_ids: env -> lident -> list<string>
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
