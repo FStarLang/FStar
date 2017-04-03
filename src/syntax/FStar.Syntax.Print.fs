@@ -296,6 +296,7 @@ let rec term_to_string x =
     if (Options.print_universes())
     then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
     else term_to_string t
+  | Tm_unknown -> "_"
   | _ -> tag_of_term x
 
 and  pat_to_string x = match x.v with
