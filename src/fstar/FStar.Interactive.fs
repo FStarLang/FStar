@@ -417,7 +417,7 @@ let rec go (line_col:(int*int))
        Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info tcenv name typ rng doc));
     go line_col filename stack curmod env ts
   | ShowMatch (type_str) ->
-    let dummy_decl = Util.format1 "let __show_match_dummy__ = (%s)" type_str in
+    let dummy_decl = Util.format1 "let __show_match_dummy__ : Type = (%s)" type_str in
     let dummy_fragment = {frag_text=dummy_decl; frag_line=0; frag_col=0} in
 
     let env_mark = mark env in
@@ -425,8 +425,11 @@ let rec go (line_col:(int*int))
       match curmod, FStar.Parser.ParseIt.parse (Inr dummy_fragment) with
       | Some _, Inl (Inr decls, _) ->
         (try
-           let dsenv', decls = FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls in
-           let ses, exported, tcenv' = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+           let _dsenv', ses = FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls in
+           // FIXME: We never typecheck [ses].  Ideally we'd run something like this:
+           //     let ses, _exported, _tcenv' = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+           // but that causes F* to complain loudly (“Failed to resolve implicit
+           // argument of type … introduced in … because user-provided implicit”)
            match ses with
            | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _, _) }] ->
              TypeChecker.Env.try_lookup_match_info (snd env) def

@@ -166,7 +166,7 @@ type match_info_branch_kind = | Nil | Cons | Tuple | Record | Variant
 type match_info_branch = { // TODO Unify with Pattern?
   mib_name: lid;
   mib_kind: match_info_branch_kind;
-  mib_vars: list<(string * typ * typ)>
+  mib_vars: list<(string * typ)>
 }
 val try_lookup_match_info  : env -> typ -> option<(lid * list<match_info_branch>)>
 

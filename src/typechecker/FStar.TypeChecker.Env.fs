@@ -717,27 +717,15 @@ type match_info_branch_kind = | Nil | Cons | Tuple | Record | Variant
 type match_info_branch = { // TODO Unify with Pattern?
   mib_name: lid;
   mib_kind: match_info_branch_kind;
-  mib_vars: list< (string * typ * typ) >
+  mib_vars: list<(string * typ)>
 }
 
 (** Enumerate branches of a match on type [typ].
 
-    [typ] should be an inductive type (e.g. [list]), possibly eta-expanded
-    (e.g. [fun a -> (list a@0)]).  The result is a list of match branches, each
-    of which has a constructor (an [lident]) and multiple arguments (a name and
-    a type).  We want the types of the variables to be re-parsable, so we close
-    the types of the arguments (hence constructor [Mktuple2] of type [tuple2 int
-    'a] has arguments [x:int] and [y:fun a -> a@0]).  This way the UI can send
-    us closed (and thus parseable) terms. *)
+    [typ] should be an inductive type (e.g. [list]), possibly applied.  The
+    result is a list of match branches, each of which has a constructor (an
+    [lident]) and multiple arguments (a name and a type). *)
 let try_lookup_match_info env (t: typ) =
-  let rec open_term typ : term = // Go from [fun a -> tuple2 a@0 int] to [tuple2 a@0 int]
-    let _, t, _ = abs_formals typ in
-    t in
-
-  let rec close_term t = // Go from [tuple2 a@0 int] -> [fun a -> tuple2 a@0 int]
-    let binders = S.binders_of_freenames (FStar.Syntax.Free.names t) in
-    U.abs binders t None in
-
   let get_mib_kind constructor_name explicits =
       match (string_of_lid constructor_name) with
       | "Prims.Nil" -> Nil
@@ -767,7 +755,7 @@ let try_lookup_match_info env (t: typ) =
       mib_kind = get_mib_kind cs_lid explicits;
       mib_vars = List.map (fun bv -> // bv.sort is [a@0] for x and [int] for y
                            let id = Syntax.Util.unmangle_field_name bv.ppname in
-                           (id.idText, bv.sort, close_term bv.sort)) (List.map fst explicits) } in
+                           (id.idText, bv.sort)) (List.map fst explicits) } in
 
   let head_lid_and_args typ : option<(lid * list<arg>)> =
     let hd, args = Syntax.Util.head_and_args typ in
@@ -793,7 +781,7 @@ let try_lookup_match_info env (t: typ) =
                     //   | Some (Inr({ sigel = Sig_declare_typ(_, _, typ, _) } as se, _), _) -> …
                     // But one would be have to be careful with type substitutions.
 
-  analyze_inductive_type (open_term t)
+  analyze_inductive_type t
     |> BU.map_option (fun (hd, _binders, args, constructors) ->
                       // FIXME `binders' here holds the binders of the inductive
                       // type; since these are shared by all constructors, one

@@ -32,10 +32,8 @@ module BU = FStar.Util //basic util
 open FStar.TypeChecker.Common
 
 let format_match_info typ_lid match_info =
-    let format_var (var, typ, closed) =
-        // [typ] is the actual type; [closed] is [typ] wrapped to be reparseable
-        let typ, closed = Print.term_to_string typ, Print.term_to_string closed in
-        var, BU.format3 "${%s<<<%s|||%s>>>}" var typ closed in
+    let format_var (var, typ) =
+        var, BU.format2 "${%s<<<%s>>>}" var (Print.term_to_string typ) in
     let format_branch { mib_name = name; mib_kind = kind; mib_vars = vars } =
         let vars = List.map format_var vars in
         match kind with
