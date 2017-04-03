@@ -623,18 +623,15 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (* closing types and terms *)
 (***********************************************************************************************)
 let abs bs t lopt =
-  if List.length bs = 0 then
-    t
-  else
+  match bs with
+  | [] -> t
+  | _ ->
     let close_lopt lopt = match lopt with
         | None
         | Some (Inr _) -> lopt
         | Some (Inl lc) ->
             Some (Inl (close_lcomp bs lc))
     in
-    match bs with
-    | [] -> t
-    | _ ->
     let body = compress (Subst.close bs t) in
     match body.n, lopt with
         | Tm_abs(bs', t, lopt'), None ->
