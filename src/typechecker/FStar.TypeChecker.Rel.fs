@@ -2149,8 +2149,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let solve_sub nct1 edge nct2 =
         let r = Env.get_range env in
         if problem.relation = EQ
-        then solve_eq (edge.mlift nct1) nct2
-        else let nct1 = edge.mlift nct1 in //they both have the same comp type constructor now
+        then solve_eq (edge.mlift env nct1) nct2
+        else let nct1 = edge.mlift env nct1 in //they both have the same comp type constructor now
              let c2_decl = Env.get_effect_decl env nct2.nct_name in
              let wp2_stronger_than_wp1 =
                 if env.lax then
@@ -2229,7 +2229,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                              && Env.non_informative env (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env (fst nct2.nct_result))
                              then let edge = {msource=nct1.nct_name;
                                               mtarget=nct2.nct_name;
-                                              mlift=fun nct -> {nct with nct_name=nct2.nct_name}} in
+                                              mlift=fun _ nct -> {nct with nct_name=nct2.nct_name}} in
                                   solve_sub nct1 edge nct2
                              else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
                                              (Print.lid_to_string nct1.nct_name)
