@@ -832,9 +832,8 @@ and tc_inductive env ses quals lids =
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
-(* the list of typechecked sig_elts, the updated environment and *)
-(* a list of new sig_elts elaborated during typechecking but not yet typechecked *)
-and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
+(* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
+and tc_decl env se: list<sigelt> * list<sigelt> =
   let env = set_hint_correlator env se in
   TcUtil.check_sigelt_quals env se;
   match se with
@@ -852,13 +851,12 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     *)
     let env = Env.set_range env r in
     let se = tc_lex_t env ses quals lids  in
-    [se], Env.push_sigelt env se, []
+    [se], []
 
   | Sig_bundle(ses, quals, lids, r) ->
     let env = Env.set_range env r in
-    let ses,projectors_ses = tc_inductive env ses quals lids  in
-    let env = List.fold_left (fun env' se -> Env.push_sigelt env' se) env ses in
-    ses, env, projectors_ses
+    let ses, projectors_ses = tc_inductive env ses quals lids  in
+    ses, projectors_ses
 
   | Sig_pragma(p, r) ->
     let set_options t s = match Options.set_options t s with
@@ -870,18 +868,17 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
       | LightOff ->
         if p = LightOff
         then Options.set_ml_ish();
-        [se], env, []
+        [se], []
       | SetOptions o ->
         set_options Options.Set o;
-        [se], env, []
+        [se], []
       | ResetOptions sopt ->
         Options.restore_cmd_line_options false |> ignore;
         let _ = match sopt with
           | None -> ()
           | Some s -> set_options Options.Reset s
         in
-        env.solver.refresh();
-        [se], env, []
+        [se], []
     end
 
 
@@ -896,17 +893,12 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
           | None -> [ Sig_new_effect (ne, r) ]
       in
 
-      [], env, ses @ effect_and_lift_ses
+      [], ses @ effect_and_lift_ses
 
   | Sig_new_effect(ne, r) ->
     let ne = tc_eff_decl env ne in
     let se = Sig_new_effect(ne, r) in
-    let env = Env.push_sigelt env se in
-    (* KM : What's the point of collecting actions sig_let if they are not returned ??*)
-    let env, ses = ne.actions |> List.fold_left (fun (env, ses) a ->
-        let se_let = U.action_as_lb ne.mname a in
-        Env.push_sigelt env se_let, se_let::ses) (env, [se]) in
-    [se], env, []
+    [se], []
 
   | Sig_sub_effect(sub, r) ->
     let ed_src = Env.get_effect_decl env sub.source in
@@ -972,12 +964,9 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
 //          printfn "LIFT: Checked %s against expected type %s\n" (Print.tscheme_to_string lift) (Print.term_to_string expected_k);
         Some lift
     in
-    // Restore the proper lax flag!
-    let env = { env with lax = lax } in
     let sub = {sub with lift_wp=Some lift_wp; lift=lift} in
     let se = Sig_sub_effect(sub, r) in
-    let env = Env.push_sigelt env se in
-    [se], env, []
+    [se], []
 
   | Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) ->
     assert (uvs = []);
@@ -1002,14 +991,13 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
                                   (List.length uvs |> BU.string_of_int)
                                   (Print.term_to_string t), r)));
     let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, flags, r) in
-    let env = Env.push_sigelt env0 se in
-    [se], env, []
+    [se], []
 
   | Sig_declare_typ (_, _, _, quals, _)
   | Sig_let (_, _, _, quals, _)
       when quals |> BU.for_some (function OnlyName -> true | _ -> false) ->
       (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
-      [], env, []
+      [], []
 
   | Sig_declare_typ(lid, uvs, t, quals, r) -> //NS: No checks on the qualifiers?
     let env = Env.set_range env r in
@@ -1024,13 +1012,11 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
             uvs, SS.close_univ_vars uvs t
     in
     let se = Sig_declare_typ(lid, uvs, t, quals, r) in
-    let env = Env.push_sigelt env se in
-    [se], env, []
+    [se], []
 
   | Sig_assume(lid, phi, quals, r) ->
     let se = tc_assume env lid phi quals r in
-    let env = Env.push_sigelt env se in
-    [se], env, []
+    [se], []
 
   | Sig_main(e, r) ->
     let env = Env.set_range env r in
@@ -1039,8 +1025,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
     let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
     Rel.force_trivial_guard env (Rel.conj_guard g1 g);
     let se = Sig_main(e, r) in
-    let env = Env.push_sigelt env se in
-    [se], env, []
+    [se], []
 
   | Sig_let(lbs, r, lids, quals, attrs) ->
     let env = Env.set_range env r in
@@ -1139,8 +1124,7 @@ and tc_decl env se: list<sigelt> * Env.env * list<sigelt> =
           then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
-    let env = Env.push_sigelt env se in
-    [se], env, []
+    [se], []
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -1236,12 +1220,32 @@ let for_export hidden se : list<sigelt> * list<lident> =
           Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
     else [se], hidden
 
+(* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
+(* this was earlier part of tc_decl, but separating it might help if and when we cache type checked modules *)
+let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
+  match se with
+  | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
+  | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
+  | Sig_pragma (p, r) ->
+    (match p with
+     | ResetOptions _ -> env.solver.refresh (); env
+     | _ -> env)
+  | Sig_new_effect_for_free _ -> env
+  | Sig_new_effect (ne, _) ->
+    let env = Env.push_sigelt env se in
+    ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
+  | Sig_declare_typ (_, _, _, quals, _)
+  | Sig_let (_, _, _, quals, _) when quals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
+  | _ -> Env.push_sigelt env se
+
+
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
-    let ses', env, ses_elaborated = tc_decl env se  in
+    let ses', ses_elaborated = tc_decl env se  in
+    let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
     then BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses');
