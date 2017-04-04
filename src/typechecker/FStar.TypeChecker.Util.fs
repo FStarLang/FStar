@@ -429,7 +429,7 @@ let lift_and_destruct env c1 c2 =
   let c1 = Env.comp_as_normal_comp_typ env c1 in
   let c2 = Env.comp_as_normal_comp_typ env c2 in
   let m, lift1, lift2 = Env.join env c1.nct_name c2.nct_name in
-  lift1 env c1, lift2 env c2
+  lift1 c1, lift2 c2
 
 let force_teq env t1 t2 =
     Rel.force_trivial_guard env (Rel.teq env t1 t2)
@@ -459,8 +459,8 @@ let join_lcomp env lc1 lc2 =
           lcomp_as_comp = begin fun () -> Env.normal_comp_typ_as_comp env nct end;
        } in
        let _, lift1, lift2 = Env.join env lc1.lcomp_name lc2.lcomp_name in
-       let nct1 = lift1 env (nct_of_lcomp lc1) in
-       let nct2 = lift2 env (nct_of_lcomp lc2) in
+       let nct1 = lift1 (nct_of_lcomp lc1) in
+       let nct2 = lift2 (nct_of_lcomp lc2) in
        List.iter2
             (fun u v -> force_teq env (Util.type_at_u u) (Util.type_at_u v))
             (List.tl nct1.nct_univs)
@@ -543,23 +543,21 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             (Print.comp_to_string c2);
       let try_simplify () =
         let aux () =
-          if U.is_trivial_wp c1
-          then match b with
-            | None -> Some (c2, "trivial no binder")
-            | Some _ ->
-              if U.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
-              then Some (c2, "trivial ml")
-              else None
-          else if U.is_ml_comp c1 && U.is_ml_comp c2
-          then Some (c2, "both ml")
-          else None
-        in
+            if U.is_trivial_wp c1
+            then match b with
+                    | None -> Some (c2, "trivial no binder")
+                    | Some _ ->
+                        if U.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
+                        then Some (c2, "trivial ml")
+                        else None
+            else if U.is_ml_comp c1 && U.is_ml_comp c2
+            then Some (c2, "both ml")
+            else None in
         let subst_c2 reason =
-          match e1opt, b with
-          | Some e, Some x ->
-            Some (SS.subst_comp [NT(x,e)] c2, reason)
-          | _ -> aux()
-        in
+            match e1opt, b with
+                | Some e, Some x ->
+                  Some (SS.subst_comp [NT(x,e)] c2, reason)
+                | _ -> aux() in
         if U.is_total_comp c1
         && U.is_total_comp c2
         then subst_c2 "both total"
@@ -567,12 +565,11 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
              && U.is_tot_or_gtot_comp c2
         then Some (S.mk_GTotal (Env.result_typ env c2), "both gtot")
         else match e1opt, b with
-          | Some e, Some x ->
-            if U.is_total_comp c1 && not (Syntax.is_null_bv x)
-            then subst_c2 "substituted e"
-            else aux ()
-          | _ -> aux ()
-      in
+            | Some e, Some x ->
+                if U.is_total_comp c1 && not (Syntax.is_null_bv x)
+                then subst_c2 "substituted e"
+                else aux ()
+            | _ -> aux () in
       match try_simplify () with
       | Some (c, reason) ->
         c
@@ -646,82 +643,59 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   else {lc with lcomp_as_comp=weaken}
 
 let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:lcomp) (g0:guard_t) : lcomp * guard_t =
-  if Rel.is_trivial g0
-  then lc, g0
-  else
-    let _ =
-      if Env.debug env <| Options.Extreme
-      then BU.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n"
-                              (N.term_to_string env e)
-                              (Rel.guard_to_string env g0)
-    in
+    if Rel.is_trivial g0
+    then lc, g0
+    else let _ = if Env.debug env <| Options.Extreme
+                 then BU.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n"
+                                (N.term_to_string env e)
+                                (Rel.guard_to_string env g0) in
+         let flags = lc.lcomp_cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
+         let strengthen () =
+            let c = lc.lcomp_as_comp () in
+            let g0 = Rel.simplify_guard env g0 in
+            match guard_form g0 with
+            | Trivial -> c
+            | NonTrivial f ->
+                let c =
+                    if U.is_pure_or_ghost_comp c
+                    && not (U.is_partial_return c)
+                    then let x = S.gen_bv "strengthen_pre_x" None (Env.result_typ env c) in
+                         let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
+                         let lc = bind env (Some e) (Env.lcomp_of_comp env c) (Some x, Env.lcomp_of_comp env xret) in
+                         lc.lcomp_as_comp()
+                    else c in
 
-    let strengthen () =
-      let c = lc.lcomp_as_comp () in
-      let g0 = Rel.simplify_guard env g0 in
-      match guard_form g0 with
-      | Trivial -> c
-      | NonTrivial f ->
-        let c =
-          if U.is_pure_or_ghost_comp c
-          && not (U.is_partial_return c)
-          then
-            let x = S.gen_bv "strengthen_pre_x" None (Env.result_typ env c) in
-            let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
-            let lc = bind env (Some e) (Env.lcomp_of_comp env c) (Some x, Env.lcomp_of_comp env xret) in
-            lc.lcomp_as_comp()
-          else c
-        in
+                if Env.debug env <| Options.Extreme
+                then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
+                                (N.term_to_string env e)
+                                (N.term_to_string env f);
 
-        let ct = comp_to_comp_typ env c in
-        if Ident.lid_equals ct.comp_typ_name C.effect_Tot_lid ||
-            Ident.lid_equals ct.comp_typ_name C.effect_GTot_lid
-        then
-          (* In the 200~ first lines of prims.fst we need to handle Tot specially *)
-          (* TODO : Is it valid not to strengthen in that case ? *)
-          c
-        else begin
-          if Env.debug env <| Options.Extreme
-          then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-                          (N.term_to_string env e)
-                          (N.term_to_string env f);
+                let nct = Env.comp_as_normal_comp_typ env c in
+                let md = Env.get_effect_decl env nct.nct_name in
+                let wp =
+                    mk_Tm_app (inst_effect_fun_with nct.nct_univs env md md.assert_p)
+                              (nct.nct_indices @ [nct.nct_result;
+                                                  S.as_arg <| label_opt env reason (Env.get_range env) f;
+                                                  nct.nct_wp])
+                              None (nct.nct_wp |> fst).pos in
+                if Env.debug env <| Options.Extreme
+                then BU.print1 "-------------Strengthened pre-condition is %s\n"
+                                (Print.term_to_string wp);
 
-          let nct = Env.comp_as_normal_comp_typ env c in
-          let md = Env.get_effect_decl env nct.nct_name in
-          let wp =
-              mk_Tm_app (inst_effect_fun_with nct.nct_univs env md md.assert_p)
-                        (nct.nct_indices @ [nct.nct_result;
-                                            S.as_arg <| label_opt env reason (Env.get_range env) f;
-                                            nct.nct_wp])
-                        None (nct.nct_wp |> fst).pos
-          in
-          if Env.debug env <| Options.Extreme
-          then BU.print1 "-------------Strengthened pre-condition is %s\n"
-                          (Print.term_to_string wp);
-
-          let c2 = normal_comp_typ_as_comp env ({nct with nct_wp=S.as_arg wp}) in
-          c2
-        end
-    in
-
-    let flags =
-      if U.is_pure_lcomp lc
-      && not <| U.is_function_typ lc.lcomp_res_typ
-      then
-        lc.lcomp_cflags
-          |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> [])
-      else []
-    in
-
-    let lc = {lc with lcomp_cflags=flags} in
-    let lc = 
-      if env.lax
-      && Options.ml_ish()
-      then lc
-      else {lc with lcomp_as_comp=strengthen}
-    in
-
-    lc, {g0 with guard_f=Trivial}
+                let c2 = normal_comp_typ_as_comp env ({nct with nct_wp=S.as_arg wp}) in
+                c2
+       in
+       let flags = if U.is_pure_lcomp lc
+                   && not <| U.is_function_typ lc.lcomp_res_typ
+                   then flags
+                   else []
+       in
+       let lc = {lc with lcomp_cflags=flags} in
+       (if env.lax
+        && Options.ml_ish()
+        then lc
+        else {lc with lcomp_as_comp=strengthen}),
+       {g0 with guard_f=Trivial}
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
@@ -1805,8 +1779,8 @@ let destruct_comp_term m =
    by instantiating the indicces in the sub_eff with the indices of the lhs
    and all remaining binders to fresh unification variables
 *)
-let mlift_of_sub_eff sub : mlift =
-  let mlift env (nct:normal_comp_typ) =
+let mlift_of_sub_eff env sub : mlift =
+  let mlift (nct:normal_comp_typ) =
     let fail () =
         failwith <| BU.format2 "Invalid application of mlift, \
                                 effect names differ : %s vs %s"

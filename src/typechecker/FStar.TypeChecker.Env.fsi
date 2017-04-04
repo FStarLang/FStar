@@ -43,6 +43,18 @@ type normal_comp_typ = {
     nct_flags: list<cflags>
 }
 
+type mlift = normal_comp_typ -> normal_comp_typ
+
+type edge = {
+  msource :lident;
+  mtarget :lident;
+  mlift   :mlift;
+}
+type effects = {
+  decls :list<eff_decl>;
+  order :list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+}
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)>
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
@@ -91,20 +103,6 @@ and guard_t = {
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
-
-and mlift = env -> normal_comp_typ -> normal_comp_typ
-
-and edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
-}
-
-and effects = {
-  decls :list<eff_decl>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-}
 
 type env_t = env
 val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe) -> solver_t -> lident -> env

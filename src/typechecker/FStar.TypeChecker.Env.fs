@@ -61,6 +61,18 @@ type normal_comp_typ = {
     nct_flags: list<cflags>
 }
 type nct = normal_comp_typ
+type mlift = normal_comp_typ -> normal_comp_typ
+
+type edge = {
+  msource :lident;
+  mtarget :lident;
+  mlift   :mlift;
+}
+type effects = {
+  decls :list<eff_decl>;
+  order :list<edge>;                                       (* transitive closure of the order in the signature *)
+  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+}
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)>
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
@@ -109,21 +121,6 @@ and guard_t = {
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
-
-and mlift = env -> normal_comp_typ -> normal_comp_typ
-
-and edge = {
-  msource :lident;
-  mtarget :lident;
-  mlift   :mlift;
-}
-and effects = {
-  decls :list<eff_decl>;
-  order :list<edge>;                                       (* transitive closure of the order in the signature *)
-  joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
-}
-
-
 type env_t = env
 
 type sigtable = BU.smap<sigelt>
@@ -939,11 +936,11 @@ let get_effect_decl env l =
 
 let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
-  then let id _ x = x in
+  then let id x = x in
        l1, id, id
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then let lift_gtot _ nct = {nct with nct_name=Const.effect_GTot_lid} in //TODO: watchout, GTot is not an nct
+  then let lift_gtot nct = {nct with nct_name=Const.effect_GTot_lid} in //TODO: watchout, GTot is not an nct
        Const.effect_GTot_lid, lift_gtot, lift_gtot
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> raise (Error(BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
@@ -952,7 +949,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=(fun env nct -> {nct with nct_name=l2})})
+  then Some ({msource=l1; mtarget=l2; mlift=(fun nct -> {nct with nct_name=l2})})
   else env.effects.order |> BU.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux env decls m =
