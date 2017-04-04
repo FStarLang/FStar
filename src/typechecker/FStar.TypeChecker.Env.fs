@@ -769,17 +769,23 @@ let try_lookup_match_info env (t: typ) =
       Some (binders, dcs)
     | _ -> None in
 
+  let pad_list lst n padding =
+    let rec repeat n x = if n <= 0 then [] else x :: repeat (n - 1) x in
+    lst @ (repeat (n - List.length lst) padding) in
+
   let rec analyze_inductive_type (typ: typ) =
     match head_lid_and_args typ with
     | None -> None
     | Some (hd, args) ->
       match binders_and_datacons_of_typ env hd with
-      | Some (binders, constructors) -> Some (hd, binders, args, constructors)
+      | Some (binders, constructors) ->
+        let args_padded = pad_list args (List.length binders) (S.tun, None) in
+        Some (hd, binders, args_padded, constructors)
       | _ -> None in // FIXME this would be the right point to resolve type aliases:
-                    // Something like
-                    //   match lookup_qname env lid with
-                    //   | Some (Inr({ sigel = Sig_declare_typ(_, _, typ, _) } as se, _), _) -> …
-                    // But one would be have to be careful with type substitutions.
+                     // Something like
+                     //   match lookup_qname env lid with
+                     //   | Some (Inr({ sigel = Sig_declare_typ(_, _, typ, _) } as se, _), _) -> …
+                     // But one would be have to be careful with type substitutions.
 
   analyze_inductive_type t
     |> BU.map_option (fun (hd, _binders, args, constructors) ->
