@@ -1842,8 +1842,8 @@ let mlift_of_sub_eff env sub : mlift =
       in
 
       match Rel.sub_comp ({env with use_eq=true}) formal_source actual_source with
-      | None -> fail ()
-      | Some g -> Rel.force_trivial_guard env g
+        | None -> fail ()
+        | Some g -> Rel.force_trivial_guard env g
     in
 
     let target_nct =
@@ -1872,19 +1872,19 @@ let extend_effect_lattice env sub_eff =
     let compose_edges e1 e2 : edge =
        {msource=e1.msource;
         mtarget=e2.mtarget;
-        mlift=(fun nct -> e2.mlift (e1.mlift nct))} in
+        mlift=(fun env nct -> e2.mlift env (e1.mlift env nct))} in
 
     let edge = {
         msource = sub_eff.sub_eff_source.comp_typ_name;
         mtarget = sub_eff.sub_eff_target.comp_typ_name;
-        mlift = mlift_of_sub_eff env sub_eff
+        mlift = mlift_of_sub_eff sub_eff
       }
     in
 
     let id_edge l = {
        msource=l;
        mtarget=l;
-       mlift=(fun nct -> nct);
+       mlift=(fun _ nct -> nct);
     } in
 
     let print_mlift l =
