@@ -216,15 +216,21 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 mllb_add_unit=false;
                 mllb_def=tm;
                 print_typ=false
-              } in
-            g, MLM_Let(NonRec, [], [lb]) in
+              }
+            in
+            g, MLM_Let(NonRec, [], [lb])
+          in
 
           let rec extract_fv tm = match (SS.compress tm).n with
             | Tm_uinst (tm, _) -> extract_fv tm
             | Tm_fvar fv ->
               let mlp = mlpath_of_lident fv.fv_name.v in
               let _, _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
+              let mle, _, mlt = Term.term_as_mlexpr g tm in
+                //the above fails, expects tm to be fully instantiated at this point
+              // let tysc = ([], mlt) in
               with_ty MLTY_Top <| MLE_Name mlp, tysc
+              // mle, tysc
             | _ -> failwith "Not an fv" in
 
           let extract_action g (a:S.action) =
