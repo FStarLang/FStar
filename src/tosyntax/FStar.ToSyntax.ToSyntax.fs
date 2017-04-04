@@ -1397,6 +1397,36 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
     } in
     Sig_let((false, [lb]), rng, lids, quals, [])
 
+let add_sigelts_to_env (env:env_t) (d:decl) (ses:sigelts) :env_t =
+  match d.d with
+  | Pragma _ -> env
+  | Fsdoc _ -> env
+  | TopLevelModule _ -> env
+  | Open lid -> Env.push_namespace env lid
+  | Include lid -> Env.push_include env lid
+  | ModuleAbbrev (x, l) -> Env.push_module_abbrev env x l
+  | Tycon _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
+  | TopLevelLet _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
+  | Main _ -> env
+  | Assume _ -> env
+  | Val _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
+  | Exception _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
+  | NewEffect (RedefineEffect (eff_name, _, _))
+  | NewEffect (DefineEffect (eff_name, _, _, _)) ->
+    (match ses with
+     | [ Sig_new_effect_for_free (ed, r) ]
+     | [ Sig_new_effect (ed, r) ] ->
+       let env0 = env in
+       let env = Env.push_sigelt env (List.hd ses) in
+       let env = ed.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ed.mname a)) env in
+       if d.quals |> List.contains Reflectable then
+         let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify (Env.enter_monad_scope env0 eff_name) in
+         let refl_decl = S.Sig_declare_typ (reflect_lid, [], S.tun, [S.Assumption; S.Reflectable ed.mname], r) in
+         Env.push_sigelt env refl_decl
+       else env
+     | _ -> failwith "Impossible, decl and sigelt don't match")
+  | SubEffect _ -> env
+
 let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_id = function
     | TyconAbstract(id, _, _)
@@ -1838,22 +1868,17 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let se = Sig_pragma(trans_pragma p, d.drange) in
     if p = LightOff
     then Options.set_ml_ish();
-    env, [se]
+    add_sigelts_to_env env d [se], [se]
 
-  | Fsdoc _ -> env, []
+  | Fsdoc _ -> add_sigelts_to_env env d [], []
 
-  | TopLevelModule id -> env, []
+  | TopLevelModule _ -> add_sigelts_to_env env d [], []
 
-  | Open lid ->
-    let env = Env.push_namespace env lid in
-    env, []
+  | Open _ -> add_sigelts_to_env env d [], []
 
-  | Include lid ->
-    let env = Env.push_include env lid in
-    env, []
+  | Include _ -> add_sigelts_to_env env d [], []
 
-  | ModuleAbbrev(x, l) ->
-    Env.push_module_abbrev env x l, []
+  | ModuleAbbrev(x, l) -> add_sigelts_to_env env d [], []
 
   | Tycon(is_effect, tcs) ->
     let quals = if is_effect then Effect_qual :: d.quals else d.quals in
@@ -1899,8 +1924,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
                             {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
                     else lbs in
           let s = Sig_let(lbs, d.drange, fvs |> List.map (fun fv -> fv.fv_name.v), quals, attrs) in
-          let env = push_sigelt env s in
-          env, [s]
+          add_sigelts_to_env env d [s], [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
@@ -1940,16 +1964,18 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         env, ses @ ses'
       in
       let bvs = gather_pattern_bound_vars pat |> set_elements in
-      List.fold_left build_projection main_let bvs
+      let _, ses = List.fold_left build_projection main_let bvs in
+      add_sigelts_to_env env d ses, ses
 
   | Main t ->
     let e = desugar_term env t in
     let se = Sig_main(e, d.drange) in
-    env, [se]
+    add_sigelts_to_env env d [se], [se]
 
   | Assume(id, t) ->
     let f = desugar_formula env t in
-    env, [Sig_assume(qualify env id, f, [S.Assumption], d.drange)]
+    let se = Sig_assume(qualify env id, f, [S.Assumption], d.drange) in
+    add_sigelts_to_env env d [se], [se]
 
 
   | Val(id, t) ->
@@ -1957,10 +1983,10 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let t = desugar_term env (close_fun env t) in
     let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
     let se = Sig_declare_typ(qualify env id, [], t, List.map (trans_qual None) quals, d.drange) in
-    let env = push_sigelt env se in
-    env, [se]
+    add_sigelts_to_env env d [se], [se]
 
   | Exception(id, None) ->
+    let env0 = env in
     let t, _ = fail_or env (try_lookup_lid env) C.exn_lid in
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
@@ -1969,9 +1995,10 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let data_ops = mk_data_projector_names [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
-    env, se'::discs@data_ops
+    add_sigelts_to_env env0 d (se'::discs@data_ops), se'::discs@data_ops
 
   | Exception(id, Some term) ->
+    let env0 = env in
     let t = desugar_term env term in
     let t = U.arrow ([null_binder t]) (mk_Total <| fst (fail_or env (try_lookup_lid env) C.exn_lid)) in
     let l = qualify env id in
@@ -1981,15 +2008,17 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let data_ops = mk_data_projector_names [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
-    env, se'::discs@data_ops
+    add_sigelts_to_env env0 d (se'::discs@data_ops), se'::discs@data_ops
 
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
-    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn
+    let _, ses = desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn in
+    add_sigelts_to_env env d ses, ses
 
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
+    let _, ses = desugar_effect env d quals eff_name eff_binders eff_typ eff_decls in
+    add_sigelts_to_env env d ses, ses
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with
@@ -2003,7 +2032,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         | LiftForFree t -> None, Some ([],desugar_term env t)
     in
     let se = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift}, d.drange) in
-    env, [se]
+    add_sigelts_to_env env d [se], [se]
 
  let desugar_decls env decls =
     List.fold_left (fun (env, sigelts) d ->
