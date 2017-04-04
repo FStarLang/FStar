@@ -136,36 +136,6 @@ let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
         end else
             h
 
-let puf_test () =
-    let (u: string puf) = puf_empty () in
-    let u_a = puf_fresh u "a" in
-    let u_b = puf_fresh u "b" in
-    let u_c = puf_fresh u "c" in
-    (U.print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)));
-    let u_d = puf_fresh u "d" in
-    let u_e = puf_fresh u "e" in
-    let u_f = puf_fresh u "f" in
-    let u_g = puf_fresh u "g" in
-    let u_h = puf_fresh u "h" in
-    let le= puf_find u u_e in
-    let u = puf_union u u_a u_b in
-    let u = puf_union u u_b u_c in
-    let la = puf_find u u_a in
-    let lc = puf_find u u_c in
-    (U.print1 "Rep of e is %s\n" le);
-    (U.print1 "Rep of a is %s\n" la);
-    (U.print1 "Rep of c is %s\n" lc);
-    let u_i = (puf_fresh u "i") in
-    let u_i2 = match u_i with | P a -> a in
-    (U.print2 "Id of i and count are %s %s\n" (Printf.sprintf "%i" u_i2) (Printf.sprintf "%i" !(u.count)));
-    let li = puf_find u u_i in
-    (U.print1 "Rep of i is %s\n" li);
-    let u = puf_union u u_b u_i in
-    let li = puf_find u u_i in
-    (U.print1 "Rep of i is %s\n" li);
-    (U.print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)))
-
-
 (* Unionfind with path compression but without ranks *)
 (* Provides transacational updates, based on a suggeestion from Francois Pottier *)
 
@@ -266,3 +236,33 @@ let change x a =
       | _ -> failwith "impossible"
 
 let equivalent x y = (rep x)==(rep y)
+
+
+let puf_test () =
+    let (u: string puf) = puf_empty () in
+    let u_a = puf_fresh u "a" in
+    let u_b = puf_fresh u "b" in
+    let u_c = puf_fresh u "c" in
+    (U.print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)));
+    let u_d = puf_fresh u "d" in
+    let u_e = puf_fresh u "e" in
+    let u_f = puf_fresh u "f" in
+    let u_g = puf_fresh u "g" in
+    let u_h = puf_fresh u "h" in
+    let le= puf_find u u_e in
+    let u = puf_union u u_a u_b in
+    let u = puf_union u u_b u_c in
+    let la = puf_find u u_a in
+    let lc = puf_find u u_c in
+    (U.print1 "Rep of e is %s\n" le);
+    (U.print1 "Rep of a is %s\n" la);
+    (U.print1 "Rep of c is %s\n" lc);
+    let u_i = (puf_fresh u "i") in
+    let u_i2 = match u_i with | P a -> a in
+    (U.print2 "Id of i and count are %s %s\n" (Printf.sprintf "%i" u_i2) (Printf.sprintf "%i" !(u.count)));
+    let li = puf_find u u_i in
+    (U.print1 "Rep of i is %s\n" li);
+    let u = puf_union u u_b u_i in
+    let li = puf_find u u_i in
+    (U.print1 "Rep of i is %s\n" li);
+    (U.print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)))
