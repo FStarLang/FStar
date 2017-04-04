@@ -151,6 +151,11 @@ let rec unfold_definition_and_simplify_eq (tm:term)
 ////////////////////////////////////////////////////////////////////////////////
 #reset-options "--use_tactics"
 
+let test_print_goal =
+  assert_by_tactic (fun () -> print "User print:") //Some auto-thunking or at least some light notation for it
+                   (forall (y:int). y==0 ==> 0==y)
+
+
 let simple_equality_assertions =
   assert_by_tactic rewrite_all_equalities
                    (forall (y:int). y==0 ==> 0==y);

@@ -81,6 +81,9 @@ let debug p msg =
         (match p.goals with [] -> "" | _ -> List.tl p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat ";;")
         msg
 
+let print_proof_state (msg:string) : tac<unit>
+  = kernel_tac "print_proof_state" (fun p -> Success(debug p msg, p))
+
 (* monadic return *)
 let ret (a:'a)
     : tac<'a>

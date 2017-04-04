@@ -22,27 +22,27 @@ type name = bv
 
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
-let quote (nm:Ident.lid) (args:S.args) = 
+let quote (nm:Ident.lid) (args:S.args) =
   match args with
   | [_; (y, _)] -> Some (E.embed_term y)
   | _ -> None
 
-let binders_of_env ps (nm:Ident.lid) (args:S.args) =    
-  match args with 
-  | [(embedded_env, _)] -> 
+let binders_of_env ps (nm:Ident.lid) (args:S.args) =
+  match args with
+  | [(embedded_env, _)] ->
     let env = E.unembed_env ps.main_context embedded_env in
     Some (E.embed_binders (Env.all_binders env))
   | _ -> None
-  
-let type_of_binder (nm:Ident.lid) (args:S.args) = 
-  match args with 
-  | [(embedded_binder, _)] -> 
+
+let type_of_binder (nm:Ident.lid) (args:S.args) =
+  match args with
+  | [(embedded_binder, _)] ->
     let b, _ = E.unembed_binder embedded_binder in
     Some (E.embed_term b.sort)
   | _ -> None
 
-let term_eq (nm:Ident.lid) (args:S.args) = 
-  match args with 
+let term_eq (nm:Ident.lid) (args:S.args) =
+  match args with
   | [(embedded_t1, _); (embedded_t2, _)] ->
     let t1 = E.unembed_term embedded_t1 in
     let t2 = E.unembed_term embedded_t2 in
@@ -149,6 +149,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "binders_of_env"  1 (binders_of_env ps);
       mk "type_of_binder"  1 type_of_binder;
       mk "term_eq"         2 term_eq;
+      mk "print_"          2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit)
     ]
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
@@ -193,19 +194,14 @@ let evaluate_user_tactic : tac<unit>
 
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
-    if Ident.lid_equals
-            (Env.current_module env)
-            FStar.Syntax.Const.prims_lid
-    || BU.starts_with (Ident.string_of_lid (Env.current_module env)) "FStar."
-    then [env, goal]
-    else let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
-         let p = proofstate_of_goal_ty env goal in
-         match run (visit evaluate_user_tactic) p with
-         | Success (_, p2) ->
-           (p2.goals @ p2.smt_goals) |> List.map (fun g ->
-             BU.print1 "Got goal: %s\n" (goal_to_string g);
-             g.context, g.goal_ty)
-         | Failed (msg, _) ->
-           BU.print1 "Tactic failed: %s\n" msg;
-           BU.print1 "Got goal: %s\n" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
-           [env, goal]
+    let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
+    let p = proofstate_of_goal_ty env goal in
+    match run (visit evaluate_user_tactic) p with
+    | Success (_, p2) ->
+        (p2.goals @ p2.smt_goals) |> List.map (fun g ->
+            BU.print1 "Got goal: %s\n" (goal_to_string g);
+            g.context, g.goal_ty)
+    | Failed (msg, _) ->
+        BU.print1 "Tactic failed: %s\n" msg;
+        BU.print1 "Got goal: %s\n" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
+        [env, goal]

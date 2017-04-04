@@ -1,6 +1,6 @@
+// This should be moved to the standard libary, e.g., FStar/ulib
 module FStar.Tactics
-
-assume type binder
+assume type binder //FStar.Syntax.Syntax.binder
 assume type term
 assume type env
 type typ     = term
@@ -8,18 +8,24 @@ type binders = list binder
 type goal    = env * term
 type goals   = list goal
 type state   = goals  //active goals 
-             * goals  //goals that have to be dispatched to SMT
+             * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program
 
 assume val binders_of_env : env -> binders
 assume val type_of_binder: binder -> term 
 assume val term_eq : term -> term -> bool
 assume val quote   : #a:Type -> a -> term
 
+(* This is meant to be all named representation
+     -- while providing some conveniences for 
+        handling the logical structure of a term 
+   NB: rename this to term_view? or something like that
+*)
 noeq type formula = 
+  //the logical skeleton of a term
   | True_  : formula
   | False_ : formula  
   | Eq     : typ -> term -> term -> formula
-  | And    : term -> term -> formula
+  | And    : term -> term -> formula  //Prims.l_and
   | Or     : term -> term -> formula
   | Not    : term -> formula
   | Implies: term -> term -> formula
@@ -28,9 +34,13 @@ noeq type formula =
   | Exists : binders -> term -> formula
   | App    : term -> term -> formula
   | Name   : binder -> formula
-    (* TODO more cases *) 
-  
+   (* TODO more cases *) 
+  //Abs   : binders -> term -> formula //Named repr
+  //Match : ....
+
+//This primitive provides a way to destruct a term as a formula
 assume val term_as_formula: term -> option formula
+//TODO: We should add a formula_as_term also
 
 noeq type result (a:Type) =
   | Success: a -> state -> result a
@@ -140,5 +150,8 @@ let exact (t:term) : Tac unit = TAC?.reflect (exact_ t)
 
 assume val apply_lemma_ : term -> tac unit
 let apply_lemma (t:term) : Tac unit = TAC?.reflect (apply_lemma_ t)
+
+assume val print_ : string -> tac unit
+let print (msg:string) : Tac unit = TAC?.reflect (print_ msg)
 
 abstract let embed (#a:Type0) (x:a) : Tot a = a

@@ -2604,7 +2604,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-            let vcs = 
+            let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
                 else [env,vc] in
