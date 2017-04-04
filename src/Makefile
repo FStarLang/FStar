@@ -137,7 +137,7 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
-	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>/' $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>\nopen FStar.Syntax.Syntax/' $@
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts
