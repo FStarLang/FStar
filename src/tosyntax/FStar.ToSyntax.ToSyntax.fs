@@ -100,7 +100,7 @@ let rec is_comp_type env t =
     | Construct(l, _) -> Env.try_lookup_effect_name env l |> Option.isSome
     | App(head, _, _) -> is_comp_type env head
     | Paren t
-    | Ascribed(t, _)
+    | Ascribed(t, _, _)
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
 
@@ -182,8 +182,10 @@ and free_type_vars env t = match (unparen t).tm with
   | Requires (t, _)
   | Ensures (t, _)
   | NamedTyp(_, t)
-  | Paren t
-  | Ascribed(t, _) -> free_type_vars env t
+  | Paren t -> free_type_vars env t
+  | Ascribed(t, t', tacopt) ->
+    let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
+    List.collect (free_type_vars env) ts
 
   | Construct(_, ts) -> List.collect (fun (t, _) -> free_type_vars env t) ts
 
@@ -846,14 +848,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
        in
        aux env [] None binders
 
-    | App({tm=Var a; range=rng}, phi, _) when (lid_equals a C.assert_lid
-                                   || lid_equals a C.assume_lid) ->
-      let phi = desugar_formula env phi in
-      let a = Ident.set_lid_range a rng in
-      mk (Tm_app(fvar a Delta_equational None,
-                 [as_arg phi;
-                  as_arg <| mk (Tm_constant(Const_unit))]))
-
     | App (_, _, UnivApp) ->
        let rec aux universes e = match (unparen e).tm with
            | App(e, t, UnivApp) ->
@@ -863,6 +857,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 let head = desugar_term env e in
                 mk (Tm_uinst(head, universes))
        in aux [] top
+
     | App _ ->
       let rec aux args e = match (unparen e).tm with
         | App(e, t, imp) when imp <> UnivApp ->
@@ -958,7 +953,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
-                mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr
+                mk_term (Ascribed(def, t, None)) (Range.union_ranges t.range def.range) Expr
             in
             let def = match args with
                  | [] -> def
@@ -1033,11 +1028,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         U.branch (pat, wopt, b) in
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
-    | Ascribed(e, t) ->
+    | Ascribed(e, t, tac_opt) ->
       let annot = if is_comp_type env t
                   then Inr (desugar_comp t.range env t)
                   else Inl (desugar_term env t) in
-      mk <| Tm_ascribed(desugar_term env e, annot, None)
+      let tac_opt = BU.map_opt tac_opt (desugar_term env) in
+      mk <| Tm_ascribed(desugar_term env e, (annot, tac_opt), None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))

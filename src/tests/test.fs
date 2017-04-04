@@ -12,8 +12,10 @@ let main argv =
     printfn "Initializing ...";
     try
         Pars.init() |> ignore;
-        Norm.run_all ();
-        Unif.run_all ();
+        FStar.Tests.Tactics.test();
+//        Tactics.test()
+//        Norm.run_all ();
+//        Unif.run_all ();
         0
     with Error(msg, r) when not <| Options.trace_error()->
          if r = Range.dummyRange

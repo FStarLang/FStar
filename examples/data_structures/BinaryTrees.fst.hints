@@ -188,8 +188,8 @@
       [
         "@query", "bool_inversion", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "lemma_Prims.invertOption",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some",
-        "uvar_typing_27892"
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some",
+        "uvar_typing_28038"
       ],
       0
     ],

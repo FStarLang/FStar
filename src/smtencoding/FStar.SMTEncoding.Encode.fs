@@ -716,8 +716,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
                 | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
-                | Tm_ascribed(_, BU.Inl t, _) -> Some t
-                | Tm_ascribed(_, BU.Inr c, _) -> Some (U.comp_result c)
+                | Tm_ascribed(_, (BU.Inl t, _), _) -> Some t
+                | Tm_ascribed(_, (BU.Inr c, _), _) -> Some (U.comp_result c)
                 | _ -> None in
 
             begin match head_type with
@@ -1546,6 +1546,17 @@ let encode_top_level_vals env bindings quals =
         let decls', env = encode_top_level_val env (BU.right lb.lbname) lb.lbtyp quals in
         decls@decls', env) ([], env)
 
+let is_tactic t =
+    let fstar_tactics_tactic_lid = FStar.Syntax.Const.p2l ["FStar"; "Tactics"; "tactic"] in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n with
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tactic_lid ->
+      true
+    | Tm_arrow(_, c) ->
+      let effect_name = U.comp_effect_name c in
+      BU.starts_with "FStar.Tactics" effect_name.str
+    | _ -> false
+
 let encode_top_level_let :
     env_t -> (bool * list<letbinding>) -> list<qualifier> -> list<decl> * env_t =
     fun env (is_rec, bindings) quals ->
@@ -1626,7 +1637,7 @@ let encode_top_level_let :
 
 
     try
-      if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp)
+      if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp || is_tactic lb.lbtyp)
       then encode_top_level_vals env bindings quals
       else
         let toks, typs, decls, env =
@@ -2348,11 +2359,17 @@ let encode_query use_env_msg tcenv q
         let rec aux bindings = match bindings with
             | Env.Binding_var x::rest ->
                 let out, rest = aux rest in
-                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+                let t =
+                    match (FStar.Syntax.Util.destruct_typ_as_formula x.sort) with
+                    | Some _ ->
+                      U.refine (S.new_bv None FStar.TypeChecker.Common.t_unit) x.sort //add a squash to trigger the shallow embedding, if the assumption is of the form x:(forall y. P) etc.
+                    | _ ->
+                      x.sort in
+                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux bindings in
-        U.close_forall (List.rev closing) q, bindings
+        U.close_forall_no_univs (List.rev closing) q, bindings
     in
     let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
     if debug tcenv Options.Low

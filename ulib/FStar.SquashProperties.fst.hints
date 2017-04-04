@@ -134,7 +134,10 @@
       1,
       2,
       1,
-      [ "@query", "equation_Prims.l_False", "false_interp" ],
+      [
+        "@query",
+        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
+      ],
       0
     ],
     [
