@@ -1787,6 +1787,9 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn (bu
 
 and desugar_subeffect env l =
   let env, effect_binders = desugar_binders env l.effect_binders in
+  (* Turn all binders into implicits whatever the original implicit status was *)
+  (* They will never be applied by the user anyway *)
+  let effect_binders = List.map (fun (x, _) -> x, Some S.imp_tag) effect_binders in
 
   let desugar_subeffect_comp_typ (t:AST.term)=
     let head, args = head_and_args t in

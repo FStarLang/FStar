@@ -2147,38 +2147,51 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     in
 
     let solve_sub nct1 edge nct2 =
-        let r = Env.get_range env in
-        if problem.relation = EQ
-        then solve_eq (edge.mlift nct1) nct2
-        else let nct1 = edge.mlift nct1 in //they both have the same comp type constructor now
-             let c2_decl = Env.get_effect_decl env nct2.nct_name in
-             let wp2_stronger_than_wp1 =
-                if env.lax then
-                   U.t_true
-                else
-                  let is_null_wp_2 = nct2.nct_flags |> BU.for_some (function
-                      | TOTAL | MLEFFECT | SOMETRIVIAL -> true
-                      | _ -> false) in
-                  if is_null_wp_2 //just check that nct1 has a trivial pre-condition
-                  then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
-                       mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.trivial,
-                                  nct1.nct_indices@[nct1.nct_result; nct1.nct_wp]))
-                          (Some U.ktype0.n) r
-                  else mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.stronger,
-                                  nct2.nct_indices@[nct1.nct_result; nct2.nct_wp; nct1.nct_wp]))
-                          (Some U.ktype0.n) r
-             in
-             let base_prob = TProb <| sub_prob (fst nct1.nct_result) problem.relation (fst nct2.nct_result) "result type" in
-             let index_probs = List.map2
-                (fun i j -> TProb <| sub_prob (fst i) EQ (fst j) "computation index")
-                nct1.nct_indices nct2.nct_indices in
-             let univ_probs =
-                let mk_type u = S.mk (Tm_type u) None Range.dummyRange in
-                List.map2
-                    (fun u u' -> TProb <| sub_prob (mk_type u) EQ (mk_type u') "computation universes")
-                    nct1.nct_univs nct2.nct_univs in
-             let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) wp2_stronger_than_wp1) [] wl in
-             solve env (attempt (base_prob::index_probs@univ_probs) wl)
+      let r = Env.get_range env in
+      if problem.relation = EQ
+      then solve_eq (edge.mlift nct1) nct2
+      else
+        let nct1orig = nct1 in
+        (* they both have the same comp type constructor now *)
+        let nct1 = edge.mlift nct1 in
+        if debug env <| Options.Other "Rel"
+        then BU.print3 "solve_sub %s (lifted to %s) %s\n"
+                       (Print.comp_to_string (Env.normal_comp_typ_as_comp env nct1orig))
+                       (Print.comp_to_string (Env.normal_comp_typ_as_comp env nct1))
+                       (Print.comp_to_string (Env.normal_comp_typ_as_comp env nct2)) ;
+        let c2_decl = Env.get_effect_decl env nct2.nct_name in
+        let wp2_stronger_than_wp1 =
+          if env.lax then
+            U.t_true
+          else
+            let is_null_wp_2 = nct2.nct_flags |> BU.for_some (function
+                | TOTAL | MLEFFECT | SOMETRIVIAL -> true
+                | _ -> false)
+            in
+            (* just check that nct1 has a trivial pre-condition *)
+            if is_null_wp_2
+            then
+              let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
+              mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.trivial,
+                         nct1.nct_indices@[nct1.nct_result; nct1.nct_wp]))
+                (Some U.ktype0.n) r
+            else mk (Tm_app(inst_effect_fun_with nct2.nct_univs env c2_decl c2_decl.stronger,
+                            nct2.nct_indices@[nct1.nct_result; nct2.nct_wp; nct1.nct_wp]))
+                    (Some U.ktype0.n) r
+        in
+        let base_prob = TProb <| sub_prob (fst nct1.nct_result) problem.relation (fst nct2.nct_result) "result type" in
+        let index_probs = List.map2
+          (fun i j -> TProb <| sub_prob (fst i) EQ (fst j) "computation index")
+          nct1.nct_indices nct2.nct_indices
+        in
+        let univ_probs =
+          let mk_type u = S.mk (Tm_type u) None Range.dummyRange in
+          List.map2
+              (fun u u' -> TProb <| sub_prob (mk_type u) EQ (mk_type u') "computation universes")
+              nct1.nct_univs nct2.nct_univs
+        in
+        let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) wp2_stronger_than_wp1) [] wl in
+        solve env (attempt (base_prob::index_probs@univ_probs) wl)
     in
 
     if BU.physical_equality c1 c2

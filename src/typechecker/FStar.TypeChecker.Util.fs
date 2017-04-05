@@ -442,34 +442,37 @@ let join_lcomp env lc1 lc2 =
   if Util.is_total_lcomp lc1
   && Util.is_total_lcomp lc2
   then lc1, lc2
-  else let nct_of_lcomp lc = {
-          nct_name    = lc.lcomp_name;
-          nct_univs   = lc.lcomp_univs;
-          nct_indices = lc.lcomp_indices;
-          nct_result  = S.as_arg lc.lcomp_res_typ ;
-          nct_wp      = S.as_arg S.tun; //dummy WP
-          nct_flags   = lc.lcomp_cflags
-       } in
-       let lcomp_of_nct nct = {
-          lcomp_name    = nct.nct_name;
-          lcomp_univs   = nct.nct_univs;
-          lcomp_indices = nct.nct_indices;
-          lcomp_res_typ = fst nct.nct_result;
-          lcomp_cflags  = nct.nct_flags;
-          lcomp_as_comp = begin fun () -> Env.normal_comp_typ_as_comp env nct end;
-       } in
-       let _, lift1, lift2 = Env.join env lc1.lcomp_name lc2.lcomp_name in
-       let nct1 = lift1 (nct_of_lcomp lc1) in
-       let nct2 = lift2 (nct_of_lcomp lc2) in
-       List.iter2
-            (fun u v -> force_teq env (Util.type_at_u u) (Util.type_at_u v))
-            (List.tl nct1.nct_univs)
-            (List.tl nct2.nct_univs);
-       List.iter2
-            (fun (i, _) (j, _) -> force_teq env i j)
-            nct1.nct_indices
-            nct2.nct_indices;
-       lcomp_of_nct nct1, lcomp_of_nct nct2
+  else
+    let nct_of_lcomp lc = {
+        nct_name    = lc.lcomp_name;
+        nct_univs   = lc.lcomp_univs;
+        nct_indices = lc.lcomp_indices;
+        nct_result  = S.as_arg lc.lcomp_res_typ ;
+        nct_wp      = S.as_arg S.tun; //dummy WP
+        nct_flags   = lc.lcomp_cflags
+      }
+    in
+    let lcomp_of_nct nct = {
+        lcomp_name    = nct.nct_name;
+        lcomp_univs   = nct.nct_univs;
+        lcomp_indices = nct.nct_indices;
+        lcomp_res_typ = fst nct.nct_result;
+        lcomp_cflags  = nct.nct_flags;
+        lcomp_as_comp = begin fun () -> Env.normal_comp_typ_as_comp env nct end;
+      }
+    in
+    let _, lift1, lift2 = Env.join env lc1.lcomp_name lc2.lcomp_name in
+    let nct1 = lift1 (nct_of_lcomp lc1) in
+    let nct2 = lift2 (nct_of_lcomp lc2) in
+    List.iter2
+      (fun u v -> force_teq env (Util.type_at_u u) (Util.type_at_u v))
+      (List.tl nct1.nct_univs)
+      (List.tl nct2.nct_univs);
+    List.iter2
+      (fun (i, _) (j, _) -> force_teq env i j)
+      nct1.nct_indices
+      nct2.nct_indices;
+    lcomp_of_nct nct1, lcomp_of_nct nct2
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
@@ -489,12 +492,14 @@ let mk_comp_l mname univs indices result wp flags =
 let mk_comp md = mk_comp_l md.mname
 
 let subst_lcomp subst lc =
-    {lc with lcomp_res_typ=SS.subst subst lc.lcomp_res_typ;
-             lcomp_as_comp=fun () -> SS.subst_comp subst (lc.lcomp_as_comp())}
+  { lc with
+    lcomp_res_typ=SS.subst subst lc.lcomp_res_typ;
+    lcomp_as_comp=fun () -> SS.subst_comp subst (lc.lcomp_as_comp())
+  }
 
 let is_function t = match (compress t).n with
-    | Tm_arrow _ -> true
-    | _ -> false
+  | Tm_arrow _ -> true
+  | _ -> false
 
 let return_value env t v =
   let c =
@@ -518,86 +523,94 @@ let return_value env t v =
 let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let lc1 = N.ghost_to_pure_lcomp env lc1 in //downgrade from ghost to pure, if possible
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
+
   if debug env Options.Extreme
-  then
-    (let bstr = match b with
-      | None -> "none"
-      | Some x -> Print.bv_to_string x in
-    BU.print4 "Before lift: Making bind (e1=%s)@c1=%s\nb=%s\t\tc2=%s\n"
+  then begin
+      let bstr = match b with
+        | None -> "none"
+        | Some x -> Print.bv_to_string x
+      in
+      BU.print4 "Before lift: Making bind (e1=%s)@c1=%s\nb=%s\t\tc2=%s\n"
         (match e1opt with | None -> "None" | Some e -> Print.term_to_string e)
-        (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
+        (Print.lcomp_to_string lc1)
+        bstr
+        (Print.lcomp_to_string lc2)
+    end ;
+
   let lc1, lc2 = join_lcomp env lc1 lc2 in
+
   //at this point, lc1 and lc2 have the same label, universes and indices
   let bind_it () =
-      let c1 = lc1.lcomp_as_comp () in
-      let c2 = lc2.lcomp_as_comp () in
-      //at this point, we know that c1 and c2 also have the same effect label, universes and indices
-      if debug env Options.Extreme
-      then BU.print5 "b=%s,Evaluated %s to %s\n And %s to %s\n"
-            (match b with
-              | None -> "none"
-              | Some x -> Print.bv_to_string x)
-            (Print.lcomp_to_string lc1)
-            (Print.comp_to_string c1)
-            (Print.lcomp_to_string lc2)
-            (Print.comp_to_string c2);
-      let try_simplify () =
-        let aux () =
-            if U.is_trivial_wp c1
-            then match b with
-                    | None -> Some (c2, "trivial no binder")
-                    | Some _ ->
-                        if U.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
-                        then Some (c2, "trivial ml")
-                        else None
-            else if U.is_ml_comp c1 && U.is_ml_comp c2
-            then Some (c2, "both ml")
-            else None in
-        let subst_c2 reason =
-            match e1opt, b with
-                | Some e, Some x ->
-                  Some (SS.subst_comp [NT(x,e)] c2, reason)
-                | _ -> aux() in
-        if U.is_total_comp c1
-        && U.is_total_comp c2
-        then subst_c2 "both total"
-        else if U.is_tot_or_gtot_comp c1
-             && U.is_tot_or_gtot_comp c2
-        then Some (S.mk_GTotal (Env.result_typ env c2), "both gtot")
-        else match e1opt, b with
-            | Some e, Some x ->
-                if U.is_total_comp c1 && not (Syntax.is_null_bv x)
-                then subst_c2 "substituted e"
-                else aux ()
-            | _ -> aux () in
-      match try_simplify () with
-      | Some (c, reason) ->
-        c
-      | None ->
-        let nct1 = Env.comp_as_normal_comp_typ env c1 in
-        let nct2 = Env.comp_as_normal_comp_typ env c2 in
-        let md = Env.get_effect_decl env nct1.nct_name in
-        let t1 = fst nct1.nct_result in
-        let t2 = fst nct2.nct_result in
-        let mk_lam wp =
-           let bs =
-              match b with
-              | None -> [null_binder (fst nct1.nct_result)]
-              | Some x -> [S.mk_binder x] in
-           U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL])))
-        in //we know it's total; mark it as such so the normalizer reduce it
-        // bind <u,u1...un,v> : i1...im -> a:Type u -> b:Type v -> M i1...im a -> (a -> M i1 ... im b) -> M i1...im b
-        let bind_inst = inst_effect_fun_with (nct1.nct_univs@[List.hd nct2.nct_univs]) env md md.bind_wp in
-        let bind_args = nct1.nct_indices@[ //binds are homogeneous in the indices of the two computations
-                        nct1.nct_result;
-                        nct2.nct_result;
-                        nct1.nct_wp;
-                        S.as_arg (mk_lam (fst nct2.nct_wp))]
-        in
-        let wp = mk_Tm_app bind_inst bind_args None t2.pos in
-        let nct = {nct2 with nct_wp=S.as_arg wp} in
-        Env.normal_comp_typ_as_comp env nct
+    let c1 = lc1.lcomp_as_comp () in
+    let c2 = lc2.lcomp_as_comp () in
+    //at this point, we know that c1 and c2 also have the same effect label, universes and indices
+    if debug env Options.Extreme
+    then BU.print5 "b=%s,Evaluated %s to %s\n And %s to %s\n"
+          (match b with
+            | None -> "none"
+            | Some x -> Print.bv_to_string x)
+          (Print.lcomp_to_string lc1)
+          (Print.comp_to_string c1)
+          (Print.lcomp_to_string lc2)
+          (Print.comp_to_string c2);
+    let try_simplify () =
+      let aux () =
+          if U.is_trivial_wp c1
+          then match b with
+                  | None -> Some (c2, "trivial no binder")
+                  | Some _ ->
+                      if U.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
+                      then Some (c2, "trivial ml")
+                      else None
+          else if U.is_ml_comp c1 && U.is_ml_comp c2
+          then Some (c2, "both ml")
+          else None in
+      let subst_c2 reason =
+          match e1opt, b with
+              | Some e, Some x ->
+                Some (SS.subst_comp [NT(x,e)] c2, reason)
+              | _ -> aux() in
+      if U.is_total_comp c1
+      && U.is_total_comp c2
+      then subst_c2 "both total"
+      else if U.is_tot_or_gtot_comp c1
+            && U.is_tot_or_gtot_comp c2
+      then Some (S.mk_GTotal (Env.result_typ env c2), "both gtot")
+      else match e1opt, b with
+          | Some e, Some x ->
+              if U.is_total_comp c1 && not (Syntax.is_null_bv x)
+              then subst_c2 "substituted e"
+              else aux ()
+          | _ -> aux () in
+    match try_simplify () with
+    | Some (c, reason) ->
+      c
+    | None ->
+      let nct1 = Env.comp_as_normal_comp_typ env c1 in
+      let nct2 = Env.comp_as_normal_comp_typ env c2 in
+      let md = Env.get_effect_decl env nct1.nct_name in
+      let t1 = fst nct1.nct_result in
+      let t2 = fst nct2.nct_result in
+      let mk_lam wp =
+          let bs =
+            match b with
+            | None -> [null_binder (fst nct1.nct_result)]
+            | Some x -> [S.mk_binder x] in
+          U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL])))
+      in //we know it's total; mark it as such so the normalizer reduce it
+      // bind <u,u1...un,v> : i1...im -> a:Type u -> b:Type v -> M i1...im a -> (a -> M i1 ... im b) -> M i1...im b
+      let bind_inst = inst_effect_fun_with (nct1.nct_univs@[List.hd nct2.nct_univs]) env md md.bind_wp in
+      let bind_args = nct1.nct_indices@[ //binds are homogeneous in the indices of the two computations
+                      nct1.nct_result;
+                      nct2.nct_result;
+                      nct1.nct_wp;
+                      S.as_arg (mk_lam (fst nct2.nct_wp))]
+      in
+      let wp = mk_Tm_app bind_inst bind_args None t2.pos in
+      let nct = {nct2 with nct_wp=S.as_arg wp} in
+      Env.normal_comp_typ_as_comp env nct
   in //bind_it
+
   if env.lax
   && Options.ml_ish() //NS: disabling this optimization temporarily
   then lc2
@@ -961,69 +974,71 @@ let maybe_instantiate (env:Env.env) e t : term * term * guard_t * S.subst_t =
   let torig = SS.compress t in
   if not env.instantiate_imp
   then e, torig, Rel.trivial_guard, []
-  else let number_of_implicits t =
-            let formals, _ = U.arrow_formals_comp t in
-            let n_implicits =
-            match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
-                | None -> List.length formals
-                | Some (implicits, _first_explicit, _rest) -> List.length implicits in
-            n_implicits
-       in
-       let inst_n_binders t =
-           match Env.expected_typ env with
-           | None -> None
-           | Some expected_t ->
-             let n_expected = number_of_implicits expected_t in
-             let n_available = number_of_implicits t in
-             if n_available < n_expected
-             then raise (Error(BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
-                                        (BU.string_of_int n_expected)
-                                        (Print.term_to_string e)
-                                        (BU.string_of_int n_available), Env.get_range env))
-             else Some (n_available - n_expected)
+  else
+    let number_of_implicits t =
+      let formals, _ = U.arrow_formals_comp t in
+      let n_implicits =
+        match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
+        | None -> List.length formals
+        | Some (implicits, _first_explicit, _rest) -> List.length implicits
+      in
+      n_implicits
+    in
+    let inst_n_binders t =
+      match Env.expected_typ env with
+      | None -> None
+      | Some expected_t ->
+        let n_expected = number_of_implicits expected_t in
+        let n_available = number_of_implicits t in
+        if n_available < n_expected
+        then raise (Error(BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
+                                  (BU.string_of_int n_expected)
+                                  (Print.term_to_string e)
+                                  (BU.string_of_int n_available), Env.get_range env))
+        else Some (n_available - n_expected)
+    in
+    let decr_inst = function
+      | None -> None
+      | Some i -> Some (i - 1)
+    in
+    begin match torig.n with
+      | Tm_arrow(bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        //instantiate at most inst_n implicit binders, when inst_n = Some n
+        //otherwise, instantate all implicits
+        //See issue #807 for why this is important
+        let rec aux subst inst_n bs =
+          match inst_n, bs with
+          | Some 0, _ -> [], bs, subst, Rel.trivial_guard //no more instantiations to do
+          | _, (x, Some (Implicit dot))::rest ->
+            let t = SS.subst subst x.sort in
+            let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
+            let subst = NT(x, v)::subst in
+            let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
+            (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
+          | _, bs -> [], bs, subst, Rel.trivial_guard
         in
-        let decr_inst = function
-                | None -> None
-                | Some i -> Some (i - 1)
-        in
-        begin match torig.n with
-            | Tm_arrow(bs, c) ->
-              let bs, c = SS.open_comp bs c in
-              //instantiate at most inst_n implicit binders, when inst_n = Some n
-              //otherwise, instantate all implicits
-              //See issue #807 for why this is important
-              let rec aux subst inst_n bs =
-                  match inst_n, bs with
-                  | Some 0, _ -> [], bs, subst, Rel.trivial_guard //no more instantiations to do
-                  | _, (x, Some (Implicit dot))::rest ->
-                      let t = SS.subst subst x.sort in
-                      let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
-                      let subst = NT(x, v)::subst in
-                      let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
-                 | _, bs -> [], bs, subst, Rel.trivial_guard
-              in
-              let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
-              begin match args, bs with
-                | [], _ -> //no implicits were instantiated
-                  e, torig, guard, []
+        let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
+        begin match args, bs with
+          | [], _ -> //no implicits were instantiated
+            e, torig, guard, []
 
-                | _, [] when not (U.is_total_comp c) ->
-                  //don't instantiate implicitly, if it has an effect
-                  e, torig, Rel.trivial_guard, []
+          | _, [] when not (U.is_total_comp c) ->
+            //don't instantiate implicitly, if it has an effect
+            e, torig, Rel.trivial_guard, []
 
-                | _ ->
+          | _ ->
 
-                  let t = match bs with
-                    | [] -> Env.result_typ env c
-                    | _ -> U.arrow bs c in
-                  let t = SS.subst subst t in
-                  let e = S.mk_Tm_app e args (Some t.n) e.pos in
-                  e, t, guard, subst
-              end
+            let t = match bs with
+              | [] -> Env.result_typ env c
+              | _ -> U.arrow bs c in
+            let t = SS.subst subst t in
+            let e = S.mk_Tm_app e args (Some t.n) e.pos in
+            e, t, guard, subst
+        end
 
-            | _ -> e, t, Rel.trivial_guard, []
-       end
+      | _ -> e, t, Rel.trivial_guard, []
+    end
 
 (**************************************************************************************)
 (* Generalizing types *)
@@ -1079,17 +1094,20 @@ let check_universe_generalization
                       ^ Print.term_to_string t, t.pos))
 
 let generalize_universes (env:env) (t0:term) : tscheme =
-    let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
-    let univnames = gather_free_univnames env t in
-    let univs = Free.univs t in
-    if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "univs to gen : %s\n" (string_of_univs univs);
-    let gen = gen_univs env univs in
-    if Env.debug env <| Options.Other "Gen"
-    then BU.print1 "After generalization: %s\n"  (Print.term_to_string t);
-    let univs = check_universe_generalization univnames gen t0 in
-    let ts = SS.close_univ_vars univs t in
-    maybe_set_tk (univs, ts) (!t0.tk)
+  let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
+
+  let univnames = gather_free_univnames env t in
+  let univs = Free.univs t in
+  if Env.debug env <| Options.Other "Gen"
+  then BU.print1 "univs to gen : %s\n" (string_of_univs univs);
+
+  let gen = gen_univs env univs in
+  if Env.debug env <| Options.Other "Gen"
+  then BU.print1 "After generalization: %s\n"  (Print.term_to_string t);
+
+  let univs = check_universe_generalization univnames gen t0 in
+  let ts = SS.close_univ_vars univs t in
+  maybe_set_tk (univs, ts) (!t0.tk)
 
 let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
   if not <| (BU.for_all (fun (_, c) -> U.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
@@ -1801,7 +1819,7 @@ let mlift_of_sub_eff env sub : mlift =
     //   This constraints sigma, imperatively
     //3. Then, we build (sigma sub_eff_target) (sigma sub_eff_lift_wp nct.wp)
     //step 1
-    let sigma =
+    let sigma, effect_binders_opening =
       let skeleton =
         sub.sub_eff_univs,
         S.mk (Tm_arrow(sub.sub_eff_binders, S.mk_Total Common.t_unit)) None Range.dummyRange
@@ -1814,8 +1832,22 @@ let mlift_of_sub_eff env sub : mlift =
           ([], List.length sub.sub_eff_binders)
       in
       let _term, _typ, _guard, index_meta_var_subst = maybe_instantiate env S.tun skel in
-      univ_meta_vars_subst @ index_meta_var_subst
+      (* maybe_instanciate open all the binders, so we need to lift the substistution to bound variables *)
+      let effect_binders_opening =
+        let lift_to_bvar subst_elt (n,l) =
+          match subst_elt with
+          | NT (b, _) -> n+1, S.DB (n, b) :: l
+          | _ -> failwith "Clearly impossible"
+        in
+        snd <| List.fold_right lift_to_bvar index_meta_var_subst (0, [])
+      in
+      univ_meta_vars_subst @ index_meta_var_subst, effect_binders_opening
     in
+
+    if Env.debug env (Options.Other "Lift")
+    then BU.print2 "Substitution used for lift : %s and %s\n"
+                   (Print.subst_to_string effect_binders_opening)
+                   (Print.subst_to_string sigma) ;
 
     (* step 2 *)
     (* Involving the actual wp in the following unification problem would just lead *)
@@ -1828,7 +1860,8 @@ let mlift_of_sub_eff env sub : mlift =
             effect_args = sub.sub_eff_source.effect_args @ [dummy_wp]
           }
         in
-        SS.subst_comp sigma (S.mk_Comp ct)
+        let c = SS.subst_comp effect_binders_opening (S.mk_Comp ct) in
+        SS.subst_comp sigma c
       in
       let actual_source =
         let ct = {
@@ -1841,6 +1874,11 @@ let mlift_of_sub_eff env sub : mlift =
         S.mk_Comp ct
       in
 
+      if Env.debug env (Options.Other "Lift")
+      then BU.print2 "trying to equate %s and %s\n"
+                     (Print.comp_to_string formal_source)
+                     (Print.comp_to_string actual_source) ;
+
       match Rel.sub_comp ({env with use_eq=true}) formal_source actual_source with
       | None -> fail ()
       | Some g -> Rel.force_trivial_guard env g
@@ -1848,20 +1886,28 @@ let mlift_of_sub_eff env sub : mlift =
 
     let target_nct =
       let target_wp =
-        S.mk_Tm_app (SS.subst sigma (BU.must sub.sub_eff_lift_wp))
+        let lift_wp = SS.subst effect_binders_opening (BU.must sub.sub_eff_lift_wp) in
+        S.mk_Tm_app (SS.subst sigma lift_wp)
           [nct.nct_wp]
           None
           Range.dummyRange
       in
       let target_comp_no_wp =
-        SS.subst_comp sigma (S.mk_Comp sub.sub_eff_target) |> U.comp_to_comp_typ
+        let c = SS.subst_comp effect_binders_opening (S.mk_Comp sub.sub_eff_target) in
+        SS.subst_comp sigma c |> U.comp_to_comp_typ
       in
       let target_comp_typ =
         { target_comp_no_wp with
           effect_args=target_comp_no_wp.effect_args@[S.as_arg target_wp]
         }
       in
-      Env.comp_as_normal_comp_typ env (S.mk_Comp target_comp_typ)
+
+      let c = S.mk_Comp target_comp_typ in
+
+      if Env.debug env (Options.Other "Lift")
+      then BU.print1 "Target comp type after lifting %s" (Print.comp_to_string c) ;
+
+      Env.comp_as_normal_comp_typ env c
     in
     target_nct
   in //end mlift

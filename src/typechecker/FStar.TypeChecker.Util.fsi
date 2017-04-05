@@ -45,6 +45,7 @@ val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation and generalization
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t * subst_t)
+val gather_free_univnames : env -> term -> univ_names
 val generalize: env -> list<(lbname*term*comp)> -> list<(lbname*univ_names*term*comp)>
 val generalize_universes: env -> term -> tscheme
 

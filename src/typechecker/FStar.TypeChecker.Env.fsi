@@ -139,9 +139,11 @@ val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> (bool * list<lident>)  //the boolean tells if the lident was actually a inductive
 val typ_of_datacon         : env -> lident -> lident
 val lookup_definition      : list<delta_level> -> env -> lident -> option<(univ_names * term)>
+val try_lookup_effect_lid' : env -> lident -> option<(universes * typ)>
 val try_lookup_effect_lid  : env -> lident -> option<term>
+val lookup_effect_lid'     : env -> lident -> universes * typ
 val lookup_effect_lid      : env -> lident -> term
-val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
+val lookup_effect_abbrev   : env -> option<universes> -> lident -> option<(binders * comp)>
 val norm_eff_name          : (env -> lident -> lident)
 val lookup_effect_quals    : env -> lident -> list<qualifier>
 val lookup_projector       : env -> lident -> int -> lident

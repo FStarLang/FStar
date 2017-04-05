@@ -617,70 +617,93 @@ let lookup_definition delta_levels env lid =
       end
     | _ -> None
 
-let try_lookup_effect_lid env (ftv:lident) : option<typ> =
+let try_lookup_effect_lid' env (ftv:lident) : option<(universes * typ)> =
   match lookup_qname env ftv with
-    | Some (Inr (se, None)) ->
-      begin match effect_signature se with
-        | None -> None
-        | Some (_, t) -> Some (Subst.set_use_range (range_of_lid ftv) t)
-      end
-    | _ -> None
+  | Some (Inr (se, None)) ->
+    begin match effect_signature se with
+      | None -> None
+      | Some (uvs, t) -> Some (uvs, Subst.set_use_range (range_of_lid ftv) t)
+    end
+  | _ -> None
+
+let try_lookup_effect_lid env ftv =
+  BU.map_opt (try_lookup_effect_lid' env ftv) snd
+
+let lookup_effect_lid' env (ftv:lident) : universes * typ =
+  match try_lookup_effect_lid' env ftv with
+  | None -> raise (Error(name_not_found "lookup_effect_lid'" ftv, range_of_lid ftv))
+  | Some k -> k
 
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
-    | None -> raise (Error(name_not_found "lookup_effect_lid" ftv, range_of_lid ftv))
-    | Some k -> k
+  | None -> raise (Error(name_not_found "lookup_effect_lid" ftv, range_of_lid ftv))
+  | Some k -> k
 
-let lookup_effect_abbrev env (univ_insts:universes) lid0 =
+let lookup_effect_abbrev env (univ_insts_opt:option<universes>) lid0 =
   match lookup_qname env lid0 with
-    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _, _), None)) ->
-      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
-      if quals |> BU.for_some (function Irreducible -> true | _ -> false)
-      then None
-      else let insts = if List.length univ_insts = List.length univs
-                       then univ_insts
-                       else if Ident.lid_equals lid Const.effect_Lemma_lid
-                            && List.length univ_insts = 1 //TODO: Lemma is a hack! It is more universe polymorphic than expected,
-                                                          //because of the SMTPats ... which should be irrelevant, but unfortunately are not
-                       then univ_insts@[U_zero]
-                       else failwith (BU.format2 "Unexpected instantiation of effect %s with %s universes"
-                                            (Print.lid_to_string lid)
-                                            (List.length univ_insts |> BU.string_of_int)) in
-           begin match binders, univs with
-             | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
-             | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
-                failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (Print.lid_to_string lid) (string_of_int <| List.length univs))
-             | _ -> let t = inst_tscheme_with (univs, U.arrow binders c) insts in
-                    let t = Subst.set_use_range (range_of_lid lid) t in
-                    begin match (Subst.compress t).n with
-                        | Tm_arrow(binders, c) ->
-                          Some (binders, c)
-                        | _ -> failwith "Impossible"
-                    end
+  | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _, _), None)) ->
+    let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
+    if quals |> BU.for_some (function Irreducible -> true | _ -> false)
+    then None
+    else
+      let insts univ_insts =
+        if List.length univ_insts = List.length univs
+        then univ_insts
+        (* TODO: Lemma is a hack! It is more universe polymorphic than expected, *)
+        (* because of the SMTPats ... which should be irrelevant, but unfortunately are not *)
+        else if Ident.lid_equals lid Const.effect_Lemma_lid
+                && List.length univ_insts = 1
+        then univ_insts@[U_zero]
+        else failwith (BU.format2 "Unexpected instantiation of effect %s with %s universes"
+                        (Print.lid_to_string lid)
+                        (List.length univ_insts |> BU.string_of_int))
+      in
+      begin match binders, univs with
+        | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
+        | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
+          failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
+                      (Print.lid_to_string lid) (string_of_int <| List.length univs))
+        | _ ->
+          let t =
+            match univ_insts_opt with
+            (* If we were not provided with universes then it means that we don't care about instanciating them *)
+            | None -> U.arrow binders c
+            | Some univ_insts ->
+              inst_tscheme_with (univs, U.arrow binders c) (insts univ_insts)
+          in
+          let t = Subst.set_use_range (range_of_lid lid) t in
+          begin match (Subst.compress t).n with
+            | Tm_arrow(binders, c) ->
+              Some (binders, c)
+            | _ -> failwith "Impossible"
           end
-    | _ -> None
+    end
+  | _ -> None
 
 let norm_eff_name =
-   let cache = BU.smap_create 20 in
-   fun env (l:lident) ->
-       let rec find l =
-           match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
-            | None -> None
-            | Some (_, c) ->
-                let l = U.comp_effect_name c in
-                match find l with
-                    | None -> Some l
-                    | Some l' -> Some l' in
-       let res = match BU.smap_try_find cache l.str with
-            | Some l -> l
-            | None ->
-              begin match find l with
-                        | None -> l
-                        | Some m -> BU.smap_add cache l.str m;
-                                    m
-              end in
-       Ident.set_lid_range res (range_of_lid l)
+  let cache = BU.smap_create 20 in
+  fun env (l:lident) ->
+    let rec find l =
+      (* universe doesn't matter here; we're just normalizing the name *)
+      match lookup_effect_abbrev env None l with
+      | None -> None
+      | Some (_, c) ->
+        let l = U.comp_effect_name c in
+        match find l with
+        | None -> Some l
+        | Some l' -> Some l'
+    in
+
+    let res = match BU.smap_try_find cache l.str with
+      | Some l -> l
+      | None ->
+        match find l with
+        | None -> l
+        | Some m ->
+          BU.smap_add cache l.str m;
+          m
+    in
+    Ident.set_lid_range res (range_of_lid l)
 
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
@@ -785,7 +808,7 @@ let comp_to_comp_typ (env:env) c =
 
 let rec unfold_effect_abbrev env comp =
   let c = comp_to_comp_typ env comp in
-  match lookup_effect_abbrev env c.comp_univs c.comp_typ_name with
+  match lookup_effect_abbrev env (Some c.comp_univs) c.comp_typ_name with
   | None -> c
   | Some (binders, cdef) ->
     let binders, cdef = SS.open_comp binders cdef in
@@ -935,6 +958,8 @@ let get_effect_decl env l =
     | Some md -> md
 
 let join env l1 l2 : (lident * mlift * mlift) =
+  let l1 = norm_eff_name env l1 in
+  let l2 = norm_eff_name env l2 in
   if lid_equals l1 l2
   then let id x = x in
        l1, id, id
