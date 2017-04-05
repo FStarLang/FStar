@@ -1397,37 +1397,23 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
     } in
     Sig_let((false, [lb]), rng, lids, quals, [])
 
-let add_sigelts_to_env (env:env_t) (d:decl) (ses:sigelts) :env_t =
-  match d.d with
-  | Pragma _ -> env
-  | Fsdoc _ -> env
-  | TopLevelModule _ -> env
-  | Open lid -> Env.push_namespace env lid
-  | Include lid -> Env.push_include env lid
-  | ModuleAbbrev (x, l) -> Env.push_module_abbrev env x l
-  | Tycon _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
-  | TopLevelLet _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
-  | Main _ -> env
-  | Assume _ -> env
-  | Val _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
-  | Exception _ -> ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env
-  | NewEffect (RedefineEffect (eff_name, _, _))
-  | NewEffect (DefineEffect (eff_name, _, _, _)) ->
-    (match ses with
-     | [ Sig_new_effect_for_free (ed, r) ]
-     | [ Sig_new_effect (ed, r) ] ->
-       let env0 = env in
-       let env = Env.push_sigelt env (List.hd ses) in
-       let env = ed.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ed.mname a)) env in
-       if d.quals |> List.contains Reflectable then
-         let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify (Env.enter_monad_scope env0 eff_name) in
-         let refl_decl = S.Sig_declare_typ (reflect_lid, [], S.tun, [S.Assumption; S.Reflectable ed.mname], r) in
-         Env.push_sigelt env refl_decl
-       else env
-     | _ -> failwith "Impossible, decl and sigelt don't match")
-  | SubEffect _ -> env
+let add_sigelts_to_env (env:env_t) (ses:sigelts) :env_t =
+  let env0 = env in
+  let env = ses |> List.fold_left (fun env se -> Env.push_sigelt env se) env in
+  match ses with
+  | [ Sig_new_effect_for_free (ed, r) ]
+  | [ Sig_new_effect (ed, r) ] ->
+    let eff_name = ed.mname.ident in  //AR: is this the right way to get eff name?
+    //push the effect actions in the env
+    let env = ed.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ed.mname a)) env in
+    if List.existsb (fun q -> match q with | S.Reflectable _ -> true | _ -> false) ed.qualifiers then
+      let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify (Env.enter_monad_scope env0 eff_name) in
+      let refl_decl = S.Sig_declare_typ (reflect_lid, [], S.tun, [S.Assumption; S.Reflectable ed.mname], r) in
+      Env.push_sigelt env refl_decl
+    else env
+  | _ -> env
 
-let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
+let rec desugar_tycon env rng quals tcs :sigelts =
   let tycon_id = function
     | TyconAbstract(id, _, _)
     | TyconAbbrev(id, _, _, _)
@@ -1496,9 +1482,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None rng in
              Sig_declare_typ(l, [], t, quals, rng)
            | _ -> se in
-        let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
-        env, [se]
+        [se]
 
     | [TyconAbbrev(id, binders, kopt, t)] ->
         let env', typars = typars_of_binders env binders in
@@ -1542,8 +1527,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                  let nm = qualify env id in
                  mk_typ_abbrev nm [] typars k t [nm] quals rng in
 
-        let env = push_sigelt env se in
-        env, [se]
+        [se]
 
     | [TyconRecord _] ->
       let trec = List.hd tcs in
@@ -1612,8 +1596,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       in
       let sigelts = tps_sigelts |> List.map snd in
       let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect U.lids_of_sigelt sigelts) rng in
-      let env = push_sigelt env0 bundle in
-      let env = List.fold_left push_sigelt env abbrevs in
+      let env = env0 in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = tps_sigelts |> List.collect (mk_data_projector_names quals env) in
       let discs = sigelts |> List.collect (function
@@ -1624,8 +1607,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
-      let env = List.fold_left push_sigelt env ops in
-      env, [bundle]@abbrevs@ops
+      [bundle] @ abbrevs @ ops
 
     | [] -> failwith "impossible"
 
@@ -1639,7 +1621,7 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
+let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls :sigelts =
     let env0 = env in
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
@@ -1677,9 +1659,10 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
       List.partition (fun decl -> List.mem (name_of_eff_decl decl) mandatory_members) eff_decls
     in
 
+    let env = { env with sigmap = BU.smap_copy env.sigmap } in
     let env, decls = mandatory_members_decls |> List.fold_left (fun (env, out) decl ->
-        let env, ses = desugar_decl env decl in
-        env, List.hd ses::out)
+        let ses = desugar_decl env decl in
+        add_sigelts_to_env env ses, List.hd ses::out)
       (env, [])
     in
     let binders = Subst.close_binders binders in
@@ -1768,21 +1751,9 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
           actions     = actions;
         }, d.drange)
     in
-    let env = push_sigelt env0 se in
-    let env = actions |> List.fold_left (fun env a ->
-        //printfn "Pushing action %s\n" a.action_name.str;
-        push_sigelt env (U.action_as_lb mname a)) env
-    in
-    let env =
-      if quals |> List.contains Reflectable
-      then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-            let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
-            push_sigelt env refl_decl
-      else env
-    in
-    env, [se]
+    [se]
 
-and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
+and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn :sigelts =
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
@@ -1848,37 +1819,26 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
       let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
       if for_free then Sig_new_effect_for_free (ed, d.drange) else Sig_new_effect (ed, d.drange)
     in
-    let monad_env = env in
-    let env = push_sigelt env0 se in
-    let env = ed.actions |> List.fold_left (fun env a ->
-        push_sigelt env (U.action_as_lb mname a)
-    ) env in
-    let env =
-        if quals |> List.contains Reflectable
-        then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-             let refl_decl = S.Sig_declare_typ(reflect_lid, [], S.tun, [S.Assumption; S.Reflectable mname], d.drange) in
-             push_sigelt env refl_decl
-        else env in
-    env, [se]
+    [se]
 
-and desugar_decl env (d:decl) : (env_t * sigelts) =
+and desugar_decl env (d:decl) :sigelts =
   let trans_qual = trans_qual d.drange in
   match d.d with
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
     if p = LightOff
     then Options.set_ml_ish();
-    add_sigelts_to_env env d [se], [se]
+    [se]
 
-  | Fsdoc _ -> add_sigelts_to_env env d [], []
+  | Fsdoc _ -> []
 
-  | TopLevelModule _ -> add_sigelts_to_env env d [], []
+  | TopLevelModule _ -> []
 
-  | Open _ -> add_sigelts_to_env env d [], []
+  | Open _ -> []
 
-  | Include _ -> add_sigelts_to_env env d [], []
+  | Include _ -> []
 
-  | ModuleAbbrev(x, l) -> add_sigelts_to_env env d [], []
+  | ModuleAbbrev(x, l) -> []
 
   | Tycon(is_effect, tcs) ->
     let quals = if is_effect then Effect_qual :: d.quals else d.quals in
@@ -1924,7 +1884,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
                             {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
                     else lbs in
           let s = Sig_let(lbs, d.drange, fvs |> List.map (fun fv -> fv.fv_name.v), quals, attrs) in
-          add_sigelts_to_env env d [s], [s]
+          [s]
         | _ -> failwith "Desugaring a let did not produce a let"
     end
     else
@@ -1950,7 +1910,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
           quals = Private :: d.quals })
       in
 
-      let build_projection (env, ses) id =
+      let build_projection ses id =
         (* We build a new toplevel definition as follow and then desugar it *)
         (* let id = match fresh_toplevel_name with | pat -> id              *)
         let main = mk_term (Var (lid_of_ids [fresh_toplevel_name])) Range.dummyRange Expr in
@@ -1960,22 +1920,21 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         let bv_pat = mk_pattern (PatVar (id, None)) Range.dummyRange in
         (* TODO : do we need to put some attributes for this declaration ? *)
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
-        let env, ses' = desugar_decl env id_decl in
-        env, ses @ ses'
+        let ses' = desugar_decl env id_decl in
+        ses @ ses'
       in
       let bvs = gather_pattern_bound_vars pat |> set_elements in
-      let _, ses = List.fold_left build_projection main_let bvs in
-      add_sigelts_to_env env d ses, ses
+      List.fold_left build_projection main_let bvs
 
   | Main t ->
     let e = desugar_term env t in
     let se = Sig_main(e, d.drange) in
-    add_sigelts_to_env env d [se], [se]
+    [se]
 
   | Assume(id, t) ->
     let f = desugar_formula env t in
     let se = Sig_assume(qualify env id, f, [S.Assumption], d.drange) in
-    add_sigelts_to_env env d [se], [se]
+    [se]
 
 
   | Val(id, t) ->
@@ -1983,7 +1942,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let t = desugar_term env (close_fun env t) in
     let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
     let se = Sig_declare_typ(qualify env id, [], t, List.map (trans_qual None) quals, d.drange) in
-    add_sigelts_to_env env d [se], [se]
+    [se]
 
   | Exception(id, None) ->
     let env0 = env in
@@ -1991,11 +1950,9 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
-    let env = push_sigelt env se' in
     let data_ops = mk_data_projector_names [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
-    let env = List.fold_left push_sigelt env (discs@data_ops) in
-    add_sigelts_to_env env0 d (se'::discs@data_ops), se'::discs@data_ops
+    (se'::discs) @ data_ops
 
   | Exception(id, Some term) ->
     let env0 = env in
@@ -2004,21 +1961,17 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let l = qualify env id in
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
-    let env = push_sigelt env se' in
     let data_ops = mk_data_projector_names [] env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
-    let env = List.fold_left push_sigelt env (discs@data_ops) in
-    add_sigelts_to_env env0 d (se'::discs@data_ops), se'::discs@data_ops
+    (se'::discs) @ data_ops
 
   | NewEffect (RedefineEffect(eff_name, eff_binders, defn)) ->
     let quals = d.quals in
-    let _, ses = desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn in
-    add_sigelts_to_env env d ses, ses
+    desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn
 
   | NewEffect (DefineEffect(eff_name, eff_binders, eff_typ, eff_decls)) ->
     let quals = d.quals in
-    let _, ses = desugar_effect env d quals eff_name eff_binders eff_typ eff_decls in
-    add_sigelts_to_env env d ses, ses
+    desugar_effect env d quals eff_name eff_binders eff_typ eff_decls
 
   | SubEffect l ->
     let lookup l = match Env.try_lookup_effect_name env l with
@@ -2032,12 +1985,19 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
         | LiftForFree t -> None, Some ([],desugar_term env t)
     in
     let se = Sig_sub_effect({source=src; target=dst; lift_wp=lift_wp; lift=lift}, d.drange) in
-    add_sigelts_to_env env d [se], [se]
+    [se]
+
+let add_decl_to_env (env:env_t) (d:decl) :env_t =
+  match d.d with
+  | Open lid -> Env.push_namespace env lid
+  | Include lid -> Env.push_include env lid
+  | ModuleAbbrev (x, l) -> Env.push_module_abbrev env x l
+  | _ -> env
 
  let desugar_decls env decls =
     List.fold_left (fun (env, sigelts) d ->
-        let env, se = desugar_decl env d in
-        env, sigelts@se) (env, []) decls
+        let se = desugar_decl env d in
+        add_sigelts_to_env (add_decl_to_env env d) se, sigelts@se) (env, []) decls
 
 let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
