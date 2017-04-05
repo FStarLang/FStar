@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--include .. UserTactics.Example1.fst</StartArguments>
+    <StartArguments>--use_hints FStar.Int.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\everest\FStar\examples\tactics\micro-benchmarks\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\everest\FStar\ulib\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
