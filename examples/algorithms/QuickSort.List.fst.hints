@@ -1,5 +1,5 @@
 [
-  "ygk†< ¯ª\u001a\u0011.±w™ˆl",
+  "Æ:ÛÒ\u0019¯Î_<À\u0003\u001c\u000f\u007f€Í",
   [
     [
       "QuickSort.List.sorted",
@@ -283,8 +283,9 @@
         "@query", "binder_x_273c0cb114efbc10b99731f088b17ae0_1",
         "binder_x_63893f6163361bb7b4db46296cfdfc01_3",
         "binder_x_f2e8156bef1eecafdcb556a8fc23f139_2", "bool_inversion",
-        "bool_typing", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
+        "bool_typing", "constructor_distinct_BoxInt",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.List.Tot.Base.op_At", "equation_Prims.eqtype",
@@ -306,6 +307,7 @@
         "fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_irrelevance_QuickSort.List.count.fuel_instrumented",
+        "fuel_irrelevance_QuickSort.List.partition.fuel_instrumented",
         "int_inversion", "int_typing",
         "interpretation_Tm_arrow_97bf16a3149921185c907fce1d10e541",
         "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
@@ -329,6 +331,7 @@
         "refinement_interpretation_Tm_refine_468647774d24e19243c4dbdb81d7cd8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_c420c91ba7f07eebbf873f316ba540a3",
+        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "token_correspondence_Prims.op_LessThan",
         "token_correspondence_QuickSort.List.count.fuel_instrumented",

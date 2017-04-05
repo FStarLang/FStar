@@ -33,7 +33,7 @@
     [
       "NatHeap.alloc_ref",
       2,
-      4,
+      2,
       2,
       [
         "@query", "constructor_distinct_Prims.None",

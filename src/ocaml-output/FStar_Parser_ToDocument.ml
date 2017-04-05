@@ -605,7 +605,7 @@ and p_attributes: FStar_Parser_AST.attributes_ -> FStar_Pprint.document =
     soft_surround_separate_map (Prims.parse_int "0") (Prims.parse_int "2")
       FStar_Pprint.empty uu____1811 FStar_Pprint.space uu____1813
       p_atomicTerm attrs
-and p_fsdoc: FStar_Parser_AST.fsdoc -> FStar_Pprint.document =
+and p_fsdoc: FStar_Syntax_Syntax.fsdoc -> FStar_Pprint.document =
   fun uu____1814  ->
     match uu____1814 with
     | (doc1,kwd_args) ->
@@ -812,7 +812,7 @@ and p_pragma: FStar_Parser_AST.pragma -> FStar_Pprint.document =
 and p_typars: FStar_Parser_AST.binder Prims.list -> FStar_Pprint.document =
   fun bs  -> p_binders true bs
 and p_fsdocTypeDeclPairs:
-  (FStar_Parser_AST.tycon* FStar_Parser_AST.fsdoc Prims.option) ->
+  (FStar_Parser_AST.tycon* FStar_Syntax_Syntax.fsdoc Prims.option) ->
     FStar_Pprint.document
   =
   fun uu____2011  ->
@@ -915,7 +915,7 @@ and p_typeDeclPrefix:
              FStar_Pprint.surround (Prims.parse_int "2")
                (Prims.parse_int "1") uu____2211 binders_doc uu____2212)
 and p_recordFieldDecl:
-  (FStar_Ident.ident* FStar_Parser_AST.term* FStar_Parser_AST.fsdoc
+  (FStar_Ident.ident* FStar_Parser_AST.term* FStar_Syntax_Syntax.fsdoc
     Prims.option) -> FStar_Pprint.document
   =
   fun uu____2213  ->
@@ -933,7 +933,8 @@ and p_recordFieldDecl:
         FStar_Pprint.group uu____2223
 and p_constructorDecl:
   (FStar_Ident.ident* FStar_Parser_AST.term Prims.option*
-    FStar_Parser_AST.fsdoc Prims.option* Prims.bool) -> FStar_Pprint.document
+    FStar_Syntax_Syntax.fsdoc Prims.option* Prims.bool) ->
+    FStar_Pprint.document
   =
   fun uu____2229  ->
     match uu____2229 with

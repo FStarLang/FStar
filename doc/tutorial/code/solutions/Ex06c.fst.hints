@@ -363,7 +363,6 @@
         "fuel_correspondence_Ex06c.mem.fuel_instrumented",
         "fuel_correspondence_Ex06c.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
-        "fuel_irrelevance_Ex06c.append.fuel_instrumented",
         "fuel_irrelevance_Ex06c.length.fuel_instrumented",
         "fuel_irrelevance_Ex06c.mem.fuel_instrumented",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
@@ -384,13 +383,14 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_322881952368149dac7c69ac98b699e9",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_704a9b9541f314d570e11d88836b335f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_e4a49db3cc6d973395c99741b1f56708",
         "token_correspondence_Ex06c.cmp", "typing_Ex06c.length",
-        "typing_Ex06c.mem", "typing_Ex06c.sorted", "typing_Prims.fst",
-        "typing_Prims.snd", "unit_typing", "well-founded-ordering-on-nat"
+        "typing_Ex06c.mem", "typing_Prims.fst", "typing_Prims.snd",
+        "unit_typing", "well-founded-ordering-on-nat"
       ],
       0
     ]
