@@ -167,7 +167,7 @@ let has_all_in_scope: env -> Prims.bool =
       (fun uu____432  ->
          match uu____432 with
          | (m,uu____436) ->
-             FStar_Ident.lid_equals m FStar_Syntax_Const.all_lid) env.modules
+             FStar_Ident.lid_equals m FStar_Parser_Const.all_lid) env.modules
 let set_bv_range:
   FStar_Syntax_Syntax.bv -> FStar_Range.range -> FStar_Syntax_Syntax.bv =
   fun bv  ->
@@ -1923,20 +1923,20 @@ let prepare_module_or_interface:
         fun mname  ->
           let prep env1 =
             let open_ns =
-              if FStar_Ident.lid_equals mname FStar_Syntax_Const.prims_lid
+              if FStar_Ident.lid_equals mname FStar_Parser_Const.prims_lid
               then []
               else
                 if
                   FStar_Util.starts_with "FStar."
                     (FStar_Ident.text_of_lid mname)
                 then
-                  [FStar_Syntax_Const.prims_lid;
-                  FStar_Syntax_Const.fstar_ns_lid]
+                  [FStar_Parser_Const.prims_lid;
+                  FStar_Parser_Const.fstar_ns_lid]
                 else
-                  [FStar_Syntax_Const.prims_lid;
-                  FStar_Syntax_Const.st_lid;
-                  FStar_Syntax_Const.all_lid;
-                  FStar_Syntax_Const.fstar_ns_lid] in
+                  [FStar_Parser_Const.prims_lid;
+                  FStar_Parser_Const.st_lid;
+                  FStar_Parser_Const.all_lid;
+                  FStar_Parser_Const.fstar_ns_lid] in
             let open_ns1 =
               if
                 (FStar_List.length mname.FStar_Ident.ns) <>

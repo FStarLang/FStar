@@ -51,8 +51,8 @@ let is_interface: Prims.string -> Prims.bool =
     uu____84 = 'i'
 let is_implementation: Prims.string -> Prims.bool =
   fun f  -> let uu____91 = is_interface f in Prims.op_Negation uu____91
-let list_of_option uu___115_100 =
-  match uu___115_100 with | Some x -> [x] | None  -> []
+let list_of_option uu___86_100 =
+  match uu___86_100 with | Some x -> [x] | None  -> []
 let list_of_pair uu____114 =
   match uu____114 with
   | (intf,impl) ->
@@ -284,25 +284,25 @@ let collect_one:
               if uu____524
               then []
               else
-                [FStar_Syntax_Const.fstar_ns_lid;
-                FStar_Syntax_Const.prims_lid] in
+                [FStar_Parser_Const.fstar_ns_lid;
+                FStar_Parser_Const.prims_lid] in
             FStar_List.iter (record_open false) auto_open;
             (let num_of_toplevelmods =
                FStar_Util.mk_ref (Prims.parse_int "0") in
-             let rec collect_fragment uu___116_600 =
-               match uu___116_600 with
+             let rec collect_fragment uu___87_600 =
+               match uu___87_600 with
                | FStar_Util.Inl file -> collect_file file
                | FStar_Util.Inr decls -> collect_decls decls
-             and collect_file uu___117_613 =
-               match uu___117_613 with
+             and collect_file uu___88_613 =
+               match uu___88_613 with
                | modul::[] -> collect_module modul
                | modules ->
                    (FStar_Util.fprint FStar_Util.stderr
                       "Warning: file %s does not respect the one module per file convention\n"
                       [filename];
                     FStar_List.iter collect_module modules)
-             and collect_module uu___118_619 =
-               match uu___118_619 with
+             and collect_module uu___89_619 =
+               match uu___89_619 with
                | FStar_Parser_AST.Module (lid,decls)
                  |FStar_Parser_AST.Interface (lid,decls,_) ->
                    (check_module_declaration_against_filename lid filename;
@@ -336,8 +336,8 @@ let collect_one:
                     collect_decl x.FStar_Parser_AST.d;
                     FStar_List.iter collect_term x.FStar_Parser_AST.attrs)
                  decls
-             and collect_decl uu___119_653 =
-               match uu___119_653 with
+             and collect_decl uu___90_653 =
+               match uu___90_653 with
                | FStar_Parser_AST.Include lid|FStar_Parser_AST.Open lid ->
                    record_open false lid
                | FStar_Parser_AST.ModuleAbbrev (ident,lid) ->
@@ -395,8 +395,8 @@ let collect_one:
                          FStar_Errors.Err uu____727 in
                        Prims.raise uu____726
                      else ()))
-             and collect_tycon uu___120_730 =
-               match uu___120_730 with
+             and collect_tycon uu___91_730 =
+               match uu___91_730 with
                | FStar_Parser_AST.TyconAbstract (uu____731,binders,k) ->
                    (collect_binders binders;
                     FStar_Util.iter_opt k collect_term)
@@ -422,8 +422,8 @@ let collect_one:
                          match uu____813 with
                          | (uu____820,t,uu____822,uu____823) ->
                              FStar_Util.iter_opt t collect_term) identterms)
-             and collect_effect_decl uu___121_828 =
-               match uu___121_828 with
+             and collect_effect_decl uu___92_828 =
+               match uu___92_828 with
                | FStar_Parser_AST.DefineEffect (uu____829,binders,t,decls) ->
                    (collect_binders binders;
                     collect_term t;
@@ -432,8 +432,8 @@ let collect_one:
                    (collect_binders binders; collect_term t)
              and collect_binders binders =
                FStar_List.iter collect_binder binders
-             and collect_binder uu___122_847 =
-               match uu___122_847 with
+             and collect_binder uu___93_847 =
+               match uu___93_847 with
                | { FStar_Parser_AST.b = FStar_Parser_AST.Annotated (_,t);
                    FStar_Parser_AST.brange = _; FStar_Parser_AST.blevel = _;
                    FStar_Parser_AST.aqual = _;_}
@@ -447,8 +447,8 @@ let collect_one:
                    -> collect_term t
                | uu____860 -> ()
              and collect_term t = collect_term' t.FStar_Parser_AST.tm
-             and collect_constant uu___123_862 =
-               match uu___123_862 with
+             and collect_constant uu___94_862 =
+               match uu___94_862 with
                | FStar_Const.Const_int (uu____863,Some (signedness,width)) ->
                    let u =
                      match signedness with
@@ -463,8 +463,8 @@ let collect_one:
                    let uu____873 = FStar_Util.format2 "fstar.%sint%s" u w in
                    add_dep uu____873
                | uu____874 -> ()
-             and collect_term' uu___124_875 =
-               match uu___124_875 with
+             and collect_term' uu___95_875 =
+               match uu___95_875 with
                | FStar_Parser_AST.Wild  -> ()
                | FStar_Parser_AST.Const c -> collect_constant c
                | FStar_Parser_AST.Op (s,ts) ->
@@ -542,8 +542,8 @@ let collect_one:
                    FStar_List.iter collect_term cattributes
              and collect_patterns ps = FStar_List.iter collect_pattern ps
              and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
-             and collect_pattern' uu___125_1045 =
-               match uu___125_1045 with
+             and collect_pattern' uu___96_1045 =
+               match uu___96_1045 with
                | FStar_Parser_AST.PatWild 
                  |FStar_Parser_AST.PatOp _|FStar_Parser_AST.PatConst _ -> ()
                | FStar_Parser_AST.PatApp (p,ps) ->
