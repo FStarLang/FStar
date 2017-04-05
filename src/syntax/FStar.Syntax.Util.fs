@@ -214,107 +214,112 @@ let comp_to_comp_typ (c:comp) : comp_typ =
     | _ -> failwith "Assertion failed: Computation type without universe"
 
 let is_named_tot c =
-    match c.n with
-        | Comp c -> lid_equals c.comp_typ_name Const.effect_Tot_lid
-        | Total _ -> true
-        | GTotal _ -> false
+  match c.n with
+  | Comp c -> lid_equals c.comp_typ_name Const.effect_Tot_lid
+  | Total _ -> true
+  | GTotal _ -> false
 
 let is_total_comp c =
-    comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+  comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_total_lcomp c = 
-    lid_equals c.lcomp_name Const.effect_Tot_lid 
-    || c.lcomp_cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c =
+  lid_equals c.lcomp_name Const.effect_Tot_lid
+  || c.lcomp_cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tot_or_gtot_lcomp c = 
-    lid_equals c.lcomp_name Const.effect_Tot_lid
-    || lid_equals c.lcomp_name Const.effect_GTot_lid
-    || c.lcomp_cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_tot_or_gtot_lcomp c =
+  lid_equals c.lcomp_name Const.effect_Tot_lid
+  || lid_equals c.lcomp_name Const.effect_GTot_lid
+  || c.lcomp_cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_partial_return c = 
-    comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_partial_return c =
+  comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
-let is_lcomp_partial_return c = 
-    c.lcomp_cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_lcomp_partial_return c =
+  c.lcomp_cflags |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
-    is_total_comp c
-    || lid_equals Const.effect_GTot_lid (comp_effect_name c)
+  is_total_comp c
+  || lid_equals Const.effect_GTot_lid (comp_effect_name c)
+
+let is_named_tot_or_gtot_comp c =
+  let m = comp_effect_name c in
+  lid_equals Const.effect_Tot_lid m || lid_equals Const.effect_GTot_lid m
 
 let is_pure_effect l =
-     lid_equals l Const.effect_Tot_lid
-     || lid_equals l Const.effect_PURE_lid
-     || lid_equals l Const.effect_Pure_lid
+  lid_equals l Const.effect_Tot_lid
+  || lid_equals l Const.effect_PURE_lid
+  || lid_equals l Const.effect_Pure_lid
 
 let is_pure_comp c = match c.n with
-    | Total _ -> true
-    | GTotal _ -> false
-    | Comp ct -> is_total_comp c
-                 || is_pure_effect ct.comp_typ_name
-                 || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
+  | Total _ -> true
+  | GTotal _ -> false
+  | Comp ct ->
+    is_total_comp c
+    || is_pure_effect ct.comp_typ_name
+    || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
-       lid_equals Const.effect_GTot_lid l
-    || lid_equals Const.effect_GHOST_lid l
-    || lid_equals Const.effect_Ghost_lid l
+  lid_equals Const.effect_GTot_lid l
+  || lid_equals Const.effect_GHOST_lid l
+  || lid_equals Const.effect_Ghost_lid l
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
 let is_pure_lcomp lc =
-    is_total_lcomp lc
-    || is_pure_effect lc.lcomp_name
-    || lc.lcomp_cflags |> U.for_some (function LEMMA -> true | _ -> false)
+  is_total_lcomp lc
+  || is_pure_effect lc.lcomp_name
+  || lc.lcomp_cflags |> U.for_some (function LEMMA -> true | _ -> false)
 
 let is_pure_or_ghost_lcomp lc =
-    is_pure_lcomp lc || is_ghost_effect lc.lcomp_name
+  is_pure_lcomp lc || is_ghost_effect lc.lcomp_name
 
 let is_pure_or_ghost_function t = match (compress t).n with
-    | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
-    | _ -> true
+  | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
+  | _ -> true
 
 let is_lemma t =  match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct -> lid_equals ct.comp_typ_name Const.effect_Lemma_lid
-        | _ -> false
-      end
-    | _ -> false
+  | Tm_arrow(_, c) ->
+    begin match c.n with
+      | Comp ct -> lid_equals ct.comp_typ_name Const.effect_Lemma_lid
+      | _ -> false
+    end
+  | _ -> false
 
 
 let head_and_args t =
-    let t = compress t in
-    match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
+  let t = compress t in
+  match t.n with
+  | Tm_app(head, args) -> head, args
+  | _ -> t, []
 
  let un_uinst t =
-    let t = Subst.compress t in
-    match t.n with
-        | Tm_uinst(t, _) -> Subst.compress t
-        | _ -> t
+  let t = Subst.compress t in
+  match t.n with
+  | Tm_uinst(t, _) -> Subst.compress t
+  | _ -> t
 
 let is_smt_lemma t = match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct when lid_equals ct.comp_typ_name Const.effect_Lemma_lid ->
-            begin match ct.effect_args with
-                | _req::_ens::(pats, _)::_ ->
-                  let pats' = unmeta pats in
-                  let head, _ = head_and_args pats' in
-                  begin match (un_uinst head).n with
-                    | Tm_fvar fv -> fv_eq_lid fv Const.cons_lid
-                    | _ -> false
-                  end
+  | Tm_arrow(_, c) ->
+    begin match c.n with
+      | Comp ct when lid_equals ct.comp_typ_name Const.effect_Lemma_lid ->
+          begin match ct.effect_args with
+            | _req::_ens::(pats, _)::_ ->
+              let pats' = unmeta pats in
+              let head, _ = head_and_args pats' in
+              begin match (un_uinst head).n with
+                | Tm_fvar fv -> fv_eq_lid fv Const.cons_lid
                 | _ -> false
-            end
-        | _ -> false
-      end
-    | _ -> false
+              end
+            | _ -> false
+          end
+      | _ -> false
+    end
+  | _ -> false
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.comp_typ_name Const.effect_ML_lid
-              || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-
+  | Comp c ->
+    lid_equals c.comp_typ_name Const.effect_ML_lid
+    || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
   | _ -> false
 
 let is_trivial_wp c =
@@ -657,23 +662,28 @@ let flat_arrow bs c =
 
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
-    
-let tot_or_gtot_result c = 
-    match c.n with 
-    | Total (t, _)
-    | GTotal (t, _) -> t
-    | _ -> failwith "Expected a Tot or GTot computation"
+
+let tot_or_gtot_result c =
+  match c.n with
+  | Total (t, _)
+  | GTotal (t, _) -> t
+  | Comp c ->
+    if Ident.lid_equals c.comp_typ_name Const.effect_Tot_lid
+       || Ident.lid_equals c.comp_typ_name Const.effect_GTot_lid
+    then fst <| List.hd c.effect_args
+    else failwith "Expected a Tot or GTot computation"
 
 let rec arrow_formals_comp k =
-    let k = Subst.compress k in
-    match k.n with
-    | Tm_arrow(bs, c) ->
-        let bs, c = Subst.open_comp bs c in
-        if is_tot_or_gtot_comp c
-        then let bs', k = arrow_formals_comp (tot_or_gtot_result c) in
-             bs@bs', k
-        else bs, c
-    | _ -> [], Syntax.mk_Total k
+  let k = Subst.compress k in
+  match k.n with
+  | Tm_arrow(bs, c) ->
+    let bs, c = Subst.open_comp bs c in
+    if is_named_tot_or_gtot_comp c
+    then
+      let bs', k = arrow_formals_comp (tot_or_gtot_result c) in
+      bs@bs', k
+    else bs, c
+  | _ -> [], Syntax.mk_Total k
 
 //let rec arrow_formals k =
 //    let bs, c = arrow_formals_comp k in

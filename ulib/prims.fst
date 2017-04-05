@@ -207,140 +207,140 @@ effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
 
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
-(* assume new type int : Type0 *)
+assume new type int : Type0
 
-(* assume HasEq_int: hasEq int *)
+assume HasEq_int: hasEq int
 
-(* assume val op_AmpAmp             : bool -> bool -> Tot bool *)
-(* assume val op_BarBar             : bool -> bool -> Tot bool *)
-(* assume val op_Negation           : bool -> Tot bool *)
-(* assume val op_Multiply           : int -> int -> Tot int *)
-(* assume val op_Subtraction        : int -> int -> Tot int *)
-(* assume val op_Addition           : int -> int -> Tot int *)
-(* assume val op_Minus              : int -> Tot int *)
-(* assume val op_LessThanOrEqual    : int -> int -> Tot bool *)
-(* assume val op_GreaterThan        : int -> int -> Tot bool *)
-(* assume val op_GreaterThanOrEqual : int -> int -> Tot bool *)
-(* assume val op_LessThan           : int -> int -> Tot bool *)
-(* assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool *)
-(* assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool *)
-(* assume new type exn : Type0 *)
-(* assume new type array : Type -> Type0 *)
-(* assume val strcat : string -> string -> Tot string *)
+assume val op_AmpAmp             : bool -> bool -> Tot bool
+assume val op_BarBar             : bool -> bool -> Tot bool
+assume val op_Negation           : bool -> Tot bool
+assume val op_Multiply           : int -> int -> Tot int
+assume val op_Subtraction        : int -> int -> Tot int
+assume val op_Addition           : int -> int -> Tot int
+assume val op_Minus              : int -> Tot int
+assume val op_LessThanOrEqual    : int -> int -> Tot bool
+assume val op_GreaterThan        : int -> int -> Tot bool
+assume val op_GreaterThanOrEqual : int -> int -> Tot bool
+assume val op_LessThan           : int -> int -> Tot bool
+assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
+assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
+assume new type exn : Type0
+assume new type array : Type -> Type0
+assume val strcat : string -> string -> Tot string
 
-(* type list (a:Type) = *)
-(*   | Nil  : list a *)
-(*   | Cons : hd:a -> tl:list a -> list a *)
+type list (a:Type) =
+  | Nil  : list a
+  | Cons : hd:a -> tl:list a -> list a
 
-(* noeq type pattern = *)
-(*   | SMTPat   : #a:Type -> a -> pattern *)
-(*   | SMTPatT  : a:Type0 -> pattern *)
-(*   | SMTPatOr : list (list pattern) -> pattern *)
+noeq type pattern =
+  | SMTPat   : #a:Type -> a -> pattern
+  | SMTPatT  : a:Type0 -> pattern
+  | SMTPatOr : list (list pattern) -> pattern
 
-(* assume type decreases : #a:Type -> a -> Type0 *)
+assume type decreases : #a:Type -> a -> Type0
 
-(* (\* *)
-(*    Lemma is desugared specially. You can write: *)
+(*
+   Lemma is desugared specially. You can write:
 
-(*      Lemma phi                 for   Lemma (requires True) phi [] *)
-(*      Lemma t1..tn              for   Lemma unit t1..tn *)
-(* *\) *)
-(* effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) = *)
-(*        Pure a pre (fun r -> post) *)
+     Lemma phi                 for   Lemma (requires True) phi []
+     Lemma t1..tn              for   Lemma unit t1..tn
+*)
+effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
+       Pure a pre (fun r -> post)
 
-(* type option (a:Type) = *)
-(*   | None : option a *)
-(*   | Some : v:a -> option a *)
+type option (a:Type) =
+  | None : option a
+  | Some : v:a -> option a
 
-(* type either 'a 'b = *)
-(*   | Inl : v:'a -> either 'a 'b *)
-(*   | Inr : v:'b -> either 'a 'b *)
+type either 'a 'b =
+  | Inl : v:'a -> either 'a 'b
+  | Inr : v:'b -> either 'a 'b
 
-(* noeq type result (a:Type) = *)
-(*   | V   : v:a -> result a *)
-(*   | E   : e:exn -> result a *)
-(*   | Err : msg:string -> result a *)
+noeq type result (a:Type) =
+  | V   : v:a -> result a
+  | E   : e:exn -> result a
+  | Err : msg:string -> result a
 
-(* (\* This new bit for Dijkstra Monads for Free; it has a "double meaning", *)
-(*  * either as an alias for reasoning about the direct definitions, or as a marker *)
-(*  * for places where a CPS transformation should happen. *\) *)
-(* effect M (a:Type) = Tot a (attributes cps) *)
+(* This new bit for Dijkstra Monads for Free; it has a "double meaning",
+ * either as an alias for reasoning about the direct definitions, or as a marker
+ * for places where a CPS transformation should happen. *)
+effect M (a:Type) = Tot a (attributes cps)
 
-(* let returnM (a:Type) (x:a) : M a = x *)
+let returnM (a:Type) (x:a) : M a = x
 
-(* new_effect DIV = PURE *)
-(* sub_effect PURE ~> DIV  = purewp_id *)
+new_effect DIV = PURE
+sub_effect (a:Type) : Prims.PURE a ~> Prims.DIV a  = purewp_id a
 
-(* effect Div (a:Type) (pre:pure_pre) (post:pure_post a) = *)
-(*        DIV a *)
-(*            (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (\* WP *\) *)
+effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
+       DIV a
+           (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
 
-(* effect Dv (a:Type) = *)
-(*      DIV a (fun (p:pure_post a) -> (forall (x:a). p x)) *)
+effect Dv (a:Type) =
+     DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
 
 
-(* let st_pre_h  (heap:Type)          = heap -> GTot Type0 *)
-(* let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0 *)
-(* let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap) *)
+let st_pre_h  (heap:Type)          = heap -> GTot Type0
+let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
+let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
-(* unfold let st_return        (heap:Type) (a:Type) *)
-(*                             (x:a) (p:st_post_h heap a) = *)
-(*      p x *)
-(* unfold let st_bind_wp       (heap:Type) *)
-(* 			    (r1:range) *)
-(* 			    (a:Type) (b:Type) *)
-(*                             (wp1:st_wp_h heap a) *)
-(*                             (wp2:(a -> GTot (st_wp_h heap b))) *)
-(*                             (p:st_post_h heap b) (h0:heap) = *)
-(*   wp1 (fun a h1 -> wp2 a p h1) h0 *)
-(* unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type) *)
-(*                              (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a) *)
-(*                              (post:st_post_h heap a) (h0:heap) = *)
-(*      l_ITE p *)
-(*         (wp_then post h0) *)
-(* 	(wp_else post h0) *)
-(* unfold let st_ite_wp        (heap:Type) (a:Type) *)
-(*                             (wp:st_wp_h heap a) *)
-(*                             (post:st_post_h heap a) (h0:heap) = *)
-(*      forall (k:st_post_h heap a). *)
-(* 	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h) *)
-(* 	 ==> wp k h0 *)
-(* unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a) *)
-(*                         (wp2:st_wp_h heap a) = *)
-(*      (forall (p:st_post_h heap a) (h:heap). wp1 p h ==> wp2 p h) *)
+unfold let st_return        (heap:Type) (a:Type)
+                            (x:a) (p:st_post_h heap a) : st_pre_h heap =
+     p x
+unfold let st_bind_wp       (heap:Type)
+			    (r1:range)
+			    (a:Type) (b:Type)
+                            (wp1:st_wp_h heap a)
+                            (wp2:(a -> GTot (st_wp_h heap b)))
+                            (p:st_post_h heap b) (h0:heap) =
+  wp1 (fun a h1 -> wp2 a p h1) h0
+unfold let st_if_then_else  (heap:Type) (a:Type) (p:Type)
+                             (wp_then:st_wp_h heap a) (wp_else:st_wp_h heap a)
+                             (post:st_post_h heap a) (h0:heap) =
+     l_ITE p
+        (wp_then post h0)
+	(wp_else post h0)
+unfold let st_ite_wp        (heap:Type) (a:Type)
+                            (wp:st_wp_h heap a)
+                            (post:st_post_h heap a) (h0:heap) =
+     forall (k:st_post_h heap a).
+	 (forall (x:a) (h:heap).{:pattern (guard_free (k x h))} k x h <==> post x h)
+	 ==> wp k h0
+unfold let st_stronger  (heap:Type) (a:Type) (wp1:st_wp_h heap a)
+                        (wp2:st_wp_h heap a) =
+     (forall (p:st_post_h heap a) (h:heap). wp1 p h ==> wp2 p h)
 
-(* unfold let st_close_wp      (heap:Type) (a:Type) (b:Type) *)
-(*                              (wp:(b -> GTot (st_wp_h heap a))) *)
-(*                              (p:st_post_h heap a) (h:heap) = *)
-(*      (forall (b:b). wp b p h) *)
-(* unfold let st_assert_p      (heap:Type) (a:Type) (p:Type) *)
-(*                              (wp:st_wp_h heap a) *)
-(*                              (q:st_post_h heap a) (h:heap) = *)
-(*      p /\ wp q h *)
-(* unfold let st_assume_p      (heap:Type) (a:Type) (p:Type) *)
-(*                              (wp:st_wp_h heap a) *)
-(*                              (q:st_post_h heap a) (h:heap) = *)
-(*      p ==> wp q h *)
-(* unfold let st_null_wp       (heap:Type) (a:Type) *)
-(*                              (p:st_post_h heap a) (h:heap) = *)
-(*      (forall (x:a) (h:heap). p x h) *)
-(* unfold let st_trivial       (heap:Type) (a:Type) *)
-(*                              (wp:st_wp_h heap a) = *)
-(*      (forall h0. wp (fun r h1 -> True) h0) *)
+unfold let st_close_wp      (heap:Type) (a:Type) (b:Type)
+                             (wp:(b -> GTot (st_wp_h heap a)))
+                             (p:st_post_h heap a) (h:heap) =
+     (forall (b:b). wp b p h)
+unfold let st_assert_p      (heap:Type) (a:Type) (p:Type)
+                             (wp:st_wp_h heap a)
+                             (q:st_post_h heap a) (h:heap) =
+     p /\ wp q h
+unfold let st_assume_p      (heap:Type) (a:Type) (p:Type)
+                             (wp:st_wp_h heap a)
+                             (q:st_post_h heap a) (h:heap) =
+     p ==> wp q h
+unfold let st_null_wp       (heap:Type) (a:Type)
+                             (p:st_post_h heap a) (h:heap) =
+     (forall (x:a) (h:heap). p x h)
+unfold let st_trivial       (heap:Type) (a:Type)
+                             (wp:st_wp_h heap a) =
+     (forall h0. wp (fun r h1 -> True) h0)
 
-(* new_effect { *)
-(*   STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect *)
-(*   with return_wp      = st_return heap *)
-(*      ; bind_wp      = st_bind_wp heap *)
-(*      ; if_then_else = st_if_then_else heap *)
-(*      ; ite_wp       = st_ite_wp heap *)
-(*      ; stronger     = st_stronger heap *)
-(*      ; close_wp     = st_close_wp heap *)
-(*      ; assert_p     = st_assert_p heap *)
-(*      ; assume_p     = st_assume_p heap *)
-(*      ; null_wp      = st_null_wp heap *)
-(*      ; trivial      = st_trivial heap *)
-(* } *)
+new_effect {
+  STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
+  with return_wp      = st_return heap
+     ; bind_wp      = st_bind_wp heap
+     ; if_then_else = st_if_then_else heap
+     ; ite_wp       = st_ite_wp heap
+     ; stronger     = st_stronger heap
+     ; close_wp     = st_close_wp heap
+     ; assert_p     = st_assert_p heap
+     ; assume_p     = st_assume_p heap
+     ; null_wp      = st_null_wp heap
+     ; trivial      = st_trivial heap
+}
 
 (* (\* Effect EXCEPTION *\) *)
 (* let ex_pre  = Type0 *)
