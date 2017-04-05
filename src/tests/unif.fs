@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tests.Unif
 //Unification tests
+open FSharp.Compatibility.OCaml
 open FStar
 open FStar.Errors
 open FStar.Util

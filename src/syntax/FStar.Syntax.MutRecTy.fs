@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.MutRecTy
+open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -89,7 +90,7 @@ let disentangle_abbrevs_from_bundle
                 | _ -> true
             end
         in
-    
+
         (* Replace a free variable corresponding to a type
         abbreviation, with memoization. *)
         let rec unfold_abbrev_fv (t: term) (fv : S.fv) : term =
@@ -138,7 +139,7 @@ let disentangle_abbrevs_from_bundle
                 tm'
             | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
         in
-            
+
         let rec aux () = match !not_unfolded_yet with
             | x :: _ -> let _unused = unfold_abbrev x in aux ()
             | _ -> List.rev !rev_unfolded_type_abbrevs
@@ -153,7 +154,7 @@ let disentangle_abbrevs_from_bundle
       let filter_out_type_abbrevs l =
           List.filter (fun lid -> FStar.List.for_all (fun lid' -> not (lid_equals lid lid')) type_abbrevs) l
       in
-      
+
       let inductives_with_abbrevs_unfolded =
 
           let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x with

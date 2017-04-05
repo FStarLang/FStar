@@ -2,14 +2,15 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 open Prims
+open FStar
 open FStar.Errors
 open FStar.List
 open FStar.Util
 open FStar.Range
 open FStar.Options
+open FStar.Parser.Const
 open FStar.Parser.AST
 open FStar.Parser.Util
-open FStar.Parser.Const
 open FStar.Const
 open FStar.Ident
 open FStar.String

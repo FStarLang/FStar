@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Tests.Test
+open FSharp.Compatibility.OCaml
 open FStar.Syntax
 open FStar
 open FStar.Errors

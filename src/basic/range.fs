@@ -31,14 +31,8 @@
 module FStar.Range
 
 open System.Collections.Generic
-(* open Internal.Utilities *)
-(* open Internal.Utilities.Pervasives *)
-(* open Microsoft.FSharp.Compiler.AbstractIL  *)
-(* open Microsoft.FSharp.Compiler.AbstractIL.Internal  *)
-(* module Ildiag = Microsoft.FSharp.Compiler.AbstractIL.Diagnostics  *)
-
+open FSharp.Compatibility.OCaml
 open Printf
-(* open Microsoft.FSharp.Compiler.Lib *)
 
 let b0 n =  (n          &&& 0xFF)
 let b1 n =  ((n >>> 8)  &&& 0xFF)
