@@ -17,3 +17,4 @@ type 'a list' = 'a list
 type 'a list = 'a list'
 let op_Multiply x y = x * y
 let string_of_int x = string_of_int x
+let string_of_bool b = string_of_bool b
