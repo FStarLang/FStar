@@ -77,7 +77,7 @@ let string_of_optiont f y xo =
     | Some x -> f x
     | None -> y
 
-let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ string_of_fsdoc x ^ "*)") "" d
+let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ S.string_of_fsdoc x ^ "*)") "" d
 let string_of_termo t = string_of_optiont term_to_string "" t
 
 // wrap-up s in MD code block.
@@ -132,10 +132,8 @@ let string_of_decl' d =
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
   | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc (comm,_) -> comm
@@ -144,7 +142,7 @@ let string_of_decl' d =
 // - it's got a fsdoc attached to it (either at top-level or in it's subtree); or
 // - it itself is a Fsdoc
 let decl_documented (d:decl) =
-    let tycon_documented (tt:list<(tycon * option<fsdoc>)>) =
+    let tycon_documented (tt:list<(tycon * option<S.fsdoc>)>) =
         let tyconvars_documented tycon =
             match tycon with
             | TyconAbstract _ | TyconAbbrev _ -> false

@@ -26,7 +26,6 @@ open FStar.Ident
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Dependencies
-open FStar.Interactive
 
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv   = FStar.ToSyntax.Env
@@ -69,7 +68,7 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
 let tc_prims () : (Syntax.modul * int)
                   * DsEnv.env
                   * TcEnv.env =
-  let solver = if Options.lax() then SMT.dummy else SMT.solver in
+  let solver = if Options.lax() then SMT.dummy else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
   let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
   let prims_filename = Options.prims () in
@@ -88,10 +87,24 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
       Some (curmod, dsenv, env)
 
     | Parser.Driver.Modul ast_modul ->
+        (* It may seem surprising that this function, whose name indicates that
+        it type-checks a fragment, can actually parse an entire module.
+        Actually, this is an abuse, and just means that we're type-checking the
+        first chunk. *)
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
-          | None -> env
-          | Some _ -> raise (Err("Interactive mode only supports a single module at the top-level")) in
+        | Some modul ->
+            (* Same-module is only allowed when editing a fst with an fsti,
+             * because we sent the interface as the first chunk. *)
+            if Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) <>
+              String.lowercase (string_of_lid modul.name)
+            then
+              raise (Err("Interactive mode only supports a single module at the top-level"))
+            else
+              env
+        | None ->
+            env
+      in
       let modul, _, env = Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
@@ -131,7 +144,7 @@ let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module a
   | [m] when (Options.should_verify m.name.str //if we're verifying this module
               && (FStar.Options.record_hints() //and if we're recording or using hints
                   || FStar.Options.use_hints())) ->
-    SMT.with_hints_db fn check_mods
+    SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mods
   | _ -> check_mods() //don't add a hints file for modules that are not actually verified
 
 (***********************************************************************)
@@ -143,8 +156,8 @@ let needs_interleaving intf impl =
   m1 = m2 &&
   FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
 
-let pop_context (dsenv, env) msg =
-    DsEnv.pop dsenv |> ignore;
+let pop_context env msg =
+    DsEnv.pop () |> ignore;
     TcEnv.pop env msg |> ignore;
     env.solver.refresh()
 
@@ -167,10 +180,17 @@ let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:DsEnv.env) (
         FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
         let caption = "interface: " ^ iname in
         //push a new solving context, so that we can blow away implementation details below
+
+        // JP: TcEnv.pop and TcEnv.push in turn call z3 push & pop -- the z3
+        // queries have a notion of push & pop that allow one to "scope" a bunch
+        // of queries and make them invisible to the outside -- what we're doing
+        // in addition to that is we're being paranoid and are killing the z3 process to be
+        // absolutely sure it doesn't use any knowledge acquired from checking the queries
+        // that stem from the implementation
         let dsenv', env' = push_context (dsenv, env) caption in
         let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
-        //discard the impl and check the interface alone for the rest of the program
-        let _ = pop_context (dsenv', env') caption in
+        // discard the impl and check the interface alone for the rest of the program
+        let _ = pop_context env' caption in
         tc_one_file dsenv env None iname //check the interface alone
 
 type uenv = DsEnv.env * env
@@ -218,84 +238,3 @@ let batch_mode_tc filenames =
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
 
-(******************************************************************************)
-(* Building an instance of the type-checker to be run in the interactive loop *)
-(******************************************************************************)
-let tc_prims_interactive () = //:uenv =
-  let _, dsenv, env = tc_prims () in
-  (dsenv, env)
-
-let tc_one_file_interactive (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
-  let dsenv, env = uenv in
-  let (intf, impl), dsenv, env, remaining =
-    match remaining with
-        | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
-          (Some intf, impl), dsenv, env, remaining
-        | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
-          (None, intf_or_impl), dsenv, env, remaining
-        | [] -> failwith "Impossible"
-  in
-  (intf, impl), (dsenv, env), None, remaining
-
-let interactive_tc : interactive_tc<(DsEnv.env * TcEnv.env), option<Syntax.modul>> =
-    let pop (dsenv, env) msg =
-          pop_context (dsenv, env) msg;
-          Options.pop() in
-
-    let push (dsenv, env) lax restore_cmd_line_options msg =
-          let env = { env with lax = lax } in
-          let res = push_context (dsenv, env) msg in
-          Options.push();
-          if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
-          res in
-
-    let mark (dsenv, env) =
-        let dsenv = DsEnv.mark dsenv in
-        let env = TcEnv.mark env in
-        Options.push();
-        dsenv, env in
-
-    let reset_mark (dsenv, env) =
-        let dsenv = DsEnv.reset_mark dsenv in
-        let env = TcEnv.reset_mark env in
-        Options.pop();
-        dsenv, env in
-
-    let cleanup (dsenv, env) = TcEnv.cleanup_interactive env in
-
-    let commit_mark (dsenv, env) =
-        let dsenv = DsEnv.commit_mark dsenv in
-        let env = TcEnv.commit_mark env in
-        dsenv, env in
-
-    let check_frag (dsenv, (env:TcEnv.env)) curmod text =
-        try
-            match tc_one_fragment curmod dsenv env text with
-                | Some (m, dsenv, env) ->
-                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
-                | _ -> None
-        with
-            | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Err.add_errors env [(msg, r)];
-              None
-
-            | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-              FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
-              None in
-
-    let report_fail () =
-        FStar.Errors.report_all() |> ignore;
-        FStar.Errors.num_errs := 0 in
-
-    { pop = pop;
-      push = push;
-      mark = mark;
-      reset_mark = reset_mark;
-      commit_mark = commit_mark;
-      check_frag = check_frag;
-      report_fail = report_fail;
-      tc_prims = tc_prims_interactive;
-      tc_one_file = tc_one_file_interactive;
-      cleanup = cleanup }

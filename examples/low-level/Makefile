@@ -11,7 +11,7 @@ CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
 KREMLIN_HOME=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
-KREMLIN_ARGS=-tmpdir kremlin -verbose -cc clang
+KREMLIN_ARGS=-tmpdir kremlin -cc clang
 
 CHACHA_ODIR=chacha
 POLY_ODIR=poly
@@ -191,7 +191,11 @@ bignum-ver:
 	$(FSTAR) --use_hints --include crypto crypto/Crypto.Symmetric.Poly1305.Bignum.fst
 
 KRML_INCLUDES=$(addprefix -I ,spartan_aes crypto $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
-KRML_ARGS=-verbose -ccopt -maes $(KOPTS)
+ifeq ($(OS),Windows_NT)
+  KRML_ARGS=-ccopts -maes $(KOPTS)
+else
+  KRML_ARGS=-ccopts -maes,-fPIC $(KOPTS)
+endif
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES) 
 
 spartan_aes/aes.o:
@@ -202,11 +206,11 @@ extract-krml-test:
 
 krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	# -bundle Crypto_KrmlTest=Flag,Crypto.*
-	$(KRML) crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst \
-		spartan_aes/aes.o crypto/spartan_stub.c \
-	       	crypto/Crypto.KrmlTest.fst -no-prefix Crypto.KrmlTest \
-	       	$(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
-		-tmpdir tmp -add-include '"testlib.h"' -o $@
+	$(KRML) spartan_aes/aes.o crypto/spartan_stub.c \
+                -no-prefix Crypto.KrmlTest \
+                $(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
+                -tmpdir tmp -add-include '"testlib.h"' -o $@ \
+                crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 	./krml-test.exe
 
 test-perf.exe: crypto/test_perf.c krml-test.exe
@@ -216,13 +220,13 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Note: cannot share the tmp directory otherwise the Makefile in
 	# LowCProvider (which does ar ../tmp/*.o) would pick up the wrong main
 	$(KRML) tmp/out.krml -drop Crypto.KrmlTest \
-		-tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
-	       	$(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
-	        crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
-		-ldopt -flto \
-		-ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
-		-I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-		-I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
+                  -tmpdir tmp-test-perf -add-include '"testlib.h"' -o $@ \
+                  $(KREMLIN_HOME)/kremlib/testlib.c crypto/test_hacks.c \
+                  crypto/test_perf.c spartan_aes/aes.o crypto/spartan_stub.c \
+                  -ldopt -flto \
+                  -ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
+                  -I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
+                  -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
 	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
 	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe

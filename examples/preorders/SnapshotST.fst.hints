@@ -49,7 +49,7 @@
       0
     ],
     [
-      "SnapshotST.19661",
+      "SnapshotST.19324",
       1,
       2,
       1,
@@ -58,6 +58,7 @@
         "constructor_distinct_Prims.Some", "equation_Preorder.preorder",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
+        "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
         "kinding_Prims.option@tok", "lemma_SnapshotST.snapshot_rel_assoc",

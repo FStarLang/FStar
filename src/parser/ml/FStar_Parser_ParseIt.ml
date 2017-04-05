@@ -51,7 +51,7 @@ let parse fn =
   let filename,lexbuf,line,col = match fn with
     | Inl(f) ->
         check_extension f;
-	      let f' = find_file f in
+        let f' = find_file f in
         (try f', Lexing.from_string (read_file f'), 1, 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | Inr s ->
@@ -79,7 +79,6 @@ let parse fn =
       Inr (msg, r)
 
     | e ->
-      let pos = lexbuf.lex_curr_p in
-      let p = FStar_Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
-      let r = FStar_Range.mk_range filename p p in
+      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.lex_curr_p in
+      let r = FStar_Range.mk_range filename pos pos in
       Inr ("Syntax error: " ^ (Printexc.to_string e), r)

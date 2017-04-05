@@ -23,6 +23,8 @@ open System.Diagnostics
 open System.IO
 open System.IO.Compression
 open System.Security.Cryptography
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Json
 
 let return_all x = x
 
@@ -66,6 +68,7 @@ let atomically (f:unit -> 'a) =
     result
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
+
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
@@ -145,6 +148,11 @@ let kill_process (p:proc) =
     p.proc.StandardInput.Close();
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process id prog args cond in
+  let output = ask_process proc input in
+  kill_process proc; output
 
 let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
@@ -269,6 +277,28 @@ let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
+
+type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
+let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
+let imap_clear<'value> (s:imap<'value>) = s.Clear()
+let imap_add (m:imap<'value>) k (v:'value) = ignore <| m.Remove(k); m.Add(k,v)
+let imap_of_list<'value> (l:list<int*'value>) =
+    let s = imap_create (List.length l) in
+    List.iter (fun (x,y) -> imap_add s x y) l;
+    s
+let imap_try_find (m:imap<'value>) k = m.TryFind(k)
+let imap_fold (m:imap<'value>) f a =
+    let out = ref a in
+    for entry in m do
+        out := f entry.Key entry.Value !out;
+    !out
+let imap_remove (m:imap<'value>) k = m.Remove k |> ignore
+let imap_keys (m:imap<'value>) = imap_fold m (fun k v keys -> k::keys) []
+let imap_copy (m:imap<'value>) =
+    let n = imap_create (m.Count) in
+    imap_fold m (fun k v () -> imap_add n k v) ();
+    n
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
@@ -318,7 +348,7 @@ let is_upper (c:char) = 'A' <= c && c <= 'Z'
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
-let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
+let replace_chars (s:string) (c:char) (by:string) = s.Replace(String.of_char c,by)
 let hashcode (s:string) = s.GetHashCode()
 let compare (s1:string) (s2:string) = s1.CompareTo(s2)
 let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine;"\n"|], StringSplitOptions.None))
@@ -502,6 +532,10 @@ let take p l =
         | x::xs -> List.rev acc, x::xs
     in take_aux [] l
 
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if l |> for_some (f x)
@@ -595,6 +629,17 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = fh.Flush()
+let file_get_contents f =
+  File.ReadAllText f
+let mkdir_clean dname =
+  if System.IO.Directory.Exists(dname) then
+    let srcDir = new System.IO.DirectoryInfo(dname)
+    for file in srcDir.GetFiles() do
+      System.IO.File.Delete file.FullName
+  else
+    System.IO.Directory.CreateDirectory(dname) |> ignore
+let concat_dir_filename dname fname =
+  System.IO.Path.Combine(dname, fname)
 
 let for_range lo hi f =
   for i = lo to hi do
@@ -763,11 +808,94 @@ type hints_db = {
     hints: hints
 }
 
-let write_hints (_: string) (_: hints_db): unit =
-  failwith "[record_hints_json]: not implemented"
+[<DataContract>]
+type internal json_db = System.Object []
 
-let read_hints (filename : string): option<hints_db> =
-    if not (File.Exists filename) then
+let internal json_db_from_hints_db (hdb) : json_db =
+    let json_unsat_core_from_unsat_core (core : string list option) =
+        match core with
+        | None -> [||]
+        | Some c -> (List.map (fun e -> e :> System.Object) c) |> List.toArray
+    let json_hint_from_hint (h) =
+        [|
+            h.hint_name :> System.Object;
+            h.hint_index :> System.Object;
+            h.fuel :> System.Object;
+            h.ifuel :> System.Object;
+            (json_unsat_core_from_unsat_core h.unsat_core) :> System.Object;
+            h.query_elapsed_time :> System.Object
+        |]
+    let json_hints_from_hints (hs) = List.map (fun x ->
+        match x with
+        | None -> [||]
+        | Some h -> (json_hint_from_hint h)) hs in
+    let json_hints = (json_hints_from_hints hdb.hints) |> List.toArray in
+    [|
+      hdb.module_digest :> System.Object ;
+      json_hints :> System.Object
+    |]
+
+let internal hints_db_from_json_db (jdb : json_db) : hints_db =
+    let unsat_core_from_json_unsat_core (core : System.Object) =
+        let core_list = core :?> System.Object [] |> Array.toList in
+        if (List.length core_list) = 0 then None else
+        Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
+    let hint_from_json_hint (h : System.Object) =
+        let ha = h :?> System.Object [] in
+        if (Array.length ha) = 0 then None else
+            if (Array.length ha) <> 6 then failwith "malformed hint" else
+            Some {
+                hint_name=ha.[0] :?> System.String;
+                hint_index=ha.[1] :?> int;
+                fuel=ha.[2] :?> int;
+                ifuel=ha.[3] :?> int;
+                unsat_core=unsat_core_from_json_unsat_core ha.[4];
+                query_elapsed_time=ha.[5] :?> int
+            } in
+    let hints_from_json_hints (hs : System.Object) =
+        let hint_list = (hs :?> System.Object []) |> Array.toList in
+        List.map (fun e -> (hint_from_json_hint e)) hint_list  in
+    if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
+    {
+      module_digest = jdb.[0] :?> System.String;
+      hints = (hints_from_json_hints jdb.[1])
+    }
+
+let internal json<'t> (obj : 't) (known_types : Type list) =
+    use ms = new MemoryStream()
+    (new DataContractJsonSerializer(typeof<'t>, known_types)).WriteObject(ms, obj)
+    Encoding.ASCII.GetString(ms.ToArray())
+
+let internal unjson<'t> (s : string) (known_types : Type list) : 't =
+    use ms = new MemoryStream(Encoding.Unicode.GetBytes(s))
+    let obj = (new DataContractJsonSerializer(typeof<'t>, known_types)).ReadObject(ms)
+    obj :?> 't
+
+let internal known_json_types =
+    [
+        typeof<System.Object>;
+        typeof<System.Object[]>;
+        typeof<System.Object[][]>;
+        typeof<string>;
+        typeof<int>
+    ]
+
+let write_hints (filename : string) (hdb : hints_db) : unit =
+    let jdb = (json_db_from_hints_db hdb) in
+    write_file filename (json jdb known_json_types)
+
+let read_hints (filename : string) : option<hints_db> =
+    try
+        let sr = new System.IO.StreamReader(filename) in
+        Some (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
+    with
+    | Failure _ ->
+        Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
         None
-    else
-        failwith "[record_hints_json]: not implemented"
+    | :? System.ArgumentException
+    | :? System.ArgumentNullException
+    | :? System.IO.FileNotFoundException
+    | :? System.IO.DirectoryNotFoundException
+    | :? System.IO.IOException ->
+        Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+        None

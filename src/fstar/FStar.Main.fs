@@ -19,7 +19,8 @@ open FStar.All
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
-open FStar.Interactive
+
+let () = FStar.Version.dummy ()
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
@@ -69,10 +70,12 @@ let codegen (umods, env) =
     in
     match opt with
     | Some "FSharp" | Some "OCaml" ->
-        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-        List.iter (fun (n,d) ->
-          Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
-        ) newDocs
+        (* When bootstrapped in F#, this will use the old printer in
+           FStar.Extraction.ML.Code for both OCaml and F# extraction.
+           When bootstarpped in OCaml, this will use the old printer
+           for F# extraction and the new printer for OCaml extraction. *)
+        let outdir = Options.output_dir() in
+        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
@@ -105,31 +108,22 @@ let go _ =
           end;
           let filename = List.hd filenames in
 
-          //try to convert filename passed from the editor to windows path
-          //on cygwin emacs this is required
-          let try_convert_file_name_to_windows (s:string) :string =
-            try
-              let _, t_out, _ = run_proc "which" "cygpath" "" in
-              if not (trim_string t_out = "/usr/bin/cygpath") then s
-              else
-                let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
-                trim_string t_out
-            with
-              | _ -> s
-          in
 
-          let filename = try_convert_file_name_to_windows filename in
+          let filename = FStar.Common.try_convert_file_name_to_mixed filename in
 
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          interactive_mode filename None Universal.interactive_tc //and then call interactive mode
+          FStar.Interactive.interactive_mode filename
 	  //and then start checking chunks from the current buffer
         end //end interactive mode
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
-          FStar.Indent.generate filenames
+          if FStar.Platform.is_fstar_compiler_using_ocaml
+          then FStar.Indent.generate filenames
+          else failwith "You seem to be using the F#-generated version ofthe compiler ; \
+                         reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin

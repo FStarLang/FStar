@@ -29,4 +29,4 @@ type input_frag = {
 }
 
 val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
-
+val find_file: string -> string

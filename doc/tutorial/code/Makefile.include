@@ -5,4 +5,4 @@ ifndef FSTAR_HOME
 endif
 
 include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/nubuild.mk
+

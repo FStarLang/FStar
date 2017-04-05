@@ -149,3 +149,5 @@ let __proj__Cons__item__tl = function
 
 
 let rec false_elim () = false_elim ()
+
+let min = min

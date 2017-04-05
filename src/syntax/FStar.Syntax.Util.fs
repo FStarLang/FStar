@@ -487,16 +487,16 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let lids_of_sigelt se = match se with
-  | Sig_let(_, _, lids, _, _)
-  | Sig_bundle(_, _, lids, _) -> lids
-  | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
-  | Sig_effect_abbrev(lid, _, _, _,  _, _, _)
-  | Sig_datacon (lid, _, _, _, _, _, _, _)
-  | Sig_declare_typ (lid, _, _, _, _)
-  | Sig_assume (lid, _, _, _) -> [lid]
-  | Sig_new_effect_for_free(n, _)
-  | Sig_new_effect(n, _) -> [n.mname]
+let lids_of_sigelt (se: sigelt) = match se.sigel with
+  | Sig_let(_, lids, _, _)
+  | Sig_bundle(_, _, lids) -> lids
+  | Sig_inductive_typ (lid, _, _,  _, _, _, _)
+  | Sig_effect_abbrev(lid, _, _, _,  _, _)
+  | Sig_datacon (lid, _, _, _, _, _, _)
+  | Sig_declare_typ (lid, _, _, _)
+  | Sig_assume (lid, _, _) -> [lid]
+  | Sig_new_effect_for_free(n)
+  | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
   | Sig_main _ -> []
@@ -505,34 +505,24 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
-let quals_of_sigelt x = match x with
-  | Sig_bundle(_, quals, _, _)
-  | Sig_inductive_typ (_, _, _,  _, _, _, quals, _)
-  | Sig_effect_abbrev  (_, _, _, _, quals, _, _)
-  | Sig_datacon (_, _, _, _, _, quals, _, _)
-  | Sig_declare_typ (_, _, _, quals, _)
-  | Sig_assume (_, _, quals, _)
-  | Sig_let(_, _, _, quals, _)
-  | Sig_new_effect({qualifiers=quals}, _)
-  | Sig_new_effect_for_free({qualifiers=quals}, _) ->
+let quals_of_sigelt (x: sigelt) = match x.sigel with
+  | Sig_bundle(_, quals, _)
+  | Sig_inductive_typ (_, _, _,  _, _, _, quals)
+  | Sig_effect_abbrev  (_, _, _, _, quals, _)
+  | Sig_datacon (_, _, _, _, _, quals, _)
+  | Sig_declare_typ (_, _, _, quals)
+  | Sig_assume (_, _, quals)
+  | Sig_let(_, _, quals, _)
+  | Sig_new_effect({qualifiers=quals})
+  | Sig_new_effect_for_free({qualifiers=quals}) ->
     quals
-  | Sig_sub_effect(_, _)
-  | Sig_pragma(_, _)
-  | Sig_main(_, _) -> []
+  | Sig_sub_effect _
+  | Sig_pragma _
+  | Sig_main _ -> []
 
-let range_of_sigelt x = match x with
-  | Sig_bundle(_, _, _, r)
-  | Sig_inductive_typ (_, _, _,  _, _, _, _, r)
-  | Sig_effect_abbrev  (_, _, _, _, _, _, r)
-  | Sig_datacon (_, _, _, _, _, _, _, r)
-  | Sig_declare_typ (_, _, _, _, r)
-  | Sig_assume (_, _, _, r)
-  | Sig_let(_, r, _, _, _)
-  | Sig_main(_, r)
-  | Sig_pragma(_, r)
-  | Sig_new_effect(_, r)
-  | Sig_new_effect_for_free(_, r)
-  | Sig_sub_effect(_, r) -> r
+let range_of_sigelt (x: sigelt) = x.sigrng
+
+let docs_of_sigelt (x: sigelt) = x.sigdoc
 
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bv  x
@@ -887,8 +877,10 @@ let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
 let teq = fvar_const Const.eq2_lid
-
-let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
+let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
+    let eq_inst = mk_Tm_uinst teq [u] in
+    mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
     let t_has_type = fvar_const Const.has_type_lid in //TODO: Fix the U_zeroes below!
@@ -912,12 +904,19 @@ let lcomp_of_comp c0 =
      cflags = flags;
      comp = fun() -> c0}
 
-let mk_forall (x:bv) (body:typ) : typ =
-  mk (Tm_app(tforall, [ iarg (x.sort);
-                        as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
+let mk_forall_aux fa x body =
+  mk (Tm_app(fa, [ iarg (x.sort);
+                   as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
 
-let rec close_forall bs f =
-  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f
+let mk_forall_no_univ (x:bv) (body:typ) : typ =
+  mk_forall_aux tforall x body
+
+let mk_forall (u:universe) (x:bv) (body:typ) : typ =
+  let tforall = mk_Tm_uinst tforall [u] in
+  mk_forall_aux tforall x body
+
+let close_forall_no_univs bs f =
+  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall_no_univ (fst b) f) bs f
 
 let rec is_wild_pat p =
     match p.v with
@@ -1016,7 +1015,8 @@ let destruct_typ_as_formula f : option<connective> =
                 a.action_typ
                 Const.effect_Tot_lid
                 a.action_defn in
-    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [Visible_default ; Action eff_lid], [])
+                // CPC @ a.action_defn.pos
+    mk_sigelt (Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []))
 
 (* Some reification utilities *)
 let mk_reify t =

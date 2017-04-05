@@ -1,5 +1,5 @@
 module Platform.Error
-
+open FStar.ST
 open FStar.Heap
 open FStar.HyperHeap
 

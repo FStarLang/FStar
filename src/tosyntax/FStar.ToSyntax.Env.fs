@@ -101,7 +101,11 @@ type foundname =
 
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
-
+let transitive_exported_ids env lid =
+    let module_name = Ident.string_of_lid lid in
+    match BU.smap_try_find env.trans_exported_ids module_name with
+    | None -> []
+    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -323,7 +327,9 @@ let lookup_default_id
     find_in_module env lid k_global_def k_not_found
 
 let module_is_defined env lid =
-    lid_equals lid (current_module env) ||
+    (match env.curmodule with
+     | None -> false
+     | Some m -> lid_equals lid (current_module env)) ||
     List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
 let resolve_module_name env lid (honor_ns: bool) : option<lident> =
@@ -352,6 +358,32 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
 
     in
     aux env.scope_mods
+
+let namespace_is_open env lid =
+  List.existsb (function
+                | Open_module_or_namespace (ns, Open_namespace) -> lid_equals lid ns
+                | _ -> false) env.scope_mods
+
+let shorten_module_path env ids is_full_path =
+  // FIXME this could be faster (module_is_defined and namespace_is_open are slow)
+  let rec aux revns id =
+    let lid = FStar.Ident.lid_of_ns_and_id (List.rev revns) id in
+    if namespace_is_open env lid
+    then Some (List.rev (id :: revns), [])
+    else match revns with
+         | [] -> None
+         | ns_last_id :: rev_ns_prefix ->
+           aux rev_ns_prefix ns_last_id |>
+             BU.map_option (fun (stripped_ids, rev_kept_ids) ->
+                            (stripped_ids, id :: rev_kept_ids)) in
+  if is_full_path && module_is_defined env (FStar.Ident.lid_of_ids ids)
+  then (ids, []) // FIXME is that right? If m is defined then all names in m are accessible?
+  else match List.rev ids with
+       | [] -> ([], [])
+       | ns_last_id :: ns_rev_prefix ->
+         match aux ns_rev_prefix ns_last_id with
+         | None -> ([], ids)
+         | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
 
 (* Generic name resolution. *)
 
@@ -391,8 +423,8 @@ let resolve_in_open_namespaces'
   let l_default k i = lookup_default_id env i (k_global_def' k) k in
   resolve_in_open_namespaces'' env lid Exported_id_term_type (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
 
-let fv_qual_of_se = function
-    | Sig_datacon(_, _, _, l, _, quals, _, _) ->
+let fv_qual_of_se = fun se -> match se.sigel with
+    | Sig_datacon(_, _, _, l, _, quals, _) ->
       let qopt = BU.find_map quals (function
           | RecordConstructor (_, fs) -> Some (Record_ctor(l, fs))
           | _ -> None) in
@@ -400,7 +432,7 @@ let fv_qual_of_se = function
         | None -> Some Data_ctor
         | x -> x
       end
-    | Sig_declare_typ (_, _, _, quals, _) ->  //TODO: record projectors?
+    | Sig_declare_typ (_, _, _, quals) ->  //TODO: record projectors?
       None
     | _ -> None
 
@@ -419,13 +451,13 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
   let k_global_def source_lid = function
       | (_, true) when exclude_interf -> None
       | (se, _) ->
-        begin match se with
+        begin match se.sigel with
           | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
-          | Sig_let((_, lbs), _, _, _, _) ->
+          | Sig_let((_, lbs), _, _, _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
-          | Sig_declare_typ(lid, _, _, quals, _) ->
+          | Sig_declare_typ(lid, _, _, quals) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
@@ -440,7 +472,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  | _ -> Some (Term_name(fvar lid dd (fv_qual_of_se se), false))
                  end
             else None
-          | Sig_new_effect_for_free (ne, _) | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
+          | Sig_new_effect_for_free (ne) | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
           | _ -> None
         end in
@@ -474,24 +506,48 @@ let try_lookup_effect_name env l =
         | _ -> None
 let try_lookup_effect_name_and_attributes env l =
     match try_lookup_effect_name' (not env.iface) env l with
-        | Some (Sig_new_effect(ne, _), l) -> Some (l, ne.cattributes)
-        | Some (Sig_new_effect_for_free(ne, _), l) -> Some (l, ne.cattributes)
-        | Some (Sig_effect_abbrev(_,_,_,_,_,cattributes,_), l) -> Some (l, cattributes)
+        | Some ({ sigel = Sig_new_effect(ne) }, l) -> Some (l, ne.cattributes)
+        | Some ({ sigel = Sig_new_effect_for_free(ne) }, l) -> Some (l, ne.cattributes)
+        | Some ({ sigel = Sig_effect_abbrev(_,_,_,_,_,cattributes) }, l) -> Some (l, cattributes)
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
-        | Some (Sig_new_effect(ne, _), _) -> Some ne
-        | Some (Sig_new_effect_for_free(ne, _), _) -> Some ne
+        | Some ({ sigel = Sig_new_effect(ne) }, _) -> Some ne
+        | Some ({ sigel = Sig_new_effect_for_free(ne) }, _) -> Some ne
         | _ -> None
 let is_effect_name env lid =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
+(* Same as [try_lookup_effect_name], but also traverses effect
+abbrevs. TODO: once indexed effects are in, also track how indices and
+other arguments are instantiated. *)
+let try_lookup_root_effect_name env l =
+    match try_lookup_effect_name' (not env.iface) env l with
+	| Some ({ sigel = Sig_effect_abbrev (l', _, _, _, _, _) }, _) ->
+	  let rec aux new_name =
+	      match BU.smap_try_find (sigmap env) new_name.str with
+	      | None -> None
+	      | Some (s, _) ->
+	        begin match s.sigel with
+                | Sig_new_effect_for_free (ne)
+		| Sig_new_effect(ne)
+		  -> Some (set_lid_range ne.mname (range_of_lid l))
+		| Sig_effect_abbrev (_, _, _, cmp, _, _) ->
+                  let l'' = U.comp_effect_name cmp in
+		  aux l''
+	        | _ -> None
+		end
+	  in aux l'
+	| Some (_, l') -> Some l'
+	| _ -> None
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
-      | (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
-      | _ -> None in
+      | ({sigel = Sig_declare_typ(lid, _, _, quals) }, _) ->
+          Some quals
+      | _ ->
+          None in
   match resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def with
     | Some quals -> quals
     | _ -> []
@@ -503,7 +559,7 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
-      | (Sig_let((_, lbs), _, _, _, _), _) ->
+      | ({ sigel = Sig_let((_, lbs), _, _, _) }, _) ->
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
@@ -511,7 +567,7 @@ let try_lookup_let env (lid:lident) =
 
 let try_lookup_definition env (lid:lident) =
     let k_global_def lid = function
-      | (Sig_let(lbs, _, _, _, _), _) ->
+      | ({ sigel = Sig_let(lbs, _, _, _) }, _) ->
         BU.find_map (snd lbs) (fun lb ->
             match lb.lbname with
                 | Inr fv when S.fv_eq_lid fv lid ->
@@ -521,25 +577,40 @@ let try_lookup_definition env (lid:lident) =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
+let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
+let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
+
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
   match try_lookup_name any_val exclude_interf env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
+let resolve_to_fully_qualified_name (env:env) (l:lident) =
+    match try_lookup_lid env l with
+    | None -> None
+    | Some (e, _) ->
+      match (Subst.compress e).n with
+      | Tm_fvar fv -> Some fv.fv_name.v
+      | _ -> None
+
+let try_lookup_lid_no_resolve (env: env) l =
+  let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
+  in
+  try_lookup_lid env' l
 
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid = function
-      | (Sig_declare_typ(_, _, _, quals, _), _) ->
+      | ({ sigel = Sig_declare_typ(_, _, _, quals) }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid Delta_constant None)
         else None
-      | (Sig_datacon _, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
+      | ({ sigel = Sig_datacon _ }, _) -> Some (lid_as_fv lid Delta_constant (Some Data_ctor))
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 let find_all_datacons env (lid:lident) =
   let k_global_def lid = function
-      | (Sig_inductive_typ(_, _, _, _, _, datas, _, _), _) -> Some datas
+      | ({ sigel = Sig_inductive_typ(_, _, _, _, _, datas, _) }, _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -592,8 +663,8 @@ let commit_record_cache =
     let _, _, _, _, commit = record_cache_aux in
     commit
 
-let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
-  | Sig_bundle(sigs, _, _, _) ->
+let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match se.sigel with
+  | Sig_bundle(sigs, _, _) ->
     let is_rec = BU.for_some (function
       | RecordType _
       | RecordConstructor _ -> true
@@ -601,13 +672,13 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = function
 
     let find_dc dc =
       sigs |> BU.find_opt (function
-        | Sig_datacon(lid, _, _, _, _, _, _, _) -> lid_equals dc lid
+        | { sigel = Sig_datacon(lid, _, _, _, _, _, _) } -> lid_equals dc lid
         | _ -> false) in
 
     sigs |> List.iter (function
-      | Sig_inductive_typ(typename, univs, parms, _, _, [dc], tags, _) ->
+      | { sigel = Sig_inductive_typ(typename, univs, parms, _, _, [dc], tags) } ->
         begin match must <| find_dc dc with
-            | Sig_datacon(constrname, _, t, _, _, _, _, _) ->
+            | { sigel = Sig_datacon(constrname, _, t, _, _, _, _) } ->
                 let formals, _ = U.arrow_formals t in
                 let is_rec = is_rec tags in
                 let formals' = formals |> List.collect (fun (x,q) ->
@@ -698,9 +769,6 @@ let exported_id_set_new () =
     | Exported_id_term_type -> term_type_set
     | Exported_id_field -> field_set
 
-let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
-let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
-
 let unique any_val exclude_if env lid =
   (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)
   let filter_scope_mods = function
@@ -728,7 +796,7 @@ let push_bv env x =
 
 let push_top_level_rec_binding env (x:ident) dd =
   let l = qualify env x in
-  if unique false true env l
+  if unique false true env l || Options.interactive ()
   then push_scope_mod env (Rec_binding (x,l,dd))
   else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
@@ -745,18 +813,18 @@ let push_sigelt env s =
     raise (Error (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r, range_of_lid l)) in
   let globals = BU.mk_ref env.scope_mods in
   let env =
-      let any_val, exclude_if = match s with
+      let any_val, exclude_if = match s.sigel with
         | Sig_let _ -> false, true
         | Sig_bundle _ -> true, true
         | _ -> false, false in
       let lids = lids_of_sigelt s in
       begin match BU.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | None -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
-        | Some l -> err l
+        | Some l when not (Options.interactive ()) -> err l
+        | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
-  let env, lss = match s with
-    | Sig_bundle(ses, _, _, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
+  let env, lss = match s.sigel with
+    | Sig_bundle(ses, _, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) ->
     lids |> List.iter (fun lid ->
@@ -815,7 +883,7 @@ let push_include env ns =
             let ex = cur_exports k in
             let () = ex := BU.set_difference (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
-            let () = trans_ex := BU.set_union (!ex) ns_ex in
+            let () = trans_ex := BU.set_union (!trans_ex) ns_ex in
             ()
           in
           List.iter update_exports all_exported_id_kinds
@@ -837,30 +905,31 @@ let push_module_abbrev env x l =
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
 let check_admits env =
-  env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_declare_typ(l, u, t, quals, r) ->
+  env.sigaccum |> List.iter (fun se -> match se.sigel with
+    | Sig_declare_typ(l, u, t, quals) ->
       begin match try_lookup_lid env l with
         | None ->
-          BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
-          BU.smap_add (sigmap env) l.str (Sig_declare_typ(l, u, t, Assumption::quals, r), false)
+          if not (Options.interactive ()) then
+            BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+          BU.smap_add (sigmap env) l.str ({ se with sigel = Sig_declare_typ(l, u, t, Assumption::quals) }, false)
         | Some _ -> ()
       end
     | _ -> ())
 
 let finish env modul =
-  modul.declarations |> List.iter (function
-    | Sig_bundle(ses, quals, _, _) ->
+  modul.declarations |> List.iter (fun se -> match se.sigel with
+    | Sig_bundle(ses, quals, _) ->
       if List.contains Private quals
       || List.contains Abstract quals
-      then ses |> List.iter (function
-                | Sig_datacon(lid, _, _, _, _, _, _, _) -> BU.smap_remove (sigmap env) lid.str
+      then ses |> List.iter (fun se -> match se.sigel with
+                | Sig_datacon(lid, _, _, _, _, _, _) -> BU.smap_remove (sigmap env) lid.str
                 | _ -> ())
 
-    | Sig_declare_typ(lid, _, _, quals, _) ->
+    | Sig_declare_typ(lid, _, _, quals) ->
       if List.contains Private quals
       then BU.smap_remove (sigmap env) lid.str
 
-    | Sig_let((_,lbs), r, _, quals, _) ->
+    | Sig_let((_,lbs), _, quals, _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then begin
@@ -870,7 +939,7 @@ let finish env modul =
       && not (List.contains Private quals)
       then lbs |> List.iter (fun lb ->
            let lid = (right lb.lbname).fv_name.v in
-           let decl = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals, r) in
+           let decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals) } in
            BU.smap_add (sigmap env) lid.str (decl, false))
 
     | _ -> ());
@@ -896,42 +965,30 @@ let finish env modul =
     sigaccum=[];
   }
 
-type env_stack_ops = {
-    push: env -> env;
-    mark: env -> env;
-    reset_mark: env -> env;
-    commit_mark: env -> env;
-    pop:env -> env
-}
+let stack: ref<(list<env>)> = BU.mk_ref []
+let push env =
+  push_record_cache();
+  stack := env::!stack;
+  {env with sigmap=BU.smap_copy (sigmap env)}
 
-let stack_ops =
-    let stack = BU.mk_ref [] in
-    let push env =
-        push_record_cache();
-        stack := env::!stack;
-        {env with sigmap=BU.smap_copy (sigmap env)} in
-    let pop env = match !stack with
-        | env::tl ->
-         pop_record_cache();
-         stack := tl;
-         env
-        | _ -> failwith "Impossible: Too many pops" in
-    let commit_mark env =
-        commit_record_cache();
-        match !stack with
-         | _::tl -> stack := tl; env
-         | _ -> failwith "Impossible: Too many pops" in
-    { push=push;
-      pop=pop;
-      mark=push;
-      reset_mark=pop;
-      commit_mark=commit_mark;}
+let pop () =
+  match !stack with
+  | env::tl ->
+    pop_record_cache();
+    stack := tl;
+    env
+  | _ -> failwith "Impossible: Too many pops"
 
-let push (env:env) = stack_ops.push env
-let mark env = stack_ops.mark env
-let reset_mark env = stack_ops.reset_mark env
-let commit_mark env = stack_ops.commit_mark env
-let pop env = stack_ops.pop env
+let commit_mark (env: env) =
+  commit_record_cache();
+  match !stack with
+  | _::tl ->
+    stack := tl;
+    env
+  | _ -> failwith "Impossible: Too many pops"
+
+let mark x = push x
+let reset_mark () = pop ()
 
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
@@ -940,7 +997,7 @@ let export_interface (m:lident) env =
             | l::_ -> l.nsstr=m.str
             | _ -> false in
     let sm = sigmap env in
-    let env = pop env in
+    let env = pop () in
     let keys = BU.smap_keys sm in
     let sm' = sigmap env in
     keys |> List.iter (fun k ->
@@ -948,8 +1005,8 @@ let export_interface (m:lident) env =
         | Some (se, true) when sigelt_in_m se ->
           BU.smap_remove sm' k;
 //          printfn "Exporting %s" k;
-          let se = match se with
-            | Sig_declare_typ(l, u, t, q, r) -> Sig_declare_typ(l, u, t, Assumption::q, r)
+          let se = match se.sigel with
+            | Sig_declare_typ(l, u, t, q) -> { se with sigel = Sig_declare_typ(l, u, t, Assumption::q) }
             | _ -> se in
           BU.smap_add sm' k (se, false)
         | _ -> ());
@@ -992,12 +1049,13 @@ let prepare_module_or_interface intf admitted env mname =
   in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with
-    | None -> prep env, false
+    | None ->
+        prep env, false
     | Some (_, m) ->
-      if not m.is_interface || intf
-      then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-      prep (push env), true //push a context so that we can pop it when we're done
+        if not (Options.interactive ()) && (not m.is_interface || intf)
+        then raise (Error(BU.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
+        //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+        prep (push env), true //push a context so that we can pop it when we're done
 
 let enter_monad_scope env mname =
   match env.curmonad with

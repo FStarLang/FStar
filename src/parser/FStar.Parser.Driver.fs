@@ -28,8 +28,8 @@ let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
 type fragment =
     | Empty
-    | Modul of AST.modul
-    | Decls of list<AST.decl>
+    | Modul of AST.modul // an entire module or interface -- unspecified
+    | Decls of list<AST.decl> // a partial set of declarations
 
 let parse_fragment frag : fragment =
     match ParseIt.parse (Inr frag) with

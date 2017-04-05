@@ -1,28 +1,48 @@
-#FLAGS=
-#LIB=
 
-OTHERFLAGS+=$(FLAGS) $(LIB)
+OTHERFLAGS+=$(FLAGS) $(LIB) --include ../dm4free
 FSTAR_HOME=../..
 include ../Makefile.include
 
 uall: all
 
-all: ifc\
-		 random_tapes\
-		 delimited_release\
-		 recursive
+all:\
+  Bijection.uver\
+  Equivalence.uver\
+  IfcComposeReify.uver\
+  IfcDeclassify.uver\
+  IfcDelimitedRelease.uver\
+  IfcDelimitedReleaseReify.uver\
+  IfcExample.uver\
+  IfcExampleReify0.uver\
+  IfcExampleReify1.uver\
+  IfcExampleReify2.uver\
+  IfcExampleReify3.uver\
+  IfcRecursiveHeapReify.uver\
+  IfcRecursiveReify.uver\
+  IfcReificationRegressionTest.uver\
+  IfcRules.uver\
+  IfcRulesReify.uver\
+  IfcTypechecker.uver\
+  Loops.uver\
+  Memo.uver\
+  NetKat.uver\
+  OneTimePad.uver\
+  Point.uver\
+  ProgramEquivalence.uver\
+  ProgramOptimizations.uver\
+  RandomTapes.uver\
+  Recursive.uver\
+  ReifyLong.uver\
+  Rel.uver\
+  StRel.uver\
+  Swap.uver\
+  UnionFind.Forest.uver\
+  UnionFind.uver\
+  UnionFind.Functions.uver\
+  While.uver\
+  WhileReify.uver \
+  OTP.uver \
+  ElGamal.uver
 
-ifc:
-	$(FSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
-
-random_tapes:
-	$(FSTAR) bijection.fst random_tapes.fst
-
-recursive:
-	$(FSTAR) recursive.fst
-
-delimited_release:
-	$(FSTAR) delimited_release.fst
-
-WhileReify:
-	$(FSTAR) --include ../../dm4free WhileReify.fst
+pack:
+	cd ../..; zip -r relational.zip examples/rel examples/dm4free

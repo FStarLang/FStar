@@ -37,7 +37,7 @@ type program =
 
 and decl =
   | DGlobal of list<flag> * lident * typ * expr
-  | DFunction of option<cc> * list<flag> * typ * lident * list<binder> * expr
+  | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
@@ -97,6 +97,7 @@ and expr =
   | ECons of typ * ident * list<expr>
   | EBufFill of expr * expr * expr
   | EString of string
+  | EFun of list<binder> * expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -157,7 +158,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 19
+let current_version: version = 20
 
 type file = string * program
 type binary_format = version * list<file>
@@ -341,16 +342,17 @@ and translate_decl env d: option<decl> =
   match d with
   | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
-      mllb_tysc = Some ([], t0);
+      mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Fun (args, body) }
     } ])
   | MLM_Let (flavor, flags, [ {
       mllb_name = name, _;
-      mllb_tysc = Some ([], t0);
+      mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
     } ]) ->
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env tvars in
       let rec find_return_type = function
         | MLTY_Fun (_, _, t) ->
             find_return_type t
@@ -363,14 +365,17 @@ and translate_decl env d: option<decl> =
       let name = env.module_name, name in
       let flags = translate_flags flags in
       if assumed then
-        Some (DExternal (None, name, translate_type env t0))
+        if List.length tvars = 0 then
+          Some (DExternal (None, name, translate_type env t0))
+        else
+          None
       else begin
         try
           let body = translate_expr env body in
-          Some (DFunction (None, flags, t, name, binders, body))
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
         with e ->
           BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (BU.print_exn e);
-          Some (DFunction (None, flags, t, name, binders, EAbort))
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbort))
       end
 
   | MLM_Let (flavor, flags, [ {
@@ -452,7 +457,7 @@ and translate_type env t: typ =
   match t with
   | MLTY_Tuple []
   | MLTY_Top ->
-      TUnit
+      TAny
   | MLTY_Var (name, _) ->
       TBound (find_t env name)
   | MLTY_Fun (t1, _, t2) ->
@@ -640,6 +645,9 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
       EApp (EQualified (path, function_name), List.map (translate_expr env) args)
 
+  | MLE_App ({ expr = MLE_Var (name, _) }, args) ->
+      EApp (EBound (find env name), List.map (translate_expr env) args)
+
   | MLE_Coerce (e, t_from, t_to) ->
       ECast (translate_expr env e, translate_type env t_to)
 
@@ -665,8 +673,11 @@ and translate_expr env e: expr =
   | MLE_CTor ((_, cons), es) ->
       ECons (assert_lid env e.mlty, cons, List.map (translate_expr env) es)
 
-  | MLE_Fun _ ->
-      failwith "todo: translate_expr [MLE_Fun]"
+  | MLE_Fun (args, body) ->
+      let binders = translate_binders env args in
+      let env = add_binders env args in
+      EFun (binders, translate_expr env body)
+
   | MLE_If (e1, e2, e3) ->
       EIfThenElse (translate_expr env e1, translate_expr env e2, (match e3 with
         | None -> EUnit

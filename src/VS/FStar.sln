@@ -43,6 +43,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "prettyprint", "..\prettypri
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosyntax", "..\tosyntax\tosyntax.fsproj", "{B0968012-B93C-4198-9085-B89669E8E4E8}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tactics", "..\tactics\tactics.fsproj", "{82336F31-A87C-4403-A2F4-2B90B4F0996B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,10 @@ Global
 		{B0968012-B93C-4198-9085-B89669E8E4E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0968012-B93C-4198-9085-B89669E8E4E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0968012-B93C-4198-9085-B89669E8E4E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82336F31-A87C-4403-A2F4-2B90B4F0996B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

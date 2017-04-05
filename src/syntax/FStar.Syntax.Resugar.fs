@@ -438,13 +438,14 @@ let rec resugar_term (t : S.term) : A.term =
         (pat, wopt, b) in
         mk (A.Match(resugar_term e, List.map resugar_branch branches))
 
-    | Tm_ascribed(e, comp, _) ->
-      let term = match comp with
+    | Tm_ascribed(e, (asc, tac_opt), _) ->
+      let term = match asc with
           | Inl n -> (* term *)
             resugar_term n
           | Inr n -> (* comp *)
             resugar_comp n in
-      mk (A.Ascribed(resugar_term e, term))
+      let tac_opt = Option.map resugar_term tac_opt in
+      mk (A.Ascribed(resugar_term e, term, tac_opt))
 
     | Tm_let((is_rec, bnds), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
@@ -550,7 +551,9 @@ let rec resugar_term (t : S.term) : A.term =
           mk (A.Name t)
       | Meta_monadic (name, t)
       | Meta_monadic_lift (name, _, t) ->
-        mk (A.Ascribed(resugar_term e, mk (A.Construct(name,[resugar_term t, A.Nothing]))))
+        mk (A.Ascribed(resugar_term e,
+                       mk (A.Construct(name,[resugar_term t, A.Nothing])),
+                       None))
       end
 
     | Tm_unknown -> mk A.Wild

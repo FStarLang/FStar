@@ -11,28 +11,22 @@ let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
 let (@|) = Platform.Bytes.(@|)
 
-(* -------------------------------------------------------------------- *)
+                         
+(* ----------------- Hashing and HMAC --------------------------------------- *)
 
 (** Hashing *)
 
 (** We support a subset of the algorithms from OpenSSL. Note: when changing
  * these types, please only append new constructors *at the end* (otherwise, C
  * functions such as [RSADigest_val] will most likely break). *)
-type hash_alg = MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
-type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
-type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
-type stream_cipher = RC4_128
-type rsa_padding = Pad_none | Pad_PKCS1
+type hash_alg =
+  | MD5
+  | SHA1
+  | SHA224
+  | SHA256
+  | SHA384
+  | SHA512
 
-type aead_cipher = 
-  | AES_128_GCM   
-  | AES_256_GCM
-  | CHACHA20_POLY1305 
-  | AES_128_CCM
-  | AES_256_CCM   
-  | AES_128_CCM_8
-  | AES_256_CCM_8
-                                
 let string_of_hash_alg = function
   | MD5 -> "MD5"
   | SHA1 -> "SHA1"
@@ -40,36 +34,6 @@ let string_of_hash_alg = function
   | SHA256 -> "SHA256"
   | SHA384 -> "SHA384"
   | SHA512 -> "SHA512"
-
-let string_of_block_cipher = function
-  | AES_128_CBC -> "AES_128_CBC"
-  | AES_256_CBC -> "AES_256_CBC"
-  | TDES_EDE_CBC -> "TDES_EDE_CBC"
-
-let blockSize = function
-  | TDES_EDE_CBC -> Z.of_int 8
-  | AES_128_CBC  -> Z.of_int 16
-  | AES_256_CBC  -> Z.of_int 16
-
-let aeadKeySize = function
-  | AES_128_CCM       -> Z.of_int 16
-  | AES_128_CCM_8     -> Z.of_int 16
-  | AES_128_GCM       -> Z.of_int 16
-  | AES_256_CCM       -> Z.of_int 32
-  | AES_256_CCM_8     -> Z.of_int 32
-  | AES_256_GCM       -> Z.of_int 32
-  | CHACHA20_POLY1305 -> Z.of_int 32
-
-let aeadRealIVSize (a:aead_cipher) = Z.of_int 12
-
-let aeadTagSize = function
-  | AES_128_CCM_8     -> Z.of_int 8
-  | AES_256_CCM_8     -> Z.of_int 8
-  | AES_128_CCM       -> Z.of_int 16
-  | AES_256_CCM       -> Z.of_int 16
-  | AES_128_GCM       -> Z.of_int 16
-  | AES_256_GCM       -> Z.of_int 16
-  | CHACHA20_POLY1305 -> Z.of_int 16
 
 let hashSize = function
   | MD5    -> Z.of_int 16
@@ -137,7 +101,55 @@ let hmac (h:hash_alg) (k:bytes) (d:bytes) =
   let h = ocaml_EVP_HMAC md (string_of_bytes k) (string_of_bytes d) in
   bytes_of_string h
 
-(* -------------------------------------------------------------------- *)
+(* ------end of Hashing------------------------------------------ *)
+
+                  
+
+                
+type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
+type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
+type stream_cipher = RC4_128
+type rsa_padding = Pad_none | Pad_PKCS1
+
+type aead_cipher = 
+  | AES_128_GCM   
+  | AES_256_GCM
+  | CHACHA20_POLY1305 
+  | AES_128_CCM
+  | AES_256_CCM   
+  | AES_128_CCM_8
+  | AES_256_CCM_8
+                                
+let string_of_block_cipher = function
+  | AES_128_CBC -> "AES_128_CBC"
+  | AES_256_CBC -> "AES_256_CBC"
+  | TDES_EDE_CBC -> "TDES_EDE_CBC"
+
+let blockSize = function
+  | TDES_EDE_CBC -> Z.of_int 8
+  | AES_128_CBC  -> Z.of_int 16
+  | AES_256_CBC  -> Z.of_int 16
+
+let aeadKeySize = function
+  | AES_128_CCM       -> Z.of_int 16
+  | AES_128_CCM_8     -> Z.of_int 16
+  | AES_128_GCM       -> Z.of_int 16
+  | AES_256_CCM       -> Z.of_int 32
+  | AES_256_CCM_8     -> Z.of_int 32
+  | AES_256_GCM       -> Z.of_int 32
+  | CHACHA20_POLY1305 -> Z.of_int 32
+
+let aeadRealIVSize (a:aead_cipher) = Z.of_int 12
+
+let aeadTagSize = function
+  | AES_128_CCM_8     -> Z.of_int 8
+  | AES_256_CCM_8     -> Z.of_int 8
+  | AES_128_CCM       -> Z.of_int 16
+  | AES_256_CCM       -> Z.of_int 16
+  | AES_128_GCM       -> Z.of_int 16
+  | AES_256_GCM       -> Z.of_int 16
+  | CHACHA20_POLY1305 -> Z.of_int 16
+
 
 (** Stream ciphers and AEAD *)
 

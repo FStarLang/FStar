@@ -114,7 +114,7 @@ reifiable reflectable new_effect {
      ; assume_p     = assume_p
      ; null_wp      = null_wp
      ; trivial      = trivial
-  and effect_actions
+;
     //these are new; both the regular and unfolded versions work
       get  = (fun _ x -> x, x), get_cps_type
     ; put  = (fun x _ -> (), x), put_cps_type

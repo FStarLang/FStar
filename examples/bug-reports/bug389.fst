@@ -1,5 +1,7 @@
 module Bug389
 
+open FStar.ST
+
 let a = alloc 0
 
 val compose_self: #wp:(unit -> Tot (st_wp unit))

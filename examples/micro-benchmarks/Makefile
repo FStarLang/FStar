@@ -6,12 +6,13 @@ include ../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
 	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
-	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.ImplicitFalse.fst
+	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.ImplicitFalse.fst \
+         NegativeTests.Positivity.fst
 
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
-NEGTESTS=35
+NEGTESTS=41
 else
 NEGTESTS=3
 endif
@@ -24,7 +25,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
 	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver \
 	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
-	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver #TestHasEq.uver #temporarily removed from mac_universes branch 
+	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver #TestHasEq.uver #temporarily removed from mac_universes branch 
 
 basictests: $(VERFILES)
 	$(FSTAR) --explicit_deps $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^

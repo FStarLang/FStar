@@ -187,7 +187,7 @@ let rec is_type_aux env t =
     | Tm_fvar fv ->
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
       then true
-      else let (_, t) = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
+      else let (_, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
            is_arity env t
 
     | Tm_uvar (_, t)
@@ -428,7 +428,7 @@ and term_as_mlty' env t =
             let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
             let ed = TcEnv.get_effect_decl env.tcenv eff in
             if ed.qualifiers |> List.contains Reifiable
-            then let t = FStar.TypeChecker.Util.reify_comp env.tcenv (U.lcomp_of_comp c) U_unknown in
+            then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
                  (* let _ = printfn "Translating comp type %s as %s\n" *)
                  (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
                  let res = term_as_mlty' env t in
@@ -499,8 +499,8 @@ and binders_as_ml_binders (g:env) (bs:binders) : list<(mlident * mlty)> * env =
                     ml_b::ml_bs, env
             else let b = fst b in
                     let t = term_as_mlty env b.sort in
-                    let env = extend_bv env b ([], t) false false false in
-                    let ml_b = (bv_as_ml_termvar b, t) in
+                    let env, b = extend_bv env b ([], t) false false false in
+                    let ml_b = (removeTick b, t) in
                     ml_b::ml_bs, env)
     ([], g) in
     List.rev ml_bs,
@@ -589,25 +589,29 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
 
-    | Pat_var x ->
-        let mlty = term_as_mlty g x.sort in
-        let g = extend_bv g x ([], mlty) false false imp in
-        g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
-
     | Pat_wild x when disjunctive_pat ->
+        // JP: the reason why this is specialized is so that:
+        //     [] | _ :: [] ->
+        // doesn't get extracted as
+        //     [] | uu__1234 :: [] ->
+        // ("bound variable must appear on both sides of the pattern").
+        // JP: this makes no sense to me. How do we know that we won't need to
+        // refer to the variable?
         g, Some (MLP_Wild, []), true
 
-    | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
+    | Pat_var x | Pat_wild x ->
+        // JP: Pat_wild turns into a binder in the internal syntax because the
+        // underlying type variable may unify and refine into something else.
         let mlty = term_as_mlty g x.sort in
-        let g = UEnv.extend_bv g x ([], mlty) false false imp in
-        g, (if imp then None else Some (MLP_Var (bv_as_mlident x), [])), ok mlty
+        let g, x = extend_bv g x ([], mlty) false false imp in
+        g, (if imp then None else Some (MLP_Var x, [])), ok mlty
 
     | Pat_dot_term _ ->
         g, None, true
 
     | Pat_cons (f, pats) ->
         let d, tys = match lookup_fv g f with
-            | Inr({expr=MLE_Name n}, ttys, _) -> n, ttys
+            | Inr(_, {expr=MLE_Name n}, ttys, _) -> n, ttys
             | _ -> failwith "Expected a constructor" in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
@@ -655,11 +659,12 @@ let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<ml
       | Pat_disj [] -> failwith "Impossible: Empty disjunctive pattern"
 
       | Pat_disj (p::pats)      ->
-        let g, p, b = extract_one_pat true g p (Some expected_t) in
+        let g', p, b = extract_one_pat true g p (Some expected_t) in
         let b, ps = BU.fold_map (fun b p ->
                     let _, p, b' = extract_one_pat true g p (Some expected_t) in
                     b && b', p) b pats in
         let ps = p :: ps in
+        let g = g' in
         let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
         let ps = ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)) in
         //branches that contains a new when clause need to be split out
@@ -841,7 +846,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 | Inl _, _ ->
                   ml_unit, E_PURE, ml_unit_ty
 
-                | Inr (x, mltys, _), qual ->
+                | Inr (_, x, mltys, _), qual ->
                   //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
                   begin match mltys with
                     | ([], t) when (t=ml_unit_ty) -> ml_unit, E_PURE, t //optimize (x:unit) to ()
@@ -962,7 +967,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
                       let (head_ml, (vars, t), inst_ok), qual =
                         match lookup_term g head with
-                        | Inr (u), q -> u, q
+                        | Inr (_, x1, x2, x3), q -> (x1, x2, x3), q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
@@ -1002,7 +1007,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                  end
             end
 
-        | Tm_ascribed(e0, tc, f) ->
+        | Tm_ascribed(e0, (tc, _), f) ->
           let t = match tc with
             | Inl t -> term_as_mlty g t
             | Inr c -> term_as_mlty g (U.comp_result c) in
@@ -1218,7 +1223,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
+                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
                     with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_unit_ty
@@ -1263,7 +1268,7 @@ let fresh = let c = mk_ref 0 in
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
-    let _, fstar_disc_type = TypeChecker.Env.lookup_lid env.tcenv discName in
+    let _, fstar_disc_type = fst <| TypeChecker.Env.lookup_lid env.tcenv discName in
     let wildcards = match (SS.compress fstar_disc_type).n with
         | Tm_arrow (binders, _) ->
             binders

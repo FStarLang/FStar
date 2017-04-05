@@ -1,5 +1,5 @@
 [
-  "ygk†< ¯ª\u001a\u0011.±w™ˆl",
+  "Æ:ÛÒ\u0019¯Î_<À\u0003\u001c\u000f\u007f€Í",
   [
     [
       "QuickSort.List.sorted",
@@ -293,6 +293,7 @@
         "equation_QuickSort.List.total_order",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_QuickSort.List.count.fuel_instrumented",
         "equation_with_fuel_QuickSort.List.partition.fuel_instrumented",
         "equation_with_fuel_QuickSort.List.sorted.fuel_instrumented",
@@ -304,7 +305,9 @@
         "fuel_correspondence_QuickSort.List.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_irrelevance_QuickSort.List.count.fuel_instrumented",
+        "fuel_irrelevance_QuickSort.List.partition.fuel_instrumented",
         "int_inversion", "int_typing",
         "interpretation_Tm_arrow_97bf16a3149921185c907fce1d10e541",
         "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
@@ -315,7 +318,7 @@
         "lemma_QuickSort.List.sorted_app_lemma",
         "pretyping_f537159ed795b314b4e58c260361ae86",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
@@ -328,10 +331,13 @@
         "refinement_interpretation_Tm_refine_468647774d24e19243c4dbdb81d7cd8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_c420c91ba7f07eebbf873f316ba540a3",
+        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "token_correspondence_Prims.op_LessThan",
         "token_correspondence_QuickSort.List.count.fuel_instrumented",
         "typing_FStar.List.Tot.Base.length",
         "typing_FStar.List.Tot.Base.mem", "typing_QuickSort.List.count",
-        "well-founded-ordering-on-nat"
+        "typing_QuickSort.List.sorted", "well-founded-ordering-on-nat"
       ],
       0
     ]

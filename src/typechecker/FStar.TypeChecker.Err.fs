@@ -29,6 +29,24 @@ open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
+open FStar.TypeChecker.Common
+
+let format_info env name typ range =
+    BU.format3 "(defined at %s) %s : %s"
+        (Range.string_of_range range)
+        name
+        (Normalize.term_to_string env typ)
+
+let info_as_string env info = 
+    let id_string, range = match info.identifier with 
+        | Inl bv -> Print.nm_to_string bv, FStar.Syntax.Syntax.range_of_bv bv
+        | Inr fv -> Print.lid_to_string (FStar.Syntax.Syntax.lid_of_fv fv), FStar.Syntax.Syntax.range_of_fv fv in
+    format_info env id_string info.identifier_ty range
+
+let info_at_pos env file row col = 
+    match FStar.TypeChecker.Common.info_at_pos file row col with
+    | None -> None
+    | Some i -> Some (info_as_string env i)
 
 let add_errors env errs =
     let errs =
@@ -41,11 +59,26 @@ let add_errors env errs =
                              else msg, r) in
     FStar.Errors.add_errors errs
 
+let possibly_verbose_message env t1 t2 =
+  let s1 = N.term_to_string env t1 in
+  let s2 = N.term_to_string env t2 in
+  let extra =
+    if s1 = s2 then
+      let _ = Options.set_options Options.Set "--prn --print_universes" in
+      let s1 = N.term_to_string env t1 in
+      let s2 = N.term_to_string env t2 in
+      BU.format2 "\nMore precisely: expected type:\n%s\ngot:\n%s\n" s1 s2
+    else
+      ""
+  in
+  s1, s2, extra
+
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
 let subtyping_failed : env -> typ -> typ -> unit -> string =
-     fun env t1 t2 x -> BU.format2 "Subtyping check failed; expected type %s; got type %s"
-        (N.term_to_string env t2) (N.term_to_string env t1)
+     fun env t1 t2 x ->
+       let s2, s1, extra = possibly_verbose_message env t2 t1 in
+       BU.format3 "Subtyping check failed; expected type %s; got type %s%s" s2 s1 extra
 let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
@@ -73,11 +106,10 @@ let expected_pattern_of_type env t1 e t2 =
     (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
 
 let basic_type_error env eopt t1 t2 =
+  let s1, s2, extra = possibly_verbose_message env t1 t2 in
   match eopt with
-    | None -> format2 "Expected type \"%s\"; got type \"%s\""
-                (N.term_to_string env t1) (N.term_to_string env t2)
-    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\""
-                (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
+    | None -> format3 "Expected type \"%s\"; got type \"%s\"%s" s1 s2 extra
+    | Some e -> format4 "Expected type \"%s\"; but \"%s\" has type \"%s\"%s" s1 (Print.term_to_string e) s2 extra
 
 let occurs_check =
   "Possibly infinite typ (occurs check failed)"

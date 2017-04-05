@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -79,10 +79,9 @@
     <Compile Include="platform.fs" />
     <Compile Include="bytes.fsi" />
     <Compile Include="bytes.fs" />
+    <Compile Include="FStar.Common.fs" />
     <Compile Include="range.fsi" />
     <Compile Include="range.fs" />
-    <Compile Include="version.fsi" />
-    <Compile Include="version.fs" />
     <Compile Include="getopt.fsi" />
     <Compile Include="getopt.fs" />
     <Compile Include="FStar.Options.fsi" />
@@ -92,6 +91,8 @@
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Errors.fs" />
+    <Compile Include="version.fsi" />
+    <Compile Include="version.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

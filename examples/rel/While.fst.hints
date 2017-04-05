@@ -1,0 +1,412 @@
+[
+  "\u001cU®fkž¶W`¿¥*v\u000fA\u0016",
+  [
+    [ "While.uu___is_Plus", 1, 2, 1, [ "@query" ], 0 ],
+    [ "While.uu___is_Minus", 1, 2, 1, [ "@query" ], 0 ],
+    [ "While.uu___is_Times", 1, 2, 1, [ "@query" ], 0 ],
+    [ "While.uu___is_Max", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.interpret_binop",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_While.Max",
+        "constructor_distinct_While.Minus",
+        "constructor_distinct_While.Plus",
+        "constructor_distinct_While.Times", "disc_equation_While.Max",
+        "disc_equation_While.Minus", "disc_equation_While.Plus",
+        "disc_equation_While.Times", "fuel_guarded_inversion_While.binop",
+        "int_inversion"
+      ],
+      0
+    ],
+    [
+      "While.exp",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.ref_haseq",
+        "assumption_Prims.HasEq_int", "assumption_While.binop_haseq",
+        "equation_While.id", "function_token_typing_Prims.int"
+      ],
+      0
+    ],
+    [ "While.uu___is_AInt", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__AInt__item___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.AInt",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_94ebaa80e9cf95cffc242c7914de3c00"
+      ],
+      0
+    ],
+    [ "While.uu___is_AVar", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__AVar__item___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.AVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_be67e6dd42460413742cd5885f052b86"
+      ],
+      0
+    ],
+    [ "While.uu___is_AOp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__AOp__item___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.AOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a075d9df1f5c243dba503141508929bb"
+      ],
+      0
+    ],
+    [
+      "While.__proj__AOp__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.AOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a075d9df1f5c243dba503141508929bb"
+      ],
+      0
+    ],
+    [
+      "While.__proj__AOp__item___2",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.AOp",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a075d9df1f5c243dba503141508929bb"
+      ],
+      0
+    ],
+    [
+      "While.interpret_exp",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_4b8b77728a8eea29532c6e327f811b98_1",
+        "disc_equation_While.AInt", "disc_equation_While.AOp",
+        "disc_equation_While.AVar", "equality_tok_Prims.LexTop@tok",
+        "fuel_guarded_inversion_While.exp",
+        "projection_inverse_While.AOp__0", "projection_inverse_While.AOp__1",
+        "projection_inverse_While.AOp__2", "subterm_ordering_While.AOp"
+      ],
+      0
+    ],
+    [
+      "While.com",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.ref_haseq",
+        "assumption_Prims.HasEq_int", "assumption_While.exp_haseq",
+        "equation_While.id", "equation_While.variant",
+        "function_token_typing_Prims.int"
+      ],
+      0
+    ],
+    [ "While.uu___is_Skip", 1, 2, 1, [ "@query" ], 0 ],
+    [ "While.uu___is_Assign", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__Assign__item__var",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.Assign",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_b9111ee85b655c8456fbdffc10913247"
+      ],
+      0
+    ],
+    [
+      "While.__proj__Assign__item__term",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.Assign",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_b9111ee85b655c8456fbdffc10913247"
+      ],
+      0
+    ],
+    [ "While.uu___is_Seq", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__Seq__item__first",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.Seq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
+      ],
+      0
+    ],
+    [
+      "While.__proj__Seq__item__second",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.Seq",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e301b9284cf53dcfdd19d29aff2de799"
+      ],
+      0
+    ],
+    [ "While.uu___is_If", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__If__item__cond",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.If",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_11047f422339fc49495ea91916ee701e"
+      ],
+      0
+    ],
+    [
+      "While.__proj__If__item__then_branch",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.If",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_11047f422339fc49495ea91916ee701e"
+      ],
+      0
+    ],
+    [
+      "While.__proj__If__item__else_branch",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.If",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_11047f422339fc49495ea91916ee701e"
+      ],
+      0
+    ],
+    [ "While.uu___is_While", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.__proj__While__item__cond",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.While",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
+      ],
+      0
+    ],
+    [
+      "While.__proj__While__item__body",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.While",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
+      ],
+      0
+    ],
+    [
+      "While.__proj__While__item__variant",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_While.While",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d"
+      ],
+      0
+    ],
+    [ "While.decr_while", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.interpret_while",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_6d2d986ae2193e10b7b088fdfea59c2f_0",
+        "binder_x_8d3099468343f7dd5eec47424656ca3a_1", "bool_inversion",
+        "disc_equation_While.While", "equality_tok_Prims.LexTop@tok",
+        "equation_While.decr_while",
+        "fuel_correspondence_While.interpret_exp.fuel_instrumented",
+        "function_token_typing_FStar.Heap.heap", "lemma_Prims.invertOption",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_While.While_body",
+        "projection_inverse_While.While_cond",
+        "projection_inverse_While.While_variant",
+        "refinement_interpretation_Tm_refine_9f1548f821ac5aa32cdc0b620d5d324d",
+        "subterm_ordering_While.While", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some", "typing_While.decr_while",
+        "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      "While.interpret_while",
+      2,
+      2,
+      1,
+      [
+        "@query", "binder_x_59b54fa21cedada836226afdcb64958b_1",
+        "bool_inversion", "constructor_distinct_While.If",
+        "disc_equation_Prims.None", "disc_equation_While.Assign",
+        "disc_equation_While.If", "disc_equation_While.Seq",
+        "disc_equation_While.Skip", "disc_equation_While.While",
+        "equality_tok_Prims.LexTop@tok", "equation_While.decr_while",
+        "fuel_guarded_inversion_While.com",
+        "function_token_typing_FStar.Heap.heap", "int_typing",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_While.If_cond",
+        "projection_inverse_While.If_else_branch",
+        "projection_inverse_While.If_then_branch",
+        "subterm_ordering_While.If", "subterm_ordering_While.Seq",
+        "typing_Prims.uu___is_Some", "well-founded-ordering-on-nat"
+      ],
+      0
+    ],
+    [
+      "While.interpret_while",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "While.interpret_while",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "While.interpret_exp_st",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "While.interpret_exp_st",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.Equals",
+        "assumption_FStar.Heap.Extensional",
+        "constructor_distinct_While.AInt", "constructor_distinct_While.AVar",
+        "data_elim_While.AInt", "disc_equation_While.AInt",
+        "disc_equation_While.AOp", "disc_equation_While.AVar",
+        "equation_While.id",
+        "equation_with_fuel_While.interpret_exp.fuel_instrumented",
+        "fuel_correspondence_While.interpret_exp.fuel_instrumented",
+        "fuel_guarded_inversion_While.exp",
+        "fuel_irrelevance_While.interpret_exp.fuel_instrumented",
+        "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "projection_inverse_While.AInt__0",
+        "projection_inverse_While.AOp__0", "projection_inverse_While.AOp__1",
+        "projection_inverse_While.AOp__2",
+        "projection_inverse_While.AVar__0", "typing_FStar.Heap.sel"
+      ],
+      0
+    ],
+    [ "While.interpret_com_st", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "While.interpret_com_st",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Heap.Extensional", "bool_inversion",
+        "constructor_distinct_Prims.None", "constructor_distinct_Tm_unit",
+        "constructor_distinct_While.Assign", "constructor_distinct_While.If",
+        "constructor_distinct_While.Seq", "constructor_distinct_While.Skip",
+        "constructor_distinct_While.While", "data_elim_Prims.None",
+        "data_elim_Prims.Some", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "disc_equation_While.Assign",
+        "disc_equation_While.If", "disc_equation_While.Seq",
+        "disc_equation_While.Skip", "disc_equation_While.While",
+        "equality_tok_While.Skip@tok",
+        "equation_with_fuel_While.interpret_com.fuel_instrumented",
+        "equation_with_fuel_While.interpret_while.fuel_instrumented",
+        "fuel_correspondence_While.interpret_com.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.option",
+        "fuel_guarded_inversion_While.com",
+        "fuel_irrelevance_While.interpret_com.fuel_instrumented",
+        "fuel_irrelevance_While.interpret_while.fuel_instrumented",
+        "function_token_typing_FStar.Heap.heap", "lemma_Prims.invertOption",
+        "pretyping_6c86c071b92797cdf01eb016249a9465",
+        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Some_v",
+        "projection_inverse_While.Assign_term",
+        "projection_inverse_While.Assign_var",
+        "projection_inverse_While.If_cond",
+        "projection_inverse_While.If_else_branch",
+        "projection_inverse_While.If_then_branch",
+        "projection_inverse_While.Seq_first",
+        "projection_inverse_While.Seq_second",
+        "projection_inverse_While.While_body",
+        "projection_inverse_While.While_cond",
+        "projection_inverse_While.While_variant",
+        "refinement_interpretation_Tm_refine_0050e5fcd27e148055a3384868271f59",
+        "typing_FStar.Heap.equal", "typing_Prims.__proj__Some__item__v",
+        "typing_Prims.uu___is_Some", "typing_While.interpret_com",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "While.interpret_com_st",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "While.interpret_com_st",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
+  ]
+]

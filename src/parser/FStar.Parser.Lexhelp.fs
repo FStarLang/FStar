@@ -143,9 +143,9 @@ let keywords =
     ALWAYS, "assert"     ,ASSERT;
     ALWAYS, "assume"     ,ASSUME;
     ALWAYS, "begin"      ,BEGIN;
+    ALWAYS, "by"         ,BY;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
-    ALWAYS, "effect_actions",ACTIONS;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
@@ -157,7 +157,6 @@ let keywords =
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;
-    ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
     ALWAYS, "include"    ,INCLUDE;
     ALWAYS, "inline"     ,INLINE;
@@ -170,7 +169,6 @@ let keywords =
     ALWAYS, "mutable"    ,MUTABLE;
     ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
-    ALWAYS, "new_effect_for_free", NEW_EFFECT_FOR_FREE;
     ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;

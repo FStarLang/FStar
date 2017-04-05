@@ -121,4 +121,6 @@ end) -> struct
 
   type ('a, 'b, 'c, 'd) l__DTuple4 =
     | MkDTuple4 of unit * unit * unit * unit * 'a * 'b * 'c * 'd
+
+  let min = min
 end

@@ -54,8 +54,8 @@
       2,
       1,
       [
-        "@query", "equation_Prims.l_True", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "@query",
+        "refinement_interpretation_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "unit_inversion", "unit_typing"
       ],
       0

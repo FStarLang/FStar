@@ -876,6 +876,24 @@ val sub: #a:Type -> b:buffer a -> i:UInt32.t{v i + v b.idx < pow2 n}
 let sub #a b i len =
   MkBuffer b.max_length b.content (i +^ b.idx) len
 
+let sub_sub
+  (#a: Type)
+  (b: buffer a)
+  (i1: UInt32.t{v i1 + (idx b) < pow2 n})
+  (len1: UInt32.t{v i1 + v len1 <= length b})
+  (i2: UInt32.t {v i2 + (v i1 + (idx b)) < pow2 n})
+  (len2: UInt32.t {v i2 + v len2 <= v len1})
+: Lemma
+  (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
+= ()  
+
+let sub_zero_length
+  (#a: Type)
+  (b: buffer a)
+: Lemma
+  (ensures (sub b (UInt32.uint_to_t 0) (UInt32.uint_to_t (length b)) == b))
+= ()
+
 let lemma_sub_spec (#a:Type) (b:buffer a)
   (i:UInt32.t{v i + v b.idx < pow2 n})
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})

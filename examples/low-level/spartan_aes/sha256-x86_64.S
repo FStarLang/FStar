@@ -2,34 +2,34 @@
 .global sha256_main_i_SHA256_Compute64Steps
 sha256_main_i_SHA256_Compute64Steps:
   mov %rdx, %r9
-  movq %rcx, 96(%rsp)
+  movq %rcx, 100(%rsp)
   mov $0, %r8d
   mov $0, %r11d
   movl 0 (%rcx), %r11d
   movl 4 (%rcx), %r8d
-  movl %r8d, 40(%rsp)
-  movl 8 (%rcx), %r8d
   movl %r8d, 44(%rsp)
-  movl 12 (%rcx), %r8d
+  movl 8 (%rcx), %r8d
   movl %r8d, 48(%rsp)
-  movl 16 (%rcx), %r8d
+  movl 12 (%rcx), %r8d
   movl %r8d, 52(%rsp)
-  movl 20 (%rcx), %r8d
+  movl 16 (%rcx), %r8d
   movl %r8d, 56(%rsp)
-  movl 24 (%rcx), %r8d
+  movl 20 (%rcx), %r8d
   movl %r8d, 60(%rsp)
-  movl 28 (%rcx), %r8d
+  movl 24 (%rcx), %r8d
   movl %r8d, 64(%rsp)
+  movl 28 (%rcx), %r8d
+  movl %r8d, 68(%rsp)
   mov $0, %eax
   mov $0, %ecx
   mov $0, %edx
   mov $0, %r10d
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -44,15 +44,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -62,7 +62,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1116352408, %r8d
@@ -70,15 +70,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -93,15 +93,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -111,7 +111,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1899447441, %r8d
@@ -119,15 +119,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -142,15 +142,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -160,7 +160,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3049323471, %r8d
@@ -168,15 +168,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -191,15 +191,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -209,7 +209,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3921009573, %r8d
@@ -217,15 +217,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -240,15 +240,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -258,7 +258,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $961987163, %r8d
@@ -266,15 +266,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -289,15 +289,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -307,7 +307,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1508970993, %r8d
@@ -315,15 +315,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -338,15 +338,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -356,7 +356,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2453635748, %r8d
@@ -364,15 +364,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -387,15 +387,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -405,7 +405,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2870763221, %r8d
@@ -413,15 +413,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -436,15 +436,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -454,7 +454,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3624381080, %r8d
@@ -462,15 +462,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -485,15 +485,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -503,7 +503,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $310598401, %r8d
@@ -511,15 +511,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -534,15 +534,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -552,7 +552,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $607225278, %r8d
@@ -560,15 +560,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -583,15 +583,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -601,7 +601,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1426881987, %r8d
@@ -609,15 +609,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -632,15 +632,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -650,7 +650,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1925078388, %r8d
@@ -658,15 +658,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -681,15 +681,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -699,7 +699,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2162078206, %r8d
@@ -707,15 +707,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -730,15 +730,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -748,7 +748,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2614888103, %r8d
@@ -756,15 +756,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -779,15 +779,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -797,7 +797,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3248222580, %r8d
@@ -805,15 +805,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -828,15 +828,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -846,7 +846,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3835390401, %r8d
@@ -854,15 +854,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -877,15 +877,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -895,7 +895,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $4022224774, %r8d
@@ -903,15 +903,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -926,15 +926,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -944,7 +944,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $264347078, %r8d
@@ -952,15 +952,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -975,15 +975,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -993,7 +993,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $604807628, %r8d
@@ -1001,15 +1001,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1024,15 +1024,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1042,7 +1042,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $770255983, %r8d
@@ -1050,15 +1050,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1073,15 +1073,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1091,7 +1091,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1249150122, %r8d
@@ -1099,15 +1099,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1122,15 +1122,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1140,7 +1140,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1555081692, %r8d
@@ -1148,15 +1148,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1171,15 +1171,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1189,7 +1189,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1996064986, %r8d
@@ -1197,15 +1197,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1220,15 +1220,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1238,7 +1238,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2554220882, %r8d
@@ -1246,15 +1246,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1269,15 +1269,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1287,7 +1287,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2821834349, %r8d
@@ -1295,15 +1295,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1318,15 +1318,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1336,7 +1336,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2952996808, %r8d
@@ -1344,15 +1344,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1367,15 +1367,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1385,7 +1385,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3210313671, %r8d
@@ -1393,15 +1393,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1416,15 +1416,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1434,7 +1434,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3336571891, %r8d
@@ -1442,15 +1442,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1465,15 +1465,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1483,7 +1483,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3584528711, %r8d
@@ -1491,15 +1491,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1514,15 +1514,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1532,7 +1532,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $113926993, %r8d
@@ -1540,15 +1540,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1563,15 +1563,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1581,7 +1581,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $338241895, %r8d
@@ -1589,15 +1589,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1612,15 +1612,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1630,7 +1630,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $666307205, %r8d
@@ -1638,15 +1638,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1661,15 +1661,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1679,7 +1679,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $773529912, %r8d
@@ -1687,15 +1687,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1710,15 +1710,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1728,7 +1728,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1294757372, %r8d
@@ -1736,15 +1736,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1759,15 +1759,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1777,7 +1777,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1396182291, %r8d
@@ -1785,15 +1785,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1808,15 +1808,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1826,7 +1826,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1695183700, %r8d
@@ -1834,15 +1834,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1857,15 +1857,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1875,7 +1875,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1986661051, %r8d
@@ -1883,15 +1883,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1906,15 +1906,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1924,7 +1924,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2177026350, %r8d
@@ -1932,15 +1932,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -1955,15 +1955,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -1973,7 +1973,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2456956037, %r8d
@@ -1981,15 +1981,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2004,15 +2004,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2022,7 +2022,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2730485921, %r8d
@@ -2030,15 +2030,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2053,15 +2053,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2071,7 +2071,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2820302411, %r8d
@@ -2079,15 +2079,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2102,15 +2102,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2120,7 +2120,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3259730800, %r8d
@@ -2128,15 +2128,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2151,15 +2151,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2169,7 +2169,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3345764771, %r8d
@@ -2177,15 +2177,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2200,15 +2200,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2218,7 +2218,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3516065817, %r8d
@@ -2226,15 +2226,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2249,15 +2249,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2267,7 +2267,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3600352804, %r8d
@@ -2275,15 +2275,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2298,15 +2298,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2316,7 +2316,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $4094571909, %r8d
@@ -2324,15 +2324,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2347,15 +2347,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2365,7 +2365,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $275423344, %r8d
@@ -2373,15 +2373,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2396,15 +2396,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2414,7 +2414,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $430227734, %r8d
@@ -2422,15 +2422,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2445,15 +2445,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2463,7 +2463,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $506948616, %r8d
@@ -2471,15 +2471,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2494,15 +2494,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2512,7 +2512,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $659060556, %r8d
@@ -2520,15 +2520,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2543,15 +2543,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2561,7 +2561,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $883997877, %r8d
@@ -2569,15 +2569,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2592,15 +2592,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2610,7 +2610,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $958139571, %r8d
@@ -2618,15 +2618,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2641,15 +2641,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2659,7 +2659,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1322822218, %r8d
@@ -2667,15 +2667,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2690,15 +2690,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2708,7 +2708,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1537002063, %r8d
@@ -2716,15 +2716,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2739,15 +2739,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2757,7 +2757,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1747873779, %r8d
@@ -2765,15 +2765,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2788,15 +2788,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2806,7 +2806,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $1955562222, %r8d
@@ -2814,15 +2814,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2837,15 +2837,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2855,7 +2855,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2024104815, %r8d
@@ -2863,15 +2863,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2886,15 +2886,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2904,7 +2904,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2227730452, %r8d
@@ -2912,15 +2912,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2935,15 +2935,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -2953,7 +2953,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2361852424, %r8d
@@ -2961,15 +2961,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -2984,15 +2984,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -3002,7 +3002,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2428436474, %r8d
@@ -3010,15 +3010,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -3033,15 +3033,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -3051,7 +3051,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $2756734187, %r8d
@@ -3059,15 +3059,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
+  movl %eax, 56(%rsp)
   mov %r11d, %eax
-  movl %eax, 68(%rsp)
-  movl 40(%rsp), %r8d
-  movl %r8d, 72(%rsp)
-  movl 44(%rsp), %ecx
-  movl %ecx, 76(%rsp)
+  movl %eax, 72(%rsp)
+  movl 44(%rsp), %r8d
+  movl %r8d, 76(%rsp)
+  movl 48(%rsp), %ecx
+  movl %ecx, 80(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -3082,15 +3082,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 52(%rsp), %r8d
-  movl %r8d, 84(%rsp)
+  movl 56(%rsp), %r8d
+  movl %r8d, 88(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 64(%rsp), %ecx
+  movl %ecx, 96(%rsp)
+  and %ecx, %edx
   movl 60(%rsp), %ecx
   movl %ecx, 92(%rsp)
-  and %ecx, %edx
-  movl 56(%rsp), %ecx
-  movl %ecx, 88(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -3100,7 +3100,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 64(%rsp), %r8d
+  movl 68(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3204031479, %r8d
@@ -3108,15 +3108,15 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 48(%rsp), %eax
+  movl 52(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 80(%rsp)
+  movl %eax, 84(%rsp)
   mov %r11d, %eax
-  movl %eax, 40(%rsp)
-  movl 68(%rsp), %r8d
-  movl %r8d, 44(%rsp)
-  movl 72(%rsp), %ecx
-  movl %ecx, 48(%rsp)
+  movl %eax, 44(%rsp)
+  movl 72(%rsp), %r8d
+  movl %r8d, 48(%rsp)
+  movl 76(%rsp), %ecx
+  movl %ecx, 52(%rsp)
   mov %r8d, %edx
   and %eax, %r8d
   and %ecx, %edx
@@ -3131,15 +3131,15 @@ sha256_main_i_SHA256_Compute64Steps:
   ror $22, %edx
   xor %edx, %eax
   add %r8d, %eax
-  movl 80(%rsp), %r8d
-  movl %r8d, 56(%rsp)
+  movl 84(%rsp), %r8d
+  movl %r8d, 60(%rsp)
   mov %r8d, %edx
   not %edx
+  movl 92(%rsp), %ecx
+  movl %ecx, 68(%rsp)
+  and %ecx, %edx
   movl 88(%rsp), %ecx
   movl %ecx, 64(%rsp)
-  and %ecx, %edx
-  movl 84(%rsp), %ecx
-  movl %ecx, 60(%rsp)
   and %r8d, %ecx
   xor %edx, %ecx
   mov %r8d, %edx
@@ -3149,7 +3149,7 @@ sha256_main_i_SHA256_Compute64Steps:
   xor %r10d, %edx
   ror $25, %r8d
   xor %r8d, %edx
-  movl 92(%rsp), %r8d
+  movl 96(%rsp), %r8d
   add %edx, %r8d
   add %ecx, %r8d
   add $3329325298, %r8d
@@ -3157,42 +3157,41 @@ sha256_main_i_SHA256_Compute64Steps:
   add %ecx, %r8d
   add %r8d, %eax
   mov %eax, %r11d
-  movl 76(%rsp), %eax
+  movl 80(%rsp), %eax
   add %r8d, %eax
-  movl %eax, 52(%rsp)
-  movq 96(%rsp), %rcx
+  movl %eax, 56(%rsp)
+  movq 100(%rsp), %rcx
   movl 0 (%rcx), %r8d
   add %r11d, %r8d
   movl %r8d, 0 (%rcx)
   movl 4 (%rcx), %r8d
-  movl 40(%rsp), %r11d
+  movl 44(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 4 (%rcx)
   movl 8 (%rcx), %r8d
-  movl 44(%rsp), %r11d
+  movl 48(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 8 (%rcx)
   movl 12 (%rcx), %r8d
-  movl 48(%rsp), %r11d
+  movl 52(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 12 (%rcx)
   movl 16 (%rcx), %r8d
-  movl 52(%rsp), %r11d
+  movl 56(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 16 (%rcx)
   movl 20 (%rcx), %r8d
-  movl 56(%rsp), %r11d
+  movl 60(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 20 (%rcx)
   movl 24 (%rcx), %r8d
-  movl 60(%rsp), %r11d
+  movl 64(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 24 (%rcx)
   movl 28 (%rcx), %r8d
-  movl 64(%rsp), %r11d
+  movl 68(%rsp), %r11d
   add %r11d, %r8d
   movl %r8d, 28 (%rcx)
-  movl $0, 40(%rsp)
   movl $0, 44(%rsp)
   movl $0, 48(%rsp)
   movl $0, 52(%rsp)
@@ -3211,6 +3210,7 @@ sha256_main_i_SHA256_Compute64Steps:
   movl $0, 104(%rsp)
   movl $0, 108(%rsp)
   movl $0, 112(%rsp)
+  movl $0, 116(%rsp)
   ret 
 
 .global sha256_main_i_SHA256_ComputeInitialWs

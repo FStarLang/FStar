@@ -11,7 +11,7 @@ let bind_id (a:Type) (b:Type) (x:id a) (f:(a -> id b)) : id b = f (x ())
     f x ()
 
 
-total reifiable reflectable new_effect_for_free {
+total reifiable reflectable new_effect {
   ID : a:Type -> Effect
   with repr   = id
      ; bind   = bind_id

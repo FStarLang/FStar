@@ -89,7 +89,7 @@ let run_all () =
     unify 0 x x Trivial;
 
     //different names, equal with a guard
-    unify 1 x y (NonTrivial (app (pars "eq2") [x;y]));
+    unify 1 x y (NonTrivial (U.mk_eq2 U_zero U.t_bool x y));
 
     //equal after some reduction
     unify 2 x (app id [x]) Trivial;
@@ -111,8 +111,8 @@ let run_all () =
             Trivial;
 
     //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
-    unify 7 (pars "fun (x:int) (y:int) -> y")
-            (pars "fun (x:int) (y:int) -> x")
+    unify 7 (tc "fun (x:int) (y:int) -> y")
+            (tc "fun (x:int) (y:int) -> x")
             (NonTrivial (tc "(forall (x:int). (forall (y:int). y==x))"));
 
     //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)

@@ -2,6 +2,8 @@
 #include <time.h>
 #include "testutils.h"
 #include "Crypto_AEAD.h"
+#include "Crypto_AEAD_Encrypt.h"
+#include "Crypto_AEAD_Wrappers_CMA.h"
 #include <openssl/evp.h>
 
 #define PLAINLEN (16*1024)
@@ -155,7 +157,7 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
       };
   }
   else
-    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None };
   Crypto_AEAD_Invariant_aead_state_______
   st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
 
@@ -202,7 +204,7 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
       };
   }
   else
-    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None };
   Crypto_AEAD_Invariant_aead_state_______
   st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
   FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
@@ -259,7 +261,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
       };
   }
   else
-    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+    ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None };
   Crypto_AEAD_Invariant_aead_state_______
   st0 = { .x00 = FStar_HyperHeap_root, .x01 = log, .x02 = prf, .x03 = ak };
   FStar_HyperStack_mem h1 = (void *)(uint8_t )0;

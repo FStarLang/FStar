@@ -51,7 +51,6 @@ val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
 
-(* Only used with F# *)
 val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
@@ -123,9 +122,11 @@ val trace_error                 : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_tactics                 : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
+val warn_default_effects        : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
@@ -134,3 +135,12 @@ val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool
+
+// HACK ALERT! This is to ensure we have no dependency from Options to Version,
+// otherwise, since Version is regenerated all the time, this invalidates the
+// whole build tree. A classy technique I learned from the OCaml compiler.
+val _version: ref<string>
+val _platform: ref<string>
+val _compiler: ref<string>
+val _date: ref<string>
+val _commit: ref<string>

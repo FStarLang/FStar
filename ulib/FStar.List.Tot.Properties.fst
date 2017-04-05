@@ -378,3 +378,477 @@ let rec sortWith_sorted #a f l = match l with
        sortWith_sorted f hi;
        append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
        append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
+
+
+(** Correctness of [mem] for types with decidable equality. TODO:
+replace [mem] with [memP] in relevant lemmas and define the right
+SMTPat to automatically recover lemmas about [mem] for types with
+decidable equality *)
+let rec mem_memP
+  (#a: eqtype)
+  (x: a)
+  (l: list a)
+: Lemma (ensures (mem x l <==> memP x l))
+= match l with
+  | [] -> ()
+  | a :: q -> mem_memP x q
+
+(** The empty list has no elements. *)
+val memP_empty : #a: Type -> x:a ->
+  Lemma (requires (memP x []))
+        (ensures False)
+let memP_empty #a x = ()
+
+(** Full specification for [existsb]: [existsb f xs] holds if, and
+only if, there exists an element [x] of [xs] such that [f x] holds. *)
+val memP_existsb: #a: Type -> f:(a -> Tot bool) -> xs:list a ->
+  Lemma(ensures (existsb f xs <==> (exists (x:a). (f x = true /\ memP x xs))))
+let rec memP_existsb #a f xs =
+  match xs with
+  | [] -> ()
+  | hd::tl -> memP_existsb f tl
+
+let rec memP_map_intro
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (x: a)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP x l ==> memP (f x) (map f l)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | _ :: q -> memP_map_intro f x q (* NOTE: would fail if [requires memP x l] instead of [ ==> ] *)
+
+let rec memP_map_elim
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (y: b)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP y (map f l) ==> (exists (x : a) . memP x l /\ f x == y)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | _ :: q -> memP_map_elim f y q
+
+(** Properties of [noRepeats] *)
+let noRepeats_nil
+  (#a: eqtype)
+: Lemma
+  (ensures (noRepeats #a []))
+= ()
+
+let noRepeats_cons
+  (#a: eqtype)
+  (h: a)
+  (tl: list a)
+: Lemma
+  (requires ((~ (mem h tl)) /\ noRepeats tl))
+  (ensures (noRepeats #a (h::tl)))
+= ()
+
+let rec noRepeats_append_elim
+  (#a: eqtype)
+  (l1 l2: list a)
+: Lemma
+  (requires (noRepeats (l1 @ l2)))
+  (ensures (noRepeats l1 /\ noRepeats l2 /\ (forall x . mem x l1 ==> ~ (mem x l2))))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_mem q1 l2 x;
+    noRepeats_append_elim q1 l2
+
+let rec noRepeats_append_intro
+  (#a: eqtype)
+  (l1 l2: list a)
+: Lemma
+  (requires (noRepeats l1 /\ noRepeats l2 /\ (forall x . mem x l1 ==> ~ (mem x l2))))
+  (ensures (noRepeats (l1 @ l2)))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | x :: q1 ->
+    append_mem q1 l2 x;
+    noRepeats_append_intro q1 l2
+
+(** Properties of [assoc] *)
+
+let assoc_nil
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+: Lemma
+  (ensures (assoc #a #b x [] == None))
+= ()
+
+let assoc_cons_eq
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (y: b)
+  (q: list (a * b))
+: Lemma
+  (ensures (assoc x ((x, y) :: q) == Some y))
+= ()
+
+let assoc_cons_not_eq
+  (#a: eqtype)
+  (#b: Type)
+  (x x': a)
+  (y: b)
+  (q: list (a * b))
+: Lemma
+  (requires (x <> x'))
+  (ensures (assoc x' ((x, y) :: q) == assoc x' q))
+= ()
+
+let rec assoc_append_elim_r
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (l1 l2: list (a * b))
+: Lemma
+  (requires (assoc x l2 == None \/ ~ (assoc x l1 == None)))
+  (ensures (assoc x (l1 @ l2) == assoc x l1))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | (x', _) :: q -> if x = x' then () else assoc_append_elim_r x q l2
+
+let rec assoc_append_elim_l
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (l1 l2: list (a * b))
+: Lemma
+  (requires (assoc x l1 == None))
+  (ensures (assoc x (l1 @ l2) == assoc x l2))
+  (decreases l1)
+= match l1 with
+  | [] -> ()
+  | (x', _) :: q -> if x = x' then assert False else assoc_append_elim_l x q l2
+
+let rec assoc_memP_some
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (y: b)
+  (l: list (a * b))
+: Lemma
+  (requires (assoc x l == Some y))
+  (ensures (memP (x, y) l))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | (x', _) :: q -> if x = x' then () else assoc_memP_some x y q
+
+let rec assoc_memP_none
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (l: list (a * b))
+: Lemma
+  (requires (assoc x l == None))
+  (ensures (forall y . ~ (memP (x, y) l)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | (x', _) :: q -> if x = x' then assert False else assoc_memP_none x q
+
+let assoc_mem
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (l: list (a * b))
+: Lemma
+  (ensures (mem x (map fst l) <==> (exists y . assoc x l == Some y)))
+= match assoc x l with
+  | None ->
+    assoc_memP_none x l;
+    mem_memP x (map fst l);
+    memP_map_elim fst x l
+  | Some y ->
+    assoc_memP_some x y l;
+    memP_map_intro fst (x, y) l;
+    mem_memP x (map fst l)
+
+(** Properties of [fold_left] *)
+
+let rec fold_left_invar
+  (#a #b: Type)
+  (f: (a -> b -> Tot a))
+  (l: list b)
+  (p: (a -> Tot Type0))
+  : Lemma
+  (requires forall (x: a) (y: b) . p x ==> memP y l ==> p (f x y) )
+  (ensures forall (x: a) . p x ==> p (fold_left f x l))
+=
+  match l with
+  | [] -> ()
+  | y :: q -> fold_left_invar f q p
+
+let rec fold_left_map
+  (#a #b #c: Type)
+  (f_aba: a -> b -> Tot a)
+  (f_bc:  b -> Tot c)
+  (f_aca: a -> c -> Tot a)
+  (l: list b)
+  : Lemma
+  (requires forall (x: a) (y: b) . f_aba x y == f_aca x (f_bc y) )
+  (ensures forall (x : a) . fold_left f_aba x l == fold_left f_aca x (map f_bc l) )
+  =
+  match l with
+  | [] -> ()
+  | y :: q -> fold_left_map f_aba f_bc f_aca q
+
+let rec map_append
+  (#a #b: Type)
+  (f: a -> Tot b)
+  (l1 l2: list a)
+:
+  Lemma
+  (ensures map f (l1 @ l2) == map f l1 @ map f l2)
+=
+  match l1 with
+  | [] -> ()
+  | x :: q -> map_append f q l2
+
+let rec fold_left_append
+  (#a #b: Type)
+  (f: a -> b -> Tot a)
+  (l1 l2: list b)
+  : Lemma
+  (ensures forall x . fold_left f x (l1 @ l2) == fold_left f (fold_left f x l1) l2)
+= match l1 with
+  | [] -> ()
+  | x :: q -> fold_left_append f q l2
+
+let rec fold_left_monoid
+  (#a: Type)
+  (opA: (a -> a -> Tot a))
+  (zeroA: a)
+  (l: list a)
+: Lemma
+  (requires
+    (forall u v w . (u `opA` (v `opA` w)) == ((u `opA` v) `opA` w)) /\
+    (forall x . (x `opA` zeroA) == x) /\
+    (forall x . (zeroA `opA` x) == x))
+  (ensures
+    forall x .
+    (fold_left opA x l) == (x `opA` (fold_left opA zeroA l)))
+= match l with
+  | [] -> ()
+  | x :: q -> fold_left_monoid opA zeroA q
+
+let fold_left_append_monoid
+  (#a: Type)
+  (f: (a -> a -> Tot a))
+  (z: a)
+  (l1 l2: list a)
+: Lemma
+  (requires
+    (forall u v w . f u (f v w) == f (f u v) w) /\
+    (forall x . f x z == x) /\
+    (forall x . f z x == x))
+  (ensures
+    fold_left f z (l1 @ l2) == f (fold_left f z l1) (fold_left f z l2))
+= fold_left_append f l1 l2;
+  fold_left_monoid f z l2
+
+(* Properties of [index] *)
+
+private let rec index_extensionality_aux
+  (#a: Type)
+  (l1 l2: list a)
+  (l_len: (l_len: unit { length l1 == length l2 } ))
+  (l_index: (i: (i: nat {i < length l1})) -> Tot (l_index: unit {index l1 i == index l2 i}))
+: Lemma
+  (ensures (l1 == l2))
+= match (l1, l2) with
+  | (a1::q1, a2::q2) ->
+    let a_eq : (a_eq : unit {a1 == a2}) = l_index 0 in
+    let q_len : (q_len: unit {length q1 == length q2}) = () in
+    let q_index (i: (i: nat {i < length q1})) : Tot (q_index: unit {index q1 i == index q2 i}) =
+      l_index (i + 1) in
+    let q_eq : (q_eq : unit {l1 == l2}) = index_extensionality_aux q1 q2 q_len q_index in
+    ()
+  | _ -> ()
+
+let index_extensionality
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (requires
+    (length l1 == length l2 /\
+    (forall (i: nat) . i < length l1 ==> index l1 i == index l2 i)))
+  (ensures (l1 == l2))
+= index_extensionality_aux l1 l2 () (fun i -> ())
+
+(** Properties of [strict_prefix_of] *)
+
+let rec strict_prefix_of_nil (#a: Type) (x: a) (l: list a)
+: Lemma
+  (requires True)
+  (ensures (strict_prefix_of [] (x::l)))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | a' :: q -> strict_prefix_of_nil a' q
+
+let strict_prefix_of_or_eq_nil (#a: Type) (l: list a)
+: Lemma
+  (ensures (strict_prefix_of [] l \/ l == []))
+= match l with
+  | [] -> ()
+  | a :: q -> strict_prefix_of_nil a q
+
+let strict_prefix_of_cons (#a: Type) (x: a) (l: list a) :
+  Lemma
+  (ensures (strict_prefix_of l (x::l)))
+= ()
+
+let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
+: Lemma
+  (requires True)
+  (ensures ((strict_prefix_of l1 l2 /\ strict_prefix_of l2 l3) ==> strict_prefix_of l1 l3))
+  (decreases l3)
+= match l3 with
+  | [] -> ()
+  | _ :: q -> strict_prefix_of_trans l1 l2 q
+
+let rec strict_prefix_of_correct (#a) (l1 l2: list a)
+: Lemma
+  (requires True)
+  (ensures (strict_prefix_of l1 l2 ==> l1 << l2))
+  (decreases l2)
+= match l2 with
+  | [] -> ()
+  | _ :: q ->
+    strict_prefix_of_correct l1 q
+
+let rec map_strict_prefix_of (#a #b: Type) (f: a -> Tot b) (l1: list a) (l2: list a) :
+ Lemma
+ (requires True)
+ (ensures (strict_prefix_of l1 l2 ==> strict_prefix_of (map f l1) (map f l2)))
+ (decreases l2)
+= match l2 with
+  | [] -> ()
+  | a::q ->
+    map_strict_prefix_of f l1 q
+
+let rec mem_strict_prefix_of (#a: eqtype) (l1: list a) (m: a) (l2: list a)
+: Lemma
+  (requires True)
+  (ensures ((mem m l1 /\ strict_prefix_of l1 l2) ==> mem m l2))
+= match l2 with
+  | [] -> ()
+  | a :: q ->
+    mem_strict_prefix_of l1 m q
+
+let rec strict_prefix_of_exists_append
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (ensures (strict_prefix_of l1 l2 ==> (exists l3 . l2 == append l3 l1)))
+= match l2 with
+  | [] -> ()
+  | a :: q ->
+    FStar.Classical.or_elim
+      #(l1 == q)
+      #(strict_prefix_of l1 q)
+      #(fun _ -> exists l3 . l2 == append l3 l1)
+      (fun _ ->
+	FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
+      (fun _ ->
+	FStar.Classical.exists_elim
+	  (exists l3 . l2 == append l3 l1)
+	  #_
+	  #(fun l3 -> q == append l3 l1)
+	  (strict_prefix_of_exists_append l1 q)
+	  (fun l3 ->
+	     FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: l3)
+	     ))
+
+let strict_prefix_of_or_eq_exists_append
+  (#a: Type)
+  (l1 l2: list a)
+: Lemma
+  (ensures ((strict_prefix_of l1 l2 \/ l1 == l2) ==> (exists l3 . l2 == append l3 l1)))
+= FStar.Classical.or_elim
+    #(strict_prefix_of l1 l2)
+    #(l1 == l2)
+    #(fun _ -> exists l3 . l2 == append l3 l1)
+    (fun _ ->
+      strict_prefix_of_exists_append l1 l2)
+    (fun _ ->
+	FStar.Classical.exists_intro
+	  (fun l3 -> l2 == append l3 l1)
+	  [] )
+
+(** Properties of << with lists *)
+
+let precedes_tl
+  (#a: Type)
+  (l: list a {Cons? l})
+: Lemma (ensures (tl l << l))
+= ()
+
+let rec precedes_append_cons_r
+  (#a: Type)
+  (l1: list a)
+  (x: a)
+  (l2: list a)
+: Lemma
+  (requires True)
+  (ensures (x << append l1 (x :: l2)))
+  [SMTPat (x << append l1 (x :: l2))]
+= match l1 with
+  | [] -> ()
+  | _ :: q -> precedes_append_cons_r q x l2
+
+let precedes_append_cons_prod_r
+  (#a #b: Type)
+  (l l1: list (a * b))
+  (x: a)
+  (y: b)
+  (l2: list (a * b))
+: Lemma
+  (requires (l == append l1 ((x, y) :: l2)))
+  (ensures (x << l /\ y << l))
+  [SMTPatOr [ [ SMTPatT (x << l); SMTPatT (l == append l1 ((x, y) :: l2))] ; [SMTPatT (y << l); SMTPatT (l == append l1 ((x, y) :: l2))] ] ]
+= precedes_append_cons_r l1 (x, y) l2
+
+let rec memP_precedes
+  (#a: Type)
+  (x: a)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (memP x l ==> x << l))
+  (decreases l)
+= match l with
+  | [] -> ()
+  | y :: q ->
+    FStar.Classical.or_elim
+      #(x == y)
+      #(memP x q)
+      #(fun _ -> x << l)
+      (fun _ -> ())
+      (fun _ -> memP_precedes x q)
+
+let assoc_precedes
+  (#a: eqtype)
+  (#b: Type)
+  (x: a)
+  (l: list (a * b))
+  (y: b)
+: Lemma
+  (requires (assoc x l == Some y))
+  (ensures (x << l /\ y << l))
+= assoc_memP_some x y l;
+  memP_precedes (x, y) l

@@ -1,5 +1,5 @@
 [
-  "Hs<q¼l_ãF±0Îª\u001eÕ&",
+  ".dšÂáÜ²7ÕR\u000e¡ôióF",
   [
     [
       "FStar.Set.singleton",
@@ -171,6 +171,20 @@
       0,
       0,
       [ "@query", "lemma_FStar.Set.lemma_equal_intro", "unit_typing" ],
+      0
+    ],
+    [
+      "FStar.Set.disjoint_not_in_both",
+      1,
+      0,
+      0,
+      [
+        "@query", "eq2-interp", "equation_FStar.Set.disjoint",
+        "equation_FStar.Set.mem", "equation_FStar.Set.set",
+        "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_intersect",
+        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
+        "unit_typing"
+      ],
       0
     ],
     [ "FStar.Set.as_set'", 1, 2, 1, [ "@query" ], 0 ],

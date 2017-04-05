@@ -1,5 +1,5 @@
 [
-  ">QÐ¡\u0010\u000e7\u001a³Þm\foùõ€",
+  "w\u0003CÙ˜ïÃqü\\-!aÛXØ",
   [
     [
       "SHA1.key",
@@ -11,6 +11,7 @@
       ],
       0
     ],
+    [ "SHA1.sample", 1, 2, 1, [ "@query" ], 0 ],
     [ "SHA1.sha1", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "SHA1.sha1",
