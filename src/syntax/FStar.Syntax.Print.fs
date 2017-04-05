@@ -243,7 +243,8 @@ let quals_to_string' quals =
 let term_to_string x = 
   let e = Resugar.resugar_term x in
   A.term_to_string e
-  //uncomment the two lines below to link to pretty print
+  // Do not uncomment the two lines below to link to pretty print since it only
+  // works in ocaml based F*. The makefile will uncomment in ocaml built
   //let d = ToDocument.term_to_document e in
   //Pp.pretty_string 1.0 100 d
 
