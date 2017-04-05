@@ -283,9 +283,9 @@ let inst_tscheme : tscheme -> universes * term = function
       let us' = us |> List.map (fun _ -> new_u_univ()) in
       inst_tscheme_with (us, t) us'
 
-let inst_tscheme_with_range (r:range) (t:tscheme) (doc:option<fsdoc>) =
+let inst_tscheme_with_range (r:range) (t:tscheme) =
     let us, t = inst_tscheme t in
-    us, Subst.set_use_range r t, doc
+    us, Subst.set_use_range r t
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
     match ed.binders with
@@ -408,43 +408,40 @@ let effect_signature se =
 
 let try_lookup_lid_aux env lid =
   let mapper (lr, rng) =
-    let doc = match lr with
-              | Inl _ -> None
-              | Inr (se, _) -> doc_of_sigelt se in
     match lr with
     | Inl t ->
-      Some (t, (rng, None)) // FIXME: Doc
+      Some (t, rng)
 
     | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _, _) }, None) ->
-      Some (inst_tscheme (uvs, t), (rng, doc))
+      Some (inst_tscheme (uvs, t), rng)
 
     | Inr ({sigel = Sig_declare_typ (l, uvs, t, qs) }, None) ->
       if in_cur_mod env l = Yes
       then if qs |> List.contains Assumption || env.is_iface
-           then Some (inst_tscheme (uvs, t), (rng, doc))
+           then Some (inst_tscheme (uvs, t), rng)
            else None
-      else Some (inst_tscheme (uvs, t), (rng, doc))
+      else Some (inst_tscheme (uvs, t), rng)
 
     | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _, _) }, None) ->
       begin match tps with
-        | [] -> Some (inst_tscheme (uvs, k), (rng, doc))
-        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), (rng, doc))
+        | [] -> Some (inst_tscheme (uvs, k), rng)
+        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
       end
 
     | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _, _) }, Some us) ->
       begin match tps with
-        | [] -> Some (inst_tscheme_with (uvs, k) us, (rng, doc))
-        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, (rng, doc))
+        | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
+        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
       end
 
     | Inr se ->
       begin match se with // FIXME why does this branch not use rng?
         | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
         | _ -> effect_signature (fst se)
-      end |> BU.map_option (fun (us_t, rng) -> (us_t, (rng, doc)))
+      end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
-      | Some ((us, t), r_d) -> Some ((us, {t with pos=range_of_lid lid}), r_d)
+      | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
       | None -> None
 
 ////////////////////////////////////////////////////////////////
@@ -455,9 +452,9 @@ let try_lookup_lid_aux env lid =
 //        val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 //        val lookup_lid             : env -> lident -> (universes * typ)
 //        val lookup_univ            : env -> univ_name -> bool
-//        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier> * option<fsdoc>)>
-//        val lookup_val_decl        : env -> lident -> universes * typ * option<fsdoc>
-//        val lookup_datacon         : env -> lident -> universes * typ * option<fsdoc>
+//        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
+//        val lookup_val_decl        : env -> lident -> universes * typ
+//        val lookup_datacon         : env -> lident -> universes * typ
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
 //        val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
@@ -493,10 +490,10 @@ let lookup_bv env bv =
 let try_lookup_lid env l =
     match try_lookup_lid_aux env l with
     | None -> None
-    | Some ((us, t), (r, d)) ->
+    | Some ((us, t), r) ->
       let use_range = range_of_lid l in
       let r = Range.set_use_range r use_range in
-      Some ((us, Subst.set_use_range use_range t), (r, d))
+      Some ((us, Subst.set_use_range use_range t), r)
 
 let lookup_lid env l =
     match try_lookup_lid env l with
@@ -513,20 +510,20 @@ let lookup_univ env x =
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, q); sigdoc = doc }, None), _) ->
-      Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q,doc)
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, q) }, None), _) ->
+      Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
     | _ -> None
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, _); sigdoc = doc }, None), _) ->
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t) doc
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, _) }, None), _) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _, _); sigdoc = doc }, None), _) ->
-      inst_tscheme_with_range (range_of_lid lid) (uvs, t) doc
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _, _) }, None), _) ->
+      inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let datacons_of_typ env lid =
@@ -630,7 +627,7 @@ let lookup_effect_quals env l =
 
 let lookup_projector env lid i =
     let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (Print.lid_to_string lid)) in
-    let _, t, _ = lookup_datacon env lid in
+    let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow(binders, _) ->
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!

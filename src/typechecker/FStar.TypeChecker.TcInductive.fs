@@ -330,7 +330,7 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
 and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
   debug_log env ("Checking nested positivity in data constructor " ^ dlid.str ^ " of the inductive " ^ ilid.str);
   //get the type of the data constructor
-  let univ_unif_vars, dt, _ = lookup_datacon env dlid in
+  let univ_unif_vars, dt = lookup_datacon env dlid in
   //lookup_datacon instantiates the universes of dlid with unification variables
   //we should unify the universe variables with us, us are the universes that the ilid fvar was instantiated with
   (List.iter2 (fun u' u -> match u' with
@@ -391,7 +391,7 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
 //ty_bs are the opended type parameters of the inductive, and ty_usubst is the universe substitution, again from the ty_lid type
 let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:universes) (unfolded:unfolded_memo_t) (env:env) :bool =
   //get the type of the data constructor
-  let univ_unif_vars, dt, _ = lookup_datacon env dlid in
+  let univ_unif_vars, dt = lookup_datacon env dlid in
   //lookup_datacon instantiates the universes of dlid with unification variables
   //we should unify the universe variables with us, us are the universes that the ilid fvar was instantiated with
   (List.iter2 (fun u' u -> match u' with
@@ -573,7 +573,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
 
 
-let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) (tc_assume:(env_t -> lident -> formula -> list<qualifier> -> Range.range -> option<fsdoc> -> sigelt)) :list<sigelt> =
+let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) (tc_assume:(env_t -> lident -> formula -> list<qualifier> -> Range.range -> sigelt)) :list<sigelt> =
   let us =
     let ty = List.hd tcs in
     match ty.sigel with
@@ -601,7 +601,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
 
   //create Sig_assume for the axioms
   let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-    let se = tc_assume env lid fml [] Range.dummyRange None in // FIXME: Docs?
+    let se = tc_assume env lid fml [] Range.dummyRange in // FIXME: Docs?
     //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
     l @ [se]
   ) [] axioms in
@@ -720,7 +720,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //new accumulator is old accumulator /\ fml
   U.mk_conj acc fml
 
-let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) (tc_assume:(env_t -> lident -> formula -> list<qualifier> -> Range.range -> option<fsdoc> -> sigelt)) :list<sigelt> =
+let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sigelt>) (env0:env_t) (tc_assume:(env_t -> lident -> formula -> list<qualifier> -> Range.range -> sigelt)) :list<sigelt> =
   //TODO: perhaps make it a map ?
   let mutuals = List.map (fun ty ->
     match ty.sigel with
@@ -744,14 +744,14 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
 
   env.solver.encode_sig env sig_bndle;
   let env = Env.push_univ_vars env us in
-  let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] Range.dummyRange None in // FIXME: Doc?
+  let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] Range.dummyRange in // FIXME: Should we generate docs for this identifier?
 
   env.solver.pop "haseq";
   [se]
 
 
 //returns: sig bundle, list of type constructors, list of data constructors
-let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qualifier>) (lids:list<lident>) (doc: option<fsdoc>) :(sigelt * list<sigelt> * list<sigelt>) =
+let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qualifier>) (lids:list<lident>) :(sigelt * list<sigelt> * list<sigelt>) =
     (*  Consider this illustrative example:
 
          type T (a:Type) : (b:Type) -> Type =
@@ -838,5 +838,5 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   (* Generalize their universes *)
   let tcs, datas = generalize_and_inst_within env0 g tcs datas in
 
-  let sig_bndle = { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = doc } in
+  let sig_bndle = { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0 } in
   sig_bndle, tcs, datas

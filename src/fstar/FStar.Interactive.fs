@@ -400,11 +400,15 @@ let rec go (line_col:(int*int))
                             | None -> lid
                             | Some lid -> lid in
              try_lookup_lid (snd env) lid
-               |> Util.map_option (fun ((_, typ), (r, d)) -> (Syntax.Print.lid_to_string lid, typ, r, d)) in
+               |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
-     | Some (id, typ, rng, doc) ->
-       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info (snd env) id typ rng doc));
+     | Some (name_or_lid, typ, rng) ->
+       let name, doc =
+         match name_or_lid with
+         | Inl name -> name, None
+         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
+       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info (snd env) name typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user

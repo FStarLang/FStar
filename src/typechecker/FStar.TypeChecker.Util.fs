@@ -247,7 +247,7 @@ let pat_as_exps allow_implicits env p
         match p.v with
            | Pat_cons(fv, pats) ->
                let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-               let _, t, _ = Env.lookup_datacon env fv.fv_name.v in
+               let _, t = Env.lookup_datacon env fv.fv_name.v in
                let f, _ = U.arrow_formals t in
                let rec aux formals pats = match formals, pats with
                 | [], [] -> []
@@ -1560,7 +1560,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
-            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name; sigdoc = None }  in // FIXME: Doc
+            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name }  in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1597,7 +1597,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
-                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; sigdoc = None } in // FIXME: Doc
+                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1642,7 +1642,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
-          let decl = { sigel = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name; sigdoc = None } in // FIXME: Doc
+          let decl = { sigel = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1673,7 +1673,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
-              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; sigdoc = None } in // FIXME: doc
+              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten

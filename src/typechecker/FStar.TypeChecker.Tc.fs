@@ -737,9 +737,9 @@ and tc_lex_t env ses quals lids =
         | _ -> assert false
     end;
     begin match ses with
-      | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r; sigdoc = d };
-         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1; sigdoc = d1 };
-         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2; sigdoc = d2 }]
+      | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r };
+         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1 };
+         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2 }]
          when (lid_equals lex_t Const.lex_t_lid
             && lid_equals lex_top Const.lextop_lid
             && lid_equals lex_cons Const.lexcons_lid) ->
@@ -748,13 +748,13 @@ and tc_lex_t env ses quals lids =
         let t = mk (Tm_type(U_name u)) None r in
         let t = Subst.close_univ_vars [u] t in
         let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []);
-                   sigrng = r; sigdoc = d } in
+                   sigrng = r } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []);
-                          sigrng = r1; sigdoc = d1 } in
+                          sigrng = r1 } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -766,22 +766,22 @@ and tc_lex_t env ses quals lids =
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []);
-                           sigrng = r2; sigdoc = d2 } in
-        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; sigdoc = d } // FIXME: Doc
+                           sigrng = r2 } in
+        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env }
       | _ ->
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, [], lids)))))
     end
 
-and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) (doc:option<fsdoc>) :sigelt =
+and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    { sigel = Sig_assume(lid, phi, quals); sigrng = r; sigdoc = doc }
+    { sigel = Sig_assume(lid, phi, quals); sigrng = r }
 
-and tc_inductive env ses quals lids doc =
+and tc_inductive env ses quals lids =
     let env0 = env in
-    let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids doc in
+    let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
             we still need to check whether or not it supports equality
             and whether it is strictly positive
@@ -831,7 +831,7 @@ and tc_inductive env ses quals lids doc =
           if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
           else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
         in
-        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = doc }::ses, data_ops_ses // FIXME: Doc
+        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0 }::ses, data_ops_ses
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
@@ -859,7 +859,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_bundle(ses, quals, lids) ->
     let env = Env.set_range env r in
-    let ses, projectors_ses = tc_inductive env ses quals lids se.sigdoc in
+    let ses, projectors_ses = tc_inductive env ses quals lids in
     ses, projectors_ses
 
   | Sig_pragma(p) ->
@@ -1019,7 +1019,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     [se], []
 
   | Sig_assume(lid, phi, quals) ->
-    let se = tc_assume env lid phi quals r se.sigdoc in
+    let se = tc_assume env lid phi quals r in
     [se], []
 
   | Sig_main(e) ->
@@ -1047,17 +1047,16 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls
-          (c) Collect docstrings
       *)
-    let should_generalize, lbs', quals_opt, val_docs = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt, docs) lb ->
+    let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
           let lbname = right lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals_opt, doc = match Env.try_lookup_val_decl env lbname.fv_name.v with
+          let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
             | None ->
                 if lb.lbunivs <> []
-                then false, lb, quals_opt, None // we already have generalized universes (e.g. elaborated term)
-                else gen, lb, quals_opt, None //no annotation found; use whatever was in the let binding
+                then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
+                else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
-            | Some ((uvs,tval), quals, doc) ->
+            | Some ((uvs,tval), quals) ->
               let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
               let _ = match lb.lbtyp.n with
                 | Tm_unknown -> ()
@@ -1067,11 +1066,10 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
               then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
               false, //explicit annotation provided; do not generalize
               mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
-              quals_opt,
-              doc
+              quals_opt
           in
-          gen, lb::lbs, quals_opt, doc::docs)
-          (true, [], (if quals=[] then None else Some quals), [])
+          gen, lb::lbs, quals_opt)
+          (true, [], (if quals=[] then None else Some quals))
     in
 
     let quals = match quals_opt with
@@ -1116,18 +1114,12 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       | _ -> failwith "impossible"
     in
 
-    (* 3.5 Fetch docs for the first let from the corresponding val and put them
-       on [se] if it doesn't already have docs (this is the common case: one
-       docstring, followed by one val (which the docstring applies to), followed
-       by one let. *)
-    let se = match se.sigdoc, val_docs with
-        | None, (Some d)::_ -> { se with sigdoc = Some d }
-        | _ -> se in
+    // CPC doc: Actually I don't need the let-val pairing; It's enough to register the docs of the val independently, since they won't be overwritten when the let is desugared with no docs.
 
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_fv fv lb.lbtyp se.sigdoc);
+        Common.insert_fv fv lb.lbtyp);
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
@@ -1226,8 +1218,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     if hidden |> BU.for_some (S.fv_eq_lid fv)
     then [], hidden //this projector definition already has a declare_typ
     else let dec = { sigel = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption]);
-                     sigrng = Ident.range_of_lid lid;
-                     sigdoc = se.sigdoc } in
+                     sigrng = Ident.range_of_lid lid } in
           [dec], lid::hidden
 
   | Sig_let(lbs, l, quals, _) ->

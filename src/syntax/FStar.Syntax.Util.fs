@@ -522,8 +522,6 @@ let quals_of_sigelt (x: sigelt) = match x.sigel with
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let doc_of_sigelt (x: sigelt) = x.sigdoc
-
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bv  x
   | (Inr l, _, _) -> range_of_lid l
@@ -1016,8 +1014,7 @@ let destruct_typ_as_formula f : option<connective> =
                 Const.effect_Tot_lid
                 a.action_defn in
     { sigel = Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []);
-      sigrng = a.action_defn.pos;
-      sigdoc = a.action_doc }
+      sigrng = a.action_defn.pos }
 
 (* Some reification utilities *)
 let mk_reify t =

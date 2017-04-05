@@ -36,15 +36,6 @@ type withinfo_t<'a,'t> = {
   p: Range.range;
 }
 
-// Documentation comment. May appear appear as follows:
-//  - Immediately before a top-level declaration
-//  - Immediately after a type constructor or record field
-//  - In the middle of a file, as a standalone documentation declaration
-(* KM : Would need some range information on fsdocs to be able to print them correctly *)
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
-
-val string_of_fsdoc : fsdoc -> string
-
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 (* Term language *)
@@ -277,8 +268,7 @@ type action = {
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
     action_defn:term;
-    action_typ: typ;
-    action_doc: option<fsdoc>;
+    action_typ: typ
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;  //[Reify;Reflect; ...]
@@ -362,7 +352,6 @@ and sigelt' =
   | Sig_pragma         of pragma
 and sigelt = {
     sigel: sigelt';
-    sigdoc: option<fsdoc>;
     sigrng: Range.range;
 }
 
