@@ -785,7 +785,8 @@ let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
   let f = BatFile.open_out fname in
-  BatMarshal.output f ~sharing:true ~closures:true value
+  BatMarshal.output f ~sharing:true ~closures:true value;
+  BatIO.close_out f
   (* BatFile.with_file_out *)
   (*   fname *)
   (*   (fun f -> *)

@@ -30,19 +30,19 @@ module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
-let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
+let tc_one_file (remaining:list<string>) (uenv:uenv) (use_cache:bool) = //:((string option * string) * uenv * modul option * string list * bool) =
   let dsenv, env = uenv in
-  let (intf, impl), dsenv, env, remaining =
+  let (intf, impl), dsenv, env, remaining, use_cache =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
-          (Some intf, impl), dsenv, env, remaining
+          let _, dsenv, env, use_cache = tc_one_file_and_intf (Some intf) impl dsenv env use_cache in
+          (Some intf, impl), dsenv, env, remaining, use_cache
         | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
-          (None, intf_or_impl), dsenv, env, remaining
+          let _, dsenv, env, use_cache = tc_one_file_and_intf None intf_or_impl dsenv env use_cache in
+          (None, intf_or_impl), dsenv, env, remaining, use_cache
         | [] -> failwith "Impossible"
   in
-  (intf, impl), (dsenv, env), None, remaining
+  (intf, impl), (dsenv, env), None, remaining, use_cache
 
 // Ibid.
 let tc_prims () = //:uenv =
@@ -283,6 +283,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
  *)
 let rec tc_deps (m:modul_t) (stack:stack_t)
                 (env:env_t) (remaining:list<string>) (ts:m_timestamps)
+                (use_cache:bool)
 //      : stack<'env,modul_t> * 'env * m_timestamps
   = match remaining with
     | [] -> stack, env, ts
@@ -290,7 +291,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
       let env = push env (Options.lax ()) true "typecheck_modul" in
-      let (intf, impl), env, modl, remaining = tc_one_file remaining env in
+      let (intf, impl), env, modl, remaining, use_cache = tc_one_file remaining env use_cache in
       let intf_t, impl_t =
         let intf_t =
           match intf with
@@ -300,7 +301,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
         let impl_t = get_file_last_modification_time impl in
         intf_t, impl_t
       in
-      tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
+      tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts) use_cache
 
 
 (*
@@ -369,11 +370,11 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
         if not b || (is_stale intf impl intf_t impl_t) then
           //reverse st from "first dependency first order" to "last dependency first order"
           let env = pop_tc_and_stack env' (List.rev_append st []) ts in
-          tc_deps m good_stack env depnames good_ts
+          tc_deps m good_stack env depnames good_ts true
         else
           let stack_elt, st' = List.hd st, List.tl st in
           iterate depnames' st' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
-      | []           -> (* st should also be empty here *) tc_deps m good_stack env' depnames good_ts
+      | []           -> (* st should also be empty here *) tc_deps m good_stack env' depnames good_ts true
   in
 
   (* Well, the file list hasn't changed, so our (single) file is still there. *)
@@ -590,7 +591,7 @@ let interactive_mode (filename:string): unit =
   //type check prims and the dependencies
   let filenames, maybe_intf = deps_of_our_file filename in
   let env = tc_prims () in
-  let stack, env, ts = tc_deps None [] env filenames [] in
+  let stack, env, ts = tc_deps None [] env filenames [] true in
 
   let initial_mod, env = match maybe_intf with
     | Some intf ->
