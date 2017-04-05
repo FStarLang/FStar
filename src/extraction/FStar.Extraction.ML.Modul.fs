@@ -207,9 +207,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_datacon _ ->
           extract_bundle g se
 
-        | Sig_new_effect(ed, _) when (ed.qualifiers |> List.contains Reifiable) ->
+        | Sig_new_effect(ed, r) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
+            let n, w = mangled_name in
+            BU.print1 "Mangled name: %s\n" n;
             let lb = {
                 mllb_name=mangled_name;
                 mllb_tysc=None;
@@ -226,18 +228,28 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             | Tm_fvar fv ->
               let mlp = mlpath_of_lident fv.fv_name.v in
               let _, _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
-              let mle, _, mlt = Term.term_as_mlexpr g tm in
-                //the above fails, expects tm to be fully instantiated at this point
-              // let tysc = ([], mlt) in
               with_ty MLTY_Top <| MLE_Name mlp, tysc
-              // mle, tysc
             | _ -> failwith "Not an fv" in
 
           let extract_action g (a:S.action) =
             BU.print1 "Extracting action %s\n" (Print.lid_to_string a.action_name);
-            let a_tm, ty_sc = extract_fv a.action_defn in
-            let a_nm, a_lid = action_name ed a in
-            extend_env g a_lid a_nm a_tm ty_sc in
+            let (aa,_), a_lid = action_name ed a in
+            let a_nm = (aa, a_lid.ident.idText) in
+            let lbname = Inl ({ppname=a_lid.ident; index=0; sort=a.action_defn}) in
+            let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
+            let lbs = (false, [lb]) in
+            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None r in
+            let a_let, _, ty = Term.term_as_mlexpr g action_lb in
+            BU.print1 "Action name: %s\n" (a_lid.ident.idText);
+            let exp, tysc = match a_let.expr with
+            | MLE_Let((_, _, [mllb]), e) ->
+                (match mllb.mllb_tysc with
+                 | Some(tysc) -> e, tysc
+                 | None -> failwith "no type scheme") in
+            let g, letb = extend_env g a_lid a_nm exp tysc in
+            // let _ = lookup g lbname in
+            BU.print1 "Extracted action %s\n" (Print.lid_to_string a.action_name);
+            g, letb in
 
           let g, return_decl =
             BU.print1 "Extracting return %s\n" "";

@@ -116,16 +116,16 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
         else None)
 
 let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
-    
-let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> = 
+
+let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun (m, tds) ->
         BU.find_map tds (fun (_, n, mangle_opt, _, _) ->
             if m = mname
             then if n=ty_name
-                 then match mangle_opt with 
-                      | None -> 
+                 then match mangle_opt with
+                      | None ->
                         Some (m, n)
                       | Some mangled ->
                         let modul = m in
@@ -210,17 +210,17 @@ let find_uniq gamma mlident =
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
   (mk_unit:bool (*some pattern terms become unit while extracting*)) :
   env * mlident=
-    let ml_ty = match t_x with 
+    let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
     let mlident, nocluewhat = bv_as_mlident x in
     let mlsymbol = find_uniq g.gamma mlident in
     let mlident = mlsymbol, nocluewhat in
     let mlx = MLE_Var mlident in
-    let mlx = if mk_unit 
-              then ml_unit 
-              else if add_unit 
-              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit]) 
+    let mlx = if mk_unit
+              then ml_unit
+              else if add_unit
+              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
     let gamma = Bv(x, Inr(mlsymbol, mlx, t_x, is_rec))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
@@ -245,7 +245,7 @@ let tySchemeIsClosed (tys : mltyscheme) : bool =
 let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
     if tySchemeIsClosed t_x
     then
-        let ml_ty = match t_x with 
+        let ml_ty = match t_x with
             | ([], t) -> t
             | _ -> MLTY_Top in
         let mlpath, mlsymbol =
@@ -256,6 +256,7 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
+        BU.print1 "Extended env with fv %s\n" mlsymbol;
         let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
         {g with gamma=gamma}, (mlsymbol, 0)
     else failwith "freevars found"
@@ -288,8 +289,8 @@ let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
-   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst    
-   
+   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
+
 let monad_op_name (ed:Syntax.eff_decl) nm =
     let module_name, eff_name = ed.mname.ns, ed.mname.ident in
     let mangled_name = Ident.reserved_prefix ^ eff_name.idText ^ "_" ^ nm in
@@ -298,7 +299,7 @@ let monad_op_name (ed:Syntax.eff_decl) nm =
     let lid = Ident.ids_of_lid ed.mname @ [Ident.id_of_text nm] |> Ident.lid_of_ids in
     ml_name, lid
 
-let action_name (ed:Syntax.eff_decl) (a:Syntax.action) = 
+let action_name (ed:Syntax.eff_decl) (a:Syntax.action) =
     monad_op_name ed a.action_name.ident.idText
 
 let bind_name (ed:Syntax.eff_decl) =
