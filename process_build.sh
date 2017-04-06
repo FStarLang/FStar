@@ -110,7 +110,9 @@ fi
 
 # Got to this point, so know it passed - copy minor version out to see if it works
 echo "* Upload the minor version of the package. Will only keep the most recent 4 packages"
-
+cd ../../..
+ORIG_PWD=$PWD
+echo "+++ ORIG PWD:"$ORIG_PWD
 BN_BINARYSPATH=~/binaries/weekly   # maybe this should be environment var or something like that similar to CI_LOGS
 #FSTAR_BIN_BRANCH="darrenge_binaries"  # test branch 
 FSTAR_BIN_BRANCH="master"
@@ -123,15 +125,15 @@ echo "--git pull --"
 git pull origin master
 
 echo "-- copy files --"
-if [[ -f ~/FStar/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
+if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   echo "--- Copy Minor Zip File ***"
-  cp ~/FStar/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
+  cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   echo "--- Git Add: "~/$BN_BINARYSPATH/$MINOR_ZIP_FILE
   git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
 fi
-if [[ -f ~/FStar/src/ocaml-output/$MINOR_TAR_FILE ]]; then
+if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "--- Copy Minor Tar File ***"
-  cp ~/FStar/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
+  cp $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
   git add $BN_BINARYSPATH/$MINOR_TAR_FILE
 fi
 
@@ -168,11 +170,13 @@ git push origin $FSTAR_BIN_BRANCH --force
 # Push new package to proper repo (BN_BINARYSPATH) and proper branch (FSTAR_BIN_BRANCH) -- might be done
 # Update Git repo of deleted file -- might be done
 # slack notification on failure?
+# Make package failure on build machine - windows
 
 
 # TO DO - clean up debug code
 # Uncomment the "exit" from the Verify section as if those fail we do not want to continue
 # Clean up the debug echo messages
+# Fix FSTAR_BIN_BRANCH back to master
 
 # Manual steps on major releases
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt 
