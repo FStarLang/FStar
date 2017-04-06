@@ -334,10 +334,13 @@ and lbs_to_string quals lbs =
                                                             (lb.lbdef |> term_to_string))))
 
 and lcomp_to_string lc =
-    if Options.print_effect_args () then
-        comp_to_string (lc.lcomp_as_comp ())
-    else
-        U.format2 "%s %s" (sli lc.lcomp_name) (term_to_string lc.lcomp_res_typ)
+  if Options.print_effect_args ()
+  (* TODO (KM) : temporarily disabling this since there are too many bugs inside the compiler *)
+  && not (is_tot_or_gtot_lcomp lc)
+  then
+    comp_to_string (lc.lcomp_as_comp ())
+  else
+    U.format2 "%s %s" (sli lc.lcomp_name) (term_to_string lc.lcomp_res_typ)
 
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())

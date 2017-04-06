@@ -553,23 +553,29 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           (Print.comp_to_string c1)
           (Print.lcomp_to_string lc2)
           (Print.comp_to_string c2);
+
     let try_simplify () =
+
       let aux () =
-          if U.is_trivial_wp c1
-          then match b with
-                  | None -> Some (c2, "trivial no binder")
-                  | Some _ ->
-                      if U.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
-                      then Some (c2, "trivial ml")
-                      else None
-          else if U.is_ml_comp c1 && U.is_ml_comp c2
-          then Some (c2, "both ml")
-          else None in
+        if U.is_trivial_wp c1
+        then match b with
+          | None -> Some (c2, "trivial no binder")
+          | Some _ ->
+            if U.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
+            then Some (c2, "trivial ml")
+            else None
+        else if U.is_ml_comp c1 && U.is_ml_comp c2
+        then Some (c2, "both ml")
+        else None
+      in
+
       let subst_c2 reason =
-          match e1opt, b with
-              | Some e, Some x ->
-                Some (SS.subst_comp [NT(x,e)] c2, reason)
-              | _ -> aux() in
+        match e1opt, b with
+        | Some e, Some x ->
+          Some (SS.subst_comp [NT(x,e)] c2, reason)
+        | _ -> aux()
+      in
+
       if U.is_total_comp c1
       && U.is_total_comp c2
       then subst_c2 "both total"
@@ -577,11 +583,13 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             && U.is_tot_or_gtot_comp c2
       then Some (S.mk_GTotal (Env.result_typ env c2), "both gtot")
       else match e1opt, b with
-          | Some e, Some x ->
-              if U.is_total_comp c1 && not (Syntax.is_null_bv x)
-              then subst_c2 "substituted e"
-              else aux ()
-          | _ -> aux () in
+        | Some e, Some x ->
+            if U.is_total_comp c1 && not (Syntax.is_null_bv x)
+            then subst_c2 "substituted e"
+            else aux ()
+        | _ -> aux ()
+    in
+
     match try_simplify () with
     | Some (c, reason) ->
       c
@@ -592,19 +600,22 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       let t1 = fst nct1.nct_result in
       let t2 = fst nct2.nct_result in
       let mk_lam wp =
-          let bs =
-            match b with
-            | None -> [null_binder (fst nct1.nct_result)]
-            | Some x -> [S.mk_binder x] in
-          U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL])))
+        let bs =
+          match b with
+          | None -> [null_binder (fst nct1.nct_result)]
+          | Some x -> [S.mk_binder x]
+        in
+        U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL])))
       in //we know it's total; mark it as such so the normalizer reduce it
       // bind <u,u1...un,v> : i1...im -> a:Type u -> b:Type v -> M i1...im a -> (a -> M i1 ... im b) -> M i1...im b
       let bind_inst = inst_effect_fun_with (nct1.nct_univs@[List.hd nct2.nct_univs]) env md md.bind_wp in
-      let bind_args = nct1.nct_indices@[ //binds are homogeneous in the indices of the two computations
-                      nct1.nct_result;
-                      nct2.nct_result;
-                      nct1.nct_wp;
-                      S.as_arg (mk_lam (fst nct2.nct_wp))]
+      let bind_args =
+        nct1.nct_indices@[ //binds are homogeneous in the indices of the two computations
+          nct1.nct_result;
+          nct2.nct_result;
+          nct1.nct_wp;
+          S.as_arg (mk_lam (fst nct2.nct_wp))
+        ]
       in
       let wp = mk_Tm_app bind_inst bind_args None t2.pos in
       let nct = {nct2 with nct_wp=S.as_arg wp} in
@@ -655,60 +666,87 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   then lc
   else {lc with lcomp_as_comp=weaken}
 
-let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:lcomp) (g0:guard_t) : lcomp * guard_t =
-    if Rel.is_trivial g0
-    then lc, g0
-    else let _ = if Env.debug env <| Options.Extreme
-                 then BU.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n"
-                                (N.term_to_string env e)
-                                (Rel.guard_to_string env g0) in
-         let flags = lc.lcomp_cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
-         let strengthen () =
-            let c = lc.lcomp_as_comp () in
-            let g0 = Rel.simplify_guard env g0 in
-            match guard_form g0 with
-            | Trivial -> c
-            | NonTrivial f ->
-                let c =
-                    if U.is_pure_or_ghost_comp c
-                    && not (U.is_partial_return c)
-                    then let x = S.gen_bv "strengthen_pre_x" None (Env.result_typ env c) in
-                         let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
-                         let lc = bind env (Some e) (Env.lcomp_of_comp env c) (Some x, Env.lcomp_of_comp env xret) in
-                         lc.lcomp_as_comp()
-                    else c in
+let strengthen_precondition
+  (reason:option<(unit -> string)>)
+  env
+  (e:term)
+  (lc:lcomp)
+  (g0:guard_t)
+  : lcomp * guard_t
+=
+  if Rel.is_trivial g0
+  then lc, g0
+  else
+    let _ =
+      if Env.debug env <| Options.Extreme
+      then BU.print2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n"
+                    (N.term_to_string env e)
+                    (Rel.guard_to_string env g0)
+    in
 
-                if Env.debug env <| Options.Extreme
-                then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
-                                (N.term_to_string env e)
-                                (N.term_to_string env f);
+    let strengthen () =
+      let c = lc.lcomp_as_comp () in
+      let g0 = Rel.simplify_guard env g0 in
+      match guard_form g0 with
+      | Trivial -> c
+      | NonTrivial f ->
+        let c =
+          if U.is_pure_or_ghost_comp c
+          && not (U.is_partial_return c)
+          then
+            let x = S.gen_bv "strengthen_pre_x" None (Env.result_typ env c) in
+            let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
+            let lc = bind env (Some e) (Env.lcomp_of_comp env c) (Some x, Env.lcomp_of_comp env xret) in
+            lc.lcomp_as_comp()
+          else c
+        in
 
-                let nct = Env.comp_as_normal_comp_typ env c in
-                let md = Env.get_effect_decl env nct.nct_name in
-                let wp =
-                    mk_Tm_app (inst_effect_fun_with nct.nct_univs env md md.assert_p)
-                              (nct.nct_indices @ [nct.nct_result;
-                                                  S.as_arg <| label_opt env reason (Env.get_range env) f;
-                                                  nct.nct_wp])
-                              None (nct.nct_wp |> fst).pos in
-                if Env.debug env <| Options.Extreme
-                then BU.print1 "-------------Strengthened pre-condition is %s\n"
-                                (Print.term_to_string wp);
+        if Env.debug env <| Options.Extreme
+        then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
+                        (N.term_to_string env e)
+                        (N.term_to_string env f);
 
-                let c2 = normal_comp_typ_as_comp env ({nct with nct_wp=S.as_arg wp}) in
-                c2
-       in
-       let flags = if U.is_pure_lcomp lc
-                   && not <| U.is_function_typ lc.lcomp_res_typ
-                   then flags
-                   else []
-       in
-       let lc = {lc with lcomp_cflags=flags} in
-       (if env.lax
-        && Options.ml_ish()
-        then lc
-        else {lc with lcomp_as_comp=strengthen}),
-       {g0 with guard_f=Trivial}
+        (* TODO (KM) : check with Nik that it is indeed the case... *)
+        (* If the computation is Tot or GTot we already have the strongest precondition possible *)
+        if U.is_tot_or_gtot_comp c
+        (* TODO : this second check should be unnecessary but it seem to happen that a Tot comp is not marked TOTAL *)
+        || U.is_named_tot_or_gtot_comp c
+        then c
+        else
+          let nct = Env.comp_as_normal_comp_typ env c in
+          let md = Env.get_effect_decl env nct.nct_name in
+          let wp =
+              mk_Tm_app (inst_effect_fun_with nct.nct_univs env md md.assert_p)
+                        (nct.nct_indices @ [nct.nct_result;
+                                            S.as_arg <| label_opt env reason (Env.get_range env) f;
+                                            nct.nct_wp])
+                        None (nct.nct_wp |> fst).pos
+          in
+
+          if Env.debug env <| Options.Extreme
+          then BU.print1 "-------------Strengthened pre-condition is %s\n"
+                          (Print.term_to_string wp);
+
+          let c2 = normal_comp_typ_as_comp env ({nct with nct_wp=S.as_arg wp}) in
+          c2
+    in
+
+    let lc =
+      let flags =
+        if U.is_pure_lcomp lc
+        && not <| U.is_function_typ lc.lcomp_res_typ
+        then lc.lcomp_cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> [])
+        else []
+      in
+      {lc with lcomp_cflags=flags}
+    in
+
+    (if env.lax
+    && Options.ml_ish()
+    then lc
+    else
+      {lc with lcomp_as_comp=strengthen}),
+      {g0 with guard_f=Trivial}
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in

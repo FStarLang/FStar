@@ -203,15 +203,15 @@ let comp_set_flags (c:comp) f =
     {c with n=Comp ({comp_to_comp_typ c with flags=f})}
 
 let comp_to_comp_typ (c:comp) : comp_typ =
-    match c.n with
-    | Comp c -> c
-    | Total (t, Some u)
-    | GTotal(t, Some u) ->
-      {comp_univs=[u];
-       comp_typ_name=comp_effect_name c; 
-       effect_args=[as_arg t]; 
-       flags=comp_flags c}
-    | _ -> failwith "Assertion failed: Computation type without universe"
+  match c.n with
+  | Comp c -> c
+  | Total (t, Some u)
+  | GTotal(t, Some u) ->
+    {comp_univs=[u];
+      comp_typ_name=comp_effect_name c;
+      effect_args=[as_arg t];
+      flags=comp_flags c}
+  | _ -> failwith "Assertion failed: Computation type without universe"
 
 let is_named_tot c =
   match c.n with
