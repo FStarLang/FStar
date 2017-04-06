@@ -210,6 +210,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect(ed, r) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
+            (match (List.rev lid.ns) with
+              | a::_ -> (BU.print1 "Last module again: %s\n" a.idText;
+                  BU.print1 "Effect name: %s\n" ed.mname.ident.idText)
+              | _ -> () );
             let n, w = mangled_name in
             BU.print1 "Mangled name: %s\n" n;
             let lb = {
@@ -233,8 +237,17 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
           let extract_action g (a:S.action) =
             BU.print1 "Extracting action %s\n" (Print.lid_to_string a.action_name);
-            let (aa,_), a_lid = action_name ed a in
-            let a_nm = (aa, a_lid.ident.idText) in
+            let a_nm, a_lid = action_name ed a in
+            //remove effect name from path
+            let a_lid = match (List.rev a_lid.ns) with
+              | e::_ when ident_equals e ed.mname.ident ->
+                  {a_lid with ns = (a_lid.ns |> List.rev |> List.tail |> List.rev)}
+              | _ -> a_lid in
+            let f, s = a_nm in
+            let a_nm = match (List.rev f) with
+              | e::_ when e = ed.mname.ident.idText ->
+                  (f |> List.rev |> List.tail |> List.rev, s)
+              | _ -> a_nm in
             let lbname = Inl ({ppname=a_lid.ident; index=0; sort=a.action_defn}) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
@@ -246,8 +259,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 (match mllb.mllb_tysc with
                  | Some(tysc) -> e, tysc
                  | None -> failwith "no type scheme") in
+
             let g, letb = extend_env g a_lid a_nm exp tysc in
-            // let _ = lookup g lbname in
             BU.print1 "Extracted action %s\n" (Print.lid_to_string a.action_name);
             g, letb in
 

@@ -1,75 +1,37 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <Name>extraction</Name>
+    <AssemblyName>extraction</AssemblyName>
+    <RootNamespace>extraction</RootNamespace>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>55398b56-03cf-4e11-adb0-a4274b7dbb35</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>extraction</RootNamespace>
-    <AssemblyName>extraction</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>extraction</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>Full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\extraction.XML</DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>PdbOnly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\extraction.XML</DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
-  <PropertyGroup>
-    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
-  </PropertyGroup>
-  <Choose>
-    <When Condition="'$(VisualStudioVersion)' == '11.0'">
-      <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')">
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')">
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-  <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="FStar.Extraction.ML.Syntax.fs" />
-    <Compile Include="FStar.Extraction.ML.UEnv.fs" />
-    <Compile Include="FStar.Extraction.ML.Util.fs" />
-    <Compile Include="FStar.Extraction.ML.Code.fsi" />
-    <Compile Include="FStar.Extraction.ML.Code.fs" />
-    <Compile Include="FStar.Extraction.ML.PrintML.fsi" />
-    <Compile Include="FStar.Extraction.ML.PrintML.fs" />
-    
-    <Compile Include="FStar.Extraction.ML.Term.fs" />
-    <Compile Include="FStar.Extraction.ML.Modul.fs" />
-    <Content Include="app.config" />
-    <Compile Include="FStar.Extraction.Kremlin.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\typechecker\typechecker.fsproj">
-      <Name>typechecker</Name>
-      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
     </Reference>
@@ -83,6 +45,13 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\typechecker\typechecker.fsproj">
+      <Name>typechecker</Name>
+      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
@@ -99,11 +68,31 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <Compile Include="FStar.Extraction.ML.Syntax.fs" />
+    <Compile Include="FStar.Extraction.ML.UEnv.fs" />
+    <Compile Include="FStar.Extraction.ML.Util.fs" />
+    <Compile Include="FStar.Extraction.ML.Code.fsi" />
+    <Compile Include="FStar.Extraction.ML.Code.fs" />
+    <Compile Include="FStar.Extraction.ML.Modul.fs" />
+    <Compile Include="FStar.Extraction.ML.PrintML.fsi" />
+    <Compile Include="FStar.Extraction.ML.PrintML.fs" />
+    <Compile Include="FStar.Extraction.ML.Term.fs" />
+    <Content Include="app.config" />
+    <Compile Include="FStar.Extraction.Kremlin.fs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Choose>
+    <When Condition="'$(VisualStudioVersion)' == '11.0'">
+      <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')">
+        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')">
+        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+  <Import Project="$(FSharpTargetsPath)" />
 </Project>

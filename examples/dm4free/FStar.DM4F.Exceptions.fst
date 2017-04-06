@@ -35,7 +35,8 @@ reifiable reflectable new_effect {
      ; raise   = raise0
 }
 
-
+let a = EXN?.repr
+let b = EXN?.raise
 let raise (#a:Type) (e:exn) : EXN a (fun _ p -> p (Inr e)) =
   let x = EXN?.raise e in
   (match x with)
