@@ -162,7 +162,7 @@ val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> int
 
-type match_info_branch_kind = | Nil | Cons | Tuple | Record | Variant
+type match_info_branch_kind = | NilBranch | ConsBranch | TupleBranch | RecordBranch | VariantBranch
 type match_info_branch = { // TODO Unify with Pattern?
   mib_name: lid;
   mib_kind: match_info_branch_kind;

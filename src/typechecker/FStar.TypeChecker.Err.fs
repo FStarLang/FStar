@@ -37,12 +37,17 @@ let format_match_info typ_lid match_info =
     let format_branch { mib_name = name; mib_kind = kind; mib_vars = vars } =
         let vars = List.map format_var vars in
         match kind with
-        | Nil -> "[]"
-        | Cons -> "(" ^ (BU.concat_l " :: " (List.map snd vars)) ^ ")"
-        | Record -> let format_field (name, place) = name ^ " = " ^ place in
-                    "{ " ^ (BU.concat_l "; " (List.map format_field vars)) ^ " }"
-        | Tuple -> "(" ^ (BU.concat_l ", " (List.map snd vars)) ^ ")"
-        | Variant -> "(" ^ BU.concat_l " " (Ident.string_of_lid name :: List.map snd vars) ^ ")" in
+        | NilBranch ->
+          "[]"
+        | ConsBranch ->
+          "(" ^ (BU.concat_l " :: " (List.map snd vars)) ^ ")"
+        | RecordBranch ->
+          let format_field (name, place) = name ^ " = " ^ place in
+          "{ " ^ (BU.concat_l "; " (List.map format_field vars)) ^ " }"
+        | TupleBranch ->
+          "(" ^ (BU.concat_l ", " (List.map snd vars)) ^ ")"
+        | VariantBranch ->
+          "(" ^ BU.concat_l " " (Ident.string_of_lid name :: List.map snd vars) ^ ")" in
     Options.with_saved_options
       (fun () ->
        Options.set_option "print_full_name" (Options.Bool true);

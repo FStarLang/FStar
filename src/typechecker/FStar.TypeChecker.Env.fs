@@ -712,7 +712,7 @@ let num_inductive_ty_params env lid =
   | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) -> List.length tps
   | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-type match_info_branch_kind = | Nil | Cons | Tuple | Record | Variant
+type match_info_branch_kind = | NilBranch | ConsBranch | TupleBranch | RecordBranch | VariantBranch
 
 type match_info_branch = { // TODO Unify with Pattern?
   mib_name: lid;
@@ -728,13 +728,13 @@ type match_info_branch = { // TODO Unify with Pattern?
 let try_lookup_match_info env (t: typ) =
   let get_mib_kind constructor_name explicits =
       match (string_of_lid constructor_name) with
-      | "Prims.Nil" -> Nil
-      | "Prims.Cons" -> Cons
+      | "Prims.Nil" -> NilBranch
+      | "Prims.Cons" -> ConsBranch
       | "Prims.Mktuple2" | "Prims.Mktuple3" | "Prims.Mktuple4"
-      | "Prims.Mktuple5" | "Prims.Mktuple6" | "Prims.Mktuple7" | "Prims.Mktuple8" -> Tuple
+      | "Prims.Mktuple5" | "Prims.Mktuple6" | "Prims.Mktuple7" | "Prims.Mktuple8" -> TupleBranch
       | _ -> match explicits with
-             | (bv, _) :: _ when Syntax.Util.is_field_name bv.ppname -> Record
-             | _ -> Variant in
+             | (bv, _) :: _ when Syntax.Util.is_field_name bv.ppname -> RecordBranch
+             | _ -> VariantBranch in
 
   let rec mksubsts args binders = // Pair up arguments to [tuple2] and parameters of [Mktuple2]
     match args, binders with
