@@ -601,7 +601,7 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
 
   //create Sig_assume for the axioms
   let ses = List.fold_left (fun (l:list<sigelt>) (lid, fml) ->
-    let se = tc_assume env lid fml [] Range.dummyRange in
+    let se = tc_assume env lid fml [] Range.dummyRange in // FIXME: Docs?
     //se has free universe variables in it, TODO: fix it by making Sig_assume a type scheme
     l @ [se]
   ) [] axioms in
@@ -744,7 +744,7 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
 
   env.solver.encode_sig env sig_bndle;
   let env = Env.push_univ_vars env us in
-  let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] Range.dummyRange in
+  let se = tc_assume env (lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ "_haseq"))])) fml [] Range.dummyRange in // FIXME: Should we generate docs for this identifier?
 
   env.solver.pop "haseq";
   [se]
@@ -838,5 +838,5 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   (* Generalize their universes *)
   let tcs, datas = generalize_and_inst_within env0 g tcs datas in
 
-  let sig_bndle = { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = None } in // FIXME: Doc
+  let sig_bndle = { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0 } in
   sig_bndle, tcs, datas

@@ -108,7 +108,7 @@ let rec decr_delta_depth = function
 
 type identifier_info = {
     identifier:either<bv, fv>;
-    identifier_ty:typ
+    identifier_ty:typ;
 }
 let rec insert_col_info col info col_infos =
     match col_infos with 
@@ -169,5 +169,3 @@ let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
         | Some ci -> Some ci//(info_as_string ci)
 let insert_bv bv ty = insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
 let insert_fv fv ty = insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)
-
-
