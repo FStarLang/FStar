@@ -8,10 +8,10 @@
       2,
       1,
       [
-        "@query", "equation_Bijection.bijection",
-        "equation_Bijection.injection", "equation_Bijection.inverses",
-        "equation_Bijection.surjection",
-        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.inverses", "equation_Bijection.surjection",
         "unit_typing"
       ],
       0

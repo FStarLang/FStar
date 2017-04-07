@@ -71,13 +71,14 @@
       2,
       1,
       [
-        "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
-        "equation_NatHeap.alloc_ref", "equation_Preorder.stable",
-        "equation_Prims.fst", "equation_Prims.nat", "equation_Prims.snd",
+        "@MaxIFuel_assumption", "@query", "equation_AllocST.contains",
+        "equation_AllocST.heap_rel", "equation_NatHeap.alloc_ref",
+        "equation_Preorder.stable", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.snd",
         "function_token_typing_NatHeap.heap", "lemma_AllocST.contains_lemma",
         "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
-        "refinement_interpretation_Tm_refine_2d642eaad3f6e1c69a279efd7fe135d5",
+        "refinement_interpretation_NatHeap_Tm_refine_c6c40c3c35724baba4c3e6e39907c4b1",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel", "typing_NatHeap.alloc_ref",
         "typing_NatHeap.ref", "typing_Prims.fst"
@@ -91,9 +92,10 @@
       2,
       1,
       [
-        "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
-        "equation_AllocST.ref", "equation_Preorder.stable",
-        "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "@MaxIFuel_assumption", "@query", "equation_AllocST.contains",
+        "equation_AllocST.heap_rel", "equation_AllocST.ref",
+        "equation_Preorder.stable",
+        "refinement_interpretation_AllocST_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel"
       ],
@@ -113,11 +115,11 @@
       2,
       1,
       [
-        "@query", "equation_AllocST.contains", "equation_AllocST.heap_rel",
-        "equation_AllocST.ref", "equation_Preorder.stable",
-        "lemma_AllocST.contains_lemma",
-        "refinement_interpretation_Tm_refine_346945d79ac9022141439348a8351567",
-        "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "@MaxIFuel_assumption", "@query", "equation_AllocST.contains",
+        "equation_AllocST.heap_rel", "equation_AllocST.ref",
+        "equation_Preorder.stable", "lemma_AllocST.contains_lemma",
+        "refinement_interpretation_AllocST_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "refinement_interpretation_NatHeap_Tm_refine_1a6e99d598538aabc30601da008f83a8",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel"
       ],
@@ -129,9 +131,9 @@
       2,
       1,
       [
-        "@query", "equation_AllocST.heap_rel", "equation_AllocST.ref",
-        "equation_Preorder.stable",
-        "refinement_interpretation_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
+        "@MaxIFuel_assumption", "@query", "equation_AllocST.heap_rel",
+        "equation_AllocST.ref", "equation_Preorder.stable",
+        "refinement_interpretation_AllocST_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel"
       ],

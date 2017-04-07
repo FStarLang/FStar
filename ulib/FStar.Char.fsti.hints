@@ -9,8 +9,8 @@
       [
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.Char.char_code", "equation_Prims.nat",
-        "haseqTm_refine_0e3e560c796fef6df2d948e98bb1d5d6",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqFStar.Char_Tm_refine_0e3e560c796fef6df2d948e98bb1d5d6",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -23,8 +23,8 @@
       [
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.Char.char_code", "equation_Prims.nat",
-        "haseqTm_refine_0e3e560c796fef6df2d948e98bb1d5d6",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqFStar.Char_Tm_refine_0e3e560c796fef6df2d948e98bb1d5d6",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ]

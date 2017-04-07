@@ -7,12 +7,13 @@
       2,
       1,
       [
-        "@query", "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
-        "equation_Prims.nat", "int_inversion", "int_typing",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0
@@ -23,21 +24,23 @@
       2,
       1,
       [
-        "@query", "binder_x_a9e8551faf9e713c6c6badb1e0f387fd_0",
-        "equation_Prims.nat",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_eb343eeb4247b0d3c27ea697bb020446_0", "equation_Prims.nat",
         "equation_with_fuel_Ex03c.fibonacci.fuel_instrumented",
         "fuel_correspondence_Ex03c.fibonacci.fuel_instrumented",
         "fuel_irrelevance_Ex03c.fibonacci.fuel_instrumented",
-        "int_inversion", "int_typing",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ae8d7bc8e7cdbe001c7fb33d1c3618db",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Ex03c_Tm_refine_0e393f873403ae589ea61d2b9bf53313",
+        "refinement_interpretation_Ex03c_Tm_refine_ae8d7bc8e7cdbe001c7fb33d1c3618db",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Ex03c.fibonacci.fuel_instrumented",
-        "unit_typing", "well-founded-ordering-on-nat"
+        "typing_Ex03c.fibonacci", "unit_typing",
+        "well-founded-ordering-on-nat"
       ],
       0
     ]
