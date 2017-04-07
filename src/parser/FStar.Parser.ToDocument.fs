@@ -325,6 +325,16 @@ let is_operatorInfix34 =
     fun op -> List.tryFind (matches_level op) opinfix34 <> None
 
 
+let handleable_op op args =
+  match List.length args with
+  | 0 -> true
+  | 1 -> is_general_prefix_op op || List.mem op [ "-" ; "~" ]
+  | 2 ->
+    is_operatorInfix0ad12 op ||
+    is_operatorInfix34 op ||
+    List.mem op ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
+  | 3 -> List.mem op [".()<-" ; ".[]<-"]
+  | _ -> false
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1109,13 +1119,22 @@ and p_projectionLHS e = match (unparen e).tm with
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
+
+  (* Failure cases : these cases are not handled in the printing grammar since *)
+  (* they are considered as invalid AST. We try to fail as soon as possible in order *)
+  (* to prevent the pretty printer from looping *)
+  | Op (op, args) when not (handleable_op op args) ->
+    failwith ("Operation " ^ op ^ " with " ^ string_of_int (List.length args) ^
+              " arguments couldn't be handled by the pretty printer")
+  | Uvar _ -> failwith "Unexpected universe variable out of universe context"
+  | Labeled _   -> failwith "Not valid in universe"
+
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
   | Wild        (* p_atomicTermNotQUident *)
   | Const _     (* p_atomicTermNotQUident *)
   | Op _        (* what about 3+ args ? are all possible labels caught somewhere ? *)
-  | Tvar _
-  | Uvar _      (* p_arg *)
+  | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
   | Construct _ (* p_appTerm *)
@@ -1141,7 +1160,6 @@ and p_projectionLHS e = match (unparen e).tm with
   | Assign _    (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term e)
-  | Labeled _   -> failwith "Not valid in universe"
 
 and p_constant = function
   | Const_effect -> str "Effect"

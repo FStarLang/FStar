@@ -920,7 +920,8 @@
       2,
       1,
       [
-        "@query", "b2t_def", "bool_inversion", "bool_typing", "eq2-interp",
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
+        "bool_typing", "eq2-interp",
         "equation_FStar.HyperStack.is_eternal_region",
         "equation_FStar.List.Tot.Base.test_sort",
         "equation_FStar.Monotonic.RRef.m_sel",
