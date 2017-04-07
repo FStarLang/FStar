@@ -1247,12 +1247,107 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | _ -> Env.push_sigelt env se
 
 
+let rec post_process_sigelt (env:Env.env) (se:sigelt) :sigelt = { se with sigel = post_process_sigel env se.sigel }
+
+and post_process_sigel (env:Env.env) (se:sigelt') :sigelt' =
+  match se with
+  | Sig_inductive_typ (lid, uvs, bs, ty, mutual_lids, datacons, quals) ->
+    Sig_inductive_typ (lid, uvs, post_process_binders env bs, post_process_typ env ty, mutual_lids, datacons, quals)
+  | Sig_bundle (ses, quals, lids) -> Sig_bundle (ses |> List.map (post_process_sigelt env), quals, lids)
+  | Sig_datacon (lid, uvs, ty, tlid, n, quals, mutual_lids) ->
+    Sig_datacon (lid, uvs, post_process_typ env ty, tlid, n, quals, mutual_lids)
+  | Sig_declare_typ (lid, uvs, ty, quals) -> Sig_declare_typ (lid, uvs, post_process_typ env ty, quals)
+  | Sig_let (lbs, lids, quals, attrs) -> Sig_let (post_process_letbindings env lbs, lids, quals, attrs)
+  | Sig_main t -> Sig_main (post_process_term env t)
+  | Sig_assume (lid, fml, quals) -> Sig_assume (lid, post_process_formula env fml, quals)
+  | Sig_new_effect ed -> Sig_new_effect (post_process_eff_decl env ed)
+  | Sig_new_effect_for_free ed -> Sig_new_effect_for_free (post_process_eff_decl env ed)
+  | Sig_sub_effect se -> Sig_sub_effect (post_process_sub_eff env se)
+  | Sig_effect_abbrev (lid, uvs, bs, cmp, quals, flags) ->
+    Sig_effect_abbrev (lid, uvs, post_process_binders env bs, post_process_comp env cmp, quals, flags)
+  | Sig_pragma _ -> se
+
+and post_process_binders (env:Env.env) (bs:binders) :binders = bs |> List.map (post_process_binder env)
+
+and post_process_typ (env:Env.env) (ty:typ) :typ = post_process_term env ty
+
+and post_process_term (env:Env.env) (t:term) :term =
+  let t = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm] env t in
+  (* TODO: go inside the term *)
+  { t with tk = BU.mk_ref None; vars = BU.mk_ref None }
+
+and post_process_binder (env:Env.env) (b:binder) :binder = (post_process_bv env (fst b), snd b)
+
+and post_process_bv (env:Env.env) (b:bv) :bv = { b with sort = post_process_term env b.sort }
+
+and post_process_letbindings (env:Env.env) (lbs:letbindings) :letbindings = (fst lbs, (snd lbs) |> List.map (post_process_letbinding env))
+
+and post_process_letbinding (env:Env.env) (lb:letbinding) :letbinding =
+  { lb with lbtyp = post_process_typ env lb.lbtyp; lbdef = post_process_term env lb.lbdef }
+
+and post_process_formula (env:Env.env) (fml:formula) :formula = post_process_typ env fml
+
+and post_process_eff_decl (env:Env.env) (ed:eff_decl) :eff_decl =
+  { ed with
+    binders      = post_process_binders env ed.binders;
+    signature    = post_process_term env ed.signature;
+    ret_wp       = post_process_tscheme env ed.ret_wp;
+    bind_wp      = post_process_tscheme env ed.bind_wp;
+    if_then_else = post_process_tscheme env ed.if_then_else;
+    ite_wp       = post_process_tscheme env ed.ite_wp;
+    stronger     = post_process_tscheme env ed.stronger;
+    close_wp     = post_process_tscheme env ed.close_wp;
+    assert_p     = post_process_tscheme env ed.assert_p;
+    assume_p     = post_process_tscheme env ed.assume_p;
+    null_wp      = post_process_tscheme env ed.null_wp;
+    trivial      = post_process_tscheme env ed.trivial;
+    repr         = post_process_term env ed.repr;
+    return_repr  = post_process_tscheme env ed.return_repr;
+    bind_repr    = post_process_tscheme env ed.bind_repr;
+    actions      = post_process_actions env ed.actions
+  }
+
+and post_process_tscheme (env:Env.env) (ts:tscheme) :tscheme =
+  (fst ts, post_process_typ env (snd ts))
+
+and post_process_actions (env:Env.env) (acts:list<action>) :list<action> = acts |> List.map (post_process_action env)
+
+and post_process_action (env:Env.env) (act:action) :action =
+  { act with action_defn = post_process_term env act.action_defn; action_typ = post_process_typ env act.action_typ }
+
+and post_process_sub_eff (env:Env.env) (se:sub_eff) :sub_eff =
+  { se with lift_wp = post_process_tscheme_option env se.lift_wp; lift = post_process_tscheme_option env se.lift }
+
+and post_process_tscheme_option (env:Env.env) (topt:option<tscheme>) :option<tscheme> =
+  match topt with
+  | None    -> None
+  | Some ts -> Some (post_process_tscheme env ts)
+
+and post_process_comp (env:Env.env) (c:comp) :comp =
+  let c = { c with n = post_process_comp' env c.n; tk = BU.mk_ref None; vars = BU.mk_ref None } in
+  c
+
+and post_process_comp' (env:Env.env) (c:comp') :comp' =
+  match c with
+  | Total (t, u_opt)  -> Total (post_process_typ env t, u_opt)
+  | GTotal (t, u_opt) -> GTotal (post_process_typ env t, u_opt)
+  | Comp ct           -> Comp (post_process_comp_typ env ct)
+
+and post_process_comp_typ (env:Env.env) (ct:comp_typ) :comp_typ =
+  { ct with result_typ = post_process_typ env ct.result_typ; effect_args = post_process_args env ct.effect_args }
+
+and post_process_args (env:Env.env) (arg_s:args) :args = arg_s |> List.map (post_process_arg env)
+
+and post_process_arg (env:Env.env) (a:arg) :arg = (post_process_term env (fst a), snd a)
+
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
     let ses', ses_elaborated = tc_decl env se  in
+    let ses' = ses' |> List.map (post_process_sigelt env) in
+
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
