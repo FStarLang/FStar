@@ -1480,8 +1480,8 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "equation_FStar.List.Tot.Base.test_sort",
-        "equation_Prims._assert",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.List.Tot.Base.test_sort", "equation_Prims._assert",
         "fuel_correspondence_FStar.OrdSet.subset.fuel_instrumented",
         "fuel_correspondence_FStar.OrdSet.union.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.Base.test_sort",

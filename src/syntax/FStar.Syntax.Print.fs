@@ -273,10 +273,14 @@ let rec term_to_string x =
   | Tm_refine(xt, f) -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-  | Tm_ascribed(e,Inl t,eff_name) ->
-                        U.format3 "(%s <: [%s] %s)" (term_to_string e) (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
-  | Tm_ascribed(e,Inr c,_) ->
-                        U.format2 "(%s <: %s)" (term_to_string e) (comp_to_string c)
+  | Tm_ascribed(e,(annot, topt),eff_name) ->
+    let annot = match annot with
+        | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
+        | Inr c -> comp_to_string c in
+    let topt = match topt with
+        | None -> ""
+        | Some t -> U.format1 "by %s" (term_to_string t) in
+    U.format3 "(%s <: %s %s)" (term_to_string e) annot topt
   | Tm_match(head, branches) ->
     U.format2 "(match %s with\n\t| %s)"
       (term_to_string head)
@@ -484,37 +488,36 @@ let eff_decl_to_string for_free ed =
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]
 
-let rec sigelt_to_string x = match x with
-  | Sig_pragma(LightOff, _) -> "#light \"off\""
-  | Sig_pragma(ResetOptions None, _) -> "#reset-options"
-  | Sig_pragma(ResetOptions (Some s), _) -> U.format1 "#reset-options \"%s\"" s
-  | Sig_pragma(SetOptions s, _) -> U.format1 "#set-options \"%s\"" s
-  | Sig_pragma(LightOff, _) -> "#light \"off\""
-  | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) ->
+let rec sigelt_to_string (x: sigelt) = match x.sigel with
+  | Sig_pragma(LightOff) -> "#light \"off\""
+  | Sig_pragma(ResetOptions None) -> "#reset-options"
+  | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
+  | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
+  | Sig_inductive_typ(lid, univs, tps, k, _, _, quals) ->
     U.format4 "%stype %s %s : %s"
              (quals_to_string' quals)
              lid.str
              (binders_to_string " " tps)
              (term_to_string k)
-  | Sig_datacon(lid, univs, t, _, _, _, _, _) ->
+  | Sig_datacon(lid, univs, t, _, _, _, _) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs t in
          U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
     else U.format2 "datacon %s : %s" lid.str (term_to_string t)
-  | Sig_declare_typ(lid, univs, t, quals, _) ->
+  | Sig_declare_typ(lid, univs, t, quals) ->
     let univs, t = Subst.open_univ_vars univs t in
     U.format4 "%sval %s %s : %s" (quals_to_string' quals) lid.str
         (if (Options.print_universes())
          then U.format1 "<%s>" (univ_names_to_string univs)
          else "")
         (term_to_string t)
-  | Sig_assume(lid, f, _, _) -> U.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, _, qs, _) -> lbs_to_string qs lbs
-  | Sig_main(e, _) -> U.format1 "let _ = %s" (term_to_string e)
-  | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed, _) -> eff_decl_to_string false ed
-  | Sig_new_effect_for_free (ed, _) -> eff_decl_to_string true ed
-  | Sig_sub_effect (se, r) ->
+  | Sig_assume(lid, f, _) -> U.format2 "val %s : %s" lid.str (term_to_string f)
+  | Sig_let(lbs, _, qs, _) -> lbs_to_string qs lbs
+  | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
+  | Sig_bundle(ses, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+  | Sig_new_effect(ed) -> eff_decl_to_string false ed
+  | Sig_new_effect_for_free (ed) -> eff_decl_to_string true ed
+  | Sig_sub_effect (se) ->
     let lift_wp = match se.lift_wp, se.lift with
       // TODO pretty-print this better
       | None, None ->
@@ -528,7 +531,7 @@ let rec sigelt_to_string x = match x with
     U.format4 "sub_effect %s ~> %s : <%s> %s"
         (lid_to_string se.source) (lid_to_string se.target)
         (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, univs, tps, c, _, flags, _) ->
+  | Sig_effect_abbrev(l, univs, tps, c, _, flags) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
          let tps, c = match (Subst.compress t).n with
@@ -540,8 +543,8 @@ let rec sigelt_to_string x = match x with
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
-let rec sigelt_to_string_short x = match x with
-  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _, _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
+let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
+  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =

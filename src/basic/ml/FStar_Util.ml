@@ -359,8 +359,8 @@ let replace_chars (s:string) (c:char) (by:string) =
   BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let splitlines s = BatString.nsplit s "\n"
-let split s sep = BatString.nsplit s sep
+let split s sep = if s = "" then [""] else BatString.nsplit s sep
+let splitlines s = split s "\n"
 
 let iof = int_of_float
 let foi = float_of_int

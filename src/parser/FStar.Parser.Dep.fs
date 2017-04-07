@@ -429,9 +429,13 @@ let collect_one
     | TryWith (t, bs) ->
         collect_term t;
         collect_branches bs
-    | Ascribed (t1, t2) ->
+    | Ascribed (t1, t2, None) ->
         collect_term t1;
         collect_term t2
+    | Ascribed (t1, t2, Some tac) ->
+        collect_term t1;
+        collect_term t2;
+        collect_term tac
     | Record (t, idterms) ->
         iter_opt t collect_term;
         List.iter (fun (_, t) -> collect_term t) idterms

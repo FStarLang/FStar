@@ -23,6 +23,7 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
+module S = FStar.Syntax.Syntax
 
 module BU = FStar.Util
 
@@ -61,8 +62,8 @@ type univ_ineq = universe * universe
 
 module C = FStar.Syntax.Const
 
-let tconst l = mk (Tm_fvar(Syntax.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(Syntax.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange
+let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
+let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange
 let t_unit   = tconst C.unit_lid
 let t_bool   = tconst C.bool_lid
 let t_int    = tconst C.int_lid
@@ -70,6 +71,14 @@ let t_string = tconst C.string_lid
 let t_float  = tconst C.float_lid
 let t_char   = tabbrev C.char_lid
 let t_range  = tconst C.range_lid
+let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [S.as_arg t_unit] (Some Util.ktype0.n) Range.dummyRange
+let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) (Some t_unit.n) Range.dummyRange
+let mk_by_tactic tac f =
+    let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
+    let tac = S.mk_Tm_app (tabbrev C.reify_tactic_lid)
+                           [S.as_arg tac]
+                           None Range.dummyRange in
+    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] (Some Util.ktype0.n) Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_constant, _ -> false
@@ -99,7 +108,7 @@ let rec decr_delta_depth = function
 
 type identifier_info = {
     identifier:either<bv, fv>;
-    identifier_ty:typ
+    identifier_ty:typ;
 }
 let rec insert_col_info col info col_infos =
     match col_infos with 
@@ -160,5 +169,3 @@ let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
         | Some ci -> Some ci//(info_as_string ci)
 let insert_bv bv ty = insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
 let insert_fv fv ty = insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)
-
-

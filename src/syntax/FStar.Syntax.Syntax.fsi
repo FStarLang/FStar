@@ -83,7 +83,7 @@ type term' =
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
-  | Tm_ascribed   of term * either<term,comp> * option<lident>   (* an effect label is the third arg, filled in by the type-checker *)
+  | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
@@ -91,6 +91,7 @@ type term' =
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
+and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
   | Pat_constant of sconst
   | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
@@ -267,7 +268,7 @@ type action = {
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
     action_defn:term;
-    action_typ: typ;
+    action_typ: typ
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;  //[Reify;Reflect; ...]
@@ -297,20 +298,13 @@ type eff_decl = {
 }
 
 // JP: there are several issues with these type definition (TODO).
-// 1) Every single constructor has a range. This ought to be:
-//      type sigelt = { elt: sigelt'; range: Range.range } and sigelt' = ...
-//    See for instance the slightly suboptimal implementation of range_of_sigelt
-//    in syntax/util.fs
-// 2) octuples hinder readability, make it difficult to maintain code (see
+// 1) octuples hinder readability, make it difficult to maintain code (see
 //    lids_of_sigelt in syntax/util.fs) and do not help being familiar with the
 //    code. We should use a record beneath Sig_datacons and others.
-// 3) In particular, because of tuples, everytime one needs to extend a Sig_*,
+// 2) In particular, because of tuples, everytime one needs to extend a Sig_*,
 //    one needs to modify > 30 different places in the code that pattern-match
 //    on a fixed-length tuple. Records would solve this.
-// JP: because 1) isn't fixed I'm only adding attributes to Sig_toplevel_let,
-// but once 1) is fixed attributes should be attached to the outer record type,
-// just like range.
-and sigelt =
+and sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
@@ -318,7 +312,6 @@ and sigelt =
                        * list<lident>              //mutually defined types
                        * list<lident>              //data constructors for this type
                        * list<qualifier>
-                       * Range.range
 // JP: the comment below seems out of date -- Sig_tycons is gone?!
 (* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
@@ -328,7 +321,6 @@ and sigelt =
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
                        * list<qualifier>
                        * list<lident>               //all the inductive types and data constructor names in this bundle
-                       * Range.range
   | Sig_datacon        of lident
                        * univ_names                 //universe variables of the inductive type it belongs to
                        * typ
@@ -336,34 +328,33 @@ and sigelt =
                        * int                        //and the number of parameters of the inductive
                        * list<qualifier>
                        * list<lident>               //mutually defined types
-                       * Range.range
   | Sig_declare_typ    of lident
                        * univ_names
                        * typ
                        * list<qualifier>
-                       * Range.range
   | Sig_let            of letbindings
-                       * Range.range
                        * list<lident>               //mutually defined
                        * list<qualifier>
                        * list<attribute>
   | Sig_main           of term
-                       * Range.range
   | Sig_assume         of lident
                        * formula
                        * list<qualifier>
-                       * Range.range
-  | Sig_new_effect     of eff_decl * Range.range
-  | Sig_new_effect_for_free of eff_decl * Range.range
-  | Sig_sub_effect     of sub_eff  * Range.range
+  | Sig_new_effect     of eff_decl
+  | Sig_new_effect_for_free of eff_decl
+  | Sig_sub_effect     of sub_eff
   | Sig_effect_abbrev  of lident
                        * univ_names
                        * binders
                        * comp
                        * list<qualifier>
                        * list<cflags>
-                       * Range.range
-  | Sig_pragma         of pragma   * Range.range
+  | Sig_pragma         of pragma
+and sigelt = {
+    sigel: sigelt';
+    sigrng: Range.range;
+}
+
 type sigelts = list<sigelt>
 
 type modul = {
@@ -386,6 +377,7 @@ val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 val mk: 'a -> Tot<mk_t_a<'a,'b>>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
+val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
 val mk_Tm_uinst:    term -> universes -> term
 val extend_app:     term -> arg -> Tot<mk_t>

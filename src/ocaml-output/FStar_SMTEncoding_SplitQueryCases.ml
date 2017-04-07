@@ -133,64 +133,12 @@ let strip_not: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
     | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not ,hd1::uu____302)
         -> hd1
     | uu____305 -> t
-let rec check_split_cases:
-  (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
-    FStar_SMTEncoding_Term.term Prims.list ->
-      (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit
-  =
-  fun f  ->
-    fun l  ->
-      fun check  ->
-        FStar_List.iter
-          (fun t  ->
-             let uu____328 =
-               let uu____329 =
-                 let uu____334 =
-                   let uu____335 = f t in
-                   FStar_SMTEncoding_Util.mkNot uu____335 in
-                 (uu____334, None, None) in
-               FStar_SMTEncoding_Term.Assume uu____329 in
-             check uu____328) (FStar_List.rev l)
-let check_exhaustiveness:
-  (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
-    FStar_SMTEncoding_Term.term ->
-      (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit
-  =
-  fun f  ->
-    fun negs  ->
-      fun check  ->
-        let uu____357 =
-          let uu____358 =
-            let uu____363 =
-              let uu____364 =
-                let uu____365 = FStar_SMTEncoding_Util.mkNot negs in
-                f uu____365 in
-              FStar_SMTEncoding_Util.mkNot uu____364 in
-            (uu____363, None, None) in
-          FStar_SMTEncoding_Term.Assume uu____358 in
-        check uu____357
-let can_handle_query:
-  Prims.int ->
-    FStar_SMTEncoding_Term.decl ->
-      (Prims.bool*
-        ((FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)*
-        FStar_SMTEncoding_Term.term Prims.list* FStar_SMTEncoding_Term.term))
-  =
-  fun n1  ->
-    fun q  ->
-      match q with
-      | FStar_SMTEncoding_Term.Assume (q',uu____399,uu____400) ->
-          let uu____403 = strip_not q' in
-          parse_query_for_split_cases n1 uu____403 (fun x  -> x)
-      | uu____405 ->
-          (false, (((fun x  -> x)), [], FStar_SMTEncoding_Util.mkFalse))
 let handle_query:
   ((FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)*
     FStar_SMTEncoding_Term.term Prims.list* FStar_SMTEncoding_Term.term) ->
     (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit
   =
-  fun uu____430  ->
+  fun uu____320  ->
     fun check  ->
-      match uu____430 with
-      | (f,l,negs) ->
-          (check_split_cases f l check; check_exhaustiveness f negs check)
+      match uu____320 with
+      | (f,l,negs) -> failwith "SplitQueryCases is not currently supported"
