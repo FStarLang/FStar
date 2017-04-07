@@ -33,16 +33,6 @@ type withinfo_t<'a,'t> = {
   p: Range.range;
 }
 
-// Documentation comment. May appear appear as follows:
-//  - Immediately before a top-level declaration
-//  - Immediately after a type constructor or record field
-//  - In the middle of a file, as a standalone documentation declaration
-(* KM : Would need some range information on fsdocs to be able to print them correctly *)
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
-
-let string_of_fsdoc (comment,keywords) =
-    comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
-
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 (* Term language *)
@@ -262,7 +252,7 @@ type action = {
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
     action_defn:term;
-    action_typ: typ;
+    action_typ: typ
 }
 type eff_decl = {
     qualifiers  :list<qualifier>;
@@ -339,7 +329,6 @@ and sigelt' =
   | Sig_pragma         of pragma
 and sigelt = {
     sigel: sigelt';
-    sigdoc: option<fsdoc>;
     sigrng: Range.range;
 }
 
@@ -449,7 +438,7 @@ let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
-let mk_sigelt (e: sigelt') = { sigel = e; sigdoc = None; sigrng = Range.dummyRange }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

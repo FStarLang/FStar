@@ -540,55 +540,76 @@ let rec go:
                                (Prims.snd env) file row col in
                        let info_opt =
                          match info_at_pos_opt with
-                         | Some uu____1458 -> info_at_pos_opt
+                         | Some uu____1483 -> info_at_pos_opt
                          | None  ->
                              if symbol = ""
                              then None
                              else
                                (let lid =
-                                  let uu____1462 =
+                                  let uu____1512 =
                                     FStar_List.map FStar_Ident.id_of_text
                                       (FStar_Util.split symbol ".") in
-                                  FStar_Ident.lid_of_ids uu____1462 in
+                                  FStar_Ident.lid_of_ids uu____1512 in
                                 let lid1 =
-                                  let uu____1465 =
-                                    FStar_ToSyntax_Env.resolve_to_fully_qualified_name
-                                      dsenv lid in
-                                  match uu____1465 with
-                                  | None  -> lid
-                                  | Some lid1 -> lid1 in
-                                let uu____1468 =
+                                  if fqn_only
+                                  then lid
+                                  else
+                                    (let uu____1516 =
+                                       FStar_ToSyntax_Env.resolve_to_fully_qualified_name
+                                         dsenv lid in
+                                     match uu____1516 with
+                                     | None  -> lid
+                                     | Some lid1 -> lid1) in
+                                let uu____1519 =
                                   FStar_TypeChecker_Env.try_lookup_lid
                                     (Prims.snd env) lid1 in
-                                FStar_All.pipe_right uu____1468
+                                FStar_All.pipe_right uu____1519
                                   (FStar_Util.map_option
-                                     (fun uu____1484  ->
-                                        match uu____1484 with
-                                        | ((uu____1489,typ),range) ->
-                                            FStar_TypeChecker_Err.format_info
-                                              (Prims.snd env) symbol typ
-                                              range))) in
+                                     (fun uu____1545  ->
+                                        match uu____1545 with
+                                        | ((uu____1555,typ),r) ->
+                                            ((FStar_Util.Inr lid1), typ, r)))) in
                        ((match info_opt with
                          | None  -> FStar_Util.print_string "\n#done-nok\n"
-                         | Some s -> FStar_Util.print1 "%s\n#done-ok\n" s);
+                         | Some (name_or_lid,typ,rng) ->
+                             let uu____1580 =
+                               match name_or_lid with
+                               | FStar_Util.Inl name -> (name, None)
+                               | FStar_Util.Inr lid ->
+                                   let uu____1590 =
+                                     FStar_Ident.string_of_lid lid in
+                                   let uu____1591 =
+                                     let uu____1593 =
+                                       FStar_ToSyntax_Env.try_lookup_doc
+                                         dsenv lid in
+                                     FStar_All.pipe_right uu____1593
+                                       (FStar_Util.map_option Prims.fst) in
+                                   (uu____1590, uu____1591) in
+                             (match uu____1580 with
+                              | (name,doc1) ->
+                                  let uu____1610 =
+                                    FStar_TypeChecker_Err.format_info
+                                      (Prims.snd env) name typ rng doc1 in
+                                  FStar_Util.print1 "%s\n#done-ok\n"
+                                    uu____1610));
                         go line_col filename stack curmod env ts))
               | Completions search_term ->
                   let rec measure_anchored_match search_term1 candidate =
                     match (search_term1, candidate) with
-                    | ([],uu____1518) -> Some ([], (Prims.parse_int "0"))
-                    | (uu____1526,[]) -> None
+                    | ([],uu____1633) -> Some ([], (Prims.parse_int "0"))
+                    | (uu____1641,[]) -> None
                     | (hs::ts1,hc::tc) ->
                         let hc_text = FStar_Ident.text_of_id hc in
                         if FStar_Util.starts_with hc_text hs
                         then
                           (match ts1 with
                            | [] -> Some (candidate, (FStar_String.length hs))
-                           | uu____1556 ->
-                               let uu____1558 = measure_anchored_match ts1 tc in
-                               FStar_All.pipe_right uu____1558
+                           | uu____1671 ->
+                               let uu____1673 = measure_anchored_match ts1 tc in
+                               FStar_All.pipe_right uu____1673
                                  (FStar_Util.map_option
-                                    (fun uu____1577  ->
-                                       match uu____1577 with
+                                    (fun uu____1692  ->
+                                       match uu____1692 with
                                        | (matched,len) ->
                                            ((hc :: matched),
                                              (((FStar_String.length hc_text)
@@ -596,46 +617,46 @@ let rec go:
                                                 + len)))))
                         else None in
                   let rec locate_match needle candidate =
-                    let uu____1613 = measure_anchored_match needle candidate in
-                    match uu____1613 with
+                    let uu____1728 = measure_anchored_match needle candidate in
+                    match uu____1728 with
                     | Some (matched,n1) -> Some ([], matched, n1)
                     | None  ->
                         (match candidate with
                          | [] -> None
                          | hc::tc ->
-                             let uu____1655 = locate_match needle tc in
-                             FStar_All.pipe_right uu____1655
+                             let uu____1770 = locate_match needle tc in
+                             FStar_All.pipe_right uu____1770
                                (FStar_Util.map_option
-                                  (fun uu____1684  ->
-                                     match uu____1684 with
+                                  (fun uu____1799  ->
+                                     match uu____1799 with
                                      | (prefix1,matched,len) ->
                                          ((hc :: prefix1), matched, len)))) in
                   let str_of_ids ids =
-                    let uu____1710 =
+                    let uu____1825 =
                       FStar_List.map FStar_Ident.text_of_id ids in
-                    FStar_Util.concat_l "." uu____1710 in
+                    FStar_Util.concat_l "." uu____1825 in
                   let match_lident_against needle lident =
                     locate_match needle
                       (FStar_List.append lident.FStar_Ident.ns
                          [lident.FStar_Ident.ident]) in
-                  let shorten_namespace uu____1739 =
-                    match uu____1739 with
+                  let shorten_namespace uu____1854 =
+                    match uu____1854 with
                     | (prefix1,matched,match_len) ->
                         let naked_match =
                           match matched with
-                          | uu____1757::[] -> true
-                          | uu____1758 -> false in
-                        let uu____1760 =
+                          | uu____1872::[] -> true
+                          | uu____1873 -> false in
+                        let uu____1875 =
                           FStar_ToSyntax_Env.shorten_module_path
                             (Prims.fst env) prefix1 naked_match in
-                        (match uu____1760 with
+                        (match uu____1875 with
                          | (stripped_ns,shortened) ->
-                             let uu____1775 = str_of_ids shortened in
-                             let uu____1776 = str_of_ids matched in
-                             let uu____1777 = str_of_ids stripped_ns in
-                             (uu____1775, uu____1776, uu____1777, match_len)) in
-                  let prepare_candidate uu____1788 =
-                    match uu____1788 with
+                             let uu____1890 = str_of_ids shortened in
+                             let uu____1891 = str_of_ids matched in
+                             let uu____1892 = str_of_ids stripped_ns in
+                             (uu____1890, uu____1891, uu____1892, match_len)) in
+                  let prepare_candidate uu____1903 =
+                    match uu____1903 with
                     | (prefix1,matched,stripped_ns,match_len) ->
                         if prefix1 = ""
                         then (matched, stripped_ns, match_len)
@@ -668,97 +689,97 @@ let rec go:
                                   FStar_Ident.lid_of_ns_and_id
                                     (FStar_Ident.ids_of_lid m)
                                     (FStar_Ident.id_of_text n1) in
-                                let uu____1871 =
+                                let uu____1986 =
                                   FStar_ToSyntax_Env.resolve_to_fully_qualified_name
                                     dsenv lid in
                                 FStar_Option.map
                                   (fun fqn  ->
-                                     let uu____1879 =
-                                       let uu____1881 =
+                                     let uu____1994 =
+                                       let uu____1996 =
                                          FStar_List.map
                                            FStar_Ident.id_of_text orig_ns in
-                                       FStar_List.append uu____1881
+                                       FStar_List.append uu____1996
                                          [fqn.FStar_Ident.ident] in
-                                     ([], uu____1879, matched_length))
-                                  uu____1871
+                                     ([], uu____1994, matched_length))
+                                  uu____1986
                               else None)) in
-                    let case_b_find_matches_in_env uu____1900 =
-                      let uu____1907 = env in
-                      match uu____1907 with
-                      | (dsenv,uu____1915) ->
+                    let case_b_find_matches_in_env uu____2015 =
+                      let uu____2022 = env in
+                      match uu____2022 with
+                      | (dsenv,uu____2030) ->
                           let matches =
                             FStar_List.filter_map
                               (match_lident_against needle)
                               all_lidents_in_env in
                           FStar_All.pipe_right matches
                             (FStar_List.filter
-                               (fun uu____1945  ->
-                                  match uu____1945 with
-                                  | (ns,id,uu____1953) ->
-                                      let uu____1958 =
-                                        let uu____1960 =
+                               (fun uu____2060  ->
+                                  match uu____2060 with
+                                  | (ns,id,uu____2068) ->
+                                      let uu____2073 =
+                                        let uu____2075 =
                                           FStar_Ident.lid_of_ids id in
                                         FStar_ToSyntax_Env.resolve_to_fully_qualified_name
-                                          dsenv uu____1960 in
-                                      (match uu____1958 with
+                                          dsenv uu____2075 in
+                                      (match uu____2073 with
                                        | None  -> false
                                        | Some l ->
-                                           let uu____1962 =
+                                           let uu____2077 =
                                              FStar_Ident.lid_of_ids
                                                (FStar_List.append ns id) in
                                            FStar_Ident.lid_equals l
-                                             uu____1962))) in
-                    let uu____1963 = FStar_Util.prefix needle in
-                    match uu____1963 with
+                                             uu____2077))) in
+                    let uu____2078 = FStar_Util.prefix needle in
+                    match uu____2078 with
                     | (ns,id) ->
                         let matched_ids =
                           match ns with
                           | [] -> case_b_find_matches_in_env ()
-                          | uu____1988 ->
+                          | uu____2103 ->
                               let l =
                                 FStar_Ident.lid_of_path ns
                                   FStar_Range.dummyRange in
-                              let uu____1991 =
+                              let uu____2106 =
                                 FStar_ToSyntax_Env.resolve_module_name
                                   (Prims.fst env) l true in
-                              (match uu____1991 with
+                              (match uu____2106 with
                                | None  -> case_b_find_matches_in_env ()
                                | Some m ->
                                    case_a_find_transitive_includes ns m id) in
                         FStar_All.pipe_right matched_ids
                           (FStar_List.map
                              (fun x  ->
-                                let uu____2024 = shorten_namespace x in
-                                prepare_candidate uu____2024)) in
-                  ((let uu____2030 =
+                                let uu____2139 = shorten_namespace x in
+                                prepare_candidate uu____2139)) in
+                  ((let uu____2145 =
                       FStar_Util.sort_with
-                        (fun uu____2038  ->
-                           fun uu____2039  ->
-                             match (uu____2038, uu____2039) with
-                             | ((cd1,ns1,uu____2054),(cd2,ns2,uu____2057)) ->
+                        (fun uu____2153  ->
+                           fun uu____2154  ->
+                             match (uu____2153, uu____2154) with
+                             | ((cd1,ns1,uu____2169),(cd2,ns2,uu____2172)) ->
                                  (match FStar_String.compare cd1 cd2 with
                                   | _0_32 when _0_32 = (Prims.parse_int "0")
                                       -> FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches in
                     FStar_List.iter
-                      (fun uu____2068  ->
-                         match uu____2068 with
+                      (fun uu____2183  ->
+                         match uu____2183 with
                          | (candidate,ns,match_len) ->
-                             let uu____2075 =
+                             let uu____2190 =
                                FStar_Util.string_of_int match_len in
-                             FStar_Util.print3 "%s %s %s \n" uu____2075 ns
-                               candidate) uu____2030);
+                             FStar_Util.print3 "%s %s %s \n" uu____2190 ns
+                               candidate) uu____2145);
                    FStar_Util.print_string "#done-ok\n";
                    go line_col filename stack curmod env ts)
               | Pop msg ->
                   (pop env msg;
-                   (let uu____2079 =
+                   (let uu____2194 =
                       match stack with
                       | [] ->
                           (FStar_Util.print_error "too many pops";
                            FStar_All.exit (Prims.parse_int "1"))
                       | hd1::tl1 -> (hd1, tl1) in
-                    match uu____2079 with
+                    match uu____2194 with
                     | ((env1,curmod1),stack1) ->
                         (if
                            (FStar_List.length stack1) =
@@ -767,14 +788,14 @@ let rec go:
                          else ();
                          go line_col filename stack1 curmod1 env1 ts)))
               | Push (lax1,l,c) ->
-                  let uu____2146 =
+                  let uu____2261 =
                     if (FStar_List.length stack) = (FStar_List.length ts)
                     then
-                      let uu____2169 =
+                      let uu____2284 =
                         update_deps filename curmod stack env ts in
-                      (true, uu____2169)
+                      (true, uu____2284)
                     else (false, (stack, env, ts)) in
-                  (match uu____2146 with
+                  (match uu____2261 with
                    | (restore_cmd_line_options1,(stack1,env1,ts1)) ->
                        let stack2 = (env1, curmod) :: stack1 in
                        let env2 =
@@ -802,70 +823,70 @@ let rec go:
                           (let env2 = commit_mark env1 in
                            go line_col filename stack curmod1 env2 ts))
                        else fail2 curmod1 env_mark
-                   | uu____2249 -> fail2 curmod env_mark)
+                   | uu____2364 -> fail2 curmod env_mark)
 let interactive_mode: Prims.string -> Prims.unit =
   fun filename  ->
-    (let uu____2261 =
-       let uu____2262 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____2262 in
-     if uu____2261
+    (let uu____2376 =
+       let uu____2377 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____2377 in
+     if uu____2376
      then
        FStar_Util.print_warning
          "code-generation is not supported in interactive mode, ignoring the codegen flag"
      else ());
-    (let uu____2265 = deps_of_our_file filename in
-     match uu____2265 with
+    (let uu____2380 = deps_of_our_file filename in
+     match uu____2380 with
      | (filenames,maybe_intf) ->
          let env = tc_prims () in
-         let uu____2279 = tc_deps None [] env filenames [] true in
-         (match uu____2279 with
+         let uu____2394 = tc_deps None [] env filenames [] true in
+         (match uu____2394 with
           | (stack,env1,ts) ->
-              let uu____2294 =
+              let uu____2409 =
                 match maybe_intf with
                 | Some intf ->
                     let frag =
-                      let uu____2307 = FStar_Util.file_get_contents intf in
+                      let uu____2422 = FStar_Util.file_get_contents intf in
                       {
-                        FStar_Parser_ParseIt.frag_text = uu____2307;
+                        FStar_Parser_ParseIt.frag_text = uu____2422;
                         FStar_Parser_ParseIt.frag_line =
                           (Prims.parse_int "0");
                         FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
                       } in
-                    let uu____2308 = check_frag env1 None frag in
-                    (match uu____2308 with
+                    let uu____2423 = check_frag env1 None frag in
+                    (match uu____2423 with
                      | Some (curmod,env2,n_errs) ->
                          (if n_errs <> (Prims.parse_int "0")
                           then
-                            ((let uu____2338 =
+                            ((let uu____2453 =
                                 FStar_Util.format1
                                   "Found the interface %s but it has errors!"
                                   intf in
-                              FStar_Util.print_warning uu____2338);
+                              FStar_Util.print_warning uu____2453);
                              FStar_All.exit (Prims.parse_int "1"))
                           else ();
                           FStar_Util.print_string
                             "Reminder: fst+fsti in interactive mode is unsound.\n";
                           (curmod, env2))
                      | None  ->
-                         ((let uu____2351 =
+                         ((let uu____2466 =
                              FStar_Util.format1
                                "Found the interface %s but could not parse it first!"
                                intf in
-                           FStar_Util.print_warning uu____2351);
+                           FStar_Util.print_warning uu____2466);
                           FStar_All.exit (Prims.parse_int "1")))
                 | None  -> (None, env1) in
-              (match uu____2294 with
+              (match uu____2409 with
                | (initial_mod,env2) ->
-                   let uu____2366 =
+                   let uu____2481 =
                      (FStar_Options.record_hints ()) ||
                        (FStar_Options.use_hints ()) in
-                   if uu____2366
+                   if uu____2481
                    then
-                     let uu____2367 =
-                       let uu____2368 = FStar_Options.file_list () in
-                       FStar_List.hd uu____2368 in
-                     FStar_SMTEncoding_Solver.with_hints_db uu____2367
-                       (fun uu____2370  ->
+                     let uu____2482 =
+                       let uu____2483 = FStar_Options.file_list () in
+                       FStar_List.hd uu____2483 in
+                     FStar_SMTEncoding_Solver.with_hints_db uu____2482
+                       (fun uu____2485  ->
                           go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                             filename stack initial_mod env2 ts)
                    else

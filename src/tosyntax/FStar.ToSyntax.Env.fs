@@ -92,6 +92,7 @@ type env = {
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
+  docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
 }
 
 type foundname =
@@ -127,7 +128,8 @@ let empty_env () = {curmodule=None;
                     sigmap=new_sigmap();
                     iface=false;
                     admitted_iface=false;
-                    expect_typ=false}
+                    expect_typ=false;
+                    docs=new_sigmap()}
 let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->
@@ -598,6 +600,9 @@ let try_lookup_lid_no_resolve (env: env) l =
   in
   try_lookup_lid env' l
 
+let try_lookup_doc (env: env) (l:lid) =
+  BU.smap_try_find env.docs l.str
+
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid = function
       | ({ sigel = Sig_declare_typ(_, _, _, quals) }, _) ->
@@ -904,6 +909,19 @@ let push_module_abbrev env x l =
   then push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
+let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
+  match doc_opt with
+  | None -> env
+  | Some doc ->
+    (match BU.smap_try_find env.docs l.str with
+     | None -> ()
+     | Some old_doc -> FStar.Errors.warn (range_of_lid l)
+                        (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
+                           (Ident.string_of_lid l) (Parser.AST.string_of_fsdoc old_doc)
+                           (Parser.AST.string_of_fsdoc doc)));
+    BU.smap_add env.docs l.str doc;
+    env
+
 let check_admits env =
   env.sigaccum |> List.iter (fun se -> match se.sigel with
     | Sig_declare_typ(l, u, t, quals) ->
@@ -969,7 +987,7 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push env =
   push_record_cache();
   stack := env::!stack;
-  {env with sigmap=BU.smap_copy (sigmap env)}
+  {env with sigmap=BU.smap_copy (sigmap env); docs=BU.smap_copy env.docs}
 
 let pop () =
   match !stack with
