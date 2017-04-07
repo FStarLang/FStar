@@ -38,10 +38,11 @@ let find_deps_if_needed verify_mode files =
     | _ ->
         let deps = List.rev deps in
         let deps =
-          if basename (List.hd deps) = "prims.fst" then
+          let prims = Options.prims_basename () in
+          if basename (List.hd deps) = prims then
             List.tl deps
           else begin
-            Util.print_error "dependency analysis did not find prims.fst?!";
+            Util.print1_error "dependency analysis did not find prims module %s?!" prims;
             exit 1
           end
         in
