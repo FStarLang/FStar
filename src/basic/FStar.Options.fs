@@ -687,7 +687,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> Bool false),
+        ZeroArgs (fun () -> Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
