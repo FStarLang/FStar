@@ -122,7 +122,7 @@ cd $BN_BINARYSPATH
 echo "--git checkout --"
 git checkout $FSTAR_BIN_BRANCH
 echo "--git pull --"
-git pull origin master
+git pull
 
 echo "-- copy files --"
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
