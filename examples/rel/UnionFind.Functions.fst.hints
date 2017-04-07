@@ -457,7 +457,7 @@
       2,
       2,
       [
-        "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_4d11e6bf0761cdfe82b6309ef0dd5d59_1",
         "binder_x_db56e96cb93d0199cd65359846e7b6e1_2",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "bool_inversion",
@@ -482,8 +482,8 @@
         "lemma_FStar.DM4F.Heap.sel_same_addr_of",
         "lemma_FStar.DM4F.Heap.sel_upd1", "lemma_FStar.DM4F.Heap.sel_upd2",
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
-        "lemma_FStar.OrdSet.lemma_intersect_symmetric",
         "lemma_FStar.OrdSet.lemma_strict_subset_minus_size",
+        "lemma_FStar.OrdSet.lemma_strict_subset_size",
         "lemma_FStar.OrdSet.lemma_strict_subset_transitive",
         "pretyping_f537159ed795b314b4e58c260361ae86",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
@@ -503,13 +503,13 @@
         "token_correspondence_Prims.op_LessThanOrEqual",
         "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel",
         "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
-        "typing_FStar.OrdSet.mem", "typing_FStar.OrdSet.strict_subset",
+        "typing_FStar.OrdSet.mem", "typing_FStar.OrdSet.minus",
+        "typing_FStar.OrdSet.size", "typing_FStar.OrdSet.strict_subset",
         "typing_FStar.OrdSet.subset", "typing_FStar.Seq.Base.index",
         "typing_Prims.__proj__Mktuple3__item___1",
         "typing_Prims.__proj__Mktuple3__item___3",
         "typing_UnionFind.Forest.elt", "typing_UnionFind.Forest.id",
-        "typing_UnionFind.Forest.set_n", "typing_UnionFind.Functions.diff",
-        "well-founded-ordering-on-nat"
+        "typing_UnionFind.Forest.set_n", "well-founded-ordering-on-nat"
       ],
       0
     ],

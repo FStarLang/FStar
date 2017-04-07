@@ -549,38 +549,38 @@ let detail_errors:
                   match uu____984 with
                   | (l,uu____991,uu____992) ->
                       let uu____997 =
-                        let uu____1002 =
-                          let uu____1003 =
-                            let uu____1006 = FStar_SMTEncoding_Util.mkFreeV l in
-                            (uu____1006, FStar_SMTEncoding_Util.mkTrue) in
-                          FStar_SMTEncoding_Util.mkEq uu____1003 in
-                        (uu____1002, (Some "Disabling label"),
-                          (Some (Prims.strcat "disable_label_" (Prims.fst l)))) in
+                        let uu____1001 =
+                          let uu____1002 =
+                            let uu____1005 = FStar_SMTEncoding_Util.mkFreeV l in
+                            (uu____1005, FStar_SMTEncoding_Util.mkTrue) in
+                          FStar_SMTEncoding_Util.mkEq uu____1002 in
+                        (uu____1001, (Some "Disabling label"),
+                          (Prims.strcat "disable_label_" (Prims.fst l))) in
                       FStar_SMTEncoding_Term.Assume uu____997)) in
         let rec linear_check eliminated errors active =
           match active with
           | [] ->
               let results =
-                let uu____1041 =
+                let uu____1039 =
                   FStar_List.map (fun x  -> (x, true)) eliminated in
-                let uu____1048 = FStar_List.map (fun x  -> (x, false)) errors in
-                FStar_List.append uu____1041 uu____1048 in
+                let uu____1046 = FStar_List.map (fun x  -> (x, false)) errors in
+                FStar_List.append uu____1039 uu____1046 in
               sort_labels results
           | hd1::tl1 ->
-              ((let uu____1061 =
+              ((let uu____1059 =
                   FStar_Util.string_of_int (FStar_List.length active) in
-                FStar_Util.print1 "%s, " uu____1061);
+                FStar_Util.print1 "%s, " uu____1059);
                FStar_SMTEncoding_Z3.refresh ();
-               (let uu____1066 =
-                  let uu____1073 =
+               (let uu____1064 =
+                  let uu____1071 =
                     FStar_All.pipe_left elim
                       (FStar_List.append eliminated
                          (FStar_List.append errors tl1)) in
-                  askZ3 uu____1073 in
-                match uu____1066 with
-                | (result,uu____1088) ->
-                    let uu____1097 = FStar_Util.is_left result in
-                    if uu____1097
+                  askZ3 uu____1071 in
+                match uu____1064 with
+                | (result,uu____1086) ->
+                    let uu____1095 = FStar_Util.is_left result in
+                    if uu____1095
                     then linear_check (hd1 :: eliminated) errors tl1
                     else linear_check eliminated (hd1 :: errors) tl1)) in
         print_banner ();

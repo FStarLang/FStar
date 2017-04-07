@@ -78,17 +78,18 @@ let strip_not (t:term) :term = match t.tm with
     | App (Not, hd::_) -> hd
     | _                -> t
 
-let rec check_split_cases (f:term -> term) (l:list<term>) (check:decl -> unit) :unit =
-    List.iter (fun t -> check (Assume (mkNot (f t), None, None))) (List.rev l)
-
-let check_exhaustiveness (f:term -> term) (negs:term) (check:decl -> unit) :unit =
-    check (Assume (mkNot (f (mkNot negs)), None, None))
-
-let can_handle_query (n:int) (q:decl) :bool * ((term -> term) * list<term> * term) =
-    match q with
-        | Assume(q', _, _) -> parse_query_for_split_cases n (strip_not q') (fun x -> x)
-        | _ -> false, ((fun x -> x), [], mkFalse)
+//let rec check_split_cases (f:term -> term) (l:list<term>) (check:decl -> unit) :unit =
+//    List.iter (fun t -> check (Assume (mkNot (f t), None, None))) (List.rev l)
+//
+//let check_exhaustiveness (f:term -> term) (negs:term) (check:decl -> unit) :unit =
+//    check (Assume (mkNot (f (mkNot negs)), None, None))
+//
+//let can_handle_query (n:int) (q:decl) :bool * ((term -> term) * list<term> * term) =
+//    match q with
+//        | Assume(q', _, _) -> parse_query_for_split_cases n (strip_not q') (fun x -> x)
+//        | _ -> false, ((fun x -> x), [], mkFalse)
 
 let handle_query ((f, l, negs):((term -> term) * list<term> * term)) (check:decl -> unit) :unit =
-    let l = check_split_cases f l check in
-    check_exhaustiveness f negs check
+    failwith "SplitQueryCases is not currently supported"
+//    let l = check_split_cases f l check in
+//    check_exhaustiveness f negs check

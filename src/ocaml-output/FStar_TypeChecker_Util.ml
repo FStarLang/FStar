@@ -4156,7 +4156,6 @@ let mk_discriminator_and_indexed_projectors:
                                FStar_Syntax_Syntax.sigel =
                                  (FStar_Syntax_Syntax.Sig_declare_typ
                                     (discriminator_name, uvs, t, quals));
-                               FStar_Syntax_Syntax.sigdoc = None;
                                FStar_Syntax_Syntax.sigrng =
                                  (FStar_Ident.range_of_lid discriminator_name)
                              } in
@@ -4312,7 +4311,6 @@ let mk_discriminator_and_indexed_projectors:
                                   FStar_Syntax_Syntax.Sig_let uu____7761 in
                                 {
                                   FStar_Syntax_Syntax.sigel = uu____7760;
-                                  FStar_Syntax_Syntax.sigdoc = None;
                                   FStar_Syntax_Syntax.sigrng = p
                                 } in
                               (let uu____7788 =
@@ -4447,8 +4445,6 @@ let mk_discriminator_and_indexed_projectors:
                                                    (FStar_Syntax_Syntax.Sig_declare_typ
                                                       (field_name, uvs, t,
                                                         quals1));
-                                                 FStar_Syntax_Syntax.sigdoc =
-                                                   None;
                                                  FStar_Syntax_Syntax.sigrng =
                                                    (FStar_Ident.range_of_lid
                                                       field_name)
@@ -4640,8 +4636,6 @@ let mk_discriminator_and_indexed_projectors:
                                                    {
                                                      FStar_Syntax_Syntax.sigel
                                                        = uu____8061;
-                                                     FStar_Syntax_Syntax.sigdoc
-                                                       = None;
                                                      FStar_Syntax_Syntax.sigrng
                                                        = p1
                                                    } in
