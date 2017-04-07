@@ -89,9 +89,10 @@
       2,
       1,
       [
-        "@query", "assumption_Ex10a.entry_haseq",
-        "assumption_FStar.Heap.SelUpd1", "bool_typing", "equation_Ex10a.db",
-        "equation_FStar.ST.ref", "equation_Prims.eqtype",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "assumption_Ex10a.entry_haseq", "assumption_FStar.Heap.SelUpd1",
+        "bool_typing", "equation_Ex10a.db", "equation_FStar.ST.ref",
+        "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
