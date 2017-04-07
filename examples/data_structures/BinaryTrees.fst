@@ -155,14 +155,16 @@ let rec remove (x:int) (t:tree{count x t > 0}) : Tot tree (decreases t) =
                     if count x t1 > 0 then Node n (remove x t1) t2
                                       else Node n t1 (remove x t2)
 
-#set-options "--max_fuel 10"
+#set-options "--z3rlimit 20 --initial_fuel 4 --initial_ifuel 2" //NS: not sure why this requires 4 unfoldings
 let rec count_remove_root (t:tree{Node? t}) :
     Lemma (ensures (let r = Node?.root t in
                    (count r (remove_root t) = count r t - 1) /\
                    (forall y. y <> r ==> count y (remove_root t) = count y t))) =
-  match t with
-  | Node n t1 t2 -> if Leaf? t1 then () else count_remove_root t1
+  let Node n t1 t2 = t in
+  if Leaf? t1 then () 
+  else count_remove_root t1
 
+#reset-options
 let rec count_remove (x:int) (t:tree{count x t > 0}) :
     Lemma (requires True)
           (ensures (count x (remove x t) = count x t - 1)) (decreases t) =
