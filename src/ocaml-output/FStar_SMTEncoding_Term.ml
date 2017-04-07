@@ -1203,7 +1203,7 @@ and mkPrelude: Prims.string -> Prims.string =
   fun z3options  ->
     let basic =
       Prims.strcat z3options
-        "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Term)\n(define-fun Reify ((x Term)) Term x)\n(assert (forall ((t Term))\n(! (implies (exists ((e Term)) (HasType e t))\n(Valid t))\n:pattern ((Valid t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n(Precedes t1 t2))\n(declare-fun Range_const () Term)\n" in
+        "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Term)\n(define-fun Reify ((x Term)) Term x)\n(assert (forall ((t Term))\n(! (implies (exists ((e Term)) (HasType e t))\n(Valid t))\n:pattern ((Valid t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n(Precedes t1 t2))\n(declare-fun Range_const () Term)\n" in
     let constrs =
       [("FString_const", [("FString_const_proj_0", Int_sort, true)],
          String_sort, (Prims.parse_int "0"), true);
@@ -1381,6 +1381,8 @@ let mk_HasTypeWithFuel: term Prims.option -> term -> term -> term =
         match f with
         | None  -> mk_HasType v1 t
         | Some f1 -> mk_HasTypeFuel f1 v1 t
+let mk_NoHoist: term -> term -> term =
+  fun dummy  -> fun b  -> mkApp ("NoHoist", [dummy; b]) b.rng
 let mk_Destruct: term -> FStar_Range.range -> term =
   fun v1  -> mkApp ("Destruct", [v1])
 let mk_Rank: term -> FStar_Range.range -> term =
@@ -1394,16 +1396,16 @@ let mk_ApplyTT: term -> term -> FStar_Range.range -> term =
 let mk_String_const: Prims.int -> FStar_Range.range -> term =
   fun i  ->
     fun r  ->
-      let uu____3425 =
-        let uu____3429 = let uu____3431 = mkInteger' i norng in [uu____3431] in
-        ("FString_const", uu____3429) in
-      mkApp uu____3425 r
+      let uu____3432 =
+        let uu____3436 = let uu____3438 = mkInteger' i norng in [uu____3438] in
+        ("FString_const", uu____3436) in
+      mkApp uu____3432 r
 let mk_Precedes: term -> term -> FStar_Range.range -> term =
   fun x1  ->
     fun x2  ->
       fun r  ->
-        let uu____3442 = mkApp ("Precedes", [x1; x2]) r in
-        FStar_All.pipe_right uu____3442 mk_Valid
+        let uu____3449 = mkApp ("Precedes", [x1; x2]) r in
+        FStar_All.pipe_right uu____3449 mk_Valid
 let mk_LexCons: term -> term -> FStar_Range.range -> term =
   fun x1  -> fun x2  -> fun r  -> mkApp ("LexCons", [x1; x2]) r
 let rec n_fuel: Prims.int -> term =
@@ -1411,12 +1413,12 @@ let rec n_fuel: Prims.int -> term =
     if n1 = (Prims.parse_int "0")
     then mkApp ("ZFuel", []) norng
     else
-      (let uu____3459 =
-         let uu____3463 =
-           let uu____3465 = n_fuel (n1 - (Prims.parse_int "1")) in
-           [uu____3465] in
-         ("SFuel", uu____3463) in
-       mkApp uu____3459 norng)
+      (let uu____3466 =
+         let uu____3470 =
+           let uu____3472 = n_fuel (n1 - (Prims.parse_int "1")) in
+           [uu____3472] in
+         ("SFuel", uu____3470) in
+       mkApp uu____3466 norng)
 let fuel_2: term = n_fuel (Prims.parse_int "2")
 let fuel_100: term = n_fuel (Prims.parse_int "100")
 let mk_and_opt:
@@ -1428,7 +1430,7 @@ let mk_and_opt:
       fun r  ->
         match (p1, p2) with
         | (Some p11,Some p21) ->
-            let uu____3488 = mkAnd (p11, p21) r in Some uu____3488
+            let uu____3495 = mkAnd (p11, p21) r in Some uu____3495
         | (Some p,None )|(None ,Some p) -> Some p
         | (None ,None ) -> None
 let mk_and_opt_l:
@@ -1440,56 +1442,56 @@ let mk_and_opt_l:
 let mk_and_l: term Prims.list -> FStar_Range.range -> term =
   fun l  ->
     fun r  ->
-      let uu____3521 = mkTrue r in
+      let uu____3528 = mkTrue r in
       FStar_List.fold_right (fun p1  -> fun p2  -> mkAnd (p1, p2) r) l
-        uu____3521
+        uu____3528
 let mk_or_l: term Prims.list -> FStar_Range.range -> term =
   fun l  ->
     fun r  ->
-      let uu____3532 = mkFalse r in
+      let uu____3539 = mkFalse r in
       FStar_List.fold_right (fun p1  -> fun p2  -> mkOr (p1, p2) r) l
-        uu____3532
+        uu____3539
 let mk_haseq: term -> term =
   fun t  ->
-    let uu____3538 = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu____3538
+    let uu____3545 = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu____3545
 let rec print_smt_term: term -> Prims.string =
   fun t  ->
     match t.tm with
     | Integer n1 -> FStar_Util.format1 "(Integer %s)" n1
     | BoundV n1 ->
-        let uu____3552 = FStar_Util.string_of_int n1 in
-        FStar_Util.format1 "(BoundV %s)" uu____3552
+        let uu____3559 = FStar_Util.string_of_int n1 in
+        FStar_Util.format1 "(BoundV %s)" uu____3559
     | FreeV fv -> FStar_Util.format1 "(FreeV %s)" (Prims.fst fv)
     | App (op,l) ->
-        let uu____3560 = print_smt_term_list l in
-        FStar_Util.format2 "(%s %s)" (op_to_string op) uu____3560
+        let uu____3567 = print_smt_term_list l in
+        FStar_Util.format2 "(%s %s)" (op_to_string op) uu____3567
     | Labeled (t1,r1,r2) ->
-        let uu____3564 = print_smt_term t1 in
-        FStar_Util.format2 "(Labeled '%s' %s)" r1 uu____3564
+        let uu____3571 = print_smt_term t1 in
+        FStar_Util.format2 "(Labeled '%s' %s)" r1 uu____3571
     | LblPos (t1,s) ->
-        let uu____3567 = print_smt_term t1 in
-        FStar_Util.format2 "(LblPos %s %s)" s uu____3567
-    | Quant (qop,l,uu____3570,uu____3571,t1) ->
-        let uu____3581 = print_smt_term_list_list l in
-        let uu____3582 = print_smt_term t1 in
-        FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) uu____3581
-          uu____3582
+        let uu____3574 = print_smt_term t1 in
+        FStar_Util.format2 "(LblPos %s %s)" s uu____3574
+    | Quant (qop,l,uu____3577,uu____3578,t1) ->
+        let uu____3588 = print_smt_term_list_list l in
+        let uu____3589 = print_smt_term t1 in
+        FStar_Util.format3 "(%s %s %s)" (qop_to_string qop) uu____3588
+          uu____3589
     | Let (es,body) ->
-        let uu____3587 = print_smt_term_list es in
-        let uu____3588 = print_smt_term body in
-        FStar_Util.format2 "(let %s %s)" uu____3587 uu____3588
+        let uu____3594 = print_smt_term_list es in
+        let uu____3595 = print_smt_term body in
+        FStar_Util.format2 "(let %s %s)" uu____3594 uu____3595
 and print_smt_term_list: term Prims.list -> Prims.string =
   fun l  ->
-    let uu____3591 = FStar_List.map print_smt_term l in
-    FStar_All.pipe_right uu____3591 (FStar_String.concat " ")
+    let uu____3598 = FStar_List.map print_smt_term l in
+    FStar_All.pipe_right uu____3598 (FStar_String.concat " ")
 and print_smt_term_list_list: term Prims.list Prims.list -> Prims.string =
   fun l  ->
     FStar_List.fold_left
       (fun s  ->
          fun l1  ->
-           let uu____3601 =
-             let uu____3602 =
-               let uu____3603 = print_smt_term_list l1 in
-               Prims.strcat uu____3603 " ] " in
-             Prims.strcat "; [ " uu____3602 in
-           Prims.strcat s uu____3601) "" l
+           let uu____3608 =
+             let uu____3609 =
+               let uu____3610 = print_smt_term_list l1 in
+               Prims.strcat uu____3610 " ] " in
+             Prims.strcat "; [ " uu____3609 in
+           Prims.strcat s uu____3608) "" l
