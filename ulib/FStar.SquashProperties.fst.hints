@@ -22,7 +22,7 @@
       2,
       1,
       [
-        "@query", "bool_inversion",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "equation_FStar.SquashProperties.join_squash",
         "equation_Prims.l_not", "equation_Prims.l_or",
         "equation_Prims.squash", "kinding_Prims.c_or@tok", "l_not-interp",

@@ -159,8 +159,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let with_fuel label_assumptions p (n, i, rlimit) =
        [Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
+        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
+        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
         p]
         @label_assumptions
         @[Term.SetOption ("rlimit", string_of_int rlimit)]
@@ -281,10 +281,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                (cb (Option.isSome unsat_core) initial_config p alt_configs !Z3.fresh_scope) in
 
     let process_query (q:decl) :unit =
-        if (Options.split_cases()) > 0 then
-            let (b, cb) = SplitQueryCases.can_handle_query (Options.split_cases()) q in
-            if b then SplitQueryCases.handle_query cb check else check q
-        else check q
+        check q
     in
 
     if Options.admit_smt_queries() then () else process_query query

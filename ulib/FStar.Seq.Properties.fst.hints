@@ -3655,7 +3655,8 @@
       1,
       1,
       [
-        "@query", "equation_FStar.Seq.Properties.cons",
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Seq.Properties.cons",
         "equation_FStar.Seq.Properties.contains", "equation_Prims.nat",
         "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
         "lemma_FStar.Seq.Base.lemma_index_create",
