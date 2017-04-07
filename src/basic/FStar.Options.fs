@@ -888,6 +888,8 @@ let prims () =
     end
   | Some x -> x
 
+let prims_basename () = basename (prims ())
+
 let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
