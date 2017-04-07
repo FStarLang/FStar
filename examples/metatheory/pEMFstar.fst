@@ -47,6 +47,7 @@ let type_0 = Type_ 0
 let succ n = app csucc n
 let refl e = app crefl e
 let eq t e1 e2 = ceq `app` t `app` e1 `app` e2
+let var_ x = Var x []
 
 
 
@@ -74,37 +75,37 @@ let rec first_N (#a:Type) (n:nat) (l:list a) : list a * list a =
 
 let (<|) f x = f x
 
-(* Operadic composition for derived term *)
-let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k))
-  : Pure (dterm (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k))
-    (requires (b2t <| L.length l >= n))
-    (ensures (fun (c', l') -> snd (first_N n l) == l'))
-= match c with
-  | Term t -> c, l
-  | Hole -> let x :: xs = l in x, xs
-  | DApp #n1 #n2 c1 c2 ->
-    let c1', l = dterm_comp_extended c1 l in
-    let c2', l = dterm_comp_extended c2 l in
-    DApp c1' c2', l
-  | DProd c1 c2 ->
-    let c1', l = dterm_comp_extended c1 l in
-    let c2', l = dterm_comp_extended_comp c2 l in
-    DProd c1' c2', l
-  | DRefine #n1 #n2 c1 c2 ->
-    let c1', l = dterm_comp_extended c1 l in
-    let c2', l = dterm_comp_extended c2 l in
-    DRefine c1' c2', l
+(* (\* Operadic composition for derived term *\) *)
+(* let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k)) *)
+(*   : Pure (dterm (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k)) *)
+(*     (requires (b2t (L.length l >= n))) *)
+(*     (ensures (fun (c', l') -> snd (first_N n l) == l')) *)
+(* = match c with *)
+(*   | Term t -> c, l *)
+(*   | Hole -> let x :: xs = l in x, xs *)
+(*   | DApp #n1 #n2 c1 c2 -> *)
+(*     let c1', l = dterm_comp_extended c1 l in *)
+(*     let c2', l = dterm_comp_extended c2 l in *)
+(*     DApp c1' c2', l *)
+(*   | DProd c1 c2 -> *)
+(*     let c1', l = dterm_comp_extended c1 l in *)
+(*     let c2', l = dterm_comp_extended_comp c2 l in *)
+(*     DProd c1' c2', l *)
+(*   | DRefine #n1 #n2 c1 c2 -> *)
+(*     let c1', l = dterm_comp_extended c1 l in *)
+(*     let c2', l = dterm_comp_extended c2 l in *)
+(*     DRefine c1' c2', l *)
 
-and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k))
-  : Pure (dcomp (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k))
-    (requires (L.length l >= n))
-    (ensures (fun (c', l') -> snd (first_N n l) == l'))
-= match c with
-  | DTot c -> let c', l = dterm_comp_extended c l in DTot c', l
-  | DPure c1 c2 ->
-    let c1', l = dterm_comp_extended c1 l in
-    let c2', l = dterm_comp_extended c2 l in
-    DPure c1' c2', l
+(* and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k)) *)
+(*   : Pure (dcomp (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k)) *)
+(*     (requires (L.length l >= n)) *)
+(*     (ensures (fun (c', l') -> snd (first_N n l) == l')) *)
+(* = match c with *)
+(*   | DTot c -> let c', l = dterm_comp_extended c l in DTot c', l *)
+(*   | DPure c1 c2 -> *)
+(*     let c1', l = dterm_comp_extended c1 l in *)
+(*     let c2', l = dterm_comp_extended c2 l in *)
+(*     DPure c1' c2', l *)
 
 
 (* let dterm_comp (#n:nat) (c:dterm n) (l:list (k:nat & dterm k){L.length l == n}) *)
@@ -129,6 +130,7 @@ let sub_id : s:sub{renaming s} = Var
 let sub_inc : s:sub{renaming s} = fun x uvs -> Var (x+1) uvs
 let sub_dec : s:sub{renaming s} = fun x uvs -> if x = 0 then Var x uvs else Var (x - 1) uvs
 let sub_inc_above (y:var) : s:sub{renaming s} = fun x uvs -> if x < y then Var x uvs else Var (x+1) uvs
+let sub_dec_above (y:var) (z:var{z <= y + 1}) : s:sub{renaming s} = fun x uvs -> if x <= y + 1 then Var 0 uvs else Var (x-z) uvs
 
 let rec subst (s:sub) (e:term)
   : Pure term
@@ -316,161 +318,85 @@ let shift_up = shift_up_above 0
 type env = var -> Tot (option term)
 let empty : env = fun _ -> None
 
+let map_opt f = function
+  | None -> None
+  | Some x -> Some (f x)
+
 let extend (g:env) (x:var) (t:term) : env =
   fun (y:var) ->
     if y < x then g y
-    else if y = x then Some (n, t)
-    else match g y with
-    | None -> None
-    | Some (n', t') -> Some (n', shift_up_above x t')
+    else if y = x then Some t
+    else map_opt (shift_up_above x) <| g (y - 1)
 
-(* Definitional equality *)
+let rec count_under (g:env) (x:var) : Tot (n:nat{n <= x + 1}) (decreases x) =
+  let k = if None? (g x) then 0 else 1 in
+  if x = 0 then k else count_under g (x-1) + k
 
-type def_eq : term -> term -> Type0 =
+let restrict_above (g:env) (x:var) : env =
+  let n = count_under g x in
+  fun y -> if y <= x then None else map_opt (subst <| sub_dec_above x n) (g y)
 
-  (* Equivalence relation *)
-  | DEqRefl :
-    t:term ->
-    def_eq t t
-  | DEqSymm :
-    #t1:term ->
-    #t2:term ->
-    def_eq t1 t2 ->
-    def_eq t2 t1
-  | DEqTrans :
-    #t1:term ->
-    #t2:term ->
-    #t3:term ->
-    def_eq t1 t2 ->
-    def_eq t2 t3 ->
-    def_eq t1 t3
+let valid (typing : env -> term -> comp -> Type0) (g:env) : Type0 =
+  forall (x:var). None? (g x) \/
+    (exists (u:universe_level). typing (restrict_above g x) (Some?.v (g x)) (Tot_ (Type_ u)))
 
-  (* Congruences *)
-  | DEqApp :
-    #t1:term ->
-    #t1':term ->
-    #t2:term ->
-    #t2':term ->
-    def_eq t1 t2 ->
-    def_eq t1' t2' ->
-    def_eq (App t1 t2) (App t1' t2')
-  | DEqLam :
-    #t1:term ->
-    #t1':term ->
-    #t2:term ->
-    #t2':term ->
-    def_eq t1 t1' ->
-    def_eq t2 t2' ->
-    def_eq (Lam t1 t2) (Lam t1' t2')
-  | DEqProd :
-    #t:term ->
-    #t':term ->
-    #c:comp ->
-    #c':comp ->
-    def_eq t t' ->
-    def_eq_comp c c' ->
-    def_eq (Prod t c) (Prod t' c')
-  | DEqRefine :
-    #t:term ->
-    #t':term ->
-    #phi:term ->
-    #phi':term ->
-    def_eq t t' ->
-    def_eq phi phi' ->
-    def_eq (Refine t phi) (Refine t' phi')
-
-  (* Computation rules *)
-  | DEqBeta :
-    #t:term ->
-    #e1:term ->
-    #e2:term ->
-    def_eq (App (Lam t e1) e2) (subst_beta e2 e1)
-  | DEqNatElimZero :
-    #t:term ->
-    #e0:term ->
-    #esucc:term ->
-    def_eq (App (App (App (App (Const NatElim []) t) e0) esucc) (Const Zero [])) e0
-  | DEqNatElimSucc :
-    #t:term ->
-    #e0:term ->
-    #esucc:term ->
-    #n:term ->
-    def_eq (App (App (App (App (Const NatElim []) t) e0) esucc) (App (Const Succ []) n))
-           (App esucc (App (App (App (App (Const NatElim []) t) e0) esucc) n))
-  | DEqEqElimRefl :
-    #t:term ->
-    #erefl:term ->
-    def_eq (App (App (App (Const EqElim []) t) erefl) (Const Refl [])) erefl
-
-and def_eq_comp : comp -> comp -> Type0 =
-  | DEqCompTot :
-    #t:term ->
-    #t':term ->
-    def_eq t t' ->
-    def_eq_comp (Tot_ t) (Tot_ t')
-  | DEqCompPure :
-    #t:term ->
-    #t':term ->
-    #wp:term ->
-    #wp':term ->
-    def_eq t t' ->
-    def_eq wp wp' ->
-    def_eq_comp (Pure_ t wp) (Pure_ t wp')
-
-
-(* Typing *)
-
+(* Definitions used during typing *)
 
 let nat_elim_type =
   List.Tot.fold_right app [
     (* p:nat -> Type0 *)
-    cnat `arr` type0 ;
+    cnat `arr` type_0 ;
     (* p 0 *)
-    Var 0 `app` czero ;
+    var_ 0 `app` czero ;
     (* forall n, p n -> p (n + 1) *)
-    cnat `arr` (Var 2 `app` Var 0) `arr` (Var 3 `app` succ (Var 1)) ;
+    cnat `arr` (var_ 2 `app` var_ 0) `arr` (var_ 3 `app` succ (var_ 1)) ;
     (* n *)
     cnat
-  ]
-  (* p n *)
-  (Var 3 `app` Var 0)
+    ]
+    (* p n *)
+    (var_ 3 `app` var_ 0)
 
 (* a:Type0 -> a -> a -> Type0 *)
-let eq_type = type_0 `arr` Var 0 `arr` Var 1 `arr` type_0
+let eq_type = type_0 `arr` var_ 0 `arr` var_ 1 `arr` type_0
 
 let eq_elim_type =
   List.Tot.fold_right app [
     (* a:Type0 *)
     type_0 ;
     (* x:a *)
-    Var 0 ;
+    var_ 0 ;
     (* p: a -> Type0 *)
-    (Var 1 `arr` type_0) ;
+    (var_ 1 `arr` type_0) ;
     (* p x *)
-    (Var 0 `app` Var 1) ;
+    (var_ 0 `app` var_ 1) ;
     (* y *)
-    Var 3 ;
+    var_ 3 ;
     (* x = y *)
-    eq (Var 4) (Var 3) (Var 0) ;
-  ]
-  (* p y *)
-  (Var 3 `app` Var 1)
+    eq (var_ 4) (var_ 3) (var_ 0) ;
+    ]
+    (* p y *)
+    (var_ 3 `app` var_ 1)
 
 let max (u1 u2 : nat) = if u1 < u2 then u2 else u1
 
-type typing : env -> term -> comp -> Type =
+(* Typing *)
+
+let tot = Tot_
+
+noeq
+type typing (def_eq : env -> term -> term -> Type0) : env -> term -> comp -> Type0 =
   | TyVar :
     #g:env ->
-    valid g ->
+    valid (typing def_eq) g ->
     x:var{Some? (g x)} ->
-    typing g (tot (Var x []))
+    typing def_eq g (Var x []) (tot (Some?.v <| g x))
 
   | TyConst :
     #g:env ->
     #c:const ->
     #t:term ->
     typing_const c t ->
-    typing g (Const c) (tot t)
+    typing def_eq g (Const c []) (tot t)
 
   (* Since we don't want constructors to contain type parameters we need to have a *)
   (* specific typing rule *)
@@ -478,20 +404,21 @@ type typing : env -> term -> comp -> Type =
     #g:env ->
     #e:term ->
     #t:term ->
-    typing g e (tot t) ->
-    typing g (refl `app` e) (tot (eq t e e))
+    typing def_eq g e (tot t) ->
+    typing def_eq g (refl e) (tot (eq t e e))
 
   | TyType :
+    #g:env ->
     u:universe_level ->
-    typing env (Type_ u) (tot (Type_ (u+1)))
+    typing def_eq g (Type_ u) (tot (Type_ (u+1)))
 
   | TyLam :
     #g:env ->
     #t:term ->
-    #c:term ->
+    #c:comp ->
     e:term ->
-    typing (extend g 0 t) e c ->
-    typing g (Lam t e) (tot (Prod t c))
+    typing def_eq (extend g 0 t) e c ->
+    typing def_eq g (Lam t e) (tot (Prod t c))
 
   | TyApp :
     #g:env ->
@@ -499,74 +426,288 @@ type typing : env -> term -> comp -> Type =
     #e1:term ->
     #c:comp ->
     #e2:term ->
-    he1:typing env e1 (tot (Prod t c)) ->
-    he2:typing env e2 (tot t) ->
-    typing_comp env (App e1 e2) c
+    he1:typing def_eq g e1 (tot (Prod t c)) ->
+    he2:typing def_eq g e2 (tot t) ->
+    typing def_eq g (App e1 e2) c
 
   | TyProd :
     #g:env ->
     #t:term ->
     #c:comp ->
-    #u1:universe ->
-    #u2:universe ->
-    typing g t (tot (Type_ u1)) ->
-    comp_typing g c (tot (Type_ u2)) ->
-    typing g (Prod t c) (tot (Type_ (max u1 u2)))
+    #u1:universe_level ->
+    #u2:universe_level ->
+    typing def_eq g t (tot (Type_ u1)) ->
+    comp_typing def_eq g c (tot (Type_ u2)) ->
+    typing def_eq g (Prod t c) (tot (Type_ (max u1 u2)))
 
   (* Impredicative *)
   | TyRefine :
     #g:env ->
     #t:term ->
     #phi:term ->
-    #u:universe ->
-    #v:universe ->
-    typing g t (tot (Type_ u)) ->
-    typing g phi (tot (Type_ v)) ->
-    typing g (Refine t phi) (tot (Type_ u))
+    #u:universe_level ->
+    #v:universe_level ->
+    typing def_eq g t (tot (Type_ u)) ->
+    typing def_eq g phi (tot (Type_ v)) ->
+    typing def_eq g (Refine t phi) (tot (Type_ u))
 
   | TyConv :
     #g:env ->
     #e:term ->
     #t1:term ->
     #t2:term ->
-    typing g e (tot t1) ->
-    def_eq t1 t2 ->
-    typing g e t2
+    typing def_eq g e (tot t1) ->
+    def_eq g t1 t2 ->
+    typing def_eq g e (tot t2)
 
-and typing_comp : env -> term -> comp -> Type =
-
-  | TyTot :
-    #g:env ->
-    #e:term ->
-    #t:term ->
-    typing g e t ->
-    typing_comp g e (Tot_ t)
-
-and comp_typing : env -> comp -> term -> Type =
+and comp_typing (def_eq : env -> term -> term -> Type) : env -> comp -> comp -> Type =
   | TyTot_ :
     #g:env ->
     #t:term ->
-    #u:universe ->
-    typing g t (Type_ u) ->
-    comp_typing g (Tot_ t) (Type_ u)
+    #u:universe_level ->
+    typing def_eq g t (tot (Type_ u)) ->
+    comp_typing def_eq g (Tot_ t) (tot (Type_ u))
 
   (* Impredicative *)
   | TyPure_ :
     #g:env ->
     #t:term ->
     #wp:term ->
-    #u:universe ->
-    typing g t (Type_ u) ->
-    typing g wp ((t `arr` type_0) `arr` type_0) ->
-    comp_typing g (Pure_ t wp) (Type_ u)
+    #u:universe_level ->
+    typing def_eq g t (tot <| Type_ u) ->
+    typing def_eq g wp (tot <| (t `arr` type_0) `arr` type_0) ->
+    comp_typing def_eq g (Pure_ t wp) (tot <| Type_ u)
 
-and typing_const : env -> const -> term -> Type =
+and typing_const : const -> term -> Type =
   | TyNat : typing_const Nat type_0
   | TyZero : typing_const Zero cnat
   | TySucc : typing_const Succ (cnat `arr` cnat)
   | TyNatElim : typing_const NatElim nat_elim_type
   | TyEq : typing_const Eq eq_type
   | TyEqElim : typing_const EqElim eq_elim_type
+
+
+(* Symmetric transitive closure of a relation *)
+
+type rel (a:Type) = a -> a -> Type0
+
+type triple (a:Type) = bool * a * a
+let concat_pred (#a:Type) (r:rel a) ((rev, z1, z2): triple a) (z2':a) =
+  if rev then r z2 z1 /\ z1 == z2' else r z1 z2 /\ z2 == z2'
+let accumulate_path (#a:Type) (r:rel a) ((rev, z1, z2):triple a) (p, z2') =
+  let pz1z2 = concat_pred #a r (rev, z1, z2) z2' in
+  (pz1z2 /\ p), z1
+
+let symmetric_transitive_closure (#a:Type) (r:rel a) : rel a =
+  fun (x y:a) ->
+    l:list (triple a){
+      Cons? l /\
+      (let (_, x',_) :: _ = l in x' == x) /\
+      fst (L.fold_right (accumulate_path #a r) l (True, y))
+    }
+
+let stc (#a:Type) (r:rel a) : rel a = symmetric_transitive_closure #a r
+let st_inject (#a:Type) (r:rel a) (x y:a) : Pure (stc #a r x y) (requires (r x y)) (ensures (fun _ -> True)) =
+  [false,x,y]
+
+(* TODO : we want to be able to write something like [wxy @ wyz by induction wxy] *)
+let rec transitivity (#a:Type) (r:rel a) (x y z : a) (wxy:stc #a r x y) (wyz:stc #a r y z)
+  : Tot (stc #a r x z) (decreases wxy)
+=
+  match wxy with
+  | [b, x_0, x_1] -> (b, x_0, x_1) :: wyz
+  | x_0 :: x_1 :: xs -> let (_, x', _) = x_1 in x_0 :: transitivity #a r x' y z (x_1 :: xs) wyz
+
+let rec symmetry' (#a:Type) (r:rel a) (x y z : a) (wyx:stc #a r y x) (wyz:stc #a r y z)
+  : Tot (stc #a r x z) (decreases wyx)
+=
+  match wyx with
+  | [b, x_0, x_1] ->
+    assert ()
+    let t = not b, x_1, x_0 in
+    assert (concat_pred #a r t y) ;
+    t :: wyz
+  | (b_0, x_00, x_01) :: (b_1, x_10, x_11) :: xs -> symmetry' #a r x x_10 z ((b_1, x_10, x_11) :: xs) ((not b_0, x_01, x_00) :: wyz)
+
+
+(* Atomic steps generating the definitional equality *)
+
+type reduce : term -> term -> Type =
+  | RedBeta :
+    #t:term ->
+    #e1:term ->
+    #e2:term ->
+    reduce (App (Lam t e1) e2) (subst_beta e2 e1)
+
+  | RedNatElimZero :
+    #t:term ->
+    #e0:term ->
+    #esucc:term ->
+    reduce (App (App (App (App (Const NatElim []) t) e0) esucc) (Const Zero [])) e0
+
+  | RedNatElimSucc :
+    #t:term ->
+    #e0:term ->
+    #esucc:term ->
+    #n:term ->
+    reduce (App (App (App (App (Const NatElim []) t) e0) esucc) (App (Const Succ []) n))
+           (App esucc (App (App (App (App (Const NatElim []) t) e0) esucc) n))
+
+  | RedEqElimRefl :
+    #t:term ->
+    #erefl:term ->
+    def_eq (App (App (App (Const EqElim []) t) erefl) (Const Refl [])) erefl
+
+(* Definitional equality *)
+
+type def_eq : env -> term -> term -> Type0 =
+
+  (* Equivalence relation *)
+  | DEqRefl :
+    #g:env ->
+    #t:term ->
+    #a:term ->
+    typing g t a ->
+    def_eq g t t
+
+  | DSTClosure :
+    #g:env ->
+    #t1:term ->
+    #t2:term ->
+    SymmetricTransitiveClosure.stc (def_eq g) t1 t2 ->
+    def_eq g t1 t2
+
+  | DCongr :
+    #g:env ->
+    #n:nat ->
+    #t1s:list term{L.length t1s == n} ->
+    #t2s:list term{L.length t1s == n} ->
+    ctx:dterm n ->
+    map3 def_eq (extend_with_ctx g ctx) t1s t2s ->
+    def_eq g (apply_ctx ctx t1s) (apply_ctx ctx t2s)
+
+  | DComputation :
+    #g:env ->
+    #t1:term ->
+    #t2:term ->
+    #a:term ->
+    typing g t1 a ->
+    typing g t2 a ->
+    reduce t1 t2 ->
+    def_eq g t1 t2
+
+(* type def_eq : env -> term -> term -> Type0 = *)
+
+(*   (\* Equivalence relation *\) *)
+(*   | DEqRefl : *)
+(*     #g:env -> *)
+(*     #t:term -> *)
+(*     #a:term -> *)
+(*     typing g t a -> *)
+(*     def_eq g t t *)
+(*   | DEqSymm : *)
+(*     #g:env -> *)
+(*     #t1:term -> *)
+(*     #t2:term -> *)
+(*     def_eq g t1 t2 -> *)
+(*     def_eq g t2 t1 *)
+(*   | DEqTrans : *)
+(*     #g:env -> *)
+(*     #t1:term -> *)
+(*     #t2:term -> *)
+(*     #t3:term -> *)
+(*     def_eq g t1 t2 -> *)
+(*     def_eq g t2 t3 -> *)
+(*     def_eq g t1 t3 *)
+
+(*   (\* Congruences *\) *)
+(*   | DEqApp : *)
+(*     #g:env -> *)
+(*     #t1:term -> *)
+(*     #t1':term -> *)
+(*     #t2:term -> *)
+(*     #t2':term -> *)
+(*     def_eq g t1 t2 -> *)
+(*     def_eq g t1' t2' -> *)
+(*     def_eq g (App t1 t2) (App t1' t2') *)
+
+(*   | DEqLam : *)
+(*     #g:env -> *)
+(*     #t1:term -> *)
+(*     #t1':term -> *)
+(*     #t2:term -> *)
+(*     #t2':term -> *)
+(*     def_eq g t1 t1' -> *)
+(*     def_eq (extend g 0 t1) t2 t2' -> *)
+(*     def_eq g (Lam t1 t2) (Lam t1' t2') *)
+
+(*   | DEqProd : *)
+(*     #g:env -> *)
+(*     #t:term -> *)
+(*     #t':term -> *)
+(*     #c:comp -> *)
+(*     #c':comp -> *)
+(*     def_eq g t t' -> *)
+(*     def_eq_comp (extend g 0 t) c c' -> *)
+(*     def_eq g (Prod t c) (Prod t' c') *)
+
+(*   | DEqRefine : *)
+(*     #g:env -> *)
+(*     #t:term -> *)
+(*     #t':term -> *)
+(*     #phi:term -> *)
+(*     #phi':term -> *)
+(*     def_eq g t t' a -> *)
+(*     def_eq (extend g 0 t) phi phi' -> *)
+(*     def_eq g (Refine t phi) (Refine t' phi') *)
+
+(*   (\* Computation rules *\) *)
+(*   | DEqBeta : *)
+(*     #g:env -> *)
+(*     #t:term -> *)
+(*     #e1:term -> *)
+(*     #e2:term -> *)
+(*     #a:term -> *)
+(*     typing (extend g 0 t) e1 a -> *)
+(*     typing g e2 t -> *)
+(*     def_eq (App (Lam t e1) e2) (subst_beta e2 e1) *)
+
+(*   | DEqNatElimZero : *)
+(*     #g:env -> *)
+(*     #t:term -> *)
+(*     #e0:term -> *)
+(*     #esucc:term -> *)
+(*     typing g t (Prod cnat ctype) *)
+(*     def_eq (App (App (App (App (Const NatElim []) t) e0) esucc) (Const Zero [])) e0 *)
+
+(*   | DEqNatElimSucc : *)
+(*     #t:term -> *)
+(*     #e0:term -> *)
+(*     #esucc:term -> *)
+(*     #n:term -> *)
+(*     def_eq (App (App (App (App (Const NatElim []) t) e0) esucc) (App (Const Succ []) n)) *)
+(*            (App esucc (App (App (App (App (Const NatElim []) t) e0) esucc) n)) *)
+(*   | DEqEqElimRefl : *)
+(*     #t:term -> *)
+(*     #erefl:term -> *)
+(*     def_eq (App (App (App (Const EqElim []) t) erefl) (Const Refl [])) erefl *)
+
+(* and def_eq_comp : comp -> comp -> Type0 = *)
+(*   | DEqCompTot : *)
+(*     #t:term -> *)
+(*     #t':term -> *)
+(*     def_eq g t t' a -> *)
+(*     def_eq_comp (Tot_ t) (Tot_ t') *)
+(*   | DEqCompPure : *)
+(*     #t:term -> *)
+(*     #t':term -> *)
+(*     #wp:term -> *)
+(*     #wp':term -> *)
+(*     def_eq g t t' a -> *)
+(*     def_eq wp wp' -> *)
+(*     def_eq_comp (Pure_ t wp) (Pure_ t wp') *)
+
+
 
 
 (* let typing_equiv (g:env) (t1 t2 : term) = *)
