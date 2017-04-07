@@ -40,7 +40,7 @@ let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
 let subst_lcomp_opt s l = match l with
-    | Some (BU.Inl l) -> Some (BU.Inl (U.lcomp_of_comp <| SS.subst_comp s (l.comp())))
+    | Some (BU.Inl l) -> Some (BU.Inl (U.lcomp_of_comp <| SS.subst_comp s ((get_lazy_comp l) ())))
     | _ -> l
 (* ------------------------------------ *)
 (* Some operations on constants *)
@@ -754,7 +754,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let reified_body = reify_body env.tcenv body in
             let c = match c with
               | BU.Inl lc ->
-                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
+                let typ = reify_comp ({env.tcenv with lax=true}) ((get_lazy_comp lc) ()) U_unknown in
                 BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
 
               (* In this case we don't have enough information to reconstruct the *)
@@ -765,7 +765,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           in
 
           let codomain_eff lc = match lc with
-            | BU.Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
+            | BU.Inl lc -> SS.subst_comp opening ((get_lazy_comp lc) ()) |> Some
             | BU.Inr (eff, flags) ->
               let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
               if Ident.lid_equals eff Const.effect_Tot_lid

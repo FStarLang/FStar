@@ -682,7 +682,7 @@ let abs_formals t =
     let subst_lcomp_opt s l = match l with
         | Some (Inl l) ->
           let l = {l with res_typ=Subst.subst s l.res_typ;
-                          comp=(fun () -> Subst.subst_comp s (l.comp()))} in
+                          comp=Inl ((fun () -> Subst.subst_comp s ((get_lazy_comp l) ())))} in
           Some (Inl l)
         | _ -> l
     in
@@ -900,7 +900,7 @@ let lcomp_of_comp c0 =
     {eff_name = eff_name;
      res_typ = comp_result c0;
      cflags = flags;
-     comp = fun() -> c0}
+     comp = Inl (fun() -> c0)}
 
 let mk_forall_aux fa x body =
   mk (Tm_app(fa, [ iarg (x.sort);

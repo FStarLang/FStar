@@ -160,7 +160,8 @@ let init () =
         ("z3seed"                       , Int 0);
         ("z3timeout"                    , Int 5);
         ("z3cliopt"                     , List []);
-        ("__no_positivity"              , Bool false)] in
+        ("__no_positivity"              , Bool false);
+        ("serialize_lax"                , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
    vals |> List.iter set_option'                          //initialize it with the default values
@@ -251,6 +252,7 @@ let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
+let get_serialize_lax           ()      = lookup_opt "serialize_lax"            as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -713,6 +715,10 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Don't check positivity of inductive types");
 
+       ( noshort,
+        "serialize_lax",
+        ZeroArgs (fun () -> Bool true),
+        "Serialize lax checked modules");
 
   ] in
      ( 'h',
@@ -963,6 +969,7 @@ let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
 let no_positivity                () = get_no_positivity               ()
+let serialize_lax                () = get_serialize_lax               ()
 
 
 let should_extract m =

@@ -197,7 +197,7 @@ and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp: either<(unit -> comp), comp> //a lazy computation or a computation, the typechecker works on Inl, we move to Inr in the post processing pass after type checking
 }
 
 and residual_comp = lident * list<cflags> (* Residual of a computation type after typechecking *)
@@ -447,3 +447,5 @@ val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
+
+val get_lazy_comp: lcomp -> (unit -> comp)

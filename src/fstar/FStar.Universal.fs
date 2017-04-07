@@ -178,7 +178,7 @@ let tc_one_file dsenv env pre_fn fn use_cache : list<(Syntax.modul * int)> //eac
     in
     let l, dsenv, env = check_mods fmods () in
     let _ =
-      if not (cache_ok) then
+      if not (cache_ok) && Options.serialize_lax () then
         let _ = if not (List.length l = 1) then failwith "Impossible, expected a single module" else () in
         let m, _ = List.hd l in
         let _ = FStar.Util.print_string ("Serializing the cache file: " ^ cache_fn ^ "\n") in

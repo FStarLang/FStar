@@ -1026,7 +1026,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     let env = Env.set_range env r in
     let env = Env.set_expected_typ env Common.t_unit in
     let e, c, g1 = tc_term env e in
-    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, c.comp()) in
+    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, (get_lazy_comp c) ()) in
     Rel.force_trivial_guard env (Rel.conj_guard g1 g);
     let se = { se with sigel = Sig_main(e) } in
     [se], []

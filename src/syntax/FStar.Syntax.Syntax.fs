@@ -194,7 +194,7 @@ and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
-    comp: unit -> comp //a lazy computation
+    comp: either<(unit -> comp), comp> //a lazy computation or a computation, the typechecker works on Inl, we move to Inr in the post processing pass after type checking
 }
 
 and residual_comp = lident * list<cflags>
@@ -532,3 +532,8 @@ let has_simple_attribute (l: list<term>) s =
     | _ ->
         false
   ) l
+
+let get_lazy_comp (l:lcomp) :(unit -> comp) =
+  match l.comp with
+  | Inl f -> f
+  | _     -> failwith "Impossible, the caller asked for the lazy comp but it's a non-lazy comp"

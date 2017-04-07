@@ -135,6 +135,7 @@ val z3_rlimit                   : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool
+val serialize_lax               : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the
