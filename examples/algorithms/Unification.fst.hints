@@ -2044,18 +2044,16 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "data_elim_Prims.Some",
+        "@MaxIFuel_assumption", "@query", "data_typing_intro_Prims.Nil@tok",
         "disc_equation_Prims.None", "equation_FStar.List.Tot.Base.test_sort",
         "equation_Prims._assert", "equation_Unification.lsubst",
-        "equation_Unification.op_At", "equation_Unification.subst",
-        "equation_Unification.unify_eqns",
-        "fuel_correspondence_Unification.solved.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.option",
+        "equation_Unification.subst", "equation_Unification.unify_eqns",
         "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "function_token_typing_Unification.subst",
         "lemma_Unification.lemma_lsubst_eqns_nil",
         "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
-        "typing_Unification.lsubst_eqns", "typing_Unification.solved",
-        "typing_Unification.unify_eqns"
+        "refinement_interpretation_Tm_refine_7a0ddd16d85a7110000e09cdaf250cae",
+        "typing_Unification.unify_correct_aux"
       ],
       0
     ]

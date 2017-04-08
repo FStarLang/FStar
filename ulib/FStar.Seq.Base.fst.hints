@@ -644,7 +644,8 @@
       2,
       1,
       [
-        "@query", "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Seq.Base.seq",
         "lemma_FStar.Seq.Base.lemma_create_len"
       ],
       0
@@ -707,7 +708,7 @@
       2,
       1,
       [
-        "@query", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Seq.Base.seq",
         "lemma_FStar.Seq.Base.lemma_len_upd",
         "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
@@ -787,7 +788,7 @@
       2,
       1,
       [
-        "@query", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Seq.Base.seq",
         "lemma_FStar.Seq.Base.lemma_len_upd",
         "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
@@ -1001,9 +1002,9 @@
       2,
       1,
       [
-        "@query", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Seq.Base.seq", "int_inversion",
-        "lemma_FStar.Seq.Base.lemma_len_slice",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Seq.Base.length",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "int_inversion", "lemma_FStar.Seq.Base.lemma_len_slice",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -1322,7 +1323,8 @@
       2,
       1,
       [
-        "@query", "fuel_guarded_inversion_FStar.Seq.Base.seq",
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Seq.Base.seq",
         "lemma_FStar.Seq.Base.lemma_init_len"
       ],
       0
@@ -1333,7 +1335,7 @@
       2,
       1,
       [
-        "@query", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Seq.Base.seq", "int_inversion",
         "lemma_FStar.Seq.Base.lemma_init_aux_len",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
