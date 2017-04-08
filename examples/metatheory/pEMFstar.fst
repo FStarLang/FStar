@@ -81,43 +81,6 @@ let rec sum_plus (l1 l2 : list nat)
   nat_monoid () ;
   L.fold_left_append_monoid add 0 l1 l2
 
-let rec first_N (#a:Type) (n:nat) (l:list a) : list a * list a =
-  if n = 0 then [], l
-  else
-    match l with
-    | [] -> [], l
-    | x :: xs -> let l1, l2 = first_N (n-1) xs in x :: l1, l2
-
-let rec first_N_length (#a:Type) (n:nat) (l:list a)
-  : Lemma (requires True) (ensures begin
-      let l_1, l_2 = first_N n l in
-      if L.length l < n then
-        L.length l_1 == L.length l /\ L.length l_2 == 0
-      else
-        L.length l_1 == n /\ L.length l_2 = L.length l - n
-    end)
-    (decreases n)
-=
-  if n = 0 then ()
-  else
-    match l with
-    | [] -> ()
-    | _::xs -> first_N_length (n-1) xs
-
-let rec first_N_assoc (#a:Type) (n1 n2:nat) (l:list a) : Lemma (requires True)
-  (ensures begin
-    let l1, l2 = first_N n1 l in
-    let l2, l3 = first_N n2 l2 in
-    let l1', l2' = first_N (n1+n2) l in
-    l1' ==  l1 @ l2 /\ l2' == l3
-  end)
-  (decreases n1)
-=
-  if n1 = 0 then ()
-  else
-    match l with
-    | [] -> ()
-    | x :: xs -> first_N_assoc (n1-1) n2 xs
 
 let (<|) f x = f x
 
@@ -135,31 +98,31 @@ and dcomp_as_comp : dcomp 0 -> comp = function
 let split_rebuild_lemma (#a:Type) (n1 n2:nat) (l:list a) (f : a -> nat)
   : Lemma (requires (b2t (L.length l >= n1 + n2)))
     (ensures begin
-      let l1, l2 = first_N n1 l in
-      let l2', l3 = first_N n2 l2 in
+      let l1, l2 = L.first_N n1 l in
+      let l2', l3 = L.first_N n2 l2 in
       L.length l2 >= n2 /\
       sum (L.map f (l1 @ l2')) == sum (L.map f l1) + sum (L.map f l2') /\
-      (l1@l2', l3) == first_N (n1 + n2) l
+      (l1@l2', l3) == L.first_N (n1 + n2) l
     end)
 =
-  let l1, l2 = first_N n1 l in
-  let l2', l3 = first_N n2 l2 in
-  first_N_length n1 l ;
-  first_N_assoc n1 n2 l ;
+  let l1, l2 = L.first_N n1 l in
+  let l2', l3 = L.first_N n2 l2 in
+  L.first_N_length n1 l ;
+  L.first_N_assoc n1 n2 l ;
   sum_plus (L.map f l1) (L.map f l2') ;
   L.map_append f l1 l2'
 
 (* Operadic composition for derived term *)
 let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k))
-  : Pure (dterm (sum <| L.map (dfst #nat #dterm) (fst <| first_N n l)) * list (k:nat & dterm k))
+  : Pure (dterm (sum <| L.map (dfst #nat #dterm) (fst <| L.first_N n l)) * list (k:nat & dterm k))
     (requires (b2t (L.length l >= n)))
-    (ensures (fun (c', l') -> snd (first_N n l) == l'))
+    (ensures (fun (c', l') -> snd (L.first_N n l) == l'))
     (decreases c)
 = match c with
   | Term t -> c, l
   | Hole ->
     let (|k, x|) :: xs = l in
-    assert_norm (sum <| L.map (dfst #nat #dterm) (fst <| first_N 1 l) == k) ;
+    assert_norm (sum <| L.map (dfst #nat #dterm) (fst <| L.first_N 1 l) == k) ;
     x, xs
   | DApp #n1 #n2 c1 c2 ->
     split_rebuild_lemma n1 n2 l (dfst #nat #dterm) ;
@@ -183,9 +146,9 @@ let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k))
     DRefine c1' c2', l
 
 and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k))
-  : Pure (dcomp (sum <| L.map (dfst #nat #dterm) (fst <| first_N n l)) * list (k:nat & dterm k))
+  : Pure (dcomp (sum <| L.map (dfst #nat #dterm) (fst <| L.first_N n l)) * list (k:nat & dterm k))
     (requires (b2t (L.length l >= n)))
-    (ensures (fun (c', l') -> snd (first_N n l) == l'))
+    (ensures (fun (c', l') -> snd (L.first_N n l) == l'))
     (decreases c)
 = match c with
   | DTot c -> let c', l = dterm_comp_extended c l in DTot c', l
@@ -196,15 +159,9 @@ and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k))
     DPure c1' c2', l
 
 
-let rec first_N_length_all (#a:Type) (l:list a)
-  : Lemma (requires True) (ensures (first_N (L.length l) l == (l, []))) (decreases l)
-= match l with
-  | [] -> ()
-  | x :: xs -> first_N_length_all xs
-
 let dterm_comp (#n:nat) (c:dterm n) (l:list (k:nat & dterm k){L.length l == n})
   : dterm (sum <| L.map dfst l)
-= first_N_length_all l ;
+= L.first_N_length_total l ;
   fst <| dterm_comp_extended c l
 
 
