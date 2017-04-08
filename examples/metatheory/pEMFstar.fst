@@ -65,7 +65,22 @@ and dcomp : nat -> Type =
   | DTot : #n:nat -> dterm n -> dcomp n
   | DPure : #n1:nat -> #n2:nat -> dterm n1 -> dterm n2 -> dcomp (n1 + n2)
 
-let sum = L.fold_left (+) 0
+let add (x y:nat): nat = x + y
+let sum :list nat -> nat = L.fold_left add 0
+let nat_monoid ()
+  : Lemma (
+    (forall u v w. add u (add v w) == add (add u v) w) /\
+    (forall u. add u 0 == u) /\
+    (forall u. add 0 u == u)
+  )
+= ()
+
+let rec sum_plus (l1 l2 : list nat)
+  : Lemma (requires True) (ensures (sum l1 + sum l2 == sum (l1 @ l2))) (decreases l1)
+=
+  nat_monoid () ;
+  L.fold_left_append_monoid add 0 l1 l2
+
 let rec first_N (#a:Type) (n:nat) (l:list a) : list a * list a =
   if n = 0 then [], l
   else
@@ -73,44 +88,124 @@ let rec first_N (#a:Type) (n:nat) (l:list a) : list a * list a =
     | [] -> [], l
     | x :: xs -> let l1, l2 = first_N (n-1) xs in x :: l1, l2
 
+let rec first_N_length (#a:Type) (n:nat) (l:list a)
+  : Lemma (requires True) (ensures begin
+      let l_1, l_2 = first_N n l in
+      if L.length l < n then
+        L.length l_1 == L.length l /\ L.length l_2 == 0
+      else
+        L.length l_1 == n /\ L.length l_2 = L.length l - n
+    end)
+    (decreases n)
+=
+  if n = 0 then ()
+  else
+    match l with
+    | [] -> ()
+    | _::xs -> first_N_length (n-1) xs
+
+let rec first_N_assoc (#a:Type) (n1 n2:nat) (l:list a) : Lemma (requires True)
+  (ensures begin
+    let l1, l2 = first_N n1 l in
+    let l2, l3 = first_N n2 l2 in
+    let l1', l2' = first_N (n1+n2) l in
+    l1' ==  l1 @ l2 /\ l2' == l3
+  end)
+  (decreases n1)
+=
+  if n1 = 0 then ()
+  else
+    match l with
+    | [] -> ()
+    | x :: xs -> first_N_assoc (n1-1) n2 xs
+
 let (<|) f x = f x
 
-(* (\* Operadic composition for derived term *\) *)
-(* let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k)) *)
-(*   : Pure (dterm (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k)) *)
-(*     (requires (b2t (L.length l >= n))) *)
-(*     (ensures (fun (c', l') -> snd (first_N n l) == l')) *)
-(* = match c with *)
-(*   | Term t -> c, l *)
-(*   | Hole -> let x :: xs = l in x, xs *)
-(*   | DApp #n1 #n2 c1 c2 -> *)
-(*     let c1', l = dterm_comp_extended c1 l in *)
-(*     let c2', l = dterm_comp_extended c2 l in *)
-(*     DApp c1' c2', l *)
-(*   | DProd c1 c2 -> *)
-(*     let c1', l = dterm_comp_extended c1 l in *)
-(*     let c2', l = dterm_comp_extended_comp c2 l in *)
-(*     DProd c1' c2', l *)
-(*   | DRefine #n1 #n2 c1 c2 -> *)
-(*     let c1', l = dterm_comp_extended c1 l in *)
-(*     let c2', l = dterm_comp_extended c2 l in *)
-(*     DRefine c1' c2', l *)
+let rec dterm_as_term : dterm 0 -> term = function
+  | Term t -> t
+  | DApp dt1 dt2 -> App (dterm_as_term dt1) (dterm_as_term dt2)
+  | DLam dt1 dt2 -> Lam (dterm_as_term dt1) (dterm_as_term dt2)
+  | DProd dt dc -> Prod (dterm_as_term dt) (dcomp_as_comp dc)
+  | DRefine dt1 dt2 -> Refine (dterm_as_term dt1) (dterm_as_term dt2)
 
-(* and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k)) *)
-(*   : Pure (dcomp (sum <| L.map dfst (fst <| first_N n l)) * list (k:nat & dterm k)) *)
-(*     (requires (L.length l >= n)) *)
-(*     (ensures (fun (c', l') -> snd (first_N n l) == l')) *)
-(* = match c with *)
-(*   | DTot c -> let c', l = dterm_comp_extended c l in DTot c', l *)
-(*   | DPure c1 c2 -> *)
-(*     let c1', l = dterm_comp_extended c1 l in *)
-(*     let c2', l = dterm_comp_extended c2 l in *)
-(*     DPure c1' c2', l *)
+and dcomp_as_comp : dcomp 0 -> comp = function
+  | DTot dt -> Tot_ (dterm_as_term dt)
+  | DPure dt1 dt2 -> Pure_ (dterm_as_term dt1) (dterm_as_term dt2)
+
+let split_rebuild_lemma (#a:Type) (n1 n2:nat) (l:list a) (f : a -> nat)
+  : Lemma (requires (b2t (L.length l >= n1 + n2)))
+    (ensures begin
+      let l1, l2 = first_N n1 l in
+      let l2', l3 = first_N n2 l2 in
+      L.length l2 >= n2 /\
+      sum (L.map f (l1 @ l2')) == sum (L.map f l1) + sum (L.map f l2') /\
+      (l1@l2', l3) == first_N (n1 + n2) l
+    end)
+=
+  let l1, l2 = first_N n1 l in
+  let l2', l3 = first_N n2 l2 in
+  first_N_length n1 l ;
+  first_N_assoc n1 n2 l ;
+  sum_plus (L.map f l1) (L.map f l2') ;
+  L.map_append f l1 l2'
+
+(* Operadic composition for derived term *)
+let rec dterm_comp_extended (#n:nat) (c:dterm n) (l:list (k:nat & dterm k))
+  : Pure (dterm (sum <| L.map (dfst #nat #dterm) (fst <| first_N n l)) * list (k:nat & dterm k))
+    (requires (b2t (L.length l >= n)))
+    (ensures (fun (c', l') -> snd (first_N n l) == l'))
+    (decreases c)
+= match c with
+  | Term t -> c, l
+  | Hole ->
+    let (|k, x|) :: xs = l in
+    assert_norm (sum <| L.map (dfst #nat #dterm) (fst <| first_N 1 l) == k) ;
+    x, xs
+  | DApp #n1 #n2 c1 c2 ->
+    split_rebuild_lemma n1 n2 l (dfst #nat #dterm) ;
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DApp c1' c2', l
+  | DLam #n1 #n2 c1 c2 ->
+    split_rebuild_lemma n1 n2 l (dfst #nat #dterm) ;
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DLam c1' c2', l
+  | DProd #n1 #n2 c1 c2 ->
+    split_rebuild_lemma n1 n2 l (dfst #nat #dterm) ;
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended_comp c2 l in
+    DProd c1' c2', l
+  | DRefine #n1 #n2 c1 c2 ->
+    split_rebuild_lemma n1 n2 l (dfst #nat #dterm) ;
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DRefine c1' c2', l
+
+and dterm_comp_extended_comp (#n:nat) (c:dcomp n) (l:list (k:nat & dterm k))
+  : Pure (dcomp (sum <| L.map (dfst #nat #dterm) (fst <| first_N n l)) * list (k:nat & dterm k))
+    (requires (b2t (L.length l >= n)))
+    (ensures (fun (c', l') -> snd (first_N n l) == l'))
+    (decreases c)
+= match c with
+  | DTot c -> let c', l = dterm_comp_extended c l in DTot c', l
+  | DPure #n1 #n2 c1 c2 ->
+    split_rebuild_lemma n1 n2 l (dfst #nat #dterm) ;
+    let c1', l = dterm_comp_extended c1 l in
+    let c2', l = dterm_comp_extended c2 l in
+    DPure c1' c2', l
 
 
-(* let dterm_comp (#n:nat) (c:dterm n) (l:list (k:nat & dterm k){L.length l == n}) *)
-(*   : dterm (sum <| L.map dfst l) *)
-(* = dterm_comp_extended *)
+let rec first_N_length_all (#a:Type) (l:list a)
+  : Lemma (requires True) (ensures (first_N (L.length l) l == (l, []))) (decreases l)
+= match l with
+  | [] -> ()
+  | x :: xs -> first_N_length_all xs
+
+let dterm_comp (#n:nat) (c:dterm n) (l:list (k:nat & dterm k){L.length l == n})
+  : dterm (sum <| L.map dfst l)
+= first_N_length_all l ;
+  fst <| dterm_comp_extended c l
 
 
 
@@ -485,49 +580,6 @@ and typing_const : const -> term -> Type =
   | TyNatElim : typing_const NatElim nat_elim_type
   | TyEq : typing_const Eq eq_type
   | TyEqElim : typing_const EqElim eq_elim_type
-
-
-(* Symmetric transitive closure of a relation *)
-
-type rel (a:Type) = a -> a -> Type0
-
-type triple (a:Type) = bool * a * a
-let concat_pred (#a:Type) (r:rel a) ((rev, z1, z2): triple a) (z2':a) =
-  if rev then r z2 z1 /\ z1 == z2' else r z1 z2 /\ z2 == z2'
-let accumulate_path (#a:Type) (r:rel a) ((rev, z1, z2):triple a) (p, z2') =
-  let pz1z2 = concat_pred #a r (rev, z1, z2) z2' in
-  (pz1z2 /\ p), z1
-
-let symmetric_transitive_closure (#a:Type) (r:rel a) : rel a =
-  fun (x y:a) ->
-    l:list (triple a){
-      Cons? l /\
-      (let (_, x',_) :: _ = l in x' == x) /\
-      fst (L.fold_right (accumulate_path #a r) l (True, y))
-    }
-
-let stc (#a:Type) (r:rel a) : rel a = symmetric_transitive_closure #a r
-let st_inject (#a:Type) (r:rel a) (x y:a) : Pure (stc #a r x y) (requires (r x y)) (ensures (fun _ -> True)) =
-  [false,x,y]
-
-(* TODO : we want to be able to write something like [wxy @ wyz by induction wxy] *)
-let rec transitivity (#a:Type) (r:rel a) (x y z : a) (wxy:stc #a r x y) (wyz:stc #a r y z)
-  : Tot (stc #a r x z) (decreases wxy)
-=
-  match wxy with
-  | [b, x_0, x_1] -> (b, x_0, x_1) :: wyz
-  | x_0 :: x_1 :: xs -> let (_, x', _) = x_1 in x_0 :: transitivity #a r x' y z (x_1 :: xs) wyz
-
-let rec symmetry' (#a:Type) (r:rel a) (x y z : a) (wyx:stc #a r y x) (wyz:stc #a r y z)
-  : Tot (stc #a r x z) (decreases wyx)
-=
-  match wyx with
-  | [b, x_0, x_1] ->
-    assert ()
-    let t = not b, x_1, x_0 in
-    assert (concat_pred #a r t y) ;
-    t :: wyz
-  | (b_0, x_00, x_01) :: (b_1, x_10, x_11) :: xs -> symmetry' #a r x x_10 z ((b_1, x_10, x_11) :: xs) ((not b_0, x_01, x_00) :: wyz)
 
 
 (* Atomic steps generating the definitional equality *)
