@@ -4076,9 +4076,8 @@ and post_process_lcomp:
         match lc.FStar_Syntax_Syntax.comp with
         | FStar_Util.Inl c_thunk ->
             let uu____5613 = c_thunk () in post_process_comp env uu____5613
-        | FStar_Util.Inr uu____5614 ->
-            failwith
-              "Impossible, post processing pass did not expect forced comp in lcomp" in
+        | FStar_Util.Inr c ->
+            failwith "Impossible, expected all comp in lcomp to be lazy" in
       let uu___116_5623 = lc in
       let uu____5624 = post_process_typ env lc.FStar_Syntax_Syntax.res_typ in
       {

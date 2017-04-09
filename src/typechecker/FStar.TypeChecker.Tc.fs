@@ -1269,7 +1269,8 @@ let post_process_withinfo_t (post_process_a:(Env.env -> 'a -> 'a)) (post_process
 let post_process_var (post_process_a:(Env.env -> 'a -> 'a)) (env:Env.env) (t:var<'a>) :var<'a> =
   post_process_withinfo_t post_process_id post_process_a env t
 
-let rec post_process_sigelt (env:Env.env) (se:sigelt) :sigelt = { se with sigel = post_process_sigel env se.sigel }
+let rec post_process_sigelt (env:Env.env) (se:sigelt) :sigelt =
+  { se with sigel = post_process_sigel env se.sigel }
 
 and post_process_sigel (env:Env.env) (se:sigelt') :sigelt' =
   match se with
@@ -1356,7 +1357,7 @@ and post_process_lcomp (env:Env.env) (lc:lcomp) :lcomp =
   let c =
     match lc.comp with
     | Inl c_thunk -> post_process_comp env (c_thunk ())
-    | Inr _       -> failwith "Impossible, post processing pass did not expect forced comp in lcomp"
+    | Inr c       -> post_process_comp env c
   in
   { lc with res_typ = post_process_typ env lc.res_typ; comp = Inr c }
 
