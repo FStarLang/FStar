@@ -946,11 +946,11 @@ and infer (env: env) (e: term): nm * term * term =
         | Some (Inl lc) ->
             if lc.cflags |> BU.for_some (function CPS -> true | _ -> false)
             then
-                let double_starred_comp = S.mk_Total (double_star <| U.comp_result ((get_lazy_comp lc) ())) in
+                let double_starred_comp = S.mk_Total (double_star <| U.comp_result (get_comp_of_lcomp lc)) in
                 let flags = List.filter (function CPS -> false | _ -> true) lc.cflags in
                 Some (Inl (U.lcomp_of_comp (comp_set_flags double_starred_comp flags)))
             else Some (Inl ({ lc with comp = Inl (begin fun () ->
-                        let c = (get_lazy_comp lc) () in
+                        let c = get_comp_of_lcomp lc in
                         let result_typ = star_type' env (U.comp_result c) in
                         U.set_result_typ c result_typ
                       end)  }))

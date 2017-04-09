@@ -1026,7 +1026,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     let env = Env.set_range env r in
     let env = Env.set_expected_typ env Common.t_unit in
     let e, c, g1 = tc_term env e in
-    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, (get_lazy_comp c) ()) in
+    let e, _, g = check_expected_effect env (Some (U.ml_comp Common.t_unit r)) (e, get_comp_of_lcomp c) in
     Rel.force_trivial_guard env (Rel.conj_guard g1 g);
     let se = { se with sigel = Sig_main(e) } in
     [se], []
@@ -1294,8 +1294,10 @@ and post_process_binders (env:Env.env) (bs:binders) :binders = post_process_list
 and post_process_typ (env:Env.env) (ty:typ) :typ = post_process_term env ty
 
 and post_process_term (env:Env.env) (t:term) :term =
-  let t = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm] env t in
-  post_process_syntax post_process_term' env t
+  //AR: this is tricky, we need to keep the terms well-typed as we navigate them, by pushing binders, univs, etc. to the env
+  //this means lots of opens, substs, etc.
+  //let t = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm] env t in
+  post_process_syntax post_process_term' env (SS.compress t)  //this is a bit hacky, normalization should take care of it already
 
 and post_process_term' (env:Env.env) (t:term') :term' =
   match t with
@@ -1319,7 +1321,7 @@ and post_process_term' (env:Env.env) (t:term') :term' =
   | Tm_uvar (uv, t) -> failwith "Impossible, expected Tm_uvars to have gone by the post processing phase"
   | Tm_delayed (_, _) -> failwith "Impossible, expected Tm_delayed to have gone by the post processing phase"
   | Tm_meta (t, md) -> Tm_meta (post_process_term env t, post_process_metadata env md)
-  | Tm_unknown -> failwith "Impossible, expected Tm_unknown to have gone by the post processing phase"
+  | Tm_unknown -> t
 
 and post_process_metadata (env:Env.env) (md:metadata) :metadata =
   match md with
@@ -1333,9 +1335,10 @@ and post_process_metadata (env:Env.env) (md:metadata) :metadata =
 and post_process_ascription (env:Env.env) (asc:ascription) :ascription =
   post_process_tuple (post_process_either post_process_term post_process_comp) (post_process_option post_process_term) env asc
 
-and post_process_branches (env:Env.env) (branches:list<branch>) :list<branch> = post_process_list post_process_branch env branches
+//annotating types on branches, return type, and on post_process_branch gives type error in boorstrapping
+and post_process_branches (env:Env.env) branches = post_process_list post_process_branch env branches
 
-and post_process_branch (env:Env.env) (b:branch) :branch =
+and post_process_branch (env:Env.env) b =
   post_process_triple post_process_pat (post_process_option post_process_term) post_process_term env b
 
 and post_process_pat (env:Env.env) (p:pat) :pat = post_process_withinfo_t post_process_pat' post_process_term' env p
@@ -1390,7 +1393,9 @@ and post_process_eff_decl (env:Env.env) (ed:eff_decl) :eff_decl =
     actions      = post_process_actions env ed.actions
   }
 
-and post_process_tscheme (env:Env.env) (ts:tscheme) :tscheme = post_process_tuple post_process_id post_process_typ env ts
+and post_process_tscheme (env:Env.env) (ts:tscheme) :tscheme =
+  let uvs, t = ts in
+  uvs, post_process_typ (Env.push_univ_vars env uvs) t
 
 and post_process_actions (env:Env.env) (acts:list<action>) :list<action> = post_process_list post_process_action env acts
 
@@ -1421,7 +1426,16 @@ let tc_decls env ses =
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
 
     let ses', ses_elaborated = tc_decl env se  in
+
+    (*let _ =
+      List.iter (fun se -> BU.print1 "\nBefore post processing sigelt: %s\n" (Print.sigelt_to_string se)) ses'
+    in*)
+
     let ses' = ses' |> List.map (post_process_sigelt env) in
+
+    (*let _ =
+      List.iter (fun se -> BU.print1 "\nAfter post processing sigelt: %s\n" (Print.sigelt_to_string se)) ses'
+    in*)
 
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
 

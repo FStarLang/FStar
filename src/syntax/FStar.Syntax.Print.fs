@@ -263,7 +263,7 @@ let rec term_to_string x =
   | Tm_abs(bs, t2, lc) ->
     begin match lc with
         | Some (Inl l) when (Options.print_implicits()) ->
-          U.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| (get_lazy_comp l) ())
+          U.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| (get_comp_of_lcomp l))
           (* TODO : Consider adding an option printing the cflags *)
         | Some (Inr (l, flags)) when (Options.print_implicits()) ->
           U.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
@@ -333,7 +333,7 @@ and lbs_to_string quals lbs =
 
 and lcomp_to_string lc =
     if Options.print_effect_args () then
-        comp_to_string ((get_lazy_comp lc) ())
+        comp_to_string ((get_comp_of_lcomp lc))
     else
         U.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
 

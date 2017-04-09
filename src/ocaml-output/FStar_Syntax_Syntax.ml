@@ -1174,10 +1174,6 @@ let has_simple_attribute: term Prims.list -> Prims.string -> Prims.bool =
                tk = uu____4363; pos = uu____4364; vars = uu____4365;_} when
                (FStar_Util.string_of_unicode data) = s -> true
            | uu____4370 -> false) l
-let get_lazy_comp: lcomp -> Prims.unit -> comp =
+let get_comp_of_lcomp: lcomp -> (comp',Prims.unit) syntax =
   fun l  ->
-    match l.comp with
-    | FStar_Util.Inl f -> f
-    | uu____4393 ->
-        failwith
-          "Impossible, the caller asked for the lazy comp but it's a non-lazy comp"
+    match l.comp with | FStar_Util.Inr c -> c | FStar_Util.Inl f -> f ()

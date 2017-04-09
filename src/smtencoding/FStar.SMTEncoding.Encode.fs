@@ -752,7 +752,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let reified_body = reify_body env.tcenv body in
             let c = match c with
               | BU.Inl lc ->
-                let typ = reify_comp ({env.tcenv with lax=true}) (get_comp lc) U_unknown in
+                let typ = reify_comp ({env.tcenv with lax=true}) (get_comp_of_lcomp lc) U_unknown in
                 BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
 
               (* In this case we don't have enough information to reconstruct the *)
@@ -763,7 +763,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           in
 
           let codomain_eff lc = match lc with
-            | BU.Inl lc -> SS.subst_comp opening (get_comp lc) |> Some
+            | BU.Inl lc -> SS.subst_comp opening (get_comp_of_lcomp lc) |> Some
             | BU.Inr (eff, flags) ->
               let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
               if Ident.lid_equals eff Const.effect_Tot_lid

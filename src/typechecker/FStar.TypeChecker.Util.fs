@@ -475,7 +475,7 @@ let lax_mk_tot_or_comp_l mname u_result result flags =
 
 let subst_lcomp subst lc =
     {lc with res_typ=SS.subst subst lc.res_typ;
-             comp=Inl (fun () -> SS.subst_comp subst ((get_lazy_comp lc) ()))}
+             comp=Inl (fun () -> SS.subst_comp subst (get_comp_of_lcomp lc))}
 
 let is_function t = match (compress t).n with
     | Tm_arrow _ -> true
@@ -519,8 +519,8 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
          let u_t = env.universe_of env lc2.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ []
       else begin
-          let c1 = (get_lazy_comp lc1) () in
-          let c2 = (get_lazy_comp lc2) () in
+          let c1 = get_comp_of_lcomp lc1 in
+          let c2 = get_comp_of_lcomp lc2 in
           if debug env Options.Extreme
           then BU.print5 "b=%s,Evaluated %s to %s\n And %s to %s\n"
                 (match b with
@@ -606,7 +606,7 @@ let weaken_guard g1 g2 = match g1, g2 with
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
-      let c = (get_lazy_comp lc) () in
+      let c = get_comp_of_lcomp lc in
       if env.lax
       && Options.ml_ish() //NS: Disabling this optimization temporarily
       then c
@@ -634,7 +634,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                                 (Rel.guard_to_string env g0) in
          let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
          let strengthen () =
-            let c = (get_lazy_comp lc) () in
+            let c = get_comp_of_lcomp lc in
             if env.lax
             then c
             else begin
@@ -648,7 +648,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                         then let x = S.gen_bv "strengthen_pre_x" None (U.comp_result c) in
                              let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
                              let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, U.lcomp_of_comp xret) in
-                             (get_lazy_comp lc) ()
+                             get_comp_of_lcomp lc
                         else c in
 
                     if Env.debug env <| Options.Extreme
@@ -696,7 +696,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
                    None res_t.pos in
     let lc2 = mk_comp md_pure u_res_t res_t forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind (Env.get_range env) env None (U.lcomp_of_comp comp) (Some x, U.lcomp_of_comp lc2) in
-    (get_lazy_comp lc) ()
+    get_comp_of_lcomp lc
 
 let ite env (guard:formula) lcomp_then lcomp_else =
   let joined_eff = join_lcomp env lcomp_then lcomp_else in
@@ -707,7 +707,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
          let u_t = env.universe_of env lcomp_then.res_typ in
          lax_mk_tot_or_comp_l joined_eff u_t lcomp_then.res_typ []
       else begin
-          let (md, _, _), (u_res_t, res_t, wp_then), (_, _, wp_else) = lift_and_destruct env ((get_lazy_comp lcomp_then) ()) ((get_lazy_comp lcomp_else) ()) in
+          let (md, _, _), (u_res_t, res_t, wp_then), (_, _, wp_else) = lift_and_destruct env (get_comp_of_lcomp lcomp_then) (get_comp_of_lcomp lcomp_else) in
           let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
           let wp = ifthenelse md res_t guard wp_then wp_else in
           if (Options.split_cases()) > 0
@@ -745,7 +745,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                 let md     = Env.get_effect_decl env Const.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
             let comp = List.fold_right (fun (g, cthen) celse ->
-                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env ((get_lazy_comp cthen) ()) celse in
+                let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env (get_comp_of_lcomp cthen) celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
             if (Options.split_cases()) > 0
             then add_equality_to_post_condition env comp res_t
@@ -763,7 +763,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
 
 let close_comp env bvs (lc:lcomp) =
   let close () =
-      let c = (get_lazy_comp lc) () in
+      let c = get_comp_of_lcomp lc in
       if U.is_ml_comp c then c
       else
         if env.lax
@@ -789,7 +789,7 @@ let close_comp env bvs (lc:lcomp) =
 
 let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let refine () =
-      let c = (get_lazy_comp lc) () in
+      let c = get_comp_of_lcomp lc in
       if not (is_pure_or_ghost_effect env lc.eff_name)
       || env.lax
       then c
@@ -808,7 +808,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
 
            let lc = bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret) in
-           let c = U.comp_set_flags ((get_lazy_comp lc) ()) (PARTIAL_RETURN::U.comp_flags c) in
+           let c = U.comp_set_flags (get_comp_of_lcomp lc) (PARTIAL_RETURN::U.comp_flags c) in
            c in
 
   let flags =
@@ -865,7 +865,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
               if env.lax
               && Options.ml_ish() //NS: disabling this optimization temporarily
               then
-                (get_lazy_comp lc) ()
+                get_comp_of_lcomp lc
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
@@ -873,10 +873,10 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
                         //it's trivial
                         let lc = {lc with res_typ=t} in
-                        (get_lazy_comp lc) ()
+                        get_comp_of_lcomp lc
 
                       | _ ->
-                          let c = (get_lazy_comp lc) () in
+                          let c = get_comp_of_lcomp lc in
                           if Env.debug env <| Options.Extreme
                           then BU.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
                                   (N.term_to_string env lc.res_typ)
@@ -907,7 +907,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                           in
                           let x = {x with sort=lc.res_typ} in
                           let c = bind e.pos env (Some e) (U.lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
-                          let c = (get_lazy_comp c) () in
+                          let c = get_comp_of_lcomp c in
                           if Env.debug env <| Options.Extreme
                           then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
                           c
@@ -1226,8 +1226,8 @@ let check_top_level env g lc : (bool * comp) =
     U.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if U.is_total_lcomp lc
-  then discharge g, (get_lazy_comp lc) ()
-  else let c = (get_lazy_comp lc) () in
+  then discharge g, get_comp_of_lcomp lc
+  else let c = get_comp_of_lcomp lc in
        let steps = [Normalize.Beta] in
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp

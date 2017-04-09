@@ -87,7 +87,7 @@ let maybe_extend_subst s b v : subst_t =
     else NT(fst b, v)::s
 
 let set_lcomp_result lc t =
-    {lc with res_typ=t; comp=Inl (fun () -> U.set_result_typ ((get_lazy_comp lc) ()) t)}
+    {lc with res_typ=t; comp=Inl (fun () -> U.set_result_typ (get_comp_of_lcomp lc) t)}
 
 let memo_tk (e:term) (t:typ) = e.tk := Some t.n; e
 
@@ -345,7 +345,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let expected_c, _, g = tc_comp env0 expected_c in
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
-    let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, (get_lazy_comp c') ()) in
+    let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, get_comp_of_lcomp c') in
     let e = mk (Tm_ascribed(e, (Inl t_res, None), Some (U.comp_effect_name expected_c))) (Some t_res.n) top.pos in
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
@@ -405,7 +405,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             end ;
             u
     in
-    let repr = Env.reify_comp env ((get_lazy_comp c) ()) u_c in
+    let repr = Env.reify_comp env (get_comp_of_lcomp c) u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
     let e, c, g' = comp_check_expected_typ env e c in
@@ -543,7 +543,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     in
     if debug env Options.Extreme
     then BU.print2 "(%s) comp type = %s\n"
-                      (Range.string_of_range top.pos) (Print.comp_to_string <| (get_lazy_comp cres) ());
+                      (Range.string_of_range top.pos) (Print.comp_to_string <| get_comp_of_lcomp cres);
 
     e, cres, Rel.conj_guard g1 g_branches
 
@@ -969,9 +969,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     if Env.debug env <| Options.Other "Implicits"
     then BU.print2 "Introduced %s implicits in body of abstraction\nAfter solving constraints, cbody is %s\n"
         (string_of_int <| List.length guard_body.implicits)
-        (Print.comp_to_string <| (get_lazy_comp cbody) ());
+        (Print.comp_to_string <| get_comp_of_lcomp cbody);
 
-    let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, (get_lazy_comp cbody) ()) in
+    let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, get_comp_of_lcomp cbody) in
     let guard = Rel.conj_guard guard_body guard in
 //    let guard = match tacopt with
 //                | None -> guard
@@ -1087,7 +1087,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
           | _ ->  (* partial app *)
               let g = Rel.conj_guard ghead guard |> Rel.solve_deferred_constraints env in
-              U.lcomp_of_comp <| mk_Total  (SS.subst subst <| U.arrow bs ((get_lazy_comp cres) ())), g
+              U.lcomp_of_comp <| mk_Total  (SS.subst subst <| U.arrow bs (get_comp_of_lcomp cres)), g
       in
       if debug env Options.Low then BU.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
 
@@ -1598,7 +1598,7 @@ and check_top_level_let env e =
             then g1, e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
-                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, (get_lazy_comp c1) ()]) in
+                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, get_comp_of_lcomp c1]) in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
 
@@ -1614,7 +1614,7 @@ and check_top_level_let env e =
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  let _ = Rel.force_trivial_guard env g1 in
-                 let c = (get_lazy_comp c1) () |> N.normalize_comp [N.Beta] env in
+                 let c = get_comp_of_lcomp c1 |> N.normalize_comp [N.Beta] env in
                  let e2 = if Util.is_pure_comp c
                           then e2
                           else mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos in
@@ -1914,7 +1914,7 @@ and tc_tot_or_gtot_term env e : term
   if U.is_tot_or_gtot_lcomp c
   then e, c, g
   else let g = Rel.solve_deferred_constraints env g in
-       let c = (get_lazy_comp c) () in
+       let c = get_comp_of_lcomp c in
        let c = norm_c env c in
        let target_comp, allow_ghost =
             if TcUtil.is_pure_effect env (U.comp_effect_name c)

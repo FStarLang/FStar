@@ -448,5 +448,4 @@ val set_range_of_fv:fv -> range -> fv
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
 
-val get_lazy_comp: lcomp -> (unit -> comp)
-val get_comp: lcomp -> comp
+val get_comp_of_lcomp: lcomp -> comp

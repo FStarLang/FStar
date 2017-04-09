@@ -682,7 +682,7 @@ let abs_formals t =
     let subst_lcomp_opt s l = match l with
         | Some (Inl l) ->
           let l = {l with res_typ=Subst.subst s l.res_typ;
-                          comp=Inl ((fun () -> Subst.subst_comp s ((get_lazy_comp l) ())))} in
+                          comp=Inl ((fun () -> Subst.subst_comp s (get_comp_of_lcomp l)))} in
           Some (Inl l)
         | _ -> l
     in

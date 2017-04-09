@@ -533,12 +533,7 @@ let has_simple_attribute (l: list<term>) s =
         false
   ) l
 
-let get_lazy_comp (l:lcomp) :(unit -> comp) =
-  match l.comp with
-  | Inl f -> f
-  | _     -> failwith "Impossible, the caller asked for the lazy comp but it's a non-lazy comp"
-
-let get_comp (l:lcomp) :comp =
+let get_comp_of_lcomp (l:lcomp) :comp =
   match l.comp with
   | Inr c -> c
-  | Inl _ -> failwith "Impossible, the caller asked for comp, but it's a lazy comp"
+  | Inl f -> f ()

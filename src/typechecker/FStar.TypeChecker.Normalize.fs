@@ -883,7 +883,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let lopt = match lopt with
-                        | Some (Inl l) -> SS.subst_comp opening ((get_lazy_comp l) ()) |> U.lcomp_of_comp |> Inl |> Some
+                        | Some (Inl l) -> SS.subst_comp opening (get_comp_of_lcomp l) |> U.lcomp_of_comp |> Inl |> Some
                         | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
@@ -1609,7 +1609,7 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
            {lc with eff_name=pure_eff;
-                    comp=Inl (fun () -> ghost_to_pure env ((get_lazy_comp lc) ()))}
+                    comp=Inl (fun () -> ghost_to_pure env (get_comp_of_lcomp lc))}
          | None -> //can't downgrade, don't know the particular incarnation of PURE to use
            lc
     else lc

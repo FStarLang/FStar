@@ -305,7 +305,7 @@ let push_subst_lcomp s lopt = match lopt with
     | Some (Inr _) -> lopt
     | Some (Inl l) ->
       Some (Inl ({l with res_typ=subst' s l.res_typ;
-                         comp=Inl ((fun () -> subst_comp' s ((get_lazy_comp l) ())))}))
+                         comp=Inl ((fun () -> subst_comp' s (get_comp_of_lcomp l)))}))
 
 let push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
@@ -513,7 +513,7 @@ let close_binders (bs:binders) : binders =
 let close_lcomp (bs:binders) lc =
     let s = closing_subst bs in
     {lc with res_typ=subst s lc.res_typ;
-             comp=Inl ((fun () -> subst_comp s ((get_lazy_comp lc) ()))); }
+             comp=Inl ((fun () -> subst_comp s (get_comp_of_lcomp lc))); }
 
 let close_pat p =
     let rec aux sub p = match p.v with

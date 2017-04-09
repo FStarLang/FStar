@@ -253,9 +253,7 @@ and inst_lcomp_opt:
                   (FStar_Util.Inl
                      (fun uu____839  ->
                         let uu____840 =
-                          let uu____843 =
-                            FStar_Syntax_Syntax.get_lazy_comp lc in
-                          uu____843 () in
+                          FStar_Syntax_Syntax.get_comp_of_lcomp lc in
                         inst_comp s uu____840))
               } in
             FStar_Util.Inl uu____828 in
@@ -266,18 +264,18 @@ let instantiate:
     fun t  ->
       match i with
       | [] -> t
-      | uu____862 ->
+      | uu____859 ->
           let inst_fv t1 fv =
-            let uu____870 =
+            let uu____867 =
               FStar_Util.find_opt
-                (fun uu____876  ->
-                   match uu____876 with
-                   | (x,uu____880) ->
+                (fun uu____873  ->
+                   match uu____873 with
+                   | (x,uu____877) ->
                        FStar_Ident.lid_equals x
                          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                 i in
-            match uu____870 with
+            match uu____867 with
             | None  -> t1
-            | Some (uu____887,us) ->
+            | Some (uu____884,us) ->
                 mk t1 (FStar_Syntax_Syntax.Tm_uinst (t1, us)) in
           inst inst_fv t
