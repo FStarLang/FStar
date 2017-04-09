@@ -1247,6 +1247,28 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | _ -> Env.push_sigelt env se
 
 
+let post_process_id (env:Env.env) (x:'a) :'a = x
+let post_process_tuple (post_process_a:(Env.env -> 'a -> 'a)) (post_process_b:(Env.env -> 'b -> 'b)) (env:Env.env) (t:('a * 'b)) :('a * 'b) =
+  post_process_a env (fst t), post_process_b env (snd t)
+let post_process_triple (post_process_a:(Env.env -> 'a -> 'a)) (post_process_b:(Env.env -> 'b -> 'b)) (post_process_c:(Env.env -> 'c -> 'c)) (env:Env.env) (t:('a * 'b * 'c)) :('a * 'b * 'c) =
+  let x, y, z = t in
+  post_process_a env x, post_process_b env y, post_process_c env z
+let post_process_list (post_process_a:(Env.env -> 'a -> 'a)) (env:Env.env) (l:list<'a>) :list<'a> = l |> List.map (post_process_a env)
+let post_process_option (post_process_a:(Env.env -> 'a -> 'a)) (env:Env.env) (t:option<'a>) :option<'a> =
+  match t with
+  | None -> None
+  | Some x -> Some (post_process_a env x)
+let post_process_either (post_process_a:(Env.env -> 'a -> 'a)) (post_process_b:(Env.env -> 'b -> 'b)) (env:Env.env) (t:either<'a, 'b>) :either<'a, 'b> =
+  match t with
+  | Inl x -> Inl (post_process_a env x)
+  | Inr y -> Inr (post_process_b env y)
+let post_process_syntax (post_process_a:(Env.env -> 'a -> 'a)) (env:Env.env) (t:syntax<'a, 'b>) :syntax<'a, 'b> =
+  { t with n = post_process_a env t.n; tk = BU.mk_ref None; vars = BU.mk_ref None }
+let post_process_withinfo_t (post_process_a:(Env.env -> 'a -> 'a)) (post_process_b:(Env.env -> 'b -> 'b)) (env:Env.env) (t:withinfo_t<'a, 'b>) :withinfo_t<'a, 'b> =
+  { t with v = post_process_a env t.v; ty = post_process_b env t.ty } 
+let post_process_var (post_process_a:(Env.env -> 'a -> 'a)) (env:Env.env) (t:var<'a>) :var<'a> =
+  post_process_withinfo_t post_process_id post_process_a env t
+
 let rec post_process_sigelt (env:Env.env) (se:sigelt) :sigelt = { se with sigel = post_process_sigel env se.sigel }
 
 and post_process_sigel (env:Env.env) (se:sigelt') :sigelt' =
@@ -1267,20 +1289,81 @@ and post_process_sigel (env:Env.env) (se:sigelt') :sigelt' =
     Sig_effect_abbrev (lid, uvs, post_process_binders env bs, post_process_comp env cmp, quals, flags)
   | Sig_pragma _ -> se
 
-and post_process_binders (env:Env.env) (bs:binders) :binders = bs |> List.map (post_process_binder env)
+and post_process_binders (env:Env.env) (bs:binders) :binders = post_process_list post_process_binder env bs
 
 and post_process_typ (env:Env.env) (ty:typ) :typ = post_process_term env ty
 
 and post_process_term (env:Env.env) (t:term) :term =
   let t = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm] env t in
-  (* TODO: go inside the term *)
-  { t with tk = BU.mk_ref None; vars = BU.mk_ref None }
+  post_process_syntax post_process_term' env t
+
+and post_process_term' (env:Env.env) (t:term') :term' =
+  match t with
+  | Tm_bvar bv -> Tm_bvar (post_process_bv env bv)
+  | Tm_name bv -> Tm_name (post_process_bv env bv)
+  | Tm_fvar fv -> Tm_fvar (post_process_fv env fv)
+  | Tm_uinst (t, uvs) -> Tm_uinst (post_process_term env t, uvs)
+  | Tm_constant _
+  | Tm_type _ -> t
+  | Tm_abs (bs, body, opt) ->
+    let bs = post_process_binders env bs in
+    let body = post_process_term env body in
+    let opt = post_process_option (post_process_either post_process_lcomp post_process_id) env opt in
+    Tm_abs (bs, body, opt)
+  | Tm_arrow (bs, c) -> Tm_arrow (post_process_binders env bs, post_process_comp env c)
+  | Tm_refine (bv, t) -> Tm_refine (post_process_bv env bv, post_process_term env t)
+  | Tm_app (t, args) -> Tm_app (post_process_term env t, post_process_args env args)
+  | Tm_match (t, branches) -> Tm_match (post_process_term env t, post_process_branches env branches)
+  | Tm_ascribed (t, asc, l_opt) -> Tm_ascribed (post_process_term env t, post_process_ascription env asc, l_opt)
+  | Tm_let (lbs, t) -> Tm_let (post_process_letbindings env lbs, post_process_term env t)
+  | Tm_uvar (uv, t) -> failwith "Impossible, expected Tm_uvars to have gone by the post processing phase"
+  | Tm_delayed (_, _) -> failwith "Impossible, expected Tm_delayed to have gone by the post processing phase"
+  | Tm_meta (t, md) -> Tm_meta (post_process_term env t, post_process_metadata env md)
+  | Tm_unknown -> failwith "Impossible, expected Tm_unknown to have gone by the post processing phase"
+
+and post_process_metadata (env:Env.env) (md:metadata) :metadata =
+  match md with
+  | Meta_pattern l -> Meta_pattern (post_process_list post_process_args env l)
+  | Meta_named _ -> md
+  | Meta_labeled _ -> md
+  | Meta_desugared _ -> md
+  | Meta_monadic (mname, ty) -> Meta_monadic (mname, post_process_typ env ty)
+  | Meta_monadic_lift (mname_from, mname_to, ty) -> Meta_monadic_lift (mname_from, mname_to, post_process_typ env ty)
+
+and post_process_ascription (env:Env.env) (asc:ascription) :ascription =
+  post_process_tuple (post_process_either post_process_term post_process_comp) (post_process_option post_process_term) env asc
+
+and post_process_branches (env:Env.env) (branches:list<branch>) :list<branch> = post_process_list post_process_branch env branches
+
+and post_process_branch (env:Env.env) (b:branch) :branch =
+  post_process_triple post_process_pat (post_process_option post_process_term) post_process_term env b
+
+and post_process_pat (env:Env.env) (p:pat) :pat = post_process_withinfo_t post_process_pat' post_process_term' env p
+
+and post_process_pat' (env:Env.env) (p:pat') :pat' =
+  match p with
+  | Pat_constant _ -> p
+  | Pat_disj l -> Pat_disj (post_process_list post_process_pat env l)
+  | Pat_cons (fv, l) -> Pat_cons (post_process_fv env fv, post_process_list (post_process_tuple post_process_pat post_process_id) env l)
+  | Pat_var bv -> Pat_var (post_process_bv env bv)
+  | Pat_wild bv -> Pat_wild (post_process_bv env bv)
+  | Pat_dot_term (bv, t) -> Pat_dot_term (post_process_bv env bv, post_process_term env t)
+
+and post_process_lcomp (env:Env.env) (lc:lcomp) :lcomp =
+  let c =
+    match lc.comp with
+    | Inl c_thunk -> post_process_comp env (c_thunk ())
+    | Inr _       -> failwith "Impossible, post processing pass did not expect forced comp in lcomp"
+  in
+  { lc with res_typ = post_process_typ env lc.res_typ; comp = Inr c }
+
+and post_process_fv (env:Env.env) (t:fv) :fv = { t with fv_name = post_process_var post_process_term env t.fv_name } 
 
 and post_process_binder (env:Env.env) (b:binder) :binder = (post_process_bv env (fst b), snd b)
 
 and post_process_bv (env:Env.env) (b:bv) :bv = { b with sort = post_process_term env b.sort }
 
-and post_process_letbindings (env:Env.env) (lbs:letbindings) :letbindings = (fst lbs, (snd lbs) |> List.map (post_process_letbinding env))
+and post_process_letbindings (env:Env.env) (lbs:letbindings) :letbindings = (fst lbs, post_process_list post_process_letbinding env (snd lbs))
 
 and post_process_letbinding (env:Env.env) (lb:letbinding) :letbinding =
   { lb with lbtyp = post_process_typ env lb.lbtyp; lbdef = post_process_term env lb.lbdef }
@@ -1307,25 +1390,17 @@ and post_process_eff_decl (env:Env.env) (ed:eff_decl) :eff_decl =
     actions      = post_process_actions env ed.actions
   }
 
-and post_process_tscheme (env:Env.env) (ts:tscheme) :tscheme =
-  (fst ts, post_process_typ env (snd ts))
+and post_process_tscheme (env:Env.env) (ts:tscheme) :tscheme = post_process_tuple post_process_id post_process_typ env ts
 
-and post_process_actions (env:Env.env) (acts:list<action>) :list<action> = acts |> List.map (post_process_action env)
+and post_process_actions (env:Env.env) (acts:list<action>) :list<action> = post_process_list post_process_action env acts
 
 and post_process_action (env:Env.env) (act:action) :action =
   { act with action_defn = post_process_term env act.action_defn; action_typ = post_process_typ env act.action_typ }
 
 and post_process_sub_eff (env:Env.env) (se:sub_eff) :sub_eff =
-  { se with lift_wp = post_process_tscheme_option env se.lift_wp; lift = post_process_tscheme_option env se.lift }
+  { se with lift_wp = post_process_option post_process_tscheme env se.lift_wp; lift = post_process_option post_process_tscheme env se.lift }
 
-and post_process_tscheme_option (env:Env.env) (topt:option<tscheme>) :option<tscheme> =
-  match topt with
-  | None    -> None
-  | Some ts -> Some (post_process_tscheme env ts)
-
-and post_process_comp (env:Env.env) (c:comp) :comp =
-  let c = { c with n = post_process_comp' env c.n; tk = BU.mk_ref None; vars = BU.mk_ref None } in
-  c
+and post_process_comp (env:Env.env) (c:comp) :comp = post_process_syntax post_process_comp' env c
 
 and post_process_comp' (env:Env.env) (c:comp') :comp' =
   match c with
@@ -1336,7 +1411,7 @@ and post_process_comp' (env:Env.env) (c:comp') :comp' =
 and post_process_comp_typ (env:Env.env) (ct:comp_typ) :comp_typ =
   { ct with result_typ = post_process_typ env ct.result_typ; effect_args = post_process_args env ct.effect_args }
 
-and post_process_args (env:Env.env) (arg_s:args) :args = arg_s |> List.map (post_process_arg env)
+and post_process_args (env:Env.env) (arg_s:args) :args = post_process_list post_process_arg env arg_s
 
 and post_process_arg (env:Env.env) (a:arg) :arg = (post_process_term env (fst a), snd a)
 
