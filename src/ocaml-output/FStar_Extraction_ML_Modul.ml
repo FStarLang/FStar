@@ -696,7 +696,7 @@ let rec extract_sig :
                  | ([],t1) ->
                      let b =
                        let uu____1373 =
-                         FStar_Syntax_Syntax.gen_bv "x" None t1  in
+                         FStar_Syntax_Syntax.gen_bv "_" None t1  in
                        FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder
                          uu____1373
                         in
