@@ -250,7 +250,7 @@ let collect_one
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
   let auto_open =
-    if basename filename = "prims.fst" then
+    if basename filename = Options.prims_basename () then
       []
     else
       [ Const.fstar_ns_lid; Const.prims_lid ]
