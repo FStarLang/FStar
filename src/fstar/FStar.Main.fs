@@ -108,9 +108,6 @@ let go _ =
           end;
           let filename = List.hd filenames in
 
-
-          let filename = FStar.Common.try_convert_file_name_to_mixed filename in
-
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
