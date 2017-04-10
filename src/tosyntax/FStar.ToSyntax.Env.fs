@@ -361,6 +361,26 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
     in
     aux env.scope_mods
 
+(** Forbid self-references to current module (#451) *)
+
+let fail_if_curmodule env ns_original ns_resolved =
+  if lid_equals ns_resolved (current_module env)
+  then
+    if lid_equals ns_resolved FStar.Syntax.Const.prims_lid
+    then () // disable this check for Prims, because of Prims.unit, etc.
+    else raise (Error (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str, range_of_lid ns_original))
+  else ()
+
+let fail_if_qualified_by_curmodule env lid =
+  match lid.ns with
+  | [] -> ()
+  | _ ->
+    let modul_orig = lid_of_ids lid.ns in
+    begin match resolve_module_name env modul_orig true with
+    | Some modul_res -> fail_if_curmodule env modul_orig modul_res
+    | _ -> ()
+    end
+
 let namespace_is_open env lid =
   List.existsb (function
                 | Open_module_or_namespace (ns, Open_namespace) -> lid_equals lid ns
@@ -860,6 +880,7 @@ let push_namespace env ns =
      then (ns, Open_namespace)
      else raise (Error(BU.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns), Ident.range_of_lid ns))
   | Some ns' ->
+     let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
      push_scope_mod env (Open_module_or_namespace (ns', kd))
@@ -867,8 +888,10 @@ let push_namespace env ns =
 let push_include env ns =
     (* similarly to push_namespace in the case of modules, we allow
        module abbrevs, but not namespace resolution *)
+    let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
+      let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
       (* update the list of includes *)
@@ -906,7 +929,8 @@ let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
-  then push_scope_mod env (Module_abbrev (x,l))
+  then let _ = fail_if_curmodule env l l in
+       push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
 let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
