@@ -105,8 +105,10 @@ val qualify: env -> ident -> lident
 
 val empty_env: unit -> env
 val current_module: env -> lident
+val try_current_module: env -> option<lident>
 val try_lookup_id: env -> ident -> option<(term*bool)>
 val shorten_module_path: env -> list<ident> -> bool -> (list<ident> * list<ident>)
+val shorten_lid: env -> lid -> lid
 val try_lookup_lid: env -> lident -> option<(term*bool)>
 val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>

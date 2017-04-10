@@ -27,6 +27,7 @@ open FStar.TypeChecker.Env
 
 module DsEnv   = FStar.ToSyntax.Env
 module TcEnv   = FStar.TypeChecker.Env
+module SS      = FStar.Syntax.Syntax
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
@@ -124,8 +125,9 @@ type input_chunks =
   | Push of bool * int * int //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
-  | Info of string * bool * option<(string * int * int)>
+  | Info of string * option<(string * int * int)>
   | Completions of string
+  | ShowMatch of string
 
 
 type interactive_state = {
@@ -207,10 +209,10 @@ let rec read_chunk () =
       match Util.split l " " with
       | [_; symbol] ->
         Util.clear_string_builder s.chunk;
-        Info (symbol, true, None)
+        Info (symbol, None)
       | [_; symbol; file; row; col] ->
         Util.clear_string_builder s.chunk;
-        Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
+        Info (symbol, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
         Util.print_error ("Unrecognized \"#info\" request: " ^l);
         exit 1
@@ -222,6 +224,9 @@ let rec read_chunk () =
       | _ ->
         Util.print_error ("Unrecognized \"#completions\" request: " ^ l);
         exit 1
+  else if Util.starts_with l "#show-match " then
+      let typ = Util.substring_from l (String.length "#show-match ") in
+      ShowMatch typ
   else if l = "#finish" then exit 0
   else
     (Util.string_builder_append s.chunk line;
@@ -384,22 +389,22 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
 let rec go (line_col:(int*int))
            (filename:string)
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
+  let (dsenv: DsEnv.env), (tcenv: TcEnv.env) = env in
   match shift_chunk () with
-  | Info(symbol, fqn_only, pos_opt) ->
+  | Info(symbol, pos_opt) ->
     let dsenv, tcenv = env in
     let info_at_pos_opt = match pos_opt with
       | None -> None
-      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
+      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos tcenv file row col in
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
-        if symbol = "" then None
+        if symbol = "" || DsEnv.try_current_module dsenv = None then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
-             let lid = if fqn_only then lid
-                       else match DsEnv.resolve_to_fully_qualified_name dsenv lid with
-                            | None -> lid
-                            | Some lid -> lid in
-             try_lookup_lid (snd env) lid
+             let lid = match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+                       | None -> lid
+                       | Some lid -> lid in
+             try_lookup_lid tcenv lid
                |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
@@ -407,8 +412,43 @@ let rec go (line_col:(int*int))
        let name, doc =
          match name_or_lid with
          | Inl name -> name, None
-         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
-       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info (snd env) name typ rng doc));
+         | Inr lid -> (Ident.string_of_lid lid,
+                       DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
+       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info tcenv name typ rng doc));
+    go line_col filename stack curmod env ts
+  | ShowMatch (type_str) ->
+    let dummy_decl = Util.format1 "let __show_match_dummy__ : Type = (%s)" type_str in
+    let dummy_fragment = {frag_text=dummy_decl; frag_line=0; frag_col=0} in
+
+    let env_mark = mark env in
+    let results =
+      match curmod, FStar.Parser.ParseIt.parse (Inr dummy_fragment) with
+      | Some _, Inl (Inr decls, _) ->
+        (try
+           let _dsenv', ses = FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls in
+           // FIXME: We never typecheck [ses].  Ideally we'd run something like this:
+           //     let ses, _exported, _tcenv' = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+           // but that causes F* to complain loudly (“Failed to resolve implicit
+           // argument of type … introduced in … because user-provided implicit”)
+           match ses with
+           | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _, _) }] ->
+             TypeChecker.Env.try_lookup_match_info (snd env) def
+               |> Util.map_option
+                    (fun (typ_name, branches) ->
+                      (DsEnv.shorten_lid dsenv typ_name,
+                       List.map (fun mib -> { mib with mib_name =
+                                              DsEnv.shorten_lid dsenv mib.mib_name })
+                                branches))
+           | _ -> None
+         with | FStar.Errors.Error _
+              | FStar.Errors.Err _ -> None)
+      | _ -> None in
+    (match results with
+     | Some (typ_lid, mi) ->
+       Util.print1 "%s\n#done-ok\n" (TypeChecker.Err.format_match_info typ_lid mi)
+     | None -> Util.print_string "\n#done-nok\n");
+
+    let env = reset_mark env_mark in
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user
@@ -476,7 +516,6 @@ let rec go (line_col:(int*int))
         let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
             : list<(list<ident> * list<ident> * int)>
             =
-            let dsenv = fst env in
             let exported_names = DsEnv.transitive_exported_ids dsenv m in
             let matched_length =
               List.fold_left
@@ -494,11 +533,10 @@ let rec go (line_col:(int*int))
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
-          = let dsenv, _ = env in 
-            let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
+          = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
-            matches |> List.filter (fun (ns, id, _) -> 
-              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with 
+            matches |> List.filter (fun (ns, id, _) ->
+              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
               | None -> false
               | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
         in

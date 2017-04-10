@@ -50,7 +50,10 @@ let nm_to_string bv =
     then bv_to_string bv
     else bv.ppname.idText
 
-let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
+let db_to_string bv =
+    if Options.print_bound_var_indices()
+    then bv.ppname.idText ^ "@" ^ string_of_int bv.index
+    else bv.ppname.idText
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -293,6 +296,7 @@ let rec term_to_string x =
     if (Options.print_universes())
     then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
     else term_to_string t
+  | Tm_unknown -> "_"
   | _ -> tag_of_term x
 
 and  pat_to_string x = match x.v with

@@ -31,14 +31,43 @@ module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
 open FStar.TypeChecker.Common
 
+let format_match_info typ_lid match_info =
+    let format_var (var, typ) =
+        var, BU.format2 "${%s<<<%s>>>}" var (Print.term_to_string typ) in
+    let format_branch { mib_name = name; mib_kind = kind; mib_vars = vars } =
+        let vars = List.map format_var vars in
+        match kind with
+        | NilBranch ->
+          "[]"
+        | ConsBranch ->
+          "(" ^ (BU.concat_l " :: " (List.map snd vars)) ^ ")"
+        | RecordBranch ->
+          let format_field (name, place) = name ^ " = " ^ place in
+          "{ " ^ (BU.concat_l "; " (List.map format_field vars)) ^ " }"
+        | TupleBranch ->
+          "(" ^ (BU.concat_l ", " (List.map snd vars)) ^ ")"
+        | VariantBranch ->
+          "(" ^ BU.concat_l " " (Ident.string_of_lid name :: List.map snd vars) ^ ")" in
+    Options.with_saved_options
+      (fun () ->
+       Options.set_option "print_full_name" (Options.Bool true);
+       Options.set_option "print_bound_var_indices" (Options.Bool false); // Not reparseable
+       Options.set_option "print_bound_var_types" (Options.Bool false); // Not reparseable
+       Options.set_option "print_implicits" (Options.Bool true);
+       Options.set_option "print_universes" (Options.Bool false);
+       BU.concat_l "\n" (Ident.string_of_lid typ_lid :: List.map format_branch match_info))
+
 let format_info env name typ range (doc: option<string>) =
-    BU.format4 "(defined at %s) %s: %s%s"
-        (Range.string_of_range range)
-        name
-        (Normalize.term_to_string env typ)
-        (match doc with
-         | Some docstring -> BU.format1 "#doc %s" docstring
-         | None -> "")
+    Options.with_saved_options
+      (fun () ->
+       Options.set_option "print_bound_var_indices" (Options.Bool false);
+       BU.format4 "(defined at %s) %s: %s%s"
+           (Range.string_of_range range)
+           name
+           (Normalize.term_to_string env typ)
+           (match doc with
+            | Some docstring -> BU.format1 "#doc %s" docstring
+            | None -> ""))
 
 let info_at_pos env file row col =
     match TypeChecker.Common.info_at_pos file row col with

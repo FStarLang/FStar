@@ -111,6 +111,7 @@ let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
+let try_current_module env = env.curmodule
 let qual = qual_id
 let qualify env id =
     match env.curmonad with
@@ -406,6 +407,10 @@ let shorten_module_path env ids is_full_path =
          match aux ns_rev_prefix ns_last_id with
          | None -> ([], ids)
          | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
+
+let shorten_lid env lid =
+    let (_, short) = shorten_module_path env lid.ns true in
+    lid_of_ns_and_id short lid.ident
 
 (* Generic name resolution. *)
 

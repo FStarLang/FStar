@@ -543,9 +543,10 @@ let mk_data l args =
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
       mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
 
+let is_field_name x = U.starts_with x.idText "^fname^"
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
 let unmangle_field_name x =
-    if U.starts_with x.idText "^fname^"
+    if is_field_name x
     then mk_ident(U.substring_from x.idText 7, x.idRange)
     else x
 
@@ -622,18 +623,15 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (* closing types and terms *)
 (***********************************************************************************************)
 let abs bs t lopt =
-  if List.length bs = 0 then
-    t
-  else
+  match bs with
+  | [] -> t
+  | _ ->
     let close_lopt lopt = match lopt with
         | None
         | Some (Inr _) -> lopt
         | Some (Inl lc) ->
             Some (Inl (close_lcomp bs lc))
     in
-    match bs with
-    | [] -> t
-    | _ ->
     let body = compress (Subst.close bs t) in
     match body.n, lopt with
         | Tm_abs(bs', t, lopt'), None ->

@@ -536,6 +536,14 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
+let binders_of_datacons env lid =
+  match lookup_qname env lid with
+  | Some (Inr({ sigel = Sig_datacon(_, _, dc_typ, _, _, _, _) }, _), _) ->
+    let dc_typ = Subst.compress dc_typ in
+    let binders, _ = arrow_formals dc_typ in
+    Some binders
+  | _ -> None
+
 let lookup_definition delta_levels env lid =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
@@ -703,6 +711,91 @@ let num_inductive_ty_params env lid =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) -> List.length tps
   | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+
+type match_info_branch_kind = | NilBranch | ConsBranch | TupleBranch | RecordBranch | VariantBranch
+
+type match_info_branch = { // TODO Unify with Pattern?
+  mib_name: lid;
+  mib_kind: match_info_branch_kind;
+  mib_vars: list<(string * typ)>
+}
+
+(** Enumerate branches of a match on type [typ].
+
+    [typ] should be an inductive type (e.g. [list]), possibly applied.  The
+    result is a list of match branches, each of which has a constructor (an
+    [lident]) and multiple arguments (a name and a type). *)
+let try_lookup_match_info env (t: typ) =
+  let get_mib_kind constructor_name explicits =
+      match (string_of_lid constructor_name) with
+      | "Prims.Nil" -> NilBranch
+      | "Prims.Cons" -> ConsBranch
+      | "Prims.Mktuple2" | "Prims.Mktuple3" | "Prims.Mktuple4"
+      | "Prims.Mktuple5" | "Prims.Mktuple6" | "Prims.Mktuple7" | "Prims.Mktuple8" -> TupleBranch
+      | _ -> match explicits with
+             | (bv, _) :: _ when Syntax.Util.is_field_name bv.ppname -> RecordBranch
+             | _ -> VariantBranch in
+
+  let rec mksubsts args binders = // Pair up arguments to [tuple2] and parameters of [Mktuple2]
+    match args, binders with
+    | [], _ -> []
+    | _, [] -> failwith "Too many arguments for this type."
+    | (t, _)::args, (bv, _)::binders -> Syntax.Syntax.NT (bv, t) :: mksubsts args binders in
+
+  let constructor_match_info args cs_lid = // for args=['a; int]
+    let binders = match binders_of_datacons env cs_lid with // [a@0, b@1, x:a@0, y:b@1] (args of Mktuple2)
+                  | None -> []
+                  | Some binders -> binders in
+    let substs = mksubsts args binders in // [b@1 → int]
+    let substituted = subst_binders substs binders in // [a@0, int, x:a@0, y:int]
+    let is_implicit (_, ql) = S.is_implicit ql in
+    let implicits, explicits = List.partition is_implicit substituted in // [a@0, int], [x:a@0, y:int]
+    assert (List.length args <= List.length implicits);
+    { mib_name = cs_lid;
+      mib_kind = get_mib_kind cs_lid explicits;
+      mib_vars = List.map (fun bv -> // bv.sort is [a@0] for x and [int] for y
+                           let id = Syntax.Util.unmangle_field_name bv.ppname in
+                           (id.idText, bv.sort)) (List.map fst explicits) } in
+
+  let head_lid_and_args typ : option<(lid * list<arg>)> =
+    let hd, args = Syntax.Util.head_and_args typ in
+    match Syntax.Util.un_uinst hd with
+    | { n = Tm_fvar fv } -> Some (fv.fv_name.v, args)
+    | _ -> None in
+
+  let binders_and_datacons_of_typ env lid =
+    match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, binders, _, _, dcs, _) }, _), _) ->
+      Some (binders, dcs)
+    | _ -> None in
+
+  let pad_list lst n padding =
+    let rec repeat n x = if n <= 0 then [] else x :: repeat (n - 1) x in
+    lst @ (repeat (n - List.length lst) padding) in
+
+  let rec analyze_inductive_type (typ: typ) =
+    match head_lid_and_args typ with
+    | None -> None
+    | Some (hd, args) ->
+      match binders_and_datacons_of_typ env hd with
+      | Some (binders, constructors) ->
+        let args_padded = pad_list args (List.length binders) (S.tun, None) in
+        Some (hd, binders, args_padded, constructors)
+      | _ -> None in // FIXME this would be the right point to resolve type aliases:
+                     // Something like
+                     //   match lookup_qname env lid with
+                     //   | Some (Inr({ sigel = Sig_declare_typ(_, _, typ, _) } as se, _), _) -> …
+                     // But one would be have to be careful with type substitutions.
+
+  analyze_inductive_type t
+    |> BU.map_option (fun (hd, _binders, args, constructors) ->
+                      // FIXME `binders' here holds the binders of the inductive
+                      // type; since these are shared by all constructors, one
+                      // should be able to create a substitution once and for
+                      // all by zipping them with `args'.  That didn't work when
+                      // I tried, though: the constructors has #.'a and #.'b,
+                      // while the parent type had 'a and 'b
+                      (hd, List.map (constructor_match_info args) constructors))
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //

@@ -88,13 +88,13 @@ let check_uvars r t =
   then
     let us = List.map (fun (x, _) -> Print.uvar_to_string x) (BU.set_elements uvs) |> String.concat ", " in
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
-    Options.push();
-    Options.set_option "hide_uvar_nums" (Options.Bool false);
-    Options.set_option "print_implicits" (Options.Bool true);
-    Errors.report r
-      (BU.format2 "Unconstrained unification variables %s in type signature %s; \
-       please add an annotation" us (Print.term_to_string t));
-    Options.pop()
+    Options.with_saved_options
+      (fun () ->
+       Options.set_option "hide_uvar_nums" (Options.Bool false);
+       Options.set_option "print_implicits" (Options.Bool true);
+       Errors.report r
+         (BU.format2 "Unconstrained unification variables %s in type signature %s; \
+          please add an annotation" us (Print.term_to_string t)))
 
 (************************************************************************)
 (* Extracting annotations from a term *)
