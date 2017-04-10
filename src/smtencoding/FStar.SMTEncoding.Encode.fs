@@ -588,9 +588,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let fsym, fterm = fresh_fvar "f" Fuel_sort in
 
-        let encoding = mkAnd(mk_HasTypeWithFuel (Some fterm) xtm base_t, refinement) in
+        let tm_has_type_with_fuel = mk_HasTypeWithFuel (Some fterm) xtm base_t in
 
-        let cvars = Term.free_variables encoding |> List.filter (fun (y, _) -> y <> x && y <> fsym) in
+        let encoding = mkAnd(tm_has_type_with_fuel, refinement) in
+
+        let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
+        let cvars = cvars |> List.filter (fun (y, _) -> y <> x && y <> fsym) in
+
         let xfv = (x, Term_sort) in
         let ffv = (fsym, Fuel_sort) in
         let tkey = mkForall([], ffv::xfv::cvars, encoding) in
