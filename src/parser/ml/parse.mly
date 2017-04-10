@@ -1,7 +1,6 @@
 %{
 (*
  We are expected to have only 6 shift-reduce conflicts.
- 
  A lot (142) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
