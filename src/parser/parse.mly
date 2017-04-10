@@ -205,7 +205,10 @@ rawDecl:
       { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings lbs r in
+        if q <> Rec && List.length lbs <> 1
+        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
         TopLevelLet(q, lbs)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ

@@ -1116,19 +1116,13 @@ and desugar_comp r env t =
       | _ -> false
     in
     let is_smt_pat (t,_) =
-      BU.print1 "is_smt_pat called with %s\n" (term_to_string t) ;
       match (unparen t).tm with
       | Construct (cons, [{tm=Construct (smtpat, _)}, _; _]) ->
-        let b1 = Ident.lid_equals cons C.cons_lid  in
-        let b2 =
-          BU.for_some (fun s -> smtpat.str = s)
-            (* the smt pattern does not seem to be disambiguated yet at this point *)
-            ["SMTPat" ; "SMTPatT" ; "SMTPatOr"]
-            (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
-        in
-        let bool_to_string b = if b then "true" else "false" in
-        BU.print2 "Pattern valid booleans are %s %s\n" (bool_to_string b1) (bool_to_string b2) ;
-        b1 && b2
+        Ident.lid_equals cons C.cons_lid &&
+        BU.for_some (fun s -> smtpat.str = s)
+          (* the smt pattern does not seem to be disambiguated yet at this point *)
+          ["SMTPat" ; "SMTPatT" ; "SMTPatOr"]
+          (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
       | _ -> false
     in
     let is_decreases = is_app "decreases" in
