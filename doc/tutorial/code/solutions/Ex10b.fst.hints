@@ -1,5 +1,5 @@
 [
-  "Á÷-W Ló\fV\u0018(µ¶\u0010‡Ç",
+  "Úﬁ¢‘9\fö+Í\u0004ñÀ=@4–",
   [
     [
       "Ex10b.point",
@@ -50,9 +50,9 @@
       ],
       0
     ],
-    [ "Ex10b.Point.x", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex10b.__proj__Point__item__x", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex10b.Point.y",
+      "Ex10b.__proj__Point__item__y",
       1,
       2,
       1,
@@ -64,7 +64,7 @@
       0
     ],
     [
-      "Ex10b.Point.y",
+      "Ex10b.__proj__Point__item__y",
       2,
       2,
       1,
@@ -199,7 +199,7 @@
         "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
         "fuel_guarded_inversion_Ex10b.point",
         "function_token_typing_Prims.int",
-        "haseqTm_refine_ca520274eabc77868e788e70814bcab3"
+        "haseqTm_refine_eb0df8af9c288e6ffc15b663a81b3bc3"
       ],
       0
     ],
@@ -226,10 +226,11 @@
         "pretyping_6c86c071b92797cdf01eb016249a9465",
         "proj_equation_Ex10b.Point_x", "proj_equation_Ex10b.Point_y",
         "projection_inverse_FStar.Heap.Ref_r",
-        "refinement_interpretation_Tm_refine_1415776481d303ea8504359ca0f5fb29",
-        "refinement_interpretation_Tm_refine_48ee2fef4b8232a0b052b33f92135659",
-        "token_correspondence_FStar.Heap.restrict", "typing_Ex10b.Point.x",
-        "typing_Ex10b.Point.y", "typing_FStar.Heap.concat",
+        "refinement_interpretation_Tm_refine_140c1a76b7c84c553fdbcc41340cd62b",
+        "refinement_interpretation_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "token_correspondence_FStar.Heap.restrict",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y", "typing_FStar.Heap.concat",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.domain",
         "typing_FStar.Heap.only", "typing_FStar.TSet.complement"
       ],
@@ -259,9 +260,9 @@
         "l_or-interp", "lemma_FStar.TSet.mem_singleton",
         "lemma_FStar.TSet.mem_union", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y",
-        "refinement_interpretation_Tm_refine_1415776481d303ea8504359ca0f5fb29",
-        "typing_Ex10b.Point.x", "typing_Ex10b.Point.y",
-        "typing_FStar.TSet.singleton"
+        "refinement_interpretation_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y", "typing_FStar.TSet.singleton"
       ],
       0
     ],
@@ -335,7 +336,7 @@
         "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
         "fuel_guarded_inversion_Ex10b.point",
         "function_token_typing_Prims.int",
-        "haseqTm_refine_ca520274eabc77868e788e70814bcab3"
+        "haseqTm_refine_eb0df8af9c288e6ffc15b663a81b3bc3"
       ],
       0
     ],
@@ -364,10 +365,11 @@
         "pretyping_ae567c2fb75be05905677af440075565",
         "proj_equation_Ex10b.Point_x", "proj_equation_Ex10b.Point_y",
         "ref_injectivity", "ref_inversion",
-        "refinement_interpretation_Tm_refine_1415776481d303ea8504359ca0f5fb29",
-        "refinement_interpretation_Tm_refine_48ee2fef4b8232a0b052b33f92135659",
-        "token_correspondence_FStar.Heap.restrict", "typing_Ex10b.Point.x",
-        "typing_Ex10b.Point.y", "typing_FStar.Heap.concat",
+        "refinement_interpretation_Tm_refine_140c1a76b7c84c553fdbcc41340cd62b",
+        "refinement_interpretation_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "token_correspondence_FStar.Heap.restrict",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y", "typing_FStar.Heap.concat",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.domain",
         "typing_FStar.Heap.op_Hat_Plus_Hat", "typing_FStar.TSet.complement",
         "typing_FStar.TSet.singleton"
@@ -398,9 +400,9 @@
         "l_or-interp", "lemma_FStar.TSet.mem_singleton",
         "lemma_FStar.TSet.mem_union", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y",
-        "refinement_interpretation_Tm_refine_1415776481d303ea8504359ca0f5fb29",
-        "typing_Ex10b.Point.x", "typing_Ex10b.Point.y",
-        "typing_FStar.TSet.singleton", "unit_inversion", "unit_typing"
+        "refinement_interpretation_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y", "typing_FStar.TSet.singleton"
       ],
       0
     ]

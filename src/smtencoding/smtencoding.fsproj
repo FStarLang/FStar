@@ -70,14 +70,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="term.fsi" />
-    <Compile Include="term.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="z3.fs" />
-    <Compile Include="splitcases.fs" />
-    <Compile Include="errorReporting.fs" />
-    <Compile Include="encode.fs" />
-    <Compile Include="solver.fs" />
+    <Compile Include="FStar.SMTEncoding.Term.fsi" />
+    <Compile Include="FStar.SMTEncoding.Term.fs" />
+    <Compile Include="FStar.SMTEncoding.Util.fs" />
+    <Compile Include="FStar.SMTEncoding.Z3.fs" />
+    <Compile Include="FStar.SMTEncoding.SplitQueryCases.fs" />
+    <Compile Include="FStar.SMTEncoding.ErrorReporting.fsi" />
+    <Compile Include="FStar.SMTEncoding.ErrorReporting.fs" />
+    <Compile Include="FStar.SMTEncoding.Encode.fsi" />
+    <Compile Include="FStar.SMTEncoding.Encode.fs" />
+    <Compile Include="FStar.SMTEncoding.Solver.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

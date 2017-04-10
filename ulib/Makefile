@@ -1,22 +1,36 @@
+.PHONY: indent
+
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
-HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
+HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst FStar.Struct.fst FStar.StructNG.fst
 
 ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
-all: $(addsuffix -ver, $(ALL)) st m_rref bufferq
+all: $(addsuffix -ver, $(ALL)) st m_rref bufferq struct
+
+indent: $(addsuffix -indent, $(ALL))
+
+%.fst-indent: %.fst
+	$(FSTAR) --indent $^ > $^.indent.fst
+
+%.fsti-indent: %.fsti
+	$(FSTAR) --indent $^ > $^.indent.fsti
+
+verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
+
+%-verindent: %
+	$(FSTAR) $^
 
 %-ver: %
 	$(FSTAR) $^
 list:
-	$(FSTAR) FStar.List.Tot.fst FStar.ListProperties.fst FStar.List.fst
+	$(FSTAR) FStar.List.Tot.Base.fst FStar.List.Tot.Properties.fst FStar.List.Tot.fst FStar.List.fst
 
 array:
-	$(FSTAR) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
+	$(FSTAR) FStar.Seq.Base.fst FStar.Classical.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Array.fst
 
 tcp:
 	$(FSTAR) FStar.Axiomatic.Array.fst FStar.Char.fsti FStar.Option.fsti FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst
@@ -44,6 +58,9 @@ m_rref:
 
 buffer:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst
+
+struct:
+	$(FSTAR) hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Struct.fst
 
 bufferq:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst

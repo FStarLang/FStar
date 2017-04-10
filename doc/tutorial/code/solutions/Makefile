@@ -33,7 +33,7 @@ Ex12g.TMAC2.fst
 VERFILES_HH=Ex11a.fst
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED=--use_hints  # CH: seems like overkill to me
+HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
 HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
@@ -62,5 +62,5 @@ out:
 Ex01a-ocaml: out Ex01a.fst
 	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
-	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe
-	-./Ex01a.exe
+	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe 2>&1
+	-./Ex01a.exe 2>&1

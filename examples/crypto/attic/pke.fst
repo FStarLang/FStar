@@ -39,7 +39,7 @@ type r = RSA.plain
 val repr:    t -> Tot r           
 let repr t = t  (* a pure function from t to RSA.plain *)  
 
-val plain: x:r -> Pure (option t) (requires True) (ensures (fun o -> is_Some o /\ repr (Some.v o) = x))
+val plain: x:r -> Pure (option t) (requires True) (ensures (fun o -> Some? o /\ repr (Some.v o) = x))
 let plain t = Some t (* a partial function from RSA.plain to t *)
 
 

@@ -1,5 +1,5 @@
 [
-  "\u0018ŸÐÜšûŠ;0@ˆ)5UF\u001f",
+  "V`Ã\u001alƒá—ÊÚµ¼C\u001f\u0007Ê",
   [
     [
       "FStar.Int8.t'",
@@ -46,7 +46,7 @@
       0
     ],
     [
-      "FStar.Int8.Mk.v",
+      "FStar.Int8.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -55,10 +55,44 @@
       ],
       0
     ],
-    [ "FStar.Int8.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Int8.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int8.v",
       1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int8.n", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.Int8.v_inj",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int8.t", "equation_FStar.Int8.v",
+        "equation_FStar.List.Tot.Base.test_sort", "equation_Prims._assert",
+        "fuel_guarded_inversion_FStar.Int8.t_",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "proj_equation_FStar.Int8.Mk_v"
+      ],
+      0
+    ],
+    [
+      "FStar.Int8.v_inj",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int8.n", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.Int8.v_inj",
+      3,
       2,
       1,
       [

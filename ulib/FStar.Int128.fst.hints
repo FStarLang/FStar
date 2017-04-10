@@ -1,5 +1,5 @@
 [
-  "\f/dÇG|àr!oÚ3)Ëúá",
+  "‚√rcû3x\u0015M*]Âê*\u001aº",
   [
     [
       "FStar.Int128.t'",
@@ -48,7 +48,7 @@
       0
     ],
     [
-      "FStar.Int128.Mk.v",
+      "FStar.Int128.__proj__Mk__item__v",
       1,
       2,
       1,
@@ -58,10 +58,46 @@
       ],
       0
     ],
-    [ "FStar.Int128.Mk.v", 2, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Int128.__proj__Mk__item__v", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int128.v",
       1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int128.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.Int128.v_inj",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int128.t", "equation_FStar.Int128.v",
+        "equation_FStar.List.Tot.Base.test_sort", "equation_Prims._assert",
+        "fuel_guarded_inversion_FStar.Int128.t_",
+        "function_token_typing_FStar.List.Tot.Base.test_sort",
+        "proj_equation_FStar.Int128.Mk_v"
+      ],
+      0
+    ],
+    [
+      "FStar.Int128.v_inj",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Int128.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.Int128.v_inj",
+      3,
       2,
       1,
       [

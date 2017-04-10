@@ -11,7 +11,7 @@ type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
 let cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
 abstract let map_t (k:eqtype) (v:eqtype) (f:cmp k) (d:ordset k f) =
-  g:(k -> Tot (option v)){(forall x. (mem x d = is_Some (g x)))}
+  g:(k -> Tot (option v)){(forall x. (mem x d = Some? (g x)))}
 
 abstract noeq type ordmap (k:eqtype) (v:eqtype) (f:cmp k) =
   | Mk_map: d:ordset k f -> m:map_t k v f d -> ordmap k v f
@@ -44,30 +44,30 @@ let const_on (#k:eqtype) (#v:eqtype) #f d x =
   let g : k -> Tot (option v) = (fun y -> if mem y d then Some x else None) in
   Mk_map d g
 
-let select (#k:eqtype) (#v:eqtype) #f x m = (Mk_map.m m) x
+let select (#k:eqtype) (#v:eqtype) #f x m = (Mk_map?.m m) x
 
 let insert (#a:eqtype) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton #a #f x) s
 
 let update (#k:eqtype) (#v:eqtype) #f x y m =
-  let s' = insert x (Mk_map.d m) in
-  let g' : k -> Tot (option v) = fun (x':k) -> if x' = x then Some y else (Mk_map.m m) x' in
+  let s' = insert x (Mk_map?.d m) in
+  let g' : k -> Tot (option v) = fun (x':k) -> if x' = x then Some y else (Mk_map?.m m) x' in
   Mk_map s' g'
 
-let contains (#k:eqtype) (#v:eqtype) #f x m = mem x (Mk_map.d m)
+let contains (#k:eqtype) (#v:eqtype) #f x m = mem x (Mk_map?.d m)
 
-let dom (#k:eqtype) (#v:eqtype) #f m = (Mk_map.d m)
+let dom (#k:eqtype) (#v:eqtype) #f m = (Mk_map?.d m)
 
 let remove (#k:eqtype) (#v:eqtype) #f x m =
-  let s' = remove x (Mk_map.d m) in
-  let g' : k -> Tot (option v) = fun x' -> if x' = x then None else (Mk_map.m m) x' in
+  let s' = remove x (Mk_map?.d m) in
+  let g' : k -> Tot (option v) = fun x' -> if x' = x then None else (Mk_map?.m m) x' in
   Mk_map s' g'
 
 let choose (#k:eqtype) (#v:eqtype) #f m =
-  match OrdSet.choose (Mk_map.d m) with
+  match OrdSet.choose (Mk_map?.d m) with
     | None   -> None
-    | Some x -> Some (x, Some.v ((Mk_map.m m) x))
+    | Some x -> Some (x, Some?.v ((Mk_map?.m m) x))
 
-let size (#k:eqtype) (#v:eqtype) #f m = OrdSet.size (Mk_map.d m)
+let size (#k:eqtype) (#v:eqtype) #f m = OrdSet.size (Mk_map?.d m)
 
 abstract type equal (#k:eqtype) (#v:eqtype) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
   (forall x. select #k #v #f x m1 = select #k #v #f x m2)
@@ -115,7 +115,7 @@ abstract val sel_empty: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k
                   
 abstract val sel_contains: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k -> m:ordmap k v f
                   -> Lemma (requires (True))
-                           (ensures (contains #k #v #f x m = is_Some (select #k #v #f x m)))
+                           (ensures (contains #k #v #f x m = Some? (select #k #v #f x m)))
                      [SMTPat (select #k #v #f x m); SMTPat (contains #k #v #f x m)]
 
 abstract val contains_upd1: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k -> y:v -> x':k
@@ -149,18 +149,18 @@ abstract val eq_remove: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k -> m:ordmap k 
                  [SMTPat (remove #k #v #f x m)]
 
 abstract val choose_empty: #k:eqtype -> #v:eqtype -> #f:cmp k
-                 -> Lemma (requires True) (ensures (is_None (choose #k #v #f
+                 -> Lemma (requires True) (ensures (None? (choose #k #v #f
                                                              (empty #k #v #f))))
                     [SMTPat (choose #k #v #f (empty #k #v #f))]
 
 abstract val choose_m: #k:eqtype -> #v:eqtype -> #f:cmp k -> m:ordmap k v f
              -> Lemma (requires (~ (equal m (empty #k #v #f))))
-                     (ensures (is_Some (choose #k #v #f m) /\
-                                (select #k #v #f (fst (Some.v (choose #k #v #f m))) m =
-                                 Some (snd (Some.v (choose #k #v #f m)))) /\
-                                (equal m (update #k #v #f (fst (Some.v (choose #k #v #f m)))
-                                                     (snd (Some.v (choose #k #v #f m)))
-                                                     (remove #k #v #f (fst (Some.v (choose #k #v #f m))) m)))))
+                     (ensures (Some? (choose #k #v #f m) /\
+                                (select #k #v #f (fst (Some?.v (choose #k #v #f m))) m =
+                                 Some (snd (Some?.v (choose #k #v #f m)))) /\
+                                (equal m (update #k #v #f (fst (Some?.v (choose #k #v #f m)))
+                                                     (snd (Some?.v (choose #k #v #f m)))
+                                                     (remove #k #v #f (fst (Some?.v (choose #k #v #f m))) m)))))
                 [SMTPat (choose #k #v #f m)]
 
 abstract val size_empty: #k:eqtype -> #v:eqtype -> #f:cmp k
@@ -182,12 +182,12 @@ abstract val dom_lemma: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k -> m:ordmap k 
 abstract val contains_const_on: #k:eqtype -> #v:eqtype -> #f:cmp k -> d:ordset k f -> x:v -> y:k
                   -> Lemma (requires (True))
                            (ensures (mem y d = contains y (const_on d x)))
-                                    //(contains y (const_on d x) ==> Some.v (select p w) = x)))
+                                    //(contains y (const_on d x) ==> Some?.v (select p w) = x)))
                      [SMTPat (contains #k #v #f y (const_on #k #v #f d x))]
                      
 abstract val select_const_on: #k:eqtype -> #v:eqtype -> #f:cmp k -> d:ordset k f -> x:v -> y:k
                      -> Lemma (requires (True))
-                             (ensures (mem y d ==> (contains y (const_on d x) /\ Some.v (select y (const_on d x)) = x)))
+                             (ensures (mem y d ==> (contains y (const_on d x) /\ Some?.v (select y (const_on d x)) = x)))
                     [SMTPat (select #k #v #f y (const_on #k #v #f d x))]
 
 abstract val sel_rem1: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k -> m:ordmap k v f
@@ -271,7 +271,7 @@ let choose_m (#k:eqtype) (#v:eqtype) #f m =
       let m' = remove #k #v #f x m in
       let (Mk_map s' g') = m' in
       let (Mk_map s'' g'') = update #k #v #f x y m' in
-      cut (feq (Mk_map.m m) g'')
+      cut (feq (Mk_map?.m m) g'')
 
 let size_empty (#k:eqtype) (#v:eqtype) #f = ()
 

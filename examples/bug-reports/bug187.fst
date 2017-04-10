@@ -13,5 +13,5 @@ let fail =
 (* The following equivalent code does typecheck*)
 let no_fail =
   let x = test in
-  if is_Some x then
-    let (|sender, vk|) = Some.v x in  ()
+  if Some? x then
+    let (|sender, vk|) = Some?.v x in  ()

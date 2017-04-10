@@ -25,6 +25,7 @@ open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part4
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part5
+open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part6
 
 let prime = prime
 let satisfiesModuloConstraints h b = satisfiesModuloConstraints h b
@@ -35,7 +36,7 @@ let w : U32.t -> Tot int = U32.v
 
 (*** Addition ***)
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 private val fsum_: a:bigint -> b:bigint{disjoint a b} -> Stack unit
   (requires (fun h -> norm h a /\ norm h b))
@@ -68,6 +69,8 @@ let fsum_ a b =
   a.(3ul) <- ab3;
   a.(4ul) <- ab4
 
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+
 val fsum': a:bigint -> b:bigint{disjoint a b} -> Stack unit
     (requires (fun h -> norm h a /\ norm h b))
     (ensures (fun h0 u h1 -> norm h0 a /\ norm h0 b /\ bound27 h1 a /\ modifies_1 a h0 h1
@@ -79,6 +82,8 @@ let fsum' a b =
   fsum_ a b;
   let h1 = ST.get() in
   lemma_fsum h0 h1 a b
+
+#reset-options "--z3rlimit 80 --initial_fuel 0 --max_fuel 0"
 
 private val update_9: c:bigint{length c >= 2*norm_length-1} ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->
@@ -101,7 +106,7 @@ let update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8 =
   c.(7ul) <- c7;
   c.(8ul) <- c8
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0 --initial_ifuel 0"
 
 private val multiplication_0:
   c:bigint{length c >= 2*norm_length-1} ->
@@ -139,25 +144,25 @@ let multiplication_0 c a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 =
   let ab43 = a4 *^ b3 in
   let ab44 = a4 *^ b4 in
   let c0 = ab00 in
-  cut (v c0 = v a0 * v b0);
+  assert (v c0 = v a0 * v b0);
   let c1 = ab01 +^ ab10 in
-  cut (v c1 = v a0 * v b1 + v a1 * v b0);
+  assert (v c1 = v a0 * v b1 + v a1 * v b0);
   let c2 = ab02 +^ ab11 +^ ab20 in
-  cut( v c2 = v a0 * v b2 + v a1 * v b1 + v a2 * v b0);
+  assert( v c2 = v a0 * v b2 + v a1 * v b1 + v a2 * v b0);
   let c3 = ab03 +^ ab12 +^ ab21 +^ ab30 in
-  cut( v c3 = v a0 * v b3 + v a1 * v b2 + v a2 * v b1 + v a3 * v b0);
+  assert( v c3 = v a0 * v b3 + v a1 * v b2 + v a2 * v b1 + v a3 * v b0);
   let c4 = ab04 +^ ab13 +^ ab22 +^ ab31 +^ ab40 in
-  cut( v c4 = v a0 * v b4 + v a1 * v b3 + v a2 * v b2 + v a3 * v b1 + v a4 * v b0);
+  assert( v c4 = v a0 * v b4 + v a1 * v b3 + v a2 * v b2 + v a3 * v b1 + v a4 * v b0);
   let c5 = ab14 +^ ab23 +^ ab32 +^ ab41 in
-  cut( v c5 = v a1 * v b4 + v a2 * v b3 + v a3 * v b2 + v a4 * v b1);
+  assert( v c5 = v a1 * v b4 + v a2 * v b3 + v a3 * v b2 + v a4 * v b1);
   let c6 = ab24 +^ ab33 +^ ab42 in
-  cut( v c6 = v a2 * v b4 + v a3 * v b3 + v a4 * v b2);
+  assert( v c6 = v a2 * v b4 + v a3 * v b3 + v a4 * v b2);
   let c7 = ab34 +^ ab43 in
-  cut( v c7 = v a3 * v b4 + v a4 * v b3);
+  assert( v c7 = v a3 * v b4 + v a4 * v b3);
   let c8 = ab44 in
-  cut( v c8 = v a4 * v b4 );
-  update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8;
-  admit() //NS: adding an admit to workaround Z3 flakiness; this verifies if the error instrumentation code is removed
+  assert( v c8 = v a4 * v b4 );
+  update_9 c c0 c1 c2 c3 c4 c5 c6 c7 c8
+  (* admit() //NS: adding an admit to workaround Z3 flakiness; this verifies if the error instrumentation code is removed *)
 
 private val multiplication_:
   c:bigint{length c >= 2 * norm_length - 1} ->
@@ -190,7 +195,7 @@ let multiplication c a b =
   let h1 = ST.get() in
   lemma_multiplication h0 h1 c a b
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 val times_5: b:U64.t{5 * v b < pow2 64} -> Tot (b':U64.t{v b' = 5 * v b})
 let times_5 b = assert_norm(pow2 2 = 4); (b <<^ 2ul) +^ b
@@ -236,11 +241,12 @@ let freduce_degree b =
 private val mod2_26: x:U64.t -> Tot (y:U64.t{v y = v x % pow2 26 /\ v y < pow2 26})
 let mod2_26 x =
   let y = x &^ 0x3ffffffuL in
-  assume (v y = v x % pow2 26);
+  assert_norm(v 0x3ffffffuL = pow2 26 - 1);
+  UInt.logand_mask (v x) 26;
   y
 
 private val div2_26: x:U64.t -> Tot (y:U64.t{v y = v x / pow2 26 /\ v y <= pow2 38})
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 let div2_26 x =
     pow2_minus 64 26;
     let y = x >>^ 26ul in
@@ -265,7 +271,7 @@ let update_5 c c0 c1 c2 c3 c4 =
   c.(3ul) <- c3;
   c.(4ul) <- c4
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 private val update_6: c:bigint{length c >= norm_length+1} ->
   c0:U64.t -> c1:U64.t -> c2:U64.t ->
@@ -282,8 +288,6 @@ let update_6 c c0 c1 c2 c3 c4 c5  =
   c.(3ul) <- c3;
   c.(4ul) <- c4;
   c.(5ul) <- c5
-
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
 
 
 private val carry_1_0:
@@ -310,7 +314,7 @@ let carry_1_0 b b0 b1 b2 b3 b4 =
   update_6 b b0' b1' b2' b3' b4' b5'
 
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 private val carry_1_:
   b:bigint{length b >= norm_length+1} ->
@@ -445,27 +449,66 @@ let modulo b =
   freduce_coefficients b
 
 
-#set-options "--lax"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 100"
 
 val finalize: b:bigint -> Stack unit
   (requires (fun h -> norm h b))
   (ensures (fun h0 _ h1 -> norm h0 b /\ norm h1 b /\ modifies_1 b h0 h1
     /\ eval h1 b norm_length = eval h0 b norm_length % reveal prime))
+    
+let logand (x:U64.t) (y:U64.t) : Pure U64.t
+  (requires True)
+  (ensures (fun z -> (v y = 0 ==> v z = 0) /\ (v y = UInt.ones 64 ==> v z = v x)))
+ = let z = x &^ y in
+   UInt.logand_lemma_1 (v x); 
+   UInt.logand_lemma_2 (v x);
+   z
+
+let eq_mask (a:U64.t) (b:U64.t) : Pure U64.t
+  (requires True)
+  (ensures (fun z -> z = U64.eq_mask a b)) 
+  = U64.eq_mask a b
+
+let gte_mask (a:U64.t) (b:U64.t) : Pure U64.t
+  (requires True)
+  (ensures (fun z -> z = U64.gte_mask a b))
+  = U64.gte_mask a b
+
+let lemma_pow2_26 (x:nat) 
+  : Lemma (requires (x == 26))
+	  (ensures (pow2 x = 67108864))
+	  [SMTPat (pow2 x)]
+  = assert_norm (pow2 26 = 67108864)
+
+val lemma_finalize':
+  h:HyperStack.mem ->
+  h':HyperStack.mem ->
+  b:bigint{norm h b} ->
+  mask:U64.t{v mask = 0 \/ v mask = pow2 64 - 1} ->
+  Lemma
+    (requires (
+      live h' b /\ (
+      let b0 = (get h b 0) in let b1 = (get h b 1) in let b2 = (get h b 2) in
+      let b3 = (get h b 3) in let b4 = (get h b 4) in
+      let b0' = (get h' b 0) in let b1' = (get h' b 1) in let b2' = (get h' b 2) in
+      let b3' = (get h' b 3) in let b4' = (get h' b 4) in
+      maskPrime mask b0 b1 b2 b3 b4 /\ masked mask b0 b1 b2 b3 b4 b0' b1' b2' b3' b4')))
+    (ensures  (live h' b /\ eval h' b 5 = eval h b 5 % (pow2 130 - 5) /\ norm h' b))
+let lemma_finalize' h h' b mask = lemma_finalize h b h' b mask
+
+//This is the code, as presented in the PLDI '17 submission
 let finalize b =
-  let mask_26 = U64.((1uL <<^ 26ul) -^ 1uL) in
-  let mask2_26m5 = U64.(mask_26 -^ (1uL <<^ 2ul)) in
-  let b0 = b.(0ul) in
-  let b1 = b.(1ul) in
-  let b2 = b.(2ul) in
-  let b3 = b.(3ul) in
-  let b4 = b.(4ul) in
-  let mask = U64.eq_mask b4 mask_26 in
-  let mask = U64.eq_mask b3 mask_26 &^ mask in
-  let mask = U64.eq_mask b2 mask_26 &^ mask in
-  let mask = U64.eq_mask b1 mask_26 &^ mask in
-  let mask = U64.gte_mask b0 mask2_26m5 &^ mask in
-  b.(0ul) <- (b0 -^ (mask &^ mask2_26m5));
-  b.(1ul) <- (b1 -^ (b1 &^ mask));
-  b.(2ul) <- (b2 -^ (b2 &^ mask));
-  b.(3ul) <- (b3 -^ (b3 &^ mask));
-  b.(4ul) <- (b4 -^ (b4 &^ mask))
+  let h0 = ST.get() in
+  let mask_26 = 67108863uL in //2^26 - 1
+  let mask2_26m5 = 67108859uL in //2^26 - 5
+  let mask = (eq_mask b.(4ul) mask_26) `logand`
+	     (eq_mask b.(3ul) mask_26) `logand`
+	     (eq_mask b.(2ul) mask_26) `logand`
+	     (eq_mask b.(1ul) mask_26) `logand`
+	     (gte_mask b.(0ul) mask2_26m5) in
+  b.(0ul) <- b.(0ul) -^ mask2_26m5 `logand` mask;
+  b.(1ul) <- b.(1ul) -^ b.(1ul) `logand` mask;
+  b.(2ul) <- b.(2ul) -^ b.(2ul) `logand` mask;
+  b.(3ul) <- b.(3ul) -^ b.(3ul) `logand` mask;
+  b.(4ul) <- b.(4ul) -^ b.(4ul) `logand` mask;
+  lemma_finalize' h0 (ST.get()) b mask 

@@ -1,5 +1,5 @@
 module FStar.Buffer
-
+ 
 open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
@@ -11,6 +11,7 @@ module HST = FStar.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
+//17-01-04 usage? move to UInt? 
 let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
 				     [SMTPat (UInt.size x n)]
@@ -30,11 +31,17 @@ type buffer (a:Type) = _buffer a
 (* Ghost getters for specifications *)
 let contains #a h (b:buffer a) : GTot Type0 = HS.contains h b.content
 
+//17-01-04 notations: 
+//17-01-04 when to use sel, index, get, read? 
+//17-01-04 In most cases as_seq should be used instead of this one.
+//17-01-04 should the pre use contains or live? 
 let sel #a h (b:buffer a{contains h b}) : GTot (seq a) = HS.sel h b.content
 
 let max_length #a (b:buffer a) : GTot nat = v b.max_length
 let length #a (b:buffer a) : GTot nat = v b.length
 let idx #a (b:buffer a) : GTot nat = v b.idx
+
+//17-01-04 rename to container or ref? 
 let content #a (b:buffer a) :
   GTot (reference (s:seq a{Seq.length s == v b.max_length})) = b.content
 
@@ -42,10 +49,11 @@ let content #a (b:buffer a) :
 let as_ref #a (b:buffer a) = as_ref (content b)
 let as_aref #a (b:buffer a) = as_aref (content b)
 let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
+//17-01-04 rename to region?
 
 (* Liveliness condition, necessary for any computation on the buffer *)
-(* abstract *) 
 let live #a (h:mem) (b:buffer a) : GTot Type0 = contains h b
+//17-01-04 global pick between live and contains?
 
 val recall: #a:Type
   -> b:buffer a{is_eternal_region (frameOf b) && not (b.content.mm)} -> Stack unit
@@ -61,6 +69,7 @@ let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a =
   Seq.index (as_seq h b) i
 
 (* Equality predicate on buffer contents, without quantifiers *)
+//17-01-04 revise comment? rename?
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
   live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
 
@@ -332,6 +341,9 @@ abstract let modifies_0 h0 h1 =
   /\ modifies_buf_0 h0.tip h0 h1
   /\ h0.tip=h1.tip
 
+(* This one is very generic: it says
+ * - some references have changed in the frame of b, but
+ * - among all buffers in this frame, b is the only one that changed. *)
 abstract let modifies_1 (#a:Type) (b:buffer a) h0 h1 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf_1 rid b h0 h1
@@ -514,8 +526,7 @@ let lemma_ststack_1 (#a:Type) (b:buffer a) h0 h1 h2 h3 : Lemma
   [SMTPatT (modifies_1 b h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3timeout 100"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 100"
 
 let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3 : Lemma
   (requires (live h0 b /\ live h0 b' /\ fresh_frame h0 h1 /\ modifies_2 b b' h1 h2 /\ popped h2 h3))
@@ -523,8 +534,7 @@ let lemma_ststack_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 h3
   [SMTPatT (modifies_2 b b' h1 h2); SMTPatT (fresh_frame h0 h1); SMTPatT (popped h2 h3)]
   = ()
 
-#reset-options "--z3timeout 20"
-#set-options "--lax"
+#reset-options "--z3rlimit 100"
 
 (* Specialized modifies clauses lemmas + associated SMTPatterns. Those are critical for
    verification as the specialized modifies clauses are abstract from outside the
@@ -543,7 +553,7 @@ let lemma_modifies_3_2_comm (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   = ()
 (* TODO: add commutativity lemmas for modifies_3 *)
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 (** Transitivity lemmas *)
 let lemma_modifies_0_trans h0 h1 h2 : Lemma
@@ -579,8 +589,7 @@ let lemma_modifies_2_trans' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 
   [SMTPatT (modifies_2 b' b h0 h1); SMTPatT (modifies_2 b b' h1 h2)]
   = ()
 
-#reset-options "--z3timeout 20 --initial_fuel 0 --max_fuel 0"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_3_trans (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a') (b'':buffer a'') h0 h1 h2 : Lemma
   (requires (modifies_3 b b' b'' h0 h1 /\ modifies_3 b b' b'' h1 h2))
@@ -589,8 +598,7 @@ let lemma_modifies_3_trans (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buf
   [SMTPatT (modifies_3 b b' b'' h0 h1); SMTPatT (modifies_3 b b' b'' h1 h2)]
   = ()
 
-#reset-options "--z3timeout 200"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 200"
 
 let lemma_modifies_3_2_trans (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h0 b' /\ live h1 b /\ live h1 b'
@@ -605,8 +613,7 @@ let lemma_modifies_3_2_trans' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h
   [SMTPatT (modifies_3_2 b' b h0 h1); SMTPatT (modifies_3_2 b b' h1 h2)]
   = ()
 
-#reset-options "--z3timeout 20"
-#set-options "--lax" // OK
+#reset-options "--z3rlimit 20"
 
 (* Specific modifies clause lemmas *)
 val lemma_modifies_0_0: h0:mem -> h1:mem -> h2:mem -> Lemma
@@ -615,7 +622,7 @@ val lemma_modifies_0_0: h0:mem -> h1:mem -> h2:mem -> Lemma
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_0 h1 h2)]
 let lemma_modifies_0_0 h0 h1 h2 = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 20"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_1_0 (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h1 b /\ modifies_1 b h0 h1 /\ modifies_0 h1 h2))
@@ -635,7 +642,7 @@ let lemma_modifies_0_1' (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = ()
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3timeout 100"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2 : Lemma
   (requires (live h0 b /\ live h0 b' /\ disjoint b b'
@@ -732,11 +739,19 @@ let create #a init len =
   assert (Seq.equal (as_seq h b) (sel h b));
   b
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
 module L = FStar.List.Tot
 
+unfold let p (#a:Type0) (init:list a) : GTot Type0 =
+  normalize (0 < L.length init) /\ normalize (L.length init < UInt.max_int 32)
+
+unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
+  normalize (length buf = len)
+
 (** Concrete getters and setters *)
-val createL: #a:Type -> init:list a -> StackInline (buffer a)
-  (requires (fun h -> L.length init > 0 /\ L.length init < UInt.max_int 32))
+val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
+  (requires (fun h -> p #a init))
   (ensures (fun (h0:mem) b h1 ->
      let len = L.length init in
      len > 0
@@ -745,7 +760,10 @@ val createL: #a:Type -> init:list a -> StackInline (buffer a)
      /\ frameOf b = h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
      /\ modifies_0 h0 h1
-     /\ as_seq h1 b == Seq.of_list init))
+     /\ as_seq h1 b == Seq.of_list init
+     /\ q #a len b))
+#set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (L.length init) in the pre-condition will be unfolded
+	                                     //whereas the L.length init below will not
 let createL #a init =
   let len = UInt32.uint_to_t (L.length init) in
   let s = Seq.of_list init in
@@ -757,6 +775,7 @@ let createL #a init =
   assert (Seq.equal (as_seq h b) (sel h b));
   b
 
+#reset-options "--initial_fuel 0 --max_fuel 0"
 let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemma
   (requires True)
   (ensures  (Map.domain h.h == Map.domain (upd h x v).h))
@@ -784,6 +803,21 @@ let rcreate #a r init len =
   lemma_upd h0 content s;
   b
 
+
+(* #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0" *)
+
+(* val create_null: #a:Type -> init:a -> len:UInt32.t -> Stack (buffer a) *)
+(*   (requires (fun h -> True)) *)
+(*   (ensures (fun h0 b h1 -> length b = UInt32.v len /\ h0 == h1)) *)
+(* let create_null #a init len = *)
+(*   push_frame(); *)
+(*   let r = create init len in *)
+(*   pop_frame(); *)
+(*   r *)
+
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
 // ocaml-only, used for conversions to Platform.bytes
 val to_seq: #a:Type -> b:buffer a -> l:UInt32.t{v l <= length b} -> STL (seq a)
   (requires (fun h -> live h b))
@@ -794,6 +828,17 @@ let to_seq #a b l =
   let i = v b.idx in
   Seq.slice s i (i + v l)
 
+
+// ocaml-only, used for conversions to Platform.bytes
+val to_seq_full: #a:Type -> b:buffer a -> ST (seq a)
+  (requires (fun h -> live h b))
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ 
+			 r == as_seq #a h1 b ))
+let to_seq_full #a b =
+  let s = !b.content in
+  let i = v b.idx in
+  Seq.slice s i (i + v b.length)
+
 val index: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> Stack a
   (requires (fun h -> live h b))
   (ensures (fun h0 z h1 -> live h0 b /\ h1 == h0
@@ -803,7 +848,7 @@ let index #a b n =
   Seq.index s (v b.idx + v n)
 
 (** REMARK: the proof of this lemma relies crucially on the `a == a'` condition
-    in B`uffer.disjoint`, and on the pattern in `SeqProperties.slice_upd` *)
+    in B`uffer.disjoint`, and on the pattern in `Seq.slice_upd` *)
 private val lemma_aux: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> z:a
   -> h0:mem -> Lemma
   (requires (live h0 b))
@@ -823,13 +868,31 @@ let upd #a b n z =
   b.content := s;
   let h = HST.get() in
   Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
-  SeqProperties.upd_slice s0 (idx b) (idx b + length b) (v n) z
+  Seq.upd_slice s0 (idx b) (idx b + length b) (v n) z
 
 val sub: #a:Type -> b:buffer a -> i:UInt32.t{v i + v b.idx < pow2 n}
   -> len:UInt32.t{v i + v len <= length b}
   -> Tot (b':buffer a{b `includes` b' /\ length b' = v len})
 let sub #a b i len =
   MkBuffer b.max_length b.content (i +^ b.idx) len
+
+let sub_sub
+  (#a: Type)
+  (b: buffer a)
+  (i1: UInt32.t{v i1 + (idx b) < pow2 n})
+  (len1: UInt32.t{v i1 + v len1 <= length b})
+  (i2: UInt32.t {v i2 + (v i1 + (idx b)) < pow2 n})
+  (len2: UInt32.t {v i2 + v len2 <= v len1})
+: Lemma
+  (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
+= ()  
+
+let sub_zero_length
+  (#a: Type)
+  (b: buffer a)
+: Lemma
+  (ensures (sub b (UInt32.uint_to_t 0) (UInt32.uint_to_t (length b)) == b))
+= ()
 
 let lemma_sub_spec (#a:Type) (b:buffer a)
   (i:UInt32.t{v i + v b.idx < pow2 n})
@@ -867,6 +930,8 @@ private val eq_lemma1:
     [SMTPatT (equal h (sub b1 0ul len) h (sub b2 0ul len))]
 let eq_lemma1 #a b1 b2 len h =
   Seq.lemma_eq_intro (as_seq h (sub b1 0ul len)) (as_seq h (sub b2 0ul len))
+
+#reset-options "--z3rlimit 20"
 
 private val eq_lemma2:
     #a:eqtype
@@ -945,6 +1010,10 @@ assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b}
 let split #t (b:buffer t) (i:UInt32.t{v i <= length b /\ v i + v b.idx < pow2 n}) : Tot (buffer t * buffer t)
   = sub b 0ul i, offset b i
 
+let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content == b'.content /\ idx b + length b = idx b'}) : Tot (buffer t)
+  = MkBuffer (b.max_length) (b.content) (b.idx) (FStar.UInt32.(b.length +^ b'.length))
+
+
 val no_upd_lemma_0: #t:Type -> h0:mem -> h1:mem -> b:buffer t -> Lemma
   (requires (live h0 b /\ modifies_0 h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal h0 b h1 b))
@@ -957,7 +1026,7 @@ val no_upd_lemma_1: #t:Type -> #t':Type -> h0:mem -> h1:mem -> a:buffer t -> b:b
   [SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b)]
 let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 
-#reset-options "--z3timeout 30 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 0"
 
 val no_upd_lemma_2: #t:Type -> #t':Type -> #t'':Type -> h0:mem -> h1:mem -> a:buffer t -> a':buffer t' -> b:buffer t'' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ disjoint a' b /\ modifies_2 a a' h0 h1))
@@ -1008,7 +1077,7 @@ let lemma_modifies_sub_2_1 #t h0 h1 (b:buffer t) : Lemma
   [SMTPatT (live h0 b); SMTPatT (modifies_2_1 b h0 h1)]
   = ()
 
-#reset-options "--z3timeout 100 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
 
 let modifies_subbuffer_1 (#t:Type) h0 h1 (sub:buffer t) (a:buffer t) : Lemma
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))

@@ -1,7 +1,11 @@
+tmp
 chacha
 curve
 poly
 aead
+LowCProvider/*.dll
+LowCProvider/*.exe
+krml-test.exe
 test_chacha.exe
 test_curve.exe
 test_poly.exe

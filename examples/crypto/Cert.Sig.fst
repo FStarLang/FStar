@@ -53,7 +53,7 @@ let sign (SK sk) text =
 let verify vk text tag =
   let verified = DSA.verify vk text tag in 
   let found =
-    is_Some 
+    Some? 
       (List.find 
         (fun (Entry k text') -> k=vk && text=text')
         !log) in 

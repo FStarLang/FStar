@@ -89,7 +89,7 @@ val dedup: l:list int{sorted l} -> Tot (l2:list int{sorted l2 /\ (forall i. mem 
 let cmp i j = i <= j
 val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
                             (decreases (length l))
-#set-options "--z3timeout 100" //The CI server is a bit flaky right now; bumping the timeout here
+//#set-options "--z3timeout 100"
 let rec sort l = match l with
   | [] -> []
   | pivot::tl ->

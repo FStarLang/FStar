@@ -2,10 +2,10 @@
   "Çr\u0002¦_ÉuMå ú?m0\"‚",
   [
     [ "FStar.Heap.ref", 1, 0, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.MkRef._0", 1, 0, 1, [ "@query" ], 0 ],
-    [ "FStar.Heap.Ref.a", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Heap.__proj__MkRef__item___0", 1, 0, 1, [ "@query" ], 0 ],
+    [ "FStar.Heap.__proj__Ref__item__a", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.Heap.Ref.r",
+      "FStar.Heap.__proj__Ref__item__r",
       1,
       2,
       1,

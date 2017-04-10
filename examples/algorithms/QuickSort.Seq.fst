@@ -1,13 +1,14 @@
 module QuickSort.Seq
 open FStar.Seq
-open FStar.SeqProperties
 
-(* the last recursive call to partition fails for me if I use the F# version
-   of F* and and the option here:
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
+(* 2016-11-22: Due to the QuickSort namespace being opened *after* the
+FStar namespace, Seq resolves to QuickSort.Seq instead of FStar.Seq,
+so we have to fix this explicitly as a module abbrev. *)
+module Seq = FStar.Seq
 
-(* CH: this is needed on my machine, intermittent failures otherwise *)
-#reset-options "--z3timeout 20"
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+#reset-options "--z3rlimit 40"
 
 val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
     -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->

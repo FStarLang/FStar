@@ -11,7 +11,7 @@ FILES=prims.ml FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
       FStar_Int32.ml FStar_UInt32.ml FStar_Int64.ml FStar_UInt64.ml FStar_UInt128.ml \
       FStar_Int_Cast.ml \
       FStar_BaseTypes.ml \
-      FStar_IO.ml FStar_Heap.ml FStar_List.ml \
+      FStar_IO.ml FStar_Heap.ml FStar_List_Tot_Base.ml FStar_List.ml \
       FStar_Option.ml FStar_String.ml FStar_Set.ml \
       FStar_Buffer.ml FStar_CommonST.ml $(ST)
 
@@ -43,5 +43,6 @@ CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~ $(subst .ml,.cmx,$(ST)) $(subst 
 clean:
 	rm -f $(CLEAN)
 	rm -f $(ULIB_GEN_DIR)/*
+	rm -f hyperstack/*.o hyperstack/*.cm*
 
 -include .depend

@@ -31,25 +31,24 @@ let put (s:int) : stexn unit = fun _ -> (Some (), s)
 let raise (a:Type) : stexn a = fun s -> (None, s)
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   STEXN: a:Type -> Effect
   with repr    = stexn
      ; return  = return
      ; bind    = bind
-  and effect_actions
-       get     = get
+     ; get     = get
      ; put     = put
      ; raise   = raise
 }
 
 (* A lift from Pure *)
-unfold let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN.post a) =
+unfold let lift_pure_stexn (a:Type) (wp:pure_wp a) (h0:int) (p:STEXN?.post a) =
         wp (fun a -> p (Some a, h0))
 sub_effect PURE ~> STEXN = lift_pure_stexn
 
 (* Pre-/postcondition variant *)
-effect StExn (a:Type) (req:STEXN.pre) (ens:int -> option a -> int -> GTot Type0) =
-  STEXN a (fun (h0:int) (p:STEXN.post a) -> req h0 /\
+effect StExn (a:Type) (req:STEXN?.pre) (ens:int -> option a -> int -> GTot Type0) =
+  STEXN a (fun (h0:int) (p:STEXN?.post a) -> req h0 /\
     (forall (r:option a) (h1:int). (req h0 /\ ens h0 r h1) ==> p (r, h1)))
 
 (* Total variant *)
@@ -61,11 +60,11 @@ val div_intrinsic : i:nat -> j:int -> StExn int
                         | None -> h0 = h1 /\ j = 0
                         | Some z -> h0 = h1 /\ j <> 0 /\ z = i / j))
 let div_intrinsic i j =
-  if j = 0 then STEXN.raise int
+  if j = 0 then STEXN?.raise int
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : S int =
-  if j = 0 then STEXN.raise int
+ let div_extrinsic (i:nat) (j:int) : S int =
+  if j = 0 then STEXN?.raise int
   else i / j
 
 let lemma_div_extrinsic (i:nat) (j:int) (h0:int) :

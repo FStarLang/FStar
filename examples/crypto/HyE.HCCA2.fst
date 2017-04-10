@@ -1,5 +1,5 @@
 module HyE.HCCA2
-
+open FStar.All
 open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes
@@ -20,16 +20,16 @@ noeq abstract type pkey =
   | PKey: #region:rid -> rawpk:RSA.pkey -> cca_pk:CCA2.pkey  -> pkey
 
 let access_pkraw (pk:pkey) =
-  PKey.rawpk pk
+  PKey?.rawpk pk
 
 noeq abstract type skey =
   | SKey: cca_sk:CCA2.skey -> pk:pkey  -> skey    type p = P.t
 
 type c = C.cipher * A.cipher //lbytes(CCA2.ciphersize + AE.ciphersize)
 
-val keygen: rid -> pkey * skey
-val encrypt: pkey -> p -> c 
-val decrypt: skey -> c -> option p 
+val keygen: rid -> ML (pkey * skey)
+val encrypt: pkey -> p -> ML c 
+val decrypt: skey -> c -> ML (option p )
 
 
 let keygen (parent:rid) =

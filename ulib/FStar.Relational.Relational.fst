@@ -7,7 +7,7 @@ type rel (a:Type) (b:Type) : Type =
 
 (* Some frequently used abbreviations *)
 type double (t:Type) = rel t t
-type eq (t:Type) = p:(double t){R.l p == R.r p}
+type eq (t:Type) = p:(double t){R?.l p == R?.r p}
 
 let twice x = R x x
 let tu = twice ()
@@ -38,7 +38,7 @@ let op_Hat_Star = rel_map2T (fun x y -> op_Multiply x y)
 let op_Hat_Slash = rel_map2T (fun x y -> x / y)
 
 (* Some convenient list functions *)
-val tl_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
+val tl_rel: #a:Type -> l:double (list a){Cons? (R?.l l) /\ Cons? (R?.r l)}-> Tot (double (list a))
 let tl_rel #a (R (_::xs) (_::ys)) = R xs ys
 let cons_rel (R x y) (R xs ys) = R (x::xs) (y::ys)
 (* Some convenient tuple functions *)

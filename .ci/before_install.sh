@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo -e "\e[31m=== Running $0 ===\e[0m"
 

@@ -1,7 +1,7 @@
 module Bug131
 
 val id : a:Type -> a -> Tot a
-let id x = x
+let id a x = x
 
 let temp = id _ 42
 

@@ -8,7 +8,7 @@ let rec sorted l = match l with
     | x::y::xs -> (x <= y) && (sorted (y::xs))
 
 val test_sorted: x:int -> l:list int ->
-      Lemma ((sorted (x::l) /\ is_Cons l) ==> x <= Cons.hd l)
+      Lemma ((sorted (x::l) /\ Cons? l) ==> x <= Cons?.hd l)
 let test_sorted x l = ()
 
 val test_sorted2: unit -> Tot (m:list int{sorted m})

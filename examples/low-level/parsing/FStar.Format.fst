@@ -51,11 +51,11 @@ let read_length b n =
 type lserializer (t:Type0) = f:(t -> Tot  lbytes)
 // The parser return the number of bytes read
 type lparser (#t:Type0) ($f:lserializer t) = 
-  f:(lbytes -> Tot (result (t * UInt32.t))){forall (b:lbytes). is_Correct (f b) ==> (v (snd (correct (f b))) <= v (lb_length b) /\ v (snd (correct (f b))) > 0)}
+  f:(lbytes -> Tot (result (t * UInt32.t))){forall (b:lbytes). Correct? (f b) ==> (v (snd (correct (f b))) <= v (lb_length b) /\ v (snd (correct (f b))) > 0)}
 
 type inverse (#t:Type0) ($f:lserializer t  ) ($g:lparser f) =
   (forall (x:t). g (f x) == Correct (x, lb_length (f x)))
-    /\ (forall (y:lbytes). is_Correct (g y) ==>  (f (fst (Correct._0 (g y))) == y))
+    /\ (forall (y:lbytes). Correct? (g y) ==>  (f (fst (Correct._0 (g y))) == y))
 
 noeq type lserializable (t:Type0) : Type0 =
   | VLSerializable: $f:lserializer t   -> $g:lparser f{inverse f g} -> lserializable t
@@ -178,7 +178,7 @@ let vlparse_key_share
     else (
       let gn:buffer u8 = sub bytes 0ul 2ul in
       // Requires to axiomatize the parsing/serialization of machine integers more precisely
-      assume (is_Correct (of_seq_bytes #UInt16.t #u16 (to_seq_byte gn)));
+      assume (Correct? (of_seq_bytes #UInt16.t #u16 (to_seq_byte gn)));
       let gn = cast u16 gn in
       let gn = read gn 0ul in
       let pk_bytes = lb_offset b 2ul in

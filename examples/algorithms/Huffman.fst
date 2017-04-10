@@ -2,7 +2,7 @@ module Huffman
 
 open FStar.Char
 open FStar.List.Tot
-open FStar.ListProperties
+open FStar.List.Tot
 
 type symbol = char
 
@@ -61,30 +61,30 @@ let rec insertion_sort (ts : list trie) : Pure (list trie)
 let rec huffman_trie (ts:list trie) : Pure trie
     (requires (sorted ts /\ List.Tot.length ts > 0))
     (ensures (fun t ->
-      ((List.Tot.length ts > 1 \/ existsb is_Node ts) ==> is_Node t)))
+      ((List.Tot.length ts > 1 \/ existsb Node? ts) ==> Node? t)))
     (decreases (List.Tot.length ts)) =
   match ts with
   | t1::t2::ts' ->
-      assert(List.Tot.length ts > 1); (* so it needs to prove is_Node t *)
+      assert(List.Tot.length ts > 1); (* so it needs to prove Node? t *)
       let w = weight t1 + weight t2 in
       let t = huffman_trie ((Node w t1 t2) `insert_in_sorted` ts') in
       (* by the recursive call we know:
          (List.Tot.length (Node w t1 t2 `insert_in_sorted` ts') > 1
-          \/ existsb is_Node (Node w t1 t2 `insert_in_sorted` ts') ==> is_Node t) *)
+          \/ existsb Node? (Node w t1 t2 `insert_in_sorted` ts') ==> Node? t) *)
       (* Since ts' could be empty, I thought that the only way we can
-         use this is by proving: existsb is_Node (Node w t1 t2
+         use this is by proving: existsb Node? (Node w t1 t2
          `insert_in_sorted` ts'), which requires induction. But F* was smarter! *)
-      if is_Nil ts' then
-        assert(existsb is_Node (Node w t1 t2 `insert_in_sorted` ts'))
+      if Nil? ts' then
+        assert(existsb Node? (Node w t1 t2 `insert_in_sorted` ts'))
       else
         assert(length (Node w t1 t2 `insert_in_sorted` ts') > 1);
-      assert(is_Node t);
+      assert(Node? t);
       t
-  | [t1] -> t1 (* this uses `existsb is_Node [t] ==> is_Node t` fact *)
+  | [t1] -> t1 (* this uses `existsb Node? [t] ==> Node? t` fact *)
 
 let huffman (sws:list (symbol*pos)) : Pure trie
     (requires (b2t (List.Tot.length sws > 0)))
-    (ensures (fun t -> List.Tot.length sws > 1 ==> is_Node t)) =
+    (ensures (fun t -> List.Tot.length sws > 1 ==> Node? t)) =
   huffman_trie (insertion_sort (List.Tot.map (fun (s,w) -> Leaf w s) sws))
 
 let rec encode_one (t:trie) (s:symbol) : Tot (option (list bool)) =
@@ -100,8 +100,8 @@ let rec encode_one (t:trie) (s:symbol) : Tot (option (list bool)) =
 // Modulo the option this is flatten (map (encode_one t) ss)
 let rec encode (t:trie) (ss:list symbol) : Pure (option (list bool))
     (requires (True))
-    (ensures (fun bs -> is_Node t /\ is_Cons ss /\ is_Some bs
-                        ==> is_Cons (Some.v bs))) =
+    (ensures (fun bs -> Node? t /\ Cons? ss /\ Some? bs
+                        ==> Cons? (Some?.v bs))) =
   match ss with
   | [] -> None (* can't encode the empty string *)
   | [s] -> encode_one t s
@@ -113,9 +113,9 @@ let rec encode (t:trie) (ss:list symbol) : Pure (option (list bool))
 
 let rec decode_one (t:trie) (bs:list bool) : Pure (option (symbol * list bool))
     (requires (True))
-    (ensures (fun r -> is_Some r ==>
-                   (List.Tot.length (snd (Some.v r)) <= List.Tot.length bs /\
-     (is_Node t ==> List.Tot.length (snd (Some.v r)) < List.Tot.length bs)))) =
+    (ensures (fun r -> Some? r ==>
+                   (List.Tot.length (snd (Some?.v r)) <= List.Tot.length bs /\
+     (Node? t ==> List.Tot.length (snd (Some?.v r)) < List.Tot.length bs)))) =
   match t, bs with
   | Node _ t1 t2, b::bs' -> decode_one (if b then t2 else t1) bs'
   | Leaf _ s, _ -> Some (s, bs)
@@ -136,11 +136,11 @@ let rec decode' (t:trie) (bs:list bool) : Tot (option (list symbol))
 // Simplified decode using idea from Bird and Wadler's book
 // (it has more complex termination condition though)
 
-let rec decode_aux (t':trie{is_Node t'}) (t:trie) (bs:list bool) :
+let rec decode_aux (t':trie{Node? t'}) (t:trie) (bs:list bool) :
   Pure (option (list symbol))
     (requires (True))
-    (ensures (fun ss -> is_Some ss ==> List.Tot.length (Some.v ss) > 0))
-    (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0]))
+    (ensures (fun ss -> Some? ss ==> List.Tot.length (Some?.v ss) > 0))
+    (decreases (%[bs; if Leaf? t && Cons? bs then 1 else 0]))
   =
   match t, bs with
   | Leaf _ s, [] -> Some [s]
@@ -151,12 +151,12 @@ let rec decode_aux (t':trie{is_Node t'}) (t:trie) (bs:list bool) :
   | Node _ _ _, [] -> None
 
 let decode (t:trie) (bs:list bool) : Pure (option (list symbol))
-    (requires (b2t (is_Node t))) (ensures (fun _ -> True)) =
+    (requires (b2t (Node? t))) (ensures (fun _ -> True)) =
   decode_aux t t bs
 
 let rec cancelation_one (t':trie) (t:trie) (s:symbol) : Lemma
-  (requires (b2t (is_Node t')))
-  (ensures (is_Node t' ==>
+  (requires (b2t (Node? t')))
+  (ensures (Node? t' ==>
             (match encode_one t s with
             | Some e -> (match decode_aux t' t e with
                         | Some d -> d = [s]
@@ -169,29 +169,29 @@ let rec cancelation_one (t':trie) (t:trie) (s:symbol) : Lemma
       | Some e -> cancelation_one t' t1 s
       | None   -> cancelation_one t' t2 s)
 
-let rec decode_prefix_aux (t':trie{is_Node t'}) (t:trie)
+let rec decode_prefix_aux (t':trie{Node? t'}) (t:trie)
     (bs:list bool) (bs':list bool) (s:symbol) : Lemma
     (requires (decode_aux t' t bs = Some [s]))
-    (ensures (is_Cons bs' ==> decode_aux t' t (bs @ bs') =
+    (ensures (Cons? bs' ==> decode_aux t' t (bs @ bs') =
                                      (match decode_aux t' t' bs' with
                                      | Some ss -> Some (s :: ss)
                                      | None -> None)))
-    (decreases (%[bs; if is_Leaf t && is_Cons bs then 1 else 0])) =
+    (decreases (%[bs; if Leaf? t && Cons? bs then 1 else 0])) =
   match t, bs with
   | Leaf _ _, [] -> ()
   | Leaf _ _, _::_ -> decode_prefix_aux t' t' bs bs' s
   | Node _ t1 t2, b::bs'' ->
       decode_prefix_aux t' (if b then t2 else t1) bs'' bs' s
 
-let rec decode_prefix (t:trie{is_Node t})
-  (bs:list bool) (bs':list bool{is_Cons bs'}) (s:symbol) : Lemma
+let rec decode_prefix (t:trie{Node? t})
+  (bs:list bool) (bs':list bool{Cons? bs'}) (s:symbol) : Lemma
   (requires (decode t bs = Some [s]))
   (ensures (decode t (bs @ bs') = (match decode t bs' with
                                    | Some ss -> Some (s :: ss)
                                    | None -> None))) =
   decode_prefix_aux t t bs bs' s
 
-let rec cancelation_aux (t:trie{is_Node t}) (ss:list symbol) : Lemma
+let rec cancelation_aux (t:trie{Node? t}) (ss:list symbol) : Lemma
   (requires (True))
   (ensures (match encode t ss with
             | Some e -> (match decode t e with

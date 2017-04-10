@@ -1,5 +1,9 @@
 # For simplified Makefiles, define FSTAR_HOME, then include the file below.
 FSTAR_HOME=../..
+include ../Makefile.include
+
+all: hello.uver
+
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 # This target is very concise and re-uses the variables defined in

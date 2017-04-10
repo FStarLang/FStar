@@ -34,16 +34,19 @@ let is_punctuation c = (
 let return_all x = x
 
 type time = float
-let now () = Unix.gettimeofday ()
+let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
-  n, 
+  n,
   Z.of_float (n *. 1000.0)
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
+let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let is_before t1 t2 = compare t1 t2 < 0
+let string_of_time = string_of_float
 
 exception Impos
 exception NYI of string
@@ -61,8 +64,10 @@ let lock () = ()
 let release () = ()
 let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
-let monitor_enter _ = ()
-let monitor_exit _ = ()
+let mlock = Mutex.create ()
+
+let monitor_enter _ = Mutex.lock mlock
+let monitor_exit _ = Mutex.unlock mlock
 let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
@@ -75,6 +80,52 @@ let atomically =
 let spawn f =
   let _ = Thread.create f () in ()
 
+let write_input in_write input =
+  output_string in_write input;
+  flush in_write
+
+(*let cnt = ref 0*)
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
+  output_string fc input;
+  close_out fc;*)
+  let cmd = prog^" "^args in
+  let (to_chd_r, to_chd_w) = Unix.pipe () in
+  let (from_chd_r, from_chd_w) = Unix.pipe () in
+  Unix.set_close_on_exec to_chd_w;
+  Unix.set_close_on_exec from_chd_r;
+  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
+                               to_chd_r from_chd_w Unix.stderr
+  in
+  (*cnt := !cnt +1;*)
+  Unix.close from_chd_w;
+  Unix.close to_chd_r;
+  let cin = Unix.in_channel_of_descr from_chd_r in
+  let cout = Unix.out_channel_of_descr to_chd_w in
+
+  (* parallel reading thread *)
+  let out = Buffer.create 16 in
+  let rec read_out _ =
+    let s, eof = (try
+                    BatString.trim (input_line cin), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+  let child_thread = Thread.create (fun _ -> read_out ()) () in
+
+  (* writing to z3 *)
+  write_input cout input;
+  close_out cout;
+
+  (* waiting for z3 to finish *)
+  Thread.join child_thread;
+  close_in cin;
+  Buffer.contents out
+
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
   let (inc,outc) = Unix.open_process command in
@@ -86,15 +137,16 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line p.inc) in
+    let s, eof = (try
+                    BatString.trim (input_line p.inc), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
-
   output_string p.outc stdin;
   flush p.outc;
   Thread.join child_thread;
@@ -109,12 +161,13 @@ let kill_all () =
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let command = name^" "^args in
-  let (inc,outc) = Unix.open_process command in
+  let (inc,outc,errc) = Unix.open_process_full command (Unix.environment ()) in
   output_string outc stdin;
   flush outc;
   let res = BatPervasives.input_all inc in
-  let _ = Unix.close_process (inc, outc) in
-  (true, res, "")
+  let err = BatPervasives.input_all errc in
+  let _ = Unix.close_process_full (inc, outc, errc) in
+  (true, res, err)
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -190,6 +243,36 @@ let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
+
+(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
+type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+
+let fifo_set_is_empty ((s, _):'a fifo_set) =
+  match s with
+  | [] -> true
+  | _ -> false
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
+  ([], fun x y -> cmp x y = Z.zero)
+
+let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
+  let rec aux out = function
+    | [] -> out
+    | hd::tl ->
+       if BatList.exists (eq hd) tl then
+         aux out tl
+       else
+         aux (hd::out) tl in
+  aux [] s1
+let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
+let fifo_set_remove x ((s1, eq):'a fifo_set) =
+  (BatList.filter (fun y -> not (eq x y)) s1, eq)
+let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
+let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
+let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
+let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
+  (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
+
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
@@ -203,6 +286,20 @@ let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
 let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
+
+type 'value imap = (Z.t, 'value) BatHashtbl.t
+let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
+let imap_clear (s:('value imap)) = BatHashtbl.clear s
+let imap_add (m:'value imap) k (v:'value) = BatHashtbl.add m k v
+let imap_of_list (l: (Z.t * 'value) list) =
+  let s = BatHashtbl.create (BatList.length l) in
+  FStar_List.iter (fun (x,y) -> imap_add s x y) l;
+  s
+let imap_try_find (m:'value imap) k = BatHashtbl.find_option m k
+let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
+let imap_remove (m:'value imap) k = BatHashtbl.remove m k
+let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
+let imap_copy (m:'value imap) = BatHashtbl.copy m
 
 let pr  = Printf.printf
 let spr = Printf.sprintf
@@ -230,6 +327,7 @@ let int_of_uint8 = int_of_char
 let uint16_of_int i = Z.to_int i
 let byte_of_char (c:char) = Char.code c
 
+let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
 let float_of_int32 = float_of_int
 let float_of_int64 = BatInt64.to_float
@@ -257,12 +355,12 @@ let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_string (s:string) (s1:string) (s2:string) =
-  BatString.rev (BatString.nreplace ~str:(BatString.rev s) ~sub:s1 ~by:s2)
+let replace_chars (s:string) (c:char) (by:string) =
+  BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let splitlines s = BatString.nsplit s "\n"
-let split s sep = BatString.nsplit s sep
+let split s sep = if s = "" then [""] else BatString.nsplit s sep
+let splitlines s = split s "\n"
 
 let iof = int_of_float
 let foi = float_of_int
@@ -442,6 +540,17 @@ let forall_exists rel l1 l2 =
   for_all (fun x -> for_some (rel x) l2) l1
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
+let take p l =
+  let rec take_aux acc = function
+    | [] -> l, []
+    | x::xs when p x -> take_aux (x::acc) xs
+    | x::xs -> List.rev acc, x::xs
+  in take_aux [] l
+
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if for_some (f x) l then
@@ -535,6 +644,22 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = flush fh
+let file_get_contents f =
+  let ic = open_in_bin f in
+  let l = in_channel_length ic in
+  let s = really_input_string ic l in
+  close_in ic;
+  s
+let concat_dir_filename d f = Filename.concat d f
+let mkdir_clean nm =
+  let remove_all_in_dir nm =
+    let open Sys in
+    Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
+  let open Unix in
+  umask 0o002;
+  try mkdir nm 0o777
+  with Unix_error (EEXIST,_,_) ->
+    remove_all_in_dir nm
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do
@@ -659,7 +784,7 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out 
+  BatFile.with_file_out
     fname
     (fun f ->
       BatPervasives.output_value f value)
@@ -679,7 +804,7 @@ let print_exn e =
 
 let digest_of_file (fname:string) =
   BatDigest.file fname
-  
+
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
@@ -722,7 +847,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out filename) json
+  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
     try
@@ -735,7 +860,7 @@ let read_hints (filename: string): hints_db option =
         `List hints
       ] ->
         {
-          module_digest; 
+          module_digest;
           hints = List.map (function
             | `Null -> None
             | `List [
@@ -765,7 +890,7 @@ let read_hints (filename: string): hints_db option =
                   query_elapsed_time = Z.of_int query_elapsed_time
                 }
               | _ ->
-                 raise Exit 
+                 raise Exit
           ) hints
         }
     | _ ->
@@ -775,6 +900,6 @@ let read_hints (filename: string): hints_db option =
    | Exit ->
       Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
-   | Sys_error _ -> 
+   | Sys_error _ ->
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None

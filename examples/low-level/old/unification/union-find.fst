@@ -139,9 +139,9 @@ val find: x:elem ->
   ST elem
     (requires (fun _ -> True))
     (ensures (fun h_0 y h_1 ->
-      is_Root (Heap.sel h_1 y) /\
-      (forall z. is_Link (Heap.sel h_0 z) ==> is_Link (Heap.sel h_1 z)) /\
-      (forall z. is_Root (Heap.sel h_0 z) ==> is_Root (Heap.sel h_1 z))))
+      Root? (Heap.sel h_1 y) /\
+      (forall z. Link? (Heap.sel h_0 z) ==> Link? (Heap.sel h_1 z)) /\
+      (forall z. Root? (Heap.sel h_0 z) ==> Root? (Heap.sel h_1 z))))
 let rec find x =
   match !x with
   | Link r ->
@@ -154,7 +154,7 @@ let rec find x =
 
 val link: x:elem -> y:elem ->
   ST elem
-    (requires (fun h -> is_Root (Heap.sel h x) /\ is_Root (Heap.sel h y)))
+    (requires (fun h -> Root? (Heap.sel h x) /\ Root? (Heap.sel h y)))
     (ensures (fun _ _ _ -> True))
 let link x y =
   if x = y then

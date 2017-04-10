@@ -1,9 +1,12 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: uall sall
+all: uall
 
 uall: $(patsubst %.fst,%.uver,$(wildcard *.fst))
 
-sall:
+# special casing this file since there is a weird interaction
+# between --verify_module and --use_hints
+MRefHeap.uver : MRefHeap.fst
+	$(FSTAR) --record_hints --verify_module MRefHeap $^
 

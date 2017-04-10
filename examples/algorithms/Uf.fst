@@ -67,7 +67,7 @@ assume val recall_reachable : #a:Type -> #a2:Type -> #b:Type -> h:heap -> r:ref 
 let recall_step (#a:eqtype) (h:heap) (z:uf a) (y:uf a)
   : Lemma (requires (reach a h z = Some y))
           (ensures (Heap.contains h y.parent)) =
-  recall_reachable h z.parent (fun (r : (option (uf a)){is_Some r}) -> match r with | Some y -> y.parent)
+  recall_reachable h z.parent (fun (r : (option (uf a)){Some? r}) -> match r with | Some y -> y.parent)
 
 //assume val recall_step : #a:eqtype -> h:heap -> z:uf a -> y:uf a -> Lemma (requires (reach a h z = Some y)) (ensures (Heap.contains h y.parent))
 
@@ -281,7 +281,8 @@ let rec uf_merge (#a:eqtype) (u1:uf a) (u2:uf a)
   else
     let h0 = get () in
     recall r1.parent ;
-    recall r2.parent ; // needed to prove that sel h1 r2.parent = None
+    (* needed to prove that sel h1 r2.parent = None *)
+    recall r2.parent ;
     r1.parent := Some r2 ;
     let h1 = get () in
 

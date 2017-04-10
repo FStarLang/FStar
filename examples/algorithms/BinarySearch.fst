@@ -64,10 +64,10 @@ val bsearch_rec_correct : t:(seq int)
                           -> a:int -> i:nat{i <= length t} -> j:int{-1 <= j /\ j < length t}
                           -> Lemma
                                (requires True)
-                               (ensures (is_Some (bsearch_rec t a i j) ==>
-                                           (Some.v (bsearch_rec t a i j) >= i) /\
-                                           (Some.v (bsearch_rec t a i j) <= j) /\
-                                           (index t (Some.v (bsearch_rec t a i j)) = a)))
+                               (ensures (Some? (bsearch_rec t a i j) ==>
+                                           (Some?.v (bsearch_rec t a i j) >= i) /\
+                                           (Some?.v (bsearch_rec t a i j) <= j) /\
+                                           (index t (Some?.v (bsearch_rec t a i j)) = a)))
                                (decreases %[(j+1)-i])
 let rec bsearch_rec_correct t a i j =
   if i > j then
@@ -86,10 +86,10 @@ let rec bsearch_rec_correct t a i j =
 val bsearch_correct : t:(seq int) -> a:int
                       -> Lemma
                            (requires True)
-                           (ensures (is_Some (bsearch t a) ==>
-                                       (Some.v (bsearch t a) >= 0) /\
-                                       (Some.v (bsearch t a) < (length t)) /\
-                                       (index t (Some.v (bsearch t a)) = a)))
+                           (ensures (Some? (bsearch t a) ==>
+                                       (Some?.v (bsearch t a) >= 0) /\
+                                       (Some?.v (bsearch t a) < (length t)) /\
+                                       (index t (Some?.v (bsearch t a)) = a)))
 let bsearch_correct t a =
   bsearch_rec_correct t a 0 ((length t)-1)
 
@@ -136,7 +136,7 @@ val bsearch_rec_complete : t:(seq int)
                        (requires (forall i1 i2. (0 <= i1) ==> (i1 <= i2) ==> (i2 < length t) ==> (index t i1 <= index t i2)) /\
                                  (forall p. 0 <= p ==> p < length t ==> index t p = a ==> p < i ==> False) /\
                                  (forall p. 0 <= p ==> p < length t ==> index t p = a ==> j < p ==> False))
-                       (ensures ((is_None (bsearch_rec t a i j)) ==>
+                       (ensures ((None? (bsearch_rec t a i j)) ==>
                                    (forall p. i <= p ==> p <= j ==> index t p = a ==> False)))
                        (decreases %[(j+1)-i])
 let rec bsearch_rec_complete t a i j =
@@ -159,7 +159,7 @@ val bsearch_complete :
   t:(seq int) -> a:int
   -> Lemma
        (requires (forall i1 i2. (0 <= i1) ==> (i1 <= i2) ==> (i2 < length t) ==> (index t i1 <= index t i2)))
-       (ensures ((is_None (bsearch t a)) ==>
+       (ensures ((None? (bsearch t a)) ==>
                  (forall p. 0 <= p ==> p < length t ==> index t p <> a)))
 let bsearch_complete t a =
   bsearch_rec_complete t a 0 ((length t)-1)

@@ -1,12 +1,42 @@
 module CoreCrypto
 
+open FStar.ST
 open Platform.Bytes
 
 effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
   (ensures (fun h0 _ h -> modifies_none h0 h))
 
-type hash_alg = | MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
+(* ------------ Hashing ------------ *) 
+type hash_alg = 
+  | MD5 
+  | SHA1 
+  | SHA224 
+  | SHA256 
+  | SHA384 
+  | SHA512
+
+let hashSize = function
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA224 -> 28
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
+
+(* These implementations are not pure; to be upgraded! *)
+assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
+assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
+
+(* Digest functions *)
+assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
+assume val digest_create : hash_alg -> EXT hash_ctx
+assume val digest_update : hash_ctx -> bytes -> EXT unit 
+assume val digest_final : hash_ctx -> EXT bytes  
+
+(* --------------------------- *)
+
+
 type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = | RC4_128
@@ -19,17 +49,6 @@ let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
-
-
-let hashSize = function
-  | MD5    -> 16
-  | SHA1   -> 20
-  | SHA224 -> 28
-  | SHA256 -> 32
-  | SHA384 -> 48
-  | SHA512 -> 64
-
-
 
 (* Authenticated Encryption for TLS.  
    Note that their AAD contents depends on the protocol version. *)
@@ -75,7 +94,7 @@ assume val aead_encryptT:
   ad:bytes -> 
   plain:bytes -> 
   GTot (lbytes (length plain + aeadTagSize a))
-  
+
 assume val aead_encrypt: 
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
@@ -83,14 +102,15 @@ assume val aead_encrypt:
   ad:bytes -> 
   plain:bytes -> 
   EXT (c:bytes {c = aead_encryptT a k iv ad plain})
-  
+
 assume val aead_decrypt:
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
   iv:lbytes (aeadRealIVSize a) -> 
   ad:bytes -> 
   cipher:bytes{length cipher >= aeadTagSize a} -> 
-  EXT (o:option bytes {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> o = Some p })
+  EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher})
+    {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p) })
 
 
 type rsa_key = {
@@ -126,15 +146,6 @@ type dh_key = {
 
 (* TODO: revisit the Tot annotations, switch to EXT when appropriate *)
 
-assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
-assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
-
-(* Digest functions *)
-assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
-assume val digest_create : hash_alg -> hash_ctx
-assume val digest_update : hash_ctx -> bytes -> unit 
-assume val digest_final : hash_ctx -> bytes  
-
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
 
@@ -146,19 +157,19 @@ assume val stream_fini : cipher_stream -> EXT unit
 
 assume val random : l:nat -> EXT (lbytes l)
 
-assume val rsa_gen_key : int -> EXT (k:rsa_key{is_Some k.rsa_prv_exp})
+assume val rsa_gen_key : int -> EXT (k:rsa_key{Some? k.rsa_prv_exp})
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes
-assume val rsa_decrypt : k:rsa_key{is_Some k.rsa_prv_exp} -> rsa_padding -> bytes -> EXT (option bytes)
-assume val rsa_sign : option hash_alg -> k:rsa_key{is_Some k.rsa_prv_exp} -> bytes -> EXT bytes
+assume val rsa_decrypt : k:rsa_key{Some? k.rsa_prv_exp} -> rsa_padding -> bytes -> EXT (option bytes)
+assume val rsa_sign : option hash_alg -> k:rsa_key{Some? k.rsa_prv_exp} -> bytes -> EXT bytes
 assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> EXT bool
 
-assume val dsa_gen_key : int -> EXT (k:dsa_key{is_Some k.dsa_private})
-assume val dsa_sign : option hash_alg -> k:dsa_key{is_Some k.dsa_private} -> bytes -> EXT bytes
+assume val dsa_gen_key : int -> EXT (k:dsa_key{Some? k.dsa_private})
+assume val dsa_sign : option hash_alg -> k:dsa_key{Some? k.dsa_private} -> bytes -> EXT bytes
 assume val dsa_verify : option hash_alg -> dsa_key -> bytes -> bytes -> Tot bool
 
 assume val dh_gen_params : int -> EXT dh_params
-assume val dh_gen_key : p:dh_params -> EXT (k:dh_key{is_Some k.dh_private /\ k.dh_params = p /\ length k.dh_public <= length p.dh_p})
-assume val dh_agreement : k:dh_key{is_Some k.dh_private} -> bytes -> EXT bytes
+assume val dh_gen_key : p:dh_params -> EXT (k:dh_key{Some? k.dh_private /\ k.dh_params = p /\ length k.dh_public <= length p.dh_p})
+assume val dh_agreement : k:dh_key{Some? k.dh_private} -> bytes -> EXT bytes
 
 (* type ec_prime = { ecp_prime : string; ecp_order : string; ecp_a : string; ecp_b : string; ecp_gx : string; ecp_gy : string; ecp_bytelen : int; ecp_id : bytes; } *)
 
@@ -191,12 +202,12 @@ type ec_key = {
 }
 
 assume val ec_is_on_curve: ec_params -> ec_point -> Tot bool
-assume val ecdh_agreement: k:ec_key{is_Some k.ec_priv} -> ec_point -> EXT bytes
+assume val ecdh_agreement: k:ec_key{Some? k.ec_priv} -> ec_point -> EXT bytes
 
-assume val ecdsa_sign: option hash_alg -> k:ec_key{is_Some k.ec_priv} -> bytes -> EXT bytes
+assume val ecdsa_sign: option hash_alg -> k:ec_key{Some? k.ec_priv} -> bytes -> EXT bytes
 assume val ecdsa_verify: option hash_alg -> ec_key -> bytes -> bytes -> EXT bool
 assume val ec_gen_key: p:ec_params
-  -> EXT (k:ec_key{is_Some k.ec_priv /\ k.ec_params = p /\
+  -> EXT (k:ec_key{Some? k.ec_priv /\ k.ec_params = p /\
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
@@ -210,9 +221,9 @@ type key =
 // with keys that are missing the "private" field.
 // The only has_priv keys are the ones loaded with load_key and or generated with gen_key
 let has_priv : key -> Type0 = function
-  | KeyRSA k -> is_Some k.rsa_prv_exp
-  | KeyDSA k -> is_Some k.dsa_private
-  | KeyECDSA k -> is_Some k.ec_priv
+  | KeyRSA k -> Some? k.rsa_prv_exp
+  | KeyDSA k -> Some? k.dsa_private
+  | KeyECDSA k -> Some? k.ec_priv
 
 assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
 assume val get_key_from_cert: bytes -> Tot (option key)

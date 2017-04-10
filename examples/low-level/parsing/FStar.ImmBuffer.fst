@@ -67,8 +67,8 @@ type result 'a : Type0 =
   | Error of string
 
 (* Destructors for that type *)
-let correct (#a:Type) (r:result a{is_Correct r}) : Tot a = match r with | Correct x -> x
-let errror (#a:Type) (r:result a{is_Error r}) : Tot string = match r with | Error s -> s
+let correct (#a:Type) (r:result a{Correct? r}) : Tot a = match r with | Correct x -> x
+let errror (#a:Type) (r:result a{Error? r}) : Tot string = match r with | Error s -> s
 
 (* Size predicate, for types on which one can compute "sizeof" as in C *)
 assume type hasSize (t:Type0) : Type0
@@ -100,7 +100,7 @@ type parser (#t:sizeof_t) ($f:serializer t) =
 
 (* Type of F* types that can be serialized into sequences of bytes *)
 type inverse (#t:sizeof_t) ($f:serializer t) ($g:parser f) =
-  (forall (x:t). g (f x) == Correct x) /\ (forall (y:seq byte). is_Correct (g y) ==>  (f (Correct._0 (g y))) == y)
+  (forall (x:t). g (f x) == Correct x) /\ (forall (y:seq byte). Correct? (g y) ==>  (f (Correct._0 (g y))) == y)
 
 noeq type serializable (t:sizeof_t) : Type0 =
 | Serializable: $f:serializer t -> $g:parser f{inverse f g} -> serializable t
@@ -135,7 +135,7 @@ let rec to_seq_bytes #t #ty s =
 (* Buffer of serializable types *)
 (* It is a "flat" representation of some structures in memory *)
 let buffer (#t:sizeof_t) (ty:serializable t) = 
-  b:bytes{length_bytes b % sizeof t = 0 /\ is_Correct (of_seq_bytes #t #ty (to_seq_byte b))}
+  b:bytes{length_bytes b % sizeof t = 0 /\ Correct? (of_seq_bytes #t #ty (to_seq_byte b))}
 
 (* Buffer have the size of bytes (should infered using the types) *)
 assume BufferHasSize: forall (#ty:sizeof_t) (t:serializable ty).
@@ -215,7 +215,7 @@ let cast_to_bytes (#t:sizeof_t) (#ty:serializable t) (b:buffer ty)
 
 (* Cast an appropriate "bytes" object to the corresponding "buffer " type *)
 let cast_to_buffer (#t:sizeof_t) (ty:serializable t) (b:bytes{length_bytes b % sizeof t = 0
-  /\ is_Correct (of_seq_bytes #t #ty (to_seq_byte b))})
+  /\ Correct? (of_seq_bytes #t #ty (to_seq_byte b))})
   : Tot (buffer ty)
   = b
 
@@ -223,7 +223,7 @@ let cast_to_buffer (#t:sizeof_t) (ty:serializable t) (b:bytes{length_bytes b % s
 (* Mostly for casts between native low level types (machine ints and pointers*)
 let cast (#t:sizeof_t) (ty:serializable t) (#t':sizeof_t) (#ty':serializable t') 
   (b:buffer ty'{length_bytes (cast_to_bytes b) % sizeof t = 0
-   /\ is_Correct (of_seq_bytes #t #ty (to_seq_byte b))})
+   /\ Correct? (of_seq_bytes #t #ty (to_seq_byte b))})
   : Tot (b':buffer ty) = cast_to_buffer #t ty (cast_to_bytes b)
 
 
@@ -342,7 +342,7 @@ let ptr = Serializable ptr_serializer ptr_parser
 assume val lemma_bytes_to_buffer: b:bytes ->
   Lemma (length_bytes b % sizeof byte = 0 
 	/\ Seq.length (to_seq_byte b) = length_bytes b
-	/\ is_Correct (of_seq_bytes #byte #u8 (to_seq_byte b)))
+	/\ Correct? (of_seq_bytes #byte #u8 (to_seq_byte b)))
 
 type lbytes = (| len:UInt32.t & b:buffer u8{length b >= v len} |)
 

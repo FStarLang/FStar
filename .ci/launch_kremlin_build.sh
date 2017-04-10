@@ -1,11 +1,11 @@
-#!/bin/bash 
-BRANCH=$BUILD_SOURCEBRANCHNAME 
-TRAVIS_TOKEN=$1 
+#!/usr/bin/env bash
+BRANCH=$BUILD_SOURCEBRANCHNAME
+TRAVIS_TOKEN=$1
 
 echo "Triggering Kremlin if build is for master branch"
 echo "Branch : $BRANCH"
 
-if [[ "$BRANCH" == "master" ]]; then 
+if [[ "$BRANCH" == "master" ]]; then
     set body='{
     "request": {
     "branch":"master"
@@ -23,4 +23,4 @@ if [[ "$BRANCH" == "master" ]]; then
     echo "Travis build trigger complete"
 else
     echo "Kremlin build is not triggered"
-fi 
+fi

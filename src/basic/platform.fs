@@ -20,4 +20,5 @@ let exe (name : string) =
     | Windows -> Util.format1 "%s.exe" name
     | Posix   -> name
 
+let is_fstar_compiler_using_ocaml = false
 

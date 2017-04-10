@@ -2,7 +2,7 @@
 type ('a, 'b) prod =
 | Pair of 'a * 'b
 
-let is_Pair = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Pair = (fun ( _discr_ ) -> (match (_discr_) with
 | Pair (_) -> begin
 true
 end
@@ -28,7 +28,7 @@ type nnat =
 | O
 | S of nnat
 
-let is_O = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_O = (fun ( _discr_ ) -> (match (_discr_) with
 | O -> begin
 true
 end
@@ -36,7 +36,7 @@ end
 false
 end))
 
-let is_S = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_S = (fun ( _discr_ ) -> (match (_discr_) with
 | S (_) -> begin
 true
 end
@@ -88,7 +88,7 @@ type ('a, ' b) list2 =
 | Nil2
 | Cons2 of 'a * ' b * ('a, ' b) list2
 
-let is_Nil2 = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Nil2 = (fun ( _discr_ ) -> (match (_discr_) with
 | Nil2 -> begin
 true
 end
@@ -96,7 +96,7 @@ end
 false
 end))
 
-let is_Cons2 = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Cons2 = (fun ( _discr_ ) -> (match (_discr_) with
 | Cons2 (_) -> begin
 true
 end
@@ -122,7 +122,7 @@ end))
 type any =
 | Any of unit * Obj.t
 
-let is_Any = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Any = (fun ( _discr_ ) -> (match (_discr_) with
 | Any (_) -> begin
 true
 end
@@ -142,7 +142,7 @@ type 'a list2p =
 | Nil2p
 | Cons2p of 'a * ('a, 'a) prod list2p
 
-let is_Nil2p = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Nil2p = (fun ( _discr_ ) -> (match (_discr_) with
 | Nil2p -> begin
 true
 end
@@ -150,7 +150,7 @@ end
 false
 end))
 
-let is_Cons2p = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Cons2p = (fun ( _discr_ ) -> (match (_discr_) with
 | Cons2p (_) -> begin
 true
 end
@@ -172,7 +172,7 @@ type 'dummyV1 list3 =
 | Nil3 of unit
 | Cons3 of unit * Obj.t * Obj.t list3
 
-let is_Nil3 = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Nil3 = (fun ( _discr_ ) -> (match (_discr_) with
 | Nil3 (_) -> begin
 true
 end
@@ -180,7 +180,7 @@ end
 false
 end))
 
-let is_Cons3 = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Cons3 = (fun ( _discr_ ) -> (match (_discr_) with
 | Cons3 (_) -> begin
 true
 end
@@ -201,7 +201,7 @@ end))
 type ' x poly =
 | Poly of nnat * ' x
 
-let is_Poly = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Poly = (fun ( _discr_ ) -> (match (_discr_) with
 | Poly (_) -> begin
 true
 end
@@ -238,7 +238,7 @@ type (' a, 'dummyV1) vec =
 | Nill
 | Conss of nnat * ' a * (' a, unit) vec
 
-let is_Nill = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Nill = (fun ( _discr_ ) -> (match (_discr_) with
 | Nill -> begin
 true
 end
@@ -246,7 +246,7 @@ end
 false
 end))
 
-let is_Conss = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Conss = (fun ( _discr_ ) -> (match (_discr_) with
 | Conss (_) -> begin
 true
 end
@@ -276,7 +276,7 @@ type (' t, ' n) naryTree =
 | Leaf
 | Node of ((' t, unit) naryTree, unit) vec
 
-let is_Leaf = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Leaf = (fun ( _discr_ ) -> (match (_discr_) with
 | Leaf -> begin
 true
 end
@@ -284,7 +284,7 @@ end
 false
 end))
 
-let is_Node = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Node = (fun ( _discr_ ) -> (match (_discr_) with
 | Node (_) -> begin
 true
 end
@@ -328,7 +328,7 @@ type ' a evenlist =
  and ' a oddlist =
 | OCons of ' a * ' a evenlist
 
-let is_ENil = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_ENil = (fun ( _discr_ ) -> (match (_discr_) with
 | ENil -> begin
 true
 end
@@ -336,7 +336,7 @@ end
 false
 end))
 
-let is_ECons = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_ECons = (fun ( _discr_ ) -> (match (_discr_) with
 | ECons (_) -> begin
 true
 end
@@ -344,7 +344,7 @@ end
 false
 end))
 
-let is_OCons = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_OCons = (fun ( _discr_ ) -> (match (_discr_) with
 | OCons (_) -> begin
 true
 end
@@ -378,7 +378,7 @@ type 'dummyV1 isEven =
  and 'dummyV1 isOdd =
 | OddSEven of nnat * unit isEven
 
-let is_Ev0 = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_Ev0 = (fun ( _discr_ ) -> (match (_discr_) with
 | Ev0 -> begin
 true
 end
@@ -386,7 +386,7 @@ end
 false
 end))
 
-let is_EvSOdd = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_EvSOdd = (fun ( _discr_ ) -> (match (_discr_) with
 | EvSOdd (_) -> begin
 true
 end
@@ -394,7 +394,7 @@ end
 false
 end))
 
-let is_OddSEven = (fun ( _discr_ ) -> (match (_discr_) with
+let uu___is_OddSEven = (fun ( _discr_ ) -> (match (_discr_) with
 | OddSEven (_) -> begin
 true
 end
@@ -425,7 +425,7 @@ end))
 type node =
 {frequency : int; next : node; zero_child : node ref; one_child : node; symbol : int; code : string}
 
-let is_Mknode = (fun ( _ ) -> (failwith "Not yet implemented:is\x5fMknode"))
+let uu___is_Mknode = (fun ( _ ) -> (failwith "Not yet implemented:is\x5fMknode"))
 
 let ev2 = EvSOdd (S (O), OddSEven (O, Ev0))
 

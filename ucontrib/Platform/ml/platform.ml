@@ -6,11 +6,11 @@ module Error = struct
   let perror (file:string) (line:Z.t) (text:string) =
       text
 
-  let is_Correct = function
+  let uu___is_Correct = function
     | Correct _ -> true
     | _ -> false
 
-  let is_Error = function
+  let uu___is_Error = function
     | Error _ -> true
     | _ -> false
 
@@ -149,14 +149,17 @@ module Bytes = struct
 
   let bytes_of_int nb i =
     let nb = Z.to_int nb in
-    let i = Z.to_int i in
+    let i = Z.to_int64 i in
+    if Int64.compare i Int64.zero < 0 then failwith "Negative 64bit.";
     let rec put_bytes bb lb n =
       if lb = 0 then failwith "not enough bytes"
       else
         begin
-          Bytes.set bb (lb-1) (char_of_int (n mod 256));
-          if n/256 > 0 then
-            put_bytes bb (lb-1) (n/256)
+          let lown = Int64.logand n (Int64.of_int 255) in
+          Bytes.set bb (lb-1) (char_of_int (Int64.to_int lown));
+          let ns = Int64.div n (Int64.of_int 256) in
+          if Int64.compare ns Int64.zero > 0 then
+            put_bytes bb (lb-1) ns
           else bb
         end
     in
@@ -510,7 +513,7 @@ module Date = struct
   type dateTime = DT of float
   type timeSpan = TS of float
   let now () = DT (Unix.gettimeofday())
-  let secondsFromDawn () = int_of_float (Unix.time()) |> Z.of_int
+  let secondsFromDawn () = Int64.of_float (Unix.time()) |> Z.of_int64
   let newTimeSpan d h m s = TS (((((float_of_int (Z.to_int d)) *. 24.0) +. (float_of_int (Z.to_int h))) *. 60.0 +. (float_of_int (Z.to_int m))) *. 60.0 +. (float_of_int (Z.to_int s)))
   let addTimeSpan (DT(a)) (TS(b)) = DT (a +. b)
   let greaterDateTime (DT(a)) (DT(b)) = a > b

@@ -10,7 +10,7 @@ let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
 (*open Seq
-open SeqProperties*)
+open Seq*)
 open SHA1
 open Formatting
 open MAC
@@ -22,9 +22,9 @@ open MAC
 val msg_buffer: ref message
 let msg_buffer = ST.alloc (empty_bytes)
 
-val send: message -> unit
+val send: message -> ML unit
 let send m = msg_buffer := m
-val recv: (message -> unit) -> unit
+val recv: (message -> ML unit) -> ML unit
 let rec recv call = if length !msg_buffer > 0
                 then (
                   let msg = !msg_buffer in

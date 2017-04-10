@@ -1,5 +1,5 @@
 [
-  "ΩëıE™h\u0001eÉ˘ÁHﬁ–Ôz",
+  "è¯HaÌÌé€[Jå±›}≥‚",
   [
     [
       "BinarySearch.bsearch_rec",
@@ -7,15 +7,15 @@
       2,
       1,
       [
-        "@query", "binder_x_9135a13cebbbe0512ca3cd976820e435_2",
-        "binder_x_efc98bf3f9a25f14a1eb69fe25ffbf47_3",
+        "@query", "binder_x_0523760e53242775be19d7f9288566f5_3",
+        "binder_x_913822752ddcaf556cd3f7287a5788cf_2",
         "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Division", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_634d8b691b6ade4bdfa3db57476ebba3",
-        "refinement_interpretation_Tm_refine_661f82eaaf1ab1f45a163ccc5133425a",
+        "refinement_interpretation_Tm_refine_0f25f1bf505c28317ad0ebe9f4f2e28c",
+        "refinement_interpretation_Tm_refine_4ffa9e8c4781dcb9f839d32e17e092af",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
@@ -40,7 +40,7 @@
         "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.length"
+        "typing_FStar.Seq.Base.length"
       ],
       0
     ],
@@ -70,27 +70,28 @@
       2,
       1,
       [
-        "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
-        "binder_x_9135a13cebbbe0512ca3cd976820e435_2",
-        "binder_x_efc98bf3f9a25f14a1eb69fe25ffbf47_3", "bool_inversion",
+        "@query", "binder_x_0523760e53242775be19d7f9288566f5_3",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_913822752ddcaf556cd3f7287a5788cf_2",
         "constructor_distinct_Prims.None", "disc_equation_Prims.Some",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert", "equation_Prims.nat",
         "equation_with_fuel_BinarySearch.bsearch_rec.fuel_instrumented",
         "fuel_correspondence_BinarySearch.bsearch_rec.fuel_instrumented",
         "fuel_irrelevance_BinarySearch.bsearch_rec.fuel_instrumented",
-        "int_inversion", "int_typing",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_Minus",
-        "primitive_Prims.op_Subtraction", "proj_equation_Prims.Some_v",
-        "projection_inverse_BoxBool_proj_0",
+        "function_token_typing_FStar.List.Tot.test_sort", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
+        "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_634d8b691b6ade4bdfa3db57476ebba3",
-        "refinement_interpretation_Tm_refine_661f82eaaf1ab1f45a163ccc5133425a",
+        "refinement_interpretation_Tm_refine_0f25f1bf505c28317ad0ebe9f4f2e28c",
+        "refinement_interpretation_Tm_refine_4ffa9e8c4781dcb9f839d32e17e092af",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "unit_typing", "well-founded-ordering-on-nat"
+        "token_correspondence_Prims.op_LessThan", "unit_inversion",
+        "well-founded-ordering-on-nat"
       ],
       0
     ],
@@ -124,7 +125,7 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_ce3c87b6b8d5c08ac34925632cf818af",
-        "typing_FStar.Seq.length"
+        "typing_FStar.Seq.Base.length"
       ],
       0
     ],
@@ -198,9 +199,9 @@
       [
         "@query", "equation_Prims.nat",
         "pretyping_ae567c2fb75be05905677af440075565",
-        "refinement_interpretation_Tm_refine_0bf0a286bd475e1b886e3e09071e5cd9",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_ce3c87b6b8d5c08ac34925632cf818af"
+        "refinement_interpretation_Tm_refine_9806ae1ccd108b48607daedc30f89730",
+        "refinement_interpretation_Tm_refine_a17aea8738f1cb1a38aeab3ae0804158",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -210,26 +211,26 @@
       2,
       1,
       [
-        "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
-        "binder_x_9135a13cebbbe0512ca3cd976820e435_2",
-        "binder_x_efc98bf3f9a25f14a1eb69fe25ffbf47_3",
+        "@query", "binder_x_0523760e53242775be19d7f9288566f5_3",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_913822752ddcaf556cd3f7287a5788cf_2",
         "constructor_distinct_Prims.Some", "disc_equation_Prims.None",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.List.Tot.test_sort",
+        "equation_Prims._assert", "equation_Prims.nat",
         "equation_with_fuel_BinarySearch.bsearch_rec.fuel_instrumented",
         "fuel_correspondence_BinarySearch.bsearch_rec.fuel_instrumented",
         "fuel_irrelevance_BinarySearch.bsearch_rec.fuel_instrumented",
-        "int_inversion", "int_typing",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_Minus",
-        "primitive_Prims.op_Subtraction",
+        "function_token_typing_FStar.List.Tot.test_sort", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_634d8b691b6ade4bdfa3db57476ebba3",
-        "refinement_interpretation_Tm_refine_661f82eaaf1ab1f45a163ccc5133425a",
+        "refinement_interpretation_Tm_refine_0f25f1bf505c28317ad0ebe9f4f2e28c",
+        "refinement_interpretation_Tm_refine_4ffa9e8c4781dcb9f839d32e17e092af",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
+        "unit_inversion", "well-founded-ordering-on-nat"
       ],
       0
     ],
@@ -262,7 +263,7 @@
         "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.length"
+        "typing_FStar.Seq.Base.length"
       ],
       0
     ]

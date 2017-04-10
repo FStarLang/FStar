@@ -1,5 +1,5 @@
 [
-  "1¥G>åPr¥Ý1ii«R¾½",
+  "(æÁAøÌN¡t)>MÖÜúm",
   [
     [
       "Ex10a.entry",
@@ -9,27 +9,29 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
+    [ "Ex10a.uu___is_Readable", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex10a.Readable._0",
+      "Ex10a.__proj__Readable__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Ex10a.Readable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1055b8b6d0025865fa0d156d9b79fe21"
+        "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0
     ],
+    [ "Ex10a.uu___is_Writable", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex10a.Writable._0",
+      "Ex10a.__proj__Writable__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Ex10a.Writable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9aab09198fcdb3c046533d1b6470083a"
+        "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0
     ],
@@ -64,14 +66,6 @@
     [
       "Ex10a.revoke",
       1,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
-      0
-    ],
-    [
-      "Ex10a.revoke",
-      2,
       2,
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
@@ -116,10 +110,10 @@
         "disc_equation_Prims.Some", "eq2-interp", "equation_Ex10a.canRead",
         "equation_Ex10a.canRead_t", "equation_Ex10a.db",
         "equation_FStar.ST.ref",
-        "equation_with_fuel_FStar.List.Tot.tryFind.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.tryFind.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
-        "interpretation_Tm_abs_80a1794b5fbb6422b5f4d011b6357843",
+        "interpretation_Tm_abs_928dc2ad90e939fe9c5b6ca765f2e743",
         "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_Prims.Cons_a",

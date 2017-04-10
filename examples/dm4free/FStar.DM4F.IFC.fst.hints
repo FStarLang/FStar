@@ -1,38 +1,26 @@
 [
-  "éå˝}B%5Ç˙ıŒ3+É´•",
+  "s≥vö\u000e8o$\u0006ÇùöÙ3Á(",
   [
-    [ "FStar.DM4F.IFC.return_ifc", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IFC.uu___is_Low", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IFC.uu___is_High", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.bind_ifc",
       1,
       2,
       1,
       [
-        "@query", "bool_inversion",
-        "data_typing_intro_FStar.DM4F.IFC.High@tok",
-        "disc_equation_Prims.None", "kinding_FStar.DM4F.IFC.label@tok",
-        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
+        "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_FStar.DM4F.IFC.ifc",
+        "interpretation_Tm_arrow_4fdb0ab0c7e9da3107de701807750e02",
+        "interpretation_Tm_arrow_9030bbbff7d28409c3f741b6861b9e46",
+        "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
+        "lemma_Prims.invertOption",
         "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.is_Some"
+        "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
-    [
-      "FStar.DM4F.IFC.IFC_bind_wp",
-      1,
-      2,
-      1,
-      [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "kinding_FStar.DM4F.IFC.label@tok",
-        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
-        "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.is_None",
-        "typing_Prims.is_Some"
-      ],
-      0
-    ],
-    [ "FStar.DM4F.IFC.IFC", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.join",
       1,
@@ -77,6 +65,84 @@
       0
     ],
     [ "FStar.DM4F.IFC.write", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.IFC.IFC_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "kinding_FStar.DM4F.IFC.label@tok",
+        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
+        "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.is_None",
+        "typing_Prims.is_Some"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__read_elab",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.DM4F.IFC.label_haseq",
+        "equality_tok_FStar.DM4F.IFC.High@tok",
+        "equality_tok_FStar.DM4F.IFC.Low@tok"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__read_complete_type",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.DM4F.IFC.label_haseq",
+        "equality_tok_FStar.DM4F.IFC.High@tok",
+        "equality_tok_FStar.DM4F.IFC.Low@tok"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__write_elab",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
+      0
+    ],
+    [
+      "FStar.DM4F.IFC.IFC___proj__IFC__item__write_complete_type",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
+      0
+    ],
+    [ "FStar.DM4F.IFC.IFC", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.IFC.IFC",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.DM4F.IFC.label_haseq",
+        "equality_tok_FStar.DM4F.IFC.High@tok",
+        "equality_tok_FStar.DM4F.IFC.Low@tok"
+      ],
+      0
+    ],
+    [ "FStar.DM4F.IFC.IFC", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.IFC.IFC",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
+      0
+    ],
+    [ "FStar.DM4F.IFC.IFC", 5, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IFC.xor", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.xor",

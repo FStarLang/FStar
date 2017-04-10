@@ -48,7 +48,7 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). EVar? (s x))
 
 val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
@@ -63,17 +63,17 @@ let esub_inc = esub_inc_above 0
 val erenaming_sub_inc : unit -> Lemma (erenaming (esub_inc))
 let erenaming_sub_inc _ = ()
 
-let is_evar (e:exp) : int = if is_EVar e then 0 else 1
+let is_evar (e:exp) : int = if EVar? e then 0 else 1
 
 val esubst : s:esub -> e:exp -> Pure exp (requires True)
-      (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
+      (ensures (fun e' -> erenaming s /\ EVar? e ==> EVar? e'))
       (decreases %[is_evar e; is_erenaming s; e])
 let rec esubst s e =
   match e with
   | EVar x -> s x
 
   | ELam t e1 ->
-     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
+     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> EVar? e}) =
        fun y -> if y=0 then EVar y
                        else (esubst esub_inc (s (y - 1))) in
      ELam t (esubst esubst_lam e1)
@@ -86,7 +86,7 @@ let esubst_lam s y =
            else esubst esub_inc (s (y-1))
 
 val esubst_lam_renaming: s:esub -> Lemma
-  (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x)))
+  (ensures (forall (x:var). erenaming s ==> EVar? (esubst_lam s x)))
 let esubst_lam_renaming s = ()
 
 (* Substitution extensional; trivial with the extensionality axiom *)
@@ -251,7 +251,7 @@ let esubst_beta = esubst_beta_gen 0
 (* Substitution on types is very much analogous *)
 
 type tsub = var -> Tot typ
-opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+opaque type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
 
 val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
                                         (~(trenaming s) ==> n=1)})
@@ -266,17 +266,17 @@ let tsub_inc = tsub_inc_above 0
 val trenaming_sub_inc : unit -> Lemma (trenaming (tsub_inc))
 let trenaming_sub_inc _ = ()
 
-let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
+let is_tvar (t:typ) : int = if TVar? t then 0 else 1
 
 val tsubst : s:tsub -> t:typ -> Pure typ (requires True)
-      (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
+      (ensures (fun t' -> trenaming s /\ TVar? t ==> TVar? t'))
       (decreases %[is_tvar t; is_trenaming s; t])
 let rec tsubst s t =
   match t with
   | TVar x -> s x
 
   | TLam k t1 ->
-     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
+     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> TVar? t}) =
        fun y -> if y=0 then TVar y
                        else (tsubst tsub_inc (s (y-1))) in
      TLam k (tsubst tsubst_lam t1)
@@ -412,7 +412,7 @@ let extend_evar g n t =
 
 type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
-            a:var{is_Some (lookup_tvar g a)} ->
+            a:var{Some? (lookup_tvar g a)} ->
             kinding g (TVar a) (Some.v (lookup_tvar g a))
   | KiLam : #g:env ->
             k:knd ->
@@ -474,7 +474,7 @@ type tequiv : typ -> typ -> Type =
 
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
-            x:var{is_Some (lookup_evar g x)} ->
+            x:var{Some? (lookup_evar g x)} ->
             kinding g (Some.v (lookup_evar g x)) KTyp ->
             typing g (EVar x) (Some.v (lookup_evar g x))
   | TyLam : #g:env ->
@@ -504,7 +504,7 @@ type typing : env -> exp -> typ -> Type =
 (* Progress proof *)
 
 val is_value : exp -> Tot bool
-let is_value = is_ELam
+let is_value = ELam?
 
 opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
                Pure (cexists (fun e' -> step e e'))

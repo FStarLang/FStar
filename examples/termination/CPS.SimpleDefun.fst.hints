@@ -1,0 +1,68 @@
+[
+  "àÙ€’ò}³Y\u0006“(±èŽDW",
+  [
+    [
+      "CPS.SimpleDefun.cont",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [ "CPS.SimpleDefun.uu___is_C0", 1, 2, 1, [ "@query" ], 0 ],
+    [ "CPS.SimpleDefun.uu___is_C1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "CPS.SimpleDefun.__proj__C1__item___0",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_CPS.SimpleDefun.C1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+      ],
+      0
+    ],
+    [
+      "CPS.SimpleDefun.__proj__C1__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_CPS.SimpleDefun.C1",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+      ],
+      0
+    ],
+    [
+      "CPS.SimpleDefun.apply",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "binder_x_99791f65bbeea99a630052cdf78a93a2_0",
+        "constructor_distinct_CPS.SimpleDefun.C0",
+        "disc_equation_CPS.SimpleDefun.C0",
+        "disc_equation_CPS.SimpleDefun.C1",
+        "fuel_guarded_inversion_CPS.SimpleDefun.cont", "int_inversion",
+        "subterm_ordering_CPS.SimpleDefun.C1"
+      ],
+      0
+    ],
+    [
+      "CPS.SimpleDefun.add_cps",
+      1,
+      2,
+      1,
+      [
+        "@query", "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ]
+  ]
+]

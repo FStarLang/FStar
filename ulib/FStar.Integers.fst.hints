@@ -1,6 +1,8 @@
 [
-  "ß¨,ÉmŠÒ\f\u001d);ô_E™\r",
+  "—Jd`úU@ñ\u001aÇR“\u000f&Ñ®",
   [
+    [ "FStar.Integers.uu___is_Signed", 1, 0, 1, [ "@query" ], 0 ],
+    [ "FStar.Integers.uu___is_Unsigned", 1, 0, 1, [ "@query" ], 0 ],
     [
       "FStar.Integers.int_t",
       1,

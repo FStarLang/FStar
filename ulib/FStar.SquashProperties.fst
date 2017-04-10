@@ -80,7 +80,7 @@ noeq type retract_cond 'a 'b : Type =
 
 (* unused below *)
 val ac: r:retract_cond 'a 'b -> retract 'a 'b -> x:'a ->
-          GTot (ceq ((MkC.j2 r) (MkC.i2 r x)) x)
+          GTot (ceq ((MkC?.j2 r) (MkC?.i2 r x)) x)
 let ac (MkC _ _ inv2) = inv2
 
 let false_elim (#a:Type) (f:False) : Tot a
@@ -111,8 +111,8 @@ assume val f : u -> Tot (squash (pow u))
 
 // val g : squash (pow U) -> Tot U
 // let g sh = fun (x:Type) -> 
-//   let (slX:squash (pow U -> Tot (pow x))) = map_squash (l1 x U) MkC.j2 in 
-//   let (srU:squash (pow U -> Tot (pow U))) = map_squash (l1 U U) MkC.i2 in 
+//   let (slX:squash (pow U -> Tot (pow x))) = map_squash (l1 x U) MkC?.j2 in 
+//   let (srU:squash (pow U -> Tot (pow U))) = map_squash (l1 U U) MkC?.i2 in 
 //   bind_squash srU (fun rU ->
 //   bind_squash slX (fun lX ->
 //   bind_squash sh (fun h ->

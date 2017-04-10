@@ -1,5 +1,5 @@
 [
-  "ö£€ÚlPãc:_ˇr]ÿ\u001b—",
+  "'êq3\u0004}7°ù\u0018ª@wX|!",
   [
     [
       "Ex06c.mem",
@@ -103,8 +103,9 @@
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5f5fd1baf8ea34bf72e4012bafe805ec",
-        "subterm_ordering_Prims.Cons", "typing_Prims.Cons.tl"
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0
     ],
@@ -344,13 +345,14 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "assumption_Prims.HasEq_int",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0", "bool_inversion",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Ex06c.cmp",
-        "equation_Prims.eqtype", "equation_Prims.fst", "equation_Prims.nat",
-        "equation_Prims.snd",
+        "bool_typing", "constructor_distinct_Prims.Cons",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equality_tok_Prims.LexTop@tok",
+        "equation_Ex06c.cmp", "equation_Prims.eqtype", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.snd",
         "equation_with_fuel_Ex06c.length.fuel_instrumented",
         "equation_with_fuel_Ex06c.mem.fuel_instrumented",
         "equation_with_fuel_Ex06c.sorted.fuel_instrumented",
@@ -374,15 +376,12 @@
         "projection_inverse_Prims.Cons_tl",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_322881952368149dac7c69ac98b699e9",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_704a9b9541f314d570e11d88836b335f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_e4a49db3cc6d973395c99741b1f56708",
-        "token_correspondence_Ex06c.cmp",
-        "token_correspondence_Ex06c.length.fuel_instrumented",
-        "typing_Ex06c.length", "typing_Ex06c.mem", "typing_Ex06c.sorted",
-        "typing_Prims.Mktuple2._1", "typing_Prims.fst", "typing_Prims.snd",
+        "token_correspondence_Ex06c.cmp", "typing_Ex06c.length",
+        "typing_Ex06c.mem", "typing_Prims.fst", "typing_Prims.snd",
         "well-founded-ordering-on-nat"
       ],
       0

@@ -1,22 +1,22 @@
 module FStar.Bytes
-
+open FStar.All
 open FStar.UInt8
 
 type bytes = array byte
-val length : bytes -> int
-val get: bytes -> int -> int
-val zero_create : int -> bytes
-val of_intarray: array int -> bytes
-val string_as_unicode_bytes: string -> bytes
-val unicode_bytes_as_string: bytes -> string
-val utf8_bytes_as_string: bytes -> string
-val append: bytes -> bytes -> bytes
-val make: (int -> int) -> int -> bytes
-val for_range: bytes -> int -> int -> (int -> unit) -> unit
+assume val length : bytes -> int
+assume val get: bytes -> int -> int
+assume val zero_create : int -> bytes
+assume val of_intarray: array int -> bytes
+assume val string_as_unicode_bytes: string -> bytes
+assume val unicode_bytes_as_string: bytes -> string
+assume val utf8_bytes_as_string: bytes -> string
+assume val append: bytes -> bytes -> bytes
+assume val make: (int -> int) -> int -> bytes
+assume val for_range: bytes -> int -> int -> (int -> unit) -> unit
 
-new type bytebuf
-val create: int -> bytebuf
-val close : bytebuf -> bytes
-val emit_int_as_byte: bytebuf -> int -> unit
-val emit_bytes: bytebuf -> bytes -> unit
-val f_encode: (byte -> string) -> bytes -> string
+assume new type bytebuf
+assume val create: int -> bytebuf
+assume val close : bytebuf -> bytes
+assume val emit_int_as_byte: bytebuf -> int -> unit
+assume val emit_bytes: bytebuf -> bytes -> unit
+assume val f_encode: (byte -> string) -> bytes -> string

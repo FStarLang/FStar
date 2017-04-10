@@ -1,9 +1,0 @@
-module Db 
-
-type ('a, 'b) t
-
-val create : unit -> ('a,'b) t
-val select: ('a,'b) t -> 'a -> 'b
-val insert: ('a,'b) t -> 'a -> 'b -> unit
-
-end

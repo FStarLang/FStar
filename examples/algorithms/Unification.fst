@@ -159,7 +159,7 @@ let rec unify e s = match e with
   | [] -> Some s
 
   | (V x, t)::tl ->
-    if is_V t && V.i t = x
+    if V? t && V?.i t = x
     then unify tl s //t is a flex-rhs
     else if occurs x t
     then None
@@ -284,7 +284,7 @@ let rec lsubst_funs_monotone l t = match l with
   | hd::tl ->
     lsubst_funs_monotone tl t; subst_funs_monotone hd (lsubst_term tl t)
     
-val lemma_occurs_not_solveable_aux: x:nat -> t:term{occurs x t /\ not (is_V t)} -> s:list subst -> Lemma
+val lemma_occurs_not_solveable_aux: x:nat -> t:term{occurs x t /\ not (V? t)} -> s:list subst -> Lemma
   (funs (lsubst_term s t) >= (funs t + funs (lsubst_term s (V x))))
 let rec lemma_occurs_not_solveable_aux x t s = match t with
   | F t1 t2 ->
@@ -304,7 +304,7 @@ type not_solveable s =
   forall l. lsubst_term l (fst s) <> lsubst_term l (snd s)
 
 val lemma_occurs_not_solveable: x:nat -> t:term -> Lemma
-  (requires (occurs x t /\ not (is_V t)))
+  (requires (occurs x t /\ not (V? t)))
   (ensures (not_solveable (V x, t)))
 let lemma_occurs_not_solveable x t = FStar.Classical.forall_intro (lemma_occurs_not_solveable_aux x t)
  
@@ -349,13 +349,13 @@ val unify_correct_aux: l:list subst -> e:eqns -> Pure (list subst)
 		  l' = (m @ l)
 		 /\ solved (lsubst_eqns l' e)))
  (decreases %[n_evars e; efuns e; n_flex_rhs e])
-#set-options "--z3timeout 20" //making it more robust for CI
+#set-options "--z3rlimit 20"
 let rec unify_correct_aux l = function
   | [] -> []
   | hd::tl ->
     begin match hd with
       | (V x, y) ->
-	if is_V y && V.i y=x
+	if V? y && V?.i y=x
 	then unify_correct_aux l tl
 	else if occurs x y
 	then (lemma_occurs_not_solveable x y; [])
@@ -392,9 +392,9 @@ let unify_eqns e = unify e []
 
 val unify_eqns_correct: e:eqns -> Lemma
   (requires True)
-  (ensures (if is_None (unify_eqns e)
+  (ensures (if None? (unify_eqns e)
 	    then not_solveable_eqns e
-	    else solved (lsubst_eqns (Some.v (unify_eqns e)) e)))
+	    else solved (lsubst_eqns (Some?.v (unify_eqns e)) e)))
 let unify_eqns_correct e =
   let _ = unify_correct_aux [] e in ()
 

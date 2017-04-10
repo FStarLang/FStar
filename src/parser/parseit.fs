@@ -18,6 +18,7 @@
 module FStar.Parser.ParseIt
 open FStar
 open FStar.Util
+open FStar.Errors
 
 type filename = string
 
@@ -25,9 +26,9 @@ type input_frag = {
     frag_text:string;
     frag_line:int;
     frag_col:int
-}   
+}
 
-// VALS_HACK_HERE
+
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with
@@ -46,7 +47,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise (Absyn.Syntax.Err(Util.format1 "Unable to find file: %s\n" filename))
+      raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
 let read_file (filename:string) =
   if Options.debug_any()
@@ -59,8 +60,8 @@ let read_file (filename:string) =
 let check_extension fn =
     if not (Util.ends_with fn ".fst")
     && not (Util.ends_with fn ".fsti")
-    then raise (FStar.Syntax.Syntax.Err("Unrecognized file extension: " ^fn))
-          
+    then raise (Err("Unrecognized file extension: " ^fn))
+
 let parse fn =
   Parser.Util.warningHandler := (function
     | e -> let msg = Printf.sprintf "Warning: %A\n" e in
@@ -73,14 +74,14 @@ let parse fn =
         check_extension filename;
         let filename' = find_file filename in
         let contents = read_file filename' in
-        filename', 
-        new System.IO.StringReader(contents) :> System.IO.TextReader, 
+        filename',
+        new System.IO.StringReader(contents) :> System.IO.TextReader,
         contents,
-        1, 
+        1,
         0
-    | Inr frag -> 
-        "<input>", 
-        new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader, 
+    | Inr frag ->
+        "<input>",
+        new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader,
         frag.frag_text,
         frag.frag_line,
         frag.frag_col  in
@@ -89,7 +90,16 @@ let parse fn =
   setLexbufPos filename lexbuf line col;
   try
       let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-      let lexer = LexFStar.token lexargs in
+      let lexer =
+          let lexer0 = LexFStar.token lexargs in
+          fun lexbuf ->
+              let tok = lexer0 lexbuf in
+              // TODO : set up this option (needs to modify dependencies...)
+              // if Options.get_debug_level () |> List.contains "Lex"
+              // then
+              //     printfn "token : %+A\n" tok ;
+              tok
+      in
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
         | Inl mods ->
@@ -100,17 +110,15 @@ let parse fn =
                 | _ -> failwith "Impossible"))
            else Inl mods
         | _ -> fileOrFragment in
-       Inl frags
+       let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
+       Inl (frags, non_polymorphic_nil)
   with
-    | Absyn.Syntax.Error(msg, r)
-    | Syntax.Syntax.Error(msg, r) ->
+    | Error(msg, r) ->
       Inr (msg, r)
     | e ->
-      let p0 = 
-        let p = lexbuf.StartPos in
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
-      let p1 = 
-        let p = lexbuf.EndPos in
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
+      let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =
+        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol) in
+      let p0 = pos_of_lexpos lexbuf.StartPos in
+      let p1 = pos_of_lexpos lexbuf.EndPos in
       let r = Range.mk_range filename p0 p1 in
-      Inr ("Syntax error", r)
+      Inr (sprintf "Syntax error (%A)" e, r)

@@ -19,7 +19,7 @@ module U64 = FStar.UInt64
 module U128 = FStar.UInt128
 module HS = FStar.HyperStack
 
-#set-options "--z3timeout 30"
+#set-options "--z3rlimit 30"
 
 let w: u32 -> Tot int = U32.v
 let vv: u64 -> Tot int = U64.v
@@ -348,7 +348,7 @@ let pow2_bitweight_lemma ctr =
   bitweight_def templ ctr;
   Math.Lemmas.pow2_plus (bitweight templ ctr) (templ ctr)
 
-#set-options "--z3timeout 60"
+#set-options "--z3rlimit 60"
 
 (* TODO: Move to Curve.Bigint *)
 val eval_wide_eq_lemma: ha:heap -> hb:heap -> a:bigint_wide{live ha a} -> b:bigint_wide{live hb b} ->
@@ -374,7 +374,7 @@ let rec eval_wide_partial_eq_lemma ha hb a b ctr len =
       eval_wide_partial_eq_lemma ha hb a b ctr (len-1)
     end
 
-#set-options "--z3timeout 30"
+#set-options "--z3rlimit 30"
 
 
 val eval_carry_lemma: ha:heap -> a:bigint_wide{live ha a /\ length a >= norm_length+1} -> 

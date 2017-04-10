@@ -70,45 +70,52 @@ let rec map f l = match l with
   | [] -> []
   | hd::tl -> f hd::map f tl
 
-val mem: 'a -> list 'a -> Tot bool
-let rec mem a l = match l with
+val mem: #a:eqtype -> x:a -> list a -> Tot bool
+let rec mem #a x l = match l with
   | [] -> false
-  | hd::tl -> hd=a || mem a tl
+  | hd::tl ->
+    hd=x || mem x tl
 
-val list_subterm_ordering_coercion: l:list 'a
-                        -> bound:'b{Precedes l bound}
-                        -> Tot (m:list 'a{l==m /\ (forall (x:'a). mem x m ==> Precedes x bound)})
-let rec list_subterm_ordering_coercion l bound = match l with
+val list_subterm_ordering_coercion: 
+			  #a:eqtype 
+			-> #b:Type
+			-> l:list a
+                        -> bound:b{l << bound}
+                        -> Tot (m:list a{l==m /\ (forall (x:a). mem x m ==> x << bound)})
+let rec list_subterm_ordering_coercion #a #b l bound = match l with
   | [] -> []
   | hd::tl ->
     hd::list_subterm_ordering_coercion tl bound
 
 (* WARNING: pattern does not contain all quantified variables. *)
-val list_subterm_ordering_lemma: l:list 'a
-                        -> bound:'b
-                        -> x:'a
+val list_subterm_ordering_lemma: 
+			#a:eqtype
+			-> #b:Type
+			-> l:list a
+                        -> bound:b
+                        -> x:a
                         -> Lemma (requires (l << bound))
                                  (ensures (mem x l ==> x << bound))
                                  [SMTPat (mem x l);
                                   SMTPatT (x << bound)]
-let rec list_subterm_ordering_lemma l bound x = match l with
+let rec list_subterm_ordering_lemma #a #b l bound x = match l with
   | [] -> ()
   | hd::tl -> list_subterm_ordering_lemma tl bound x
 
-val move_refinement:  #a:Type
+val move_refinement:  #a:eqtype
                    -> #p:(a -> Type)
                    -> l:list a{forall z. mem z l ==> p z}
                    -> Tot (list (x:a{p x}))
-let rec move_refinement (a:Type) (p:(a -> Type)) l = match l with
+let rec move_refinement #a #p l = match l with
   | [] -> []
   | hd::tl -> hd::move_refinement #a #p tl
 
-type T 'a =
-  | Leaf : 'a -> T 'a
-  | Node : list (T 'a) -> T 'a
+type t (a:Type) =
+  | Leaf : a -> t a
+  | Node : list (t a) -> t a
 
-val treeMap : #a:Type -> #b:Type -> (a -> Tot b) -> T a -> Tot (T b)
-let rec treeMap 'a 'b f v = match v with
+val treeMap : #a:eqtype -> #b:Type -> (a -> Tot b) -> t a -> Tot (t b)
+let rec treeMap #a #b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list.

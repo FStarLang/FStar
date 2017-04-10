@@ -1,4 +1,5 @@
 module SHA1
+open FStar.All
 open FStar.Seq
 open Platform.Bytes
 open CoreCrypto
@@ -15,7 +16,7 @@ let macsize = 20
 type key = lbytes keysize
 type tag = bytes //lbytes macsize
 
-val sample: n:nat -> lbytes n
+val sample: n:nat -> St (lbytes n)
 let sample n = random n 
 
 val sha1 : bytes -> Tot (h:bytes{length h = 20})

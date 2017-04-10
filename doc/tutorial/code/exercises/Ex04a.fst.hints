@@ -23,8 +23,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list"
+        "@query", "binder_x_72f4c9ec7542f0aa9e643baaf2de5fd1_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ]

@@ -1,10 +1,15 @@
-(** Nik's suggestion for closure conversion **)
+(** Nik's suggestion for closure conversion
+
+    Update Jan 23rd, 2017: 
+      This approach is not likely to work with universes.
+      In particular, see the universe inconsistency below
+**)
 module CPS.DoubleCC
 
 open CPS.Expr
 
-type closure =
-  | Clos : env:Type -> env -> (env -> int -> Tot int) -> closure
+noeq type closure =
+  | Clos : env:Type0 -> env -> (env -> int -> Tot int) -> closure
 
 val apply : closure -> int -> Tot int
 let apply c n =
@@ -19,6 +24,6 @@ val clos1 : e:expr -> ((a:expr{a << e}) * closure) -> int -> Tot int (decreases 
 let rec eval e k =
   match e with
     | Const n -> apply k n
-    | Plus t u -> eval t (Clos #((a:expr{a << e}) * closure) (u,k) (clos1 e))
+    | Plus t u -> eval t (Clos ((a:expr{a << e}) * closure) (u,k) (clos1 e))  //NS: universe inconsistency at the application of Clos
 
-and clos1 _ (u,k) n = eval u (Clos #(closure * int) (k,n) clos2)
+and clos1 _ (u,k) n = eval u (Clos (closure * int) (k,n) clos2)

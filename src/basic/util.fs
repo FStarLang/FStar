@@ -23,19 +23,24 @@ open System.Diagnostics
 open System.IO
 open System.IO.Compression
 open System.Security.Cryptography
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Json
 
 let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
 let time_diff (t1:time) (t2:time) : float * int =
-    let ts = t2 - t1 in 
+    let ts = t2 - t1 in
     ts.TotalSeconds, int32 ts.TotalMilliseconds
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
+let get_file_last_modification_time f = System.IO.File.GetLastWriteTime f
+let is_before t1 t2 = System.DateTime.Compare (t1, t2) < 0
+let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 
 exception Impos
 exception NYI of string
@@ -63,6 +68,7 @@ let atomically (f:unit -> 'a) =
     result
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
+
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
@@ -143,6 +149,11 @@ let kill_process (p:proc) =
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
 
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process id prog args cond in
+  let output = ask_process proc input in
+  kill_process proc; output
+
 let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
@@ -206,6 +217,40 @@ let set_count ((s1, _):set<'a>) = s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 
+(* fifo_set is implemented with the same underlying representation as sets         *)
+(* (i.e. a list + equality) and the invariant that "insertion order" is preserved. *)
+(* The convention is that the first element in insertion order is at the end of the*)
+(* underlying list.                                                                *)
+type fifo_set<'a> = set<'a>
+
+let fifo_set_is_empty ((s, _):fifo_set<'a>) =
+    match s with
+    | [] -> true
+    | _ -> false
+
+let new_fifo_set (cmp:'a -> 'a -> int) (hash:'a -> int) : fifo_set<'a> =
+    ([], fun x y -> cmp x y = 0)
+
+(* The input list [s1] is in reverse order and we need to keep only the last       *)
+(* occurence of each elements in s1. Note that accumulating over such elements     *)
+(* will reverse the order of the input list so that we obtain back the insertion   *)
+(* order.                                                                          *)
+let fifo_set_elements ((s1, eq):fifo_set<'a>) :list<'a> =
+   let rec aux out = function
+        | [] -> out
+        | hd::tl -> if List.exists (eq hd) out
+                    then aux out tl
+                    else aux (hd::out) tl
+   in
+   aux [] s1
+let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
+let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
+let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
+let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
+let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
+let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
+  List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+
 type System.Collections.Generic.Dictionary<'K, 'V> with
   member x.TryFind(key) =
     match x.TryGetValue(key) with
@@ -232,6 +277,28 @@ let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
+
+type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
+let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
+let imap_clear<'value> (s:imap<'value>) = s.Clear()
+let imap_add (m:imap<'value>) k (v:'value) = ignore <| m.Remove(k); m.Add(k,v)
+let imap_of_list<'value> (l:list<int*'value>) =
+    let s = imap_create (List.length l) in
+    List.iter (fun (x,y) -> imap_add s x y) l;
+    s
+let imap_try_find (m:imap<'value>) k = m.TryFind(k)
+let imap_fold (m:imap<'value>) f a =
+    let out = ref a in
+    for entry in m do
+        out := f entry.Key entry.Value !out;
+    !out
+let imap_remove (m:imap<'value>) k = m.Remove k |> ignore
+let imap_keys (m:imap<'value>) = imap_fold m (fun k v keys -> k::keys) []
+let imap_copy (m:imap<'value>) =
+    let n = imap_create (m.Count) in
+    imap_fold m (fun k v () -> imap_add n k v) ();
+    n
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
@@ -254,6 +321,7 @@ let int_of_uint8 (i:uint8) = int32 i
 let uint16_of_int (i:int) = uint16 i
 let byte_of_char (s:char) = byte s
 
+let float_of_string (s:string) = (float)s
 let float_of_byte (b:byte) = (float)b
 let float_of_int32 (n:int32) = (float)n
 let float_of_int64 (n:int64) = (float)n
@@ -265,7 +333,7 @@ let string_of_int   i = string_of_int i
 let string_of_bool b = if b then "true" else "false"
 let string_of_int64  (i:int64) = i.ToString()
 let string_of_int32 i = string_of_int i
-let string_of_float i = string_of_float i
+let string_of_float i = sprintf "%f" i
 let hex_string_of_byte  (i:byte) =
     let hs = spr "%x" i in
     if (String.length hs = 1) then "0"^hs
@@ -280,7 +348,7 @@ let is_upper (c:char) = 'A' <= c && c <= 'Z'
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
-let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
+let replace_chars (s:string) (c:char) (by:string) = s.Replace(String.of_char c,by)
 let hashcode (s:string) = s.GetHashCode()
 let compare (s1:string) (s2:string) = s1.CompareTo(s2)
 let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine;"\n"|], StringSplitOptions.None))
@@ -343,7 +411,7 @@ type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
-let is_left = function 
+let is_left = function
   | Inl _ -> true
   | _ -> false
 let is_right = function
@@ -457,6 +525,17 @@ let for_all f l = List.forall f l
 let for_some f l = List.exists f l
 let forall_exists rel l1 l2 = l1 |> for_all (fun x -> l2 |> for_some (rel x))
 let multiset_equiv rel l1 l2 = List.length l1 = List.length l2 && forall_exists rel l1 l2
+let take p l =
+    let rec take_aux acc = function
+        | [] -> l, []
+        | x::xs when p x -> take_aux (x::acc) xs
+        | x::xs -> List.rev acc, x::xs
+    in take_aux [] l
+
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if l |> for_some (f x)
@@ -550,6 +629,17 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = fh.Flush()
+let file_get_contents f =
+  File.ReadAllText f
+let mkdir_clean dname =
+  if System.IO.Directory.Exists(dname) then
+    let srcDir = new System.IO.DirectoryInfo(dname)
+    for file in srcDir.GetFiles() do
+      System.IO.File.Delete file.FullName
+  else
+    System.IO.Directory.CreateDirectory(dname) |> ignore
+let concat_dir_filename dname fname =
+  System.IO.Path.Combine(dname, fname)
 
 let for_range lo hi f =
   for i = lo to hi do
@@ -670,8 +760,8 @@ let print_exn (e: exn): string =
   e.Message
 
 let format_md5 bytes =
-  let sb = 
-    Array.fold 
+  let sb =
+    Array.fold
       (fun (acc:StringBuilder) (by:byte) ->
         acc.Append(by.ToString("x2")))
       (new StringBuilder())
@@ -712,8 +802,94 @@ type hints_db = {
     hints: hints
 }
 
-let write_hints (_: string) (_: hints_db): unit =
-  failwith "[record_hints_json]: not implemented"
+[<DataContract>]
+type internal json_db = System.Object []
 
-let read_hints (_: string): option<hints_db> =
-  failwith "[record_hints_json]: not implemented"
+let internal json_db_from_hints_db (hdb) : json_db =
+    let json_unsat_core_from_unsat_core (core : string list option) =
+        match core with
+        | None -> [||]
+        | Some c -> (List.map (fun e -> e :> System.Object) c) |> List.toArray
+    let json_hint_from_hint (h) =
+        [|
+            h.hint_name :> System.Object;
+            h.hint_index :> System.Object;
+            h.fuel :> System.Object;
+            h.ifuel :> System.Object;
+            (json_unsat_core_from_unsat_core h.unsat_core) :> System.Object;
+            h.query_elapsed_time :> System.Object
+        |]
+    let json_hints_from_hints (hs) = List.map (fun x ->
+        match x with
+        | None -> [||]
+        | Some h -> (json_hint_from_hint h)) hs in
+    let json_hints = (json_hints_from_hints hdb.hints) |> List.toArray in
+    [|
+      hdb.module_digest :> System.Object ;
+      json_hints :> System.Object
+    |]
+
+let internal hints_db_from_json_db (jdb : json_db) : hints_db =
+    let unsat_core_from_json_unsat_core (core : System.Object) =
+        let core_list = core :?> System.Object [] |> Array.toList in
+        if (List.length core_list) = 0 then None else
+        Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
+    let hint_from_json_hint (h : System.Object) =
+        let ha = h :?> System.Object [] in
+        if (Array.length ha) = 0 then None else
+            if (Array.length ha) <> 6 then failwith "malformed hint" else
+            Some {
+                hint_name=ha.[0] :?> System.String;
+                hint_index=ha.[1] :?> int;
+                fuel=ha.[2] :?> int;
+                ifuel=ha.[3] :?> int;
+                unsat_core=unsat_core_from_json_unsat_core ha.[4];
+                query_elapsed_time=ha.[5] :?> int
+            } in
+    let hints_from_json_hints (hs : System.Object) =
+        let hint_list = (hs :?> System.Object []) |> Array.toList in
+        List.map (fun e -> (hint_from_json_hint e)) hint_list  in
+    if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
+    {
+      module_digest = jdb.[0] :?> System.String;
+      hints = (hints_from_json_hints jdb.[1])
+    }
+
+let internal json<'t> (obj : 't) (known_types : Type list) =
+    use ms = new MemoryStream()
+    (new DataContractJsonSerializer(typeof<'t>, known_types)).WriteObject(ms, obj)
+    Encoding.ASCII.GetString(ms.ToArray())
+
+let internal unjson<'t> (s : string) (known_types : Type list) : 't =
+    use ms = new MemoryStream(Encoding.Unicode.GetBytes(s))
+    let obj = (new DataContractJsonSerializer(typeof<'t>, known_types)).ReadObject(ms)
+    obj :?> 't
+
+let internal known_json_types =
+    [
+        typeof<System.Object>;
+        typeof<System.Object[]>;
+        typeof<System.Object[][]>;
+        typeof<string>;
+        typeof<int>
+    ]
+
+let write_hints (filename : string) (hdb : hints_db) : unit =
+    let jdb = (json_db_from_hints_db hdb) in
+    write_file filename (json jdb known_json_types)
+
+let read_hints (filename : string) : option<hints_db> =
+    try
+        let sr = new System.IO.StreamReader(filename) in
+        Some (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
+    with
+    | Failure _ ->
+        Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
+        None
+    | :? System.ArgumentException
+    | :? System.ArgumentNullException
+    | :? System.IO.FileNotFoundException
+    | :? System.IO.DirectoryNotFoundException
+    | :? System.IO.IOException ->
+        Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+        None

@@ -14,11 +14,22 @@
    limitations under the License.
 *)
 module Prims
+
+(* Type of attributes *)
+assume new type attribute : Type0
+(* An attribute indicating that some effect must be processed by dmff *)
+assume val cps : attribute
+
 (* A predicate to express when a type supports decidable equality
    The type-checker emits axioms for hasEq for each inductive type *)
 assume type hasEq: Type -> GTot Type0
 
 type eqtype = a:Type{hasEq a}
+
+(* bool is a two element type with elements {'true', 'false'}
+    we assume it is primitive, for convenient interop with other languages *)
+assume new type bool : Type0
+assume HasEq_bool: hasEq bool
 
 (* False is the empty inductive type *)
 type c_False =
@@ -47,30 +58,25 @@ type l_False = squash c_False
  *)
 let inversion (a:Type) = True
 
-(* The usual equality deifned as an inductive type *)
+(* The usual equality defined as an inductive type *)
 type equals (#a:Type) (x:a) : a -> Type =
   | Refl : equals x x
-  
+
 (* infix binary '==';
    proof irrelevant, heterogeneous equality in Type#0
-*)   
-//TODO: instead of hard-wiring the == syntax, 
+*)
+//TODO: instead of hard-wiring the == syntax,
 //       we should just rename eq2 to op_Equals_Equals
 type eq2 (#a:Type) (x:a) (y:a) = squash (equals x y)
 
 (* Heterogeneous equality *)
-type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type = 
+type h_equals (#a:Type) (x:a) : #b:Type -> b -> Type =
   | HRefl : h_equals x x
 
 (* A proof-irrelevant version of h_equals *)
 type eq3 (#a:Type) (#b:Type) (x:a) (y:b) = squash (h_equals x y)
 
 unfold let op_Equals_Equals_Equals (#a:Type) (#b:Type) (x:a) (y:b) = eq3 x y
-
-(* bool is a two element type with elements {'true', 'false'}
-   we assume it is primitive, for convenient interop with other languages *)
-assume new type bool : Type0
-assume HasEq_bool: hasEq bool
 
 (* bool-to-type coercion *)
 type b2t (b:bool) = (b == true)
@@ -180,7 +186,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
         PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). pre /\ post x ==> p x)) // pure_wp
+             (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
@@ -257,14 +263,16 @@ noeq type result (a:Type) =
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
  * either as an alias for reasoning about the direct definitions, or as a marker
  * for places where a CPS transformation should happen. *)
-effect M (a:Type) = Tot a
+effect M (a:Type) = Tot a (attributes cps)
+
+let returnM (a:Type) (x:a) : M a = x
 
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
 effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
        DIV a
-           (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
+           (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
 
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
@@ -344,8 +352,8 @@ unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
          : GTot Type0 =
   forall (k:ex_post b).
      (forall (rb:result b).{:pattern (guard_free (k rb))} k rb <==> p rb)
-     ==> (wp1 (fun ra1 -> (is_V ra1 ==> wp2 (V.v ra1) k)
-			/\ (is_E ra1 ==> k (E (E.e ra1)))))
+     ==> (wp1 (fun ra1 -> (V? ra1 ==> wp2 (V?.v ra1) k)
+			/\ (E? ra1 ==> k (E (E?.e ra1)))))
 
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (post:ex_post a) =
   forall (k:ex_post a).
@@ -381,7 +389,7 @@ new_effect {
 }
 effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
        EXN a
-         (fun (p:ex_post a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
+         (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r)) (* WP *)
 
 unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
@@ -402,7 +410,7 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (is_V ra ==> wp2 (V.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (V? ra ==> wp2 (V?.v ra) p h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -536,29 +544,93 @@ unopteq type dtuple4 (a:Type)
            -> _4:d _1 _2 _3
            -> dtuple4 a b c d
 
+(* Concrete syntax (w:a & x:b w & y:c w x & z:d w x y & e w x y z) *)
+unopteq type dtuple5 (a:Type)
+             (b:(w:a -> GTot Type))
+             (c:(w:a -> b w -> GTot Type))
+             (d:(w:a -> x:b w -> y:c w x -> GTot Type))
+             (e:(w:a -> x:b w -> y:c w x -> z:d w x y -> GTot Type)) =
+ | Mkdtuple5:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> dtuple5 a b c d e
+
+(* Concrete syntax (v:a & w:b v & x:c v w & y:d v w x & z:e v w x y & f v w x y z) *)
+unopteq type dtuple6 (a:Type)
+             (b:(v:a -> GTot Type))
+             (c:(v:a -> b v -> GTot Type))
+             (d:(v:a -> w:b v -> x:c v w -> GTot Type))
+             (e:(v:a -> w:b v -> x:c v w -> y:d v w x -> GTot Type))
+             (f:(v:a -> w:b v -> x:c v w -> y:d v w x -> z:e v w x y -> GTot Type)) =
+ | Mkdtuple6:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> _6:f _1 _2 _3 _4 _5
+           -> dtuple6 a b c d e f
+
+(* Concrete syntax (u:a & v:b u & w:c u v & x:d u v w & y:e u v w x & z:f u v w x y & g u v w x y z) *)
+unopteq type dtuple7 (a:Type)
+             (b:(u:a -> GTot Type))
+             (c:(u:a -> b u -> GTot Type))
+             (d:(u:a -> v:b u -> w:c u v -> GTot Type))
+             (e:(u:a -> v:b u -> w:c u v -> x:d u v w -> GTot Type))
+             (f:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> GTot Type))
+             (g:(u:a -> v:b u -> w:c u v -> x:d u v w -> y:e u v w x -> z:f u v w x y -> GTot Type)) =
+ | Mkdtuple7:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> _6:f _1 _2 _3 _4 _5
+           -> _7:g _1 _2 _3 _4 _5 _6
+           -> dtuple7 a b c d e f g
+
+(* Concrete syntax (t:a & u:b t & v:c t u & w:d t u v & x:e t u v w & y:f t u v w x & z:g t u v w x y & h t u v w x y z) *)
+unopteq type dtuple8 (a:Type)
+             (b:(t:a -> GTot Type))
+             (c:(t:a -> b t -> GTot Type))
+             (d:(t:a -> u:b t -> v:c t u -> GTot Type))
+             (e:(t:a -> u:b t -> v:c t u -> w:d t u v -> GTot Type))
+             (f:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> GTot Type))
+             (g:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> GTot Type))
+             (h:(t:a -> u:b t -> v:c t u -> w:d t u v -> x:e t u v w -> y:f t u v w x -> z:g t u v w x y -> GTot Type)) =
+ | Mkdtuple8:_1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> _5:e _1 _2 _3 _4
+           -> _6:f _1 _2 _3 _4 _5
+           -> _7:g _1 _2 _3 _4 _5 _6
+           -> _8:h _1 _2 _3 _4 _5 _6 _7
+           -> dtuple8 a b c d e f g h
+
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
 val fst : ('a * 'b) -> Tot 'a
-let fst x = Mktuple2._1 x
+let fst x = Mktuple2?._1 x
 
 val snd : ('a * 'b) -> Tot 'b
-let snd x = Mktuple2._2 x
+let snd x = Mktuple2?._2 x
 
 val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
-let dfst #a #b t = Mkdtuple2._1 t
+let dfst #a #b t = Mkdtuple2?._1 t
 
-val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2._1 t))
-let dsnd #a #b t = Mkdtuple2._2 t
+val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
+let dsnd #a #b t = Mkdtuple2?._2 t
 
-assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
+assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
-let _assert p () = ()
+val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
+let _assert p = ()
 val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
@@ -577,7 +649,7 @@ let allow_inversion (a:Type)
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
-  (ensures (forall (x:option a). is_None x \/ is_Some x))
+  (ensures (forall (x:option a). None? x \/ Some? x))
   [SMTPatT (option a)]
 let invertOption a = allow_inversion (option a)
 
@@ -600,6 +672,8 @@ let rec pow2 (x:nat) : Tot pos =
   | 0  -> 1
   | _  -> 2 `op_Multiply` (pow2 (x-1))
 
+let min x y = if x <= y then x else y
+
 let abs (x:int) : Tot int = if x >= 0 then x else -x
 
 assume val string_of_bool: bool -> Tot string
@@ -613,3 +687,6 @@ abstract let normalize (a:Type0) = a
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
+
+val false_elim : #a:Type -> u:unit{false} -> Tot a
+let rec false_elim #a u = false_elim ()

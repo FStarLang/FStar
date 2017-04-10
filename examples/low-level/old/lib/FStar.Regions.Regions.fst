@@ -516,7 +516,7 @@ let locIsLive v m =
 
 // (*
 // val writeMemAuxPreservesStail :  #a:Type -> r:(lref a) -> m:smem -> v:a ->
-// Lemma (requires (is_InStack (regionOf r)))
+// Lemma (requires (InStack? (regionOf r)))
 //   (ensures tail m = tail (writeMemAux r m v))
 // let rec writeMemAuxPreservesStail r m v =  ()
 // *)

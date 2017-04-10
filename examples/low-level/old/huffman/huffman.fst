@@ -160,7 +160,7 @@ let is_empty l = (memread l = [])
 
 val is_singleton: l:node_list -> PureMem bool
                                  (fun m0 -> b2t (live_node_list l m0))
-                                 (fun m0 r -> live_node_list l m0 /\ r = (is_Cons (lookupRef l m0) &&
+                                 (fun m0 r -> live_node_list l m0 /\ r = (Cons? (lookupRef l m0) &&
                                                                           Cons.tl (lookupRef l m0) = []))
 let is_singleton l = match (memread l) with
   | _::[] -> true
@@ -168,11 +168,11 @@ let is_singleton l = match (memread l) with
 
 val pop_two: l:node_list -> Mem (located node * located node)
                             (fun m0 -> live_node_list l m0 /\
-                                       is_Cons (lookupRef l m0) /\
-                                       is_Cons (Cons.tl (lookupRef l m0)))
+                                       Cons? (lookupRef l m0) /\
+                                       Cons? (Cons.tl (lookupRef l m0)))
                             (fun m0 r m1 -> live_node_list l m0                 /\
-                                            is_Cons (lookupRef l m0)           /\
-                                            is_Cons (Cons.tl (lookupRef l m0)) /\
+                                            Cons? (lookupRef l m0)           /\
+                                            Cons? (Cons.tl (lookupRef l m0)) /\
                                             live_node (fst r) m1                /\
                                             live_node (snd r) m1                /\
                                             live_node_list l m1                 /\

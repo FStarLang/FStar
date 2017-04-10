@@ -1,5 +1,5 @@
 module Platform.Error
-
+open FStar.ST
 open FStar.Heap
 open FStar.HyperHeap
 
@@ -10,7 +10,7 @@ type optResult 'a 'b =
 //allowing inverting optResult without having to globally increase the fuel just for this
 val invertOptResult : a:Type -> b:Type -> Lemma 
   (requires True)
-  (ensures (forall (x:optResult a b). is_Error x \/ is_Correct x))
+  (ensures (forall (x:optResult a b). Error? x \/ Correct? x))
   [SMTPatT (optResult a b)]
 let invertOptResult a b = allow_inversion (optResult a b)
 

@@ -64,8 +64,6 @@ let lemma_uint32_of_bytes (a:t) (b:t) (c:t) (d:t) : Lemma
     pow2_plus 8 24;
     lemma_euclidean_division (v a + pow2 8 * v b + pow2 16 * v c) (v d) (pow2 24)
 
-#reset-options
-
 (** Reads an unsigned int32 out of 4 bytes *)
 val uint32_of_bytes: b:bytes{length b >= 4} -> STL u32
   (requires (fun h -> live h b))
@@ -98,7 +96,7 @@ let uint32_of_bytes (b:bytes{length b >= 4}) =
   lemma_uint32_of_bytes b0' b1' b2' b3';
   b0' +^ b1'' +^ b2'' +^ b3''
 
-#reset-options "--z3timeout 20"
+#reset-options "--z3rlimit 20"
 
 (** Stores the content of a byte buffer into a unsigned int32 buffer *)
 (* TODO: add functional spec *)
@@ -146,24 +144,25 @@ let rec bytes_of_uint32s output m l =
       end
     end
 
-#reset-options
-
 (** Stores the content of a byte buffer into a unsigned int32 buffer *)
-(* TODO: add functional spec *)
 val bytes_of_uint32: output:bytes{length output >= 4} -> m:u32 -> STL unit
   (requires (fun h -> live h output))
   (ensures (fun h0 _ h1 -> live h1 output
-    /\ modifies_1 output h0 h1 ))
+    /\ modifies_1 output h0 h1
+    /\ U8.v (get h1 output 0) = (U32.v m) % pow2 8
+    /\ U8.v (get h1 output 1) = (U32.v m / pow2 8) % pow2 8
+    /\ U8.v (get h1 output 2) = (U32.v m / pow2 16) % pow2 8
+    /\ U8.v (get h1 output 3) = (U32.v m / pow2 24)  % pow2 8 ))
 let rec bytes_of_uint32 output x =
-  let b0 = uint32_to_uint8 (x &^ 255ul) in
-  let b1 = uint32_to_uint8 ((x >>^ 8ul) &^ 255ul) in
-  let b2 = uint32_to_uint8 ((x >>^ 16ul) &^ 255ul) in
-  let b3 = uint32_to_uint8 ((x >>^ 24ul) &^ 255ul) in
+  let b0 = uint32_to_uint8 (x) in
+  let b1 = uint32_to_uint8 ((x >>^ 8ul)) in
+  let b2 = uint32_to_uint8 ((x >>^ 16ul)) in
+  let b3 = uint32_to_uint8 ((x >>^ 24ul)) in
   output.(0ul) <- b0;
   output.(1ul) <- b1;
   output.(2ul) <- b2;
   output.(3ul) <- b3
- 
+
 (* A form of memset, could go into some "Utils" functions module *)
 //16-10-03 added functional step; made pre-condition tighter (sufficient for use in AEAD)
 val memset: b:bytes -> z:u8 -> len:u32 -> STL unit
@@ -182,5 +181,5 @@ let rec memset b z len =
     let h1 = ST.get() in 
     let s = as_seq h1 b in
     assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
-    assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
+    assert(Seq.equal s (Seq.cons z (Seq.slice s 1 (v len))))
   end

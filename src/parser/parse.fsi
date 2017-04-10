@@ -2,397 +2,417 @@
 module FStar.Parser.Parse
 open FStar.Parser.AST
 type token = 
-  | EOF
-  | OPPREFIX of (string)
-  | OPINFIX0a of (string)
-  | OPINFIX0b of (string)
-  | OPINFIX0c of (string)
-  | OPINFIX0d of (string)
-  | OPINFIX1 of (string)
-  | OPINFIX2 of (string)
-  | OPINFIX3 of (string)
-  | OPINFIX4 of (string)
-  | BACKTICK
-  | MINUS
-  | COLON_EQUALS
-  | REQUIRES
-  | ENSURES
-  | NEW_EFFECT
-  | NEW_EFFECT_FOR_FREE
-  | SUB_EFFECT
-  | SQUIGGLY_RARROW
-  | TOTAL
-  | KIND
-  | PRIVATE
-  | REIFIABLE
-  | REFLECTABLE
-  | REIFY
-  | LBRACE_COLON_PATTERN
-  | PIPE_RIGHT
-  | BAR
-  | RBRACK
-  | RBRACE
-  | DOLLAR
-  | BAR_RBRACK
-  | UNDERSCORE
-  | LENS_PAREN_LEFT
-  | LENS_PAREN_RIGHT
-  | SEMICOLON_SEMICOLON
-  | EQUALS
-  | PERCENT_LBRACK
-  | DOT_LBRACK
-  | DOT_LPAREN
-  | LBRACK
-  | LBRACK_BAR
-  | LBRACE
-  | BANG_LBRACE
-  | DOT
-  | COLON
-  | COLON_COLON
-  | SEMICOLON
-  | IFF
-  | IMPLIES
-  | CONJUNCTION
-  | DISJUNCTION
-  | WHEN
   | WITH
-  | HASH
-  | AMP
-  | LPAREN
-  | RPAREN
-  | LPAREN_RPAREN
-  | COMMA
-  | LARROW
-  | RARROW
-  | OPEN
-  | REC
-  | MUTABLE
-  | THEN
-  | TRUE
-  | L_TRUE
-  | TRY
-  | TYPE
-  | EFFECT
+  | WHEN
   | VAL
-  | MATCH
-  | OF
-  | EXCEPTION
-  | FALSE
-  | L_FALSE
-  | FUN
-  | FUNCTION
-  | IF
-  | IN
-  | MODULE
-  | DEFAULT
-  | AND
-  | ASSERT
-  | BEGIN
-  | ELSE
-  | END
-  | ACTIONS
-  | TYP_APP_LESS
-  | TYP_APP_GREATER
-  | SUBTYPE
-  | SUBKIND
-  | NOEQUALITY
   | UNOPTEQUALITY
-  | PRAGMALIGHT
-  | PRAGMA_SET_OPTIONS
-  | PRAGMA_RESET_OPTIONS
-  | IRREDUCIBLE
+  | UNIV_HASH
   | UNFOLDABLE
-  | INLINE
-  | OPAQUE
-  | ABSTRACT
   | UNFOLD
-  | INLINE_FOR_EXTRACTION
-  | FORALL
-  | EXISTS
-  | ASSUME
-  | NEW
-  | LOGIC
-  | FSDOC_STANDALONE of (fsdoc)
-  | FSDOC of (fsdoc)
-  | LET of (bool)
-  | CHAR of (char)
-  | IEEE64 of (float)
+  | UNDERSCORE
+  | UINT8 of (string)
   | UINT64 of (string)
   | UINT32 of (string)
   | UINT16 of (string)
-  | UINT8 of (string)
-  | INT of (string * bool)
+  | TYP_APP_LESS
+  | TYP_APP_GREATER
+  | TYPE
+  | TVAR of (string)
+  | TRY
+  | TRUE
+  | TOTAL
+  | TILDE of (string)
+  | THEN
+  | SUB_EFFECT
+  | SUBTYPE
+  | SUBKIND
+  | STRING of (bytes)
+  | SQUIGGLY_RARROW
+  | SEMICOLON_SEMICOLON
+  | SEMICOLON
+  | RPAREN
+  | REQUIRES
+  | REIFY
+  | REIFIABLE
+  | REFLECTABLE
+  | REC
+  | RBRACK
+  | RBRACE
+  | RARROW
+  | QMARK_DOT
+  | QMARK
+  | PRIVATE
+  | PRAGMA_SET_OPTIONS
+  | PRAGMA_RESET_OPTIONS
+  | PRAGMALIGHT
+  | PIPE_RIGHT
+  | PERCENT_LBRACK
+  | OPPREFIX of (string)
+  | OPINFIX4 of (string)
+  | OPINFIX3 of (string)
+  | OPINFIX2 of (string)
+  | OPINFIX1 of (string)
+  | OPINFIX0d of (string)
+  | OPINFIX0c of (string)
+  | OPINFIX0b of (string)
+  | OPINFIX0a of (string)
+  | OPEN
+  | OPAQUE
+  | OF
+  | NOEXTRACT
+  | NOEQUALITY
+  | NEW_EFFECT
+  | NEW
+  | NAME of (string)
+  | MUTABLE
+  | MODULE
+  | MINUS
+  | MATCH
+  | L_TRUE
+  | L_FALSE
+  | LPAREN_RPAREN
+  | LPAREN
+  | LOGIC
+  | LET of (bool)
+  | LENS_PAREN_RIGHT
+  | LENS_PAREN_LEFT
+  | LBRACK_BAR
+  | LBRACK_AT
+  | LBRACK
+  | LBRACE_COLON_PATTERN
+  | LBRACE
+  | LARROW
+  | IRREDUCIBLE
+  | INT8 of (string * bool)
   | INT64 of (string * bool)
   | INT32 of (string * bool)
   | INT16 of (string * bool)
-  | INT8 of (string * bool)
-  | TILDE of (string)
-  | TVAR of (string)
-  | NAME of (string)
+  | INT of (string * bool)
+  | INLINE_FOR_EXTRACTION
+  | INLINE
+  | INCLUDE
+  | IN
+  | IMPLIES
+  | IFF
+  | IF
+  | IEEE64 of (float)
   | IDENT of (string)
-  | STRING of (bytes)
+  | HASH
+  | FUNCTION
+  | FUN
+  | FSDOC_STANDALONE of (fsdoc)
+  | FSDOC of (fsdoc)
+  | FORALL
+  | FALSE
+  | EXISTS
+  | EXCEPTION
+  | EQUALS
+  | EOF
+  | ENSURES
+  | END
+  | ELSE
+  | EFFECT
+  | DOT_LPAREN
+  | DOT_LBRACK
+  | DOT
+  | DOLLAR
+  | DISJUNCTION
+  | DEFAULT
+  | CONJUNCTION
+  | COMMA
+  | COLON_EQUALS
+  | COLON_COLON
+  | COLON
+  | CHAR of (char)
   | BYTEARRAY of (bytes)
+  | BY
+  | BEGIN
+  | BAR_RBRACK
+  | BAR
+  | BANG_LBRACE
+  | BACKTICK
+  | ATTRIBUTES
+  | ASSUME
+  | ASSERT
+  | AND
+  | AMP
+  | ABSTRACT
 type tokenId = 
-    | TOKEN_EOF
-    | TOKEN_OPPREFIX
-    | TOKEN_OPINFIX0a
-    | TOKEN_OPINFIX0b
-    | TOKEN_OPINFIX0c
-    | TOKEN_OPINFIX0d
-    | TOKEN_OPINFIX1
-    | TOKEN_OPINFIX2
-    | TOKEN_OPINFIX3
-    | TOKEN_OPINFIX4
-    | TOKEN_BACKTICK
-    | TOKEN_MINUS
-    | TOKEN_COLON_EQUALS
-    | TOKEN_REQUIRES
-    | TOKEN_ENSURES
-    | TOKEN_NEW_EFFECT
-    | TOKEN_NEW_EFFECT_FOR_FREE
-    | TOKEN_SUB_EFFECT
-    | TOKEN_SQUIGGLY_RARROW
-    | TOKEN_TOTAL
-    | TOKEN_KIND
-    | TOKEN_PRIVATE
-    | TOKEN_REIFIABLE
-    | TOKEN_REFLECTABLE
-    | TOKEN_REIFY
-    | TOKEN_LBRACE_COLON_PATTERN
-    | TOKEN_PIPE_RIGHT
-    | TOKEN_BAR
-    | TOKEN_RBRACK
-    | TOKEN_RBRACE
-    | TOKEN_DOLLAR
-    | TOKEN_BAR_RBRACK
-    | TOKEN_UNDERSCORE
-    | TOKEN_LENS_PAREN_LEFT
-    | TOKEN_LENS_PAREN_RIGHT
-    | TOKEN_SEMICOLON_SEMICOLON
-    | TOKEN_EQUALS
-    | TOKEN_PERCENT_LBRACK
-    | TOKEN_DOT_LBRACK
-    | TOKEN_DOT_LPAREN
-    | TOKEN_LBRACK
-    | TOKEN_LBRACK_BAR
-    | TOKEN_LBRACE
-    | TOKEN_BANG_LBRACE
-    | TOKEN_DOT
-    | TOKEN_COLON
-    | TOKEN_COLON_COLON
-    | TOKEN_SEMICOLON
-    | TOKEN_IFF
-    | TOKEN_IMPLIES
-    | TOKEN_CONJUNCTION
-    | TOKEN_DISJUNCTION
-    | TOKEN_WHEN
     | TOKEN_WITH
-    | TOKEN_HASH
-    | TOKEN_AMP
-    | TOKEN_LPAREN
-    | TOKEN_RPAREN
-    | TOKEN_LPAREN_RPAREN
-    | TOKEN_COMMA
-    | TOKEN_LARROW
-    | TOKEN_RARROW
-    | TOKEN_OPEN
-    | TOKEN_REC
-    | TOKEN_MUTABLE
-    | TOKEN_THEN
-    | TOKEN_TRUE
-    | TOKEN_L_TRUE
-    | TOKEN_TRY
-    | TOKEN_TYPE
-    | TOKEN_EFFECT
+    | TOKEN_WHEN
     | TOKEN_VAL
-    | TOKEN_MATCH
-    | TOKEN_OF
-    | TOKEN_EXCEPTION
-    | TOKEN_FALSE
-    | TOKEN_L_FALSE
-    | TOKEN_FUN
-    | TOKEN_FUNCTION
-    | TOKEN_IF
-    | TOKEN_IN
-    | TOKEN_MODULE
-    | TOKEN_DEFAULT
-    | TOKEN_AND
-    | TOKEN_ASSERT
-    | TOKEN_BEGIN
-    | TOKEN_ELSE
-    | TOKEN_END
-    | TOKEN_ACTIONS
-    | TOKEN_TYP_APP_LESS
-    | TOKEN_TYP_APP_GREATER
-    | TOKEN_SUBTYPE
-    | TOKEN_SUBKIND
-    | TOKEN_NOEQUALITY
     | TOKEN_UNOPTEQUALITY
-    | TOKEN_PRAGMALIGHT
-    | TOKEN_PRAGMA_SET_OPTIONS
-    | TOKEN_PRAGMA_RESET_OPTIONS
-    | TOKEN_IRREDUCIBLE
+    | TOKEN_UNIV_HASH
     | TOKEN_UNFOLDABLE
-    | TOKEN_INLINE
-    | TOKEN_OPAQUE
-    | TOKEN_ABSTRACT
     | TOKEN_UNFOLD
-    | TOKEN_INLINE_FOR_EXTRACTION
-    | TOKEN_FORALL
-    | TOKEN_EXISTS
-    | TOKEN_ASSUME
-    | TOKEN_NEW
-    | TOKEN_LOGIC
-    | TOKEN_FSDOC_STANDALONE
-    | TOKEN_FSDOC
-    | TOKEN_LET
-    | TOKEN_CHAR
-    | TOKEN_IEEE64
+    | TOKEN_UNDERSCORE
+    | TOKEN_UINT8
     | TOKEN_UINT64
     | TOKEN_UINT32
     | TOKEN_UINT16
-    | TOKEN_UINT8
-    | TOKEN_INT
+    | TOKEN_TYP_APP_LESS
+    | TOKEN_TYP_APP_GREATER
+    | TOKEN_TYPE
+    | TOKEN_TVAR
+    | TOKEN_TRY
+    | TOKEN_TRUE
+    | TOKEN_TOTAL
+    | TOKEN_TILDE
+    | TOKEN_THEN
+    | TOKEN_SUB_EFFECT
+    | TOKEN_SUBTYPE
+    | TOKEN_SUBKIND
+    | TOKEN_STRING
+    | TOKEN_SQUIGGLY_RARROW
+    | TOKEN_SEMICOLON_SEMICOLON
+    | TOKEN_SEMICOLON
+    | TOKEN_RPAREN
+    | TOKEN_REQUIRES
+    | TOKEN_REIFY
+    | TOKEN_REIFIABLE
+    | TOKEN_REFLECTABLE
+    | TOKEN_REC
+    | TOKEN_RBRACK
+    | TOKEN_RBRACE
+    | TOKEN_RARROW
+    | TOKEN_QMARK_DOT
+    | TOKEN_QMARK
+    | TOKEN_PRIVATE
+    | TOKEN_PRAGMA_SET_OPTIONS
+    | TOKEN_PRAGMA_RESET_OPTIONS
+    | TOKEN_PRAGMALIGHT
+    | TOKEN_PIPE_RIGHT
+    | TOKEN_PERCENT_LBRACK
+    | TOKEN_OPPREFIX
+    | TOKEN_OPINFIX4
+    | TOKEN_OPINFIX3
+    | TOKEN_OPINFIX2
+    | TOKEN_OPINFIX1
+    | TOKEN_OPINFIX0d
+    | TOKEN_OPINFIX0c
+    | TOKEN_OPINFIX0b
+    | TOKEN_OPINFIX0a
+    | TOKEN_OPEN
+    | TOKEN_OPAQUE
+    | TOKEN_OF
+    | TOKEN_NOEXTRACT
+    | TOKEN_NOEQUALITY
+    | TOKEN_NEW_EFFECT
+    | TOKEN_NEW
+    | TOKEN_NAME
+    | TOKEN_MUTABLE
+    | TOKEN_MODULE
+    | TOKEN_MINUS
+    | TOKEN_MATCH
+    | TOKEN_L_TRUE
+    | TOKEN_L_FALSE
+    | TOKEN_LPAREN_RPAREN
+    | TOKEN_LPAREN
+    | TOKEN_LOGIC
+    | TOKEN_LET
+    | TOKEN_LENS_PAREN_RIGHT
+    | TOKEN_LENS_PAREN_LEFT
+    | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT
+    | TOKEN_LBRACK
+    | TOKEN_LBRACE_COLON_PATTERN
+    | TOKEN_LBRACE
+    | TOKEN_LARROW
+    | TOKEN_IRREDUCIBLE
+    | TOKEN_INT8
     | TOKEN_INT64
     | TOKEN_INT32
     | TOKEN_INT16
-    | TOKEN_INT8
-    | TOKEN_TILDE
-    | TOKEN_TVAR
-    | TOKEN_NAME
+    | TOKEN_INT
+    | TOKEN_INLINE_FOR_EXTRACTION
+    | TOKEN_INLINE
+    | TOKEN_INCLUDE
+    | TOKEN_IN
+    | TOKEN_IMPLIES
+    | TOKEN_IFF
+    | TOKEN_IF
+    | TOKEN_IEEE64
     | TOKEN_IDENT
-    | TOKEN_STRING
+    | TOKEN_HASH
+    | TOKEN_FUNCTION
+    | TOKEN_FUN
+    | TOKEN_FSDOC_STANDALONE
+    | TOKEN_FSDOC
+    | TOKEN_FORALL
+    | TOKEN_FALSE
+    | TOKEN_EXISTS
+    | TOKEN_EXCEPTION
+    | TOKEN_EQUALS
+    | TOKEN_EOF
+    | TOKEN_ENSURES
+    | TOKEN_END
+    | TOKEN_ELSE
+    | TOKEN_EFFECT
+    | TOKEN_DOT_LPAREN
+    | TOKEN_DOT_LBRACK
+    | TOKEN_DOT
+    | TOKEN_DOLLAR
+    | TOKEN_DISJUNCTION
+    | TOKEN_DEFAULT
+    | TOKEN_CONJUNCTION
+    | TOKEN_COMMA
+    | TOKEN_COLON_EQUALS
+    | TOKEN_COLON_COLON
+    | TOKEN_COLON
+    | TOKEN_CHAR
     | TOKEN_BYTEARRAY
+    | TOKEN_BY
+    | TOKEN_BEGIN
+    | TOKEN_BAR_RBRACK
+    | TOKEN_BAR
+    | TOKEN_BANG_LBRACE
+    | TOKEN_BACKTICK
+    | TOKEN_ATTRIBUTES
+    | TOKEN_ASSUME
+    | TOKEN_ASSERT
+    | TOKEN_AND
+    | TOKEN_AMP
+    | TOKEN_ABSTRACT
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
     | NONTERM__startterm
     | NONTERM__startinputFragment
+    | NONTERM_option_FSDOC_
+    | NONTERM_option___anonymous_1_
+    | NONTERM_option___anonymous_2_
+    | NONTERM_option___anonymous_5_
+    | NONTERM_option___anonymous_7_
+    | NONTERM_option_ascribeKind_
+    | NONTERM_option_ascribeTyp_
+    | NONTERM_option_fsTypeArgs_
+    | NONTERM_option_mainDecl_
+    | NONTERM_option_pair_hasSort_simpleTerm__
+    | NONTERM_option_string_
+    | NONTERM_boption_SQUIGGLY_RARROW_
+    | NONTERM_boption___anonymous_0_
+    | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
+    | NONTERM_list___anonymous_4_
+    | NONTERM_list___anonymous_8_
+    | NONTERM_list_argTerm_
+    | NONTERM_list_atomicTerm_
+    | NONTERM_list_constructorDecl_
+    | NONTERM_list_decl_
+    | NONTERM_list_decoration_
+    | NONTERM_list_multiBinder_
+    | NONTERM_nonempty_list_aqualified_lident__
+    | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
+    | NONTERM_nonempty_list_atomicPattern_
+    | NONTERM_nonempty_list_atomicTerm_
+    | NONTERM_nonempty_list_atomicUniverse_
+    | NONTERM_nonempty_list_dotOperator_
+    | NONTERM_nonempty_list_patternOrMultibinder_
+    | NONTERM_separated_nonempty_list_AND_letbinding_
+    | NONTERM_separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+    | NONTERM_separated_nonempty_list_BAR_tuplePattern_
+    | NONTERM_separated_nonempty_list_COMMA_appTerm_
+    | NONTERM_separated_nonempty_list_COMMA_atomicTerm_
+    | NONTERM_separated_nonempty_list_COMMA_constructorPattern_
+    | NONTERM_separated_nonempty_list_COMMA_tmEq_
+    | NONTERM_separated_nonempty_list_COMMA_tvar_
+    | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
+    | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
+    | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
+    | NONTERM_separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__
+    | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
-    | NONTERM_maybe_pragma_light
+    | NONTERM_mainDecl
     | NONTERM_pragma
-    | NONTERM_maybeOptions
-    | NONTERM_maybeDoc
-    | NONTERM_decls
+    | NONTERM_decoration
     | NONTERM_decl
-    | NONTERM_decl2
-    | NONTERM_tycon
-    | NONTERM_kind_abbrev
-    | NONTERM_new_effect
-    | NONTERM_effect_redefinition
-    | NONTERM_effect_definition
-    | NONTERM_actions
-    | NONTERM_effect_decls
-    | NONTERM_effect_decl
-    | NONTERM_more_effect_decls
-    | NONTERM_sub_effect
-    | NONTERM_qualifier
-    | NONTERM_qualifiers
-    | NONTERM_assumeTag
-    | NONTERM_tyconDefinition
-    | NONTERM_tyconDefinitions
-    | NONTERM_maybeFocus
-    | NONTERM_letqualifier
-    | NONTERM_letbindings
-    | NONTERM_letbinding
-    | NONTERM_pattern
-    | NONTERM_tuplePattern
-    | NONTERM_operatorPattern
-    | NONTERM_patternListComma
-    | NONTERM_listPattern
-    | NONTERM_consPattern
-    | NONTERM_appPattern
-    | NONTERM_atomicPatterns
-    | NONTERM_atomicPattern
-    | NONTERM_atomicPattern2
-    | NONTERM_nonTvarPattern
-    | NONTERM_nonTvarPattern2
-    | NONTERM_ascriptionOrPattern
-    | NONTERM_patternListSemiColon
-    | NONTERM_patternListSemiColonRest
-    | NONTERM_recordPattern
-    | NONTERM_moreFieldPatterns
-    | NONTERM_binder
+    | NONTERM_rawDecl
+    | NONTERM_typeDecl
     | NONTERM_typars
     | NONTERM_tvarinsts
-    | NONTERM_aqual_opt
-    | NONTERM_binders
-    | NONTERM_tyconDefn
-    | NONTERM_recordFields
-    | NONTERM_constructors
+    | NONTERM_typeDefinition
     | NONTERM_recordFieldDecl
     | NONTERM_constructorDecl
-    | NONTERM_of_typ
-    | NONTERM_lid
-    | NONTERM_qname
-    | NONTERM_eitherName
+    | NONTERM_letbinding
+    | NONTERM_newEffect
+    | NONTERM_effectRedefinition
+    | NONTERM_effectDefinition
+    | NONTERM_effectDecl
+    | NONTERM_subEffect
+    | NONTERM_qualifier
+    | NONTERM_maybeFocus
+    | NONTERM_letqualifier
+    | NONTERM_aqual
+    | NONTERM_aqualUniverses
+    | NONTERM_disjunctivePattern
+    | NONTERM_tuplePattern
+    | NONTERM_constructorPattern
+    | NONTERM_atomicPattern
+    | NONTERM_patternOrMultibinder
+    | NONTERM_binder
+    | NONTERM_multiBinder
+    | NONTERM_binders
+    | NONTERM_aqualified_lident_
+    | NONTERM_aqualified_lidentOrUnderscore_
+    | NONTERM_qlident
+    | NONTERM_quident
+    | NONTERM_path_lident_
+    | NONTERM_path_uident_
     | NONTERM_ident
-    | NONTERM_name
-    | NONTERM_tvars
+    | NONTERM_lidentOrOperator
+    | NONTERM_lidentOrUnderscore
+    | NONTERM_lident
+    | NONTERM_uident
     | NONTERM_tvar
-    | NONTERM_namepath
-    | NONTERM_idpath
-    | NONTERM_ascribeTypOpt
-    | NONTERM_ascribeKindOpt
+    | NONTERM_ascribeTyp
+    | NONTERM_ascribeKind
     | NONTERM_kind
-    | NONTERM_typ
     | NONTERM_term
     | NONTERM_noSeqTerm
-    | NONTERM_qpat
-    | NONTERM_morePats
+    | NONTERM_typ
+    | NONTERM_trigger
     | NONTERM_disjunctivePats
     | NONTERM_conjunctivePat
     | NONTERM_simpleTerm
-    | NONTERM_patternBranches
-    | NONTERM_maybeBar
     | NONTERM_maybeFocusArrow
-    | NONTERM_firstPatternBranch
     | NONTERM_patternBranch
-    | NONTERM_disjunctivePattern
-    | NONTERM_maybeWhen
-    | NONTERM_funArrow
     | NONTERM_tmIff
     | NONTERM_tmImplies
-    | NONTERM_tmArrowNoEquals
-    | NONTERM_arrowDomainNoEquals
-    | NONTERM_tmArrow
-    | NONTERM_arrowDomain
-    | NONTERM_tmDisjunction
+    | NONTERM_tmArrow_tmFormula_
+    | NONTERM_tmArrow_tmNoEq_
+    | NONTERM_tmFormula
     | NONTERM_tmConjunction
     | NONTERM_tmTuple
     | NONTERM_tmEq
-    | NONTERM_tmCons
-    | NONTERM_dtupleTerm
-    | NONTERM_arithTerm
-    | NONTERM_refinementTerm
-    | NONTERM_aqual
+    | NONTERM_tmNoEq
     | NONTERM_refineOpt
-    | NONTERM_unaryTerm
-    | NONTERM_appTerm
-    | NONTERM_indexingTerm
-    | NONTERM_formula
-    | NONTERM_atomicTerm
-    | NONTERM_atomicTermNotQName
-    | NONTERM_maybeFieldProjections
-    | NONTERM_fieldProjections
-    | NONTERM_targs
-    | NONTERM_maybeInsts
-    | NONTERM_insts
-    | NONTERM_projectionLHSNotQName
-    | NONTERM_commaTermList
-    | NONTERM_moreCommaTerms
-    | NONTERM_semiColonTermList
-    | NONTERM_moreSemiColonTerms
     | NONTERM_recordExp
-    | NONTERM_recordExpRest
-    | NONTERM_recordFieldAssignment
-    | NONTERM_recordFieldAssignments
-    | NONTERM_maybeWithSort
+    | NONTERM_simpleDef
+    | NONTERM_appTerm
+    | NONTERM_argTerm
+    | NONTERM_indexingTerm
+    | NONTERM_atomicTerm
+    | NONTERM_atomicTermQUident
+    | NONTERM_atomicTermNotQUident
+    | NONTERM_opPrefixTerm_atomicTermNotQUident_
+    | NONTERM_opPrefixTerm_atomicTermQUident_
+    | NONTERM_projectionLHS
+    | NONTERM_fsTypeArgs
+    | NONTERM_qidentWithTypeArgs_qlident_option_fsTypeArgs__
+    | NONTERM_qidentWithTypeArgs_quident_some_fsTypeArgs__
     | NONTERM_hasSort
-    | NONTERM_maybeHash
-    | NONTERM_hashIndexingTerms
-    | NONTERM_tupleN
     | NONTERM_constant
+    | NONTERM_universe
+    | NONTERM_universeFrom
+    | NONTERM_atomicUniverse
+    | NONTERM_some_fsTypeArgs_
+    | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
+    | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
+    | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
+    | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
+    | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
+    | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 

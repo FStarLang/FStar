@@ -12,7 +12,7 @@ let tail st =
   | [] -> []
   | h::tl -> tl
 
-let isNonEmpty = is_Cons
+let isNonEmpty = Cons?
 
 val top : #a:Type -> l:stack a{isNonEmpty l} -> Tot a
 let top l =

@@ -1,5 +1,5 @@
 [
-  "G×'¥F£\u0000\u0006\u001dGÿGª¾Äz",
+  "W5ÏúRÑ\u0000\u0017_Ûâ\fE`>\u0011",
   [
     [
       "Ex10a.entry",
@@ -9,27 +9,29 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
+    [ "Ex10a.uu___is_Readable", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex10a.Readable._0",
+      "Ex10a.__proj__Readable__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Ex10a.Readable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1055b8b6d0025865fa0d156d9b79fe21"
+        "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0
     ],
+    [ "Ex10a.uu___is_Writable", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex10a.Writable._0",
+      "Ex10a.__proj__Writable__item___0",
       1,
       2,
       1,
       [
         "@query", "disc_equation_Ex10a.Writable",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9aab09198fcdb3c046533d1b6470083a"
+        "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0
     ],
@@ -87,24 +89,33 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Heap.SelUpd1", "equation_Ex10a.db",
-        "equation_FStar.ST.ref", "function_token_typing_Ex10a.acls",
-        "function_token_typing_Ex10a.db",
-        "refinement_interpretation_Tm_refine_61824f39f1a5b2f9359cc4429f47ee80"
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "assumption_Ex10a.entry_haseq", "assumption_FStar.Heap.SelUpd1",
+        "bool_typing", "equation_Ex10a.db", "equation_FStar.ST.ref",
+        "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
+        "interpretation_Tm_abs_d592309a9e16580c4c1ab183cecde0b3",
+        "interpretation_Tm_arrow_449d659811cde73f2fac6653669a9d13",
+        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "kinding_Ex10a.entry@tok",
+        "lemma_FStar.List.Tot.Base.mem_filter_forall",
+        "pretyping_9ab526030749815b532b60f20894130b",
+        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "primitive_Prims.op_disEquality",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_84b7374bf590ecae935ce0336fc23fc2",
+        "typing_FStar.Heap.sel",
+        "typing_Tm_abs_d592309a9e16580c4c1ab183cecde0b3"
       ],
       0
     ],
     [
       "Ex10a.revoke",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
-      0
-    ],
-    [
-      "Ex10a.revoke",
-      4,
       2,
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
@@ -147,9 +158,9 @@
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Some",
         "disc_equation_Prims.Some", "eq2-interp", "equation_Ex10a.canRead",
         "equation_Ex10a.canRead_t",
-        "equation_with_fuel_FStar.List.Tot.tryFind.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.tryFind.fuel_instrumented",
-        "interpretation_Tm_abs_80a1794b5fbb6422b5f4d011b6357843",
+        "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "interpretation_Tm_abs_928dc2ad90e939fe9c5b6ca765f2e743",
         "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_Prims.Cons_a",

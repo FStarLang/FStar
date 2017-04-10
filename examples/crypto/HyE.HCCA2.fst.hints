@@ -1,11 +1,11 @@
 [
-  ")áü¯\u0001=$å*SsY\u001e[¾}",
+  "0\u0007ç£\n\u0005Yü´ù\fÌÊE…¸",
   [
-    [ "HyE.HCCA2.PKey.region", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.HCCA2.PKey.rawpk", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.HCCA2.PKey.cca_pk", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.HCCA2.SKey.cca_sk", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.HCCA2.SKey.pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.__proj__PKey__item__region", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.__proj__PKey__item__rawpk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.__proj__PKey__item__cca_pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.__proj__SKey__item__cca_sk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.HCCA2.__proj__SKey__item__pk", 1, 2, 1, [ "@query" ], 0 ],
     [
       "HyE.HCCA2.keygen",
       1,
@@ -46,8 +46,13 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "equation_HyE.PlainPKE.t", "fuel_guarded_inversion_Prims.option"
+        "@query", "bool_inversion", "data_elim_Prims.V",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "equation_HyE.PlainPKE.t",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "function_token_typing_HyE.AE.key", "lemma_Prims.invertOption",
+        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ]

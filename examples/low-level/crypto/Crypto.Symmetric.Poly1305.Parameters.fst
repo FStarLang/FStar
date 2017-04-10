@@ -1,5 +1,7 @@
 module Crypto.Symmetric.Poly1305.Parameters
 
+#reset-options "--max_fuel 8"
+
 (* Standard platform integer size *)
 inline_for_extraction let platform_size : pos = 64
 (* Integer size after multiplication *)

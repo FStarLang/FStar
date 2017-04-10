@@ -1,5 +1,5 @@
 [
-  "Ç\n®€w¬F&þ\u0014¯¸\u0014…tö",
+  "ó®4²¹ÒÙÜ™³3/#Ø}•",
   [
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_div_def",
@@ -125,7 +125,7 @@
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_0",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
       1,
       0,
       1,
@@ -133,299 +133,41 @@
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_0",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
       2,
       0,
       1,
       [
-        "@query", "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "@query", "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero", "equation_Prims.nat",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
       ],
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_0",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
       3,
       0,
       1,
       [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "@query", "equation_Crypto.Symmetric.Poly1305.Spec.elem",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
-        "equation_FStar.Mul.op_Star", "equation_FStar.UInt128.n",
-        "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero", "equation_Prims.nat",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "function_token_typing_FStar.UInt128.n", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_Prims.pow2"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_1",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_1",
-      2,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_1",
-      3,
-      0,
-      1,
-      [
-        "@query", "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_1",
-      4,
-      0,
-      1,
-      [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
-        "equation_FStar.Mul.op_Star", "equation_FStar.UInt128.n",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "function_token_typing_FStar.UInt128.n", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_Prims.pow2"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_2",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_2",
-      2,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_2",
-      3,
-      0,
-      1,
-      [
-        "@query", "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_2",
-      4,
-      0,
-      1,
-      [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
-        "equation_FStar.Mul.op_Star", "equation_Prims.nat",
-        "equation_Prims.pos",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
         "unit_inversion", "unit_typing"
       ],
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_3",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_3",
-      2,
-      0,
-      1,
-      [
-        "@query", "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9_3",
-      3,
-      0,
-      1,
-      [
-        "@query", "equation_FStar.Mul.op_Star", "equation_Prims.nat",
-        "equation_Prims.pos", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9",
-      2,
-      0,
-      1,
-      [
-        "@query", "equation_Prims.pos", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9",
-      3,
-      0,
-      1,
-      [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
-        "equation_FStar.Mul.op_Star", "equation_Prims.nat",
-        "equation_Prims.pos",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9",
-      4,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9",
-      5,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_modulo_9",
-      6,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
-      1,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
-      2,
-      0,
-      1,
-      [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_Prims.pos",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "function_token_typing_Prims.pos",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Ghost.reveal"
-      ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
-      3,
-      0,
-      1,
-      [
-        "@query",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_Prims.pos",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "function_token_typing_Prims.pos", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Modulus", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Ghost.reveal"
-      ],
-      0
-    ],
-    [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
       4,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_2_130_modulo_prime",
-      5,
       0,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -516,7 +258,7 @@
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.Buffer.buffer", "equation_FStar.Mul.op_Star",
         "equation_FStar.UInt64.t",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -533,21 +275,24 @@
         "@query",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.satisfiesModuloConstraints",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
-        "equation_FStar.Int64.n", "equation_FStar.Int8.n",
-        "equation_FStar.List.Tot.test_sort", "equation_FStar.Mul.op_Star",
-        "equation_FStar.UInt64.v", "equation_Prims._assert",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.Int63.n", "equation_FStar.Mul.op_Star",
+        "equation_FStar.UInt64.v", "equation_FStar.UInt8.n",
         "equation_Prims.nat", "equation_Prims.pos",
         "fuel_correspondence_Crypto.Symmetric.Poly1305.Bigint.maxValue.fuel_instrumented",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
-        "function_token_typing_FStar.Int64.n",
-        "function_token_typing_FStar.Int8.n",
-        "function_token_typing_FStar.List.Tot.test_sort", "int_typing",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "function_token_typing_FStar.Int63.n",
+        "function_token_typing_FStar.UInt8.n", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_Prims.pow2", "unit_inversion"
+        "typing_Prims.pow2"
       ],
       0
     ],
@@ -571,32 +316,29 @@
       0,
       1,
       [
-        "@query", "b2t_def",
-        "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
-        "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
+        "@query",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.bound63",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.isDegreeReduced",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.satisfiesModuloConstraints",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
-        "equation_FStar.Int8.n", "equation_FStar.Mul.op_Star",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt64.n", "equation_FStar.UInt64.t",
-        "equation_FStar.UInt64.v", "equation_Prims.nat",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.Int63.n", "equation_FStar.Mul.op_Star",
+        "equation_FStar.UInt64.v", "equation_FStar.UInt8.n",
+        "equation_Prims.nat", "equation_Prims.pos",
         "fuel_correspondence_Crypto.Symmetric.Poly1305.Bigint.maxValue.fuel_instrumented",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
-        "function_token_typing_FStar.Int8.n", "int_typing",
-        "kinding_FStar.UInt64.t_@tok", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
-        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
-        "refinement_interpretation_Tm_refine_7e3beb6acccffb41919f80afab550fdd",
-        "refinement_interpretation_Tm_refine_b0cc669109f5223394a5a92793efa434",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "function_token_typing_FStar.Int63.n",
+        "function_token_typing_FStar.UInt8.n", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Buffer.get", "typing_FStar.UInt64.v"
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_Prims.pow2"
       ],
       0
     ],
@@ -654,17 +396,20 @@
       [
         "@query",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_FStar.Mul.op_Star",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.Mul.op_Star", "equation_Prims.nat",
         "equation_Prims.pos",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
         "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "function_token_typing_Prims.pos", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Ghost.reveal"
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0
     ],
@@ -732,19 +477,15 @@
       [
         "@query",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_Prims.nat",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero", "equation_Prims.nat",
         "equation_Prims.pos",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented",
         "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "function_token_typing_Prims.pos", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Ghost.reveal"
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
       ],
       0
     ],
@@ -854,7 +595,246 @@
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      1,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      2,
+      0,
+      1,
+      [
+        "@query", "equation_Prims.nat", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_01682d6c4d9e6e3a8e6275843d8da889",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      3,
+      0,
+      2,
+      [
+        "@query", "b2t_def", "data_elim_FStar.UInt32.Mk",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.taglen",
+        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
+        "equation_FStar.List.Tot.test_sort", "equation_FStar.Mul.op_Star",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.uint_to_t",
+        "equation_Prims._assert", "equation_Prims.nat", "equation_Prims.pos",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.taglen",
+        "function_token_typing_FStar.List.Tot.test_sort", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_01682d6c4d9e6e3a8e6275843d8da889",
+        "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "typing_Prims.pow2", "unit_inversion"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      4,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      5,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      6,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_0",
+      7,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_1",
+      1,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_1",
+      2,
+      0,
+      1,
+      [
+        "@query",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_01682d6c4d9e6e3a8e6275843d8da889",
+        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_1",
+      3,
+      0,
+      1,
+      [
+        "@query",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
+        "equation_FStar.Mul.op_Star", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented", "int_inversion",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_01682d6c4d9e6e3a8e6275843d8da889",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_1",
+      4,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_2",
+      1,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_2",
+      2,
+      0,
+      1,
+      [
+        "@query", "equation_Prims.nat", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_01682d6c4d9e6e3a8e6275843d8da889",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_2",
+      3,
+      0,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_3",
+      1,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_3",
+      2,
+      0,
+      1,
+      [
+        "@query",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_3",
+      3,
+      0,
+      1,
+      [
+        "@query",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
+        "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.Mul.op_Star", "equation_FStar.UInt128.n",
+        "equation_Prims.nat", "equation_Prims.pos",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "function_token_typing_FStar.UInt128.n", "int_inversion",
+        "int_typing", "lemma_FStar.Int.pow2_values",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368",
+        "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
+        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
+        "token_correspondence_Prims.pow2.fuel_instrumented",
+        "typing_Prims.pow2"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4_no_prime",
       1,
       0,
       0,
@@ -862,25 +842,58 @@
       0
     ],
     [
-      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4_no_prime",
       2,
       0,
       0,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2_4_no_prime",
+      3,
+      0,
+      0,
+      [
+        "@query", "equation_FStar.Mul.op_Star", "equation_Prims.nat",
+        "fuel_correspondence_Prims.pow2.fuel_instrumented", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
+      1,
+      0,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
+      2,
+      0,
+      1,
       [
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.isDegreeReduced",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
         "equation_FStar.Mul.op_Star", "equation_FStar.UInt64.t",
-        "equation_Prims.pos",
+        "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
         "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
       ],
       0
     ],
@@ -893,32 +906,25 @@
         "@query", "b2t_def",
         "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.isDegreeReduced",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "equation_FStar.Ghost.hide", "equation_FStar.Mul.op_Star",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
-        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt64.n", "equation_FStar.UInt64.t",
-        "equation_FStar.UInt64.v", "equation_Prims.nat",
-        "equation_Prims.pos",
-        "fuel_correspondence_Prims.pow2.fuel_instrumented",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
-        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.p_1305",
-        "function_token_typing_Prims.pos", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_LessThanOrEqual", "primitive_Prims.op_Modulus",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
+        "equation_FStar.Mul.op_Star", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
+        "equation_FStar.UInt64.t", "equation_FStar.UInt64.v",
+        "equation_Prims.nat",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
+        "lemma_FStar.Int.pow2_values", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
-        "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Tm_refine_e9a76007e0467ae540411f3d3dbfc5be",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Ghost.reveal"
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
       ],
       0
     ],
@@ -926,7 +932,7 @@
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.lemma_freduce_degree2",
       4,
       0,
-      0,
+      1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
@@ -947,18 +953,21 @@
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.bound63",
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.isDegreeReduced",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part3.satisfiesModuloConstraints",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
+        "equation_Crypto.Symmetric.Poly1305.Spec.elem",
         "equation_Crypto.Symmetric.Poly1305.Spec.p_1305",
+        "equation_Crypto.Symmetric.Poly1305.Spec.zero",
         "equation_FStar.Mul.op_Star", "equation_FStar.UInt64.t",
-        "equation_Prims.pos",
+        "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.prime",
+        "function_token_typing_Crypto.Symmetric.Poly1305.Spec.zero",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
         "refinement_interpretation_Tm_refine_6245f085a2a4e0b2d9eb72640206e5b4",
-        "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+        "refinement_interpretation_Tm_refine_c44d6b2b02c0b515cd6e2f4d9892c368"
       ],
       0
     ],

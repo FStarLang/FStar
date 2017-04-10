@@ -1,9 +1,8 @@
 FSTAR_HOME=../..
 include ../Makefile.include
-all: uall sall
+all: uall
 
-uall: bst RBTree.uver vector
-sall:
+uall: BinaryTrees.uver bst RBTree.uver vector
 
 bst: BinarySearchTree.uver BinarySearchTree0.uver BinarySearchTreeBasic.uver BinarySearchTreeFirst.uver
 

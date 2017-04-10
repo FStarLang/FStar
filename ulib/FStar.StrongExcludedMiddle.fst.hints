@@ -1,0 +1,13 @@
+[
+  "È:'’ûùÎ\u0002©M∂–_Üñd",
+  [
+    [
+      "FStar.StrongExcludedMiddle.strong_excluded_middle",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0
+    ]
+  ]
+]

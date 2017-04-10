@@ -1,5 +1,5 @@
 [
-  "•sXY4aÈ\u001fÏ€E¼¡Î›õ",
+  "—‚)+Ï¼J¦PŸk:ç\u0012äe",
   [
     [
       "Ex10b.point",
@@ -50,9 +50,9 @@
       ],
       0
     ],
-    [ "Ex10b.Point.x", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ex10b.__proj__Point__item__x", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Ex10b.Point.y",
+      "Ex10b.__proj__Point__item__y",
       1,
       2,
       1,
@@ -64,7 +64,7 @@
       0
     ],
     [
-      "Ex10b.Point.y",
+      "Ex10b.__proj__Point__item__y",
       2,
       2,
       1,
@@ -170,9 +170,9 @@
         "l_or-interp", "lemma_FStar.TSet.mem_singleton",
         "lemma_FStar.TSet.mem_union", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y",
-        "refinement_interpretation_Tm_refine_1415776481d303ea8504359ca0f5fb29",
-        "typing_Ex10b.Point.x", "typing_Ex10b.Point.y",
-        "typing_FStar.TSet.singleton"
+        "refinement_interpretation_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "typing_Ex10b.__proj__Point__item__x",
+        "typing_Ex10b.__proj__Point__item__y", "typing_FStar.TSet.singleton"
       ],
       0
     ]

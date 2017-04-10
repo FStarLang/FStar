@@ -32,7 +32,7 @@ type exp =
   | EAbs   : ty -> exp -> exp
 
 val is_value : exp -> Tot bool
-let is_value = is_EAbs
+let is_value = EAbs?
 
 (* Parallel substitution operation `subst` *)
 
@@ -49,7 +49,7 @@ let is_value = is_EAbs
 (* assume val excluded_middle : p:Type -> Tot (b:bool{b = true <==> p}) *)
 
 type sub = var -> Tot exp
-type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+type renaming (s:sub) = (forall (x:var). EVar? (s x))
 
 assume val is_renaming : s:sub -> Tot (n:int{(renaming s ==> n=0) /\
                                              (~(renaming s) ==> n=1)})
@@ -60,18 +60,18 @@ let sub_inc y = EVar (y+1)
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
-let is_var (e:exp) : int = if is_EVar e then 0 else 1
+let is_var (e:exp) : int = if EVar? e then 0 else 1
 
 
 val subst : e:exp -> s:sub -> Pure exp (requires True)
-                                       (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
+                                       (ensures (fun e' -> renaming s /\ EVar? e ==> EVar? e'))
                                        (decreases %[is_var e; is_renaming s; e])
 let rec subst e s =
   match e with
   | EVar x -> s x
 
   | EAbs t e1 ->
-     let subst_eabs : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
+     let subst_eabs : y:var -> Tot (e:exp{renaming s ==> EVar? e}) = fun y ->
        if y=0
        then EVar y
        else ((* renaming_sub_inc (); --unnecessary hint *)

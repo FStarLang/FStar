@@ -186,6 +186,12 @@ let fresh_frame (m0:mem) (m1:mem) =
   /\ HH.parent m1.tip = m0.tip
   /\ m1.h == Map.upd m0.h m1.tip Heap.emp
 
+let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
+    : Lemma (fresh_frame m0 m1 /\
+	     modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==> 
+	     modifies_transitively s m0 (pop m2))
+    = ()
+
 let lemma_pop_is_popped (m0:mem{poppable m0})
   : Lemma (popped m0 (pop m0))
   = let m1 = pop m0 in
@@ -261,7 +267,14 @@ unfold let mods (rs:some_refs) h0 h1 =
     modifies (normalize_term (regions_of_some_refs rs)) h0 h1
   /\ (forall (r:rid). modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1)
 
-
+////////////////////////////////////////////////////////////////////////////////
+let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
+			      (r:rid{is_eternal_region r /\
+				     r<>HH.root /\
+				     r `is_in` h.h})
+   : Lemma (HH.disjoint h.tip r)
+   = ()
+   
 ////////////////////////////////////////////////////////////////////////////////
 #set-options "--initial_fuel 0 --max_fuel 0"
 let f (a:Type0) (b:Type0) (x:reference a) (x':reference a) 
@@ -280,3 +293,30 @@ let f (a:Type0) (b:Type0) (x:reference a) (x':reference a)
 					 (Set.singleton z.id))) h0 h1);
   assert (sel h0 x' == sel h1 x');
   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1)
+
+(* let f2 (a:Type0) (b:Type0) (x:reference a) (y:reference b) *)
+(* 			   (h0:mem) (h1:mem) =  *)
+(*   assume (HH.disjoint (frameOf x) (frameOf y)); *)
+(*   assume (mods [Ref x; Ref y] h0 h1); *)
+(*  //-------------------------------------------------------------------------------- *)
+(*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
+
+(* let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) : GTot Type0 = *)
+(*   match i with *)
+(*   | [] -> True *)
+(*   | Ref x::tl -> *)
+(*     let r = x.id in *)
+(*     (modifies_ref r (normalize_term (refs_in_region r rs)) h0 h1 /\ *)
+(*      modifies_some_refs tl rs h0 h1) *)
+
+(* unfold let mods_2 (rs:some_refs) h0 h1 = *)
+(*     modifies (normalize_term (regions_of_some_refs rs)) h0 h1 *)
+(*   /\ modifies_some_refs rs rs h0 h1 *)
+
+(* #reset-options "--log_queries --initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
+(* #set-options "--debug FStar.HyperStack --debug_level print_normalized_terms" *)
+(* let f3 (a:Type0) (b:Type0) (x:reference a) *)
+(* 			   (h0:mem) (h1:mem) =  *)
+(*   assume (mods_2 [Ref x] h0 h1); *)
+(*  //-------------------------------------------------------------------------------- *)
+(*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)

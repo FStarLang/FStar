@@ -2,7 +2,6 @@ module Ex12d.Pad
 
 open FStar.UInt8
 open FStar.Seq
-open FStar.SeqProperties
 
 
 type uint8 = FStar.UInt8.t

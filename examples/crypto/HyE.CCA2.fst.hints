@@ -1,12 +1,12 @@
 [
-  "\u0001è\u0012ÑæLûN⁄28ÁeäÕ\\",
+  "í\u0014—#ƒ1G\u0010¥Kì∫{˝'^",
   [
-    [ "HyE.CCA2.Entry.c", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.Entry.p", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.PKey.region", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.PKey.rawpk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.__proj__Entry__item__c", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.__proj__Entry__item__p", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.__proj__PKey__item__region", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.__proj__PKey__item__rawpk", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "HyE.CCA2.PKey.log",
+      "HyE.CCA2.__proj__PKey__item__log",
       1,
       2,
       1,
@@ -16,8 +16,8 @@
       ],
       0
     ],
-    [ "HyE.CCA2.SKey.raw", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.SKey.pk", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.__proj__SKey__item__raw", 1, 2, 1, [ "@query" ], 0 ],
+    [ "HyE.CCA2.__proj__SKey__item__pk", 1, 2, 1, [ "@query" ], 0 ],
     [
       "HyE.CCA2.keygen",
       1,
@@ -35,8 +35,32 @@
       0
     ],
     [
+      "HyE.CCA2.encrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "bool_inversion", "equation_HyE.Ideal.conf",
+        "function_token_typing_HyE.Ideal.ind_cca"
+      ],
+      0
+    ],
+    [
       "HyE.CCA2.decrypt",
       1,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equation_HyE.RSA.cipher", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+      ],
+      0
+    ],
+    [
+      "HyE.CCA2.decrypt",
+      2,
       2,
       1,
       [

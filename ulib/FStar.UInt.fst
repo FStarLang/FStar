@@ -4,6 +4,34 @@ open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
+val pow2_values: x:nat -> Lemma
+  (requires True)
+  (ensures (let p = pow2 x in
+   match x with
+   | 0  -> p=1
+   | 1  -> p=2
+   | 8  -> p=256
+   | 16 -> p=65536
+   | 31 -> p=2147483648
+   | 32 -> p=4294967296
+   | 63 -> p=9223372036854775808
+   | 64 -> p=18446744073709551616
+   | 128 -> p=0x100000000000000000000000000000000
+   | _  -> True))
+  [SMTPat (pow2 x)]
+let pow2_values x =
+   match x with
+   | 0  -> assert_norm (pow2 0 == 1)
+   | 1  -> assert_norm (pow2 1 == 2)
+   | 8  -> assert_norm (pow2 8 == 256)
+   | 16 -> assert_norm (pow2 16 == 65536)
+   | 31 -> assert_norm (pow2 31 == 2147483648)
+   | 32 -> assert_norm (pow2 32 == 4294967296)
+   | 63 -> assert_norm (pow2 63 == 9223372036854775808)
+   | 64 -> assert_norm (pow2 64 == 18446744073709551616)
+   | 128 -> assert_norm (pow2 128 = 0x100000000000000000000000000000000)
+   | _  -> ()
+
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
  * a copy-paste of this module. *)
 
@@ -12,7 +40,7 @@ open FStar.Math.Lemmas
  * - definition of max and min
  * - use of regular integer modulus instead of wrap-around modulus *)
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
@@ -27,7 +55,7 @@ type uint_t (n:nat) = x:int{size x n}
 val zero: n:nat -> Tot (uint_t n)
 let zero n = 0
 
-#reset-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 val pow2_n: #n:pos -> p:nat{p < n} -> Tot (uint_t n)
 let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
@@ -35,7 +63,7 @@ let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
 val one: n:pos -> Tot (uint_t n)
 let one n = 1
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val ones: n:nat -> Tot (uint_t n)
 let ones n = max_int n
@@ -147,14 +175,14 @@ let lt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
 let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 
 (* Casts *)
-val to_uint_t: m:pos -> a:int -> Tot (uint_t m)
+val to_uint_t: m:nat -> a:int -> Tot (uint_t m)
 let to_uint_t m a = a % pow2 m
 
 open FStar.Seq
 
 (* WARNING: Mind the big endian vs little endian definition *)
 
-#reset-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#reset-options "--initial_fuel 1 --max_fuel 1"
 
 (* Casts *)
 val to_vec: #n:nat -> num:uint_t n -> Tot (bv_t n)
@@ -210,9 +238,9 @@ let from_vec_lemma_2 #n a b = inverse_vec_lemma a; inverse_vec_lemma b
 
 open FStar.Math.Lemmas
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--initial_fuel 0 --max_fuel 0"
 
-val from_vec_aux: #n:pos -> a:bv_t n -> s1:pos{s1 < n} -> s2:pos{s2 < s1} ->
+val from_vec_aux: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> s2:nat{s2 < s1} ->
   Lemma (requires True)
         (ensures (from_vec #s2 (slice a 0 s2)) * pow2 (n - s2) + (from_vec #(s1 - s2) (slice a s2 s1)) * pow2 (n - s1) + (from_vec #(n - s1) (slice a s1 n)) = ((from_vec #s2 (slice a 0 s2)) * pow2 (s1 - s2) + (from_vec #(s1 - s2) (slice a s2 s1))) * pow2 (n - s1) + (from_vec #(n - s1) (slice a s1 n)))
 let from_vec_aux #n a s1 s2 =
@@ -220,15 +248,15 @@ let from_vec_aux #n a s1 s2 =
   paren_mul_right (from_vec #s2 (slice a 0 s2)) (pow2 (s1 - s2)) (pow2 (n - s1));
   pow2_plus (s1 - s2) (n - s1)
 
-#set-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#set-options "--initial_fuel 0 --max_fuel 0"
 
-val seq_slice_lemma: #n:pos -> a:bv_t n -> s1:nat{s1 < n} -> t1:nat{t1 >= s1 && t1 <= n} -> s2:nat{s2 < t1 - s1} -> t2:nat{t2 >= s2 && t2 <= t1 - s1} ->
+val seq_slice_lemma: #n:nat -> a:bv_t n -> s1:nat{s1 < n} -> t1:nat{t1 >= s1 && t1 <= n} -> s2:nat{s2 < t1 - s1} -> t2:nat{t2 >= s2 && t2 <= t1 - s1} ->
   Lemma (equal (slice (slice a s1 t1) s2 t2) (slice a (s1 + s2) (s1 + t2)))
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#set-options "--z3timeout 20 --initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 20"
 
-val from_vec_propriety: #n:pos -> a:bv_t n -> s:pos{s < n} ->
+val from_vec_propriety: #n:pos -> a:bv_t n -> s:nat{s < n} ->
   Lemma (requires True)
         (ensures from_vec a = (from_vec #s (slice a 0 s)) * pow2 (n - s) + from_vec #(n - s) (slice a s n))
 	(decreases (n - s))
@@ -244,11 +272,10 @@ let rec from_vec_propriety #n a s =
     seq_slice_lemma #n a s n 1 (n - s)
   end
 
-#reset-options "--z3timeout 5 --initial_fuel 0 --max_fuel 0"
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 val append_lemma: #n:pos -> #m:pos -> a:bv_t n -> b:bv_t m ->
-  Lemma (requires True)
-        (ensures from_vec #(n + m) (append a b) = (from_vec #n a) * pow2 m + (from_vec #m b))
+  Lemma (from_vec #(n + m) (append a b) = (from_vec #n a) * pow2 m + (from_vec #m b))
 let append_lemma #n #m a b =
   assert(equal a (slice (append a b) 0 n));
   assert(equal b (slice (append a b) n (n + m)));
@@ -270,7 +297,7 @@ let slice_right_lemma #n a s =
   modulo_addition_lemma (from_vec #s (slice a (n - s) n)) (pow2 s) (from_vec #(n - s) (slice a 0 (n - s)));
   small_modulo_lemma_1 (from_vec #s (slice a (n - s) n)) (pow2 s)
 
-#set-options "--z3timeout 5 --initial_fuel 1 --max_fuel 1"
+#set-options "--initial_fuel 1 --max_fuel 1"
 
 (* Relations between constants in BitVector and in UInt. *)
 val zero_to_vec_lemma: #n:pos -> i:nat{i < n} ->
@@ -303,23 +330,21 @@ let rec pow2_to_vec_lemma #n p i =
 val pow2_from_vec_lemma: #n:pos -> p:nat{p < n} ->
   Lemma (requires True) (ensures from_vec (elem_vec #n p) = pow2_n #n (n - p - 1))
         [SMTPat (from_vec (elem_vec #n p))]
-let pow2_from_vec_lemma #n p = to_vec_lemma_2 (from_vec (elem_vec #n p)) (pow2_n #n (n - p - 1))
+let pow2_from_vec_lemma #n p =
+  to_vec_lemma_2 (from_vec (elem_vec #n p)) (pow2_n #n (n - p - 1))
 
 val ones_to_vec_lemma: #n:pos -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures index (to_vec (ones n)) i = index (ones_vec #n) i)
 	[SMTPat (index (to_vec (ones n)) i)]
 let rec ones_to_vec_lemma #n i =
-  if i = n - 1 then () else begin 
-     pow2_plus i (n - i);
-     division_definition (pow2 n - 1) (pow2 i) (pow2 (n - i) - 1);
-     ones_to_vec_lemma #(n - 1) i
-  end
+  if i = n - 1 then () else ones_to_vec_lemma #(n - 1) i
 
 val ones_from_vec_lemma: #n:pos ->
   Lemma (requires True) (ensures from_vec (ones_vec #n) = ones n)
         [SMTPat (from_vec (ones_vec #n))]
-let ones_from_vec_lemma #n = to_vec_lemma_2 (from_vec (ones_vec #n)) (ones n)
+let ones_from_vec_lemma #n =
+  to_vec_lemma_2 (from_vec (ones_vec #n)) (ones n)
 
 
 (* (nth a i) returns a boolean indicating the i-th bit of a. *)
@@ -491,6 +516,97 @@ val lognot_lemma_1: #n:pos ->
   Lemma (requires True) (ensures (lognot #n (zero n) = ones n))
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 
+#set-options "--initial_fuel 1 --max_fuel 1"
+
+(** Used in the next two lemmas *)
+private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
+  Lemma (requires (a % pow2 m == 0))
+        (ensures  (index (to_vec a) i == false))
+        [SMTPat (index (to_vec #n a) i); SMTPatT (a % pow2 m == 0)]
+let rec to_vec_mod_pow2 #n a m i =
+  if i = n - 1 then
+    begin
+    lemma_index_app2 (to_vec #(n - 1) (a / 2)) (Seq.create 1 (a % 2 = 1)) i;
+    mod_mult_exact a 2 (pow2 (m - 1))
+    end
+  else
+    begin
+    lemma_index_app1 (to_vec #(n - 1) (a / 2)) (Seq.create 1 (a % 2 = 1)) i;
+    assert (index (to_vec a) i == index (to_vec #(n - 1) (a / 2)) i);
+    mod_pow2_div2 a m;
+    to_vec_mod_pow2 #(n - 1) (a / 2) (m - 1) i
+    end
+
+(** Used in the next two lemmas *)
+private val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
+  Lemma (requires (a < pow2 m))
+        (ensures  (index (to_vec a) i == false))
+        [SMTPat (index (to_vec #n a) i); SMTPatT (a < pow2 m)]
+let rec to_vec_lt_pow2 #n a m i =
+  if n = 0 then ()
+  else
+    if m = 0 then
+      assert (a == zero n)
+    else
+      begin
+      lemma_index_app1 (to_vec #(n - 1) (a / 2)) (Seq.create 1 (a % 2 = 1)) i;
+      assert (index (to_vec a) i == index (to_vec #(n - 1) (a / 2)) i);
+      to_vec_lt_pow2 #(n - 1) (a / 2) (m - 1) i
+      end
+
+(** Used in the next two lemmas *)
+private val index_to_vec_ones: #n:pos -> m:nat{m <= n} -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (pow2 m <= pow2 n /\
+          (i < n - m ==> index (to_vec #n (pow2 m - 1)) i == false) /\
+          (n - m <= i ==> index (to_vec #n (pow2 m - 1)) i == true)))
+        [SMTPat (index (to_vec #n (pow2 m - 1)) i)]
+let rec index_to_vec_ones #n m i =
+   let a = pow2 m - 1 in
+   pow2_le_compat n m;
+   if m = 0 then one_to_vec_lemma #n i
+   else if m = n then ones_to_vec_lemma #n i
+   else if i = n - 1 then ()
+   else index_to_vec_ones #(n - 1) (m - 1) i
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
+
+val logor_disjoint: #n:pos -> a:uint_t n -> b:uint_t n -> m:pos{m < n} ->
+  Lemma (requires (a % pow2 m == 0 /\ b < pow2 m))
+        (ensures  (logor #n a b == a + b))
+let logor_disjoint #n a b m =
+  assert (a % pow2 m == 0); // To trigger pattern above
+  assert (forall (i:nat{n - m <= i /\ i < n}).{:pattern (index (to_vec a) i)}
+    index (to_vec a) i == false);
+  assert (b < pow2 m); // To trigger pattern above
+  assert (forall (i:nat{i < n - m}).{:pattern (index (to_vec b) i)}
+    index (to_vec b) i == false);
+  Seq.lemma_split (logor_vec (to_vec a) (to_vec b)) (n - m);
+  Seq.lemma_eq_intro
+    (logor_vec (to_vec a) (to_vec b))
+    (append (slice (to_vec a) 0 (n - m)) (slice (to_vec b) (n - m) n));
+  append_lemma #(n - m) #m (slice (to_vec a) 0 (n - m)) (slice (to_vec b) (n - m) n);
+  slice_left_lemma #n (to_vec a) (n - m);
+  div_exact_r a (pow2 m);
+  assert (from_vec #(n - m) (slice (to_vec a) 0 (n - m)) * pow2 m == a);
+  slice_right_lemma #n (to_vec b) m;
+  small_modulo_lemma_1 b (pow2 m);
+  assert (from_vec #m (slice (to_vec b) (n - m) n) == b)
+
+val logand_mask: #n:pos -> a:uint_t n -> m:pos{m < n} ->
+  Lemma (pow2 m < pow2 n /\ logand #n a (pow2 m - 1) == a % pow2 m)
+let logand_mask #n a m =
+  pow2_lt_compat n m;
+  Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
+  Seq.lemma_eq_intro
+    (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
+    (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));
+  append_lemma #(n - m) #m (zero_vec #(n - m)) (slice (to_vec a) (n - m) n);
+  assert (0 * pow2 m + a % pow2 m == a % pow2 m);
+  assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
+  slice_right_lemma #n (to_vec a) m;
+  assert (from_vec #m (slice (to_vec a) (n - m) n) == a % pow2 m)
+
 
 (* Shift operators *)
 val shift_left: #n:pos -> a:uint_t n -> s:nat -> Tot (uint_t n)
@@ -609,6 +725,7 @@ let shift_right_value_lemma #n a s =
   if s >= n then shift_right_value_aux_1 #n a s
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
+
 
 (* val lemma_pow2_values: n:nat -> Lemma *)
 (*   (requires (n <= 64)) *)

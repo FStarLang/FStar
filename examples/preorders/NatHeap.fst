@@ -30,7 +30,7 @@ abstract type ref (a:Type) = nat
 
 abstract let contains (#a:Type) (h:heap) (r:ref a) : GTot Type0 =
   exists x . snd h r == Some (| a , x |)
-//NB: is_Some (snd h r), would avoid the existential, but would not capture the type equality
+//NB: Some? (snd h r), would avoid the existential, but would not capture the type equality
 
 //NB: match snd h r with | Some (| b, _ |) -> a == b | _ -> False
 //    this style would avoid the existential

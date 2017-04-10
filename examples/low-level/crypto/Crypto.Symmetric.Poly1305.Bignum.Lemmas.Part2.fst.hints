@@ -1,19 +1,18 @@
 [
-  "m€©Aá\u0012W\u001b¯»ƒ:‘èk;",
+  "v ÊM\u001fwÚ\u0019ê}ÿúÆÝéÆ",
   [
     [
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.lemma_multiplication060",
       1,
       0,
-      2,
+      1,
       [
         "@query", "equation_FStar.List.Tot.test_sort",
         "equation_FStar.Mul.op_Star", "equation_Prims._assert",
         "fuel_correspondence_Prims.pow2.fuel_instrumented",
         "function_token_typing_FStar.List.Tot.test_sort", "int_inversion",
         "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0"
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0
     ],
@@ -66,7 +65,7 @@
       "Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part2.lemma_multiplication061",
       1,
       0,
-      1,
+      2,
       [
         "@query", "equation_FStar.Mul.op_Star", "int_inversion",
         "int_typing", "primitive_Prims.op_Addition",
@@ -359,16 +358,12 @@
         "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.isMultiplication",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_Crypto.Symmetric.Poly1305.Parameters.templ",
-        "equation_FStar.Buffer.buffer", "equation_FStar.Int8.n",
         "equation_FStar.Mul.op_Star", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
         "equation_FStar.UInt.uint_t", "equation_FStar.UInt64.n",
         "equation_FStar.UInt64.t", "equation_FStar.UInt64.v",
-        "equation_Prims.nat", "equation_Prims.pos",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
-        "fuel_guarded_inversion_FStar.HyperStack.mem",
-        "function_token_typing_FStar.Int8.n", "int_inversion", "int_typing",
-        "kinding_FStar.UInt64.t_@tok", "primitive_Prims.op_Addition",
+        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -376,11 +371,9 @@
         "refinement_interpretation_Tm_refine_033585b16f9282fb8c7c71161354496f",
         "refinement_interpretation_Tm_refine_03d0bed5c0733099844f268aecd0836d",
         "refinement_interpretation_Tm_refine_160771b25134b8980d8dbd379f76ee2f",
-        "refinement_interpretation_Tm_refine_7e3beb6acccffb41919f80afab550fdd",
-        "refinement_interpretation_Tm_refine_b0cc669109f5223394a5a92793efa434",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Buffer.get", "typing_FStar.UInt64.v"
+        "typing_Prims.pow2"
       ],
       0
     ],
@@ -399,13 +392,12 @@
       1,
       [
         "@query", "equation_Crypto.Symmetric.Poly1305.Bigint.bigint",
-        "equation_Crypto.Symmetric.Poly1305.Bigint.norm",
         "equation_Crypto.Symmetric.Poly1305.Bigint.u64",
-        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.bound27",
+        "equation_Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1.isMultiplication",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.Buffer.buffer", "equation_FStar.Mul.op_Star",
         "equation_FStar.UInt64.t",
-        "fuel_guarded_inversion_FStar.Buffer.buffer_",
+        "fuel_guarded_inversion_FStar.Buffer._buffer",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
@@ -424,8 +416,7 @@
         "@query",
         "equation_Crypto.Symmetric.Poly1305.Parameters.norm_length",
         "equation_FStar.Mul.op_Star", "primitive_Prims.op_Multiply",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "unit_inversion", "unit_typing"
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
       ],
       0
     ]

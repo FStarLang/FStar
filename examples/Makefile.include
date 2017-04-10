@@ -4,7 +4,6 @@ ifndef FSTAR_HOME
 endif
 
 include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 ifeq ($(OS),Windows_NT)
 MSBUILD = msbuild
@@ -12,64 +11,5 @@ else
 MSBUILD = xbuild
 endif
 
-LIB_FILES=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Char.fsti FStar.String.fsti FStar.Constructive.fst FStar.Classical.fst
-STDLIB=$(LIB_FILES)
-OLDLIB=FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst
-
-SFSTAR=$(FSTAR) --stratified 
-
-FULL_LIB=$(LIB_FILES) FStar.ListProperties.fst
-STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
-FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
-PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
-STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
-FSTARC=$(SFSTAR) $(STDCACHE) 
-
-%.ver: %.fst
-	$(SFSTAR) $(STDLIB) $^
-
-%.oldlib.ver: %.fst
-	$(SFSTAR) $(OLDLIB) $^
-
-%.cache.ver: %.fst
-	$(SFSTAR) $(STDLIB_CACHE) $^
-
-%.fulllib.ver: %.fst
-	$(SFSTAR) $(FULL_LIB) $^
-
-%.vv: %.fst
-	$(FSTAR_OR_NUBUILD) $^
-
-%.lax: %.fst
-	$(SFSTAR) $(STDLIB) --lax $^
-
-%.perm.ver: %.fst
-	$(SFSTAR) $(PERMLIB) $^
-
-%.c.ver: %.fst
-	$(FSTARC) $^
-
-.cache: $(STDLIB)
-	mkdir -p $(FSTAR_HOME)/cache
-	$(SFSTAR) --serialize_mods $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) FStar.ST.fst)
-
-.ccache:
-	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
-
-.all.ver: $(VERFILES)
-	$(SFSTAR) --explicit_deps $(STDLIB) $^
-
 %.uver: %.fst
 	$(FSTAR) --verify_module $* $^
-
-%.sver: %.fst
-	$(SFSTAR) --explicit_deps $(STDLIB) $^
-
-%.sver-nolib: %.fst
-	$(SFSTAR) $^
-
-.all.oldlib.ver: $(VERFILES)
-	$(SFSTAR) $(OLDLIB) $^
-
-.all.cache.ver: $(VERFILES)
-	$(SFSTAR) $(STDLIB_CACHE) $^
