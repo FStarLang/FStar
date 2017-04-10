@@ -342,17 +342,21 @@ let detail_errors_parallel (env) (all_labels:labels) (p:decl) (fuel:int * int * 
                 ")\n" in
     let reply = ask_process z3batch (input ^ "\n") in
     let lines = (String.split ['\n'] reply) in
-    if lines.Length < 3 || lines.[0] <> "OK" then
+    if (List.length lines) < 3 || (List.hd lines) <> "OK" then
         BU.print_error ("Error: " ^ reply)
-    else (
-        let proven_lbls = (String.split [' '] lines.[1]) in
-        let error_lbls = (String.split [' '] lines.[2]) in
-        kill_process z3batch;
-        BU.print_string "\n";
-        let sorted_labels = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) all_labels in
-        let print_result ((name, sort), msg, r) =
-            if (List.contains name proven_lbls)
-            then BU.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
-            else FStar.Errors.report r msg in
-        List.iter (print_result) sorted_labels) ;
+    else
+        (match lines with
+        | l1 :: l2 :: l3 :: _ ->
+            let proven_lbls = (String.split [' '] l2) in
+            let error_lbls = (String.split [' '] l3) in
+            kill_process z3batch;
+            BU.print_string "\n";
+            let sorted_labels = List.sortWith (fun (_, _, r1) (_, _, r2) -> Range.compare r1 r2) all_labels in
+            let print_result ((name, sort), msg, r) =
+                if (List.contains name proven_lbls)
+                then BU.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
+                else FStar.Errors.report r msg in
+            List.iter (print_result) sorted_labels
+        | _ ->
+            BU.print_error "Not enough lines in reply from z3batch\n" );
     []
