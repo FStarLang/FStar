@@ -29,9 +29,9 @@
         "equation_Prims.l_not", "equation_Prims.l_or",
         "equation_Prims.squash", "kinding_Prims.c_or@tok", "l_not-interp",
         "l_or-interp", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.SquashProperties_Tm_refine_f853efcd2332312e533b8e0a30693494",
+        "refinement_interpretation_FStar.SquashProperties_Tm_refine_3d9be3f8c1f455cdaac99a8638e52c06",
         "refinement_interpretation_FStar.Squash_Tm_refine_7fdd091adbcfc3810a61ff266cf2272b",
-        "refinement_interpretation_Prims_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_FStar.Squash.get_proof",
         "typing_FStar.SquashProperties.join_squash", "typing_Prims.l_not",
         "typing_Prims.l_or", "unit_typing"
@@ -136,7 +136,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_FStar.SquashProperties_Tm_refine_f1ecc6ab6882a651504f328937700647"
+        "refinement_interpretation_FStar.SquashProperties_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0
     ],

@@ -588,15 +588,14 @@ let pow2_multiplication_modulo_lemma_1 a b c =
   paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
-#reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0"
-
+#reset-options "--z3rlimit 300 --initial_fuel 0 --max_fuel 0"
 val pow2_multiplication_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
     Lemma ( (a * pow2 c) % pow2 b = (a % pow2 (b - c)) * pow2 c )
 let pow2_multiplication_modulo_lemma_2 a b c =
   euclidean_division_definition a (pow2 (b - c));
   let q = pow2 (b - c) in
   let r = a % pow2 (b - c) in
-  cut(a = q * (a / q) + a % q);
+  assert(a = q * (a / q) + a % q);
   pow2_plus (b - c) c;
   paren_mul_right (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);
   paren_mul_left (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);

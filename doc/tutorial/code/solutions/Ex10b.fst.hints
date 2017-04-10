@@ -46,7 +46,7 @@
         "@MaxIFuel_assumption", "@query", "assumption_FStar.Heap.ref_haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
         "function_token_typing_Prims.int",
-        "haseqEx10b_Tm_refine_f2a77ae22406f0f6f8f3003c6e41b99e",
+        "haseqEx10b_Tm_refine_50ab0377712f0522b27837907767410c",
         "ref_inversion"
       ],
       0
@@ -197,7 +197,7 @@
         "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
         "fuel_guarded_inversion_Ex10b.point",
         "function_token_typing_Prims.int",
-        "haseqEx10b_Tm_refine_eb0df8af9c288e6ffc15b663a81b3bc3"
+        "haseqEx10b_Tm_refine_061a074574caa0ed0bfca1916737a4e4"
       ],
       0
     ],
@@ -208,6 +208,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_9248629b80e5ece8a5830df634103252",
         "assumption_FStar.Heap.DomContains",
         "assumption_FStar.Heap.DomRestrict",
         "assumption_FStar.Heap.Extensional",
@@ -222,7 +223,7 @@
         "proj_equation_Ex10b.Point_x", "proj_equation_Ex10b.Point_y",
         "projection_inverse_FStar.Heap.Ref_r",
         "refinement_interpretation_Ex10b_Tm_refine_140c1a76b7c84c553fdbcc41340cd62b",
-        "refinement_interpretation_Ex10b_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "refinement_interpretation_Ex10b_Tm_refine_e3387e141d646e9de3bbc88a27c687af",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y", "typing_FStar.Heap.concat",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.domain",
@@ -249,13 +250,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_9248629b80e5ece8a5830df634103252",
         "data_typing_intro_FStar.Heap.Ref@tok", "equation_FStar.Heap.fresh",
         "equation_FStar.Heap.op_Hat_Plus_Hat", "equation_FStar.ST.ref",
         "function_token_typing_Prims.int", "kinding_FStar.Heap.aref@tok",
         "l_or-interp", "lemma_FStar.TSet.mem_singleton",
         "lemma_FStar.TSet.mem_union", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y",
-        "refinement_interpretation_Ex10b_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "refinement_interpretation_Ex10b_Tm_refine_e3387e141d646e9de3bbc88a27c687af",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y", "typing_FStar.TSet.singleton"
       ],
@@ -331,7 +333,7 @@
         "assumption_Prims.HasEq_int", "equation_FStar.ST.ref",
         "fuel_guarded_inversion_Ex10b.point",
         "function_token_typing_Prims.int",
-        "haseqEx10b_Tm_refine_eb0df8af9c288e6ffc15b663a81b3bc3"
+        "haseqEx10b_Tm_refine_061a074574caa0ed0bfca1916737a4e4"
       ],
       0
     ],
@@ -343,6 +345,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Heap_pretyping_24fcca413a49c3b9891a433ace204782",
+        "FStar.Heap_pretyping_9248629b80e5ece8a5830df634103252",
         "assumption_FStar.Heap.DomContains",
         "assumption_FStar.Heap.DomRestrict", "assumption_FStar.Heap.Equals",
         "assumption_FStar.Heap.RestrictSel",
@@ -357,7 +360,7 @@
         "proj_equation_Ex10b.Point_x", "proj_equation_Ex10b.Point_y",
         "ref_injectivity", "ref_inversion",
         "refinement_interpretation_Ex10b_Tm_refine_140c1a76b7c84c553fdbcc41340cd62b",
-        "refinement_interpretation_Ex10b_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "refinement_interpretation_Ex10b_Tm_refine_e3387e141d646e9de3bbc88a27c687af",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y", "typing_FStar.Heap.concat",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.domain",
@@ -384,13 +387,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_9248629b80e5ece8a5830df634103252",
         "data_typing_intro_FStar.Heap.Ref@tok", "equation_FStar.Heap.fresh",
         "equation_FStar.Heap.op_Hat_Plus_Hat", "equation_FStar.ST.ref",
         "function_token_typing_Prims.int", "kinding_FStar.Heap.aref@tok",
         "l_or-interp", "lemma_FStar.TSet.mem_singleton",
         "lemma_FStar.TSet.mem_union", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y",
-        "refinement_interpretation_Ex10b_Tm_refine_984fec5f7e1972378ce98eeb46801541",
+        "refinement_interpretation_Ex10b_Tm_refine_e3387e141d646e9de3bbc88a27c687af",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y", "typing_FStar.TSet.singleton"
       ],

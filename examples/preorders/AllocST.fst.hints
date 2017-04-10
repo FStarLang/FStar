@@ -78,10 +78,11 @@
         "function_token_typing_NatHeap.heap", "lemma_AllocST.contains_lemma",
         "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
-        "refinement_interpretation_NatHeap_Tm_refine_c6c40c3c35724baba4c3e6e39907c4b1",
+        "refinement_interpretation_NatHeap_Tm_refine_116e09534423f6bb69ae556c00002c3f",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel", "typing_NatHeap.alloc_ref",
-        "typing_NatHeap.ref", "typing_Prims.fst"
+        "typing_NatHeap.ref", "typing_Prims.__proj__Mktuple2__item___2",
+        "typing_Prims.fst"
       ],
       0
     ],
@@ -119,7 +120,7 @@
         "equation_AllocST.heap_rel", "equation_AllocST.ref",
         "equation_Preorder.stable", "lemma_AllocST.contains_lemma",
         "refinement_interpretation_AllocST_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
-        "refinement_interpretation_NatHeap_Tm_refine_1a6e99d598538aabc30601da008f83a8",
+        "refinement_interpretation_NatHeap_Tm_refine_6a27c6788c8781b120f5dae512341216",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel"
       ],

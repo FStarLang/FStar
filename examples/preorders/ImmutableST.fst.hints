@@ -17,7 +17,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_ImmutableST.contains",
         "lemma_ImmutableST.contains_lemma",
-        "refinement_interpretation_ImmutableST_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833"
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7"
       ],
       0
     ],
@@ -29,7 +29,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_ImmutableST_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -42,7 +42,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_ImmutableST_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -55,7 +55,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_ImmutableST_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -68,7 +68,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_ImmutableST_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -100,12 +100,13 @@
         "lemma_ImmutableST.contains_lemma",
         "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
-        "refinement_interpretation_ImmutableST_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
-        "refinement_interpretation_NatHeap_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_NatHeap_Tm_refine_c6c40c3c35724baba4c3e6e39907c4b1",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
+        "refinement_interpretation_NatHeap_Tm_refine_116e09534423f6bb69ae556c00002c3f",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "token_correspondence_ImmutableST.contains",
         "token_correspondence_ImmutableST.heap_rel",
-        "typing_NatHeap.alloc_ref", "typing_NatHeap.ref", "typing_Prims.fst"
+        "typing_NatHeap.alloc_ref", "typing_NatHeap.ref",
+        "typing_Prims.__proj__Mktuple2__item___2", "typing_Prims.fst"
       ],
       0
     ],

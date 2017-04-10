@@ -372,7 +372,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_dd5be3d04dc3e96c668f031fec87a848"
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_2af6b12551310535283758991ae0dbcf"
       ],
       0
     ],
@@ -419,21 +419,18 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion", "constructor_distinct_Prims.Some",
         "equation_FStar.List.Tot.Base.mem_filter_spec",
-        "equation_Prims.eqtype",
-        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "forall-interp",
+        "equation_Prims.eqtype", "forall-interp",
         "fuel_correspondence_FStar.List.Tot.Base.filter.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
         "interpretation_FStar.List.Tot.Base_Tm_abs_5a53730e85895a2f14121a2687f4ab78",
         "l_imp-interp", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_0c7908f698f9577a46d808fd65e0ae4b",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_38ef2cb225014ae1c2586bd786874f92",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.List.Tot.Base.filter", "unit_typing"
       ],

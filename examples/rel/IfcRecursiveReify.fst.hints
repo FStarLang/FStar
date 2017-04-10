@@ -88,6 +88,7 @@
         "interpretation_FStar.DM4F.IntStoreFixed_Tm_abs_b75b7fa41fb51ae08ceddcd629962d13",
         "interpretation_IfcRecursiveReify_Tm_abs_705efac1e4aef11ad59150eb059182da",
         "interpretation_IfcRecursiveReify_Tm_abs_e69ffcfb48421fbd5bcff511830b5b95",
+        "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
         "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
         "proj_equation_Prims.Mktuple2__2", "proj_equation_Rel.R_l",
@@ -96,7 +97,7 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_031aa5f46d93e5d19c7d173c1a0a0157",
+        "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
@@ -189,7 +190,7 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_031aa5f46d93e5d19c7d173c1a0a0157",
+        "refinement_interpretation_FStar.DM4F.Heap.IntStoreFixed_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"

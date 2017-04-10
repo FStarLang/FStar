@@ -82,6 +82,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "FStar.Heap_pretyping_9248629b80e5ece8a5830df634103252",
         "assumption_FStar.Heap.DomContains", "assumption_FStar.Heap.DomUpd",
         "b2t_def", "data_typing_intro_FStar.Heap.Ref@tok",
         "equation_AllocSTwHeaps.contains", "equation_AllocSTwHeaps.heap_rel",
@@ -90,9 +91,9 @@
         "kinding_FStar.Heap.aref@tok", "l_or-interp",
         "lemma_AllocSTwHeaps.contains_lemma",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_124951a135cbe5bd22b961cb01b0bbcc",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_572a38bbd13f86f374f9c1d684eda1dd",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_9bebff24f4d420e70db08d1035457fbe",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_c3ad7b12cbe4b2476807f377c3846893",
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_f266846c73cce125edac3e7c76689db3",
         "token_correspondence_AllocSTwHeaps.contains",
         "token_correspondence_AllocSTwHeaps.heap_rel",
         "typing_AllocSTwHeaps.gen_ref", "typing_FStar.Heap.domain",
@@ -107,7 +108,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_b0e2fbc99f1f2f8504b456c7567e5361"
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_c443bed4b5cd174ac857a1cb26ece6b1"
       ],
       0
     ],
@@ -126,7 +127,7 @@
         "kinding_FStar.Heap.aref@tok", "l_or-interp",
         "lemma_FStar.TSet.mem_union", "ref_inversion",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_572a38bbd13f86f374f9c1d684eda1dd",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_cf5635769d37d4120e600754d3020d29",
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_c8ac13ed36b6a9786309a4676a282b65",
         "typing_AllocSTwHeaps.upd", "typing_FStar.Heap.domain",
         "typing_FStar.TSet.singleton"
       ],
@@ -140,6 +141,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "FStar.Heap_pretyping_9248629b80e5ece8a5830df634103252",
         "assumption_FStar.Heap.DomContains", "assumption_FStar.Heap.DomUpd",
         "data_typing_intro_FStar.Heap.Ref@tok",
         "equation_AllocSTwHeaps.heap_rel", "equation_AllocSTwHeaps.ref",
@@ -147,7 +149,7 @@
         "kinding_FStar.Heap.aref@tok", "l_or-interp",
         "lemma_FStar.TSet.mem_union", "ref_inversion",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_572a38bbd13f86f374f9c1d684eda1dd",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_cf5635769d37d4120e600754d3020d29",
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_c8ac13ed36b6a9786309a4676a282b65",
         "typing_AllocSTwHeaps.upd", "typing_FStar.Heap.domain",
         "typing_FStar.TSet.singleton"
       ],

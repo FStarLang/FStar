@@ -319,14 +319,23 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
         "Huffman_interpretation_Tm_arrow_d9daaf5b221e9e24720c55d564602246",
+        "Huffman_pretyping_7e0e32870af72b30cad3010be3cb1c4f",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.Char.char", "equation_Huffman.permutation",
-        "equation_Huffman.symbol", "equation_Prims.pos",
-        "function_token_typing_Prims.pos", "kinding_FStar.Char.char_@tok",
-        "kinding_Huffman.trie@tok", "kinding_Prims.tuple2@tok",
-        "lemma_FStar.List.Tot.Properties.map_lemma"
+        "equation_Huffman.symbol", "equation_Prims.nat",
+        "equation_Prims.pos",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "function_token_typing_Prims.pos", "int_inversion", "int_typing",
+        "kinding_FStar.Char.char_@tok", "kinding_Huffman.trie@tok",
+        "kinding_Prims.tuple2@tok",
+        "lemma_FStar.List.Tot.Properties.map_lemma",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.List.Tot.Base.length"
       ],
       0
     ],

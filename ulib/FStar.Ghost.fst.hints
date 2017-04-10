@@ -85,7 +85,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_FStar.Ghost_Tm_refine_fe92ca5f59249712e3a29569cd813153"
+        "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0
     ],
@@ -97,7 +97,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_FStar.Ghost_Tm_refine_fe92ca5f59249712e3a29569cd813153"
+        "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0
     ]

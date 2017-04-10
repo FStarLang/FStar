@@ -155,7 +155,7 @@ let rec remove (x:int) (t:tree{count x t > 0}) : Tot tree (decreases t) =
                     if count x t1 > 0 then Node n (remove x t1) t2
                                       else Node n t1 (remove x t2)
 
-#set-options "--z3rlimit 20 --initial_fuel 4 --initial_ifuel 2" //NS: not sure why this requires 4 unfoldings
+#set-options "--z3rlimit 20 --initial_fuel 2 --initial_ifuel 2"
 let rec count_remove_root (t:tree{Node? t}) :
     Lemma (ensures (let r = Node?.root t in
                    (count r (remove_root t) = count r t - 1) /\
