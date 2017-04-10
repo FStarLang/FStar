@@ -320,8 +320,8 @@ let detail_errors_parallel (env) (all_labels:labels) (p:decl) (fuel:int * int * 
      let n, i, r = fuel in
      let query = (List.rev theory)
         @ [ Term.Caption(BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-            Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
-            Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None); ]
+            Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
+            Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption"); ]
         @ [ p ]
         @ [Term.SetOption ("rlimit", string_of_int r)]
     in
