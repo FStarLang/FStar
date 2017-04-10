@@ -51,34 +51,34 @@ let tc_prims:
       if uu____92
       then FStar_SMTEncoding_Solver.dummy
       else
-        (let uu___216_94 = FStar_SMTEncoding_Solver.solver in
+        (let uu___214_94 = FStar_SMTEncoding_Solver.solver in
          {
            FStar_TypeChecker_Env.init =
-             (uu___216_94.FStar_TypeChecker_Env.init);
+             (uu___214_94.FStar_TypeChecker_Env.init);
            FStar_TypeChecker_Env.push =
-             (uu___216_94.FStar_TypeChecker_Env.push);
+             (uu___214_94.FStar_TypeChecker_Env.push);
            FStar_TypeChecker_Env.pop =
-             (uu___216_94.FStar_TypeChecker_Env.pop);
+             (uu___214_94.FStar_TypeChecker_Env.pop);
            FStar_TypeChecker_Env.mark =
-             (uu___216_94.FStar_TypeChecker_Env.mark);
+             (uu___214_94.FStar_TypeChecker_Env.mark);
            FStar_TypeChecker_Env.reset_mark =
-             (uu___216_94.FStar_TypeChecker_Env.reset_mark);
+             (uu___214_94.FStar_TypeChecker_Env.reset_mark);
            FStar_TypeChecker_Env.commit_mark =
-             (uu___216_94.FStar_TypeChecker_Env.commit_mark);
+             (uu___214_94.FStar_TypeChecker_Env.commit_mark);
            FStar_TypeChecker_Env.encode_modul =
-             (uu___216_94.FStar_TypeChecker_Env.encode_modul);
+             (uu___214_94.FStar_TypeChecker_Env.encode_modul);
            FStar_TypeChecker_Env.encode_sig =
-             (uu___216_94.FStar_TypeChecker_Env.encode_sig);
+             (uu___214_94.FStar_TypeChecker_Env.encode_sig);
            FStar_TypeChecker_Env.preprocess =
              FStar_Tactics_Interpreter.preprocess;
            FStar_TypeChecker_Env.solve =
-             (uu___216_94.FStar_TypeChecker_Env.solve);
+             (uu___214_94.FStar_TypeChecker_Env.solve);
            FStar_TypeChecker_Env.is_trivial =
-             (uu___216_94.FStar_TypeChecker_Env.is_trivial);
+             (uu___214_94.FStar_TypeChecker_Env.is_trivial);
            FStar_TypeChecker_Env.finish =
-             (uu___216_94.FStar_TypeChecker_Env.finish);
+             (uu___214_94.FStar_TypeChecker_Env.finish);
            FStar_TypeChecker_Env.refresh =
-             (uu___216_94.FStar_TypeChecker_Env.refresh)
+             (uu___214_94.FStar_TypeChecker_Env.refresh)
          }) in
     let env =
       FStar_TypeChecker_Env.initial_env
