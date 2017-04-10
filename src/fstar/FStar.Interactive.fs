@@ -110,7 +110,7 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
 
 let report_fail () =
     FStar.Errors.report_all() |> ignore;
-    FStar.Errors.num_errs := 0
+    FStar.Errors.clear ()
 
 (******************************************************************************************)
 (* The interface expected to be provided by a type-checker to run in the interactive loop *)

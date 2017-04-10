@@ -271,7 +271,7 @@ let detail_errors env
     let print_result ((_, msg, r), success) =
         if success
         then BU.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
-        else FStar.Errors.report r msg
+        else FStar.Errors.err r msg
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
