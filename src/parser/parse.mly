@@ -1,33 +1,6 @@
 %{
 (*
- Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
-   4 s/r conflicts on BAR
-      function | P -> match with | Q -> _ | R -> _
-      function | P -> function ...  (x 2)
-      function | P -> try e with | ...
-
-   1 s/r conflict on SEMICOLON
-       fun x -> e1 ; e2
-     is parsed as
-        (fun x -> e1; e2)
-     rather than
-        (fun x -> e1); e2
-
-   2 s/r conflict on DOT
-      A.B ^ .C  (x 2)
-
-   1 s/r conflict on LBRACE
-
-      Consider:
-          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
-
-      This is parsed as:
-        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
-      rather than:
-        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
-
-      Analogous ambiguities with -> and * as well.
-
+ We are expected to have only 6 shift-reduce conflicts.
  A lot (142) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -529,7 +502,7 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=typ tactic_opt=option(BY tactic=typ {tactic})
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=typ {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
