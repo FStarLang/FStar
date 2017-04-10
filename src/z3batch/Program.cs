@@ -350,6 +350,8 @@ namespace z3batch
 
         static int Main(string[] args)
         {
+            int exitCode = 0;
+
             try
             {
                 Stream stream = args.Length > 0 ? new FileStream(args[0], FileMode.Open) :
@@ -368,7 +370,6 @@ namespace z3batch
 
                 List<string> lines = new List<string>();
                 string line = streamRdr.ReadLine();
-                int exitCode = 0;
                 while (line != null)
                 {
                     if (line.TrimStart(' ').StartsWith(prove_labels_cmd))
@@ -399,7 +400,7 @@ namespace z3batch
                 Console.WriteLine("Stack trace: " + ex.StackTrace);
             }
 
-            return 0;
+            return exitCode;
         }
     }
 }
