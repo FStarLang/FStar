@@ -721,7 +721,7 @@
       "BinaryTrees.count_remove_root",
       5,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
         "binder_x_4f12cf247a1f2a0cd3974332a65f3b77_0",

@@ -7,16 +7,16 @@
       2,
       1,
       [
-        "@query", "equation_DelimCC.bind_k", "equation_DelimCC.kont",
-        "equation_DelimCC.return_k",
+        "@MaxIFuel_assumption", "@query", "equation_DelimCC.bind_k",
+        "equation_DelimCC.kont", "equation_DelimCC.return_k",
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_Tm_abs_27c290fa202cbea969ff046e420118c8",
         "interpretation_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_Tm_abs_bbab2524e0b098b5ae18f1bb2a44f6ea",
-        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "refinement_interpretation_Tm_refine_7c2e39de34c5be077bc8e5ffd09ce7e2",
-        "token_correspondence_DelimCC.return_k", "unit_typing"
+        "refinement_interpretation_Tm_refine_ec226b0e6a0f4fa7cc8749ef613754f4",
+        "token_correspondence_DelimCC.return_k",
+        "typing_Tm_abs_bbab2524e0b098b5ae18f1bb2a44f6ea", "unit_typing"
       ],
       0
     ],
@@ -41,19 +41,15 @@
       2,
       1,
       [
-        "@query", "equation_DelimCC.bind_k", "equation_DelimCC.cont",
+        "@MaxIFuel_assumption", "@query", "equation_DelimCC.bind_k",
         "equation_DelimCC.kont",
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_Tm_abs_27c290fa202cbea969ff046e420118c8",
         "interpretation_Tm_abs_bbab2524e0b098b5ae18f1bb2a44f6ea",
         "interpretation_Tm_abs_f67011d027e5b9d26cc729d608756f89",
-        "interpretation_Tm_arrow_0eace9b912d97aae97d19f4429c48773",
-        "interpretation_Tm_arrow_75c651dd2b6cd7f49cbaa1cb5c675f7d",
-        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "interpretation_Tm_arrow_b1d0c4dd755e9056f6359496ee3f997d",
-        "refinement_interpretation_Tm_refine_7c2e39de34c5be077bc8e5ffd09ce7e2",
-        "typing_Tm_abs_f67011d027e5b9d26cc729d608756f89", "unit_typing"
+        "refinement_interpretation_Tm_refine_ec226b0e6a0f4fa7cc8749ef613754f4",
+        "typing_Tm_abs_bbab2524e0b098b5ae18f1bb2a44f6ea", "unit_typing"
       ],
       0
     ],

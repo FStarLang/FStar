@@ -341,13 +341,9 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equation_Prims.l_True",
-        "lemma_Prims.invertOption",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_kinding_Tm_refine_dd5be3d04dc3e96c668f031fec87a848",
-        "typing_Prims.uu___is_Some", "unit_typing"
+        "fuel_guarded_inversion_Prims.option"
       ],
       0
     ],
@@ -357,8 +353,8 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_dd5be3d04dc3e96c668f031fec87a848"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2af6b12551310535283758991ae0dbcf"
       ],
       0
     ],
@@ -395,19 +391,22 @@
       2,
       1,
       [
-        "@query", "b2t_def", "bool_inversion",
-        "constructor_distinct_Prims.Some",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query", "b2t_def",
+        "bool_inversion", "constructor_distinct_Prims.Some",
         "equation_FStar.List.Tot.Base.mem_filter_spec",
-        "equation_Prims.eqtype", "forall-interp",
+        "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "forall-interp",
         "fuel_correspondence_FStar.List.Tot.Base.filter.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
         "interpretation_Tm_abs_5a53730e85895a2f14121a2687f4ab78",
         "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "l_imp-interp", "pretyping_f8666440faa91836cc5a13998af863fc",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_3b05ca79f2e737c2e86a0d3454f5920f",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_96e87de2320c4876900e2892663ad125",
         "typing_FStar.List.Tot.Base.filter", "unit_typing"
       ],
       0

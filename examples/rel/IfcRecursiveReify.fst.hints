@@ -53,7 +53,7 @@
       2,
       2,
       [
-        "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_token_correspondence",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
@@ -97,8 +97,8 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_Tm_refine_031aa5f46d93e5d19c7d173c1a0a0157",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
@@ -146,7 +146,7 @@
       2,
       1,
       [
-        "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_equality",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__get_token_correspondence",
         "FStar.DM4F.IntStoreFixed.__proj__INT_STORE__item__put_equality",
@@ -191,8 +191,8 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_Tm_refine_031aa5f46d93e5d19c7d173c1a0a0157",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_f0496eb03f3fb51b5e4ca0d53ea58c01",
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],

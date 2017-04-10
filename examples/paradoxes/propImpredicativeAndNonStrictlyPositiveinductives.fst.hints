@@ -23,9 +23,10 @@
       2,
       1,
       [
-        "@query", "equation_Prims.eq2", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash",
         "pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -65,9 +66,10 @@
       2,
       1,
       [
-        "@query", "equation_Prims.l_Exists", "equation_Prims.squash",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash",
         "pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -78,10 +80,10 @@
       2,
       1,
       [
-        "@query",
+        "@MaxIFuel_assumption", "@query",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.x0",
-        "refinement_interpretation_Tm_refine_ace1dd16e91853e42010e52656b26c78",
+        "refinement_interpretation_Tm_refine_a76790a67dd7603a5ece16b7793a8efe",
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.p0"
       ],
       0

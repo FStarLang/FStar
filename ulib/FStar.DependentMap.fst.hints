@@ -126,8 +126,9 @@
       2,
       1,
       [
-        "@query", "equation_Prims.eqtype",
-        "haseqTm_refine_58c34dee72b3fe507ef917efaa9a3ebf",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.DependentMap.t",
+        "haseqTm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -138,8 +139,8 @@
       2,
       1,
       [
-        "@query", "equation_Prims.eqtype",
-        "haseqTm_refine_58c34dee72b3fe507ef917efaa9a3ebf",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqTm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -166,8 +167,8 @@
       2,
       1,
       [
-        "@query", "equation_Prims.eqtype",
-        "haseqTm_refine_58c34dee72b3fe507ef917efaa9a3ebf",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqTm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -178,8 +179,8 @@
       2,
       1,
       [
-        "@query", "equation_Prims.eqtype",
-        "haseqTm_refine_58c34dee72b3fe507ef917efaa9a3ebf",
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "haseqTm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0

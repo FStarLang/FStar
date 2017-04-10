@@ -70,9 +70,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C61",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C61",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3e14727dacbff8fb05eafdbe79143f6f"
+        "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0
     ],
@@ -82,9 +83,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C61",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C61",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3e14727dacbff8fb05eafdbe79143f6f"
+        "refinement_interpretation_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0
     ],
