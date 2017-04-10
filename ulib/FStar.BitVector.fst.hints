@@ -616,9 +616,9 @@
       2,
       1,
       [
-        "@query", "bool_typing", "equation_Prims.nat", "equation_Prims.pos",
-        "int_inversion", "int_typing",
-        "lemma_FStar.BitVector.logxor_vec_definition",
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
+        "int_typing", "lemma_FStar.BitVector.logxor_vec_definition",
         "pretyping_f537159ed795b314b4e58c260361ae86",
         "primitive_Prims.op_Subtraction", "primitive_Prims.op_disEquality",
         "projection_inverse_BoxInt_proj_0",
