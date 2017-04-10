@@ -12,9 +12,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.Constructive.IntroL",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Constructive.IntroL",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_873fe770bf2eb685b0cbd9912aa26df7"
+        "refinement_interpretation_Tm_refine_5f96298b0b74547bf135efed6725faec"
       ],
       0
     ],
@@ -25,9 +26,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.Constructive.IntroR",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Constructive.IntroR",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c2a28d0576651e02ca4ed7241dbb792f"
+        "refinement_interpretation_Tm_refine_7fbfb42f7ce95e0df3d91787685cfbfc"
       ],
       0
     ],

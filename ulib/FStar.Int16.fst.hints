@@ -43,7 +43,7 @@
       [
         "@query", "assumption_Prims.HasEq_int", "equation_FStar.Int.int_t",
         "equation_FStar.Int16.n",
-        "haseqTm_refine_ae791d5fae3bac5aab1116259a4112c6"
+        "haseqTm_refine_f5da0921f0dd8806caefeddce48fd98d"
       ],
       0
     ],
@@ -758,9 +758,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_FStar.Int16.n",
-        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
-        "haseqTm_refine_21585458d909f23ee4655707a84e1b16",
-        "pretyping_ae567c2fb75be05905677af440075565",
+        "haseqTm_refine_34a930fe6eff72e2e58b43b6d5f52a01",
         "projection_inverse_BoxInt_proj_0"
       ],
       0

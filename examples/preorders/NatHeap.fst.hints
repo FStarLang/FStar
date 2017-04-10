@@ -7,14 +7,11 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.Some",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.Some",
         "disc_equation_Prims.Some", "equation_NatHeap.contains",
-        "equation_NatHeap.heap", "equation_Prims.nat",
-        "fuel_guarded_inversion_Prims.tuple2",
-        "projection_inverse_Prims.Mkdtuple2__2",
+        "equation_Prims.nat", "projection_inverse_Prims.Mkdtuple2__2",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "token_correspondence_Prims.snd"
       ],
       0
@@ -25,16 +22,16 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
     [
       "NatHeap.alloc_ref",
       2,
+      8,
       2,
-      1,
       [
         "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "data_elim_Prims.Mktuple2",
@@ -55,9 +52,9 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "token_correspondence_Prims.snd"
       ],
       0
@@ -79,8 +76,8 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
@@ -90,17 +87,15 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "data_elim_Prims.Mktuple2",
-        "data_elim_Prims.Some", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "equation_NatHeap.contains",
-        "equation_NatHeap.heap", "equation_NatHeap.ref",
-        "equation_NatHeap.sel", "equation_Prims.fst", "equation_Prims.nat",
-        "equation_Prims.snd", "fuel_guarded_inversion_Prims.option",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.Some", "data_elim_Prims.Some",
+        "equation_NatHeap.contains", "equation_NatHeap.heap",
+        "equation_NatHeap.ref", "equation_NatHeap.sel", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.snd",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2", "int_inversion",
         "interpretation_Tm_abs_59825d9ea7f0f6e08f01421499c198f1",
         "interpretation_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
-        "lemma_Prims.invertOption",
         "pretyping_ae567c2fb75be05905677af440075565",
         "primitive_Prims.op_Equality", "proj_equation_Prims.Mktuple2__1",
         "proj_equation_Prims.Mktuple2__2",
@@ -110,9 +105,9 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "token_correspondence_Prims.snd"
       ],
       0
@@ -163,20 +158,24 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "data_elim_Prims.Mktuple2",
-        "data_elim_Prims.None", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "equation_NatHeap.emp",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
+        "constructor_distinct_Prims.option",
+        "constructor_distinct_Prims.unit", "data_elim_Prims.Mktuple2",
+        "data_elim_Prims.None", "data_elim_Prims.Some",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_NatHeap.heap", "equation_NatHeap.max",
         "equation_Prims.fst", "equation_Prims.nat", "equation_Prims.snd",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2",
-        "function_token_typing_NatHeap.emp",
         "function_token_typing_Prims.nat", "int_inversion",
         "interpretation_Tm_abs_eb4c420c97dd03c2940358c9e3ce7111",
         "interpretation_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
         "kinding_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
         "lemma_Prims.invertOption",
+        "pretyping_779086306c29597e3dd1127d16405da1",
         "pretyping_ae567c2fb75be05905677af440075565",
+        "pretyping_f8666440faa91836cc5a13998af863fc",
         "primitive_Prims.op_GreaterThan", "proj_equation_Prims.Mktuple2__1",
         "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
@@ -184,13 +183,13 @@
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_74660044caf971eb471b746f010299b4",
+        "refinement_interpretation_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Prims.snd",
         "typing_Prims.__proj__Mktuple2__item___1",
-        "typing_Prims.uu___is_None",
-        "typing_Tm_abs_385f47b94d17233613a9b97f7887db25"
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some",
+        "unit_typing"
       ],
       0
     ],
@@ -228,22 +227,23 @@
       2,
       1,
       [
-        "@query", "equation_NatHeap.consistent", "equation_NatHeap.contains",
-        "equation_NatHeap.heap", "equation_NatHeap.ref",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
+        "constructor_distinct_Prims.Some", "equation_NatHeap.consistent",
+        "equation_NatHeap.contains", "equation_NatHeap.heap",
+        "equation_NatHeap.ref", "equation_NatHeap.sel",
         "equation_NatHeap.upd", "equation_Prims.dfst", "equation_Prims.nat",
         "equation_Prims.snd", "fuel_guarded_inversion_Prims.tuple2",
-        "int_inversion",
         "interpretation_Tm_abs_812216500e1f2997e57a85fec1206358",
         "primitive_Prims.op_Equality", "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__2",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_346945d79ac9022141439348a8351567",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
+        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
+        "refinement_interpretation_Tm_refine_e781d426e2141bc9b6701165a2ae2283",
         "typing_NatHeap.upd", "unit_typing"
       ],
       0
@@ -284,18 +284,15 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.Mkdtuple2",
-        "constructor_distinct_Prims.Some", "equation_NatHeap.contains",
-        "equation_NatHeap.heap", "equation_NatHeap.sel",
-        "equation_Prims.nat", "fuel_guarded_inversion_Prims.tuple2",
-        "projection_inverse_Prims.Mkdtuple2__1",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.Some",
+        "equation_NatHeap.contains", "equation_NatHeap.heap",
+        "equation_NatHeap.sel", "equation_Prims.nat",
+        "fuel_guarded_inversion_Prims.tuple2",
         "projection_inverse_Prims.Mkdtuple2__2",
-        "projection_inverse_Prims.Mkdtuple2_a",
-        "projection_inverse_Prims.Mkdtuple2_b",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_Tm_refine_9d88cae5276f15574da8f7c281b0ff9a",
-        "token_correspondence_Prims.snd", "unit_typing"
+        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
+        "unit_typing"
       ],
       0
     ],
@@ -306,12 +303,11 @@
       2,
       1,
       [
-        "@query", "equation_NatHeap.heap", "equation_NatHeap.ref",
-        "equation_NatHeap.upd", "equation_Prims.nat",
-        "fuel_guarded_inversion_Prims.tuple2", "int_inversion",
-        "refinement_interpretation_Tm_refine_346945d79ac9022141439348a8351567",
-        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
+        "@MaxIFuel_assumption", "@query", "equation_NatHeap.heap",
+        "equation_NatHeap.ref", "equation_NatHeap.upd", "equation_Prims.nat",
+        "int_inversion",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Tm_refine_e781d426e2141bc9b6701165a2ae2283",
         "typing_NatHeap.upd", "unit_typing"
       ],
       0
@@ -340,8 +336,8 @@
       2,
       1,
       [
-        "@query", "lemma_NatHeap.contains_upd",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882"
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_upd",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
@@ -351,10 +347,9 @@
       2,
       1,
       [
-        "@query", "equation_NatHeap.heap", "equation_NatHeap.upd",
-        "equation_Prims.nat", "fuel_guarded_inversion_Prims.tuple2",
-        "refinement_interpretation_Tm_refine_346945d79ac9022141439348a8351567",
-        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
+        "@MaxIFuel_assumption", "@query", "equation_NatHeap.heap",
+        "equation_NatHeap.upd",
+        "refinement_interpretation_Tm_refine_e781d426e2141bc9b6701165a2ae2283",
         "typing_NatHeap.upd", "unit_typing"
       ],
       0
@@ -365,8 +360,8 @@
       2,
       1,
       [
-        "@query", "lemma_NatHeap.contains_upd",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882"
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_upd",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
@@ -376,13 +371,9 @@
       2,
       1,
       [
-        "@query", "equation_NatHeap.heap", "equation_NatHeap.ref",
-        "equation_NatHeap.upd", "equation_Prims.nat",
-        "fuel_guarded_inversion_Prims.tuple2", "int_inversion",
-        "refinement_interpretation_Tm_refine_346945d79ac9022141439348a8351567",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "@MaxIFuel_assumption", "@query", "equation_NatHeap.heap",
+        "equation_NatHeap.upd",
+        "refinement_interpretation_Tm_refine_e781d426e2141bc9b6701165a2ae2283",
         "typing_NatHeap.upd", "unit_typing"
       ],
       0
@@ -393,8 +384,8 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
@@ -405,7 +396,8 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.FunctionalExtensionality.Extensionality",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.FunctionalExtensionality.Extensionality",
         "constructor_distinct_Prims.Some", "data_elim_Prims.Some",
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.FunctionalExtensionality.feq",
@@ -417,17 +409,14 @@
         "interpretation_Tm_abs_812216500e1f2997e57a85fec1206358",
         "interpretation_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
         "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "kinding_Prims.option@tok",
-        "pretyping_779086306c29597e3dd1127d16405da1",
-        "primitive_Prims.op_Equality", "proj_equation_Prims.Mktuple2__1",
-        "proj_equation_Prims.Mktuple2__2",
+        "kinding_Prims.option@tok", "primitive_Prims.op_Equality",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Mkdtuple2__2",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_Tm_refine_4e1d06e9ce6d5ccc13dcf2dfda6c70fd",
-        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f"
+        "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
@@ -438,26 +427,29 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "data_elim_Prims.Mkdtuple2",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_NatHeap.concat", "equation_NatHeap.consistent",
         "equation_NatHeap.contains", "equation_NatHeap.heap",
-        "equation_NatHeap.ref", "equation_Prims.dfst", "equation_Prims.nat",
-        "equation_Prims.snd", "fuel_guarded_inversion_Prims.dtuple2",
-        "fuel_guarded_inversion_Prims.tuple2", "int_inversion",
+        "equation_NatHeap.ref", "equation_Prims.dfst", "equation_Prims.fst",
+        "equation_Prims.nat", "equation_Prims.snd",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_Prims.tuple2",
+        "function_token_typing_Prims.nat", "int_inversion",
         "interpretation_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8",
         "interpretation_Tm_abs_db239ec63fd5321f95368f3e43e609f5",
+        "kinding_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
         "proj_equation_Prims.Mkdtuple2__1",
-        "proj_equation_Prims.Mktuple2__2",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_74660044caf971eb471b746f010299b4",
+        "refinement_interpretation_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_Prims.snd", "unit_typing"
+        "token_correspondence_Prims.snd", "typing_Prims.fst", "unit_typing"
       ],
       0
     ],
@@ -494,8 +486,8 @@
       2,
       1,
       [
-        "@query", "lemma_NatHeap.contains_concat1",
-        "refinement_interpretation_Tm_refine_8951eed0264c02b4c664324115504244"
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_concat1",
+        "refinement_interpretation_Tm_refine_241ad8bfe898ca08359d47be04127cb2"
       ],
       0
     ],
@@ -505,32 +497,30 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "data_elim_Prims.Mkdtuple2",
-        "data_elim_Prims.Mktuple2", "data_elim_Prims.Some",
-        "disc_equation_Prims.Some", "equation_NatHeap.concat",
-        "equation_NatHeap.consistent", "equation_NatHeap.contains",
-        "equation_NatHeap.heap", "equation_NatHeap.ref",
-        "equation_NatHeap.sel", "equation_Prims.dfst", "equation_Prims.fst",
-        "equation_Prims.nat", "equation_Prims.snd",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_NatHeap.concat", "equation_NatHeap.consistent",
+        "equation_NatHeap.contains", "equation_NatHeap.heap",
+        "equation_NatHeap.ref", "equation_NatHeap.sel",
+        "equation_Prims.dfst", "equation_Prims.nat", "equation_Prims.snd",
         "fuel_guarded_inversion_Prims.dtuple2",
-        "fuel_guarded_inversion_Prims.tuple2", "int_inversion",
+        "fuel_guarded_inversion_Prims.tuple2", "int_inversion", "int_typing",
         "interpretation_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8",
         "interpretation_Tm_abs_db239ec63fd5321f95368f3e43e609f5",
-        "interpretation_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
-        "lemma_Prims.invertOption", "proj_equation_Prims.Mkdtuple2__1",
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "proj_equation_Prims.Mkdtuple2__1",
         "proj_equation_Prims.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_74660044caf971eb471b746f010299b4",
-        "refinement_interpretation_Tm_refine_8951eed0264c02b4c664324115504244",
+        "refinement_interpretation_Tm_refine_241ad8bfe898ca08359d47be04127cb2",
+        "refinement_interpretation_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Prims.snd", "typing_NatHeap.concat",
-        "typing_Prims.uu___is_None", "unit_typing"
+        "unit_typing"
       ],
       0
     ],
@@ -540,8 +530,8 @@
       2,
       1,
       [
-        "@query", "lemma_NatHeap.contains_concat2",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882"
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_concat2",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
       ],
       0
     ],
@@ -551,22 +541,30 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_NatHeap.concat",
         "equation_NatHeap.contains", "equation_NatHeap.heap",
-        "equation_NatHeap.ref", "equation_NatHeap.sel", "equation_Prims.nat",
-        "equation_Prims.snd", "fuel_guarded_inversion_Prims.tuple2",
-        "int_inversion",
+        "equation_NatHeap.max", "equation_NatHeap.ref",
+        "equation_NatHeap.sel", "equation_Prims.fst", "equation_Prims.nat",
+        "equation_Prims.snd", "fuel_guarded_inversion_Prims.option",
+        "fuel_guarded_inversion_Prims.tuple2",
+        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
         "interpretation_Tm_abs_db239ec63fd5321f95368f3e43e609f5",
-        "proj_equation_Prims.Mktuple2__2",
+        "interpretation_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
+        "kinding_Tm_arrow_64a7f7bb1256d2656ec950aad3d386c3",
+        "pretyping_ae567c2fb75be05905677af440075565",
+        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_Tm_refine_74660044caf971eb471b746f010299b4",
+        "refinement_interpretation_Tm_refine_2e41fb7d06e112424daaf88d02c96d15",
         "refinement_interpretation_Tm_refine_a4b0e39a0c1109f688bbd3b30c58de8f",
         "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_NatHeap.concat", "unit_typing"
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
+        "typing_NatHeap.concat", "typing_Prims.__proj__Mktuple2__item___1",
+        "typing_Prims.fst", "typing_Tm_abs_db239ec63fd5321f95368f3e43e609f5",
+        "unit_typing"
       ],
       0
     ]

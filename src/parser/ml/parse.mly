@@ -715,7 +715,10 @@ rawDecl:
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings lbs r in
+        if q <> Rec && List.length lbs <> 1
+        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
         TopLevelLet(q, lbs)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
