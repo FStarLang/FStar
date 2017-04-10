@@ -121,7 +121,7 @@ namespace fabc_make
             {
                 WaitForSuccess = true,
                 MaxTaskRetryCount = 1,
-                CommandLine = "apt-get install -y unzip mono-runtime libmono-system-numerics4.0-cil libmono-system-runtime-serialization4.0-cil",
+                CommandLine = "sudo apt-get install -y unzip mono-runtime libmono-system-numerics4.0-cil libmono-system-runtime-serialization4.0-cil libgomp1",
                 UserIdentity = new UserIdentity(new AutoUserSpecification(elevationLevel: ElevationLevel.Admin))
             };
             r.Commit();
