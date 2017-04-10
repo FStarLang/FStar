@@ -4,8 +4,10 @@ open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
+open FStar.Ident
 open FStar.TypeChecker.Env
 
+module SP = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module SC = FStar.Syntax.Const
@@ -18,6 +20,9 @@ module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
 
 type name = bv
+
+// TODO be consistent
+type em_term = term
 
 (*
    f: x:int -> P
@@ -180,6 +185,87 @@ let with_cur_goal (nm:string) (f:goal -> tac<'a>) : tac<'a>
         match p.goals with
         | [] -> fail "No more goals"
         | hd::tl -> f hd))
+
+let cur_goal : tac<goal>
+    = kernel_tac "cur_goal" (
+            fun ps -> match ps.goals with
+                        | hd::_ -> Success (hd,ps)
+                        | _ -> Failed ("No goals left", ps)
+      )
+
+let set_cur_goal (g:goal) : tac<unit>
+    = kernel_tac "set_cur_goal" (
+              fun ps -> match ps.goals with
+                        | hd::tl -> Success ((), {ps with goals = g::tl})
+                        | _ -> Failed ("No goals left", ps)
+      )
+
+// TODO Ignoring arg qualifiers, OK?
+// TODO universes should unify?
+// TODO do we need the environment?
+let rec term_eq t1 t2 = match (SS.compress t1).n, (SS.compress t2).n with
+  | Tm_name x, Tm_name y -> bv_eq x y
+  | Tm_fvar x, Tm_fvar y -> fv_eq x y
+  | Tm_constant x, Tm_constant y -> x = y
+  | Tm_type x, Tm_type y -> x = y
+  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> b1.Length = b2.Length &&
+                                               List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
+                                               term_eq t1 t2 &&
+                                               true //k1 = k2 TODO Fix?
+  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 &&
+                                        a1.Length = a2.Length &&
+                                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) a1 a2
+  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
+                                          comp_eq c1 c2
+  | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
+  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 &&
+                                            bs1.Length = bs2.Length &&
+                                            List.forall2 branch_eq bs1 bs2
+  | _, _ -> false // TODO missing cases
+and comp_eq c1 c2 = match c1.n, c2.n with
+  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO match u's?
+  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2 // TODO match u's?
+  | Comp c1, Comp c2 -> c1.comp_univs = c2.comp_univs &&
+                        c1.effect_name = c2.effect_name &&
+                        term_eq c1.result_typ c2.result_typ &&
+                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) c1.effect_args c2.effect_args &&
+                        eq_flags c1.flags c2.flags
+  | _, _ -> false
+and eq_flags f1 f2 = false // TODO
+and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
+
+// TODO go for bottom up or fold-like structure
+let rec replace_in_term e1 e2 t =
+    BU.print3 "GGG replacing %s for %s in %s\n"
+        (SP.term_to_string e1) (SP.term_to_string e2) (SP.term_to_string t);
+    BU.print1 "GGG TAG OF T = %s\n" (SP.tag_of_term (SS.compress t));
+    if term_eq e1 t
+    then e2
+    else let t' = match (SS.compress t).n with
+                  | Tm_app (f, args) -> BU.print1 "Tm_app %s\n" (string_of_int args.Length);
+                                        Tm_app (replace_in_term e1 e2 f,
+                                                    List.map (fun (a,q) -> (replace_in_term e1 e2 a, q)) args)
+                  | x -> x
+          in {t with n = t'}
+
+let treplace (e1:term) (e2:term) (t:term) =
+    BU.print3 "TAC replacing %s for %s in %s\n"
+        (SP.term_to_string e1) (SP.term_to_string e2) (SP.term_to_string t);
+    replace_in_term e1 e2 t
+
+// TODO universe zero?
+// TODO type is hardcoded to int. need to ask the user for it???
+let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) None Range.dummyRange
+
+let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit>
+  = if false //not (Rel.is_trivial (Rel.teq ¿ENV? t1 t2))
+    then
+        fail "ill-typed rewriting requested"
+    else
+        bind cur_goal (fun g -> 
+        let goal_ty' = treplace e1 e2 (g.goal_ty) in
+        bind (set_cur_goal {g with goal_ty = goal_ty'}) (fun _ ->
+        add_goals [{ context = g.context; witness = None; goal_ty = U.mk_eq2 U_zero t1 e1 e2}]))
 
 let smt : tac<unit> =
     with_cur_goal "smt" (fun g ->

@@ -105,6 +105,17 @@ let mk_tactic_interpretation_2 (ps:proofstate)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<term> =
+  match args with
+  | [(et1, _); (et2, _); (embedded_state, _)] ->
+    Util.print1 "GGG grewrite with args = %s\n" (Print.args_to_string args);
+    let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
+    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let res = run (grewrite_impl (E.type_of_embedded et1) (E.type_of_embedded et2) (E.unembed_term et1) (E.unembed_term et2)) ps in
+    Some (E.embed_result res E.embed_unit FStar.TypeChecker.Common.t_unit)
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
 let rec primitive_steps ps : list<N.primitive_step> =
     let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid nm in {
@@ -143,7 +154,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "binders_of_env_"  1 (binders_of_env ps);
       mk "type_of_binder_"  1 type_of_binder;
       mk "term_eq_"         2 term_eq;
-      mk "print_"           2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit)
+      mk "print_"           2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "grewrite_"        3 (grewrite_interpretation ps)
     ]
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =

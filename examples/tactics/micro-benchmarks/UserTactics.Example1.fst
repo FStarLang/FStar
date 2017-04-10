@@ -167,6 +167,21 @@ let test_print_goal =
   assert_by_tactic (fun () -> print "User print:") //Some auto-thunking or at least some light notation for it
                    (forall (y:int). y==0 ==> 0==y)
 
+let test_grewrite =
+assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ())) (1 + 2 = 2 + 1)
+
+let test_grewrite2 (w x y z:int) =
+assert_by_tactic (fun () -> grewrite (quote (z + y) ()) (quote (y + z) ());
+                            grewrite (quote (x + (y + z)) ()) (quote ((y + z) + x) ());
+                            grewrite (quote (w + ((y + z) + x)) ()) (quote (((y + z) + x) + w) ())
+                 ) (w + (x + (z + y)) = (y + z) + (x + w))
+
+let test_grewrite3 (w x y z : int) =
+assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ());
+                            grewrite (quote (3, 3+4) ()) (quote (3,7) ())
+                 )
+                 ( (1+2, 3+4) = (5-2, 7+0) )
+
 
 let simple_equality_assertions =
   assert_by_tactic rewrite_all_equalities

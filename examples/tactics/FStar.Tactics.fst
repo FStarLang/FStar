@@ -30,6 +30,7 @@ noeq type formula =
   | App    : term -> term -> formula
   | Name   : binder -> formula
    (* TODO more cases *) 
+  | IntLit : int -> formula
   //Abs   : binders -> term -> formula //Named repr
   //Match : ....
 
@@ -161,3 +162,6 @@ let apply_lemma (t:term) : Tac unit = TAC?.reflect (apply_lemma_ t)
 
 assume val print_ : string -> tac unit
 let print (msg:string) : Tac unit = TAC?.reflect (print_ msg)
+
+assume val grewrite_ : term -> term -> tac unit
+let grewrite (e1:term) (e2:term) : Tac unit = TAC?.reflect (grewrite_ e1 e2)
