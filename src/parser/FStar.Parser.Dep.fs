@@ -103,8 +103,6 @@ let lowercase_module_name f =
     (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
-  //try to convert the cygwin paths to windows paths
-  let include_directories = List.map FStar.Common.try_convert_file_name_to_mixed include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
