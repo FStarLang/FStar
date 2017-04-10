@@ -1342,7 +1342,11 @@ and post_process_branches (env:Env.env) branches = post_process_list post_proces
 and post_process_branch (env:Env.env) b =
   post_process_triple post_process_pat (post_process_option post_process_term) post_process_term env b
 
-and post_process_pat (env:Env.env) (p:pat) :pat = post_process_withinfo_t post_process_pat' post_process_term' env p
+and post_process_pat (env:Env.env) (p:pat) :pat =
+  let dummy_term = mk p.ty None Range.dummyRange in
+  let t' = (SS.compress dummy_term).n in
+  { p with v = post_process_pat' env p.v; ty = post_process_term' env t' }
+  //post_process_withinfo_t post_process_pat' post_process_term' env p
 
 and post_process_pat' (env:Env.env) (p:pat') :pat' =
   match p with

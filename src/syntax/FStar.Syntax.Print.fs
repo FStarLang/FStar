@@ -238,6 +238,10 @@ let quals_to_string' quals =
    (higher-order unification) produces types containing lots of
    redexes that should first be reduced. *)
 let rec term_to_string x =
+  let s = term_to_string' x in
+  (tag_of_term x) ^ " << " ^ s ^ " >> "
+
+and term_to_string' x =
   let x = Subst.compress x in
   let x = if Options.print_implicits() then x else unmeta x in
   match x.n with
