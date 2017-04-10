@@ -385,7 +385,7 @@ atomicPattern:
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
-  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(qlident, EQUALS, tuplePattern)) RBRACE
+  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
@@ -401,6 +401,12 @@ atomicPattern:
       { mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
+
+fieldPattern:
+  | p = separated_pair(qlident, EQUALS, tuplePattern)
+      { p }
+  | lid=qlident
+      { lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do NOT allow _ in multibinder () since it creates reduce/reduce conflicts when  *)
@@ -712,6 +718,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
+  | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)
