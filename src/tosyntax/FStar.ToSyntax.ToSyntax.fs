@@ -1104,61 +1104,95 @@ and desugar_args env args =
 and desugar_comp r env t =
     let fail : string -> 'a = fun msg -> raise (Error(msg, r)) in
     let is_requires (t, _) = match (unparen t).tm with
-        | Requires _ -> true
-        | _ -> false in
+      | Requires _ -> true
+      | _ -> false
+    in
     let is_ensures (t, _) = match (unparen t).tm with
-        | Ensures _ -> true
-        | _ -> false in
+      | Ensures _ -> true
+      | _ -> false
+    in
     let is_app head (t, _) = match (unparen t).tm with
-       | App({tm=Var d}, _, _) -> d.ident.idText = head
-       | _ -> false in
+      | App({tm=Var d}, _, _) -> d.ident.idText = head
+      | _ -> false
+    in
+    let is_smt_pat (t,_) =
+      BU.print1 "is_smt_pat called with %s\n" (term_to_string t) ;
+      match (unparen t).tm with
+      | Construct (cons, [{tm=Construct (smtpat, _)}, _; _]) ->
+        let b1 = Ident.lid_equals cons C.cons_lid  in
+        let b2 =
+          BU.for_some (fun s -> smtpat.str = s)
+            (* the smt pattern does not seem to be disambiguated yet at this point *)
+            ["SMTPat" ; "SMTPatT" ; "SMTPatOr"]
+            (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
+        in
+        let bool_to_string b = if b then "true" else "false" in
+        BU.print2 "Pattern valid booleans are %s %s\n" (bool_to_string b1) (bool_to_string b2) ;
+        b1 && b2
+      | _ -> false
+    in
     let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
-        let head, args = head_and_args t in
-        match head.tm with
-            | Name lemma when (lemma.ident.idText = "Lemma") -> //need to add the unit result type and the empty SMTPat list, if n
-              let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
-              let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
-              let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type_level, Nothing in
-              let args = match args with
-                    | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-                    | [ens] -> [unit_tm;req_true;ens;nil_pat] //a single ensures clause
-                    | [req;ens] when (is_requires req && is_ensures ens) -> [unit_tm;req;ens;nil_pat]
-                    | [ens;dec] when (is_ensures ens && is_decreases dec) -> [unit_tm;req_true;ens;nil_pat;dec]
-                    | [req;ens;dec] when (is_requires req && is_ensures ens && is_app "decreases" dec) -> [unit_tm;req;ens;nil_pat;dec]
-                    | more -> unit_tm::more in
-              let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
-              head_and_attributes, args
+      let head, args = head_and_args t in
+      match head.tm with
+      | Name lemma when (lemma.ident.idText = "Lemma") ->
+        (* need to add the unit result type and the empty SMTPat list, if n *)
+        let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
+        let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
+        let req_true =
+          let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
+          mk_term req t.range Type_level, Nothing
+        in
+        let args = match args with
+          | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
+          (* a single ensures clause *)
+          | [ens] -> [unit_tm;req_true;ens;nil_pat]
+          | [ens;smtpat] when is_smt_pat smtpat ->
+              [unit_tm;req_true;ens;smtpat]
+          | [req;ens] when (is_requires req && is_ensures ens) ->
+              [unit_tm;req;ens;nil_pat]
+          | [ens;dec] when (is_ensures ens && is_decreases dec) ->
+              [unit_tm;req_true;ens;nil_pat;dec]
+          | [ens;dec;smtpat] when (is_ensures ens && is_decreases dec && is_smt_pat smtpat) ->
+              [unit_tm;req_true;ens;smtpat;dec]
+          | [req;ens;dec] when (is_requires req && is_ensures ens && is_decreases dec) ->
+              [unit_tm;req;ens;nil_pat;dec]
+          | more -> unit_tm::more
+        in
+        let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
+        head_and_attributes, args
 
-            | Name l when Env.is_effect_name env l ->
-             //we have an explicit effect annotation ... no need to add anything
-             fail_or env (Env.try_lookup_effect_name_and_attributes env) l, args
+      | Name l when Env.is_effect_name env l ->
+        (* we have an explicit effect annotation ... no need to add anything *)
+        fail_or env (Env.try_lookup_effect_name_and_attributes env) l, args
 
 
-            | Name l when (lid_equals (Env.current_module env) C.prims_lid //we're right at the beginning of Prims, when Tot isn't yet fully defined
-                               && l.ident.idText = "Tot") ->
-             //we have an explicit effect annotation ... no need to add anything
-             (Ident.set_lid_range Const.effect_Tot_lid head.range,  []), args
+      (* we're right at the beginning of Prims, when Tot isn't yet fully defined *)
+      | Name l when (lid_equals (Env.current_module env) C.prims_lid
+                          && l.ident.idText = "Tot") ->
+        (* we have an explicit effect annotation ... no need to add anything *)
+        (Ident.set_lid_range Const.effect_Tot_lid head.range,  []), args
 
-            | Name l when (lid_equals (Env.current_module env) C.prims_lid //we're right at the beginning of Prims, when GTot isn't yet fully defined
-                               && l.ident.idText = "GTot") ->
-             //we have an explicit effect annotation ... no need to add anything
-             (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
+      (* we're right at the beginning of Prims, when GTot isn't yet fully defined *)
+      | Name l when (lid_equals (Env.current_module env) C.prims_lid
+                          && l.ident.idText = "GTot") ->
+        (* we have an explicit effect annotation ... no need to add anything *)
+        (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
 
-            | Name l when (l.ident.idText="Type"
-                           || l.ident.idText="Type0"
-                           || l.ident.idText="Effect") ->
-              //the default effect for Type is always Tot
-              (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
+      | Name l when (l.ident.idText="Type"
+                      || l.ident.idText="Type0"
+                      || l.ident.idText="Effect") ->
+        (* the default effect for Type is always Tot *)
+        (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
 
-            | _ ->
-             let default_effect =
-               if Options.ml_ish ()
-               then Const.effect_ML_lid
-               else (if Options.warn_default_effects()
-                     then FStar.Errors.warn head.range "Using default effect Tot";
-                     Const.effect_Tot_lid) in
-             (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
+      | _ ->
+        let default_effect =
+          if Options.ml_ish ()
+          then Const.effect_ML_lid
+          else (if Options.warn_default_effects()
+                then FStar.Errors.warn head.range "Using default effect Tot";
+                Const.effect_Tot_lid) in
+        (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
@@ -1169,16 +1203,20 @@ and desugar_comp r env t =
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in
     let rest = desugar_args env rest in
-    let dec, rest = rest |> List.partition (fun (t, _) ->
-            begin match t.n with
-                | Tm_app({n=Tm_fvar fv}, [_]) -> S.fv_eq_lid fv C.decreases_lid
-                | _ -> false
-            end) in
+    let dec, rest =
+      let is_decrease (t, _) = match t.n with
+        | Tm_app({n=Tm_fvar fv}, [_]) -> S.fv_eq_lid fv C.decreases_lid
+        | _ -> false
+      in
+      rest |> List.partition is_decrease
+    in
 
-    let decreases_clause = dec |> List.map (fun (t, _) ->
-                match t.n with
-                | Tm_app(_, [(arg, _)]) -> DECREASES arg
-                | _ -> failwith "impos") in
+    let decreases_clause =
+      dec |> List.map (fun (t, _) ->
+        match t.n with
+        | Tm_app(_, [(arg, _)]) -> DECREASES arg
+        | _ -> failwith "impos")
+    in
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)
         let is_empty (l:list<'a>) = match l with | [] -> true | _ -> false in
@@ -1193,32 +1231,39 @@ and desugar_comp r env t =
     else if no_additional_args
          && lid_equals eff C.effect_GTot_lid
     then mk_GTotal result_typ
-    else let flags =
-            if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
-            else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
-            else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
-            else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
-            else [] in
-        let flags = flags @ cattributes in
-        let rest =
-            if lid_equals eff C.effect_Lemma_lid
-            then match rest with
-                    | [req;ens;(pat, aq)] ->
-                      let pat = match pat.n with
-                        | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it
-                          let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
-                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero] in //;U_zero] in
-                          S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
-                        | _ -> pat in
-                        [req; ens;
-                        (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
-                    | _ -> rest
-            else rest in
-        mk_Comp ({comp_univs=universes;
-                  effect_name=eff;
-                  result_typ=result_typ;
-                  effect_args=rest;
-                  flags=flags@decreases_clause})
+    else
+      let flags =
+        if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
+        else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
+        else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
+        else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
+        else []
+      in
+      let flags = flags @ cattributes in
+      let rest =
+        if lid_equals eff C.effect_Lemma_lid
+        then
+          match rest with
+          | [req;ens;(pat, aq)] ->
+            let pat = match pat.n with
+              (* we really want the empty pattern to be in universe S 0 rather than generalizing it *)
+              | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
+                let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
+                let pattern =
+                  S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero]
+                in
+                S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
+              | _ -> pat
+            in
+            [req; ens; (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
+          | _ -> rest
+        else rest
+      in
+      mk_Comp ({comp_univs=universes;
+                effect_name=eff;
+                result_typ=result_typ;
+                effect_args=rest;
+                flags=flags@decreases_clause})
 
 and desugar_formula env (f:term) : S.term =
   let connective s = match s with
