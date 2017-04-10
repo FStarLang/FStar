@@ -1194,8 +1194,9 @@
       2,
       1,
       [
-        "@query", "data_elim_Ex11a.Cons", "disc_equation_Ex11a.Cons",
-        "equation_Ex11a.distinct", "equation_FStar.HyperHeap.disjoint",
+        "@MaxIFuel_assumption", "@query", "data_elim_Ex11a.Cons",
+        "disc_equation_Ex11a.Cons", "equation_Ex11a.distinct",
+        "equation_FStar.HyperHeap.disjoint",
         "fuel_guarded_inversion_Ex11a.bot", "lemma_Ex11a.lemma_mem_rid",
         "pretyping_cfb04784214c7b625dc274210af5ad8b",
         "proj_equation_Ex11a.Bot_r", "projection_inverse_BoxBool_proj_0",

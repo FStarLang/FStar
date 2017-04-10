@@ -167,10 +167,10 @@
     [
       "MRefHeap.alloc_ref",
       13,
-      4,
       2,
+      1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "data_elim_Prims.Mktuple2",
         "data_elim_Prims.Some", "disc_equation_Prims.None",
         "equation_MRefHeap.contains", "equation_MRefHeap.heap",
@@ -178,6 +178,7 @@
         "equation_MRefHeap.sel", "equation_Prims.dfst",
         "equation_Prims.dsnd", "equation_Prims.fst", "equation_Prims.nat",
         "equation_Prims.snd", "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2", "int_inversion",
         "interpretation_Tm_abs_2d207d6d2a655b1bd70ed6b69d4afaad",
         "interpretation_Tm_arrow_7c94c96dc293d3467019c1d15bb27fe9",

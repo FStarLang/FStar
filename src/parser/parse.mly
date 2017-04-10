@@ -70,8 +70,8 @@ open FStar_String
 %token <float> IEEE64
 %token <char> CHAR
 %token <bool> LET
-%token <FStar_Syntax_Syntax.fsdoc> FSDOC
-%token <FStar_Syntax_Syntax.fsdoc> FSDOC_STANDALONE
+%token <FStar_Parser_AST.fsdoc> FSDOC
+%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION

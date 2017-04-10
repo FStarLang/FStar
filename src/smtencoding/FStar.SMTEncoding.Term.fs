@@ -110,7 +110,7 @@ type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
   | DefineFun  of string * list<sort> * sort * term * caption //defined function
-  | Assume     of term   * caption * option<string>           //optionally named
+  | Assume     of term   * caption * string                   //named top-level assertion
   | Caption    of string
   | Eval       of term
   | Echo       of string
@@ -364,7 +364,7 @@ let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, a
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
-    Assume(mkEq(mkInteger' id norng, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[]) norng]) norng) norng, Some "fresh token", Some a_name)
+    Assume(mkEq(mkInteger' id norng, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[]) norng]) norng) norng, Some "fresh token", a_name)
 
 let fresh_constructor (name, arg_sorts, sort, id) =
   let id = string_of_int id in
@@ -373,7 +373,7 @@ let fresh_constructor (name, arg_sorts, sort, id) =
   let capp = mkApp(name, bvars) norng in
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
   let a_name = "constructor_distinct_" ^name in
-  Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng, Some "Constructor distinct", Some a_name)
+  Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng, Some "Constructor distinct", a_name)
 
 let injective_constructor (name, fields, sort) =
     let n_bvars = List.length fields in
@@ -390,7 +390,7 @@ let injective_constructor (name, fields, sort) =
             if projectible
             then let a_name = "projection_inverse_"^name in
                  [proj_name;
-                  Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng, Some "Projection inverse", Some a_name)]
+                  Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng, Some "Projection inverse", a_name)]
             else [proj_name])
     |> List.flatten
 
@@ -451,72 +451,99 @@ let name_macro_binders sorts =
     let names, binders, n = name_binders_inner (Some "__") [] 0 sorts in
     List.rev names, binders
 
-let termToSmt t =
-  let remove_guard_free pats =
-    pats |> List.map (fun ps ->
-      ps |> List.map (fun tm ->
-        match tm.tm with
-        | App(Var "Prims.guard_free", [{tm=BoundV _}]) -> tm
-        | App(Var "Prims.guard_free", [p]) -> p
-        | _ -> tm))
-  in
-  let rec aux' n (names:list<fv>) t = match t.tm with
-    | Integer i     -> i
-    | BoundV i ->
-      List.nth names i |> fst
-    | FreeV x -> fst x
-    | App(op, []) -> op_to_string op
-    | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
-    | Labeled(t, _, _) -> aux n names t
-    | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
-    | Quant(qop, pats, wopt, sorts, body) ->
-      let names, binders, n = name_binders_inner None names n sorts in
-      let binders = binders |> String.concat " " in
-      let pats = remove_guard_free pats in
-      let pats_str =
-        match pats with
-        | [[]]
-        | [] -> ""
-        | _ ->
-          pats
-          |> List.map (fun pats ->
-            format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p ->
-              format1 "%s" (aux n names p)) pats)))
-          |> String.concat "\n"
+let termToSmt
+  : enclosing_name:string -> t:term -> string
+  =
+  fun enclosing_name t ->
+      let next_qid =
+          let ctr = BU.mk_ref 0 in
+          fun depth ->
+            let n = !ctr in
+            BU.incr ctr;
+            if n = 0 then enclosing_name
+            else BU.format2 "%s.%s" enclosing_name (BU.string_of_int n)
       in
-      begin match pats, wopt with
-        | [[]], None
-        | [], None -> BU.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
-        | _ -> BU.format5 "(%s (%s)\n (! %s\n %s %s))"
-                          (qop_to_string qop)
-                          binders
-                          (aux n names body)
-                          (weightToSmt wopt)
-                          pats_str
-      end
-    | Let (es, body) ->
-      (* binders are reversed but according to the smt2 standard *)
-      (* substitution should occur in parallel and order should not matter *)
-      let names, binders, n =
-        List.fold_left (fun (names0, binders, n0) e ->
-          let nm = "@lb" ^ string_of_int n0 in
-          let names0 = (nm, Term_sort)::names0 in
-          let b = BU.format2 "(%s %s)" nm (aux n names e) in
-          names0, b::binders, n0+1)
-        (names, [], n)
-        es
+      let remove_guard_free pats =
+        pats |> List.map (fun ps ->
+          ps |> List.map (fun tm ->
+            match tm.tm with
+            | App(Var "Prims.guard_free", [{tm=BoundV _}]) -> tm
+            | App(Var "Prims.guard_free", [p]) -> p
+            | _ -> tm))
       in
-      BU.format2 "(let (%s) %s)"
-                 (String.concat " " binders)
-                 (aux n names body)
+      let rec aux' depth n (names:list<fv>) t =
+        let aux = aux (depth + 1) in
+        match t.tm with
+        | Integer i     -> i
+        | BoundV i ->
+          List.nth names i |> fst
+        | FreeV x -> fst x
+        | App(op, []) -> op_to_string op
+        | App(op, tms) -> BU.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
+        | Labeled(t, _, _) -> aux n names t
+        | LblPos(t, s) -> BU.format2 "(! %s :lblpos %s)" (aux n names t) s
+        | Quant(qop, pats, wopt, sorts, body) ->
+          let qid = next_qid () in
+          let names, binders, n = name_binders_inner None names n sorts in
+          let binders = binders |> String.concat " " in
+          let pats = remove_guard_free pats in
+          let pats_str =
+            match pats with
+            | [[]]
+            | [] -> ";;no pats"
+            | _ ->
+              pats
+              |> List.map (fun pats ->
+                format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p ->
+                  format1 "%s" (aux n names p)) pats)))
+              |> String.concat "\n"
+          in
+          if depth = 0
+          then let qbody =
+                  match pats, wopt with
+                  | [], None
+                  | [[]], None ->
+                    aux n names body
+                  | _ ->
+                    BU.format3 "(! %s\n %s\n%s)"
+                        (aux n names body)
+                        (weightToSmt wopt)
+                        pats_str in
+               BU.format "(%s (%s)\n %s)"
+                    [qop_to_string qop;
+                     binders;
+                     qbody]
+          else BU.format "(%s (%s)\n (! %s\n %s\n%s\n:qid %s))"
+                    [qop_to_string qop;
+                     binders;
+                     aux n names body;
+                     weightToSmt wopt;
+                     pats_str;
+                     qid]
 
-  and aux n names t =
-    let s = aux' n names t in
-    if t.rng <> norng
-    then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
-    else s
-  in
-  aux 0 [] t
+        | Let (es, body) ->
+          (* binders are reversed but according to the smt2 standard *)
+          (* substitution should occur in parallel and order should not matter *)
+          let names, binders, n =
+            List.fold_left (fun (names0, binders, n0) e ->
+              let nm = "@lb" ^ string_of_int n0 in
+              let names0 = (nm, Term_sort)::names0 in
+              let b = BU.format2 "(%s %s)" nm (aux n names e) in
+              names0, b::binders, n0+1)
+            (names, [], n)
+            es
+          in
+          BU.format2 "(let (%s) %s)"
+                     (String.concat " " binders)
+                     (aux n names body)
+
+      and aux depth n names t =
+        let s = aux' depth n names t in
+        if t.rng <> norng
+        then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
+        else s
+      in
+      aux 0 0 [] t
 
 
 let caption_to_string = function
@@ -540,13 +567,12 @@ let rec declToSmt z3options decl =
   | DefineFun(f,arg_sorts,retsort,body,c) ->
     let names, binders = name_macro_binders arg_sorts in
     let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
-    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt body)
-  | Assume(t,c,Some n) ->
-    format3 "%s(assert (!\n%s\n:named %s))" (caption_to_string c) (termToSmt t) (escape n)
-  | Assume(t,c,None) ->
-    format2 "%s(assert %s)" (caption_to_string c) (termToSmt t)
+    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt (escape f) body)
+  | Assume(t,c,n) ->
+    let n = escape n in
+    format3 "%s(assert (! %s\n:named %s))" (caption_to_string c) (termToSmt n t) n
   | Eval t ->
-    format1 "(eval %s)" (termToSmt t)
+    format1 "(eval %s)" (termToSmt "eval" t)
   | Echo s ->
     format1 "(echo \"%s\")" s
   | CheckSat -> "(check-sat)"

@@ -721,10 +721,10 @@
       "BinaryTrees.count_remove_root",
       5,
       2,
-      2,
+      1,
       [
-        "@query", "binder_x_4f12cf247a1f2a0cd3974332a65f3b77_0",
-        "constructor_distinct_BinaryTrees.Leaf",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "binder_x_4f12cf247a1f2a0cd3974332a65f3b77_0",
         "constructor_distinct_BinaryTrees.Node",
         "data_elim_BinaryTrees.Node", "disc_equation_BinaryTrees.Leaf",
         "disc_equation_BinaryTrees.Node", "equation_Prims.nat",

@@ -459,7 +459,7 @@ let filter_assertions core theory = match core with
 | Some core ->
     let theory', n_retained, n_pruned =
         List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
-        | Assume(_, _, Some name) ->
+        | Assume(_, _, name) ->
             if List.contains name core
             then d::theory, n_retained+1, n_pruned
             else if BU.starts_with name "@"
@@ -470,9 +470,9 @@ let filter_assertions core theory = match core with
     let missed_assertions th core =
     let missed =
         core |> List.filter (fun nm ->
-            th |> BU.for_some (function Assume(_, _, Some nm') -> nm=nm' | _ -> false) |> not)
+            th |> BU.for_some (function Assume(_, _, nm') -> nm=nm' | _ -> false) |> not)
         |> String.concat ", " in
-    let included = th |> List.collect (function Assume(_, _, Some nm) -> [nm] | _ -> []) |> String.concat ", " in
+    let included = th |> List.collect (function Assume(_, _, nm) -> [nm] | _ -> []) |> String.concat ", " in
     BU.format2 "missed={%s}; included={%s}" missed included in
     if Options.hint_info ()
     && Options.debug_any()
@@ -496,7 +496,7 @@ let mk_cb used_unsat_core cb (uc_errs, time) =
         | Inr (_, ek) -> cb (Inr ([],ek), time) // if we filtered the theory, then the error message is unreliable
     else cb (uc_errs, time)
 
-let mk_input theory = 
+let mk_input theory =
     let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if Options.log_queries() then query_logging.write_to_log r ;
     r
@@ -509,8 +509,8 @@ let ask_1_core (core:unsat_core) label_messages qry (cb: (either<unsat_core, (er
     bg_scope := [] ; // Now consumed.
     run_job ({job=z3_job false label_messages input; callback=cb})
 
-let ask_n_cores (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =     
-    let theory = List.flatten (match scope with 
+let ask_n_cores (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
+    let theory = List.flatten (match scope with
         | Some s -> (List.rev s)
         | None   -> bg_scope := [] ; // Not needed; discard.
                     (List.rev !fresh_scope)) in

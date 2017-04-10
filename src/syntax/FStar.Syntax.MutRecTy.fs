@@ -40,7 +40,6 @@ let disentangle_abbrevs_from_bundle
     (quals:   list<qualifier>)
     (members: list<lident>)
     (rng:   FStar.Range.range)
-    (doc:   option<S.fsdoc>)
     : sigelt * list<sigelt> =
 
     (* Gather the list of type abbrevs *)
@@ -56,7 +55,6 @@ let disentangle_abbrevs_from_bundle
    | [] ->
      (* if there are no type abbreviations, then do not change anything. *)
      { sigel = Sig_bundle (sigelts, quals, members);
-       sigdoc = doc;
        sigrng = rng }, []
    | _ ->
 
@@ -198,7 +196,6 @@ let disentangle_abbrevs_from_bundle
       in
 
       let new_bundle = { sigel = Sig_bundle (inductives_with_abbrevs_unfolded, quals, new_members);
-                         sigdoc = doc;
                          sigrng = rng }
       in
 
