@@ -226,7 +226,7 @@ let seq_inv_com' env c1 c2 l h0 =
     | None, _ -> ()
     | Some (), h2 -> ()
 
-#set-options "--z3rlimit 100"
+#set-options "--z3rlimit 150"
 
 val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))

@@ -166,7 +166,7 @@ let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:he
   = ()
 #reset-options
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let lemma_merge_height_independence (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   (h_1:heap{live uf h_1 /\ well_formed uf h_1})
   (h_2:heap{live uf h_2 /\ well_formed uf h_2})
