@@ -207,6 +207,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_datacon _ ->
           extract_bundle g se
 
+        // TODO:
+        //   - also inline the definition of return and bind
+        //   - sort out the OCaml module business (is it possible actually?)
+        //        - remove the very hacky hack for calling raise
         | Sig_new_effect(ed) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
@@ -251,7 +255,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let lbname = Inl ({ppname=a_lid.ident; index=0; sort=a.action_defn}) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
-            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None FStar.Range.dummyRange in
+            let action_lb = mk (Tm_let(lbs, a.action_defn)) None FStar.Range.dummyRange in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
             BU.print1 "Action name: %s\n" (a_lid.ident.idText);
             let exp, tysc = match a_let.expr with

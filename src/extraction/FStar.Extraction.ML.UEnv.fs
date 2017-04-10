@@ -148,7 +148,7 @@ let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
     let x = BU.find_map g.gamma (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
         // amazingly hacky hack
-        // | Fv (fv', t) when fv'.fv_name.v.str = "FStar.DM4F.Exceptions.EXN.__proj__EXN__item__raise" -> Some t
+        | Fv (fv', t) when fv'.fv_name.v.str = "FStar.DM4F.Exceptions.EXN.__proj__EXN__item__raise" -> Some t
         | _ -> None) in
     match x with
         | None ->
