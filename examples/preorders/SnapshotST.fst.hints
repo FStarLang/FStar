@@ -31,20 +31,17 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_Preorder.stable", "equation_Prims.fst",
-        "equation_Prims.snd", "equation_SnapshotST.snapshot_rel",
+        "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
         "equation_SnapshotST.witnessing_predicate",
-        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2", "kinding_Prims.option@tok",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_1bba57771335d347501306d1b28b9253",
-        "typing_Prims.Mktuple2._1", "typing_Prims.fst", "typing_Prims.snd",
-        "unit_typing"
+        "lemma_Prims.invertOption", "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_Tm_refine_69f4507bee77a61657e8d68850a06b96",
+        "typing_Prims.fst", "typing_Prims.snd", "unit_typing"
       ],
       0
     ],

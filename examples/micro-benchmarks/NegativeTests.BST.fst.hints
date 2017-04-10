@@ -39,9 +39,9 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "assumption_Prims.option_haseq",
-        "haseqTm_refine_96da7bad5ebe66e395a507d441709378", "int_inversion",
+        "haseqTm_refine_8b06c75bf6335b4a8412e4f057ce63ff", "int_inversion",
         "kinding_NegativeTests.BST.tree@tok"
       ],
       0

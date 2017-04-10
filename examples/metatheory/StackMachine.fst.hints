@@ -412,9 +412,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TEq",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TEq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_268a2491a90b7114d30f79789bdabdf8"
+        "refinement_interpretation_Tm_refine_013f03405ee56e2bee5ec40dee6f6602"
       ],
       0
     ],
@@ -639,9 +639,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiNConst",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiNConst",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_66a300e47203a51a833dc63ffe41f992"
+        "refinement_interpretation_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0
     ],
@@ -651,9 +652,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiNConst",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiNConst",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_66a300e47203a51a833dc63ffe41f992"
+        "refinement_interpretation_Tm_refine_a56f6ca6150cb01114a8fab36ff93703"
       ],
       0
     ],
@@ -664,9 +666,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBConst",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBConst",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_08781b66d14e8fdf262d86ca8ddec988"
+        "refinement_interpretation_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0
     ],
@@ -676,9 +679,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBConst",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBConst",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_08781b66d14e8fdf262d86ca8ddec988"
+        "refinement_interpretation_Tm_refine_55dae19a239461194000bc379645c48e"
       ],
       0
     ],
@@ -689,9 +693,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBinop",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBinop",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7d370fea588d22de7a2f7f034b8e0655"
+        "refinement_interpretation_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0
     ],
@@ -701,9 +706,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBinop",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBinop",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7d370fea588d22de7a2f7f034b8e0655"
+        "refinement_interpretation_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0
     ],
@@ -713,9 +719,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBinop",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBinop",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7d370fea588d22de7a2f7f034b8e0655"
+        "refinement_interpretation_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0
     ],
@@ -725,9 +732,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBinop",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBinop",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7d370fea588d22de7a2f7f034b8e0655"
+        "refinement_interpretation_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0
     ],
@@ -738,7 +746,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TiBinop",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_StackMachine.TiBinop",
         "proj_equation_StackMachine.TiBinop_arg1",
         "proj_equation_StackMachine.TiBinop_arg2",
         "proj_equation_StackMachine.TiBinop_res",
@@ -746,7 +755,7 @@
         "projection_inverse_StackMachine.TiBinop_arg1",
         "projection_inverse_StackMachine.TiBinop_arg2",
         "projection_inverse_StackMachine.TiBinop_res",
-        "refinement_interpretation_Tm_refine_7d370fea588d22de7a2f7f034b8e0655"
+        "refinement_interpretation_Tm_refine_ca5cda80d86a5fe3c677897fc0fef6ed"
       ],
       0
     ],
@@ -770,9 +779,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TNil",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TNil",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_13db1b8ebb7af4d1bedb892e3c83e4b8"
+        "refinement_interpretation_Tm_refine_f199955d1c0a09a2e1c2187aa1c27dfb"
       ],
       0
     ],
@@ -783,9 +792,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e5c8c3c8d5981075c2759aca94cd91dc"
+        "refinement_interpretation_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0
     ],
@@ -795,9 +804,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e5c8c3c8d5981075c2759aca94cd91dc"
+        "refinement_interpretation_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0
     ],
@@ -807,9 +816,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e5c8c3c8d5981075c2759aca94cd91dc"
+        "refinement_interpretation_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0
     ],
@@ -820,13 +829,13 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TCons",
         "proj_equation_StackMachine.TCons_s1",
         "proj_equation_StackMachine.TCons_s2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_StackMachine.TCons_s1",
         "projection_inverse_StackMachine.TCons_s2",
-        "refinement_interpretation_Tm_refine_e5c8c3c8d5981075c2759aca94cd91dc"
+        "refinement_interpretation_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0
     ],
@@ -837,13 +846,13 @@
       2,
       1,
       [
-        "@query", "disc_equation_StackMachine.TCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_StackMachine.TCons",
         "proj_equation_StackMachine.TCons_s2",
         "proj_equation_StackMachine.TCons_s3",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_StackMachine.TCons_s2",
         "projection_inverse_StackMachine.TCons_s3",
-        "refinement_interpretation_Tm_refine_e5c8c3c8d5981075c2759aca94cd91dc"
+        "refinement_interpretation_Tm_refine_71c338e63ae841db80789b96cbe806f6"
       ],
       0
     ],
