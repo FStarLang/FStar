@@ -62,12 +62,6 @@ type tac<'a> = {
     kernel:bool;
 }
 
-let as_tac name b f = {
-    tac_f=f;
-    tac_name=name;
-    kernel=b;
-}
-
 let kernel_tac n t = {tac_f=t; tac_name=n; kernel=true}
 let user_tac n t = {tac_f=t; tac_name=n; kernel=false}
 let name_tac n t = {t with tac_name=n; kernel=false}
