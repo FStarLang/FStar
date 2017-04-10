@@ -754,7 +754,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 else app
             end
         | None ->
-            raise (Error ("Constructor " ^ l.str ^ " not found", top.range))
+            let error_msg =
+              match Env.try_lookup_effect_name env l with
+              | None -> "Constructor " ^ l.str ^ " not found"
+              | Some _ -> "Effect " ^ l.str ^ " used at an unexpected position"
+            in
+            raise (Error (error_msg, top.range))
         end
 
     | Sum(binders, t) ->
