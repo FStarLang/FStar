@@ -329,7 +329,7 @@ unfold let st_trivial       (heap:Type) (a:Type)
 
 new_effect {
   STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-  with return_wp      = st_return heap
+  with return_wp    = st_return heap
      ; bind_wp      = st_bind_wp heap
      ; if_then_else = st_if_then_else heap
      ; ite_wp       = st_ite_wp heap

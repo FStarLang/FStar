@@ -127,7 +127,9 @@ three steps:
      (obtaining a .NET binary for F\*);
 
   **Step 2.** extract the sources of F* itself to OCaml
-     using the F* binary produced at step 1 (or even a previous step 3);
+     using the F* binary produced at step 1 (or even a previous step 3) —
+     **Note:** this no longer works reliably with the .NET binary, please
+     consider doing 3-2-3 instead of 1-2-3;
 
   **Step 3.** re-build F* using the OCaml compiler from the code
      generated at step 2 (obtaining a faster native binary for F\*).

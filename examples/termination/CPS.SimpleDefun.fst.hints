@@ -17,9 +17,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_CPS.SimpleDefun.C1",
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+        "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0
     ],
@@ -29,9 +29,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_CPS.SimpleDefun.C1",
+        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
+        "refinement_interpretation_CPS.SimpleDefun_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
       ],
       0
     ],
@@ -41,7 +41,8 @@
       2,
       1,
       [
-        "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_99791f65bbeea99a630052cdf78a93a2_0",
         "constructor_distinct_CPS.SimpleDefun.C0",
         "disc_equation_CPS.SimpleDefun.C0",
@@ -57,7 +58,8 @@
       2,
       1,
       [
-        "@query", "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"

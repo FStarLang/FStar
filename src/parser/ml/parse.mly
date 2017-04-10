@@ -1,33 +1,6 @@
 %{
 (*
- Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
-   4 s/r conflicts on BAR
-      function | P -> match with | Q -> _ | R -> _
-      function | P -> function ...  (x 2)
-      function | P -> try e with | ...
-
-   1 s/r conflict on SEMICOLON
-       fun x -> e1 ; e2
-     is parsed as
-        (fun x -> e1; e2)
-     rather than
-        (fun x -> e1); e2
-
-   2 s/r conflict on DOT
-      A.B ^ .C  (x 2)
-
-   1 s/r conflict on LBRACE
-
-      Consider:
-          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
-
-      This is parsed as:
-        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
-      rather than:
-        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
-
-      Analogous ambiguities with -> and * as well.
-
+ We are expected to have only 6 shift-reduce conflicts.
  A lot (142) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -244,7 +217,7 @@ option___anonymous_5_:
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                            (tactic)
+                                                              (tactic)
 in
     ( Some x )}
 
@@ -1428,7 +1401,7 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| tmIff SUBTYPE typ option___anonymous_5_
+| tmIff SUBTYPE tmIff option___anonymous_5_
     {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
       ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm

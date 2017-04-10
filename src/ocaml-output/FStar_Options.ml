@@ -865,7 +865,7 @@ let rec specs :
                    in
                 List uu____1573)), "[option]")), "Z3 command line options");
       (FStar_Getopt.noshort, "z3refresh",
-        (FStar_Getopt.ZeroArgs ((fun uu____1587  -> Bool false))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1587  -> Bool true))),
         "Restart Z3 after each query; useful for ensuring proof robustness");
       (FStar_Getopt.noshort, "z3rlimit",
         (FStar_Getopt.OneArg

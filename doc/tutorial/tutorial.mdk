@@ -1853,7 +1853,7 @@ Unsurprisingly, it fails, on several counts:
 Let's try again:
 
     val sort: l:list int -> Tot (m:list int{sorted m
-                                         /\ forall i. mem i l <==> mem i m})
+                                         /\ (forall i. mem i l <==> mem i m)})
                                 (decreases (length l))
 
 And here are a couple of lemmas about `partition` and `sorted`:
@@ -1933,7 +1933,7 @@ the arguments to those lemmas. We can do much better.
 
 If only we had given `partition` and `sorted` richer intrinsic types,
 types that captured the properties that we proved using lemmas, we
-wouldn't have had to pollute out implementation of quicksort. This is
+wouldn't have had to pollute our implementation of quicksort. This is
 a significant advantage of using the intrinsic proof style---every
 call of a function like `partition (fun x -> pivot <= x) tl`
 immediately carries all the properties that were proven intrinsically
