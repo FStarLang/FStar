@@ -661,7 +661,11 @@ and cps_and_elaborate env ed =
     let action_elab = SS.close params action_elab in
     let action_typ_with_wp = SS.close params action_typ_with_wp in
     let action_elab = abs params action_elab None in
-    let action_typ_with_wp = flat_arrow params (S.mk_Total action_typ_with_wp) in
+    let action_typ_with_wp =
+      match params with
+      | [] -> action_typ_with_wp
+      | _ -> flat_arrow params (S.mk_Total action_typ_with_wp)
+    in
     if Env.debug env <| Options.Other "ED"
     then BU.print4 "original params %s, end params %s, type %s, term %s\n"
         (Print.binders_to_string "," params_un)
