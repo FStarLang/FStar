@@ -103,8 +103,6 @@ let lowercase_module_name f =
     (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
-  //try to convert the cygwin paths to windows paths
-  let include_directories = List.map FStar.Common.try_convert_file_name_to_mixed include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -556,8 +554,8 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - M.fsti and M.fst otherwise
    * - When starting from a command-line argument, visiting M (because it is
    *   passed from the command-line) generates a dependency on:
-   *   - M.fsti only if the argument was M.fsti
-   *   - both M.fsti and M.fst if the argument was M.fst
+   *   - M.fsti when **only** M.fsti is given as argument
+   *   - both M.fsti and M.fst otherwise (including when both M.fsti and M.fst are passed)
    *)
   let partial_discovery =
     not (Options.verify_all () || Options.extract_all ())
@@ -582,11 +580,12 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
       List.iter (discover_one false partial_discovery) deps
   in
   let discover_command_line_argument f =
-    let m = lowercase_module_name f in
-    if is_interface f then
-      discover_one true true m
-    else
-      discover_one true false m
+    let mn = lowercase_module_name f in
+    let interface_only =
+      match must (smap_try_find m mn) with
+      | Some _, None -> true // Only an fsti given in command line
+      | _ -> false in
+    discover_one true interface_only mn
   in
   List.iter discover_command_line_argument filenames;
 

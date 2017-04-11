@@ -319,7 +319,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__
+    | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_mainDecl
@@ -348,6 +348,7 @@ type nonTerminalId =
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
     | NONTERM_atomicPattern
+    | NONTERM_fieldPattern
     | NONTERM_patternOrMultibinder
     | NONTERM_binder
     | NONTERM_multiBinder

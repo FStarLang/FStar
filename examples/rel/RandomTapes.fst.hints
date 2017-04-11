@@ -17,7 +17,7 @@
       [
         "@query", "equation_Bijection.bijection",
         "equation_Bijection.injection", "equation_Bijection.surjection",
-        "interpretation_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
+        "interpretation_RandomTapes_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
       ],
       0
     ],
@@ -27,12 +27,14 @@
       2,
       1,
       [
-        "@query", "equation_Bijection.bijection",
-        "equation_Bijection.injection", "equation_Bijection.inverses",
-        "equation_Bijection.surjection", "equation_RandomTapes.minus",
-        "int_inversion",
-        "interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
-        "pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_44faff5d8543c30ad9bf2eeaf1b3abcf",
+        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Bijection.bijection", "equation_Bijection.injection",
+        "equation_Bijection.inverses", "equation_Bijection.surjection",
+        "equation_RandomTapes.minus",
+        "function_token_typing_RandomTapes.minus", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "token_correspondence_Prims.op_Addition",
@@ -46,8 +48,9 @@
       2,
       1,
       [
-        "@query", "function_token_typing_RandomTapes.id",
-        "refinement_interpretation_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_RandomTapes.id",
+        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
       ],
       0
     ],
@@ -65,13 +68,11 @@
       2,
       1,
       [
-        "@query", "data_elim_Rel.R", "eq2-interp",
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
         "equation_RandomTapes.add", "equation_RandomTapes.otp",
         "equation_RandomTapes.otp_rand", "equation_RandomTapes.random_tape",
         "equation_RandomTapes.rel_random_tape", "equation_Rel.lift3",
-        "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel",
-        "int_inversion", "int_typing",
-        "pretyping_f986b91ad3d5cf34f5ff0e3466d53f43",
+        "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "proj_equation_Rel.R_l",
         "proj_equation_Rel.R_r", "projection_inverse_BoxInt_proj_0",
@@ -79,7 +80,7 @@
         "projection_inverse_Prims.Mktuple3__2",
         "projection_inverse_Prims.Mktuple3__3", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_Tm_refine_69d053b4b3b129ec9df25d9449fbb927",
+        "refinement_interpretation_RandomTapes_Tm_refine_1bb28f4e7ae475e2c26df42b40a3231e",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_RandomTapes.otp",
         "token_correspondence_RandomTapes.otp_rand", "unit_typing"
@@ -92,8 +93,9 @@
       2,
       1,
       [
-        "@query", "function_token_typing_RandomTapes.id",
-        "refinement_interpretation_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_RandomTapes.id",
+        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
       ],
       0
     ],
@@ -103,23 +105,21 @@
       2,
       1,
       [
-        "@query", "data_elim_Rel.R", "eq2-interp",
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
         "equation_RandomTapes.add", "equation_RandomTapes.otp2",
         "equation_RandomTapes.otp2_rand", "equation_RandomTapes.random_tape",
         "equation_RandomTapes.rel_random_tape", "equation_Rel.lift5",
         "equation_Rel.r_eq", "fuel_guarded_inversion_Rel.rel",
-        "int_inversion", "int_typing",
-        "pretyping_f986b91ad3d5cf34f5ff0e3466d53f43",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
-        "projection_inverse_BoxInt_proj_0",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Subtraction", "proj_equation_Rel.R_l",
+        "proj_equation_Rel.R_r", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Mktuple5__1",
         "projection_inverse_Prims.Mktuple5__2",
         "projection_inverse_Prims.Mktuple5__3",
         "projection_inverse_Prims.Mktuple5__4",
         "projection_inverse_Prims.Mktuple5__5", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_Tm_refine_69d053b4b3b129ec9df25d9449fbb927",
+        "refinement_interpretation_RandomTapes_Tm_refine_1bb28f4e7ae475e2c26df42b40a3231e",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_RandomTapes.otp2",
         "token_correspondence_RandomTapes.otp2_rand", "unit_typing"

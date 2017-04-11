@@ -9,15 +9,15 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IFC_interpretation_Tm_arrow_4fdb0ab0c7e9da3107de701807750e02",
+        "FStar.DM4F.IFC_interpretation_Tm_arrow_9030bbbff7d28409c3f741b6861b9e46",
+        "FStar.DM4F.IFC_pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
+        "bool_inversion", "bool_typing",
+        "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "equation_FStar.DM4F.IFC.ifc",
-        "interpretation_Tm_arrow_4fdb0ab0c7e9da3107de701807750e02",
-        "interpretation_Tm_arrow_9030bbbff7d28409c3f741b6861b9e46",
-        "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption",
-        "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "projection_inverse_BoxBool_proj_0"
+        "equation_FStar.DM4F.IFC.ifc", "kinding_FStar.DM4F.IFC.label@tok",
+        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption"
       ],
       0
     ],
@@ -71,12 +71,13 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "kinding_FStar.DM4F.IFC.label@tok",
-        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption",
-        "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.is_None",
-        "typing_Prims.is_Some"
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IFC_pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
+        "bool_inversion", "data_typing_intro_FStar.DM4F.IFC.High@tok",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -161,9 +162,7 @@
         "@query", "assumption_FStar.DM4F.IFC.label_haseq",
         "assumption_Prims.HasEq_unit", "assumption_Prims.option_haseq",
         "assumption_Prims.tuple2_haseq", "function_token_typing_Prims.unit",
-        "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
-        "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "pretyping_f8666440faa91836cc5a13998af863fc"
+        "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok"
       ],
       0
     ],
@@ -173,27 +172,22 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "bool_typing",
-        "constructor_distinct_Prims.Mktuple2",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IFC_pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
+        "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "data_typing_intro_Prims.None@tok",
         "equality_tok_FStar.DM4F.IFC.High@tok",
-        "equality_tok_FStar.DM4F.IFC.Low@tok",
-        "equation_FStar.DM4F.IFC.flows", "equation_FStar.DM4F.IFC.join",
         "function_token_typing_Prims.unit",
         "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
-        "pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Mktuple2__a",
-        "projection_inverse_Prims.Mktuple2__b",
         "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_a",
-        "projection_inverse_Prims.Some_v"
+        "projection_inverse_Prims.Some_v", "unit_typing"
       ],
       0
     ]

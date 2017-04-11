@@ -22,6 +22,8 @@ open FStar
 open FStar.Util
 open FStar.Getopt
 
+module FC = FStar.Common
+
 type debug_level_t =
   | Low
   | Medium
@@ -32,6 +34,7 @@ type debug_level_t =
 type option_val =
   | Bool of bool
   | String of string
+  | Path of string
   | Int of int
   | List of list<option_val>
   | Unset
@@ -57,6 +60,7 @@ let as_int = function
   | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
+  | Path b -> FStar.Common.try_convert_file_name_to_mixed b
   | _ -> failwith "Impos: expected String"
 let as_list as_t = function
   | List ts -> ts |> List.map as_t
@@ -102,7 +106,6 @@ let init () =
         ("extract_module"               , List []);
         ("extract_namespace"            , List []);
         ("fs_typ_app"                   , Bool false);
-        ("fsi"                          , Bool false);
         ("fstar_home"                   , Unset);
         ("full_context_dependency"      , Bool true);
         ("hide_genident_nums"           , Bool false);
@@ -266,11 +269,8 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
-// Note: the "lib/fstar" is for the case where package is installed in the
+// Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
-let include_path_base_dirs =
-  ["/lib"; "/lib/fstar"]
-
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
@@ -421,7 +421,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "fstar_home",
-        OneArg (String,
+        OneArg (Path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
 
@@ -447,7 +447,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "include",
-        OneArg ((fun s -> List (get_include() @ [s] |> List.map String)),
+        OneArg ((fun s -> List (List.map String (get_include()) @ [Path s])),
                 "[path]"),
         "A directory in which to search for files included on the command line");
 
@@ -535,7 +535,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "odir",
-        OneArg (String,
+        OneArg (Path,
                 "[dir]"),
         "Place output in directory [dir]");
 
@@ -613,7 +613,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "smt",
-        OneArg (String,
+        OneArg (Path,
                  "[path]"),
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
@@ -687,7 +687,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> Bool false),
+        ZeroArgs (fun () -> Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
@@ -796,9 +796,11 @@ let fstar_home () =
     | None ->
       let x = Util.get_exec_dir () in
       let x = x ^ "/.." in
+      // Memoizes to avoid repeatedly forking an external process
       set_option' ("fstar_home", String x);
       x
-    | Some x -> x
+    | Some x ->
+      x
 
 let set_options o s =
     let specs = match o with
@@ -811,7 +813,7 @@ let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
-  res, !file_list_
+  res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
   !file_list_
@@ -852,14 +854,12 @@ let should_print_message m =
     else false
 
 let include_path () =
-  (* Allows running fstar either from the source repository, or after
-   * installation (into /usr/local for instance) *)
   if get_no_default_includes() then
     get_include()
   else
-  let h = fstar_home () in
-  let defs = universe_include_path_base_dirs in
-  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let h = fstar_home () in
+    let defs = universe_include_path_base_dirs in
+    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
   if Util.is_path_absolute filename then

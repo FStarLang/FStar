@@ -8,18 +8,21 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "equation_Preorder.preorder", "equation_Prims.fst",
+        "equation_Preorder.preorder", "equation_Prims._assert",
+        "equation_Prims.fst", "equation_Prims.snd",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2", "kinding_Prims.option@tok",
         "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
-        "typing_Prims.fst", "typing_Prims.is_None", "typing_Prims.is_Some",
-        "typing_Prims.snd", "unit_inversion", "unit_typing"
+        "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
+        "typing_Prims.__proj__Mktuple2__item___2", "typing_Prims.fst",
+        "typing_Prims.snd", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some", "unit_typing"
       ],
       0
     ],
@@ -31,19 +34,18 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_Preorder.stable", "equation_Prims.fst",
         "equation_Prims.snd", "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
         "equation_SnapshotST.witnessing_predicate",
-        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2", "kinding_Prims.option@tok",
         "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_1bba57771335d347501306d1b28b9253",
-        "typing_Prims.Mktuple2._1", "typing_Prims.fst", "typing_Prims.snd",
+        "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_v",
+        "refinement_interpretation_SnapshotST_Tm_refine_69f4507bee77a61657e8d68850a06b96",
+        "typing_Prims.fst", "typing_Prims.snd", "typing_Prims.uu___is_Some",
         "unit_typing"
       ],
       0
@@ -54,7 +56,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_Preorder.preorder",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
@@ -63,7 +65,7 @@
         "function_token_typing_SnapshotST.tmp_state",
         "kinding_Prims.option@tok", "lemma_SnapshotST.snapshot_rel_assoc",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
+        "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "token_correspondence_SnapshotST.snapshot_rel", "typing_Prims.fst"
       ],
       0
@@ -74,15 +76,16 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_Preorder.preorder",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
+        "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
         "kinding_Prims.option@tok", "lemma_SnapshotST.snapshot_rel_assoc",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
+        "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "token_correspondence_SnapshotST.snapshot_rel", "typing_Prims.fst"
       ],
       0
@@ -94,15 +97,16 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_Preorder.preorder",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
+        "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
         "kinding_Prims.option@tok", "lemma_SnapshotST.snapshot_rel_assoc",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
+        "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "token_correspondence_SnapshotST.snapshot_rel", "typing_Prims.fst"
       ],
       0
@@ -113,15 +117,16 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_Preorder.preorder",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
+        "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
         "kinding_Prims.option@tok", "lemma_SnapshotST.snapshot_rel_assoc",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
+        "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
         "token_correspondence_SnapshotST.snapshot_rel", "typing_Prims.fst"
       ],
       0
@@ -135,7 +140,7 @@
         "@query", "equation_Preorder.stable",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
-        "interpretation_Tm_abs_4cb02706c19a5df62a02ccc979419762",
+        "interpretation_SnapshotST_Tm_abs_052e54f8c82617071bbaac101c69bfb0",
         "lemma_SnapshotST.witnessing_predicate_stable",
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
@@ -158,7 +163,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_Preorder.stable",
         "equation_SnapshotST.snapshot_state",
         "equation_SnapshotST.witnessed",
@@ -166,7 +171,7 @@
         "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
-        "interpretation_Tm_abs_4cb02706c19a5df62a02ccc979419762",
+        "interpretation_SnapshotST_Tm_abs_052e54f8c82617071bbaac101c69bfb0",
         "lemma_SnapshotST.witnessing_predicate_stable",
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
@@ -179,14 +184,14 @@
       2,
       1,
       [
-        "@query", "equation_Preorder.stable",
+        "@MaxIFuel_assumption", "@query", "equation_Preorder.stable",
         "equation_SnapshotST.snapshot_state",
         "equation_SnapshotST.witnessed",
         "equation_SnapshotST.witnessing_predicate",
         "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_SnapshotST.tmp_rel",
         "function_token_typing_SnapshotST.tmp_state",
-        "interpretation_Tm_abs_4cb02706c19a5df62a02ccc979419762",
+        "interpretation_SnapshotST_Tm_abs_052e54f8c82617071bbaac101c69bfb0",
         "lemma_SnapshotST.witnessing_predicate_stable",
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
@@ -198,18 +203,17 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "constructor_distinct_Prims.Some", "equation_Preorder.preorder",
         "equation_Prims.fst", "equation_Prims.snd",
         "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
         "function_token_typing_SnapshotST.tmp_rel",
-        "pretyping_779086306c29597e3dd1127d16405da1",
         "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
+        "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3"
       ],
       0
     ],

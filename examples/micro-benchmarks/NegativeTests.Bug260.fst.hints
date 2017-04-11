@@ -10,9 +10,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Bug260.S",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Bug260.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c7798980fdaa69b62544817f36c3402f"
+        "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0
     ],
