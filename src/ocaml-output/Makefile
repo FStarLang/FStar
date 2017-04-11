@@ -6,8 +6,8 @@ HAS_VALID_MENHIR := 0
 endif
 
 MENHIR=menhir #--explain --infer -la 1 --table
-bbbbbbbb=ocamllex
-OCAMLBUILD=cd ../../ && ocamlbuild -verbose 1 -tag debug -cflag '-g' -I src/ocaml-output -I src/basic/ml \
+OCAMLLEX=ocamllex
+OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build \
   -I src/prettyprint/ml -I src/ocaml-output/bootlibs -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
@@ -99,11 +99,9 @@ endif
 	                    >> $@
 
 fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.byte
-	cp _build/src/fstar/ml/main.byte ../../bin/$@
-	cp _build/src/fstar/ml/main.byte ../../bin/fstar.ocaml
-
-FStar_Parser_Parse.ml: parse.mly
+	$(OCAMLBUILD) main.native
+	cp _build/src/fstar/ml/main.native ../../bin/$@
+	cp _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
@@ -245,7 +243,3 @@ purge: clean
 	rm -f *.ml || true
 
 -include .depend
-
-debug: $(GENERATED_FILES)
-	$(OCAMLBUILD) debug_printers.cma
-
