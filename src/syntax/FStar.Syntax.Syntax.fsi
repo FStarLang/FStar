@@ -267,6 +267,7 @@ type action = {
     action_name:lident;
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
+    action_params : binders;
     action_defn:term;
     action_typ: typ
 }

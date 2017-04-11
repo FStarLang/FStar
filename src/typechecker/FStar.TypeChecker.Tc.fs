@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -322,6 +322,15 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
       let actions =
         let check_action act =
+          (* We should not have action params anymore, they should have been handled by dmff below *)
+          assert (match act.action_params with | [] -> true | _ -> false) ;
+          (* let params_un, act_typ, opening = SS.open_term' act.action_params act.action_typ in *)
+          (* let params, env, _ = tc_tparams env params_un in *)
+          (* let act_defn = match params with *)
+          (*     | [] -> act.action_defn *)
+          (*     |_ -> SS.subst opening act.action_defn *)
+          (* in *)
+
           // 0) The action definition has a (possibly) useless type; the
           // action cps'd type contains the "good" wp that tells us EVERYTHING
           // about what this action does. Please note that this "good" wp is
@@ -330,7 +339,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
-          let env' = Env.set_expected_typ env act_typ in
+          let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
           if Env.debug env (Options.Other "ED") then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
@@ -379,17 +388,24 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (* printfn "Checked action %s against type %s\n" *)
           (*         (Print.term_to_string act_defn) *)
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
+
+          (* let act_defn = SS.close params act_defn in *)
           let univs, act_defn = TcUtil.generalize_universes env act_defn in
+          (* let act_typ = SS.close params act_typ in *)
+
           let act_typ = N.normalize [N.Beta] env act_typ in
           {act with
               action_univs=univs;
+              (* action_params=params; (\* TODO : do we need to close the effect params ? *\) *)
               action_defn=act_defn;
-              action_typ =act_typ } in
+              action_typ =act_typ }
+        in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
   in
 
   //generalize and close
+  (* QUESTION (KM) : Why do we close with ed.binders and not effect_params ?? *)
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
   let (univs, t) = TcUtil.generalize_universes env0 t in
   let signature = match effect_params, (SS.compress t).n with
@@ -418,12 +434,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     { act with
         action_univs=univs;
         action_defn=defn;
-        action_typ=typ; } in
-  let nunivs = List.length univs in
-  assert (List.length effect_params > 0 || nunivs = 1);
+        action_typ=typ; }
+  in
+  assert (List.length effect_params > 0 || List.length univs = 1);
   let ed = { ed with
       univs       = univs
-    ; binders     = effect_params
+    ; binders     = effect_params (* QUESTION (KM) : don't we need to close the effect params ? *)
     ; signature   = signature
     ; ret_wp      = close 0 return_wp
     ; bind_wp     = close 1 bind_wp
@@ -479,8 +495,8 @@ and cps_and_elaborate env ed =
       else a
   in
 
-  let open_and_check t =
-    let subst = SS.opening_of_binders effect_binders in
+  let open_and_check env other_binders t =
+    let subst = SS.opening_of_binders (effect_binders @ other_binders) in
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
     t, comp
@@ -488,7 +504,7 @@ and cps_and_elaborate env ed =
   let mk x = mk x None signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check ed.repr in
+  let repr, _comp = open_and_check env [] ed.repr in
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
@@ -512,10 +528,11 @@ and cps_and_elaborate env ed =
 
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
-  let elaborate_and_star dmff_env item =
+  let elaborate_and_star dmff_env other_binders item =
+    let env = DMFF.get_env dmff_env in
     let u_item, item = item in
     // TODO: assert no universe polymorphism
-    let item, item_comp = open_and_check item in
+    let item, item_comp = open_and_check env other_binders item in
     if not (U.is_total_lcomp item_comp) then
       raise (Err (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
@@ -524,8 +541,8 @@ and cps_and_elaborate env ed =
     dmff_env, item_t, item_wp, item_elab
   in
 
-  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
-  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
+  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
+  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
 
   (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
   (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
@@ -628,15 +645,42 @@ and cps_and_elaborate env ed =
   sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries false")) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
+    let params_un = SS.open_binders action.action_params in
+    let params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
+    let params = List.map (fun (bv, qual) ->
+      { bv with sort = N.normalize [ N.EraseUniverses ] env' bv.sort }, qual
+    ) params in
+    let dmff_env' = DMFF.set_env dmff_env env' in
     // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_t, action_wp, action_elab =
-      elaborate_and_star dmff_env (action.action_univs, action.action_defn)
+      elaborate_and_star dmff_env' params (action.action_univs, action.action_defn)
     in
     let name = action.action_name.ident.idText in
-    let action_typ_with_wp = DMFF.trans_F dmff_env action_t action_wp in
+    let action_typ_with_wp = DMFF.trans_F dmff_env' action_t action_wp in
+    let params = SS.close_binders params in
+    let action_elab = SS.close params action_elab in
+    let action_typ_with_wp = SS.close params action_typ_with_wp in
+    let action_elab = abs params action_elab None in
+    let action_typ_with_wp =
+      match params with
+      | [] -> action_typ_with_wp
+      | _ -> flat_arrow params (S.mk_Total action_typ_with_wp)
+    in
+    if Env.debug env <| Options.Other "ED"
+    then BU.print4 "original params %s, end params %s, type %s, term %s\n"
+        (Print.binders_to_string "," params_un)
+        (Print.binders_to_string "," params)
+        (Print.term_to_string action_typ_with_wp)
+        (Print.term_to_string action_elab) ;
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
-    dmff_env, { action with action_defn = apply_close action_elab; action_typ = apply_close action_typ_with_wp } :: actions
+    (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
+    dmff_env,
+    { action with
+      action_params = [] ;
+      action_defn = apply_close action_elab;
+      action_typ = apply_close action_typ_with_wp
+    } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 
