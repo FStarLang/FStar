@@ -15,9 +15,9 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.contains",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.contains",
         "lemma_ImmutableST.contains_lemma",
-        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833"
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7"
       ],
       0
     ],
@@ -27,9 +27,9 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.heap_rel",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -40,9 +40,9 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.heap_rel",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -53,9 +53,9 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.heap_rel",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -66,9 +66,9 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.heap_rel",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_Preorder.preorder",
-        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
         "token_correspondence_ImmutableST.heap_rel"
       ],
       0
@@ -92,7 +92,7 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.contains",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.contains",
         "equation_ImmutableST.heap_rel", "equation_NatHeap.alloc_ref",
         "equation_Preorder.stable", "equation_Prims.fst",
         "equation_Prims.nat", "equation_Prims.snd",
@@ -100,12 +100,13 @@
         "lemma_ImmutableST.contains_lemma",
         "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
-        "refinement_interpretation_Tm_refine_2d642eaad3f6e1c69a279efd7fe135d5",
-        "refinement_interpretation_Tm_refine_381aad689620751e2681a9ae18ea3882",
-        "refinement_interpretation_Tm_refine_f482e7f0b3d27f45edc04e0a6eae8833",
+        "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
+        "refinement_interpretation_NatHeap_Tm_refine_116e09534423f6bb69ae556c00002c3f",
+        "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
         "token_correspondence_ImmutableST.contains",
         "token_correspondence_ImmutableST.heap_rel",
-        "typing_NatHeap.alloc_ref", "typing_NatHeap.ref", "typing_Prims.fst"
+        "typing_NatHeap.alloc_ref", "typing_NatHeap.ref",
+        "typing_Prims.__proj__Mktuple2__item___2", "typing_Prims.fst"
       ],
       0
     ],
@@ -123,10 +124,10 @@
       2,
       1,
       [
-        "@query", "equation_ImmutableST.contains",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.contains",
         "equation_ImmutableST.heap_rel", "equation_ImmutableST.ref",
         "equation_Preorder.stable",
-        "refinement_interpretation_Tm_refine_3b96159e2f11c189d5827512307ee48c",
+        "refinement_interpretation_ImmutableST_Tm_refine_3b96159e2f11c189d5827512307ee48c",
         "token_correspondence_ImmutableST.contains",
         "token_correspondence_ImmutableST.heap_rel"
       ],
@@ -156,23 +157,16 @@
       [ "@query", "equation_ImmutableST.contains" ],
       0
     ],
-    [
-      "ImmutableST.write_nop",
-      2,
-      2,
-      1,
-      [ "@query", "equation_ImmutableST.heap_rel", "unit_typing" ],
-      0
-    ],
+    [ "ImmutableST.write_nop", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
     [
       "ImmutableST.recall",
       1,
       2,
       1,
       [
-        "@query", "equation_ImmutableST.heap_rel",
+        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.heap_rel",
         "equation_ImmutableST.ref", "equation_Preorder.stable",
-        "refinement_interpretation_Tm_refine_3b96159e2f11c189d5827512307ee48c",
+        "refinement_interpretation_ImmutableST_Tm_refine_3b96159e2f11c189d5827512307ee48c",
         "token_correspondence_ImmutableST.contains",
         "token_correspondence_ImmutableST.heap_rel"
       ],

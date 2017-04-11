@@ -226,7 +226,7 @@ let seq_inv_com' env c1 c2 l h0 =
     | None, _ -> ()
     | Some (), h2 -> ()
 
-#set-options "--z3rlimit 100"
+#set-options "--z3rlimit 200"
 
 val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
@@ -358,7 +358,7 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-#set-options "--z3rlimit 40"
+#set-options "--z3rlimit 200"
 
 val while_inv_com'
   : env:label_fun ->

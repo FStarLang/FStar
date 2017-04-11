@@ -26,6 +26,7 @@ CONFIGURATION=Release
 -include Makefile.local
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
+DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 ifeq ($(UNAME),Darwin)
   HEAD=ghead
@@ -51,6 +52,8 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 all: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
+	# An artefact of the build process is that parse.fsi is auto-generated
+	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 

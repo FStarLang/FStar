@@ -440,7 +440,7 @@ let rec sortWith f = function
      append (sortWith f lo) (pivot::sortWith f hi)
 
 #set-options "--initial_fuel 4 --initial_ifuel 4"
-private let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
+private abstract let test_sort = assert (sortWith (compare_of_bool (<)) [3; 2; 1] = [1; 2; 3])
 
 (** A l1 is a strict prefix of l2. *)
 
