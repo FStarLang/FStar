@@ -392,15 +392,15 @@ let rec unzip3 l = match l with
 
 (** Splitting a list at some index **)
 
-(** [first_N] takes a natural number n and a list and returns a pair
+(** [splitAt] takes a natural number n and a list and returns a pair
     of the maximal prefix of l of size smaller than n and the rest of
     the list *)
-let rec first_N (#a:Type) (n:nat) (l:list a) : list a * list a =
+let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
   if n = 0 then [], l
   else
     match l with
     | [] -> [], l
-    | x :: xs -> let l1, l2 = first_N (n-1) xs in x :: l1, l2
+    | x :: xs -> let l1, l2 = splitAt (n-1) xs in x :: l1, l2
 
 (** Sorting (implemented as quicksort) **)
 
