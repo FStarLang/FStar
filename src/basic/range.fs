@@ -62,8 +62,9 @@ let pair_ord (compare1,compare2) (a1,a2) (aa1,aa2) =
 
 let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
-type file_idx = int32
-type pos = int32
+type file_idx = MkFileIdx of int32
+type pos = MkPos of int32
+let int32_of_pos (MkPos x) = x
 
 type range = {
     def_range:int64;
@@ -87,15 +88,16 @@ let line_col_mask = mask32 col_nbits line_nbits
 let mk_pos l c =
     let l = max 0 l in
     let c = max 0 c in
-        ( c &&& pos_col_mask)
-    ||| ((l <<< col_nbits) &&& line_col_mask)
-let line_of_pos p =  (p lsr col_nbits)
-let col_of_pos p =  (p &&& pos_col_mask)
+    MkPos
+    (( c &&& pos_col_mask)
+    ||| ((l <<< col_nbits) &&& line_col_mask))
+let line_of_pos (MkPos p) =  (p lsr col_nbits)
+let col_of_pos (MkPos p) =  (p &&& pos_col_mask)
 let zeroPos = mk_pos 1 0
 
-let bits_of_pos (x:pos) :int32 = x
-let pos_of_bits (x:int32) : pos = x
-let end_of_line (x:pos) = (x &&& line_col_mask) ||| pos_col_mask
+let bits_of_pos (MkPos x) :int32 = x
+let pos_of_bits (x:int32) : pos = MkPos x
+let end_of_line (MkPos x) = MkPos ((x &&& line_col_mask) ||| pos_col_mask)
 
 let file_idx_nbits = 14
 let start_line_nbits = line_nbits
@@ -110,7 +112,7 @@ let start_col_mask  = mask64 (file_idx_nbits + start_line_nbits) start_col_nbits
 let end_line_mask   = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits) end_line_nbits
 let end_col_mask    = mask64 (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits) end_col_nbits
 
-let mk_file_idx_range fidx b e =
+let mk_file_idx_range (MkFileIdx fidx) (b:pos) (e:pos) =
         int64(fidx)
     ||| (int64(line_of_pos b) <<< file_idx_nbits)
     ||| (int64(col_of_pos b)  <<< (file_idx_nbits + start_line_nbits))
@@ -118,7 +120,7 @@ let mk_file_idx_range fidx b e =
     ||| (int64(col_of_pos e)  <<< (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
     |> range_of_def_range
 
-let file_idx_of_range {def_range=r}   = int32(r &&& file_idx_mask)
+let file_idx_of_range {def_range=r}   = MkFileIdx <| int32(r &&& file_idx_mask)
 let start_line_of_range {def_range=r} = int32((r &&& start_line_mask) >>> file_idx_nbits)
 let start_col_of_range {def_range=r}  = int32((r &&& start_col_mask)  >>> (file_idx_nbits + start_line_nbits))
 let end_line_of_range {def_range=r}   = int32((r &&& end_line_mask)   >>> (file_idx_nbits + start_line_nbits + start_col_nbits))
@@ -144,7 +146,7 @@ type FileIndexTable() =
                         indexToFileTable.Add(f);
                         fileToIndexTable.[f] <- n;
                         n)
-        member t.SetFileName n f =
+        member t.SetFileName (MkFileIdx n) f =
             indexToFileTable.[n] <- f
 
         member t.IndexToFile n =
@@ -158,11 +160,11 @@ let maxFileIndex = pown32 file_idx_nbits
 // WARNING: Global Mutable State, holding a mapping between integers and filenames
 let fileIndexTable = new FileIndexTable()
 // Note if we exceed the maximum number of files we'll start to report incorrect file names
-let file_idx_of_file f = fileIndexTable.FileToIndex(f) % maxFileIndex
-let file_of_file_idx n = fileIndexTable.IndexToFile(n)
+let file_idx_of_file f = MkFileIdx <| fileIndexTable.FileToIndex(f) % maxFileIndex
+let file_of_file_idx (MkFileIdx n) = fileIndexTable.IndexToFile(n)
 let set_file_of_range r f = fileIndexTable.SetFileName (file_idx_of_range r) f
 
-let mk_range f b e = mk_file_idx_range (file_idx_of_file f) b e
+let mk_range f (b:pos) (e:pos) = mk_file_idx_range (file_idx_of_file f) b e
 let file_of_range r = file_of_file_idx (file_idx_of_range r)
 
 (* end representation, start derived ops *)
@@ -176,11 +178,6 @@ let end_range r = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
                                        (end_of_line (end_of_range r))
-
-let trim_range_right r n =
-    let fidx,p1,p2 = dest_file_idx_range r in
-    let l2,c2 = dest_pos p2 in
-    mk_file_idx_range fidx p1 (mk_pos l2 (max 0 (c2 - n)))
 
 let pos_ord   p1 p2 = pair_ord (int_ord   ,int_ord) (dest_pos p1) (dest_pos p2)
 (* range_ord: not a total order, but enough to sort on ranges *)
@@ -233,7 +230,7 @@ let rangeStartup = rangeN "startup" 1
 
 (* // Store a file_idx in the pos_fname field, so we don't have to look up the  *)
 (* // file_idx hash table to map back from pos_fname to a file_idx during lexing  *)
-let encode_file_idx idx =
+let encode_file_idx (MkFileIdx idx) =
    Bytes.utf8_bytes_as_string (Bytes.of_intarray [|  (idx &&& 0x7F);
                                                      ((idx lsr 7) &&& 0x7F)  |])
 
@@ -241,10 +238,11 @@ let encode_file file = file |> file_idx_of_file |> encode_file_idx
 
 let _ = assert (file_idx_nbits <= 14) (* this encoding is size limited *)
 let decode_file_idx (s:string) =
-    if String.length s = 0 then 0 else
-    let idx =   (int32 s.[0])
-             ||| ((int32 s.[1]) <<< 7) in
-    idx
+    MkFileIdx
+        (if String.length s = 0 then 0 else
+         let idx =   (int32 s.[0])
+                  ||| ((int32 s.[1]) <<< 7) in
+         idx)
 
 (* For Diagnostics *)
 let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in sprintf "%d,%d" line col

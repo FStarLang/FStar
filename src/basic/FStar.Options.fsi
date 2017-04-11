@@ -32,6 +32,7 @@ type debug_level_t =
 type option_val =
   | Bool of bool
   | String of string
+  | Path of string
   | Int of int
   | List of list<option_val>
   | Unset
