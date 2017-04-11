@@ -324,7 +324,7 @@ let is_app = function
     | Var "ApplyTF" -> true
     | _ -> false
 
-let is_eta env vars t =
+let gen_typing_and_interpretation env vars t =
     let rec aux t xs = match t.tm, xs with
         | App(app, [f; {tm=FreeV y}]), x::xs
           when (is_app app && Term.fv_eq x y) -> aux f xs
@@ -805,6 +805,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               if is_impure lc && not (is_reifiable env.tcenv lc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
+                let cache_size = BU.smap_size env.cache in
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let lc, body =
                   if is_reifiable env.tcenv lc
@@ -832,8 +833,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some (t, _, _) -> mkApp(t, List.map mkFreeV cvars), []
                 | None ->
-                  match is_eta env vars body with
-                  | Some t -> t, []
+                  match gen_typing_and_interpretation env vars body with
+                  | Some t ->
+                    let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls' in
+                    t, decls
                   | None ->
                     let cvar_sorts = List.map snd cvars in
                     let fsym =

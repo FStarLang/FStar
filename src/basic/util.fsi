@@ -76,6 +76,7 @@ val smap_remove: smap<'value> -> string -> unit
 (* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
+val smap_size: smap<'value> -> int
 
 type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
 val imap_create: int -> imap<'value>
