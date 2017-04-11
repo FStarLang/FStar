@@ -1397,7 +1397,7 @@ let is_fstar_tactics_quote: FStar_Syntax_Syntax.term -> Prims.bool =
     match uu____4202 with
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         FStar_Syntax_Syntax.fv_eq_lid fv
-          FStar_Syntax_Const.fstar_tactics_quote_lid
+          FStar_Syntax_Const.fstar_tactics_quote__lid
     | uu____4207 -> false
 let rec norm:
   cfg -> env -> stack -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
