@@ -324,6 +324,9 @@ let is_app = function
     | Var "ApplyTF" -> true
     | _ -> false
 
+//for Tm_abs terms, we do not generate their typing and interpretation
+//if they are eta expansions (fun x -> f x), in which case we simply return the encoding of f
+//or if they are of the form (fun x -> a + b), in which case we seem to be returning the encoding of a + b ... a bit confused about that
 let gen_typing_and_interpretation env vars t =
     let rec aux t xs = match t.tm, xs with
         | App(app, [f; {tm=FreeV y}]), x::xs
@@ -592,6 +595,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let encoding = mkAnd(tm_has_type_with_fuel, refinement) in
 
+        //earlier we used to get cvars from encoding
+        //but mkAnd is optimized and when refinement is False, it returns False
+        //in that case, cvars was turning out to be empty, resulting in non well-formed encoding (e.g. of hasEq, since free variables of base_t are not captured in cvars)
+        //to get around that, computing cvars separately from the components of the encoding variable
         let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
         let cvars = cvars |> List.filter (fun (y, _) -> y <> x && y <> fsym) in
 
@@ -805,7 +812,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               if is_impure lc && not (is_reifiable env.tcenv lc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
-                let cache_size = BU.smap_size env.cache in
+                let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let lc, body =
                   if is_reifiable env.tcenv lc
@@ -823,6 +830,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 in
                 let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
                 let cvars = Term.free_variables key_body in
+                //adding free variables of the return type also to cvars
                 let cvars =
                   match arrow_t_opt with
                   | None   -> cvars
@@ -835,6 +843,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | None ->
                   match gen_typing_and_interpretation env vars body with
                   | Some t ->
+                    //if the cache has not changed, we need not generate decls and decls', but if the cache has changed, someone might use them in future
                     let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls' in
                     t, decls
                   | None ->
