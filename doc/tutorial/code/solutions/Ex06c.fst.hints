@@ -359,8 +359,7 @@
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Ex06c_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
         "assumption_Prims.HasEq_int",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_0", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
@@ -370,15 +369,17 @@
         "equation_Prims.nat", "equation_Prims.snd",
         "equation_with_fuel_Ex06c.length.fuel_instrumented",
         "equation_with_fuel_Ex06c.mem.fuel_instrumented",
+        "equation_with_fuel_Ex06c.partition.fuel_instrumented",
         "equation_with_fuel_Ex06c.sorted.fuel_instrumented",
         "fuel_correspondence_Ex06c.length.fuel_instrumented",
         "fuel_correspondence_Ex06c.mem.fuel_instrumented",
+        "fuel_correspondence_Ex06c.partition.fuel_instrumented",
         "fuel_correspondence_Ex06c.sorted.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_Ex06c.length.fuel_instrumented",
         "fuel_irrelevance_Ex06c.mem.fuel_instrumented",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
-        "kinding_Prims.list@tok", "lemma_Ex06c.append_mem",
+        "function_token_typing_Ex06c.cmp", "function_token_typing_Prims.int",
+        "int_inversion", "kinding_Prims.list@tok", "lemma_Ex06c.append_mem",
         "lemma_Ex06c.partition_lemma", "lemma_Ex06c.sorted_concat_lemma",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
@@ -396,9 +397,10 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_Ex06c.cmp",
         "token_correspondence_Ex06c.length.fuel_instrumented",
-        "token_correspondence_Ex06c.sorted.fuel_instrumented",
-        "typing_Ex06c.length", "typing_Ex06c.mem", "typing_Prims.fst",
-        "typing_Prims.snd", "well-founded-ordering-on-nat"
+        "token_correspondence_Ex06c.mem.fuel_instrumented",
+        "typing_Ex06c.length", "typing_Ex06c.mem", "typing_Ex06c.sorted",
+        "typing_Prims.fst", "typing_Prims.snd",
+        "well-founded-ordering-on-nat"
       ],
       0
     ]

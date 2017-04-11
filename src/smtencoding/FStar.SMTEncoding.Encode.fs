@@ -812,8 +812,21 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   else lc, body
                 in
                 let body, decls' = encode_term body envbody in
+                let arrow_t_opt, decls'' =
+                  match codomain_eff lc with
+                  | None   -> None, []
+                  | Some c ->
+                    let tfun = U.arrow bs c in
+                    let t, decls = encode_term tfun env in
+                    Some t, decls
+                in
                 let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
                 let cvars = Term.free_variables key_body in
+                let cvars =
+                  match arrow_t_opt with
+                  | None   -> cvars
+                  | Some t -> BU.remove_dups fv_eq (Term.free_variables t @ cvars)
+                in
                 let tkey = mkForall([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
                 match BU.smap_try_find env.cache tkey_hash with
@@ -831,19 +844,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let f = mkApp(fsym, List.map mkFreeV cvars) in
                     let app = mk_Apply f vars in
                     let typing_f =
-                      match codomain_eff lc with
+                      match arrow_t_opt with
                       | None -> [] //no typing axiom for this lambda, because we don't have enough info
-                      | Some c ->
-                        let tfun = U.arrow bs c in
-                        let f_has_t, decls'' = encode_term_pred None tfun env f in
+                      | Some t ->
+                        let f_has_t = mk_HasTypeWithFuel None f t in
                         let a_name = "typing_"^fsym in
-                        decls''@[Term.Assume(mkForall([[f]], cvars, f_has_t), Some a_name, a_name)]
+                        [Term.Assume(mkForall([[f]], cvars, f_has_t), Some a_name, a_name)]
                     in
                     let interp_f =
                       let a_name = "interpretation_" ^fsym in
                       Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
-                    let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
+                    let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
                     f, f_decls
           end
