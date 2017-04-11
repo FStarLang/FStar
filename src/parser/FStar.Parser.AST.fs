@@ -165,21 +165,21 @@ type expr = term
 //  - In the middle of a file, as a standalone documentation declaration
 type fsdoc = {
   comment:string;
-  key_val_map:list<(string * string)>
+  key_val_map:list<(string * string)>;
   fsdrange: range
 }
 
 type record_field = {
   field_id:ident ;
   field_type:term ;
-  field_doc:option<fsdoc> ;
+  field_doc:list<fsdoc> ;
   field_range : range
 }
 
 type variant_constr = {
   variant_id : ident ;
   variant_type : option<term> ;
-  variant_doc : option<fsdoc> ;
+  variant_doc : list<fsdoc> ;
   variant_range : range
 }
 
@@ -192,39 +192,49 @@ type tycon' =
 type tycon = {
   tycon_id: ident ;
   typarams: list<binder> ;
-  tydata : tycon'
+  tydata : tycon' ;
+  tydoc : list<fsdoc> ;
+  tyrange : range
 }
 
+type letbinding {
+  letbindingpat : pattern ;
+  letbindingdef : term ;
+  letbindingrange : range ;
+  letbindingdoc : list<fsdoc>
+}
+
+(* TODO (KM) : thesse should be fsdocs and not comments *)
 type qualifier =
-  (** a declaration only visible to the current module *)
+  (* * a declaration only visible to the current module *)
   | Private
-  (** a declaration whose definition won't be visible outside current module *)
+  (* * a declaration whose definition won't be visible outside current module *)
   | Abstract
-  (** an inductive definition for which we don't try to generate decidable equality *)
+  (* * an inductive definition for which we don't try to generate decidable equality *)
   | Noeq
-  (** an inductive definition for which we generate the naive decidable equality *)
+  (* * an inductive definition for which we generate the naive decidable equality *)
   | Unopteq
-  (** a declaration which is assumed to hold without a definition (axiom) *)
+  (* * a declaration which is assumed to hold without a definition (axiom) *)
   | Assumption
   | DefaultEffect
   | TotalEffect
   | Effect_qual
   | New
-  (** a definition that *should* always be unfolded by the normalizer *)
+  (* * a definition that *should* always be unfolded by the normalizer *)
   | Inline
-  (** a definition that may be unfolded by the normalizer, but only if necessary (default) *)
+  (* * a definition that may be unfolded by the normalizer, but only if necessary (default) *)
   | Visible
-  (** a definition that will be unfolded by the normalizer, during unification and for SMT queries *)
+  (* * a definition that will be unfolded by the normalizer, during unification and for SMT queries *)
   | Unfold_for_unification_and_vcgen
-  (** a definition that will be inlined only during compilation *)
+  (* * a definition that will be inlined only during compilation *)
   | Inline_for_extraction
-  (** a definition that can never be unfolded by the normalizer *)
+  (* * a definition that can never be unfolded by the normalizer *)
   | Irreducible
-  (** a definition whose contents won't be extracted (currently, by KreMLin only) *)
+  (* * a definition whose contents won't be extracted (currently, by KreMLin only) *)
   | NoExtract
-  (** An effect definition which comes with a reify operation *)
+  (* * An effect definition which comes with a reify operation *)
   | Reifiable
-  (** An effect definition which comes with a reflect operation *)
+  (* * An effect definition which comes with a reflect operation *)
   | Reflectable
 
   (* old qualifiers *)
@@ -260,10 +270,10 @@ type decl' =
   | Open of lid
   | Include of lid
   | ModuleAbbrev of ident * lid
-  | TopLevelLet of let_qualifier * list<(pattern * term)>
+  | TopLevelLet of let_qualifier * list<letbinding>
   | Main of term
-  (* bool is for effect *)
-  | Tycon of bool * list<(tycon * option<fsdoc>)>
+  (* If the bool is true then it is an effect definition (so the list contains only one element) *)
+  | Tycon of bool * list<tycon>
   | Val of ident * term
   | Exception of ident * option<term>
   | NewEffect of effect_decl
@@ -275,7 +285,7 @@ type decl' =
 and decl = {
   d:decl';
   drange:range;
-  doc:option<fsdoc>;
+  doc:list<fsdoc>;
   quals: qualifiers;
   attrs: attributes_
 }
@@ -292,10 +302,13 @@ type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
 let check_id id =
-    let first_char = String.substring id.idText 0 1 in
-    if String.lowercase first_char = first_char
-    then ()
-    else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
+  let first_char = String.substring id.idText 0 1 in
+  if String.lowercase first_char = first_char
+  then ()
+  else raise (Error(Util.format1 "Invalid identifer '%s';\
+                                  expected a symbol that begins with a lower-case character"
+                                  id.idText,
+                    id.idRange))
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
@@ -568,13 +581,47 @@ let to_fsdoc (comment, kwd_args, range) =
     fsdrange = range
   }
 
-let place_fsdoc_in_tycon fsdocs decl =
-  match decl.d with
-  | Tycon (b, tycons) ->
+let is_nil = function | [] -> true | _ -> false
 
-  | _ -> failwith "Impossible : not a Tycon"
+let place_fsdoc_before_elt (fsdocs, l) elt erange continuation =
+  let elt_line = line_of_pos (end_of_range erange) in
+  let is_standalone (_, ,r) = line_of_pos (end_of_range r) + 2 <= elt_line in
+  let standalone_fsdocs, fsdocs = BU.take is_standalone_fsdoc fsdocs in
+  let standalone_fsdocs = List.map to_fsdoc standalone_fsdocs in
+  let fsdocs, elt = continuation fsdocs elt in
+  fsdocs, decl:: standalone_fsdocs @ l
 
-let place_fsdoc_in_toplevellet fsdocs decl =
+let place_fsdoc_in_record_field (fsdocs, l) field =
+
+let place_fsdoc_in_variant (fsdocs, l) variant
+
+
+let place_fsdoc_in_tycon (fsdocs, l) tyc =
+  let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range tyc.tyrange r) in
+  assert (is_nil tyc.tydoc) ;
+  let tyc = match tyc.tydata with
+    | TyconAbstract | TyconAbstract _ -> { tyc with tydoc = List.map to_fsdoc contained_fsdocs }
+    | TyconRecord fields ->
+      let type_fsdocs, fields_fsdocs =
+        BU.take (fun (_,_, r) -> range_before_range r tyc.tycon_id.idRange) contained_fsdocs
+      in
+      let residual_fsdocs, rev_fields = List.fold_left place_fsdoc_in_record_field (fields_dsdocs, []) fields in
+      assert (is_nil residual_fsdocs) ;
+      {tyc with tydoc = type_fsdocs ; tydata = TyconRecord (List.rev rev_fields)}
+    | TyconVariant variants ->
+      let type_fsdocs, variant_fsdocs =
+        BU.take (fun (_,_, r) -> range_before_range r tyc.tycon_id.idRange) contained_fsdocs
+      in
+      let residual_fsdocs, rev_variants = List.fold_left place_fsdoc_in_variant (variants_dsdocs, []) variants in
+      assert (is_nil residual_fsdocs) ;
+      {tyc with tydoc = type_fsdocs ; tydata = TyconVariant (List.rev rev_variants)}
+  in
+  fsdocs, tyc::l
+
+let place_fsdoc_in_toplevellet fsdocs lb =
+  let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range tyc.tyrange r) in
+  assert (is_nil lb.letbindingdoc) ;
+  {lb with letbindingdoc = contained_fsdocs}
   match decl.d with
   | TopLevelLet (lq, defs) ->
 
@@ -582,33 +629,31 @@ let place_fsdoc_in_toplevellet fsdocs decl =
 
 let place_fsdoc_in_decl fsdocs decl =
   let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range decl.drange r) in
-  match contained_fsdocs with
-  | [] -> fsdocs, decl
-  | _ :: _ :: _ -> failwith "Not managing multiple fsdocs attached to the same toplevel element"
-  | [raw_doc] ->
-    let decl = match decl.d with
-      | Tycon _ -> place_fsdoc_in_tycon contained_fsdocs decl
-      | TopLevelLet _ -> place_fsdoc_in_toplevellet contained_fsdocs decl
-      | _ ->
-        begin match decl.doc with | Some _ -> failwith "Already filled fsdoc found" | _ -> () end;
-        { decl with doc = Some (to_fsdoc raw_doc) }
-    in
-    fsdocs, decl
+  assert (match decl.doc with | [] -> true | _ -> false) ;
+  let decl = match decl.d with
+    | Tycon (b, tycons) ->
+      let residual_fsdocs, rev_tycons = List.fold_left place_fsdoc_in_tycon (contained_fsdocs, []) tycons in
+      (* TODO : have a real error in that case *)
+      assert (match residual_fsdocs with | [] -> true | _ -> false) ;
+      Tycon (b, List.rev rev_tycons)
+    | TopLevelLet (lq, defs) ->
+      let residual_fsdocs, rev_defs = List.fold_left  place_fsdoc_in_toplevellet contained_fsdocs defs in
+      assert (match residual_fsdocs with | [] -> true | _ -> false) ;
+      TopLevelLet (lq, List.rev rev_defs)
+    | _ ->
+      { decl with doc = List.map to_fsdoc fsdocs }
+  in
+  fsdocs, decl
 
 let place_fsdoc_in_modul fsdocs modul =
   match modul with
   | Module (_, decls)
   | Interface (_, decls, _) ->
-    let place_fsdoc_before_decl (fsdocs, l) decl =
-      let decl_line = line_of_pos (end_of_range decl.drange) in
-      let is_standalone (_, ,r) = line_of_pos (end_of_range r) + 2 <= decl_line in
-      let standalone_fsdocs, fsdocs = BU.take is_standalone_fsdoc fsdocs in
-      let standalone_fsdocs = List.map standalone_fsdocs in
-      let fsdocs, decl = place_fsdoc_in_decl fsdocs decl in
-      fsdocs, decl:: standalone_fsdocs @ l
+    let place_fsdoc_before_decl acc decl =
+      place_fsdoc_before_elt acc decl decl.drange place_fsdoc_in_decl
     in
     decls
-    |> List.fold_left place_fsdoc_before_decl (fsdocs, zeroPos, [])
+    |> List.fold_left place_fsdoc_before_decl (fsdocs, [])
     |> snd
     |> List.rev
 
