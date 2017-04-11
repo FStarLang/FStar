@@ -324,12 +324,6 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
         let check_action act =
           (* We should not have action params anymore, they should have been handled by dmff below *)
           assert (match act.action_params with | [] -> true | _ -> false) ;
-          (* let params_un, act_typ, opening = SS.open_term' act.action_params act.action_typ in *)
-          (* let params, env, _ = tc_tparams env params_un in *)
-          (* let act_defn = match params with *)
-          (*     | [] -> act.action_defn *)
-          (*     |_ -> SS.subst opening act.action_defn *)
-          (* in *)
 
           // 0) The action definition has a (possibly) useless type; the
           // action cps'd type contains the "good" wp that tells us EVERYTHING
@@ -389,14 +383,11 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (*         (Print.term_to_string act_defn) *)
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
 
-          (* let act_defn = SS.close params act_defn in *)
           let univs, act_defn = TcUtil.generalize_universes env act_defn in
-          (* let act_typ = SS.close params act_typ in *)
 
           let act_typ = N.normalize [N.Beta] env act_typ in
           {act with
               action_univs=univs;
-              (* action_params=params; (\* TODO : do we need to close the effect params ? *\) *)
               action_defn=act_defn;
               action_typ =act_typ }
         in
@@ -646,30 +637,30 @@ and cps_and_elaborate env ed =
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let params_un = SS.open_binders action.action_params in
-    let params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
-    let params = List.map (fun (bv, qual) ->
+    let action_params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
+    let action_params = List.map (fun (bv, qual) ->
       { bv with sort = N.normalize [ N.EraseUniverses ] env' bv.sort }, qual
-    ) params in
+    ) action_params in
     let dmff_env' = DMFF.set_env dmff_env env' in
     // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_t, action_wp, action_elab =
-      elaborate_and_star dmff_env' params (action.action_univs, action.action_defn)
+      elaborate_and_star dmff_env' action_params (action.action_univs, action.action_defn)
     in
     let name = action.action_name.ident.idText in
     let action_typ_with_wp = DMFF.trans_F dmff_env' action_t action_wp in
-    let params = SS.close_binders params in
-    let action_elab = SS.close params action_elab in
-    let action_typ_with_wp = SS.close params action_typ_with_wp in
-    let action_elab = abs params action_elab None in
+    let action_params = SS.close_binders action_params in
+    let action_elab = SS.close action_params action_elab in
+    let action_typ_with_wp = SS.close action_params action_typ_with_wp in
+    let action_elab = abs action_params action_elab None in
     let action_typ_with_wp =
-      match params with
+      match action_params with
       | [] -> action_typ_with_wp
-      | _ -> flat_arrow params (S.mk_Total action_typ_with_wp)
+      | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
     in
     if Env.debug env <| Options.Other "ED"
-    then BU.print4 "original params %s, end params %s, type %s, term %s\n"
+    then BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
         (Print.binders_to_string "," params_un)
-        (Print.binders_to_string "," params)
+        (Print.binders_to_string "," action_params)
         (Print.term_to_string action_typ_with_wp)
         (Print.term_to_string action_elab) ;
     let action_elab = register (name ^ "_elab") action_elab in
