@@ -666,7 +666,7 @@ let is_reify_head = function
 
 let is_fstar_tactics_quote t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote__lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =

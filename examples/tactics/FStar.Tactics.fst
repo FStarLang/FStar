@@ -10,11 +10,6 @@ type goals   = list goal
 type state   = goals  //active goals 
              * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program
 
-assume val binders_of_env : env -> binders
-assume val type_of_binder: binder -> term 
-assume val term_eq : term -> term -> bool
-assume val quote   : #a:Type -> a -> term
-
 (* This is meant to be all named representation
      -- while providing some conveniences for 
         handling the logical structure of a term 
@@ -37,10 +32,6 @@ noeq type formula =
    (* TODO more cases *) 
   //Abs   : binders -> term -> formula //Named repr
   //Match : ....
-
-//This primitive provides a way to destruct a term as a formula
-assume val term_as_formula: term -> option formula
-//TODO: We should add a formula_as_term also
 
 noeq type result (a:Type) =
   | Success: a -> state -> result a
@@ -102,56 +93,73 @@ let assert_by_tactic (t:tactic unit) (p:Type)
          (ensures (fun _ -> p))
   = ()
 
+assume private val binders_of_env_ : env -> binders
+let binders_of_env (e:env) : Tac binders = binders_of_env_ e
+
+assume private val type_of_binder_: binder -> term 
+let type_of_binder (b:binder) : Tac term = type_of_binder_ b
+
+assume private val term_eq_ : term -> term -> bool
+let term_eq t1 t2 : Tac bool = term_eq_ t1 t2
+
+assume private val quote_  : #a:Type -> a -> term
+let quote #a (x:a) : tactic term = fun () -> quote_ x
+
+//This primitive provides a way to destruct a term as a formula
+//TODO: We should add a formula_as_term also
+assume private val term_as_formula_ : term -> option formula
+let term_as_formula t : Tac (option formula) = term_as_formula_ t
+
 (* Many of these could be derived from apply_lemma, 
    rather than being assumed as primitives. 
    E.g., forall_intros could be an application of 
          FStar.Classical.forall_intro
  *)         
-assume val forall_intros_: tac binders
+assume private val forall_intros_: tac binders
 let forall_intros () : Tac binders = TAC?.reflect forall_intros_
 
-assume val implies_intro_: tac binder
+assume private val implies_intro_: tac binder
 let implies_intro () : Tac binder = TAC?.reflect implies_intro_
 
-assume val trivial_  : tac unit
+assume private val trivial_  : tac unit
 let trivial () : Tac unit = TAC?.reflect trivial_
 
-assume val revert_  : tac unit
+assume private val revert_  : tac unit
 let revert () : Tac unit = TAC?.reflect revert_
 
-assume val clear_   : tac unit
+assume private val clear_   : tac unit
 let clear () : Tac unit = TAC?.reflect clear_
 
-assume val split_   : tac unit
+assume private val split_   : tac unit
 let split () : Tac unit = TAC?.reflect split_
 
-assume val merge_   : tac unit
+assume private val merge_   : tac unit
 let merge () : Tac unit = TAC?.reflect merge_
 
-assume val rewrite_ : binder -> tac unit
+assume private val rewrite_ : binder -> tac unit
 let rewrite (b:binder) : Tac unit = TAC?.reflect (rewrite_ b)
 
-assume val smt_     : tac unit
+assume private val smt_     : tac unit
 let smt () : Tac unit = TAC?.reflect smt_
 
-assume val visit_   : tac unit -> tac unit
+assume private val visit_   : tac unit -> tac unit
 let visit (f:tactic unit) : Tac unit = TAC?.reflect (visit_ (reify_tactic f))
 
-assume val focus_: tac unit -> tac unit
+assume private val focus_: tac unit -> tac unit
 let focus (f:tactic unit) : Tac unit = TAC?.reflect (focus_ (reify_tactic f))
 
 (* could be implemented using focus_ *)
-assume val seq_ : tac unit -> tac unit -> tac unit
+assume private val seq_ : tac unit -> tac unit -> tac unit
 let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () -> 
   TAC?.reflect (seq_ (reify_tactic f) (reify_tactic g))
 
-assume val exact_ : term -> tac unit
+assume private val exact_ : term -> tac unit
 let exact (t:term) : Tac unit = TAC?.reflect (exact_ t)
 
-assume val apply_lemma_ : term -> tac unit
+assume private val apply_lemma_ : term -> tac unit
 let apply_lemma (t:term) : Tac unit = TAC?.reflect (apply_lemma_ t)
 
 assume val print_ : string -> tac unit
 let print (msg:string) : Tac unit = TAC?.reflect (print_ msg)
 
-abstract let embed (#a:Type0) (x:a) : Tot a = a
+abstract let embed (#a:Type0) (x:a) : Tot a = x

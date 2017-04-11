@@ -149,7 +149,14 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "binders_of_env"  1 (binders_of_env ps);
       mk "type_of_binder"  1 type_of_binder;
       mk "term_eq"         2 term_eq;
-      mk "print_"          2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit)
+      mk "term_as_formula_" 1 (mk_pure_interpretation_1 E.term_as_formula
+                                             E.unembed_term
+                                             (E.embed_option E.embed_formula E.fstar_tactics_formula));
+      mk "quote_"           2 quote;
+      mk "binders_of_env_"  1 (binders_of_env ps);
+      mk "type_of_binder_"  1 type_of_binder;
+      mk "term_eq_"         2 term_eq;
+      mk "print_"           2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit)
     ]
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
