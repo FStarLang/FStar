@@ -767,16 +767,16 @@ let is_app: FStar_SMTEncoding_Term.op -> Prims.bool =
     | FStar_SMTEncoding_Term.Var "ApplyTT"|FStar_SMTEncoding_Term.Var
       "ApplyTF" -> true
     | uu____1769 -> false
-let gen_typing_and_interpretation:
+let is_an_eta_expansion:
   env_t ->
     FStar_SMTEncoding_Term.fv Prims.list ->
       FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term Prims.option
   =
   fun env  ->
     fun vars  ->
-      fun t  ->
-        let rec aux t1 xs =
-          match ((t1.FStar_SMTEncoding_Term.tm), xs) with
+      fun body  ->
+        let rec aux t xs =
+          match ((t.FStar_SMTEncoding_Term.tm), xs) with
           | (FStar_SMTEncoding_Term.App
              (app,f::{
                        FStar_SMTEncoding_Term.tm =
@@ -798,7 +798,7 @@ let gen_typing_and_interpretation:
                           | uu____1827 -> false) args vars) in
               if uu____1817 then tok_of_name env f else None
           | (uu____1830,[]) ->
-              let fvs = FStar_SMTEncoding_Term.free_variables t1 in
+              let fvs = FStar_SMTEncoding_Term.free_variables t in
               let uu____1833 =
                 FStar_All.pipe_right fvs
                   (FStar_List.for_all
@@ -807,9 +807,9 @@ let gen_typing_and_interpretation:
                           FStar_Util.for_some
                             (FStar_SMTEncoding_Term.fv_eq fv) vars in
                         Prims.op_Negation uu____1835)) in
-              if uu____1833 then Some t1 else None
+              if uu____1833 then Some t else None
           | uu____1838 -> None in
-        aux t (FStar_List.rev vars)
+        aux body (FStar_List.rev vars)
 let reify_body:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
@@ -2076,8 +2076,8 @@ and encode_term:
                                                 (uu____4298, [])
                                             | None  ->
                                                 let uu____4314 =
-                                                  gen_typing_and_interpretation
-                                                    env vars body3 in
+                                                  is_an_eta_expansion env
+                                                    vars body3 in
                                                 (match uu____4314 with
                                                  | Some t1 ->
                                                      let decls1 =
