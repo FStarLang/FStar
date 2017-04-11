@@ -378,6 +378,7 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
     //if it's an arrow type, we want to check that ty occurs strictly positive in the sort of every binder
     //TODO: do something with c also?
     debug_log env ("Checking nested positivity in an Tm_arrow node, with binders as: " ^ (PP.binders_to_string "; " sbs));
+    let sbs = SS.open_binders sbs in
     let b, _ =
     List.fold_left (fun (r, env) b ->
         if not r then r, env  //we have already seen a problematic binder
