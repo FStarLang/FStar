@@ -365,7 +365,7 @@ let is_an_eta_expansion env vars body =
     then //t is of the form (f vars) for all the lambda bound variables vars
          //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
          tok_of_name env f
-    else None
+    else check_partial_applications body (List.rev vars)
 
   | _ ->
     check_partial_applications body (List.rev vars)

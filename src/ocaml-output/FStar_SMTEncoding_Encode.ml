@@ -808,7 +808,8 @@ let is_an_eta_expansion:
                         | FStar_SMTEncoding_Term.FreeV fv ->
                             FStar_SMTEncoding_Term.fv_eq fv v1
                         | uu____1837 -> false) args vars) in
-            if uu____1827 then tok_of_name env f else None
+            if uu____1827 then tok_of_name env f 
+            else check_partial_applications body (FStar_List.rev vars)
         | uu____1840 -> check_partial_applications body (FStar_List.rev vars)
 let reify_body:
   FStar_TypeChecker_Env.env ->
