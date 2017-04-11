@@ -77,27 +77,41 @@ type term' =
   | Const     of sconst
   | Op        of string * list<term>
   | Tvar      of ident
-  | Uvar      of ident                                (* universe variable *)
-  | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
-  | Name      of lid // a qualified identifier that starts with an uppercase (Foo.Bar.Baz)
-  | Projector of lid * ident (* a data constructor followed by one of
-                                its formal parameters, or an effect
-                                followed by one  of its actions or
-                                "fields" *)
-  | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
+
+  (* universe variable *)
+  | Uvar      of ident
+
+  (* a qualified identifier that starts with a lowercase (Foo.Bar.baz) *)
+  | Var       of lid
+
+  (* a qualified identifier that starts with an uppercase (Foo.Bar.Baz) *)
+  | Name      of lid
+
+  (* a data constructor followed by one of its formal parameters, or an effect *)
+  (* followed by one of its actions or "fields" *)
+  | Projector of lid * ident
+
+  (* data, type: bool in each arg records an implicit *)
+  | Construct of lid * list<(term*imp)>
   | Abs       of list<pattern> * term
-  | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
+
+  (* aqual marks an explicitly provided implicit parameter *)
+  | App       of term * term * imp
   | Let       of let_qualifier * list<(pattern * term)> * term
   | LetOpen   of lid * term
   | Seq       of term * term
   | If        of term * term * term
   | Match     of term * list<branch>
   | TryWith   of term * list<branch>
-  | Ascribed  of term * term
+  | Ascribed  of term * term * option<term>
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
-  | Product   of list<binder> * term                 (* function space *)
-  | Sum       of list<binder> * term                 (* dependent tuple *)
+
+  (* function space *)
+  | Product   of list<binder> * term
+
+  (* dependent tuple *)
+  | Sum       of list<binder> * term
   | QForall   of list<binder> * list<list<term>> * term
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
@@ -107,8 +121,12 @@ type term' =
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
   | Assign    of ident * term
-  | Discrim   of lid   (* Some?  (formerly is_Some) *)
-  | Attributes of list<term>   (* attributes decorating a term *)
+
+  (* Some?  (formerly is_Some) *)
+  | Discrim   of lid
+
+  (* attributes decorating a term *)
+  | Attributes of list<term>
 
 and term = {tm:term'; range:range}
 
@@ -249,7 +267,6 @@ type decl' =
   | Val of ident * term
   | Exception of ident * option<term>
   | NewEffect of effect_decl
-  | NewEffectForFree of effect_decl (* always a [DefineEffect] *)
   | SubEffect of lift
   | Pragma of pragma
   | Fsdoc of fsdoc
@@ -264,7 +281,7 @@ and decl = {
 }
 and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
-  | DefineEffect   of ident * list<binder> * term * list<decl> * list<decl>
+  | DefineEffect   of ident * list<binder> * term * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
@@ -653,8 +670,10 @@ let rec term_to_string (x:term) = match x.tm with
         (p |> pat_to_string)
         (match w with | None -> "" | Some e -> Util.format1 "when %s" (term_to_string e))
         (e |> term_to_string)) branches)
-  | Ascribed(t1, t2) ->
+  | Ascribed(t1, t2, None) ->
     Util.format2 "(%s : %s)" (t1|> term_to_string) (t2|> term_to_string)
+  | Ascribed(t1, t2, Some tac) ->
+    Util.format3 "(%s : %s by %s)" (t1|> term_to_string) (t2|> term_to_string) (tac |> term_to_string)
   | Record(Some e, fields) ->
     Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
   | Record(None, fields) ->
@@ -744,10 +763,8 @@ let decl_to_string (d:decl) = match d.d with
   | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
   | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(DefineEffect(i, _, _, _, _))
+  | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | NewEffectForFree(DefineEffect(i, _, _, _, _))
-  | NewEffectForFree(RedefineEffect(i, _, _)) -> "new_effect_for_free " ^ i.idText
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
   | Fsdoc _ -> "fsdoc"

@@ -29,6 +29,26 @@ open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
+open FStar.TypeChecker.Common
+
+let format_info env name typ range (doc: option<string>) =
+    BU.format4 "(defined at %s) %s: %s%s"
+        (Range.string_of_range range)
+        name
+        (Normalize.term_to_string env typ)
+        (match doc with
+         | Some docstring -> BU.format1 "#doc %s" docstring
+         | None -> "")
+
+let info_at_pos env file row col =
+    match TypeChecker.Common.info_at_pos file row col with
+    | None -> None
+    | Some info ->
+      match info.identifier with
+      | Inl bv -> Some (Inl (Print.nm_to_string bv), info.identifier_ty,
+                       FStar.Syntax.Syntax.range_of_bv bv)
+      | Inr fv -> Some (Inr (FStar.Syntax.Syntax.lid_of_fv fv), info.identifier_ty,
+                       FStar.Syntax.Syntax.range_of_fv fv)
 
 let add_errors env errs =
     let errs =

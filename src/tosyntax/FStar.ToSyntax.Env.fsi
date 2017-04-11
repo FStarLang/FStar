@@ -91,6 +91,7 @@ type env = {
   iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
+  docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
 }
 
 type foundname =
@@ -105,10 +106,18 @@ val qualify: env -> ident -> lident
 val empty_env: unit -> env
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
+val shorten_module_path: env -> list<ident> -> bool -> (list<ident> * list<ident>)
 val try_lookup_lid: env -> lident -> option<(term*bool)>
+val try_lookup_lid_no_resolve: env -> lident -> option<(term*bool)>
 val try_lookup_effect_name: env -> lident -> option<lident>
 val try_lookup_effect_name_and_attributes: env -> lident -> option<(lident * list<cflags>)>
 val try_lookup_effect_defn: env -> lident -> option<eff_decl>
+(* [try_lookup_root_effect_name] is the same as
+[try_lookup_effect_name], but also traverses effect abbrevs. TODO:
+once indexed effects are in, also track how indices and other
+arguments are instantiated. *)
+val try_lookup_root_effect_name: env -> lident -> option<lident>
+val try_lookup_doc: env -> lid -> option<Parser.AST.fsdoc>
 val try_lookup_datacon: env -> lident -> option<fv>
 val try_lookup_record_by_field_name: env -> lident -> option<record_or_dc>
 val belongs_to_record: env -> lident -> record_or_dc -> bool
@@ -117,6 +126,9 @@ val try_lookup_definition: env -> lident -> option<term>
 val is_effect_name: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>
+val resolve_module_name: env:env -> lid:lident -> honor_ns:bool -> option<lident>
+val fail_if_qualified_by_curmodule: env -> lident -> unit
+val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
 
 val push_bv: env -> ident -> env * bv
 val push_bv_mutable: env -> ident -> env * bv
@@ -125,6 +137,7 @@ val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env
 val push_module_abbrev : env -> ident -> lident -> env
+val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
 val pop: unit -> env
 val push: env -> env
@@ -135,6 +148,8 @@ val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
+
+val transitive_exported_ids: env -> lident -> list<string>
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool

@@ -22,7 +22,8 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Heap.DomContains",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Heap.DomContains",
         "assumption_FStar.Heap.DomRestrict", "assumption_FStar.Heap.Equals",
         "assumption_FStar.Heap.Extensional",
         "assumption_FStar.Heap.RestrictSel",

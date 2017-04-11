@@ -34,9 +34,9 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ghost.erased",
-        "equation_FStar.Ghost.reveal",
-        "interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "equation_FStar.Ghost.erased", "equation_FStar.Ghost.reveal",
         "unit_typing"
       ],
       0
@@ -71,9 +71,9 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ghost.erased",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8"
+        "refinement_interpretation_FStar.Ghost_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
       0
     ],
@@ -83,9 +83,9 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ghost.erased",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_Tm_refine_fe92ca5f59249712e3a29569cd813153"
+        "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0
     ],
@@ -95,9 +95,9 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ghost.erased",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal",
-        "refinement_interpretation_Tm_refine_fe92ca5f59249712e3a29569cd813153"
+        "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0
     ]

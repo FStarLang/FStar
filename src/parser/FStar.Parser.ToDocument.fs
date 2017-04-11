@@ -325,6 +325,16 @@ let is_operatorInfix34 =
     fun op -> List.tryFind (matches_level op) opinfix34 <> None
 
 
+let handleable_op op args =
+  match List.length args with
+  | 0 -> true
+  | 1 -> is_general_prefix_op op || List.mem op [ "-" ; "~" ]
+  | 2 ->
+    is_operatorInfix0ad12 op ||
+    is_operatorInfix34 op ||
+    List.mem op ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
+  | 3 -> List.mem op [".()<-" ; ".[]<-"]
+  | _ -> false
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -488,8 +498,6 @@ and p_rawDecl d = match d.d with
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
-  | NewEffectForFree (ne) ->
-    str "new_effect_for_free" ^^ space ^^ p_newEffect ne
   | Pragma p ->
     p_pragma p
   | Fsdoc doc ->
@@ -587,22 +595,17 @@ and p_letbinding (pat, e) =
 and p_newEffect = function
   | RedefineEffect (lid, bs, t) ->
     p_effectRedefinition lid bs t
-  | DefineEffect (lid, bs, t, eff_decls, action_decls) ->
-    p_effectDefinition lid bs t eff_decls action_decls
+  | DefineEffect (lid, bs, t, eff_decls) ->
+    p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
     surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
 
-and p_effectDefinition uid bs t eff_decls action_decls =
+and p_effectDefinition uid bs t eff_decls =
   braces_with_nesting (
     group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
-    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls) ^^
-    p_actionDecls action_decls
+    prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls)
     )
-
-and p_actionDecls = function
-  | [] -> empty
-  | l -> break1 ^^ prefix2 (str "and actions") (separate_break_map semi p_effectDecl l)
 
 and p_effectDecl d = match d.d with
   | Tycon(false, [TyconAbbrev(lid, [], None, e), None]) ->
@@ -814,8 +817,10 @@ and p_term e = match (unparen e).tm with
 and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
 
 and p_noSeqTerm' e = match (unparen e).tm with
-  | Ascribed (e, t) ->
+  | Ascribed (e, t, None) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
+  | Ascribed (e, t, Some tac) ->
+      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t ^/^ str "by" ^/^ p_typ tac)
   | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2)
@@ -1114,13 +1119,22 @@ and p_projectionLHS e = match (unparen e).tm with
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
+
+  (* Failure cases : these cases are not handled in the printing grammar since *)
+  (* they are considered as invalid AST. We try to fail as soon as possible in order *)
+  (* to prevent the pretty printer from looping *)
+  | Op (op, args) when not (handleable_op op args) ->
+    failwith ("Operation " ^ op ^ " with " ^ string_of_int (List.length args) ^
+              " arguments couldn't be handled by the pretty printer")
+  | Uvar _ -> failwith "Unexpected universe variable out of universe context"
+  | Labeled _   -> failwith "Not valid in universe"
+
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
   | Wild        (* p_atomicTermNotQUident *)
   | Const _     (* p_atomicTermNotQUident *)
   | Op _        (* what about 3+ args ? are all possible labels caught somewhere ? *)
-  | Tvar _
-  | Uvar _      (* p_arg *)
+  | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
   | Construct _ (* p_appTerm *)
@@ -1146,7 +1160,6 @@ and p_projectionLHS e = match (unparen e).tm with
   | Assign _    (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term e)
-  | Labeled _   -> failwith "Not valid in universe"
 
 and p_constant = function
   | Const_effect -> str "Effect"

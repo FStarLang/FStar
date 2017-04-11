@@ -237,6 +237,11 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, pats, iopt, sorts, body) ->
           let labels, body = aux default_msg ropt post_name_opt labels body in
           labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
+
+        (* TODO (KM) : I am not sure whether we should label the let-bounded expressions here *)
+        | Let(es, body) ->
+          let labels, body = aux default_msg ropt post_name_opt labels body in
+          labels, Term.mkLet (es, body) q.rng
     in
     aux "assertion failed" None None [] q
 
@@ -271,7 +276,7 @@ let detail_errors env
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         (labs |> List.map (fun (l, _, _) ->
-                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
+                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", ("disable_label_"^fst l)))) in
 
     //check all active labels linearly and classify as eliminated/error
     let rec linear_check eliminated errors active =

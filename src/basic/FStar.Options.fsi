@@ -32,6 +32,7 @@ type debug_level_t =
 type option_val =
   | Bool of bool
   | String of string
+  | Path of string
   | Int of int
   | List of list<option_val>
   | Unset
@@ -51,7 +52,6 @@ val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
 
-(* Only used with F# *)
 val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
@@ -101,6 +101,7 @@ val output_dir                  : unit    -> option<string>
 val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
+val prims_basename              : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_fuels                 : unit    -> bool
@@ -123,6 +124,7 @@ val trace_error                 : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_tactics                 : unit    -> bool
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool

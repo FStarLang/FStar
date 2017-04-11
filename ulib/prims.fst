@@ -186,7 +186,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
         PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). pre /\ post x ==> p x)) // pure_wp
+             (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
@@ -272,7 +272,7 @@ sub_effect PURE ~> DIV  = purewp_id
 
 effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
        DIV a
-           (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
+           (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
 
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
@@ -329,7 +329,7 @@ unfold let st_trivial       (heap:Type) (a:Type)
 
 new_effect {
   STATE_h (heap:Type) : result:Type -> wp:st_wp_h heap result -> Effect
-  with return_wp      = st_return heap
+  with return_wp    = st_return heap
      ; bind_wp      = st_bind_wp heap
      ; if_then_else = st_if_then_else heap
      ; ite_wp       = st_ite_wp heap
@@ -389,7 +389,7 @@ new_effect {
 }
 effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
        EXN a
-         (fun (p:ex_post a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
+         (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r)) (* WP *)
 
 unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
@@ -623,14 +623,14 @@ let dfst #a #b t = Mkdtuple2?._1 t
 val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
 let dsnd #a #b t = Mkdtuple2?._2 t
 
-assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
+assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
 let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
-let _assert p () = ()
+val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
+let _assert p = ()
 val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)

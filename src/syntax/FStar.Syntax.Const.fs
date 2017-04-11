@@ -102,6 +102,8 @@ let exp_false_bool  = mk (Tm_constant (Const_bool false))
 let exp_unit        = mk (Tm_constant (Const_unit))
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
+let some_lid        = pconst  "Some"
+let none_lid        = pconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 (* list_append_lid is needed to desugar @ in the compiler *)
@@ -186,3 +188,11 @@ let guard_free     = pconst "guard_free"
 (* Constants for marking terms with normalization hints *)
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
+
+(* tactic constants *)
+let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
+let tactic_lid = fstar_tactics_lid "tactic"
+let by_tactic_lid = fstar_tactics_lid "by_tactic"
+let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
+let fstar_tactics_embed_lid = fstar_tactics_lid "embed"
+let fstar_tactics_quote_lid = fstar_tactics_lid "quote"

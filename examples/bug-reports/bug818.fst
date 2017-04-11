@@ -1,7 +1,6 @@
 module Bug818
 
-val find : ('a -> Tot bool) -> Tot ((list 'a) -> Tot (option 'a))
-let rec find f l = match l with
-  | [] -> None
-  | hd::tl -> if f hd then Some hd else find f tl
+(* this works: val find : a:Type -> (option a) -> Tot int *)
 
+val find : a:Type -> Tot ((option a) -> Tot int)
+let rec find b l = 42

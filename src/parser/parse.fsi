@@ -7,7 +7,6 @@ type token =
   | VAL
   | UNOPTEQUALITY
   | UNIV_HASH
-  | UNIVAR of (string)
   | UNFOLDABLE
   | UNFOLD
   | UNDERSCORE
@@ -62,7 +61,6 @@ type token =
   | OF
   | NOEXTRACT
   | NOEQUALITY
-  | NEW_EFFECT_FOR_FREE
   | NEW_EFFECT
   | NEW
   | NAME of (string)
@@ -127,6 +125,7 @@ type token =
   | COLON
   | CHAR of (char)
   | BYTEARRAY of (bytes)
+  | BY
   | BEGIN
   | BAR_RBRACK
   | BAR
@@ -137,7 +136,6 @@ type token =
   | ASSERT
   | AND
   | AMP
-  | ACTIONS
   | ABSTRACT
 type tokenId = 
     | TOKEN_WITH
@@ -145,7 +143,6 @@ type tokenId =
     | TOKEN_VAL
     | TOKEN_UNOPTEQUALITY
     | TOKEN_UNIV_HASH
-    | TOKEN_UNIVAR
     | TOKEN_UNFOLDABLE
     | TOKEN_UNFOLD
     | TOKEN_UNDERSCORE
@@ -200,7 +197,6 @@ type tokenId =
     | TOKEN_OF
     | TOKEN_NOEXTRACT
     | TOKEN_NOEQUALITY
-    | TOKEN_NEW_EFFECT_FOR_FREE
     | TOKEN_NEW_EFFECT
     | TOKEN_NEW
     | TOKEN_NAME
@@ -265,6 +261,7 @@ type tokenId =
     | TOKEN_COLON
     | TOKEN_CHAR
     | TOKEN_BYTEARRAY
+    | TOKEN_BY
     | TOKEN_BEGIN
     | TOKEN_BAR_RBRACK
     | TOKEN_BAR
@@ -275,7 +272,6 @@ type tokenId =
     | TOKEN_ASSERT
     | TOKEN_AND
     | TOKEN_AMP
-    | TOKEN_ACTIONS
     | TOKEN_ABSTRACT
     | TOKEN_end_of_input
     | TOKEN_error
@@ -285,7 +281,8 @@ type nonTerminalId =
     | NONTERM_option_FSDOC_
     | NONTERM_option___anonymous_1_
     | NONTERM_option___anonymous_2_
-    | NONTERM_option___anonymous_6_
+    | NONTERM_option___anonymous_5_
+    | NONTERM_option___anonymous_7_
     | NONTERM_option_ascribeKind_
     | NONTERM_option_ascribeTyp_
     | NONTERM_option_fsTypeArgs_
@@ -295,13 +292,11 @@ type nonTerminalId =
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
-    | NONTERM_loption_separated_nonempty_list_SEMICOLON_effectDecl__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_4_
-    | NONTERM_list___anonymous_7_
+    | NONTERM_list___anonymous_8_
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
-    | NONTERM_list_atomicUniverse_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
@@ -310,6 +305,7 @@ type nonTerminalId =
     | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
+    | NONTERM_nonempty_list_atomicUniverse_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
@@ -323,7 +319,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__
+    | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_mainDecl
@@ -341,7 +337,6 @@ type nonTerminalId =
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
     | NONTERM_effectDefinition
-    | NONTERM_actionDecls
     | NONTERM_effectDecl
     | NONTERM_subEffect
     | NONTERM_qualifier
@@ -353,6 +348,7 @@ type nonTerminalId =
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
     | NONTERM_atomicPattern
+    | NONTERM_fieldPattern
     | NONTERM_patternOrMultibinder
     | NONTERM_binder
     | NONTERM_multiBinder
@@ -410,14 +406,13 @@ type nonTerminalId =
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
-    | NONTERM_univar
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_list_SEMICOLON_simpleDef_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_recordFieldDecl_
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
-    | NONTERM_reverse_left_flexible_list_BAR___anonymous_5_
+    | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int

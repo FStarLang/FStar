@@ -22,6 +22,8 @@ open FStar
 open FStar.Util
 open FStar.Getopt
 
+module FC = FStar.Common
+
 type debug_level_t =
   | Low
   | Medium
@@ -32,6 +34,7 @@ type debug_level_t =
 type option_val =
   | Bool of bool
   | String of string
+  | Path of string
   | Int of int
   | List of list<option_val>
   | Unset
@@ -57,6 +60,7 @@ let as_int = function
   | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
+  | Path b -> FStar.Common.try_convert_file_name_to_mixed b
   | _ -> failwith "Impos: expected String"
 let as_list as_t = function
   | List ts -> ts |> List.map as_t
@@ -102,7 +106,6 @@ let init () =
         ("extract_module"               , List []);
         ("extract_namespace"            , List []);
         ("fs_typ_app"                   , Bool false);
-        ("fsi"                          , Bool false);
         ("fstar_home"                   , Unset);
         ("full_context_dependency"      , Bool true);
         ("hide_genident_nums"           , Bool false);
@@ -134,6 +137,7 @@ let init () =
         ("print_bound_var_types"        , Bool false);
         ("print_effect_args"            , Bool false);
         ("print_fuels"                  , Bool false);
+        ("print_full_names"             , Bool false);
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
         ("print_z3_statistics"          , Bool false);
@@ -149,6 +153,7 @@ let init () =
         ("unthrottle_inductives"        , Bool false);
         ("use_eq_at_higher_order"       , Bool false);
         ("use_hints"                    , Bool false);
+        ("use_tactics"                  , Bool false);
         ("verify"                       , Bool true);
         ("verify_all"                   , Bool false);
         ("verify_module"                , List []);
@@ -220,6 +225,7 @@ let get_print_before_norm       ()      = lookup_opt "print_before_norm"        
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
+let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
@@ -236,6 +242,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_tactics             ()      = lookup_opt "use_tactics"              as_bool
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -262,11 +269,8 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
-// Note: the "lib/fstar" is for the case where package is installed in the
+// Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
-let include_path_base_dirs =
-  ["/lib"; "/lib/fstar"]
-
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
@@ -417,7 +421,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "fstar_home",
-        OneArg (String,
+        OneArg (Path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
 
@@ -443,7 +447,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "include",
-        OneArg ((fun s -> List (get_include() @ [s] |> List.map String)),
+        OneArg ((fun s -> List (List.map String (get_include()) @ [Path s])),
                 "[path]"),
         "A directory in which to search for files included on the command line");
 
@@ -531,7 +535,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "odir",
-        OneArg (String,
+        OneArg (Path,
                 "[dir]"),
         "Place output in directory [dir]");
 
@@ -562,6 +566,11 @@ let rec specs () : list<Getopt.opt> =
         "Print the fuel amounts used for each successful query");
 
        ( noshort,
+        "print_full_names",
+        ZeroArgs (fun () -> Bool true),
+        "Print full names of variables");
+
+       ( noshort,
         "print_implicits",
         ZeroArgs(fun () -> Bool true),
         "Print implicit arguments");
@@ -579,7 +588,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "prn",
         ZeroArgs (fun () -> Bool true),
-        "Print real names (you may want to use this in conjunction with log_queries)");
+        "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "record_hints",
@@ -604,7 +613,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "smt",
-        OneArg (String,
+        OneArg (Path,
                  "[path]"),
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
@@ -640,6 +649,11 @@ let rec specs () : list<Getopt.opt> =
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
+        "use_tactics",
+        ZeroArgs (fun () -> Bool true),
+        "Pre-process a verification condition using a user-provided tactic (a flag to support migration to tactics gradually)");
+
+       ( noshort,
         "verify_all",
         ZeroArgs (fun () -> Bool true),
         "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
@@ -673,7 +687,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> Bool false),
+        ZeroArgs (fun () -> Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
@@ -747,6 +761,7 @@ let settable = function
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
+    | "print_full_names"
     | "print_implicits"
     | "print_universes"
     | "print_z3_statistics"
@@ -758,6 +773,7 @@ let settable = function
     | "trace_error"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
+    | "use_tactics"
     | "__temp_no_proj"
     | "no_warn_top_level_effects"
     | "reuse_hint_for"
@@ -780,9 +796,11 @@ let fstar_home () =
     | None ->
       let x = Util.get_exec_dir () in
       let x = x ^ "/.." in
+      // Memoizes to avoid repeatedly forking an external process
       set_option' ("fstar_home", String x);
       x
-    | Some x -> x
+    | Some x ->
+      x
 
 let set_options o s =
     let specs = match o with
@@ -795,7 +813,7 @@ let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
-  res, !file_list_
+  res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
   !file_list_
@@ -836,14 +854,12 @@ let should_print_message m =
     else false
 
 let include_path () =
-  (* Allows running fstar either from the source repository, or after
-   * installation (into /usr/local for instance) *)
   if get_no_default_includes() then
     get_include()
   else
-  let h = fstar_home () in
-  let defs = universe_include_path_base_dirs in
-  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let h = fstar_home () in
+    let defs = universe_include_path_base_dirs in
+    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
   if Util.is_path_absolute filename then
@@ -871,6 +887,8 @@ let prims () =
             raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
     end
   | Some x -> x
+
+let prims_basename () = basename (prims ())
 
 let prepend_output_dir fname =
   match get_odir() with
@@ -920,7 +938,7 @@ let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
-let print_real_names             () = get_prn                         ()
+let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
@@ -932,6 +950,7 @@ let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_tactics                  () = get_use_tactics                 ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"

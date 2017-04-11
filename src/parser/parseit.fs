@@ -117,11 +117,9 @@ let parse fn =
     | Error(msg, r) ->
       Inr (msg, r)
     | e ->
-      let p0 =
-        let p = lexbuf.StartPos in
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
-      let p1 =
-        let p = lexbuf.EndPos in
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
+      let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =
+        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol) in
+      let p0 = pos_of_lexpos lexbuf.StartPos in
+      let p1 = pos_of_lexpos lexbuf.EndPos in
       let r = Range.mk_range filename p0 p1 in
       Inr (sprintf "Syntax error (%A)" e, r)

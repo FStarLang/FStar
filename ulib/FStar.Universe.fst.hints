@@ -1,31 +1,8 @@
 [
   "®ÿÊ•∫7\u0007Qõ}\u001c êoƒ",
   [
-    [
-      "FStar.Universe.__proj__Ret__item___0",
-      1,
-      2,
-      1,
-      [
-        "@query", "disc_equation_FStar.Universe.Ret",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_93cf4d3fe85b97017eefeb624a579fc0"
-      ],
-      0
-    ],
+    [ "FStar.Universe.__proj__Ret__item___0", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Universe.raise_t", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "FStar.Universe.downgrade_val",
-      1,
-      2,
-      1,
-      [
-        "@query", "disc_equation_FStar.Universe.Ret",
-        "equation_FStar.Universe.raise_t",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_93cf4d3fe85b97017eefeb624a579fc0"
-      ],
-      0
-    ]
+    [ "FStar.Universe.downgrade_val", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

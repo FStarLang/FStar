@@ -46,19 +46,24 @@ type delta_level =
   | Eager_unfolding_only
   | Unfold of delta_depth
 
-type mlift = typ -> typ -> typ
+
+type mlift = {
+  mlift_wp:typ -> typ -> typ ;
+  mlift_term:option<(typ -> typ -> term -> term)>
+}
 
 type edge = {
   msource :lident;
   mtarget :lident;
-  mlift   :typ -> typ -> typ;
+  mlift   :mlift;
 }
 type effects = {
   decls :list<eff_decl>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
-type cached_elt = either<(universes * typ), (sigelt * option<universes>)>
+type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
+type goal = term
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -94,6 +99,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
+    preprocess   :env -> goal -> list<(env * goal)>;  //a hook for a tactic; still too simple
     solve        :option<(unit -> string)> -> env -> typ -> unit;
     is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
@@ -311,44 +317,54 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * option<universes>)>>  =
+let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * option<universes>)> * Range.range)>  =
   let cur_mod = in_cur_mod env lid in
   let cache t = BU.smap_add (gamma_cache env) lid.str t; Some t in
-  let found = if cur_mod<>No
-              then match BU.smap_try_find (gamma_cache env) lid.str with
-                    | None ->
-                      BU.find_map env.gamma (function
-                        | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
-                        | Binding_sig (_, Sig_bundle(ses, _, _, _)) ->
-                            BU.find_map ses (fun se ->
-                                if lids_of_sigelt se |> BU.for_some (lid_equals lid)
-                                then cache (Inr (se, None))
-                                else None)
-                        | Binding_sig (lids, s) ->
-                          let maybe_cache t = match s with
-                            | Sig_declare_typ _ -> Some t
-                            | _ -> cache t in
-                          if lids |> BU.for_some (lid_equals lid) then maybe_cache (Inr (s, None)) else None
-                        | Binding_sig_inst (lids, s, us) ->
-                          if lids |> BU.for_some (lid_equals lid) then Some (Inr (s, Some us)) else None
-                        | _ -> None)
-                    | se -> se
-               else None in
+  let found =
+    if cur_mod<>No
+    then match BU.smap_try_find (gamma_cache env) lid.str with
+      | None ->
+        BU.find_map env.gamma (function
+          | Binding_lid(l,t) ->
+            if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
+          | Binding_sig (_, { sigel = Sig_bundle(ses, _, _) }) ->
+              BU.find_map ses (fun se ->
+                if lids_of_sigelt se |> BU.for_some (lid_equals lid)
+                then cache (Inr (se, None), U.range_of_sigelt se)
+                else None)
+          | Binding_sig (lids, s) ->
+            let maybe_cache t = match s.sigel with
+              | Sig_declare_typ _ -> Some t
+              | _ -> cache t
+            in
+            begin match List.tryFind (lid_equals lid) lids with 
+                  | None -> None
+                  | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
+            end
+          | Binding_sig_inst (lids, s, us) ->
+            begin match List.tryFind (lid_equals lid) lids with 
+                  | None -> None
+                  | Some l -> Some (Inr (s, Some us), Ident.range_of_lid l)
+            end
+          | _ -> None)
+      | se -> se
+    else None
+  in
   if is_some found
   then found
   else if cur_mod <> Yes || has_interface env env.curmodule
   then match find_in_sigtab env lid with
-        | Some se -> Some (Inr (se, None))
+        | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
   else None
 
-let rec add_sigelt env se = match se with
-    | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
+let rec add_sigelt env se = match se.sigel with
+    | Sig_bundle(ses, _, _) -> add_sigelts env ses
     | _ ->
     let lids = lids_of_sigelt se in
     List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
-    match se with
-    | Sig_new_effect(ne, _) ->
+    match se.sigel with
+    | Sig_new_effect(ne) ->
       ne.actions |> List.iter (fun a ->
           let se_let = U.action_as_lb ne.mname a in
           BU.smap_add (sigtab env) a.action_name.str se_let)
@@ -363,69 +379,69 @@ and add_sigelts env ses =
 let try_lookup_bv env (bv:bv) =
   BU.find_map env.gamma (function
     | Binding_var id when bv_eq id bv ->
-      Some id.sort
+      Some (id.sort, id.ppname.idRange)
     | _ -> None)
 
-let lookup_type_of_let se lid = match se with
-    | Sig_let((_, [lb]), _, _, _, _) ->
-      Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
+let lookup_type_of_let se lid = match se.sigel with
+    | Sig_let((_, [lb]), _, _, _) ->
+      Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
-    | Sig_let((_, lbs), _, _, _, _) ->
+    | Sig_let((_, lbs), _, _, _) ->
         BU.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
           | Inr fv ->
             if fv_eq_lid fv lid
-            then Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
+            then Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_fv fv)
             else None)
 
     | _ -> None
 
 let effect_signature se =
-    match se with
-    | Sig_new_effect(ne, _) ->
-        Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)))
+    match se.sigel with
+    | Sig_new_effect(ne) ->
+        Some (inst_tscheme (ne.univs, U.arrow ne.binders (mk_Total ne.signature)), se.sigrng)
 
-    | Sig_effect_abbrev (lid, us, binders, _, _, _, _) ->
-        Some (inst_tscheme (us, U.arrow binders (mk_Total teff)))
+    | Sig_effect_abbrev (lid, us, binders, _, _, _) ->
+        Some (inst_tscheme (us, U.arrow binders (mk_Total teff)), se.sigrng)
 
     | _ -> None
 
 let try_lookup_lid_aux env lid =
-  let mapper = function
+  let mapper (lr, rng) =
+    match lr with
     | Inl t ->
-      Some t
+      Some (t, rng)
 
-    | Inr (Sig_datacon(_, uvs, t, _, _, _, _, _), None) ->
-      Some (inst_tscheme (uvs, t))
+    | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _, _) }, None) ->
+      Some (inst_tscheme (uvs, t), rng)
 
-    | Inr (Sig_declare_typ (l, uvs, t, qs, _), None) ->
+    | Inr ({sigel = Sig_declare_typ (l, uvs, t, qs) }, None) ->
       if in_cur_mod env l = Yes
       then if qs |> List.contains Assumption || env.is_iface
-           then Some (inst_tscheme (uvs, t))
+           then Some (inst_tscheme (uvs, t), rng)
            else None
-      else Some (inst_tscheme (uvs, t))
+      else Some (inst_tscheme (uvs, t), rng)
 
-    | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _), None) ->
+    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _, _) }, None) ->
       begin match tps with
-        | [] -> Some <| inst_tscheme (uvs, k)
-        | _ ->  Some <| inst_tscheme (uvs, U.flat_arrow tps (mk_Total k))
+        | [] -> Some (inst_tscheme (uvs, k), rng)
+        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
       end
 
-    | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _), Some us) ->
+    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _, _) }, Some us) ->
       begin match tps with
-        | [] -> Some <| inst_tscheme_with (uvs, k) us
-        | _ ->  Some <| inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us
+        | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
+        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
       end
 
     | Inr se ->
-      begin match se with
-        | Sig_let _, None ->
-          lookup_type_of_let (fst se) lid
+      begin match se with // FIXME why does this branch not use rng?
+        | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
         | _ -> effect_signature (fst se)
-      end
+      end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
-      | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
+      | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
       | None -> None
 
 ////////////////////////////////////////////////////////////////
@@ -437,7 +453,7 @@ let try_lookup_lid_aux env lid =
 //        val lookup_lid             : env -> lident -> (universes * typ)
 //        val lookup_univ            : env -> univ_name -> bool
 //        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
-//        val lookup_val_decl        : env -> lident -> (universes * typ)
+//        val lookup_val_decl        : env -> lident -> universes * typ
 //        val lookup_datacon         : env -> lident -> universes * typ
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
@@ -465,20 +481,24 @@ let lid_exists env l =
     | Some _ -> true
 
 let lookup_bv env bv =
+    let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
-    | None -> raise (Error(variable_not_found bv, range_of_bv bv))
-    | Some t -> Subst.set_use_range (range_of_bv bv) t
+    | None -> raise (Error(variable_not_found bv, bvr))
+    | Some (t, r) -> Subst.set_use_range bvr t, 
+                     Range.set_use_range r bvr
 
 let try_lookup_lid env l =
     match try_lookup_lid_aux env l with
     | None -> None
-    | Some (us, t) ->
-      Some (us, Subst.set_use_range (range_of_lid l) t)
+    | Some ((us, t), r) ->
+      let use_range = range_of_lid l in
+      let r = Range.set_use_range r use_range in
+      Some ((us, Subst.set_use_range use_range t), r)
 
 let lookup_lid env l =
     match try_lookup_lid env l with
     | None -> raise (Error(name_not_found l, range_of_lid l))
-    | Some (us, t) -> (us, t)
+    | Some v -> v
 
 let lookup_univ env x =
     List.find (function
@@ -490,56 +510,55 @@ let lookup_univ env x =
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
   match lookup_qname env lid with
-    | Some (Inr (Sig_declare_typ(_, uvs, t, q, _), None)) ->
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, q) }, None), _) ->
       Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
     | _ -> None
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_declare_typ(_, uvs, t, _, _), None)) ->
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) ->
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _), _)) -> true, dcs
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, dcs, _) }, _), _) -> true, dcs
     | _ -> false, []
 
 let typ_of_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, _, _, l, _, _, _, _), _)) -> l
+    | Some (Inr ({ sigel = Sig_datacon (_, _, _, l, _, _, _) }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
 let lookup_definition delta_levels env lid =
   let visible quals =
-      delta_levels |> BU.for_some (fun dl ->
-      quals |> BU.for_some (visible_at dl))
+      delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
   match lookup_qname env lid with
-    | Some (Inr (se, None)) ->
-      begin match se with
-        | Sig_let((_, lbs), _, _, quals, _) when visible quals ->
-            BU.find_map lbs (fun lb ->
-                let fv = right lb.lbname in
-                if fv_eq_lid fv lid
-                then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (U.unascribe lb.lbdef))
-                else None)
-        | _ -> None
-      end
-    | _ -> None
+  | Some (Inr (se, None), _) ->
+    begin match se.sigel with
+      | Sig_let((_, lbs), _, quals, _) when visible quals ->
+          BU.find_map lbs (fun lb ->
+              let fv = right lb.lbname in
+              if fv_eq_lid fv lid
+              then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (U.unascribe lb.lbdef))
+              else None)
+      | _ -> None
+    end
+  | _ -> None
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
-    | Some (Inr (se, None)) ->
+    | Some (Inr (se, None), _) ->
       begin match effect_signature se with
         | None -> None
-        | Some (_, t) -> Some (Subst.set_use_range (range_of_lid ftv) t)
+        | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
       end
     | _ -> None
 
@@ -550,7 +569,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
-    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _, _), None)) ->
+    | Some (Inr ({ sigel = Sig_effect_abbrev (lid, univs, binders, c, quals, _) }, None), _) ->
       let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
       if quals |> BU.for_some (function Irreducible -> true | _ -> false)
       then None
@@ -602,7 +621,7 @@ let norm_eff_name =
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
     match lookup_qname env l with
-    | Some (Inr (Sig_new_effect(ne, _), _)) ->
+    | Some (Inr ({ sigel = Sig_new_effect(ne) }, _), _) ->
       ne.qualifiers
     | _ -> []
 
@@ -619,24 +638,24 @@ let lookup_projector env lid i =
 
 let is_projector env (l:lident) : bool =
     match lookup_qname env l with
-        | Some (Inr (Sig_declare_typ(_, _, _, quals, _), _)) ->
+        | Some (Inr ({ sigel = Sig_declare_typ(_, _, _, quals) }, _), _) ->
           BU.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
 let is_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, _, _, _, _, _, _, _), _)) -> true
+    | Some (Inr ({ sigel = Sig_datacon (_, _, _, _, _, _, _) }, _), _) -> true
     | _ -> false
 
 let is_record env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_inductive_typ(_, _, _, _, _, _, tags, _), _)) ->
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _, tags) }, _), _) ->
         BU.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
     | _ -> false
 
 let is_action env lid =
     match lookup_qname env lid with
-        | Some (Inr (Sig_let(_, _, _, tags, _), _)) ->
+        | Some (Inr ({ sigel = Sig_let(_, _, tags, _) }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) tags
         | _ -> false
 
@@ -665,11 +684,12 @@ let is_interpreted =
         | _ -> false
 
 let is_type_constructor env lid =
-    let mapper = function
+    let mapper x = 
+        match fst x with
         | Inl _ -> Some false
         | Inr (se, _) ->
-           begin match se with
-            | Sig_declare_typ (_, _, _, qs, _) ->
+           begin match se.sigel with
+            | Sig_declare_typ (_, _, _, qs) ->
               Some (List.contains New qs)
             | Sig_inductive_typ _ ->
               Some true
@@ -681,7 +701,7 @@ let is_type_constructor env lid =
 
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
-  | Some (Inr (Sig_inductive_typ (_, _, tps, _, _, _, _, _), _)) -> List.length tps
+  | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _, _) }, _), _) -> List.length tps
   | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 ////////////////////////////////////////////////////////////
@@ -695,12 +715,16 @@ let get_effect_decl env l =
     | None -> raise (Error(name_not_found l, range_of_lid l))
     | Some md -> md
 
-let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
+let identity_mlift : mlift =
+  { mlift_wp=(fun t wp -> wp) ;
+    mlift_term=Some (fun t wp e -> e) }
+
+let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
-  then l1, (fun t wp -> wp), (fun t wp -> wp)
+  then l1, identity_mlift, identity_mlift
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Const.effect_GTot_lid, (fun t wp -> wp), (fun t wp -> wp)
+  then Const.effect_GTot_lid, identity_mlift, identity_mlift
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> raise (Error(BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
@@ -708,7 +732,7 @@ let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
   || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
-  then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
+  then Some ({msource=l1; mtarget=l2; mlift=identity_mlift})
   else env.effects.order |> BU.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
 let wp_sig_aux decls m =
@@ -738,43 +762,71 @@ let null_wp_for_eff env eff_name (res_u:universe) (res_t:term) =
                           effect_args=[S.as_arg null_wp_res];
                           flags=[]})
 
-let build_lattice env se = match se with
-  | Sig_new_effect(ne, _) ->
+let build_lattice env se = match se.sigel with
+  | Sig_new_effect(ne) ->
     let effects = {env.effects with decls=ne::env.effects.decls} in
     {env with effects=effects}
 
-  | Sig_sub_effect(sub, _) ->
+  | Sig_sub_effect(sub) ->
     let compose_edges e1 e2 : edge =
-       {msource=e1.msource;
+      let composed_lift =
+        let mlift_wp r wp1 = e2.mlift.mlift_wp r (e1.mlift.mlift_wp r wp1) in
+        let mlift_term =
+          match e1.mlift.mlift_term, e2.mlift.mlift_term with
+          | Some l1, Some l2 -> Some (fun t wp e -> l2 t (e1.mlift.mlift_wp t wp) (l1 t wp e))
+          | _ -> None
+        in
+        { mlift_wp=mlift_wp ; mlift_term=mlift_term}
+      in
+      { msource=e1.msource;
         mtarget=e2.mtarget;
-        mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
+        mlift=composed_lift }
+    in
 
-    let mk_lift lift_t r wp1 =
-        let _, lift_t = inst_tscheme lift_t in
-        mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
+    let mk_mlift_wp lift_t r wp1 =
+      let _, lift_t = inst_tscheme lift_t in
+      mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
+    in
 
-    let sub_lift_wp = match sub.lift_wp with
+    let sub_mlift_wp = match sub.lift_wp with
       | Some sub_lift_wp ->
-          sub_lift_wp
+          mk_mlift_wp sub_lift_wp
       | None ->
           failwith "sub effect should've been elaborated at this stage"
     in
 
-    let edge =
-      {msource=sub.source;
-       mtarget=sub.target;
-       mlift=mk_lift sub_lift_wp} in
-    let id_edge l = {
-       msource=sub.source;
-       mtarget=sub.target;
-       mlift=(fun t wp -> wp)
-    } in
-    let print_mlift l =
-        let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) Delta_constant None in
-        let wp = lid_as_fv (lid_of_path  ["WP"]  dummyRange) Delta_constant None in //A couple of bogus constants, just for printing
-        Print.term_to_string (l arg wp) in
-    let order = edge::env.effects.order in
+    let mk_mlift_term lift_t r wp1 e =
+      let _, lift_t = inst_tscheme lift_t in
+      mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
+    in
 
+    let sub_mlift_term = BU.map_opt sub.lift mk_mlift_term in
+
+    let edge =
+      { msource=sub.source;
+        mtarget=sub.target;
+        mlift={ mlift_wp=sub_mlift_wp; mlift_term=sub_mlift_term } }
+    in
+
+    let id_edge l = {
+      msource=sub.source;
+      mtarget=sub.target;
+      mlift=identity_mlift
+    } in
+
+    (* For debug purpose... *)
+    let print_mlift l =
+      (* A couple of bogus constants, just for printing *)
+      let bogus_term s = fv_to_tm (lid_as_fv (lid_of_path [s] dummyRange) Delta_constant None) in
+      let arg = bogus_term "ARG" in
+      let wp = bogus_term "WP" in
+      let e = bogus_term "COMP" in
+      BU.format2 "{ wp : %s ; term : %s }"
+                 (Print.term_to_string (l.mlift_wp arg wp))
+                 (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l arg wp e))))
+    in
+
+    let order = edge::env.effects.order in
     let ms = env.effects.decls |> List.map (fun (e:eff_decl) -> e.mname) in
 
     let find_edge order (i, j) =
@@ -787,42 +839,64 @@ let build_lattice env se = match se with
        and it's not incremental.
        Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
     let order =
-        ms |> List.fold_left (fun order k ->
+      let fold_fun order k =
         order@(ms |> List.collect (fun i ->
-               if lid_equals i k then []
-               else ms |> List.collect (fun j ->
-                    if lid_equals j k
-                    then []
-                    else match find_edge order (i, k), find_edge order (k, j) with
-                            | Some e1, Some e2 -> [compose_edges e1 e2]
-                            | _ -> []))))
-        order in
+                  if lid_equals i k then []
+                  else ms |> List.collect (fun j ->
+                      if lid_equals j k
+                      then []
+                      else match find_edge order (i, k), find_edge order (k, j) with
+              | Some e1, Some e2 -> [compose_edges e1 e2]
+              | _ -> [])))
+      in ms |> List.fold_left fold_fun order
+    in
     let order = BU.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
                                             && lid_equals e1.mtarget e2.mtarget) order in
     let _ = order |> List.iter (fun edge ->
         if Ident.lid_equals edge.msource Const.effect_DIV_lid
         && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
         then raise (Error(BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str,
-                          get_range env))) in
+                          get_range env)))
+    in
     let joins =
-        ms |> List.collect (fun i ->
-        ms |> List.collect (fun j ->
-        let join_opt = ms |> List.fold_left (fun bopt k ->
+      ms |> List.collect (fun i ->
+      ms |> List.collect (fun j ->
+      let join_opt =
+        if Ident.lid_equals i j then Some (i, id_edge i, id_edge i)
+        else
+          ms |> List.fold_left (fun bopt k ->
           match find_edge order (i, k), find_edge order (j, k) with
             | Some ik, Some jk ->
               begin match bopt with
-                | None -> Some (k, ik, jk) //we don't have a current candidate as the upper bound; so we may as well use k
+                (* we don't have a current candidate as the upper bound; so we may as well use k *)
+                | None -> Some (k, ik, jk)
 
                 | Some (ub, _, _) ->
-                  if BU.is_some (find_edge order (k, ub))
-                  && not (BU.is_some (find_edge order (ub, k)))
-                  then Some (k, ik, jk) //k is less than ub
-                  else bopt
+                  begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
+                    | true, true ->
+                      if Ident.lid_equals k ub
+                      then (BU.print_warning "Looking multiple times at the same upper bound candidate" ; bopt)
+                      else failwith "Found a cycle in the lattice"
+                    | false, false -> bopt
+                          (* KM : This seems a little fishy since we could obtain as *)
+                          (* a join an effect which might not be comparable with all *)
+                          (* upper bounds (which means that the order of joins does matter) *)
+                          (* raise (Error (BU.format4 "Uncomparable upper bounds for effects %s and %s : %s %s" *)
+                          (*                 (Ident.text_of_lid i) *)
+                          (*                 (Ident.text_of_lid j) *)
+                          (*                 (Ident.text_of_lid k) *)
+                          (*                 (Ident.text_of_lid ub), *)
+                          (*               get_range env)) *)
+                    | true, false -> Some (k, ik, jk) //k is less than ub
+                    | false, true -> bopt
+                  end
               end
-            | _ -> bopt) None in
-        match join_opt with
-            | None -> []
-            | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)])) in
+            | _ -> bopt) None
+      in
+      match join_opt with
+      | None -> []
+      | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)]))
+    in
 
     let effects = {env.effects with order=order; joins=joins} in
 //    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
@@ -831,7 +905,82 @@ let build_lattice env se = match se with
 
   | _ -> env
 
-////////////////////////////////////////////////////////////
+let comp_to_comp_typ (env:env) c =
+    let c = match c.n with
+            | Total (t, None) ->
+              let u = env.universe_of env t in
+              S.mk_Total' t (Some u)
+            | GTotal (t, None) ->
+              let u = env.universe_of env t in
+              S.mk_GTotal' t (Some u)
+            | _ -> c in
+    U.comp_to_comp_typ c
+
+let rec unfold_effect_abbrev env comp =
+  let c = comp_to_comp_typ env comp in
+  match lookup_effect_abbrev env c.comp_univs c.effect_name with
+    | None -> c
+    | Some (binders, cdef) ->
+      let binders, cdef = Subst.open_comp binders cdef in
+      if List.length binders <> List.length c.effect_args + 1
+      then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+                                (BU.string_of_int (List.length binders))
+                                (BU.string_of_int (List.length c.effect_args + 1))
+                                (Print.comp_to_string (S.mk_Comp c))
+                            , comp.pos));
+      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
+      let c1 = Subst.subst_comp inst cdef in
+      let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
+      unfold_effect_abbrev env c
+
+let effect_repr_aux only_reifiable env c u_c =
+    match effect_decl_opt env (norm_eff_name env (U.comp_effect_name c)) with
+    | None -> None
+    | Some ed ->
+        if only_reifiable && not (ed.qualifiers |> List.contains Reifiable)
+        then None
+        else match ed.repr.n with
+        | Tm_unknown -> None
+        | _ ->
+          let c = unfold_effect_abbrev env c in
+          let res_typ, wp = c.result_typ, List.hd c.effect_args in
+          let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
+          Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
+
+let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
+
+let reify_comp env c u_c : term =
+    let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l), get_range env)) in
+    match effect_repr_aux true env c u_c with
+    | None -> no_reify (U.comp_effect_name c)
+    | Some tm -> tm
+
+(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
+(* a body or codomain of an arrow) [x] is reifiable *)
+
+let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
+    let quals = lookup_effect_quals env effect_lid in
+    List.contains Reifiable quals
+
+let is_reifiable (env:env) (c:either<S.lcomp, S.residual_comp>) : bool =
+    let effect_lid = match c with
+        | Inl lc -> lc.eff_name
+        | Inr (eff_name, _) -> eff_name
+    in
+    is_reifiable_effect env effect_lid
+
+let is_reifiable_comp (env:env) (c:S.comp) : bool =
+    match c.n with
+    | Comp ct -> is_reifiable_effect env ct.effect_name
+    | _ -> false
+
+let is_reifiable_function (env:env) (t:S.term) : bool =
+    match (compress t).n with
+    | Tm_arrow (_, c) -> is_reifiable_comp env c
+    | _ -> false
+
+
+///////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
 
@@ -866,6 +1015,11 @@ let push_sigelt_inst env s us =
 let push_local_binding env b = {env with gamma=b::env.gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
+
+let pop_bv env =
+    match env.gamma with
+    | Binding_var x::rest -> Some (x, {env with gamma=rest})
+    | _ -> None
 
 let push_binders env (bs:binders) =
     List.fold_left (fun env (x, _) -> push_bv env x) env bs
@@ -968,6 +1122,24 @@ let bound_vars env = bound_vars_of_bindings env.gamma
 
 let all_binders env = binders_of_bindings env.gamma
 
+let print_gamma env =
+    env.gamma |> List.map (function
+        | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
+        | Binding_univ u -> "Binding_univ " ^ u.idText
+        | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)
+        | Binding_sig (ls, _) -> "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
+        | Binding_sig_inst (ls, _, _) -> "Binding_sig_inst " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", "))
+    |> String.concat "::\n"
+    |> BU.print1 "%s\n"
+
+let eq_gamma env env' =
+    if BU.physical_equality env.gamma env'.gamma
+    then true
+    else let g = all_binders env in
+         let g' = all_binders env' in
+         List.length g = List.length g'
+         && List.forall2 (fun (b1, _) (b2, _) -> S.bv_eq b1 b2) g g'
+
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let lidents env : list<lident> =
@@ -987,6 +1159,7 @@ let dummy_solver = {
     commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
+    preprocess=(fun e g -> [e,g]);
     solve=(fun _ _ _ -> ());
     is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());

@@ -10,8 +10,9 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal"
       ],
       0
     ],
