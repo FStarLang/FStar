@@ -36,12 +36,7 @@ reifiable reflectable new_effect {
 }
 
 
-let raise (#a:Type) (e:exn) : EXN a (fun _ p -> p (Inr e)) =
-  EXN?.raise #a e
-
-(* let raise (#a:Type) (e:exn) : EXN a (fun _ p -> p (Inr e)) = *)
-(*   let x = EXN?.raise e in *)
-(*   (match x with) *)
+let raise = EXN?.raise
 
 (* An effect to alias easily write pre- and postconditions *)
 (* Note: we use Type0 instead of EXN?.pre to avoid having to thunk everything. *)

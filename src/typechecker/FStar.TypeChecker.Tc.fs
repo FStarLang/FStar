@@ -323,7 +323,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
       let actions =
         let check_action act =
           (* We should not have action params anymore, they should have been handled by dmff below *)
-          assert (act.action_params = []) ;
+          assert (match act.action_params with | [] -> true | _ -> false) ;
           (* let params_un, act_typ, opening = SS.open_term' act.action_params act.action_typ in *)
           (* let params, env, _ = tc_tparams env params_un in *)
           (* let act_defn = match params with *)
@@ -339,7 +339,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
-          let env' = Env.set_expected_typ env act_typ in
+          let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
           if Env.debug env (Options.Other "ED") then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
@@ -662,11 +662,12 @@ and cps_and_elaborate env ed =
     let action_typ_with_wp = SS.close params action_typ_with_wp in
     let action_elab = abs params action_elab None in
     let action_typ_with_wp = flat_arrow params (S.mk_Total action_typ_with_wp) in
-    BU.print4 "original params %s, end params %s, type %s, term %s\n"
-      (Print.binders_to_string "," params_un)
-      (Print.binders_to_string "," params)
-      (Print.term_to_string action_typ_with_wp)
-      (Print.term_to_string action_elab) ;
+    if Env.debug env <| Options.Other "ED"
+    then BU.print4 "original params %s, end params %s, type %s, term %s\n"
+        (Print.binders_to_string "," params_un)
+        (Print.binders_to_string "," params)
+        (Print.term_to_string action_typ_with_wp)
+        (Print.term_to_string action_elab) ;
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
     (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
