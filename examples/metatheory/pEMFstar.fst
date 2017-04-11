@@ -1,6 +1,6 @@
 module PEMFstar
 
-module L = FStar.List.Tot
+module L = FStar.List.Pure
 
 type universe_level = nat
 
@@ -392,6 +392,32 @@ let valid (typing : env -> term -> comp -> Type0) (g:env) : Type0 =
   forall (x:var). None? (g x) \/
     (exists (u:universe_level). typing (restrict_above g x) (Some?.v (g x)) (Tot_ (Type_ u)))
 
+let rec extend_with_ctx1 (g:env) (ctx:dterm 1) : Tot env (decreases ctx) =
+  match ctx with
+  | Hole -> g
+  | DApp #n1 #n2 dt1 dt2 ->
+    if n1 = 1
+    then extend_with_ctx1 g dt1
+    else extend_with_ctx1 g dt2
+  | DLam #n1 #n2 dt1 dt2
+  | DRefine #n1 #n2 dt1 dt2 ->
+    if n1 = 1
+    then extend_with_ctx1 g dt1
+    else extend_with_ctx1 (extend g 0 (dterm_as_term dt1)) dt2
+  | DProd #n1 #n2 dt dc ->
+    if n1 = 1
+    then extend_with_ctx1 g dt
+    else extend_with_comp_ctx1 (extend g 0 (dterm_as_term dt)) dc
+
+and extend_with_comp_ctx1 (g:env) (ctx:dcomp 1) : Tot env (decreases ctx) =
+  match ctx with
+  | DTot dt -> extend_with_ctx1 g dt
+  | DPure #n1 #n2 dt1 dt2 ->
+    if n1 = 1
+    then extend_with_ctx1 g dt1
+    else extend_with_ctx1 g dt2
+
+
 (* Definitions used during typing *)
 
 let nat_elim_type =
@@ -565,10 +591,24 @@ type reduce : term -> term -> Type =
   | RedEqElimRefl :
     #t:term ->
     #erefl:term ->
-    def_eq (App (App (App (Const EqElim []) t) erefl) (Const Refl [])) erefl
+    reduce (App (App (App (Const EqElim []) t) erefl) (Const Refl [])) erefl
 
 (* Definitional equality *)
 
+(* let apply_ctx (#n:nat) (ctx:dterm n) (ts:list term{L.length ts == n}) *)
+(*   : Tot term *)
+(* = let to_dterm (t:term) : k:nat & dterm k = (|0, Term t |) in *)
+(*   let ts : l:list (k:nat & dterm k){L.length l == n} = L.map to_dterm ts in *)
+(*   (\* TODO : this fails to prove (I guess it needs induction) *\) *)
+(*   assert_norm (sum <| L.map dfst ts == 0) ; *)
+(*   dterm_as_term (dterm_comp ctx ts) *)
+
+let apply_ctx (ctx:dterm 1) (l:list term{match l with | [_] -> True | _ -> False}) : term =
+  let l : l:list (k:nat & dterm k){L.length l = 1} = [(|0, Term (L.hd l)|)]in
+  assert_norm (sum <| L.map dfst l == 0) ;
+  dterm_as_term (dterm_comp ctx l)
+
+noeq
 type def_eq : env -> term -> term -> Type0 =
 
   (* Equivalence relation *)
@@ -576,7 +616,7 @@ type def_eq : env -> term -> term -> Type0 =
     #g:env ->
     #t:term ->
     #a:term ->
-    typing g t a ->
+    typing def_eq g t (tot a) ->
     def_eq g t t
 
   | DSTClosure :
@@ -589,21 +629,24 @@ type def_eq : env -> term -> term -> Type0 =
   | DCongr :
     #g:env ->
     #n:nat ->
-    #t1s:list term{L.length t1s == n} ->
-    #t2s:list term{L.length t1s == n} ->
-    ctx:dterm n ->
-    map3 def_eq (extend_with_ctx g ctx) t1s t2s ->
-    def_eq g (apply_ctx ctx t1s) (apply_ctx ctx t2s)
+    #t1:term ->
+    #t2:term ->
+    ctx:dterm 1 ->
+    def_eq (extend_with_ctx1 g ctx) t1 t2 ->
+    def_eq g (apply_ctx ctx [t1]) (apply_ctx ctx [t2])
 
   | DComputation :
     #g:env ->
     #t1:term ->
     #t2:term ->
     #a:term ->
-    typing g t1 a ->
-    typing g t2 a ->
+    typing def_eq g t1 (tot a) ->
+    typing def_eq g t2 (tot a) ->
     reduce t1 t2 ->
     def_eq g t1 t2
+
+
+
 
 (* type def_eq : env -> term -> term -> Type0 = *)
 
