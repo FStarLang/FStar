@@ -622,18 +622,15 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (* closing types and terms *)
 (***********************************************************************************************)
 let abs bs t lopt =
-  if List.length bs = 0 then
-    t
-  else
-    let close_lopt lopt = match lopt with
-        | None
-        | Some (Inr _) -> lopt
-        | Some (Inl lc) ->
-            Some (Inl (close_lcomp bs lc))
-    in
-    match bs with
-    | [] -> t
-    | _ ->
+  let close_lopt lopt = match lopt with
+      | None
+      | Some (Inr _) -> lopt
+      | Some (Inl lc) ->
+          Some (Inl (close_lcomp bs lc))
+  in
+  match bs with
+  | [] -> t
+  | _ ->
     let body = compress (Subst.close bs t) in
     match body.n, lopt with
         | Tm_abs(bs', t, lopt'), None ->
@@ -1005,14 +1002,16 @@ let destruct_typ_as_formula f : option<connective> =
 
 
   let action_as_lb eff_lid a =
-    let lb = close_univs_and_mk_letbinding
-                None
-                (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-                (Inr (lid_as_fv a.action_name Delta_equational None))
-                a.action_univs
-                a.action_typ
-                Const.effect_Tot_lid
-                a.action_defn in
+    let lb =
+      close_univs_and_mk_letbinding
+        None
+        (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
+        (Inr (lid_as_fv a.action_name Delta_equational None))
+        a.action_univs
+        (arrow a.action_params (mk_Total a.action_typ))
+        Const.effect_Tot_lid
+        (abs a.action_params a.action_defn None)
+    in
     { sigel = Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []);
       sigrng = a.action_defn.pos }
 

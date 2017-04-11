@@ -273,7 +273,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
                  then query_info "failed";
                  try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope in
 
-        if Option.isSome unsat_core then Z3.refresh();
+        if Option.isSome unsat_core
+        || Options.z3_refresh() then Z3.refresh();
         Z3.ask unsat_core
                all_labels
                (with_fuel [] p initial_config)

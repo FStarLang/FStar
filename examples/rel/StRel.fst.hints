@@ -7,11 +7,13 @@
       2,
       1,
       [
-        "@query", "equation_Prims.fst", "equation_Prims.snd",
-        "equation_StRel.f1_hp", "function_token_typing_Prims.int",
-        "pretyping_6c86c071b92797cdf01eb016249a9465",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.fst", "equation_Prims.snd", "equation_StRel.f1_hp",
+        "function_token_typing_FStar.Heap.emp",
+        "function_token_typing_Prims.int", "proj_equation_Prims.Mktuple2__1",
+        "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "ref_inversion",
         "typing_FStar.Heap.sel"
@@ -24,9 +26,11 @@
       2,
       1,
       [
-        "@query", "equation_Prims.fst", "equation_Prims.snd",
-        "equation_StRel.f2_hp", "pretyping_6c86c071b92797cdf01eb016249a9465",
-        "pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.fst", "equation_Prims.snd", "equation_StRel.f2_hp",
+        "function_token_typing_FStar.Heap.emp",
         "proj_equation_Prims.Mktuple2__1", "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "ref_inversion"
@@ -41,15 +45,15 @@
       2,
       1,
       [
-        "@query", "eq2-interp", "equation_Rel.eq", "equation_Rel.lift",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "eq2-interp", "equation_Rel.eq", "equation_Rel.lift",
         "equation_Rel.r_eq", "equation_StRel.glift2",
-        "function_token_typing_FStar.Heap.emp",
-        "pretyping_6c86c071b92797cdf01eb016249a9465",
-        "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
-        "projection_inverse_Prims.Mktuple2__1",
+        "function_token_typing_FStar.Heap.emp", "proj_equation_Rel.R_l",
+        "proj_equation_Rel.R_r", "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
         "projection_inverse_Rel.R_r",
-        "refinement_interpretation_Tm_refine_b7adc7274fb5942de957c81cfe96d74d",
+        "refinement_interpretation_Rel_Tm_refine_b7adc7274fb5942de957c81cfe96d74d",
         "token_correspondence_StRel.f1_hp", "unit_typing"
       ],
       0
@@ -60,16 +64,17 @@
       2,
       1,
       [
-        "@query", "data_elim_Rel.R", "eq2-interp", "equation_Prims.snd",
-        "equation_Rel.lift", "equation_Rel.lift2", "equation_Rel.r_eq",
-        "equation_StRel.f2_hp", "fuel_guarded_inversion_Rel.rel",
-        "pretyping_f986b91ad3d5cf34f5ff0e3466d53f43",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "eq2-interp", "equation_Prims.snd", "equation_Rel.lift",
+        "equation_Rel.lift2", "equation_Rel.r_eq", "equation_StRel.f2_hp",
+        "fuel_guarded_inversion_Rel.rel",
+        "function_token_typing_FStar.Heap.emp",
         "proj_equation_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "projection_inverse_Rel.R_l",
-        "projection_inverse_Rel.R_r", "ref_inversion",
-        "token_correspondence_Prims.snd", "token_correspondence_StRel.f2_hp",
-        "unit_typing"
+        "projection_inverse_Rel.R_r", "token_correspondence_Prims.snd",
+        "token_correspondence_StRel.f2_hp", "unit_typing"
       ],
       0
     ]

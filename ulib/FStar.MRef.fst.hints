@@ -20,9 +20,9 @@
       2,
       1,
       [
-        "@query", "equation_FStar.MRef.as_ref", "equation_FStar.MRef.mref",
-        "equation_FStar.MRef.sel", "equation_FStar.ST.ref", "ref_inversion",
-        "typing_FStar.Heap.sel"
+        "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.as_ref",
+        "equation_FStar.MRef.mref", "equation_FStar.MRef.sel",
+        "equation_FStar.ST.ref", "ref_inversion", "typing_FStar.Heap.sel"
       ],
       0
     ],

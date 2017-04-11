@@ -33,6 +33,7 @@ type env = {
 
 val empty : Env.env -> (sconst -> typ) -> env
 val get_env: env -> Env.env
+val set_env : env -> Env.env -> env
 val gen_wps_for_free: Env.env -> binders -> bv -> term -> eff_decl -> sigelts * eff_decl
 val double_star: typ -> typ
 val star_type: env -> typ -> typ

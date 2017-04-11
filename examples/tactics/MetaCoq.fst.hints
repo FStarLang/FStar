@@ -7,17 +7,7 @@
     [ "MetaCoq.ttry", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.or", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.exact", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "MetaCoq.apply",
-      1,
-      2,
-      1,
-      [
-        "@query", "data_elim_Prims.V", "disc_equation_Prims.V",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0"
-      ],
-      0
-    ],
+    [ "MetaCoq.apply", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.cut", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.select", 1, 2, 1, [ "@query" ], 0 ]
   ]

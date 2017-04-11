@@ -405,8 +405,10 @@ let rec desugar_universe t : Syntax.universe =
    so, then return the record found by field name resolution. *)
 let check_fields env fields rg =
     let (f, _) = List.hd fields in
+    let _ = Env.fail_if_qualified_by_curmodule env f in
     let record = fail_or env (try_lookup_record_by_field_name env) f in
     let check_field (f', _) =
+        let _ = Env.fail_if_qualified_by_curmodule env f' in
         if Env.belongs_to_record env f' record
         then ()
         else let msg = BU.format3
@@ -687,6 +689,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Name {str="False"}   -> S.fvar (Ident.set_lid_range Const.false_lid top.range) Delta_constant None
     | Projector (eff_name, {idText = txt})
       when is_special_effect_combinator txt && Env.is_effect_name env eff_name ->
+      let _ = Env.fail_if_qualified_by_curmodule env eff_name in
       (* TODO : would it be possible to normalize the effect name at that point so that *)
       (* we get back the original effect definition instead of an effect abbreviation *)
       begin match try_lookup_effect_defn env eff_name with
@@ -708,9 +711,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Var l
     | Name l ->
+      let _ = Env.fail_if_qualified_by_curmodule env l in
       desugar_name mk setpos env true l
 
     | Projector (l, i) ->
+      let _ = Env.fail_if_qualified_by_curmodule env l in
       let name =
         match Env.try_lookup_datacon env l with
         | Some _ -> Some (true, l)
@@ -727,6 +732,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Discrim lid ->
+      let _ = Env.fail_if_qualified_by_curmodule env lid in
       begin match Env.try_lookup_datacon env lid with
       | None ->
         raise (Error (BU.format1 "Data constructor %s not found" lid.str, top.range))
@@ -736,6 +742,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Construct(l, args) ->
+        let _ = Env.fail_if_qualified_by_curmodule env l in
         begin match Env.try_lookup_datacon env l with
         | Some head ->
             let head, is_data = mk (Tm_fvar head), true in
@@ -754,7 +761,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 else app
             end
         | None ->
-            raise (Error ("Constructor " ^ l.str ^ " not found", top.range))
+            let error_msg =
+              match Env.try_lookup_effect_name env l with
+              | None -> "Constructor " ^ l.str ^ " not found"
+              | Some _ -> "Effect " ^ l.str ^ " used at an unexpected position"
+            in
+            raise (Error (error_msg, top.range))
         end
 
     | Sum(binders, t) ->
@@ -874,7 +886,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | LetOpen (lid, e) ->
       let env = Env.push_namespace env lid in
-      desugar_term_maybe_top top_level env e
+      (if env.expect_typ then desugar_typ else desugar_term) env e
 
     | Let(qual, ((pat, _snd)::_tl), body) ->
       let is_rec = qual = Rec in
@@ -1079,6 +1091,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       end
 
     | Project(e, f) ->
+      let _ = Env.fail_if_qualified_by_curmodule env f in
       let constrname, is_rec = fail_or env  (try_lookup_dc_by_field_name env) f in
       let e = desugar_term env e in
       let projname = mk_field_projector_name_from_ident constrname f.ident in
@@ -1104,61 +1117,89 @@ and desugar_args env args =
 and desugar_comp r env t =
     let fail : string -> 'a = fun msg -> raise (Error(msg, r)) in
     let is_requires (t, _) = match (unparen t).tm with
-        | Requires _ -> true
-        | _ -> false in
+      | Requires _ -> true
+      | _ -> false
+    in
     let is_ensures (t, _) = match (unparen t).tm with
-        | Ensures _ -> true
-        | _ -> false in
+      | Ensures _ -> true
+      | _ -> false
+    in
     let is_app head (t, _) = match (unparen t).tm with
-       | App({tm=Var d}, _, _) -> d.ident.idText = head
-       | _ -> false in
+      | App({tm=Var d}, _, _) -> d.ident.idText = head
+      | _ -> false
+    in
+    let is_smt_pat (t,_) =
+      match (unparen t).tm with
+      | Construct (cons, [{tm=Construct (smtpat, _)}, _; _]) ->
+        Ident.lid_equals cons C.cons_lid &&
+        BU.for_some (fun s -> smtpat.str = s)
+          (* the smt pattern does not seem to be disambiguated yet at this point *)
+          ["SMTPat" ; "SMTPatT" ; "SMTPatOr"]
+          (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
+      | _ -> false
+    in
     let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
-        let head, args = head_and_args t in
-        match head.tm with
-            | Name lemma when (lemma.ident.idText = "Lemma") -> //need to add the unit result type and the empty SMTPat list, if n
-              let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
-              let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
-              let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type_level, Nothing in
-              let args = match args with
-                    | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-                    | [ens] -> [unit_tm;req_true;ens;nil_pat] //a single ensures clause
-                    | [req;ens] when (is_requires req && is_ensures ens) -> [unit_tm;req;ens;nil_pat]
-                    | [ens;dec] when (is_ensures ens && is_decreases dec) -> [unit_tm;req_true;ens;nil_pat;dec]
-                    | [req;ens;dec] when (is_requires req && is_ensures ens && is_app "decreases" dec) -> [unit_tm;req;ens;nil_pat;dec]
-                    | more -> unit_tm::more in
-              let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
-              head_and_attributes, args
+      let head, args = head_and_args t in
+      match head.tm with
+      | Name lemma when (lemma.ident.idText = "Lemma") ->
+        (* need to add the unit result type and the empty SMTPat list, if n *)
+        let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
+        let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
+        let req_true =
+          let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
+          mk_term req t.range Type_level, Nothing
+        in
+        let args = match args with
+          | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
+          (* a single ensures clause *)
+          | [ens] -> [unit_tm;req_true;ens;nil_pat]
+          | [ens;smtpat] when is_smt_pat smtpat ->
+              [unit_tm;req_true;ens;smtpat]
+          | [req;ens] when (is_requires req && is_ensures ens) ->
+              [unit_tm;req;ens;nil_pat]
+          | [ens;dec] when (is_ensures ens && is_decreases dec) ->
+              [unit_tm;req_true;ens;nil_pat;dec]
+          | [ens;dec;smtpat] when (is_ensures ens && is_decreases dec && is_smt_pat smtpat) ->
+              [unit_tm;req_true;ens;smtpat;dec]
+          | [req;ens;dec] when (is_requires req && is_ensures ens && is_decreases dec) ->
+              [unit_tm;req;ens;nil_pat;dec]
+          | more -> unit_tm::more
+        in
+        let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
+        head_and_attributes, args
 
-            | Name l when Env.is_effect_name env l ->
-             //we have an explicit effect annotation ... no need to add anything
-             fail_or env (Env.try_lookup_effect_name_and_attributes env) l, args
+      | Name l when Env.is_effect_name env l ->
+        (* we have an explicit effect annotation ... no need to add anything *)
+        fail_or env (Env.try_lookup_effect_name_and_attributes env) l, args
 
 
-            | Name l when (lid_equals (Env.current_module env) C.prims_lid //we're right at the beginning of Prims, when Tot isn't yet fully defined
-                               && l.ident.idText = "Tot") ->
-             //we have an explicit effect annotation ... no need to add anything
-             (Ident.set_lid_range Const.effect_Tot_lid head.range,  []), args
+      (* we're right at the beginning of Prims, when Tot isn't yet fully defined *)
+      | Name l when (lid_equals (Env.current_module env) C.prims_lid
+                          && l.ident.idText = "Tot") ->
+        (* we have an explicit effect annotation ... no need to add anything *)
+        (Ident.set_lid_range Const.effect_Tot_lid head.range,  []), args
 
-            | Name l when (lid_equals (Env.current_module env) C.prims_lid //we're right at the beginning of Prims, when GTot isn't yet fully defined
-                               && l.ident.idText = "GTot") ->
-             //we have an explicit effect annotation ... no need to add anything
-             (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
+      (* we're right at the beginning of Prims, when GTot isn't yet fully defined *)
+      | Name l when (lid_equals (Env.current_module env) C.prims_lid
+                          && l.ident.idText = "GTot") ->
+        (* we have an explicit effect annotation ... no need to add anything *)
+        (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
 
-            | Name l when (l.ident.idText="Type"
-                           || l.ident.idText="Type0"
-                           || l.ident.idText="Effect") ->
-              //the default effect for Type is always Tot
-              (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
+      | Name l when (l.ident.idText="Type"
+                      || l.ident.idText="Type0"
+                      || l.ident.idText="Effect") ->
+        (* the default effect for Type is always Tot *)
+        (Ident.set_lid_range Const.effect_Tot_lid head.range, []), [t, Nothing]
 
-            | _ ->
-             let default_effect =
-               if Options.ml_ish ()
-               then Const.effect_ML_lid
-               else (if Options.warn_default_effects()
-                     then FStar.Errors.warn head.range "Using default effect Tot";
-                     Const.effect_Tot_lid) in
-             (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
+      | _ ->
+        let default_effect =
+          if Options.ml_ish ()
+          then Const.effect_ML_lid
+          else (if Options.warn_default_effects()
+                then FStar.Errors.warn head.range "Using default effect Tot";
+                Const.effect_Tot_lid) in
+        (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
@@ -1169,16 +1210,20 @@ and desugar_comp r env t =
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in
     let rest = desugar_args env rest in
-    let dec, rest = rest |> List.partition (fun (t, _) ->
-            begin match t.n with
-                | Tm_app({n=Tm_fvar fv}, [_]) -> S.fv_eq_lid fv C.decreases_lid
-                | _ -> false
-            end) in
+    let dec, rest =
+      let is_decrease (t, _) = match t.n with
+        | Tm_app({n=Tm_fvar fv}, [_]) -> S.fv_eq_lid fv C.decreases_lid
+        | _ -> false
+      in
+      rest |> List.partition is_decrease
+    in
 
-    let decreases_clause = dec |> List.map (fun (t, _) ->
-                match t.n with
-                | Tm_app(_, [(arg, _)]) -> DECREASES arg
-                | _ -> failwith "impos") in
+    let decreases_clause =
+      dec |> List.map (fun (t, _) ->
+        match t.n with
+        | Tm_app(_, [(arg, _)]) -> DECREASES arg
+        | _ -> failwith "impos")
+    in
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)
         let is_empty (l:list<'a>) = match l with | [] -> true | _ -> false in
@@ -1193,32 +1238,39 @@ and desugar_comp r env t =
     else if no_additional_args
          && lid_equals eff C.effect_GTot_lid
     then mk_GTotal result_typ
-    else let flags =
-            if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
-            else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
-            else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
-            else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
-            else [] in
-        let flags = flags @ cattributes in
-        let rest =
-            if lid_equals eff C.effect_Lemma_lid
-            then match rest with
-                    | [req;ens;(pat, aq)] ->
-                      let pat = match pat.n with
-                        | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it
-                          let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
-                          let pattern = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero] in //;U_zero] in
-                          S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
-                        | _ -> pat in
-                        [req; ens;
-                        (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
-                    | _ -> rest
-            else rest in
-        mk_Comp ({comp_univs=universes;
-                  effect_name=eff;
-                  result_typ=result_typ;
-                  effect_args=rest;
-                  flags=flags@decreases_clause})
+    else
+      let flags =
+        if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
+        else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
+        else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
+        else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
+        else []
+      in
+      let flags = flags @ cattributes in
+      let rest =
+        if lid_equals eff C.effect_Lemma_lid
+        then
+          match rest with
+          | [req;ens;(pat, aq)] ->
+            let pat = match pat.n with
+              (* we really want the empty pattern to be in universe S 0 rather than generalizing it *)
+              | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
+                let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
+                let pattern =
+                  S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero]
+                in
+                S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
+              | _ -> pat
+            in
+            [req; ens; (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
+          | _ -> rest
+        else rest
+      in
+      mk_Comp ({comp_univs=universes;
+                effect_name=eff;
+                result_typ=result_typ;
+                effect_args=rest;
+                flags=flags@decreases_clause})
 
 and desugar_formula env (f:term) : S.term =
   let connective s = match s with
@@ -1618,8 +1670,8 @@ let desugar_binders env binders =
     let env, binders = List.fold_left (fun (env,binders) b ->
     match desugar_binder env b with
       | (Some a, k) ->
-        let env, a = Env.push_bv env a in
-        env, S.mk_binder ({a with sort=k})::binders
+        let binder, env = as_binder env b.aqual (Some a, k) in
+        env, binder::binders
 
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
@@ -1670,24 +1722,30 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let binders = Subst.close_binders binders in
     let actions_docs = actions |> List.map (fun d ->
         match d.d with
-        | Tycon(_, [TyconAbbrev(name, _, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
+        | Tycon(_, [TyconAbbrev(name, params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and its cps'd type.
+            let env, params = desugar_binders env params in
+            let params = Subst.close_binders params in
             {
               action_name=Env.qualify env name;
               action_unqualified_name = name;
               action_univs=[];
-              action_defn=Subst.close binders (desugar_term env def);
-              action_typ=Subst.close binders (desugar_typ env cps_type)
+              action_params = params;
+              action_defn=Subst.close (binders @ params) (desugar_term env def);
+              action_typ=Subst.close (binders @ params) (desugar_typ env cps_type)
             }, doc
-        | Tycon(_, [TyconAbbrev(name, _, _, defn), doc]) when for_free ->
+        | Tycon(_, [TyconAbbrev(name, params, _, defn), doc]) when for_free ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
+            let env, params = desugar_binders env params in
+            let params = Subst.close_binders params in
             {
               action_name=Env.qualify env name;
               action_unqualified_name = name;
               action_univs=[];
-              action_defn=Subst.close binders (desugar_term env defn);
+              action_params = params;
+              action_defn=Subst.close (binders@params) (desugar_term env defn);
               action_typ=S.tun
             }, doc
         | _ ->
@@ -1832,6 +1890,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
                     action_name = Env.qualify env (action.action_unqualified_name);
                     action_unqualified_name = action.action_unqualified_name;
                     action_univs = action.action_univs ;
+                    action_params = action.action_params ;
                     action_defn =snd (sub ([], action.action_defn)) ;
                     action_typ =snd (sub ([], action.action_typ))
                 })

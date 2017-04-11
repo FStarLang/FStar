@@ -498,22 +498,7 @@ let termToSmt
                   format1 "%s" (aux n names p)) pats)))
               |> String.concat "\n"
           in
-          if depth = 0
-          then let qbody =
-                  match pats, wopt with
-                  | [], None
-                  | [[]], None ->
-                    aux n names body
-                  | _ ->
-                    BU.format3 "(! %s\n %s\n%s)"
-                        (aux n names body)
-                        (weightToSmt wopt)
-                        pats_str in
-               BU.format "(%s (%s)\n %s)"
-                    [qop_to_string qop;
-                     binders;
-                     qbody]
-          else BU.format "(%s (%s)\n (! %s\n %s\n%s\n:qid %s))"
+          BU.format "(%s (%s)\n (! %s\n %s\n%s\n:qid %s))"
                     [qop_to_string qop;
                      binders;
                      aux n names body;
@@ -609,6 +594,12 @@ and mkPrelude z3options =
 		                (! (= (HasTypeFuel (SFuel f) x t)\n\
 			                  (HasTypeZ x t))\n\
 		                   :pattern ((HasTypeFuel (SFuel f) x t)))))\n\
+                (declare-fun NoHoist (Term Bool) Bool)\n\
+                ;;no-hoist\n\
+                (assert (forall ((dummy Term) (b Bool))\n\
+		                (! (= (NoHoist dummy b)\n\
+			                  b)\n\
+		                   :pattern ((NoHoist dummy b)))))\n\
                 (define-fun  IsTyped ((x Term)) Bool\n\
                     (exists ((t Term)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyTF (Term Fuel) Term)\n\
@@ -699,6 +690,7 @@ let mk_HasTypeFuel f v t =
 let mk_HasTypeWithFuel f v t = match f with
     | None -> mk_HasType v t
     | Some f -> mk_HasTypeFuel f v t
+let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
 let mk_Destruct v     = mkApp("Destruct", [v])
 let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng

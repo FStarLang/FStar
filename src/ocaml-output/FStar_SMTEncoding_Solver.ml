@@ -628,23 +628,27 @@ let ask_and_report_errors :
                                       (prev_fuel, prev_ifuel, timeout) p1
                                       errs alt scope)))
                         in
-                       (if FStar_Option.isSome unsat_core
-                        then FStar_SMTEncoding_Z3.refresh ()
-                        else ();
-                        (let uu____1367 = with_fuel [] p initial_config  in
-                         let uu____1369 =
-                           let uu____1378 =
+                       ((let uu____1365 =
+                           (FStar_Option.isSome unsat_core) ||
+                             (FStar_Options.z3_refresh ())
+                            in
+                         if uu____1365
+                         then FStar_SMTEncoding_Z3.refresh ()
+                         else ());
+                        (let uu____1368 = with_fuel [] p initial_config  in
+                         let uu____1370 =
+                           let uu____1379 =
                              FStar_ST.read FStar_SMTEncoding_Z3.fresh_scope
                               in
                            cb (FStar_Option.isSome unsat_core) initial_config
-                             p alt_configs uu____1378
+                             p alt_configs uu____1379
                             in
                          FStar_SMTEncoding_Z3.ask unsat_core all_labels
-                           uu____1367 None uu____1369))
+                           uu____1368 None uu____1370))
                     in
                  let process_query q = check q  in
-                 let uu____1388 = FStar_Options.admit_smt_queries ()  in
-                 if uu____1388 then () else process_query query)
+                 let uu____1389 = FStar_Options.admit_smt_queries ()  in
+                 if uu____1389 then () else process_query query)
   
 let solve :
   (Prims.unit -> Prims.string) Prims.option ->
@@ -653,39 +657,39 @@ let solve :
   fun use_env_msg  ->
     fun tcenv  ->
       fun q  ->
-        (let uu____1407 =
-           let uu____1408 =
-             let uu____1409 = FStar_TypeChecker_Env.get_range tcenv  in
-             FStar_All.pipe_left FStar_Range.string_of_range uu____1409  in
-           FStar_Util.format1 "Starting query at %s" uu____1408  in
-         FStar_SMTEncoding_Encode.push uu____1407);
+        (let uu____1408 =
+           let uu____1409 =
+             let uu____1410 = FStar_TypeChecker_Env.get_range tcenv  in
+             FStar_All.pipe_left FStar_Range.string_of_range uu____1410  in
+           FStar_Util.format1 "Starting query at %s" uu____1409  in
+         FStar_SMTEncoding_Encode.push uu____1408);
         (let tcenv1 = FStar_TypeChecker_Env.incr_query_index tcenv  in
-         let uu____1411 =
+         let uu____1412 =
            FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv1 q  in
-         match uu____1411 with
+         match uu____1412 with
          | (prefix1,labels,qry,suffix) ->
-             let pop1 uu____1432 =
-               let uu____1433 =
-                 let uu____1434 =
-                   let uu____1435 = FStar_TypeChecker_Env.get_range tcenv1
+             let pop1 uu____1433 =
+               let uu____1434 =
+                 let uu____1435 =
+                   let uu____1436 = FStar_TypeChecker_Env.get_range tcenv1
                       in
-                   FStar_All.pipe_left FStar_Range.string_of_range uu____1435
+                   FStar_All.pipe_left FStar_Range.string_of_range uu____1436
                     in
-                 FStar_Util.format1 "Ending query at %s" uu____1434  in
-               FStar_SMTEncoding_Encode.pop uu____1433  in
+                 FStar_Util.format1 "Ending query at %s" uu____1435  in
+               FStar_SMTEncoding_Encode.pop uu____1434  in
              (match qry with
               | FStar_SMTEncoding_Term.Assume
                   ({
                      FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App
-                       (FStar_SMTEncoding_Term.FalseOp ,uu____1436);
-                     FStar_SMTEncoding_Term.freevars = uu____1437;
-                     FStar_SMTEncoding_Term.rng = uu____1438;_},uu____1439,uu____1440)
+                       (FStar_SMTEncoding_Term.FalseOp ,uu____1437);
+                     FStar_SMTEncoding_Term.freevars = uu____1438;
+                     FStar_SMTEncoding_Term.rng = uu____1439;_},uu____1440,uu____1441)
                   -> pop1 ()
-              | uu____1448 when tcenv1.FStar_TypeChecker_Env.admit -> pop1 ()
-              | FStar_SMTEncoding_Term.Assume (q1,uu____1451,uu____1452) ->
+              | uu____1449 when tcenv1.FStar_TypeChecker_Env.admit -> pop1 ()
+              | FStar_SMTEncoding_Term.Assume (q1,uu____1452,uu____1453) ->
                   (ask_and_report_errors tcenv1 labels prefix1 qry suffix;
                    pop1 ())
-              | uu____1454 -> failwith "Impossible"))
+              | uu____1455 -> failwith "Impossible"))
   
 let solver : FStar_TypeChecker_Env.solver_t =
   {
@@ -706,21 +710,21 @@ let solver : FStar_TypeChecker_Env.solver_t =
   } 
 let dummy : FStar_TypeChecker_Env.solver_t =
   {
-    FStar_TypeChecker_Env.init = (fun uu____1461  -> ());
-    FStar_TypeChecker_Env.push = (fun uu____1462  -> ());
-    FStar_TypeChecker_Env.pop = (fun uu____1463  -> ());
-    FStar_TypeChecker_Env.mark = (fun uu____1464  -> ());
-    FStar_TypeChecker_Env.reset_mark = (fun uu____1465  -> ());
-    FStar_TypeChecker_Env.commit_mark = (fun uu____1466  -> ());
+    FStar_TypeChecker_Env.init = (fun uu____1462  -> ());
+    FStar_TypeChecker_Env.push = (fun uu____1463  -> ());
+    FStar_TypeChecker_Env.pop = (fun uu____1464  -> ());
+    FStar_TypeChecker_Env.mark = (fun uu____1465  -> ());
+    FStar_TypeChecker_Env.reset_mark = (fun uu____1466  -> ());
+    FStar_TypeChecker_Env.commit_mark = (fun uu____1467  -> ());
     FStar_TypeChecker_Env.encode_modul =
-      (fun uu____1467  -> fun uu____1468  -> ());
+      (fun uu____1468  -> fun uu____1469  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____1469  -> fun uu____1470  -> ());
+      (fun uu____1470  -> fun uu____1471  -> ());
     FStar_TypeChecker_Env.preprocess = (fun e  -> fun g  -> [(e, g)]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____1477  -> fun uu____1478  -> fun uu____1479  -> ());
+      (fun uu____1478  -> fun uu____1479  -> fun uu____1480  -> ());
     FStar_TypeChecker_Env.is_trivial =
-      (fun uu____1483  -> fun uu____1484  -> false);
-    FStar_TypeChecker_Env.finish = (fun uu____1485  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____1486  -> ())
+      (fun uu____1484  -> fun uu____1485  -> false);
+    FStar_TypeChecker_Env.finish = (fun uu____1486  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____1487  -> ())
   } 

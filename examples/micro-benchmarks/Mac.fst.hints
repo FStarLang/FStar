@@ -8,7 +8,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -52,7 +52,7 @@
         "@MaxIFuel_assumption", "@query", "equation_MAC.bytes",
         "equation_MAC.text", "proj_equation_MAC.Entry_k",
         "projection_inverse_MAC.Entry_k",
-        "refinement_interpretation_Tm_refine_efe335931539402e9fdf173d2969658e"
+        "refinement_interpretation_MAC_Tm_refine_efe335931539402e9fdf173d2969658e"
       ],
       0
     ],
@@ -64,23 +64,23 @@
       2,
       2,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_FStar.UInt8.t__haseq",
-        "bool_typing", "constructor_distinct_Prims.V", "data_elim_MAC.Entry",
-        "data_elim_Prims.Some", "disc_equation_Prims.Some",
-        "disc_equation_Prims.V", "equation_FStar.UInt8.byte",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_FStar.UInt8.t__haseq", "bool_typing",
+        "data_elim_MAC.Entry", "data_elim_Prims.Some",
+        "disc_equation_Prims.Some", "equation_FStar.UInt8.byte",
         "equation_FStar.UInt8.t", "equation_MAC.bytes", "equation_MAC.key",
         "equation_MAC.keysize", "equation_MAC.nbytes", "equation_MAC.text",
         "equation_Prims.eqtype", "fuel_guarded_inversion_MAC.entry",
-        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "primitive_Prims.op_AmpAmp", "proj_equation_Prims.V_v",
-        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_a",
+        "fuel_guarded_inversion_Prims.option", "kinding_FStar.UInt8.t_@tok",
+        "lemma_FStar.Seq.Base.lemma_eq_elim", "primitive_Prims.op_AmpAmp",
+        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.V_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_a0af297ee1dc064b3efd53d8610fea8c",
-        "refinement_interpretation_Tm_refine_bc1e295f2a145a708c162f71b3994441",
-        "refinement_interpretation_Tm_refine_d0601e316b1b70cf0cf519eefca4a7f6",
-        "refinement_interpretation_Tm_refine_efe335931539402e9fdf173d2969658e",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
+        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
+        "refinement_interpretation_MAC_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
+        "refinement_interpretation_MAC_Tm_refine_f16bc6d060834fc8a7755be1bcd69222",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Seq.Base.eq"
       ],
       0

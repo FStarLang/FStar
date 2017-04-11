@@ -82,9 +82,12 @@ type is_permutation (a:eqtype) (l:list a) (m:list a) =
 val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
   Tot (m:list a{sorted f m /\ is_permutation a l m})
   (decreases (length l))
-#set-options "--z3rlimit 10"
+//NS: for CI, replaying this with hints fails; 
+//    Then it requires finding a proof in a fresh solver context
+//    which now seems to take a lot of time ... without the lemma invocation below
 let rec quicksort #a f = function
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
+    partition_lemma (f pivot) tl;  //without this, proof takes a much longer now (e.g., ~20s)
     (quicksort f lo) @ pivot :: quicksort f hi

@@ -298,8 +298,12 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          if quals |> List.contains Assumption
          then let always_fail =
                   let imp = match U.arrow_formals t with
-                    | [], t -> fail_exp lid t
-                    | bs, t -> U.abs bs (fail_exp lid t) None in
+                    | [], t ->
+                      // Avoid top-level failwith statements
+                      let b = mk_binder <| (gen_bv "_" None t) in
+                      U.abs [b] (fail_exp lid t) None
+                    | bs, t ->
+                      U.abs bs (fail_exp lid t) None in
                   { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
                                                       lbunivs=[];
                                                       lbtyp=t;
