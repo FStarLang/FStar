@@ -1970,11 +1970,16 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.None", "equation_Unification.lsubst",
-        "equation_Unification.unify_eqns",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Prims.Some", "disc_equation_Prims.None",
+        "equation_Unification.lsubst", "equation_Unification.op_At",
+        "equation_Unification.subst", "equation_Unification.unify_eqns",
+        "fuel_correspondence_Unification.solved.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.option",
         "lemma_Unification.lemma_lsubst_eqns_nil",
         "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
-        "unit_typing"
+        "typing_Unification.lsubst_eqns", "typing_Unification.solved",
+        "typing_Unification.unify_eqns", "unit_typing"
       ],
       0
     ]

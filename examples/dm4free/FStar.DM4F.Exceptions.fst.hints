@@ -1,5 +1,5 @@
 [
-  "“j9Ò¡|Ë7Ùı+Åe\u0007…˜",
+  "\u00191r’r∫67é%i€\u001bÁ0%",
   [
     [
       "FStar.DM4F.Exceptions.bind_ex",
@@ -36,7 +36,6 @@
     ],
     [ "FStar.DM4F.Exceptions.EXN", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Exceptions.EXN", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.raise", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Exceptions.uu___is_Division_by_zero",
       1,
@@ -148,7 +147,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.Exceptions.__proj__EXN__item__raise_equality",
-        "FStar.DM4F.Exceptions.__proj__EXN__item__raise_token_correspondence",
         "Prims_pretyping_2feddfe489e78a01f5d2e9b55172b46a",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
@@ -157,14 +155,13 @@
         "disc_equation_Prims.Inl", "disc_equation_Prims.Inr",
         "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
         "equation_FStar.DM4F.Exceptions.div_extrinsic",
-        "equation_FStar.DM4F.Exceptions.raise", "equation_Prims.l_False",
-        "equation_Prims.nat", "fuel_guarded_inversion_Prims.either",
-        "int_inversion",
+        "equation_FStar.DM4F.Exceptions.raise", "equation_Prims.nat",
+        "fuel_guarded_inversion_Prims.either", "int_inversion",
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_12738f4075157821691a1ae1e90b1767",
-        "interpretation_FStar.DM4F.Exceptions_Tm_abs_1ebfd69d8b8ec95b19fae9474c26f802",
+        "interpretation_FStar.DM4F.Exceptions_Tm_abs_22f4ff7efea308d1528b0e88dc772a72",
         "interpretation_FStar.DM4F.Exceptions_Tm_abs_3c822c1177e8497747fc2be802a5a309",
-        "interpretation_FStar.DM4F.Exceptions_Tm_abs_55532d3ddf3d8527a0271dbb68ee88ba",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Inl__a", "projection_inverse_Prims.Inl__b",
         "projection_inverse_Prims.Inl_v", "projection_inverse_Prims.Inr__a",
         "projection_inverse_Prims.Inr__b", "projection_inverse_Prims.Inr_v",

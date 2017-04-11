@@ -992,8 +992,10 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_da0ce6472e3557dab4a010c89b01a198_0", "bool_inversion",
-        "constructor_distinct_SfLists.Nil", "disc_equation_SfLists.Cons",
+        "bool_typing", "constructor_distinct_SfLists.Nil",
+        "data_elim_SfLists.Cons", "disc_equation_SfLists.Cons",
         "disc_equation_SfLists.Nil", "equality_tok_SfLists.Nil@tok",
         "equation_SfLists.existsb_",
         "equation_with_fuel_SfLists.existsb.fuel_instrumented",
@@ -1003,13 +1005,13 @@
         "fuel_guarded_inversion_SfLists.ilist",
         "fuel_irrelevance_SfLists.existsb.fuel_instrumented",
         "fuel_irrelevance_SfLists.forallb.fuel_instrumented",
-        "interpretation_SfLists_Tm_abs_098245e4604f5a0db8c6e12c84f3b741",
+        "int_inversion",
+        "interpretation_SfLists_Tm_abs_646eec380c4b703a82e093534123df6f",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_SfLists.Cons__0",
         "projection_inverse_SfLists.Cons__1",
         "subterm_ordering_SfLists.Cons", "typing_SfLists.forallb",
-        "typing_SfLists_Tm_abs_098245e4604f5a0db8c6e12c84f3b741",
+        "typing_SfLists_Tm_abs_646eec380c4b703a82e093534123df6f",
         "unit_typing"
       ],
       0
