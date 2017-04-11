@@ -19,6 +19,9 @@ effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
   (ensures (fun h0 _ h1 -> h0==h1))
 
+assume val set_nonblock: networkStream -> unit
+assume val clear_nonblock: networkStream -> unit
+
 (* Server side *)
 
 assume val listen: string -> nat -> EXT tcpListener
@@ -32,6 +35,15 @@ assume val connectTimeout: nat -> string -> nat -> EXT networkStream
 assume val connect: string -> nat -> EXT networkStream
 
 (* Input/Output *)
+
+// adding support for (potentially) non-blocking I/O
+// NB for now, send *fails* on partial writes, and *loops* on EAGAIN/EWOULDBLOCK.
+
+type recv_result (max:nat) = 
+  | RecvWouldBlock
+  | RecvError of string
+  | Received of b:bytes {length b <= max}
+assume val recv_async: networkStream -> max:nat -> EXT (recv_result max)
 
 assume val recv: networkStream -> max:nat -> EXT (optResult string (b:bytes {length b <= max}))
 assume val send: networkStream -> bytes -> EXT (optResult string unit)
