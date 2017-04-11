@@ -487,16 +487,16 @@ let destruct typ lid =
     | Tm_fvar tc when fv_eq_lid tc lid -> Some []
     | _ -> None
 
-let lids_of_sigelt se = match se with
-  | Sig_let(_, _, lids, _, _)
-  | Sig_bundle(_, _, lids, _) -> lids
-  | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
-  | Sig_effect_abbrev(lid, _, _, _,  _, _, _)
-  | Sig_datacon (lid, _, _, _, _, _, _, _)
-  | Sig_declare_typ (lid, _, _, _, _)
-  | Sig_assume (lid, _, _, _) -> [lid]
-  | Sig_new_effect_for_free(n, _)
-  | Sig_new_effect(n, _) -> [n.mname]
+let lids_of_sigelt (se: sigelt) = match se.sigel with
+  | Sig_let(_, lids, _, _)
+  | Sig_bundle(_, _, lids) -> lids
+  | Sig_inductive_typ (lid, _, _,  _, _, _, _)
+  | Sig_effect_abbrev(lid, _, _, _,  _, _)
+  | Sig_datacon (lid, _, _, _, _, _, _)
+  | Sig_declare_typ (lid, _, _, _)
+  | Sig_assume (lid, _, _) -> [lid]
+  | Sig_new_effect_for_free(n)
+  | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
   | Sig_main _ -> []
@@ -505,34 +505,22 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
-let quals_of_sigelt x = match x with
-  | Sig_bundle(_, quals, _, _)
-  | Sig_inductive_typ (_, _, _,  _, _, _, quals, _)
-  | Sig_effect_abbrev  (_, _, _, _, quals, _, _)
-  | Sig_datacon (_, _, _, _, _, quals, _, _)
-  | Sig_declare_typ (_, _, _, quals, _)
-  | Sig_assume (_, _, quals, _)
-  | Sig_let(_, _, _, quals, _)
-  | Sig_new_effect({qualifiers=quals}, _)
-  | Sig_new_effect_for_free({qualifiers=quals}, _) ->
+let quals_of_sigelt (x: sigelt) = match x.sigel with
+  | Sig_bundle(_, quals, _)
+  | Sig_inductive_typ (_, _, _,  _, _, _, quals)
+  | Sig_effect_abbrev  (_, _, _, _, quals, _)
+  | Sig_datacon (_, _, _, _, _, quals, _)
+  | Sig_declare_typ (_, _, _, quals)
+  | Sig_assume (_, _, quals)
+  | Sig_let(_, _, quals, _)
+  | Sig_new_effect({qualifiers=quals})
+  | Sig_new_effect_for_free({qualifiers=quals}) ->
     quals
-  | Sig_sub_effect(_, _)
-  | Sig_pragma(_, _)
-  | Sig_main(_, _) -> []
+  | Sig_sub_effect _
+  | Sig_pragma _
+  | Sig_main _ -> []
 
-let range_of_sigelt x = match x with
-  | Sig_bundle(_, _, _, r)
-  | Sig_inductive_typ (_, _, _,  _, _, _, _, r)
-  | Sig_effect_abbrev  (_, _, _, _, _, _, r)
-  | Sig_datacon (_, _, _, _, _, _, _, r)
-  | Sig_declare_typ (_, _, _, _, r)
-  | Sig_assume (_, _, _, r)
-  | Sig_let(_, r, _, _, _)
-  | Sig_main(_, r)
-  | Sig_pragma(_, r)
-  | Sig_new_effect(_, r)
-  | Sig_new_effect_for_free(_, r)
-  | Sig_sub_effect(_, r) -> r
+let range_of_sigelt (x: sigelt) = x.sigrng
 
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bv  x
@@ -634,18 +622,15 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (* closing types and terms *)
 (***********************************************************************************************)
 let abs bs t lopt =
-  if List.length bs = 0 then
-    t
-  else
-    let close_lopt lopt = match lopt with
-        | None
-        | Some (Inr _) -> lopt
-        | Some (Inl lc) ->
-            Some (Inl (close_lcomp bs lc))
-    in
-    match bs with
-    | [] -> t
-    | _ ->
+  let close_lopt lopt = match lopt with
+      | None
+      | Some (Inr _) -> lopt
+      | Some (Inl lc) ->
+          Some (Inl (close_lcomp bs lc))
+  in
+  match bs with
+  | [] -> t
+  | _ ->
     let body = compress (Subst.close bs t) in
     match body.n, lopt with
         | Tm_abs(bs', t, lopt'), None ->
@@ -1017,15 +1002,18 @@ let destruct_typ_as_formula f : option<connective> =
 
 
   let action_as_lb eff_lid a =
-    let lb = close_univs_and_mk_letbinding
-                None
-                (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-                (Inr (lid_as_fv a.action_name Delta_equational None))
-                a.action_univs
-                a.action_typ
-                Const.effect_Tot_lid
-                a.action_defn in
-    Sig_let((false, [lb]), a.action_defn.pos, [a.action_name], [Visible_default ; Action eff_lid], [])
+    let lb =
+      close_univs_and_mk_letbinding
+        None
+        (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
+        (Inr (lid_as_fv a.action_name Delta_equational None))
+        a.action_univs
+        (arrow a.action_params (mk_Total a.action_typ))
+        Const.effect_Tot_lid
+        (abs a.action_params a.action_defn None)
+    in
+    { sigel = Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []);
+      sigrng = a.action_defn.pos }
 
 (* Some reification utilities *)
 let mk_reify t =

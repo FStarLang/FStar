@@ -7,9 +7,12 @@
       2,
       1,
       [
-        "@query", "binder_x_0c607185f6c6768f1786fe5f14f15ea1_2",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0c607185f6c6768f1786fe5f14f15ea1_2",
         "disc_equation_CPS.Expr.Const", "disc_equation_CPS.Expr.Plus",
         "fuel_guarded_inversion_CPS.Expr.expr",
+        "projection_inverse_CPS.Expr.Plus__0",
+        "projection_inverse_CPS.Expr.Plus__1",
         "subterm_ordering_CPS.Expr.Plus"
       ],
       0

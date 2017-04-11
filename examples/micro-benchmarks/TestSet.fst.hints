@@ -7,8 +7,8 @@
       2,
       1,
       [
-        "@query", "equation_FStar.TSet.subset",
-        "function_token_typing_TestSet.a", "function_token_typing_TestSet.b",
+        "@query", "function_token_typing_TestSet.a",
+        "function_token_typing_TestSet.b",
         "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
         "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",

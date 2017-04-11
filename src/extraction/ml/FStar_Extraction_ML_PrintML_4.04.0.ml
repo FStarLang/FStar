@@ -139,11 +139,14 @@ let rec build_pattern (p: mlpattern): pattern =
 
 and build_constructor_pat ((path, sym), p) =
   let (path', name) =
-    (* resugaring Cons and Nil *) 
-    (match sym with
-    | "Cons" -> ([], "::")
-    | "Nil" -> ([], "[]")
-    | x -> (path, x)) in
+    (* resugaring the Cons and Nil from Prims *) 
+    (match path with
+     | ["Prims"] ->
+       (match sym with
+        | "Cons" -> ([], "::")
+        | "Nil" -> ([], "[]")
+        | x -> (path, x)) 
+     | _ -> (path, sym)) in
   match p with
   | [] ->
      Ppat_construct (path_to_ident (path', name), None)

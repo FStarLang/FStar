@@ -23,11 +23,8 @@ let pair_ord (compare1,compare2) (a1,a2) (aa1,aa2) =
 
 let proj_ord f a1 a2 = compare (f a1)  (f a2)
 
-type file_idx = FStar_BaseTypes.int32
-(* KM In a perfect world this file would satisfy the F# interface that*)
-(* we are relying on... it is not the case and pos are actually using *)
-(* regular ocaml int. *)
-type pos = int (* FStar_BaseTypes.int32 *)
+type file_idx = int
+type pos = int
 type range = {
     def_range:FStar_BaseTypes.int64;
     use_range:FStar_BaseTypes.int64
@@ -52,19 +49,19 @@ let _ = assert (pos_nbits <= 31)
 let pos_col_mask  = mask32 0         col_nbits
 let line_col_mask = mask32 col_nbits line_nbits
 
-let mk_pos (l:int) (c:int) : pos =
-  let l = max 0 l in
-  let c = max 0 c in
+let mk_pos (l:Prims.int) (c:Prims.int) : pos =
+  let l = max 0 (Z.to_int l) in
+  let c = max 0 (Z.to_int c) in
   (c land pos_col_mask)
   lor ((l lsl col_nbits) land line_col_mask)
 let line_of_pos_int p = p lsr col_nbits
 let col_of_pos_int p = p land pos_col_mask
 
-let line_of_pos p = Z.of_int (line_of_pos_int p)
-let col_of_pos p =  Z.of_int (col_of_pos_int p)
+let line_of_pos p : Prims.int = Z.of_int (line_of_pos_int p)
+let col_of_pos p : Prims.int = Z.of_int (col_of_pos_int p)
 
-let end_of_line p = mk_pos (line_of_pos_int p) 511 (* pos_col_mask *)
-let zeroPos : pos = mk_pos 1 0
+let end_of_line p = mk_pos (line_of_pos p) (Z.of_int 511) (* pos_col_mask *)
+let zeroPos : pos = mk_pos Z.one Z.zero
 
 (* Not usable in current situation *)
 (* let bits_of_pos (x:pos) : FStar_BaseTypes.int32 = x *)
@@ -95,10 +92,10 @@ let mk_file_idx_range fidx (b:pos) (e:pos) =
        (lsl64 (BatInt64.of_int (line_of_pos_int e)) (file_idx_nbits + start_line_nbits + start_col_nbits)))
     (lsl64 (BatInt64.of_int (col_of_pos_int e)) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits)))
 let file_idx_of_range {def_range=r}   = BatInt64.to_int (land64 r file_idx_mask)
-let start_line_of_range {def_range=r} = BatInt64.to_int (lsr64 (land64 r start_line_mask) file_idx_nbits)
-let start_col_of_range {def_range=r}  = BatInt64.to_int (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
-let end_line_of_range {def_range=r}   = BatInt64.to_int (lsr64 (land64 r end_line_mask) (file_idx_nbits + start_line_nbits + start_col_nbits))
-let end_col_of_range {def_range=r}    = BatInt64.to_int (lsr64 (land64 r end_col_mask) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
+let start_line_of_range {def_range=r} = Z.of_int64 (lsr64 (land64 r start_line_mask) file_idx_nbits)
+let start_col_of_range {def_range=r}  = Z.of_int64 (lsr64 (land64 r start_col_mask) (file_idx_nbits + start_line_nbits))
+let end_line_of_range {def_range=r}   = Z.of_int64 (lsr64 (land64 r end_line_mask) (file_idx_nbits + start_line_nbits + start_col_nbits))
+let end_col_of_range {def_range=r}    = Z.of_int64 (lsr64 (land64 r end_col_mask) (file_idx_nbits + start_line_nbits + start_col_nbits + end_line_nbits))
 
 (* This is just a standard unique-index table *)
 module FileIndexTable = struct
@@ -147,11 +144,6 @@ let extend_to_end_of_line r =
    assert (col_of_pos_int (end_of_range r) = 511) ;
    r
 
-let trim_range_right r n =
-  let fidx,p1,p2 = dest_file_idx_range r in
-  let l2,c2 = dest_pos p2 in
-  mk_file_idx_range fidx p1 (mk_pos l2 (max 0 (c2 - n)))
-
 let pos_ord   p1 p2 = pair_ord (int_ord   ,int_ord) (dest_pos p1) (dest_pos p2)
 (* range_ord: not a total order, but enough to sort on ranges *)
 let range_ord r1 r2 = pair_ord (string_ord,pos_ord) (file_of_range r1,start_of_range r1) (file_of_range r2,start_of_range r2)
@@ -196,11 +188,6 @@ let range_before_pos m1 p =
 let range_before_range m1 m2 =
   pos_geq (start_of_range m2) (end_of_range m1)
 
-let rangeN filename line =  mk_range filename (mk_pos line 0) (mk_pos line 80)
-let pos0 = mk_pos 1 0
-let range0 =  rangeN "unknown" 1
-let rangeStartup = rangeN "startup" 1
-
 (* // Store a file_idx in the pos_fname field, so we don't have to look up the  *)
 (* // file_idx hash table to map back from pos_fname to a file_idx during lexing  *)
 let encode_file_idx idx =
@@ -209,7 +196,7 @@ let encode_file_idx idx =
 let encode_file file = encode_file_idx (file_idx_of_file file)
 
 let _ = assert (file_idx_nbits <= 14) (* this encoding is size limited *)
-let decode_file_idx (s:string) =
+let decode_file_idx (s:string) : file_idx =
   if BatString.length s = 0 then 0 else
     let idx =   (int_of_char (BatString.get s 0))
                 lor ((int_of_char (BatString.get s 1)) lsl 7) in
@@ -221,23 +208,21 @@ let string_of_def_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (stri
 let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
 let string_of_range r       = string_of_def_range r
 
-
-let compare r1 r2 =
+let compare r1 r2 : Prims.int =
   let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
-  if fcomp = 0
-  then let start1 = start_of_range r1 in
-       let start2 = start_of_range r2 in
-       let lcomp = line_of_pos_int start1 - line_of_pos_int start2 in
-       if lcomp = 0
-       then col_of_pos_int start1 - col_of_pos_int start2
-       else lcomp
-  else fcomp
+  let i = 
+    if fcomp = 0
+    then let start1 = start_of_range r1 in
+         let start2 = start_of_range r2 in
+         let lcomp = line_of_pos_int start1 - line_of_pos_int start2 in
+         if lcomp = 0
+         then col_of_pos_int start1 - col_of_pos_int start2
+         else lcomp
+    else fcomp in
+  Z.of_int i
 
-let compare r1 r2 = Z.of_int (compare r1 r2)
-
-let compare_use_range r1 r2 = 
+let compare_use_range r1 r2 : Prims.int = 
     compare ({r1 with def_range=r1.use_range})
             ({r2 with def_range=r2.use_range})
 
-(* let mk_range f b e = mk_range f (Z.to_int b) (Z.to_int e) *)
 let line_of_pos_int p = Z.of_int (line_of_pos_int p)

@@ -37,9 +37,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Unit2.Int",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Unit2.Int",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a80b1732c37b674c773643729bebf97c"
+        "refinement_interpretation_Unit2_Tm_refine_a80b1732c37b674c773643729bebf97c"
       ],
       0
     ],
@@ -50,9 +50,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Unit2.Bool",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Unit2.Bool",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
+        "refinement_interpretation_Unit2_Tm_refine_51f253259fbb75b1f44c4d01d8397ea7"
       ],
       0
     ],
@@ -62,11 +62,13 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Unit2.Int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing", "data_elim_Unit2.Bool", "data_elim_Unit2.Int",
         "disc_equation_Unit2.Bool", "disc_equation_Unit2.Int",
         "fuel_guarded_inversion_Unit2.t", "int_typing",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Negation"
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Negation",
+        "projection_inverse_Unit2.Bool_b"
       ],
       0
     ],

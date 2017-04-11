@@ -1,0 +1,21 @@
+[
+  "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
+  [
+    [ "TestGhost.g", 1, 2, 1, [ "@query" ], 0 ],
+    [ "TestGhost.h", 1, 2, 1, [ "@query" ], 0 ],
+    [ "TestGhost.i", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [
+      "TestGhost.i",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal"
+      ],
+      0
+    ],
+    [ "TestGhost.j", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ]
+  ]
+]

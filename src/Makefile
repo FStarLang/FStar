@@ -26,6 +26,7 @@ CONFIGURATION=Release
 -include Makefile.local
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
+DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 ifeq ($(UNAME),Darwin)
   HEAD=ghead
@@ -51,6 +52,8 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 all: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
+	# An artefact of the build process is that parse.fsi is auto-generated
+	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
@@ -121,7 +124,14 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
-	$(SED) -i 's/type cell.*/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/type pa_t.*/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/and data.*//g' $@
+	$(SED) -i 's/.*| PArray.*//g' $@
+	$(SED) -i 's/.*| PDiff.*//g' $@
+	$(SED) -i 's/type puf_t.*//g' $@
+	$(SED) -i 's/type puf.*/assume new type puf : Type0 -> Type0/g' $@
+	$(SED) -i 's/type p_uvar.*/assume new type p_uvar : Type0 -> Type0/g' $@
+	$(SED) -i 's/type cell.*//g' $@
 	$(SED) -i 's/and contents.*//g' $@
 	$(SED) -i 's/.*| Data.*//g' $@
 	$(SED) -i 's/.*| Fwd.*//g' $@
@@ -130,7 +140,7 @@ boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 boot_fstis/FStar.Parser.Parse.fsti: parser/parse.fsi
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
-	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>/' $@
+	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>\nopen FStar.Syntax.Syntax/' $@
 
 rename_as_fst:
 	./tools/rename_all_boot_fsts

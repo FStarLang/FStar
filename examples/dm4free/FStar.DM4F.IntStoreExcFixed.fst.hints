@@ -7,9 +7,10 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "lemma_Prims.invertOption",
-        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -19,9 +20,10 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "fuel_guarded_inversion_Prims.option"
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -59,7 +61,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "data_typing_intro_Prims.None@tok", "disc_equation_Prims.None",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.None_a"

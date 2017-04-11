@@ -108,9 +108,6 @@ let go _ =
           end;
           let filename = List.hd filenames in
 
-
-          let filename = FStar.Common.try_convert_file_name_to_mixed filename in
-
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
@@ -154,10 +151,11 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
+    let trace = Util.trace_of_exn e in
     (begin
         if FStar.Errors.handleable e then FStar.Errors.handle_err false e;
         if (Options.trace_error()) then
-          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
         else if not (FStar.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
      end;

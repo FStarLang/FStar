@@ -2266,10 +2266,12 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
         then solve_eq (lift_c1 ()) c2
         else let is_null_wp_2 = c2.flags |> BU.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
-                | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
-                | _ -> failwith (BU.format2 "Got effects %s and %s, expected normalized effects"
-                                                (Print.lid_to_string c1.effect_name)
-                                                (Print.lid_to_string c2.effect_name)) in
+              | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
+              | _ ->
+                raise (Error (BU.format2 "Got effects %s and %s, expected normalized effects"
+                                          (Print.lid_to_string c1.effect_name)
+                                          (Print.lid_to_string c2.effect_name), env.range))
+             in
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
              else let c2_decl = Env.get_effect_decl env c2.effect_name in

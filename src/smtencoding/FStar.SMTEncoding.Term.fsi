@@ -85,7 +85,7 @@ type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
   | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of term   * caption * option<string>
+  | Assume     of term   * caption * string                   //named top-level assertion
   | Caption    of string
   | Eval       of term
   | Echo       of string
@@ -146,7 +146,6 @@ val injective_constructor : (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
-val termToSmt: term -> string
 val declToSmt: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
@@ -173,6 +172,7 @@ val mk_HasTypeZ:     term -> term -> term
 val mk_IsTyped:      term -> term
 val mk_HasTypeFuel:  term -> term -> term -> term
 val mk_HasTypeWithFuel: option<term> -> term -> term -> term
+val mk_NoHoist:      term -> term -> term
 val mk_tester:       string -> term -> term
 val mk_Term_type:    term
 val mk_ApplyTF:      term -> term -> term
