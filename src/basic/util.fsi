@@ -130,6 +130,15 @@ val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
 
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+val default_printer : printer
+val set_printer : printer -> unit
+
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string

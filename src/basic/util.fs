@@ -300,12 +300,49 @@ let imap_copy (m:imap<'value>) =
     imap_fold m (fun k v () -> imap_add n k v) ();
     n
 
+let format (fmt:string) (args:list<string>) =
+    let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
+    if frags.Length <> List.length args + 1
+    then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
+    else let args = Array.ofList (args@[""]) in
+         Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
+
+let format1 f a = format f [a]
+let format2 f a b = format f [a;b]
+let format3 f a b c = format f [a;b;c]
+let format4 f a b c d = format f [a;b;c;d]
+let format5 f a b c d e = format f [a;b;c;d;e]
+let format6 f a b c d e g = format f [a;b;c;d;e;g]
+
+let stdout_isatty () = None:option<bool>
+
+// These functions have no effect in F#
+let colorize (s:string) (colors:(string * string)) = s
+let colorize_bold (s:string) = s
+let colorize_red (s:string) = s
+let colorize_cyan (s:string) = s
+// END
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
-let print_string s = pr "%s" s
-let print_any s = pr "%A" s
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+let default_printer =
+  { printer_prinfo = fun s -> pr "%s" s;
+    printer_prwarning = fun s -> fpr stderr "%s" (colorize_cyan s);
+    printer_prerror = fun s -> fpr stderr "%s" (colorize_red s); }
+
+let current_printer = ref default_printer
+let set_printer printer = current_printer := printer
+
+let print_string s = (!current_printer).printer_prinfo s
+let print_any s = print_string (spr "%A" s)
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:list<string>) = String.concat sep l
 
@@ -358,21 +395,6 @@ let split (s1:string) (s2:string) = Array.toList (s1.Split([|s2|], StringSplitOp
 let iof = int_of_float
 let foi = float_of_int
 
-let format (fmt:string) (args:list<string>) =
-    let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
-    if frags.Length <> List.length args + 1
-    then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
-    else let args = Array.ofList (args@[""]) in
-         Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
-
-let format1 f a = format f [a]
-let format2 f a b = format f [a;b]
-let format3 f a b c = format f [a;b;c]
-let format4 f a b c d = format f [a;b;c;d]
-let format5 f a b c d e = format f [a;b;c;d;e]
-let format6 f a b c d e g = format f [a;b;c;d;e;g]
-
-
 let print1 a b = print_string <| format1 a b
 let print2 a b c = print_string <| format2 a b c
 let print3 a b c d = print_string <| format3 a b c d
@@ -382,21 +404,12 @@ let print6 a b c d e f g = print_string <| format6 a b c d e f g
 
 let print s args = print_string <| format s args
 
-let stdout_isatty () = None:option<bool>
-
-// These functions have no effect in F#
-let colorize (s:string) (colors:(string * string)) = s
-let colorize_bold (s:string) = s
-let colorize_red (s:string) = s
-let colorize_cyan (s:string) = s
-// END
-
-let print_error s = fpr stderr "%s" (colorize_red s)
+let print_error s = (!current_printer).printer_prerror s
 let print1_error a b = print_error <| format1 a b
 let print2_error a b c = print_error <| format2 a b c
 let print3_error a b c d = print_error <| format3 a b c d
 
-let print_warning s = fpr stderr "%s" (colorize_cyan s)
+let print_warning s = (!current_printer).printer_prwarning s
 let print1_warning a b = print_warning <| format1 a b
 let print2_warning a b c = print_warning <| format2 a b c
 let print3_warning a b c d = print_warning <| format3 a b c d

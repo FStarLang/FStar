@@ -178,9 +178,9 @@ let lowercase_join_longident (l: lident) (last: bool) =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    Util.fprint stderr "Warning: the module declaration \"module %s\" \
+    Util.print2_warning "Warning: the module declaration \"module %s\" \
       found in file %s does not match its filename. Dependencies will be \
-      incorrect.\n" [string_of_lid lid true; filename]
+      incorrect.\n" (string_of_lid lid true) filename
 
 exception Exit
 
@@ -211,8 +211,8 @@ let collect_one
           if let_open then
             raise (Err ("let-open only supported for modules, not namespaces"))
           else
-            Util.fprint stderr "Warning: no modules in namespace %s and no file with \
-              that name either\n" [string_of_lid lid true]
+            Util.print1_warning "Warning: no modules in namespace %s and no file with \
+              that name either\n" (string_of_lid lid true)
         end
     end
   in
@@ -236,7 +236,7 @@ let collect_one
             List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
         | None ->
             if List.length lid.ns > 0 && Options.debug_any() then
-              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
+              Util.print1_warning "Warning: unbound module reference %s\n" (string_of_lid lid false)
         end
       in
       // Option.Some x
@@ -267,7 +267,7 @@ let collect_one
     | [ modul ] ->
         collect_module modul
     | modules ->
-        Util.fprint stderr "Warning: file %s does not respect the one module per file convention\n" [ filename ];
+        Util.print1_warning "Warning: file %s does not respect the one module per file convention\n" filename;
         List.iter collect_module modules
 
   and collect_module = function
