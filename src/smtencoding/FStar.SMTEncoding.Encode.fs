@@ -340,6 +340,18 @@ let is_an_eta_expansion env vars body =
           //recurse on f with the remaining arguments
           check_partial_applications f xs
 
+        | App(Var f, args), _ ->
+          if List.length args = List.length xs
+          && List.forall2 (fun a v ->
+                            match a.tm with
+                            | FreeV fv -> fv_eq fv v
+                            | _ -> false)
+             args (List.rev xs)
+          then //t is of the form (f vars) for all the lambda bound variables vars
+               //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
+               tok_of_name env f
+          else None
+
         | _, [] ->
           //Case 2:
           //We're left with a closed head term applied to no arguments.
@@ -353,22 +365,7 @@ let is_an_eta_expansion env vars body =
           else None
 
         | _ -> None
-  in
-  match body.tm with
-  | App(Var f, args) ->
-    if List.length args = List.length vars
-    && List.forall2 (fun a v ->
-                        match a.tm with
-                        | FreeV fv -> fv_eq fv v
-                        | _ -> false)
-       args vars
-    then //t is of the form (f vars) for all the lambda bound variables vars
-         //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
-         tok_of_name env f
-    else check_partial_applications body (List.rev vars)
-
-  | _ ->
-    check_partial_applications body (List.rev vars)
+  in check_partial_applications body (List.rev vars)
 
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
