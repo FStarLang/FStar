@@ -16,7 +16,6 @@ cache/
 /src/parser/lex.fs
 /src/parser/parse.ml
 /src/parser/parse.mli
-src/ocaml-output/
 
 /src/boot_fstis
 /src/boot_fsts
