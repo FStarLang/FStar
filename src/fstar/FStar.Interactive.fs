@@ -614,6 +614,8 @@ let interactive_mode (filename:string): unit =
               exit 1
             end;
             Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n";
+            let env =
+                fst env, {snd env with is_iface = false} in
             curmod, env
         | None ->
             Util.print_warning (Util.format1

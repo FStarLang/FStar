@@ -99,7 +99,7 @@ type foundname =
   | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
 
-
+let set_iface env b = {env with iface=b}
 
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
 let transitive_exported_ids env lid =

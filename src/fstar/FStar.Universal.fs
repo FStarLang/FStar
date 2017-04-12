@@ -96,6 +96,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
         then FStar.ToSyntax.ToSyntax.as_interface ast_modul
         else ast_modul in
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
+      let dsenv = if is_interface_dependence then FStar.ToSyntax.Env.set_iface dsenv false else dsenv in
       let env = match curmod with
         | Some modul ->
             (* Same-module is only allowed when editing a fst with an fsti,

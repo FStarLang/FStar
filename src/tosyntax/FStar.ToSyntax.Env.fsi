@@ -102,7 +102,7 @@ val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
 val qualify: env -> ident -> lident
-
+val set_iface: env -> bool -> env
 val empty_env: unit -> env
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>

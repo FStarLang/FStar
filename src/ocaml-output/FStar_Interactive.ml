@@ -863,7 +863,7 @@ let interactive_mode: Prims.string -> Prims.unit =
                           (Prims.parse_int "0");
                         FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
                       } in
-                    let uu____2411 = check_frag env2 None (frag, true) in
+                    let uu____2411 = check_frag env2 None (frag, false) in
                     (match uu____2411 with
                      | Some (curmod,env3,n_errs) ->
                          (if n_errs <> (Prims.parse_int "0")
