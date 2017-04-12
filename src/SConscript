@@ -1,0 +1,371 @@
+import sys
+import os, os.path
+import re
+import SCons
+
+Import('env')
+
+# --------------------------------------------------------------------
+
+# root of the boot fst files
+u_boot_fsts = 'u_boot_fsts/'
+
+# directory to extract Ocaml code to
+u_ocaml_output = 'ocaml-output/'
+
+env['CONFIGURATION']='Release'
+# TODO: does anyone use a Makefile.local?
+env['MSBUILDARGS']='/verbosity:minimal /p:Configuration=$CONFIGURATION'
+
+env['NUGET']=File('#/VS/.nuget/NuGet.exe')
+
+env['FSLYDIR'] = '#VS/packages/FsLexYacc.6.1.0'
+env['FSYACC']  = '$(RUNTIME) $(FSLYDIR)/build/fsyacc.exe'
+env['FSLEX']   = '$(RUNTIME) $(FSLYDIR)/build/fslex.exe'
+
+env['FSTARBOOT'] = '$FSTAR_RUNTIME $FSTAR $OTHERFLAGS --eager_inference --lax --MLish --no_location_info --odir ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis'               
+
+# --------------------------------------------------------------------
+
+# return a list, where each element is the concatenation of prefix 'p' with the original element
+def addprefix(p, l):
+  return [p+x for x in l]
+  
+# return a string, which is the concatenation of prefix 'p' with each of the original elements
+def addprefixstr(p, l):
+  return ' '.join(addprefix(p, l))
+  
+# SCons Glob() enumerates only a single directory.  This function
+# recurses down through directories.
+def recursive_glob(env, pattern, strings=False):
+  matches = []
+  split = os.path.split(pattern) # [0] is the directory, [1] is the actual pattern
+  platform_directory =  split[0] #os.path.normpath(split[0])
+  for d in os.listdir(platform_directory):
+    if os.path.isdir(os.path.join(platform_directory, d)):
+      newpattern = os.path.join(split[0], d, split[1])
+      matches.append(recursive_glob(env, newpattern, strings))
+  
+  files = env.Glob(pattern, strings=strings)
+  matches.append(files)
+  return Flatten(matches)
+
+# nuget_restore target
+nuget_restore = env.Pseudo('nuget-restore')
+fstar_sln = File('#/VS/FStar.sln')
+env.Command(nuget_restore, fstar_sln, [Mkdir('../VS/packages'),
+                                       '$RUNTIME $NUGET restore $SOURCE'])
+
+update_nuget = env.Pseudo('update-nuget')
+env.Command(update_nuget, '', '$RUNTIME $NUGET update -self')
+Depends(update_nuget, nuget_restore)
+
+# VS install-packages target
+install_packages = env.Pseudo('install-packages')
+if sys.platform != 'win32':
+  env.Command(install_packages, fstar_sln, 'find VS/packages -name \'*.exe\' -exec chmod +x \'{}\' \';\'')
+Depends(install_packages, update_nuget)  
+Requires(install_packages, update_nuget)  # 'update_nuget' must complete ahead of 'install_packages'
+
+fstar_binaries=['fstar.exe', 'fsdoc.dll', 'tosyntax.dll', 'extraction.dll', 'smtencoding.dll', 'typechecker.dll', 'prettyprint.dll', 'syntax.dll', 'format.dll', 'basic.dll']
+fstar_targets=[File('#/bin/' + b) for b in fstar_binaries]
+
+chmod_a_plus_x = 0777  # 'a+x' implemented as rwx/rwx/rwx
+vs_fstar = env.Command([fstar_targets, '$BIN/tests.exe'],
+                        fstar_sln, 
+                        ['$MSBUILD $MSBUILDARGS $SOURCE',
+                        Chmod(str(env['BIN'])+'/tests.exe', chmod_a_plus_x),
+                        Chmod(str(env['BIN'])+'/fstar.exe', chmod_a_plus_x)])
+Requires(vs_fstar, install_packages) # 'install_packages" must complete ahead of 'vs_fstar')
+NoCache(fstar_targets) # don't cache these... Always regenerate from msbuild
+# if '-c' or '--clean' is passed on the command line, call out to msbuild to clean, too
+if GetOption('clean'):
+  # TODO: the clean makefile target built nuget-restore first, in order to allow msbuild to launch
+  os.system(env.subst('$MSBUILD $MSBUILDARGS /t:clean') + ' ' + str(fstar_sln))
+  
+all = Alias('all', vs_fstar)
+
+# Scons action, which takes a text source file, and emits a text target file,
+# having used the generator function to transform source to target.
+def generate_boot_file(target, source, env, generator):
+  # read the source file into memory
+  try:
+    fd = open(source[0].get_path(), 'r')
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't read source file %s" % source[0])
+  sourcefile = fd.read()
+  sourcelines = re.split('\r|\n', sourcefile)
+  fd.close()
+
+  # munge the source file into the target file  
+  targetlines = generator(sourcelines)
+  
+  # write the target file
+  try:
+    fd = open(target[0].get_path(), "w")
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't write target file %s" % target[0])
+  for l in targetlines:
+    fd.write(l)
+    fd.write('\n')
+  fd.close()
+  
+class FstMunger:
+  def __init__(self, source, action=None):
+    self.source = source
+    self.action = action
+
+# generate FStar.list.fst from base/list.fsi    
+def generate_FStar_list_fst(target, source, env):
+  def process(sourcelines):
+    targetlines=[]
+    for s in sourcelines:
+      t = s.replace('open Prims', 'module ALL_TEMP = FStar.All')
+      t = re.sub(r'<.* when .* : equality>', '', t)
+      t = t.replace('val', 'assume val')
+      targetlines.append(t)
+    return targetlines
+  return generate_boot_file(target, source, env, process)
+  
+# generate FStar.util.fsti from basic/util.fsi
+def generate_FStar_util_fsti(target, source, env):
+  def process(sourcelines):
+    targetlines=[]
+    for s in sourcelines:
+      t = s.replace('open System.IO','module ALL_TMP = FStar.All')
+      t = re.sub('type time.*', 'assume new type time', t)
+      t = re.sub('type smap.*', 'assume new type smap : Type0 -> Type0', t)
+      t = re.sub('type imap.*', 'assume new type imap : Type0 -> Type0', t)
+      t = re.sub('type out_channel.*', 'assume new type out_channel', t)
+      t = re.sub('type file_handle.*', 'assume new type file_handle', t)
+      t = re.sub('type stream_reader.*', 'assume new type stream_reader', t)
+      t = re.sub('type string_builder.*', 'assume new type string_builder', t)
+      t = re.sub('type proc.*', 'assume new type proc', t)
+      t = re.sub('type set.*', 'assume new type set:Type0 -> Type0', t)
+      targetlines.append(t)
+    return targetlines
+  return generate_boot_file(target, source, env, process)
+  
+# generate FStar.unionfind.fsti from basic/unionfind.fsi  
+def generate_FStar_unionfind_fsti(target, source, env):
+  def process(sourcelines):
+    targetlines=[]
+    for s in sourcelines:
+      t = re.sub(r'type cell.*', 'module ALL_TMP = FStar.All', s)
+      t = re.sub(r'and contents.*', '', t)
+      t = re.sub(r'.*\| Data.*', '', t)
+      t = re.sub(r'.*\| Fwd.*', '', t)
+      t = re.sub(r'type uvar.*', 'assume new type uvar : Type0 -> Type0', t)
+      targetlines.append(t)
+    return targetlines
+  return generate_boot_file(target, source, env, process)
+  
+# generate FStar.Parser.Parse.fsti from parser/parse.fsi
+def generate_parse_fsi(target, source, env):
+  def process(sourcelines):
+    match = 'module FStar.Parser.Parse'
+    replace = 'module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>'
+    targetlines = ['#light "off"']
+    for i in range(0,len(sourcelines)-13):
+      targetlines.append(sourcelines[i].replace(match, replace))
+    return targetlines
+  return generate_boot_file(target, source, env, process)
+  
+munge_fsts = {
+  'FStar.Pprint.fsti':FstMunger('prettyprint/prettyprint.fsi'),
+  'FStar.list.fst':FstMunger('basic/list.fsi', generate_FStar_list_fst),
+  'FStar.bytes.fst':FstMunger('basic/bytes.fsti'),
+  'FStar.util.fsti':FstMunger('basic/util.fsi', generate_FStar_util_fsti),
+  'FStar.unionfind.fsti':FstMunger('basic/unionfind.fsi', generate_FStar_unionfind_fsti),
+  'FStar.Parser.Parse.fsti':FstMunger('parser/parse.fsi', generate_parse_fsi),
+  'FStar.Parser.Parseit.fsti':FstMunger('parser/parseit.fsi')
+}  
+  
+# target files
+u_boot_basic_fsti=addprefix('FStar.', ['string.fsti', 'list.fst', 'util.fsti', 'platform.fsti', 'bytes.fst', 'range.fsti', 'version.fsti', 'getopt.fsti', 'unionfind.fsti', 'Pprint.fsti'])
+u_all_interfaces=[u_boot_basic_fsti, 'FStar.Parser.Parse.fsti']
+
+# Im makefile, ./tools/rename_all_boot_fsts is a shell script which 
+# copies *.fs and *.fsi files from FStar.*.fs* into u_boot_fsts/
+# with updated file extensions (.fst and .fsti).  For Scons, this
+# instead creates a dictionary, mapping target file to source file.
+# the build process will use this to generate env.Copy() targets
+# as needed.
+def get_all_boot_fsts(env):
+  fsts = {}
+  files = recursive_glob(env, './FStar.*.fs')
+  for f in files:
+    n = str(f)
+    if 'u_boot_fsts' in n:
+      # skip this file
+      pass
+    elif '~' in n:
+      # skip this file - editor temp file
+      pass
+    else:
+      n = n.replace('\\', '/')              # convert to Unix paths
+      filename = os.path.basename(n)[:-3]   # get the filename without extension
+      dest_fst = u_boot_fsts + filename + '.fst'
+      copy_fst = env.Command(dest_fst, n, Copy('$TARGET', '$SOURCE'))
+      target = [copy_fst]
+      ni = n+'i' # .fsti
+      if os.path.isfile(ni):
+        dest_fsti = dest_fst + 'i'
+        copy_fsti = env.Command(dest_fsti, ni, Copy('$TARGET', '$SOURCE'))
+        target.append(copy_fsti)
+      fsts[dest_fst] = target
+  # add in the special-case files
+  dest_fst = u_boot_fsts + 'FStar.Parser.Parseit.fsti'
+  new_fst = env.Command(dest_fst, 'parser/parseit.fsi', Copy('$TARGET', '$SOURCE'))
+  fsts[dest_fst] = new_fst
+  for f in Flatten(u_all_interfaces):
+    munger = munge_fsts.get(f)
+    dest_fst = 'boot_fstis/'+f
+    # default to 'boot_fstis/%.fsti: basic/%.fsi' make pattern
+    source_fs = 'basic/'+f.replace('.fst', '.fs')  # handles both .fst/.fs and .fsti/.fsi
+    if f.startswith('FStar.'):
+      # switch to 'boot_fstis/FStar.%.fsti: basic/%.fsi' make pattern
+      source_fs = source_fs.replace('FStar.', '')
+    action = None
+    if munger != None:
+      action = munger.action
+      source_fs = munger.source
+    if action == None:
+      action = Copy('$TARGET', '$SOURCE')
+    new_fst = env.Command(dest_fst, source_fs, action)
+    fsts[dest_fst] = new_fst
+  return fsts
+  
+
+# Helper class used by the SConscript file, to specify per-file
+# Dafny command-line options for verification.  
+class Extraction:
+  def __init__(self, command, sources, targets):
+    self.command = command;             # string
+    self.sources = Flatten(sources);    # flattened list of source .fs filenames
+    self.targets = Flatten(targets);    # flattened list of target .fst filenames
+
+# Helper class for extracting a set of modules
+#  '$FSTARBOOT %prefix%%module%.Fst --extract_module %module%'
+class ExtractModules(Extraction):
+  def __init__(self, modules):
+    if type(modules)==type(''):
+      self.command = '--extract_module ' + modules
+      self.sources = [u_boot_fsts+modules+'.fst']
+      self.targets = [u_ocaml_output+modules.replace('.','_')+'.ml']
+    else:
+      m = Flatten(modules)
+      self.command = ' '.join(['--extract_module '+module for module in m])
+      self.sources = [u_boot_fsts+module+'.fst' for module in m]
+      self.targets = [u_ocaml_output+module.replace('.','_')+'.ml' for module in m]
+      
+class ExtractNamespaces(Extraction):
+  def __init__(self, namespaces, files):
+    if type(namespaces)==type(''):
+      self.command = '--extract_namespace '+namespaces
+    else:
+      self.command = ['--extract_namespace '+namespace for namespace in namespaces]
+    if type(files)==type(''):
+      self.sources = [u_boot_fsts+files]
+      self.targets = [u_ocaml_output+files[:-4].replace('.','_')+'.ml']
+    else:
+      flatfiles = Flatten(files)
+      self.sources = [u_boot_fsts+file for file in flatfiles]
+      self.targets = [u_ocaml_output+file[:-4].replace('.','_')+'.ml' for file in flatfiles]
+
+# --------------------------------------------------------------------
+
+# Now create a target for each entry in fstar_extractions
+def GenExtractionTargets(env, extractions, boot_fsts):
+  extraction_targets = {}
+  for name,e in extractions.iteritems():
+    command = e.command if (type(e.command) == type('')) else ' '.join(e.command)
+    # zip the targets and sources together into tuples, so that we can launch separate fstar.exe 
+    # instances for each pair.  The original makefile batched them together into one launch,
+    # which optimizes for clean-build performance.  We optimize for the developer scenario of
+    # modifying a single source file and rebuilding.
+    for (target, source) in zip(e.targets, e.sources):
+      t = env.Command(target, source, '$FSTARBOOT $SOURCES '+command)
+      Depends(t, env['FSTAR'])  # take an explicit dependency on the F* compiler executable
+      pseudotarget = Alias(name, t)
+      for d in boot_fsts[source]:
+        Depends(t, d)
+    extraction_targets[name] = pseudotarget
+  return extraction_targets
+                       
+
+# Copy .fs to  u_boot_fsts/ and flatten the directory tree (rename_all_boot_fsts)
+def CreateOcamlTarget(fstar_extractions, ocaml_targets):
+  ocaml = env.Alias('ocaml', u_boot_fsts)
+  boot_fsts = get_all_boot_fsts(env)
+  extraction_targets = GenExtractionTargets(env, fstar_extractions, boot_fsts)
+  PriorTarget = None
+  for t in Flatten(ocaml_targets):
+    Depends(ocaml, extraction_targets[t])
+    # Create a dependency on the prior target listed in ocaml_targets, to mimic the Makefile's incomplete dependency graph
+    if PriorTarget != None:
+      Depends(t, PriorTarget)
+    PriorTarget = t
+  return ocaml
+  
+  
+# --------------------------------------------------------------------
+
+# List of files to extract, and how to extract them them.
+fstar_extractions = {
+'u_extract_misc':ExtractModules(['FStar.Options','FStar.Ident','FStar.Errors','FStar.Const','FStar.Format']),
+'u_extract_syntax':ExtractNamespaces(['FStar.Syntax','FStar.Fsdoc'],
+  [addprefix('FStar.Syntax.', ['Syntax.fst','Const.fst','Subst.fst','Free.fst','InstFV.fst','Util.fst','Print.fst','MutRecTy.fst']), 'FStar.Fsdoc.Generator.fst']),
+'u_extract_parser':ExtractNamespaces('FStar.Parser',
+   addprefix('FStar.Parser.', ['AST.fst','Interleave.fst','Lexhelp.fst','Parseit.fsti','Driver.fst','Dep.fst','ToDocument.fst'])),
+'u_extract_normalizer':ExtractNamespaces('FStar.TypeChecker', addprefix('FStar.TypeChecker.', ['Common.fst','Env.fst','Normalize.fst','Err.fst'])),        
+'u_extract_rel':ExtractModules('FStar.TypeChecker.Rel'),           
+'u_extract_util':ExtractModules('FStar.TypeChecker.Util'),
+'u_extract_dmff':ExtractModules('FStar.TypeChecker.DMFF'),
+'u_extract_tcterm':ExtractModules('FStar.TypeChecker.TcTerm'),
+'u_extract_tcinductive':ExtractModules('FStar.TypeChecker.TcInductive'),
+'u_extract_tc':ExtractModules('FStar.TypeChecker.Tc'),
+'u_extract_tosyntax':ExtractNamespaces('FStar.ToSyntax',
+   addprefix('FStar.ToSyntax.', ['Env.fst','ToSyntax.fst'])),
+'u_extract_extraction':ExtractNamespaces('FStar.Extraction',
+   addprefix('FStar.Extraction.', ['ML.Syntax.fst','ML.UEnv.fst','ML.Util.fst','ML.Code.fst','ML.Term.fst','ML.Modul.fst','Kremlin.fst'])),           
+'u_extract_smtencoding_base':ExtractNamespaces('FStar.SMTEncoding',
+   addprefix('FStar.SMTEncoding.', ['Term.fst','SplitQueryCases.fst','ErrorReporting.fst'])),           
+'u_extract_uz': ExtractNamespaces('FStar.SMTEncoding', addprefix('FStar.SMTEncoding.', ['Util.fst','Z3.fst'])),
+'u_extract_encode': ExtractModules('FStar.SMTEncoding.Encode'),
+'u_extract_solver': ExtractModules('FStar.SMTEncoding.Solver'),
+'u_extract_fstar': ExtractModules(addprefix('FStar.', ['Dependencies','Interactive','Universal','Indent','Main']))
+}
+# targets that name other targets
+u_extract_typechecker=['u_extract_normalizer','u_extract_rel','u_extract_util','u_extract_dmff','u_extract_tcterm','u_extract_tcinductive','u_extract_tc']
+u_extract_smtencoding=['u_extract_uz','u_extract_smtencoding_base','u_extract_encode','u_extract_solver']
+u_extract_all=['u_extract_misc','u_extract_syntax','u_extract_parser',
+              u_extract_typechecker,'u_extract_tosyntax',u_extract_smtencoding,
+              'u_extract_extraction','u_extract_fstar']
+
+ocaml_targets = ['u_extract_misc','u_extract_syntax','u_extract_parser',
+                 u_extract_typechecker,'u_extract_tosyntax',u_extract_smtencoding,
+                'u_extract_extraction','u_extract_fstar']
+
+# --------------------------------------------------------------------
+def MakeOcamlTarget(env):
+  ocaml = CreateOcamlTarget(fstar_extractions, ocaml_targets)
+  return ocaml
+
+env.AddMethod(MakeOcamlTarget, 'MakeOcaml')
+
+Default(all)    # make the 'all' target be the default
+# Force the 'all' target to AlwaysBuild, so that MsBuild is invoked to do its own
+# evaluation of dependencies from the F# source code to fstar.exe.
+building_all = False
+if COMMAND_LINE_TARGETS:
+  if 'all' in COMMAND_LINE_TARGETS:
+    building_all = True
+else:
+  if all[0] in DEFAULT_TARGETS:
+    building_all = True
+if building_all:
+  AlwaysBuild(nuget_restore)
+  AlwaysBuild(install_packages)
+  AlwaysBuild(vs_fstar)
+

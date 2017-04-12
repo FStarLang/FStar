@@ -1,0 +1,204 @@
+import sys
+import os
+import subprocess
+import re
+import time
+import datetime
+import SCons
+
+Import('env')
+
+# --------------------------------------------------------------------
+conf = Configure(env)
+menhir_tool = conf.CheckProg('menhir') # returns None or the full path to it
+if menhir_tool:
+  output = subprocess.check_output([menhir_tool, '--version'])
+  srch = re.search(r'.*version ([0-9]*)', output)
+  version = int(srch.group(1))
+  has_valid_menhir = version >= 20161115
+  env['MENHIR'] = menhir_tool
+else:  
+  has_valid_menhir = False
+  env['MENHIR'] = None
+
+ 
+env['MENHIRARGS']='' #'--explain --infer -la 1 --table'
+env['OCAMLLEX']='ocamllex'
+env['OCAMLBUILD']='ocamlbuild'
+env['OCAMLBUILDARGS']='-cflag \'-g\' -I src/ocaml-output -I src/basic/ml ' \
+                      '-I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build ' \
+                      '-I src/prettyprint/ml -I src/ocaml-output/bootlibs -use-ocamlfind'
+
+build_parse_mly=['cd ../..',
+                 '$MENHIR $MENHIRARGS --only-preprocess-for-ocamlyacc $SOURCE >$TARGET']
+copy_parse_mly=Copy('$TARGET', '$SOURCE')                   
+parse_mly=env.Command('parse.mly', '../parser/parse.mly', 
+                      build_parse_mly if has_valid_menhir else copy_parse_mly)
+                      
+parse_ml=env.Command(['parse.ml', 'parse.mli'], 'parse.mly', 'ocamlyacc $SOURCE')
+
+# generate FStar.Parser.Parse.fsti from parser/parse.fsi
+def generate_fstar_parser_parse_ml(target, source, env):
+  parse_mly = str(source[0])
+  subprocess.check_output(['ocamlyacc', parse_mly])
+
+  # read the source file into memory
+  parse_ml = 'ocaml-output/parse.ml'
+  parse_mli= 'ocaml-output/parse.mli'
+  try:
+    fd = open(parse_ml, 'r')
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't read source file %s" % parse_ml)
+  sourcefile = fd.read()
+  fd.close()
+  
+  # delete the temporary files as they are not tracked by SCons and
+  # ocamlbuild complains downstream if they are present.
+  os.remove(parse_ml)
+  os.remove(parse_mli)
+
+  # write the target file
+  try:
+    fd = open(target[0].get_path(), "w")
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't write target file %s" % target[0])
+   
+  fd.write('open Prims\n')
+  fd.write('open FStar_Errors\n')
+  fd.write('open FStar_List\n')
+  fd.write('open FStar_Util\n')
+  fd.write('open FStar_Range\n')
+  fd.write('open FStar_Options\n')
+  fd.write('open FStar_Syntax_Syntax\n')
+  fd.write('open FStar_Syntax_Const\n')
+  fd.write('open FStar_Syntax_Util\n')
+  fd.write('open FStar_Parser_AST\n')
+  fd.write('open FStar_Parser_Util\n')
+  fd.write('open FStar_Const\n')
+  fd.write('open FStar_Ident\n')
+  fd.write('open FStar_String\n')
+  fd.write(sourcefile)
+  fd.close()
+
+fstar_parser_parse_ml=env.Command('FStar_Parser_Parse.ml', File('parse.mly'), generate_fstar_parser_parse_ml)
+
+# generate FStar_Version.ml from version.txt and other data
+def generate_fstar_version_ml(target, source, env):
+  # read the source file into memory
+  try:
+    fd = open(source[0].get_path(), 'r')
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't read source file %s" % source[0])
+  sourcefile = fd.read().split('\r\n')
+  fd.close()
+  VERSION = sourcefile[0]
+  
+  # the Makefile showed local time along with timezone.  Python27 doesn't support timezones, so report UTC instead
+  utcnow = datetime.datetime.utcnow().replace(microsecond=0)
+  DATE = utcnow.isoformat()
+  
+  if sys.platform == 'win32':
+    if os.getenv('PROCESSOR_ARCHITECTURE')=='AMD64':
+      PLATFORM='Windows_x64'
+    else:
+      PLATFORM='Windows_x86'
+  else:
+    PLATFORM=os.uname()[4]  # machine is at index 4
+  
+  COMPILER = 'OCaml ' + subprocess.check_output(['ocamlc', '-version']).split('\r\n')[0]
+  
+  COMMIT = subprocess.check_output(['tools/get_commit']).split('\n')[0]
+  
+  try:
+    fd = open(target[0].get_path(), "w")
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't write target file %s" % target[0])
+
+  fd.write('let dummy () = ();;\n')
+  fd.write('FStar_Options._version := "' + VERSION + '";;\n')
+  fd.write('FStar_Options._platform := "' + PLATFORM + '";;\n')
+  fd.write('FStar_Options._compiler := "' + COMPILER + '";;\n')
+  fd.write('FStar_Options._date := "' + DATE + '";;\n')
+  fd.write('FStar_Options._commit:= "' + COMMIT + '";;\n')
+  fd.close()
+
+fstar_version_ml=env.Command('FStar_Version.ml', '../../version.txt', generate_fstar_version_ml)
+
+readpipe, writepipe = os.pipe()
+os.write(writepipe, 'print_endline Sys.ocaml_version')
+os.close(writepipe)
+OCAML_VERSION = subprocess.check_output(['ocaml','-noprompt','-noinit','-stdin'], stdin=readpipe).split('\r\n')[0]
+os.close(readpipe)
+env.Command('../extraction/ml/FStar_Extraction_ML_PrintML.ml',
+            '../extraction/ml/FStar_Extraction_ML_PrintML_'+OCAML_VERSION+'.ml',
+            Copy('$TARGET', '$SOURCE'))
+            
+# generate ../parser/parse.fsy from parse.mly
+def generate_parse_fsy(target, source, env):
+  # read the source file into memory
+  try:
+    fd = open(source[0].get_path(), 'r')
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't read source file %s" % source[0])
+  sourcelines = fd.read().split('\n')
+  fd.close()
+  
+  targetlines = ['%{']
+  targetlines.append('#light "off"')
+  targetlines.append('// (c) Microsoft Corporation. All rights reserved')
+  targetlines.append('open Prims')
+  targetlines.append('open FStar.Errors')
+  targetlines.append('open FStar.List')
+  targetlines.append('open FStar.Util')
+  targetlines.append('open FStar.Range')
+  targetlines.append('open FStar.Options')
+  targetlines.append('open FStar.Syntax.Syntax')
+  targetlines.append('open FStar.Syntax.Const')
+  targetlines.append('open FStar.Syntax.Util')
+  targetlines.append('open FStar.Parser.AST')
+  targetlines.append('open FStar.Parser.Util')
+  targetlines.append('open FStar.Const')
+  targetlines.append('open FStar.Ident')
+  targetlines.append('open FStar.String')
+  for s in sourcelines:
+    if re.match(r'/%{', s):
+      continue
+    elif re.match(r'^open ', s):
+      continue
+    elif re.match(r'%token.*->.*', s):
+      continue
+    elif re.match(r'%type.*->.*', s):
+      continue
+    if re.match(r'%token|%type', s):
+      s = re.sub(r'[a-zA-Z0-9_]*\.','', s)
+    if re.match(r'%token.*->.*', s):
+      continue
+    if re.match(r'%type.*->.*', s):
+      continue
+    targetlines.append(s)
+      
+  # write the target file
+  try:
+    fd = open(target[0].get_path(), "wb")
+  except (OSError,IOError), e:
+    raise SCons.Errors.UserError("Can't write target file %s" % target[0])
+  for l in targetlines:
+    sl = l.split('\n')
+    for s in sl:
+      fd.write(s)
+  fd.close()
+  
+fstar_version_ml=env.Command(File('#/../parser/parse.fsy'), File('parse.mly'), generate_parse_fsy)
+
+GENERATED_FILES=['parse.mly','FStar_Parser_Parse.ml','FStar_Version.ml','../extraction/ml/FStar_Extraction_ML_PrintML.ml','../parser/parse.fsy']
+
+def MakeOcamlOutput(env, fstar_exe_name):
+  main_native = env.Command('main.native', '', 'cd .. && $OCAMLBUILD $OCAMLBUILDARGS main.native')
+  for g in GENERATED_FILES:
+    Depends(main_native, File('#/ocaml-output/'+g))
+  fstar_exe = env.Command('../../bin/'+fstar_exe_name+'.exe', main_native, Copy('$TARGET', '$SOURCE'))
+  fstar_ocaml=env.Command('../../bin/'+fstar_exe_name+'.ocaml', main_native, Copy('$TARGET', '$SOURCE'))
+  return [fstar_exe, fstar_ocaml]
+  
+env.AddMethod(MakeOcamlOutput, 'MakeOcamlOutput')
+ 
