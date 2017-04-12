@@ -1,0 +1,119 @@
+import re
+import sys
+import os, os.path
+import subprocess
+import traceback
+import pdb
+import shutil
+import SCons.Util
+import platform
+
+Import("*")
+
+AddOption('--CACHEDIR',
+  dest='cache_dir',
+  type='string',
+  default=None,
+  action='store',
+  help='Specify the SCSons Shared Cache Directory')
+
+cache_dir=GetOption('cache_dir')
+if cache_dir == None:
+  cache_dir = os.environ.get('EVEREST_SCONS_CACHE_DIR')
+if cache_dir != None:
+  print('Using Shared Cache Directory %s'%cache_dir)
+  CacheDir(cache_dir)
+
+  
+  
+
+# construct a default environment
+env = Environment()
+
+# --------------------------------------------------------------------
+# Configuration of some platform-specific tools; eventually we will want a configure script
+
+if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-bit
+  if sys.platform == 'cygwin':
+    fd = open('/proc/registry/HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/MSBuild/ToolsVersions/14.0/MSBuildToolsPath', 'r')
+    v = fd.read()
+    v = v.rstrip(' \0') # strip the trailing \0 and any trailing whitespace
+    fd.close()
+  else:
+    import _winreg
+    k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\14.0')
+    v = _winreg.QueryValueEx(k, 'MSBuildToolsPath')[0]
+    k.Close()
+  env['FSC']     = 'fsc'
+  env['MSBUILD'] = '"'+os.path.join(v, 'MSBuild.exe')+'"'
+  uname          = 'Windows_NT'
+  # Copy the current fstar.exe to ExtractionFStar.exe so the ExtractionFStar.exe can be used
+  # to run extraction to OCaml and fstar.exe can be the output target for the build, without
+  # creating a circular dependency.
+  if os.path.exists('../bin/fstar.exe'):
+    shutil.copy2('../bin/fstar.exe', '../bin/ExtractionFStar.exe')
+  env['FSTAR']   = File('#/../bin/ExtractionFStar.exe')  # the path to the FStar binary
+  env['RUNTIME'] = ''     # no Mono needed to run .NET code (FSLexYacc, etc.)
+  env['FSTAR_RUNTIME']='' # no Mono needed to run the FStar compiler
+  # propagate the TMP environment variable into the OS environment block used to launch
+  # child processes.  nuget.exe uses TMP as the path to its lock file and falls back
+  # on C:\WINDOWS if it doesn't exist, and that is readonly for most Windows users.
+  env['ENV']['TMP'] = os.environ['TMP']
+  
+  # set the OS environment var in child processes.  MSBuild scripts like NuGet.targets consume it.
+  env.AppendENVPath('OS', 'Windows_NT')  
+else:
+  env['FSC']     = 'fsharpc'
+  env['MSBUILD'] = 'xbuild'
+  uname          = os.uname()[0]  # sysname is at index 0
+  env['RUNTIME'] = 'mono'
+  # reproduce what fstar-any.sh does:
+  l = os.readlink('../bin/fstar.exe')
+  fstar = os.path.join(os.path.dirname('../bin'), l) # convert l to absolute path
+  if os.path.exists(fstar):
+    filetype = subprocess.check_output(['file',fstar])
+    # Copy the current fstar.exe to ExtractionFStar.exe so the ExtractionFStar.exe can be used
+    # to run extraction to OCaml and fstar.exe can be the output target for the build, without
+    # creating a circular dependency.
+    shutil.copy2(fstar, '../bin/ExtractionFStar.exe')
+    env['FSTAR'] = File('#/../bin/ExtractionFStar.exe')  # the path to the FStar binary
+    if filetype.contains('Mono'):                                   # how to execute the FStar binary
+      env['FSTAR_RUNTIME'] = env['RUNTIME']  # it's the F# version
+    else:
+      env['FSTAR_RUNTIME'] = '' # it's the OCaml verion
+  else:
+    raise SCons.Errors.UserError('fstar.exe not found')
+    
+# propagate the OS PATH environment variable into child processes, so tools like menhir can be found  
+env['ENV']['PATH']=os.environ['PATH']
+env['BIN']=Dir('#/../bin')
+Export('env')
+
+# --------------------------------------------------------------------
+
+
+SConscript(['SConscript', 
+            'ocaml-output/SConscript'])
+            
+# --------------------------------------------------------------------
+
+
+# fstar-ocaml target:
+#ml = env.MakeOcaml() # extract .fs to .ml using ExtractionFStar.exe
+#fstar_ocaml = env.MakeOcamlOutput('FStar')
+#env.Depends(fstar_ocaml, ml)
+#Alias('fstar-ocaml', fstar_ocaml)
+
+# ocaml-fstar-ocaml target
+#extraction_fstar = env.MakeOcamlOutput('ExtractionFStar')
+#ml = env.MakeOcaml()
+#fstar_ocaml = env.MakeOcamlOutput('FStar')
+#env.Depends(ml, extraction_fstar)
+#env.Depends(fstar_ocaml, ml)
+#Alias('ocaml-fstar-ocaml', fstar_ocaml)
+
+# boot-ocaml
+#env.Ignore(extraction_fstar)
+fstar_ocaml = env.MakeOcamlOutput('FStar')
+Alias('boot-ocaml', fstar_ocaml)
+
