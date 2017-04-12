@@ -1,6 +1,4 @@
-
 open Prims
-
 type z3_err =
   (FStar_SMTEncoding_Term.error_labels * FStar_SMTEncoding_Z3.error_kind)
 type z3_result = (FStar_SMTEncoding_Z3.unsat_core,z3_err) FStar_Util.either

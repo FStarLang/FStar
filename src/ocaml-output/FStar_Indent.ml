@@ -1,4 +1,3 @@
-
 open Prims
 let generate : FStar_Parser_ParseIt.filename Prims.list -> Prims.unit =
   fun filenames  ->

@@ -1,4 +1,3 @@
-
 open Prims
 type step =
   | Beta 

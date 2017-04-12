@@ -1,4 +1,3 @@
-
 open Prims
 let qual_id : FStar_Ident.lident -> FStar_Ident.ident -> FStar_Ident.lident =
   fun lid  ->

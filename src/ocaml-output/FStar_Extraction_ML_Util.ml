@@ -1,4 +1,3 @@
-
 open Prims
 let pruneNones l =
   FStar_List.fold_right

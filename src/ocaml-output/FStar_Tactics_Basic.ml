@@ -1,9 +1,5 @@
-
 open Prims
-
-type name =
-FStar_Syntax_Syntax.bv
-
+type name = FStar_Syntax_Syntax.bv
 type goal =
   {
   context: FStar_TypeChecker_Env.env ;

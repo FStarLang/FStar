@@ -1,4 +1,3 @@
-
 open Prims
 type binding =
   | Binding_var of FStar_Syntax_Syntax.bv 

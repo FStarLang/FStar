@@ -1,4 +1,3 @@
-
 open Prims
 type doc =
   | Doc of Prims.string 

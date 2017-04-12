@@ -1,4 +1,3 @@
-
 open Prims
 let guard_of_guard_formula :
   FStar_TypeChecker_Common.guard_formula -> FStar_TypeChecker_Env.guard_t =
@@ -430,9 +429,8 @@ let uu___is_INVARIANT : variance -> Prims.bool =
     match projectee with | INVARIANT  -> true | uu____566 -> false
   
 type tprob =
-(FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) FStar_TypeChecker_Common.problem
-
-
+  (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term)
+    FStar_TypeChecker_Common.problem
 type cprob =
   (FStar_Syntax_Syntax.comp,Prims.unit) FStar_TypeChecker_Common.problem
 type ('a,'b) problem_t = ('a,'b) FStar_TypeChecker_Common.problem

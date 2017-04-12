@@ -1,4 +1,3 @@
-
 open Prims
 type sort =
   | Bool_sort 

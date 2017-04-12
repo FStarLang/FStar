@@ -1,4 +1,3 @@
-
 open Prims
 let module_or_interface_name :
   FStar_Syntax_Syntax.modul -> (Prims.bool * FStar_Ident.lident) =

@@ -1,4 +1,3 @@
-
 open Prims
 type inst_t = (FStar_Ident.lident * FStar_Syntax_Syntax.universes) Prims.list
 let mk t s =

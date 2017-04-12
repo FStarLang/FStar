@@ -1,4 +1,3 @@
-
 open Prims
 type decl =
   | DGlobal of (flag Prims.list * (Prims.string Prims.list * Prims.string) *

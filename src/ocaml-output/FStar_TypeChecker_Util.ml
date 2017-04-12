@@ -1,6 +1,4 @@
-
 open Prims
-
 type lcomp_with_binder =
   (FStar_Syntax_Syntax.bv Prims.option * FStar_Syntax_Syntax.lcomp)
 let report :

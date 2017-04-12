@@ -1,4 +1,3 @@
-
 open Prims
 let set_hint_correlator :
   FStar_TypeChecker_Env.env ->

@@ -1,4 +1,3 @@
-
 open Prims
 type verify_mode =
   | VerifyAll 

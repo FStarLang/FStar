@@ -1,4 +1,3 @@
-
 open Prims
 let trans_aqual :
   FStar_Parser_AST.arg_qualifier Prims.option ->

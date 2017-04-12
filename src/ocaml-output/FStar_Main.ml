@@ -1,4 +1,3 @@
-
 open Prims
 let uu___220 : Prims.unit = FStar_Version.dummy () 
 let process_args :

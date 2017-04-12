@@ -1,4 +1,3 @@
-
 open Prims
 let old_mk_tuple_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident =
   fun n1  ->

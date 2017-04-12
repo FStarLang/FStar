@@ -1,4 +1,3 @@
-
 open Prims
 exception Not_a_wp_implication of Prims.string 
 let uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool =

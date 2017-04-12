@@ -1,4 +1,3 @@
-
 open Prims
 let format_info :
   FStar_TypeChecker_Env.env ->

@@ -1,4 +1,3 @@
-
 open Prims
 let intern_string : Prims.string -> Prims.string =
   let strings = FStar_Util.smap_create (Prims.parse_int "100")  in

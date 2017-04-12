@@ -1,4 +1,3 @@
-
 open Prims
 let mk :
   FStar_Syntax_Syntax.term' ->

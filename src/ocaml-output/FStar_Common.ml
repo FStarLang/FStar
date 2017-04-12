@@ -1,4 +1,3 @@
-
 open Prims
 let has_cygpath : Prims.bool =
   try

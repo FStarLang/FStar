@@ -1,4 +1,3 @@
-
 open Prims
 let norng f x = f x FStar_Range.dummyRange 
 let mkTrue : FStar_SMTEncoding_Term.term =

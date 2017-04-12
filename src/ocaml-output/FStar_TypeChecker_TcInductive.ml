@@ -1,4 +1,3 @@
-
 open Prims
 let tc_tycon :
   FStar_TypeChecker_Env.env_t ->

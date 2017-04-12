@@ -1,4 +1,3 @@
-
 open Prims
 let should_print_fs_typ_app : Prims.bool FStar_ST.ref =
   FStar_Util.mk_ref false 

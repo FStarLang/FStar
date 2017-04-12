@@ -1,6 +1,4 @@
-
 open Prims
-
 type ty_or_exp_b =
   ((FStar_Extraction_ML_Syntax.mlident * FStar_Extraction_ML_Syntax.mlty),
     (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.mlexpr

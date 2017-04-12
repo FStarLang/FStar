@@ -1,4 +1,3 @@
-
 open Prims
 type local_binding =
   (FStar_Ident.ident * FStar_Syntax_Syntax.bv * Prims.bool)

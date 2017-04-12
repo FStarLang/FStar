@@ -1,4 +1,3 @@
-
 open Prims
 type name = FStar_Syntax_Syntax.bv
 let fstar_tactics_lid : Prims.string -> FStar_Ident.lident =
