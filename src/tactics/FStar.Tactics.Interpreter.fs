@@ -142,13 +142,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                             (unembed_tactic_0 E.unembed_unit)
                                             E.embed_unit
                                             FStar.TypeChecker.Common.t_unit);
-      mk "term_as_formula" 1 (mk_pure_interpretation_1 E.term_as_formula
-                                            E.unembed_term
-                                            (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "quote"           2 quote;
-      mk "binders_of_env"  1 (binders_of_env ps);
-      mk "type_of_binder"  1 type_of_binder;
-      mk "term_eq"         2 term_eq;
       mk "term_as_formula_" 1 (mk_pure_interpretation_1 E.term_as_formula
                                              E.unembed_term
                                              (E.embed_option E.embed_formula E.fstar_tactics_formula));
