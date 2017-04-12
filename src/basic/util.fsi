@@ -139,6 +139,7 @@ type printer = {
 val default_printer : printer
 val set_printer : printer -> unit
 
+val print_raw : string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -237,6 +238,7 @@ val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
+val try_find: ('a -> bool) -> list<'a> -> option<'a>
 val try_find_i: (int -> 'a -> bool) -> list<'a> -> option<(int * 'a)>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val try_find_index: ('a -> bool) -> list<'a> -> option<int>

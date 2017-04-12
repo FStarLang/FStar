@@ -341,6 +341,7 @@ let default_printer =
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
+let print_raw s = pr "%s" s
 let print_string s = (!current_printer).printer_prinfo s
 let print_any s = print_string (spr "%A" s)
 let strcat s1 s2 = s1 ^ s2
@@ -476,6 +477,8 @@ let find_opt f l =
     | [] -> None
     | hd::tl -> if f hd then Some hd else aux tl in
     aux l
+
+let try_find f l = List.tryFind f l
 
 let try_find_index f l = List.tryFindIndex f l
 

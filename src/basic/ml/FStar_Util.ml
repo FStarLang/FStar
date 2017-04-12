@@ -359,6 +359,7 @@ let default_printer =
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
+let print_raw s = pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
@@ -527,6 +528,8 @@ let rec find_map l f =
      match f x with
      | None -> find_map tl f
      | y -> y
+
+let try_find f l = try Some (List.find f l) with Not_found -> None
 
 let try_find_index f l =
   let rec aux i = function
