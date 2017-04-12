@@ -797,8 +797,8 @@ effectDefinition:
 
 effectDecl:
   lident binders EQUALS simpleTerm
-    {let (lid, params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, [TyconAbbrev(lid, params, None, t), None])) (rhs2 parseState 1 3) [] )}
+    {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
+    ( mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
