@@ -326,11 +326,11 @@ let is_app = function
 
 // [is_an_eta_expansion env vars body]:
 //       returns Some t'
-//               if (fun xs -> t) is an eta-expansion of t'
+//               if (fun xs -> body) is an eta-expansion of t'
 //       else returns None
 let is_an_eta_expansion env vars body =
     //assert vars <> []
-    let rec aux t xs =
+    let rec check_partial_applications t xs =
         match t.tm, xs with
         | App(app, [f; {tm=FreeV y}]), x::xs
           when (is_app app && Term.fv_eq x y) ->
@@ -338,26 +338,22 @@ let is_an_eta_expansion env vars body =
           //t is of the form (ApplyTT f x)
           //   i.e., it's a partial or curried application of f to x
           //recurse on f with the remaining arguments
-          aux f xs
+          check_partial_applications f xs
 
         | App(Var f, args), _ ->
-          //Case 2:
-          if List.length args = List.length vars
-          && List.forall2 (fun a v -> match a.tm with
-            | FreeV fv -> fv_eq fv v
-            | _ -> false) args vars
+          if List.length args = List.length xs
+          && List.forall2 (fun a v ->
+                            match a.tm with
+                            | FreeV fv -> fv_eq fv v
+                            | _ -> false)
+             args (List.rev xs)
           then //t is of the form (f vars) for all the lambda bound variables vars
                //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
-               // --- Notice that this does not depend on the currently remaining variables xs
-               //     Although perhaps it should. As such, it does not detect the eta-expansion of
-               //     things like fun x -> (ApplyTT (App(p, []), [x])
-               //     Arguably, the encoding should never produce App(p, []) in the first place
-               //               but somehow it does
                tok_of_name env f
           else None
 
         | _, [] ->
-          //Case 3:
+          //Case 2:
           //We're left with a closed head term applied to no arguments.
           //This case is only reachable after unfolding the recursive calls in Case 1 (note vars <> [])
           //and checking that the body t is of the form (ApplyTT (... (ApplyTT t x0) ... xn))
@@ -368,8 +364,8 @@ let is_an_eta_expansion env vars body =
           then Some t
           else None
 
-        | _ -> None in
-  aux body (List.rev vars)
+        | _ -> None
+  in check_partial_applications body (List.rev vars)
 
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
