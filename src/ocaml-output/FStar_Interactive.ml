@@ -863,7 +863,7 @@ let interactive_mode: Prims.string -> Prims.unit =
                           (Prims.parse_int "0");
                         FStar_Parser_ParseIt.frag_col = (Prims.parse_int "0")
                       } in
-                    let uu____2411 = check_frag env2 None (frag, false) in
+                    let uu____2411 = check_frag env2 None (frag, true) in
                     (match uu____2411 with
                      | Some (curmod,env3,n_errs) ->
                          (if n_errs <> (Prims.parse_int "0")
@@ -877,27 +877,81 @@ let interactive_mode: Prims.string -> Prims.unit =
                           else ();
                           FStar_Util.print_string
                             "Reminder: fst+fsti in interactive mode is unsound.\n";
-                          (curmod, env3))
+                          (let env4 =
+                             ((Prims.fst env3),
+                               (let uu___220_2447 = Prims.snd env3 in
+                                {
+                                  FStar_TypeChecker_Env.solver =
+                                    (uu___220_2447.FStar_TypeChecker_Env.solver);
+                                  FStar_TypeChecker_Env.range =
+                                    (uu___220_2447.FStar_TypeChecker_Env.range);
+                                  FStar_TypeChecker_Env.curmodule =
+                                    (uu___220_2447.FStar_TypeChecker_Env.curmodule);
+                                  FStar_TypeChecker_Env.gamma =
+                                    (uu___220_2447.FStar_TypeChecker_Env.gamma);
+                                  FStar_TypeChecker_Env.gamma_cache =
+                                    (uu___220_2447.FStar_TypeChecker_Env.gamma_cache);
+                                  FStar_TypeChecker_Env.modules =
+                                    (uu___220_2447.FStar_TypeChecker_Env.modules);
+                                  FStar_TypeChecker_Env.expected_typ =
+                                    (uu___220_2447.FStar_TypeChecker_Env.expected_typ);
+                                  FStar_TypeChecker_Env.sigtab =
+                                    (uu___220_2447.FStar_TypeChecker_Env.sigtab);
+                                  FStar_TypeChecker_Env.is_pattern =
+                                    (uu___220_2447.FStar_TypeChecker_Env.is_pattern);
+                                  FStar_TypeChecker_Env.instantiate_imp =
+                                    (uu___220_2447.FStar_TypeChecker_Env.instantiate_imp);
+                                  FStar_TypeChecker_Env.effects =
+                                    (uu___220_2447.FStar_TypeChecker_Env.effects);
+                                  FStar_TypeChecker_Env.generalize =
+                                    (uu___220_2447.FStar_TypeChecker_Env.generalize);
+                                  FStar_TypeChecker_Env.letrecs =
+                                    (uu___220_2447.FStar_TypeChecker_Env.letrecs);
+                                  FStar_TypeChecker_Env.top_level =
+                                    (uu___220_2447.FStar_TypeChecker_Env.top_level);
+                                  FStar_TypeChecker_Env.check_uvars =
+                                    (uu___220_2447.FStar_TypeChecker_Env.check_uvars);
+                                  FStar_TypeChecker_Env.use_eq =
+                                    (uu___220_2447.FStar_TypeChecker_Env.use_eq);
+                                  FStar_TypeChecker_Env.is_iface = false;
+                                  FStar_TypeChecker_Env.admit =
+                                    (uu___220_2447.FStar_TypeChecker_Env.admit);
+                                  FStar_TypeChecker_Env.lax =
+                                    (uu___220_2447.FStar_TypeChecker_Env.lax);
+                                  FStar_TypeChecker_Env.lax_universes =
+                                    (uu___220_2447.FStar_TypeChecker_Env.lax_universes);
+                                  FStar_TypeChecker_Env.type_of =
+                                    (uu___220_2447.FStar_TypeChecker_Env.type_of);
+                                  FStar_TypeChecker_Env.universe_of =
+                                    (uu___220_2447.FStar_TypeChecker_Env.universe_of);
+                                  FStar_TypeChecker_Env.use_bv_sorts =
+                                    (uu___220_2447.FStar_TypeChecker_Env.use_bv_sorts);
+                                  FStar_TypeChecker_Env.qname_and_index =
+                                    (uu___220_2447.FStar_TypeChecker_Env.qname_and_index)
+                                })) in
+                           (curmod, env4)))
                      | None  ->
-                         ((let uu____2454 =
+                         ((let uu____2458 =
                              FStar_Util.format1
                                "Found the interface %s but could not parse it first!"
                                intf in
-                           FStar_Util.print_warning uu____2454);
+                           FStar_Util.print_warning uu____2458);
+                          report_fail ();
+                          FStar_Util.print_string "#done-nok\n";
                           FStar_All.exit (Prims.parse_int "1")))
                 | None  -> (None, env2) in
               (match uu____2397 with
                | (initial_mod,env3) ->
-                   let uu____2471 =
+                   let uu____2477 =
                      (FStar_Options.record_hints ()) ||
                        (FStar_Options.use_hints ()) in
-                   if uu____2471
+                   if uu____2477
                    then
-                     let uu____2472 =
-                       let uu____2473 = FStar_Options.file_list () in
-                       FStar_List.hd uu____2473 in
-                     FStar_SMTEncoding_Solver.with_hints_db uu____2472
-                       (fun uu____2475  ->
+                     let uu____2478 =
+                       let uu____2479 = FStar_Options.file_list () in
+                       FStar_List.hd uu____2479 in
+                     FStar_SMTEncoding_Solver.with_hints_db uu____2478
+                       (fun uu____2481  ->
                           go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                             filename stack initial_mod env3 ts)
                    else
