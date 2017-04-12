@@ -2204,10 +2204,10 @@ it is shadowed by the local `x`. The other cases are straightforward.
 > _Note for experts: Because we will only reduce closed expressions,
   where all variables
   are bound by previous lambdas, we will only ever substitute closed
-  expressions, and this naive definition of
+  expressions `e`, and this naive definition of
   substitution is good enough. Substitution would become trickier to define
   or the representation of variables would have to change if we were considering
-  the case where e, the expression replacing a variable in
+  the case where `e`, the expression replacing a variable in
   some other expression, may itself contain free variables._
 
 Given the definition of values and of substitution we can now define
