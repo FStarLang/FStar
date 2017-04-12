@@ -1722,30 +1722,30 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let binders = Subst.close_binders binders in
     let actions_docs = actions |> List.map (fun d ->
         match d.d with
-        | Tycon(_, [TyconAbbrev(name, params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
+        | Tycon(_, [TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])}), doc]) when not for_free ->
             // When the effect is not for free, user has to provide a pair of
             // the definition and its cps'd type.
-            let env, params = desugar_binders env params in
-            let params = Subst.close_binders params in
+            let env, action_params = desugar_binders env action_params in
+            let action_params = Subst.close_binders action_params in
             {
               action_name=Env.qualify env name;
               action_unqualified_name = name;
               action_univs=[];
-              action_params = params;
-              action_defn=Subst.close (binders @ params) (desugar_term env def);
-              action_typ=Subst.close (binders @ params) (desugar_typ env cps_type)
+              action_params = action_params;
+              action_defn=Subst.close (binders @ action_params) (desugar_term env def);
+              action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
             }, doc
-        | Tycon(_, [TyconAbbrev(name, params, _, defn), doc]) when for_free ->
+        | Tycon(_, [TyconAbbrev(name, action_params, _, defn), doc]) when for_free ->
             // When for free, the user just provides the definition and the rest
             // is elaborated
-            let env, params = desugar_binders env params in
-            let params = Subst.close_binders params in
+            let env, action_params = desugar_binders env action_params in
+            let action_params = Subst.close_binders action_params in
             {
               action_name=Env.qualify env name;
               action_unqualified_name = name;
               action_univs=[];
-              action_params = params;
-              action_defn=Subst.close (binders@params) (desugar_term env defn);
+              action_params = action_params;
+              action_defn=Subst.close (binders@action_params) (desugar_term env defn);
               action_typ=S.tun
             }, doc
         | _ ->
