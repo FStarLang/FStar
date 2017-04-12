@@ -907,3 +907,50 @@ let read_hints (filename : string) : option<hints_db> =
     | :? System.IO.IOException ->
         Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
         None
+
+(** Interactive protocol **)
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
+exception UnsupportedJson
+
+let rec json_to_obj js =
+  match js with
+  | JsonNull -> null :> obj
+  | JsonBool b -> b :> obj
+  | JsonInt i -> i :> obj
+  | JsonStr s -> s :> obj
+  | JsonList l -> List.map json_to_obj l :> obj
+  | JsonAssoc a -> dict [ for (k, v) in a -> (k, json_to_obj v) ] :> obj
+
+let rec obj_to_json (o: obj) : option<json> =
+  let rec aux (o : obj) : json =
+    match o with
+    | null -> JsonNull
+    | :? bool as b -> JsonBool b
+    | :? int as i -> JsonInt i
+    | :? string as s -> JsonStr s
+    | :? (obj[]) as l -> JsonList (List.map aux (Array.toList l))
+    | :? System.Collections.Generic.IDictionary<string, obj> as a ->
+      JsonAssoc [ for KeyValue(k, v) in a -> (k, aux v) ]
+    | _ -> raise UnsupportedJson in
+  try Some (aux o) with UnsupportedJson -> None
+
+let json_of_string str : option<json> =
+  try
+    let deserializer = new System.Web.Script.Serialization.JavaScriptSerializer() in
+    obj_to_json (deserializer.DeserializeObject str : obj)
+  with
+  | :? ArgumentNullException
+  | :? ArgumentException
+  | :? InvalidOperationException -> None
+
+let string_of_json json : string =
+  let serializer = new System.Web.Script.Serialization.JavaScriptSerializer() in
+  serializer.Serialize (json_to_obj json)

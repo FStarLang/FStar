@@ -368,3 +368,14 @@ type hints_db = {
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> option<hints_db>
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
+
+val json_of_string : string -> option<json>
+val string_of_json : json -> string
