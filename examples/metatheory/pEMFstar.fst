@@ -645,6 +645,43 @@ type def_eq : env -> term -> term -> Type0 =
     reduce t1 t2 ->
     def_eq g t1 t2
 
+type def_eq_nf_reduce : env -> term -> term -> Type0 =
+  | DNFReduce :
+    #g:env ->
+    #t1:term ->
+    #t2:term ->
+    #a:term ->
+    typing def_eq_nf g t1 (tot a) ->
+    typing def_eq_nf g t2 (tot a) ->
+    reduce t1 t2 ->
+    def_eq g t1 t2
+
+and def_eq_congr : env -> term -> term -> Type0 =
+  | DNFCongr :
+    #g:env ->
+    #n:nat ->
+    #t1:term ->
+    #t2:term ->
+    ctx:dterm 1 ->
+    def_eq_nf_reduce (extend_with_ctx1 g ctx) t1 t2 ->
+    def_eq_nf_congr g (apply_ctx ctx [t1]) (apply_ctx ctx [t2])
+
+
+and def_eq_nf : env -> term -> term -> Type0 =
+  | DNFRefl :
+    #g:env ->
+    #t:term ->
+    #a:term ->
+    typing def_eq g t (tot a) ->
+    def_eq_nf g t t
+
+  | DNFSTClosure :
+    #g:env ->
+    #t1:term ->
+    #t2:term ->
+    SymmetricTransitiveClosure.stc (def_eq_congr g) t1 t2 ->
+    def_eq_nf g t1 t2
+
 
 
 
