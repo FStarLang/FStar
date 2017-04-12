@@ -203,23 +203,26 @@ let set_cur_goal (g:goal) : tac<unit>
 // TODO Ignoring arg qualifiers, OK?
 // TODO universes should unify?
 // TODO do we need the environment?
+let eqlen (xs : list<'a>) (ys : list<'a>) : bool =
+    List.length xs = List.length ys
+
 let rec term_eq t1 t2 = match (SS.compress t1).n, (SS.compress t2).n with
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
   | Tm_constant x, Tm_constant y -> x = y
   | Tm_type x, Tm_type y -> x = y
-  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> b1.Length = b2.Length &&
+  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlen b1 b2 &&
                                                List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
                                                term_eq t1 t2 &&
                                                true //k1 = k2 TODO Fix?
   | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 &&
-                                        a1.Length = a2.Length &&
+                                        eqlen a1 a2 &&
                                         List.forall2 (fun (x,_) (y,_) -> term_eq x y) a1 a2
   | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
                                           comp_eq c1 c2
   | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
   | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 &&
-                                            bs1.Length = bs2.Length &&
+                                            eqlen bs1 bs2 &&
                                             List.forall2 branch_eq bs1 bs2
   | _, _ -> false // TODO missing cases
 and comp_eq c1 c2 = match c1.n, c2.n with
@@ -242,8 +245,7 @@ let rec replace_in_term e1 e2 t =
     if term_eq e1 t
     then e2
     else let t' = match (SS.compress t).n with
-                  | Tm_app (f, args) -> BU.print1 "Tm_app %s\n" (string_of_int args.Length);
-                                        Tm_app (replace_in_term e1 e2 f,
+                  | Tm_app (f, args) -> Tm_app (replace_in_term e1 e2 f,
                                                     List.map (fun (a,q) -> (replace_in_term e1 e2 a, q)) args)
                   | x -> x
           in {t with n = t'}
@@ -261,11 +263,12 @@ let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit>
   = if false //not (Rel.is_trivial (Rel.teq ¿ENV? t1 t2))
     then
         fail "ill-typed rewriting requested"
-    else
+    else (
         bind cur_goal (fun g -> 
         let goal_ty' = treplace e1 e2 (g.goal_ty) in
-        bind (set_cur_goal {g with goal_ty = goal_ty'}) (fun _ ->
+        bind (set_cur_goal ({g with goal_ty = goal_ty'})) (fun _ ->
         add_goals [{ context = g.context; witness = None; goal_ty = U.mk_eq2 U_zero t1 e1 e2}]))
+    )
 
 let smt : tac<unit> =
     with_cur_goal "smt" (fun g ->
