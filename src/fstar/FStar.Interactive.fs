@@ -621,6 +621,8 @@ let interactive_mode (filename:string): unit =
             Util.print_warning (Util.format1
               "Found the interface %s but could not parse it first!"
               intf);
+            report_fail();
+            Util.print_string "#done-nok\n";
             exit 1
         end
     | None ->
