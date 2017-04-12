@@ -102,8 +102,8 @@ let type_of_binder (b:binder) : Tac term = type_of_binder_ b
 assume private val term_eq_ : term -> term -> bool
 let term_eq t1 t2 : Tac bool = term_eq_ t1 t2
 
-assume private val quote_  : #a:Type -> a -> term
-let quote #a (x:a) : tactic term = fun () -> quote_ x
+assume private val embed  : #a:Type -> a -> term
+let quote #a (x:a) : tactic term = fun () -> embed x
 
 //This primitive provides a way to destruct a term as a formula
 //TODO: We should add a formula_as_term also
@@ -161,5 +161,3 @@ let apply_lemma (t:term) : Tac unit = TAC?.reflect (apply_lemma_ t)
 
 assume val print_ : string -> tac unit
 let print (msg:string) : Tac unit = TAC?.reflect (print_ msg)
-
-abstract let embed (#a:Type0) (x:a) : Tot a = x

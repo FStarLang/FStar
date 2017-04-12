@@ -22,11 +22,6 @@ type name = bv
 
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
-let quote (nm:Ident.lid) (args:S.args) =
-  match args with
-  | [_; (y, _)] -> Some (E.embed_term y)
-  | _ -> None
-
 let binders_of_env ps (nm:Ident.lid) (args:S.args) =
   match args with
   | [(embedded_env, _)] ->
@@ -145,7 +140,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "term_as_formula_" 1 (mk_pure_interpretation_1 E.term_as_formula
                                              E.unembed_term
                                              (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "quote_"           2 quote;
       mk "binders_of_env_"  1 (binders_of_env ps);
       mk "type_of_binder_"  1 type_of_binder;
       mk "term_eq_"         2 term_eq;

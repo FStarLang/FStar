@@ -60,7 +60,7 @@ let un_protect_embedded_term : term -> term =
     let embed_lid = fstar_tactics_lid "embed" in
     fun (t:term) ->
         let head, args = U.head_and_args t in
-        match (SS.compress head).n, args with
+        match (U.un_uinst head).n, args with
         | Tm_fvar fv, [_; (x, _)]
             when S.fv_eq_lid fv embed_lid ->
           x
