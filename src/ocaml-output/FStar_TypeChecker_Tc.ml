@@ -2083,9 +2083,10 @@ and cps_and_elaborate:
                                                                params_un in
                                                            (match uu____2187
                                                             with
-                                                            | (params,env',uu____2197)
+                                                            | (action_params,env',uu____2197)
                                                                 ->
-                                                                let params1 =
+                                                                let action_params1
+                                                                  =
                                                                   FStar_List.map
                                                                     (
                                                                     fun
@@ -2119,7 +2120,7 @@ and cps_and_elaborate:
                                                                     } in
                                                                     (uu____2213,
                                                                     qual))
-                                                                    params in
+                                                                    action_params in
                                                                 let dmff_env'
                                                                   =
                                                                   FStar_TypeChecker_DMFF.set_env
@@ -2129,7 +2130,7 @@ and cps_and_elaborate:
                                                                   =
                                                                   elaborate_and_star
                                                                     dmff_env'
-                                                                    params1
+                                                                    action_params1
                                                                     ((action.FStar_Syntax_Syntax.action_univs),
                                                                     (action.FStar_Syntax_Syntax.action_defn)) in
                                                                 (match uu____2219
@@ -2145,29 +2146,29 @@ and cps_and_elaborate:
                                                                     dmff_env'
                                                                     action_t
                                                                     action_wp in
-                                                                    let params2
+                                                                    let action_params2
                                                                     =
                                                                     FStar_Syntax_Subst.close_binders
-                                                                    params1 in
+                                                                    action_params1 in
                                                                     let action_elab1
                                                                     =
                                                                     FStar_Syntax_Subst.close
-                                                                    params2
+                                                                    action_params2
                                                                     action_elab in
                                                                     let action_typ_with_wp1
                                                                     =
                                                                     FStar_Syntax_Subst.close
-                                                                    params2
+                                                                    action_params2
                                                                     action_typ_with_wp in
                                                                     let action_elab2
                                                                     =
                                                                     FStar_Syntax_Util.abs
-                                                                    params2
+                                                                    action_params2
                                                                     action_elab1
                                                                     None in
                                                                     let action_typ_with_wp2
                                                                     =
-                                                                    match params2
+                                                                    match action_params2
                                                                     with
                                                                     | 
                                                                     [] ->
@@ -2180,7 +2181,7 @@ and cps_and_elaborate:
                                                                     FStar_Syntax_Syntax.mk_Total
                                                                     action_typ_with_wp1 in
                                                                     FStar_Syntax_Util.flat_arrow
-                                                                    params2
+                                                                    action_params2
                                                                     uu____2246 in
                                                                     ((
                                                                     let uu____2250
@@ -2202,7 +2203,7 @@ and cps_and_elaborate:
                                                                     =
                                                                     FStar_Syntax_Print.binders_to_string
                                                                     ","
-                                                                    params2 in
+                                                                    action_params2 in
                                                                     let uu____2253
                                                                     =
                                                                     FStar_Syntax_Print.term_to_string
@@ -2212,7 +2213,7 @@ and cps_and_elaborate:
                                                                     FStar_Syntax_Print.term_to_string
                                                                     action_elab2 in
                                                                     FStar_Util.print4
-                                                                    "original params %s, end params %s, type %s, term %s\n"
+                                                                    "original action_params %s, end action_params %s, type %s, term %s\n"
                                                                     uu____2251
                                                                     uu____2252
                                                                     uu____2253

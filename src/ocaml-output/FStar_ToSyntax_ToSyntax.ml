@@ -4212,7 +4212,7 @@ let rec desugar_effect:
                                         match d1.FStar_Parser_AST.d with
                                         | FStar_Parser_AST.Tycon
                                             (uu____9502,(FStar_Parser_AST.TyconAbbrev
-                                                         (name,params,uu____9505,
+                                                         (name,action_params,uu____9505,
                                                           {
                                                             FStar_Parser_AST.tm
                                                               =
@@ -4227,12 +4227,13 @@ let rec desugar_effect:
                                             when Prims.op_Negation for_free
                                             ->
                                             let uu____9539 =
-                                              desugar_binders env2 params in
+                                              desugar_binders env2
+                                                action_params in
                                             (match uu____9539 with
-                                             | (env3,params1) ->
-                                                 let params2 =
+                                             | (env3,action_params1) ->
+                                                 let action_params2 =
                                                    FStar_Syntax_Subst.close_binders
-                                                     params1 in
+                                                     action_params1 in
                                                  let uu____9551 =
                                                    let uu____9552 =
                                                      FStar_ToSyntax_Env.qualify
@@ -4242,7 +4243,8 @@ let rec desugar_effect:
                                                        desugar_term env3 def in
                                                      FStar_Syntax_Subst.close
                                                        (FStar_List.append
-                                                          binders1 params2)
+                                                          binders1
+                                                          action_params2)
                                                        uu____9554 in
                                                    let uu____9557 =
                                                      let uu____9558 =
@@ -4250,7 +4252,8 @@ let rec desugar_effect:
                                                          cps_type in
                                                      FStar_Syntax_Subst.close
                                                        (FStar_List.append
-                                                          binders1 params2)
+                                                          binders1
+                                                          action_params2)
                                                        uu____9558 in
                                                    {
                                                      FStar_Syntax_Syntax.action_name
@@ -4260,7 +4263,7 @@ let rec desugar_effect:
                                                      FStar_Syntax_Syntax.action_univs
                                                        = [];
                                                      FStar_Syntax_Syntax.action_params
-                                                       = params2;
+                                                       = action_params2;
                                                      FStar_Syntax_Syntax.action_defn
                                                        = uu____9553;
                                                      FStar_Syntax_Syntax.action_typ
@@ -4269,15 +4272,16 @@ let rec desugar_effect:
                                                  (uu____9551, doc1))
                                         | FStar_Parser_AST.Tycon
                                             (uu____9562,(FStar_Parser_AST.TyconAbbrev
-                                                         (name,params,uu____9565,defn),doc1)::[])
+                                                         (name,action_params,uu____9565,defn),doc1)::[])
                                             when for_free ->
                                             let uu____9584 =
-                                              desugar_binders env2 params in
+                                              desugar_binders env2
+                                                action_params in
                                             (match uu____9584 with
-                                             | (env3,params1) ->
-                                                 let params2 =
+                                             | (env3,action_params1) ->
+                                                 let action_params2 =
                                                    FStar_Syntax_Subst.close_binders
-                                                     params1 in
+                                                     action_params1 in
                                                  let uu____9596 =
                                                    let uu____9597 =
                                                      FStar_ToSyntax_Env.qualify
@@ -4287,7 +4291,8 @@ let rec desugar_effect:
                                                        desugar_term env3 defn in
                                                      FStar_Syntax_Subst.close
                                                        (FStar_List.append
-                                                          binders1 params2)
+                                                          binders1
+                                                          action_params2)
                                                        uu____9599 in
                                                    {
                                                      FStar_Syntax_Syntax.action_name
@@ -4297,7 +4302,7 @@ let rec desugar_effect:
                                                      FStar_Syntax_Syntax.action_univs
                                                        = [];
                                                      FStar_Syntax_Syntax.action_params
-                                                       = params2;
+                                                       = action_params2;
                                                      FStar_Syntax_Syntax.action_defn
                                                        = uu____9598;
                                                      FStar_Syntax_Syntax.action_typ
