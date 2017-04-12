@@ -95,6 +95,11 @@ let go _ =
     | Error msg ->
         Util.print_string msg
     | Success ->
+        let _ =
+          if Options.print_ocaml_gc_statistics ()
+          then FStar.Platform.init_print_ocaml_gc_statistics ()
+          else ()
+        in
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
         else if Options.interactive () then begin //--in

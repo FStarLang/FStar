@@ -22,3 +22,5 @@ let exe (name : string) =
 
 let is_fstar_compiler_using_ocaml = false
 
+let init_print_ocaml_gc_statistics () =
+    Util.print_warning "Warning: F* compiled with F#, --print_ocaml_gc_statistics ignored\n"

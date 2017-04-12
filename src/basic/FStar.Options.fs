@@ -141,6 +141,7 @@ let init () =
         ("print_implicits"              , Bool false);
         ("print_universes"              , Bool false);
         ("print_z3_statistics"          , Bool false);
+        ("print_ocaml_gc_statistics"    , Bool false);
         ("prn"                          , Bool false);
         ("record_hints"                 , Bool false);
         ("reuse_hint_for"               , Unset);
@@ -230,6 +231,7 @@ let get_print_implicits         ()      = lookup_opt "print_implicits"          
 
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
+let get_print_ocaml_gc_statistics ()    = lookup_opt "print_ocaml_gc_statistics" as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
@@ -584,6 +586,11 @@ let rec specs () : list<Getopt.opt> =
         "print_z3_statistics",
         ZeroArgs(fun () -> Bool true),
         "Print Z3 statistics for each SMT query");
+
+       ( noshort,
+        "print_ocaml_gc_statistics",
+        ZeroArgs(fun () -> Bool true),
+        "Print statistics of the OCaml garbage collector at every major collection cycle (OCaml version only)");
 
        ( noshort,
         "prn",
@@ -941,6 +948,7 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+let print_ocaml_gc_statistics    () = get_print_ocaml_gc_statistics   ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
