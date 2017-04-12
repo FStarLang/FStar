@@ -114,7 +114,6 @@ cd ../../..
 ORIG_PWD=$PWD
 echo "+++ ORIG PWD:"$ORIG_PWD
 BN_BINARYSPATH=~/binaries/weekly   # maybe this should be environment var or something like that similar to CI_LOGS
-#FSTAR_BIN_BRANCH="darrenge_binaries"  # test branch 
 FSTAR_BIN_BRANCH="master"
 BN_FILESTOKEEP=4
 
@@ -122,17 +121,17 @@ cd $BN_BINARYSPATH
 echo "--git checkout --"
 git checkout $FSTAR_BIN_BRANCH
 echo "--git pull --"
-#git pull --allow-unrelated-histories  # git 2.9 and above
+git pull origin master #--allow-unrelated-histories  # git 2.9 and above
 
 echo "-- copy files --"
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
-  echo "--- Copy Minor Zip File ***"
+  echo "+++ Copy Minor Zip File ***"
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
-  echo "--- Git Add: "~/$BN_BINARYSPATH/$MINOR_ZIP_FILE
+  echo "+++ Git Add: "~/$BN_BINARYSPATH/$MINOR_ZIP_FILE
   git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
-  echo "--- Copy Minor Tar File ***"
+  echo "+++ Copy Minor Tar File ***"
   cp $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
   git add $BN_BINARYSPATH/$MINOR_TAR_FILE
 fi
@@ -141,42 +140,48 @@ fi
 echo "-- Delete oldest file --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
 ZIP_COUNT=`ls -1 $BN_FILES 2>/dev/null | wc -l`
-echo "-- Zip Count:"$ZIP_COUNT
+echo "+++ Zip Count:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
-echo "-- Zip Files:"$BN_ZIP_FILES
-  echo "--- Deleted oldest .zip file ---"
-  echo "Zip Files:"$BN_ZIP_FILES
-  ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1)) | xargs rm
+  echo "+++ Deleted oldest .zip file ---"
+  ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
+  for ZIP_FILE in $ZIP_FILE_LIST
+  do
+     echo "+++Delete Zip file:"${ZIP_FILE}
+     rm ${ZIP_FILE}
+     git rm ${ZIP_FILE}
+  done
 fi
 
-echo "-- Delete tar file --"
+echo "+++ Delete tar file --"
 BN_TAR_FILES=$BN_BINARYSPATH/*.gz
 TAR_COUNT=`ls -1 $BN_FILES 2>/dev/null | wc -l`
 if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
-  echo "--- Deleted oldest .gz file ---"
+  echo "+++ Deleted oldest .gz file ---"
   ls -t1 $BN_TAR_FILES | tail -n +$(($BN_FILESTOKEEP+1)) | xargs rm
+  TAR_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
+  for TAR_FILE in $TAR_FILE_LIST
+  do
+     echo "+++ Delete Tar file:"${TAR_FILE}
+     rm ${TAR_FILE}
+     git rm ${TAR_FILE}
+  done
 fi
 
-echo "--- Made it here!!!!"
-
+echo "+++ Binary Path:"$BN_BINARYSPATH
+echo "+++ PWD:"$PWD
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it --- "
 git commit --amend -m "Adding new build package and removing oldest."
 echo "--- now push it --- "
-git push origin $FSTAR_BIN_BRANCH --force  
+git push git@github.com:FStarLang/binaries.git $FSTAR_BIN_BRANCH --force
 
 
 # TO DO - new features to implement
-# Push new package to proper repo (BN_BINARYSPATH) and proper branch (FSTAR_BIN_BRANCH) -- might be done
-# Update Git repo of deleted file -- might be done
 # slack notification on failure?
-# Make package failure on build machine - windows
-
 
 # TO DO - clean up debug code
 # Uncomment the "exit" from the Verify section as if those fail we do not want to continue
 # Clean up the debug echo messages
-# Fix FSTAR_BIN_BRANCH back to master
 
 # Manual steps on major releases
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt 
