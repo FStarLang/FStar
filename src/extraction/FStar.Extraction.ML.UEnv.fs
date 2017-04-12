@@ -140,23 +140,21 @@ let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
         | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
-        | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
+        | None ->
+            List.iter (function
+              | Fv (fv', t) ->
+                  BU.print2 "%s = %s\n" lid.ident.idText fv'.fv_name.v.str
+              | _ -> () ) g.gamma;
+            failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
         | Some y -> y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
 let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
     let x = BU.find_map g.gamma (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
-        // amazingly hacky hack
-        | Fv (fv', t) when fv'.fv_name.v.str = "FStar.DM4F.Exceptions.EXN.__proj__EXN__item__raise" -> Some t
         | _ -> None) in
     match x with
-        | None ->
-            List.iter (function
-              | Fv (fv', t) ->
-                  BU.print2 "%s = %s\n" fv.fv_name.v.str fv'.fv_name.v.str
-              | _ -> () ) g.gamma;
-            failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
+        | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
         | Some y -> y
 
 let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
@@ -259,14 +257,10 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
           let ns, i = y in
           (* let mlsymbol = find_uniq g.gamma (avoid_keyword i) in *)
           let mlsymbol = avoid_keyword i in
-          (match (List.rev ns) with
-            | h::t -> BU.print1 "Last module %s\n" h
-            | _ -> () );
           (ns, mlsymbol), mlsymbol
         in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
-        BU.print1 "Extended env with fv %s\n" mlsymbol;
         let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
         {g with gamma=gamma}, (mlsymbol, 0)
     else failwith "freevars found"

@@ -214,10 +214,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect(ed) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
-            (match (List.rev lid.ns) with
-              | a::_ -> (BU.print1 "Last module again: %s\n" a.idText;
-                  BU.print1 "Effect name: %s\n" ed.mname.ident.idText)
-              | _ -> () );
+            // (match (List.rev lid.ns) with
+            //   | a::_ -> (BU.print1 "Last module again: %s\n" a.idText;
+            //       BU.print1 "Effect name: %s\n" ed.mname.ident.idText)
+            //   | _ -> () );
             let n, w = mangled_name in
             BU.print1 "Mangled name: %s\n" n;
             let lb = {
@@ -239,45 +239,37 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               with_ty MLTY_Top <| MLE_Name mlp, tysc
             | _ -> failwith "Not an fv" in
 
+          let rec extract_fv2 tm = match (SS.compress tm).n with
+            | Tm_uinst (tm, _) -> extract_fv2 tm
+            | Tm_fvar fv ->
+              let mlp = mlpath_of_lident fv.fv_name.v in
+              let a, b, tysc, d = BU.right <| UEnv.lookup_fv g fv in
+              b, tysc
+            | _ -> failwith "Not an fv" in
+
           let extract_action g (a:S.action) =
-            BU.print1 "Extracting action %s\n" (Print.lid_to_string a.action_name);
             let a_nm, a_lid = action_name ed a in
-            //remove effect name from path
-            let a_lid = match (List.rev a_lid.ns) with
-              | e::_ when ident_equals e ed.mname.ident ->
-                  {a_lid with ns = (a_lid.ns |> List.rev |> List.tail |> List.rev)}
-              | _ -> a_lid in
-            let f, s = a_nm in
-            let a_nm = match (List.rev f) with
-              | e::_ when e = ed.mname.ident.idText ->
-                  (f |> List.rev |> List.tail |> List.rev, s)
-              | _ -> a_nm in
             let lbname = Inl ({ppname=a_lid.ident; index=0; sort=a.action_defn}) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
             let action_lb = mk (Tm_let(lbs, a.action_defn)) None FStar.Range.dummyRange in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
-            BU.print1 "Action name: %s\n" (a_lid.ident.idText);
             let exp, tysc = match a_let.expr with
             | MLE_Let((_, _, [mllb]), e) ->
                 (match mllb.mllb_tysc with
                  | Some(tysc) -> e, tysc
-                 | None -> failwith "no type scheme") in
+                 | None -> failwith "No type scheme") in
 
-            let g, letb = extend_env g a_lid a_nm exp tysc in
-            BU.print1 "Extracted action %s\n" (Print.lid_to_string a.action_name);
-            g, letb in
+            extend_env g a_lid a_nm exp tysc in
 
           let g, return_decl =
-            BU.print1 "Extracting return %s\n" "";
             let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
             let return_nm, return_lid = monad_op_name ed "return" in
             extend_env g return_lid return_nm return_tm ty_sc in
 
           let g, bind_decl =
-            BU.print1 "Extracting bind %s\n" "";
-            let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
             let bind_nm, bind_lid = monad_op_name ed "bind" in
+            let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
             extend_env g bind_lid bind_nm bind_tm ty_sc in
 
           let g, actions = BU.fold_map extract_action g ed.actions in
