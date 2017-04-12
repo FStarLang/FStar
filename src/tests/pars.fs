@@ -75,7 +75,7 @@ let pars_term_or_fragment is_term s =
       if is_term
       then let t = Parser.Parse.term lexer lexbuf in
            Some (ToSyntax.desugar_term env t)
-      else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref frag with
+      else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
                 | Some (test_mod', (env', tcenv'), 0) ->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
@@ -131,7 +131,7 @@ let pars_and_tc_fragment (s:string) =
     try
         let env, tcenv = init() in
         let frag = frag_of_text s in
-        match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref frag with
+        match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
         | Some (test_mod', (env', tcenv'), n) ->
             test_mod_ref := test_mod';
             dsenv_ref := Some env';

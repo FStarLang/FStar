@@ -2139,14 +2139,16 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
   } in
   env, modul, pop_when_done
 
+let as_interface (m:AST.modul) : AST.modul =
+    match m with
+    | AST.Module(mname, decls) -> AST.Interface(mname, decls, true)
+    | i -> i
+
 let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modul =
   let m =
     if Options.interactive () &&
       get_file_extension (List.hd (Options.file_list ())) = "fsti"
-    then
-      match m with
-      | Module(mname, decls) -> AST.Interface(mname, decls, true)
-      | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
+    then as_interface m
     else m
   in
   let x, y, pop_when_done = desugar_modul_common curmod env m in

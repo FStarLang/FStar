@@ -80,7 +80,7 @@ let tc_prims () : (Syntax.modul * int)
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
-let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
+let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence) =
   try
     match Parser.Driver.parse_fragment frag with
     | Parser.Driver.Empty ->
@@ -91,6 +91,10 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) frag =
         it type-checks a fragment, can actually parse an entire module.
         Actually, this is an abuse, and just means that we're type-checking the
         first chunk. *)
+      let ast_modul =
+        if is_interface_dependence
+        then FStar.ToSyntax.ToSyntax.as_interface ast_modul
+        else ast_modul in
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let env = match curmod with
         | Some modul ->
