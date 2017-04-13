@@ -478,7 +478,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       //label the haseq predicate so that we get a proper error message if the assertion fails
       let sort_range = (fst b).sort.pos in
       let haseq_b = TcUtil.label
-                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add the 'noeq' qualifier" ty_lid.str)
+                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" ty_lid.str)
                     sort_range
                     haseq_b
       in
