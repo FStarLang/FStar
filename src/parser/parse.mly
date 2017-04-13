@@ -936,6 +936,12 @@ atomicUniverse:
   | op=OPINFIX4
   | op=operatorInfix0ad12
      { op }
+  | op=PIPE_RIGHT
+     { "|>" }
+  | op=COLON_EQUALS
+     { ":=" }
+  | op=COLON_COLON
+     { "::" }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
