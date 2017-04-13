@@ -119,6 +119,11 @@
       <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
+      <Name>prettyprint</Name>
+      <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>

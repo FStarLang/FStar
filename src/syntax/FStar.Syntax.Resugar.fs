@@ -33,6 +33,7 @@ module A  = FStar.Parser.AST
 module C = FStar.Syntax.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
+module D = FStar.Parser.ToDocument
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =  x.ppname.idText ^ "__" ^ (string_of_int x.index) in
@@ -274,7 +275,7 @@ let rec resugar_term (t : S.term) : A.term =
         | _ ->
             let u = resugar_universe u t.pos in
             let l = lid_of_path ["Type"] t.pos in
-            mk (A.Construct (l, [(u, A.Nothing)]))
+            mk (A.Construct (l, [(u, UnivApp)]))
         end
 
     | Tm_abs(xs, body, _) -> //fun x1 .. xn -> body
@@ -311,12 +312,15 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
+      let resugar_as_app e args = 
+        let args = args |> List.map (fun (e, qual) ->
+              resugar_term e) in
+        let e = resugar_term e in
+        List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
+      in
       begin match resugar_term_as_op e with
         | None->
-          let args = args |> List.map (fun (e, qual) ->
-            resugar_term e) in
-          let e = resugar_term e in
-          List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
+          resugar_as_app e args
 
         | Some "tuple" ->
           let args = args |> List.map (fun (e, qual) ->
@@ -419,10 +423,13 @@ let rec resugar_term (t : S.term) : A.term =
           let (e, _ ) = List.hd args in
           resugar_term e
 
-        | Some op ->
-          let args = args |> List.map (fun (e, qual) ->
-            resugar_term e) in
-          mk (A.Op(op, args))
+        | Some op -> 
+          if (D.handleable_op op (List.length args)) then
+            let args = args |> List.map (fun (e, qual) ->
+              resugar_term e) in
+            mk (A.Op(op, args))
+          else
+            resugar_as_app e args
       end
 
     | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->

@@ -242,11 +242,8 @@ let quals_to_string' quals =
 
 let term_to_string x =
   let e = Resugar.resugar_term x in
-   A.term_to_string e
-  // Do not uncomment the two lines below to link to pretty print since it only
-  // works in ocaml based F*. The makefile will uncomment in ocaml built
-  //let d = ToDocument.term_to_document e in
-  //Pp.pretty_string 1.0 100 d
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string (float_of_string "1.0") 100 d
 
 let rec pat_to_string x = match x.v with
     | Pat_cons(l, pats) -> U.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")

@@ -324,7 +324,16 @@ let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
     fun op -> List.tryFind (matches_level op) opinfix34 <> None
 
-
+let handleable_op op args_length =  
+    match args_length with  
+    | 0 -> true  
+    | 1 -> is_general_prefix_op op || List.mem op [ "-" ; "~" ]  
+    | 2 ->  
+      is_operatorInfix0ad12 op ||  
+      is_operatorInfix34 op ||  
+      List.mem op ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]  
+    | 3 -> List.mem op [".()<-" ; ".[]<-"]  
+    | _ -> false 
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1141,7 +1150,10 @@ and p_projectionLHS e = match (unparen e).tm with
   | Assign _    (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term e)
-  | Labeled _   -> failwith "Not valid in universe"
+  | Labeled (e, s, b)  
+    (* created in resugar from Mate_labeled used by typechecker to record error messages*)
+    -> group (str s ^^ soft_parens_with_nesting (p_term e))
+
 
 and p_constant = function
   | Const_effect -> str "Effect"
