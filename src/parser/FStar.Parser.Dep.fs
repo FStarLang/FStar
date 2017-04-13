@@ -582,7 +582,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   let discover_command_line_argument f =
     let m = lowercase_module_name f in
     let interface_only = is_interface f &&
-      not (List.existsb (fun f ->
+      not (List.existsML (fun f ->
         lowercase_module_name f = m && is_implementation f)
       filenames)
     in
