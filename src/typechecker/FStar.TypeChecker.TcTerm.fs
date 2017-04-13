@@ -1269,8 +1269,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             aux false chead.res_typ
     in //end tc_args
 
-    let rec check_function_app norm tf =
-       match (U.unrefine tf).n with
+    let rec check_function_app tf =
+       match (unfold_whnf env tf).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
             let rec tc_args env args : (Syntax.args * list<(Range.range * lcomp)> * guard_t) = match args with
@@ -1312,12 +1312,16 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let head_info = head, chead, ghead, U.lcomp_of_comp c in
             tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
 
-        | _ ->
-            if not norm
-            then check_function_app true (unfold_whnf env tf)
-            else raise (Error(Err.expected_function_typ env tf, head.pos)) in
+        | Tm_refine (bv,_) ->
+            check_function_app bv.sort
 
-    check_function_app false (N.normalize [N.Beta;N.WHNF] env (U.unrefine thead))
+        | Tm_ascribed (t, _, _) ->
+            check_function_app t
+
+        | _ ->
+            raise (Error(Err.expected_function_typ env tf, head.pos)) in
+
+    check_function_app thead
 
 (******************************************************************************)
 (* SPECIAL CASE OF CHECKING APPLICATIONS:                                     *)

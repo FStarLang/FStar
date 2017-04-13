@@ -324,27 +324,48 @@ let is_app = function
     | Var "ApplyTF" -> true
     | _ -> false
 
-//for Tm_abs terms, we do not generate their typing and interpretation
-//if they are eta expansions (fun x -> f x), in which case we simply return the encoding of f
-//or if they are of the form (fun x -> a + b), in which case we seem to be returning the encoding of a + b ... a bit confused about that
-let gen_typing_and_interpretation env vars t =
-    let rec aux t xs = match t.tm, xs with
+// [is_an_eta_expansion env vars body]:
+//       returns Some t'
+//               if (fun xs -> body) is an eta-expansion of t'
+//       else returns None
+let is_an_eta_expansion env vars body =
+    //assert vars <> []
+    let rec check_partial_applications t xs =
+        match t.tm, xs with
         | App(app, [f; {tm=FreeV y}]), x::xs
-          when (is_app app && Term.fv_eq x y) -> aux f xs
+          when (is_app app && Term.fv_eq x y) ->
+          //Case 1:
+          //t is of the form (ApplyTT f x)
+          //   i.e., it's a partial or curried application of f to x
+          //recurse on f with the remaining arguments
+          check_partial_applications f xs
+
         | App(Var f, args), _ ->
-          if List.length args = List.length vars
-          && List.forall2 (fun a v -> match a.tm with
-            | FreeV fv -> fv_eq fv v
-            | _ -> false) args vars
-          then tok_of_name env f
+          if List.length args = List.length xs
+          && List.forall2 (fun a v ->
+                            match a.tm with
+                            | FreeV fv -> fv_eq fv v
+                            | _ -> false)
+             args (List.rev xs)
+          then //t is of the form (f vars) for all the lambda bound variables vars
+               //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
+               tok_of_name env f
           else None
+
         | _, [] ->
+          //Case 2:
+          //We're left with a closed head term applied to no arguments.
+          //This case is only reachable after unfolding the recursive calls in Case 1 (note vars <> [])
+          //and checking that the body t is of the form (ApplyTT (... (ApplyTT t x0) ... xn))
+          //where [x0;...;xn] = vars0.
+          //As long as t does not mention any of the vars, (fun vars -> body) is an eta-expansion of t
           let fvs = Term.free_variables t in
           if fvs |> List.for_all (fun fv -> not (BU.for_some (fv_eq fv) vars)) //t doesn't contain any of the bound variables
           then Some t
           else None
-        | _ -> None in
-  aux t (List.rev vars)
+
+        | _ -> None
+  in check_partial_applications body (List.rev vars)
 
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
@@ -841,7 +862,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some (t, _, _) -> mkApp(t, List.map mkFreeV cvars), []
                 | None ->
-                  match gen_typing_and_interpretation env vars body with
+                  match is_an_eta_expansion env vars body with
                   | Some t ->
                     //if the cache has not changed, we need not generate decls and decls', but if the cache has changed, someone might use them in future
                     let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls' in

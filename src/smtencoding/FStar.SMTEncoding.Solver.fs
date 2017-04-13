@@ -169,7 +169,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @suffix in
 
     let check (p:decl) =
-        let rlimit = Prims.op_Multiply (Options.z3_rlimit ()) 544656 in
+        let rlimit = Prims.op_Multiply (Options.z3_rlimit_factor ()) (Prims.op_Multiply (Options.z3_rlimit ()) 544656) in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), rlimit in
         let hint_opt = next_hint query_name query_index in
         let unsat_core, initial_config =
