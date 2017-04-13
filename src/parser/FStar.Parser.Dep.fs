@@ -195,7 +195,7 @@ let collect_one
 =
   let deps = BU.mk_ref [] in
   let add_dep d =
-    if not (List.existsb (fun d' -> d' = d) !deps) then
+    if not (List.existsML (fun d' -> d' = d) !deps) then
       deps := d :: !deps
   in
   let working_map = smap_copy original_map in
