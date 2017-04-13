@@ -37,6 +37,7 @@ module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
+module TcUtil = FStar.TypeChecker.Util
 
 exception Un_extractable
 
@@ -272,43 +273,6 @@ let rec is_ml_value e =
     | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
-(* VD: functions copied over from FStar.SMTEncoding.Encode *)
-(* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
-(* a body or codomain of an arrow) [x] is reifiable *)
-
-let is_reifiable_effect (env:TcEnv.env) (effect_lid:lident) : bool =
-  let quals = TcEnv.lookup_effect_quals env effect_lid in
-  List.contains Reifiable quals
-
-let is_reifiable (env:TcEnv.env) (c:either<S.lcomp, S.residual_comp>) : bool =
-  let effect_lid = match c with
-    | Inl lc -> lc.eff_name
-    | Inr (eff_name, _) -> eff_name
-  in
-  is_reifiable_effect env effect_lid
-
-let is_reifiable_comp (env:TcEnv.env) (c:S.comp) : bool =
-  match c.n with
-  | Comp ct -> is_reifiable_effect env ct.effect_name
-  | _ -> false
-
-let is_reifiable_function (env:TcEnv.env) (t:S.term) : bool =
-  match (SS.compress t).n with
-  | Tm_arrow (_, c) -> is_reifiable_comp env c
-  | _ -> false
-
-(* [reify_body env t] assumes that [t] has a reifiable computation type *)
-(* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
-(* and returns the result of reifying t *)
-let reify_body (env:TcEnv.env) (t:S.term) : S.term =
-  let tm = U.mk_reify t in
-  let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
-  if TcEnv.debug env <| Options.Other "ExtractEffects"
-  then BU.print2 "Reified body %s \nto %s\n"
-                (Print.term_to_string tm)
-                (Print.term_to_string tm') ;
-  tm'
-
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
 let normalize_abs (t0:term) : term =
@@ -495,6 +459,7 @@ and term_as_mlty' env t =
         res
 
       | Tm_abs(bs,ty,_) ->  (* (sch) rule in \hat{\epsilon} *)
+        (* reify body here? *)
         (* We just translate the body in an extended environment; the binders will just end up as units *)
         let bs, ty = SS.open_term bs ty in
         let bts, env = binders_as_ml_binders env bs in
@@ -892,15 +857,24 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   end
                end
 
-        | Tm_abs(bs, body, copt(* the annotated computation type of the body ... probably don't need it *)) ->
+        | Tm_abs(bs, body, copt (* the annotated computation type of the body *)) ->
           let bs, body = SS.open_term bs body in
+
+        //   let reify_comp_and_body env c body =
+        //     let reified_body = TcUtil.reify_body env.tcenv body in
+        //     let c = match c with
+        //       | BU.Inl lc ->
+        //         let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
+        //         BU.Inl (U.lcomp_of_comp (S.mk_Total typ)) in
+
           let body =
             match copt with
-            | Some c -> 
-                if is_reifiable g.tcenv c
-                then reify_body g.tcenv body 
+            | Some c ->
+                if TcEnv.is_reifiable g.tcenv c
+                then begin BU.print1 "Got here %s\n" ""; TcUtil.reify_body g.tcenv body end
                 else body
             | None -> body in
+
           let ml_bs, env = binders_as_ml_binders g bs in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
@@ -946,8 +920,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
-			     S.fv_eq_lid fv Syntax.Const.op_And ||
-			     S.fv_eq_lid fv Syntax.Const.op_Or
+			                    S.fv_eq_lid fv Syntax.Const.op_And ||
+			                    S.fv_eq_lid fv Syntax.Const.op_Or
                            | _ ->
                               false)
                         in

@@ -956,6 +956,19 @@ let pure_or_ghost_pre_and_post env comp =
 
          end
 
+(* [reify_body env t] assumes that [t] has a reifiable computation type *)
+(* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
+(* and returns the result of reifying t *)
+let reify_body (env:Env.env) (t:S.term) : S.term =
+    let tm = U.mk_reify t in
+    let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
+    if Env.debug env <| Options.Other "SMTEncodingReify"
+    then BU.print2 "Reified body %s \nto %s\n"
+        (Print.term_to_string tm)
+        (Print.term_to_string tm') ;
+    tm'
+
+
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)

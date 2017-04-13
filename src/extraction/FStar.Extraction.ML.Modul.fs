@@ -248,6 +248,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             | _ -> failwith "Not an fv" in
 
           let extract_action g (a:S.action) =
+            assert (match a.action_params with | [] -> true | _ -> false);
             let a_nm, a_lid = action_name ed a in
             let lbname = Inl ({ppname=a_lid.ident; index=0; sort=a.action_defn}) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in

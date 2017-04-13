@@ -497,7 +497,7 @@ let try_lookup_lid env l =
 
 let lookup_lid env l =
     match try_lookup_lid env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> BU.print1 "got here%s" "\n"; raise (Error(name_not_found l, range_of_lid l))
     | Some v -> v
 
 let lookup_univ env x =

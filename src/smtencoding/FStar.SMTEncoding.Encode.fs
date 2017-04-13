@@ -366,18 +366,6 @@ let is_an_eta_expansion env vars body =
 
         | _ -> None
   in check_partial_applications body (List.rev vars)
-
-(* [reify_body env t] assumes that [t] has a reifiable computation type *)
-(* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
-(* and returns the result of reifying t *)
-let reify_body (env:Env.env) (t:S.term) : S.term =
-    let tm = U.mk_reify t in
-    let tm' = N.normalize [N.Beta; N.Reify; N.Eager_unfolding; N.EraseUniverses; N.AllowUnboundUniverses] env tm in
-    if Env.debug env <| Options.Other "SMTEncodingReify"
-    then BU.print2 "Reified body %s \nto %s\n"
-        (Print.term_to_string tm)
-        (Print.term_to_string tm') ;
-    tm'
 (* </Utilities> *)
 
 (**********************************************************************************)
@@ -712,11 +700,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   end
                   else e0
               in
-              let e =
-                  match args_e with
-                  | [_] -> e0
-                  | _ -> S.mk (S.Tm_app(e0, List.tl args_e)) None t0.pos
-              in
+              let e = S.mk_Tm_app e0 (List.tl args_e) None t0.pos in
               encode_term e env
 
 
@@ -795,7 +779,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           in
 
           let reify_comp_and_body env c body =
-            let reified_body = reify_body env.tcenv body in
+            let reified_body = TcUtil.reify_body env.tcenv body in
             let c = match c with
               | BU.Inl lc ->
                 let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
@@ -1788,7 +1772,7 @@ let encode_top_level_let :
               let body =
                 (* Reify the body if needed *)
                 if is_reifiable_function env'.tcenv t_norm
-                then reify_body env'.tcenv body
+                then TcUtil.reify_body env'.tcenv body
                 else body
               in
               let app = mk_app curry f ftok vars in
@@ -1855,7 +1839,7 @@ let encode_top_level_let :
             let app = mkApp(f, List.map mkFreeV vars) in
             let gsapp = mkApp(g, mkApp("SFuel", [fuel_tm])::vars_tm) in
             let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
-            let body = if is_reifiable_function env'.tcenv t_norm then reify_body env'.tcenv body else body in
+            let body = if is_reifiable_function env'.tcenv t_norm then TcUtil.reify_body env'.tcenv body else body in
             let body_tm, decls2 = encode_term body env' in
 
             //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
