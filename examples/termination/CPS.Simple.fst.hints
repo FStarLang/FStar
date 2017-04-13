@@ -7,7 +7,8 @@
       2,
       1,
       [
-        "@query", "binder_x_9a691d092aa1033ae30e6c0e5e60237c_2",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a691d092aa1033ae30e6c0e5e60237c_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],

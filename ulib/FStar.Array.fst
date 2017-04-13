@@ -15,7 +15,7 @@
 *)
 
 (**
-F* standard library mutable arrays module. 
+F* standard library mutable arrays module.
 
 @summary Mutable arrays
 *)
@@ -25,7 +25,21 @@ open FStar.All
 open FStar.ST
 open FStar.Seq
 open FStar.Heap
-(* abstract *) type array (t:Type) = ref (seq t)
+
+abstract type array (t:Type) = ref (seq t)
+
+      (* #a:Type -> heap -> ref a ->  GTot a *)
+val sel: #a:Type -> heap -> array a -> GTot (seq a)
+let sel #a h s = Heap.sel h s
+
+val contains: #a:Type -> heap -> array a -> GTot (bool)
+let contains #a h s = Heap.contains h s
+
+val heap_upd: #a:Type -> heap -> array a -> seq a -> GTot heap
+let heap_upd #a h r v = Heap.upd h r v
+
+val mk_aref: #a: Type -> array a -> aref
+let mk_aref #a r = Ref r
 
 abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
   (requires (fun h -> contains h s1 /\ contains h s2))
@@ -78,7 +92,7 @@ abstract val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
                             /\ contains h1 x
-                            /\ h1==upd h0 x (Seq.upd (sel h0 x) n v))))
+                            /\ h1==heap_upd h0 x (Seq.upd (sel h0 x) n v))))
 let upd #a x n v =
   let s = !x in
   let s' = Seq.upd s n v in
@@ -103,7 +117,7 @@ val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                             (ensures (fun h0 _u h1 ->
                                       (j < Seq.length (sel h0 x))
                                       /\ contains h1 x
-                                      /\ (h1==Heap.upd h0 x (Seq.swap (sel h0 x) i j))))
+                                      /\ (h1==heap_upd h0 x (Seq.swap (sel h0 x) i j))))
 let swap #a x i j =
   let tmpi = index x i in
   let tmpj = index x j in
@@ -173,7 +187,7 @@ let rec blit_aux #a s s_idx t t_idx len ctr =
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
-val blit:
+private val blit:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat ->
   ST unit
      (requires (fun h ->

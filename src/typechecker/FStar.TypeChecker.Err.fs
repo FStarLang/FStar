@@ -31,22 +31,24 @@ module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
 open FStar.TypeChecker.Common
 
-let format_info env name typ range =
-    BU.format3 "(defined at %s) %s : %s"
+let format_info env name typ range (doc: option<string>) =
+    BU.format4 "(defined at %s) %s: %s%s"
         (Range.string_of_range range)
         name
         (Normalize.term_to_string env typ)
+        (match doc with
+         | Some docstring -> BU.format1 "#doc %s" docstring
+         | None -> "")
 
-let info_as_string env info = 
-    let id_string, range = match info.identifier with 
-        | Inl bv -> Print.nm_to_string bv, FStar.Syntax.Syntax.range_of_bv bv
-        | Inr fv -> Print.lid_to_string (FStar.Syntax.Syntax.lid_of_fv fv), FStar.Syntax.Syntax.range_of_fv fv in
-    format_info env id_string info.identifier_ty range
-
-let info_at_pos env file row col = 
-    match FStar.TypeChecker.Common.info_at_pos file row col with
+let info_at_pos env file row col =
+    match TypeChecker.Common.info_at_pos file row col with
     | None -> None
-    | Some i -> Some (info_as_string env i)
+    | Some info ->
+      match info.identifier with
+      | Inl bv -> Some (Inl (Print.nm_to_string bv), info.identifier_ty,
+                       FStar.Syntax.Syntax.range_of_bv bv)
+      | Inr fv -> Some (Inr (FStar.Syntax.Syntax.lid_of_fv fv), info.identifier_ty,
+                       FStar.Syntax.Syntax.range_of_fv fv)
 
 let add_errors env errs =
     let errs =

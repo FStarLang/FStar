@@ -277,6 +277,7 @@ let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
+let smap_size (m:smap<'value>) = m.Count
 
 type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
 let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)

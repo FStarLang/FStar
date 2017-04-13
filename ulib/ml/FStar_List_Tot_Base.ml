@@ -21,6 +21,7 @@ let fold_left = BatList.fold_left
 let fold_right = BatList.fold_right
 let fold_left2 = BatList.fold_left2
 let mem = BatList.mem
+type ('a, 'b, 'c) memP = unit
 let contains x l = BatList.exists (fun y -> x = y) l
 let existsb f l = BatList.exists f l
 let find f l = try Some (BatList.find f l) with | Not_found -> None

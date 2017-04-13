@@ -20,6 +20,7 @@ GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
 PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
+DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
@@ -62,6 +63,7 @@ ifeq ($(HAS_VALID_MENHIR), 1)
 	# letting OCamlbuild go through ocamlyacc
 	$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
 	# Save a copy of the dumb parse.mly for whoever doesn't have menhir.
+	$(DOS2UNIX) parse.mly
 	cp parse.mly ../parser/ml/
 else
 	cp ../parser/ml/parse.mly ./parse.mly
@@ -121,7 +123,12 @@ FStar_Parser_Parse.ml: parse.mly
 	# TODO: create a proper OCamlbuild rule for this production so that
 	# OCamlbuild knows how to generate parse.mly first (possibly using
 	# menhir) and removes the production as needed.
-	ocamlyacc parse.mly
+	ocamlyacc parse.mly 2> yac-log
+	cat yac-log
+	@
+	@if (( $$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/') > 6 )); then \
+	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
+	  fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
 

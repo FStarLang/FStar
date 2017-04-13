@@ -393,17 +393,22 @@ let rec go (line_col:(int*int))
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
-        if symbol = "" then None // FIXME obey fqn_only
+        if symbol = "" then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
-             let lid = match DsEnv.resolve_to_fully_qualified_name dsenv lid with
-                       | None -> lid
-                       | Some lid -> lid in
+             let lid = if fqn_only then lid
+                       else match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+                            | None -> lid
+                            | Some lid -> lid in
              try_lookup_lid (snd env) lid
-               |> Util.map_option (fun ((_, typ), range) ->
-                                   FStar.TypeChecker.Err.format_info (snd env) symbol typ range) in
+               |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
-     | Some s -> Util.print1 "%s\n#done-ok\n" s);
+     | Some (name_or_lid, typ, rng) ->
+       let name, doc =
+         match name_or_lid with
+         | Inl name -> name, None
+         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
+       Util.print1 "%s\n#done-ok\n" (FStar.TypeChecker.Err.format_info (snd env) name typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user
@@ -489,11 +494,11 @@ let rec go (line_col:(int*int))
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
-          = let dsenv, _ = env in 
+          = let dsenv, _ = env in
             let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
-            matches |> List.filter (fun (ns, id, _) -> 
-              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with 
+            matches |> List.filter (fun (ns, id, _) ->
+              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
               | None -> false
               | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
         in
@@ -563,9 +568,6 @@ let rec go (line_col:(int*int))
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-//          Util.print3 "got frag %s, %s, %s" frag.frag_text
-//            (Util.string_of_int frag.frag_line)
-//            (Util.string_of_int frag.frag_col);
       let res = check_frag env_mark curmod frag in begin
         match res with
         | Some (curmod, env, n_errs) ->
@@ -591,8 +593,10 @@ let interactive_mode (filename:string): unit =
   let filenames, maybe_intf = deps_of_our_file filename in
   let env = tc_prims () in
   let stack, env, ts = tc_deps None [] env filenames [] in
-
-  let initial_mod, env = match maybe_intf with
+  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+  let initial_mod, env =
+    match maybe_intf with
     | Some intf ->
         // We found an interface: send it to the interactive mode as if it
         // were a regular chunk

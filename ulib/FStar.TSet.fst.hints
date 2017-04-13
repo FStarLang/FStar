@@ -16,9 +16,10 @@
       0,
       0,
       [
-        "@query", "equation_Prims.eq2", "equation_Prims.squash",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -29,9 +30,10 @@
       0,
       0,
       [
-        "@query", "equation_Prims.l_or", "equation_Prims.squash",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_or", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -42,9 +44,10 @@
       0,
       0,
       [
-        "@query", "equation_Prims.l_and", "equation_Prims.squash",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -55,10 +58,11 @@
       0,
       0,
       [
-        "@query", "equation_Prims.l_False", "equation_Prims.l_imp",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_False", "equation_Prims.l_imp",
         "equation_Prims.l_not", "equation_Prims.squash",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "refinement_interpretation_Tm_refine_9464479a8dbea99c4e6879c5c69f2f30",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -70,8 +74,8 @@
       0,
       [
         "@query", "equation_FStar.TSet.empty", "equation_FStar.TSet.mem",
-        "equation_Prims.l_False", "false_interp",
-        "interpretation_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "equation_Prims.l_False", "equation_Prims.prop", "false_interp",
+        "interpretation_FStar.TSet_Tm_abs_886c983ca0884b59e18b11af014002a9",
         "unit_typing"
       ],
       0
@@ -83,8 +87,8 @@
       0,
       [
         "@query", "eq2-interp", "equation_FStar.TSet.mem",
-        "equation_FStar.TSet.singleton",
-        "interpretation_Tm_abs_13caedc89029acfa66f26657769a6146",
+        "equation_FStar.TSet.singleton", "equation_Prims.prop",
+        "interpretation_FStar.TSet_Tm_abs_4a8b5af53f87cdf31b1c6b39359b0bc7",
         "unit_typing"
       ],
       0
@@ -96,7 +100,8 @@
       0,
       [
         "@query", "equation_FStar.TSet.mem", "equation_FStar.TSet.union",
-        "interpretation_Tm_abs_009685910fdc14e49dd768fe741df7f6",
+        "equation_Prims.prop",
+        "interpretation_FStar.TSet_Tm_abs_bf7df9b68193612f2e28c85161cf966c",
         "unit_typing"
       ],
       0
@@ -108,7 +113,8 @@
       0,
       [
         "@query", "equation_FStar.TSet.intersect", "equation_FStar.TSet.mem",
-        "interpretation_Tm_abs_0662f02c672d9437f8a8527cd25f52f1",
+        "equation_Prims.prop",
+        "interpretation_FStar.TSet_Tm_abs_30a1967e70d56a00508c2fb5f0ef6c01",
         "unit_typing"
       ],
       0
@@ -120,8 +126,8 @@
       0,
       [
         "@query", "equation_FStar.TSet.complement",
-        "equation_FStar.TSet.mem",
-        "interpretation_Tm_abs_cb223a150ca7d4bb39ced5d7ab008682",
+        "equation_FStar.TSet.mem", "equation_Prims.prop",
+        "interpretation_FStar.TSet_Tm_abs_106e2b8bb3ee461ce99851ab8e9b259c",
         "unit_typing"
       ],
       0
