@@ -57,23 +57,21 @@ let protect_embedded_term (t:typ) (x:term) =
     S.mk_Tm_app fstar_tactics_embed [S.iarg t; S.as_arg x] None x.pos
 
 let type_of_embedded : term -> typ =
-    let embed_lid = fstar_tactics_lid "embed" in
     fun (t:term) ->
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n, args with
         | Tm_fvar fv, [(t,_); _]
-            when S.fv_eq_lid fv embed_lid ->
+            when S.fv_eq_lid fv SC.fstar_tactics_embed_lid ->
           t
         | _ ->
           failwith (BU.format1 "Not a protected embedded term (1): %s" (Print.term_to_string t))
 
 let un_protect_embedded_term : term -> term =
-    let embed_lid = fstar_tactics_lid "embed" in
     fun (t:term) ->
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n, args with
         | Tm_fvar fv, [_; (x, _)]
-            when S.fv_eq_lid fv embed_lid ->
+            when S.fv_eq_lid fv SC.fstar_tactics_embed_lid ->
           x
         | _ ->
           failwith (BU.format1 "Not a protected embedded term (2): %s" (Print.term_to_string t))

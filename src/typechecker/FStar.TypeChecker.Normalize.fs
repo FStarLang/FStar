@@ -664,9 +664,9 @@ let is_reify_head = function
     | _ ->
       false
 
-let is_fstar_tactics_quote t =
+let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote__lid
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -696,11 +696,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)
-            when is_fstar_tactics_quote hd ->
+            when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
             let t = {t with n=Tm_app(hd, args)} in
             let t = reduce_primops cfg t in
-            rebuild cfg env stack t //quoted terms should not be normalized, but they may have free variables
+            rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
