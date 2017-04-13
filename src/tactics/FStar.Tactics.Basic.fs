@@ -17,6 +17,7 @@ module U = FStar.Syntax.Util
 module Rel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
+module TcErr  = FStar.TypeChecker.Err
 module N = FStar.TypeChecker.Normalize
 
 type name = bv
@@ -148,7 +149,7 @@ let add_smt_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
     set ({p with smt_goals=gs@p.smt_goals}))
 
-let replace (g:goal) : tac<unit> =
+let replace_cur (g:goal) : tac<unit> =
     bind dismiss (fun _ ->
     add_goals [g])
 
@@ -200,74 +201,36 @@ let set_cur_goal (g:goal) : tac<unit>
                         | _ -> Failed ("No goals left", ps)
       )
 
-// TODO Ignoring arg qualifiers, OK?
-// TODO universes should unify?
-// TODO do we need the environment?
-let eqlen (xs : list<'a>) (ys : list<'a>) : bool =
-    List.length xs = List.length ys
-
-let rec term_eq t1 t2 = match (SS.compress t1).n, (SS.compress t2).n with
-  | Tm_name x, Tm_name y -> bv_eq x y
-  | Tm_fvar x, Tm_fvar y -> fv_eq x y
-  | Tm_constant x, Tm_constant y -> x = y
-  | Tm_type x, Tm_type y -> x = y
-  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlen b1 b2 &&
-                                               List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
-                                               term_eq t1 t2 &&
-                                               true //k1 = k2 TODO Fix?
-  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 &&
-                                        eqlen a1 a2 &&
-                                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) a1 a2
-  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
-                                          comp_eq c1 c2
-  | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
-  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 &&
-                                            eqlen bs1 bs2 &&
-                                            List.forall2 branch_eq bs1 bs2
-  | _, _ -> false // TODO missing cases
-and comp_eq c1 c2 = match c1.n, c2.n with
-  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO match u's?
-  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2 // TODO match u's?
-  | Comp c1, Comp c2 -> c1.comp_univs = c2.comp_univs &&
-                        c1.effect_name = c2.effect_name &&
-                        term_eq c1.result_typ c2.result_typ &&
-                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) c1.effect_args c2.effect_args &&
-                        eq_flags c1.flags c2.flags
-  | _, _ -> false
-and eq_flags f1 f2 = false // TODO
-and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
-
-// TODO go for bottom up or fold-like structure
-let rec replace_in_term e1 e2 t =
-    BU.print3 "GGG replacing %s for %s in %s\n"
-        (SP.term_to_string e1) (SP.term_to_string e2) (SP.term_to_string t);
-    BU.print1 "GGG TAG OF T = %s\n" (SP.tag_of_term (SS.compress t));
-    if term_eq e1 t
+let replace_point e1 e2 t =
+    if U.term_eq e1 t
     then e2
-    else let t' = match (SS.compress t).n with
-                  | Tm_app (f, args) -> Tm_app (replace_in_term e1 e2 f,
-                                                    List.map (fun (a,q) -> (replace_in_term e1 e2 a, q)) args)
-                  | x -> x
-          in {t with n = t'}
+    else t
 
-let treplace (e1:term) (e2:term) (t:term) =
+let rec replace_in_term e1 e2 t =
+    U.bottom_fold (replace_point e1 e2) t
+
+let treplace env (e1:term) (e2:term) (t:term) =
     BU.print3 "TAC replacing %s for %s in %s\n"
         (SP.term_to_string e1) (SP.term_to_string e2) (SP.term_to_string t);
     replace_in_term e1 e2 t
 
-// TODO universe zero?
-// TODO type is hardcoded to int. need to ask the user for it???
-let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) None Range.dummyRange
-
-let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit>
-  = if false //not (Rel.is_trivial (Rel.teq ¿ENV? t1 t2))
-    then
-        fail "ill-typed rewriting requested"
-    else (
-        bind cur_goal (fun g -> 
-        let goal_ty' = treplace e1 e2 (g.goal_ty) in
-        bind (set_cur_goal ({g with goal_ty = goal_ty'})) (fun _ ->
-        add_goals [{ context = g.context; witness = None; goal_ty = U.mk_eq2 U_zero t1 e1 e2}]))
+// eq hardcoded to univ #0
+let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit> =
+    bind cur_goal (fun g -> 
+        let env = g.context in
+        let ok = match Rel.try_teq true env t1 t2 with
+                 | None -> false
+                 | Some g -> Rel.is_trivial g in
+        if ok // Types match
+        then begin
+             let goal_ty' = treplace env e1 e2 (g.goal_ty) in
+             bind (set_cur_goal ({g with goal_ty = goal_ty'})) (fun _ ->
+             add_goals [{ context = g.context; witness = None; goal_ty = U.mk_eq2 U_zero t1 e1 e2}])
+        end
+        else begin
+            TcErr.add_errors env ["Ill-type rewriting requested", e1.pos];
+            fail "grewrite: Ill-typed rewriting requested"
+        end
     )
 
 let smt : tac<unit> =
@@ -343,7 +306,7 @@ let rec map (t:tac<'a>): tac<(list<'a>)> =
 let map_goal_term (f:term -> term) : tac<unit> =
     let aux =
         with_cur_goal "map_goal" (fun g ->
-        replace ({g with goal_ty=f g.goal_ty}))
+        replace_cur ({g with goal_ty=f g.goal_ty}))
     in
     bind (map aux) (fun _ -> ret ())
 
@@ -355,7 +318,7 @@ let map_meta (t:tac<'a>) : tac<'a> =
     with_cur_goal "map_meta" (fun g ->
     match (SS.compress g.goal_ty).n with
     | Tm_meta(f, annot) ->
-      bind (replace ({g with goal_ty=f})) (fun _ -> //remove the meta
+      bind (replace_cur ({g with goal_ty=f})) (fun _ -> //remove the meta
       bind t (fun a ->                              //run t, getting a
       bind (map_goal_term (fun tm ->
             if is_true tm then tm
@@ -528,7 +491,7 @@ let exact (tm:term)
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
             if Rel.teq_nosmt goal.context t goal.goal_ty
             then let _ = solve goal tm in
-                 replace ({goal with witness=None; goal_ty=U.t_true})
+                 replace_cur ({goal with witness=None; goal_ty=U.t_true})
             else
                  let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
                             (Print.term_to_string tm)
@@ -549,7 +512,7 @@ let rewrite (h:binder) : tac<unit>
         (match (SS.compress x).n with
          | Tm_name x ->
            let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
-           replace goal
+           replace_cur goal
          | _ ->
            fail "Not an equality hypothesis with a variable on the LHS")
       | _ -> fail "Not an equality hypothesis")

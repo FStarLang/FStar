@@ -108,7 +108,6 @@ let mk_tactic_interpretation_2 (ps:proofstate)
 let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(et1, _); (et2, _); (embedded_state, _)] ->
-    Util.print1 "GGG grewrite with args = %s\n" (Print.args_to_string args);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (grewrite_impl (E.type_of_embedded et1) (E.type_of_embedded et2) (E.unembed_term et1) (E.unembed_term et2)) ps in
@@ -192,7 +191,7 @@ let evaluate_user_tactic : tac<unit>
           | Tm_fvar fv, [(tactic, _); (assertion, _)]
                 when S.fv_eq_lid fv E.by_tactic_lid ->
             focus_cur_goal "user tactic"
-            (bind (replace ({goal with goal_ty=assertion})) (fun _ ->
+            (bind (replace_cur ({goal with goal_ty=assertion})) (fun _ ->
                    unembed_tactic_0 E.unembed_unit tactic))
           | _ ->
             fail "Not a user tactic"))

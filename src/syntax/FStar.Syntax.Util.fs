@@ -1064,3 +1064,54 @@ let rec list_elements (e:term) : option<list<term>> =
       Some (hd::must (list_elements tl))
   | _ ->
       None
+
+let eqlen (xs : list<'a>) (ys : list<'a>) : bool =
+    List.length xs = List.length ys
+
+// TODO Ignoring arg qualifiers, OK?
+// TODO universes should unify?
+// TODO do we need the environment?
+let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
+  | Tm_name x, Tm_name y -> bv_eq x y
+  | Tm_fvar x, Tm_fvar y -> fv_eq x y
+  | Tm_constant x, Tm_constant y -> x = y
+  | Tm_type x, Tm_type y -> x = y
+  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlen b1 b2 &&
+                                               List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
+                                               term_eq t1 t2 &&
+                                               true //k1 = k2 TODO Fix?
+  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 &&
+                                        eqlen a1 a2 &&
+                                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) a1 a2
+  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
+                                          comp_eq c1 c2
+  | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
+  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 &&
+                                            eqlen bs1 bs2 &&
+                                            List.forall2 branch_eq bs1 bs2
+  | _, _ -> false // TODO missing cases
+and comp_eq c1 c2 = match c1.n, c2.n with
+  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO match u's?
+  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2 // TODO match u's?
+  | Comp c1, Comp c2 -> c1.comp_univs = c2.comp_univs &&
+                        c1.effect_name = c2.effect_name &&
+                        term_eq c1.result_typ c2.result_typ &&
+                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) c1.effect_args c2.effect_args &&
+                        eq_flags c1.flags c2.flags
+  | _, _ -> false
+and eq_flags f1 f2 = false // TODO
+and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
+
+let rec bottom_fold (f : term -> term) (t : term) : term = 
+    let ff = bottom_fold f in
+    let tn = (un_uinst t).n in
+    let tn = match tn with
+             | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
+             // TODO: types
+             | Tm_abs (bs, t, k) -> let _, t' = open_term bs t in
+                                    let t'' = ff t' in
+                                    Tm_abs (bs, close bs t'', k)
+
+             | Tm_arrow (bs, k) -> tn //TODO
+             | _ -> tn in
+    { t with n = tn }

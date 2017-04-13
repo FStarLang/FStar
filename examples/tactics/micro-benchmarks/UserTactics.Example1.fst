@@ -168,20 +168,26 @@ let test_print_goal =
                    (forall (y:int). y==0 ==> 0==y)
 
 let test_grewrite =
-assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ())) (1 + 2 = 2 + 1)
+assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ())) (1 + 2 == 2 + 1)
 
 let test_grewrite2 (w x y z:int) =
 assert_by_tactic (fun () -> grewrite (quote (z + y) ()) (quote (y + z) ());
                             grewrite (quote (x + (y + z)) ()) (quote ((y + z) + x) ());
                             grewrite (quote (w + ((y + z) + x)) ()) (quote (((y + z) + x) + w) ())
-                 ) (w + (x + (z + y)) = (y + z) + (x + w))
+                 ) (w + (x + (z + y)) == (y + z) + (x + w))
 
 let test_grewrite3 (w x y z : int) =
 assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ());
                             grewrite (quote (3, 3+4) ()) (quote (3,7) ())
                  )
-                 ( (1+2, 3+4) = (5-2, 7+0) )
+                 ( (1+2, 3+4) == (5-2, 7+0) )
 
+// Should rewrite all at once, and does, but we get a weird hard query
+let test_grewrite4 (f : int -> int -> int) (w : int) =
+assert_by_tactic (fun () -> let _ = implies_intro () in
+                            grewrite (quote (f w w) ()) (quote w ());
+                            revert ())
+                 ( f w w == w ==> f (f w w) (f w w) == w)
 
 let simple_equality_assertions =
   assert_by_tactic rewrite_all_equalities
