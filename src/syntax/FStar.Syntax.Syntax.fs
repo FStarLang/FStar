@@ -251,6 +251,7 @@ type action = {
     action_name:lident;
     action_unqualified_name: ident; // necessary for effect redefinitions, this name shall not contain the name of the effect
     action_univs:univ_names;
+    action_params : binders;
     action_defn:term;
     action_typ: typ
 }
@@ -522,7 +523,7 @@ let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
-let set_range_of_fv (fv:fv) (r:Range.range) = 
+let set_range_of_fv (fv:fv) (r:Range.range) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function

@@ -116,7 +116,8 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
-         begin match (SS.compress res_lcomp.res_typ).n with
+         let norm_whnf = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env' in
+         begin match (norm_whnf res_lcomp.res_typ).n with
                | Tm_type _ -> ()
                | ty -> raise (Error(BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
@@ -378,6 +379,7 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
     //if it's an arrow type, we want to check that ty occurs strictly positive in the sort of every binder
     //TODO: do something with c also?
     debug_log env ("Checking nested positivity in an Tm_arrow node, with binders as: " ^ (PP.binders_to_string "; " sbs));
+    let sbs = SS.open_binders sbs in
     let b, _ =
     List.fold_left (fun (r, env) b ->
         if not r then r, env  //we have already seen a problematic binder

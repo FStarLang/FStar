@@ -32,6 +32,7 @@ type debug_level_t =
 type option_val =
   | Bool of bool
   | String of string
+  | Path of string
   | Int of int
   | List of list<option_val>
   | Unset
@@ -100,6 +101,7 @@ val output_dir                  : unit    -> option<string>
 val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
+val prims_basename              : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_fuels                 : unit    -> bool
@@ -132,6 +134,7 @@ val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
+val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool

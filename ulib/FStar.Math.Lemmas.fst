@@ -206,7 +206,7 @@ val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (ensures  (x = z))
 let lemma_eq_trans_2 w x y z = ()
 
-#reset-options "--z3rlimit 80 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
 
 private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
@@ -242,11 +242,14 @@ let lemma_mod_sub_0 a = ()
 val lemma_mod_sub_1: a:pos -> b:pos{a < b} -> Lemma ((-a) % b = b - (a%b))
 let lemma_mod_sub_1 a b = ()
 
-
+//NS: not sure why this requires 4 unfoldings
+//    it fails initially, and then succeeds on a retry with less fuel; strange
+#reset-options "--z3rlimit 20 --initial_ifuel 2 --initial_fuel 4"
 private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
   = ()
 
+#reset-options "--initial_ifuel 1 --z3rlimit 5"
 val lemma_mod_mul_distr_l: a:nat -> b:nat -> p:pos -> Lemma
   ((a * b) % p = ((a % p) * b) % p)
 let lemma_mod_mul_distr_l a b p =
@@ -325,13 +328,18 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 0"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
 let lemma_mod_plus_mul_distr a b c p =
-  lemma_mod_mul_distr_l (a + b) c p;
-  lemma_mod_mul_distr_l c ((a + b) % p) p;
+  let init = ((a + b) * c) % p in
+                                     //  ((a + b) * c) % p
+  lemma_mod_mul_distr_l (a + b) c p; //= (((a + b) % p) * c) % p
+  swap_mul ((a + b) % p) c;          //= (c * ((a + b) % p)) % p
+  lemma_mod_mul_distr_l c ((a + b) % p) p; //= (c % p * ((a + b) % p)) % p
+  let reached = (c % p * ((a + b) % p)) % p in
+  assert (init = reached);
   lemma_mod_plus_distr_l a b p;
   lemma_mod_plus_distr_l b (a % p) p
 
@@ -444,22 +452,21 @@ let division_sub_lemma a b n =
   multiple_division_lemma n b;
   division_definition (a - n * b) b (a / b - n)
 
-#reset-options "-z3rlimit 1000000 --initial_fuel 1 --max_fuel 1"
+#reset-options "-z3rlimit 20 --initial_fuel 1 --max_fuel 1"
 
 (* Lemma: Modulo distributivity *)
 val modulo_distributivity: a:nat -> b:nat -> c:pos ->
     Lemma ( (a + b) % c = (a % c + b % c) % c )
-let modulo_distributivity a b c = admit()
-(* CH: this used to work, but now fails even with huge rlimit
+let modulo_distributivity a b c =
   euclidean_division_definition a c;
   euclidean_division_definition b c;
   euclidean_division_definition (a % c + b % c) c;
   nat_over_pos_is_nat a c;
   nat_over_pos_is_nat b c;
   division_addition_lemma (a - (a / c) * c + b - (b / c) * c) c (a / c + b / c)
-*)
 
-#reset-options "-z3rlimit 10 --initial_fuel 0 --max_fuel 0"
+
+#reset-options "-z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 (* Lemma: Modulo distributivity under special condition *)
 val modulo_addition_lemma: a:nat -> b:pos -> n:nat ->
@@ -543,12 +550,11 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "-z3rlimit 1000000 --initial_fuel 1 --max_fuel 1"
+#reset-options "-z3rlimit 20" //--initial_fuel 1 --max_fuel 1"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
-let modulo_modulo_lemma a b c = admit()
-(* CH: this used to work, but now fails even with huge rlimit
+let modulo_modulo_lemma a b c =
   modulo_addition_lemma (a - (a / (b * c)) * (b * c)) b ((a / (b * c)) * c);
   let n = (a / (b * c)) * c in
   let x = (a - (a / (b * c)) * (b * c)) in
@@ -556,7 +562,6 @@ let modulo_modulo_lemma a b c = admit()
   lemma_div_mod a (b*c);
   cut( a % b = (a - (a / (b * c)) * (b * c)) % b );
   euclidean_division_definition a (b * c)
-*)
 
 #reset-options "-z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
@@ -583,15 +588,14 @@ let pow2_multiplication_modulo_lemma_1 a b c =
   paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
-#reset-options "--z3rlimit 1000 --initial_fuel 0 --max_fuel 0"
-
+#reset-options "--z3rlimit 300 --initial_fuel 0 --max_fuel 0"
 val pow2_multiplication_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
     Lemma ( (a * pow2 c) % pow2 b = (a % pow2 (b - c)) * pow2 c )
 let pow2_multiplication_modulo_lemma_2 a b c =
   euclidean_division_definition a (pow2 (b - c));
   let q = pow2 (b - c) in
   let r = a % pow2 (b - c) in
-  cut(a = q * (a / q) + a % q);
+  assert(a = q * (a / q) + a % q);
   pow2_plus (b - c) c;
   paren_mul_right (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);
   paren_mul_left (a / pow2 (b - c)) (pow2 (b - c)) (pow2 c);

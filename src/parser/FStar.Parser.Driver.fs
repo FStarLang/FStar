@@ -44,10 +44,10 @@ let parse_fragment frag : fragment =
 
     | Inl (Inl _, _) ->
       raise (Err("Refusing to check more than one module at a time incrementally"))
-      
+
     | Inr (msg,r) ->
       raise (Error(msg, r))
-      
+
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
   match ParseIt.parse (Inl fn) with
@@ -58,7 +58,7 @@ let parse_file fn =
     let msg = Util.format1 "%s: expected a module\n" fn in
     let r = Range.dummyRange in
     raise (Error(msg, r))
-    
+
   | Inr (msg, r) ->
     raise (Error(msg, r))
-    
+
