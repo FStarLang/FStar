@@ -91,7 +91,8 @@ type env = {
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
-  remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>  (* A map from interface names to their stil-to-be-processed top-level decls *)
+  remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
+  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
 }
 
 type foundname =
@@ -131,6 +132,8 @@ let qualify env id =
     match env.curmonad with
     | None -> qual (current_module env) id
     | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
+let syntax_only env = env.syntax_only
+let set_syntax_only env b = { env with syntax_only = b }
 let new_sigmap () = BU.smap_create 100
 let empty_env () = {curmodule=None;
                     curmonad=None;
@@ -145,7 +148,9 @@ let empty_env () = {curmodule=None;
                     admitted_iface=false;
                     expect_typ=false;
                     docs=new_sigmap();
-                    remaining_iface_decls=[]}
+                    remaining_iface_decls=[];
+                    syntax_only=false}
+
 let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->

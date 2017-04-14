@@ -92,7 +92,9 @@ type env
 //  expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
 //  docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
 //  remaining_iface_decls:BU.smap<(list<Parser.AST.decl>)>
+//  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
 //}
+
 type foundname =
   | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
@@ -100,6 +102,8 @@ type foundname =
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val syntax_only: env -> bool
+val set_syntax_only: env -> bool -> env
 val qualify: env -> ident -> lident
 val set_iface: env -> bool -> env
 val iface: env -> bool

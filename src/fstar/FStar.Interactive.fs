@@ -69,9 +69,12 @@ let pop (_, env) msg =
     pop_context env msg;
     Options.pop()
 
-let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
-    let env = { env with lax = lax } in
-    let res = push_context (dsenv, env) msg in
+type push_kind = | SyntaxCheck | LaxCheck | FullCheck
+
+let push ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
+    let tcenv = { tcenv with lax = (kind = LaxCheck) } in
+    let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
+    let res = push_context (dsenv, tcenv) msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
@@ -158,7 +161,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
     | _  ->
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
-      let env = push env (Options.lax ()) true "typecheck_modul" in
+      let env = push env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
       let (intf, impl), env, modl, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -280,18 +283,17 @@ let js_assoc = function
   | JsonAssoc a -> a
   | other -> js_fail "dictionary" other
 
-type push_kind = | PushLax | PushFull
-
 let js_pushkind s : push_kind = match js_str s with
-  | "lax" -> PushLax
-  | "full" -> PushFull
+  | "syntax" -> SyntaxCheck
+  | "lax" -> LaxCheck
+  | "full" -> FullCheck
   | _ -> js_fail "push_kind" s
 
 type query' =
 | Exit
 | DescribeProtocol
 | Pop
-| Push of push_kind * string * int * int
+| Push of push_kind * string * int * int * bool
 | AutoComplete of string
 | Lookup of string * option<(string * int * int)> * list<string>
 | Compute of string
@@ -304,7 +306,7 @@ let interactive_protocol_vernum = 1
 let interactive_protocol_features =
   ["autocomplete"; "compute"; "describe-protocol"; "exit";
    "lookup"; "lookup/documentation"; "lookup/definition";
-   "pop"; "push"; "search"]
+   "pop"; "peek"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -332,10 +334,11 @@ let unpack_interactive_query json =
          | "exit" -> Exit
          | "pop" -> Pop
          | "describe-protocol" -> DescribeProtocol
-         | "push" -> Push (arg "kind" |> js_pushkind,
-                          arg "code" |> js_str,
-                          arg "line" |> js_int,
-                          arg "column" |> js_int)
+         | "peek" | "push" -> Push (arg "kind" |> js_pushkind,
+                                   arg "code" |> js_str,
+                                   arg "line" |> js_int,
+                                   arg "column" |> js_int,
+                                   query = "peek")
          | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
          | "lookup" -> Lookup (arg "symbol" |> js_str,
                               try_arg "location"
@@ -349,6 +352,11 @@ let unpack_interactive_query json =
          | "search" -> Search (arg "terms" |> js_str)
          | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
 
+let validate_interactive_query = function
+  | { qid = qid; qq = Push (SyntaxCheck, _, _, _, false) } ->
+    { qid = qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
+  | other -> other
+
 let read_interactive_query stream : query =
   try
     match Util.read_line stream with
@@ -356,7 +364,7 @@ let read_interactive_query stream : query =
     | Some line ->
       match Util.json_of_string line with
       | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-      | Some request -> unpack_interactive_query request
+      | Some request -> validate_interactive_query (unpack_interactive_query request)
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) ->
@@ -467,7 +475,7 @@ let run_pop st = // This shrinks all internal stacks by 1
     ((QueryOK, JsonNull),
       Inl ({ st with repl_env = env; repl_curmod = curmod; repl_stack = stack }))
 
-let run_push st kind text line column = // This grows all internal stacks by 1
+let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
 
   // If we are at a stage where we have not yet pushed a fragment from the
@@ -479,7 +487,7 @@ let run_push st kind text line column = // This grows all internal stacks by 1
     else false, (stack, env, ts) in
 
   let stack = (env, st.repl_curmod) :: stack in
-  let env = push env (kind = PushLax) restore_cmd_line_options "#push" in
+  let env = push env kind restore_cmd_line_options "#push" in
 
   // This pushes to an internal, hidden stack
   let env_mark = mark env in
@@ -494,7 +502,7 @@ let run_push st kind text line column = // This grows all internal stacks by 1
                       repl_line = line; repl_column = column } in
 
   match res with
-  | Some (curmod, env, nerrs) when nerrs = 0 ->
+  | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
     // At this stage, the internal stack has grown with size 1.
     let env = commit_mark env in
     ((QueryOK, JsonList errors),
@@ -504,7 +512,8 @@ let run_push st kind text line column = // This grows all internal stacks by 1
     // immediately after failed pushes; this version pops automatically.
     let env = reset_mark env_mark in
     let _, st'' = run_pop ({ st' with repl_env = env }) in
-    ((QueryNOK, JsonList errors), st'')
+    let status = if peek_only then QueryOK else QueryNOK in
+    ((status, JsonList errors), st'')
 
 let run_lookup st symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
@@ -749,7 +758,9 @@ type search_candidate = { sc_lid: lid; sc_typ:
                           ref<option<Syntax.Syntax.typ>>;
                           sc_fvars: ref<option<set<lid>>> }
 
-let sc_of_lid lid = { sc_lid = lid; sc_typ = ref None; sc_fvars = ref None }
+let sc_of_lid lid = { sc_lid = lid;
+                      sc_typ = Util.mk_ref None;
+                      sc_fvars = Util.mk_ref None }
 
 let sc_typ tcenv sc = // Memoized version of sc_typ
    match !sc.sc_typ with
@@ -829,7 +840,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | Pop -> run_pop st
-  | Push (kind, text, l, c) -> run_push st kind text l c
+  | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
   | AutoComplete search_term -> run_completions st search_term
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute term -> run_compute st term

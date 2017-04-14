@@ -112,7 +112,8 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
         | None ->
             env
       in
-      let modul, _, env = Tc.tc_partial_modul env modul in
+      let modul, _, env = if DsEnv.syntax_only dsenv then (modul, [], env)
+                          else Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
     | Parser.Driver.Decls ast_decls ->
@@ -124,7 +125,8 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
       match curmod with
         | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
         | Some modul ->
-            let modul, _, env  = Tc.tc_more_partial_modul env modul decls in
+            let modul, _, env  = if DsEnv.syntax_only dsenv then (modul, [], env)
+                                 else Tc.tc_more_partial_modul env modul decls in
             Some (Some modul, dsenv, env)
 
     with
