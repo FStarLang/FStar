@@ -167,13 +167,13 @@ type left_action (#m:Type) (mm:monoid m) (a:Type) =
     unit_lemma: unit_act_lemma m a (Monoid?.unit mm) act ->
     left_action mm a
 
-let action_morphism
+let left_action_morphism
     (#a #b #ma #mb:Type)
-    (mma:monoid ma)
-    (mmb:monoid mb)
-    (la:left_action mma a)
-    (lb:left_action mmb b)
     (f:a -> b)
     (* mf ought to be a monoid morphism but we don't use this fact in the property *)
     (mf: ma -> mb)
+    (#mma:monoid ma)
+    (#mmb:monoid mb)
+    (la:left_action mma a)
+    (lb:left_action mmb b)
 = forall (g:ma) (x:a). LAct?.act lb (mf g) (f x) == f (LAct?.act la g x)
