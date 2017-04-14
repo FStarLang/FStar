@@ -123,11 +123,12 @@ if [[ ! -d $BN_BINARYSPATH ]]; then
   git clone https://github.com/FStarLang/binaries.git
 fi
 
-cd $BN_BINARYSPATH
+#cd $BN_BINARYSPATH
+cd ~/binaries
 echo "--git checkout --"
 git checkout $FSTAR_BIN_BRANCH
 echo "--git pull --"
-git pull origin master #--allow-unrelated-histories  # git 2.9 and above
+git pull origin master # maybe need --allow-unrelated-histories  # git 2.9 and above
 
 echo "-- copy files --"
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
