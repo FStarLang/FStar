@@ -292,7 +292,7 @@ type query' =
 | Pop
 | Push of push_kind * string * int * int
 | AutoComplete of string
-| Lookup of string * option<(string * int * int)>
+| Lookup of string * option<(string * int * int)> * list<string>
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
@@ -339,7 +339,8 @@ let unpack_interactive_query json =
                                 |> Util.map_option (fun loc ->
                                     (assoc "[location]" "filename" loc |> js_str,
                                      assoc "[location]" "line" loc |> js_int,
-                                     assoc "[location]" "column" loc |> js_int)))
+                                     assoc "[location]" "column" loc |> js_int)),
+                              List.map js_str (arg "requested-info" |> js_list))
          | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
 
 let read_interactive_query stream : query =
@@ -383,14 +384,14 @@ let json_of_issue issue =
                                   | Some r -> [json_of_range r]))]
 
 type lookup_result = { lr_name: string;
-                       lr_def_range: Range.range;
-                       lr_typ: string;
+                       lr_def_range: option<Range.range>;
+                       lr_typ: option<string>;
                        lr_doc: option<string> }
 
 let json_of_lookup_result lr =
-  JsonAssoc [("defined-at", json_of_range lr.lr_def_range);
-             ("name", JsonStr lr.lr_name);
-             ("type", JsonStr lr.lr_typ);
+  JsonAssoc [("name", JsonStr lr.lr_name);
+             ("defined-at", json_of_opt json_of_range lr.lr_def_range);
+             ("type", json_of_opt JsonStr lr.lr_typ);
              ("documentation", json_of_opt JsonStr lr.lr_doc)]
 
 let json_of_protocol_info =
@@ -497,29 +498,48 @@ let run_push st kind text line column = // This grows all internal stacks by 1
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     ((QueryNOK, JsonList errors), st'')
 
-let run_lookup st symbol pos_opt =
+let run_lookup st symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
-  let info_at_pos_opt = match pos_opt with
-    | None -> None
-    | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos tcenv file row col in
-  let info_opt = match info_at_pos_opt with
+
+  let info_of_lid_str lid_str =
+    let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
+    let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name dsenv lid in
+    try_lookup_lid tcenv lid |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
+
+  let docs_of_lid lid =
+    DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst in
+
+  let info_at_pos_opt =
+    Util.bind_opt pos_opt (fun (file, row, col) ->
+      FStar.TypeChecker.Err.info_at_pos tcenv file row col) in
+
+  let info_opt =
+    match info_at_pos_opt with
     | Some _ -> info_at_pos_opt
-    | None -> // Use name lookup as a fallback
-      if symbol = "" then None
-      else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
-           let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name dsenv lid in
-           try_lookup_lid tcenv lid
-             |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
+    | None -> if symbol = "" then None else info_of_lid_str symbol in
+
   let response = match info_opt with
     | None -> (QueryNOK, JsonNull)
     | Some (name_or_lid, typ, rng) ->
-      let name, doc =
+      let name =
         match name_or_lid with
-        | Inl name -> name, None
-        | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
-      let typ_str = FStar.TypeChecker.Normalize.term_to_string tcenv typ in
-      let result = { lr_name = name; lr_def_range = rng; lr_typ = typ_str; lr_doc = doc } in
+        | Inl name -> name
+        | Inr lid -> Ident.string_of_lid lid in
+      let typ_str =
+        if List.mem "type" requested_info then
+          Some (FStar.TypeChecker.Normalize.term_to_string tcenv typ)
+        else None in
+      let doc_str =
+        match name_or_lid with
+        | Inr lid when List.mem "documentation" requested_info -> docs_of_lid lid
+        | _ -> None in
+      let def_range =
+        if List.mem "defined-at" requested_info then Some rng else None in
+
+      let result = { lr_name = name; lr_def_range = def_range;
+                     lr_typ = typ_str; lr_doc = doc_str } in
       (QueryOK, json_of_lookup_result result) in
+
   (response, Inl st)
 
 let run_completions st search_term =
@@ -644,7 +664,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Pop -> run_pop st
   | Push (kind, text, l, c) -> run_push st kind text l c
   | AutoComplete search_term -> run_completions st search_term
-  | Lookup (symbol, pos_opt) -> run_lookup st symbol pos_opt
+  | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | ProtocolViolation query -> run_protocol_violation st query
 
 let rec go st : unit =
