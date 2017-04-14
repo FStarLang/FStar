@@ -124,7 +124,7 @@ if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
   git clone https://github.com/FStarLang/binaries.git
 fi
 
-$BN_BINARYSPATH_ROOT
+cd $BN_BINARYSPATH_ROOT
 echo "--git checkout --"
 git checkout $FSTAR_BIN_BRANCH
 echo "--git pull --"
