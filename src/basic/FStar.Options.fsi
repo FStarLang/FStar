@@ -134,6 +134,7 @@ val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
+val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
 val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool

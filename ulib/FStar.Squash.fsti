@@ -25,9 +25,9 @@ val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
 val return_squash : #a:Type -> a -> Tot (squash a)
 
 val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot (squash b)) ->
-  GTot (squash b)
+  Tot (squash b)
 
 val map_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot b) ->
-  GTot (squash b)
+  Tot (squash b)
 
-val join_squash : #a:Type -> squash (squash a) -> GTot (squash a)
+val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)

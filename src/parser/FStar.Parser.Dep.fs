@@ -195,7 +195,7 @@ let collect_one
 =
   let deps = BU.mk_ref [] in
   let add_dep d =
-    if not (List.existsb (fun d' -> d' = d) !deps) then
+    if not (List.existsML (fun d' -> d' = d) !deps) then
       deps := d :: !deps
   in
   let working_map = smap_copy original_map in
@@ -554,8 +554,8 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - M.fsti and M.fst otherwise
    * - When starting from a command-line argument, visiting M (because it is
    *   passed from the command-line) generates a dependency on:
-   *   - M.fsti only if the argument was M.fsti
-   *   - both M.fsti and M.fst if the argument was M.fst
+   *   - M.fsti when **only** M.fsti is given as argument
+   *   - both M.fsti and M.fst otherwise (including when both M.fsti and M.fst are passed)
    *)
   let partial_discovery =
     not (Options.verify_all () || Options.extract_all ())
@@ -581,10 +581,12 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   in
   let discover_command_line_argument f =
     let m = lowercase_module_name f in
-    if is_interface f then
-      discover_one true true m
-    else
-      discover_one true false m
+    let interface_only = is_interface f &&
+      not (List.existsML (fun f ->
+        lowercase_module_name f = m && is_implementation f)
+      filenames)
+    in
+    discover_one true interface_only m
   in
   List.iter discover_command_line_argument filenames;
 

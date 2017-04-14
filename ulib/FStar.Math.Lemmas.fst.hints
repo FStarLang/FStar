@@ -1,5 +1,5 @@
 [
-  "h9ø€∂d¥Å¿≥\u0001/Wß-\u007f",
+  "w„öØˇå2°\u0012Îõ\f\u000fo“",
   [
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -2479,7 +2479,7 @@
     [
       "FStar.Math.Lemmas.modulo_modulo_lemma",
       3,
-      1,
+      2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",

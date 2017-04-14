@@ -468,8 +468,8 @@
     [
       "FStar.Math.Lib.powx_lemma2",
       3,
+      4,
       2,
-      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",

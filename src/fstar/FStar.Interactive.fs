@@ -93,9 +93,9 @@ let commit_mark (dsenv, env) =
     let env = TcEnv.commit_mark env in
     dsenv, env
 
-let check_frag (dsenv, (env:TcEnv.env)) curmod text =
+let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     try
-        match tc_one_fragment curmod dsenv env text with
+        match tc_one_fragment curmod dsenv env frag with
             | Some (m, dsenv, env) ->
                   Some (m, (dsenv, env), FStar.Errors.get_err_count())
             | _ -> None
@@ -568,7 +568,7 @@ let rec go (line_col:(int*int))
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-      let res = check_frag env_mark curmod frag in begin
+      let res = check_frag env_mark curmod (frag, false) in begin
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
@@ -605,7 +605,7 @@ let interactive_mode (filename:string): unit =
           frag_line = 0;
           frag_col = 0
         } in
-        begin match check_frag env None frag with
+        begin match check_frag env None (frag, true) with
         | Some (curmod, env, n_errs) ->
             if n_errs <> 0 then begin
               Util.print_warning (Util.format1
@@ -614,11 +614,15 @@ let interactive_mode (filename:string): unit =
               exit 1
             end;
             Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n";
+            let env =
+                fst env, {snd env with is_iface = false} in
             curmod, env
         | None ->
             Util.print_warning (Util.format1
               "Found the interface %s but could not parse it first!"
               intf);
+            report_fail();
+            Util.print_string "#done-nok\n";
             exit 1
         end
     | None ->

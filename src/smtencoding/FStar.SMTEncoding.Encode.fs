@@ -324,24 +324,48 @@ let is_app = function
     | Var "ApplyTF" -> true
     | _ -> false
 
-let is_eta env vars t =
-    let rec aux t xs = match t.tm, xs with
+// [is_an_eta_expansion env vars body]:
+//       returns Some t'
+//               if (fun xs -> body) is an eta-expansion of t'
+//       else returns None
+let is_an_eta_expansion env vars body =
+    //assert vars <> []
+    let rec check_partial_applications t xs =
+        match t.tm, xs with
         | App(app, [f; {tm=FreeV y}]), x::xs
-          when (is_app app && Term.fv_eq x y) -> aux f xs
+          when (is_app app && Term.fv_eq x y) ->
+          //Case 1:
+          //t is of the form (ApplyTT f x)
+          //   i.e., it's a partial or curried application of f to x
+          //recurse on f with the remaining arguments
+          check_partial_applications f xs
+
         | App(Var f, args), _ ->
-          if List.length args = List.length vars
-          && List.forall2 (fun a v -> match a.tm with
-            | FreeV fv -> fv_eq fv v
-            | _ -> false) args vars
-          then tok_of_name env f
+          if List.length args = List.length xs
+          && List.forall2 (fun a v ->
+                            match a.tm with
+                            | FreeV fv -> fv_eq fv v
+                            | _ -> false)
+             args (List.rev xs)
+          then //t is of the form (f vars) for all the lambda bound variables vars
+               //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
+               tok_of_name env f
           else None
+
         | _, [] ->
+          //Case 2:
+          //We're left with a closed head term applied to no arguments.
+          //This case is only reachable after unfolding the recursive calls in Case 1 (note vars <> [])
+          //and checking that the body t is of the form (ApplyTT (... (ApplyTT t x0) ... xn))
+          //where [x0;...;xn] = vars0.
+          //As long as t does not mention any of the vars, (fun vars -> body) is an eta-expansion of t
           let fvs = Term.free_variables t in
           if fvs |> List.for_all (fun fv -> not (BU.for_some (fv_eq fv) vars)) //t doesn't contain any of the bound variables
           then Some t
           else None
-        | _ -> None in
-  aux t (List.rev vars)
+
+        | _ -> None
+  in check_partial_applications body (List.rev vars)
 
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
@@ -592,6 +616,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let encoding = mkAnd(tm_has_type_with_fuel, refinement) in
 
+        //earlier we used to get cvars from encoding
+        //but mkAnd is optimized and when refinement is False, it returns False
+        //in that case, cvars was turning out to be empty, resulting in non well-formed encoding (e.g. of hasEq, since free variables of base_t are not captured in cvars)
+        //to get around that, computing cvars separately from the components of the encoding variable
         let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
         let cvars = cvars |> List.filter (fun (y, _) -> y <> x && y <> fsym) in
 
@@ -805,6 +833,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               if is_impure lc && not (is_reifiable env.tcenv lc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
+                let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let lc, body =
                   if is_reifiable env.tcenv lc
@@ -812,15 +841,32 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                   else lc, body
                 in
                 let body, decls' = encode_term body envbody in
+                let arrow_t_opt, decls'' =
+                  match codomain_eff lc with
+                  | None   -> None, []
+                  | Some c ->
+                    let tfun = U.arrow bs c in
+                    let t, decls = encode_term tfun env in
+                    Some t, decls
+                in
                 let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
                 let cvars = Term.free_variables key_body in
+                //adding free variables of the return type also to cvars
+                let cvars =
+                  match arrow_t_opt with
+                  | None   -> cvars
+                  | Some t -> BU.remove_dups fv_eq (Term.free_variables t @ cvars)
+                in
                 let tkey = mkForall([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some (t, _, _) -> mkApp(t, List.map mkFreeV cvars), []
                 | None ->
-                  match is_eta env vars body with
-                  | Some t -> t, []
+                  match is_an_eta_expansion env vars body with
+                  | Some t ->
+                    //if the cache has not changed, we need not generate decls and decls', but if the cache has changed, someone might use them in future
+                    let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls' in
+                    t, decls
                   | None ->
                     let cvar_sorts = List.map snd cvars in
                     let fsym =
@@ -831,19 +877,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let f = mkApp(fsym, List.map mkFreeV cvars) in
                     let app = mk_Apply f vars in
                     let typing_f =
-                      match codomain_eff lc with
+                      match arrow_t_opt with
                       | None -> [] //no typing axiom for this lambda, because we don't have enough info
-                      | Some c ->
-                        let tfun = U.arrow bs c in
-                        let f_has_t, decls'' = encode_term_pred None tfun env f in
+                      | Some t ->
+                        let f_has_t = mk_HasTypeWithFuel None f t in
                         let a_name = "typing_"^fsym in
-                        decls''@[Term.Assume(mkForall([[f]], cvars, f_has_t), Some a_name, a_name)]
+                        [Term.Assume(mkForall([[f]], cvars, f_has_t), Some a_name, a_name)]
                     in
                     let interp_f =
                       let a_name = "interpretation_" ^fsym in
                       Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
-                    let f_decls = decls@decls'@(fdecl::typing_f)@[interp_f] in
+                    let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
                     BU.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
                     f, f_decls
           end
