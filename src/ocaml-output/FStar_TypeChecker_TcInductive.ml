@@ -1325,7 +1325,7 @@ let optimized_haseq_soundness_for_data :
                        let haseq_b1 =
                          let uu____2012 =
                            FStar_Util.format1
-                             "Failed to prove that the type '%s' supports decidable equality because of this argument; add the 'noeq' qualifier"
+                             "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier"
                              ty_lid.FStar_Ident.str
                             in
                          FStar_TypeChecker_Util.label uu____2012 sort_range
