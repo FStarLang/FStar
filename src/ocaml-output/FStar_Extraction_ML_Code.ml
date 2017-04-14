@@ -299,8 +299,8 @@ let escape_char_hex : FStar_BaseTypes.char -> Prims.string =
 let escape_or :
   (FStar_Char.char -> Prims.string) -> FStar_Char.char -> Prims.string =
   fun fallback  ->
-    fun uu___116_614  ->
-      match uu___116_614 with
+    fun uu___120_614  ->
+      match uu___120_614 with
       | c when c = '\\' -> "\\\\"
       | c when c = ' ' -> " "
       | c when c = '\b' -> "\\b"
