@@ -1,5 +1,5 @@
 [
-  "C•é\nI˜’¢\u0019R%R{i;F",
+  "á\u000e„\u0010óWO„^\u001b ç»ÕÀ^",
   [
     [
       "FStar.Classical.give_witness",
@@ -12,6 +12,7 @@
       ],
       0
     ],
+    [ "FStar.Classical.get_forall", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.impl_to_arrow", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.arrow_to_impl", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.forall_intro_gtot", 1, 2, 1, [ "@query" ], 0 ],
