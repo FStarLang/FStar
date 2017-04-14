@@ -295,6 +295,7 @@ type query' =
 | AutoComplete of string
 | Lookup of string * option<(string * int * int)> * list<string>
 | Compute of string
+| Search of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
@@ -302,7 +303,7 @@ let interactive_protocol_vernum = 1
 
 let interactive_protocol_features =
   ["autocomplete"; "compute"; "describe-protocol"; "exit";
-   "lookup"; "lookup/documentation"; "pop"; "push"]
+   "lookup"; "lookup/documentation"; "pop"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -344,6 +345,7 @@ let unpack_interactive_query json =
                                      assoc "[location]" "column" loc |> js_int)),
                               List.map js_str (arg "requested-info" |> js_list))
          | "compute" -> Compute (arg "term" |> js_str)
+         | "search" -> Search (arg "terms" |> js_str)
          | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
 
 let read_interactive_query stream : query =
@@ -661,7 +663,6 @@ let run_completions st search_term =
                              matches) in
   ((QueryOK, JsonList json_candidates), Inl st)
 
-
 let run_compute st term =
   let run_and_rewind st task =
     let env_mark = mark st.repl_env in
@@ -722,6 +723,96 @@ let run_compute st term =
                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
                                 | None -> raise e)))
 
+type search_term' =
+| NameContainsStr of string
+| TypeContainsLid of lid
+and search_term = { st_negate: bool;
+                    st_term: search_term' }
+
+let st_cost = function
+| NameContainsStr str -> - (String.length str)
+| TypeContainsLid lid -> 1
+
+type search_candidate = { sc_lid: lid; sc_typ:
+                          ref<option<Syntax.Syntax.typ>>;
+                          sc_fvars: ref<option<set<lid>>> }
+
+let sc_of_lid lid = { sc_lid = lid; sc_typ = ref None; sc_fvars = ref None }
+
+let sc_typ tcenv sc = // Memoized version of sc_typ
+   match !sc.sc_typ with
+   | Some t -> t
+   | None -> let typ = match try_lookup_lid tcenv sc.sc_lid with
+                       | None -> SS.mk SS.Tm_unknown None Range.dummyRange
+                       | Some ((_, typ), _) -> typ in
+             sc.sc_typ := Some typ; typ
+
+let sc_fvars tcenv sc = // Memoized version of fc_vars
+   match !sc.sc_fvars with
+   | Some fv -> fv
+   | None -> let fv = Syntax.Free.fvars (sc_typ tcenv sc) in
+             sc.sc_fvars := Some fv; fv
+
+let json_of_search_result dsenv tcenv sc =
+  let typ_str = Syntax.Print.term_to_string (sc_typ tcenv sc) in
+  JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid dsenv sc.sc_lid).str);
+             ("type", JsonStr typ_str)]
+
+exception InvalidSearch of string
+
+let run_search st search_str =
+  let dsenv, tcenv = st.repl_env in
+  let empty_fv_set = SS.new_fv_set () in
+
+  let st_matches candidate term =
+    let found =
+      match term.st_term with
+      | NameContainsStr str -> Util.contains candidate.sc_lid.str str
+      | TypeContainsLid lid -> set_mem lid (sc_fvars tcenv candidate) in
+    found <> term.st_negate in
+
+  let parse search_str =
+    let parse_one term =
+      let negate = Util.starts_with term "-" in
+      let term = if negate then Util.substring_from term 1 else term in
+      let beg_quote = Util.starts_with term "\"" in
+      let end_quote = Util.ends_with term "\"" in
+      let strip_quotes str =
+        if String.length str < 2 then
+          raise (InvalidSearch "Empty search term")
+        else
+          Util.substring str 1 (String.length term - 2) in
+      let parsed =
+        if beg_quote <> end_quote then
+          raise (InvalidSearch (Util.format1 "Improperly quoted search term: %s" term))
+        else if beg_quote then
+          NameContainsStr (strip_quotes term)
+        else
+          let lid = Ident.lid_of_str term in
+          match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+          | None -> raise (InvalidSearch (Util.format1 "Unknown identifier: %s" term))
+          | Some lid -> TypeContainsLid lid in
+      { st_negate = negate; st_term = parsed } in
+
+    let terms = List.map parse_one (Util.split search_str " ") in
+    let cmp = fun x y -> st_cost x.st_term - st_cost y.st_term in
+    Util.sort_with cmp terms in
+
+  let results =
+    try
+      let terms = parse search_str in
+      let all_lidents = FStar.TypeChecker.Env.lidents tcenv in
+      let all_candidates = List.map sc_of_lid all_lidents in
+      let matches_all candidate = List.for_all (st_matches candidate) terms in
+      let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
+      let results = List.filter matches_all all_candidates in
+      let sorted = Util.sort_with cmp results in
+      match results with
+      | [] -> raise (InvalidSearch "No results found")
+      | _ -> (QueryOK, JsonList (List.map (json_of_search_result dsenv tcenv) sorted))
+    with InvalidSearch s -> (QueryNOK, JsonStr s) in
+  (results, Inl st)
+
 let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
@@ -729,7 +820,8 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Push (kind, text, l, c) -> run_push st kind text l c
   | AutoComplete search_term -> run_completions st search_term
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
-  | Compute (term) -> run_compute st term
+  | Compute term -> run_compute st term
+  | Search term -> run_search st term
   | ProtocolViolation query -> run_protocol_violation st query
 
 let rec go st : unit =

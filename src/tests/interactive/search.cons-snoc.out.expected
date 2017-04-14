@@ -1,0 +1,5 @@
+{"features": ["autocomplete", "compute", "describe-protocol", "exit", "lookup", "lookup/documentation", "pop", "push", "search"], "kind": "protocol-info", "version": 1}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [{"lid": "append_cons_snoc", "type": "(u:(seq a@0) -> x:a@1 -> v:(seq a@2) -> Lemma (unit))"}, {"lid": "lemma_cons_snoc", "type": "(hd:a@0 -> s:(seq a@1) -> tl:a@2 -> Lemma (unit))"}], "status": "success"}
+{"kind": "response", "query-id": "3", "response": [{"lid": "lemma_cons_snoc", "type": "(hd:a@0 -> s:(seq a@1) -> tl:a@2 -> Lemma (unit))"}], "status": "success"}
+{"kind": "response", "query-id": "4", "response": [{"lid": "append_cons_snoc", "type": "(u:(seq a@0) -> x:a@1 -> v:(seq a@2) -> Lemma (unit))"}], "status": "success"}
