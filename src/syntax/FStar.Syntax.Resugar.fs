@@ -200,6 +200,21 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | Pat_wild _ -> true
     | _ -> false
 
+let remove_typechecker_added_args args = 
+  // remove the args added by typechecker.normalize since
+  // the added args would break the assumption of the args
+  // length of Op, try_with etc.
+  // TODO: Instead of removing them, maybe if everything is 
+  // opened correctly, they will go away?
+  args |> List.partition (fun arg -> begin match arg with 
+            | (e, Some _) ->
+              begin match (SS.compress e).n with 
+              | Tm_app({n=Tm_uvar(u, _)}, args) -> false
+              | _ -> true
+              end
+            | _ -> true
+            end) 
+
 let rec resugar_term (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -312,6 +327,7 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
+      let args, rest = remove_typechecker_added_args args in
       let resugar_as_app e args = 
         let args = args |> List.map (fun (e, qual) ->
               resugar_term e) in
@@ -367,19 +383,31 @@ let rec resugar_term (t : S.term) : A.term =
             | [(a1, _);(a2, _)] -> a1, a2
             | _ -> failwith("wrong arguments to try_with") in
           (* where a1 and a1 is Tm_abs(Tm_match)) *)
-          let decomp term = match (term.n) with
+          let decomp term = match (SS.compress term).n with
             | Tm_abs(x, e, _) ->
               let x, e = SS.open_term x e in
               e
             | _ -> failwith("unexpected") in
           let body = resugar_term (decomp body) in
           let handler = resugar_term (decomp handler) in
-          let e = match (body.tm) with
+          let rec resugar_body t = match (t.tm) with
             | A.Match(e, [(_,_,b)]) -> b
+            | A.Ascribed(t1, t2, t3) -> 
+              (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
+              mk (A.Ascribed(resugar_body t1, t2, t3))
             | _ -> failwith("unexpected body format") in
-          let branches = match (handler.tm) with
+          let e = resugar_body body in
+          let rec resugar_branches t = match (t.tm) with
             | A.Match(e, branches) -> branches
-            | _ -> failwith("unexpected handler format") in
+            | A.Ascribed(t1, t2, t3) -> 
+              (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
+              (* TODO: where should we keep the information stored in Ascribed? *)
+              resugar_branches t1
+            | _ -> 
+              (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
+              []
+          in
+          let branches = resugar_branches handler in
           mk (A.TryWith(e, branches))
 
         | Some op when op = "forall" || op = "exists" ->
@@ -412,7 +440,11 @@ let rec resugar_term (t : S.term) : A.term =
                 let xs = xs |> List.rev in
                 if op = "forall" then mk (A.QForall(xs, pats, body)) else mk (A.QExists(xs, pats, body))
 
-            | _ -> failwith "expect Tm_abs for QForall/QExists"
+            | _ -> 
+            (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
+            (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
+            if op = "forall" then mk (A.QForall([], [[]], resugar_term body)) 
+            else mk (A.QExists([], [[]], resugar_term body))
           in
           begin match args with
             | [(b, _)]
@@ -507,7 +539,13 @@ let rec resugar_term (t : S.term) : A.term =
                     let head, universes = aux head in
                     let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
                     let args = List.map (fun (t, _) -> (resugar_term t, A.Nothing)) args in
-                    mk (A.Construct(head, args@universes))
+                    if (U.is_tuple_data_lid' head) then
+                      // ToDocument doesn't expect uvar that is added by the 
+                      // typechecker in tuple constructor
+                      // TODO: where should be store the universe information?
+                      mk (A.Construct(head, args))
+                    else
+                      mk (A.Construct(head, args@universes))
                 | Tm_meta(_, m) ->
                   // the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker
                   // applies monadic_application
@@ -520,12 +558,19 @@ let rec resugar_term (t : S.term) : A.term =
               end
           | Sequence ->
               let term = resugar_term e in
-              begin match term.tm with
+              let rec resugar_seq t = match t.tm with  
                 | A.Let(_, [p, t1], t2) ->
                    mk (A.Seq(t1, t2))
+                | A.Ascribed(t1, t2, t3) -> 
+                   (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
+                   mk (A.Ascribed(resugar_seq t1, t2, t3))
                 | _ ->
-                   failwith "This case is impossible for sequence"
-              end
+                   (* this case happens in typechecker.normalize when Tm_let is_pure_effect, then 
+                      only the body of Tm_let is used. *)
+                   (* TODO: How should it be resugared *)
+                   t
+              in
+              resugar_seq term
           | Primop (* doesn't seem to be generated by desugar *)
           | Masked_effect (* doesn't seem to be generated by desugar *)
           | Meta_smt_pat -> (* nothing special, just resugar the term *)
