@@ -113,18 +113,18 @@ echo "* Upload the minor version of the package. Will only keep the most recent 
 cd ../../..
 ORIG_PWD=$PWD
 echo "+++ ORIG PWD:"$ORIG_PWD
-BN_BINARYSPATH=~/binaries/weekly   # maybe this should be environment var or something like that similar to CI_LOGS
+BN_BINARYSPATH_ROOT=~/binaries
+BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly   # maybe this should be environment var or something like that similar to CI_LOGS
 FSTAR_BIN_BRANCH="master"
 BN_FILESTOKEEP=4
 
-# check that BN_BINARYSPATH exists.
-if [[ ! -d $BN_BINARYSPATH ]]; then
-  echo "+++ " $BN_BINARYSPATH " does not exist so cloning"
+# check that BN_BINARYSPATH_ROOT exists.
+if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
+  echo "+++ " $BN_BINARYSPATH_ROOT " does not exist so cloning"
   git clone https://github.com/FStarLang/binaries.git
 fi
 
-#cd $BN_BINARYSPATH
-cd ~/binaries
+$BN_BINARYSPATH_ROOT
 echo "--git checkout --"
 git checkout $FSTAR_BIN_BRANCH
 echo "--git pull --"
