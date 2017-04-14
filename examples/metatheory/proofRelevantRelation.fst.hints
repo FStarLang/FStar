@@ -1,0 +1,424 @@
+[
+  "p¢îH»4÷t¡·1C∂„r<",
+  [
+    [
+      "ProofRelevantRelation.__proj__Ctx__item__ctx",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__Ctx__item__m",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_ProofRelevantRelation.Ctx_ctx",
+        "projection_inverse_ProofRelevantRelation.Ctx_ctx"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__Ctx__item__l",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_ProofRelevantRelation.Ctx_ctx",
+        "proj_equation_ProofRelevantRelation.Ctx_m",
+        "projection_inverse_ProofRelevantRelation.Ctx_ctx",
+        "projection_inverse_ProofRelevantRelation.Ctx_m"
+      ],
+      0
+    ],
+    [ "ProofRelevantRelation.uu___is_FRReturn", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ProofRelevantRelation.__proj__FRReturn__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProofRelevantRelation.FRReturn",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_67da9976fc196a122ccf40e0d2a5da87"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FRReturn__item__y",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProofRelevantRelation.FRReturn",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_67da9976fc196a122ccf40e0d2a5da87"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FRReturn__item___2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FRReturn__item___2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProofRelevantRelation.FRReturn",
+        "proj_equation_ProofRelevantRelation.FRReturn_x",
+        "proj_equation_ProofRelevantRelation.FRReturn_y",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_ProofRelevantRelation.FRReturn_x",
+        "projection_inverse_ProofRelevantRelation.FRReturn_y",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_67da9976fc196a122ccf40e0d2a5da87"
+      ],
+      0
+    ],
+    [ "ProofRelevantRelation.uu___is_FRRefl", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ProofRelevantRelation.__proj__FRRefl__item__x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_ProofRelevantRelation.FRRefl",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_ef90acb71d7adc8d4b4e7dbb5e798c8b"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_reflexive_rel_free",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_ProofRelevantRelation.FRReturn",
+        "disc_equation_ProofRelevantRelation.FRRefl",
+        "disc_equation_ProofRelevantRelation.FRReturn",
+        "fuel_guarded_inversion_ProofRelevantRelation.free_reflexive_rel",
+        "projection_inverse_ProofRelevantRelation.FRRefl_x"
+      ],
+      0
+    ],
+    [ "ProofRelevantRelation.free_symmetric_rel", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ProofRelevantRelation.free_symmetric_rel_symmetric",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_symmetric_rel_symmetric",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_symmetric_rel_free",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [ "ProofRelevantRelation.concat_valid", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ProofRelevantRelation.free_transitive_rel_pred",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.append_valid",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_0174e4425cb9f885bbb1a0513bb5306c_5",
+        "binder_x_8cbbdde975dfe622321ba9da38b41a57_6",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "data_elim_FStar.Algebra.Monoid.MonoidMorphism",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "eq2-interp",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.Algebra.Monoid.embed_nat_int",
+        "equation_FStar.Algebra.Monoid.int_plus_monoid",
+        "equation_FStar.Algebra.Monoid.intro_monoid",
+        "equation_FStar.Algebra.Monoid.intro_monoid_morphism",
+        "equation_FStar.Algebra.Monoid.monoid_morphism_unit_lemma",
+        "equation_FStar.Algebra.Monoid.nat_plus_monoid",
+        "equation_FStar.Algebra.Monoid.uu___21",
+        "equation_FStar.Classical.get_equality",
+        "equation_FStar.Classical.get_squashed", "equation_Prims._assert",
+        "equation_Prims.eq2", "equation_Prims.l_True", "equation_Prims.nat",
+        "equation_Prims.snd", "equation_Prims.squash",
+        "equation_ProofRelevantRelation.concat_valid",
+        "equation_ProofRelevantRelation.free_transitive_rel",
+        "equation_ProofRelevantRelation.free_transitive_rel_pred",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.dtuple3",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
+        "fuel_irrelevance_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "function_token_typing_FStar.Algebra.Monoid.int_plus_monoid",
+        "function_token_typing_FStar.Algebra.Monoid.uu___21",
+        "function_token_typing_Prims.int", "int_typing", "l_and-interp",
+        "proj_equation_FStar.Algebra.Monoid.Monoid_unit",
+        "proj_equation_Prims.Cons_tl", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Algebra.Monoid.Monoid_unit",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Mkdtuple3__1",
+        "projection_inverse_Prims.Mkdtuple3__2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_FStar.Classical_Tm_refine_7c805cbd5439f1b21f6463c70e57d0f1",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_430795d6eddfa4f9bda86512bead8503",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_FStar.Algebra.Monoid.embed_nat_int",
+        "token_correspondence_ProofRelevantRelation.concat_valid",
+        "typing_FStar.Algebra.Monoid.__proj__Monoid__item__unit",
+        "typing_FStar.Classical.get_equality", "unit_inversion",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_transitive_rel_transitive",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons",
+        "equation_ProofRelevantRelation.free_transitive_rel",
+        "equation_ProofRelevantRelation.free_transitive_rel_pred",
+        "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_430795d6eddfa4f9bda86512bead8503",
+        "typing_FStar.List.Tot.Base.append"
+      ],
+      0
+    ],
+    [ "ProofRelevantRelation.concat", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ProofRelevantRelation.concat",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "binder_x_76da10e4017bd8224a0ab2fa64c196a9_12",
+        "binder_x_cf4725074e95fe4a254811bbcc7ecf69_9",
+        "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil", "eq2-interp",
+        "equality_tok_Prims.LexTop@tok", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.snd",
+        "equation_ProofRelevantRelation.concat_valid",
+        "equation_ProofRelevantRelation.free_transitive_rel_pred",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.dtuple3",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_irrelevance_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "l_and-interp", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Mkdtuple3__1",
+        "projection_inverse_Prims.Mkdtuple3__2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_8cbc48aa1e1fc0fe2c0c773ce79d8793",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_ProofRelevantRelation.concat_valid"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_transitive_rel_free",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "data_elim_Prims.Cons", "disc_equation_Prims.Cons", "eq2-interp",
+        "equation_Prims.l_True", "equation_Prims.snd",
+        "equation_ProofRelevantRelation.concat_valid",
+        "equation_ProofRelevantRelation.free_transitive_rel",
+        "equation_ProofRelevantRelation.free_transitive_rel_pred",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.dtuple3",
+        "fuel_guarded_inversion_Prims.list",
+        "fuel_irrelevance_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "l_and-interp", "proj_equation_Prims.Mktuple2__2",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "projection_inverse_Prims.Mkdtuple3__1",
+        "projection_inverse_Prims.Mkdtuple3__2",
+        "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "refinement_interpretation_ProofRelevantRelation_Tm_refine_430795d6eddfa4f9bda86512bead8503",
+        "token_correspondence_ProofRelevantRelation.concat_valid"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FCAct__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FCAct__item__y",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FCAct__item___2",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_ProofRelevantRelation.FCAct_x",
+        "proj_equation_ProofRelevantRelation.FCAct_y",
+        "projection_inverse_ProofRelevantRelation.FCAct_x",
+        "projection_inverse_ProofRelevantRelation.FCAct_y"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__FCAct__item__c",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_congruence_rel_congruence",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Algebra.Monoid.mult_act_lemma",
+        "equation_ProofRelevantRelation.plug_in",
+        "fuel_guarded_inversion_ProofRelevantRelation.free_congruence_rel",
+        "proj_equation_ProofRelevantRelation.Ctx_ctx",
+        "proj_equation_ProofRelevantRelation.Ctx_m",
+        "projection_inverse_ProofRelevantRelation.FCAct_a",
+        "projection_inverse_ProofRelevantRelation.FCAct_c",
+        "projection_inverse_ProofRelevantRelation.FCAct_ctx",
+        "projection_inverse_ProofRelevantRelation.FCAct_r",
+        "projection_inverse_ProofRelevantRelation.FCAct_x",
+        "projection_inverse_ProofRelevantRelation.FCAct_y",
+        "token_correspondence_FStar.Algebra.Monoid.__proj__LAct__item__act",
+        "token_correspondence_FStar.Algebra.Monoid.__proj__Monoid__item__mult"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__CtxMorphism__item__mf",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__CtxMorphism__item__mmf",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_ProofRelevantRelation.CtxMorphism_mf",
+        "projection_inverse_ProofRelevantRelation.CtxMorphism_mf"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.__proj__CtxMorphism__item__lf",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_ProofRelevantRelation.CtxMorphism_mf",
+        "projection_inverse_ProofRelevantRelation.CtxMorphism_mf"
+      ],
+      0
+    ],
+    [
+      "ProofRelevantRelation.free_congruence_rel_free",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Algebra.Monoid.left_action_morphism",
+        "equation_ProofRelevantRelation.plug_in",
+        "fuel_guarded_inversion_ProofRelevantRelation.ctx_morphism",
+        "fuel_guarded_inversion_ProofRelevantRelation.free_congruence_rel",
+        "proj_equation_ProofRelevantRelation.Ctx_ctx",
+        "projection_inverse_ProofRelevantRelation.FCAct_a",
+        "projection_inverse_ProofRelevantRelation.FCAct_c",
+        "projection_inverse_ProofRelevantRelation.FCAct_ctx",
+        "projection_inverse_ProofRelevantRelation.FCAct_r",
+        "projection_inverse_ProofRelevantRelation.FCAct_x",
+        "projection_inverse_ProofRelevantRelation.FCAct_y",
+        "token_correspondence_ProofRelevantRelation.__proj__CtxMorphism__item__mf"
+      ],
+      0
+    ]
+  ]
+]
