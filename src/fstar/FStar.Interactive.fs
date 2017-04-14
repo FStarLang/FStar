@@ -303,7 +303,8 @@ let interactive_protocol_vernum = 1
 
 let interactive_protocol_features =
   ["autocomplete"; "compute"; "describe-protocol"; "exit";
-   "lookup"; "lookup/documentation"; "pop"; "push"; "search"]
+   "lookup"; "lookup/documentation"; "lookup/definition";
+   "pop"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -391,13 +392,15 @@ let json_of_issue issue =
 type lookup_result = { lr_name: string;
                        lr_def_range: option<Range.range>;
                        lr_typ: option<string>;
-                       lr_doc: option<string> }
+                       lr_doc: option<string>;
+                       lr_def: option<string> }
 
 let json_of_lookup_result lr =
   JsonAssoc [("name", JsonStr lr.lr_name);
              ("defined-at", json_of_opt json_of_range lr.lr_def_range);
              ("type", json_of_opt JsonStr lr.lr_typ);
-             ("documentation", json_of_opt JsonStr lr.lr_doc)]
+             ("documentation", json_of_opt JsonStr lr.lr_doc);
+             ("definition", json_of_opt JsonStr lr.lr_def)]
 
 let json_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in
@@ -514,6 +517,11 @@ let run_lookup st symbol pos_opt requested_info =
   let docs_of_lid lid =
     DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst in
 
+  let def_of_lid lid =
+    Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
+      | (Inr (se, _), _) -> Some (Syntax.Print.sigelt_to_string se)
+      | _ -> None) in
+
   let info_at_pos_opt =
     Util.bind_opt pos_opt (fun (file, row, col) ->
       FStar.TypeChecker.Err.info_at_pos tcenv file row col) in
@@ -538,11 +546,15 @@ let run_lookup st symbol pos_opt requested_info =
         match name_or_lid with
         | Inr lid when List.mem "documentation" requested_info -> docs_of_lid lid
         | _ -> None in
+      let def_str =
+        match name_or_lid with
+        | Inr lid when List.mem "definition" requested_info -> def_of_lid lid
+        | _ -> None in
       let def_range =
         if List.mem "defined-at" requested_info then Some rng else None in
 
       let result = { lr_name = name; lr_def_range = def_range;
-                     lr_typ = typ_str; lr_doc = doc_str } in
+                     lr_typ = typ_str; lr_doc = doc_str; lr_def = def_str } in
       (QueryOK, json_of_lookup_result result) in
 
   (response, Inl st)
