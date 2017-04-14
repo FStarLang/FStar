@@ -38,12 +38,15 @@ let intro_monoid (m:Type) (u:m) (mult:m -> m -> m)
 
 (** Some monoid structures *)
 
-let nat_monoid : monoid nat =
+let nat_plus_monoid : monoid nat =
   let add (x y : nat) : nat = x + y in
   intro_monoid nat 0 add
 
-let int_monoid : monoid int =
+let int_plus_monoid : monoid int =
   intro_monoid int 0 (+)
+
+(* let int_mul_monoid : monoid int = *)
+(*   intro_monoid int 1 op_Multiply *)
 
 let conjunction_monoid : monoid prop =
   let u : prop = True in
@@ -100,6 +103,54 @@ let disjunction_monoid : monoid prop =
   assert (associativity_lemma prop mult) ;
   intro_monoid prop u mult
 
+(* Definition of a morphism of monoid *)
+
+let monoid_morphism_unit_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
+  f (Monoid?.unit ma) == Monoid?.unit mb
+
+let monoid_morphism_mult_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
+  forall (x y:a). Monoid?.mult mb (f x) (f y) == f (Monoid?.mult ma x y)
+
+unopteq
+type monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
+  | MonoidMorphism :
+    unit:monoid_morphism_unit_lemma f ma mb ->
+    mult:monoid_morphism_mult_lemma f ma mb ->
+    monoid_morphism f ma mb
+
+let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
+  : Pure (monoid_morphism f ma mb)
+    (requires (monoid_morphism_unit_lemma f ma mb /\ monoid_morphism_mult_lemma f ma mb))
+    (ensures (fun _ -> True))
+=
+  MonoidMorphism
+    (get_equality (f (Monoid?.unit ma)) (Monoid?.unit mb))
+    (get_forall (fun (x:a) -> forall (y:a). Monoid?.mult mb (f x) (f y) == f (Monoid?.mult ma x y)))
+
+let embed_nat_int (n:nat) : int = n
+let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
+
+let neg (p:prop) : prop = ~p
+let _ =
+  assert (neg True <==> False) ;
+  PropExt.apply (neg True) False ;
+  let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == (neg p \/ neg q)) =
+    assert (neg (p /\ q) <==> (neg p \/ neg q)) ;
+    PropExt.apply (neg (p /\ q)) (neg p \/ neg q)
+  in
+  forall_intro_2 mult_lemma_helper ;
+  intro_monoid_morphism neg conjunction_monoid disjunction_monoid
+
+let _ =
+  assert (neg False <==> True) ;
+  PropExt.apply (neg False) True ;
+  let mult_lemma_helper (p q:prop) : Lemma (neg (p \/ q) == (neg p /\ neg q)) =
+    assert (neg (p \/ q) <==> (neg p /\ neg q)) ;
+    PropExt.apply (neg (p \/ q)) (neg p /\ neg q)
+  in
+  forall_intro_2 mult_lemma_helper ;
+  intro_monoid_morphism neg disjunction_monoid conjunction_monoid
+
 (* Definition of a left action *)
 
 let mult_act_lemma (m a:Type) (mult:m -> m -> m) (act:m -> a -> a) =
@@ -115,3 +166,14 @@ type left_action (#m:Type) (mm:monoid m) (a:Type) =
     mult_lemma: mult_act_lemma m a (Monoid?.mult mm) act ->
     unit_lemma: unit_act_lemma m a (Monoid?.unit mm) act ->
     left_action mm a
+
+let action_morphism
+    (#a #b #ma #mb:Type)
+    (mma:monoid ma)
+    (mmb:monoid mb)
+    (la:left_action mma a)
+    (lb:left_action mmb b)
+    (f:a -> b)
+    (* mf ought to be a monoid morphism but we don't use this fact in the property *)
+    (mf: ma -> mb)
+= forall (g:ma) (x:a). LAct?.act lb (mf g) (f x) == f (LAct?.act la g x)
