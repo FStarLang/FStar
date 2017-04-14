@@ -117,6 +117,12 @@ BN_BINARYSPATH=~/binaries/weekly   # maybe this should be environment var or som
 FSTAR_BIN_BRANCH="master"
 BN_FILESTOKEEP=4
 
+# check that BN_BINARYSPATH exists.
+if [[ ! -d $BN_BINARYSPATH ]]; then
+  echo "+++ " $BN_BINARYSPATH " does not exist so cloning"
+  git clone https://github.com/FStarLang/binaries.git
+fi
+
 cd $BN_BINARYSPATH
 echo "--git checkout --"
 git checkout $FSTAR_BIN_BRANCH
@@ -177,6 +183,7 @@ git push git@github.com:FStarLang/binaries.git $FSTAR_BIN_BRANCH --force
 
 
 # TO DO - new features to implement
+# Handling BN_BINARYSPATH proper? Environment var maybe?
 # slack notification on failure?
 
 # TO DO - clean up debug code
