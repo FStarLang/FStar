@@ -26,6 +26,7 @@ open FStar.Errors
 open FStar.Universal
 open FStar.TypeChecker.Env
 
+module SS = FStar.Syntax.Syntax
 module DsEnv   = FStar.ToSyntax.Env
 module TcEnv   = FStar.TypeChecker.Env
 
@@ -293,13 +294,14 @@ type query' =
 | Push of push_kind * string * int * int
 | AutoComplete of string
 | Lookup of string * option<(string * int * int)> * list<string>
+| Compute of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
 let interactive_protocol_vernum = 1
 
 let interactive_protocol_features =
-  ["autocomplete"; "describe-protocol"; "exit";
+  ["autocomplete"; "compute"; "describe-protocol"; "exit";
    "lookup"; "lookup/documentation"; "pop"; "push"]
 
 exception InvalidQuery of string
@@ -341,6 +343,7 @@ let unpack_interactive_query json =
                                      assoc "[location]" "line" loc |> js_int,
                                      assoc "[location]" "column" loc |> js_int)),
                               List.map js_str (arg "requested-info" |> js_list))
+         | "compute" -> Compute (arg "term" |> js_str)
          | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
 
 let read_interactive_query stream : query =
@@ -658,6 +661,67 @@ let run_completions st search_term =
                              matches) in
   ((QueryOK, JsonList json_candidates), Inl st)
 
+
+let run_compute st term =
+  let run_and_rewind st task =
+    let env_mark = mark st.repl_env in
+    let results = task st in
+    let env = reset_mark env_mark in
+    let st' = { st with repl_env = env } in
+    (results, Inl st') in
+
+  let dummy_let_fragment term =
+    let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
+    { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+
+  let normalize_term tcenv t =
+    FStar.TypeChecker.Normalize.normalize
+      [FStar.TypeChecker.Normalize.Beta;
+       FStar.TypeChecker.Normalize.Iota;
+       FStar.TypeChecker.Normalize.Zeta;
+       FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant;
+       FStar.TypeChecker.Normalize.Inlining;
+       FStar.TypeChecker.Normalize.Eager_unfolding;
+       FStar.TypeChecker.Normalize.Primops]
+      tcenv t in
+
+  let find_let_body ses =
+    match ses with
+    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _, _) }] -> Some def
+    | _ -> None in
+
+  let parse frag =
+    match FStar.Parser.ParseIt.parse (Inr frag) with
+    | Inl (Inr decls, _) -> Some decls
+    | _ -> None in
+
+  let desugar dsenv decls =
+    snd (FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls) in
+
+  let typecheck tcenv decls =
+    let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+    ses in
+
+  run_and_rewind st (fun st ->
+    let dsenv, tcenv = st.repl_env in
+    let frag = dummy_let_fragment term in
+    match st.repl_curmod with
+    | None -> (QueryNOK, JsonStr "Current module unset")
+    | _ ->
+      match parse frag with
+      | None -> (QueryNOK, JsonStr "Count not parse this term")
+      | Some decls ->
+        try
+          let decls = desugar dsenv decls in
+          let ses = typecheck tcenv decls in
+          match find_let_body ses with
+          | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
+          | Some def -> let normalized = normalize_term tcenv def in
+                       (QueryOK, JsonStr (Syntax.Print.term_to_string normalized))
+        with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
+                                | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                | None -> raise e)))
+
 let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
@@ -665,6 +729,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Push (kind, text, l, c) -> run_push st kind text l c
   | AutoComplete search_term -> run_completions st search_term
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
+  | Compute (term) -> run_compute st term
   | ProtocolViolation query -> run_protocol_violation st query
 
 let rec go st : unit =
