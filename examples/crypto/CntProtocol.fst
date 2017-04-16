@@ -34,6 +34,8 @@ let client_cnt = lemma_repr_bytes_values 1; ST.alloc 1
 val server_cnt: ref uint16
 let server_cnt = lemma_repr_bytes_values 0; ST.alloc 0
 
+let foo () = assert (addr_of log_prot <> addr_of client_cnt)
+
 val server_max: l:list event -> Tot (c:uint16)
 let rec server_max l =
   match l with
@@ -56,9 +58,9 @@ let rec max_lemma s c l =
      max_lemma s c l'
 
 let invariant h =
-  server_max (Heap.sel h log_prot) = Heap.sel h server_cnt &&
-    Heap.contains h server_cnt && Heap.contains h client_cnt &&
-      Heap.contains h log_prot && server_cnt <> client_cnt
+  server_max (Heap.sel h log_prot) = Heap.sel h server_cnt  /\
+    Heap.contains h server_cnt /\ Heap.contains h client_cnt /\
+      Heap.contains h log_prot /\ (addr_of server_cnt <> addr_of client_cnt)
 
 
 let fresh_cnt x =
@@ -86,11 +88,13 @@ val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
     (requires (fun h -> invariant h /\
                         (forall e . List.Tot.mem e (sel h log_prot) ==> e <> (Recv s c)) /\
                         (c > server_max (sel h log_prot))))
-    (ensures (fun h x h' -> invariant h' /\ c = sel h' server_cnt /\
-                            (sel h' log_prot = Recv s c::sel h log_prot)
-                            /\ modifies (!{log_prot, server_cnt}) h h'))
+    (ensures (fun h x h' -> (* invariant h' /\ *) c = sel h' server_cnt)) ///\
+                            //(sel h' log_prot = Recv s c::sel h log_prot)))
+                            ///\ modifies (as_set [addr_of log_prot; addr_of server_cnt]) h h'))
 let log_and_update s c =
+  ST.recall log_prot;
   log_event (Recv s c);
+  ST.recall server_cnt;
   update_cnt c
 
 (* some basic, untrusted network controlled by the adversary *)
