@@ -123,9 +123,9 @@ let contains (#a:Type) (m:mem) (s:reference a) =
   live_region m s.id
   /\ HH.contains_ref s.ref m.h
 
-let does_not_contain (#a:Type) (h:mem) (r:reference a) =
+let unused_in (#a:Type) (r:reference a) (h:mem) =
   ~ (live_region h r.id) \/
-  HH.does_not_contain_ref r.ref h.h
+  HH.unused_in r.ref h.h
 
 private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
   (requires (weak_live_region m r))
@@ -222,24 +222,19 @@ let lemma_upd_1 #a (h:mem) (x:reference a) (v:a) : Lemma
   [SMTPat (upd h x v); SMTPatT (contains h x)]
   = ()
 
-(*
- * AR: this precondition used to be ~ (contains h x), which is weaker than ~ (contains_not_necessarily_well_typed)
- * TODO: it's a pattern that if you want to say does not contain, use contains_not_necessarily_well_typed
- * perhaps factor it out systematically
- *)
 let lemma_upd_2 (#a:Type) (h:mem) (x:reference a) (v:a) : Lemma
-  (requires (frameOf x = h.tip /\ does_not_contain h x))
+  (requires (frameOf x = h.tip /\ x `unused_in` h))
   (ensures (frameOf x = h.tip
 	    /\ modifies_one h.tip h (upd h x v)
 	    /\ modifies_ref h.tip Set.empty h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (does_not_contain h x)]
+  [SMTPat (upd h x v); SMTPatT (x `unused_in` h)]
   = ()
 
 val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:reference a -> x':reference a' -> Lemma
-  (requires (contains h x /\ does_not_contain h x'))
+  (requires (contains h x /\ x' `unused_in` h))
   (ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x')))
-  [SMTPat (contains h x); SMTPat (does_not_contain h x')]
+  [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
 let lemma_live_1 #a #a' h x x' = ()
 
 let above_tip_is_live (#a:Type) (m:mem) (x:reference a) : Lemma

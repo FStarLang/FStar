@@ -583,12 +583,12 @@ let contains
 : GTot Type0
 = Buffer.contains h (as_buffer p)
 
-let does_not_contain
+let unused_in
   (#value: Type)
-  (h: HS.mem)
   (p: struct_ptr value)
+  (h: HS.mem)
 : GTot Type0
-= Buffer.does_not_contain h (as_buffer p)
+= Buffer.unused_in (as_buffer p) h
 
 let live
   (#value: Type)
@@ -597,12 +597,12 @@ let live
 : GTot Type0
 = Buffer.live h (as_buffer p)
 
-let not_live
+let unmapped_in
   (#value: Type)
-  (h: HS.mem)
   (p: struct_ptr value)
+  (h: HS.mem)
 : GTot Type0
-= Buffer.not_live h (as_buffer p)
+= Buffer.unmapped_in (as_buffer p) h
 
 abstract let live_contains
   (#value: Type)
@@ -640,7 +640,7 @@ abstract let recall
 : HST.Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0 == m1 /\ live m1 p))
-= assert (HS.is_mm (Buffer.content (as_buffer p)) = HS.is_mm (Buffer.content (StructPtr?.content p))); //AR: why do we need this? there are some z3 errors, so verification could be flaky, remove those errors first
+= assert (HS.is_mm (Buffer.content (as_buffer p)) = HS.is_mm (Buffer.content (StructPtr?.content p)));
   Buffer.recall (StructPtr?.content p)
 
 let get
@@ -1111,7 +1111,7 @@ let live_disjoint
   (p1: struct_ptr value1)
   (p2: struct_ptr value2)
 : Lemma
-  (requires (live h p1 /\ does_not_contain h p2))
+  (requires (live h p1 /\ p2 `unused_in` h))
   (ensures (disjoint p1 p2))
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
 = live_contains h p1;
@@ -1207,7 +1207,7 @@ let modifies_0_0 h0 h1 h2 = ()
 #reset-options "--z3rlimit 16"
 
 let modifies_0_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
-  (requires (does_not_contain h0 b /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+  (requires (b `unused_in` h0 /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
   (ensures  (modifies_0 h0 h2))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = Buffer.lemma_reveal_modifies_0 h0 h1;
@@ -1224,7 +1224,7 @@ abstract let screate
 : StackInline (struct_ptr value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
-       does_not_contain h0 b
+       b `unused_in` h0
      /\ live h1 b
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
@@ -1244,7 +1244,7 @@ abstract let ecreate
   (s: t)
 : ST (struct_ptr t)
   (requires (fun h -> HS.is_eternal_region r))
-  (ensures (fun (h0:HS.mem) b h1 -> does_not_contain h0 b
+  (ensures (fun (h0:HS.mem) b h1 -> b `unused_in` h0
     /\ live h1 b
     /\ Map.domain h1.HS.h == Map.domain h0.HS.h
     /\ h1.HS.tip = h0.HS.tip

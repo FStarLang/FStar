@@ -240,9 +240,9 @@ let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool  =
   (* AR: in master this is the code *)
   (* Map.contains m i && Heap.contains (Map.sel m i) (as_ref r) *)
 
-let does_not_contain_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool =
+let unused_in (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool =
   not (Map.contains m i) ||
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.does_not_contain (Map.sel m i) (as_ref r))
+  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
 
 (*
  * AR: using this from HyperStack:weak_contains,
@@ -252,7 +252,7 @@ let weak_contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
-  Heap.does_not_contain (Map.sel m0 i) (as_ref r) /\
+  Heap.unused_in (as_ref r) (Map.sel m0 i) /\
   Heap.contains (Map.sel m1 i) (as_ref r)
 
 let modifies_rref (r:rid) (s:Set.set nat) h0 h1 = 

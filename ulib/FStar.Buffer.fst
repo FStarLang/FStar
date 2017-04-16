@@ -30,7 +30,7 @@ type buffer (a:Type) = _buffer a
 
 (* Ghost getters for specifications *)
 let contains #a h (b:buffer a) : GTot Type0 = HS.contains h b.content
-let does_not_contain #a h (b:buffer a) : GTot Type0 = HS.does_not_contain h b.content
+let unused_in #a (b:buffer a) h : GTot Type0 = HS.unused_in b.content h
 
 //17-01-04 notations: 
 //17-01-04 when to use sel, index, get, read? 
@@ -54,7 +54,7 @@ let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
 
 (* Liveliness condition, necessary for any computation on the buffer *)
 let live #a (h:mem) (b:buffer a) : GTot Type0 = contains h b
-let not_live #a (h:mem) (b:buffer a) : GTot Type0 = does_not_contain h b
+let unmapped_in #a (b:buffer a) (h:mem) : GTot Type0 = unused_in b h
 //17-01-04 global pick between live and contains?
 
 val recall: #a:Type
@@ -108,7 +108,7 @@ let lemma_disjoint_sub' #a #a' (x:buffer a) (subx:buffer a) (y:buffer a') : Lemm
   = ()
 
 val lemma_live_disjoint: #a:Type -> #a':Type -> h:mem -> b:buffer a -> b':buffer a' -> Lemma
-  (requires (live h b /\ does_not_contain h b'))
+  (requires (live h b /\ b' `unused_in` h))
   (ensures (disjoint b b'))
   [SMTPatT (disjoint b b'); SMTPatT (live h b)]
 let lemma_live_disjoint #a #a' h b b' = ()
@@ -248,15 +248,15 @@ let lemma_modifies_bufs_sub rid bufs subbufs h0 h1 :
  = ()
 
 val lemma_modifies_bufs_subset: #a:Type -> #a':Type -> h0:mem -> h1:mem -> bufs:TSet.set abuffer -> b:buffer a -> b':buffer a' -> Lemma
-  (requires (not_live h0 b' /\ live h0 b /\ disjoint_from_bufs b (bufs ++ (only b')) ))
+  (requires (b' `unmapped_in` h0 /\ live h0 b /\ disjoint_from_bufs b (bufs ++ (only b')) ))
   (ensures (disjoint_from_bufs b bufs))
   [SMTPatT (modifies_bufs h0.tip (bufs ++ (only b')) h0 h1); SMTPatT (live h0 b)]
 let lemma_modifies_bufs_subset #a #a' h0 h1 bufs b b' = ()
 
 val lemma_modifies_bufs_superset: #a:Type -> #a':Type -> h0:mem -> h1:mem -> bufs:TSet.set abuffer -> b:buffer a -> b':buffer a' -> Lemma
-  (requires (does_not_contain h0 b' /\ live h0 b /\ disjoint_from_bufs b bufs))
+  (requires (b' `unused_in` h0 /\ live h0 b /\ disjoint_from_bufs b bufs))
   (ensures (disjoint_from_bufs b (bufs ++ (only b'))))
-  [SMTPatT (modifies_bufs h0.tip bufs h0 h1); SMTPatT (not_live h0 b'); SMTPatT (live h0 b)]
+  [SMTPatT (modifies_bufs h0.tip bufs h0 h1); SMTPatT (b' `unmapped_in` h0); SMTPatT (live h0 b)]
 let lemma_modifies_bufs_superset #a #a' h0 h1 bufs b b' = ()
 
 (* Specialized lemmas *)
@@ -645,7 +645,7 @@ let lemma_modifies_0_1 (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
   = ()
 
 let lemma_modifies_0_1' (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
-  (requires (does_not_contain h0 b /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+  (requires (b `unused_in` h0 /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
   (ensures  (modifies_0 h0 h2))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = ()
@@ -660,28 +660,28 @@ let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2
   = ()
 
 let lemma_modifies_0_2 (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
-  (requires (live h0 b /\ does_not_contain h0 b' /\ modifies_0 h0 h1 /\ live h1 b'
+  (requires (live h0 b /\ b' `unused_in` h0 /\ modifies_0 h0 h1 /\ live h1 b'
     /\ frameOf b' = h0.tip /\ modifies_2 b b' h1 h2))
   (ensures  (modifies_2_1 b h0 h2))
   [SMTPatT (modifies_2 b b' h1 h2); SMTPatT (modifies_0 h0 h1)]
   = ()
 
 let lemma_modifies_0_2' (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
-  (requires (live h0 b /\ does_not_contain h0 b' /\ modifies_0 h0 h1 /\ live h1 b'
+  (requires (live h0 b /\ b' `unused_in` h0 /\ modifies_0 h0 h1 /\ live h1 b'
     /\ frameOf b' = h0.tip /\ modifies_2 b' b h1 h2))
   (ensures  (modifies_2_1 b h0 h2))
   [SMTPatT (modifies_2 b' b h1 h2); SMTPatT (modifies_0 h0 h1)]
   = ()
 
 let lemma_modifies_1_2 (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
-  (requires (live h0 b /\ modifies_1 b h0 h1 /\ does_not_contain h0 b' /\ live h1 b' /\
+  (requires (live h0 b /\ modifies_1 b h0 h1 /\ b' `unused_in` h0 /\ live h1 b' /\
     modifies_2 b b' h1 h2 /\ frameOf b' = h0.tip))
   (ensures  (modifies_2_1 b h0 h2))
   [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_2 b b' h1 h2)]
   = ()
 
 let lemma_modifies_1_2' (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
-  (requires (live h0 b /\ modifies_1 b h0 h1 /\ does_not_contain h0 b' /\ live h1 b' /\
+  (requires (live h0 b /\ modifies_1 b h0 h1 /\ b' `unused_in` h0 /\ live h1 b' /\
     modifies_2 b' b h1 h2 /\ frameOf b' = h0.tip))
   (ensures  (modifies_2_1 b h0 h2))
   [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_2 b' b h1 h2)]
@@ -700,7 +700,7 @@ let lemma_modifies_1_2''' (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1
   = ()
 
 let lemma_modifies_1_1_prime (#t:Type) (#t':Type) (b:buffer t) (b':buffer t') h0 h1 h2 : Lemma
-  (requires (live h0 b /\ modifies_1 b h0 h1 /\ does_not_contain h0 b' /\ live h1 b' /\
+  (requires (live h0 b /\ modifies_1 b h0 h1 /\ b' `unused_in` h0 /\ live h1 b' /\
     modifies_1 b' h1 h2 /\ frameOf b' = h0.tip))
   (ensures  (modifies_2_1 b h0 h2))
   [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_1 b' h1 h2)]
@@ -733,7 +733,7 @@ let lemma_modifies_2_1'' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 
 (** Concrete getters and setters *)
 val create: #a:Type -> init:a -> len:UInt32.t -> StackInline (buffer a)
   (requires (fun h -> True))
-  (ensures (fun (h0:mem) b h1 -> does_not_contain h0 b
+  (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
      /\ live h1 b /\ idx b = 0 /\ length b = v len
      /\ frameOf b = h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
@@ -763,7 +763,7 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
   (ensures (fun (h0:mem) b h1 ->
      let len = L.length init in
      len > 0
-     /\ does_not_contain h0 b
+     /\ b `unused_in` h0
      /\ live h1 b /\ idx b = 0 /\ length b = len
      /\ frameOf b = h0.tip
      /\ Map.domain h1.h == Map.domain h0.h
@@ -793,7 +793,7 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemm
 
 val rcreate: #a:Type -> r:HH.rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h -> is_eternal_region r))
-  (ensures (fun (h0:mem) b h1 -> does_not_contain h0 b
+  (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
     /\ live h1 b /\ idx b = 0 /\ length b = v len
     /\ Map.domain h1.h == Map.domain h0.h
     /\ h1.tip = h0.tip
@@ -863,10 +863,7 @@ private let lemma_aux_0
          (ensures  (live h0 b /\ live h0 bb /\
 	            (let h1 = HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z) in
 		     as_seq h0 bb == as_seq h1 bb)))
-  = if FStar.StrongExcludedMiddle.strong_excluded_middle (a == tt) &&
-      as_addr b = as_addr bb && frameOf b = frameOf bb then begin
-      Heap.sel_same_addr (Map.sel h0.h (frameOf bb)) (as_ref b) (as_ref bb)
-    end
+  = ()
 
 private let lemma_aux_1
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem) (tt:Type)
