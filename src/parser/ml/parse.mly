@@ -1115,9 +1115,33 @@ let op =
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN PIPE_RIGHT RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "|>" )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN COLON_EQUALS RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( ":=" )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN COLON_COLON RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "::" )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | UNDERSCORE
     {let _1 = () in
       ( mk_pattern PatWild (rhs parseState 1) )}
+| HASH UNDERSCORE
+    {let (_1, _2) = ((), ()) in
+      ( mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) )}
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
@@ -1350,6 +1374,27 @@ let id =
          ( op )
   in
        ( op )
+in
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
+| LPAREN PIPE_RIGHT RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let id =
+  let op = op0 in
+       ( "|>" )
+in
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
+| LPAREN COLON_EQUALS RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let id =
+  let op = op0 in
+       ( ":=" )
+in
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
+| LPAREN COLON_COLON RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let id =
+  let op = op0 in
+       ( "::" )
 in
     ( mk_ident(compile_op' id, rhs parseState 2) )}
 
@@ -2048,6 +2093,27 @@ let op =
          ( op )
   in
        ( op )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN PIPE_RIGHT RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "|>" )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN COLON_EQUALS RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( ":=" )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN COLON_COLON RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "::" )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT

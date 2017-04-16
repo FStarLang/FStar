@@ -195,7 +195,7 @@ let collect_one
 =
   let deps = BU.mk_ref [] in
   let add_dep d =
-    if not (List.existsb (fun d' -> d' = d) !deps) then
+    if not (List.existsML (fun d' -> d' = d) !deps) then
       deps := d :: !deps
   in
   let working_map = smap_copy original_map in
@@ -580,12 +580,13 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
       List.iter (discover_one false partial_discovery) deps
   in
   let discover_command_line_argument f =
-    let mn = lowercase_module_name f in
-    let interface_only =
-      match must (smap_try_find m mn) with
-      | Some _, None -> true // Only an fsti given in command line
-      | _ -> false in
-    discover_one true interface_only mn
+    let m = lowercase_module_name f in
+    let interface_only = is_interface f &&
+      not (List.existsML (fun f ->
+        lowercase_module_name f = m && is_implementation f)
+      filenames)
+    in
+    discover_one true interface_only m
   in
   List.iter discover_command_line_argument filenames;
 

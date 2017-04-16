@@ -395,6 +395,8 @@ atomicPattern:
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern PatWild (rhs parseState 1) }
+  | HASH UNDERSCORE
+      { mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
@@ -936,6 +938,12 @@ atomicUniverse:
   | op=OPINFIX4
   | op=operatorInfix0ad12
      { op }
+  | op=PIPE_RIGHT
+     { "|>" }
+  | op=COLON_EQUALS
+     { ":=" }
+  | op=COLON_COLON
+     { "::" }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
