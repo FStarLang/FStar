@@ -33,13 +33,18 @@ val sel: #a:Type -> heap -> array a -> GTot (seq a)
 let sel #a h s = Heap.sel h s
 
 val contains: #a:Type -> heap -> array a -> GTot (bool)
-let contains #a h s = Heap.contains h s
+let contains #a h s =
+  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains h s)
+
+let unused_in (#a:Type) (a:array a) (h:heap) :GTot bool
+ = FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in a h)
 
 val heap_upd: #a:Type -> heap -> array a -> seq a -> GTot heap
 let heap_upd #a h r v = Heap.upd h r v
 
-val mk_aref: #a: Type -> array a -> aref
-let mk_aref #a r = Ref r
+let addr_of (#a:Type) (a:array a) :GTot nat = addr_of a
+
+let only (#a:Type) (a:array a) :GTot (Set.set nat) = Set.singleton (addr_of a)
 
 abstract val op_At_Bar: #a:Type -> s1:array a -> s2:array a -> ST (array a)
   (requires (fun h -> contains h s1 /\ contains h s2))
@@ -53,7 +58,7 @@ let op_At_Bar #a s1 s2 =
 
 abstract val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (h0 `does_not_contain` x
+  (ensures  (fun h0 x h1 -> (x `unused_in` h0
                              /\ contains h1 x
                              /\ modifies Set.empty h0 h1
                              /\ sel h1 x==s)))
@@ -68,7 +73,7 @@ let to_seq #a s =
 
 abstract val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (h0 `does_not_contain` x
+  (ensures  (fun h0 x h1 -> (x `unused_in` h0
                              /\ contains h1 x
                              /\ modifies Set.empty h0 h1
                              /\ sel h1 x==Seq.create n init)))
@@ -147,7 +152,7 @@ val copy:
      (requires (fun h -> contains h s
 			 /\ Seq.length (sel h s) > 0))
      (ensures (fun h0 r h1 -> (modifies Set.empty h0 h1)
-				     /\ h0 `does_not_contain` r
+				     /\ r `unused_in` h0
 				     /\ (contains h1 r)
 				     /\ (Seq.equal (sel h1 r) (sel h0 s))))
 let copy #a s =
@@ -221,7 +226,7 @@ val sub :
     (ensures (fun h0 t h1 ->
       (contains h1 t)
       /\ (contains h0 s)
-      /\ h0 `does_not_contain` t
+      /\ t `unused_in` h0
       /\ (modifies Set.empty h0 h1)
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))
@@ -230,6 +235,3 @@ let sub #a s idx len =
   let t = create len (index s 0) in
   blit s idx t 0 len;
   t
-
-val foo: n:nat -> St nat (decreases n)
-let rec foo n = foo (n + 1)

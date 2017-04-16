@@ -189,7 +189,7 @@ let lemma_alloc (#a:Type) (h0:heap) (x:a) (mm:bool)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc h0 x mm in
                     h1 == upd h0 r x /\ fresh r h0 h1 /\ is_mm r = mm))
-	 [SMTPat (alloc h0 x)]
+	 [SMTPat (alloc h0 x mm)]
   = ()
 
 let lemma_free_mm_sel (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
