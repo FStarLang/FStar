@@ -15,7 +15,7 @@
 *)
 #light "off"
 
-module FStar.Interactive
+module FStar.Legacy.Interactive
 open FStar.All
 open FStar
 open FStar.Util
