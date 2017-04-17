@@ -47,24 +47,30 @@ make package
 # For weekly build, we want to use TimeStamp since it is a minor release
 echo "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%s)
+echo "+++ Time Stamp:"$TIME_STAMP
+echo "+++ Current Version:"$CURRENT_VERSION
 
 # make package makes it major version using version.txt. This process is weekly process to make minor versions (using timestamp in file name) 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 MINOR_ZIP_FILE=fstar_$TIME_STAMP$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
-echo "----- Copied Original Minor Zip File ---"
+echo "----- Copy Original Minor Zip File ---"
   cp $MAJOR_ZIP_FILE $MINOR_ZIP_FILE
+echo "----- Unzip Zip File ---"  
   unzip -o $MAJOR_ZIP_FILE
 fi
 
 # Extract linux file if exists
-TYPE="Linux_x86_64.tar.gz"
+TYPE="_Linux_x86_64.tar.gz"  # fstar_0.9.4.2_Linux_x86_64.tar.gz
 MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
+echo "+++ Major tar File:"$MAJOR_TAR_FILE
 MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
+echo "+++ Minor tar File:"$MINOR_TAR_FILE
 if [[ -f $MAJOR_TAR_FILE ]]; then
-echo "----- Copied Original Minor Tar File ---"
+echo "----- Copy Original Minor Tar File ---"
   cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
+echo "----- Extract Tar File ---"  
   tar -x $MAJOR_TAR_FILE
 fi
 
