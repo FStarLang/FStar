@@ -111,8 +111,9 @@ let go _ =
 
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
+
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          FStar.Interactive.interactive_mode filename
+          FStar.Legacy.Interactive.interactive_mode filename
 	  //and then start checking chunks from the current buffer
         end //end interactive mode
         else if Options.doc() then // --doc Generate Markdown documentation files

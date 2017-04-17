@@ -445,7 +445,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "in",
         ZeroArgs (fun () -> Bool true),
-        "Interactive mode; reads input from stdin");
+        "Legacy interactive mode; reads input from stdin");
 
        ( noshort,
         "include",
