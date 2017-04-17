@@ -276,8 +276,8 @@ let js_int = function
 let js_str = function
   | JsonStr s -> s
   | other -> js_fail "string" other
-let js_list = function
-  | JsonList l -> l
+let js_list k = function
+  | JsonList l -> List.map k l
   | other -> js_fail "list" other
 let js_assoc = function
   | JsonAssoc a -> a
@@ -314,6 +314,11 @@ type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
 let try_assoc key a =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) a)
 
+let wrap_js_failure qid expected got =
+  { qid = qid;
+    qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
+                            expected (json_to_str got)) }
+
 let unpack_interactive_query json =
   let assoc errloc key a =
     match try_assoc key a with
@@ -323,34 +328,38 @@ let unpack_interactive_query json =
   let request = json |> js_assoc in
 
   let qid = assoc "query" "query-id" request |> js_str in
-  let query = assoc "query" "query" request |> js_str in
-  let args = assoc "query" "args" request |> js_assoc in
+  try
+    let query = assoc "query" "query" request |> js_str in
+    let args = assoc "query" "args" request |> js_assoc in
 
-  let arg k = assoc "[args]" k args in
-  let try_arg k = try_assoc k args in
+    let arg k = assoc "[args]" k args in
+    let try_arg k = try_assoc k args in
 
-  { qid = qid;
-    qq = match query with
-         | "exit" -> Exit
-         | "pop" -> Pop
-         | "describe-protocol" -> DescribeProtocol
-         | "peek" | "push" -> Push (arg "kind" |> js_pushkind,
-                                   arg "code" |> js_str,
-                                   arg "line" |> js_int,
-                                   arg "column" |> js_int,
-                                   query = "peek")
-         | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
-         | "lookup" -> Lookup (arg "symbol" |> js_str,
-                              try_arg "location"
-                                |> Util.map_option js_assoc
-                                |> Util.map_option (fun loc ->
-                                    (assoc "[location]" "filename" loc |> js_str,
-                                     assoc "[location]" "line" loc |> js_int,
-                                     assoc "[location]" "column" loc |> js_int)),
-                              List.map js_str (arg "requested-info" |> js_list))
-         | "compute" -> Compute (arg "term" |> js_str)
-         | "search" -> Search (arg "terms" |> js_str)
-         | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
+    { qid = qid;
+      qq = match query with
+           | "exit" -> Exit
+           | "pop" -> Pop
+           | "describe-protocol" -> DescribeProtocol
+           | "peek" | "push" -> Push (arg "kind" |> js_pushkind,
+                                     arg "code" |> js_str,
+                                     arg "line" |> js_int,
+                                     arg "column" |> js_int,
+                                     query = "peek")
+           | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
+           | "lookup" -> Lookup (arg "symbol" |> js_str,
+                                try_arg "location"
+                                  |> Util.map_option js_assoc
+                                  |> Util.map_option (fun loc ->
+                                      (assoc "[location]" "filename" loc |> js_str,
+                                       assoc "[location]" "line" loc |> js_int,
+                                       assoc "[location]" "column" loc |> js_int)),
+                                arg "requested-info" |> js_list js_str)
+           | "compute" -> Compute (arg "term" |> js_str)
+           | "search" -> Search (arg "terms" |> js_str)
+           | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
+  with
+  | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
+  | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
 let validate_interactive_query = function
   | { qid = qid; qq = Push (SyntaxCheck, _, _, _, false) } ->
@@ -367,10 +376,8 @@ let read_interactive_query stream : query =
       | Some request -> validate_interactive_query (unpack_interactive_query request)
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
-  | UnexpectedJsonType (expected, got) ->
-    { qid = "?";
-      qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
-                              expected (json_to_str got)) }
+  | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
+
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
