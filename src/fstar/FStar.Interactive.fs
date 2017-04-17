@@ -289,6 +289,13 @@ let js_pushkind s : push_kind = match js_str s with
   | "full" -> FullCheck
   | _ -> js_fail "push_kind" s
 
+let js_reductionrule s = match js_str s with
+  | "beta" -> FStar.TypeChecker.Normalize.Beta
+  | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
+  | "iota" -> FStar.TypeChecker.Normalize.Iota
+  | "zeta" -> FStar.TypeChecker.Normalize.Zeta
+  | _ -> js_fail "reduction rule" s
+
 type query' =
 | Exit
 | DescribeProtocol
@@ -296,7 +303,7 @@ type query' =
 | Push of push_kind * string * int * int * bool
 | AutoComplete of string
 | Lookup of string * option<(string * int * int)> * list<string>
-| Compute of string
+| Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
@@ -333,7 +340,10 @@ let unpack_interactive_query json =
     let args = assoc "query" "args" request |> js_assoc in
 
     let arg k = assoc "[args]" k args in
-    let try_arg k = try_assoc k args in
+    let try_arg k =
+      match try_assoc k args with
+      | Some JsonNull -> None
+      | other -> other in
 
     { qid = qid;
       qq = match query with
@@ -354,7 +364,9 @@ let unpack_interactive_query json =
                                        assoc "[location]" "line" loc |> js_int,
                                        assoc "[location]" "column" loc |> js_int)),
                                 arg "requested-info" |> js_list js_str)
-           | "compute" -> Compute (arg "term" |> js_str)
+           | "compute" -> Compute (arg "term" |> js_str,
+                                  try_arg "rules"
+                                    |> Util.map_option (js_list js_reductionrule))
            | "search" -> Search (arg "terms" |> js_str)
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
@@ -691,7 +703,7 @@ let run_completions st search_term =
                              matches) in
   ((QueryOK, JsonList json_candidates), Inl st)
 
-let run_compute st term =
+let run_compute st term rules =
   let run_and_rewind st task =
     let env_mark = mark st.repl_env in
     let results = task st in
@@ -703,16 +715,8 @@ let run_compute st term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
     { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
 
-  let normalize_term tcenv t =
-    FStar.TypeChecker.Normalize.normalize
-      [FStar.TypeChecker.Normalize.Beta;
-       FStar.TypeChecker.Normalize.Iota;
-       FStar.TypeChecker.Normalize.Zeta;
-       FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant;
-       FStar.TypeChecker.Normalize.Inlining;
-       FStar.TypeChecker.Normalize.Eager_unfolding;
-       FStar.TypeChecker.Normalize.Primops]
-      tcenv t in
+  let normalize_term tcenv rules t =
+    FStar.TypeChecker.Normalize.normalize rules tcenv t in
 
   let find_let_body ses =
     match ses with
@@ -731,6 +735,17 @@ let run_compute st term =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
+  let rules =
+    (match rules with
+     | Some rules -> rules
+     | None -> [FStar.TypeChecker.Normalize.Beta;
+               FStar.TypeChecker.Normalize.Iota;
+               FStar.TypeChecker.Normalize.Zeta;
+               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
+    @ [FStar.TypeChecker.Normalize.Inlining;
+       FStar.TypeChecker.Normalize.Eager_unfolding;
+       FStar.TypeChecker.Normalize.Primops] in
+
   run_and_rewind st (fun st ->
     let dsenv, tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
@@ -745,7 +760,7 @@ let run_compute st term =
           let ses = typecheck tcenv decls in
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
-          | Some def -> let normalized = normalize_term tcenv def in
+          | Some def -> let normalized = normalize_term tcenv rules def in
                        (QueryOK, JsonStr (Syntax.Print.term_to_string normalized))
         with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
@@ -850,7 +865,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
   | AutoComplete search_term -> run_completions st search_term
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
-  | Compute term -> run_compute st term
+  | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
   | ProtocolViolation query -> run_protocol_violation st query
 
