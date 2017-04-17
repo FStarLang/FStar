@@ -62,16 +62,16 @@ echo "----- Unzip Zip File ---"
 fi
 
 # Extract linux file if exists
-TYPE="_Linux_x86_64.tar.gz"  # fstar_0.9.4.2_Linux_x86_64.tar.gz
+TYPE="_Linux_x86_64.tar.gz"  
 MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
-echo "+++ Major tar File:"$MAJOR_TAR_FILE
+ echo "+++ Major tar File:"$MAJOR_TAR_FILE
 MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
 echo "+++ Minor tar File:"$MINOR_TAR_FILE
 if [[ -f $MAJOR_TAR_FILE ]]; then
 echo "----- Copy Original Minor Tar File ---"
   cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
 echo "----- Extract Tar File ---"  
-  tar -x $MAJOR_TAR_FILE
+  tar -x -f $MAJOR_TAR_FILE
 fi
 
 echo "*** Make the examples ***"
