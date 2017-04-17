@@ -54,7 +54,7 @@ abstract let sel (#a:Type) (h:heap) (r:ref a) :GTot a
     else r.init
 
 (* Update. *)
-private abstract let upd_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) (x:a) :heap
+abstract let upd_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) (x:a) :heap
   = { h with memory = (fun r' -> if r.addr = r'
 			      then Some (| a, x |)
                               else h.memory r') }
@@ -178,7 +178,14 @@ let lemma_contains_implies_used
 	 [SMTPatOr [[SMTPat (h `contains` r)]; [SMTPat (r `unused_in` h)]]]
   = ()
 
-let lemma_distinct_addrs
+let lemma_distinct_addrs_distinct_types
+  (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b)
+  :Lemma (requires (a =!= b /\ h `contains` r1 /\ h `contains` r2))
+         (ensures  (addr_of r1 <> addr_of r2))
+	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
+  = ()
+
+let lemma_distinct_addrs_unused
   (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b)
   :Lemma (requires (r1 `unused_in` h /\ ~ (r2 `unused_in` h)))
          (ensures  (addr_of r1 <> addr_of r2))

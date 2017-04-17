@@ -34,8 +34,6 @@ let client_cnt = lemma_repr_bytes_values 1; ST.alloc 1
 val server_cnt: ref uint16
 let server_cnt = lemma_repr_bytes_values 0; ST.alloc 0
 
-let foo () = assert (addr_of log_prot <> addr_of client_cnt)
-
 val server_max: l:list event -> Tot (c:uint16)
 let rec server_max l =
   match l with
@@ -62,7 +60,6 @@ let invariant h =
     Heap.contains h server_cnt /\ Heap.contains h client_cnt /\
       Heap.contains h log_prot /\ (addr_of server_cnt <> addr_of client_cnt)
 
-
 let fresh_cnt x =
   let y = !server_cnt in
   (y < x)
@@ -88,14 +85,13 @@ val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
     (requires (fun h -> invariant h /\
                         (forall e . List.Tot.mem e (sel h log_prot) ==> e <> (Recv s c)) /\
                         (c > server_max (sel h log_prot))))
-    (ensures (fun h x h' -> (* invariant h' /\ *) c = sel h' server_cnt)) ///\
-                            //(sel h' log_prot = Recv s c::sel h log_prot)))
-                            ///\ modifies (as_set [addr_of log_prot; addr_of server_cnt]) h h'))
+    (ensures (fun h x h' -> invariant h' /\ c = sel h' server_cnt /\
+                         (sel h' log_prot = Recv s c::sel h log_prot) /\
+                         (modifies (union (singleton (addr_of log_prot)) (singleton (addr_of server_cnt))) h h')))
 let log_and_update s c =
-  ST.recall log_prot;
   log_event (Recv s c);
-  ST.recall server_cnt;
   update_cnt c
+
 
 (* some basic, untrusted network controlled by the adversary *)
 
@@ -104,12 +100,12 @@ let msg_buffer = ST.alloc (empty_bytes)
 
 val send: message -> ST unit
 		       (requires (fun h -> True))
-		       (ensures (fun h x h' -> modifies !{msg_buffer} h h'))
+		       (ensures (fun h x h' -> modifies (only msg_buffer) h h'))
 let send m = msg_buffer := m
 
 val recv: unit -> ST message
 		    (requires (fun h -> True))
-		    (ensures (fun h x h' -> modifies !{msg_buffer} h h'))
+		    (ensures (fun h x h' -> modifies (only msg_buffer) h h'))
 let rec recv _ = if length !msg_buffer > 0
                 then (
                   let msg = !msg_buffer in
@@ -135,6 +131,10 @@ val client : uint32 -> ST (option string)
 				     repr_bytes ((sel h client_cnt) + 1) <= 2 ))
  			  (ensures (fun h x h' -> invariant h'))
 let client (s: uint32) =
+  ST.recall (MAC.log);
+  ST.recall (msg_buffer);
+  ST.recall (log_prot);
+  ST.recall (server_cnt);
   let c = next_cnt () in
   assume (signal s c); //a protocol event
   let t = CntFormat.signal s c in
@@ -142,11 +142,16 @@ let client (s: uint32) =
   send (t @| m);
   None
 
-
 val server : unit -> ST (option string)
 			(requires (fun h -> invariant h))
-			(ensures (fun h x h' -> invariant h' /\ modifies (!{log_prot, server_cnt, msg_buffer}) h h'))
+			(ensures (fun h x h' -> invariant h' /\ modifies (Set.union (Set.singleton (addr_of log_prot))
+			                                                        (Set.union (Set.singleton (addr_of server_cnt))
+								                           (Set.singleton (addr_of msg_buffer)))) h h'))
 let server () =
+  ST.recall (MAC.log);
+  ST.recall (msg_buffer);
+  ST.recall (log_prot);
+  ST.recall (server_cnt);
   let msg = recv () in (
     if length msg = signal_size + macsize then (
       let (t, m) = split msg signal_size  in

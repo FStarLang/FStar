@@ -44,14 +44,13 @@ assume val recall: #a:Type -> r:ref a -> STATE unit
 
 assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                            (fun h -> True)
-                                           (fun h0 r h1 -> r `unused_in` h0 /\ h1 `contains` r /\
-					                h1==upd h0 r init)
+                                           (fun h0 r h1 -> (r, h1) = alloc h0 init true)
 
 assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)
 
 assume val write:  #a:Type -> r:ref a -> v:a -> ST unit
                                                  (fun h -> True)
-                                                 (fun h0 x h1 -> h1==upd h0 r v)
+                                                 (fun h0 x h1 -> h0 `contains` r /\ h1==upd h0 r v)
 
 assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1)
