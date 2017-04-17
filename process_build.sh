@@ -152,7 +152,7 @@ fi
 # Now that latest package is added, remove the oldest one so only keeping most recent 4 packages
 echo "-- Delete oldest file --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
-ZIP_COUNT=`ls -1 $BN_FILES 2>/dev/null | wc -l`
+ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
 echo "+++ Zip Count:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
   echo "+++ Deleted oldest .zip file ---"
@@ -167,11 +167,13 @@ fi
 
 echo "+++ Delete tar file --"
 BN_TAR_FILES=$BN_BINARYSPATH/*.gz
-TAR_COUNT=`ls -1 $BN_FILES 2>/dev/null | wc -l`
+echo "+++ Tar Files:"$BN_TAR_FILES
+TAR_COUNT=`ls -1 $BN_TAR_FILES 2>/dev/null | wc -l`
+echo "++ Tar Count:"$TAR_COUNT
 if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
   echo "+++ Deleted oldest .gz file ---"
   ls -t1 $BN_TAR_FILES | tail -n +$(($BN_FILESTOKEEP+1)) | xargs rm
-  TAR_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
+  TAR_FILE_LIST=`ls -t1 $BN_TAR_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
   for TAR_FILE in $TAR_FILE_LIST
   do
      echo "+++ Delete Tar file:"${TAR_FILE}
