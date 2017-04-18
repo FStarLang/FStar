@@ -112,6 +112,7 @@ let init () =
         ("hide_uvar_nums"               , Bool false);
         ("hint_info"                    , Bool false);
         ("in"                           , Bool false);
+        ("ide"                          , Bool false);
         ("include"                      , List []);
         ("indent"                       , Bool false);
         ("initial_fuel"                 , Int 2);
@@ -203,6 +204,7 @@ let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_in                      ()      = lookup_opt "in"                       as_bool
+let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_indent                  ()      = lookup_opt "indent"                   as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
@@ -445,7 +447,12 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "in",
         ZeroArgs (fun () -> Bool true),
-        "Interactive mode; reads input from stdin");
+        "Legacy interactive mode; reads input from stdin");
+
+       ( noshort,
+        "ide",
+        ZeroArgs (fun () -> Bool true),
+        "JSON-based interactive mode for IDEs");
 
        ( noshort,
         "include",
@@ -928,12 +935,14 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let inline_arith                 () = get_inline_arith                ()
-let interactive                  () = get_in                          ()
+let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
+let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()

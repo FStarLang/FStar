@@ -1,0 +1,10 @@
+{"features": ["autocomplete", "describe-protocol", "exit", "lookup", "lookup/documentation", "pop", "push"], "kind": "protocol-info", "version": 1}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "success"}
+{"kind": "response", "query-id": "3", "response": null, "status": "success"}
+{"kind": "response", "query-id": "4", "response": null, "status": "success"}
+{"kind": "response", "query-id": "5", "response": [], "status": "success"}
+{"kind": "response", "query-id": "6", "response": [], "status": "success"}
+{"kind": "response", "query-id": "7", "response": null, "status": "success"}
+{"kind": "response", "query-id": "8", "response": null, "status": "success"}
+{"kind": "response", "query-id": "9", "response": [], "status": "success"}
