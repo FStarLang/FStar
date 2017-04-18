@@ -135,33 +135,50 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
 
 let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
 
+let lookup_eff_action (g:env) (x:either<fv,lident>) : ty_or_exp_b =
+    // effect actions are extracted as projectors in a namespace named after the effect
+    // check if that's the case and if so lookup in this namespace
+    let name, range = match x with
+        | Inl fv -> fv.fv_name.v, Range.string_of_range fv.fv_name.p
+        | Inr lid -> lid, Range.string_of_range Range.dummyRange in
+    let fv_not_found = (BU.format2 "(%s) free Variable %s not found\n" range (Print.lid_to_string name)) in
+    let eff_action =
+        // assumes that if the action exists, its name is in the format
+        // __proj__[eff]__item__[action]
+        let bits = String.split ['_'] name.ident.idText
+                   |> List.filter (fun x -> not (x = "")) in
+        if (List.length bits = 4) then begin
+            if (List.hd bits = "proj") && (List.nth bits 2 = "item") then
+                (Some <| List.nth bits 1)
+            else None end
+        else None in
+    let eff_name = match eff_action with
+        | Some n -> n
+        | None -> failwith fv_not_found in
+    let constructed_name = String.concat "." <| (List.map (fun x -> x.idText) name.ns)@[eff_name; name.ident.idText] in
+
+    let x = BU.find_map g.gamma (function
+        | Fv (fv', t) when fv'.fv_name.v.str = constructed_name -> Some t
+        | _ -> None) in
+    match x with
+        | None -> failwith fv_not_found
+        | Some y -> y
+
 let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
     let x = BU.find_map g.gamma (function
         | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
-        | None ->
-            List.iter (function
-              | Fv (fv', t) ->
-                  BU.print2 "%s = %s\n" lid.ident.idText fv'.fv_name.v.str
-              | _ -> () ) g.gamma;
-            failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
+        | None -> lookup_eff_action g (Inr lid)
         | Some y -> y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
 let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
     let x = BU.find_map g.gamma (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
-        // amazingly hacky hack
-        | Fv (fv', t) when fv'.fv_name.v.str = "FStar.DM4F.Exceptions.EXN.__proj__EXN__item__raise" -> Some t
         | _ -> None) in
     match x with
-        | None ->
-            List.iter (function
-              | Fv (fv', t) ->
-                  BU.print2 "%s = %s\n" fv.fv_name.v.str fv'.fv_name.v.str
-              | _ -> () ) g.gamma;
-            failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
+        | None -> lookup_eff_action g (Inl fv)
         | Some y -> y
 
 let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =

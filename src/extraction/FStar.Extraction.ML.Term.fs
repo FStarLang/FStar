@@ -871,9 +871,10 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             match copt with
             | Some c ->
                 if TcEnv.is_reifiable g.tcenv c
-                then begin BU.print1 "Got here %s\n" ""; TcUtil.reify_body g.tcenv body end
+                then TcUtil.reify_body g.tcenv body
                 else body
             | None -> body in
+        // let body2 = TcUtil.remove_reify body in
 
           let ml_bs, env = binders_as_ml_binders g bs in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -883,6 +884,14 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
         | Tm_app({n=Tm_constant Const_reify}, [t]) ->
+        //   let t0 = TcUtil.reify_body g.tcenv (fst t) in
+        //   let t0 = TcUtil.remove_reify t0 in
+        //   let t0 = match (fst t).n with
+        //     | Tm_app(head, args) -> mk (Tm_app(head, args@[(C.exp_unit, None)])) None head.pos
+        //     | _ -> fst t in
+        //   BU.print2 "Before removal %s \nafter removal %s\n"
+        //     (Print.term_to_string (fst t))
+        //     (Print.term_to_string t0) ;
           let ml, e_tag, mlty = term_as_mlexpr' g (fst t) in
           ml, E_PURE, mlty
 

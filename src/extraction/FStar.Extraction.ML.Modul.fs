@@ -36,6 +36,7 @@ module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module Util = FStar.Extraction.ML.Util
+module Env = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -231,44 +232,68 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             g, MLM_Let(NonRec, [], [lb])
           in
 
-          let rec extract_fv tm = match (SS.compress tm).n with
+          let rec extract_fv tm =
+            BU.print1 "extract_fv term: %s\n" (Print.term_to_string tm);
+            match (SS.compress tm).n with
             | Tm_uinst (tm, _) -> extract_fv tm
+            | Tm_app (h, args) ->
+                // none of this stuff works, maybe I need to make a MLE_Fun?
+                // let exp, tysc = extract_fv h in
+                BU.print1 "Just got here %s\n" ""; //expected fully instantiated variable for term_as_mlexpr
+                let exp, _, ty = Term.term_as_mlexpr g tm in
+                with_ty MLTY_Top <| exp.expr, ([], ty)
+                // exp, ([], ty)
             | Tm_fvar fv ->
               let mlp = mlpath_of_lident fv.fv_name.v in
               let _, _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
               with_ty MLTY_Top <| MLE_Name mlp, tysc
             | _ -> failwith "Not an fv" in
 
-          let rec extract_fv2 tm = match (SS.compress tm).n with
-            | Tm_uinst (tm, _) -> extract_fv2 tm
-            | Tm_fvar fv ->
-              let mlp = mlpath_of_lident fv.fv_name.v in
-              let a, b, tysc, d = BU.right <| UEnv.lookup_fv g fv in
-              b, tysc
-            | _ -> failwith "Not an fv" in
-
           let extract_action g (a:S.action) =
             assert (match a.action_params with | [] -> true | _ -> false);
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+              BU.print2 "Action type %s and term %s\n"
+                (Print.term_to_string a.action_typ)
+                (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
-            let lbname = Inl ({ppname=a_lid.ident; index=0; sort=a.action_defn}) in
+            let lbname = Inl (S.new_bv (Some a.action_defn.pos) C.exp_unit) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
-            let action_lb = mk (Tm_let(lbs, a.action_defn)) None FStar.Range.dummyRange in
+            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
+            // if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+            //   BU.print1 "Action let: %s\n" (Code.string_of_mlexpr a_nm a_let);
             let exp, tysc = match a_let.expr with
-            | MLE_Let((_, _, [mllb]), e) ->
+            | MLE_Let((_, _, [mllb]), _) ->
                 (match mllb.mllb_tysc with
-                 | Some(tysc) -> e, tysc
+                 | Some(tysc) -> mllb.mllb_def, tysc
                  | None -> failwith "No type scheme") in
-
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then begin
+              // BU.print1 "Action term: %s\n" (Code.string_of_mlexpr a_nm exp);
+              // BU.print1 "Action type: %s\n" (Code.string_of_mlty a_nm (exp.mlty));
+              BU.print1 "Action typescheme: %s\n" (Code.string_of_mlty a_nm (snd tysc));
+              List.iter (fun x -> BU.print1 "Action type binders: %s\n" (fst x)) (fst tysc) end;
             extend_env g a_lid a_nm exp tysc in
 
           let g, return_decl =
-            let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
+            BU.print1 "Extracting return%s" "\n";
             let return_nm, return_lid = monad_op_name ed "return" in
+            // let lbname = Inl (S.new_bv None (snd ed.return_repr)) in
+            // let lb = mk_lb (lbname, (fst ed.return_repr), C.effect_Tot_lid, (snd ed.return_repr), C.exp_unit) in
+            // let lbs = (false, [lb]) in
+            // let return_lb = mk (Tm_let(lbs, C.exp_unit)) None FStar.Range.dummyRange in
+            // let r_let, _, r_ty = Term.term_as_mlexpr g return_lb in
+            // let exp, tysc = match r_let.expr with
+            // | MLE_Let((_, _, [mllb]), _) ->
+            //     (match mllb.mllb_tysc with
+            //      | Some(tysc) -> mllb.mllb_def, tysc
+            //      | None -> failwith "No type scheme") in
+            // extend_env g return_lid return_nm exp tysc in
+            let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
             extend_env g return_lid return_nm return_tm ty_sc in
 
           let g, bind_decl =
+            BU.print1 "Extracting bind%s" "\n";
             let bind_nm, bind_lid = monad_op_name ed "bind" in
             let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
             extend_env g bind_lid bind_nm bind_tm ty_sc in
