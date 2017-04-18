@@ -125,16 +125,24 @@ type req (msg:message) =
 val k: k:key{key_prop k == req}
 let k = keygen req
 
+let recall_all () :ST unit (requires (fun h0      -> True))
+                           (ensures  (fun h0 _ h1 -> h0 == h1     /\
+			              (let open FStar.Heap in
+			               h0 `contains` MAC.log    /\
+				       h0 `contains` msg_buffer /\
+				       h0 `contains` log_prot   /\
+				       h0 `contains` server_cnt)))
+  = ST.recall (MAC.log);
+    ST.recall (msg_buffer);
+    ST.recall (log_prot);
+    ST.recall (server_cnt)
 
 val client : uint32 -> ST (option string)
  			  (requires (fun h -> invariant h /\
 				     repr_bytes ((sel h client_cnt) + 1) <= 2 ))
  			  (ensures (fun h x h' -> invariant h'))
 let client (s: uint32) =
-  ST.recall (MAC.log);
-  ST.recall (msg_buffer);
-  ST.recall (log_prot);
-  ST.recall (server_cnt);
+  recall_all ();
   let c = next_cnt () in
   assume (signal s c); //a protocol event
   let t = CntFormat.signal s c in
@@ -148,10 +156,7 @@ val server : unit -> ST (option string)
 			                                                        (Set.union (Set.singleton (addr_of server_cnt))
 								                           (Set.singleton (addr_of msg_buffer)))) h h'))
 let server () =
-  ST.recall (MAC.log);
-  ST.recall (msg_buffer);
-  ST.recall (log_prot);
-  ST.recall (server_cnt);
+  recall_all ();
   let msg = recv () in (
     if length msg = signal_size + macsize then (
       let (t, m) = split msg signal_size  in

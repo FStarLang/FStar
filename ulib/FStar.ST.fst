@@ -44,7 +44,7 @@ assume val recall: #a:Type -> r:ref a -> STATE unit
 
 assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                            (fun h -> True)
-                                           (fun h0 r h1 -> (r, h1) = alloc h0 init true)
+                                           (fun h0 r h1 -> (r, h1) == alloc h0 init true)
 
 assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)

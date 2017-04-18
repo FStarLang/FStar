@@ -214,8 +214,15 @@ let lemma_free_mm_unused (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r
 let lemma_free_mm_contains (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
   :Lemma (requires True)
          (ensures  (let h1 = free_mm h0 r in
-	            (addr_of r' <> addr_of r /\ h0 `contains` r') ==> h1 `contains` r'))
+	            (addr_of r' <> addr_of r /\ h0 `contains` r') <==> h1 `contains` r'))
 	 [SMTPat ((free_mm h0 r) `contains` r')]
+  = ()
+
+let lemma_free_mm_unused_r (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
+  :Lemma (requires True)
+         (ensures  (let h1 = free_mm h0 r in
+	            (r' `unused_in` h0 ==> r' `unused_in` h1)))
+	 [SMTPat (r' `unused_in` (free_mm h0 r))]
   = ()
 
 let lemma_sel_same_addr (#a:Type) (h:heap) (r1:ref a) (r2:ref a)
@@ -237,6 +244,11 @@ let sel_upd2 (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b) (x:b)
 	 [SMTPat (sel (upd h r2 x) r1)]
   = ()
 
+let lemma_ref_injectivity
+  :(u:unit{forall (a:Type) (b:Type) (r1:ref a) (r2:ref b). a =!= b ==> ~ (eq3 r1 r2)})
+  = ()
+
+
 let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
   forall (a:Type0) (r:ref a). r `unused_in` h1 <==> r `unused_in` h2
 
@@ -252,7 +264,7 @@ let in_dom_emp (#a:Type) (r:ref a)
 	 [SMTPat (r `unused_in` emp)]
   = ()
 
-let upd_contains_a_well_typed (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+let upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
   :Lemma (requires True)
          (ensures  (((upd h r x) `contains` r) /\
 
@@ -263,6 +275,12 @@ let upd_contains_a_well_typed (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':r
 		       (addr_of r <> addr_of r')))  //or r'.addr <> r.addr
 		     ==> (upd h r x) `contains` r')))  //then updated heap contains_a_well_typed r'
          [SMTPat ((upd h r x) `contains` r')]
+  = ()
+
+let upd_unused (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+  :Lemma (requires True)
+         (ensures  ((addr_of r <> addr_of r' /\ r' `unused_in` h) <==> r' `unused_in` (upd h r x)))
+	 [SMTPat (r' `unused_in` (upd h r x))]
   = ()
 
 abstract let equal (h1:heap) (h2:heap) :Type0 =
