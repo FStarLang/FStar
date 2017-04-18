@@ -8,6 +8,9 @@ exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
 
+(* Raised when an empty fragment is parsed *)
+exception Empty_frag
+
 module BU = FStar.Util
 
 let diag r msg =
