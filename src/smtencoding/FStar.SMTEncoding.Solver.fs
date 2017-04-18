@@ -169,7 +169,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @suffix in
 
     let check (p:decl) =
-        let rlimit = Prims.op_Multiply (Options.z3_rlimit ()) 544656 in
+        let rlimit = Prims.op_Multiply (Options.z3_rlimit_factor ()) (Prims.op_Multiply (Options.z3_rlimit ()) 544656) in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), rlimit in
         let hint_opt = next_hint query_name query_index in
         let unsat_core, initial_config =
@@ -273,7 +273,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
                  then query_info "failed";
                  try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope in
 
-        if Option.isSome unsat_core then Z3.refresh();
+        if Option.isSome unsat_core
+        || Options.z3_refresh() then Z3.refresh();
         Z3.ask unsat_core
                all_labels
                (with_fuel [] p initial_config)

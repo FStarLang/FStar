@@ -10,9 +10,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Ex04e.Some",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ex04e.Some",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
+        "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
       0
     ],
@@ -22,7 +22,8 @@
       2,
       1,
       [
-        "@query", "binder_x_9548550b794ddfa02e075a01d7d0d9fd_1",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9548550b794ddfa02e075a01d7d0d9fd_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"

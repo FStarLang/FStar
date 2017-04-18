@@ -34,13 +34,13 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   let dsenv, env = uenv in
   let (intf, impl), dsenv, env, remaining =
     match remaining with
-        | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
-          (Some intf, impl), dsenv, env, remaining
-        | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
-          (None, intf_or_impl), dsenv, env, remaining
-        | [] -> failwith "Impossible"
+    | intf :: impl :: remaining when needs_interleaving intf impl ->
+      let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
+      (Some intf, impl), dsenv, env, remaining
+    | intf_or_impl :: remaining ->
+      let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
+      (None, intf_or_impl), dsenv, env, remaining
+    | [] -> failwith "Impossible"
   in
   (intf, impl), (dsenv, env), None, remaining
 
@@ -93,20 +93,20 @@ let commit_mark (dsenv, env) =
     let env = TcEnv.commit_mark env in
     dsenv, env
 
-let check_frag (dsenv, (env:TcEnv.env)) curmod text =
-    try
-        match tc_one_fragment curmod dsenv env text with
-            | Some (m, dsenv, env) ->
-                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
-            | _ -> None
-    with
-        | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(msg, r)];
-          None
+let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
+  try
+    match tc_one_fragment curmod dsenv env frag with
+    | Some (m, dsenv, env) ->
+          Some (m, (dsenv, env), FStar.Errors.get_err_count())
+    | _ -> None
+  with
+  | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Err.add_errors env [(msg, r)];
+    None
 
-        | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
-          None
+  | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+    None
 
 let report_fail () =
     FStar.Errors.report_all() |> ignore;
@@ -494,11 +494,11 @@ let rec go (line_col:(int*int))
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
-          = let dsenv, _ = env in 
+          = let dsenv, _ = env in
             let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
-            matches |> List.filter (fun (ns, id, _) -> 
-              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with 
+            matches |> List.filter (fun (ns, id, _) ->
+              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
               | None -> false
               | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
         in
@@ -568,10 +568,7 @@ let rec go (line_col:(int*int))
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-//          Util.print3 "got frag %s, %s, %s" frag.frag_text
-//            (Util.string_of_int frag.frag_line)
-//            (Util.string_of_int frag.frag_col);
-      let res = check_frag env_mark curmod frag in begin
+      let res = check_frag env_mark curmod (frag, false) in begin
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
@@ -596,8 +593,10 @@ let interactive_mode (filename:string): unit =
   let filenames, maybe_intf = deps_of_our_file filename in
   let env = tc_prims () in
   let stack, env, ts = tc_deps None [] env filenames [] in
-
-  let initial_mod, env = match maybe_intf with
+  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+  let initial_mod, env =
+    match maybe_intf with
     | Some intf ->
         // We found an interface: send it to the interactive mode as if it
         // were a regular chunk
@@ -606,7 +605,7 @@ let interactive_mode (filename:string): unit =
           frag_line = 0;
           frag_col = 0
         } in
-        begin match check_frag env None frag with
+        begin match check_frag env None (frag, true) with
         | Some (curmod, env, n_errs) ->
             if n_errs <> 0 then begin
               Util.print_warning (Util.format1
@@ -615,11 +614,15 @@ let interactive_mode (filename:string): unit =
               exit 1
             end;
             Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n";
+            let env =
+                fst env, {snd env with is_iface = false} in
             curmod, env
         | None ->
             Util.print_warning (Util.format1
               "Found the interface %s but could not parse it first!"
               intf);
+            report_fail();
+            Util.print_string "#done-nok\n";
             exit 1
         end
     | None ->

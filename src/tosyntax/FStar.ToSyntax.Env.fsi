@@ -102,7 +102,7 @@ val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
 val qualify: env -> ident -> lident
-
+val set_iface: env -> bool -> env
 val empty_env: unit -> env
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<(term*bool)>
@@ -127,6 +127,7 @@ val is_effect_name: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>
 val resolve_module_name: env:env -> lid:lident -> honor_ns:bool -> option<lident>
+val fail_if_qualified_by_curmodule: env -> lident -> unit
 val resolve_to_fully_qualified_name : env:env -> l:lident -> option<lident>
 
 val push_bv: env -> ident -> env * bv

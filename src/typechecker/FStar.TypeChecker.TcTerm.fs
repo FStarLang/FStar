@@ -113,6 +113,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
       else false //can't reason about effectful function definitions, so not worth returning this
 //    | Tm_type _ -> false
     | _ -> true in
+  (* if term, then lc is a trivial lazy computation (lcomp_of_comp) *)
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp (if not (should_return t)
                                 || not (Env.should_verify env)
@@ -134,6 +135,7 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
                 (Rel.guard_to_string env g) (Rel.guard_to_string env guard);
      let msg = if Rel.is_trivial g then None else (Some <| Err.subtyping_failed env t t') in
      let g = Rel.conj_guard g guard in
+     (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g in
   if debug env Options.Low
@@ -613,9 +615,9 @@ and tc_value env (e:term) : term
     e, S.mk_Total t |> U.lcomp_of_comp, (Rel.conj_guard g0 g1)
 
   | Tm_name x ->
-    let t, rng = 
-        if env.use_bv_sorts 
-        then x.sort, S.range_of_bv x 
+    let t, rng =
+        if env.use_bv_sorts
+        then x.sort, S.range_of_bv x
         else Env.lookup_bv env x in
     let x = S.set_range_of_bv ({x with sort=t}) rng in
     FStar.TypeChecker.Common.insert_bv x t;
@@ -662,11 +664,16 @@ and tc_value env (e:term) : term
     let bs, c = SS.open_comp bs c in
     let env0 = env in
     let env, _ = Env.clear_expected_typ env in
+    (* type checking the binders *)
     let bs, env, g, us = tc_binders env bs in
+    (* type checking the computation *)
     let c, uc, f = tc_comp env c in
     let e = {U.arrow bs c with pos=top.pos} in
+    (* checks the SMT pattern associated with this function is properly defined with regard to context *)
     check_smt_pat env e bs c;
+    (* taking the maximum of the universes of the computation and of all binders *)
     let u = S.U_max (uc::us) in
+    (* create a universe of level u *)
     let t = mk (Tm_type u) None top.pos in
     let g = Rel.conj_guard g (Rel.close_guard_univs us bs f) in
     value_check_expected_typ env0 e (Inl t) g
@@ -693,6 +700,7 @@ and tc_value env (e:term) : term
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_abs(bs, body, _) ->
+    (* in case we use type variables which are implicitly quantified, we add quantifiers here *)
     let bs = TcUtil.maybe_add_implicit_binders env bs in
     if Env.debug env Options.Low
     then BU.print1 "Abstraction is: %s\n" (Print.term_to_string ({top with n=Tm_abs(bs, body, None)}));
@@ -820,9 +828,14 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                                   S.range_of_bv hd))
                     | _ -> ()
                end;
+               (* since binders depend on previous ones, we accumulate a substitution *)
                let expected_t = SS.subst subst hd_expected.sort in
                let t, g = match (U.unmeta hd.sort).n with
                     | Tm_unknown -> expected_t, g
+                    (* in case we have an annotation on both implementation and declaration, we:
+                      * 1) type check the implementation type
+                      * 2) add an extra guard that the two types must be equal (use_eq will be used in Rel.teq
+                    *)
                     | _ ->
                       if Env.debug env Options.High then BU.print1 "Checking binder %s\n" (Print.bv_to_string hd);
                       let t, _, g1 = tc_tot_or_gtot_term env hd.sort in
@@ -858,6 +871,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     =
       match t0 with
       | None -> (* no expected type; just build a function type from the binders in the term *)
+          (* env.letrecs are the current letrecs we are checking *)
           let _ = match env.letrecs with
               | [] -> ()
               | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type"
@@ -875,6 +889,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           let t = SS.compress t in
           let rec as_function_typ norm t =
               match (SS.compress t).n with
+              (* we are type checking abs so all cases except arrow are required for definitional equality *)
               | Tm_uvar _
               | Tm_app({n=Tm_uvar _}, _) ->
                 (* expected a uvar; build a function type from the term and unify with it *)
@@ -952,7 +967,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           as_function_typ false t
     in
 
+    (* whether to try first to use unification for solving sub-typing constraints or only propagate to the SMT solver *)
     let use_eq = env.use_eq in
+    (* topt is the expected type of the expression obtained from the env *)
     let env, topt = Env.clear_expected_typ env in
 
     if Env.debug env Options.High
@@ -1252,8 +1269,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             aux false chead.res_typ
     in //end tc_args
 
-    let rec check_function_app norm tf =
-       match (U.unrefine tf).n with
+    let rec check_function_app tf =
+       match (unfold_whnf env tf).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
             let rec tc_args env args : (Syntax.args * list<(Range.range * lcomp)> * guard_t) = match args with
@@ -1295,12 +1312,16 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let head_info = head, chead, ghead, U.lcomp_of_comp c in
             tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
 
-        | _ ->
-            if not norm
-            then check_function_app true (unfold_whnf env tf)
-            else raise (Error(Err.expected_function_typ env tf, head.pos)) in
+        | Tm_refine (bv,_) ->
+            check_function_app bv.sort
 
-    check_function_app false (N.normalize [N.Beta;N.WHNF] env (U.unrefine thead))
+        | Tm_ascribed (t, _, _) ->
+            check_function_app t
+
+        | _ ->
+            raise (Error(Err.expected_function_typ env tf, head.pos)) in
+
+    check_function_app thead
 
 (******************************************************************************)
 (* SPECIAL CASE OF CHECKING APPLICATIONS:                                     *)
@@ -1689,10 +1710,16 @@ and check_top_level_let_rec env top =
     let env = instantiate_both env in
     match top.n with
         | Tm_let((true, lbs), e2) ->
+           (* replace bound variables in terms and of universes with new names (free variables) *)
 (*open*)   let lbs, e2 = SS.open_let_rec lbs e2 in
 
+           (* expected types for top level definitions are stored in the lbs and we therefore just
+            * remove previous, unrelated, expected type in env
+            * the expected type is defined within lbs
+            * *)
            let env0, topt = Env.clear_expected_typ env in
            let lbs, rec_env = build_let_rec_env true env0 lbs in
+           (* now we type check each let rec *)
            let lbs, g_lbs = check_let_recs rec_env lbs in
            let g_lbs = Rel.solve_deferred_constraints env g_lbs |> Rel.resolve_implicits in
 
@@ -1796,9 +1823,13 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
 
 and check_let_recs env lbs =
     let lbs, gs = lbs |> List.map (fun lb ->
+        (* here we set the expected type in the environment to the annotated expected type and use it in order
+         * to type check the body of the lb
+         * *)
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (U.is_total_lcomp c)
         then raise (Error ("Expected let rec to be a Tot term; got effect GTot", e.pos));
+        (* replace the body lb.lbdef with the type checked body e with elaboration on monadic application *)
         let lb = U.mk_letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
         lb, g) |> List.unzip in
     let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in

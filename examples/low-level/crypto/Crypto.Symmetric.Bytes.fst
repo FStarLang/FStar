@@ -436,7 +436,7 @@ let random_bytes len =
   let buf = Buffer.create 0uy len in
   let m1 = ST.get () in
   lemma_reveal_modifies_0 m0 m1;
-  Bytes.random (v len) buf;
+  random (v len) buf;
   let m2 = ST.get () in
   lemma_reveal_modifies_1 buf m1 m2;
   let b = load_bytes len buf in

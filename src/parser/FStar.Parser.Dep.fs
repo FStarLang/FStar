@@ -103,8 +103,6 @@ let lowercase_module_name f =
     (if any). *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.include_path () in
-  //try to convert the cygwin paths to windows paths
-  let include_directories = List.map FStar.Common.try_convert_file_name_to_mixed include_directories in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
@@ -197,7 +195,7 @@ let collect_one
 =
   let deps = BU.mk_ref [] in
   let add_dep d =
-    if not (List.existsb (fun d' -> d' = d) !deps) then
+    if not (List.existsML (fun d' -> d' = d) !deps) then
       deps := d :: !deps
   in
   let working_map = smap_copy original_map in
@@ -250,7 +248,7 @@ let collect_one
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
   let auto_open =
-    if basename filename = "prims.fst" then
+    if basename filename = Options.prims_basename () then
       []
     else
       [ Const.fstar_ns_lid; Const.prims_lid ]
@@ -556,8 +554,8 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - M.fsti and M.fst otherwise
    * - When starting from a command-line argument, visiting M (because it is
    *   passed from the command-line) generates a dependency on:
-   *   - M.fsti only if the argument was M.fsti
-   *   - both M.fsti and M.fst if the argument was M.fst
+   *   - M.fsti when **only** M.fsti is given as argument
+   *   - both M.fsti and M.fst otherwise (including when both M.fsti and M.fst are passed)
    *)
   let partial_discovery =
     not (Options.verify_all () || Options.extract_all ())
@@ -583,10 +581,12 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   in
   let discover_command_line_argument f =
     let m = lowercase_module_name f in
-    if is_interface f then
-      discover_one true true m
-    else
-      discover_one true false m
+    let interface_only = is_interface f &&
+      not (List.existsML (fun f ->
+        lowercase_module_name f = m && is_implementation f)
+      filenames)
+    in
+    discover_one true interface_only m
   in
   List.iter discover_command_line_argument filenames;
 

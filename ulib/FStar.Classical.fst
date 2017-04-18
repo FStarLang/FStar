@@ -4,6 +4,18 @@ open FStar.Squash
 val give_witness: #a:Type -> a -> Lemma (ensures a)
 let give_witness #a x = return_squash x
 
+val get_squashed (#b a:Type) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
+let get_squashed #b a =
+  let p = get_proof a in
+  join_squash #b p
+
+val get_equality (#t:Type) (a b:t) : Pure (a == b) (requires (a == b)) (ensures (fun _ -> True))
+let get_equality #t a b = get_squashed #(equals a b) (a == b)
+
+val get_forall (#a:Type) (p:a -> GTot Type0) : Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))
+let get_forall #a p =
+  get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x)
+
 val impl_to_arrow : #a:Type0 -> #b:Type0 -> impl:(a ==> b) -> sx:squash a -> GTot (squash b)
 let impl_to_arrow #a #b impl sx =
   bind_squash #(a -> GTot b) impl (fun f ->

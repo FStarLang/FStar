@@ -286,6 +286,7 @@ let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
 let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
+let smap_size (m:'value smap) = BatHashtbl.length m
 
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)

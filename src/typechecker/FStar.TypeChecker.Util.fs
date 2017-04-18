@@ -1453,6 +1453,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
+        && (not (Options.interactive()))
         then err "definitions cannot be assumed or marked with equality qualifiers"
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->

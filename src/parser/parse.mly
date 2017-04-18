@@ -1,33 +1,6 @@
 %{
 (*
- Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
-   4 s/r conflicts on BAR
-      function | P -> match with | Q -> _ | R -> _
-      function | P -> function ...  (x 2)
-      function | P -> try e with | ...
-
-   1 s/r conflict on SEMICOLON
-       fun x -> e1 ; e2
-     is parsed as
-        (fun x -> e1; e2)
-     rather than
-        (fun x -> e1); e2
-
-   2 s/r conflict on DOT
-      A.B ^ .C  (x 2)
-
-   1 s/r conflict on LBRACE
-
-      Consider:
-          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
-
-      This is parsed as:
-        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
-      rather than:
-        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
-
-      Analogous ambiguities with -> and * as well.
-
+ We are expected to have only 6 shift-reduce conflicts.
  A lot (142) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -142,12 +115,12 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) d=decl decls=list(decl) main_opt=mainDecl? EOF
+  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) main_opt=mainDecl? EOF
       {
         let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) d decls
+        in as_frag is_light (rhs parseState 1) decls
       }
 
 (* TODO : let's try to remove that *)
@@ -205,7 +178,10 @@ rawDecl:
       { Tycon(true, [(TyconAbbrev(uid, tparams, None, t), None)]) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND, letbinding)
       {
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings lbs r in
+        if q <> Rec && List.length lbs <> 1
+        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
         TopLevelLet(q, lbs)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
@@ -293,8 +269,8 @@ effectDefinition:
     { DefineEffect(lid, bs, typ, eds) }
 
 effectDecl:
-  | lid=lident EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] }
+  | lid=lident action_params=binders EQUALS t=simpleTerm
+    { mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -409,7 +385,7 @@ atomicPattern:
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rhs2 parseState 1 3) }
-  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, separated_pair(qlident, EQUALS, tuplePattern)) RBRACE
+  | LBRACE record_pat=separated_nonempty_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
@@ -419,12 +395,20 @@ atomicPattern:
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern PatWild (rhs parseState 1) }
+  | HASH UNDERSCORE
+      { mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
       { mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
+
+fieldPattern:
+  | p = separated_pair(qlident, EQUALS, tuplePattern)
+      { p }
+  | lid=qlident
+      { lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do NOT allow _ in multibinder () since it creates reduce/reduce conflicts when  *)
@@ -526,7 +510,7 @@ term:
 
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=typ tactic_opt=option(BY tactic=typ {tactic})
+  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=typ {tactic})
       { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
@@ -736,6 +720,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
+  | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)
@@ -953,6 +938,12 @@ atomicUniverse:
   | op=OPINFIX4
   | op=operatorInfix0ad12
      { op }
+  | op=PIPE_RIGHT
+     { "|>" }
+  | op=COLON_EQUALS
+     { ":=" }
+  | op=COLON_COLON
+     { "::" }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:

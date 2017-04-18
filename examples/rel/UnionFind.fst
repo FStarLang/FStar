@@ -149,7 +149,9 @@ let lemma_merge_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{l
 		     (//let d_2 = if d_1 >= d_2 then d_1 + 1 else d_2 in
 		      sel h1 (index uf r_2) == (r_2, d_2, elift2 union s_1 s_2)) /\
 		     (forall (j:id n). (j <> r_1 /\ j <> r_2) ==> sel h (index uf j) == sel h1 (index uf j)))))
-  = ()
+  = let r_1, _ = reify (find uf i_1 h) h in
+    let r_2, _ = reify (find uf i_2 h) h in
+    ()
 
 let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:heap{live uf h /\ well_formed uf h})
   :Lemma (requires True)
@@ -166,7 +168,7 @@ let lemma_merge_opt_helper (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n) (h:he
   = ()
 #reset-options
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40"
 let lemma_merge_height_independence (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   (h_1:heap{live uf h_1 /\ well_formed uf h_1})
   (h_2:heap{live uf h_2 /\ well_formed uf h_2})
