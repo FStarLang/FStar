@@ -16,10 +16,11 @@
 #light "off"
 module FStar.ToSyntax.Interleave
 open FStar.All
-module E = FStar.ToSyntax.Env
-module AST = FStar.Parser.AST
-module I = FStar.Ident
+open FStar.All
+open FStar.Ident
+open FStar.Parser.AST
+open FStar.ToSyntax.Env
 
-val initialize_interface: I.lid -> list<AST.decl> -> E.env -> E.env
-val prefix_with_interface_decls: E.env -> AST.decl -> E.env * list<AST.decl>
-val interleave_module: E.env -> AST.modul -> E.env * AST.modul
+val initialize_interface: lident -> list<decl> -> FStar.ToSyntax.Env.env -> FStar.ToSyntax.Env.env
+val prefix_with_interface_decls: FStar.ToSyntax.Env.env -> decl -> FStar.ToSyntax.Env.env * list<decl>
+val interleave_module: FStar.ToSyntax.Env.env -> modul -> FStar.ToSyntax.Env.env * modul

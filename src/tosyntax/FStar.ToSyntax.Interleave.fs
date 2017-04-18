@@ -241,28 +241,28 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : E.env =
         if Options.ml_ish()
         then ml_mode_check_initial_interface l
         else check_initial_interface l in
-    match Env.iface_decls env mname with
+    match E.iface_decls env mname with
     | Some _ ->
       raise (Error(Util.format1 "Interface %s has already been processed"
                                 (Ident.string_of_lid mname),
                    Ident.range_of_lid mname))
     | None ->
-      Env.set_iface_decls env mname decls
+      E.set_iface_decls env mname decls
 
 let prefix_with_interface_decls (env:E.env) (impl:decl) : E.env * list<decl> =
-    match Env.iface_decls env (Env.current_module env) with
+    match E.iface_decls env (E.current_module env) with
     | None ->
       env, [impl]
     | Some iface ->
       let iface, impl = prefix_one_decl iface impl in
-      let env = Env.set_iface_decls env (Env.current_module env) iface in
+      let env = E.set_iface_decls env (E.current_module env) iface in
       env, impl
 
 let interleave_module (env:E.env) (a:modul) : E.env * modul =
     match a with
     | Interface _ -> env, a
     | Module(l, impls) -> begin
-      match Env.iface_decls env l with
+      match E.iface_decls env l with
       | None -> env, a
       | Some iface ->
         let iface, impls =
@@ -281,7 +281,7 @@ let interleave_module (env:E.env) (a:modul) : E.env * modul =
                                     err,
                        Ident.range_of_lid l))
         | _ ->
-          let env = Env.set_iface_decls env l [] in
+          let env = E.set_iface_decls env l [] in
           let a = Module(l, impls) in
           env, a
       end

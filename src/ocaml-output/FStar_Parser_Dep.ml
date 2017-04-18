@@ -264,8 +264,9 @@ let collect_one:
                     if uu____506
                     then
                       let uu____510 = string_of_lid lid false in
-                      FStar_Util.print1_warning
-                        "Warning: unbound module reference %s\n" uu____510
+                      let rr =  FStar_Range.string_of_range (FStar_Ident.range_of_lid lid) in
+                      FStar_Util.print2_warning
+                        "%s (Warning): unbound module reference %s\n" rr uu____510
                     else () in
               let uu____513 = lowercase_join_longident lid false in
               try_key uu____513 in
