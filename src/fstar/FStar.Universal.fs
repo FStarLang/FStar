@@ -37,6 +37,7 @@ module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
+module BU      = FStar.Util
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -56,7 +57,7 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
         | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
           when Ident.lid_equals lid1 lid2 ->
           let env = FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 env in
-          let env, ast = FStar.ToSyntax.Interleave.interleave_module env (List.hd ast) in
+          let env, ast = FStar.ToSyntax.Interleave.interleave_module env (List.hd ast) true in
           env, [ast]
         | _ ->
             raise (Err ("mismatch between pre-module and module\n"))
@@ -95,10 +96,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
         it type-checks a fragment, can actually parse an entire module.
         Actually, this is an abuse, and just means that we're type-checking the
         first chunk. *)
-      let ast_modul =
-        if is_interface_dependence
-        then FStar.ToSyntax.ToSyntax.as_interface ast_modul
-        else ast_modul in
+      let ds_env, ast_modul = FStar.ToSyntax.Interleave.interleave_module dsenv ast_modul false in
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let dsenv = if is_interface_dependence then FStar.ToSyntax.Env.set_iface dsenv false else dsenv in
       let env = match curmod with
@@ -141,7 +139,7 @@ let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.Typ
     | Inl (Inl [FStar.Parser.AST.Interface(l, decls, _)], _) ->
       FStar.ToSyntax.Interleave.initialize_interface l decls dsenv, env
     | Inl _ ->
-      raise (FStar.Errors.Err(Util.format1 "Unexpected result from parsing %s; expected a single interface"
+      raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
                                interface_file_name))
     | Inr (err, rng) ->
       raise (FStar.Errors.Error(err, rng))

@@ -23,4 +23,4 @@ open FStar.ToSyntax.Env
 
 val initialize_interface: lident -> list<decl> -> FStar.ToSyntax.Env.env -> FStar.ToSyntax.Env.env
 val prefix_with_interface_decls: FStar.ToSyntax.Env.env -> decl -> FStar.ToSyntax.Env.env * list<decl>
-val interleave_module: FStar.ToSyntax.Env.env -> modul -> FStar.ToSyntax.Env.env * modul
+val interleave_module: FStar.ToSyntax.Env.env -> modul -> bool -> FStar.ToSyntax.Env.env * modul

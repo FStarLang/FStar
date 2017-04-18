@@ -349,8 +349,8 @@ type token = (FStar_Char.char,Prims.string) FStar_Util.either
 type associativity_level = (associativity* token Prims.list)
 let token_to_string:
   (FStar_BaseTypes.char,Prims.string) FStar_Util.either -> Prims.string =
-  fun uu___128_577  ->
-    match uu___128_577 with
+  fun uu___124_577  ->
+    match uu___124_577 with
     | FStar_Util.Inl c -> Prims.strcat (FStar_Util.string_of_char c) ".*"
     | FStar_Util.Inr s -> s
 let matches_token:
@@ -358,8 +358,8 @@ let matches_token:
     (FStar_Char.char,Prims.string) FStar_Util.either -> Prims.bool
   =
   fun s  ->
-    fun uu___129_589  ->
-      match uu___129_589 with
+    fun uu___125_589  ->
+      match uu___125_589 with
       | FStar_Util.Inl c ->
           let uu____593 = FStar_String.get s (Prims.parse_int "0") in
           uu____593 = c
@@ -405,8 +405,8 @@ let level_table:
   ((Prims.int* Prims.int* Prims.int)* (FStar_Char.char,Prims.string)
     FStar_Util.either Prims.list) Prims.list
   =
-  let levels_from_associativity l uu___130_947 =
-    match uu___130_947 with
+  let levels_from_associativity l uu___126_947 =
+    match uu___126_947 with
     | Left  -> (l, l, (l - (Prims.parse_int "1")))
     | Right  -> ((l - (Prims.parse_int "1")), l, l)
     | NonAssoc  -> (l, l, l) in
@@ -801,8 +801,8 @@ and p_rawDecl: FStar_Parser_AST.decl -> FStar_Pprint.document =
         failwith
           "Effect abbreviation is expected to be defined by an abbreviation"
 and p_pragma: FStar_Parser_AST.pragma -> FStar_Pprint.document =
-  fun uu___131_2009  ->
-    match uu___131_2009 with
+  fun uu___127_2009  ->
+    match uu___127_2009 with
     | FStar_Parser_AST.SetOptions s ->
         let uu____2011 = str "#set-options" in
         let uu____2012 =
@@ -834,8 +834,8 @@ and p_fsdocTypeDeclPairs:
         let uu____2036 = p_typeDecl typedecl in
         FStar_Pprint.op_Hat_Hat uu____2035 uu____2036
 and p_typeDecl: FStar_Parser_AST.tycon -> FStar_Pprint.document =
-  fun uu___132_2037  ->
-    match uu___132_2037 with
+  fun uu___128_2037  ->
+    match uu___128_2037 with
     | FStar_Parser_AST.TyconAbstract (lid,bs,typ_opt) ->
         let empty' uu____2048 = FStar_Pprint.empty in
         p_typeDeclPrefix lid bs typ_opt empty'
@@ -1014,8 +1014,8 @@ and p_letbinding:
                    FStar_Pprint.group uu____2304) in
         let uu____2307 = p_term e in prefix2 pat_doc uu____2307
 and p_newEffect: FStar_Parser_AST.effect_decl -> FStar_Pprint.document =
-  fun uu___133_2308  ->
-    match uu___133_2308 with
+  fun uu___129_2308  ->
+    match uu___129_2308 with
     | FStar_Parser_AST.RedefineEffect (lid,bs,t) ->
         p_effectRedefinition lid bs t
     | FStar_Parser_AST.DefineEffect (lid,bs,t,eff_decls) ->
@@ -1115,8 +1115,8 @@ and p_subEffect: FStar_Parser_AST.lift -> FStar_Pprint.document =
       FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____2419 in
     FStar_Pprint.op_Hat_Hat uu____2412 uu____2418
 and p_qualifier: FStar_Parser_AST.qualifier -> FStar_Pprint.document =
-  fun uu___134_2420  ->
-    match uu___134_2420 with
+  fun uu___130_2420  ->
+    match uu___130_2420 with
     | FStar_Parser_AST.Private  -> str "private"
     | FStar_Parser_AST.Abstract  -> str "abstract"
     | FStar_Parser_AST.Noeq  -> str "noeq"
@@ -1141,8 +1141,8 @@ and p_qualifiers: FStar_Parser_AST.qualifiers -> FStar_Pprint.document =
     let uu____2422 = FStar_Pprint.separate_map break1 p_qualifier qs in
     FStar_Pprint.group uu____2422
 and p_letqualifier: FStar_Parser_AST.let_qualifier -> FStar_Pprint.document =
-  fun uu___135_2423  ->
-    match uu___135_2423 with
+  fun uu___131_2423  ->
+    match uu___131_2423 with
     | FStar_Parser_AST.Rec  ->
         let uu____2424 = str "rec" in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____2424
@@ -1151,8 +1151,8 @@ and p_letqualifier: FStar_Parser_AST.let_qualifier -> FStar_Pprint.document =
         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____2425
     | FStar_Parser_AST.NoLetQualifier  -> FStar_Pprint.empty
 and p_aqual: FStar_Parser_AST.arg_qualifier -> FStar_Pprint.document =
-  fun uu___136_2426  ->
-    match uu___136_2426 with
+  fun uu___132_2426  ->
+    match uu___132_2426 with
     | FStar_Parser_AST.Implicit  -> str "#"
     | FStar_Parser_AST.Equality  -> str "$"
 and p_disjunctivePattern: FStar_Parser_AST.pattern -> FStar_Pprint.document =
@@ -1670,8 +1670,8 @@ and p_quantifier: FStar_Parser_AST.term -> FStar_Pprint.document =
         failwith "Imposible : p_quantifier called on a non-quantifier term"
 and p_trigger:
   FStar_Parser_AST.term Prims.list Prims.list -> FStar_Pprint.document =
-  fun uu___137_2892  ->
-    match uu___137_2892 with
+  fun uu___133_2892  ->
+    match uu___133_2892 with
     | [] -> FStar_Pprint.empty
     | pats ->
         let uu____2899 =
@@ -1762,8 +1762,8 @@ and p_patternBranch:
         FStar_Pprint.group uu____2970
 and p_maybeWhen: FStar_Parser_AST.term Prims.option -> FStar_Pprint.document
   =
-  fun uu___138_2980  ->
-    match uu___138_2980 with
+  fun uu___134_2980  ->
+    match uu___134_2980 with
     | None  -> FStar_Pprint.empty
     | Some e ->
         let uu____2983 = str "when" in
@@ -2325,8 +2325,8 @@ and p_projectionLHS: FStar_Parser_AST.term -> FStar_Pprint.document =
                                 |FStar_Parser_AST.Attributes _
         -> let uu____3605 = p_term e in soft_parens_with_nesting uu____3605
 and p_constant: FStar_Const.sconst -> FStar_Pprint.document =
-  fun uu___141_3606  ->
-    match uu___141_3606 with
+  fun uu___137_3606  ->
+    match uu___137_3606 with
     | FStar_Const.Const_effect  -> str "Effect"
     | FStar_Const.Const_unit  -> str "()"
     | FStar_Const.Const_bool b -> FStar_Pprint.doc_of_bool b
@@ -2344,12 +2344,12 @@ and p_constant: FStar_Const.sconst -> FStar_Pprint.document =
         let uu____3622 = str "B" in
         FStar_Pprint.op_Hat_Hat uu____3620 uu____3622
     | FStar_Const.Const_int (repr,sign_width_opt) ->
-        let signedness uu___139_3634 =
-          match uu___139_3634 with
+        let signedness uu___135_3634 =
+          match uu___135_3634 with
           | FStar_Const.Unsigned  -> str "u"
           | FStar_Const.Signed  -> FStar_Pprint.empty in
-        let width uu___140_3638 =
-          match uu___140_3638 with
+        let width uu___136_3638 =
+          match uu___136_3638 with
           | FStar_Const.Int8  -> str "y"
           | FStar_Const.Int16  -> str "s"
           | FStar_Const.Int32  -> str "l"

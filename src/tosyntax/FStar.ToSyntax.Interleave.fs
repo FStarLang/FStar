@@ -258,7 +258,7 @@ let prefix_with_interface_decls (env:E.env) (impl:decl) : E.env * list<decl> =
       let env = E.set_iface_decls env (E.current_module env) iface in
       env, impl
 
-let interleave_module (env:E.env) (a:modul) : E.env * modul =
+let interleave_module (env:E.env) (a:modul) (expect_complete_modul:bool) : E.env * modul =
     match a with
     | Interface _ -> env, a
     | Module(l, impls) -> begin
@@ -273,16 +273,16 @@ let interleave_module (env:E.env) (a:modul) : E.env * modul =
                 (iface, [])
                 impls
         in
+        let env = E.set_iface_decls env l iface in
+        let a = Module(l, impls) in
         match iface with
-        | _::_ ->
+        | _::_ when expect_complete_modul ->
           let err = List.map FStar.Parser.AST.decl_to_string iface |> String.concat "\n\t" in
           raise (Error(Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
                                     (Ident.string_of_lid l)
                                     err,
                        Ident.range_of_lid l))
         | _ ->
-          let env = E.set_iface_decls env l [] in
-          let a = Module(l, impls) in
           env, a
       end
 
