@@ -700,40 +700,18 @@ let interactive_mode' (filename:string): unit =
   let stack, env, ts = tc_deps None [] env filenames [] in
   let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
-  let initial_mod, env =
+  let env =
     match maybe_intf with
     | Some intf ->
-        // We found an interface: send it to the interactive mode as if it
-        // were a regular chunk
-        let frag = {
-          frag_text = file_get_contents intf;
-          frag_line = 0;
-          frag_col = 0
-        } in
-        begin match check_frag env None (frag, true) with
-        | Some (curmod, env, n_errs) ->
-            if n_errs <> 0 then begin
-              Util.print_warning (Util.format1
-                "Found the interface %s but it has errors!"
-                intf);
-              failwith "Failed to typecheck interface"
-            end;
-            Util.print_string "Reminder: fst+fsti in interactive mode is unsound.\n";
-            let env =
-                fst env, {snd env with is_iface = false} in
-            curmod, env
-        | None ->
-            Util.print_warning (Util.format1
-              "Found the interface %s but could not parse it first!"
-              intf);
-            failwith "Failed to parse interface"
-        end
+        // We found an interface: record its contents in the desugaring environment
+        // to be interleaved with the module implementation on-demand
+        FStar.Universal.load_interface_decls env intf
     | None ->
-        None, env
+        env
   in
 
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
-                  repl_stack = stack; repl_curmod = initial_mod;
+                  repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
 
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
