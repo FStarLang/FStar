@@ -10,9 +10,12 @@ fi
 set -e
 set -o pipefail
 
+BUILD_DIR=$(pwd)
 if [[ -f ~/.bash_profile ]]; then
+echo "+++ Run source .bash_profile ++"
   source ~/.bash_profile
 fi
+cd "$BUILD_DIR"
 
 # Constants for showing color in output window
 RED='\033[0;31m'
@@ -56,8 +59,9 @@ MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 MINOR_ZIP_FILE=fstar_$TIME_STAMP$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
 echo "----- Copy Original Minor Zip File ---"
+echo "+++ " $MAJOR_ZIP_FILE $MINOR_ZIP_FILE  
   cp $MAJOR_ZIP_FILE $MINOR_ZIP_FILE
-echo "----- Unzip Zip File ---"  
+echo "----- Unzip Zip File:"$MAJOR_ZIP_FILE  
   unzip -o $MAJOR_ZIP_FILE
 fi
 
@@ -69,8 +73,9 @@ MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
 echo "+++ Minor tar File:"$MINOR_TAR_FILE
 if [[ -f $MAJOR_TAR_FILE ]]; then
 echo "----- Copy Original Minor Tar File ---"
+echo "+++ "$MAJOR_TAR_FILE $MINOR_TAR_FILE
   cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
-echo "----- Extract Tar File ---"  
+echo "----- Extract Tar File:"$MAJOR_TAR_FILE
   tar -x -f $MAJOR_TAR_FILE
 fi
 
@@ -139,12 +144,15 @@ git pull origin master # maybe need --allow-unrelated-histories  # git 2.9 and a
 echo "-- copy files --"
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   echo "+++ Copy Minor Zip File ***"
+  echo "+++ "$ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
+ 
   echo "+++ Git Add: "~/$BN_BINARYSPATH/$MINOR_ZIP_FILE
   git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "+++ Copy Minor Tar File ***"
+  echo "+++" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
   cp $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
   git add $BN_BINARYSPATH/$MINOR_TAR_FILE
 fi
