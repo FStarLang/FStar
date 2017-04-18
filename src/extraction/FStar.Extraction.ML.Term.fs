@@ -902,8 +902,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
-			     S.fv_eq_lid fv Syntax.Const.op_And ||
-			     S.fv_eq_lid fv Syntax.Const.op_Or
+                             S.fv_eq_lid fv Syntax.Const.op_And ||
+                             S.fv_eq_lid fv Syntax.Const.op_Or
                            | _ ->
                               false)
                         in
@@ -923,14 +923,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                             lbs app in // lets are to ensure L to R eval ordering of arguments
                         l_app, f, t
 
-                    | (arg, _)::rest, MLTY_Fun (formal_t, f', t) when is_type g arg -> //non-prefix type app; this type argument gets erased to unit
-                      if type_leq g formal_t ml_unit_ty
-                      then extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join arg.pos f f', t) rest
-                      else failwith (BU.format4 "Impossible: ill-typed application:\n\thead=%s, arg=%s, tag=%s\n\texpected type unit, got %s" //ill-typed; should be impossible
-                                            (Code.string_of_mlexpr g.currentModule mlhead)
-                                            (Print.term_to_string arg)
-                                            (Print.tag_of_term arg)
-                                            (Code.string_of_mlty g.currentModule formal_t))
+                    | (arg, _)::rest, MLTY_Fun (formal_t, f', t)
+                            when (is_type g arg
+                                  && type_leq g formal_t ml_unit_ty) ->
+                      //non-prefix type app; this type argument gets erased to unit
+                      extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join arg.pos f f', t) rest
 
                     | (e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
                       let r = e0.pos in
