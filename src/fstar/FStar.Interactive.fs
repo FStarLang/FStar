@@ -705,7 +705,6 @@ let interactive_mode' (filename:string): unit =
     | Some intf ->
         // We found an interface: record its contents in the desugaring environment
         // to be interleaved with the module implementation on-demand
-        printfn "Loading interface decls for %s" intf;
         FStar.Universal.load_interface_decls env intf
     | None ->
         env
