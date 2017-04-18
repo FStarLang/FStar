@@ -128,7 +128,7 @@ let rec prefix_with_iface_decls
    * list<decl> =  //d prefixed with relevant bits from iface
    match iface with
    | [] -> [], [impl]
-   | iface_hd::iface -> begin
+   | iface_hd::iface_tl -> begin
      match iface_hd.d with
      | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
         raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", impl.drange))
@@ -140,7 +140,7 @@ let rec prefix_with_iface_decls
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
        if not defines_x
        then if def_ids |> Util.for_some (fun y ->
-               iface |> Util.for_some (is_val y.ident))
+               iface_tl |> Util.for_some (is_val y.ident))
             then raise (Error(Util.format2 "Expected the definition of %s to precede %s"
                                            x.idText
                                            (def_ids |> List.map Ident.string_of_lid |> String.concat ", "),
@@ -162,12 +162,12 @@ let rec prefix_with_iface_decls
                                      iface_hd.drange))
                   else aux ys iface //no val given for 'y'; ok
             in
-            let take_iface, rest_iface = aux mutually_defined_with_x iface in
-            rest_iface, take_iface@[impl]
+            let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
+            rest_iface, iface_hd::take_iface@[impl]
 
 
      | _ ->
-       let iface, ds = prefix_with_iface_decls iface impl in
+       let iface, ds = prefix_with_iface_decls iface_tl impl in
        iface, iface_hd::ds
     end
 
@@ -193,7 +193,7 @@ let check_initial_interface (iface:list<decl>) =
           end
     in
     aux iface;
-    iface
+    iface |> List.filter (fun d -> match d.d with TopLevelModule _ -> false | _ -> true)
 
 //////////////////////////////////////////////////////////////////////
 //A weaker variant, for use only in --MLish mode

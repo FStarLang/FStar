@@ -61,6 +61,8 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
         | _ ->
             raise (Err ("mismatch between pre-module and module\n"))
   in
+//  if fn = "test.fst"
+//  then printfn "%s" (ast |> List.map FStar.Parser.AST.modul_to_string |> String.concat "\n\n");
   Desugar.desugar_file env ast
 
 
