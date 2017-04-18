@@ -299,6 +299,7 @@ let js_reductionrule s = match js_str s with
 type query' =
 | Exit
 | DescribeProtocol
+| DescribeRepl
 | Pop
 | Push of push_kind * string * int * int * bool
 | AutoComplete of string
@@ -311,7 +312,7 @@ and query = { qq: query'; qid: string }
 let interactive_protocol_vernum = 1
 
 let interactive_protocol_features =
-  ["autocomplete"; "compute"; "describe-protocol"; "exit";
+  ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/documentation"; "lookup/definition";
    "pop"; "peek"; "push"; "search"]
 
@@ -350,6 +351,7 @@ let unpack_interactive_query json =
            | "exit" -> Exit
            | "pop" -> Pop
            | "describe-protocol" -> DescribeProtocol
+           | "describe-repl" -> DescribeRepl
            | "peek" | "push" -> Push (arg "kind" |> js_pushkind,
                                      arg "code" |> js_str,
                                      arg "line" |> js_int,
@@ -469,11 +471,18 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_env: env_t; repl_ts: m_timestamps;
                     repl_stdin: stream_reader }
 
+let json_of_repl_state st =
+  [("loaded-dependencies",
+    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts))]
+
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
 let run_describe_protocol st =
   ((QueryOK, JsonAssoc json_of_protocol_info), Inl st)
+
+let run_describe_repl st =
+  ((QueryOK, JsonAssoc (json_of_repl_state st)), Inl st)
 
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
@@ -871,6 +880,7 @@ let run_search st search_str =
 let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
+  | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
   | AutoComplete search_term -> run_completions st search_term
