@@ -34,13 +34,13 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   let dsenv, env = uenv in
   let (intf, impl), dsenv, env, remaining =
     match remaining with
-        | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
-          (Some intf, impl), dsenv, env, remaining
-        | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
-          (None, intf_or_impl), dsenv, env, remaining
-        | [] -> failwith "Impossible"
+    | intf :: impl :: remaining when needs_interleaving intf impl ->
+      let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
+      (Some intf, impl), dsenv, env, remaining
+    | intf_or_impl :: remaining ->
+      let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
+      (None, intf_or_impl), dsenv, env, remaining
+    | [] -> failwith "Impossible"
   in
   (intf, impl), (dsenv, env), None, remaining
 
@@ -94,19 +94,19 @@ let commit_mark (dsenv, env) =
     dsenv, env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
-    try
-        match tc_one_fragment curmod dsenv env frag with
-            | Some (m, dsenv, env) ->
-                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
-            | _ -> None
-    with
-        | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(msg, r)];
-          None
+  try
+    match tc_one_fragment curmod dsenv env frag with
+    | Some (m, dsenv, env) ->
+          Some (m, (dsenv, env), FStar.Errors.get_err_count())
+    | _ -> None
+  with
+  | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Err.add_errors env [(msg, r)];
+    None
 
-        | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
-          None
+  | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+    None
 
 let report_fail () =
     FStar.Errors.report_all() |> ignore;

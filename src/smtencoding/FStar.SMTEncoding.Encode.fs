@@ -2229,23 +2229,31 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   let encoded_head = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
                   let guards_for_parameter (arg:term) xv =
-                    let fv = match arg.tm with
-                             | FreeV fv -> fv
-                             | _ -> failwith "Impossible: parameter must be a variable" in
+                    let fv =
+                      match arg.tm with
+                      | FreeV fv -> fv
+                      | _ -> failwith "Impossible: parameter must be a variable"
+                    in
                     let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
                         then [Term.subst g fv xv]
-                        else []) in
+                        else [])
+                    in
                     mk_and_l guards
                   in
-                  let _, arg_vars, elim_eqns_or_guards, _ = List.fold_left (fun (env, arg_vars, eqns_or_guards, i) arg ->
-                          let _, xv, env = gen_term_var env (S.new_bv None tun) in
-                          let eqns =
-                            if i < n_tps
-                            then guards_for_parameter arg xv::eqns_or_guards
-                            else mkEq(arg, xv)::eqns_or_guards in //we only get equations induced on the type indices, not parameters;
-                                                        //Also see https://github.com/FStarLang/FStar/issues/349
-                          (env, xv::arg_vars, eqns, i + 1)) (env', [], [], 0) encoded_args in
+                  let _, arg_vars, elim_eqns_or_guards, _ =
+                    List.fold_left (fun (env, arg_vars, eqns_or_guards, i) arg ->
+                      let _, xv, env = gen_term_var env (S.new_bv None tun) in
+                      (* we only get equations induced on the type indices, not parameters; *)
+                      (* Also see https://github.com/FStarLang/FStar/issues/349 *)
+                      let eqns =
+                        if i < n_tps
+                        then guards_for_parameter arg xv::eqns_or_guards
+                        else mkEq(arg, xv)::eqns_or_guards
+                      in
+                      (env, xv::arg_vars, eqns, i + 1))
+                      (env', [], [], 0) encoded_args
+                  in
                   let arg_vars = List.rev arg_vars in
                   let ty = mkApp(encoded_head, arg_vars) in
                   let xvars = List.map mkFreeV vars in
@@ -2266,16 +2274,19 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                      Some "lextop is top",
                                      (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
-                        let prec =
-                            vars
-                         |> List.mapi (fun i v ->
-                                if i < n_tps //it's a parameter, so it's inaccessible and no need for a sub-term ordering on it
+                      let prec =
+                        vars
+                          |> List.mapi (fun i v ->
+                                (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
+                                if i < n_tps
                                 then []
                                 else [mk_Precedes (mkFreeV v) dapp])
-                         |> List.flatten in
-                        Term.Assume(mkForall([[ty_pred]], add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
+                          |> List.flatten
+                      in
+                      Term.Assume(mkForall([[ty_pred]], add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
-                                    ("subterm_ordering_"^ddconstrsym)) in
+                                    ("subterm_ordering_"^ddconstrsym))
+                  in
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->

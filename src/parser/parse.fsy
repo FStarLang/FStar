@@ -597,13 +597,13 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  boption___anonymous_0_ decl list_decl_ option_mainDecl_ EOF
-    {let (is_light, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
+  boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
+    {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
       (
         let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) d decls
+        in as_frag is_light (rhs parseState 1) decls
       )}
 
 mainDecl:
