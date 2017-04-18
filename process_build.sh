@@ -56,8 +56,9 @@ echo "+++ Current Version:"$CURRENT_VERSION
 # make package makes it major version using version.txt. This process is weekly process to make minor versions (using timestamp in file name) 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
-MINOR_ZIP_FILE=fstar_$TIME_STAMP$TYPE
+echo "+++ Major Zip file:"$MAJOR_ZIP_FILE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
+  MINOR_ZIP_FILE=fstar_$TIME_STAMP$TYPE
 echo "----- Copy Original Minor Zip File ---"
 echo "+++ " $MAJOR_ZIP_FILE $MINOR_ZIP_FILE  
   cp $MAJOR_ZIP_FILE $MINOR_ZIP_FILE
@@ -68,10 +69,9 @@ fi
 # Extract linux file if exists
 TYPE="_Linux_x86_64.tar.gz"  
 MAJOR_TAR_FILE=fstar_$CURRENT_VERSION$TYPE
- echo "+++ Major tar File:"$MAJOR_TAR_FILE
-MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
-echo "+++ Minor tar File:"$MINOR_TAR_FILE
+echo "+++ Major tar File:"$MAJOR_TAR_FILE
 if [[ -f $MAJOR_TAR_FILE ]]; then
+  MINOR_TAR_FILE=fstar_$TIME_STAMP$TYPE
 echo "----- Copy Original Minor Tar File ---"
 echo "+++ "$MAJOR_TAR_FILE $MINOR_TAR_FILE
   cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
@@ -158,8 +158,9 @@ if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
 fi
 
 # Now that latest package is added, remove the oldest one so only keeping most recent 4 packages
-echo "-- Delete oldest file --"
+echo "-- Delete oldest ZIP file --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
+echo "++ Zip Files:"$BN_ZIP_FILES
 ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
 echo "+++ Zip Count:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
@@ -173,7 +174,7 @@ if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
   done
 fi
 
-echo "+++ Delete tar file --"
+echo "+++ Delete oldest TAR file --"
 BN_TAR_FILES=$BN_BINARYSPATH/*.gz
 echo "+++ Tar Files:"$BN_TAR_FILES
 TAR_COUNT=`ls -1 $BN_TAR_FILES 2>/dev/null | wc -l`
