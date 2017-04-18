@@ -90,18 +90,18 @@ let mk_tactic_interpretation_0 ps t embed_a t_a nm args =
         match uu____282 with
         | (goals,smt_goals) ->
             let ps1 =
-              let uu___98_291 = ps in
+              let uu___101_291 = ps in
               {
                 FStar_Tactics_Basic.main_context =
-                  (uu___98_291.FStar_Tactics_Basic.main_context);
+                  (uu___101_291.FStar_Tactics_Basic.main_context);
                 FStar_Tactics_Basic.main_goal =
-                  (uu___98_291.FStar_Tactics_Basic.main_goal);
+                  (uu___101_291.FStar_Tactics_Basic.main_goal);
                 FStar_Tactics_Basic.all_implicits =
-                  (uu___98_291.FStar_Tactics_Basic.all_implicits);
+                  (uu___101_291.FStar_Tactics_Basic.all_implicits);
                 FStar_Tactics_Basic.goals = goals;
                 FStar_Tactics_Basic.smt_goals = smt_goals;
                 FStar_Tactics_Basic.transaction =
-                  (uu___98_291.FStar_Tactics_Basic.transaction)
+                  (uu___101_291.FStar_Tactics_Basic.transaction)
               } in
             let res = FStar_Tactics_Basic.run t ps1 in
             let uu____294 =
@@ -120,18 +120,18 @@ let mk_tactic_interpretation_1 ps t unembed_b embed_a t_a nm args =
         match uu____381 with
         | (goals,smt_goals) ->
             let ps1 =
-              let uu___99_390 = ps in
+              let uu___102_390 = ps in
               {
                 FStar_Tactics_Basic.main_context =
-                  (uu___99_390.FStar_Tactics_Basic.main_context);
+                  (uu___102_390.FStar_Tactics_Basic.main_context);
                 FStar_Tactics_Basic.main_goal =
-                  (uu___99_390.FStar_Tactics_Basic.main_goal);
+                  (uu___102_390.FStar_Tactics_Basic.main_goal);
                 FStar_Tactics_Basic.all_implicits =
-                  (uu___99_390.FStar_Tactics_Basic.all_implicits);
+                  (uu___102_390.FStar_Tactics_Basic.all_implicits);
                 FStar_Tactics_Basic.goals = goals;
                 FStar_Tactics_Basic.smt_goals = smt_goals;
                 FStar_Tactics_Basic.transaction =
-                  (uu___99_390.FStar_Tactics_Basic.transaction)
+                  (uu___102_390.FStar_Tactics_Basic.transaction)
               } in
             let res =
               let uu____393 = let uu____395 = unembed_b b in t uu____395 in
@@ -158,18 +158,18 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
         match uu____513 with
         | (goals,smt_goals) ->
             let ps1 =
-              let uu___100_522 = ps in
+              let uu___103_522 = ps in
               {
                 FStar_Tactics_Basic.main_context =
-                  (uu___100_522.FStar_Tactics_Basic.main_context);
+                  (uu___103_522.FStar_Tactics_Basic.main_context);
                 FStar_Tactics_Basic.main_goal =
-                  (uu___100_522.FStar_Tactics_Basic.main_goal);
+                  (uu___103_522.FStar_Tactics_Basic.main_goal);
                 FStar_Tactics_Basic.all_implicits =
-                  (uu___100_522.FStar_Tactics_Basic.all_implicits);
+                  (uu___103_522.FStar_Tactics_Basic.all_implicits);
                 FStar_Tactics_Basic.goals = goals;
                 FStar_Tactics_Basic.smt_goals = smt_goals;
                 FStar_Tactics_Basic.transaction =
-                  (uu___100_522.FStar_Tactics_Basic.transaction)
+                  (uu___103_522.FStar_Tactics_Basic.transaction)
               } in
             let res =
               let uu____525 =
@@ -429,12 +429,12 @@ let evaluate_user_tactic: Prims.unit FStar_Tactics_Basic.tac =
                      let uu____808 =
                        let uu____810 =
                          FStar_Tactics_Basic.replace
-                           (let uu___101_812 = goal in
+                           (let uu___104_812 = goal in
                             {
                               FStar_Tactics_Basic.context =
-                                (uu___101_812.FStar_Tactics_Basic.context);
+                                (uu___104_812.FStar_Tactics_Basic.context);
                               FStar_Tactics_Basic.witness =
-                                (uu___101_812.FStar_Tactics_Basic.witness);
+                                (uu___104_812.FStar_Tactics_Basic.witness);
                               FStar_Tactics_Basic.goal_ty = assertion
                             }) in
                        FStar_Tactics_Basic.bind uu____810

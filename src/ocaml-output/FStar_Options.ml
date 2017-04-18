@@ -74,27 +74,27 @@ let __set_unit_tests: Prims.unit -> Prims.unit =
 let __clear_unit_tests: Prims.unit -> Prims.unit =
   fun uu____143  -> FStar_ST.write __unit_tests__ false
 let as_bool: option_val -> Prims.bool =
-  fun uu___47_148  ->
-    match uu___47_148 with
+  fun uu___50_148  ->
+    match uu___50_148 with
     | Bool b -> b
     | uu____150 -> failwith "Impos: expected Bool"
 let as_int: option_val -> Prims.int =
-  fun uu___48_153  ->
-    match uu___48_153 with
+  fun uu___51_153  ->
+    match uu___51_153 with
     | Int b -> b
     | uu____155 -> failwith "Impos: expected Int"
 let as_string: option_val -> Prims.string =
-  fun uu___49_158  ->
-    match uu___49_158 with
+  fun uu___52_158  ->
+    match uu___52_158 with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____161 -> failwith "Impos: expected String"
-let as_list as_t uu___50_177 =
-  match uu___50_177 with
+let as_list as_t uu___53_177 =
+  match uu___53_177 with
   | List ts -> FStar_All.pipe_right ts (FStar_List.map as_t)
   | uu____184 -> failwith "Impos: expected List"
-let as_option as_t uu___51_201 =
-  match uu___51_201 with
+let as_option as_t uu___54_201 =
+  match uu___54_201 with
   | Unset  -> None
   | v1 -> let uu____205 = as_t v1 in Some uu____205
 let fstar_options: option_val FStar_Util.smap Prims.list FStar_ST.ref =
@@ -373,8 +373,8 @@ let get_z3timeout: Prims.unit -> Prims.int =
 let get_no_positivity: Prims.unit -> Prims.bool =
   fun uu____774  -> lookup_opt "__no_positivity" as_bool
 let dlevel: Prims.string -> debug_level_t =
-  fun uu___52_777  ->
-    match uu___52_777 with
+  fun uu___55_777  ->
+    match uu___55_777 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -866,8 +866,8 @@ and validate_cardinality: Prims.string -> Prims.string =
          (let uu____1692 = specs () in display_usage_aux uu____1692);
          FStar_All.exit (Prims.parse_int "1"))
 let settable: Prims.string -> Prims.bool =
-  fun uu___53_1701  ->
-    match uu___53_1701 with
+  fun uu___56_1701  ->
+    match uu___56_1701 with
     | "admit_smt_queries"
       |"cardinality"
        |"debug"
