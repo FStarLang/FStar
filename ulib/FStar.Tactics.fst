@@ -60,6 +60,18 @@ let _bind (a:Type) (b:Type)
 (* Actions *)
 let _get () : _tac state = fun s0 -> Success s0 s0 
 
+let tac_wp a = state -> (_result a -> Tot Type0) -> Tot Type0
+
+unfold let g_bind (r:range) (a:Type) (b:Type) (wp:tac_wp a) (f:a -> tac_wp b) = fun ps post ->
+    wp ps (fun m' -> match m' with
+                     | Success a q -> f a q post
+                     | Failed msg q -> post (Failed msg q))
+
+unfold let g_compact (a:Type) (wp:tac_wp a) : tac_wp a =
+    fun ps post -> wp ps (fun _ -> True) /\ (forall (r:_result a). post r \/ wp ps (fun r' -> ~(r == r')))
+
+unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:tac_wp a) (f:a -> tac_wp b) =
+    g_compact b (g_bind r a b wp f)
 
 (* total  *) //disable the termination check, although it remains reifiable
 reifiable reflectable new_effect {
