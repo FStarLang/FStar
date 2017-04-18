@@ -843,6 +843,12 @@ let run_search st search_str =
     let cmp = fun x y -> st_cost x.st_term - st_cost y.st_term in
     Util.sort_with cmp terms in
 
+  let pprint_one term =
+    (if term.st_negate then "-" else "")
+    ^ (match term.st_term with
+       | NameContainsStr s -> Util.format1 "\"%s\"" s
+       | TypeContainsLid l -> Util.format1 "%s" l.str) in
+
   let results =
     try
       let terms = parse search_str in
@@ -852,9 +858,13 @@ let run_search st search_str =
       let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
       let results = List.filter matches_all all_candidates in
       let sorted = Util.sort_with cmp results in
+      let js = Options.with_saved_options
+                 (fun () -> Options.set_option "print_effect_args" (Options.Bool true);
+                         List.map (json_of_search_result dsenv tcenv) sorted) in
       match results with
-      | [] -> raise (InvalidSearch "No results found")
-      | _ -> (QueryOK, JsonList (List.map (json_of_search_result dsenv tcenv) sorted))
+      | [] -> let kwds = Util.concat_l " " (List.map pprint_one terms) in
+              raise (InvalidSearch (Util.format1 "No results found for query [%s]" kwds))
+      | _ -> (QueryOK, JsonList js)
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
