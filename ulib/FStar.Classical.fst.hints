@@ -1,5 +1,5 @@
 [
-  "á\u000e„\u0010óWO„^\u001b ç»ÕÀ^",
+  "98_O\u007f¡≤Œ\u0007áœxÎ∞\\∆",
   [
     [
       "FStar.Classical.give_witness",
@@ -12,7 +12,23 @@
       ],
       0
     ],
-    [ "FStar.Classical.get_forall", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Classical.get_squashed", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.get_equality",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.eq2" ],
+      0
+    ],
+    [
+      "FStar.Classical.get_forall",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.l_Forall" ],
+      0
+    ],
     [ "FStar.Classical.impl_to_arrow", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.arrow_to_impl", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.forall_intro_gtot", 1, 2, 1, [ "@query" ], 0 ],

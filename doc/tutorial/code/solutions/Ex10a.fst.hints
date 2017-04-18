@@ -89,17 +89,15 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query",
         "Ex10a_interpretation_Tm_arrow_449d659811cde73f2fac6653669a9d13",
         "Ex10a_pretyping_9ab526030749815b532b60f20894130b",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Ex10a.entry_haseq", "assumption_FStar.Heap.SelUpd1",
-        "bool_typing", "equation_Ex10a.db", "equation_FStar.ST.ref",
+        "equation_Ex10a.db", "equation_FStar.ST.ref",
         "equation_Prims.eqtype",
-        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
         "interpretation_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
         "kinding_Ex10a.entry@tok",
@@ -109,7 +107,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_3fe51265bfaf4f905b76cff89cbeb76e",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
-        "typing_FStar.Heap.sel"
+        "typing_FStar.Heap.sel", "typing_FStar.List.Tot.Base.mem"
       ],
       0
     ],
