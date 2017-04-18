@@ -93,32 +93,139 @@ open FStar.Parser.AST
     Note, the order decls 
  *)
 
+let id_eq_lid i (l:lident) = i.idText = l.ident.idText
+
+let is_val x d = match d.d with 
+    | Val(y, _) -> x.idText = y.idText
+    | _ -> false
+
+let is_type x d = match d.d with 
+    | Tycon(_, tys) -> 
+        tys |> Util.for_some (fun (t,_) -> id_of_tycon t = x.idText)
+    | _ -> false
+
+//is d of of the form 'let x = ...' or 'type x = ...'
+let definition_lids d = 
+    match d.d with 
+    | TopLevelLet(_, defs) -> 
+        lids_of_let defs
+    | Tycon(_, tys) ->
+        tys |> List.collect (function
+                | TyconAbbrev(id, _, _, _), _ -> 
+                  [Ident.lid_of_ids [id]]
+                | _ -> [])
+    | _ -> []
+
+let is_definition_of x d = 
+    Util.for_some (id_eq_lid x) (definition_lids d)
+     
+let prefix_until_let x ds = 
+    ds |> FStar.Util.prefix_until (is_definition_of x)
+
+let rec prefix_with_iface_decls 
+        (iface:list<decl>)
+        (impl:decl)
+   : list<decl>  //remaining iface decls
+   * list<decl> =  //d prefixed with relevant bits from iface
+   match iface with 
+   | [] -> [], [impl]
+   | iface_hd::iface -> begin 
+     match iface_hd.d with
+     | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) -> 
+        raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", impl.drange))
+
+     | Val(x, t) ->  
+       //we have a 'val x' in the interface
+       //take impl as is, unless it is a let x, in which case prefix it with iface_hd
+       let def_ids = definition_lids impl in
+       let defines_x = Util.for_some (id_eq_lid x) def_ids in
+       if not defines_x
+       then if def_ids |> Util.for_some (fun y ->
+               iface |> Util.for_some (is_val y.ident))
+            then raise (Error(Util.format2 "Expected the definition of %s to precede %s" 
+                                           x.idText
+                                           (def_ids |> List.map Ident.string_of_lid |> String.concat ", "),
+                              impl.drange))
+            else iface, [impl]
+       else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
+            let rec aux mutuals iface = 
+                match mutuals, iface with
+                | [], _ -> [], iface
+                | _::_, [] -> [], []
+                | y::ys, iface_hd::iface_tl ->
+                  if is_val y.ident iface_hd
+                  then let val_ys, iface = aux ys iface_tl in 
+                       iface_hd::val_ys, iface
+                  else if Option.isSome <| List.tryFind (is_val y.ident) iface_tl
+                  then raise (Error (Util.format2 "%s is out of order with the definition of %s" 
+                                            (decl_to_string iface_hd)
+                                            (Ident.string_of_lid y),
+                                     iface_hd.drange))
+                  else aux ys iface //no val given for 'y'; ok
+            in 
+            let take_iface, rest_iface = aux mutually_defined_with_x iface in
+            rest_iface, take_iface@[impl]
+                      
+                                  
+     | _ ->
+       let iface, ds = prefix_with_iface_decls iface impl in
+       iface, iface_hd::ds 
+    end
+
+let check_initial_interface (iface:list<decl>) =
+    let rec aux iface = 
+        match iface with 
+        | [] -> ()
+        | hd::tl -> begin
+            match hd.d with
+            | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) -> 
+              raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", hd.drange))
+
+            | Val(x, t) ->  //we have a 'val x' in the interface
+              if Util.for_some (is_definition_of x) tl
+              then raise (Error(Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" x.idText x.idText,
+                                hd.drange))
+              else if hd.quals |> List.contains Assumption
+              then raise (Error("Interfaces cannot use `assume val x : t`; just write `val x : t` instead", 
+                                hd.drange))
+              else ()
+
+            | _ -> ()          
+          end
+    in 
+    aux iface;
+    iface
+
+//in --MLish mode: the interleaving rules are WAY more lax
+//      this is basically only in support of bootstrapping the compiler
+//      Here, if you have a `let x = e` in the implementation
+//      Then prefix it with `val x : t`, if any in the interface
+//      Don't enforce any ordering constraints
+let rec ml_mode_prefix_with_iface_decls 
+        (iface:list<decl>)
+        (impl:decl)
+   : list<decl>    //remaining iface decls
+   * list<decl> =  //impl prefixed with relevant bits from iface
+   match impl.d with 
+   | TopLevelLet(_, defs) -> //if c
+     let xs = lids_of_let defs in
+     let val_xs, rest_iface = 
+        List.partition 
+            (fun d -> xs |> Util.for_some (fun x -> is_val x.ident d))
+            iface 
+     in
+     rest_iface, val_xs@[impl]
+   | _ -> 
+     iface, [impl]
+
+let ml_mode_check_initial_interface (iface:list<decl>) = 
+    iface |> List.filter (fun d -> 
+    match d.d with
+    | Val _ -> true //only retain the vals in --MLish mode
+    | _ -> false)
+
+
 let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> = 
-    let id_eq_lid i (l:lident) = i.idText = l.ident.idText in
-
-    let is_val x d = match d.d with 
-        | Val(y, _) -> x.idText = y.idText
-        | _ -> false in
-
-    let is_type x d = match d.d with 
-        | Tycon(_, tys) -> 
-          tys |> Util.for_some (fun (t,_) -> id_of_tycon t = x.idText)
-        | _ -> false in
-
-    //is d of of the form 'let x = ...' or 'type x = ...'
-    let is_let x d = match d.d with 
-        | TopLevelLet(_, defs) -> 
-          lids_of_let defs |> Util.for_some (id_eq_lid x)
-        | Tycon(_, tys) ->
-          tys |> List.map (fun (x,_) -> x)
-            |> Util.for_some (function 
-            | TyconAbbrev(id', _, _, _) -> x.idText = id'.idText
-            | _ -> false) 
-        | _ -> false in
-         
-          
-    let prefix_until_let x ds = ds |> FStar.Util.prefix_until (is_let x) in
-
     let aux_ml (iface:list<decl>) (impl:list<decl>) : list<decl> = 
         let rec interleave_vals (vals:list<decl>) (impl:list<decl>) = 
             match vals with 
@@ -173,7 +280,7 @@ let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
                                     ds |> List.collect (fun d -> match d.d with
                                        | Val(x, _) -> [x]
                                        | _ -> []) in
-                                begin match prefix |> List.tryFind (fun d -> remaining_iface_vals |> Util.for_some (fun x -> is_let x d)) with 
+                                begin match prefix |> List.tryFind (fun d -> remaining_iface_vals |> Util.for_some (fun x -> is_definition_of x d)) with 
                                     | Some d -> raise (Error (Util.format2 "%s is out of order with %s" (decl_to_string d) (decl_to_string let_x), d.drange))
                                     | _ ->
                                       begin match let_x.d with 
