@@ -1064,3 +1064,13 @@ let rec list_elements (e:term) : option<list<term>> =
       Some (hd::must (list_elements tl))
   | _ ->
       None
+
+let rec apply_last f l = match l with
+   | [] -> failwith "apply_last: got empty list"
+   | [a] -> [f a]
+   | (x::xs) -> x :: (apply_last f xs)
+
+let dm4f_lid ed name : lident =
+    let p = path_of_lid ed.mname in
+    let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
+    lid_of_path p' Range.dummyRange

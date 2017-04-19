@@ -56,7 +56,6 @@ let empty env tc_const = {
   tc_const = tc_const
 }
 
-
 // Synthesis of WPs from a partial effect definition (in F*) ------------------
 
 let gen_wps_for_free
@@ -100,9 +99,7 @@ let gen_wps_for_free
     | _ ->
         failwith "wp_a doesn't end in Type0" in
 
-  let mk_lid name: lident =
-    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
-  in
+  let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
   if Env.debug env (Options.Other "ED") then

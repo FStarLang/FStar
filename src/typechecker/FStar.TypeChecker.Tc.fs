@@ -513,9 +513,7 @@ and cps_and_elaborate env ed =
   let effect_signature = recheck_debug "turned into the effect signature" env effect_signature in
 
   let sigelts = BU.mk_ref [] in
-  let mk_lid name: lident =
-    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
-  in
+  let mk_lid name : lident = U.dm4f_lid ed name in
 
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
