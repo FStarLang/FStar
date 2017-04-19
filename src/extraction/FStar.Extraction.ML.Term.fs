@@ -97,9 +97,9 @@ let err_value_restriction t =
 let err_unexpected_eff t f0 f1 =
     fail t.pos (BU.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1))
 
-(********************************************************************)
-(* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_ANY} *)
-(********************************************************************)
+(***********************************************************************)
+(* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)
+(***********************************************************************)
 let effect_as_etag =
     let cache = BU.smap_create 20 in
     let rec delta_norm_eff g (l:lident) =
@@ -117,7 +117,18 @@ let effect_as_etag =
         then E_PURE
         else if lid_equals l C.effect_GHOST_lid
         then E_GHOST
-        else E_IMPURE
+        else
+            // Reifiable effects should be pure. Added guard because some effect declarations
+            // don't seem to be in the environment at this point, in particular FStar.All.ML
+            // (maybe because it's primitive?)
+            let ed_opt = TcEnv.effect_decl_opt g.tcenv l in
+            match ed_opt with
+            | Some ed ->
+                if ed.qualifiers |> List.contains Reifiable
+                then E_PURE
+                else E_IMPURE
+            | None -> E_IMPURE
+
 (********************************************************************************************)
 (* Basic syntactic operations on a term                                                     *)
 (********************************************************************************************)
@@ -459,7 +470,6 @@ and term_as_mlty' env t =
         res
 
       | Tm_abs(bs,ty,_) ->  (* (sch) rule in \hat{\epsilon} *)
-        (* reify body here? *)
         (* We just translate the body in an extended environment; the binders will just end up as units *)
         let bs, ty = SS.open_term bs ty in
         let bts, env = binders_as_ml_binders env bs in
@@ -859,14 +869,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_abs(bs, body, copt (* the annotated computation type of the body *)) ->
           let bs, body = SS.open_term bs body in
-
-        //   let reify_comp_and_body env c body =
-        //     let reified_body = TcUtil.reify_body env.tcenv body in
-        //     let c = match c with
-        //       | BU.Inl lc ->
-        //         let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
-        //         BU.Inl (U.lcomp_of_comp (S.mk_Total typ)) in
-
           let body =
             match copt with
             | Some c ->
@@ -874,7 +876,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 then TcUtil.reify_body g.tcenv body
                 else body
             | None -> body in
-        // let body2 = TcUtil.remove_reify body in
 
           let ml_bs, env = binders_as_ml_binders g bs in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -884,14 +885,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
         | Tm_app({n=Tm_constant Const_reify}, [t]) ->
-        //   let t0 = TcUtil.reify_body g.tcenv (fst t) in
-        //   let t0 = TcUtil.remove_reify t0 in
-        //   let t0 = match (fst t).n with
-        //     | Tm_app(head, args) -> mk (Tm_app(head, args@[(C.exp_unit, None)])) None head.pos
-        //     | _ -> fst t in
-        //   BU.print2 "Before removal %s \nafter removal %s\n"
-        //     (Print.term_to_string (fst t))
-        //     (Print.term_to_string t0) ;
           let ml, e_tag, mlty = term_as_mlexpr' g (fst t) in
           ml, E_PURE, mlty
 

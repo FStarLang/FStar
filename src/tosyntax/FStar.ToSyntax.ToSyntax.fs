@@ -1741,7 +1741,6 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
             // is elaborated
             let env, action_params = desugar_binders env action_params in
             let action_params = Subst.close_binders action_params in
-            List.iter (fun x -> BU.print1 "Action param %s\n" (fst x).ppname.idText) action_params;
             {
               action_name=Env.qualify env name;
               action_unqualified_name = name;

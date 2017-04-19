@@ -281,9 +281,6 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
           let ns, i = y in
           (* let mlsymbol = find_uniq g.gamma (avoid_keyword i) in *)
           let mlsymbol = avoid_keyword i in
-          (* (match (List.rev ns) with
-            | h::t -> BU.print1 "Last module %s\n" h
-            | _ -> () ); *)
           (ns, mlsymbol), mlsymbol
         in
         let mly = MLE_Name mlpath in
