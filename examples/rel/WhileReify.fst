@@ -19,7 +19,7 @@ let interpret_binop o a b =
   | Times -> op_Multiply a b
   | Max   -> if a <= b then b else a
 
-noeq type exp =
+type exp =
 | AInt : int -> exp
 | AVar : id -> exp
 | AOp  : binop -> exp -> exp -> exp

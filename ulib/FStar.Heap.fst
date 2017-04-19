@@ -254,24 +254,51 @@ let emp :heap = {
   memory    = (fun (r:nat) -> None)
 }
 
-let in_dom_emp (#a:Type) (r:ref a)
+let lemma_in_dom_emp (#a:Type) (r:ref a)
   :Lemma (requires True)
          (ensures  (r `unused_in` emp))
 	 [SMTPat (r `unused_in` emp)]
   = ()
 
-let upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+let lemma_upd_contains (#a:Type) (h:heap) (r:ref a) (x:a)
   :Lemma (requires True)
-         (ensures  (((upd h r x) `contains` r) /\
-
-	            ((h `contains` r' /\  //if h contains_a_well_typed r' and
-
-                      ((h `contains` r) \/  //either h contains_a_well_typed r
-		       (r `unused_in` h) \/  //or h does not contain r
-		       (addr_of r <> addr_of r')))  //or r'.addr <> r.addr
-		     ==> (upd h r x) `contains` r')))  //then updated heap contains_a_well_typed r'
-         [SMTPat ((upd h r x) `contains` r')]
+         (ensures  ((upd h r x) `contains` r))
+	 [SMTPat ((upd h r x) `contains` r)]
   = ()
+
+let lemma_well_typed_upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+  :Lemma (requires (h `contains` r))
+         (ensures  (let h1 = upd h r x in
+	            h1 `contains` r' <==> h `contains` r'))
+	 [SMTPat ((upd h r x) `contains` r')]
+  = ()
+
+let lemma_unused_upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+  :Lemma (requires (r `unused_in` h))
+         (ensures  (let h1 = upd h r x in
+	            (h `contains` r'  ==> h1 `contains` r') /\
+		    (h1 `contains` r' ==> (h `contains` r' \/ addr_of r' = addr_of r))))
+	 [SMTPat ((upd h r x) `contains` r')]
+  = ()
+
+let lemma_upd_contains_different_addr (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+  :Lemma (requires (h `contains` r' /\ addr_of r <> addr_of r'))
+         (ensures  ((upd h r x) `contains` r'))
+	 [SMTPat ((upd h r x) `contains` r')]
+  = ()
+
+(* let upd_contains (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b) *)
+(*   :Lemma (requires True) *)
+(*          (ensures  (((upd h r x) `contains` r) /\ *)
+
+(* 	            ((h `contains` r' /\  //if h contains_a_well_typed r' and *)
+
+(*                       ((h `contains` r) \/  //either h contains_a_well_typed r *)
+(* 		       (r `unused_in` h) \/  //or h does not contain r *)
+(* 		       (addr_of r <> addr_of r')))  //or r'.addr <> r.addr *)
+(* 		     ==> (upd h r x) `contains` r')))  //then updated heap contains_a_well_typed r' *)
+(*          [SMTPat ((upd h r x) `contains` r')] *)
+(*   = () *)
 
 let upd_unused (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
   :Lemma (requires True)
