@@ -411,7 +411,7 @@ let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
 let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
+  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
