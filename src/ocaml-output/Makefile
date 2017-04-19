@@ -18,6 +18,7 @@ GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX=$(shell pwd)/fstar
+PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -215,8 +216,8 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
-	chmod 755 $(PREFIX)/bin/*z3*.*
-	
+	if [ -f "$(PREFIX)/bin/z3.exe" ]; then chmod 755 $(PREFIX)/bin/*z3*.*; fi
+
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
 	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
