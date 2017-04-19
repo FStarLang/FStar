@@ -121,6 +121,16 @@ assume val ist_recall :  p:predicate heap{stable heap_rel p} ->
 
 type mref (a:Type) (r:relation a{preorder r}) = m:mref a r{ist_witnessed (contains m)}
 
+//showing that a preorder for a reference can be lifted to heap_rel
+val lifting_lemma: (a:Type) 
+                -> (rel:preorder_t a) 
+	        -> (m:mref a rel) 
+	        -> (h:heap)
+	        -> (v:a)
+	        -> Lemma (requires (contains m h /\ rel (sel h m) v))
+		         (ensures  (contains m h /\ heap_rel h (upd h m v)))
+let lifting_lemma a rel m h v = ()
+
 
 (* Pre- and postconditions for the allocated references instance of IST. *)
 
