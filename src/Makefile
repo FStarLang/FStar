@@ -165,7 +165,7 @@ u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Sub
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
-u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Interleave.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
+u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Parser
 
 u_extract_normalizer: $(addprefix u_boot_fsts/FStar.TypeChecker., Common.fst Env.fst Normalize.fst Err.fst)
@@ -191,7 +191,7 @@ u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 
 u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tcinductive u_extract_tc
 
-u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
+u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst Interleave.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
 
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)

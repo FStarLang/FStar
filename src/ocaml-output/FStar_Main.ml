@@ -1,5 +1,5 @@
 open Prims
-let uu___247: Prims.unit = FStar_Version.dummy ()
+let uu___243: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit -> (FStar_Getopt.parse_cmdline_res* Prims.string Prims.list) =
   fun uu____6  -> FStar_Options.parse_cmd_line ()
@@ -23,9 +23,9 @@ let finished_message:
            (FStar_List.iter
               (fun uu____47  ->
                  match uu____47 with
-                 | ((iface,name),time) ->
+                 | ((iface1,name),time) ->
                      let tag =
-                       if iface then "i'face (or impl+i'face)" else "module" in
+                       if iface1 then "i'face (or impl+i'face)" else "module" in
                      let uu____59 =
                        FStar_Options.should_print_message
                          name.FStar_Ident.str in
