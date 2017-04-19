@@ -76,3 +76,13 @@ val recall: p:predicate mem{stable m_rel p} -> MST unit (fun _ -> witnessed p) (
 let recall p = admit () //intentional (justified by metatheory)
 
 
+val test_lemma: (r:rid)
+	     ->	(a:Type) 
+             -> (rel:preorder a) 
+	     -> (mr:m_rref r a rel{live_region m s.id}) 
+	     -> (m:mem)
+	     -> (v:a)
+	     -> Lemma (requires (rel (sel m mr) v))
+		      (ensures (m_rel m (upd m mr v)))
+let test_lemma r a rel r m v = ()
+

@@ -37,10 +37,10 @@ abstract let compare_addrs (#a:Type) (#b:Type) (#rela:preorder a) (#relb:preorde
   = r1.addr = r2.addr
 
 abstract let contains (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
-  = exists x . (h.memory r.addr == Some (| a , (x, rel) |))
-//  = Some? (h.memory r.addr) 
-// /\ dfst (Some?.v (h.memory r.addr)) == a 
-// /\ snd (dsnd (Some?.v (h.memory r.addr))) == rel
+//  = exists x . (h.memory r.addr == Some (| a , (x, rel) |))
+  = Some? (h.memory r.addr) 
+ /\ dfst (Some?.v (h.memory r.addr)) == a 
+ /\ snd #(dfst (Some?.v (h.memory r.addr))) #(preorder a) (dsnd (Some?.v (h.memory r.addr))) == rel
 
 
 abstract let unused_in (#a:Type) (#rel:preorder a) (r:mref a rel) (h:heap) :Type0
