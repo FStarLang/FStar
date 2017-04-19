@@ -215,6 +215,8 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
+	chmod 755 $(PREFIX)/bin/*z3*.*
+	
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
 	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
