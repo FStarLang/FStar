@@ -66,7 +66,7 @@ val only: #a:Type -> #rel:preorder a -> mref a rel -> GTot (set nat)
 let only #a #rel r = singleton (addr_of r)
 
 (* Select. *)
-private abstract let sel_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) :a
+abstract let sel_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) :Tot a
   = let Some (| _, (x, _) |) = h.memory r.addr in
     x
 
@@ -75,14 +75,19 @@ abstract let sel (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) :GTot a
       sel_tot #a h r
     else r.init
 
+let lemma_sel_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r})
+  :Lemma (sel_tot h r == sel h r)
+  [SMTPat (sel_tot h r)]
+  = ()
+
 (* Update. *)
-private abstract let upd_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a) :heap
+let upd_condition (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a) 
+  = ~(contains h r) \/ rel (sel h r) x
+
+abstract let upd_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a{upd_condition h r x}) :Tot heap
   = { h with memory = (fun r' -> if r.addr = r'
 			      then Some (| a, (x , rel) |)
                               else h.memory r') }
-
-let upd_condition (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a) 
-  = ~(contains h r) \/ rel (sel h r) x
 
 abstract let upd (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{upd_condition h r x}) :GTot heap
   = if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
@@ -98,6 +103,12 @@ abstract let upd (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{upd_co
         { h with memory = (fun r' -> if r' = r.addr
 				  then Some (| a, (x, rel) |)
                                   else h.memory r') }
+
+abstract let lemma_upd_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a{upd_condition h r x})
+  :Lemma (upd_tot h r x == upd h r x)
+  [SMTPat (upd_tot h r x)]
+  = ()
+
 
 (* Allocate. *)
 abstract let alloc (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:bool) :GTot (mref a rel * heap)
