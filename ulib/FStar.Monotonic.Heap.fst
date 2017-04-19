@@ -14,7 +14,7 @@ let predicate (a:Type) = a -> Type0
 let preorder_rel (#a:Type) (rel:relation a) = 
   (forall x . rel x x) /\ (forall x y z . rel x y /\ rel y z ==> rel x z)
 
-let preorder (a:Type) = rel:relation a{preorder_rel rel}
+let preorder (a:Type) = rel:relation a{preorder_rel #a rel}
 
 let stable (#a:Type) (rel:relation a{preorder_rel rel}) (p:predicate a) =
   forall x y . p x /\ rel x y ==> p y
@@ -111,7 +111,7 @@ let modifies (s:set nat) (h0:heap) (h1:heap) =
                          ((~ (mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
   (forall (a:Type) (rel:preorder a) (r:mref a rel).{:pattern (contains h1 r)}
                         h0 `contains` r ==> h1 `contains` r)
-			
+
 (** some lemmas that summarize the behavior **)
 
 (*
@@ -187,11 +187,10 @@ private let lemma_alloc_fresh_test (#a:Type) (#rel:preorder a) (h0:heap) (x:a) (
           fresh r h0 h1 /\ modifies empty h0 h1)
   = ()
 
-
 private let lemma_modifies_trans_test (h1:heap) (h2:heap) (h3:heap) (s1:set nat) (s2:set nat)
   :Lemma (requires (modifies s1 h1 h2 /\ modifies s2 h2 h3))
          (ensures  (modifies (union s1 s2) h1 h3))
-  = ()
+  = ()  
 
 (** **)
 
@@ -315,3 +314,12 @@ val op_Hat_Plus_Hat: #a:Type -> #b:Type -> #rela:preorder a -> #relb:preorder b 
 let op_Hat_Plus_Hat #a #b #rela #relb r1 r2 = union (only r1) (only r2)
 
 
+(** some lemmas about the types and relations of references with the same address **)
+
+let lemma_contains_same_type (#a:Type) (#b:Type) (#rel:preorder a) (#rel':preorder b) (h:heap) (r:mref a rel{h `contains` r}) (r':mref b rel'{h `contains` r'})
+  :Lemma (addr_of r = addr_of r' ==> a == b)
+  = ()
+
+let lemma_contains_same_rel (#a:Type) (#b:Type) (#rel:preorder a) (#rel':preorder b) (h:heap) (r:mref a rel{h `contains` r}) (r':mref b rel'{h `contains` r'})
+  :Lemma (addr_of r = addr_of r' ==> rel === rel')
+  = ()
