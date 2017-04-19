@@ -58,26 +58,60 @@ let contains (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) = MH.contains h
 val sel: #a:Type -> #rel:preorder a -> h:heap -> mref a rel -> GTot a
 let sel #a #rel h m = MH.sel h (as_mref m)
 
-val upd: #a:Type -> #rel:preorder a -> h:heap -> mref a rel -> a -> GTot heap
+val upd: #a:Type -> #rel:preorder a -> h:heap -> (m:mref a rel) -> (x:a{rel (sel h m) x}) -> GTot heap
 let upd #a #rel h m v = MH.upd h (as_mref m) v
 
 
 (* Generated preorder on heaps *)
 
 let heap_rel (h0:heap) (h1:heap) 
-  = forall a rel (m:mref a rel) .
-      (contains h0 m ==> contains h1 m) 
-   /\ (contains h0 m ==> rel (sel h0 m) (sel h1 m))
+  = (forall a rel (m:mref a rel) . (contains h0 m ==> contains h1 m) )
+ /\ (forall a rel (m:mref a rel) . (contains h0 m ==> rel (sel h0 m) (sel h1 m)))
 
-//fails with non-refined sel and upd (succeeds with refined versions, see examples/preorders/MRefST.fst)
+val lemma1: (a:Type)
+         -> (rel: preorder a)
+         -> (h:heap)
+         -> (m:mref a rel)
+         -> (x:a)
+	 -> Lemma (requires (contains h m /\ rel (sel h m) x))
+	          (ensures  (rel (sel h m) x /\ (forall b rel' (m':mref b rel') . contains h m' ==> contains (upd h m x) m')))
+let lemma1 a rel h m x = ()
+
+val lemma2: (a:Type)
+         -> (rel: preorder a)
+         -> (h:heap)
+         -> (m:mref a rel)
+         -> (x:a)
+	 -> Lemma (requires (contains h m /\ rel (sel h m) x))
+	          (ensures  (rel (sel h m) x /\ (forall b rel' (m':mref b rel') . addr_of m <> addr_of m' /\ contains h m' ==> rel' (sel h m') (sel (upd h m x) m'))))
+let lemma2 a rel h m x = ()
+
+val lemma3: (a:Type)
+         -> (rel: preorder a)
+         -> (h:heap)
+         -> (m:mref a rel)
+         -> (x:a)
+	 -> Lemma (requires (contains h m /\ rel (sel h m) x))
+	          (ensures  (rel (sel h m) x /\ sel (upd h m x) m == x))
+let lemma3 a rel h m x = ()
+
+val lemma4: (a:Type)
+         -> (rel: preorder a)
+         -> (h:heap)
+         -> (m:mref a rel)
+         -> (x:a)
+	 -> Lemma (requires (contains h m /\ rel (sel h m) x))
+	          (ensures  (contains h m /\ rel (sel h m) x /\ (forall b rel' (m':mref b rel') . addr_of m = addr_of m' /\ contains h m' ==> rel' (sel h m') (sel (upd h m x) m'))))
+let lemma4 a rel h m x = ()
+
 val lifting_lemma: (a:Type) 
                 -> (rel:preorder a) 
 	        -> (m:mref a rel) 
 	        -> (h:heap)
-	        -> (v:a)
-	        -> Lemma (requires (contains h m /\ rel (sel h m) v))
-		         (ensures  (contains h m /\ heap_rel h (upd h m v)))
-let lifting_lemma a rel m h v = ()
+	        -> (x:a)
+	        -> Lemma (requires (contains h m /\ rel (sel h m) x))
+		         (ensures  (contains h m /\ rel (sel h m) x /\ heap_rel h (upd h m x)))
+let lifting_lemma a rel m h x = ()
 
 
 (* The preorder-indexed monad interface for MSTATE *)
