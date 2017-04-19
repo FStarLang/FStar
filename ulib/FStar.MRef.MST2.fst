@@ -102,16 +102,16 @@ val lemma4: (a:Type)
          -> (x:a)
 	 -> Lemma (requires (contains h m /\ rel (sel h m) x))
 	          (ensures  (contains h m /\ rel (sel h m) x /\ (forall b rel' (m':mref b rel') . addr_of m = addr_of m' /\ contains h m' ==> rel' (sel h m') (sel (upd h m x) m'))))
-let lemma4 a rel h m x = ()
+let lemma4 a rel h m x = admit () // lack of extensionality wrt preorders, addr_of m = addr_of m' =!=> a == a' /\ rel == rel'
 
 val lifting_lemma: (a:Type) 
                 -> (rel:preorder a) 
-	        -> (m:mref a rel) 
 	        -> (h:heap)
+	        -> (m:mref a rel) 
 	        -> (x:a)
 	        -> Lemma (requires (contains h m /\ rel (sel h m) x))
 		         (ensures  (contains h m /\ rel (sel h m) x /\ heap_rel h (upd h m x)))
-let lifting_lemma a rel m h x = ()
+let lifting_lemma a rel h m x = lemma4 a rel h m x
 
 
 (* The preorder-indexed monad interface for MSTATE *)
