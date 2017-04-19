@@ -205,12 +205,6 @@ let lemma_free_mm_sel (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ 
 	 [SMTPat (sel (free_mm h0 r) r')]
   = ()
 
-let lemma_free_mm_unused (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r})
-  :Lemma (requires True)
-         (ensures  (r `unused_in` (free_mm h0 r)))
-	 [SMTPat (r `unused_in` (free_mm h0 r))]
-  = ()
-
 let lemma_free_mm_contains (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
   :Lemma (requires True)
          (ensures  (let h1 = free_mm h0 r in
@@ -218,10 +212,12 @@ let lemma_free_mm_contains (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` 
 	 [SMTPat ((free_mm h0 r) `contains` r')]
   = ()
 
-let lemma_free_mm_unused_r (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
+let lemma_free_mm_unused (#a:Type) (#b:Type) (h0:heap) (r:ref a{h0 `contains` r /\ is_mm r}) (r':ref b)
   :Lemma (requires True)
          (ensures  (let h1 = free_mm h0 r in
-	            (r' `unused_in` h0 ==> r' `unused_in` h1)))
+	            ((addr_of r = addr_of r' ==> r' `unused_in` h1)      /\
+		     (r' `unused_in` h0      ==> r' `unused_in` h1)      /\
+		     (r' `unused_in` h1      ==> (r' `unused_in` h0 \/ addr_of r' = addr_of r)))))
 	 [SMTPat (r' `unused_in` (free_mm h0 r))]
   = ()
 
