@@ -3,8 +3,6 @@ module FStar.MRef.MST2
 open FStar.Monotonic.Heap
 open FStar.ST
 
-open FStar.Preorder
-
 module MH = FStar.Monotonic.Heap
 
 (* The underlying ordinary state monad of the preorder-indexed MSTATE effect *)

@@ -3,8 +3,22 @@ module FStar.Monotonic.Heap
 open FStar.Classical
 open FStar.Set
 
-open FStar.Preorder
 open FStar.StrongExcludedMiddle
+
+(* Preordered relations and stable predicates *)
+
+let relation (a:Type) = a -> a -> Type0
+
+let predicate (a:Type) = a -> Type0
+
+let preorder_rel (#a:Type) (rel:relation a) = 
+  (forall x . rel x x) /\ (forall x y z . rel x y /\ rel y z ==> rel x z)
+
+let preorder (a:Type) = rel:relation a{preorder_rel rel}
+
+let stable (#a:Type) (rel:relation a{preorder_rel rel}) (p:predicate a) =
+  forall x y . p x /\ rel x y ==> p y
+
 
 (* Heap is a tuple of a source of freshness (the no. of the next 
    reference to be allocated) and a mapping of allocated raw 

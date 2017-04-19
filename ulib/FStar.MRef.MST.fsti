@@ -3,8 +3,6 @@ module FStar.MRef.MST
 open FStar.Heap
 open FStar.ST
 
-open FStar.Preorder
-
 (* The underlying ordinary state monad of the preorder-indexed MSTATE effect *)
 
 private let st (a:Type) = heap -> M (a * heap)
