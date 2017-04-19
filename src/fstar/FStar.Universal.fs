@@ -116,7 +116,11 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
       Some (Some modul, dsenv, env)
 
     | Parser.Driver.Decls ast_decls ->
-      let dsenv, decls = Desugar.desugar_decls dsenv ast_decls in
+      let dsenv, ast_decls_l =
+            BU.fold_map FStar.ToSyntax.Interleave.prefix_with_interface_decls
+                        dsenv
+                        ast_decls in
+      let dsenv, decls = Desugar.desugar_decls dsenv (List.flatten ast_decls_l) in
       match curmod with
         | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
         | Some modul ->
@@ -264,4 +268,3 @@ let batch_mode_tc filenames =
   end;
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
-

@@ -228,9 +228,12 @@ let ml_mode_check_initial_interface (iface:list<decl>) =
 
 
 let prefix_one_decl iface impl =
-    if Options.ml_ish ()
-    then ml_mode_prefix_with_iface_decls iface impl
-    else prefix_with_iface_decls iface impl
+    match impl.d with
+    | TopLevelModule _ -> iface, [impl]
+    | _ ->
+      if Options.ml_ish ()
+      then ml_mode_prefix_with_iface_decls iface impl
+      else prefix_with_iface_decls iface impl
 
 //////////////////////////////////////////////////////////////////////////
 //Top-level interface
@@ -285,93 +288,3 @@ let interleave_module (env:E.env) (a:modul) (expect_complete_modul:bool) : E.env
         | _ ->
           env, a
       end
-
-//
-//let interleave (iface:list<decl>) (impl:list<decl>) : list<decl> =
-//    let aux_ml (iface:list<decl>) (impl:list<decl>) : list<decl> =
-//        let rec interleave_vals (vals:list<decl>) (impl:list<decl>) =
-//            match vals with
-//            | [] -> impl
-//            | {d=Val(x, _)}::remaining_vals ->
-//              let d = List.hd vals in
-//              let lopt = prefix_until_let x impl in
-//              begin match lopt with
-//                    | None ->
-//                      raise (Error("No definition found for " ^x.idText, d.drange))
-//
-//                    | Some (prefix, let_x, rest_impl) ->
-//                      let impl = prefix@[d;let_x]@rest_impl in
-//                      interleave_vals remaining_vals impl
-//              end
-//
-//            | _::remaining_vals ->
-//              interleave_vals remaining_vals impl
-//        in
-//        interleave_vals iface impl
-//    in
-//
-//    let rec aux (out:list<list<decl>>) iface impl =
-//        match iface with
-//            | [] -> (List.rev out |> List.flatten) @ impl
-//            | d::ds ->
-//              match d.d with
-//                | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
-//                  raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", d.drange))
-//
-//                | Val(x, t) ->  //we have a 'val x' in the interface
-//                  let _ = match impl |> List.tryFind (fun d -> is_val x d || is_type x d) with
-//                    | None -> ()
-//                    | Some ({d=Val _; drange=r}) -> raise (Error(Util.format1 "%s is repeated in the implementation" (decl_to_string d), r))
-//                    | Some i -> raise (Error(Util.format1 "%s in the interface is implemented with a 'type'" (decl_to_string d), i.drange)) in
-//                  begin match prefix_until_let x iface with
-//                    | Some _ -> raise (Error(Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" x.idText x.idText, d.drange))
-//                    | None ->
-//                      let lopt = prefix_until_let x impl in
-//                      begin match lopt with
-//                        | None ->
-//                          if d.quals |> List.contains Assumption
-//                          then aux ([d]::out) ds impl
-//                          else raise (Error("No definition found for " ^x.idText, d.drange))
-//
-//                        | Some (prefix, let_x, rest_impl) ->
-//                          if d.quals |> List.contains Assumption
-//                          then raise (Error(Util.format2 "Assumed declaration %s is defined at %s"
-//                                                         x.idText (Range.string_of_range let_x.drange),
-//                                            d.drange))
-//                          else let remaining_iface_vals =
-//                                    ds |> List.collect (fun d -> match d.d with
-//                                       | Val(x, _) -> [x]
-//                                       | _ -> []) in
-//                                begin match prefix |> List.tryFind (fun d -> remaining_iface_vals |> Util.for_some (fun x -> is_definition_of x d)) with
-//                                    | Some d -> raise (Error (Util.format2 "%s is out of order with %s" (decl_to_string d) (decl_to_string let_x), d.drange))
-//                                    | _ ->
-//                                      begin match let_x.d with
-//                                         | TopLevelLet(_, defs) ->
-//                                           let def_lids = lids_of_let defs in //let rec x and y, etc.
-//                                           let iface_prefix_opt = iface |> FStar.Util.prefix_until (fun d ->
-//                                            match d.d with
-//                                                | Val(y, _) ->
-//                                                  not (def_lids |> Util.for_some (id_eq_lid y))
-//
-//                                                | _ -> true) in
-//                                           let all_vals_for_defs, rest_iface =
-//                                                  match iface_prefix_opt with
-//                                                    | None -> //only val x, val y left in the interface
-//                                                      iface, []
-//
-//                                                    | Some (all_vals_for_defs, first_non_val, rest_iface) ->
-//                                                      all_vals_for_defs, first_non_val::rest_iface in
-//                                           let hoist = prefix@all_vals_for_defs@[let_x] in
-//                                           aux (hoist::out) rest_iface rest_impl
-//
-//                                         | _ -> failwith "Impossible"
-//                                      end
-//                                end
-//                       end
-//                    end
-//
-//                | _ -> aux ([d]::out) ds impl
-//    in
-//	if Options.ml_ish ()
-//	then aux_ml iface impl
-//	else aux [] iface impl
