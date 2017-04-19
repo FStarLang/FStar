@@ -76,7 +76,7 @@ val lifting_lemma: (a:Type)
 	        -> (h:heap)
 	        -> (v:a)
 	        -> Lemma (requires (contains h m /\ rel (sel h m) v))
-		         (ensures  (contains h m /\ h_rel h (upd h m v)))
+		         (ensures  (contains h m /\ heap_rel h (upd h m v)))
 let lifting_lemma a rel m h v = ()
 
 
