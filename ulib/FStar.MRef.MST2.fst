@@ -15,7 +15,7 @@ let preorder_rel (#a:Type) (rel:relation a) =
 
 let preorder (a:Type) = rel:relation a{preorder_rel rel}
 
-let stable (#a:Type) (rel:relation a{preorder_rel rel}) (p:predicate a) =
+let stable_rel (#a:Type) (rel:relation a{preorder_rel rel}) (p:predicate a) =
   forall x y . p x /\ rel x y ==> p y
   
 
@@ -58,7 +58,7 @@ let contains (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) = MH.contains h
 val sel: #a:Type -> #rel:preorder a -> h:heap -> mref a rel -> GTot a
 let sel #a #rel h m = MH.sel h (as_mref m)
 
-val upd: #a:Type -> #rel:preorder a -> h:heap -> (m:mref a rel) -> (x:a{rel (sel h m) x}) -> GTot heap
+val upd: #a:Type -> #rel:preorder a -> h:heap -> (m:mref a rel) -> (x:a{upd_condition h m x}) -> GTot heap
 let upd #a #rel h m v = MH.upd h (as_mref m) v
 
 
@@ -130,26 +130,53 @@ let lifting_lemma #a #rel h m x = ()
 
 (* The preorder-indexed monad interface for MSTATE *)
 
-(*val mst_get: unit -> MST heap (fun _ -> True) (fun h0 h h1 -> h0 == h /\ h == h1)
+val mst_get: unit -> MST heap (fun _ -> True) (fun h0 h h1 -> h0 == h /\ h == h1)
 let mst_get () = MSTATE?.get ()
 
-val mst_put: h:heap -> MST unit (fun h0 -> h_rel h0 h) (fun _ _ h1 -> h == h1)
+val mst_put: h:heap -> MST unit (fun h0 -> heap_rel h0 h) (fun _ _ h1 -> h == h1)
 let mst_put h = MSTATE?.put h
 
-abstract type mst_witnessed (p:predicate heap{stable h_rel p}) = True
+abstract type mst_witnessed (p:predicate heap{stable heap_rel p}) = True
 
-val mst_witness: p:predicate heap{stable h_rel p} -> MST unit (fun h0 -> p h0) (fun h0 _ h1 -> h0 == h1 /\ mst_witnessed p)
+val mst_witness: p:predicate heap{stable heap_rel p} -> MST unit (fun h0 -> p h0) (fun h0 _ h1 -> h0 == h1 /\ mst_witnessed p)
 let mst_witness p = ()
 
-val mst_recall: p:predicate heap{stable h_rel p} -> MST unit (fun _ -> mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
-let mst_recall p = admit () //intentional (justified by metatheory)*)
+val mst_recall: p:predicate heap{stable heap_rel p} -> MST unit (fun _ -> mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
+let mst_recall p = admit () //intentional (justified by metatheory)
 
+let stable (#a:Type) (p:predicate a) (rel:preorder a) = stable_rel rel p
 
+abstract type token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) = True
+
+(* The monotonic references interface for MSTATE *)
+
+(*type fresh(#a:Type) (#rel:preorder a) (x:a) h0 (m:mref a rel) h1 = 
+  ~ (contains h0 m) /\ contains h1 m /\ h1 == upd h0 m x
+
+val alloc: #a:Type
+        -> #rel:preorder a
+        -> x:a
+        -> MST (mref a rel)
+              (requires (fun _ -> True))
+              (fun h0 m h1 -> fresh x h0 m h1)
+let alloc #a #rel x 
+  = let h0 = mst_get () in
+    let mh = alloc h0 x rel false in 
+    admit () //ST.alloc x*)
+
+(*val read: #a:Type
+       -> #rel:preorder a
+       -> m:mref a rel
+       -> MST a
+              (requires (fun h -> True))
+              (ensures  (fun h0 v h1 -> h0 == h1 /\ v == sel h0 m))
+let read #a #b m = 
+  let h = mst_get () in
+  sel h m*)
 
 
 
 (*
-let stable (#a:Type) (p:predicate a) (rel:preorder a) = FStar.Preorder.stable rel p
 
 abstract type token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) = True
 abstract type witnessed (p:heap -> Type) = True

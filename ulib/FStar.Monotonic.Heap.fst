@@ -2,7 +2,6 @@ module FStar.Monotonic.Heap
 
 open FStar.Classical
 open FStar.Set
-
 open FStar.StrongExcludedMiddle
 
 (* Preordered relations and stable predicates *)
@@ -82,7 +81,10 @@ private abstract let upd_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{
 			      then Some (| a, (x , rel) |)
                               else h.memory r') }
 
-abstract let upd (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{rel (sel h r) x}) :GTot heap
+let upd_condition (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a) 
+  = ~(contains h r) \/ rel (sel h r) x
+
+abstract let upd (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{upd_condition h r x}) :GTot heap
   = if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
     then upd_tot h r x
     else
@@ -118,7 +120,7 @@ let modifies (s:set nat) (h0:heap) (h1:heap) =
  * update of a well-typed reference
  *)
 private let lemma_upd_contains_test
-  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{rel (sel h0 r) x})
+  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{upd_condition h0 r x})
   :Lemma (h0 `contains` r ==>
           (let h1 = upd h0 r x in
            (forall (b:Type) (rel':preorder b) (r':mref b rel'). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
@@ -134,7 +136,7 @@ private let lemma_upd_contains_test
  * in h0, r' is well-typed, but in h1 it's not
  *)
 private let lemma_upd_contains_not_necessarily_well_typed_test
-  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{rel (sel h0 r) x})
+  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{upd_condition h0 r x})
   :Lemma ((~ (r `unused_in` h0)) ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
@@ -147,7 +149,7 @@ private let lemma_upd_contains_not_necessarily_well_typed_test
  * update of an unused reference
  *)
 private let lemma_upd_unused_test
-  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{rel (sel h0 r) x})
+  (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a{upd_condition h0 r x})
   :Lemma (r `unused_in` h0 ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
@@ -247,14 +249,14 @@ let lemma_sel_same_addr (#a:Type) (#rel:preorder a) (h:heap) (r1:mref a rel) (r2
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
   = ()
 
-let sel_upd1 (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{rel (sel h r) x}) (r':mref a rel)
+let sel_upd1 (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{upd_condition h r x}) (r':mref a rel)
   :Lemma (requires (addr_of r = addr_of r'))
          (ensures  (sel (upd h r x) r' == x))
          [SMTPat (sel (upd h r x) r')]
 
   = ()
 
-let sel_upd2 (#a:Type) (#b:Type) (#rela:preorder a) (#relb:preorder b) (h:heap) (r1:mref a rela) (r2:mref b relb) (x:b{relb (sel h r2) x})
+let sel_upd2 (#a:Type) (#b:Type) (#rela:preorder a) (#relb:preorder b) (h:heap) (r1:mref a rela) (r2:mref b relb) (x:b{upd_condition h r2 x})
   :Lemma (requires (addr_of r1 <> addr_of r2))
          (ensures  (sel (upd h r2 x) r1 == sel h r1))
 	 [SMTPat (sel (upd h r2 x) r1)]
@@ -275,7 +277,7 @@ let in_dom_emp (#a:Type) (#rel:preorder a) (r:mref a rel)
 	 [SMTPat (r `unused_in` emp)]
   = ()
 
-let upd_contains_a_well_typed (#a:Type) (#b:Type) (#rela:preorder a) (#relb:preorder b) (h:heap) (r:mref a rela) (x:a{rela (sel h r) x}) (r':mref b relb)
+let upd_contains_a_well_typed (#a:Type) (#b:Type) (#rela:preorder a) (#relb:preorder b) (h:heap) (r:mref a rela) (x:a{upd_condition h r x}) (r':mref b relb)
   :Lemma (requires True)
          (ensures  (((upd h r x) `contains` r) /\
 
