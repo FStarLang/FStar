@@ -78,6 +78,7 @@ val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
+val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool
 val initial_fuel                : unit    -> int
@@ -85,6 +86,7 @@ val initial_ifuel               : unit    -> int
 val inline_arith                : unit    -> bool
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
+val legacy_interactive          : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int

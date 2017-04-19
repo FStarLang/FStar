@@ -18,8 +18,8 @@ let rec apply_until_some f s =
        | None  -> apply_until_some f rest
        | Some st -> Some (rest, st))
   
-let map_some_curry f x uu___98_101 =
-  match uu___98_101 with | None  -> x | Some (a,b) -> f a b 
+let map_some_curry f x uu___100_101 =
+  match uu___100_101 with | None  -> x | Some (a,b) -> f a b 
 let apply_until_some_then_map f s g t =
   let uu____162 = apply_until_some f s  in
   FStar_All.pipe_right uu____162 (map_some_curry g t) 
@@ -116,8 +116,8 @@ let subst_bv :
   fun a  ->
     fun s  ->
       FStar_Util.find_map s
-        (fun uu___99_552  ->
-           match uu___99_552 with
+        (fun uu___101_552  ->
+           match uu___101_552 with
            | FStar_Syntax_Syntax.DB (i,x) when
                i = a.FStar_Syntax_Syntax.index ->
                let uu____556 =
@@ -136,19 +136,19 @@ let subst_nm :
   fun a  ->
     fun s  ->
       FStar_Util.find_map s
-        (fun uu___100_569  ->
-           match uu___100_569 with
+        (fun uu___102_569  ->
+           match uu___102_569 with
            | FStar_Syntax_Syntax.NM (x,i) when FStar_Syntax_Syntax.bv_eq a x
                ->
                let uu____573 =
                  FStar_Syntax_Syntax.bv_to_tm
-                   (let uu___105_574 = a  in
+                   (let uu___107_574 = a  in
                     {
                       FStar_Syntax_Syntax.ppname =
-                        (uu___105_574.FStar_Syntax_Syntax.ppname);
+                        (uu___107_574.FStar_Syntax_Syntax.ppname);
                       FStar_Syntax_Syntax.index = i;
                       FStar_Syntax_Syntax.sort =
-                        (uu___105_574.FStar_Syntax_Syntax.sort)
+                        (uu___107_574.FStar_Syntax_Syntax.sort)
                     })
                   in
                Some uu____573
@@ -164,8 +164,8 @@ let subst_univ_bv :
   fun x  ->
     fun s  ->
       FStar_Util.find_map s
-        (fun uu___101_593  ->
-           match uu___101_593 with
+        (fun uu___103_593  ->
+           match uu___103_593 with
            | FStar_Syntax_Syntax.UN (y,t) when x = y -> Some t
            | uu____597 -> None)
   
@@ -177,8 +177,8 @@ let subst_univ_nm :
   fun x  ->
     fun s  ->
       FStar_Util.find_map s
-        (fun uu___102_607  ->
-           match uu___102_607 with
+        (fun uu___104_607  ->
+           match uu___104_607 with
            | FStar_Syntax_Syntax.UD (y,i) when
                x.FStar_Ident.idText = y.FStar_Ident.idText ->
                Some (FStar_Syntax_Syntax.U_bvar i)
@@ -221,30 +221,30 @@ let tag_with_range t s =
         | FStar_Syntax_Syntax.Tm_fvar fv ->
             let l = FStar_Syntax_Syntax.lid_of_fv fv  in
             let v1 =
-              let uu___106_675 = fv.FStar_Syntax_Syntax.fv_name  in
+              let uu___108_675 = fv.FStar_Syntax_Syntax.fv_name  in
               {
                 FStar_Syntax_Syntax.v = (FStar_Ident.set_lid_range l r1);
                 FStar_Syntax_Syntax.ty =
-                  (uu___106_675.FStar_Syntax_Syntax.ty);
-                FStar_Syntax_Syntax.p = (uu___106_675.FStar_Syntax_Syntax.p)
+                  (uu___108_675.FStar_Syntax_Syntax.ty);
+                FStar_Syntax_Syntax.p = (uu___108_675.FStar_Syntax_Syntax.p)
               }  in
             let fv1 =
-              let uu___107_691 = fv  in
+              let uu___109_691 = fv  in
               {
                 FStar_Syntax_Syntax.fv_name = v1;
                 FStar_Syntax_Syntax.fv_delta =
-                  (uu___107_691.FStar_Syntax_Syntax.fv_delta);
+                  (uu___109_691.FStar_Syntax_Syntax.fv_delta);
                 FStar_Syntax_Syntax.fv_qual =
-                  (uu___107_691.FStar_Syntax_Syntax.fv_qual)
+                  (uu___109_691.FStar_Syntax_Syntax.fv_qual)
               }  in
             FStar_Syntax_Syntax.Tm_fvar fv1
         | t' -> t'  in
-      let uu___108_693 = t  in
+      let uu___110_693 = t  in
       {
         FStar_Syntax_Syntax.n = t';
-        FStar_Syntax_Syntax.tk = (uu___108_693.FStar_Syntax_Syntax.tk);
+        FStar_Syntax_Syntax.tk = (uu___110_693.FStar_Syntax_Syntax.tk);
         FStar_Syntax_Syntax.pos = r1;
-        FStar_Syntax_Syntax.vars = (uu___108_693.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___110_693.FStar_Syntax_Syntax.vars)
       }
   
 let tag_lid_with_range l s =
@@ -318,8 +318,8 @@ and subst_flags' :
     fun flags  ->
       FStar_All.pipe_right flags
         (FStar_List.map
-           (fun uu___103_972  ->
-              match uu___103_972 with
+           (fun uu___105_972  ->
+              match uu___105_972 with
               | FStar_Syntax_Syntax.DECREASES a ->
                   let uu____976 = subst' s a  in
                   FStar_Syntax_Syntax.DECREASES uu____976
@@ -335,7 +335,7 @@ and subst_comp_typ' :
       match s with
       | ([],None )|([]::[],None ) -> t
       | uu____996 ->
-          let uu___109_1002 = t  in
+          let uu___111_1002 = t  in
           let uu____1003 =
             FStar_List.map (subst_univ (Prims.fst s))
               t.FStar_Syntax_Syntax.comp_univs
@@ -410,13 +410,13 @@ let subst_binder' s uu____1175 =
   match uu____1175 with
   | (x,imp) ->
       let uu____1180 =
-        let uu___110_1181 = x  in
+        let uu___112_1181 = x  in
         let uu____1182 = subst' s x.FStar_Syntax_Syntax.sort  in
         {
           FStar_Syntax_Syntax.ppname =
-            (uu___110_1181.FStar_Syntax_Syntax.ppname);
+            (uu___112_1181.FStar_Syntax_Syntax.ppname);
           FStar_Syntax_Syntax.index =
-            (uu___110_1181.FStar_Syntax_Syntax.index);
+            (uu___112_1181.FStar_Syntax_Syntax.index);
           FStar_Syntax_Syntax.sort = uu____1182
         }  in
       (uu____1180, imp)
@@ -464,14 +464,14 @@ let subst_pat' :
                         let uu____1369 = aux n1 p4  in Prims.fst uu____1369)
                      ps
                     in
-                 ((let uu___111_1374 = p3  in
+                 ((let uu___113_1374 = p3  in
                    {
                      FStar_Syntax_Syntax.v =
                        (FStar_Syntax_Syntax.Pat_disj (p3 :: ps1));
                      FStar_Syntax_Syntax.ty =
-                       (uu___111_1374.FStar_Syntax_Syntax.ty);
+                       (uu___113_1374.FStar_Syntax_Syntax.ty);
                      FStar_Syntax_Syntax.p =
-                       (uu___111_1374.FStar_Syntax_Syntax.p)
+                       (uu___113_1374.FStar_Syntax_Syntax.p)
                    }), m))
         | FStar_Syntax_Syntax.Pat_cons (fv,pats) ->
             let uu____1387 =
@@ -488,74 +488,74 @@ let subst_pat' :
                in
             (match uu____1387 with
              | (pats1,n2) ->
-                 ((let uu___112_1492 = p1  in
+                 ((let uu___114_1492 = p1  in
                    {
                      FStar_Syntax_Syntax.v =
                        (FStar_Syntax_Syntax.Pat_cons
                           (fv, (FStar_List.rev pats1)));
                      FStar_Syntax_Syntax.ty =
-                       (uu___112_1492.FStar_Syntax_Syntax.ty);
+                       (uu___114_1492.FStar_Syntax_Syntax.ty);
                      FStar_Syntax_Syntax.p =
-                       (uu___112_1492.FStar_Syntax_Syntax.p)
+                       (uu___114_1492.FStar_Syntax_Syntax.p)
                    }), n2))
         | FStar_Syntax_Syntax.Pat_var x ->
             let s1 = shift_subst' n1 s  in
             let x1 =
-              let uu___113_1508 = x  in
+              let uu___115_1508 = x  in
               let uu____1509 = subst' s1 x.FStar_Syntax_Syntax.sort  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___113_1508.FStar_Syntax_Syntax.ppname);
+                  (uu___115_1508.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index =
-                  (uu___113_1508.FStar_Syntax_Syntax.index);
+                  (uu___115_1508.FStar_Syntax_Syntax.index);
                 FStar_Syntax_Syntax.sort = uu____1509
               }  in
-            ((let uu___114_1514 = p1  in
+            ((let uu___116_1514 = p1  in
               {
                 FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_var x1);
                 FStar_Syntax_Syntax.ty =
-                  (uu___114_1514.FStar_Syntax_Syntax.ty);
-                FStar_Syntax_Syntax.p = (uu___114_1514.FStar_Syntax_Syntax.p)
+                  (uu___116_1514.FStar_Syntax_Syntax.ty);
+                FStar_Syntax_Syntax.p = (uu___116_1514.FStar_Syntax_Syntax.p)
               }), (n1 + (Prims.parse_int "1")))
         | FStar_Syntax_Syntax.Pat_wild x ->
             let s1 = shift_subst' n1 s  in
             let x1 =
-              let uu___115_1525 = x  in
+              let uu___117_1525 = x  in
               let uu____1526 = subst' s1 x.FStar_Syntax_Syntax.sort  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___115_1525.FStar_Syntax_Syntax.ppname);
+                  (uu___117_1525.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index =
-                  (uu___115_1525.FStar_Syntax_Syntax.index);
+                  (uu___117_1525.FStar_Syntax_Syntax.index);
                 FStar_Syntax_Syntax.sort = uu____1526
               }  in
-            ((let uu___116_1531 = p1  in
+            ((let uu___118_1531 = p1  in
               {
                 FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x1);
                 FStar_Syntax_Syntax.ty =
-                  (uu___116_1531.FStar_Syntax_Syntax.ty);
-                FStar_Syntax_Syntax.p = (uu___116_1531.FStar_Syntax_Syntax.p)
+                  (uu___118_1531.FStar_Syntax_Syntax.ty);
+                FStar_Syntax_Syntax.p = (uu___118_1531.FStar_Syntax_Syntax.p)
               }), (n1 + (Prims.parse_int "1")))
         | FStar_Syntax_Syntax.Pat_dot_term (x,t0) ->
             let s1 = shift_subst' n1 s  in
             let x1 =
-              let uu___117_1547 = x  in
+              let uu___119_1547 = x  in
               let uu____1548 = subst' s1 x.FStar_Syntax_Syntax.sort  in
               {
                 FStar_Syntax_Syntax.ppname =
-                  (uu___117_1547.FStar_Syntax_Syntax.ppname);
+                  (uu___119_1547.FStar_Syntax_Syntax.ppname);
                 FStar_Syntax_Syntax.index =
-                  (uu___117_1547.FStar_Syntax_Syntax.index);
+                  (uu___119_1547.FStar_Syntax_Syntax.index);
                 FStar_Syntax_Syntax.sort = uu____1548
               }  in
             let t01 = subst' s1 t0  in
-            ((let uu___118_1556 = p1  in
+            ((let uu___120_1556 = p1  in
               {
                 FStar_Syntax_Syntax.v =
                   (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
                 FStar_Syntax_Syntax.ty =
-                  (uu___118_1556.FStar_Syntax_Syntax.ty);
-                FStar_Syntax_Syntax.p = (uu___118_1556.FStar_Syntax_Syntax.p)
+                  (uu___120_1556.FStar_Syntax_Syntax.ty);
+                FStar_Syntax_Syntax.p = (uu___120_1556.FStar_Syntax_Syntax.p)
               }), n1)
          in
       aux (Prims.parse_int "0") p
@@ -566,14 +566,14 @@ let push_subst_lcomp s lopt =
   | Some (FStar_Util.Inl l) ->
       let uu____1590 =
         let uu____1593 =
-          let uu___119_1594 = l  in
+          let uu___121_1594 = l  in
           let uu____1595 = subst' s l.FStar_Syntax_Syntax.res_typ  in
           {
             FStar_Syntax_Syntax.eff_name =
-              (uu___119_1594.FStar_Syntax_Syntax.eff_name);
+              (uu___121_1594.FStar_Syntax_Syntax.eff_name);
             FStar_Syntax_Syntax.res_typ = uu____1595;
             FStar_Syntax_Syntax.cflags =
-              (uu___119_1594.FStar_Syntax_Syntax.cflags);
+              (uu___121_1594.FStar_Syntax_Syntax.cflags);
             FStar_Syntax_Syntax.comp =
               (fun uu____1598  ->
                  let uu____1599 = l.FStar_Syntax_Syntax.comp ()  in
@@ -657,13 +657,13 @@ let push_subst :
           mk1 uu____1965
       | FStar_Syntax_Syntax.Tm_refine (x,phi) ->
           let x1 =
-            let uu___120_2002 = x  in
+            let uu___122_2002 = x  in
             let uu____2003 = subst' s x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___120_2002.FStar_Syntax_Syntax.ppname);
+                (uu___122_2002.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___120_2002.FStar_Syntax_Syntax.index);
+                (uu___122_2002.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____2003
             }  in
           let phi1 =
@@ -714,42 +714,42 @@ let push_subst :
                       match lb.FStar_Syntax_Syntax.lbname with
                       | FStar_Util.Inl x ->
                           FStar_Util.Inl
-                            (let uu___121_2233 = x  in
+                            (let uu___123_2233 = x  in
                              {
                                FStar_Syntax_Syntax.ppname =
-                                 (uu___121_2233.FStar_Syntax_Syntax.ppname);
+                                 (uu___123_2233.FStar_Syntax_Syntax.ppname);
                                FStar_Syntax_Syntax.index =
-                                 (uu___121_2233.FStar_Syntax_Syntax.index);
+                                 (uu___123_2233.FStar_Syntax_Syntax.index);
                                FStar_Syntax_Syntax.sort = lbt
                              })
                       | FStar_Util.Inr fv ->
                           FStar_Util.Inr
-                            (let uu___122_2235 = fv  in
+                            (let uu___124_2235 = fv  in
                              {
                                FStar_Syntax_Syntax.fv_name =
-                                 (let uu___123_2236 =
+                                 (let uu___125_2236 =
                                     fv.FStar_Syntax_Syntax.fv_name  in
                                   {
                                     FStar_Syntax_Syntax.v =
-                                      (uu___123_2236.FStar_Syntax_Syntax.v);
+                                      (uu___125_2236.FStar_Syntax_Syntax.v);
                                     FStar_Syntax_Syntax.ty = lbt;
                                     FStar_Syntax_Syntax.p =
-                                      (uu___123_2236.FStar_Syntax_Syntax.p)
+                                      (uu___125_2236.FStar_Syntax_Syntax.p)
                                   });
                                FStar_Syntax_Syntax.fv_delta =
-                                 (uu___122_2235.FStar_Syntax_Syntax.fv_delta);
+                                 (uu___124_2235.FStar_Syntax_Syntax.fv_delta);
                                FStar_Syntax_Syntax.fv_qual =
-                                 (uu___122_2235.FStar_Syntax_Syntax.fv_qual)
+                                 (uu___124_2235.FStar_Syntax_Syntax.fv_qual)
                              })
                        in
-                    let uu___124_2251 = lb  in
+                    let uu___126_2251 = lb  in
                     {
                       FStar_Syntax_Syntax.lbname = lbname;
                       FStar_Syntax_Syntax.lbunivs =
-                        (uu___124_2251.FStar_Syntax_Syntax.lbunivs);
+                        (uu___126_2251.FStar_Syntax_Syntax.lbunivs);
                       FStar_Syntax_Syntax.lbtyp = lbt;
                       FStar_Syntax_Syntax.lbeff =
-                        (uu___124_2251.FStar_Syntax_Syntax.lbeff);
+                        (uu___126_2251.FStar_Syntax_Syntax.lbeff);
                       FStar_Syntax_Syntax.lbdef = lbd
                     }))
              in
@@ -828,10 +828,10 @@ let set_use_range :
       subst'
         ([],
           (Some
-             (let uu___125_2510 = r  in
+             (let uu___127_2510 = r  in
               {
                 FStar_Range.def_range = (r.FStar_Range.use_range);
-                FStar_Range.use_range = (uu___125_2510.FStar_Range.use_range)
+                FStar_Range.use_range = (uu___127_2510.FStar_Range.use_range)
               }))) t
   
 let subst_comp :
@@ -857,13 +857,13 @@ let open_binders' bs =
     | [] -> ([], o)
     | (x,imp)::bs' ->
         let x' =
-          let uu___126_2643 = FStar_Syntax_Syntax.freshen_bv x  in
+          let uu___128_2643 = FStar_Syntax_Syntax.freshen_bv x  in
           let uu____2644 = subst o x.FStar_Syntax_Syntax.sort  in
           {
             FStar_Syntax_Syntax.ppname =
-              (uu___126_2643.FStar_Syntax_Syntax.ppname);
+              (uu___128_2643.FStar_Syntax_Syntax.ppname);
             FStar_Syntax_Syntax.index =
-              (uu___126_2643.FStar_Syntax_Syntax.index);
+              (uu___128_2643.FStar_Syntax_Syntax.index);
             FStar_Syntax_Syntax.sort = uu____2644
           }  in
         let o1 =
@@ -923,7 +923,7 @@ let open_pat :
       | FStar_Syntax_Syntax.Pat_disj uu____2809 -> failwith "impossible"
       | FStar_Syntax_Syntax.Pat_constant uu____2815 -> p1
       | FStar_Syntax_Syntax.Pat_cons (fv,pats) ->
-          let uu___127_2828 = p1  in
+          let uu___129_2828 = p1  in
           let uu____2831 =
             let uu____2832 =
               let uu____2840 =
@@ -939,14 +939,14 @@ let open_pat :
             FStar_Syntax_Syntax.Pat_cons uu____2832  in
           {
             FStar_Syntax_Syntax.v = uu____2831;
-            FStar_Syntax_Syntax.ty = (uu___127_2828.FStar_Syntax_Syntax.ty);
-            FStar_Syntax_Syntax.p = (uu___127_2828.FStar_Syntax_Syntax.p)
+            FStar_Syntax_Syntax.ty = (uu___129_2828.FStar_Syntax_Syntax.ty);
+            FStar_Syntax_Syntax.p = (uu___129_2828.FStar_Syntax_Syntax.p)
           }
       | FStar_Syntax_Syntax.Pat_var x ->
           let yopt =
             FStar_Util.find_map renaming
-              (fun uu___104_2894  ->
-                 match uu___104_2894 with
+              (fun uu___106_2894  ->
+                 match uu___106_2894 with
                  | (x',y) when
                      (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText =
                        (x'.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
@@ -956,57 +956,57 @@ let open_pat :
           let y =
             match yopt with
             | None  ->
-                let uu___128_2904 = FStar_Syntax_Syntax.freshen_bv x  in
+                let uu___130_2904 = FStar_Syntax_Syntax.freshen_bv x  in
                 let uu____2905 = subst sub1 x.FStar_Syntax_Syntax.sort  in
                 {
                   FStar_Syntax_Syntax.ppname =
-                    (uu___128_2904.FStar_Syntax_Syntax.ppname);
+                    (uu___130_2904.FStar_Syntax_Syntax.ppname);
                   FStar_Syntax_Syntax.index =
-                    (uu___128_2904.FStar_Syntax_Syntax.index);
+                    (uu___130_2904.FStar_Syntax_Syntax.index);
                   FStar_Syntax_Syntax.sort = uu____2905
                 }
             | Some y -> y  in
-          let uu___129_2909 = p1  in
+          let uu___131_2909 = p1  in
           {
             FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_var y);
-            FStar_Syntax_Syntax.ty = (uu___129_2909.FStar_Syntax_Syntax.ty);
-            FStar_Syntax_Syntax.p = (uu___129_2909.FStar_Syntax_Syntax.p)
+            FStar_Syntax_Syntax.ty = (uu___131_2909.FStar_Syntax_Syntax.ty);
+            FStar_Syntax_Syntax.p = (uu___131_2909.FStar_Syntax_Syntax.p)
           }
       | FStar_Syntax_Syntax.Pat_wild x ->
           let x' =
-            let uu___130_2914 = FStar_Syntax_Syntax.freshen_bv x  in
+            let uu___132_2914 = FStar_Syntax_Syntax.freshen_bv x  in
             let uu____2915 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___130_2914.FStar_Syntax_Syntax.ppname);
+                (uu___132_2914.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___130_2914.FStar_Syntax_Syntax.index);
+                (uu___132_2914.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____2915
             }  in
-          let uu___131_2918 = p1  in
+          let uu___133_2918 = p1  in
           {
             FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x');
-            FStar_Syntax_Syntax.ty = (uu___131_2918.FStar_Syntax_Syntax.ty);
-            FStar_Syntax_Syntax.p = (uu___131_2918.FStar_Syntax_Syntax.p)
+            FStar_Syntax_Syntax.ty = (uu___133_2918.FStar_Syntax_Syntax.ty);
+            FStar_Syntax_Syntax.p = (uu___133_2918.FStar_Syntax_Syntax.p)
           }
       | FStar_Syntax_Syntax.Pat_dot_term (x,t0) ->
           let x1 =
-            let uu___132_2928 = x  in
+            let uu___134_2928 = x  in
             let uu____2929 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___132_2928.FStar_Syntax_Syntax.ppname);
+                (uu___134_2928.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___132_2928.FStar_Syntax_Syntax.index);
+                (uu___134_2928.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____2929
             }  in
           let t01 = subst sub1 t0  in
-          let uu___133_2933 = p1  in
+          let uu___135_2933 = p1  in
           {
             FStar_Syntax_Syntax.v =
               (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
-            FStar_Syntax_Syntax.ty = (uu___133_2933.FStar_Syntax_Syntax.ty);
-            FStar_Syntax_Syntax.p = (uu___133_2933.FStar_Syntax_Syntax.p)
+            FStar_Syntax_Syntax.ty = (uu___135_2933.FStar_Syntax_Syntax.ty);
+            FStar_Syntax_Syntax.p = (uu___135_2933.FStar_Syntax_Syntax.p)
           }
        in
     let rec aux sub1 renaming p1 =
@@ -1019,14 +1019,14 @@ let open_pat :
           (match uu____3003 with
            | (p3,sub2,renaming1) ->
                let ps1 = FStar_List.map (aux_disj sub2 renaming1) ps  in
-               ((let uu___134_3051 = p3  in
+               ((let uu___136_3051 = p3  in
                  {
                    FStar_Syntax_Syntax.v =
                      (FStar_Syntax_Syntax.Pat_disj (p3 :: ps1));
                    FStar_Syntax_Syntax.ty =
-                     (uu___134_3051.FStar_Syntax_Syntax.ty);
+                     (uu___136_3051.FStar_Syntax_Syntax.ty);
                    FStar_Syntax_Syntax.p =
-                     (uu___134_3051.FStar_Syntax_Syntax.p)
+                     (uu___136_3051.FStar_Syntax_Syntax.p)
                  }), sub2, renaming1))
       | FStar_Syntax_Syntax.Pat_cons (fv,pats) ->
           let uu____3068 =
@@ -1044,25 +1044,25 @@ let open_pat :
              in
           (match uu____3068 with
            | (pats1,sub2,renaming1) ->
-               ((let uu___135_3304 = p1  in
+               ((let uu___137_3304 = p1  in
                  {
                    FStar_Syntax_Syntax.v =
                      (FStar_Syntax_Syntax.Pat_cons
                         (fv, (FStar_List.rev pats1)));
                    FStar_Syntax_Syntax.ty =
-                     (uu___135_3304.FStar_Syntax_Syntax.ty);
+                     (uu___137_3304.FStar_Syntax_Syntax.ty);
                    FStar_Syntax_Syntax.p =
-                     (uu___135_3304.FStar_Syntax_Syntax.p)
+                     (uu___137_3304.FStar_Syntax_Syntax.p)
                  }), sub2, renaming1))
       | FStar_Syntax_Syntax.Pat_var x ->
           let x' =
-            let uu___136_3318 = FStar_Syntax_Syntax.freshen_bv x  in
+            let uu___138_3318 = FStar_Syntax_Syntax.freshen_bv x  in
             let uu____3319 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___136_3318.FStar_Syntax_Syntax.ppname);
+                (uu___138_3318.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___136_3318.FStar_Syntax_Syntax.index);
+                (uu___138_3318.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3319
             }  in
           let sub2 =
@@ -1070,21 +1070,21 @@ let open_pat :
             (FStar_Syntax_Syntax.DB ((Prims.parse_int "0"), x')) ::
               uu____3324
              in
-          ((let uu___137_3332 = p1  in
+          ((let uu___139_3332 = p1  in
             {
               FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_var x');
-              FStar_Syntax_Syntax.ty = (uu___137_3332.FStar_Syntax_Syntax.ty);
-              FStar_Syntax_Syntax.p = (uu___137_3332.FStar_Syntax_Syntax.p)
+              FStar_Syntax_Syntax.ty = (uu___139_3332.FStar_Syntax_Syntax.ty);
+              FStar_Syntax_Syntax.p = (uu___139_3332.FStar_Syntax_Syntax.p)
             }), sub2, ((x, x') :: renaming))
       | FStar_Syntax_Syntax.Pat_wild x ->
           let x' =
-            let uu___138_3339 = FStar_Syntax_Syntax.freshen_bv x  in
+            let uu___140_3339 = FStar_Syntax_Syntax.freshen_bv x  in
             let uu____3340 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___138_3339.FStar_Syntax_Syntax.ppname);
+                (uu___140_3339.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___138_3339.FStar_Syntax_Syntax.index);
+                (uu___140_3339.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3340
             }  in
           let sub2 =
@@ -1092,30 +1092,30 @@ let open_pat :
             (FStar_Syntax_Syntax.DB ((Prims.parse_int "0"), x')) ::
               uu____3345
              in
-          ((let uu___139_3353 = p1  in
+          ((let uu___141_3353 = p1  in
             {
               FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x');
-              FStar_Syntax_Syntax.ty = (uu___139_3353.FStar_Syntax_Syntax.ty);
-              FStar_Syntax_Syntax.p = (uu___139_3353.FStar_Syntax_Syntax.p)
+              FStar_Syntax_Syntax.ty = (uu___141_3353.FStar_Syntax_Syntax.ty);
+              FStar_Syntax_Syntax.p = (uu___141_3353.FStar_Syntax_Syntax.p)
             }), sub2, ((x, x') :: renaming))
       | FStar_Syntax_Syntax.Pat_dot_term (x,t0) ->
           let x1 =
-            let uu___140_3365 = x  in
+            let uu___142_3365 = x  in
             let uu____3366 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___140_3365.FStar_Syntax_Syntax.ppname);
+                (uu___142_3365.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___140_3365.FStar_Syntax_Syntax.index);
+                (uu___142_3365.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3366
             }  in
           let t01 = subst sub1 t0  in
-          ((let uu___141_3376 = p1  in
+          ((let uu___143_3376 = p1  in
             {
               FStar_Syntax_Syntax.v =
                 (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
-              FStar_Syntax_Syntax.ty = (uu___141_3376.FStar_Syntax_Syntax.ty);
-              FStar_Syntax_Syntax.p = (uu___141_3376.FStar_Syntax_Syntax.p)
+              FStar_Syntax_Syntax.ty = (uu___143_3376.FStar_Syntax_Syntax.ty);
+              FStar_Syntax_Syntax.p = (uu___143_3376.FStar_Syntax_Syntax.p)
             }), sub1, renaming)
        in
     let uu____3379 = aux [] [] p  in
@@ -1160,13 +1160,13 @@ let close_binders :
       | [] -> []
       | (x,imp)::tl1 ->
           let x1 =
-            let uu___142_3496 = x  in
+            let uu___144_3496 = x  in
             let uu____3497 = subst s x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___142_3496.FStar_Syntax_Syntax.ppname);
+                (uu___144_3496.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___142_3496.FStar_Syntax_Syntax.index);
+                (uu___144_3496.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3497
             }  in
           let s' =
@@ -1185,14 +1185,14 @@ let close_lcomp :
   fun bs  ->
     fun lc  ->
       let s = closing_subst bs  in
-      let uu___143_3518 = lc  in
+      let uu___145_3518 = lc  in
       let uu____3519 = subst s lc.FStar_Syntax_Syntax.res_typ  in
       {
         FStar_Syntax_Syntax.eff_name =
-          (uu___143_3518.FStar_Syntax_Syntax.eff_name);
+          (uu___145_3518.FStar_Syntax_Syntax.eff_name);
         FStar_Syntax_Syntax.res_typ = uu____3519;
         FStar_Syntax_Syntax.cflags =
-          (uu___143_3518.FStar_Syntax_Syntax.cflags);
+          (uu___145_3518.FStar_Syntax_Syntax.cflags);
         FStar_Syntax_Syntax.comp =
           (fun uu____3522  ->
              let uu____3523 = lc.FStar_Syntax_Syntax.comp ()  in
@@ -1222,14 +1222,14 @@ let close_pat :
                       let uu____3609 = aux sub2 p4  in Prims.fst uu____3609)
                    ps
                   in
-               ((let uu___144_3621 = p3  in
+               ((let uu___146_3621 = p3  in
                  {
                    FStar_Syntax_Syntax.v =
                      (FStar_Syntax_Syntax.Pat_disj (p3 :: ps1));
                    FStar_Syntax_Syntax.ty =
-                     (uu___144_3621.FStar_Syntax_Syntax.ty);
+                     (uu___146_3621.FStar_Syntax_Syntax.ty);
                    FStar_Syntax_Syntax.p =
-                     (uu___144_3621.FStar_Syntax_Syntax.p)
+                     (uu___146_3621.FStar_Syntax_Syntax.p)
                  }), sub2))
       | FStar_Syntax_Syntax.Pat_cons (fv,pats) ->
           let uu____3638 =
@@ -1246,25 +1246,25 @@ let close_pat :
              in
           (match uu____3638 with
            | (pats1,sub2) ->
-               ((let uu___145_3804 = p1  in
+               ((let uu___147_3804 = p1  in
                  {
                    FStar_Syntax_Syntax.v =
                      (FStar_Syntax_Syntax.Pat_cons
                         (fv, (FStar_List.rev pats1)));
                    FStar_Syntax_Syntax.ty =
-                     (uu___145_3804.FStar_Syntax_Syntax.ty);
+                     (uu___147_3804.FStar_Syntax_Syntax.ty);
                    FStar_Syntax_Syntax.p =
-                     (uu___145_3804.FStar_Syntax_Syntax.p)
+                     (uu___147_3804.FStar_Syntax_Syntax.p)
                  }), sub2))
       | FStar_Syntax_Syntax.Pat_var x ->
           let x1 =
-            let uu___146_3818 = x  in
+            let uu___148_3818 = x  in
             let uu____3819 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___146_3818.FStar_Syntax_Syntax.ppname);
+                (uu___148_3818.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___146_3818.FStar_Syntax_Syntax.index);
+                (uu___148_3818.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3819
             }  in
           let sub2 =
@@ -1272,21 +1272,21 @@ let close_pat :
             (FStar_Syntax_Syntax.NM (x1, (Prims.parse_int "0"))) ::
               uu____3824
              in
-          ((let uu___147_3829 = p1  in
+          ((let uu___149_3829 = p1  in
             {
               FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_var x1);
-              FStar_Syntax_Syntax.ty = (uu___147_3829.FStar_Syntax_Syntax.ty);
-              FStar_Syntax_Syntax.p = (uu___147_3829.FStar_Syntax_Syntax.p)
+              FStar_Syntax_Syntax.ty = (uu___149_3829.FStar_Syntax_Syntax.ty);
+              FStar_Syntax_Syntax.p = (uu___149_3829.FStar_Syntax_Syntax.p)
             }), sub2)
       | FStar_Syntax_Syntax.Pat_wild x ->
           let x1 =
-            let uu___148_3834 = x  in
+            let uu___150_3834 = x  in
             let uu____3835 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___148_3834.FStar_Syntax_Syntax.ppname);
+                (uu___150_3834.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___148_3834.FStar_Syntax_Syntax.index);
+                (uu___150_3834.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3835
             }  in
           let sub2 =
@@ -1294,30 +1294,30 @@ let close_pat :
             (FStar_Syntax_Syntax.NM (x1, (Prims.parse_int "0"))) ::
               uu____3840
              in
-          ((let uu___149_3845 = p1  in
+          ((let uu___151_3845 = p1  in
             {
               FStar_Syntax_Syntax.v = (FStar_Syntax_Syntax.Pat_wild x1);
-              FStar_Syntax_Syntax.ty = (uu___149_3845.FStar_Syntax_Syntax.ty);
-              FStar_Syntax_Syntax.p = (uu___149_3845.FStar_Syntax_Syntax.p)
+              FStar_Syntax_Syntax.ty = (uu___151_3845.FStar_Syntax_Syntax.ty);
+              FStar_Syntax_Syntax.p = (uu___151_3845.FStar_Syntax_Syntax.p)
             }), sub2)
       | FStar_Syntax_Syntax.Pat_dot_term (x,t0) ->
           let x1 =
-            let uu___150_3855 = x  in
+            let uu___152_3855 = x  in
             let uu____3856 = subst sub1 x.FStar_Syntax_Syntax.sort  in
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___150_3855.FStar_Syntax_Syntax.ppname);
+                (uu___152_3855.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___150_3855.FStar_Syntax_Syntax.index);
+                (uu___152_3855.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____3856
             }  in
           let t01 = subst sub1 t0  in
-          ((let uu___151_3863 = p1  in
+          ((let uu___153_3863 = p1  in
             {
               FStar_Syntax_Syntax.v =
                 (FStar_Syntax_Syntax.Pat_dot_term (x1, t01));
-              FStar_Syntax_Syntax.ty = (uu___151_3863.FStar_Syntax_Syntax.ty);
-              FStar_Syntax_Syntax.p = (uu___151_3863.FStar_Syntax_Syntax.p)
+              FStar_Syntax_Syntax.ty = (uu___153_3863.FStar_Syntax_Syntax.ty);
+              FStar_Syntax_Syntax.p = (uu___153_3863.FStar_Syntax_Syntax.p)
             }), sub1)
        in
     aux [] p
@@ -1431,17 +1431,17 @@ let open_let_rec :
                           FStar_Util.left lb.FStar_Syntax_Syntax.lbname  in
                         FStar_Syntax_Syntax.freshen_bv uu____4090  in
                       ((i + (Prims.parse_int "1")),
-                        ((let uu___152_4093 = lb  in
+                        ((let uu___154_4093 = lb  in
                           {
                             FStar_Syntax_Syntax.lbname = (FStar_Util.Inl x);
                             FStar_Syntax_Syntax.lbunivs =
-                              (uu___152_4093.FStar_Syntax_Syntax.lbunivs);
+                              (uu___154_4093.FStar_Syntax_Syntax.lbunivs);
                             FStar_Syntax_Syntax.lbtyp =
-                              (uu___152_4093.FStar_Syntax_Syntax.lbtyp);
+                              (uu___154_4093.FStar_Syntax_Syntax.lbtyp);
                             FStar_Syntax_Syntax.lbeff =
-                              (uu___152_4093.FStar_Syntax_Syntax.lbeff);
+                              (uu___154_4093.FStar_Syntax_Syntax.lbeff);
                             FStar_Syntax_Syntax.lbdef =
-                              (uu___152_4093.FStar_Syntax_Syntax.lbdef)
+                              (uu___154_4093.FStar_Syntax_Syntax.lbdef)
                           }) :: lbs1), ((FStar_Syntax_Syntax.DB (i, x)) ::
                         out))) lbs ((Prims.parse_int "0"), [], [])
             in
@@ -1470,19 +1470,19 @@ let open_let_rec :
                           in
                        match uu____4111 with
                        | (uu____4146,us,u_let_rec_opening) ->
-                           let uu___153_4153 = lb  in
+                           let uu___155_4153 = lb  in
                            let uu____4154 =
                              subst u_let_rec_opening
                                lb.FStar_Syntax_Syntax.lbdef
                               in
                            {
                              FStar_Syntax_Syntax.lbname =
-                               (uu___153_4153.FStar_Syntax_Syntax.lbname);
+                               (uu___155_4153.FStar_Syntax_Syntax.lbname);
                              FStar_Syntax_Syntax.lbunivs = us;
                              FStar_Syntax_Syntax.lbtyp =
-                               (uu___153_4153.FStar_Syntax_Syntax.lbtyp);
+                               (uu___155_4153.FStar_Syntax_Syntax.lbtyp);
                              FStar_Syntax_Syntax.lbeff =
-                               (uu___153_4153.FStar_Syntax_Syntax.lbeff);
+                               (uu___155_4153.FStar_Syntax_Syntax.lbeff);
                              FStar_Syntax_Syntax.lbdef = uu____4154
                            }))
                 in
@@ -1536,20 +1536,20 @@ let close_let_rec :
                           in
                        match uu____4216 with
                        | (uu____4237,u_let_rec_closing) ->
-                           let uu___154_4241 = lb  in
+                           let uu___156_4241 = lb  in
                            let uu____4242 =
                              subst u_let_rec_closing
                                lb.FStar_Syntax_Syntax.lbdef
                               in
                            {
                              FStar_Syntax_Syntax.lbname =
-                               (uu___154_4241.FStar_Syntax_Syntax.lbname);
+                               (uu___156_4241.FStar_Syntax_Syntax.lbname);
                              FStar_Syntax_Syntax.lbunivs =
-                               (uu___154_4241.FStar_Syntax_Syntax.lbunivs);
+                               (uu___156_4241.FStar_Syntax_Syntax.lbunivs);
                              FStar_Syntax_Syntax.lbtyp =
-                               (uu___154_4241.FStar_Syntax_Syntax.lbtyp);
+                               (uu___156_4241.FStar_Syntax_Syntax.lbtyp);
                              FStar_Syntax_Syntax.lbeff =
-                               (uu___154_4241.FStar_Syntax_Syntax.lbeff);
+                               (uu___156_4241.FStar_Syntax_Syntax.lbeff);
                              FStar_Syntax_Syntax.lbdef = uu____4242
                            }))
                 in

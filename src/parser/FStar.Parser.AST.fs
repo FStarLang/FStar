@@ -452,7 +452,11 @@ let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<dec
             as_mlist out ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+  let d, ds = match ds with
+    | d :: ds -> d, ds
+    | [] -> raise Empty_frag
+  in
   match d.d with
   | TopLevelModule m ->
       let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in

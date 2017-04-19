@@ -1,0 +1,1 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Minimal\nlet hello : string = \"Hello F*!\"\n","line":1,"column":0}}

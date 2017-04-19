@@ -13,8 +13,8 @@ let uu___is_Z3V : z3version -> Prims.bool =
 let __proj__Z3V__item___0 : z3version -> (Prims.int * Prims.int * Prims.int)
   = fun projectee  -> match projectee with | Z3V _0 -> _0 
 let z3version_as_string : z3version -> Prims.string =
-  fun uu___91_48  ->
-    match uu___91_48 with
+  fun uu___93_48  ->
+    match uu___93_48 with
     | Z3V_Unknown s -> FStar_Util.format1 "unknown version: %s" s
     | Z3V (i,j,k) ->
         let uu____53 = FStar_Util.string_of_int i  in
@@ -151,8 +151,8 @@ let uu___is_KILLED : z3status -> Prims.bool =
     match projectee with | KILLED  -> true | uu____245 -> false
   
 let status_to_string : z3status -> Prims.string =
-  fun uu___92_248  ->
-    match uu___92_248 with
+  fun uu___94_248  ->
+    match uu___94_248 with
     | SAT uu____249 -> "sat"
     | UNSAT uu____251 -> "unsat"
     | UNKNOWN uu____252 -> "unknown"
@@ -523,8 +523,8 @@ let z3_job :
     fun label_messages  ->
       fun input  ->
         fun uu____1105  ->
-          let ekind uu___93_1121 =
-            match uu___93_1121 with
+          let ekind uu___95_1121 =
+            match uu___95_1121 with
             | TIMEOUT uu____1122 -> Timeout
             | SAT _|UNKNOWN _ -> Default
             | KILLED  -> Kill
@@ -697,8 +697,8 @@ let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___94_1624  ->
-            match uu___94_1624 with
+         (fun uu___96_1624  ->
+            match uu___96_1624 with
             | FStar_SMTEncoding_Term.Push |FStar_SMTEncoding_Term.Pop  ->
                 failwith "Unexpected push/pop"
             | uu____1625 -> ()));
@@ -778,8 +778,8 @@ let filter_assertions :
                              let uu____1814 =
                                FStar_All.pipe_right th
                                  (FStar_Util.for_some
-                                    (fun uu___95_1816  ->
-                                       match uu___95_1816 with
+                                    (fun uu___97_1816  ->
+                                       match uu___97_1816 with
                                        | FStar_SMTEncoding_Term.Assume
                                            (uu____1817,uu____1818,nm') ->
                                            nm = nm'
@@ -794,8 +794,8 @@ let filter_assertions :
                    let uu____1823 =
                      FStar_All.pipe_right th
                        (FStar_List.collect
-                          (fun uu___96_1827  ->
-                             match uu___96_1827 with
+                          (fun uu___98_1827  ->
+                             match uu___98_1827 with
                              | FStar_SMTEncoding_Term.Assume
                                  (uu____1829,uu____1830,nm) -> [nm]
                              | uu____1832 -> []))

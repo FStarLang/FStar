@@ -52,6 +52,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          assert (uvs = []);
  (*open*)let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
+         let k = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env k in
          let indices, t = U.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
@@ -97,7 +98,10 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
               then env, [], U_zero
               else raise (Error("Unexpected data constructor", se.sigrng)) in
 
+         let norm_whnf = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env in
+
          let arguments, result =
+            let t = norm_whnf t in
             match (SS.compress t).n with
                 | Tm_arrow(bs, res) ->
                   //the type of each datacon is already a function with the type params as arguments
@@ -116,8 +120,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
          let arguments, env', us = tc_tparams env arguments in
          let result, res_lcomp = tc_trivial_guard env' result in
-         let norm_whnf = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env' in
-         begin match (norm_whnf res_lcomp.res_typ).n with
+         begin match (SS.compress res_lcomp.res_typ).n with
                | Tm_type _ -> ()
                | ty -> raise (Error(BU.format2 "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                                 (Print.term_to_string result)
@@ -475,7 +478,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       //label the haseq predicate so that we get a proper error message if the assertion fails
       let sort_range = (fst b).sort.pos in
       let haseq_b = TcUtil.label
-                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add the 'noeq' qualifier" ty_lid.str)
+                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" ty_lid.str)
                     sort_range
                     haseq_b
       in

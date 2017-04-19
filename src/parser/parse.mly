@@ -115,12 +115,12 @@ open FStar_String
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
 inputFragment:
-  | is_light=boption(PRAGMALIGHT STRING { }) d=decl decls=list(decl) main_opt=mainDecl? EOF
+  | is_light=boption(PRAGMALIGHT STRING { }) decls=list(decl) main_opt=mainDecl? EOF
       {
         let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) d decls
+        in as_frag is_light (rhs parseState 1) decls
       }
 
 (* TODO : let's try to remove that *)
@@ -395,6 +395,8 @@ atomicPattern:
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
       { mk_pattern PatWild (rhs parseState 1) }
+  | HASH UNDERSCORE
+      { mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
@@ -936,6 +938,12 @@ atomicUniverse:
   | op=OPINFIX4
   | op=operatorInfix0ad12
      { op }
+  | op=PIPE_RIGHT
+     { "|>" }
+  | op=COLON_EQUALS
+     { ":=" }
+  | op=COLON_COLON
+     { "::" }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
