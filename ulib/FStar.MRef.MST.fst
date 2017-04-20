@@ -261,77 +261,26 @@ val recall_stable_on_heap: #a:Type
                         -> p:predicate heap{stable_on_heap m p}
                         -> MST unit
                                (requires (fun _ ->  witnessed_stable_on_heap m p))
-                               (ensures (fun h0 _ h1 -> p h1))
+                               (ensures  (fun h0 _ h1 -> h0 == h1 /\ p h1))
 let recall_stable_on_heap #a #rel m p = mst_recall p
 
-(*
-
-let stable (#a:Type) (p:predicate a) (rel:preorder a) = stable_rel rel p
-
-abstract type token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) = True
-abstract type witnessed (p:heap -> Type) = True
-
-type fresh(#a:Type) (#rel:preorder a) (x:a) h0 (m:mref a rel) h1 = 
-  ~ (contains h0 m) /\ contains h1 m /\ h1==upd h0 m x
-
-val alloc: #a:Type
-        -> #rel:preorder a
-        -> x:a
-        -> ST (mref a rel)
-              (requires (fun _ -> True))
-              (fun h0 m h1 -> fresh x h0 m h1)
-let alloc #a #rel x = ST.alloc x
-
-val read: #a:Type
-       -> #rel:preorder a
-       -> x:mref a rel
-       -> ST a
-            (requires (fun h -> True))
-            (ensures (fun h0 v h1 -> h0==h1 /\ v==sel h0 x))
-let read #a #b x = !x
-
-val write: #a:Type
-        -> #rel:preorder a
-        -> x:mref a rel
-        -> v:a
-        -> ST unit
-              (requires (fun h0 -> rel (sel h0 x) v))
-              (ensures (fun h0 _ h1 -> h1==upd h0 x v))
-let write #a #b x v = x := v
-
-val take_token: #a:Type
-          -> #rel:preorder a
-          -> m:mref a rel
-          -> p:(a -> Type)
-          -> ST unit
-                (requires (fun h0 -> p (sel h0 m) /\ stable p rel))
-                (ensures (fun h0 _ h1 -> h0==h1 /\ token m p))
-let take_token #a #rel m p = ()
-
-assume val recall_token: #a:Type
-                     -> #b:reln a
-                     -> m:mref a b
-                     -> p:(a -> Type)
-                     -> ST unit
-                       (requires (fun _ ->  token m p))
-                       (ensures (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
-
-let stable_on_heap (#a:Type) (#b:reln a) (r:mref a b) (p:(heap -> Type)) = 
-  forall h0 h1. p h0 /\ b (sel h0 r) (sel h1 r) ==> p h1
-  
-assume val recall: p:(heap -> Type)
-                -> ST unit
-                      (requires (fun _ ->  witnessed p))
-                      (ensures (fun h0 _ h1 -> p h1))
+let witnessed (p:predicate heap{stable p heap_rel}) = mst_witnessed p
 
 val witness: #a:Type
-          -> #b:reln a
-          -> m:mref a b
-          -> p:(heap -> Type)
-          -> ST unit
-                (requires (fun h0 -> p h0 /\ stable_on_heap m p))
-                (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
-let witness #a #b m p = ()*)
+          -> #rel:preorder a
+          -> m:mref a rel
+          -> p:predicate heap{stable p heap_rel}
+          -> MST unit
+                 (requires (fun h0 -> p h0))
+                 (ensures  (fun h0 _ h1 -> h0 == h1 /\ witnessed p))
+let witness #a #rel m p = mst_witness p
 
-
+val recall: #a:Type
+         -> #rel:preorder a
+         -> m:mref a rel
+         -> p:predicate heap{stable p heap_rel}
+         -> MST unit
+                (requires (fun _ ->  witnessed p))
+                (ensures  (fun h0 _ h1 -> h0 == h1 /\ p h1))
+let recall #a #rel m p = mst_recall p
 
