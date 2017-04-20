@@ -7,7 +7,7 @@ open FStar.Preorder
 (* TODO: Use the module system to properly control the visibility of actions and functions *)
 
 
-(* Defining the underlying state monad on mem using DM4F *)
+(* Definition of the underlying state monad on heap using DM4F *)
 
 let st (a:Type) = heap -> M (a * heap)
 
@@ -30,7 +30,7 @@ total new_effect {
 }
 
 
-(* Pre- and postcondition form of MSTATE *)
+(* Pre- and postcondition presentation of MSTATE *)
 
 let st_pre = heap -> Type0
 let st_post a = a -> heap -> Type0
@@ -41,20 +41,20 @@ effect MST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
 	                                               /\ (forall a h1. post h0 a h1 ==> p (a, h1)))
 
 
-(* Private definition of monotonic references, used to state heap_rel *)
+(* Private definition of monotonic references, used to define heap_rel *)
 
 private abstract let mmref (a:Type) (rel:preorder a) = mref a rel
 
-let m_as_mref (#a:Type) (#rel:preorder a) (m:mmref a rel) :GTot (mref a rel) = m
+private let m_as_mref (#a:Type) (#rel:preorder a) (m:mmref a rel) :GTot (mref a rel) = m
 
-let m_contains (#a:Type) (#rel:preorder a) (h:heap) (m:mmref a rel) = contains h (m_as_mref m)
+private let m_contains (#a:Type) (#rel:preorder a) (m:mmref a rel) (h:heap) = contains h (m_as_mref m)
 
-let m_addr_of (#a:Type) (#rel:preorder a) (m:mmref a rel) :GTot nat = addr_of (m_as_mref m)
+private let m_addr_of (#a:Type) (#rel:preorder a) (m:mmref a rel) :GTot nat = addr_of (m_as_mref m)
 
-let m_sel (#a:Type) (#rel:preorder a) (h:heap) (m:mmref a rel) :GTot a 
+private let m_sel (#a:Type) (#rel:preorder a) (h:heap) (m:mmref a rel) :GTot a 
   = sel h (m_as_mref m)
 
-let m_upd (#a:Type) (#rel:preorder a) (h:heap) (m:mmref a rel) (x:a{upd_condition h (m_as_mref m) x}) 
+private let m_upd (#a:Type) (#rel:preorder a) (h:heap) (m:mmref a rel) (x:a{upd_condition h (m_as_mref m) x}) 
   :GTot heap 
   = upd h (m_as_mref m) x
 
@@ -62,8 +62,8 @@ let m_upd (#a:Type) (#rel:preorder a) (h:heap) (m:mmref a rel) (x:a{upd_conditio
 (* Generated preorder on heaps *)
 
 let heap_rel (h0:heap) (h1:heap) 
-  = (forall a rel (m:mmref a rel) . (m_contains h0 m ==> m_contains h1 m) )
- /\ (forall a rel (m:mmref a rel) . (m_contains h0 m ==> rel (m_sel h0 m) (m_sel h1 m)))
+  = (forall a rel (m:mmref a rel) . (m_contains m h0 ==> m_contains m h1) )
+ /\ (forall a rel (m:mmref a rel) . (m_contains m h0 ==> rel (m_sel h0 m) (m_sel h1 m)))
 
 
 (* Lifting a relation on mmref to heap_rel *)
@@ -76,11 +76,11 @@ val m_lifting_lemma_aux: (#a:Type)
                       -> (m:mmref a rel)
 	              -> (m':mmref b rel')
                       -> (x:a)
-	              -> Lemma (requires (m_contains h m /\ rel (m_sel h m) x
-		                          /\ m_addr_of m = m_addr_of m' /\ m_contains h m'))
+	              -> Lemma (requires (m_contains m h /\ rel (m_sel h m) x
+		                          /\ m_addr_of m = m_addr_of m' /\ m_contains m' h))
 	                       (ensures  (rel (m_sel h m) x
 			                  /\ rel' (m_sel h m') (m_sel (m_upd h m x) m')))
-		               [SMTPat (m_contains h m'); SMTPat (rel (m_sel h m) x)]
+		               [SMTPat (m_contains m' h); SMTPat (rel (m_sel h m) x)]
 let m_lifting_lemma_aux #a #b #rel #rel' h m m' x 
   = lemma_contains_same_type h (m_as_mref m) (m_as_mref m'); 
     lemma_contains_same_rel h (m_as_mref m) (m_as_mref m')
@@ -90,8 +90,8 @@ val m_lifting_lemma: (#a:Type)
 	          -> (h:heap)
 	          -> (m:mmref a rel) 
 	          -> (x:a)
-	          -> Lemma (requires (m_contains h m /\ rel (m_sel h m) x))
-		           (ensures  (m_contains h m /\ rel (m_sel h m) x
+	          -> Lemma (requires (m_contains m h /\ rel (m_sel h m) x))
+		           (ensures  (m_contains m h /\ rel (m_sel h m) x
 			              /\ heap_rel h (m_upd h m x)))
 			   [SMTPat (heap_rel h (m_upd h m x))]
 let m_lifting_lemma #a #rel h m x = ()
@@ -105,11 +105,14 @@ let mst_get () = MSTATE?.get_st ()
 val mst_put: h:heap -> MST unit (fun h0 -> heap_rel h0 h) (fun _ _ h1 -> h == h1)
 let mst_put h = MSTATE?.put_st h
 
-abstract type mst_witnessed (p:predicate heap{stable p heap_rel}) = True
+//this abstract type can be used when MST is defined in a separate module
+//abstract type mst_witnessed (p:predicate heap{stable p heap_rel}) = True
+
+assume type mst_witnessed : (p:predicate heap{stable p heap_rel}) -> Type0
 
 val mst_witness: p:predicate heap{stable p heap_rel} 
               -> MST unit (fun h0 -> p h0) (fun h0 _ h1 -> h0 == h1 /\ mst_witnessed p)
-let mst_witness p = ()
+let mst_witness p = admit () //intentional (justified by metatheory)
 
 val mst_recall: p:predicate heap{stable p heap_rel} 
              -> MST unit (fun _ -> mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
@@ -118,7 +121,7 @@ let mst_recall p = admit () //intentional (justified by metatheory)
 
 (* Monotonic references and operations on them *)
 
-abstract let mref (a:Type) (rel:preorder a) = m:mmref a rel{mst_witnessed (fun h -> m_contains h m)}
+abstract let mref (a:Type) (rel:preorder a) = m:mmref a rel{mst_witnessed (m_contains m)}
 
 let as_mref (#a:Type) (#rel:preorder a) (m:mref a rel) 
   :GTot (FStar.Monotonic.Heap.mref a rel) 
@@ -126,15 +129,15 @@ let as_mref (#a:Type) (#rel:preorder a) (m:mref a rel)
 
 let as_mmref (#a:Type) (#rel:preorder a) (m:mref a rel) :GTot (mmref a rel) = m
 
-let contains (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) = contains h (as_mref m)
+let contains (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) = m_contains (as_mref m) h //contains h (as_mref m)
 
-let addr_of (#a:Type) (#rel:preorder a) (m:mref a rel) :GTot nat = addr_of (as_mref m)
+let addr_of (#a:Type) (#rel:preorder a) (m:mref a rel) :GTot nat = m_addr_of (as_mref m) //addr_of (as_mref m)
 
-let sel (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) :GTot a = sel h (as_mref m)
+let sel (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) :GTot a = m_sel h (as_mref m) //sel h (as_mref m)
 
 let upd (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) (x:a{upd_condition h (as_mref m) x}) 
   :GTot heap 
-  = upd h (as_mref m) x
+  = m_upd h (as_mref m) x //upd h (as_mref m) x
 
 
 (* Lifting a relation on mref to heap_rel *)
@@ -152,6 +155,22 @@ let lifting_lemma #a #rel h m x = m_lifting_lemma h (as_mmref m) x
 
 (* The public monotonic references interface for MSTATE *)
 
+type fresh(#a:Type) (#rel:preorder a) (x:a) h0 (m:mref a rel) h1 = 
+  ~(contains h0 m) /\ contains h1 m /\ h1 == upd h0 m x
+
+val alloc: #a:Type
+        -> #rel:preorder a
+        -> x:a
+        -> MST (mref a rel)
+               (requires (fun _ -> True))
+               (fun h0 m h1 -> fresh x h0 m h1)
+let alloc #a #rel x 
+  = let h0 = mst_get () in
+    let m, h1 = alloc_tot h0 x rel false in 
+    mst_put h1;
+    mst_witness (m_contains m);
+    m
+
 val read: #a:Type
        -> #rel:preorder a
        -> m:mref a rel
@@ -160,9 +179,9 @@ val read: #a:Type
               (ensures  (fun h0 v h1 -> h0 == h1 /\ v == sel h0 m))
 let read #a #rel m
   = let h = mst_get () in
-    mst_recall (fun h -> contains h m);
+    mst_recall (m_contains m);
     FStar.Monotonic.Heap.sel_tot h m
-    
+
 
 val write: #a:Type
         -> #rel:preorder a
@@ -173,25 +192,25 @@ val write: #a:Type
                (ensures  (fun h0 _ h1 -> rel (sel h0 m) x /\ h1 == upd h0 m x))
 let write #a #rel m x
   = let h0 = mst_get () in
-    mst_recall (fun h -> contains h m);
+    mst_recall (m_contains m);
     let h1 = FStar.Monotonic.Heap.upd_tot h0 m x in
-    assert (h1 == upd h0 m x);
     mst_put h1
 
 
-(*type fresh(#a:Type) (#rel:preorder a) (x:a) h0 (m:mref a rel) h1 = 
-  ~ (contains h0 m) /\ contains h1 m /\ h1 == upd h0 m x
+//abstract type token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) = True
 
-val alloc: #a:Type
-        -> #rel:preorder a
-        -> x:a
-        -> MST (mref a rel)
-              (requires (fun _ -> True))
-              (fun h0 m h1 -> fresh x h0 m h1)
-let alloc #a #rel x 
-  = let h0 = mst_get () in
-    //let mh = alloc h0 x rel false in 
-    admit () //ST.alloc x*)
+(*assume type token : (#a:Type) -> (#rel:preorder a) -> (m:mref a rel) -> (p:predicate a{stable p rel}) -> Type0
+
+val take_token: #a:Type
+          -> #rel:preorder a
+          -> m:mref a rel
+          -> p:predicate a{stable p rel}
+          -> MST unit
+                (requires (fun h0 -> p (sel h0 m)))
+                (ensures  (fun h0 _ h1 -> h0==h1 /\ token m p))
+let take_token #a #rel m p 
+  = admit ()*)
+
 
 
 (*
@@ -262,5 +281,6 @@ val witness: #a:Type
                 (requires (fun h0 -> p h0 /\ stable_on_heap m p))
                 (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
 let witness #a #b m p = ()*)
+
 
 

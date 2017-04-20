@@ -67,7 +67,7 @@ abstract let sel (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) :GTot a
 
 let lemma_sel_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r})
   :Lemma (sel_tot h r == sel h r)
-  [SMTPat (sel_tot h r)]
+         [SMTPat (sel_tot h r)]
   = ()
 
 (* Update. *)
@@ -94,16 +94,32 @@ abstract let upd (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{upd_co
 				  then Some (| a, (x, rel) |)
                                   else h.memory r') }
 
-abstract let lemma_upd_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a{upd_condition h r x})
+let lemma_upd_tot (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a{upd_condition h r x})
   :Lemma (upd_tot h r x == upd h r x)
-  [SMTPat (upd_tot h r x)]
+         [SMTPat (upd_tot h r x)]
   = ()
 
 
 (* Allocate. *)
+private abstract let alloc_ref (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:bool) 
+                               (r:mref a rel{~(contains h r) /\ r.addr = h.next_addr /\ r.init == x /\ r.mm == mm}) :Tot heap
+  = { next_addr = r.addr + 1;
+      memory    = (fun (r':nat) -> if r' = r.addr
+	                           then Some (| a, (x, rel) |)
+				   else h.memory r')}
+
+abstract let alloc_tot (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:bool) :Tot (mref a rel * heap)
+  = let r = { addr = h.next_addr; init = x; mm = mm } in
+    r, alloc_ref h x rel mm r
+
 abstract let alloc (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:bool) :GTot (mref a rel * heap)
   = let r = { addr = h.next_addr; init = x; mm = mm } in
     r, upd #a #rel h r x
+
+let lemma_alloc_tot (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:bool) 
+  :Lemma (alloc_tot h x rel mm == alloc h x rel mm)
+         [SMTPat (alloc_tot h x rel mm)]
+  = ()
 
 abstract let free_mm (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r /\ is_mm r})
   :GTot heap
