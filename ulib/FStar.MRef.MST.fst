@@ -155,6 +155,8 @@ let lifting_lemma #a #rel h m x = m_lifting_lemma h (as_mmref m) x
 
 (* The public monotonic references interface for MSTATE *)
 
+(* Allocation *)
+
 type fresh(#a:Type) (#rel:preorder a) (x:a) h0 (m:mref a rel) h1 = 
   ~(contains h0 m) /\ contains h1 m /\ h1 == upd h0 m x
 
@@ -171,6 +173,8 @@ let alloc #a #rel x
     mst_witness (m_contains m);
     m
 
+(* Read and write *)
+
 val read: #a:Type
        -> #rel:preorder a
        -> m:mref a rel
@@ -181,7 +185,6 @@ let read #a #rel m
   = let h = mst_get () in
     mst_recall (m_contains m);
     FStar.Monotonic.Heap.sel_tot h m
-
 
 val write: #a:Type
         -> #rel:preorder a
@@ -196,6 +199,8 @@ let write #a #rel m x
     let h1 = FStar.Monotonic.Heap.upd_tot h0 m x in
     mst_put h1
 
+(* Taking and recalling tokens*)
+
 let token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) 
   = mst_witnessed (fun h -> contains h m /\ p (sel h m))
 
@@ -206,7 +211,7 @@ val take_token: #a:Type
              -> p:predicate a{stable p rel}
              -> MST unit
                     (requires (fun h0 -> p (sel h0 m)))
-                    (ensures  (fun h0 _ h1 -> h0==h1 /\ token m p))
+                    (ensures  (fun h0 _ h1 -> h0 == h1 /\ token m p))
 let take_token #a #rel m p 
   = mst_recall (m_contains m); 
     mst_witness (fun h -> contains h m /\ p (sel h m))
@@ -217,23 +222,47 @@ val recall_token: #a:Type
                -> p:predicate a{stable p rel}
                -> MST unit
                       (requires (fun _ ->  token m p))
-                      (ensures  (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
+                      (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (sel h1 m)))
 let recall_token #a #rel m p
   = mst_recall (fun h -> contains h m /\ p (sel h m))
 
-(*let stable_on_heap (#a:Type) (#rel:preorder a) (r:mref a rel) (p:predicate heap) = 
-  forall h0 h1. p h0 /\ rel (sel h0 r) (sel h1 r) ==> p h1
+(* Witnessing and recalling *)
 
-let witnessed (p:predicate heap{stable p heap_rel}) = mst_witnessed p
+let stable_on_heap_aux (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate heap) (h0:heap) (h1:heap) =
+  p h0 /\
+  (contains h0 m ==> contains h1 m /\ rel (sel h0 m) (sel h1 m))
+  ==>
+  p h1
 
-val witness: #a:Type
-          -> #rel:preorder a
-          -> m:mref a rel
-          -> p:predicate heap{stable_on_heap m p}
-          -> MST unit
-                 (requires (fun h0 -> p h0 /\ stable_on_heap m p))
-                 (ensures  (fun h0 _ h1 -> h0==h1 /\ witnessed p))
-let witness #a #rel m p = admit ()*)
+let stable_on_heap (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate heap) = 
+  forall h0 h1. stable_on_heap_aux m p h0 h1 //p h0 /\ rel (sel h0 m) (sel h1 m) ==> p h1
+
+let lemma_stable_on_heap (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate heap) 
+  :Lemma (forall h0 h1 . stable_on_heap_aux m p h0 h1
+			 ==>
+			 (p h0 /\ heap_rel h0 h1 ==> p h1))
+	 [SMTPat (stable_on_heap m p); SMTPat (stable p heap_rel)]
+= ()
+
+let witnessed_stable_on_heap (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate heap{stable_on_heap m p}) = mst_witnessed p
+
+val witness_stable_on_heap: #a:Type
+                         -> #rel:preorder a
+                         -> m:mref a rel
+                         -> p:predicate heap{stable_on_heap m p}
+                         -> MST unit
+                                (requires (fun h0 -> p h0))
+                                (ensures  (fun h0 _ h1 -> h0 == h1 /\ witnessed_stable_on_heap m p))
+let witness_stable_on_heap #a #rel m p = mst_witness p
+
+val recall_stable_on_heap: #a:Type
+                        -> #rel:preorder a
+                        -> m:mref a rel
+                        -> p:predicate heap{stable_on_heap m p}
+                        -> MST unit
+                               (requires (fun _ ->  witnessed_stable_on_heap m p))
+                               (ensures (fun h0 _ h1 -> p h1))
+let recall_stable_on_heap #a #rel m p = mst_recall p
 
 (*
 
