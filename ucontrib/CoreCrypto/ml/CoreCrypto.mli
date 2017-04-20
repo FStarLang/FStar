@@ -91,6 +91,8 @@ type ec_curve =
   | ECC_P256
   | ECC_P384
   | ECC_P521
+  | ECC_X25519
+  | ECC_X448
 
 val ec_bytelen: ec_curve -> Z.t
 
