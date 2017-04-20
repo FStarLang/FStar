@@ -196,22 +196,44 @@ let write #a #rel m x
     let h1 = FStar.Monotonic.Heap.upd_tot h0 m x in
     mst_put h1
 
+let token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) 
+  = mst_witnessed (fun h -> contains h m /\ p (sel h m))
 
-//abstract type token (#a:Type) (#rel:preorder a) (m:mref a rel) (p:predicate a{stable p rel}) = True
-
-(*assume type token : (#a:Type) -> (#rel:preorder a) -> (m:mref a rel) -> (p:predicate a{stable p rel}) -> Type0
 
 val take_token: #a:Type
+             -> #rel:preorder a
+             -> m:mref a rel
+             -> p:predicate a{stable p rel}
+             -> MST unit
+                    (requires (fun h0 -> p (sel h0 m)))
+                    (ensures  (fun h0 _ h1 -> h0==h1 /\ token m p))
+let take_token #a #rel m p 
+  = mst_recall (m_contains m); 
+    mst_witness (fun h -> contains h m /\ p (sel h m))
+
+val recall_token: #a:Type
+               -> #rel:preorder a
+               -> m:mref a rel
+               -> p:predicate a{stable p rel}
+               -> MST unit
+                      (requires (fun _ ->  token m p))
+                      (ensures  (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
+let recall_token #a #rel m p
+  = mst_recall (fun h -> contains h m /\ p (sel h m))
+
+(*let stable_on_heap (#a:Type) (#rel:preorder a) (r:mref a rel) (p:predicate heap) = 
+  forall h0 h1. p h0 /\ rel (sel h0 r) (sel h1 r) ==> p h1
+
+let witnessed (p:predicate heap{stable p heap_rel}) = mst_witnessed p
+
+val witness: #a:Type
           -> #rel:preorder a
           -> m:mref a rel
-          -> p:predicate a{stable p rel}
+          -> p:predicate heap{stable_on_heap m p}
           -> MST unit
-                (requires (fun h0 -> p (sel h0 m)))
-                (ensures  (fun h0 _ h1 -> h0==h1 /\ token m p))
-let take_token #a #rel m p 
-  = admit ()*)
-
-
+                 (requires (fun h0 -> p h0 /\ stable_on_heap m p))
+                 (ensures  (fun h0 _ h1 -> h0==h1 /\ witnessed p))
+let witness #a #rel m p = admit ()*)
 
 (*
 
