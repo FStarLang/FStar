@@ -249,10 +249,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
             let exp, tysc = match a_let.expr with
-            | MLE_Let((_, _, [mllb]), _) ->
-                (match mllb.mllb_tysc with
-                 | Some(tysc) -> mllb.mllb_def, tysc
-                 | None -> failwith "No type scheme") in
+              | MLE_Let((_, _, [mllb]), _) ->
+                  (match mllb.mllb_tysc with
+                  | Some(tysc) -> mllb.mllb_def, tysc
+                  | None -> failwith "No type scheme")
+              | _ -> failwith "Impossible" in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then begin
               BU.print1 "Action typescheme: %s\n" (Code.string_of_mlty a_nm (snd tysc));
               List.iter (fun x -> BU.print1 "Action type binders: %s\n" (fst x)) (fst tysc) end;
