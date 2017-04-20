@@ -392,6 +392,13 @@ let read_interactive_query stream : query =
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
 
+let rec json_of_option_val = function
+  | Options.Bool b -> JsonBool b
+  | Options.String s
+  | Options.Path s -> JsonStr s
+  | Options.Int n -> JsonInt n
+  | Options.List vs -> JsonList (List.map json_of_option_val vs)
+  | Options.Unset -> JsonStr "unset"
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
@@ -473,7 +480,12 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
 
 let json_of_repl_state st =
   [("loaded-dependencies",
-    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts))]
+    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
+   ("options",
+    JsonList (List.map (fun (name, value) -> JsonAssoc [("name", JsonStr name);
+                                                        ("value", json_of_option_val value)])
+                       (Options.get_options ()))) 
+  ]
 
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)

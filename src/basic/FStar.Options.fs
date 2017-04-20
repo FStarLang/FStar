@@ -181,6 +181,9 @@ let clear () =
 
 let _run = clear()
 
+let get_options () =
+  Util.smap_fold (peek()) (fun k v acc -> (k,v)::acc) []
+
 let lookup_opt s c =
   match Util.smap_try_find (peek()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
