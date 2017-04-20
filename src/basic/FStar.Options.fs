@@ -86,92 +86,92 @@ let with_saved_options f =
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
 
+let defaults =
+     [
+      ("__temp_no_proj"               , List []);
+      ("_fstar_home"                  , String "");
+      ("_include_path"                , List []);
+      ("admit_smt_queries"            , Bool false);
+      ("cardinality"                  , String "off");
+      ("codegen"                      , Unset);
+      ("codegen-lib"                  , List []);
+      ("debug"                        , List []);
+      ("debug_level"                  , List []);
+      ("dep"                          , Unset);
+      ("detail_errors"                , Bool false);
+      ("doc"                          , Bool false);
+      ("dump_module"                  , List []);
+      ("eager_inference"              , Bool false);
+      ("explicit_deps"                , Bool false);
+      ("extract_all"                  , Bool false);
+      ("extract_module"               , List []);
+      ("extract_namespace"            , List []);
+      ("fs_typ_app"                   , Bool false);
+      ("fstar_home"                   , Unset);
+      ("full_context_dependency"      , Bool true);
+      ("hide_genident_nums"           , Bool false);
+      ("hide_uvar_nums"               , Bool false);
+      ("hint_info"                    , Bool false);
+      ("in"                           , Bool false);
+      ("ide"                          , Bool false);
+      ("include"                      , List []);
+      ("indent"                       , Bool false);
+      ("initial_fuel"                 , Int 2);
+      ("initial_ifuel"                , Int 1);
+      ("inline_arith"                 , Bool false);
+      ("lax"                          , Bool false);
+      ("log_queries"                  , Bool false);
+      ("log_types"                    , Bool false);
+      ("max_fuel"                     , Int 8);
+      ("max_ifuel"                    , Int 2);
+      ("min_fuel"                     , Int 1);
+      ("MLish"                        , Bool false);
+      ("n_cores"                      , Int 1);
+      ("no_default_includes"          , Bool false);
+      ("no_extract"                   , List []);
+      ("no_location_info"             , Bool false);
+      ("no_warn_top_level_effects"    , Bool true);
+      ("odir"                         , Unset);
+      ("prims"                        , Unset);
+      ("pretype"                      , Bool true);
+      ("prims_ref"                    , Unset);
+      ("print_before_norm"            , Bool false);
+      ("print_bound_var_types"        , Bool false);
+      ("print_effect_args"            , Bool false);
+      ("print_fuels"                  , Bool false);
+      ("print_full_names"             , Bool false);
+      ("print_implicits"              , Bool false);
+      ("print_universes"              , Bool false);
+      ("print_z3_statistics"          , Bool false);
+      ("prn"                          , Bool false);
+      ("record_hints"                 , Bool false);
+      ("reuse_hint_for"               , Unset);
+      ("show_signatures"              , List []);
+      ("silent"                       , Bool false);
+      ("smt"                          , Unset);
+      ("split_cases"                  , Int 0);
+      ("timing"                       , Bool false);
+      ("trace_error"                  , Bool false);
+      ("unthrottle_inductives"        , Bool false);
+      ("use_eq_at_higher_order"       , Bool false);
+      ("use_hints"                    , Bool false);
+      ("use_tactics"                  , Bool false);
+      ("verify"                       , Bool true);
+      ("verify_all"                   , Bool false);
+      ("verify_module"                , List []);
+      ("warn_default_effects"         , Bool false);
+      ("z3refresh"                    , Bool false);
+      ("z3rlimit"                     , Int 5);
+      ("z3rlimit_factor"              , Int 1);
+      ("z3seed"                       , Int 0);
+      ("z3timeout"                    , Int 5);
+      ("z3cliopt"                     , List []);
+      ("__no_positivity"              , Bool false)]
 
 let init () =
-  let vals =
-       [
-        ("__temp_no_proj"               , List []);
-        ("_fstar_home"                  , String "");
-        ("_include_path"                , List []);
-        ("admit_smt_queries"            , Bool false);
-        ("cardinality"                  , String "off");
-        ("codegen"                      , Unset);
-        ("codegen-lib"                  , List []);
-        ("debug"                        , List []);
-        ("debug_level"                  , List []);
-        ("dep"                          , Unset);
-        ("detail_errors"                , Bool false);
-        ("doc"                          , Bool false);
-        ("dump_module"                  , List []);
-        ("eager_inference"              , Bool false);
-        ("explicit_deps"                , Bool false);
-        ("extract_all"                  , Bool false);
-        ("extract_module"               , List []);
-        ("extract_namespace"            , List []);
-        ("fs_typ_app"                   , Bool false);
-        ("fstar_home"                   , Unset);
-        ("full_context_dependency"      , Bool true);
-        ("hide_genident_nums"           , Bool false);
-        ("hide_uvar_nums"               , Bool false);
-        ("hint_info"                    , Bool false);
-        ("in"                           , Bool false);
-        ("ide"                          , Bool false);
-        ("include"                      , List []);
-        ("indent"                       , Bool false);
-        ("initial_fuel"                 , Int 2);
-        ("initial_ifuel"                , Int 1);
-        ("inline_arith"                 , Bool false);
-        ("lax"                          , Bool false);
-        ("log_queries"                  , Bool false);
-        ("log_types"                    , Bool false);
-        ("max_fuel"                     , Int 8);
-        ("max_ifuel"                    , Int 2);
-        ("min_fuel"                     , Int 1);
-        ("MLish"                        , Bool false);
-        ("n_cores"                      , Int 1);
-        ("no_default_includes"          , Bool false);
-        ("no_extract"                   , List []);
-        ("no_location_info"             , Bool false);
-        ("no_warn_top_level_effects"    , Bool true);
-        ("odir"                         , Unset);
-        ("prims"                        , Unset);
-        ("pretype"                      , Bool true);
-        ("prims_ref"                    , Unset);
-        ("print_before_norm"            , Bool false);
-        ("print_bound_var_types"        , Bool false);
-        ("print_effect_args"            , Bool false);
-        ("print_fuels"                  , Bool false);
-        ("print_full_names"             , Bool false);
-        ("print_implicits"              , Bool false);
-        ("print_universes"              , Bool false);
-        ("print_z3_statistics"          , Bool false);
-        ("prn"                          , Bool false);
-        ("record_hints"                 , Bool false);
-        ("reuse_hint_for"               , Unset);
-        ("show_signatures"              , List []);
-        ("silent"                       , Bool false);
-        ("smt"                          , Unset);
-        ("split_cases"                  , Int 0);
-        ("timing"                       , Bool false);
-        ("trace_error"                  , Bool false);
-        ("unthrottle_inductives"        , Bool false);
-        ("use_eq_at_higher_order"       , Bool false);
-        ("use_hints"                    , Bool false);
-        ("use_tactics"                  , Bool false);
-        ("verify"                       , Bool true);
-        ("verify_all"                   , Bool false);
-        ("verify_module"                , List []);
-        ("warn_default_effects"         , Bool false);
-        ("z3refresh"                    , Bool false);
-        ("z3rlimit"                     , Int 5);
-        ("z3rlimit_factor"              , Int 1);
-        ("z3seed"                       , Int 0);
-        ("z3timeout"                    , Int 5);
-        ("z3cliopt"                     , List []);
-        ("__no_positivity"              , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
-   vals |> List.iter set_option'                          //initialize it with the default values
+   defaults |> List.iter set_option'                          //initialize it with the default values
 
 let clear () =
    let o = Util.smap_create 50 in
@@ -181,13 +181,13 @@ let clear () =
 
 let _run = clear()
 
-let get_options () =
-  Util.smap_fold (peek()) (fun k v acc -> (k,v)::acc) []
-
-let lookup_opt s c =
+let get_option s =
   match Util.smap_try_find (peek()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
-  | Some s -> c s
+  | Some s -> s
+
+let lookup_opt s c =
+  c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_cardinality             ()      = lookup_opt "cardinality"              as_string
@@ -757,9 +757,12 @@ and validate_cardinality x = match x with
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
               display_usage_aux (specs ()); exit 1)
 
-and validate_dir p = 
+and validate_dir p =
   mkdir false p; 
   p
+
+let docs () =
+  List.map (fun (_, name, _, doc) -> (name, doc)) (specs ())
 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
