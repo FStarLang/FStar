@@ -4,7 +4,7 @@ open FStar.Monotonic.Heap
 
 open FStar.Preorder
 
-(* TODO: Use the module system to properly control the visibility of actions and functions *)
+(* TODO: Use the module system to uniformly control the visibility of the actions of MSTATE and functions *)
 
 
 (* Definition of the underlying state monad on heap using DM4F *)
@@ -128,7 +128,7 @@ let as_mref (#a:Type) (#rel:preorder a) (m:mref a rel)
   :GTot (FStar.Monotonic.Heap.mref a rel) 
   = m_as_mref m
 
-let as_mmref (#a:Type) (#rel:preorder a) (m:mref a rel) :GTot (mmref a rel) = m
+private let as_mmref (#a:Type) (#rel:preorder a) (m:mref a rel) :GTot (mmref a rel) = m
 
 let contains (#a:Type) (#rel:preorder a) (h:heap) (m:mref a rel) = m_contains (as_mref m) h
 
