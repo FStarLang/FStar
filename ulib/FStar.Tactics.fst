@@ -174,16 +174,22 @@ let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
   TAC?.reflect (seq_ (reify_tactic f) (reify_tactic g))
 
 assume private val exact_ : term -> _tac unit
-let exact (t:term) : tactic unit = fun () -> TAC?.reflect (exact_ t)
+let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (exact_ tt)
 
 assume private val apply_lemma_ : term -> _tac unit
-let apply_lemma (t:term) : tactic unit = fun () -> TAC?.reflect (apply_lemma_ t)
+let apply_lemma (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (apply_lemma_ tt)
 
 assume val print_ : string -> _tac unit
 let print (msg:string) : tactic unit = fun () -> TAC?.reflect (print_ msg)
 
 assume val grewrite_ : term -> term -> _tac unit
-let grewrite (e1:term) (e2:term) : tactic unit = fun () -> TAC?.reflect (grewrite_ e1 e2)
+let grewrite (e1:tactic term) (e2:tactic term) : tactic unit =
+    fun () -> let t1 = e1 () in
+              let t2 = e2 () in
+              TAC?.reflect (grewrite_ t1 t2)
+
+let tbind (a:Type) (b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
+    fun () -> let r = t () in f r ()
 
 // For some reason, a direct definition fails.
 let revert_all (bs:binders) : tactic unit =
@@ -318,7 +324,7 @@ let mul_commute_ascription : tactic unit
     let _, goal_t = cur_goal () in  // G |- x=e ==> P
     match term_as_formula goal_t () with
     | Some (Eq _ _ _) ->
-      apply_lemma (quote lemma_mul_comm ()) ()
+      apply_lemma (quote lemma_mul_comm) ()
     | _ -> fail "Not an equality" ()
 
 // TODO: unfold tactic or complains about termination

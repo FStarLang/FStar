@@ -1,30 +1,31 @@
 module UserTactics.Example1
 open FStar.Tactics
 
+#reset-options "--use_tactics"
+
 let test_print_goal =
-  assert_by_tactic (fun () -> print "User print:") //Some auto-thunking or at least some light notation for it
+  assert_by_tactic (print "User print:") //Some auto-thunking or at least some light notation for it
                    (forall (y:int). y==0 ==> 0==y)
 
 let test_grewrite =
-assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ())) (1 + 2 == 2 + 1)
+assert_by_tactic (grewrite (quote (1 + 2)) (quote 3)) (1 + 2 == 2 + 1)
 
 let test_grewrite2 (w x y z:int) =
-assert_by_tactic (fun () -> grewrite (quote (z + y) ()) (quote (y + z) ());
-                            grewrite (quote (x + (y + z)) ()) (quote ((y + z) + x) ());
-                            grewrite (quote (w + ((y + z) + x)) ()) (quote (((y + z) + x) + w) ())
+assert_by_tactic (seq (grewrite (quote (z + y)) (quote (y + z)))
+                 (seq (grewrite (quote (x + (y + z))) (quote ((y + z) + x)))
+                      (grewrite (quote (w + ((y + z) + x))) (quote (((y + z) + x) + w))))
                  ) (w + (x + (z + y)) == (y + z) + (x + w))
 
 let test_grewrite3 (w x y z : int) =
-assert_by_tactic (fun () -> grewrite (quote (1 + 2) ()) (quote 3 ());
-                            grewrite (quote (3, 3+4) ()) (quote (3,7) ())
-                 )
+assert_by_tactic (seq (grewrite (quote (1 + 2)) (quote 3))
+                      (grewrite (quote (3, 3+4)) (quote (3,7))))
                  ( (1+2, 3+4) == (5-2, 7+0) )
 
 // Should rewrite all at once, and does, but we get a weird hard query
 let test_grewrite4 (f : int -> int -> int) (w : int) =
-assert_by_tactic (fun () -> let _ = implies_intro () in
-                            grewrite (quote (f w w) ()) (quote w ());
-                            revert ())
+assert_by_tactic (tbind binder unit implies_intro (fun _ ->
+                 (tbind unit unit (grewrite (quote (f w w)) (quote w)) (fun _ ->
+                        revert))))
                  ( f w w == w ==> f (f w w) (f w w) == w)
 
 let simple_equality_assertions =
@@ -51,7 +52,7 @@ let simple_equality_assertions_within_a_function () =
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)); //identical to one of the queries above, but now inside a function, which produces a slightly different VC
   assert_by_tactic rewrite_all_equalities
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized
-  assert_by_tactic (fun () -> visit (unfold_definition_and_simplify_eq (quote visible_predicate)))
+  assert_by_tactic (visit (unfold_definition_and_simplify_eq (quote visible_predicate)))
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away
 
 let local_let_bindings =
@@ -87,7 +88,7 @@ let test_apply (x:nat) (y:nat) =
 let test_apply_ascription (x:nat) (y:nat) =
   assert (op_Multiply x y == op_Multiply y x)
   <: Tot unit
-  by (fun () -> visit mul_commute_ascription)
+  by (visit mul_commute_ascription)
 
 (* this fails, rightfully, since the top-level goal is not *)
 (* let test_apply_ascription_fail (x:nat) (y:nat) = *)
