@@ -264,7 +264,7 @@ effectRedefinition:
 
 effectDefinition:
   | LBRACE lid=uident bs=binders COLON typ=tmArrow(tmNoEq)
-    	   WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
+           WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
     RBRACE
     { DefineEffect(lid, bs, typ, eds) }
 
@@ -295,9 +295,9 @@ subEffect:
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
-	          | "lift_wp", "lift" -> tm1, tm2
-	          | "lift", "lift_wp" -> tm2, tm1
-	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | "lift_wp", "lift" -> tm1, tm2
+                  | "lift", "lift_wp" -> tm2, tm1
+                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      }
@@ -313,7 +313,7 @@ qualifier:
     raise (Error("The 'inline' qualifier has been renamed to 'unfold'", lhs parseState))
    }
   | UNFOLDABLE    {
-	      raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+              raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
    }
   | INLINE_FOR_EXTRACTION {
      Inline_for_extraction
@@ -346,7 +346,7 @@ letqualifier:
  (* Remove with stratify *)
 aqual:
   | EQUALS    { print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-				        Equality }
+                                        Equality }
   | q=aqualUniverses { q }
 
 aqualUniverses:
@@ -553,7 +553,8 @@ noSeqTerm:
         mk_function branches (lhs parseState) (rhs2 parseState 1 2)
       }
   | ASSUME e=atomicTerm
-      { mkExplicitApp (mk_term (Var assume_lid) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
+      { let a = set_lid_range assume_lid (rhs parseState 1) in
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
   | id=lident LARROW e=noSeqTerm
       { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
 
@@ -757,7 +758,7 @@ atomicTermQUident:
     {
         let t = Name id in
         let e = mk_term t (rhs parseState 1) Un in
-	      e
+              e
     }
   | id=quident DOT_LPAREN t=term RPAREN
     {
@@ -766,7 +767,8 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
-  | ASSERT   { mk_term (Var assert_lid) (rhs parseState 1) Expr }
+  | ASSERT   { let a = set_lid_range assert_lid (rhs parseState 1) in
+               mk_term (Var a) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
   | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level }

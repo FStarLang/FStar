@@ -1080,10 +1080,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                               let body = U.mk_reify <| body in
                               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
                               let body = S.mk (Tm_abs([S.mk_binder x], body, Some (Inr (m, [])))) None body.pos in
+                              let close = closure_as_term cfg env in
                               let bind_inst = match (SS.compress bind_repr).n with
                                 | Tm_uinst (bind, [_ ; _]) ->
-                                    S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv lb.lbtyp
-                                                          ; cfg.tcenv.universe_of cfg.tcenv t]))
+                                    S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
+                                                          ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
                                     None t.pos
                                 | _ -> failwith "NIY : Reification of indexed effects"
                               in

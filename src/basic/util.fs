@@ -648,11 +648,12 @@ let write_file (fn:string) s =
 let flush_file (fh:file_handle) = fh.Flush()
 let file_get_contents f =
   File.ReadAllText f
-let mkdir_clean dname =
+let mkdir clean dname =
   if System.IO.Directory.Exists(dname) then
     let srcDir = new System.IO.DirectoryInfo(dname)
-    for file in srcDir.GetFiles() do
-      System.IO.File.Delete file.FullName
+    if clean then 
+        for file in srcDir.GetFiles() do
+        System.IO.File.Delete file.FullName
   else
     System.IO.Directory.CreateDirectory(dname) |> ignore
 let concat_dir_filename dname fname =
