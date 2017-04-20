@@ -668,15 +668,17 @@ let file_get_contents f =
   close_in ic;
   s
 let concat_dir_filename d f = Filename.concat d f
-let mkdir_clean nm =
+let mkdir clean nm =
   let remove_all_in_dir nm =
     let open Sys in
     Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
   let open Unix in
-  umask 0o002;
+  (match Sys.os_type with
+  | "Unix" -> ignore (umask 0o002)
+  | _ -> (* unimplemented*) ());
   try mkdir nm 0o777
   with Unix_error (EEXIST,_,_) ->
-    remove_all_in_dir nm
+    if clean then remove_all_in_dir nm
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do

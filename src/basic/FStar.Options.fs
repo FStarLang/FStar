@@ -544,7 +544,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "odir",
-        OneArg (Path,
+        OneArg ((fun p -> Path (validate_dir p)),
                 "[dir]"),
         "Place output in directory [dir]");
 
@@ -750,6 +750,10 @@ and validate_cardinality x = match x with
     | "off" -> x
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
               display_usage_aux (specs ()); exit 1)
+
+and validate_dir p = 
+  mkdir false p; 
+  p
 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
