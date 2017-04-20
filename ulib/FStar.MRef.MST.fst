@@ -110,13 +110,13 @@ let mst_put h = MSTATE?.put_st h
 
 assume type mst_witnessed : (p:predicate heap) -> Type0
 
-val mst_witness: p:predicate heap{stable p heap_rel} 
-              -> MST unit (fun h0 -> p h0) (fun h0 _ h1 -> h0 == h1 /\ mst_witnessed p)
+val mst_witness: p:predicate heap 
+              -> MST unit (fun h0 -> p h0 /\ stable p heap_rel) (fun h0 _ h1 -> h0 == h1 /\ mst_witnessed p)
 let mst_witness p = admit () //intentional (justified by metatheory)
 
 //Compared to FStar.MRef.fst, has (stable p heap_rel) refinement, so as to ensure the metatheoretical well-formedness of (mst_witnessed p)
-val mst_recall: p:predicate heap{stable p heap_rel} 
-             -> MST unit (fun _ -> mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
+val mst_recall: p:predicate heap 
+             -> MST unit (fun _ -> stable p heap_rel /\ mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
 let mst_recall p = admit () //intentional (justified by metatheory)
 
 
