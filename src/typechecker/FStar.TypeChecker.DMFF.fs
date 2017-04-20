@@ -913,7 +913,7 @@ and infer (env: env) (e: term): nm * term * term =
       let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
         let c = bv.sort in
         if is_C c then
-          let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type' env c) in
+          let xw = S.gen_bv (bv.ppname.idText ^ "__w") None (star_type' env c) in
           let x = { bv with sort = trans_F_ env c (S.bv_to_name xw) } in
           let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
           env, S.mk_binder x :: S.mk_binder xw :: acc
