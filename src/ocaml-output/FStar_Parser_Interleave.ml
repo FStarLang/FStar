@@ -36,8 +36,8 @@ let interleave:
                       match uu____101 with | (x1,uu____106) -> x1)) in
             FStar_All.pipe_right uu____91
               (FStar_Util.for_some
-                 (fun uu___124_110  ->
-                    match uu___124_110 with
+                 (fun uu___127_110  ->
+                    match uu___127_110 with
                     | FStar_Parser_AST.TyconAbbrev
                         (id',uu____112,uu____113,uu____114) ->
                         x.FStar_Ident.idText = id'.FStar_Ident.idText
@@ -81,8 +81,8 @@ let interleave:
              | FStar_Parser_AST.Tycon (uu____240,tys) when
                  FStar_All.pipe_right tys
                    (FStar_Util.for_some
-                      (fun uu___125_257  ->
-                         match uu___125_257 with
+                      (fun uu___128_257  ->
+                         match uu___128_257 with
                          | (FStar_Parser_AST.TyconAbstract
                             uu____261,uu____262) -> true
                          | uu____270 -> false))

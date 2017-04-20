@@ -1369,9 +1369,10 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let typing_pred = mk_HasType x refa in
         let typing_pred_b = mk_HasType x refb in
         [Term.Assume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, mk_tester "BoxRef" x)), Some "ref inversion", "ref_inversion");
-         Term.Assume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
-                     Some "ref typing is injective",
-                     "ref_injectivity")] in
+//         Term.Assume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
+//                     Some "ref typing is injective",
+//                     "ref_injectivity")
+        ] in
     let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
         [Term.Assume(valid, Some "True interpretation", "true_interp")] in

@@ -126,8 +126,8 @@ let handle_err: Prims.bool -> Prims.exn -> Prims.unit =
           FStar_Util.print1_error "Error: %s" msg1
       | uu____323 -> Prims.raise e
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___54_326  ->
-    match uu___54_326 with
+  fun uu___57_326  ->
+    match uu___57_326 with
     | Error _|FStar_Util.NYI _|Err _ -> true
     | uu____330 -> false
 let report: FStar_Range.range -> Prims.string -> Prims.unit =

@@ -8,7 +8,7 @@
    Exception function in the heap is acceptable.
 *)
 module FStar.DM4F.Heap.ST
-open FStar.Heap
+open FStar.DM4F.Heap
 open FStar.DM4F.ST
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,15 +34,18 @@ effect STNull (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 ////////////////////////////////////////////////////////////////////////////////
 
 (* Allocation *)
-(*
- * AR: Ghost does not go with ST, hence the admit
- *     also removed the post-conditions as they are covered by alloc_lemma in the heap
- *)
-let alloc (#a:Type) (init:a)
-    : ST (ref a)
-  	 (requires (fun h -> True))
-	 (ensures (fun h0 r h1 -> alloc h0 init == (r, h1)))
-    = admit ()
+ let alloc (#a:Type) (init:a)
+  : ST (ref a)
+       (requires (fun h -> True))
+       (ensures (fun h0 r h1 ->
+	 	 ~ (h0 `contains` r)          /\  //the ref r is fresh
+		 h1 `contains_a_well_typed` r /\  //and is well-typed in h1
+		 sel h1 r == init             /\  //initialized to init
+		 modifies Set.empty h0 h1))  //and no existing ref is modified
+    = let h0 = STATE?.get () in
+      let r, h1 = alloc h0 init in
+      STATE?.put h1;
+      r
 
  let alloc_weak (#a:Type) (init:a)
   :ST (ref a) (requires (fun h0      -> True))
@@ -54,32 +57,40 @@ let alloc (#a:Type) (init:a)
     r
 
 (* Reading, aka dereference *)
-reifiable let read (#a:Type) (r:ref a)
-    : ST a
-  	 (requires (fun h0     -> True))
-	 (ensures (fun h0 v h1 -> h0 == h1 /\ sel h0 r == v))
-   = admit ()
-   
-reifiable let (!) = read
+ let read (#a:Type) (r:ref a)
+  : ST a
+       (requires (fun h -> h `contains_a_well_typed` r))
+       (ensures (fun h0 v h1 ->
+		 h0 == h1 /\  //heap does not change
+                 h1 `contains_a_well_typed` r /\
+		 sel h1 r == v))                  //returns the contents of r
+   = let h0 = STATE?.get () in
+     sel_tot h0 r
 
-let read_weak (#a:Type) (r:ref a)
-  : ST a (requires (fun h0      -> True))
+ let (!) = read
+
+ let read_weak (#a:Type) (r:ref a)
+  : ST a (requires (fun h0      -> h0 `contains_a_well_typed` r))
          (ensures  (fun h0 v h1 -> forall (a:Type) (r:ref a). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r))
-   = admit ()
+   = let h0 = STATE?.get () in
+     sel_tot h0 r
 
 (* Writing, aka assignment *)
  let write (#a:Type) (r:ref a) (v:a)
     : ST unit
-  	 (requires (fun h0     -> True))
-	 (ensures (fun h0 _ h1 -> h1 == upd h0 r v))
-    = admit ()
-    
-let op_Colon_Equals = write
+  	 (requires (fun h -> h `contains_a_well_typed` r))
+	 (ensures (fun h0 _ h1 -> h0 `contains_a_well_typed` r /\
+ 		               h1 `contains_a_well_typed` r /\  //the heap remains well-typed
+		               h1 == upd h0 r v))  //and is updated at location r only
+    = let h0 = STATE?.get () in
+      STATE?.put (upd_tot h0 r v)
+ let op_Colon_Equals = write
 
-let write_weak (#a:Type) (r:ref a) (v:a)
-    : ST unit (requires (fun h0      -> True))
+ let write_weak (#a:Type) (r:ref a) (v:a)
+    : ST unit (requires (fun h0      -> h0 `contains_a_well_typed` r))
               (ensures  (fun h0 v h1 -> forall (a:Type) (r:ref a). h0 `contains_a_well_typed` r ==> h1 `contains_a_well_typed` r))
-  = admit ()
+  = let h0 = STATE?.get () in
+    STATE?.put (upd_tot h0 r v)
 
 ////////////////////////////////////////////////////////////////////////////////
 //A simple example using the local state operations
