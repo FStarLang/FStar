@@ -36,7 +36,7 @@ module BU = FStar.Util
 module D = FStar.Parser.ToDocument
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
-  let unique_name =  x.ppname.idText ^ "__" ^ (string_of_int x.index) in
+  let unique_name =  x.ppname.idText in
   I.mk_ident (unique_name, x.ppname.idRange)
 
 let resugar_arg_qual (q:option<S.arg_qualifier>) : option<A.arg_qualifier> =
@@ -200,21 +200,6 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | Pat_wild _ -> true
     | _ -> false
 
-let remove_typechecker_added_args args = 
-  // remove the args added by typechecker.normalize since
-  // the added args would break the assumption of the args
-  // length of Op, try_with etc.
-  // TODO: Instead of removing them, maybe if everything is 
-  // opened correctly, they will go away?
-  args |> List.partition (fun arg -> begin match arg with 
-            | (e, Some _) ->
-              begin match (SS.compress e).n with 
-              | Tm_app({n=Tm_uvar(u, _)}, args) -> false
-              | _ -> true
-              end
-            | _ -> true
-            end) 
-
 let rec resugar_term (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -232,7 +217,7 @@ let rec resugar_term (t : S.term) : A.term =
     in
     match (SS.compress t).n with //always call compress before case-analyzing a S.term
     | Tm_delayed _ ->
-      failwith "This case is impossible after compress"
+      failwith "Tm_delayed is impossible after compress"
 
     | Tm_bvar x ->
       (* this case can happen when printing a subterm of a term that is not opened *)
@@ -266,7 +251,7 @@ let rec resugar_term (t : S.term) : A.term =
             let r = I.mk_ident (snd, t.pos) in
             mk (A.Projector(l, r ))
           | _ ->
-            failwith "not implemented yet"
+            failwith "wrong projector format"
         end
        else if (lid_equals a C.assert_lid
             || lid_equals a C.assume_lid
@@ -327,8 +312,22 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_app(e, args) ->
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
-      let args, rest = remove_typechecker_added_args args in
-      let resugar_as_app e args = 
+      let rec last = function
+            | hd :: [] -> [hd]
+            | hd :: tl -> last tl
+            | _ -> failwith "last of an empty list"
+      in 
+      let rec last_two = function
+            | [] | [_] -> failwith "last two elements of a list with less than two elements "
+            | [a1;a2] -> [a1;a2]
+            | _::t -> last_two t
+      in 
+      let rec last_three = function
+            | [] | [_] | [_;_] -> failwith "last three elements of a list with less than three elements "
+            | [a1;a2;a3] -> [a1;a2;a3]
+            | _::t -> last_three t
+      in 
+      let resugar_as_app e args =   
         let args = args |> List.map (fun (e, qual) ->
               resugar_term e) in
         let e = resugar_term e in
@@ -350,11 +349,11 @@ let rec resugar_term (t : S.term) : A.term =
 
         | Some "dtuple" ->
           (* this is desugared from Sum(binders*term) *)
-          let rec last = function
-            | hd :: [] -> hd
-            | hd :: tl -> last tl
-            | _ -> failwith "Empty list." in
-          let body, _ = last args in
+          let args = last args in
+          let body = match args with 
+            | [(b, _)] -> b
+            | _ -> failwith "wrong arguments to dtuple"
+          in
           begin match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
@@ -379,15 +378,19 @@ let rec resugar_term (t : S.term) : A.term =
           end
 
         | Some "try_with" ->
-          let body, handler = match args with
-            | [(a1, _);(a2, _)] -> a1, a2
-            | _ -> failwith("wrong arguments to try_with") in
-          (* where a1 and a1 is Tm_abs(Tm_match)) *)
+          (* only the last two args are from original AST terms, others are added by typechecker *)
+          (* TODO: we need a place to store the information in the args added by the typechecker *)
+          let new_args = last_two args in 
+          let body, handler = match new_args with
+            | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *) 
+            | _ -> 
+              failwith("wrong arguments to try_with")
+          in
           let decomp term = match (SS.compress term).n with
             | Tm_abs(x, e, _) ->
               let x, e = SS.open_term x e in
               e
-            | _ -> failwith("unexpected") in
+            | _ -> failwith("wrong argument format to try_with") in
           let body = resugar_term (decomp body) in
           let handler = resugar_term (decomp handler) in
           let rec resugar_body t = match (t.tm) with
@@ -395,7 +398,7 @@ let rec resugar_term (t : S.term) : A.term =
             | A.Ascribed(t1, t2, t3) -> 
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               mk (A.Ascribed(resugar_body t1, t2, t3))
-            | _ -> failwith("unexpected body format") in
+            | _ -> failwith("unexpected body format to try_with") in
           let e = resugar_body body in
           let rec resugar_branches t = match (t.tm) with
             | A.Match(e, branches) -> branches
@@ -446,24 +449,31 @@ let rec resugar_term (t : S.term) : A.term =
             if op = "forall" then mk (A.QForall([], [[]], resugar_term body)) 
             else mk (A.QExists([], [[]], resugar_term body))
           in
+          (* only the last two args are from original AST terms, others are added by typechecker *)
+          (* TODO: we need a place to store the information in the args added by the typechecker *)
+          let args = last args in 
           begin match args with
-            | [(b, _)]
-            | [_;(b,_)] -> resugar b
+            | [(b, _)] -> resugar b
             | _ -> failwith "wrong args format to QForall"
           end
+           
         | Some "alloc" ->
           let (e, _ ) = List.hd args in
           resugar_term e
 
         | Some op -> 
-          if (D.handleable_op op (List.length args)) then
-            let args = args |> List.map (fun (e, qual) ->
-              resugar_term e) in
-            mk (A.Op(op, args))
-          else
-            resugar_as_app e args
-      end
-
+          let resugar args = args |> List.map (fun (e, qual) ->
+              resugar_term e) 
+          in
+          (* ignore the arguments added by typechecker *)
+          (* TODO: we need a place to store the information in the args added by the typechecker *)
+          begin match D.handleable_args_length op with 
+            | 1 -> mk (A.Op(op, resugar (last args)))
+            | 2 -> mk (A.Op(op, resugar (last_two args)))
+            | 3 -> mk (A.Op(op, resugar (last_three args)))
+            | _ -> resugar_as_app e args
+          end
+    end
     | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
       mk (A.If(resugar_term e, resugar_term t1, resugar_term t2))
 
@@ -493,7 +503,7 @@ let rec resugar_term (t : S.term) : A.term =
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
         let typ, def = match (SS.compress td).n with
           | Tm_app(_, [(t, _); (d, _)]) -> t, d
-          | _ -> failwith "Impossibe"
+          | _ -> failwith "wrong let binding format"
         in
         let binders, term, is_pat_app = match (SS.compress def).n with
           | Tm_abs(b, t, _) ->
@@ -554,7 +564,7 @@ let rec resugar_term (t : S.term) : A.term =
                     | _ -> failwith "wrong Tm_meta format in Meta_desugared"
                   end
                 | _ ->
-                  failwith "Data_app format"
+                  failwith "wrong Data_app format"
               end
           | Sequence ->
               let term = resugar_term e in
@@ -722,10 +732,18 @@ and resugar_match_pat (p:S.pat) : A.pattern =
       else
         mk (A.PatTuple(args, false))
 
-    | Pat_cons({fv_qual=Some (Record_ctor _)}, args) ->
-      (* need to find the corresponding record and go through the record.fields *)
-      (* if the pattern is not Wild, then we have the pattern for the field to make the (lid*pattern) *)
-      failwith "PatRecord not resugared yet"
+    | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, args) ->
+      let fields = fields |> List.map (fun f -> FStar.Ident.lid_of_ids [f]) in
+      let args = args |> List.map (fun (p, b) -> aux p) in 
+      // make sure the fields and args are of the same length.
+      let rec map2 l1 l2  = match (l1, l2) with
+        | ([], []) -> []
+        | ([], hd::tl) -> []
+        | (hd::tl, []) -> (hd, mk (A.PatWild)) :: map2 tl []
+        | (hd1::tl1, hd2::tl2) -> (hd1, hd2) :: map2 tl1 tl2
+      in
+      let args = map2 fields args in
+      mk (A.PatRecord(args))     
 
     | Pat_cons (fv, args) ->
       let args = List.map (fun (p, b) -> aux p) args in

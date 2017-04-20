@@ -324,16 +324,15 @@ let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
     fun op -> List.tryFind (matches_level op) opinfix34 <> None
 
-let handleable_op op args_length =  
-    match args_length with  
-    | 0 -> true  
-    | 1 -> is_general_prefix_op op || List.mem op [ "-" ; "~" ]  
-    | 2 ->  
-      is_operatorInfix0ad12 op ||  
+let handleable_args_length op =  
+    if is_general_prefix_op op || List.mem op [ "-" ; "~" ] then 1
+    else if (is_operatorInfix0ad12 op ||  
       is_operatorInfix34 op ||  
-      List.mem op ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]  
-    | 3 -> List.mem op [".()<-" ; ".[]<-"]  
-    | _ -> false 
+      List.mem op ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+    then 2
+    else if (List.mem op [".()<-" ; ".[]<-"]) then 3
+    else 0
+    
 
 (* ****************************************************************************)
 (*                                                                            *)
