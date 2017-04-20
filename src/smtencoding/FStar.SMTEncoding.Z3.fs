@@ -159,7 +159,7 @@ let query_logging =
           let dir_name = match !current_module_name with
             | None -> failwith "current module not set"
             | Some n -> BU.format1 "queries-%s" n in
-          BU.mkdir_clean dir_name;
+          BU.mkdir true dir_name;
           current_file_name := Some dir_name;
           dir_name
         | Some n -> n in
