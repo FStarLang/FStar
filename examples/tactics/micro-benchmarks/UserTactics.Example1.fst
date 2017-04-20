@@ -23,8 +23,8 @@ assert_by_tactic (seq (grewrite (quote (1 + 2)) (quote 3))
 
 // Should rewrite all at once, and does, but we get a weird hard query
 let test_grewrite4 (f : int -> int -> int) (w : int) =
-assert_by_tactic (tbind binder unit implies_intro (fun _ ->
-                 (tbind unit unit (grewrite (quote (f w w)) (quote w)) (fun _ ->
+assert_by_tactic (tbind implies_intro (fun _ ->
+                 (tbind (grewrite (quote (f w w)) (quote w)) (fun _ ->
                         revert))))
                  ( f w w == w ==> f (f w w) (f w w) == w)
 

@@ -188,7 +188,7 @@ let grewrite (e1:tactic term) (e2:tactic term) : tactic unit =
               let t2 = e2 () in
               TAC?.reflect (grewrite_ t1 t2)
 
-let tbind (a:Type) (b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
+let tbind (#a:Type) (#b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
     fun () -> let r = t () in f r ()
 
 // For some reason, a direct definition fails.
