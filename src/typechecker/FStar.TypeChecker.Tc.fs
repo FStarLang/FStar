@@ -837,7 +837,7 @@ and tc_inductive env ses quals lids =
              | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.report r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
+           Errors.err r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
          else ()
        ) tcs in
        ());

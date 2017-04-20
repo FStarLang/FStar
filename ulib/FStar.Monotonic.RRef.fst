@@ -47,6 +47,8 @@ let as_hsref #r #a #b x = x
 
 let m_contains (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.contains m (as_hsref mr)
 
+let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.unused_in (as_hsref mr) m
+
 (* let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:t) (m1:t) : GTot Type0 = *)
 (*   HyperHeap.fresh_rref (as_rref mr) m0 m1 *)
 

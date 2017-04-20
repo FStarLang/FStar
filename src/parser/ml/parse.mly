@@ -595,13 +595,13 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  boption___anonymous_0_ decl list_decl_ option_mainDecl_ EOF
-    {let (is_light, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
+  boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
+    {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
       (
         let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) d decls
+        in as_frag is_light (rhs parseState 1) decls
       )}
 
 mainDecl:
@@ -827,9 +827,9 @@ in
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
-	          | "lift_wp", "lift" -> tm1, tm2
-	          | "lift", "lift_wp" -> tm2, tm1
-	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | "lift_wp", "lift" -> tm1, tm2
+                  | "lift", "lift_wp" -> tm2, tm1
+                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -874,9 +874,9 @@ in
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
-	          | "lift_wp", "lift" -> tm1, tm2
-	          | "lift", "lift_wp" -> tm2, tm1
-	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | "lift_wp", "lift" -> tm1, tm2
+                  | "lift", "lift_wp" -> tm2, tm1
+                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -893,7 +893,7 @@ qualifier:
 | UNFOLDABLE
     {let _1 = () in
                   (
-	      raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+              raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
    )}
 | INLINE_FOR_EXTRACTION
     {let _1 = () in
@@ -964,7 +964,7 @@ aqual:
   EQUALS
     {let _1 = () in
               ( print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-				        Equality )}
+                                        Equality )}
 | aqualUniverses
     {let q = $1 in
                      ( q )}
@@ -1534,7 +1534,8 @@ in
       )}
 | ASSUME atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mkExplicitApp (mk_term (Var assume_lid) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
+      ( let a = set_lid_range assume_lid (rhs parseState 1) in
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
 | lident LARROW noSeqTerm
     {let (id, _2, e) = ($1, (), $3) in
       ( mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr )}
@@ -1978,7 +1979,7 @@ atomicTermQUident:
     (
         let t = Name id in
         let e = mk_term t (rhs parseState 1) Un in
-	      e
+              e
     )}
 | quident DOT_LPAREN term RPAREN
     {let (id, _2, t, _4) = ($1, (), $3, ()) in
@@ -1992,7 +1993,8 @@ atomicTermNotQUident:
                ( mk_term Wild (rhs parseState 1) Un )}
 | ASSERT
     {let _1 = () in
-             ( mk_term (Var assert_lid) (rhs parseState 1) Expr )}
+             ( let a = set_lid_range assert_lid (rhs parseState 1) in
+               mk_term (Var a) (rhs parseState 1) Expr )}
 | tvar
     {let tv = $1 in
                 ( mk_term (Tvar tv) (rhs parseState 1) Type_level )}

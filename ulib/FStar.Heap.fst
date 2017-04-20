@@ -87,7 +87,9 @@ let modifies (s:set nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
                          ((~ (mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
   (forall (a:Type) (r:ref a).{:pattern (contains h1 r)}
-                        h0 `contains` r ==> h1 `contains` r)
+                        h0 `contains` r ==> h1 `contains` r) /\
+  (forall (a:Type) (r:ref a).{:pattern (r `unused_in` h0)}
+                        r `unused_in` h1 ==> r `unused_in` h0)
 
 (** some lemmas that summarize the behavior **)
 
@@ -155,18 +157,9 @@ private let lemma_free_mm_test (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ i
 				   (r' `unused_in` h0 <==> r' `unused_in` h1)))))
   = ()
 
-private let lemma_upd_modifies_test (#a:Type) (h:heap) (r:ref a{h `contains` r \/ r `unused_in` h}) (x:a)
-  :Lemma (modifies (Set.singleton (addr_of r)) h (upd h r x))
-  = ()
-
 private let lemma_alloc_fresh_test (#a:Type) (h0:heap) (x:a) (mm:bool)
   :Lemma (let r, h1 = alloc h0 x mm in
           fresh r h0 h1 /\ modifies empty h0 h1)
-  = ()
-
-private let lemma_modifies_trans_test (h1:heap) (h2:heap) (h3:heap) (s1:set nat) (s2:set nat)
-  :Lemma (requires (modifies s1 h1 h2 /\ modifies s2 h2 h3))
-         (ensures  (modifies (union s1 s2) h1 h3))
   = ()
 
 (** **)
@@ -227,14 +220,14 @@ let lemma_sel_same_addr (#a:Type) (h:heap) (r1:ref a) (r2:ref a)
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
   = ()
 
-let sel_upd1 (#a:Type) (h:heap) (r:ref a) (x:a) (r':ref a)
+let lemma_sel_upd1 (#a:Type) (h:heap) (r:ref a) (x:a) (r':ref a)
   :Lemma (requires (addr_of r = addr_of r'))
          (ensures  (sel (upd h r x) r' == x))
          [SMTPat (sel (upd h r x) r')]
 
   = ()
 
-let sel_upd2 (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b) (x:b)
+let lemma_sel_upd2 (#a:Type) (#b:Type) (h:heap) (r1:ref a) (r2:ref b) (x:b)
   :Lemma (requires (addr_of r1 <> addr_of r2))
          (ensures  (sel (upd h r2 x) r1 == sel h r1))
 	 [SMTPat (sel (upd h r2 x) r1)]
@@ -300,11 +293,29 @@ let lemma_upd_contains_different_addr (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:
 (*          [SMTPat ((upd h r x) `contains` r')] *)
 (*   = () *)
 
-let upd_unused (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
+let lemma_upd_unused (#a:Type) (#b:Type) (h:heap) (r:ref a) (x:a) (r':ref b)
   :Lemma (requires True)
          (ensures  ((addr_of r <> addr_of r' /\ r' `unused_in` h) <==> r' `unused_in` (upd h r x)))
 	 [SMTPat (r' `unused_in` (upd h r x))]
   = ()
+
+let lemma_contains_upd_modifies (#a:Type) (h:heap) (r:ref a) (x:a)
+  :Lemma (requires (h `contains` r))
+         (ensures  (modifies (Set.singleton (addr_of r)) h (upd h r x)))
+         [SMTPat (upd h r x); SMTPat (h `contains` r)]
+  = ()
+
+let lemma_unused_upd_modifies (#a:Type) (h:heap) (r:ref a) (x:a)
+  :Lemma (requires (r `unused_in` h))
+         (ensures  (modifies (Set.singleton (addr_of r)) h (upd h r x)))
+         [SMTPat (upd h r x); SMTPat (r `unused_in` h)]
+  = ()
+
+(* let lemma_modifies_trans (h1:heap) (h2:heap) (h3:heap) (s1:set nat) (s2:set nat) *)
+(*   :Lemma (requires (modifies s1 h1 h2 /\ modifies s2 h2 h3)) *)
+(*          (ensures  (modifies (union s1 s2) h1 h3)) *)
+(* 	 [SMTPat (modifies s1 h1 h2); SMTPat (modifies s2 h2 h3)] *)
+(*   = () *)
 
 abstract let equal (h1:heap) (h2:heap) :Type0 =
   h1.next_addr = h2.next_addr /\
