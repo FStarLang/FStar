@@ -16,7 +16,7 @@ open FStar.Preorder
 abstract noeq type heap_rec = {
   next_addr: nat;
   memory   : nat -> Tot (option (a:Type0 & (a * preorder a)))
-}  
+}
 
 abstract type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
@@ -49,8 +49,19 @@ abstract let contains (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
 abstract let unused_in (#a:Type) (#rel:preorder a) (r:mref a rel) (h:heap) :Type0
   = None? (h.memory r.addr)
 
+let lemma_unused_not_contained (#a:Type) (#rel:preorder a) (r:mref a rel) (h:heap)
+  :Lemma (r `unused_in` h ==> ~(contains h r))
+         [SMTPat (r `unused_in` h)]
+  = ()
+
 let fresh (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) 
   = r `unused_in` h0 /\ h1 `contains` r
+
+let lemma_fresh_not_contained (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) 
+  :Lemma (requires (fresh r h0 h1))
+         (ensures  (~(contains h0 r)))
+	 [SMTPat (fresh r h0 h1)]
+  = ()
 
 val only: #a:Type -> #rel:preorder a -> mref a rel -> GTot (set nat)
 let only #a #rel r = singleton (addr_of r)

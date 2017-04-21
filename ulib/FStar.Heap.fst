@@ -29,6 +29,12 @@ abstract let unused_in (#a:Type) (r:ref a) (h:heap) :Type0 = unused_in r h
 
 let fresh (#a:Type) (r:ref a) (h0:heap) (h1:heap) = fresh (as_mref r) h0 h1
 
+let lemma_fresh_not_contained (#a:Type) (r:ref a) (h0:heap) (h1:heap) 
+  :Lemma (requires (fresh r h0 h1))
+         (ensures  (~(contains h0 r)))
+	 [SMTPat (fresh r h0 h1)]
+  = lemma_fresh_not_contained r h0 h1
+
 let only x = singleton (addr_of x)
 
 (* Select. *)
@@ -37,7 +43,6 @@ private abstract let sel_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) :a
 
 abstract let sel (#a:Type) (h:heap) (r:ref a) :GTot a
   = sel h r
- 
 
 (* Update. *)
 abstract let upd_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) (x:a) :heap
