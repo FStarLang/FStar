@@ -825,19 +825,23 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
-    match (SS.compress t).n with
-        | Tm_type _ ->
-          begin match (SS.compress lc.res_typ).n with
-            | Tm_fvar fv when S.fv_eq_lid fv Const.bool_lid ->
-              let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
-              let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
-              let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
-              e, lc
-            | _ -> e, lc
-          end
-
-        | _ -> e, lc
+    let is_type t =
+        let t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t in
+        match (SS.compress t).n with
+        | Tm_type _ -> true
+        | _ -> false
+    in
+    match (SS.compress lc.res_typ).n with
+    | Tm_fvar fv
+        when S.fv_eq_lid fv Const.bool_lid
+          && is_type t ->
+      let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
+      let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
+      let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
+      let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
+      e, lc
+    | _ ->
+      e, lc
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   let use_eq =
