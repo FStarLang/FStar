@@ -1079,8 +1079,8 @@
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l_0",
       1,
-      1,
-      1,
+      8,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
         "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
