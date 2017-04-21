@@ -755,44 +755,51 @@ let extract:
   fun g  ->
     fun m  ->
       FStar_Syntax_Syntax.reset_gensym ();
-      (let uu____1589 = FStar_Options.restore_cmd_line_options true in
+      (let uu____1590 = FStar_Options.debug_any () in
+       if uu____1590
+       then
+         let uu____1591 =
+           FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
+         FStar_Util.print1 "Extracting module %s\n" uu____1591
+       else ());
+      (let uu____1593 = FStar_Options.restore_cmd_line_options true in
        let name =
          FStar_Extraction_ML_Syntax.mlpath_of_lident
            m.FStar_Syntax_Syntax.name in
        let g1 =
-         let uu___161_1592 = g in
+         let uu___161_1596 = g in
          {
            FStar_Extraction_ML_UEnv.tcenv =
-             (uu___161_1592.FStar_Extraction_ML_UEnv.tcenv);
+             (uu___161_1596.FStar_Extraction_ML_UEnv.tcenv);
            FStar_Extraction_ML_UEnv.gamma =
-             (uu___161_1592.FStar_Extraction_ML_UEnv.gamma);
+             (uu___161_1596.FStar_Extraction_ML_UEnv.gamma);
            FStar_Extraction_ML_UEnv.tydefs =
-             (uu___161_1592.FStar_Extraction_ML_UEnv.tydefs);
+             (uu___161_1596.FStar_Extraction_ML_UEnv.tydefs);
            FStar_Extraction_ML_UEnv.currentModule = name
          } in
-       let uu____1593 =
+       let uu____1597 =
          FStar_Util.fold_map extract_sig g1
            m.FStar_Syntax_Syntax.declarations in
-       match uu____1593 with
+       match uu____1597 with
        | (g2,sigs) ->
            let mlm = FStar_List.flatten sigs in
            let is_kremlin =
-             let uu____1610 = FStar_Options.codegen () in
-             match uu____1610 with
+             let uu____1614 = FStar_Options.codegen () in
+             match uu____1614 with
              | Some "Kremlin" -> true
-             | uu____1612 -> false in
-           let uu____1614 =
+             | uu____1616 -> false in
+           let uu____1618 =
              (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
                 (is_kremlin ||
                    (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
                &&
                (FStar_Options.should_extract
                   (m.FStar_Syntax_Syntax.name).FStar_Ident.str) in
-           if uu____1614
+           if uu____1618
            then
-             ((let uu____1619 =
+             ((let uu____1623 =
                  FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-               FStar_Util.print1 "Extracted module %s\n" uu____1619);
+               FStar_Util.print1 "Extracted module %s\n" uu____1623);
               (g2,
                 [FStar_Extraction_ML_Syntax.MLLib
                    [(name, (Some ([], mlm)),
