@@ -31,15 +31,6 @@ module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
 open FStar.TypeChecker.Common
 
-let format_info env name typ range (doc: option<string>) =
-    BU.format4 "(defined at %s) %s: %s%s"
-        (Range.string_of_range range)
-        name
-        (Normalize.term_to_string env typ)
-        (match doc with
-         | Some docstring -> BU.format1 "#doc %s" docstring
-         | None -> "")
-
 let info_at_pos env file row col =
     match TypeChecker.Common.info_at_pos file row col with
     | None -> None

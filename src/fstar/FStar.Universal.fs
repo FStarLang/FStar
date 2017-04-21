@@ -37,6 +37,7 @@ module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
+module BU      = FStar.Util
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -47,18 +48,22 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
   : DsEnv.env
   * list<Syntax.modul> =
   let ast, _ = Parser.Driver.parse_file fn in
-  let ast = match pre_fn with
+  let env, ast = match pre_fn with
     | None ->
-        ast
+        env, ast
     | Some pre_fn ->
         let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
         | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
           when Ident.lid_equals lid1 lid2 ->
-            [ Parser.AST.Module (lid1, FStar.Parser.Interleave.interleave decls1 decls2) ]
+          let env = FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 env in
+          let env, ast = FStar.ToSyntax.Interleave.interleave_module env (List.hd ast) true in
+          env, [ast]
         | _ ->
             raise (Err ("mismatch between pre-module and module\n"))
   in
+//  if fn = "test.fst"
+//  then printfn "%s" (ast |> List.map FStar.Parser.AST.modul_to_string |> String.concat "\n\n");
   Desugar.desugar_file env ast
 
 
@@ -91,10 +96,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
         it type-checks a fragment, can actually parse an entire module.
         Actually, this is an abuse, and just means that we're type-checking the
         first chunk. *)
-      let ast_modul =
-        if is_interface_dependence
-        then FStar.ToSyntax.ToSyntax.as_interface ast_modul
-        else ast_modul in
+      let ds_env, ast_modul = FStar.ToSyntax.Interleave.interleave_module dsenv ast_modul false in
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let dsenv = if is_interface_dependence then FStar.ToSyntax.Env.set_iface dsenv false else dsenv in
       let env = match curmod with
@@ -114,7 +116,11 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
       Some (Some modul, dsenv, env)
 
     | Parser.Driver.Decls ast_decls ->
-      let dsenv, decls = Desugar.desugar_decls dsenv ast_decls in
+      let dsenv, ast_decls_l =
+            BU.fold_map FStar.ToSyntax.Interleave.prefix_with_interface_decls
+                        dsenv
+                        ast_decls in
+      let dsenv, decls = Desugar.desugar_decls dsenv (List.flatten ast_decls_l) in
       match curmod with
         | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
         | Some modul ->
@@ -128,6 +134,26 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
       | FStar.Errors.Err msg when not ((Options.trace_error())) ->
           TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
           None
+      | e when not ((Options.trace_error())) -> raise e
+
+let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.TypeChecker.Env.env =
+  try
+    let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
+    match r with
+    | Inl (Inl [FStar.Parser.AST.Interface(l, decls, _)], _) ->
+      FStar.ToSyntax.Interleave.initialize_interface l decls dsenv, env
+    | Inl _ ->
+      raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
+                               interface_file_name))
+    | Inr (err, rng) ->
+      raise (FStar.Errors.Error(err, rng))
+  with
+      | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+          TypeChecker.Err.add_errors env [(msg,r)];
+          dsenv, env
+      | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+          TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
+          dsenv, env
       | e when not ((Options.trace_error())) -> raise e
 
 (***********************************************************************)
@@ -242,4 +268,3 @@ let batch_mode_tc filenames =
   end;
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
-

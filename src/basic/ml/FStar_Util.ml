@@ -302,12 +302,66 @@ let imap_remove (m:'value imap) k = BatHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
 
+let format (fmt:string) (args:string list) =
+  let frags = BatString.nsplit fmt "%s" in
+  if BatList.length frags <> BatList.length args + 1 then
+    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Pervasives.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
+  else
+    let args = args@[""] in
+    BatList.fold_left2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
+
+let format1 f a = format f [a]
+let format2 f a b = format f [a;b]
+let format3 f a b c = format f [a;b;c]
+let format4 f a b c d = format f [a;b;c;d]
+let format5 f a b c d e = format f [a;b;c;d;e]
+let format6 f a b c d e g = format f [a;b;c;d;e;g]
+
+let stdout_isatty () = Some (Unix.isatty Unix.stdout)
+
+let colorize s colors =
+  match colors with
+  | (c1,c2) ->
+     match stdout_isatty () with
+     | Some true -> format3 "%s%s%s" c1 s c2
+     | _ -> s
+
+let colorize_bold s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_red s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_cyan s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
+  | _ -> s
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
-let print_string s = pr "%s" s; flush stdout
-let print_any s = output_value stdout s; flush stdout
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+let default_printer =
+  { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
+    printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
+    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr); }
+
+let current_printer = ref default_printer
+let set_printer printer = current_printer := printer
+
+let print_raw s = pr "%s" s; flush stdout
+let print_string s = (!current_printer).printer_prinfo s
+let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
 
@@ -357,7 +411,7 @@ let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
 let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
+  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
@@ -365,21 +419,6 @@ let splitlines s = split s "\n"
 
 let iof = int_of_float
 let foi = float_of_int
-
-let format (fmt:string) (args:string list) =
-  let frags = BatString.nsplit fmt "%s" in
-  if BatList.length frags <> BatList.length args + 1 then
-    failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Pervasives.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
-  else
-    let args = args@[""] in
-    BatList.fold_left2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
-
-let format1 f a = format f [a]
-let format2 f a b = format f [a;b]
-let format3 f a b c = format f [a;b;c]
-let format4 f a b c d = format f [a;b;c;d]
-let format5 f a b c d e = format f [a;b;c;d;e]
-let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
 let print1 a b = print_string (format1 a b)
 let print2 a b c = print_string (format2 a b c)
@@ -389,40 +428,15 @@ let print5 a b c d e f = print_string (format5 a b c d e f)
 let print6 a b c d e f g = print_string (format6 a b c d e f g)
 let print fmt args = print_string (format fmt args)
 
-let stdout_isatty () = Some (Unix.isatty Unix.stdout)
-
-let colorize s colors =
-  match colors with
-  | (c1,c2) ->
-     match stdout_isatty () with
-     | Some true -> format3 "%s%s%s" c1 s c2
-     | _ -> s
-
-let colorize_bold s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_red s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_cyan s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
-  | _ -> s
-
-let print_error s = fpr stderr "%s" (colorize_red s); flush stdout; flush stderr
+let print_error s = (!current_printer).printer_prerror s
 let print1_error a b = print_error (format1 a b)
 let print2_error a b c = print_error (format2 a b c)
 let print3_error a b c d = print_error (format3 a b c d)
 
-let print_warning s = fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr
+let print_warning s = (!current_printer).printer_prwarning s
 let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
-
 
 let stderr = stderr
 let stdout = stdout
@@ -514,6 +528,8 @@ let rec find_map l f =
      match f x with
      | None -> find_map tl f
      | y -> y
+
+let try_find f l = try Some (List.find f l) with Not_found -> None
 
 let try_find_index f l =
   let rec aux i = function
@@ -652,15 +668,17 @@ let file_get_contents f =
   close_in ic;
   s
 let concat_dir_filename d f = Filename.concat d f
-let mkdir_clean nm =
+let mkdir clean nm =
   let remove_all_in_dir nm =
     let open Sys in
     Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
   let open Unix in
-  umask 0o002;
+  (match Sys.os_type with
+  | "Unix" -> ignore (umask 0o002)
+  | _ -> (* unimplemented*) ());
   try mkdir nm 0o777
   with Unix_error (EEXIST,_,_) ->
-    remove_all_in_dir nm
+    if clean then remove_all_in_dir nm
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do
@@ -904,3 +922,45 @@ let read_hints (filename: string): hints_db option =
    | Sys_error _ ->
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
+
+(** Interactive protocol **)
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of Z.t
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
+exception UnsupportedJson
+
+let json_of_yojson yjs: json option =
+  let rec aux yjs =
+    match yjs with
+    | `Null -> JsonNull
+    | `Bool b -> JsonBool b
+    | `Int i -> JsonInt (Z.of_int i)
+    | `String s -> JsonStr s
+    | `List l -> JsonList (List.map aux l)
+    | `Assoc a -> JsonAssoc (List.map (fun (k, v) -> (k, aux v)) a)
+    | _ -> raise UnsupportedJson in
+  try Some (aux yjs) with UnsupportedJson -> None
+
+let rec yojson_of_json js =
+  match js with
+  | JsonNull -> `Null
+  | JsonBool b -> `Bool b
+  | JsonInt i -> `Int (Z.to_int i)
+  | JsonStr s -> `String s
+  | JsonList l -> `List (List.map yojson_of_json l)
+  | JsonAssoc a -> `Assoc (List.map (fun (k, v) -> (k, yojson_of_json v)) a)
+
+let json_of_string str : json option =
+  let open Yojson.Basic in
+  try
+    json_of_yojson (Yojson.Basic.from_string str)
+  with Yojson.Json_error _ -> None
+
+let string_of_json json =
+  Yojson.Basic.to_string (yojson_of_json json)
