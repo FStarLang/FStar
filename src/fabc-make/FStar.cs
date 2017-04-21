@@ -70,7 +70,6 @@ namespace fabc_make
             public string FUEL = " $LIMITS--max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 0 ";
             public List<string> TaskFiles = new List<string>();
             public string[] OutFileExtensions = { }; // { "hints", "proofs.smt2" };
-            public bool Timed = true;
 
             public string cmd;
             public Task(string c) { this.cmd = c; }
@@ -81,7 +80,7 @@ namespace fabc_make
                 t = t.Replace("$FUEL", FUEL);
                 t = t.Replace("$LIMITS", LIMITS).Replace("$RLIMIT10", RLIMIT10);
                 t = t.Replace("$OPTS", OPTS).Replace("$HINTS", HINTS);
-                return (Timed ? "time (" + t + ")" : t) + Postprocess();
+                return ("time (" + t + ")") + Postprocess();
             }
 
             public string Postprocess()

@@ -32,6 +32,7 @@ namespace fabc_make
 
         private static string JobIDPrefix = null;
         private static string PkgLocalName = "pkg.zip";
+        private static TimeSpan PkgUpdateTimeout = new TimeSpan(0, 1, 0);
         private static TimeSpan TaskRetentionTime = new TimeSpan(48, 00, 00);
         private static TimeSpan TaskMaxWallClockTime = new TimeSpan(12, 00, 00);
         private static int TaskMaxRetryCount = 1;
@@ -77,6 +78,7 @@ namespace fabc_make
                         case "PoolID": PoolID = value; break;
                         case "JobIDPrefix": JobIDPrefix = value; break;
                         case "PkgLocalName": PkgLocalName = value; break;
+                        case "PkgUpdateTimeout": PkgUpdateTimeout = TimeSpan.Parse(value); break;
                         case "TaskRetentionTime": TaskRetentionTime = TimeSpan.Parse(value); break;
                         case "TaskMaxWallClockTime": TaskMaxWallClockTime = TimeSpan.Parse(value); break;
                         case "TaskMaxRetryCount": TaskMaxRetryCount = Convert.ToInt32(value); break;
@@ -152,7 +154,15 @@ namespace fabc_make
                 !blob.Properties.LastModified.HasValue ||
                  blob.Properties.LastModified.Value < File.GetLastWriteTime(myargs.Package))
             {
-                blob.UploadFromFile(myargs.Package);
+                if (myargs.ConfigFileName != null)
+                {
+                    double sz = new FileInfo(myargs.Package).Length / 1024.0 / 1024.0;
+                    Console.WriteLine("Uploading package ({0} MiB) ...", sz.ToString("F"));
+                }
+
+                blob.UploadFromFile(myargs.Package, null, 
+                    new BlobRequestOptions() { MaximumExecutionTime=PkgUpdateTimeout }, 
+                    null);
             }
         }
 
@@ -171,20 +181,23 @@ namespace fabc_make
             Console.WriteLine("Package blob deleted.");
         }
 
-        public static CloudJob MkJob(string displayName)
+        public static CloudJob MkJob(string displayName, bool showInfo)
         {
-            string _jID = "";
+            string jID = "";
 
             try
             {
-                do { _jID = JobIDPrefix + Guid.NewGuid().ToString(); }
-                while (bc.JobOperations.GetJob(_jID) != null);
+                do { jID = JobIDPrefix + Guid.NewGuid().ToString(); }
+                while (bc.JobOperations.GetJob(jID) != null);
             }
             catch (BatchException ex) when (ex.RequestInformation.BatchError.Code == "JobNotFound") { }
 
+            if (showInfo)
+                Console.WriteLine("Creating job '{0}' ...", jID);
+
             PoolInformation pi = new PoolInformation();
             pi.PoolId = PoolID;
-            CloudJob j = bc.JobOperations.CreateJob(_jID, pi);
+            CloudJob j = bc.JobOperations.CreateJob(jID, pi);
             j.OnAllTasksComplete = OnAllTasksComplete.NoAction;
             j.OnTaskFailure = OnTaskFailure.NoAction;
             j.Constraints = new JobConstraints(new TimeSpan(24, 0, 0), 5);
@@ -253,7 +266,6 @@ namespace fabc_make
             { /* OK */}
             catch (Exception ex) { Console.WriteLine("Exception: " + ex.Message); }
 
-
             StreamWriter sw = new StreamWriter(tr.Info);
             sw.WriteLine(String.Format("[ Result of: {0} ]", tsk.CommandLine));
             sw.WriteLine(String.Format("[ Node: {0} ]", tsk.ComputeNodeInformation.ComputeNodeId));
@@ -303,6 +315,9 @@ namespace fabc_make
 
         static bool InitPackage(Arguments myargs)
         {
+            if (myargs.ConfigFileName != null)
+                Console.WriteLine("Creating package ...");
+
             string np = FStar.MakePackage(FStarHome, Z3, myargs.PackageContents);
 
             if (myargs.Package == null)
@@ -416,25 +431,35 @@ namespace fabc_make
                                 @"bin|*.dll",
                                 @"ulib|*.fst",
                                 @"ulib|*.fsti",
-                                @"ulib|*.hints",
                                 @"examples|*.fst",
                                 @"examples|*.fsti",
-                                @"examples|*.hints",
                                 @"ucontrib|*.fst",
                                 @"ucontrib|*.fsti",
-                                @"ucontrib|*.hints",
                                 @"doc|*.fst",
-                                @"doc|*.fsti",
-                                @"doc|*.hints"
+                                //@"doc|*.fsti",
+                                //@"ulib|*.hints",
+                                //@"examples|*.hints",
+                                //@"ucontrib|*.hints",
+                                //@"doc|*.hints"
                             };
 
             if (!InitPackage(myargs))
                 return 1;
 
-            j = MkJob(JobDisplayName);
+            j = MkJob(JobDisplayName, myargs.ConfigFileName != null);
 
-            Console.WriteLine(myargs.PackageBlobId);
-            Console.WriteLine(j.Id);
+            if (myargs.ConfigFileName != null)
+                using (StreamWriter sw = new StreamWriter(myargs.ConfigFileName))
+                {
+                    sw.WriteLine(myargs.PackageBlobId);
+                    sw.WriteLine(j.Id);
+                }
+            else
+            {
+                Console.WriteLine(myargs.PackageBlobId);
+                Console.WriteLine(j.Id);
+            }
+
             return 0;
         }
 
@@ -450,7 +475,8 @@ namespace fabc_make
             string sd = myargs.Directory != null ? ("cd " + d) : "";
             FStar.Task t = new FStar.Task("H=`pwd` ; " + sd + " ; " +
                                           String.Join(" ", myargs.FStarArguments));
-            t.Timed = false;
+
+            t.OutFileExtensions = new string[] { "hints" };
 
             string PkgBlobUri = "https://" + StorageAccountName + ".blob.core.windows.net/" + PackageBlobContainer + "/" + myargs.PackageBlobId;
             string taskId;
@@ -526,7 +552,15 @@ namespace fabc_make
                             tr.StdOut.Seek(0, SeekOrigin.Begin);
                             tr.StdErr.Seek(0, SeekOrigin.Begin);
                             tr.StdOut.CopyTo(Console.OpenStandardOutput());
-                            tr.StdErr.CopyTo(Console.OpenStandardError());
+
+                            using (StreamReader sr = new StreamReader(tr.StdErr))
+                            {
+                                string s = sr.ReadToEnd();
+                                string [] lines = s.Split('\n');
+                                for (int i = 0; i < lines.Length - 4; i++) // `time' outputs 4 lines
+                                    Console.WriteLine(lines);      
+                            }
+
                             if (tr.ExitCode != 0)
                                 Console.WriteLine("Command failed with exit code " + tr.ExitCode.ToString());
                         }
@@ -599,9 +633,11 @@ namespace fabc_make
                             break;
                         case "list":
                             ListJobs(myargs);
+                            exitCode = 0;
                             break;
                         case "delete":
                             Delete(myargs);
+                            exitCode = 0;
                             break;
                         default:
                             Console.WriteLine("Unknown command: " + myargs.Command);
@@ -626,11 +662,10 @@ namespace fabc_make
                 {
                     if (bc != null)
                         bc.Close();
-                }
-
-                exitCode = 0;
+                }                
             }
 
+            // Console.WriteLine("Exit code: " + exitCode.ToString());
             return exitCode;
         }
     }

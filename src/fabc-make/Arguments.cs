@@ -64,7 +64,7 @@ namespace fabc_make
                 }
             }
 
-            if (result.ConfigFileName != null)
+            if (result.ConfigFileName != null && File.Exists(result.ConfigFileName))
             {
                 using (StreamReader sr = new StreamReader(result.ConfigFileName))
                 {
