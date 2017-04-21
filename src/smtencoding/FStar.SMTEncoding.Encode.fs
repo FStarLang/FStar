@@ -1771,10 +1771,15 @@ let encode_top_level_let :
 
               (* Open universes *)
               let flid = flid_fv.fv_name.v in
-              let univ_subst, univ_vars = SS.univ_var_opening uvs in
-              let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-              let t_norm = SS.subst univ_subst t_norm in
-              let e = SS.compress (SS.subst univ_subst e) in
+              let env', e, t_norm =
+                let tcenv', _, e_t =
+                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let e, t_norm =
+                    match e_t with
+                    | [e; t_norm] -> e, t_norm
+                    | _ -> failwith "Impossible" in
+                {env with tcenv=tcenv'}, e, t_norm
+              in
 
               (* Open binders *)
               let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
@@ -1826,10 +1831,15 @@ let encode_top_level_let :
           let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
 
             (* Open universes *)
-            let univ_subst, univ_vars = SS.univ_var_opening uvs in
-            let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-            let t_norm = SS.subst univ_subst t_norm in
-            let e = SS.subst univ_subst e in
+            let env', e, t_norm =
+                let tcenv', _, e_t =
+                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let e, t_norm =
+                    match e_t with
+                    | [e; t_norm] -> e, t_norm
+                    | _ -> failwith "Impossible" in
+                {env with tcenv=tcenv'}, e, t_norm
+            in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print3 "Encoding let rec %s : %s = %s\n"
                         (Print.lbname_to_string lbn)

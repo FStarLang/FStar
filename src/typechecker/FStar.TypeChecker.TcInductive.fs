@@ -52,7 +52,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          assert (uvs = []);
  (*open*)let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let k = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env k in
+         let k = N.unfold_whnf env k in
          let indices, t = U.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
@@ -98,10 +98,9 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
               then env, [], U_zero
               else raise (Error("Unexpected data constructor", se.sigrng)) in
 
-         let norm_whnf = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env in
 
          let arguments, result =
-            let t = norm_whnf t in
+            let t = N.unfold_whnf env t in
             match (SS.compress t).n with
                 | Tm_arrow(bs, res) ->
                   //the type of each datacon is already a function with the type params as arguments
@@ -432,14 +431,14 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
 let check_positivity (ty:sigelt) (env:env_t) :bool =
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
   let unfolded_inductives = BU.mk_ref [] in
-  
+
   //ty_bs are the parameters of ty, it does not include the indexes (also indexes are not parameters of data constructor types, inductive type parameters are)
   let ty_lid, ty_us, ty_bs =
     match ty.sigel with
     | Sig_inductive_typ (lid, us, bs, _, _, _, _) -> lid, us, bs
     | _                                           -> failwith "Impossible!"
   in
-  
+
   //open the universe variables, we will use these universe names for data constructors also later on
   let ty_usubst, ty_us = SS.univ_var_opening ty_us in
   //push the universe names in the env

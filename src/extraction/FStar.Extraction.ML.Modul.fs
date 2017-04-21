@@ -50,6 +50,9 @@ let mangle_projector_lid (x: lident) : lident =
 
 let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
 
+let as_pair = function
+   | [a;b] -> (a,b)
+   | _ -> failwith "Expected a list with 2 elements"
 
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
@@ -250,14 +253,23 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           g, []
 
         | Sig_declare_typ(lid, _, t, quals)  when Term.is_arity g t -> //lid is a type
-          if quals |> BU.for_some (function Assumption -> true | _ -> false) |> not
+          //extracting `assume type t : k`
+          if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
           then g, []
           else let bs, _ = U.arrow_formals t in
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
         | Sig_let((false, [lb]), _, quals, _) when Term.is_arity g lb.lbtyp ->
-          extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
+          //extracting `type t = e`
+          //or         `let t = e` when e is a type
+          let tcenv, (lbdef, lbtyp) =
+            let tcenv, _, def_typ =
+                FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
+            tcenv, as_pair def_typ in
+          let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
+          //eta expansion is important; see issue #490
+          extract_typ_abbrev g (right lb.lbname) quals lbdef
 
         | Sig_let (lbs, _, quals, attrs) ->
           let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in

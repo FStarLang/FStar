@@ -826,7 +826,7 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     let is_type t =
-        let t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t in
+        let t = N.unfold_whnf env t in
         match (SS.compress t).n with
         | Tm_type _ -> true
         | _ -> false
