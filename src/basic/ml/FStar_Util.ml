@@ -411,7 +411,7 @@ let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
   BatString.map (fun c -> if c = c1 then c2 else c) s
 let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (function c -> by | x -> BatString.of_char x) s
+  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
@@ -668,15 +668,17 @@ let file_get_contents f =
   close_in ic;
   s
 let concat_dir_filename d f = Filename.concat d f
-let mkdir_clean nm =
+let mkdir clean nm =
   let remove_all_in_dir nm =
     let open Sys in
     Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
   let open Unix in
-  umask 0o002;
+  (match Sys.os_type with
+  | "Unix" -> ignore (umask 0o002)
+  | _ -> (* unimplemented*) ());
   try mkdir nm 0o777
   with Unix_error (EEXIST,_,_) ->
-    remove_all_in_dir nm
+    if clean then remove_all_in_dir nm
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do

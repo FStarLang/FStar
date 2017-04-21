@@ -532,19 +532,25 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    * in our dependency graph. *)
   let verify_flags = List.map (fun f -> f, BU.mk_ref false) (Options.verify_module ()) in
 
+  let partial_discovery =
+    not (Options.verify_all () || Options.extract_all ())
+  in
+
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
    * immutable from there on. *)
   let m = build_map filenames in
-  (* Debug. *)
-  (* List.map (fun k ->
-    let p = function
-      | Some x -> Util.format1 "Some %s" x
-      | None -> "None"
-    in
+  let file_names_of_key k =
     let intf, impl = must (smap_try_find m k) in
-    Util.print3 "%s: %s, %s\n" k (p intf) (p impl)
-  ) (smap_keys m); *)
+    match intf, impl with
+    | None, None -> failwith "Impossible"
+    | None, Some i
+    | Some i, None -> i
+    | Some i, _ when partial_discovery -> i
+    | Some i, Some j -> i ^ " && " ^ j
+  in
+  (* Debug. *)
+  //  List.iter (fun k -> BU.print_string (file_names_of_key k)) (smap_keys m);
 
   let collect_one = collect_one verify_flags verify_mode in
 
@@ -559,9 +565,6 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - M.fsti when **only** M.fsti is given as argument
    *   - both M.fsti and M.fst otherwise (including when both M.fsti and M.fst are passed)
    *)
-  let partial_discovery =
-    not (Options.verify_all () || Options.extract_all ())
-  in
   let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
@@ -603,7 +606,8 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     match color with
     | Gray ->
         Util.print1 "Warning: recursive dependency on module %s\n" key;
-        Util.print1 "The cycle is: %s \n" (String.concat " -> " cycle);
+        let cycle = cycle |> List.map file_names_of_key in
+        Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
         print_graph immediate_graph;
         print_string "\n";
         exit 1
