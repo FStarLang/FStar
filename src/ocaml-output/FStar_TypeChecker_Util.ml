@@ -2213,12 +2213,7 @@ let maybe_coerce_bool_to_type:
       fun lc  ->
         fun t  ->
           let is_type1 t1 =
-            let t2 =
-              FStar_TypeChecker_Normalize.normalize
-                [FStar_TypeChecker_Normalize.WHNF;
-                FStar_TypeChecker_Normalize.UnfoldUntil
-                  FStar_Syntax_Syntax.Delta_constant;
-                FStar_TypeChecker_Normalize.Beta] env t1 in
+            let t2 = FStar_TypeChecker_Normalize.unfold_whnf env t1 in
             let uu____4132 =
               let uu____4133 = FStar_Syntax_Subst.compress t2 in
               uu____4133.FStar_Syntax_Syntax.n in
