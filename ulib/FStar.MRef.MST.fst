@@ -105,18 +105,20 @@ let mst_get () = MSTATE?.get_st ()
 val mst_put: h:heap -> MST unit (fun h0 -> heap_rel h0 h) (fun _ _ h1 -> h == h1)
 let mst_put h = MSTATE?.put_st h
 
-//this abstract type can be used when MST is defined in a separate module
-//abstract type mst_witnessed (p:predicate heap) = True
+abstract type mst_witnessed (p:predicate heap) = stable p heap_rel //packaging stability in the witnessed modality
 
-assume type mst_witnessed : (p:predicate heap) -> Type0
+(*assume type mst_witnessed: (p:predicate heap) -> Type0
 
+assume val lem_mst_witnessed: (p:predicate heap) -> Lemma (requires (mst_witnessed p)) 
+							  (ensures  (stable p heap_rel))
+							  [SMTPat (mst_witnessed p)]*)
+							  
 val mst_witness: p:predicate heap 
               -> MST unit (fun h0 -> p h0 /\ stable p heap_rel) (fun h0 _ h1 -> h0 == h1 /\ mst_witnessed p)
-let mst_witness p = admit () //intentional (justified by metatheory)
+let mst_witness p = ()
 
-//Compared to FStar.MRef.fst, has (stable p heap_rel) refinement, so as to ensure the metatheoretical well-formedness of (mst_witnessed p)
 val mst_recall: p:predicate heap 
-             -> MST unit (fun _ -> stable p heap_rel /\ mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
+             -> MST unit (fun _ -> mst_witnessed p) (fun h0 _ h1 -> h0 == h1 /\ p h1)
 let mst_recall p = admit () //intentional (justified by metatheory)
 
 
@@ -222,9 +224,7 @@ val recall_token: #a:Type
                -> m:mref a rel
                -> p:predicate a
                -> MST unit
-	              //Compared to FStar.MRef.fst, has (stable p rel) precondition to ensure 
-		      //the metatheoretical well-formedness of the underlying (mst_witnessed p)
-                      (requires (fun _ -> stable p rel /\ token m p))   
+                      (requires (fun _ -> token m p))   
                       (ensures  (fun h0 _ h1 -> h0 == h1 /\ p (sel h1 m)))
 let recall_token #a #rel m p
   = mst_recall (fun h -> contains h m /\ p (sel h m))
@@ -263,9 +263,7 @@ val recall: #a:Type
                         -> m:mref a rel
                         -> p:predicate heap
                         -> MST unit
-			       //Compared to FStar.MRef.fst, has (stable_on_heap m p) precondition to ensure 
-		               //the metatheoretical well-formedness of the underlying (mst_witnessed p)
-                               (requires (fun _ -> stable_on_heap m p /\ witnessed p))
+                               (requires (fun _ -> witnessed p))
                                (ensures  (fun h0 _ h1 -> h0 == h1 /\ p h1))
 let recall #a #rel m p = mst_recall p
 
@@ -283,9 +281,7 @@ val recall_heap: #a:Type
               -> m:mref a rel
               -> p:predicate heap
               -> MST unit
-		     //Compared to FStar.MRef.fst, has (stable p heap_rel) precondition to ensure 
-		     //the metatheoretical well-formedness of the underlying (mst_witnessed p)
-                     (requires (fun _ -> stable p heap_rel /\ witnessed p))
+                     (requires (fun _ -> witnessed p))
                      (ensures  (fun h0 _ h1 -> h0 == h1 /\ p h1))
 let recall_heap #a #rel m p = mst_recall p
 
