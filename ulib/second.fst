@@ -623,67 +623,67 @@ let dsnd #a #b t = Mkdtuple2?._2 t
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
-(* irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b *)
-(* let unsafe_coerce #a #b x = admit(); x *)
-(* assume val admitP  : p:Type -> Pure unit True (fun x -> p) *)
-(* val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True)) *)
-(* let _assert p () = () *)
-(* val cut     : p:Type -> Pure unit (requires p) (fun x -> p) *)
-(* let cut p = () *)
-(* assume val raise: exn -> Ex 'a       (\* TODO: refine with the Exn monad *\) *)
+irreducible val unsafe_coerce  : #a:Type u#a -> #b: Type u#a -> a -> Tot b
+let unsafe_coerce #a #b x = admit(); x
+assume val admitP  : p:Type -> Pure unit True (fun x -> p)
+val _assert : p:Type -> unit -> Pure unit (requires p) (ensures (fun x -> True))
+let _assert p () = ()
+val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
+let cut p = ()
+assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 
 
-(* val ignore: #a:Type -> a -> Tot unit *)
-(* let ignore #a x = () *)
+val ignore: #a:Type -> a -> Tot unit
+let ignore #a x = ()
 
-(* type nat = i:int{i >= 0} *)
-(* type pos = i:int{i > 0} *)
-(* type nonzero = i:int{i<>0} *)
-(* let allow_inversion (a:Type) *)
-(*   : Pure unit (requires True) (ensures (fun x -> inversion a)) *)
-(*   = () *)
+type nat = i:int{i >= 0}
+type pos = i:int{i > 0}
+type nonzero = i:int{i<>0}
+let allow_inversion (a:Type)
+  : Pure unit (requires True) (ensures (fun x -> inversion a))
+  = ()
 
-(* //allowing inverting option without having to globally increase the fuel just for this *)
-(* val invertOption : a:Type -> Lemma *)
-(*   (requires True) *)
-(*   (ensures (forall (x:option a). None? x \/ Some? x)) *)
-(*   [SMTPatT (option a)] *)
-(* let invertOption a = allow_inversion (option a) *)
+//allowing inverting option without having to globally increase the fuel just for this
+val invertOption : a:Type -> Lemma
+  (requires True)
+  (ensures (forall (x:option a). None? x \/ Some? x))
+  [SMTPatT (option a)]
+let invertOption a = allow_inversion (option a)
 
 
-(* (\*    For the moment we require not just that the divisor is non-zero, *\) *)
-(* (\*    but also that the dividend is natural. This works around a *\) *)
-(* (\*    mismatch between the semantics of integer division in SMT-LIB and *\) *)
-(* (\*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *\) *)
-(* (\*    math Euclidian division), while for F#/OCaml ints the modulus has *\) *)
-(* (\*    the same sign as the dividend.                                    *\) *)
+(*    For the moment we require not just that the divisor is non-zero, *)
+(*    but also that the dividend is natural. This works around a *)
+(*    mismatch between the semantics of integer division in SMT-LIB and *)
+(*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
+(*    math Euclidian division), while for F#/OCaml ints the modulus has *)
+(*    the same sign as the dividend.                                    *)
 
-(* (\*    Our arbitrary precision ints are compiled to zarith (big_ints)  *\) *)
-(* (\*    in OCaml. Although in F# they are still compiled to platform-specific *\) *)
-(* (\*    finite integers---this should eventually change to .NET BigInteger *\) *)
-(* assume val op_Modulus            : int -> nonzero -> Tot int *)
-(* assume val op_Division           : nat -> nonzero -> Tot int *)
+(*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
+(*    in OCaml. Although in F# they are still compiled to platform-specific *)
+(*    finite integers---this should eventually change to .NET BigInteger *)
+assume val op_Modulus            : int -> nonzero -> Tot int
+assume val op_Division           : nat -> nonzero -> Tot int
 
-(* let rec pow2 (x:nat) : Tot pos = *)
-(*   match x with *)
-(*   | 0  -> 1 *)
-(*   | _  -> 2 `op_Multiply` (pow2 (x-1)) *)
+let rec pow2 (x:nat) : Tot pos =
+  match x with
+  | 0  -> 1
+  | _  -> 2 `op_Multiply` (pow2 (x-1))
 
-(* let min x y = if x <= y then x else y *)
+let min x y = if x <= y then x else y
 
-(* let abs (x:int) : Tot int = if x >= 0 then x else -x *)
+let abs (x:int) : Tot int = if x >= 0 then x else -x
 
-(* assume val string_of_bool: bool -> Tot string *)
-(* assume val string_of_int: int -> Tot string *)
+assume val string_of_bool: bool -> Tot string
+assume val string_of_int: int -> Tot string
 
-(* (\*********************************************************************************\) *)
-(* (\* Marking terms for normalization *\) *)
-(* (\*********************************************************************************\) *)
-(* abstract let normalize_term (#a:Type) (x:a) : a = x *)
-(* abstract let normalize (a:Type0) = a *)
+(*********************************************************************************)
+(* Marking terms for normalization *)
+(*********************************************************************************)
+abstract let normalize_term (#a:Type) (x:a) : a = x
+abstract let normalize (a:Type0) = a
 
-(* val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p)) *)
-(* let assert_norm p = () *)
+val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+let assert_norm p = ()
 
-(* val false_elim : #a:Type -> u:unit{false} -> Tot a *)
-(* let rec false_elim #a u = false_elim () *)
+val false_elim : #a:Type -> u:unit{false} -> Tot a
+let rec false_elim #a u = false_elim ()
