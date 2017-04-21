@@ -402,7 +402,7 @@ and comp_to_string c =
                           (c.flags |> List.map cflags_to_string |> String.concat " ")
         else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
         && not (Options.print_effect_args())
-        then U.format1 "Tot %s" (term_to_string (fst (List.hd c.effect_args)))
+        then U.format1 "Tot %s" (args_to_string c.effect_args)
         else if not (Options.print_effect_args())
                 && not (Options.print_implicits())
                 && lid_equals c.comp_typ_name Const.effect_ML_lid

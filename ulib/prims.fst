@@ -195,8 +195,8 @@ total new_effect GHOST = PURE
 
 unfold let purewp_id (a:Type) (wp:pure_wp a) = wp
 
-sub_effect PURE ~> GHOST = purewp_id
-(* sub_effect (a:Type) : Prims.PURE a ~> Prims.GHOST a = purewp_id a *)
+(* sub_effect PURE ~> GHOST = purewp_id *)
+sub_effect (a:Type) : Prims.PURE a ~> Prims.GHOST a = purewp_id a
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
@@ -269,7 +269,7 @@ effect M (a:Type) = Tot a (attributes cps)
 let returnM (a:Type) (x:a) : M a = x
 
 new_effect DIV = PURE
-sub_effect PURE ~> DIV  = purewp_id
+sub_effect (a:Type) : Prims.PURE a ~> Prims.DIV a  = purewp_id a
 
 effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
        DIV a
@@ -393,7 +393,7 @@ effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
          (fun (p:ex_post a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
 
 unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
-sub_effect DIV ~> EXN = lift_div_exn
+sub_effect (a:Type) : Prims.DIV a ~> Prims.EXN a = lift_div_exn a
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
 let all_pre_h  (h:Type)           = h -> GTot Type0
@@ -453,10 +453,6 @@ new_effect {
   ; null_wp      = all_null_wp      heap
   ; trivial      = all_trivial      heap
 }
-
-
-
-
 
 type lex_t =
   | LexTop  : lex_t

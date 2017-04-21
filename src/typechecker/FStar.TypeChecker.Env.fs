@@ -813,10 +813,11 @@ let rec unfold_effect_abbrev env comp =
   | Some (binders, cdef) ->
     let binders, cdef = SS.open_comp binders cdef in
     if List.length binders <> List.length c.effect_args
-    then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+    then raise (Error (BU.format4 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s... args are %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args))
                                 (Print.comp_to_string (S.mk_Comp c))
+                                (Print.args_to_string c.effect_args)
                             , comp.pos));
     let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders c.effect_args in
     let c1 = SS.subst_comp inst cdef in

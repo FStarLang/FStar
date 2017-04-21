@@ -443,14 +443,8 @@ let join_lcomp env lc1 lc2 =
   && Util.is_total_lcomp lc2
   then lc1, lc2
   else
-    let nct_of_lcomp lc = {
-        nct_name    = lc.lcomp_name;
-        nct_univs   = lc.lcomp_univs;
-        nct_indices = lc.lcomp_indices;
-        nct_result  = S.as_arg lc.lcomp_res_typ ;
-        nct_wp      = S.as_arg S.tun; //dummy WP
-        nct_flags   = lc.lcomp_cflags
-      }
+    let nct_of_lcomp lc =
+      Env.comp_as_normal_comp_typ env (lc.lcomp_as_comp())
     in
     let lcomp_of_nct nct = {
         lcomp_name    = nct.nct_name;
@@ -541,6 +535,8 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
 
   //at this point, lc1 and lc2 have the same label, universes and indices
   let bind_it () =
+    if debug env Options.Extreme
+    then printfn "bind it!";
     let c1 = lc1.lcomp_as_comp () in
     let c2 = lc2.lcomp_as_comp () in
     //at this point, we know that c1 and c2 also have the same effect label, universes and indices

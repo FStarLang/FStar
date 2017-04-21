@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--explicit_deps Test.fst --debug Test --debug_level LogTypes --debug_level SMTEncoding --verify_module Test --print_implicits</StartArguments>
+    <StartArguments>--prims second.fst x.fst --debug yes --lax --trace_error --print_effect_args --debug X --debug_level Extreme</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
