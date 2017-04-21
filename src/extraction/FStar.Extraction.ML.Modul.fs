@@ -180,28 +180,6 @@ let extract_bundle env se =
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
-//let level_of_sigelt g se =
-//    let l = function
-//        | Term.false -> "false"
-//        | Term.true -> "true"
-//        | Term.Kind_level -> "Kind_level" in
-//    match se with
-//        | Sig_bundle _
-//        | Sig_inductive_typ _
-//        | Sig_datacon _ -> BU.print_string "\t\tInductive bundle"
-//
-//        | Sig_declare_typ(lid, _, t, quals, _) ->
-//          BU.print2 "\t\t%s @ %s\n" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
-//
-//        | Sig_let((_, lb::_), _, _, _, _) ->
-//          BU.print3 "\t\t%s : %s @ %s\n" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
-//                                         (Print.term_to_string lb.lbtyp)
-//                                         (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
-//
-//
-//        | _ -> BU.print_string "other\n"
-//
-
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
      match se.sigel with
@@ -267,6 +245,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
             tcenv, as_pair def_typ in
+          let lbtyp = FStar.TypeChecker.Normalize.unfold_whnf tcenv lbtyp in
           let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
           //eta expansion is important; see issue #490
           extract_typ_abbrev g (right lb.lbname) quals lbdef

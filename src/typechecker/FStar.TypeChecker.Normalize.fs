@@ -1636,7 +1636,10 @@ let normalize_refinement steps env t0 =
 let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
 
 let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
-  let t_e = unfold_whnf env t_e in
+  //unfold_whnf env t_e in
+  //It would be nice to eta_expand based on the WHNF of t_e
+  //except that this triggers a brittleness in the unification algorithm and its interaction with SMT encoding
+  //in particular, see Rel.u_abs (roughly line 520)
   let formals, c = U.arrow_formals_comp t_e in
   match formals with
   | [] -> e
