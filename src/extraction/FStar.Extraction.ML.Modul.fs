@@ -356,13 +356,17 @@ let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations 
 
 let extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
+  if Options.debug_any ()
+  then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with currentModule = name}  in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
-  if m.name.str <> "Prims" && (is_kremlin || not m.is_interface) && Options.should_extract m.name.str then begin
+  if m.name.str <> "Prims"
+  && (is_kremlin || not m.is_interface)
+  && Options.should_extract m.name.str then begin
     BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
     g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
   end else begin
