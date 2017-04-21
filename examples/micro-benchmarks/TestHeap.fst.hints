@@ -9,7 +9,8 @@
       [
         "@MaxIFuel_assumption", "@query", "function_token_typing_Prims.int",
         "function_token_typing_TestHeap.h",
-        "function_token_typing_TestHeap.x", "lemma_FStar.Heap.sel_upd1",
+        "function_token_typing_TestHeap.x",
+        "lemma_FStar.Heap.lemma_sel_upd1",
         "refinement_interpretation_TestHeap_Tm_refine_908e6c157c79fd6fc33182e15825a300"
       ],
       0
@@ -33,7 +34,7 @@
         "function_token_typing_TestHeap.h",
         "function_token_typing_TestHeap.x",
         "function_token_typing_TestHeap.y", "int_typing",
-        "lemma_FStar.Heap.sel_upd1", "lemma_FStar.Heap.sel_upd2",
+        "lemma_FStar.Heap.lemma_sel_upd1", "lemma_FStar.Heap.lemma_sel_upd2",
         "refinement_interpretation_TestHeap_Tm_refine_908e6c157c79fd6fc33182e15825a300"
       ],
       0
@@ -53,7 +54,7 @@
       1,
       [
         "@query", "function_token_typing_Prims.int",
-        "function_token_typing_TestHeap.y", "lemma_FStar.Heap.sel_upd1"
+        "function_token_typing_TestHeap.y", "lemma_FStar.Heap.lemma_sel_upd1"
       ],
       0
     ],

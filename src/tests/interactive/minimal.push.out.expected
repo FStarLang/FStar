@@ -1,0 +1,2 @@
+{"features": ["autocomplete", "describe-protocol", "exit", "lookup", "lookup/documentation", "pop", "push"], "kind": "protocol-info", "version": 1}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}

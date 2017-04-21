@@ -1,5 +1,5 @@
 [
-  "~¿Óõ`a3qËËCx\u0004á2~",
+  "\u0001¸\u0003Y\u0003íl‚¨C+c^Ã/3",
   [
     [
       "FStar.Heap.compare_addrs",
@@ -648,80 +648,6 @@
       0
     ],
     [
-      "FStar.Heap.lemma_upd_modifies_test",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Heap_interpretation_Tm_arrow_14003e2cd99922b10224554d9ebc3344",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Prims.HasEq_int", "b2t_def",
-        "constructor_distinct_Prims.Some", "data_elim_FStar.Heap.Mkheap_rec",
-        "data_elim_FStar.Heap.Mkref", "data_elim_Prims.None",
-        "data_elim_Prims.Some", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "equation_FStar.Heap.addr_of",
-        "equation_FStar.Heap.contains", "equation_FStar.Heap.heap",
-        "equation_FStar.Heap.modifies", "equation_FStar.Heap.sel",
-        "equation_FStar.Heap.sel_tot", "equation_FStar.Heap.unused_in",
-        "equation_FStar.Heap.upd", "equation_FStar.Heap.upd_tot",
-        "equation_Prims.dfst", "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Heap.heap_rec",
-        "fuel_guarded_inversion_FStar.Heap.ref",
-        "fuel_guarded_inversion_Prims.dtuple2",
-        "fuel_guarded_inversion_Prims.option",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "interpretation_FStar.Heap_Tm_abs_bf84de4729fe44a4c5c4ed1e4da037d7",
-        "interpretation_FStar.Heap_Tm_abs_f95237f2ac73a2ade36c8659e109eea5",
-        "lemma_FStar.Set.mem_singleton", "lemma_Prims.invertOption",
-        "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Heap.Mkheap_rec_memory",
-        "proj_equation_FStar.Heap.Mkref_addr",
-        "proj_equation_Prims.Mkdtuple2__1", "proj_equation_Prims.Some_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Heap.Mkheap_rec_memory",
-        "projection_inverse_FStar.Heap.Mkheap_rec_next_addr",
-        "projection_inverse_Prims.Mkdtuple2__1",
-        "projection_inverse_Prims.Some_v",
-        "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
-        "refinement_interpretation_FStar.Heap_Tm_refine_4b3610eb38f46ee55e11f83299526af7",
-        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Heap.__proj__Mkheap_rec__item__next_addr",
-        "typing_FStar.Heap.__proj__Mkref__item__addr",
-        "typing_FStar.Heap.addr_of", "typing_FStar.Heap.contains",
-        "typing_FStar.Heap.upd",
-        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
-        "unit_typing"
-      ],
-      0
-    ],
-    [
-      "FStar.Heap.lemma_upd_modifies_test",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "FStar.Heap.lemma_upd_modifies_test",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
       "FStar.Heap.lemma_alloc_fresh_test",
       1,
       2,
@@ -781,52 +707,6 @@
     ],
     [
       "FStar.Heap.lemma_alloc_fresh_test",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "FStar.Heap.lemma_modifies_trans_test",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "bool_inversion",
-        "data_elim_FStar.Heap.Mkheap_rec", "equation_FStar.Heap.heap",
-        "equation_FStar.Heap.modifies", "equation_Prims.eqtype",
-        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "lemma_FStar.Set.mem_union", "primitive_Prims.op_BarBar",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Heap.addr_of", "typing_FStar.Set.mem",
-        "typing_FStar.Set.union", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "FStar.Heap.lemma_modifies_trans_test",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "FStar.Heap.lemma_modifies_trans_test",
       3,
       2,
       1,
@@ -936,21 +816,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Heap_interpretation_Tm_arrow_14003e2cd99922b10224554d9ebc3344",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "b2t_def",
         "bool_inversion", "constructor_distinct_Prims.Some",
         "data_elim_FStar.Heap.Mkheap_rec", "data_elim_Prims.Mktuple2",
-        "data_elim_Prims.None", "disc_equation_Prims.None",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_FStar.Heap.alloc", "equation_FStar.Heap.contains",
         "equation_FStar.Heap.fresh", "equation_FStar.Heap.heap",
         "equation_FStar.Heap.is_mm", "equation_FStar.Heap.unused_in",
         "equation_FStar.Heap.upd", "equation_Prims.dfst",
         "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
+        "int_inversion",
         "interpretation_FStar.Heap_Tm_abs_f95237f2ac73a2ade36c8659e109eea5",
         "lemma_FStar.Heap.lemma_contains_implies_used",
-        "lemma_Prims.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThanOrEqual",
         "proj_equation_FStar.Heap.Mkheap_rec_memory",
+        "proj_equation_FStar.Heap.Mkheap_rec_next_addr",
         "proj_equation_FStar.Heap.Mkref_addr",
         "proj_equation_FStar.Heap.Mkref_mm",
         "proj_equation_Prims.Mkdtuple2__1", "proj_equation_Prims.Some_v",
@@ -961,10 +842,10 @@
         "projection_inverse_Prims.Mkdtuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Some_v",
+        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
         "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "typing_FStar.Heap.__proj__Mkheap_rec__item__next_addr",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Heap.alloc", "typing_FStar.Heap.contains",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
@@ -1219,7 +1100,7 @@
       0
     ],
     [
-      "FStar.Heap.sel_upd1",
+      "FStar.Heap.lemma_sel_upd1",
       1,
       2,
       1,
@@ -1229,12 +1110,12 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "constructor_distinct_Prims.Some", "data_elim_FStar.Heap.Mkheap_rec",
         "data_elim_FStar.Heap.Mkref", "data_elim_Prims.Some",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "equation_FStar.Heap.addr_of", "equation_FStar.Heap.contains",
-        "equation_FStar.Heap.heap", "equation_FStar.Heap.sel",
-        "equation_FStar.Heap.sel_tot", "equation_FStar.Heap.upd",
-        "equation_FStar.Heap.upd_tot", "equation_Prims.dfst",
-        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
+        "disc_equation_Prims.Some", "equation_FStar.Heap.addr_of",
+        "equation_FStar.Heap.contains", "equation_FStar.Heap.heap",
+        "equation_FStar.Heap.sel", "equation_FStar.Heap.sel_tot",
+        "equation_FStar.Heap.upd", "equation_FStar.Heap.upd_tot",
+        "equation_Prims.dfst", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Heap.heap_rec",
         "fuel_guarded_inversion_FStar.Heap.ref",
         "fuel_guarded_inversion_Prims.dtuple2",
         "interpretation_FStar.Heap_Tm_abs_bf84de4729fe44a4c5c4ed1e4da037d7",
@@ -1250,7 +1131,6 @@
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
         "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "typing_FStar.Heap.__proj__Mkheap_rec__item__next_addr",
         "typing_FStar.Heap.addr_of", "typing_FStar.Heap.contains",
         "typing_FStar.Heap.upd",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
@@ -1259,7 +1139,7 @@
       0
     ],
     [
-      "FStar.Heap.sel_upd1",
+      "FStar.Heap.lemma_sel_upd1",
       2,
       2,
       1,
@@ -1270,7 +1150,7 @@
       0
     ],
     [
-      "FStar.Heap.sel_upd1",
+      "FStar.Heap.lemma_sel_upd1",
       3,
       2,
       1,
@@ -1281,27 +1161,36 @@
       0
     ],
     [
-      "FStar.Heap.sel_upd2",
+      "FStar.Heap.lemma_sel_upd2",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Heap_interpretation_Tm_arrow_14003e2cd99922b10224554d9ebc3344",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "b2t_def",
-        "data_elim_FStar.Heap.Mkheap_rec", "data_elim_FStar.Heap.Mkref",
+        "bool_inversion", "data_elim_FStar.Heap.Mkheap_rec",
+        "data_elim_FStar.Heap.Mkref", "data_elim_Prims.Some",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_FStar.Heap.addr_of", "equation_FStar.Heap.contains",
         "equation_FStar.Heap.heap", "equation_FStar.Heap.sel",
         "equation_FStar.Heap.sel_tot", "equation_FStar.Heap.unused_in",
         "equation_FStar.Heap.upd", "equation_FStar.Heap.upd_tot",
-        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
+        "equation_Prims.nat", "equation_Prims.pure_pre",
+        "fuel_guarded_inversion_FStar.Heap.heap_rec",
         "fuel_guarded_inversion_FStar.Heap.ref",
-        "fuel_guarded_inversion_Prims.option", "int_inversion",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "fuel_guarded_inversion_Prims.option",
+        "function_token_typing_Prims.pure_pre", "int_inversion",
+        "interpretation_FStar.Heap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8",
         "interpretation_FStar.Heap_Tm_abs_bf84de4729fe44a4c5c4ed1e4da037d7",
         "interpretation_FStar.Heap_Tm_abs_f95237f2ac73a2ade36c8659e109eea5",
+        "kinding_Prims.dtuple2@tok",
         "lemma_FStar.Heap.lemma_contains_implies_used",
-        "primitive_Prims.op_Equality",
+        "lemma_Prims.invertOption", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "proj_equation_FStar.Heap.Mkheap_rec_memory",
         "proj_equation_FStar.Heap.Mkheap_rec_next_addr",
         "proj_equation_FStar.Heap.Mkref_addr", "proj_equation_Prims.Some_v",
@@ -1310,16 +1199,15 @@
         "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Heap.__proj__Mkheap_rec__item__next_addr",
         "typing_FStar.Heap.addr_of", "typing_FStar.Heap.contains",
         "typing_FStar.Heap.upd",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
-        "unit_typing"
+        "typing_Prims.uu___is_None", "unit_typing"
       ],
       0
     ],
     [
-      "FStar.Heap.sel_upd2",
+      "FStar.Heap.lemma_sel_upd2",
       2,
       2,
       1,
@@ -1330,7 +1218,7 @@
       0
     ],
     [
-      "FStar.Heap.sel_upd2",
+      "FStar.Heap.lemma_sel_upd2",
       3,
       2,
       1,
@@ -1581,7 +1469,7 @@
       0
     ],
     [
-      "FStar.Heap.upd_unused",
+      "FStar.Heap.lemma_upd_unused",
       1,
       2,
       1,
@@ -1592,8 +1480,7 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "b2t_def",
         "bool_inversion", "bool_typing", "constructor_distinct_Prims.Some",
         "data_elim_FStar.Heap.Mkheap_rec", "data_elim_FStar.Heap.Mkref",
-        "data_elim_Prims.None", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "equation_FStar.Heap.addr_of",
+        "disc_equation_Prims.None", "equation_FStar.Heap.addr_of",
         "equation_FStar.Heap.emp", "equation_FStar.Heap.heap",
         "equation_FStar.Heap.unused_in", "equation_FStar.Heap.upd",
         "equation_FStar.Heap.upd_tot", "equation_Prims.nat",
@@ -1606,8 +1493,7 @@
         "interpretation_FStar.Heap_Tm_abs_bf84de4729fe44a4c5c4ed1e4da037d7",
         "interpretation_FStar.Heap_Tm_abs_f95237f2ac73a2ade36c8659e109eea5",
         "lemma_FStar.Heap.lemma_contains_implies_used",
-        "lemma_Prims.invertOption", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Equality",
         "proj_equation_FStar.Heap.Mkheap_rec_memory",
         "proj_equation_FStar.Heap.Mkheap_rec_next_addr",
         "proj_equation_FStar.Heap.Mkref_addr",
@@ -1617,18 +1503,16 @@
         "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Heap.__proj__Mkheap_rec__item__next_addr",
+        "typing_FStar.Heap.__proj__Mkheap_rec__item__memory",
         "typing_FStar.Heap.__proj__Mkref__item__addr",
-        "typing_FStar.Heap.addr_of", "typing_FStar.Heap.contains",
-        "typing_FStar.Heap.upd",
-        "typing_FStar.Heap_Tm_abs_615c6d353e7c02601a269534905db2e0",
+        "typing_FStar.Heap.contains", "typing_FStar.Heap.upd",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
       0
     ],
     [
-      "FStar.Heap.upd_unused",
+      "FStar.Heap.lemma_upd_unused",
       2,
       2,
       1,
@@ -1639,7 +1523,100 @@
       0
     ],
     [
-      "FStar.Heap.upd_unused",
+      "FStar.Heap.lemma_upd_unused",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Heap.lemma_contains_upd_modifies",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "disc_equation_Prims.Some",
+        "equation_FStar.Heap.addr_of", "equation_FStar.Heap.contains",
+        "equation_FStar.Heap.heap", "equation_FStar.Heap.modifies",
+        "equation_FStar.Heap.upd", "equation_Prims.eqtype",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
+        "fuel_guarded_inversion_FStar.Heap.ref",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_typing", "lemma_FStar.Heap.lemma_sel_upd2",
+        "lemma_FStar.Heap.lemma_upd_unused",
+        "lemma_FStar.Heap.lemma_well_typed_upd_contains",
+        "lemma_FStar.Set.mem_singleton", "primitive_Prims.op_Equality",
+        "proj_equation_FStar.Heap.Mkref_addr",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Heap.__proj__Mkref__item__addr",
+        "typing_FStar.Heap.addr_of", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Heap.lemma_contains_upd_modifies",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Heap.lemma_contains_upd_modifies",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Heap.lemma_unused_upd_modifies",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.heap",
+        "equation_FStar.Heap.modifies", "equation_FStar.Heap.upd",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
+        "fuel_guarded_inversion_FStar.Heap.ref",
+        "lemma_FStar.Heap.lemma_contains_implies_used",
+        "lemma_FStar.Heap.lemma_distinct_addrs_unused",
+        "lemma_FStar.Heap.lemma_sel_upd2",
+        "lemma_FStar.Heap.lemma_unused_upd_contains",
+        "lemma_FStar.Heap.lemma_upd_unused",
+        "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Heap.lemma_unused_upd_modifies",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Heap.lemma_unused_upd_modifies",
       3,
       2,
       1,
@@ -1676,7 +1653,7 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.Heap.equal", "equation_FStar.Heap.heap",
         "equation_Prims.nat", "fuel_guarded_inversion_FStar.Heap.heap_rec",
-        "function_token_typing_Prims.nat", "int_inversion", "int_typing",
+        "function_token_typing_Prims.nat", "int_typing",
         "interpretation_FStar.Heap_Tm_abs_615c6d353e7c02601a269534905db2e0",
         "kinding_Prims.option@tok",
         "proj_equation_FStar.Heap.Mkheap_rec_memory",
@@ -1684,7 +1661,6 @@
         "projection_inverse_FStar.Heap.Mkheap_rec_memory",
         "refinement_interpretation_FStar.Heap_Tm_refine_09a82249204fb6feda535b81fd28fc71",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Heap.__proj__Mkheap_rec__item__next_addr",
         "typing_FStar.Heap_Tm_abs_615c6d353e7c02601a269534905db2e0",
         "unit_typing"
       ],

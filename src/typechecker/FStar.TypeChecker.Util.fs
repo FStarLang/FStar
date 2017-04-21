@@ -44,8 +44,8 @@ module C = FStar.Syntax.Const
 
 //Reporting errors
 let report env errs =
-    Errors.report (Env.get_range env)
-                  (Err.failed_to_prove_specification errs)
+    Errors.err (Env.get_range env)
+               (Err.failed_to_prove_specification errs)
 
 (************************************************************************)
 (* Unification variables *)
@@ -91,7 +91,7 @@ let check_uvars r t =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.report r
+    Errors.err r
       (BU.format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" us (Print.term_to_string t));
     Options.pop()
@@ -1453,7 +1453,6 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
-        && (not (Options.interactive()))
         then err "definitions cannot be assumed or marked with equality qualifiers"
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->

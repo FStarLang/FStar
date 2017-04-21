@@ -595,11 +595,11 @@ and desugar_match_pat_maybe_top _ env pat =
 and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
 
 and desugar_term env e : S.term =
-    let env = {env with expect_typ=false} in
+    let env = Env.set_expect_typ env false in
     desugar_term_maybe_top false env e
 
 and desugar_typ env e : S.term =
-    let env = {env with expect_typ=true} in
+    let env = Env.set_expect_typ env true in
     desugar_term_maybe_top false env e
 
 and desugar_machine_integer env repr (signedness, width) range =
@@ -886,7 +886,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | LetOpen (lid, e) ->
       let env = Env.push_namespace env lid in
-      (if env.expect_typ then desugar_typ else desugar_term) env e
+      (if Env.expect_typ env then desugar_typ else desugar_term) env e
 
     | Let(qual, ((pat, _snd)::_tl), body) ->
       let is_rec = qual = Rec in
@@ -1360,7 +1360,8 @@ let mk_data_discriminators quals env t tps k datas =
         | S.Private -> true
         | _ -> false)
     in
-    let quals q = if not <| env.iface || env.admitted_iface
+    let quals q = if not (Env.iface env)
+                  || Env.admitted_iface env
                   then S.Assumption::q@quals
                   else q@quals
     in
@@ -2047,7 +2048,11 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
   | Val(id, t) ->
     let quals = d.quals in
     let t = desugar_term env (close_fun env t) in
-    let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
+    let quals =
+        if Env.iface env
+        && Env.admitted_iface env
+        then Assumption::quals
+        else quals in
     let lid = qualify env id in
     let se = { sigel = Sig_declare_typ(lid, [], t, List.map (trans_qual None) quals); sigrng = d.drange } in
     let env = push_sigelt env se in
@@ -2171,6 +2176,6 @@ let desugar_file (env:env_t) (f:file) =
 
 let add_modul_to_env (m:Syntax.modul) (en: env) :env =
   let en, pop_when_done = Env.prepare_module_or_interface false false en m.name in
-  let en = List.fold_left Env.push_sigelt ({ en with curmodule = Some(m.name) }) m.exports in
+  let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
   let env = Env.finish_module_or_interface en m in
   if pop_when_done then export_interface m.name env else env
