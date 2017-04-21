@@ -849,7 +849,7 @@ effectDecl:
 subEffect:
   binders COLON appTerm SQUIGGLY_RARROW appTerm liftDefinition
     {let (effect_binders, _2, msource, _4, mdest, lift_op) = ($1, (), $3, (), $5, $6) in
-      ( { effect_binders ; msource ; mdest ; lift_op } )}
+      ( { effect_binders=effect_binders ; msource=msource ; mdest=mdest ; lift_op=lift_op } )}
 
 liftDefinition:
   EQUALS simpleTerm

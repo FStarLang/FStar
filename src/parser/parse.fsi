@@ -342,6 +342,7 @@ type nonTerminalId =
     | NONTERM_actionDecls
     | NONTERM_effectDecl
     | NONTERM_subEffect
+    | NONTERM_liftDefinition
     | NONTERM_qualifier
     | NONTERM_maybeFocus
     | NONTERM_letqualifier

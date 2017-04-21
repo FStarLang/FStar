@@ -308,7 +308,7 @@ effectDecl:
 
 subEffect:
   | effect_binders=binders COLON msource=appTerm SQUIGGLY_RARROW mdest=appTerm lift_op=liftDefinition
-      { { effect_binders ; msource ; mdest ; lift_op } }
+      { { effect_binders=effect_binders ; msource=msource ; mdest=mdest ; lift_op=lift_op } }
 
 liftDefinition:
   | EQUALS lift=simpleTerm
