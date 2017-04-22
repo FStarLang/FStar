@@ -234,7 +234,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
             if Options.z3_refresh() || Options.print_z3_statistics() then Z3.refresh();
             let query_info tag =
-                 BU.print "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
+                 BU.print "(%s%s)\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
                                 [Range.string_of_range (Env.get_range env);
                                  at_log_file();
                                  query_name;
