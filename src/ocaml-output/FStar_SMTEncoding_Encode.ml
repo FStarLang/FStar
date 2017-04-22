@@ -5583,7 +5583,7 @@ let encode_top_level_let:
                                                                  (Some
                                                                     "Correspondence of recursive function to instrumented version"),
                                                                  (Prims.strcat
-                                                                    "@fuel_correspondence_"
+                                                                    "fuel_correspondence_"
                                                                     g)) in
                                                              FStar_SMTEncoding_Term.Assume
                                                                uu____12578 in
@@ -5630,7 +5630,7 @@ let encode_top_level_let:
                                                                  (Some
                                                                     "Fuel irrelevance"),
                                                                  (Prims.strcat
-                                                                    "@fuel_irrelevance_"
+                                                                    "fuel_irrelevance_"
                                                                     g)) in
                                                              FStar_SMTEncoding_Term.Assume
                                                                uu____12597 in

@@ -1876,10 +1876,10 @@ let encode_top_level_let :
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
-                                    ("@fuel_correspondence_"^g)) in
+                                    ("fuel_correspondence_"^g)) in
             let eqn_g' = Term.Assume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
                                     Some "Fuel irrelevance",
-                                    ("@fuel_irrelevance_" ^g)) in
+                                    ("fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
               let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
               let vars_tm = List.map mkFreeV vars in
