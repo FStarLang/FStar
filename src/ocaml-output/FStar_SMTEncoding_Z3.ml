@@ -223,7 +223,7 @@ let query_logging: query_log =
             match uu____561 with
             | None  -> failwith "current module not set"
             | Some n1 -> FStar_Util.format1 "queries-%s" n1 in
-          (FStar_Util.mkdir_clean dir_name;
+          (FStar_Util.mkdir true dir_name;
            FStar_ST.write current_file_name (Some dir_name);
            dir_name)
       | Some n1 -> n1 in

@@ -26,6 +26,7 @@ open FStar.Errors
 open FStar.Universal
 open FStar.TypeChecker.Env
 
+module SS = FStar.Syntax.Syntax
 module DsEnv   = FStar.ToSyntax.Env
 module TcEnv   = FStar.TypeChecker.Env
 
@@ -68,9 +69,12 @@ let pop (_, env) msg =
     pop_context env msg;
     Options.pop()
 
-let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
-    let env = { env with lax = lax } in
-    let res = push_context (dsenv, env) msg in
+type push_kind = | SyntaxCheck | LaxCheck | FullCheck
+
+let push ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
+    let tcenv = { tcenv with lax = (kind = LaxCheck) } in
+    let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
+    let res = push_context (dsenv, tcenv) msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
@@ -157,7 +161,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
     | _  ->
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
-      let env = push env (Options.lax ()) true "typecheck_modul" in
+      let env = push env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
       let (intf, impl), env, modl, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -272,41 +276,56 @@ let js_int = function
 let js_str = function
   | JsonStr s -> s
   | other -> js_fail "string" other
-let js_list = function
-  | JsonList l -> l
+let js_list k = function
+  | JsonList l -> List.map k l
   | other -> js_fail "list" other
 let js_assoc = function
   | JsonAssoc a -> a
   | other -> js_fail "dictionary" other
 
-type push_kind = | PushLax | PushFull
-
 let js_pushkind s : push_kind = match js_str s with
-  | "lax" -> PushLax
-  | "full" -> PushFull
+  | "syntax" -> SyntaxCheck
+  | "lax" -> LaxCheck
+  | "full" -> FullCheck
   | _ -> js_fail "push_kind" s
+
+let js_reductionrule s = match js_str s with
+  | "beta" -> FStar.TypeChecker.Normalize.Beta
+  | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
+  | "iota" -> FStar.TypeChecker.Normalize.Iota
+  | "zeta" -> FStar.TypeChecker.Normalize.Zeta
+  | _ -> js_fail "reduction rule" s
 
 type query' =
 | Exit
 | DescribeProtocol
+| DescribeRepl
 | Pop
-| Push of push_kind * string * int * int
+| Push of push_kind * string * int * int * bool
 | AutoComplete of string
 | Lookup of string * option<(string * int * int)> * list<string>
+| Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
+| Search of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
 let interactive_protocol_vernum = 1
 
 let interactive_protocol_features =
-  ["autocomplete"; "describe-protocol"; "exit";
-   "lookup"; "lookup/documentation"; "pop"; "push"]
+  ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
+   "lookup"; "lookup/documentation"; "lookup/definition";
+   "pop"; "peek"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
 
 let try_assoc key a =
   Util.map_option snd (Util.try_find (fun (k, _) -> k = key) a)
+
+let wrap_js_failure qid expected got =
+  { qid = qid;
+    qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
+                            expected (json_to_str got)) }
 
 let unpack_interactive_query json =
   let assoc errloc key a =
@@ -317,31 +336,49 @@ let unpack_interactive_query json =
   let request = json |> js_assoc in
 
   let qid = assoc "query" "query-id" request |> js_str in
-  let query = assoc "query" "query" request |> js_str in
-  let args = assoc "query" "args" request |> js_assoc in
+  try
+    let query = assoc "query" "query" request |> js_str in
+    let args = assoc "query" "args" request |> js_assoc in
 
-  let arg k = assoc "[args]" k args in
-  let try_arg k = try_assoc k args in
+    let arg k = assoc "[args]" k args in
+    let try_arg k =
+      match try_assoc k args with
+      | Some JsonNull -> None
+      | other -> other in
 
-  { qid = qid;
-    qq = match query with
-         | "exit" -> Exit
-         | "pop" -> Pop
-         | "describe-protocol" -> DescribeProtocol
-         | "push" -> Push (arg "kind" |> js_pushkind,
-                          arg "code" |> js_str,
-                          arg "line" |> js_int,
-                          arg "column" |> js_int)
-         | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
-         | "lookup" -> Lookup (arg "symbol" |> js_str,
-                              try_arg "location"
-                                |> Util.map_option js_assoc
-                                |> Util.map_option (fun loc ->
-                                    (assoc "[location]" "filename" loc |> js_str,
-                                     assoc "[location]" "line" loc |> js_int,
-                                     assoc "[location]" "column" loc |> js_int)),
-                              List.map js_str (arg "requested-info" |> js_list))
-         | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
+    { qid = qid;
+      qq = match query with
+           | "exit" -> Exit
+           | "pop" -> Pop
+           | "describe-protocol" -> DescribeProtocol
+           | "describe-repl" -> DescribeRepl
+           | "peek" | "push" -> Push (arg "kind" |> js_pushkind,
+                                     arg "code" |> js_str,
+                                     arg "line" |> js_int,
+                                     arg "column" |> js_int,
+                                     query = "peek")
+           | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
+           | "lookup" -> Lookup (arg "symbol" |> js_str,
+                                try_arg "location"
+                                  |> Util.map_option js_assoc
+                                  |> Util.map_option (fun loc ->
+                                      (assoc "[location]" "filename" loc |> js_str,
+                                       assoc "[location]" "line" loc |> js_int,
+                                       assoc "[location]" "column" loc |> js_int)),
+                                arg "requested-info" |> js_list js_str)
+           | "compute" -> Compute (arg "term" |> js_str,
+                                  try_arg "rules"
+                                    |> Util.map_option (js_list js_reductionrule))
+           | "search" -> Search (arg "terms" |> js_str)
+           | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
+  with
+  | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
+  | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
+
+let validate_interactive_query = function
+  | { qid = qid; qq = Push (SyntaxCheck, _, _, _, false) } ->
+    { qid = qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
+  | other -> other
 
 let read_interactive_query stream : query =
   try
@@ -350,13 +387,18 @@ let read_interactive_query stream : query =
     | Some line ->
       match Util.json_of_string line with
       | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-      | Some request -> unpack_interactive_query request
+      | Some request -> validate_interactive_query (unpack_interactive_query request)
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
-  | UnexpectedJsonType (expected, got) ->
-    { qid = "?";
-      qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
-                              expected (json_to_str got)) }
+  | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
+
+let rec json_of_fstar_option = function
+  | Options.Bool b -> JsonBool b
+  | Options.String s
+  | Options.Path s -> JsonStr s
+  | Options.Int n -> JsonInt n
+  | Options.List vs -> JsonList (List.map json_of_fstar_option vs)
+  | Options.Unset -> JsonNull
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
@@ -386,13 +428,15 @@ let json_of_issue issue =
 type lookup_result = { lr_name: string;
                        lr_def_range: option<Range.range>;
                        lr_typ: option<string>;
-                       lr_doc: option<string> }
+                       lr_doc: option<string>;
+                       lr_def: option<string> }
 
 let json_of_lookup_result lr =
   JsonAssoc [("name", JsonStr lr.lr_name);
              ("defined-at", json_of_opt json_of_range lr.lr_def_range);
              ("type", json_of_opt JsonStr lr.lr_typ);
-             ("documentation", json_of_opt JsonStr lr.lr_doc)]
+             ("documentation", json_of_opt JsonStr lr.lr_doc);
+             ("definition", json_of_opt JsonStr lr.lr_def)]
 
 let json_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in
@@ -434,11 +478,29 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_env: env_t; repl_ts: m_timestamps;
                     repl_stdin: stream_reader }
 
+let json_of_repl_state st =
+  let opts_and_defaults =
+    let opt_docs = Util.smap_of_list (Options.docs ()) in
+    let get_doc k = Util.smap_try_find opt_docs k in
+    List.map (fun (k, v) -> (k, Options.get_option k, get_doc k, v)) Options.defaults in
+  [("loaded-dependencies",
+    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
+   ("options",
+    JsonList (List.map (fun (name, value, doc, dflt) ->
+                        JsonAssoc [("name", JsonStr name);
+                                   ("value", json_of_fstar_option value);
+                                   ("default", json_of_fstar_option dflt);
+                                   ("documentation", json_of_opt JsonStr doc)])
+                       opts_and_defaults))]
+
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
 let run_describe_protocol st =
   ((QueryOK, JsonAssoc json_of_protocol_info), Inl st)
+
+let run_describe_repl st =
+  ((QueryOK, JsonAssoc (json_of_repl_state st)), Inl st)
 
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
@@ -459,7 +521,7 @@ let run_pop st = // This shrinks all internal stacks by 1
     ((QueryOK, JsonNull),
       Inl ({ st with repl_env = env; repl_curmod = curmod; repl_stack = stack }))
 
-let run_push st kind text line column = // This grows all internal stacks by 1
+let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
 
   // If we are at a stage where we have not yet pushed a fragment from the
@@ -471,7 +533,7 @@ let run_push st kind text line column = // This grows all internal stacks by 1
     else false, (stack, env, ts) in
 
   let stack = (env, st.repl_curmod) :: stack in
-  let env = push env (kind = PushLax) restore_cmd_line_options "#push" in
+  let env = push env kind restore_cmd_line_options "#push" in
 
   // This pushes to an internal, hidden stack
   let env_mark = mark env in
@@ -486,7 +548,7 @@ let run_push st kind text line column = // This grows all internal stacks by 1
                       repl_line = line; repl_column = column } in
 
   match res with
-  | Some (curmod, env, nerrs) when nerrs = 0 ->
+  | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
     // At this stage, the internal stack has grown with size 1.
     let env = commit_mark env in
     ((QueryOK, JsonList errors),
@@ -496,7 +558,8 @@ let run_push st kind text line column = // This grows all internal stacks by 1
     // immediately after failed pushes; this version pops automatically.
     let env = reset_mark env_mark in
     let _, st'' = run_pop ({ st' with repl_env = env }) in
-    ((QueryNOK, JsonList errors), st'')
+    let status = if peek_only then QueryOK else QueryNOK in
+    ((status, JsonList errors), st'')
 
 let run_lookup st symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
@@ -508,6 +571,11 @@ let run_lookup st symbol pos_opt requested_info =
 
   let docs_of_lid lid =
     DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst in
+
+  let def_of_lid lid =
+    Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
+      | (Inr (se, _), _) -> Some (Syntax.Print.sigelt_to_string se)
+      | _ -> None) in
 
   let info_at_pos_opt =
     Util.bind_opt pos_opt (fun (file, row, col) ->
@@ -533,11 +601,15 @@ let run_lookup st symbol pos_opt requested_info =
         match name_or_lid with
         | Inr lid when List.mem "documentation" requested_info -> docs_of_lid lid
         | _ -> None in
+      let def_str =
+        match name_or_lid with
+        | Inr lid when List.mem "definition" requested_info -> def_of_lid lid
+        | _ -> None in
       let def_range =
         if List.mem "defined-at" requested_info then Some rng else None in
 
       let result = { lr_name = name; lr_def_range = def_range;
-                     lr_typ = typ_str; lr_doc = doc_str } in
+                     lr_typ = typ_str; lr_doc = doc_str; lr_def = def_str } in
       (QueryOK, json_of_lookup_result result) in
 
   (response, Inl st)
@@ -658,13 +730,181 @@ let run_completions st search_term =
                              matches) in
   ((QueryOK, JsonList json_candidates), Inl st)
 
+let run_compute st term rules =
+  let run_and_rewind st task =
+    let env_mark = mark st.repl_env in
+    let results = task st in
+    let env = reset_mark env_mark in
+    let st' = { st with repl_env = env } in
+    (results, Inl st') in
+
+  let dummy_let_fragment term =
+    let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
+    { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+
+  let normalize_term tcenv rules t =
+    FStar.TypeChecker.Normalize.normalize rules tcenv t in
+
+  let find_let_body ses =
+    match ses with
+    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _, _) }] -> Some def
+    | _ -> None in
+
+  let parse frag =
+    match FStar.Parser.ParseIt.parse (Inr frag) with
+    | Inl (Inr decls, _) -> Some decls
+    | _ -> None in
+
+  let desugar dsenv decls =
+    snd (FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls) in
+
+  let typecheck tcenv decls =
+    let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+    ses in
+
+  let rules =
+    (match rules with
+     | Some rules -> rules
+     | None -> [FStar.TypeChecker.Normalize.Beta;
+               FStar.TypeChecker.Normalize.Iota;
+               FStar.TypeChecker.Normalize.Zeta;
+               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
+    @ [FStar.TypeChecker.Normalize.Inlining;
+       FStar.TypeChecker.Normalize.Eager_unfolding;
+       FStar.TypeChecker.Normalize.Primops] in
+
+  run_and_rewind st (fun st ->
+    let dsenv, tcenv = st.repl_env in
+    let frag = dummy_let_fragment term in
+    match st.repl_curmod with
+    | None -> (QueryNOK, JsonStr "Current module unset")
+    | _ ->
+      match parse frag with
+      | None -> (QueryNOK, JsonStr "Count not parse this term")
+      | Some decls ->
+        try
+          let decls = desugar dsenv decls in
+          let ses = typecheck tcenv decls in
+          match find_let_body ses with
+          | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
+          | Some def -> let normalized = normalize_term tcenv rules def in
+                       (QueryOK, JsonStr (Syntax.Print.term_to_string normalized))
+        with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
+                                | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                | None -> raise e)))
+
+type search_term' =
+| NameContainsStr of string
+| TypeContainsLid of lid
+and search_term = { st_negate: bool;
+                    st_term: search_term' }
+
+let st_cost = function
+| NameContainsStr str -> - (String.length str)
+| TypeContainsLid lid -> 1
+
+type search_candidate = { sc_lid: lid; sc_typ:
+                          ref<option<Syntax.Syntax.typ>>;
+                          sc_fvars: ref<option<set<lid>>> }
+
+let sc_of_lid lid = { sc_lid = lid;
+                      sc_typ = Util.mk_ref None;
+                      sc_fvars = Util.mk_ref None }
+
+let sc_typ tcenv sc = // Memoized version of sc_typ
+   match !sc.sc_typ with
+   | Some t -> t
+   | None -> let typ = match try_lookup_lid tcenv sc.sc_lid with
+                       | None -> SS.mk SS.Tm_unknown None Range.dummyRange
+                       | Some ((_, typ), _) -> typ in
+             sc.sc_typ := Some typ; typ
+
+let sc_fvars tcenv sc = // Memoized version of fc_vars
+   match !sc.sc_fvars with
+   | Some fv -> fv
+   | None -> let fv = Syntax.Free.fvars (sc_typ tcenv sc) in
+             sc.sc_fvars := Some fv; fv
+
+let json_of_search_result dsenv tcenv sc =
+  let typ_str = Syntax.Print.term_to_string (sc_typ tcenv sc) in
+  JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid dsenv sc.sc_lid).str);
+             ("type", JsonStr typ_str)]
+
+exception InvalidSearch of string
+
+let run_search st search_str =
+  let dsenv, tcenv = st.repl_env in
+  let empty_fv_set = SS.new_fv_set () in
+
+  let st_matches candidate term =
+    let found =
+      match term.st_term with
+      | NameContainsStr str -> Util.contains candidate.sc_lid.str str
+      | TypeContainsLid lid -> set_mem lid (sc_fvars tcenv candidate) in
+    found <> term.st_negate in
+
+  let parse search_str =
+    let parse_one term =
+      let negate = Util.starts_with term "-" in
+      let term = if negate then Util.substring_from term 1 else term in
+      let beg_quote = Util.starts_with term "\"" in
+      let end_quote = Util.ends_with term "\"" in
+      let strip_quotes str =
+        if String.length str < 2 then
+          raise (InvalidSearch "Empty search term")
+        else
+          Util.substring str 1 (String.length term - 2) in
+      let parsed =
+        if beg_quote <> end_quote then
+          raise (InvalidSearch (Util.format1 "Improperly quoted search term: %s" term))
+        else if beg_quote then
+          NameContainsStr (strip_quotes term)
+        else
+          let lid = Ident.lid_of_str term in
+          match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+          | None -> raise (InvalidSearch (Util.format1 "Unknown identifier: %s" term))
+          | Some lid -> TypeContainsLid lid in
+      { st_negate = negate; st_term = parsed } in
+
+    let terms = List.map parse_one (Util.split search_str " ") in
+    let cmp = fun x y -> st_cost x.st_term - st_cost y.st_term in
+    Util.sort_with cmp terms in
+
+  let pprint_one term =
+    (if term.st_negate then "-" else "")
+    ^ (match term.st_term with
+       | NameContainsStr s -> Util.format1 "\"%s\"" s
+       | TypeContainsLid l -> Util.format1 "%s" l.str) in
+
+  let results =
+    try
+      let terms = parse search_str in
+      let all_lidents = FStar.TypeChecker.Env.lidents tcenv in
+      let all_candidates = List.map sc_of_lid all_lidents in
+      let matches_all candidate = List.for_all (st_matches candidate) terms in
+      let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
+      let results = List.filter matches_all all_candidates in
+      let sorted = Util.sort_with cmp results in
+      let js = Options.with_saved_options
+                 (fun () -> Options.set_option "print_effect_args" (Options.Bool true);
+                         List.map (json_of_search_result dsenv tcenv) sorted) in
+      match results with
+      | [] -> let kwds = Util.concat_l " " (List.map pprint_one terms) in
+              raise (InvalidSearch (Util.format1 "No results found for query [%s]" kwds))
+      | _ -> (QueryOK, JsonList js)
+    with InvalidSearch s -> (QueryNOK, JsonStr s) in
+  (results, Inl st)
+
 let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
+  | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
-  | Push (kind, text, l, c) -> run_push st kind text l c
+  | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
   | AutoComplete search_term -> run_completions st search_term
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
+  | Compute (term, rules) -> run_compute st term rules
+  | Search term -> run_search st term
   | ProtocolViolation query -> run_protocol_violation st query
 
 let rec go st : unit =

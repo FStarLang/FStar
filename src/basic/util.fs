@@ -384,6 +384,7 @@ let trim_string (s:string) = s.Trim()
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
 let char_at (s:string) (i:int) : char = s.[i]
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let contains (s1:string) (s2:string) = s1.IndexOf(s2) >= 0
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
@@ -648,11 +649,12 @@ let write_file (fn:string) s =
 let flush_file (fh:file_handle) = fh.Flush()
 let file_get_contents f =
   File.ReadAllText f
-let mkdir_clean dname =
+let mkdir clean dname =
   if System.IO.Directory.Exists(dname) then
     let srcDir = new System.IO.DirectoryInfo(dname)
-    for file in srcDir.GetFiles() do
-      System.IO.File.Delete file.FullName
+    if clean then 
+        for file in srcDir.GetFiles() do
+        System.IO.File.Delete file.FullName
   else
     System.IO.Directory.CreateDirectory(dname) |> ignore
 let concat_dir_filename dname fname =
