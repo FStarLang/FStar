@@ -64,8 +64,9 @@ namespace fabc_make
                     if (line.TrimStart()[0] == '#')
                         continue;
                     string[] tokens = line.Split(new char[] { '=' }, 2);
-                    string option = tokens[0];
+                    string option = tokens[0]; 
                     string value = tokens[1];
+                    //Console.WriteLine("{0}={1}", option, value);
                     switch (option)
                     {
                         case "StorageAccountName": StorageAccountName = value; break;
@@ -154,17 +155,19 @@ namespace fabc_make
                 !blob.Properties.LastModified.HasValue ||
                  blob.Properties.LastModified.Value < File.GetLastWriteTime(myargs.Package))
             {
-                if (myargs.ConfigFileName != null)
+                if (myargs.BatchIDFile != null)
                 {
                     double sz = new FileInfo(myargs.Package).Length / 1024.0 / 1024.0;
                     Console.WriteLine("Uploading package ({0} MiB) ...", sz.ToString("F"));
                 }
-
+                
                 blob.UploadFromFile(myargs.Package, null, 
                     new BlobRequestOptions() { MaximumExecutionTime=PkgUpdateTimeout }, 
                     null);
             }
         }
+
+        
 
         static void DeletePackageBlob(Arguments myargs)
         {
@@ -315,7 +318,7 @@ namespace fabc_make
 
         static bool InitPackage(Arguments myargs)
         {
-            if (myargs.ConfigFileName != null)
+            if (myargs.BatchIDFile != null)
                 Console.WriteLine("Creating package ...");
 
             string np = FStar.MakePackage(FStarHome, Z3, myargs.PackageContents);
@@ -426,34 +429,37 @@ namespace fabc_make
             }
 
 
-            myargs.PackageContents = new string[] {
-                                @"bin|*.exe",
-                                @"bin|*.dll",
-                                @"ulib|*.fst",
-                                @"ulib|*.fsti",
-                                @"examples|*.fst",
-                                @"examples|*.fsti",
-                                @"ucontrib|*.fst",
-                                @"ucontrib|*.fsti",
-                                @"doc|*.fst",
-                                //@"doc|*.fsti",
-                                //@"ulib|*.hints",
-                                //@"examples|*.hints",
-                                //@"ucontrib|*.hints",
-                                //@"doc|*.hints"
-                            };
+            //myargs.PackageContents = new string[] {
+            //                    @"bin|*.exe",
+            //                    @"bin|*.dll",
+            //                    @"ulib|*.fst",
+            //                    @"ulib|*.fsti",
+            //                    @"examples|*.fst",
+            //                    @"examples|*.fsti",
+            //                    @"ucontrib|*.fst",
+            //                    @"ucontrib|*.fsti",
+            //                    @"doc|*.fst",
+            //                    //@"doc|*.fsti",
+            //                    //@"ulib|*.hints",
+            //                    //@"examples|*.hints",
+            //                    //@"ucontrib|*.hints",
+            //                    //@"doc|*.hints"
+            //                };
 
-            if (!InitPackage(myargs))
-                return 1;
+            //if (!InitPackage(myargs))
+            //    return 1;
 
-            j = MkJob(JobDisplayName, myargs.ConfigFileName != null);
+            j = MkJob(JobDisplayName, myargs.BatchIDFile != null);
 
-            if (myargs.ConfigFileName != null)
-                using (StreamWriter sw = new StreamWriter(myargs.ConfigFileName))
-                {
+            if (myargs.BatchIDFile != null)
+            {
+                Console.WriteLine("see: " + myargs.BatchIDFile);
+                using (StreamWriter sw = new StreamWriter(myargs.BatchIDFile))
+                {                    
                     sw.WriteLine(myargs.PackageBlobId);
                     sw.WriteLine(j.Id);
                 }
+            }
             else
             {
                 Console.WriteLine(myargs.PackageBlobId);

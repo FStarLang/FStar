@@ -17,7 +17,7 @@ namespace fabc_make
         public string[] PackageContents = new string[] { };
         public string[] FStarArguments = null;
 
-        public string ConfigFileName = null;
+        public string BatchIDFile = null;
         public string Directory = null;
         public bool SaveResultFiles = true;
 
@@ -49,7 +49,7 @@ namespace fabc_make
                 {
                     case "-b": result.PackageBlobId = args[++i]; break;
                     case "-j": result.JobId = args[++i]; break;
-                    case "-i": result.ConfigFileName = args[++i]; break;
+                    case "-i": result.BatchIDFile = args[++i]; break;
                     case "-d": result.Directory = args[++i]; break;
                     case "-ns": result.SaveResultFiles = false; break;
                     case "--":
@@ -64,9 +64,9 @@ namespace fabc_make
                 }
             }
 
-            if (result.ConfigFileName != null && File.Exists(result.ConfigFileName))
+            if (result.BatchIDFile != null && File.Exists(result.BatchIDFile))
             {
-                using (StreamReader sr = new StreamReader(result.ConfigFileName))
+                using (StreamReader sr = new StreamReader(result.BatchIDFile))
                 {
                     result.PackageBlobId = sr.ReadLine();
                     result.JobId = sr.ReadLine();
@@ -95,7 +95,7 @@ namespace fabc_make
              Options:
                -b <id>        package blob id
                -j             job id
-               -i <path>      config file name
+               -i <path>      Batch IDs file
                -d <path>      directory within package
                -ns            don't save result files
 

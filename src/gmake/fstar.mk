@@ -16,8 +16,12 @@ CVEREXE=$(CVEREXE_ALWAYS)
 
 DG=$(.DEFAULT_GOAL)
 
-BATCH_IDS_FILE:=$(shell mktemp -u)
-$(BATCH_IDS_FILE): 
+BATCH_TMP:=$(FSTAR_HOME)/tmp
+$(BATCH_TMP):
+	@mkdir -v $(BATCH_TMP)
+
+BATCH_IDS_FILE:=$(shell mktemp -u -p $(BATCH_TMP))
+$(BATCH_IDS_FILE): $(BATCH_TMP)
 	$(CVEREXE) create -i $(BATCH_IDS_FILE) 
 
 .DEFAULT_GOAL := $(DG)
