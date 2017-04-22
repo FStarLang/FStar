@@ -168,11 +168,11 @@ let disjoint_3 a b b' b'' = disjoint a b /\ disjoint a b' /\ disjoint a b''
 let disjoint_4 a b b' b'' b''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b'''
 let disjoint_5 a b b' b'' b''' b'''' = disjoint a b /\ disjoint a b' /\ disjoint a b'' /\ disjoint a b''' /\ disjoint a b''''
 
-let disjoint_ref_1 a r = as_addr a <> r
-let disjoint_ref_2 a r r' = as_addr a <> r /\ as_addr a <> r'
-let disjoint_ref_3 a r r' r'' = as_addr a <> r /\ as_addr a <> r' /\ as_addr a <> r''
-let disjoint_ref_4 a r r' r'' r''' = as_addr a <> r /\ as_addr a <> r' /\ as_addr a <> r'' /\ as_addr a <> r'''
-let disjoint_ref_5 a r r' r'' r''' r'''' = as_addr a <> r /\ as_addr a <> r' /\ as_addr a <> r'' /\ as_addr a <> r''' /\ as_addr a <> r''''
+let disjoint_ref_1 (#t:Type) a (r:reference t) = frameOf a <> r.id \/ as_addr a <> HS.as_addr r
+let disjoint_ref_2 a r r' = disjoint_ref_1 a r /\ disjoint_ref_1 a r'
+let disjoint_ref_3 a r r' r'' = disjoint_ref_1 a r /\ disjoint_ref_2 a r' r''
+let disjoint_ref_4 a r r' r'' r''' = disjoint_ref_1 a r /\ disjoint_ref_3 a r' r'' r'''
+let disjoint_ref_5 a r r' r'' r''' r'''' = disjoint_ref_1 a r /\ disjoint_ref_4 a r' r'' r''' r''''
 
 val disjoint_only_lemma: #a:Type -> #a':Type -> b:buffer a -> b':buffer a' -> Lemma
   (requires (disjoint b b'))
