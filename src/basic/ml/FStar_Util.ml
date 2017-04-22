@@ -406,6 +406,7 @@ let trim_string = BatString.trim
 let ends_with = BatString.ends_with
 let char_at s index = BatString.get s (Z.to_int index)
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
