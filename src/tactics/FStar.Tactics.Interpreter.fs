@@ -203,12 +203,13 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     let p = proofstate_of_goal_ty env goal in
     match run (visit evaluate_user_tactic) p with
     | Success (_, p2) ->
-        let _ = p2.goals |> List.map (fun g ->
-                    BU.print1 "Got goal: %s\n" (goal_to_string g);
-                    g.context, g.goal_ty) in
-        p2.smt_goals |> List.map (fun g ->
-            BU.print1 "Got SMT goal: %s\n" (goal_to_string g);
-            g.context, g.goal_ty)
+        let gs = p2.goals |> List.map (fun g ->
+                     BU.print1 "Got goal: %s\n" (goal_to_string g);
+                     g.context, g.goal_ty) in
+        let smtgs = p2.smt_goals |> List.map (fun g ->
+                        BU.print1 "Got SMT goal: %s\n" (goal_to_string g);
+                        g.context, g.goal_ty) in
+        gs@smtgs
     | Failed (msg, _) ->
         BU.print1 "Tactic failed: %s\n" msg;
         BU.print1 "Got goal: %s\n" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
