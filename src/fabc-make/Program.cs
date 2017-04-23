@@ -429,31 +429,31 @@ namespace fabc_make
             }
 
 
-            //myargs.PackageContents = new string[] {
-            //                    @"bin|*.exe",
-            //                    @"bin|*.dll",
-            //                    @"ulib|*.fst",
-            //                    @"ulib|*.fsti",
-            //                    @"examples|*.fst",
-            //                    @"examples|*.fsti",
-            //                    @"ucontrib|*.fst",
-            //                    @"ucontrib|*.fsti",
-            //                    @"doc|*.fst",
-            //                    //@"doc|*.fsti",
-            //                    //@"ulib|*.hints",
-            //                    //@"examples|*.hints",
-            //                    //@"ucontrib|*.hints",
-            //                    //@"doc|*.hints"
-            //                };
+            myargs.PackageContents = new string[] {
+                                @"bin|*.exe",
+                                //@"bin|*.dll",
+                                @"ulib|*.fst",
+                                @"ulib|*.fsti",
+                                @"examples|*.fst",
+                                @"examples|*.fsti",
+                                @"ucontrib|*.fst",
+                                @"ucontrib|*.fsti",
+                                @"doc|*.fst",
+                                //@"doc|*.fsti",
+                                //@"ulib|*.hints",
+                                //@"examples|*.hints",
+                                //@"ucontrib|*.hints",
+                                //@"doc|*.hints"
+                                //@"C:\fscratch\hints\fstar-regressions-cver-record-default-refresh|*.hints"
+                            };
 
-            //if (!InitPackage(myargs))
-            //    return 1;
+            if (!InitPackage(myargs))
+                return 1;
 
             j = MkJob(JobDisplayName, myargs.BatchIDFile != null);
 
             if (myargs.BatchIDFile != null)
             {
-                Console.WriteLine("see: " + myargs.BatchIDFile);
                 using (StreamWriter sw = new StreamWriter(myargs.BatchIDFile))
                 {                    
                     sw.WriteLine(myargs.PackageBlobId);
@@ -564,7 +564,7 @@ namespace fabc_make
                                 string s = sr.ReadToEnd();
                                 string [] lines = s.Split('\n');
                                 for (int i = 0; i < lines.Length - 4; i++) // `time' outputs 4 lines
-                                    Console.WriteLine(lines);      
+                                    Console.WriteLine(lines[i]);      
                             }
 
                             if (tr.ExitCode != 0)

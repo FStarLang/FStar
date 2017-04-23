@@ -293,8 +293,8 @@ ctags:
 
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
-uregressions-cver: $(CVERCONFIG)
+uregressions-cver: CVERCONFIG
 	+make -C ../ulib all-cver
 	+make -C ../examples all-cver
-	$(CVEREXE) await -i $(CVERCONFIG) -ns
-	rm $(CVERCONFIG)
+	# $(CVEREXE) await -i $(BATCH_IDS_FILE) -ns
+	rm -f $(BATCH_IDS_FILE)

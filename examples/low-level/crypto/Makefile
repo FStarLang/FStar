@@ -120,7 +120,7 @@ all-assumes: $(addsuffix .fst, $(VERIFY) $(LAX))
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 CFSTAR=$(subst CURRENT_DIR,examples/low-level/crypto,$(CVERFSTAR))
 all-cver: $(addsuffix .fst-cver, $(VERIFY)) 
-%.fst-cver:
+%.fst-cver: CVERCONFIG
 	$(CFSTAR) $(OPTIONS) \
 	$(FSTAR_INCLUDE_PATHS) \
 	--__temp_no_proj Crypto.Symmetric.MAC \

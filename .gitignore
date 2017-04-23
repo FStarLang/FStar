@@ -79,3 +79,4 @@ nubuild.progress
 
 # Z3/F* nightly/weekly files
 /nightly
+tmp

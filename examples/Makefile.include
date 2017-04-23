@@ -12,7 +12,7 @@ else
 MSBUILD = xbuild
 endif
 
-%.uver: %.fst
+%.uver: %.fst 
 	$(FSTAR) --verify_module $* $^
 
 %.ucver: %.fst

@@ -45,16 +45,16 @@ EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.
 
 CFSTAR=$(subst CURRENT_DIR,ulib,$(CVERFSTAR))
 
-%-cver: %
-	$(CFSTAR) $^
-st-cver:
+%-cver: % CVERCONFIG
+	$(CFSTAR) $*
+st-cver: CVERCONFIG
 	$(CFSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst FStar.Util.fst		
-m_rref-cver: 
+m_rref-cver: CVERCONFIG
 	$(CFSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
-bufferq-cver:
+bufferq-cver: CVERCONFIG
 	$(CFSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst
-struct-cver:
+struct-cver: CVERCONFIG
 	$(CFSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst FStar.Struct.fst
 
-all-cver: $(CVERCONFIG) $(addsuffix -cver, $(ALL)) st-cver m_rref-cver bufferq-cver struct-cver
+all-cver: $(addsuffix -cver, $(ALL)) st-cver m_rref-cver bufferq-cver struct-cver
 	true
