@@ -51,6 +51,9 @@ let mangle_projector_lid (x: lident) : lident =
 
 let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
 
+let as_pair = function
+   | [a;b] -> (a,b)
+   | _ -> failwith "Expected a list with 2 elements"
 
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
@@ -178,28 +181,6 @@ let extract_bundle env se =
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
-//let level_of_sigelt g se =
-//    let l = function
-//        | Term.false -> "false"
-//        | Term.true -> "true"
-//        | Term.Kind_level -> "Kind_level" in
-//    match se with
-//        | Sig_bundle _
-//        | Sig_inductive_typ _
-//        | Sig_datacon _ -> BU.print_string "\t\tInductive bundle"
-//
-//        | Sig_declare_typ(lid, _, t, quals, _) ->
-//          BU.print2 "\t\t%s @ %s\n" (Print.lid_to_string lid) (l (Term.predecessor t <| Term.level g t))
-//
-//        | Sig_let((_, lb::_), _, _, _, _) ->
-//          BU.print3 "\t\t%s : %s @ %s\n" ((right lb.lbname).fv_name.v |> Print.lid_to_string)
-//                                         (Print.term_to_string lb.lbtyp)
-//                                         (l (Term.predecessor lb.lbtyp <| Term.level g lb.lbtyp))
-//
-//
-//        | _ -> BU.print_string "other\n"
-//
-
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
      match se.sigel with
@@ -277,14 +258,24 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           g, []
 
         | Sig_declare_typ(lid, _, t, quals)  when Term.is_arity g t -> //lid is a type
-          if quals |> BU.for_some (function Assumption -> true | _ -> false) |> not
+          //extracting `assume type t : k`
+          if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
           then g, []
           else let bs, _ = U.arrow_formals t in
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
         | Sig_let((false, [lb]), _, quals, _) when Term.is_arity g lb.lbtyp ->
-          extract_typ_abbrev g (right lb.lbname) quals lb.lbdef
+          //extracting `type t = e`
+          //or         `let t = e` when e is a type
+          let tcenv, (lbdef, lbtyp) =
+            let tcenv, _, def_typ =
+                FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
+            tcenv, as_pair def_typ in
+          let lbtyp = FStar.TypeChecker.Normalize.unfold_whnf tcenv lbtyp in
+          let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
+          //eta expansion is important; see issue #490
+          extract_typ_abbrev g (right lb.lbname) quals lbdef
 
         | Sig_let (lbs, _, quals, attrs) ->
           let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
@@ -371,13 +362,17 @@ let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations 
 
 let extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
+  if Options.debug_any ()
+  then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with currentModule = name}  in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
-  if m.name.str <> "Prims" && (is_kremlin || not m.is_interface) && Options.should_extract m.name.str then begin
+  if m.name.str <> "Prims"
+  && (is_kremlin || not m.is_interface)
+  && Options.should_extract m.name.str then begin
     BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
     g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
   end else begin

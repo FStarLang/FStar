@@ -550,7 +550,7 @@ and cps_and_elaborate env ed =
           let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
           N.normalize [ N.Beta ] env0 raw_wp_b1
         in
-        let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
+        let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
 
         (* We check that what' is Tot Type0 *)
         let fail () =
