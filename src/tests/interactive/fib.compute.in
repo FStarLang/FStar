@@ -1,0 +1,2 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Fib\nlet rec fib n =\n  if n <= 1 then 1 else fib (n - 1) + fib (n - 2)\n","line":1,"column":0}}
+{"query-id":"2","query":"compute","args":{"term":"fib 5"}}

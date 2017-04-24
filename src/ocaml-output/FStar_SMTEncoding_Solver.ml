@@ -534,7 +534,7 @@ let ask_and_report_errors:
                                      uu____1277 :: uu____1278 in
                                    uu____1273 :: uu____1275 in
                                  FStar_Util.print
-                                   "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
+                                   "(%s%s)\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
                                    uu____1271 in
                                match result with
                                | FStar_Util.Inl unsat_core1 ->

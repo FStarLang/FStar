@@ -1795,7 +1795,8 @@ and cps_and_elaborate:
                                                           FStar_Syntax_Util.unascribe
                                                             wp_b1 in
                                                         FStar_TypeChecker_Normalize.eta_expand_with_type
-                                                          body1 uu____1814 in
+                                                          env0 body1
+                                                          uu____1814 in
                                                       FStar_All.pipe_left
                                                         FStar_Syntax_Util.abs_formals
                                                         uu____1813 in

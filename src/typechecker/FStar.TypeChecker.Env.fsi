@@ -138,6 +138,7 @@ val get_range      : env -> Range.range
 val lid_exists             : env -> lident -> bool
 val try_lookup_bv          : env -> bv -> option<(typ * Range.range)>
 val lookup_bv              : env -> bv -> typ * Range.range
+val lookup_qname           : env -> lident -> option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
 val try_lookup_lid         : env -> lident -> option<((universes * typ) * Range.range)>
 val lookup_lid             : env -> lident -> (universes * typ) * Range.range
 val lookup_univ            : env -> univ_name -> bool
@@ -180,6 +181,7 @@ val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
 val push_module        : env -> modul -> env
 val push_univ_vars     : env -> univ_names -> env
+val open_universes_in  : env -> univ_names -> list<term> -> env * univ_names * list<term>
 val set_expected_typ   : env -> typ -> env
 val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>

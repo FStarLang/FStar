@@ -214,6 +214,7 @@ val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
+val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
 (* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
