@@ -29,7 +29,7 @@ let contains #a h r = contains h r
 abstract val unused_in: #a:Type0 -> ref a -> heap -> GTot Type0
 let unused_in #a r h = unused_in r h
 
-abstract val fresh: #a:Type0 -> ref a -> heap -> heap -> GTot Type0
+val fresh: #a:Type0 -> ref a -> heap -> heap -> GTot Type0
 let fresh #a r h0 h1 = fresh r h0 h1
 
 let only x = singleton (addr_of x)
