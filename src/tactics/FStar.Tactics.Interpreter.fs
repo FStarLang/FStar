@@ -4,6 +4,7 @@ open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
+open FStar.Range
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -201,15 +202,19 @@ let evaluate_user_tactic : tac<unit>
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
     let p = proofstate_of_goal_ty env goal in
+    let initial = (1, []) in
     match run (visit evaluate_user_tactic) p with
     | Success (_, p2) ->
-        let gs = p2.goals |> List.map (fun g ->
-                     BU.print1 "Got goal: %s\n" (goal_to_string g);
-                     g.context, g.goal_ty) in
-        let smtgs = p2.smt_goals |> List.map (fun g ->
-                        BU.print1 "Got SMT goal: %s\n" (goal_to_string g);
-                        g.context, g.goal_ty) in
-        gs@smtgs
+        let s = initial in
+        let s = List.fold_left (fun (n,gs) g ->
+                     BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
+                     let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
+                     (n+1, (g.context, gt')::gs)) s p2.goals in
+        let s = List.fold_left (fun (n,gs) g ->
+                     BU.print2 "Got SMT goal #%s: %s\n" (string_of_int n) (goal_to_string g);
+                     let gt' = TcUtil.label ("SMT Goal #" ^ string_of_int n) dummyRange g.goal_ty in
+                     (n+1, (g.context, gt')::gs)) s p2.smt_goals in
+        let (_, gs) = s in gs
     | Failed (msg, _) ->
         BU.print1 "Tactic failed: %s\n" msg;
         BU.print1 "Got goal: %s\n" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
