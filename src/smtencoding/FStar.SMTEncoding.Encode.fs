@@ -1772,10 +1772,15 @@ let encode_top_level_let :
 
               (* Open universes *)
               let flid = flid_fv.fv_name.v in
-              let univ_subst, univ_vars = SS.univ_var_opening uvs in
-              let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-              let t_norm = SS.subst univ_subst t_norm in
-              let e = SS.compress (SS.subst univ_subst e) in
+              let env', e, t_norm =
+                let tcenv', _, e_t =
+                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let e, t_norm =
+                    match e_t with
+                    | [e; t_norm] -> e, t_norm
+                    | _ -> failwith "Impossible" in
+                {env with tcenv=tcenv'}, e, t_norm
+              in
 
               (* Open binders *)
               let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
@@ -1827,10 +1832,15 @@ let encode_top_level_let :
           let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
 
             (* Open universes *)
-            let univ_subst, univ_vars = SS.univ_var_opening uvs in
-            let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-            let t_norm = SS.subst univ_subst t_norm in
-            let e = SS.subst univ_subst e in
+            let env', e, t_norm =
+                let tcenv', _, e_t =
+                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let e, t_norm =
+                    match e_t with
+                    | [e; t_norm] -> e, t_norm
+                    | _ -> failwith "Impossible" in
+                {env with tcenv=tcenv'}, e, t_norm
+            in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print3 "Encoding let rec %s : %s = %s\n"
                         (Print.lbname_to_string lbn)
@@ -1867,10 +1877,10 @@ let encode_top_level_let :
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
-                                    ("fuel_correspondence_"^g)) in
+                                    ("@fuel_correspondence_"^g)) in
             let eqn_g' = Term.Assume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
                                     Some "Fuel irrelevance",
-                                    ("fuel_irrelevance_" ^g)) in
+                                    ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
               let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
               let vars_tm = List.map mkFreeV vars in

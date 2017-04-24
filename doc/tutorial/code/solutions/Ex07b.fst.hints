@@ -663,6 +663,7 @@
         "fuel_correspondence_Ex07b.subst.fuel_instrumented",
         "fuel_correspondence_Ex07b.typing.fuel_instrumented",
         "fuel_guarded_inversion_Ex07b.exp",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_irrelevance_Ex07b.subst.fuel_instrumented",
         "fuel_irrelevance_Ex07b.typing.fuel_instrumented", "int_inversion",
         "interpretation_Ex07b_Tm_abs_fc0fbdd6d5a8a594ca8c8683cd16af6d",
@@ -694,10 +695,11 @@
         "subterm_ordering_Ex07b.EAbs", "subterm_ordering_Ex07b.EApp",
         "subterm_ordering_Ex07b.EFst", "subterm_ordering_Ex07b.EIf",
         "subterm_ordering_Ex07b.EPair", "subterm_ordering_Ex07b.ESnd",
-        "token_correspondence_Ex07b.empty", "typing_Ex07b.appears_free_in",
-        "typing_Ex07b.typing",
+        "token_correspondence_Ex07b.empty",
+        "token_correspondence_Ex07b.typing.fuel_instrumented",
+        "typing_Ex07b.appears_free_in", "typing_Ex07b.typing",
         "typing_Ex07b_Tm_abs_fc0fbdd6d5a8a594ca8c8683cd16af6d",
-        "typing_tok_Ex07b.TBool@tok", "unit_typing"
+        "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0
     ],

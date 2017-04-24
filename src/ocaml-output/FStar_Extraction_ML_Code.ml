@@ -278,8 +278,8 @@ let escape_char_hex: FStar_BaseTypes.char -> Prims.string =
 let escape_or:
   (FStar_Char.char -> Prims.string) -> FStar_Char.char -> Prims.string =
   fun fallback  ->
-    fun uu___119_614  ->
-      match uu___119_614 with
+    fun uu___120_614  ->
+      match uu___120_614 with
       | c when c = '\\' -> "\\\\"
       | c when c = ' ' -> " "
       | c when c = '\b' -> "\\b"
@@ -422,15 +422,15 @@ let rec doc_of_expr:
                    [FStar_Format.text "Obj.magic "; FStar_Format.parens doc1] in
                FStar_Format.parens uu____791)
         | FStar_Extraction_ML_Syntax.MLE_Seq es ->
-            let docs =
+            let docs1 =
               FStar_List.map
                 (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in
-            let docs1 =
+            let docs2 =
               FStar_List.map
                 (fun d  ->
                    FStar_Format.reduce
-                     [d; FStar_Format.text ";"; FStar_Format.hardline]) docs in
-            let uu____801 = FStar_Format.reduce docs1 in
+                     [d; FStar_Format.text ";"; FStar_Format.hardline]) docs1 in
+            let uu____801 = FStar_Format.reduce docs2 in
             FStar_Format.parens uu____801
         | FStar_Extraction_ML_Syntax.MLE_Const c ->
             let uu____803 = string_of_mlconstant c in
@@ -497,17 +497,17 @@ let rec doc_of_expr:
                   FStar_Format.reduce1 uu____884 in
             maybe_paren outer e_app_prio doc1
         | FStar_Extraction_ML_Syntax.MLE_Tuple es ->
-            let docs =
+            let docs1 =
               FStar_List.map
                 (fun x  ->
                    let uu____895 =
                      doc_of_expr currentModule (min_op_prec, NonAssoc) x in
                    FStar_Format.parens uu____895) es in
-            let docs1 =
+            let docs2 =
               let uu____899 =
-                FStar_Format.combine (FStar_Format.text ", ") docs in
+                FStar_Format.combine (FStar_Format.text ", ") docs1 in
               FStar_Format.parens uu____899 in
-            docs1
+            docs2
         | FStar_Extraction_ML_Syntax.MLE_Let ((rec_,uu____901,lets),body) ->
             let pre =
               if
@@ -1196,13 +1196,13 @@ and doc_of_sig:
   =
   fun currentModule  ->
     fun s  ->
-      let docs = FStar_List.map (doc_of_sig1 currentModule) s in
-      let docs1 =
+      let docs1 = FStar_List.map (doc_of_sig1 currentModule) s in
+      let docs2 =
         FStar_List.map
           (fun x  ->
              FStar_Format.reduce
-               [x; FStar_Format.hardline; FStar_Format.hardline]) docs in
-      FStar_Format.reduce docs1
+               [x; FStar_Format.hardline; FStar_Format.hardline]) docs1 in
+      FStar_Format.reduce docs2
 let doc_of_mod1:
   FStar_Extraction_ML_Syntax.mlsymbol ->
     FStar_Extraction_ML_Syntax.mlmodule1 -> FStar_Format.doc
@@ -1249,7 +1249,7 @@ let doc_of_mod:
   =
   fun currentModule  ->
     fun m  ->
-      let docs =
+      let docs1 =
         FStar_List.map
           (fun x  ->
              let doc1 = doc_of_mod1 currentModule x in
@@ -1259,7 +1259,7 @@ let doc_of_mod:
                   FStar_Format.empty
               | uu____1776 -> FStar_Format.hardline);
              FStar_Format.hardline]) m in
-      FStar_Format.reduce (FStar_List.flatten docs)
+      FStar_Format.reduce (FStar_List.flatten docs1)
 let rec doc_of_mllib_r:
   FStar_Extraction_ML_Syntax.mllib ->
     (Prims.string* FStar_Format.doc) Prims.list
@@ -1364,7 +1364,7 @@ let rec doc_of_mllib_r:
                   head1 :: uu____1962 in
                 FStar_List.append prefix1 uu____1960 in
               FStar_All.pipe_left FStar_Format.reduce uu____1958 in
-        let docs =
+        let docs1 =
           FStar_List.map
             (fun uu____1990  ->
                match uu____1990 with
@@ -1372,7 +1372,7 @@ let rec doc_of_mllib_r:
                    let uu____2017 = FStar_Extraction_ML_Util.flatten_mlpath x in
                    let uu____2018 = for1_mod true (x, s, m) in
                    (uu____2017, uu____2018)) mllib in
-        docs
+        docs1
 let doc_of_mllib:
   FStar_Extraction_ML_Syntax.mllib ->
     (Prims.string* FStar_Format.doc) Prims.list
