@@ -541,28 +541,18 @@ let clear_hd (x:name) : tac<unit>
 let revert : tac<unit>
     = with_cur_goal "revert" (fun goal ->
       match Env.pop_bv goal.context with
-      | None -> fail "Cannot clear_hd; empty context"
+      | None -> fail "Cannot revert; empty context"
       | Some (x, env') ->
-        let fns = FStar.Syntax.Free.names goal.goal_ty in
         BU.print1 "reverting %s\n" (Print.bv_to_string x);
-        if not (Util.set_mem x fns)
-        then clear_hd x
-        else let new_goal =
-                match un_squash x.sort, un_squash goal.goal_ty with
-                | Some p, Some q ->
-                    { goal with
-                    context = env';
-                    goal_ty = U.mk_imp p q
-                    }
-                | _ ->
-                    { goal with
-                        context = env';
-                        goal_ty = U.mk_forall (FStar.TypeChecker.TcTerm.universe_of env' x.sort)
-                                              x
-                                              goal.goal_ty
-                    } in
-            bind dismiss (fun _ ->
-            add_goals [new_goal]))
+        let new_goal =
+           { goal with
+               context = env';
+               goal_ty = U.mk_forall (FStar.TypeChecker.TcTerm.universe_of env' x.sort)
+                                     x
+                                     goal.goal_ty
+           } in
+        bind dismiss (fun _ ->
+        add_goals [new_goal]))
 
 let revert_hd (x:name) : tac<unit>
     = with_cur_goal "revert_hd" (fun goal ->
