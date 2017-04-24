@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace fabc_make
 {
@@ -14,11 +15,13 @@ namespace fabc_make
 
         public string Package = null;
         public string PackageBlobId = null;
-        public string[] PackageContents = new string[] { };
+        public List<string> PackageContents = new List<string>();
         public string[] FStarArguments = null;
 
         public string BatchIDFile = null;
         public string Directory = null;
+        public string HintDirectory = null;
+        public bool HintCollection = false;
         public bool SaveResultFiles = true;
 
         internal static Arguments Get(string[] args)
@@ -51,6 +54,8 @@ namespace fabc_make
                     case "-j": result.JobId = args[++i]; break;
                     case "-i": result.BatchIDFile = args[++i]; break;
                     case "-d": result.Directory = args[++i]; break;
+                    case "-h": result.HintDirectory = args[++i]; break;
+                    case "-hc": result.HintCollection = true; break;
                     case "-ns": result.SaveResultFiles = false; break;
                     case "--":
                         result.FStarArguments = new string[args.Length - i - 1];
@@ -97,6 +102,8 @@ namespace fabc_make
                -i <path>      Batch IDs file
                -d <path>      directory within package
                -ns            don't save result files
+               -h <path>      path to *.hints files
+               -hc            collect *.hints files
 
              Commands:
                add

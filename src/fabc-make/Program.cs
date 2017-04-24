@@ -344,9 +344,9 @@ namespace fabc_make
                 jobDetail = new ODATADetailLevel("id eq '" + myargs.JobId + "'", "id,displayName", null);
             IPagedEnumerable<CloudJob> jobs = bc.JobOperations.ListJobs(jobDetail);
 
-            Console.WriteLine("{0,-50}==={1,-50}=|=========|", new string('=', 50), new string('=', 50));
-            Console.WriteLine("{0,-50} | {1,-50} | C/R/A/P |", "Id", "DisplayName");
-            Console.WriteLine("{0,-50}---{1,-50}-|---------|", new string('-', 50), new string('-', 50));
+            Console.WriteLine("{0,-50}==={1,-50}=|=================|", new string('=', 50), new string('=', 50));
+            Console.WriteLine("{0,-50} | {1,-50} |  C / R / A / P  |", "Id", "DisplayName");
+            Console.WriteLine("{0,-50}---{1,-50}-|-----------------|", new string('-', 50), new string('-', 50));
 
             int g_completed = 0, g_running = 0, g_active = 0, g_preparing = 0;
 
@@ -370,9 +370,9 @@ namespace fabc_make
 
                 string id = j.Id.Length > 50 ? j.Id.Substring(0, 49) + "*" : j.Id;
                 string dn = j.DisplayName != null ? (j.DisplayName.Length < 50 ? j.DisplayName : j.DisplayName.Substring(0, 50)) : "";
-                Console.WriteLine(String.Format("{0,-50} | {1,-50} | {2}/{3}/{4}/{5}         |", id, dn, completed, running, active, preparing));
+                Console.WriteLine(String.Format("{0,-50} | {1,-50} | {2,3}/{3,3}/{4,3}/{5,3} |", id, dn, completed, running, active, preparing));
             }
-            Console.WriteLine(new string('=', 50) + "===" + new string('=', 50) + "=|=========|");
+            Console.WriteLine(new string('=', 50) + "===" + new string('=', 50) + "=|=================|");
 
             Console.WriteLine();
             CloudPool pool = GetOrCreatePool();
@@ -429,18 +429,24 @@ namespace fabc_make
             }
 
 
-            myargs.PackageContents = new string[] {
-                                @"bin|*.exe",
-                                //@"bin|*.dll",
-                                @"ulib|*.fst",
-                                @"ulib|*.fsti",
-                                @"examples|*.fst",
-                                @"examples|*.fsti",
-                                @"ucontrib|*.fst",
-                                @"ucontrib|*.fsti",
-                                @"doc|*.fst",
-                                @"doc|*.fsti",
-                            };
+            myargs.PackageContents =
+                new List<string>() {
+                    @"bin|*.exe",
+                    @"ulib|*.fst",
+                    @"ulib|*.fsti",
+                    @"examples|*.fst",
+                    @"examples|*.fsti",
+                    @"ucontrib|*.fst",
+                    @"ucontrib|*.fsti",
+                    @"doc|*.fst",
+                    @"doc|*.fsti"
+                };
+
+            // myargs.PackageContents.Add(@"bin|*.dll");
+
+            if (myargs.HintDirectory != null)
+                myargs.PackageContents.Add(myargs.HintDirectory + "|*.hints");
+
 
             if (!InitPackage(myargs))
                 return 1;
@@ -477,7 +483,8 @@ namespace fabc_make
             FStar.Task t = new FStar.Task("H=`pwd` ; " + sd + " ; " +
                                           String.Join(" ", myargs.FStarArguments));
 
-            t.OutFileExtensions = new string[] { "hints" };
+            if (myargs.HintCollection)
+                t.OutFileExtensions = new string[] { "hints" };
 
             string PkgBlobUri = "https://" + StorageAccountName + ".blob.core.windows.net/" + PackageBlobContainer + "/" + myargs.PackageBlobId;
             string taskId;
