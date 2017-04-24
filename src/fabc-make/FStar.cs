@@ -28,7 +28,7 @@ namespace fabc_make
                 string entryName = (f.StartsWith(home)) ? f.Substring(home.Length + 1) :
                                    (f.StartsWith(d)) ? f.Substring(d.Length + 1) :
                                                           Path.GetFileName(f);
-                Console.WriteLine("  " + f + " [" + entryName + "]");
+                // Console.WriteLine("  " + f + " [" + entryName + "]");
                 zip.CreateEntryFromFile(f, entryName.Replace(@"\", "/"), CompressionLevel.Optimal);
             }
         }
@@ -51,7 +51,7 @@ namespace fabc_make
                     string[] dirptrns = dirptrn.Split('|');
                     string dir = dirptrns[0];
                     string ptrn = dirptrns[1];
-                    Console.WriteLine("> " + ptrn + " in " + dir);
+                    // Console.WriteLine("> " + ptrn + " in " + dir);
                     AddFilesToZip(home, dir, ptrn, zip);
                 }
 
