@@ -132,7 +132,10 @@ BN_FILESTOKEEP=4
 # check that BN_BINARYSPATH_ROOT exists.
 if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
   echo "+++ " $BN_BINARYSPATH_ROOT " does not exist so cloning"
+  cd ~
+  echo "+++ Current dir:" $PWD
   git clone https://github.com/FStarLang/binaries.git
+  cd $BN_BINARYSPATH_ROOT
 fi
 
 cd $BN_BINARYSPATH_ROOT
@@ -201,7 +204,6 @@ git push git@github.com:FStarLang/binaries.git $FSTAR_BIN_BRANCH --force
 
 
 # TO DO - new features to implement
-# Handling BN_BINARYSPATH proper? Environment var maybe?
 # Implement these calls into ci script?
 # Fix src/ocaml-output/Makefile where ~line 217 (cp of Z3) ... put chmod 755 z3.exe
 
