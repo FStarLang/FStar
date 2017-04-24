@@ -1,4 +1,4 @@
-module FStar.MRef.MST
+module FStar.MRef
 
 open FStar.Monotonic.Heap
 
