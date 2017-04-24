@@ -1169,7 +1169,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                         norm cfg env (List.tl stack) body
                     | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                        let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
+                        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
                         norm cfg env (List.tl stack) lifted
                     | Tm_match(e, branches) ->
                       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
@@ -1196,7 +1196,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 if should_reify
                 then
-                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' t)
+                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
                 (* TODO : don't we need to normalize t here ? *)
                 // let t = norm cfg env stack t in
