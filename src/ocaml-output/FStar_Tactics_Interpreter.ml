@@ -512,7 +512,7 @@ let preprocess:
          FStar_Tactics_Basic.run uu____879 p in
        match uu____877 with
        | FStar_Tactics_Basic.Success (uu____884,p2) ->
-           let uu____886 =
+           let gs =
              FStar_All.pipe_right p2.FStar_Tactics_Basic.goals
                (FStar_List.map
                   (fun g  ->
@@ -520,21 +520,23 @@ let preprocess:
                       FStar_Util.print1 "Got goal: %s\n" uu____898);
                      ((g.FStar_Tactics_Basic.context),
                        (g.FStar_Tactics_Basic.goal_ty)))) in
-           FStar_All.pipe_right p2.FStar_Tactics_Basic.smt_goals
-             (FStar_List.map
-                (fun g  ->
-                   (let uu____907 = FStar_Tactics_Basic.goal_to_string g in
-                    FStar_Util.print1 "Got SMT goal: %s\n" uu____907);
-                   ((g.FStar_Tactics_Basic.context),
-                     (g.FStar_Tactics_Basic.goal_ty))))
-       | FStar_Tactics_Basic.Failed (msg,uu____909) ->
+           let smtgs =
+             FStar_All.pipe_right p2.FStar_Tactics_Basic.smt_goals
+               (FStar_List.map
+                  (fun g  ->
+                     (let uu____911 = FStar_Tactics_Basic.goal_to_string g in
+                      FStar_Util.print1 "Got SMT goal: %s\n" uu____911);
+                     ((g.FStar_Tactics_Basic.context),
+                       (g.FStar_Tactics_Basic.goal_ty)))) in
+           FStar_List.append gs smtgs
+       | FStar_Tactics_Basic.Failed (msg,uu____915) ->
            (FStar_Util.print1 "Tactic failed: %s\n" msg;
-            (let uu____912 =
+            (let uu____918 =
                FStar_Tactics_Basic.goal_to_string
                  {
                    FStar_Tactics_Basic.context = env;
                    FStar_Tactics_Basic.witness = None;
                    FStar_Tactics_Basic.goal_ty = goal
                  } in
-             FStar_Util.print1 "Got goal: %s\n" uu____912);
+             FStar_Util.print1 "Got goal: %s\n" uu____918);
             [(env, goal)]))

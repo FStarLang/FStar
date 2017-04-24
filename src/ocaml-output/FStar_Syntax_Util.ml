@@ -2134,9 +2134,7 @@ and branch_eq:
       match (uu____5624, uu____5625) with | ((p1,w1,t1),(p2,w2,t2)) -> false
 let rec bottom_fold:
   (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
-    FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
   fun f  ->
     fun t  ->
@@ -2167,10 +2165,12 @@ let rec bottom_fold:
                  FStar_Syntax_Syntax.Tm_abs uu____5816)
         | FStar_Syntax_Syntax.Tm_arrow (bs,k) -> tn
         | uu____5853 -> tn in
-      let uu___178_5854 = t in
-      {
-        FStar_Syntax_Syntax.n = tn1;
-        FStar_Syntax_Syntax.tk = (uu___178_5854.FStar_Syntax_Syntax.tk);
-        FStar_Syntax_Syntax.pos = (uu___178_5854.FStar_Syntax_Syntax.pos);
-        FStar_Syntax_Syntax.vars = (uu___178_5854.FStar_Syntax_Syntax.vars)
-      }
+      f
+        (let uu___178_5854 = t in
+         {
+           FStar_Syntax_Syntax.n = tn1;
+           FStar_Syntax_Syntax.tk = (uu___178_5854.FStar_Syntax_Syntax.tk);
+           FStar_Syntax_Syntax.pos = (uu___178_5854.FStar_Syntax_Syntax.pos);
+           FStar_Syntax_Syntax.vars =
+             (uu___178_5854.FStar_Syntax_Syntax.vars)
+         })
