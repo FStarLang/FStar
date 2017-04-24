@@ -382,7 +382,7 @@ namespace fabc_make
                               g_completed + g_running + g_active + g_preparing);
         }
 
-        static async Task DeleteJob(string jobId, Arguments myargs)
+        static async Task DeleteJob(string jobId)
         {
             ODATADetailLevel taskDetail = new ODATADetailLevel(null, "id,resourceFiles", null);
 
@@ -411,7 +411,7 @@ namespace fabc_make
         static void Delete(Arguments myargs)
         {
             Debug.Assert(myargs.JobId != null);
-            DeleteJob(myargs.JobId, myargs).Wait();
+            DeleteJob(myargs.JobId).Wait();
         }
 
 
@@ -439,12 +439,7 @@ namespace fabc_make
                                 @"ucontrib|*.fst",
                                 @"ucontrib|*.fsti",
                                 @"doc|*.fst",
-                                //@"doc|*.fsti",
-                                //@"ulib|*.hints",
-                                //@"examples|*.hints",
-                                //@"ucontrib|*.hints",
-                                //@"doc|*.hints"
-                                //@"C:\fscratch\hints\fstar-regressions-cver-record-default-refresh|*.hints"
+                                @"doc|*.fsti",
                             };
 
             if (!InitPackage(myargs))
@@ -518,12 +513,37 @@ namespace fabc_make
         static int Await(Arguments myargs)
         {
             if (myargs.JobId == null)
-                throw new Exception("await requires job id (-j or -i).");
+            {
+                ODATADetailLevel jobDetail;
+                if (myargs.JobId == null)
+                    jobDetail = new ODATADetailLevel("startswith(id,'" + JobIDPrefix + "')", "id,displayName", null);
+                else
+                    jobDetail = new ODATADetailLevel("id eq '" + myargs.JobId + "'", "id,displayName", null);
+                IPagedEnumerable<CloudJob> jobs = bc.JobOperations.ListJobs(jobDetail);
 
-            CloudJob j = bc.JobOperations.GetJob(myargs.JobId);
+                foreach (CloudJob j in jobs)
+                {
+                    if (!j.Id.StartsWith(JobIDPrefix))
+                        continue;
+
+                    int r = Await(j.Id, myargs.SaveResultFiles);
+
+                    if (r != 0)
+                        return r;
+                }
+
+                return 0;
+            }
+            else
+                return Await(myargs.JobId, myargs.SaveResultFiles);
+        }
+
+        static int Await(string jobId, bool saveResultFiles)
+        {
+            CloudJob j = bc.JobOperations.GetJob(jobId);
 
             string resultFileDir = null;
-            if (myargs.SaveResultFiles)
+            if (saveResultFiles)
             {
                 resultFileDir = GetJobDirectoryName(j.Id, j.DisplayName);
                 if (!Directory.Exists(resultFileDir))
@@ -592,7 +612,7 @@ namespace fabc_make
                 done = j.ListTasks(taskDetail).Count() == 0;
             }
 
-            DeleteJob(j.Id, myargs).Wait();
+            DeleteJob(j.Id).Wait();
 
             return exitCode;
         }

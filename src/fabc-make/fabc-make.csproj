@@ -58,8 +58,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Rest.ClientRuntime, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\VS\packages\Microsoft.Rest.ClientRuntime.2.3.5\lib\net45\Microsoft.Rest.ClientRuntime.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\VS\packages\Microsoft.Rest.ClientRuntime.2.3.6\lib\net45\Microsoft.Rest.ClientRuntime.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Rest.ClientRuntime.Azure, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\VS\packages\Microsoft.Rest.ClientRuntime.Azure.3.3.5\lib\net45\Microsoft.Rest.ClientRuntime.Azure.dll</HintPath>
@@ -69,9 +68,8 @@
       <HintPath>..\VS\packages\WindowsAzure.Storage.8.1.1\lib\net45\Microsoft.WindowsAzure.Storage.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\VS\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\VS\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

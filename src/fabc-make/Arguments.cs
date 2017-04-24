@@ -75,7 +75,6 @@ namespace fabc_make
 
             switch (result.Command)
             {
-                case "await":
                 case "delete":
                     if (result.JobId == null)
                     {

@@ -20,6 +20,9 @@ namespace fabc_make
 
         internal static void AddFilesToZip(string home, string d, string ptrn, ZipArchive zip)
         {
+            home = home.TrimEnd('\\').TrimEnd('/');
+            d = d.TrimEnd('\\').TrimEnd('/');
+
             foreach (string f in Directory.EnumerateFiles(Path.Combine(home, d), ptrn, SearchOption.AllDirectories))
             {
                 string entryName = (f.StartsWith(home)) ? f.Substring(home.Length + 1) :
