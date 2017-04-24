@@ -314,9 +314,12 @@ let op_Hat_Plus_Hat #a #b r1 r2 = union (only r1) (only r2)
 
 (* lemmas to pass regressions *)
 
-(*let lemma_fresh_not_contained (#a:Type) (r:ref a) (h0:heap) (h1:heap) 
-  :Lemma (requires (fresh r h0 h1))
-         (ensures  (~(contains h0 r)))
-	 [SMTPat (fresh r h0 h1)]
-  = () //lemma_fresh_not_contained r h0 h1*)
+private let lemma_contains (#a:Type0) (h:heap) (r:ref a)
+  :Lemma (contains h r <==> FStar.Monotonic.Heap.contains h r)
+         [SMTPat (contains h r)]
+  = ()
 
+private let lemma_unused_in (#a:Type0) (r:ref a) (h:heap)
+  :Lemma (unused_in r h <==> FStar.Monotonic.Heap.unused_in r h)
+         [SMTPat (unused_in r h)]
+  = ()
