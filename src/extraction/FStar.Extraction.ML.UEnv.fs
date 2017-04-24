@@ -142,23 +142,19 @@ let lookup_eff_action (g:env) (x:either<fv,lident>) : ty_or_exp_b =
         | Inl fv -> fv.fv_name.v, Range.string_of_range fv.fv_name.p
         | Inr lid -> lid, Range.string_of_range Range.dummyRange in
     let fv_not_found = (BU.format2 "(%s) free Variable %s not found\n" range (Print.lid_to_string name)) in
-    let eff_action =
-        // assumes that if the action exists, its name is in the format
-        // __proj__[eff]__item__[action]
-        let bits = String.split ['_'] name.ident.idText
-                   |> List.filter (fun x -> not (x = "")) in
-        if (List.length bits = 4) then begin
-            if (List.hd bits = "proj") && (List.nth bits 2 = "item") then
-                (Some <| List.nth bits 1)
-            else None end
-        else None in
-    let eff_name = match eff_action with
-        | Some n -> n
-        | None -> failwith fv_not_found in
-    let constructed_name = String.concat "." <| (List.map (fun x -> x.idText) name.ns)@[eff_name; name.ident.idText] in
+
+    let eff_name =
+        // assumes action names are in the format __proj__[eff]__item__[action]
+        // if found, return eff
+        let idents = String.split ['_'] name.ident.idText in
+        try
+            let i,j = List.index (fun x -> x = "proj") idents, List.index (fun x -> x = "item") idents in
+            String.concat "_" <| snd (List.splitAt (i+2) (fst (List.splitAt (j-1) idents)))
+        with _ -> failwith fv_not_found in
+    let action_name = String.concat "." <| (List.map (fun x -> x.idText) name.ns)@[eff_name; name.ident.idText] in
 
     let x = BU.find_map g.gamma (function
-        | Fv (fv', t) when fv'.fv_name.v.str = constructed_name -> Some t
+        | Fv (fv', t) when fv'.fv_name.v.str = action_name -> Some t
         | _ -> None) in
     match x with
         | None -> failwith fv_not_found
@@ -285,7 +281,6 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
-        // BU.print1 "Extended env with fv %s\n" mlsymbol;
         let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
         {g with gamma=gamma}, (mlsymbol, 0)
     else failwith "freevars found"

@@ -876,7 +876,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                 then TcUtil.reify_body g.tcenv body
                 else body
             | None -> body in
-
           let ml_bs, env = binders_as_ml_binders g bs in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right

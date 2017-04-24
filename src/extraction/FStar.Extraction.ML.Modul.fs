@@ -192,9 +192,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect(ed) when (ed.qualifiers |> List.contains Reifiable) ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
-            let n, w = mangled_name in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
-            BU.print1 "Mangled name: %s\n" n;
+            BU.print1 "Mangled name: %s\n" (fst mangled_name);
             let lb = {
                 mllb_name=mangled_name;
                 mllb_tysc=None;
@@ -236,18 +235,18 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   | None -> failwith "No type scheme")
               | _ -> failwith "Impossible" in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then begin
-              BU.print1 "Action typescheme: %s\n" (Code.string_of_mlty a_nm (snd tysc));
-              List.iter (fun x -> BU.print1 "Action type binders: %s\n" (fst x)) (fst tysc) end;
+              BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
+              List.iter (fun x -> BU.print1 "and binders: %s\n" (fst x)) (fst tysc) end;
             extend_env g a_lid a_nm exp tysc in
 
           let g, return_decl =
-            let return_nm, return_lid = monad_op_name ed "return" in
             let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
+            let return_nm, return_lid = monad_op_name ed "return" in
             extend_env g return_lid return_nm return_tm ty_sc in
 
           let g, bind_decl =
-            let bind_nm, bind_lid = monad_op_name ed "bind" in
             let bind_tm, ty_sc = extract_fv (snd ed.bind_repr) in
+            let bind_nm, bind_lid = monad_op_name ed "bind" in
             extend_env g bind_lid bind_nm bind_tm ty_sc in
 
           let g, actions = BU.fold_map extract_action g ed.actions in
