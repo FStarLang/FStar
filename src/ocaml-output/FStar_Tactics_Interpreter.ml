@@ -507,36 +507,65 @@ let preprocess:
       (let uu____875 = FStar_Syntax_Print.term_to_string goal in
        FStar_Util.print1 "About to preprocess %s\n" uu____875);
       (let p = FStar_Tactics_Basic.proofstate_of_goal_ty env goal in
-       let uu____877 =
-         let uu____879 = FStar_Tactics_Basic.visit evaluate_user_tactic in
-         FStar_Tactics_Basic.run uu____879 p in
-       match uu____877 with
-       | FStar_Tactics_Basic.Success (uu____884,p2) ->
-           let gs =
-             FStar_All.pipe_right p2.FStar_Tactics_Basic.goals
-               (FStar_List.map
-                  (fun g  ->
-                     (let uu____898 = FStar_Tactics_Basic.goal_to_string g in
-                      FStar_Util.print1 "Got goal: %s\n" uu____898);
-                     ((g.FStar_Tactics_Basic.context),
-                       (g.FStar_Tactics_Basic.goal_ty)))) in
-           let smtgs =
-             FStar_All.pipe_right p2.FStar_Tactics_Basic.smt_goals
-               (FStar_List.map
-                  (fun g  ->
-                     (let uu____911 = FStar_Tactics_Basic.goal_to_string g in
-                      FStar_Util.print1 "Got SMT goal: %s\n" uu____911);
-                     ((g.FStar_Tactics_Basic.context),
-                       (g.FStar_Tactics_Basic.goal_ty)))) in
-           FStar_List.append gs smtgs
-       | FStar_Tactics_Basic.Failed (msg,uu____915) ->
+       let initial = ((Prims.parse_int "1"), []) in
+       let uu____888 =
+         let uu____890 = FStar_Tactics_Basic.visit evaluate_user_tactic in
+         FStar_Tactics_Basic.run uu____890 p in
+       match uu____888 with
+       | FStar_Tactics_Basic.Success (uu____895,p2) ->
+           let s = initial in
+           let s1 =
+             FStar_List.fold_left
+               (fun uu____914  ->
+                  fun g  ->
+                    match uu____914 with
+                    | (n1,gs) ->
+                        ((let uu____935 = FStar_Util.string_of_int n1 in
+                          let uu____936 =
+                            FStar_Tactics_Basic.goal_to_string g in
+                          FStar_Util.print2 "Got goal #%s: %s\n" uu____935
+                            uu____936);
+                         (let gt' =
+                            let uu____938 =
+                              let uu____939 = FStar_Util.string_of_int n1 in
+                              Prims.strcat "Goal #" uu____939 in
+                            FStar_TypeChecker_Util.label uu____938
+                              FStar_Range.dummyRange
+                              g.FStar_Tactics_Basic.goal_ty in
+                          ((n1 + (Prims.parse_int "1")),
+                            (((g.FStar_Tactics_Basic.context), gt') :: gs)))))
+               s p2.FStar_Tactics_Basic.goals in
+           let s2 =
+             FStar_List.fold_left
+               (fun uu____956  ->
+                  fun g  ->
+                    match uu____956 with
+                    | (n1,gs) ->
+                        ((let uu____977 = FStar_Util.string_of_int n1 in
+                          let uu____978 =
+                            FStar_Tactics_Basic.goal_to_string g in
+                          FStar_Util.print2 "Got SMT goal #%s: %s\n"
+                            uu____977 uu____978);
+                         (let gt' =
+                            let uu____980 =
+                              let uu____981 = FStar_Util.string_of_int n1 in
+                              Prims.strcat "SMT Goal #" uu____981 in
+                            FStar_TypeChecker_Util.label uu____980
+                              FStar_Range.dummyRange
+                              g.FStar_Tactics_Basic.goal_ty in
+                          ((n1 + (Prims.parse_int "1")),
+                            (((g.FStar_Tactics_Basic.context), gt') :: gs)))))
+               s1 p2.FStar_Tactics_Basic.smt_goals in
+           let uu____987 = s2 in
+           (match uu____987 with | (uu____996,gs) -> gs)
+       | FStar_Tactics_Basic.Failed (msg,uu____1005) ->
            (FStar_Util.print1 "Tactic failed: %s\n" msg;
-            (let uu____918 =
+            (let uu____1008 =
                FStar_Tactics_Basic.goal_to_string
                  {
                    FStar_Tactics_Basic.context = env;
                    FStar_Tactics_Basic.witness = None;
                    FStar_Tactics_Basic.goal_ty = goal
                  } in
-             FStar_Util.print1 "Got goal: %s\n" uu____918);
+             FStar_Util.print1 "Got goal: %s\n" uu____1008);
             [(env, goal)]))
