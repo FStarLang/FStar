@@ -57,11 +57,11 @@ let lemma_unused_not_contained (#a:Type) (#rel:preorder a) (r:mref a rel) (h:hea
 let fresh (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) 
   = r `unused_in` h0 /\ h1 `contains` r
 
-let lemma_fresh_not_contained (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) 
+(*let lemma_fresh_not_contained (#a:Type) (#rel:preorder a) (r:mref a rel) (h0:heap) (h1:heap) 
   :Lemma (requires (fresh r h0 h1))
          (ensures  (~(contains h0 r)))
 	 [SMTPat (fresh r h0 h1)]
-  = ()
+  = ()*)
 
 val only: #a:Type -> #rel:preorder a -> mref a rel -> GTot (set nat)
 let only #a #rel r = singleton (addr_of r)
@@ -117,7 +117,7 @@ private abstract let alloc_ref (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:boo
   = { next_addr = r.addr + 1;
       memory    = (fun (r':nat) -> if r' = r.addr
 	                           then Some (| a, (x, rel) |)
-				   else h.memory r')}
+				   else h.memory r') }
 
 abstract let alloc_tot (#a:Type) (h:heap) (x:a) (rel:preorder a) (mm:bool) :Tot (mref a rel * heap)
   = let r = { addr = h.next_addr; init = x; mm = mm } in
@@ -169,7 +169,7 @@ private let lemma_upd_contains_not_necessarily_well_typed_test
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
            (forall (b:Type) (rel':preorder b) (r':mref b rel'). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')           /\
-	   (forall (b:Type) (rel':preorder b) (r':mref b rel'). (r'.addr <> r.addr /\ h0 `contains` r') ==> h1 `contains` r') /\
+	   (forall (b:Type) (rel':preorder b) (r':mref b rel'). (addr_of r' <> addr_of r /\ h0 `contains` r') ==> h1 `contains` r') /\
 	   (forall (b:Type) (rel':preorder b) (r':mref b rel'). r' `unused_in` h0 <==> r' `unused_in` h1)))
   = ()
 
