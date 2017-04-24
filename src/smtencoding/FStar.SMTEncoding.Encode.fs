@@ -1387,19 +1387,21 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
-        let valid = mkApp("Valid", [mkApp(conj, [a;b])]) in
+        let l_and_a_b = mkApp(conj, [a;b]) in
+        let valid = mkApp("Valid", [l_and_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation", "l_and-interp")] in
+        [Term.Assume(mkForall([[l_and_a_b]], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation", "l_and-interp")] in
     let mk_or_interp : env -> string -> term -> decls_t = fun env disj _ ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
-        let valid = mkApp("Valid", [mkApp(disj, [a;b])]) in
+        let l_or_a_b = mkApp(disj, [a;b]) in
+        let valid = mkApp("Valid", [l_or_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
+        [Term.Assume(mkForall([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
     let mk_eq2_interp : env -> string -> term -> decls_t = fun env eq2 tt ->
         let aa = ("a", Term_sort) in
         let xx = ("x", Term_sort) in
@@ -1407,8 +1409,9 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let a = mkFreeV aa in
         let x = mkFreeV xx in
         let y = mkFreeV yy in
-        let valid = mkApp("Valid", [mkApp(eq2, [a;x;y])]) in
-        [Term.Assume(mkForall([[valid]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
+        let eq2_x_y = mkApp(eq2, [a;x;y]) in
+        let valid = mkApp("Valid", [eq2_x_y]) in
+        [Term.Assume(mkForall([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
     let mk_eq3_interp : env -> string -> term -> decls_t = fun env eq3 tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1418,32 +1421,36 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         let x = mkFreeV xx in
         let y = mkFreeV yy in
-        let valid = mkApp("Valid", [mkApp(eq3, [a;b;x;y])]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
+        let eq3_x_y = mkApp(eq3, [a;b;x;y]) in
+        let valid = mkApp("Valid", [eq3_x_y]) in
+        [Term.Assume(mkForall([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
     let mk_imp_interp : env -> string -> term -> decls_t = fun env imp tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
-        let valid = mkApp("Valid", [mkApp(imp, [a;b])]) in
+        let l_imp_a_b = mkApp(imp, [a;b]) in
+        let valid = mkApp("Valid", [l_imp_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation", "l_imp-interp")] in
+        [Term.Assume(mkForall([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation", "l_imp-interp")] in
     let mk_iff_interp : env -> string -> term -> decls_t = fun env iff tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
-        let valid = mkApp("Valid", [mkApp(iff, [a;b])]) in
+        let l_iff_a_b = mkApp(iff, [a;b]) in
+        let valid = mkApp("Valid", [l_iff_a_b]) in
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
+        [Term.Assume(mkForall([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
     let mk_not_interp : env -> string -> term -> decls_t = fun env l_not tt ->
         let aa = ("a", Term_sort) in
         let a = mkFreeV aa in
-        let valid = mkApp("Valid", [mkApp(l_not, [a])]) in
+        let l_not_a = mkApp(l_not, [a]) in
+        let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
-        [Term.Assume(mkForall([[valid]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
+        [Term.Assume(mkForall([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
     let mk_forall_interp : env -> string -> term -> decls_t = fun env for_all tt ->
         let aa = ("a", Term_sort) in
         let bb = ("b", Term_sort) in
@@ -1451,9 +1458,10 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let a = mkFreeV aa in
         let b = mkFreeV bb in
         let x = mkFreeV xx in
-        let valid = mkApp("Valid", [mkApp(for_all, [a;b])]) in
+        let l_forall_a_b = mkApp(for_all, [a;b]) in
+        let valid = mkApp("Valid", [l_forall_a_b]) in
         let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
+        [Term.Assume(mkForall([[l_forall_a_b]], [aa;bb], mkIff(mkForall([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
                      Some "forall interpretation",
                      "forall-interp")] in
     let mk_exists_interp : env -> string -> term -> decls_t = fun env for_some tt ->
@@ -1463,9 +1471,10 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let a = mkFreeV aa in
         let b = mkFreeV bb in
         let x = mkFreeV xx in
-        let valid = mkApp("Valid", [mkApp(for_some, [a;b])]) in
+        let l_exists_a_b = mkApp(for_some, [a;b]) in
+        let valid = mkApp("Valid", [l_exists_a_b]) in
         let valid_b_x = mkApp("Valid", [mk_ApplyTT b x]) in
-        [Term.Assume(mkForall([[valid]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
+        [Term.Assume(mkForall([[l_exists_a_b]], [aa;bb], mkIff(mkExists([[mk_HasTypeZ x a]], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)),
                      Some "exists interpretation",
                      "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
@@ -2027,10 +2036,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
-       let valid_b2t_x = mkApp("Valid", [mkApp("Prims.b2t", [x])]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
+       let b2t_x = mkApp("Prims.b2t", [x]) in
+       let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
-                    Term.Assume(mkForall([[valid_b2t_x]], [xx],
-                                              mkEq(valid_b2t_x, mkApp("BoxBool_proj_0", [x]))),
+                    Term.Assume(mkForall([[b2t_x]], [xx],
+                                           mkEq(valid_b2t_x, mkApp("BoxBool_proj_0", [x]))),
                                 Some "b2t def",
                                 "b2t_def")] in
        decls, env
