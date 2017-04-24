@@ -64,7 +64,7 @@ namespace fabc_make
                     if (line.TrimStart()[0] == '#')
                         continue;
                     string[] tokens = line.Split(new char[] { '=' }, 2);
-                    string option = tokens[0]; 
+                    string option = tokens[0];
                     string value = tokens[1];
                     //Console.WriteLine("{0}={1}", option, value);
                     switch (option)
@@ -160,14 +160,14 @@ namespace fabc_make
                     double sz = new FileInfo(myargs.Package).Length / 1024.0 / 1024.0;
                     Console.WriteLine("Uploading package ({0} MiB) ...", sz.ToString("F"));
                 }
-                
-                blob.UploadFromFile(myargs.Package, null, 
-                    new BlobRequestOptions() { MaximumExecutionTime=PkgUpdateTimeout }, 
+
+                blob.UploadFromFile(myargs.Package, null,
+                    new BlobRequestOptions() { MaximumExecutionTime=PkgUpdateTimeout },
                     null);
             }
         }
 
-        
+
 
         static void DeletePackageBlob(Arguments myargs)
         {
@@ -456,7 +456,7 @@ namespace fabc_make
             if (myargs.BatchIDFile != null)
             {
                 using (StreamWriter sw = new StreamWriter(myargs.BatchIDFile))
-                {                    
+                {
                     sw.WriteLine(myargs.PackageBlobId);
                     sw.WriteLine(j.Id);
                 }
@@ -591,7 +591,7 @@ namespace fabc_make
                                 string s = sr.ReadToEnd();
                                 string [] lines = s.Split('\n');
                                 for (int i = 0; i < lines.Length - 4; i++) // `time' outputs 4 lines
-                                    Console.WriteLine(lines[i]);      
+                                    Console.WriteLine(lines[i]);
                             }
 
                             if (tr.ExitCode != 0)
@@ -695,7 +695,7 @@ namespace fabc_make
                 {
                     if (bc != null)
                         bc.Close();
-                }                
+                }
             }
 
             // Console.WriteLine("Exit code: " + exitCode.ToString());
