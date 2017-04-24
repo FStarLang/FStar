@@ -667,7 +667,7 @@ let rec visit (callback:tac<unit>)
                     | Some (U.QAll(xs, _, _)) ->
                       bind intros (fun binders ->
                       //printfn "At forall %s" (List.map Print.bv_to_string names |> String.concat ", ");
-                      bind (visit callback) (fun _ ->
+                      seq (visit callback) (
                       bind (revert_all_hd (List.map fst binders)) (fun _ ->
                       with_cur_goal "inner" (fun goal ->
                       BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal);
@@ -681,8 +681,7 @@ let rec visit (callback:tac<unit>)
                     | Some (U.BaseConn(l, _))
                         when Ident.lid_equals l SC.imp_lid ->
                       bind imp_intro (fun h ->
-                      bind (visit callback) (fun _ ->
-                      revert))
+                      seq (visit callback) revert)
 
                     | Some (U.BaseConn(l, _)) ->
                       or_else trivial smt)))
