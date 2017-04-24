@@ -543,16 +543,21 @@ let revert : tac<unit>
       match Env.pop_bv goal.context with
       | None -> fail "Cannot revert; empty context"
       | Some (x, env') ->
-        BU.print1 "reverting %s\n" (Print.bv_to_string x);
+        let fvs = FStar.Syntax.Free.names goal.goal_ty in
         let new_goal =
-           { goal with
-               context = env';
-               goal_ty = U.mk_forall (FStar.TypeChecker.TcTerm.universe_of env' x.sort)
-                                     x
-                                     goal.goal_ty
-           } in
-        bind dismiss (fun _ ->
-        add_goals [new_goal]))
+            if Util.set_mem x fvs
+            then { goal with
+                     context = env';
+                     goal_ty = U.mk_forall (FStar.TypeChecker.TcTerm.universe_of env' x.sort)
+                                           x
+                                           goal.goal_ty
+                 }
+            else { goal with
+                     context = env';
+                     goal_ty = U.mk_imp x.sort goal.goal_ty
+                 }
+         in
+        bind dismiss (fun _ -> add_goals [new_goal]))
 
 let revert_hd (x:name) : tac<unit>
     = with_cur_goal "revert_hd" (fun goal ->
