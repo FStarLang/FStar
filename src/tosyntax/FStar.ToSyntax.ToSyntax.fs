@@ -108,43 +108,69 @@ let unit_ty = mk_term (Name FStar.Syntax.Const.unit_lid) Range.dummyRange Type_l
 
 let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
 
-let op_as_term env arity rng s : option<S.term> =
-  let r l dd = Some (S.lid_as_fv (set_lid_range l rng) dd None |> S.fv_to_tm) in
+let op_as_term env arity rng op : option<S.term> =
+  let r l dd = Some (S.lid_as_fv (set_lid_range l op.idRange) dd None |> S.fv_to_tm) in
   let fallback () =
-      match s with
-        | "=" ->    r C.op_Eq Delta_equational
-        | ":=" ->   r C.write_lid Delta_equational
-        | "<" ->    r C.op_LT Delta_equational
-        | "<=" ->   r C.op_LTE Delta_equational
-        | ">" ->    r C.op_GT Delta_equational
-        | ">=" ->   r C.op_GTE Delta_equational
-        | "&&" ->   r C.op_And Delta_equational
-        | "||" ->   r C.op_Or Delta_equational
-        | "+" ->    r C.op_Addition Delta_equational
-        | "-" when (arity=1) -> r C.op_Minus Delta_equational
-        | "-" ->    r C.op_Subtraction Delta_equational
-        | "/" ->    r C.op_Division Delta_equational
-        | "%" ->    r C.op_Modulus Delta_equational
-        | "!" ->    r C.read_lid Delta_equational
-        | "@" ->    if Options.ml_ish ()
-		   then r C.list_append_lid Delta_equational
-		   else r C.list_tot_append_lid Delta_equational
-        | "^" ->    r C.strcat_lid Delta_equational
-        | "|>" ->   r C.pipe_right_lid Delta_equational
-        | "<|" ->   r C.pipe_left_lid Delta_equational
-        | "<>" ->   r C.op_notEq Delta_equational
-        | "~"   ->  r C.not_lid (Delta_defined_at_level 2)
-        | "=="  ->  r C.eq2_lid Delta_constant
-        | "<<" ->   r C.precedes_lid Delta_constant
-        | "/\\" ->  r C.and_lid (Delta_defined_at_level 1)
-        | "\\/" ->  r C.or_lid (Delta_defined_at_level 1)
-        | "==>" ->  r C.imp_lid (Delta_defined_at_level 1)
-        | "<==>" -> r C.iff_lid (Delta_defined_at_level 2)
-        | _ -> None in
-   begin match Env.try_lookup_lid env (compile_op_lid arity s rng) with
-        | Some t -> Some (fst t)
-        | _ -> fallback()
-   end
+    match Ident.text_of_id op with
+    | "=" ->
+      r C.op_Eq Delta_equational
+    | ":=" ->
+      r C.write_lid Delta_equational
+    | "<" ->
+      r C.op_LT Delta_equational
+    | "<=" ->
+      r C.op_LTE Delta_equational
+    | ">" ->
+      r C.op_GT Delta_equational
+    | ">=" ->
+      r C.op_GTE Delta_equational
+    | "&&" ->
+      r C.op_And Delta_equational
+    | "||" ->
+      r C.op_Or Delta_equational
+    | "+" ->
+      r C.op_Addition Delta_equational
+    | "-" when (arity=1) ->
+      r C.op_Minus Delta_equational
+    | "-" ->
+      r C.op_Subtraction Delta_equational
+    | "/" ->
+      r C.op_Division Delta_equational
+    | "%" ->
+      r C.op_Modulus Delta_equational
+    | "!" ->
+      r C.read_lid Delta_equational
+    | "@" ->
+      if Options.ml_ish ()
+      then r C.list_append_lid Delta_equational
+      else r C.list_tot_append_lid Delta_equational
+    | "^" ->
+      r C.strcat_lid Delta_equational
+    | "|>" ->
+      r C.pipe_right_lid Delta_equational
+    | "<|" ->
+      r C.pipe_left_lid Delta_equational
+    | "<>" ->
+      r C.op_notEq Delta_equational
+    | "~"   ->
+      r C.not_lid (Delta_defined_at_level 2)
+    | "=="  ->
+      r C.eq2_lid Delta_constant
+    | "<<" ->
+      r C.precedes_lid Delta_constant
+    | "/\\" ->
+      r C.and_lid (Delta_defined_at_level 1)
+    | "\\/" ->
+      r C.or_lid (Delta_defined_at_level 1)
+    | "==>" ->
+      r C.imp_lid (Delta_defined_at_level 1)
+    | "<==>" ->
+      r C.iff_lid (Delta_defined_at_level 2)
+    | _ -> None
+  in
+  match Env.try_lookup_lid env (compile_op_lid arity op.idText op.idRange) with
+  | Some t -> Some (fst t)
+  | _ -> fallback()
 
 let sort_ftv ftv =
   BU.sort_with (fun x y -> String.compare x.idText y.idText) <|
@@ -365,7 +391,7 @@ let rec desugar_maybe_non_constant_universe t
                         ^ repr, t.range)) ;
       Inl n
   | Op (op_plus, [t1 ; t2]) ->
-      assert (op_plus = "+") ;
+      assert (Ident.text_of_id op_plus = "+") ;
       let u1 = desugar_maybe_non_constant_universe t1 in
       let u2 = desugar_maybe_non_constant_universe t2 in
       begin match u1, u2 with
@@ -467,7 +493,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
     let pos_r r q = Syntax.withinfo q tun.n r in
     match p.pat with
       | PatOp op ->
-          aux loc env ({ pat = PatVar (id_of_text (compile_op 0 op), None); prange = p.prange })
+          aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
         let loc, env, var, p, _ = aux loc env p in
@@ -573,7 +599,7 @@ and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * option<pat>)
   let mklet x = env, LetBinder(qualify env x, tun), None in
   if top
   then match p.pat with
-    | PatOp x -> mklet (id_of_text (compile_op 0 x))
+    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText, x.idRange))
     | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), None)
@@ -652,14 +678,19 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Const c ->
         mk (Tm_constant c)
 
-    | Op("=!=", args) ->
-      desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
+    | Op({idText = "=!="; idRange=r}, args) ->
+      let e = mk_term (Op(Ident.mk_ident ("==", r), args)) top.range top.level in
+      desugar_term env (mk_term(Op(Ident.mk_ident ("~",r), [e])) top.range top.level)
 
-    | Op("*", [_;_]) when (op_as_term env 2 top.range "*" |> Option.isNone) -> //if op_Star has not been rebound, then it's reserved for tuples
+    (* if op_Star has not been rebound, then it's reserved for tuples *)
+    | Op(op_star, [_;_]) when
+      Ident.text_of_id op_star = "*" &&
+      (op_as_term env 2 top.range op_star |> Option.isNone) ->
       let rec flatten t = match t.tm with
         // * is left-associative
-        | Op("*", [t1;t2]) -> flatten t1 @ [ t2 ]
-        | _ -> [t] in
+        | Op({idText = "*"}, [t1;t2]) -> flatten t1 @ [ t2 ]
+        | _ -> [t]
+      in
       let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
       let tup, _ = fail_or env (Env.try_lookup_lid env) (U.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))
@@ -672,7 +703,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Op(s, args) ->
       begin match op_as_term env (List.length args) top.range s with
-        | None -> raise (Error("Unexpected or unbound operator: " ^ s, top.range))
+        | None -> raise (Error("Unexpected or unbound operator: " ^ Ident.text_of_id s, top.range))
         | Some op ->
             if List.length args > 0 then
               let args = args |> List.map (fun t -> desugar_term env t, None) in
