@@ -109,7 +109,8 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Fin.find.fuel_instrumented", "@query",
         "FStar.Fin_interpretation_Tm_arrow_52551f2a404183ed23f99984ad9b27d1",
         "FStar.Fin_interpretation_Tm_arrow_d7f99247b0ae2d6b050418177010af96",
         "FStar.Seq.Base_interpretation_Tm_arrow_015e5d64a12964940b96ac2bc090f517",
@@ -122,7 +123,6 @@
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.Fin.fin",
         "equation_FStar.Fin.in_", "equation_Prims.nat",
-        "fuel_correspondence_FStar.Fin.find.fuel_instrumented",
         "fuel_guarded_inversion_Prims.option", "int_inversion", "int_typing",
         "interpretation_FStar.Fin_Tm_abs_519779745438b66112d801d449da4b85",
         "interpretation_FStar.Fin_Tm_abs_c5c581666833b7fa14b3e9fc0d1fd6b5",

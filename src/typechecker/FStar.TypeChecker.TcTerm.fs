@@ -52,7 +52,6 @@ let is_eq = function
     | Some Equality -> true
     | _ -> false
 let steps env = [N.Beta; N.Eager_unfolding]
-let unfold_whnf env t = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let check_no_escape head_opt env (fvs:list<bv>) kt =
@@ -231,7 +230,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
           //exclude types and function-typed arguments from the decreases clause
           let filter_types_and_functions (bs:binders)  =
             bs |> List.collect (fun (b, _) ->
-                    let t = unfold_whnf env (U.unrefine b.sort) in
+                    let t = N.unfold_whnf env (U.unrefine b.sort) in
                     match t.n with
                         | Tm_type _
                         | Tm_arrow _ -> []
@@ -925,7 +924,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         let c = SS.subst_comp subst c_expected in
                         (* the expected type is explicitly curried *)
                         if U.is_named_tot c then
-                          let t = unfold_whnf env (U.comp_result c) in
+                          let t = N.unfold_whnf env (U.comp_result c) in
                           match t.n with
                           | Tm_arrow(bs_expected, c_expected) ->
                             let (env, bs', more, guard', subst) = check_binders env more_bs bs_expected in
@@ -961,7 +960,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         try normalizing it first;
                         otherwise synthesize a type and check it against the given type *)
                 if not norm
-                then as_function_typ true (unfold_whnf env t)
+                then as_function_typ true (N.unfold_whnf env t)
                 else let _, bs, _, c_opt, tacopt, envbody, body, g = expected_function_typ env None body in
                       Some (t, false), bs, [], c_opt, tacopt, envbody, body, g in
           as_function_typ false t
@@ -1263,14 +1262,14 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Range.string_of_range tres.pos);
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
-                        aux true (unfold_whnf env tres)
+                        aux true (N.unfold_whnf env tres)
                     | _ -> raise (Error(BU.format2 "Too many arguments to function of type %s; got %s arguments"
                                             (N.term_to_string env thead) (BU.string_of_int n_args), argpos arg)) in
             aux false chead.res_typ
     in //end tc_args
 
     let rec check_function_app tf =
-       match (unfold_whnf env tf).n with
+       match (N.unfold_whnf env tf).n with
         | Tm_uvar _
         | Tm_app({n=Tm_uvar _}, _) ->
             let rec tc_args env args : (Syntax.args * list<(Range.range * lcomp)> * guard_t) = match args with

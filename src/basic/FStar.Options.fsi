@@ -42,6 +42,9 @@ type options =
     | Reset
     | Restore
 
+val defaults                    : list<(string * option_val)>
+val docs                        : unit -> list<(string * string)>
+
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
@@ -74,6 +77,7 @@ val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
 val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
+val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
@@ -132,6 +136,7 @@ val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool
 val warn_default_effects        : unit    -> bool
 val warn_top_level_effects      : unit    -> bool
+val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool

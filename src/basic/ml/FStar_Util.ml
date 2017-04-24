@@ -406,6 +406,7 @@ let trim_string = BatString.trim
 let ends_with = BatString.ends_with
 let char_at s index = BatString.get s (Z.to_int index)
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
 let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
 let replace_char (s:string) (c1:char) (c2:char) =
@@ -668,15 +669,17 @@ let file_get_contents f =
   close_in ic;
   s
 let concat_dir_filename d f = Filename.concat d f
-let mkdir_clean nm =
+let mkdir clean nm =
   let remove_all_in_dir nm =
     let open Sys in
     Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
   let open Unix in
-  umask 0o002;
+  (match Sys.os_type with
+  | "Unix" -> ignore (umask 0o002)
+  | _ -> (* unimplemented*) ());
   try mkdir nm 0o777
   with Unix_error (EEXIST,_,_) ->
-    remove_all_in_dir nm
+    if clean then remove_all_in_dir nm
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do

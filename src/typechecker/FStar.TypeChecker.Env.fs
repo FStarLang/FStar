@@ -337,12 +337,12 @@ let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * 
               | Sig_declare_typ _ -> Some t
               | _ -> cache t
             in
-            begin match List.tryFind (lid_equals lid) lids with 
+            begin match List.tryFind (lid_equals lid) lids with
                   | None -> None
                   | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
             end
           | Binding_sig_inst (lids, s, us) ->
-            begin match List.tryFind (lid_equals lid) lids with 
+            begin match List.tryFind (lid_equals lid) lids with
                   | None -> None
                   | Some l -> Some (Inr (s, Some us), Ident.range_of_lid l)
             end
@@ -484,7 +484,7 @@ let lookup_bv env bv =
     let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
     | None -> raise (Error(variable_not_found bv, bvr))
-    | Some (t, r) -> Subst.set_use_range bvr t, 
+    | Some (t, r) -> Subst.set_use_range bvr t,
                      Range.set_use_range r bvr
 
 let try_lookup_lid env l =
@@ -684,7 +684,7 @@ let is_interpreted =
         | _ -> false
 
 let is_type_constructor env lid =
-    let mapper x = 
+    let mapper x =
         match fst x with
         | Inl _ -> Some false
         | Inr (se, _) ->
@@ -1043,6 +1043,11 @@ let push_module env (m:modul) =
 
 let push_univ_vars (env:env_t) (xs:univ_names) : env_t =
     List.fold_left (fun env x -> push_local_binding env (Binding_univ x)) env xs
+
+let open_universes_in env uvs terms =
+    let univ_subst, univ_vars = Subst.univ_var_opening uvs in
+    let env' = push_univ_vars env univ_vars in
+    env', univ_vars, List.map (Subst.subst univ_subst) terms
 
 let set_expected_typ env t =
   {env with expected_typ = Some t; use_eq=false}
