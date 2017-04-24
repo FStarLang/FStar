@@ -1114,4 +1114,4 @@ let rec bottom_fold (f : term -> term) (t : term) : term =
 
              | Tm_arrow (bs, k) -> tn //TODO
              | _ -> tn in
-    { t with n = tn }
+    f { t with n = tn }
