@@ -258,7 +258,7 @@ let fresh_rref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m0:t) (m1
   MH.contains (Map.sel m1 i) (as_mref r)
 
 let modifies_rref (r:rid) (s:Set.set nat) h0 h1 = 
-  Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
+  MH.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
 abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (requires (i<>j /\ includes i j))
