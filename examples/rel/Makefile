@@ -5,44 +5,46 @@ include ../Makefile.include
 
 uall: all
 
-all:\
-  Bijection.uver\
-  Equivalence.uver\
-  IfcComposeReify.uver\
-  IfcDeclassify.uver\
-  IfcDelimitedRelease.uver\
-  IfcDelimitedReleaseReify.uver\
-  IfcExample.uver\
-  IfcExampleReify0.uver\
-  IfcExampleReify1.uver\
-  IfcExampleReify2.uver\
-  IfcExampleReify3.uver\
-  IfcRecursiveHeapReify.uver\
-  IfcRecursiveReify.uver\
-  IfcReificationRegressionTest.uver\
-  IfcRules.uver\
-  IfcRulesReify.uver\
-  IfcTypechecker.uver\
-  Loops.uver\
-  Memo.uver\
-  NetKat.uver\
-  OneTimePad.uver\
-  Point.uver\
-  ProgramEquivalence.uver\
-  ProgramOptimizations.uver\
-  RandomTapes.uver\
-  Recursive.uver\
-  ReifyLong.uver\
-  Rel.uver\
-  StRel.uver\
-  Swap.uver\
-  UnionFind.Forest.uver\
-  UnionFind.uver\
-  UnionFind.Functions.uver\
-  While.uver\
-  WhileReify.uver \
-  OTP.uver \
-  ElGamal.uver
+FILES =\
+  Bijection.fst\
+  Equivalence.fst\
+  IfcComposeReify.fst\
+  IfcDeclassify.fst\
+  IfcDelimitedRelease.fst\
+  IfcDelimitedReleaseReify.fst\
+  IfcExample.fst\
+  IfcExampleReify0.fst\
+  IfcExampleReify1.fst\
+  IfcExampleReify2.fst\
+  IfcExampleReify3.fst\
+  IfcRecursiveHeapReify.fst\
+  IfcRecursiveReify.fst\
+  IfcReificationRegressionTest.fst\
+  IfcRules.fst\
+  IfcRulesReify.fst\
+  IfcTypechecker.fst\
+  Loops.fst\
+  Memo.fst\
+  NetKat.fst\
+  OneTimePad.fst\
+  Point.fst\
+  ProgramEquivalence.fst\
+  ProgramOptimizations.fst\
+  RandomTapes.fst\
+  Recursive.fst\
+  ReifyLong.fst\
+  Rel.fst\
+  StRel.fst\
+  Swap.fst\
+  UnionFind.Forest.fst\
+  UnionFind.fst\
+  UnionFind.Functions.fst\
+  While.fst\
+  WhileReify.fst \
+  OTP.fst \
+  ElGamal.fst
+
+all: $(subst fst,uver,$(FILES))
 
 %.fst-in:
 	@echo $(OTHERFLAGS)
@@ -51,8 +53,5 @@ pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free
 
 CFSTAR=$(subst CURRENT_DIR,examples/rel,$(CVERFSTAR))
-all-cver:
-	$(CFSTAR) rel.fst whilelanguage.fst ifc.fst ifcExample.fst
-	$(CFSTAR) bijection.fst random_tapes.fst
-	$(CFSTAR) recursive.fst
-	$(CFSTAR) delimited_release.fst
+
+all-cver: $(subst fst,ucver,$(FILES))
