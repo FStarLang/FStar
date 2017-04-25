@@ -151,10 +151,12 @@ echo "+++ PWD 2:"$PWD
 echo "-- Delete oldest ZIP file --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
 ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
+echo "+++ ZIP COUNT:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
   ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
   for ZIP_FILE in $ZIP_FILE_LIST
   do
+  echo "+++ Remove:"${ZIP_FILE}
      rm ${ZIP_FILE}
      git rm ${ZIP_FILE}
   done
@@ -171,6 +173,8 @@ if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
      git rm ${TAR_FILE}
   done
 fi
+
+echo "+++ PWD3:"$PWD
 
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
