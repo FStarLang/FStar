@@ -1459,10 +1459,10 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Platform.Bytes.sum_length.fuel_instrumented",
-        "@fuel_irrelevance_Platform.Bytes.sum_length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.cbytes",
+        "equation_Platform.Bytes.get_cbytes",
         "equation_Platform.Bytes.good_bytes", "equation_Prims.nat",
         "equation_with_fuel_Platform.Bytes.sum_length.fuel_instrumented",
         "fuel_guarded_inversion_Platform.Bytes.proto_bytes", "int_inversion",
