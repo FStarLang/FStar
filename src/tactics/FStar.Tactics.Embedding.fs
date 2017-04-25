@@ -163,6 +163,7 @@ let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
     let embedded_env = un_protect_embedded_term protected_embedded_env in
     let binders = unembed_list embedded_env unembed_binder in
     BU.print1 "Unembedding environment: %s\n" (Print.binders_to_string ", " binders);
+    // TODO: Why try????
     List.fold_left (fun env b ->
         match Env.try_lookup_bv env (fst b) with
         | None -> Env.push_binders env [b]

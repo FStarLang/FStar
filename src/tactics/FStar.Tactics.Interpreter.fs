@@ -197,25 +197,59 @@ let evaluate_user_tactic : tac<unit>
           | _ ->
             fail "Not a user tactic"))
 
+let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid ->
+        begin
+        // kinda unclean
+        match run (unembed_tactic_0 E.unembed_unit tactic) (proofstate_of_goal_ty e assertion) with
+        | Success (_, ps) ->
+            (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
+        | Failed (s,ps) ->
+            (assertion, []) // we clean the tactic out
+        end
+    | _ ->
+        (t, [])
 
+let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
+        : term * list<goal> =
+    let (tn', gs) =
+        match (SS.compress t).n with
+        | Tm_uinst (t,us) -> let (t',gs) = traverse f e t in
+                             (Tm_uinst (t', us), gs)
+        | Tm_meta (t, m) -> let (t', gs) = traverse f e t in
+                            (Tm_meta (t', m), gs)
+        | Tm_app (hd, args) ->
+                let (hd', gs1) = traverse f e hd in
+                let (as', gs2) = List.fold_right (fun (a,q) (as',gs) ->
+                                                      let (a', gs') = traverse f e a in
+                                                      ((a',q)::as', gs@gs'))
+                                                 args ([], []) in
+                (Tm_app (hd', as'), gs1@gs2)
+        | Tm_abs (bs, t, k) ->
+                // TODO: traverse types in bs and k?
+                let bs, topen = SS.open_term bs t in
+                let e' = Env.push_binders e bs in
+                let (topen', gs) = traverse f e' topen in
+                (Tm_abs (bs, SS.close bs topen', k), gs)
+        | x -> (x, []) in
+    let t' = { t with n = tn' } in
+    let t', gs' = f e t' in
+    (t', gs@gs')
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
-    let p = proofstate_of_goal_ty env goal in
     let initial = (1, []) in
-    match run (visit evaluate_user_tactic) p with
-    | Success (_, p2) ->
+    match traverse by_tactic_interp env goal with
+    | (t', gs) ->
+        BU.print2 "Main goal simplified to: %s |- %s\n"
+                (Env.all_binders env |> Print.binders_to_string ", ")
+                (Print.term_to_string t');
         let s = initial in
         let s = List.fold_left (fun (n,gs) g ->
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                      let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
-                     (n+1, (g.context, gt')::gs)) s p2.goals in
-        let s = List.fold_left (fun (n,gs) g ->
-                     BU.print2 "Got SMT goal #%s: %s\n" (string_of_int n) (goal_to_string g);
-                     let gt' = TcUtil.label ("SMT Goal #" ^ string_of_int n) dummyRange g.goal_ty in
-                     (n+1, (g.context, gt')::gs)) s p2.smt_goals in
-        let (_, gs) = s in gs
-    | Failed (msg, _) ->
-        BU.print1 "Tactic failed: %s\n" msg;
-        BU.print1 "Got goal: %s\n" (goal_to_string ({context=env; witness=None; goal_ty=goal}));
-        [env, goal]
+                     (n+1, (g.context, gt')::gs)) s gs in
+        let (_, gs) = s in
+        (env, t') :: gs

@@ -194,6 +194,9 @@ let tret (#a:Type) (x:a) : tactic a =
 let tbind (#a:Type) (#b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
     fun () -> let r = t () in f r ()
 
+let tbind' (#a:Type) (#b:Type) (t : tactic a) (f : tactic b) : tactic b =
+    fun () -> let r = t () in f ()
+
 // For some reason, a direct definition fails.
 let revert_all (bs:binders) : tactic unit =
     let rec _revert_all (bs:binders) : Tac unit =
