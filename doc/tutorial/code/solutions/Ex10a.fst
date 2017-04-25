@@ -24,7 +24,7 @@ let canRead db file =
 
 (* The acls reference stores the current access-control list, initially empty *)
 val acls: ref db
-let acls = alloc []
+let acls = ST.alloc []
 
 (*
    Here are two stateful functions which alter the access control list.

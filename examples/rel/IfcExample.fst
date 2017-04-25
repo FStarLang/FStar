@@ -13,10 +13,10 @@ assume val z : ref int
 assume val c : ref int 
 
 let env var = 
-  if var = x then Low
-  else if var = y then Low 
-    else if var = c then Low
-      else if var = z then High
+  if var = addr_of x then Low
+  else if var = addr_of y then Low 
+    else if var = addr_of c then Low
+      else if var = addr_of z then High
         else High
 
 (* 
