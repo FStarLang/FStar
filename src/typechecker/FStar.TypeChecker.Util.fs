@@ -251,7 +251,7 @@ let pat_as_exps allow_implicits env p
                let f, _ = U.arrow_formals t in
                let rec aux formals pats = match formals, pats with
                 | [], [] -> []
-                | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.fv_name.v))
+                | [], _::_ -> raise (Error(BU.format1 "Too many pattern arguments to constructor %s" (text_of_lid fv.fv_name.v), range_of_lid fv.fv_name.v))
                 | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
                     formals |> List.map (fun (t, imp) -> match imp with
                         | Some (Implicit inaccessible) ->

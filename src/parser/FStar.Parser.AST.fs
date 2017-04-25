@@ -16,57 +16,42 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.All
-//open FStar.Absyn
 open FStar.Errors
 module C = FStar.Syntax.Const
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
-//open FStar.Absyn.Syntax
 open FStar.Range
 open FStar.Ident
 open FStar
 open FStar.Util
 open FStar.Const
 
-let old_mk_tuple_lid n r =
-  let t = Util.format1 "Tuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
-let old_mk_tuple_data_lid n r =
-  let t = Util.format1 "MkTuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
-//let old_is_tuple_data_lid f n =
-//  Syntax.lid_equals f (mk_tuple_data_lid n Syntax.dummyRange)
-//
-//let old_is_dtuple_constructor (t:typ) = match t.n with
-//  | Typ_const l -> Util.starts_with l.v.str "Prims.DTuple"
-//  | _ -> false
-
-let old_mk_dtuple_lid n r =
-  let t = Util.format1 "DTuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
-let old_mk_dtuple_data_lid n r =
-  let t = Util.format1 "MkDTuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
  *)
+
+(* Application type *)
 type imp =
-    | FsTypApp
-    | Hash
-    | UnivApp
-    | Nothing
+  (* F# compatible <> type application *)
+  | FsTypApp
+  (* Implict argument application *)
+  | Hash
+  (* explicit universe application *)
+  | UnivApp
+  (* normal application *)
+  | Nothing
+
+(* Qualifier for a binder *)
 type arg_qualifier =
-    | Implicit
-    | Equality
+  (* If the binder correspond to an implicit *)
+  | Implicit
+  (* If we should use unification rather than subtyping on the type of this argument *)
+  | Equality
+
 type aqual = option<arg_qualifier>
 
-// let rec mutable makes no sense, so just don't do it
 type let_qualifier =
   | NoLetQualifier
   | Rec
@@ -76,6 +61,10 @@ type term' =
   | Wild
   | Const     of sconst
   | Op        of ident * list<term>
+  (* Assignment operation x <- t *)
+  | Assign    of ident * term
+
+  (* Type variable (F# compatibility ?) *)
   | Tvar      of ident
 
   (* universe variable *)
@@ -91,39 +80,44 @@ type term' =
   (* followed by one of its actions or "fields" *)
   | Projector of lid * ident
 
+  (* Discriminator of a datatype i.e. Some? *)
+  | Discrim   of lid
+
   (* data, type: bool in each arg records an implicit *)
   | Construct of lid * list<(term*imp)>
+
+  (* function space *)
+  | Product   of list<binder> * term
   | Abs       of list<pattern> * term
 
   (* aqual marks an explicitly provided implicit parameter *)
   | App       of term * term * imp
   | Let       of let_qualifier * list<(pattern * term)> * term
-  | LetOpen   of lid * term
   | Seq       of term * term
   | If        of term * term * term
   | Match     of term * list<branch>
   | TryWith   of term * list<branch>
+
+  (* A type anotation optionally accompanied by a tactic *)
   | Ascribed  of term * term * option<term>
   | Record    of option<term> * list<(lid * term)>
-  | Project   of term * lid
 
-  (* function space *)
-  | Product   of list<binder> * term
+  (* Projection out of a record i.e. t.x *)
+  | Project   of term * lid
 
   (* dependent tuple *)
   | Sum       of list<binder> * term
   | QForall   of list<binder> * list<list<term>> * term
   | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
+
+  (* A type with a bound identifier x:t *)
   | NamedTyp  of ident * term
   | Paren     of term
+  | LetOpen   of lid * term
+
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
-  | Labeled   of term * string * bool
-  | Assign    of ident * term
-
-  (* Some?  (formerly is_Some) *)
-  | Discrim   of lid
 
   (* attributes decorating a term *)
   | Attributes of list<term>
@@ -147,7 +141,8 @@ and pattern' =
   | PatName     of lid
   | PatTvar     of ident * option<arg_qualifier>
   | PatList     of list<pattern>
-  | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
+  (* dependent if flag is set *)
+  | PatTuple    of list<pattern> * bool
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term
   | PatOr       of list<pattern>
@@ -161,7 +156,7 @@ type expr = term
 
 // Documentation comment. May appear appear as follows:
 //  - Immediately before a top-level declaration
-//  - Immediately after a type constructor or record field
+//  - Immediately before a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
 type fsdoc = {
   comment:string;
@@ -187,7 +182,8 @@ type tycon' =
   | TyconAbstract
   | TyconAbbrev   of term
   | TyconRecord   of list<record_field>
-  | TyconVariant  of list<variant_constr> * bool (* if true, uses 'of' instead of ':' *)
+  (* if true, uses 'of' instead of ':' *)
+  | TyconVariant  of list<variant_constr> * bool
 
 type tycon = {
   tycon_id: ident ;
@@ -197,14 +193,14 @@ type tycon = {
   tyrange : range
 }
 
-type letbinding {
+type letbinding = {
   letbindingpat : pattern ;
   letbindingdef : term ;
   letbindingrange : range ;
   letbindingdoc : list<fsdoc>
 }
 
-(* TODO (KM) : thesse should be fsdocs and not comments *)
+(* TODO (KM) : these should be fsdocs and not comments *)
 type qualifier =
   (* * a declaration only visible to the current module *)
   | Private
@@ -247,7 +243,6 @@ type attributes_ = list<term>
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list<term>
-  | Doc of fsdoc
 
 type lift_op =
   | NonReifiableLift of term
@@ -289,26 +284,20 @@ and decl = {
   quals: qualifiers;
   attrs: attributes_
 }
+
 and effect_decl =
-  (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)
+  (* KM : Is there really a need for the generality of decl here instead of e.g. lid * term ? *)
   | DefineEffect   of ident * list<binder> * term * list<decl>
   | RedefineEffect of ident * list<binder> * term
 
 type modul =
   | Module of lid * list<decl>
-  | Interface of lid * list<decl> * bool (* flag to mark admitted interfaces *)
+  (* flag to mark admitted interfaces *)
+  | Interface of lid * list<decl> * bool
 type file = list<modul>
 type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
-let check_id id =
-  let first_char = String.substring id.idText 0 1 in
-  if String.lowercase first_char = first_char
-  then ()
-  else raise (Error(Util.format1 "Invalid identifer '%s';\
-                                  expected a symbol that begins with a lower-case character"
-                                  id.idText,
-                    id.idRange))
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
@@ -316,78 +305,83 @@ let at_most_one s r l = match l with
   | _ -> raise (Error (Util.format1 "At most one %s is allowed on declarations" s, r))
 
 let mk_decl d r decorations =
-  let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
   let attributes_ = at_most_one "attribute set" r (
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
   ) in
   let attributes_ = Util.dflt [] attributes_ in
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  { d=d; drange=r; doc=doc; quals=qualifiers; attrs=attributes_ }
+  { d=d; drange=r; quals=qualifiers; attrs=attributes_ ; doc=[]}
 
 let mk_binder b r i = {b=b; brange=r; aqual=i}
 let mk_term t r = {tm=t; range=r}
-let mk_uminus t rminus r l =
+let mk_uminus t rminus r =
   let t =
     match t.tm with
     | Const (Const_int (s, Some (Signed, width))) ->
-        Const (Const_int ("-" ^ s, Some (Signed, width)))
+      Const (Const_int ("-" ^ s, Some (Signed, width)))
     | _ ->
-        Op(mk_ident ("-", rminus), [t])
+      Op(mk_ident ("-", rminus), [t])
   in
-  mk_term t r l
+  mk_term t r
 
 let mk_pattern p r = {pat=p; prange=r}
+
+(* TODO : only used in tosyntax *)
 let un_curry_abs ps body = match body.tm with
-    | Abs(p', body') -> Abs(ps@p', body')
-    | _ -> Abs(ps, body)
+  | Abs(p', body') -> Abs(ps@p', body')
+  | _ -> Abs(ps, body)
+
 let mk_function branches r1 r2 =
   let x =
     let i = FStar.Syntax.Syntax.next_id () in
-    Ident.gen r1 in
+    Ident.gen r1
+  in
   mk_term (Abs([mk_pattern (PatVar(x,None)) r1],
-               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
-    r2 Expr
+               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1, branches)) r2))
+    r2
+
 let un_function p tm = match p.pat, tm.tm with
-    | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
-    | _ -> None
+  | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
+  | _ -> None
 
 let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
-let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r
+let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r
 
 let mkConsList r elts =
-  let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
-    List.fold_right (fun e tl -> consTerm r e tl) elts nil
+  let nil = mk_term (Construct(C.nil_lid, [])) r in
+  List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
 let mkLexList r elts =
-  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
+  let nil = mk_term (Construct(C.lextop_lid, [])) r in
   List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
 
 let ml_comp t =
-    let ml = mk_term (Name FStar.Syntax.Const.effect_ML_lid) t.range Expr in
-    let t = mk_term (App(ml, t, Nothing)) t.range Expr in
-    t
+  let ml = mk_term (Name FStar.Syntax.Const.effect_ML_lid) t.range in
+  let t = mk_term (App(ml, t, Nothing)) t.range in
+  t
 
 let tot_comp t =
-    let ml = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range Expr in
-    let t = mk_term (App(ml, t, Nothing)) t.range Expr in
-    t
+  let ml = mk_term (Name FStar.Syntax.Const.effect_Tot_lid) t.range in
+  let t = mk_term (App(ml, t, Nothing)) t.range in
+  t
 
 let mkApp t args r = match args with
   | [] -> t
   | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, args)) r Un
-      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
+    | Name s -> mk_term (Construct(s, args)) r
+    | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r) t args
 
 let mkRefSet r elts =
   let empty_lid, singleton_lid, union_lid =
-      C.tset_empty, C.tset_singleton, C.tset_union in
-  let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
-  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
-  let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
-  let union = mk_term (Var(set_lid_range union_lid r)) r Expr in
+    C.tset_empty, C.tset_singleton, C.tset_union
+  in
+  let empty = mk_term (Var(set_lid_range empty_lid r)) r in
+  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r in
+  let singleton = mk_term (Var (set_lid_range singleton_lid r)) r in
+  let union = mk_term (Var(set_lid_range union_lid r)) r in
   List.fold_right (fun e tl ->
     let e = mkApp ref_constr [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in
@@ -396,98 +390,102 @@ let mkRefSet r elts =
 let mkExplicitApp t args r = match args with
   | [] -> t
   | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
-      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
+    | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r
+    | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r) t args
 
 let mkAdmitMagic r =
-    let unit_const = mk_term(Const Const_unit) r Expr in
-    let admit =
-        let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
-        mkExplicitApp admit_name [unit_const] r in
-    let magic =
-        let magic_name = mk_term(Var(set_lid_range C.magic_lid r)) r Expr in
-        mkExplicitApp magic_name [unit_const] r in
-    let admit_magic = mk_term(Seq(admit, magic)) r Expr in
-    admit_magic
+  let unit_const = mk_term(Const Const_unit) r in
+  let admit =
+    let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r in
+    mkExplicitApp admit_name [unit_const] r
+  in
+  let magic =
+    let magic_name = mk_term(Var(set_lid_range C.magic_lid r)) r in
+    mkExplicitApp magic_name [unit_const] r
+  in
+  let admit_magic = mk_term(Seq(admit, magic)) r in
+  admit_magic
 
 let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 
 let focusBranches branches r =
-    let should_filter = Util.for_some fst branches in
-        if should_filter
-        then let _ = Errors.warn r "Focusing on only some cases" in
-         let focussed = List.filter fst branches |> List.map snd in
-                 focussed@[mkWildAdmitMagic r]
-        else branches |> List.map snd
+  let should_filter = Util.for_some fst branches in
+  if should_filter then
+    let _ = Errors.warn r "Focusing on only some cases" in
+    let focussed = List.filter fst branches |> List.map snd in
+    focussed@[mkWildAdmitMagic r]
+  else branches |> List.map snd
 
 let focusLetBindings lbs r =
-    let should_filter = Util.for_some fst lbs in
-        if should_filter
-        then let _ = Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
-         List.map (fun (f, lb) ->
-              if f then lb
-              else (fst lb, mkAdmitMagic r)) lbs
-        else lbs |> List.map snd
+  let should_filter = Util.for_some fst lbs in
+  if should_filter
+  then
+    let _ = Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+    List.map (fun (f, lb) ->
+      if f then lb
+      else (fst lb, mkAdmitMagic r)) lbs
+  else lbs |> List.map snd
 
 let mkFsTypApp t args r =
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 
-  (* TODO : is this valid or should it use Construct ? *)
 let mkTuple args r =
-  let cons = FStar.Syntax.Util.mk_tuple_data_lid (List.length args) r in
-  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
+  let cons = U.mk_tuple_data_lid (List.length args) r in
+  mkExplicitApp (mk_term (Name cons) r) args r
 
 let mkDTuple args r =
-  let cons = FStar.Syntax.Util.mk_dtuple_data_lid (List.length args) r in
-  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
+  let cons = U.mk_dtuple_data_lid (List.length args) r in
+  mkExplicitApp (mk_term (Name cons) r) args r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit =
-  let b = mk_binder (Annotated(id, t)) m implicit in
+(* Creates a binder id:t with aqual implicit optionally refined by refopt. *)
+(* If should_bind_var is true then it binds id in the refinement if any. *)
+(* Otherwise the refinement is assumed not to depend on id *)
+let mkRefinedBinder id t should_bind_var refopt r implicit =
+  let b = mk_binder (Annotated(id, t)) r implicit in
   match refopt with
-    | None -> b
-    | Some phi ->
-        if should_bind_var
-        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m )) m  implicit
-        else
-            let x = gen t.range in
-            let b = mk_binder (Annotated (x, t)) m  implicit in
-            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m )) m  implicit
+  | None -> b
+  | Some phi ->
+    if should_bind_var
+    then mk_binder (Annotated(id, mk_term (Refine(b, phi)) r)) r implicit
+    else
+      let x = gen t.range in
+      let b = mk_binder (Annotated (x, t)) r implicit in
+      mk_binder (Annotated(id, mk_term (Refine(b, phi)) r)) r implicit
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
-    let t = match phi_opt with
-        | None     -> t
-        | Some phi ->
-            if should_bind_pat
-            then
-                begin match pat.pat with
-                | PatVar (x,_) ->
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range  None, phi)) range 
-                | _ ->
-                    let x = gen t_range in
-                    let phi =
-                        (* match x with | pat -> phi | _ -> False *)
-                        let x_var = mk_term (Var (lid_of_ids [x])) phi.range Formula in
-                        let pat_branch = (pat, None, phi)in
-                        let otherwise_branch =
-                            (mk_pattern PatWild phi.range, None,
-                             mk_term (Name (lid_of_path ["False"] phi.range)) phi.range Formula)
-                        in
-                        mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range Formula
-                    in
-                    mk_term (Refine(mk_binder (Annotated(x, t)) t_range  None, phi)) range 
-                end
-            else
-                let x = gen t.range in
-                mk_term (Refine(mk_binder (Annotated (x, t)) t_range  None, phi)) range 
-     in
-     mk_pattern (PatAscribed(pat, t)) range
+  let t = match phi_opt with
+    | None     -> t
+    | Some phi ->
+      if not <| should_bind_pat
+      then
+        let x = gen t.range in
+        mk_term (Refine(mk_binder (Annotated (x, t)) t_range  None, phi)) range
+      else
+        match pat.pat with
+        | PatVar (x,_) ->
+          mk_term (Refine(mk_binder (Annotated(x, t)) t_range  None, phi)) range
+        | _ ->
+          let x = gen t_range in
+          let phi =
+            (* match x with | pat -> phi | _ -> False *)
+            let x_var = mk_term (Var (lid_of_ids [x])) phi.range in
+            let pat_branch = (pat, None, phi)in
+            let otherwise_branch =
+                (mk_pattern PatWild phi.range, None,
+                  mk_term (Name (lid_of_path ["False"] phi.range)) phi.range)
+            in
+            mk_term (Match (x_var, [pat_branch ; otherwise_branch])) phi.range
+          in
+          mk_term (Refine(mk_binder (Annotated(x, t)) t_range  None, phi)) range
+  in
+  mk_pattern (PatAscribed(pat, t)) range
 
 let rec extract_named_refinement t1  =
-    match t1.tm with
-        | NamedTyp(x, t) -> Some (x, t, None)
-        | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
-    | Paren t -> extract_named_refinement t
-        | _ -> None
+  match t1.tm with
+  | NamedTyp(x, t) -> Some (x, t, None)
+  | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
+  | Paren t -> extract_named_refinement t
+  | _ -> None
 
 (* Some helpers that parse.mly and parse.fsy will want too *)
 
@@ -506,69 +504,71 @@ let rec extract_named_refinement t1  =
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
 let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<decl>) : list<modul> =
-    let ((m_name, m_decl), cur) = cur in
-    match ds with
-    | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
-    | d :: ds ->
-        begin match d.d with
-        | TopLevelModule m' ->
-            as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
-        | _ ->
-            as_mlist out ((m_name, m_decl), d::cur) ds
-        end
+  let ((m_name, m_decl), cur) = cur in
+  match ds with
+  | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
+  | d :: ds ->
+    match d.d with
+    | TopLevelModule m' ->
+      as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
+    | _ ->
+      as_mlist out ((m_name, m_decl), d::cur) ds
 
 let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
   let d, ds = match ds with
     | d :: ds -> d, ds
+    (* If the fragment is empty we raise an exception which will be caught by by the parser driver *)
     | [] -> raise Empty_frag
   in
   match d.d with
   | TopLevelModule m ->
-      let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
-      let ms = as_mlist [] ((m,d), []) ds in
-      begin match List.tl ms with
-      | Module (m', _) :: _ ->
-          (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
-          let msg = "Support for more than one module in a file is deprecated" in
-          print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
-      | _ ->
-          ()
-      end;
-      Inl ms
+    let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
+    (* TODO : remove this annoying feature allowing multiple modules per-file (the *)
+    (* code would be so much simpler...) *)
+    let ms = as_mlist [] ((m,d), []) ds in
+    begin match List.tl ms with
+    | Module (m', _) :: _ ->
+      (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
+      let msg = "Support for more than one module in a file is deprecated" in
+      print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
+    | _ -> ()
+    end;
+    Inl ms
   | _ ->
-      let ds = d::ds in
-      List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
-        | _ -> ()
-      ) ds;
-      Inr ds
+    let ds = d::ds in
+    List.iter (function
+      | {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
+      | _ -> ()
+    ) ds;
+    Inr ds
 
 let compile_op arity s =
-    let name_of_char = function
-      |'&' -> "Amp"
-      |'@'  -> "At"
-      |'+' -> "Plus"
-      |'-' when (arity=1) -> "Minus"
-      |'-' -> "Subtraction"
-      |'/' -> "Slash"
-      |'<' -> "Less"
-      |'=' -> "Equals"
-      |'>' -> "Greater"
-      |'_' -> "Underscore"
-      |'|' -> "Bar"
-      |'!' -> "Bang"
-      |'^' -> "Hat"
-      |'%' -> "Percent"
-      |'*' -> "Star"
-      |'?' -> "Question"
-      |':' -> "Colon"
-      | _ -> "UNKNOWN" in
-    match s with
-    | ".[]<-" -> "op_String_Assignment"
-    | ".()<-" -> "op_Array_Assignment"
-    | ".[]" -> "op_String_Access"
-    | ".()" -> "op_Array_Access"
-    | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
+  let name_of_char = function
+    |'&' -> "Amp"
+    |'@'  -> "At"
+    |'+' -> "Plus"
+    |'-' when (arity=1) -> "Minus"
+    |'-' -> "Subtraction"
+    |'/' -> "Slash"
+    |'<' -> "Less"
+    |'=' -> "Equals"
+    |'>' -> "Greater"
+    |'_' -> "Underscore"
+    |'|' -> "Bar"
+    |'!' -> "Bang"
+    |'^' -> "Hat"
+    |'%' -> "Percent"
+    |'*' -> "Star"
+    |'?' -> "Question"
+    |':' -> "Colon"
+    | _ -> "UNKNOWN"
+  in
+  match s with
+  | ".[]<-" -> "op_String_Assignment"
+  | ".()<-" -> "op_Array_Assignment"
+  | ".[]" -> "op_String_Access"
+  | ".()" -> "op_Array_Access"
+  | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
 let compile_op' s =
   compile_op (-1) s
@@ -592,44 +592,44 @@ let comments_before r1 (_, _, r) =
 
 let fold_and_retrieve (f:list<'a> -> 'b -> list<'a> * 'b) (resources:list<'a>) (lfolded:list<'b>) =
   let fold_map_adaptator (acc, l) y = let acc, y = f acc y in acc, y::l in
-  let rest, rev_folded = List.fold_left fold_map_adaptator (fsdocs, []) lfolded in
-  rest, rev_folded
+  let rest, rev_folded = List.fold_left fold_map_adaptator (resources, []) lfolded in
+  rest, List.rev rev_folded
 
 let place_fsdoc_in_record_field fsdocs field =
-  let current_fsdocs, other_fsdocs = BU.take (comments_before field.field_range) fsdocs in
+  let current_fsdocs, other_fsdocs = take (comments_before field.field_range) fsdocs in
   assert (is_nil field.field_doc) ;
-  other_fsdocs, {field with field_doc = current_fsdocs}
+  other_fsdocs, {field with field_doc = List.map to_fsdoc current_fsdocs}
 
 let place_fsdoc_in_variant fsdocs variant =
-  let current_fsdocs, other_fsdocs = BU.take (comments_before variant.variant_range) fsdocs in
+  let current_fsdocs, other_fsdocs = take (comments_before variant.variant_range) fsdocs in
   assert (is_nil variant.variant_doc) ;
-  other_fsdocs, {variant with variant_doc = current_fsdocs}
+  other_fsdocs, {variant with variant_doc = List.map to_fsdoc current_fsdocs}
 
 let place_fsdoc_in_tycon fsdocs tyc =
-  let contained_fsdocs, fsdocs = BU.take (comments_before tyc.tyrange) fsdocs in
+  let contained_fsdocs, fsdocs = take (comments_before tyc.tyrange) fsdocs in
   assert (is_nil tyc.tydoc) ;
   let tyc = match tyc.tydata with
-    | TyconAbstract | TyconAbstract _ -> { tyc with tydoc = List.map to_fsdoc contained_fsdocs }
+    | TyconAbstract | TyconAbbrev _ -> { tyc with tydoc = List.map to_fsdoc contained_fsdocs }
     | TyconRecord fields ->
-      let type_fsdocs, fields_fsdocs = BU.take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
+      let type_fsdocs, fields_fsdocs = take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
       let residual_fsdocs, fields = fold_and_retrieve place_fsdoc_in_record_field fields_fsdocs fields in
       assert (is_nil residual_fsdocs) ;
-      {tyc with tydoc = type_fsdocs ; tydata = TyconRecord fields}
-    | TyconVariant variants ->
-      let type_fsdocs, variant_fsdocs = BU.take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
+      {tyc with tydoc = List.map to_fsdoc type_fsdocs ; tydata = TyconRecord fields}
+    | TyconVariant (variants, b) ->
+      let type_fsdocs, variants_fsdocs = take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
       let residual_fsdocs, variants = fold_and_retrieve place_fsdoc_in_variant variants_fsdocs variants in
       assert (is_nil residual_fsdocs) ;
-      {tyc with tydoc = type_fsdocs ; tydata = TyconVariant rev_variants}
+      {tyc with tydoc = List.map to_fsdoc type_fsdocs ; tydata = TyconVariant (variants, b)}
   in
   fsdocs, tyc
 
 let place_fsdoc_in_toplevellet fsdocs lb =
-  let contained_fsdocs, fsdocs = BU.take (comments_before tyc.tyrange) in
+  let contained_fsdocs, fsdocs = take (comments_before lb.letbindingrange) fsdocs in
   assert (is_nil lb.letbindingdoc) ;
-  fsdocs, {lb with letbindingdoc = contained_fsdocs}
+  fsdocs, {lb with letbindingdoc = List.map to_fsdoc contained_fsdocs}
 
 let place_fsdoc_in_decl fsdocs decl =
-  let contained_fsdocs, fsdocs = BU.take (comments_before decl.drange) in
+  let contained_fsdocs, fsdocs = take (comments_before decl.drange) fsdocs in
   assert (is_nil decl.doc) ;
   (* If we are placing documents in a let or a type declaration then we put the documentation at the next level *)
   let decl = match decl.d with
@@ -647,17 +647,19 @@ let place_fsdoc_in_decl fsdocs decl =
   in
   fsdocs, decl
 
-let place_fsdoc_before_elt (fsdocs, l) elt erange continuation =
-  let elt_line = line_of_pos (end_of_range erange) in
-  let is_standalone (_, ,r) = line_of_pos (end_of_range r) + 2 <= elt_line in
-  let standalone_fsdocs, fsdocs = BU.take is_standalone_fsdoc fsdocs in
-  let standalone_fsdocs = List.map (fun c -> Fsdoc (to_fsdoc c)) standalone_fsdocs in
-  let fsdocs, elt = continuation fsdocs elt in
+let place_fsdoc_before_decl (fsdocs, l) decl =
+  let decl_line = line_of_pos (end_of_range decl.drange) in
+  let is_standalone_fsdoc (_, _, r) = line_of_pos (end_of_range r) + 2 <= decl_line in
+  let standalone_fsdocs, fsdocs = take is_standalone_fsdoc fsdocs in
+  let standalone_fsdocs =
+    List.map (fun c -> let d = to_fsdoc c in mk_decl (Fsdoc d) d.fsdrange []) standalone_fsdocs
+  in
+  let fsdocs, decl = place_fsdoc_in_decl fsdocs decl in
   fsdocs, decl:: standalone_fsdocs @ l
 
 let place_fsdoc_in_decls fsdocs decls =
-  let place_fsdoc_before_decl acc decl = place_fsdoc_before_elt acc decl decl.drange place_fsdoc_in_decl in
-  fold_and_retrieve place_fsdoc_before_decl fsdocs decls
+  let fsdocs, rev_decls = List.fold_left  place_fsdoc_before_decl (fsdocs, []) decls in
+  fsdocs, List.rev rev_decls
 
 let place_fsdoc_in_modul fsdocs modul =
   match modul with
@@ -671,33 +673,38 @@ let place_fsdoc_in_modul fsdocs modul =
 let place_fsdoc_in_frag fsdocs frag =
   match frag with
   | Inr moduls ->
-      let fsdocs, moduls = fold_and_retrieve place_fsdoc_in_modul fsdocs moduls in
-      fsdocs, moduls
+    let fsdocs, moduls = fold_and_retrieve place_fsdoc_in_modul fsdocs moduls in
+    fsdocs, Inr moduls
   | Inl decls ->
-    let fsdocs, decls = place_fsdocs_in_decls fsdocs decls in
+    let fsdocs, decls = place_fsdoc_in_decls fsdocs decls in
     fsdocs, Inl decls
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+(* KM (04/17) : Do we still need these functions since we have toDocument ? *)
+
 let string_of_fsdoc (comment,keywords) =
-    comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
+  comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
 
 let string_of_let_qualifier = function
   | NoLetQualifier -> ""
   | Rec -> "rec"
   | Mutable -> "mutable"
+
 let to_string_l sep f l =
   String.concat sep (List.map f l)
+
 let imp_to_string = function
-    | Hash -> "#"
-    | _ -> ""
+  | Hash -> "#"
+  | UnivApp -> "u#"
+  | _ -> ""
+
 let rec term_to_string (x:term) = match x.tm with
   | Wild -> "_"
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
-  | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> P.const_to_string c
   | Op(s, xs) ->
       Util.format2 "%s(%s)" (text_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
@@ -799,13 +806,9 @@ let rec head_id_of_pat p = match p.pat with
   | PatAscribed(p, _) -> head_id_of_pat p
   | _ -> []
 
-let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
+let lids_of_let defs =  defs |> List.collect (fun lb -> head_id_of_pat lb.letbindingpat)
 
-let id_of_tycon = function
-  | TyconAbstract(i, _, _)
-  | TyconAbbrev(i, _, _, _)
-  | TyconRecord(i, _, _, _)
-  | TyconVariant(i, _, _, _) -> i.idText
+let id_of_tycon  tyc = tyc.tycon_id.idText
 
 let decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ l.str
@@ -815,7 +818,7 @@ let decl_to_string (d:decl) = match d.d with
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
   | Main _ -> "main ..."
   | Assume(i, _) -> "assume " ^ i.idText
-  | Tycon(_, tys) -> "type " ^ (tys |> List.map (fun (x,_)->id_of_tycon x) |> String.concat ", ")
+  | Tycon(_, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ i.idText
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))

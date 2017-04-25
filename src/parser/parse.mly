@@ -144,7 +144,7 @@ decoration:
       { Qualifier x }
 
 decl:
-  | ASSUME lid=uident COLON phi=formula
+  | ASSUME lid=uident COLON phi=noSeqTerm
       { mk_decl (Assume(lid, phi)) (rhs2 parseState 1 4) [ Qualifier Assumption ] }
 
   | d=decoration ds=list(decoration) decl=rawDecl
@@ -180,7 +180,7 @@ rawDecl:
       {
         let t = match flatten bss with
           | [] -> t
-          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
+          | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5)
         in Val(lid, t)
       }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
@@ -191,8 +191,7 @@ rawDecl:
       { SubEffect se }
 
 typeDecl:
-  (* TODO : change to lident with stratify *)
-  | lid=ident tparams=typars ascr_opt=ascribeKind? tcdef=typeDefinition
+  | lid=lident tparams=typars ascr_opt=ascribeKind? tcdef=typeDefinition
       { tcdef lid tparams ascr_opt }
 
 typars:
@@ -204,18 +203,18 @@ tvarinsts:
       { map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs }
 
 typeDefinition:
-  |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
+  |   { (fun id binders kopt -> TyconAbstract(id, binders, kopt)) }
   | EQUALS t=typ
-      { (fun id binders kopt ->  check_id id; TyconAbbrev(id, binders, kopt, t)) }
+      { (fun id binders kopt -> TyconAbbrev(id, binders, kopt, t)) }
   /* A documentation on the first branch creates a conflict with { x with a = ... }/{ a = ... } */
   | EQUALS LBRACE
       record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl)
    RBRACE
-      { (fun id binders kopt -> check_id id; TyconRecord(id, binders, kopt, record_field_decls)) }
+      { (fun id binders kopt -> TyconRecord(id, binders, kopt, record_field_decls)) }
   (* TODO : try to have the first bar optional now that we removed FSDOC *)
   (* having the first BAR optional using left-flexible list creates a s/r on FSDOC since any decl can be preceded by a FSDOC *)
   | EQUALS ct_decls=list(constructorDecl)
-    { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
+    { (fun id binders kopt -> TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
   | lid=lident COLON t=typ
@@ -435,7 +434,7 @@ binder:
   | aqualified_lid=aqualified(lidentOrUnderscore)
      {
        let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type_level q
+       mk_binder (Variable lid) (rhs parseState 1) q
      }
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
@@ -502,7 +501,7 @@ ascribeKind:
 
 (* Remove for stratify *)
 kind:
-  | t=tmArrow(tmNoEq) { {t with level=Kind} }
+  | t=tmArrow(tmNoEq) { t }
 
 
 
@@ -513,47 +512,47 @@ term:
   | e=noSeqTerm
       { e }
   | e1=noSeqTerm SEMICOLON e2=term
-      { mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) }
 
 
 noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=typ {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr }
+      { mk_term (Ascribed(e, t,tactic_opt)) (rhs2 parseState 1 4) }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4)
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Requires(t, None)) (rhs2 parseState 1 2) }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
-      { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Attributes es) (rhs2 parseState 1 2) }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
-      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
+      { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) }
   | IF e1=noSeqTerm THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
-        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) in
+        mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4)
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
          let branches = focusBranches (pbs) (rhs2 parseState 1 4) in
-         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4) Expr
+         mk_term (TryWith(e1, branches)) (rhs2 parseState 1 4)
       }
   | MATCH e=term WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
       {
         let branches = focusBranches pbs (rhs2 parseState 1 4) in
-        mk_term (Match(e, branches)) (rhs2 parseState 1 4) Expr
+        mk_term (Match(e, branches)) (rhs2 parseState 1 4)
       }
   | LET OPEN uid=quident IN e=term
-      { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr }
+      { mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) }
   | LET q=letqualifier lbs=separated_nonempty_list(AND,letbinding) IN e=term
       {
         let lbs = focusLetBindings lbs (rhs2 parseState 2 3) in
-        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5) Expr
+        mk_term (Let(q, lbs, e)) (rhs2 parseState 1 5)
       }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
       {
@@ -562,9 +561,9 @@ noSeqTerm:
       }
   | ASSUME e=atomicTerm
       { let a = set_lid_range assume_lid (rhs parseState 1) in
-        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) }
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1)) [e] (rhs2 parseState 1 2) }
   | id=lident LARROW e=noSeqTerm
-      { mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Assign(id, e)) (rhs2 parseState 1 3) }
 
 typ:
   | t=simpleTerm  { t }
@@ -573,7 +572,7 @@ typ:
       {
         match bs with
             | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
-            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
+            | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) NoSeqTerm
       }
 
 %inline quantifier:
@@ -593,7 +592,7 @@ conjunctivePat:
 simpleTerm:
   | e=tmIff { e }
   | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
-      { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) Un }
+      { mk_term (Abs(flatten pats, e)) (rhs2 parseState 1 4) }
 
 maybeFocusArrow:
   | RARROW          { false }
@@ -611,32 +610,32 @@ patternBranch:
 
 %inline maybeWhen:
   |                      { None }
-  | WHEN e=tmFormula     { Some e }
+  | WHEN e=tmNoSeqTerm     { Some e }
 
 
 
 tmIff:
   | e1=tmImplies IFF e2=tmIff
-      { mk_term (Op(mk_ident("<==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(mk_ident("<==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) NoSeqTerm }
   | e=tmImplies { e }
 
 tmImplies:
-  | e1=tmArrow(tmFormula) IMPLIES e2=tmImplies
-      { mk_term (Op(mk_ident("==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Formula }
-  | e=tmArrow(tmFormula)
+  | e1=tmArrow(tmNoSeqTerm) IMPLIES e2=tmImplies
+      { mk_term (Op(mk_ident("==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) NoSeqTerm }
+  | e=tmArrow(tmNoSeqTerm)
       { e }
 
 
-(* Tm : tmDisjunction (now tmFormula, containing EQUALS) or tmCons (now tmNoEq, without EQUALS) *)
+(* Tm : tmDisjunction (now tmNoSeqTerm, containing EQUALS) or tmCons (now tmNoEq, without EQUALS) *)
 tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
        let (aq_opt, dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
+         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) aq_opt
          | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
        in
-       mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
+       mk_term (Product([b], tgt)) (rhs2 parseState 1 3) 
      }
   | e=Tm { e }
 
@@ -645,14 +644,14 @@ tmArrow(Tm):
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
   | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
 
-tmFormula:
-  | e1=tmFormula DISJUNCTION e2=tmConjunction
-      { mk_term (Op(mk_ident("\\/", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) Formula }
+tmNoSeqTerm:
+  | e1=tmNoSeqTerm DISJUNCTION e2=tmConjunction
+      { mk_term (Op(mk_ident("\\/", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) NoSeqTerm }
   | e=tmConjunction { e }
 
 tmConjunction:
   | e1=tmConjunction CONJUNCTION e2=tmTuple
-      { mk_term (Op(mk_ident("/\\", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(mk_ident("/\\", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) NoSeqTerm }
   | e=tmTuple { e }
 
 tmTuple:
@@ -666,17 +665,17 @@ tmTuple:
 
 tmEq:
   | e1=tmEq BACKTICK id=qlident BACKTICK e2=tmEq
-      { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
+      { mkApp (mk_term (Var id) (rhs2 parseState 2 4)) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
   | e1=tmEq EQUALS e2=tmEq
-      { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3)}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
   | e1=tmEq COLON_EQUALS e2=tmEq
-      { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3)}
   | e1=tmEq PIPE_RIGHT e2=tmEq
-      { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3)}
   | e1=tmEq op=operatorInfix0ad12 e2=tmEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3)}
   | e=tmNoEq
       { e }
 
@@ -693,43 +692,40 @@ tmNoEq:
         let dom, res = match tail.tm with
             | Sum(dom', res) -> dom::dom', res
             | _ -> [dom], tail in
-        mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
+        mk_term (Sum(dom, res)) (rhs2 parseState 1 3)
       }
   | e1=tmNoEq MINUS e2=tmNoEq
-      { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3)}
   | e1=tmNoEq op=OPINFIX3 e2=tmNoEq
-      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3)}
   | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
-      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3)}
   | MINUS e=tmNoEq
-      { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
+      { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) }
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
           | None -> NamedTyp(id, e)
-          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) Type_level None, phi)
-        in mk_term t (rhs2 parseState 1 4) Type_level
+          | Some phi -> Refine(mk_binder (Annotated(id, e)) (rhs2 parseState 1 3) None, phi)
+        in mk_term t (rhs2 parseState 1 4)
       }
   | LBRACE e=recordExp RBRACE { e }
   | op=TILDE e=atomicTerm
-      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
+      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) NoSeqTerm }
   | e=appTerm { e }
 
 refineOpt:
-  | phi_opt=option(LBRACE phi=formula RBRACE {phi}) {phi_opt}
-
-%inline formula:
-  | e=noSeqTerm { {e with level=Formula} }
+  | phi_opt=option(LBRACE phi=noSeqTerm RBRACE {phi}) {phi_opt}
 
 recordExp:
   | record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (None, record_fields)) (rhs parseState 1) Expr }
+      { mk_term (Record (None, record_fields)) (rhs parseState 1) }
   | e=appTerm WITH  record_fields=right_flexible_nonempty_list(SEMICOLON, simpleDef)
-      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Record (Some e, record_fields)) (rhs2 parseState 1 3) }
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
-  | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
+  | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)
@@ -747,7 +743,7 @@ indexingTerm:
   | e1=atomicTermNotQUident op_exprs=nonempty_list(dotOperator)
       {
         List.fold_left (fun e1 (op, e2, r) ->
-            mk_term (Op(op, [ e1; e2 ])) (union_ranges e1.range r) Expr)
+            mk_term (Op(op, [ e1; e2 ])) (union_ranges e1.range r))
             e1 op_exprs
       }
   | e=atomicTerm
@@ -765,37 +761,37 @@ atomicTermQUident:
   | id=quident
     {
         let t = Name id in
-        let e = mk_term t (rhs parseState 1) Un in
+        let e = mk_term t (rhs parseState 1) in
               e
     }
   | id=quident DOT_LPAREN t=term RPAREN
     {
-      mk_term (LetOpen (id, t)) (rhs2 parseState 1 4) Expr
+      mk_term (LetOpen (id, t)) (rhs2 parseState 1 4)
     }
 
 atomicTermNotQUident:
-  | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
+  | UNDERSCORE { mk_term Wild (rhs parseState 1) }
   | ASSERT   { let a = set_lid_range assert_lid (rhs parseState 1) in
-               mk_term (Var a) (rhs parseState 1) Expr }
-  | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
-  | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
-  | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level }
-  | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level }
+               mk_term (Var a) (rhs parseState 1) }
+  | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) }
+  | c=constant { mk_term (Const c) (rhs parseState 1) }
+  | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) }
+  | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
   | LPAREN op=operator RPAREN
-      { mk_term (Op(op, [])) (rhs2 parseState 1 3) Un }
+      { mk_term (Op(op, [])) (rhs2 parseState 1 3) }
   | LENS_PAREN_LEFT e0=tmEq COMMA el=separated_nonempty_list(COMMA, tmEq) LENS_PAREN_RIGHT
       { mkDTuple (e0::el) (rhs2 parseState 1 5) }
   | e=projectionLHS field_projs=list(DOT id=qlident {id})
-      { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) Expr ) e field_projs }
+      { fold_left (fun e lid -> mk_term (Project(e, lid)) (rhs2 parseState 1 2) ) e field_projs }
   | BEGIN e=term END
       { e }
 
 (* Tm: atomicTermQUident or atomicTermNotQUident *)
 opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
-      { mk_term (Op(mk_ident(op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Expr }
+      { mk_term (Op(mk_ident(op, rhs parseState 1), [e])) (rhs2 parseState 1 2) }
 
 
 projectionLHS:
@@ -803,18 +799,18 @@ projectionLHS:
       { e }
   | e=qidentWithTypeArgs(quident, some(fsTypeArgs))
       { e }
-  | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
+  | LPAREN e=term sort_opt=option(SUBKIND t=simpleTerm {t}) RPAREN
       {
         let e1 = match sort_opt with
           | None -> e
-          | Some (level, t) -> mk_term (Ascribed(e,{t with level=level},None)) (rhs2 parseState 1 4) level
-        in mk_term (Paren e1) (rhs2 parseState 1 4) (e.level)
+          | Some t -> mk_term (Ascribed(e, t, None)) (rhs2 parseState 1 4)
+        in mk_term (Paren e1) (rhs2 parseState 1 4)
       }
   | LBRACK_BAR es=semiColonTermList BAR_RBRACK
       {
         let l = mkConsList (rhs2 parseState 1 3) es in
         let pos = (rhs2 parseState 1 3) in
-        mkExplicitApp (mk_term (Var (array_mk_array_lid)) pos Expr) [l] pos
+        mkExplicitApp (mk_term (Var (array_mk_array_lid)) pos) [l] pos
       }
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
@@ -823,9 +819,9 @@ projectionLHS:
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident
-      { mk_term (Projector (ns, id)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Projector (ns, id)) (rhs2 parseState 1 3) }
   | lid=quident QMARK
-      { mk_term (Discrim lid) (rhs2 parseState 1 2) Un }
+      { mk_term (Discrim lid) (rhs2 parseState 1 2) }
 
 fsTypeArgs:
   | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
@@ -837,15 +833,11 @@ qidentWithTypeArgs(Qid,TypeArgs):
   | id=Qid targs_opt=TypeArgs
       {
         let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rhs parseState 1) Un in
+        let e = mk_term t (rhs parseState 1) in
         match targs_opt with
         | None -> e
         | Some targs -> mkFsTypApp e targs (rhs2 parseState 1 2)
       }
-
-hasSort:
-  (* | SUBTYPE { Expr } *)
-  | SUBKIND { Type_level } (* Remove with stratify *)
 
   (* use flexible_list *)
 %inline semiColonTermList:
@@ -908,7 +900,7 @@ universeFrom:
          then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
                            ^ "The only allowed operator in that context is +.",
                            rhs parseState 2)) ;
-         mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
+         mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3)
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
@@ -917,23 +909,23 @@ universeFrom:
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.",
                           rhs parseState 1)) ;
-        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
+        let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) in
         mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
       }
 
 atomicUniverse:
   | UNDERSCORE
-      { mk_term Wild (rhs parseState 1) Expr }
+      { mk_term Wild (rhs parseState 1) }
   | n=INT
       {
         if snd n then
           errorR(Error("This number is outside the allowable range for representable integer constants",
                        lhs(parseState)));
-        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
+        mk_term (Const (Const_int (fst n, None))) (rhs parseState 1)
       }
-  | u=lident { mk_term (Uvar u) u.idRange Expr }
+  | u=lident { mk_term (Uvar u) u.idRange }
   | LPAREN u=universeFrom RPAREN
-    { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
+    { u (*mk_term (Paren u) (rhs2 parseState 1 3)*) }
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */
