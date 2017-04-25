@@ -103,6 +103,19 @@ let disjunction_monoid : monoid prop =
   assert (associativity_lemma prop mult) ;
   intro_monoid prop u mult
 
+let bool_and_monoid : monoid bool =
+  let and_ b1 b2 = b1 && b2 in
+  intro_monoid bool true and_
+
+let bool_or_monoid : monoid bool =
+  let or_ b1 b2 = b1 || b2 in
+  intro_monoid bool false or_
+
+let bool_xor_monoid : monoid bool =
+  let xor b1 b2 = (b1 || b2) && not (b1 && b2) in
+  intro_monoid bool false xor
+
+
 (* Definition of a morphism of monoid *)
 
 let monoid_morphism_unit_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =

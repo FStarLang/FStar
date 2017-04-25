@@ -858,16 +858,7 @@ let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
     | [] -> t_false
     | hd::tl -> List.fold_right mk_disj tl hd
-let mk_imp phi1 phi2  =
-    match (compress phi1).n with
-        | Tm_fvar tc when fv_eq_lid tc Const.false_lid -> t_true
-        | Tm_fvar tc when fv_eq_lid tc Const.true_lid  -> phi2
-        | _ ->
-            begin match (compress phi2).n with
-                | Tm_fvar tc when (fv_eq_lid tc Const.true_lid
-                                || fv_eq_lid tc Const.false_lid) -> phi2
-                | _ -> mk_binop timp phi1 phi2
-            end
+let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
