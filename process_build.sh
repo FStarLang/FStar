@@ -126,9 +126,11 @@ git checkout $FSTAR_BIN_BRANCH
 git pull origin master
 
 echo "-- copy files and add to Github --"
+echo "+++ PWD:"$PWD
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   echo "-- "$ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
+  echo "+++ git add call:git add "$BN_BINARYSPATH/$MINOR_ZIP_FILE
   git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
