@@ -288,9 +288,11 @@ let ask_and_report_errors env all_labels prefix query suffix =
                                 (Some scope)
                                 (hint_refinement_cb) ;
                             if (!refinement_ok) then
-                                if (core_ext_max_dist) >= 10 then
+                                let cutoff = 10 in
+                                if (core_ext_max_dist) >= cutoff then (
+                                    BU.print "\tHint-fallback smt.core.extend_patterns.max_distance=%s reached, aborting refinement." [ (BU.string_of_int cutoff) ];
                                     current_core := None
-                                else
+                                ) else
                                     refine_hint (core_ext_max_dist + 1)
                         ) in
                 (let z3cliopts_before = Options.z3_cliopt() in
