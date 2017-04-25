@@ -130,8 +130,12 @@ echo "+++ PWD:"$PWD
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   echo "-- "$ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
-  echo "+++ git add call:git add "$BN_BINARYSPATH/$MINOR_ZIP_FILE
-  git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
+  #echo "+++ git add call:git add "$BN_BINARYSPATH/$MINOR_ZIP_FILE
+  echo "+++ git add call:git add "$MINOR_ZIP_FILE
+  cd $BN_BINARYSPATH
+  echo "+++ PWD:"$PWD
+  #git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
+  git add $MINOR_ZIP_FILE
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "--" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
