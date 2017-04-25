@@ -3,7 +3,7 @@
 set -e
 if [[ $(uname) != "Linux" ]]; then
   echo "This script must be run on a case-sensitive OS"
-  exit 1
+  #exit 1
 fi
 
 hints=$(find . -iname '*.hints')
