@@ -38,6 +38,7 @@ cache/
 /bin/z3.exe
 /bin/z3-x86.exe
 /bin/z3-x64.exe
+/bin/fabc-make.exe
 /src/*/obj
 
 examples/*/*.ml
