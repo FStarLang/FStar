@@ -114,6 +114,8 @@ let parse fn =
        let nil_inst2 : list<string * list<(string * string)> * FStar.Range.range> = [] in
        Inl (frags, nil_inst1, nil_inst2)
   with
+    | Empty_frag ->
+        Inl (Inl [], [])
     | Error(msg, r) ->
       Inr (msg, r)
     | e ->

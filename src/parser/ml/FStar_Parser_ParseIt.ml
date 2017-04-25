@@ -75,6 +75,9 @@ let parse fn =
       in
       Inl FStar_Parser_LexFStar.(frags, flush_comments (), flush_fsdocs ())
   with
+    | FStar_Errors.Empty_frag ->
+      Inl (Inl [], [])
+
     | FStar_Errors.Error(msg, r) ->
       Inr (msg, r)
 

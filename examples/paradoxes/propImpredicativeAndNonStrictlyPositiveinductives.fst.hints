@@ -39,7 +39,8 @@
       [
         "@query", "eq2-interp",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.inj",
-        "interpretation_PropImpredicativeAndNonStrictlyPositiveInductives_Tm_abs_2a316223f9d248d7081e5ce78b203e99",
+        "equation_PropImpredicativeAndNonStrictlyPositiveInductives.prop",
+        "interpretation_PropImpredicativeAndNonStrictlyPositiveInductives_Tm_abs_50bcf4b52db65e2607f02a7b091b68ab",
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
       ],
       0

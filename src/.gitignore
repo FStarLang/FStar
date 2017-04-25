@@ -2,6 +2,8 @@ ocaml.ml
 fstarml.cm[io]
 fsharp-output
 /backend/
+u_boot_fsts
+u_ocaml-output
 
 [Bb]in/
 [Oo]bj/

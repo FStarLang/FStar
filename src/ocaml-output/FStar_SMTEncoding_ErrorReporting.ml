@@ -114,11 +114,11 @@ let label_goals:
                 match ropt with
                 | None  -> rng
                 | Some r1 ->
-                    let uu___102_297 = r1 in
+                    let uu___104_297 = r1 in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
-                        (uu___102_297.FStar_Range.use_range)
+                        (uu___104_297.FStar_Range.use_range)
                     } in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =
@@ -541,7 +541,7 @@ let detail_errors:
                 let uu____953 = FStar_Range.string_of_range r in
                 FStar_Util.print1_error
                   "OK: proof obligation at %s was proven\n" uu____953
-              else FStar_Errors.report r msg in
+              else FStar_Errors.err r msg in
         let elim labs =
           FStar_All.pipe_right labs
             (FStar_List.map

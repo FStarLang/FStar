@@ -75,7 +75,7 @@ type let_qualifier =
 type term' =
   | Wild
   | Const     of sconst
-  | Op        of string * list<term>
+  | Op        of ident * list<term>
   | Tvar      of ident
 
   (* universe variable *)
@@ -151,7 +151,7 @@ and pattern' =
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term
   | PatOr       of list<pattern>
-  | PatOp       of string
+  | PatOp       of ident
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
@@ -326,13 +326,13 @@ let mk_decl d r decorations =
 
 let mk_binder b r i = {b=b; brange=r; aqual=i}
 let mk_term t r = {tm=t; range=r}
-let mk_uminus t r l =
+let mk_uminus t rminus r l =
   let t =
     match t.tm with
     | Const (Const_int (s, Some (Signed, width))) ->
         Const (Const_int ("-" ^ s, Some (Signed, width)))
     | _ ->
-        Op("-", [t])
+        Op(mk_ident ("-", rminus), [t])
   in
   mk_term t r l
 
@@ -517,7 +517,11 @@ let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<dec
             as_mlist out ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+  let d, ds = match ds with
+    | d :: ds -> d, ds
+    | [] -> raise Empty_frag
+  in
   match d.d with
   | TopLevelModule m ->
       let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
@@ -583,90 +587,95 @@ let to_fsdoc (comment, kwd_args, range) =
 
 let is_nil = function | [] -> true | _ -> false
 
-let place_fsdoc_before_elt (fsdocs, l) elt erange continuation =
-  let elt_line = line_of_pos (end_of_range erange) in
-  let is_standalone (_, ,r) = line_of_pos (end_of_range r) + 2 <= elt_line in
-  let standalone_fsdocs, fsdocs = BU.take is_standalone_fsdoc fsdocs in
-  let standalone_fsdocs = List.map to_fsdoc standalone_fsdocs in
-  let fsdocs, elt = continuation fsdocs elt in
-  fsdocs, decl:: standalone_fsdocs @ l
+let comments_before r1 (_, _, r) =
+  line_of_pos (end_of_range r) <= line_of_pos (end_of_range r1)
 
-let place_fsdoc_in_record_field (fsdocs, l) field =
+let fold_and_retrieve (f:list<'a> -> 'b -> list<'a> * 'b) (resources:list<'a>) (lfolded:list<'b>) =
+  let fold_map_adaptator (acc, l) y = let acc, y = f acc y in acc, y::l in
+  let rest, rev_folded = List.fold_left fold_map_adaptator (fsdocs, []) lfolded in
+  rest, rev_folded
 
-let place_fsdoc_in_variant (fsdocs, l) variant
+let place_fsdoc_in_record_field fsdocs field =
+  let current_fsdocs, other_fsdocs = BU.take (comments_before field.field_range) fsdocs in
+  assert (is_nil field.field_doc) ;
+  other_fsdocs, {field with field_doc = current_fsdocs}
 
+let place_fsdoc_in_variant fsdocs variant =
+  let current_fsdocs, other_fsdocs = BU.take (comments_before variant.variant_range) fsdocs in
+  assert (is_nil variant.variant_doc) ;
+  other_fsdocs, {variant with variant_doc = current_fsdocs}
 
-let place_fsdoc_in_tycon (fsdocs, l) tyc =
-  let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range tyc.tyrange r) in
+let place_fsdoc_in_tycon fsdocs tyc =
+  let contained_fsdocs, fsdocs = BU.take (comments_before tyc.tyrange) fsdocs in
   assert (is_nil tyc.tydoc) ;
   let tyc = match tyc.tydata with
     | TyconAbstract | TyconAbstract _ -> { tyc with tydoc = List.map to_fsdoc contained_fsdocs }
     | TyconRecord fields ->
-      let type_fsdocs, fields_fsdocs =
-        BU.take (fun (_,_, r) -> range_before_range r tyc.tycon_id.idRange) contained_fsdocs
-      in
-      let residual_fsdocs, rev_fields = List.fold_left place_fsdoc_in_record_field (fields_dsdocs, []) fields in
+      let type_fsdocs, fields_fsdocs = BU.take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
+      let residual_fsdocs, fields = fold_and_retrieve place_fsdoc_in_record_field fields_fsdocs fields in
       assert (is_nil residual_fsdocs) ;
-      {tyc with tydoc = type_fsdocs ; tydata = TyconRecord (List.rev rev_fields)}
+      {tyc with tydoc = type_fsdocs ; tydata = TyconRecord fields}
     | TyconVariant variants ->
-      let type_fsdocs, variant_fsdocs =
-        BU.take (fun (_,_, r) -> range_before_range r tyc.tycon_id.idRange) contained_fsdocs
-      in
-      let residual_fsdocs, rev_variants = List.fold_left place_fsdoc_in_variant (variants_dsdocs, []) variants in
+      let type_fsdocs, variant_fsdocs = BU.take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
+      let residual_fsdocs, variants = fold_and_retrieve place_fsdoc_in_variant variants_fsdocs variants in
       assert (is_nil residual_fsdocs) ;
-      {tyc with tydoc = type_fsdocs ; tydata = TyconVariant (List.rev rev_variants)}
+      {tyc with tydoc = type_fsdocs ; tydata = TyconVariant rev_variants}
   in
-  fsdocs, tyc::l
+  fsdocs, tyc
 
 let place_fsdoc_in_toplevellet fsdocs lb =
-  let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range tyc.tyrange r) in
+  let contained_fsdocs, fsdocs = BU.take (comments_before tyc.tyrange) in
   assert (is_nil lb.letbindingdoc) ;
-  {lb with letbindingdoc = contained_fsdocs}
-  match decl.d with
-  | TopLevelLet (lq, defs) ->
-
-  | _ -> failwith "Impossible : not a TopLevelLet"
+  fsdocs, {lb with letbindingdoc = contained_fsdocs}
 
 let place_fsdoc_in_decl fsdocs decl =
-  let contained_fsdocs, fsdocs = BU.take (fun (_, _, r) -> range_contains_range decl.drange r) in
-  assert (match decl.doc with | [] -> true | _ -> false) ;
+  let contained_fsdocs, fsdocs = BU.take (comments_before decl.drange) in
+  assert (is_nil decl.doc) ;
+  (* If we are placing documents in a let or a type declaration then we put the documentation at the next level *)
   let decl = match decl.d with
     | Tycon (b, tycons) ->
-      let residual_fsdocs, rev_tycons = List.fold_left place_fsdoc_in_tycon (contained_fsdocs, []) tycons in
+      let residual_fsdocs, tycons = fold_and_retrieve place_fsdoc_in_tycon contained_fsdocs tycons in
       (* TODO : have a real error in that case *)
-      assert (match residual_fsdocs with | [] -> true | _ -> false) ;
-      Tycon (b, List.rev rev_tycons)
+      assert (is_nil residual_fsdocs) ;
+      { decl with d = Tycon (b, tycons) }
     | TopLevelLet (lq, defs) ->
-      let residual_fsdocs, rev_defs = List.fold_left  place_fsdoc_in_toplevellet contained_fsdocs defs in
-      assert (match residual_fsdocs with | [] -> true | _ -> false) ;
-      TopLevelLet (lq, List.rev rev_defs)
+      let residual_fsdocs, defs = fold_and_retrieve place_fsdoc_in_toplevellet contained_fsdocs defs in
+      assert (is_nil residual_fsdocs) ;
+      {decl with d = TopLevelLet (lq, defs) }
     | _ ->
       { decl with doc = List.map to_fsdoc fsdocs }
   in
   fsdocs, decl
 
+let place_fsdoc_before_elt (fsdocs, l) elt erange continuation =
+  let elt_line = line_of_pos (end_of_range erange) in
+  let is_standalone (_, ,r) = line_of_pos (end_of_range r) + 2 <= elt_line in
+  let standalone_fsdocs, fsdocs = BU.take is_standalone_fsdoc fsdocs in
+  let standalone_fsdocs = List.map (fun c -> Fsdoc (to_fsdoc c)) standalone_fsdocs in
+  let fsdocs, elt = continuation fsdocs elt in
+  fsdocs, decl:: standalone_fsdocs @ l
+
+let place_fsdoc_in_decls fsdocs decls =
+  let place_fsdoc_before_decl acc decl = place_fsdoc_before_elt acc decl decl.drange place_fsdoc_in_decl in
+  fold_and_retrieve place_fsdoc_before_decl fsdocs decls
+
 let place_fsdoc_in_modul fsdocs modul =
   match modul with
-  | Module (_, decls)
-  | Interface (_, decls, _) ->
-    let place_fsdoc_before_decl acc decl =
-      place_fsdoc_before_elt acc decl decl.drange place_fsdoc_in_decl
-    in
-    decls
-    |> List.fold_left place_fsdoc_before_decl (fsdocs, [])
-    |> snd
-    |> List.rev
+  | Module (m, decls) ->
+    let fsdocs, decls = place_fsdoc_in_decls fsdocs decls in
+    fsdocs, Module (m, decls)
+  | Interface (m, decls, b) ->
+    let fsdocs, decls = place_fsdoc_in_decls fsdocs decls in
+    fsdocs, Interface (m, decls, b)
 
 let place_fsdoc_in_frag fsdocs frag =
   match frag with
   | Inr moduls ->
-    let fold_map_adaptator f (acc, l) y = let acc, y = f acc y in acc, y::l
-    List.fold_left (fold_map_adaptator place_fsdoc_in_modul) (fsdocs, []) moduls
-    |> snd
-    |> List.rev
-
-  (* We don't care about fsdocs in interactive mode *)
-  | Inl _ -> frag
+      let fsdocs, moduls = fold_and_retrieve place_fsdoc_in_modul fsdocs moduls in
+      fsdocs, moduls
+  | Inl decls ->
+    let fsdocs, decls = place_fsdocs_in_decls fsdocs decls in
+    fsdocs, Inl decls
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
@@ -690,7 +699,8 @@ let rec term_to_string (x:term) = match x.tm with
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> P.const_to_string c
-  | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
+  | Op(s, xs) ->
+      Util.format2 "%s(%s)" (text_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id
   | Uvar id -> id.idText
   | Var l
@@ -763,9 +773,9 @@ and binder_to_string x =
   Util.format2 "%s%s" (aqual_to_string x.aqual) s
 
 and aqual_to_string = function
-   | Some Equality -> "$"
-   | Some Implicit -> "#"
-   | _ -> ""
+  | Some Equality -> "$"
+  | Some Implicit -> "#"
+  | _ -> ""
 
 and pat_to_string x = match x.pat with
   | PatWild -> "_"
@@ -779,15 +789,15 @@ and pat_to_string x = match x.pat with
   | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
-  | PatOp op ->  Util.format1 "(%s)" op
+  | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
 let rec head_id_of_pat p = match p.pat with
-        | PatName l -> [l]
-        | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
-        | PatApp(p, _) -> head_id_of_pat p
-        | PatAscribed(p, _) -> head_id_of_pat p
-        | _ -> []
+  | PatName l -> [l]
+  | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+  | PatApp(p, _) -> head_id_of_pat p
+  | PatAscribed(p, _) -> head_id_of_pat p
+  | _ -> []
 
 let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 

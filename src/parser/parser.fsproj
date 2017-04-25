@@ -81,7 +81,6 @@
     <Compile Include="parse.fs" />
     <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />
-    <Compile Include="FStar.Parser.Interleave.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
     <Compile Include="FStar.Parser.Driver.fs" />

@@ -31,6 +31,7 @@ open FStar.Ident
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+val as_interface: AST.modul -> AST.modul
 val desugar_file: env -> file -> env * list<S.modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
 val desugar_partial_modul: option<S.modul> -> env -> AST.modul -> env * Syntax.modul
