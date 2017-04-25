@@ -126,16 +126,17 @@ git checkout $FSTAR_BIN_BRANCH
 git pull origin master
 
 echo "-- copy files and add to Github --"
-echo "+++ PWD:"$PWD
+echo "+++ PWD:"$PWD #binaries
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   echo "-- "$ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   #echo "+++ git add call:git add "$BN_BINARYSPATH/$MINOR_ZIP_FILE
   echo "+++ git add call:git add "$MINOR_ZIP_FILE
-  cd $BN_BINARYSPATH
+  cd $BN_BINARYSPATH  #binaries/weekly
   echo "+++ PWD:"$PWD
-  #git add $BN_BINARYSPATH/$MINOR_ZIP_FILE
   git add $MINOR_ZIP_FILE
+  cd ..  #go back to binaries
+  echo "+++ PWD After:"$PWD 
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "--" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
@@ -144,6 +145,9 @@ if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
 fi
 
 # Now that latest package is added, remove the oldest one so only keeping most recent 4 packages
+echo "+++ PWD:"$PWD 
+cd $BN_BINARYSPATH
+echo "+++ PWD 2:"$PWD 
 echo "-- Delete oldest ZIP file --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
 ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
