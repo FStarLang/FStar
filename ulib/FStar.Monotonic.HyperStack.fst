@@ -1,4 +1,4 @@
-module FStar.HyperStack
+module FStar.Monotonic.HyperStack
 open FStar.Monotonic.HyperHeap
 
 open FStar.Preorder
