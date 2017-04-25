@@ -284,13 +284,13 @@ let freevar_eq: term -> term -> Prims.bool =
       | (FreeV x1,FreeV y1) -> fv_eq x1 y1
       | uu____731 -> false
 let freevar_sort: term -> sort =
-  fun uu___85_736  ->
-    match uu___85_736 with
+  fun uu___88_736  ->
+    match uu___88_736 with
     | { tm = FreeV x; freevars = uu____738; rng = uu____739;_} -> fv_sort x
     | uu____746 -> failwith "impossible"
 let fv_of_term: term -> fv =
-  fun uu___86_749  ->
-    match uu___86_749 with
+  fun uu___89_749  ->
+    match uu___89_749 with
     | { tm = FreeV fv; freevars = uu____751; rng = uu____752;_} -> fv
     | uu____759 -> failwith "impossible"
 let rec freevars: term -> (Prims.string* sort) Prims.list =
@@ -312,11 +312,11 @@ let free_variables: term -> fvs =
           FStar_Util.remove_dups fv_eq uu____830 in
         (FStar_ST.write t.freevars (Some fvs); fvs)
 let qop_to_string: qop -> Prims.string =
-  fun uu___87_842  ->
-    match uu___87_842 with | Forall  -> "forall" | Exists  -> "exists"
+  fun uu___90_842  ->
+    match uu___90_842 with | Forall  -> "forall" | Exists  -> "exists"
 let op_to_string: op -> Prims.string =
-  fun uu___88_845  ->
-    match uu___88_845 with
+  fun uu___91_845  ->
+    match uu___91_845 with
     | TrueOp  -> "true"
     | FalseOp  -> "false"
     | Not  -> "not"
@@ -338,8 +338,8 @@ let op_to_string: op -> Prims.string =
     | ITE  -> "ite"
     | Var s -> s
 let weightToSmt: Prims.int Prims.option -> Prims.string =
-  fun uu___89_850  ->
-    match uu___89_850 with
+  fun uu___92_850  ->
+    match uu___92_850 with
     | None  -> ""
     | Some i ->
         let uu____853 = FStar_Util.string_of_int i in
@@ -1139,8 +1139,8 @@ let termToSmt: Prims.string -> term -> Prims.string =
         else s in
       aux (Prims.parse_int "0") (Prims.parse_int "0") [] t
 let caption_to_string: Prims.string Prims.option -> Prims.string =
-  fun uu___90_2830  ->
-    match uu___90_2830 with
+  fun uu___93_2830  ->
+    match uu___93_2830 with
     | None  -> ""
     | Some c ->
         let uu____2833 =
@@ -1160,8 +1160,8 @@ let rec declToSmt: Prims.string -> decl -> Prims.string =
       | Caption c ->
           let uu____2859 =
             FStar_All.pipe_right (FStar_Util.splitlines c)
-              (fun uu___91_2861  ->
-                 match uu___91_2861 with | [] -> "" | h::t -> h) in
+              (fun uu___94_2861  ->
+                 match uu___94_2861 with | [] -> "" | h::t -> h) in
           FStar_Util.format1 "\n; %s" uu____2859
       | DeclFun (f,argsorts,retsort,c) ->
           let l = FStar_List.map strSort argsorts in
@@ -1354,10 +1354,10 @@ let mk_Valid: term -> term =
                        freevars = uu____3325; rng = uu____3326;_}::[])
         -> let uu____3333 = unboxBool t1 in mkNot uu____3333 t1.rng
     | App (Var "Prims.b2t",t1::[]) ->
-        let uu___92_3336 = unboxBool t1 in
+        let uu___95_3336 = unboxBool t1 in
         {
-          tm = (uu___92_3336.tm);
-          freevars = (uu___92_3336.freevars);
+          tm = (uu___95_3336.tm);
+          freevars = (uu___95_3336.freevars);
           rng = (t.rng)
         }
     | uu____3339 -> mkApp ("Valid", [t]) t.rng

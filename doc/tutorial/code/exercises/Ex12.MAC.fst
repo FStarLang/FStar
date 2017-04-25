@@ -34,10 +34,10 @@ let log = ST.alloc #(list entry) []
 val keygen: p:(text -> Type) -> ML (pkey p)
 val mac:    k:key -> t:text{key_prop k t} -> ST tag 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> modifies !{ log } h h'))
+  (ensures (fun h x h' -> Heap.modifies (Heap.only log) h h'))
 val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> modifies !{} h h'))
+  (ensures (fun h x h' -> Heap.modifies Set.empty h h'))
 // END: MacSpec
 
 (* ---- implementation *)

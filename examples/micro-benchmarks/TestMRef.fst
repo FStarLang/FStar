@@ -10,8 +10,8 @@ assume val y : ref int
 assume val z : ref int
 
 val test_frame_write_ref : unit -> ST unit
-                              (requires (fun h -> y =!= z))
-                              (ensures (fun h0 x h1 -> modifies (TSet.singleton (Ref y)) h0 h1))
+                              (requires (fun h -> addr_of y =!= addr_of z))
+                              (ensures (fun h0 x h1 -> modifies (only y) h0 h1))
 let test_frame_write_ref u =
   let v = !z in
   y := 17;
@@ -19,8 +19,8 @@ let test_frame_write_ref u =
   assert (v=v')
 
 val test_frame_write_mref : unit -> ST unit
-                              (requires (fun h -> y =!= MRef.as_ref x))
-                              (ensures (fun h0 x h1 -> modifies (TSet.singleton (Ref y)) h0 h1))
+                              (requires (fun h -> addr_of y =!= addr_of (MRef.as_ref x)))
+                              (ensures (fun h0 x h1 -> modifies (only y) h0 h1))
 let test_frame_write_mref u =
   let v = MRef.read x in
   y := 17;
@@ -29,7 +29,7 @@ let test_frame_write_mref u =
 
 val test_frame_alloc_mref : unit -> ST unit
                               (requires (fun h -> MRef.contains h x))
-                              (ensures (fun h0 x h1 -> modifies (TSet.singleton (Ref y)) h0 h1))
+                              (ensures (fun h0 x h1 -> modifies (only y) h0 h1))
 let test_frame_alloc_mref u =
   let h0 = get() in
   assert (MRef.contains h0 x);
@@ -50,8 +50,8 @@ let test_frame_alloc_mref u =
 
 
 val test_write_mref : unit -> ST unit
-                              (requires (fun h -> True))
-                              (ensures (fun h0 u h1 -> modifies (TSet.singleton (Ref (MRef.as_ref x))) h0 h1))
+                              (requires (fun h -> MRef.contains h x))
+                              (ensures (fun h0 u h1 -> modifies (only (MRef.as_ref x)) h0 h1))
 let test_write_mref u =
   let v = MRef.read x in
   MRef.write x (v + 1)
