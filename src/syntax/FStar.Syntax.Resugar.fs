@@ -733,17 +733,21 @@ and resugar_match_pat (p:S.pat) : A.pattern =
         mk (A.PatTuple(args, false))
 
     | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, args) ->
-      let fields = fields |> List.map (fun f -> FStar.Ident.lid_of_ids [f]) in
-      let args = args |> List.map (fun (p, b) -> aux p) in 
+      // reverse the fields and args list to match them since the args added by the type checker
+      // are inserted in the front of the args list.
+      let fields = fields |> List.map (fun f -> FStar.Ident.lid_of_ids [f]) |> List.rev in
+      let args = args |> List.map (fun (p, b) -> aux p) |> List.rev in 
       // make sure the fields and args are of the same length.
       let rec map2 l1 l2  = match (l1, l2) with
         | ([], []) -> []
-        | ([], hd::tl) -> []
-        | (hd::tl, []) -> (hd, mk (A.PatWild)) :: map2 tl []
+        | ([], hd::tl) -> [] (* new args could be added by the type checker *)
+        | (hd::tl, []) -> (hd, mk (A.PatWild)) :: map2 tl [] (* no new fields should be added*)
         | (hd1::tl1, hd2::tl2) -> (hd1, hd2) :: map2 tl1 tl2
       in
-      let args = map2 fields args in
+      // reverse back the args list
+      let args = map2 fields args |> List.rev in
       mk (A.PatRecord(args))     
+      
 
     | Pat_cons (fv, args) ->
       let args = List.map (fun (p, b) -> aux p) args in
