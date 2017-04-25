@@ -446,8 +446,9 @@ let tscheme_to_string (us, t) = U.format2 "%s%s" (enclose_universes <| univ_name
 let eff_decl_to_string for_free ed =
     let actions_to_string actions =
         actions |> List.map (fun a ->
-          U.format4 "%s%s : %s = %s"
+          U.format5 "%s%s %s : %s = %s"
             (sli a.action_name)
+            (binders_to_string " " a.action_params)
             (enclose_universes <| univ_names_to_string a.action_univs)
             (term_to_string a.action_typ)
             (term_to_string a.action_defn))

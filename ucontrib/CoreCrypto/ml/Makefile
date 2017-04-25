@@ -103,7 +103,7 @@ test: Tests.exe
 clean:
 	$(MAKE) -C $(DB) clean
 	$(MAKE) -C $(PLATFORM) clean
-	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
+	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
 depend:
 	$(OCAMLDEP) *.ml *.mli > .depend

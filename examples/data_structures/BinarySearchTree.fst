@@ -17,17 +17,12 @@ let rec all p t =
   | Leaf -> true
   | Node n t1 t2 -> p n && all p t1 && all p t2
 
-val lt : int -> int -> Tot bool
-let lt n1 n2 = n1 < n2
-
-val gt : int -> int -> Tot bool
-let gt n1 n2 = n1 > n2
-
 val is_bst : tree -> Tot bool
 let rec is_bst t =
   match t with
   | Leaf -> true
-  | Node n t1 t2 -> all (gt n) t1 && all (lt n) t2 && is_bst t1 && is_bst t2
+  | Node n t1 t2 -> all (fun n' -> n > n') t1 &&
+                    all (fun n' -> n < n') t2 && is_bst t1 && is_bst t2
 
 val search : x:int -> t:tree{is_bst t} ->
   Tot (r:bool{r <==> in_tree x t})

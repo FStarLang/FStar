@@ -72,35 +72,39 @@ type env = {
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
   scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
-  exported_ids:         BU.smap<exported_id_set>;       (* identifiers (stored as strings for efficiency)
+  exported_ids:         BU.smap<exported_id_set>;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
                                                              not "private"/"abstract" definitions which it is
                                                              enough to just remove from the sigmap. Formally,
                                                              iden is in exported_ids[ModulA] if, and only if,
                                                              there is no 'include ModulB' (with ModulB.iden
-                                                             defined or reachable) after iden in ModulA.
-                                                           *)
-  trans_exported_ids:   BU.smap<exported_id_set>;       (* transitive version of exported_ids along the
+                                                             defined or reachable) after iden in ModulA. *)
+  trans_exported_ids:   BU.smap<exported_id_set>;         (* transitive version of exported_ids along the
                                                              "include" relation: an identifier is in this set
                                                              for a module if and only if it is defined either
-                                                             in this module or in one of its included modules.
-                                                           *)
-  includes:             BU.smap<(ref<(list<lident>)>)>; (* list of "includes" declarations for each module. *)
+                                                             in this module or in one of its included modules. *)
+  includes:             BU.smap<(ref<(list<lident>)>)>;   (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  sigmap:               BU.smap<(sigelt * bool)>;       (* bool indicates that this was declared in an interface file *)
-  iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
+  sigmap:               BU.smap<(sigelt * bool)>;         (* bool indicates that this was declared in an interface file *)
+  iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
+  remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
+  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
 }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
   | Eff_name  of sigelt * lident
 
-
-
+let set_iface env b = {env with iface=b}
+let iface e = e.iface
+let set_admitted_iface e b = {e with admitted_iface=b}
+let admitted_iface e = e.admitted_iface
+let set_expect_typ e b = {e with expect_typ=b}
+let expect_typ e = e.expect_typ
 let all_exported_id_kinds: list<exported_id_kind> = [ Exported_id_field; Exported_id_term_type ]
 let transitive_exported_ids env lid =
     let module_name = Ident.string_of_lid lid in
@@ -108,14 +112,28 @@ let transitive_exported_ids env lid =
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
+let set_current_module e l = {e with curmodule=Some l}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
+let iface_decls env l =
+    match env.remaining_iface_decls |>
+          List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
+    | None -> None
+    | Some (_, decls) -> Some decls
+let set_iface_decls env l ds =
+    let _, rest =
+        FStar.List.partition
+            (fun (m, _) -> Ident.lid_equals l m)
+            env.remaining_iface_decls in
+    {env with remaining_iface_decls=(l, ds)::rest}
 let qual = qual_id
 let qualify env id =
     match env.curmonad with
     | None -> qual (current_module env) id
     | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
+let syntax_only env = env.syntax_only
+let set_syntax_only env b = { env with syntax_only = b }
 let new_sigmap () = BU.smap_create 100
 let empty_env () = {curmodule=None;
                     curmonad=None;
@@ -129,7 +147,10 @@ let empty_env () = {curmodule=None;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false;
-                    docs=new_sigmap()}
+                    docs=new_sigmap();
+                    remaining_iface_decls=[];
+                    syntax_only=false}
+
 let sigmap env = env.sigmap
 let has_all_in_scope env =
   List.existsb (fun (m, _) ->
@@ -361,6 +382,26 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
     in
     aux env.scope_mods
 
+(** Forbid self-references to current module (#451) *)
+
+let fail_if_curmodule env ns_original ns_resolved =
+  if lid_equals ns_resolved (current_module env)
+  then
+    if lid_equals ns_resolved FStar.Syntax.Const.prims_lid
+    then () // disable this check for Prims, because of Prims.unit, etc.
+    else raise (Error (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str, range_of_lid ns_original))
+  else ()
+
+let fail_if_qualified_by_curmodule env lid =
+  match lid.ns with
+  | [] -> ()
+  | _ ->
+    let modul_orig = lid_of_ids lid.ns in
+    begin match resolve_module_name env modul_orig true with
+    | Some modul_res -> fail_if_curmodule env modul_orig modul_res
+    | _ -> ()
+    end
+
 let namespace_is_open env lid =
   List.existsb (function
                 | Open_module_or_namespace (ns, Open_namespace) -> lid_equals lid ns
@@ -386,6 +427,10 @@ let shorten_module_path env ids is_full_path =
          match aux ns_rev_prefix ns_last_id with
          | None -> ([], ids)
          | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
+
+let shorten_lid env lid =
+  let (_, short) = shorten_module_path env lid.ns true in
+  lid_of_ns_and_id short lid.ident
 
 (* Generic name resolution. *)
 
@@ -860,6 +905,7 @@ let push_namespace env ns =
      then (ns, Open_namespace)
      else raise (Error(BU.format1 "Namespace %s cannot be found" (Ident.text_of_lid ns), Ident.range_of_lid ns))
   | Some ns' ->
+     let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
      push_scope_mod env (Open_module_or_namespace (ns', kd))
@@ -867,8 +913,10 @@ let push_namespace env ns =
 let push_include env ns =
     (* similarly to push_namespace in the case of modules, we allow
        module abbrevs, but not namespace resolution *)
+    let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
+      let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
       (* update the list of includes *)
@@ -906,7 +954,8 @@ let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
-  then push_scope_mod env (Module_abbrev (x,l))
+  then let _ = fail_if_curmodule env l l in
+       push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
 let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =

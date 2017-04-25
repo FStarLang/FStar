@@ -1,33 +1,6 @@
 %{
 (*
- Known (intentional) ambiguities: 8 s/r conflicts in total; resolved by shifting
-   4 s/r conflicts on BAR
-      function | P -> match with | Q -> _ | R -> _
-      function | P -> function ...  (x 2)
-      function | P -> try e with | ...
-
-   1 s/r conflict on SEMICOLON
-       fun x -> e1 ; e2
-     is parsed as
-        (fun x -> e1; e2)
-     rather than
-        (fun x -> e1); e2
-
-   2 s/r conflict on DOT
-      A.B ^ .C  (x 2)
-
-   1 s/r conflict on LBRACE
-
-      Consider:
-          let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
-
-      This is parsed as:
-        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
-      rather than:
-        let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
-
-      Analogous ambiguities with -> and * as well.
-
+ We are expected to have only 6 shift-reduce conflicts.
  A lot (142) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
@@ -244,7 +217,7 @@ option___anonymous_5_:
 let x =
   let tactic = tactic0 in
   let _1 = _10 in
-                                                            (tactic)
+                                                              (tactic)
 in
     ( Some x )}
 
@@ -605,24 +578,12 @@ separated_nonempty_list_SEMICOLON_effectDecl_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__:
-  qlident EQUALS tuplePattern
-    {let (x0, _20, y0) = ($1, (), $3) in
-let x =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
-      ( (x, y) )
-in
+separated_nonempty_list_SEMICOLON_fieldPattern_:
+  fieldPattern
+    {let x = $1 in
     ( [ x ] )}
-| qlident EQUALS tuplePattern SEMICOLON separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__
-    {let (x0, _20, y0, _2, xs) = ($1, (), $3, (), $5) in
-let x =
-  let y = y0 in
-  let _2 = _20 in
-  let x = x0 in
-      ( (x, y) )
-in
+| fieldPattern SEMICOLON separated_nonempty_list_SEMICOLON_fieldPattern_
+    {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
 separated_nonempty_list_SEMICOLON_tuplePattern_:
@@ -634,13 +595,13 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     ( x :: xs )}
 
 inputFragment:
-  boption___anonymous_0_ decl list_decl_ option_mainDecl_ EOF
-    {let (is_light, d, decls, main_opt, _5) = ($1, $2, $3, $4, ()) in
+  boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
+    {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
       (
         let decls = match main_opt with
            | None -> decls
            | Some main -> decls @ [main]
-        in as_frag is_light (rhs parseState 1) d decls
+        in as_frag is_light (rhs parseState 1) decls
       )}
 
 mainDecl:
@@ -715,7 +676,10 @@ rawDecl:
 | LET letqualifier separated_nonempty_list_AND_letbinding_
     {let (_1, q, lbs) = ($1, $2, $3) in
       (
-        let lbs = focusLetBindings lbs (rhs2 parseState 1 3) in
+        let r = rhs2 parseState 1 3 in
+        let lbs = focusLetBindings lbs r in
+        if q <> Rec && List.length lbs <> 1
+        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
         TopLevelLet(q, lbs)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
@@ -830,9 +794,9 @@ effectDefinition:
     ( DefineEffect(lid, bs, typ, eds) )}
 
 effectDecl:
-  lident EQUALS simpleTerm
-    {let (lid, _2, t) = ($1, (), $3) in
-    ( mk_decl (Tycon (false, [TyconAbbrev(lid, [], None, t), None])) (rhs2 parseState 1 3) [] )}
+  lident binders EQUALS simpleTerm
+    {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
+    ( mk_decl (Tycon (false, [TyconAbbrev(lid, action_params, None, t), None])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -863,9 +827,9 @@ in
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
-	          | "lift_wp", "lift" -> tm1, tm2
-	          | "lift", "lift_wp" -> tm2, tm1
-	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | "lift_wp", "lift" -> tm1, tm2
+                  | "lift", "lift_wp" -> tm2, tm1
+                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -910,9 +874,9 @@ in
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
-	          | "lift_wp", "lift" -> tm1, tm2
-	          | "lift", "lift_wp" -> tm2, tm1
-	          | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | "lift_wp", "lift" -> tm1, tm2
+                  | "lift", "lift_wp" -> tm2, tm1
+                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -929,7 +893,7 @@ qualifier:
 | UNFOLDABLE
     {let _1 = () in
                   (
-	      raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+              raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
    )}
 | INLINE_FOR_EXTRACTION
     {let _1 = () in
@@ -1000,7 +964,7 @@ aqual:
   EQUALS
     {let _1 = () in
               ( print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
-				        Equality )}
+                                        Equality )}
 | aqualUniverses
     {let q = $1 in
                      ( q )}
@@ -1052,7 +1016,7 @@ let pats =
       ( xs )
 in
       ( mk_pattern (PatList pats) (rhs2 parseState 1 3) )}
-| LBRACE separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__ RBRACE
+| LBRACE separated_nonempty_list_SEMICOLON_fieldPattern_ RBRACE
     {let (_1, record_pat, _3) = ((), $2, ()) in
       ( mk_pattern (PatRecord record_pat) (rhs2 parseState 1 3) )}
 | LENS_PAREN_LEFT constructorPattern COMMA separated_nonempty_list_COMMA_constructorPattern_ LENS_PAREN_RIGHT
@@ -1151,9 +1115,33 @@ let op =
        ( op )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN PIPE_RIGHT RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "|>" )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN COLON_EQUALS RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( ":=" )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN COLON_COLON RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "::" )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | UNDERSCORE
     {let _1 = () in
       ( mk_pattern PatWild (rhs parseState 1) )}
+| HASH UNDERSCORE
+    {let (_1, _2) = ((), ()) in
+      ( mk_pattern (PatVar (gen (rhs2 parseState 1 2), Some Implicit)) (rhs parseState 1) )}
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
@@ -1163,6 +1151,20 @@ in
 | quident
     {let uid = $1 in
       ( mk_pattern (PatName uid) (rhs parseState 1) )}
+
+fieldPattern:
+  qlident EQUALS tuplePattern
+    {let (x0, _20, y0) = ($1, (), $3) in
+let p =
+  let y = y0 in
+  let _2 = _20 in
+  let x = x0 in
+      ( (x, y) )
+in
+      ( p )}
+| qlident
+    {let lid = $1 in
+      ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
   atomicPattern
@@ -1374,6 +1376,27 @@ let id =
        ( op )
 in
     ( mk_ident(compile_op' id, rhs parseState 2) )}
+| LPAREN PIPE_RIGHT RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let id =
+  let op = op0 in
+       ( "|>" )
+in
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
+| LPAREN COLON_EQUALS RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let id =
+  let op = op0 in
+       ( ":=" )
+in
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
+| LPAREN COLON_COLON RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let id =
+  let op = op0 in
+       ( "::" )
+in
+    ( mk_ident(compile_op' id, rhs parseState 2) )}
 
 lidentOrUnderscore:
   IDENT
@@ -1425,7 +1448,7 @@ noSeqTerm:
   typ
     {let t = $1 in
            ( t )}
-| tmIff SUBTYPE typ option___anonymous_5_
+| tmIff SUBTYPE tmIff option___anonymous_5_
     {let (e, _2, t, tactic_opt) = ($1, (), $3, $4) in
       ( mk_term (Ascribed(e,{t with level=Expr},tactic_opt)) (rhs2 parseState 1 4) Expr )}
 | atomicTermNotQUident DOT_LPAREN term RPAREN LARROW noSeqTerm
@@ -1511,7 +1534,8 @@ in
       )}
 | ASSUME atomicTerm
     {let (_1, e) = ((), $2) in
-      ( mkExplicitApp (mk_term (Var assume_lid) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
+      ( let a = set_lid_range assume_lid (rhs parseState 1) in
+        mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [e] (rhs2 parseState 1 2) )}
 | lident LARROW noSeqTerm
     {let (id, _2, e) = ($1, (), $3) in
       ( mk_term (Assign(id, e)) (rhs2 parseState 1 3) Expr )}
@@ -1890,6 +1914,9 @@ let e =
       ( (x, y) )
 in
                                                  ( e )}
+| qlident
+    {let lid = $1 in
+                ( lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un )}
 
 appTerm:
   indexingTerm list_argTerm_
@@ -1952,7 +1979,7 @@ atomicTermQUident:
     (
         let t = Name id in
         let e = mk_term t (rhs parseState 1) Un in
-	      e
+              e
     )}
 | quident DOT_LPAREN term RPAREN
     {let (id, _2, t, _4) = ($1, (), $3, ()) in
@@ -1966,7 +1993,8 @@ atomicTermNotQUident:
                ( mk_term Wild (rhs parseState 1) Un )}
 | ASSERT
     {let _1 = () in
-             ( mk_term (Var assert_lid) (rhs parseState 1) Expr )}
+             ( let a = set_lid_range assert_lid (rhs parseState 1) in
+               mk_term (Var a) (rhs parseState 1) Expr )}
 | tvar
     {let tv = $1 in
                 ( mk_term (Tvar tv) (rhs parseState 1) Type_level )}
@@ -2067,6 +2095,27 @@ let op =
          ( op )
   in
        ( op )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN PIPE_RIGHT RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "|>" )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN COLON_EQUALS RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( ":=" )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN COLON_COLON RPAREN
+    {let (_1, op0, _3) = ((), (), ()) in
+let op =
+  let op = op0 in
+       ( "::" )
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LENS_PAREN_LEFT tmEq COMMA separated_nonempty_list_COMMA_tmEq_ LENS_PAREN_RIGHT

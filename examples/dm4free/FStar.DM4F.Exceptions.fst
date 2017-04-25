@@ -24,7 +24,7 @@ let bind_ex a b f g = fun _ ->
   | Inr e -> Inr e
   | Inl x -> g x ()
 
-let raise0 (e:exn) : ex False = fun _ -> Inr e
+let raise0 (a:Type) (e:exn) : ex a = fun _ -> Inr e
 
 (* Define the new effect using DM4F *)
 reifiable reflectable new_effect {
@@ -32,13 +32,11 @@ reifiable reflectable new_effect {
   with repr     = ex
      ; bind     = bind_ex
      ; return   = return_ex
-     ; raise   = raise0
+     ; raise (#a:Type) = raise0 a
 }
 
 
-let raise (#a:Type) (e:exn) : EXN a (fun _ p -> p (Inr e)) =
-  let x = EXN?.raise e in
-  (match x with)
+let raise = EXN?.raise
 
 (* An effect to alias easily write pre- and postconditions *)
 (* Note: we use Type0 instead of EXN?.pre to avoid having to thunk everything. *)

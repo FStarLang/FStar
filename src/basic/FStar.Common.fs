@@ -32,8 +32,18 @@ let has_cygpath =
 //that works on both cygwin and native windows
 //noop if not on cygwin
 //on cygwin emacs this is required
-let try_convert_file_name_to_mixed (s:string) : string =
-    if has_cygpath
-    then let _, t_out, _ = BU.run_proc "cygpath" ("-m " ^ s) "" in
-         BU.trim_string t_out
-    else s
+
+let try_convert_file_name_to_mixed =
+  let cache = BU.smap_create 20 in
+  fun (s:string) ->
+    if has_cygpath then
+      match BU.smap_try_find cache s with
+      | Some s ->
+          s
+      | None ->
+          let _, out, _ = BU.run_proc "cygpath" ("-m " ^ s) "" in
+          let out = BU.trim_string out in
+          BU.smap_add cache s out;
+          out
+    else
+      s

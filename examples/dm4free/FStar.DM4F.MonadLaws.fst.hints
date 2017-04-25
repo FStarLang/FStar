@@ -8,14 +8,15 @@
       2,
       1,
       [
-        "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_ba25146db3fad1d3edff80286448bf2e",
+        "equation_FStar.DM4F.MonadLaws.bind_st",
         "equation_FStar.DM4F.MonadLaws.return_st",
         "equation_FStar.DM4F.MonadLaws.st",
         "equation_FStar.FunctionalExtensionality.feq",
         "fuel_guarded_inversion_Prims.tuple2",
-        "interpretation_Tm_abs_43814a76456119240bf69c93d41f35af",
-        "interpretation_Tm_abs_4ce37ed6f81ccca5d9d9fe876f96677f",
-        "interpretation_Tm_arrow_ba25146db3fad1d3edff80286448bf2e",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_43814a76456119240bf69c93d41f35af",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_6ef333d7b01f507822feff21b1f29419",
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0
@@ -29,8 +30,8 @@
         "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
         "equation_FStar.DM4F.MonadLaws.return_st",
         "equation_FStar.FunctionalExtensionality.feq",
-        "interpretation_Tm_abs_43814a76456119240bf69c93d41f35af",
-        "interpretation_Tm_abs_4ce37ed6f81ccca5d9d9fe876f96677f",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_43814a76456119240bf69c93d41f35af",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_6ef333d7b01f507822feff21b1f29419",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2"
       ],
@@ -44,8 +45,8 @@
       [
         "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
         "equation_FStar.FunctionalExtensionality.feq",
-        "interpretation_Tm_abs_4ce37ed6f81ccca5d9d9fe876f96677f",
-        "interpretation_Tm_abs_9cfb73fc8ed4f4775cefe7e3d8e6a981"
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_226c216e0ea460802b4491a711d5e8f3",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_6ef333d7b01f507822feff21b1f29419"
       ],
       0
     ],
@@ -57,15 +58,16 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_867fb0ec9bbaf080f2680ce5cdc0d2a3",
+        "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
+        "bool_inversion", "bool_typing",
+        "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_FStar.DM4F.MonadLaws.ifc",
-        "interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
-        "interpretation_Tm_arrow_867fb0ec9bbaf080f2680ce5cdc0d2a3",
         "kinding_FStar.DM4F.MonadLaws.label@tok", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption",
-        "pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
-        "projection_inverse_BoxBool_proj_0"
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
@@ -75,9 +77,12 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Some",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_867fb0ec9bbaf080f2680ce5cdc0d2a3",
+        "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Some",
         "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
@@ -85,15 +90,13 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2",
-        "interpretation_Tm_abs_0a4fe88a43e32b8d4115e3b4241311ae",
-        "interpretation_Tm_abs_67131c4d7bf916dcb4098ab08ec03bd8",
-        "interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
-        "interpretation_Tm_arrow_867fb0ec9bbaf080f2680ce5cdc0d2a3",
-        "pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_67131c4d7bf916dcb4098ab08ec03bd8",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_86683a2f9a3ed505b3bed468d2a7d997",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "typing_Tm_abs_0a4fe88a43e32b8d4115e3b4241311ae", "unit_typing"
+        "typing_FStar.DM4F.MonadLaws.bind_ifc",
+        "typing_FStar.DM4F.MonadLaws.return_ifc", "unit_typing"
       ],
       0
     ],
@@ -103,7 +106,11 @@
       2,
       1,
       [
-        "@query", "data_elim_Prims.Some",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
+        "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
+        "constructor_distinct_Prims.None", "constructor_distinct_Tm_unit",
+        "data_elim_Prims.Some",
         "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
@@ -111,11 +118,11 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2",
-        "interpretation_Tm_abs_0a4fe88a43e32b8d4115e3b4241311ae",
-        "interpretation_Tm_abs_67131c4d7bf916dcb4098ab08ec03bd8",
-        "interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
-        "pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
-        "token_correspondence_FStar.DM4F.MonadLaws.return_ifc", "unit_typing"
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_67131c4d7bf916dcb4098ab08ec03bd8",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_86683a2f9a3ed505b3bed468d2a7d997",
+        "token_correspondence_FStar.DM4F.MonadLaws.return_ifc",
+        "typing_FStar.DM4F.MonadLaws_Tm_abs_86683a2f9a3ed505b3bed468d2a7d997",
+        "unit_typing"
       ],
       0
     ],
@@ -125,25 +132,29 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some",
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
+        "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
+        "Prims_pretyping_779086306c29597e3dd1127d16405da1",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
         "constructor_distinct_Prims.option",
         "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
+        "data_elim_Prims.Some",
         "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
         "equation_FStar.DM4F.MonadLaws.bind_ifc",
         "equation_FStar.DM4F.MonadLaws.ifc",
         "equation_FStar.FunctionalExtensionality.feq",
         "fuel_guarded_inversion_Prims.option",
-        "interpretation_Tm_abs_09ff75ce812d6dd419c79ba5694b4445",
-        "interpretation_Tm_abs_0a4fe88a43e32b8d4115e3b4241311ae",
-        "interpretation_Tm_arrow_725b948e28332f20a93371f8c91440bb",
-        "pretyping_779086306c29597e3dd1127d16405da1",
-        "pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "fuel_guarded_inversion_Prims.tuple2",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_51bfb50ba28bec41b25c8c42949140af",
+        "interpretation_FStar.DM4F.MonadLaws_Tm_abs_86683a2f9a3ed505b3bed468d2a7d997",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "typing_Tm_abs_0a4fe88a43e32b8d4115e3b4241311ae", "unit_typing"
+        "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_v",
+        "typing_FStar.DM4F.MonadLaws.bind_ifc",
+        "typing_FStar.DM4F.MonadLaws_Tm_abs_51bfb50ba28bec41b25c8c42949140af",
+        "unit_typing"
       ],
       0
     ]

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -72,6 +72,8 @@
   <ItemGroup>
     <Compile Include="FStar.ToSyntax.Env.fsi" />
     <Compile Include="FStar.ToSyntax.Env.fs" />
+    <Compile Include="FStar.ToSyntax.Interleave.fsi" />
+    <Compile Include="FStar.ToSyntax.Interleave.fs" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fsi" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fs" />
   </ItemGroup>
