@@ -1028,6 +1028,9 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
+        "FStar.HyperStack_interpretation_Tm_arrow_44cc1777afbdbed9bdd3d9b2ecbc41b2",
+        "FStar.Set_interpretation_Tm_arrow_4019e894ab4058a3164e2b8786c32b27",
+        "FStar.Set_interpretation_Tm_arrow_f285bd18d16ed788dea4e9c47fb2243d",
         "assumption_FStar.HyperHeap.HasEq_rid", "bool_inversion",
         "data_elim_FStar.HyperStack.HS", "equation_FStar.HyperHeap.t",
         "equation_FStar.HyperStack.hh", "equation_FStar.HyperStack.is_in",
@@ -1041,6 +1044,9 @@
         "function_token_typing_FStar.Heap.heap",
         "function_token_typing_FStar.HyperHeap.rid",
         "function_token_typing_FStar.HyperHeap.root",
+        "function_token_typing_FStar.HyperStack.remove_elt",
+        "function_token_typing_FStar.Set.complement",
+        "function_token_typing_FStar.Set.singleton",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomRestrict",
         "lemma_FStar.Map.lemma_equal_refl",
@@ -1059,13 +1065,14 @@
         "refinement_interpretation_FStar.HyperStack_Tm_refine_488f46e62de23611bddec214fc66cf52",
         "refinement_interpretation_FStar.HyperStack_Tm_refine_f724abd6de992fc2f861487694296e1a",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_FStar.HyperStack.remove_elt",
+        "token_correspondence_FStar.Set.complement",
+        "token_correspondence_FStar.Set.singleton",
         "typing_FStar.HyperStack.__proj__HS__item__h",
         "typing_FStar.HyperStack.__proj__HS__item__tip",
         "typing_FStar.HyperStack.is_in", "typing_FStar.HyperStack.poppable",
-        "typing_FStar.HyperStack.remove_elt", "typing_FStar.Map.domain",
-        "typing_FStar.Map.restrict", "typing_FStar.Set.complement",
-        "typing_FStar.Set.intersect", "typing_FStar.Set.mem",
-        "typing_FStar.Set.singleton"
+        "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
+        "typing_FStar.Set.mem"
       ],
       0
     ],
