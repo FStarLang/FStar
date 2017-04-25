@@ -88,6 +88,7 @@ open FStar_String
 %token LENS_PAREN_RIGHT
 %token <bool> LET
 %token LOGIC
+%token LONG_LEFT_ARROW
 %token LPAREN
 %token LPAREN_RPAREN
 %token L_FALSE
@@ -1443,6 +1444,9 @@ term:
 | noSeqTerm SEMICOLON term
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr )}
+| lidentOrUnderscore LONG_LEFT_ARROW noSeqTerm SEMICOLON term
+    {let (x, _2, e1, _4, e2) = ($1, (), $3, (), $5) in
+      ( mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr )}
 
 noSeqTerm:
   typ

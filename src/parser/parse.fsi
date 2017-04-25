@@ -72,6 +72,7 @@ type token =
   | L_FALSE
   | LPAREN_RPAREN
   | LPAREN
+  | LONG_LEFT_ARROW
   | LOGIC
   | LET of (bool)
   | LENS_PAREN_RIGHT
@@ -208,6 +209,7 @@ type tokenId =
     | TOKEN_L_FALSE
     | TOKEN_LPAREN_RPAREN
     | TOKEN_LPAREN
+    | TOKEN_LONG_LEFT_ARROW
     | TOKEN_LOGIC
     | TOKEN_LET
     | TOKEN_LENS_PAREN_RIGHT

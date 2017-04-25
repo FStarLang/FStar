@@ -56,7 +56,7 @@ open FStar_String
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
+%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -506,7 +506,8 @@ term:
       { e }
   | e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr }
-
+  | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
+      { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 noSeqTerm:
   | t=typ  { t }
