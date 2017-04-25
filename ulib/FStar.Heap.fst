@@ -239,7 +239,8 @@ let lemma_ref_injectivity
 
 
 let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
-  forall (a:Type0) (r:ref a). r `unused_in` h1 <==> r `unused_in` h2
+  (forall (a:Type0) (r:ref a). h1 `contains` r <==> h2 `contains` r) /\
+  (forall (a:Type0) (r:ref a). r `unused_in` h1 <==> r `unused_in` h2)
 
 (* Empty. *)
 let emp :heap = {
