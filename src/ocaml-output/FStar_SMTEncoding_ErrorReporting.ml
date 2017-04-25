@@ -114,11 +114,11 @@ let label_goals:
                 match ropt with
                 | None  -> rng
                 | Some r1 ->
-                    let uu___104_297 = r1 in
+                    let uu___107_297 = r1 in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
-                        (uu___104_297.FStar_Range.use_range)
+                        (uu___107_297.FStar_Range.use_range)
                     } in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =

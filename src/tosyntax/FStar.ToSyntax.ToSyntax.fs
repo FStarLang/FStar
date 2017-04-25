@@ -245,6 +245,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Record _
   | Match _
   | TryWith _
+  | Bind _
   | Seq _ -> []
 
 let head_and_args t =
@@ -910,6 +911,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           let head = desugar_term env e in
           mk (Tm_app(head, args)) in
       aux [] top
+
+    | Bind(x, t1, t2) ->
+      let xpat = AST.mk_pattern (AST.PatVar(x, None)) x.idRange in
+      let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
+      let bind = AST.mk_term (AST.Var(Ident.lid_of_path ["bind"] x.idRange)) x.idRange AST.Expr in
+      desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
 
     | Seq(t1, t2) ->
       mk (Tm_meta(desugar_term env (mk_term (Let(NoLetQualifier, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr),

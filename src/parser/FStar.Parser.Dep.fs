@@ -418,6 +418,7 @@ let collect_one
     | LetOpen (lid, t) ->
         record_open true lid;
         collect_term t
+    | Bind(_, t1, t2)
     | Seq (t1, t2) ->
         collect_term t1;
         collect_term t2

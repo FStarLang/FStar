@@ -39,7 +39,7 @@ let safeMac_ideal_writes
     let aead_entries_0 = HS.sel h0 aead_st.log in
     let aead_entries_1 = HS.sel h1 aead_st.log in
     HS.modifies (Set.singleton aead_st.log_region) h0 h1 /\
-    HS.modifies_ref aead_st.log_region (TSet.singleton (FStar.Heap.Ref (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
+    HS.modifies_ref aead_st.log_region (Set.singleton (FStar.Heap.addr_of (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
     aead_entries_1 
       == Seq.snoc 
                       aead_entries_0 
@@ -71,7 +71,7 @@ val frame_ideal_writes
 	       sel_plain h0 plainlen plain == sel_plain h1 plainlen plain /\
 	       Buffer.as_seq h0 ct == Buffer.as_seq h1 ct                             /\
 	       Buffer.as_seq h0 aad == Buffer.as_seq h1 aad                           /\
-	       HS.modifies_ref aead_st.prf.mac_rgn TSet.empty h0 h1))))
+	       HS.modifies_ref aead_st.prf.mac_rgn Set.empty h0 h1))))
 let frame_ideal_writes #i #rw #aadlen #plainlen aead_st nonce aad plain cipher_tagged h0 h1 = ()
 
 val fresh_nonces_are_unused_after_ideal

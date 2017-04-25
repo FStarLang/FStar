@@ -570,11 +570,11 @@ private let _field
   let p'' : path from (value fd) = PathField p' fd in
   StructPtr content p''
 
-let as_aref 
+let as_addr
   (#value: Type)
   (p: struct_ptr value)
-: GTot Heap.aref
-= Buffer.as_aref (as_buffer p)
+: GTot nat
+= Buffer.as_addr (as_buffer p)
 
 let contains
   (#value: Type)
@@ -583,12 +583,26 @@ let contains
 : GTot Type0
 = Buffer.contains h (as_buffer p)
 
+let unused_in
+  (#value: Type)
+  (p: struct_ptr value)
+  (h: HS.mem)
+: GTot Type0
+= Buffer.unused_in (as_buffer p) h
+
 let live
   (#value: Type)
   (h: HS.mem)
   (p: struct_ptr value)
 : GTot Type0
 = Buffer.live h (as_buffer p)
+
+let unmapped_in
+  (#value: Type)
+  (p: struct_ptr value)
+  (h: HS.mem)
+: GTot Type0
+= Buffer.unmapped_in (as_buffer p) h
 
 abstract let live_contains
   (#value: Type)
@@ -618,7 +632,7 @@ let memory_managed
   (#value: Type)
   (p: struct_ptr value)
 : GTot bool
-= (Buffer.content (as_buffer p)).HS.mm
+= HS.is_mm (Buffer.content (as_buffer p))
 
 abstract let recall
   (#value: Type)
@@ -626,7 +640,8 @@ abstract let recall
 : HST.Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0 == m1 /\ live m1 p))
-= Buffer.recall (StructPtr?.content p)
+= assert (HS.is_mm (Buffer.content (as_buffer p)) = HS.is_mm (Buffer.content (StructPtr?.content p)));
+  Buffer.recall (StructPtr?.content p)
 
 let get
   (#key: eqtype)
@@ -793,6 +808,13 @@ abstract let frameOf_gfield
   [SMTPat (frameOf (gfield p fd))]
 = ()
 
+(*
+ * AR: need to investigate why is this needed
+ *)
+private let memory_managed_redundant_lemma (#a:Type) (s:struct_ptr a)
+  :Lemma (memory_managed s = HS.is_mm (Buffer.content (as_buffer s)))
+  = ()
+
 abstract let memory_managed_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
@@ -802,7 +824,11 @@ abstract let memory_managed_gfield
   (requires True)
   (ensures (memory_managed (gfield p fd) <==> memory_managed p))
   [SMTPat (memory_managed (gfield p fd))]
-= ()
+= let p' = gfield p fd in
+  memory_managed_redundant_lemma p;
+  memory_managed_redundant_lemma p';
+  assert (memory_managed p = HS.is_mm (Buffer.content (as_buffer p))); //AR: something's wrong, i had to insert these asserts all over
+  assert (memory_managed p' == HS.is_mm (Buffer.content (as_buffer p')))
 
 abstract let includes_gfield
   (#key: eqtype)
@@ -1085,7 +1111,7 @@ let live_disjoint
   (p1: struct_ptr value1)
   (p2: struct_ptr value2)
 : Lemma
-  (requires (live h p1 /\ ~ (contains h p2)))
+  (requires (live h p1 /\ p2 `unused_in` h))
   (ensures (disjoint p1 p2))
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
 = live_contains h p1;
@@ -1181,7 +1207,7 @@ let modifies_0_0 h0 h1 h2 = ()
 #reset-options "--z3rlimit 16"
 
 let modifies_0_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
-  (requires (~(contains h0 b) /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+  (requires (b `unused_in` h0 /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
   (ensures  (modifies_0 h0 h2))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = Buffer.lemma_reveal_modifies_0 h0 h1;
@@ -1198,7 +1224,7 @@ abstract let screate
 : StackInline (struct_ptr value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
-       ~(contains h0 b)
+       b `unused_in` h0
      /\ live h1 b
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
@@ -1218,17 +1244,21 @@ abstract let ecreate
   (s: t)
 : ST (struct_ptr t)
   (requires (fun h -> HS.is_eternal_region r))
-  (ensures (fun (h0:HS.mem) b h1 -> ~(contains h0 b)
+  (ensures (fun (h0:HS.mem) b h1 -> b `unused_in` h0
     /\ live h1 b
     /\ Map.domain h1.HS.h == Map.domain h0.HS.h
     /\ h1.HS.tip = h0.HS.tip
     /\ HS.modifies (Set.singleton r) h0 h1
-    /\ HS.modifies_ref r TSet.empty h0 h1
+    /\ HS.modifies_ref r Set.empty h0 h1
     /\ as_value h1 b == s
-    /\ ~(memory_managed b)))
+    /\ ~ (memory_managed b)))
 = let h0 = HST.get() in
-  let content = Buffer.rcreate r s (UInt32.uint_to_t 1) in
-  let b = StructPtr content PathBase in
+  let buf = Buffer.rcreate r s (UInt32.uint_to_t 1) in
+  assert (~ (HS.is_mm (FStar.Buffer.content buf)));
+  let b = StructPtr buf PathBase in
+  memory_managed_redundant_lemma b;
+  assert (as_buffer b == buf);
+  assert (memory_managed b = HS.is_mm (FStar.Buffer.content (as_buffer b)));
   let h1 = HST.get() in
   b
 

@@ -188,8 +188,8 @@ let add_errors: (Prims.string* FStar_Range.range) Prims.list -> Prims.unit =
                   let uu____441 = message_prefix.append_prefix msg in
                   err r uu____441) errs)
 let issue_of_exn: Prims.exn -> issue Prims.option =
-  fun uu___55_445  ->
-    match uu___55_445 with
+  fun uu___58_445  ->
+    match uu___58_445 with
     | Error (msg,r) ->
         let uu____449 =
           let uu____450 = message_prefix.append_prefix msg in
@@ -213,7 +213,7 @@ let err_exn: Prims.exn -> Prims.unit =
     | Some issue -> add_one issue
     | None  -> Prims.raise exn
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___56_466  ->
-    match uu___56_466 with
+  fun uu___59_466  ->
+    match uu___59_466 with
     | Error _|FStar_Util.NYI _|Err _ -> true
     | uu____470 -> false
