@@ -281,7 +281,12 @@ type eff_decl = {
     actions     :list<action>
 }
 
-and sigelt' =
+type sig_metadata = {
+    sigmeta_active:bool;
+    sigmeta_fact_db_ids:list<string>;
+}
+
+type sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
@@ -320,10 +325,12 @@ and sigelt' =
                        * list<cflags>
   | Sig_pragma         of pragma
 and sigelt = {
-    sigel: sigelt';
-    sigrng: Range.range;
-    sigqual: list<qualifier>
+    sigel:    sigelt';
+    sigrng:   Range.range;
+    sigquals: list<qualifier>;
+    sigmeta:  sig_metadata
 }
+
 type sigelts = list<sigelt>
 
 type modul = {
@@ -429,7 +436,8 @@ let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigqual=[] }
+let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

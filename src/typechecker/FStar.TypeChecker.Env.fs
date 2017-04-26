@@ -415,7 +415,7 @@ let try_lookup_lid_aux env lid =
     | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _) }, None) ->
       Some (inst_tscheme (uvs, t), rng)
 
-    | Inr ({sigel = Sig_declare_typ (l, uvs, t); sigqual=qs }, None) ->
+    | Inr ({sigel = Sig_declare_typ (l, uvs, t); sigquals=qs }, None) ->
       if in_cur_mod env l = Yes
       then if qs |> List.contains Assumption || env.is_iface
            then Some (inst_tscheme (uvs, t), rng)
@@ -510,7 +510,7 @@ let lookup_univ env x =
 let try_lookup_val_decl env lid =
   //QUESTION: Why does this not inst_tscheme?
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t); sigqual = q }, None), _) ->
+    | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t); sigquals = q }, None), _) ->
       Some ((uvs, Subst.set_use_range (range_of_lid lid) t),q)
     | _ -> None
 
@@ -543,7 +543,7 @@ let lookup_definition delta_levels env lid =
   match lookup_qname env lid with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
-      | Sig_let((_, lbs), _, _) when visible se.sigqual ->
+      | Sig_let((_, lbs), _, _) when visible se.sigquals ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
@@ -569,7 +569,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
-    | Some (Inr ({ sigel = Sig_effect_abbrev (lid, univs, binders, c, _); sigqual = quals }, None), _) ->
+    | Some (Inr ({ sigel = Sig_effect_abbrev (lid, univs, binders, c, _); sigquals = quals }, None), _) ->
       let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
       if quals |> BU.for_some (function Irreducible -> true | _ -> false)
       then None
@@ -621,7 +621,7 @@ let norm_eff_name =
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
     match lookup_qname env l with
-    | Some (Inr ({ sigel = Sig_new_effect _; sigqual=q}, _), _) ->
+    | Some (Inr ({ sigel = Sig_new_effect _; sigquals=q}, _), _) ->
       q
     | _ -> []
 
@@ -638,7 +638,7 @@ let lookup_projector env lid i =
 
 let is_projector env (l:lident) : bool =
     match lookup_qname env l with
-        | Some (Inr ({ sigel = Sig_declare_typ(_, _, _); sigqual=quals }, _), _) ->
+        | Some (Inr ({ sigel = Sig_declare_typ(_, _, _); sigquals=quals }, _), _) ->
           BU.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
@@ -649,13 +649,13 @@ let is_datacon env lid =
 
 let is_record env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _); sigqual=quals }, _), _) ->
+    | Some (Inr ({ sigel = Sig_inductive_typ(_, _, _, _, _, _); sigquals=quals }, _), _) ->
         BU.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) quals
     | _ -> false
 
 let is_action env lid =
     match lookup_qname env lid with
-        | Some (Inr ({ sigel = Sig_let(_, _, _); sigqual = quals }, _), _) ->
+        | Some (Inr ({ sigel = Sig_let(_, _, _); sigquals = quals }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) quals
         | _ -> false
 
@@ -690,7 +690,7 @@ let is_type_constructor env lid =
         | Inr (se, _) ->
            begin match se.sigel with
             | Sig_declare_typ _ ->
-              Some (List.contains New se.sigqual)
+              Some (List.contains New se.sigquals)
             | Sig_inductive_typ _ ->
               Some true
             | _ -> Some false
@@ -764,7 +764,7 @@ let null_wp_for_eff env eff_name (res_u:universe) (res_t:term) =
 
 let build_lattice env se = match se.sigel with
   | Sig_new_effect(ne) ->
-    let effects = {env.effects with decls=(ne, se.sigqual)::env.effects.decls} in
+    let effects = {env.effects with decls=(ne, se.sigquals)::env.effects.decls} in
     {env with effects=effects}
 
   | Sig_sub_effect(sub) ->

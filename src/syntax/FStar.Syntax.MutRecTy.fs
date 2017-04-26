@@ -56,7 +56,8 @@ let disentangle_abbrevs_from_bundle
      (* if there are no type abbreviations, then do not change anything. *)
      { sigel = Sig_bundle (sigelts, members);
        sigrng = rng;
-       sigqual = quals }, []
+       sigquals = quals;
+       sigmeta = default_sigmeta }, []
    | _ ->
 
     let type_abbrevs = type_abbrev_sigelts |> List.map begin fun x -> match x.sigel with
@@ -121,7 +122,7 @@ let disentangle_abbrevs_from_bundle
         and unfold_abbrev (x: sigelt) = match x.sigel with
             | Sig_let ((false, [lb]), _, attr) ->
 	        (* eliminate some qualifiers for definitions *)
-	        let quals = x.sigqual |> List.filter begin function
+	        let quals = x.sigquals |> List.filter begin function
 	        | Noeq -> false
 	        | _ -> true
 	        end in
@@ -135,7 +136,7 @@ let disentangle_abbrevs_from_bundle
                 let tm' = inst unfold_abbrev_fv lb.lbdef in
                 let lb' = { lb with lbtyp = ty' ; lbdef = tm' } in
                 let sigelt' = Sig_let ((false, [lb']), [lid], attr) in
-                let () = rev_unfolded_type_abbrevs := { x with sigel = sigelt'; sigqual = quals } :: !rev_unfolded_type_abbrevs in
+                let () = rev_unfolded_type_abbrevs := { x with sigel = sigelt'; sigquals = quals } :: !rev_unfolded_type_abbrevs in
                 let () = in_progress := List.tl !in_progress in (* pop *)
                 tm'
             | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
@@ -198,7 +199,8 @@ let disentangle_abbrevs_from_bundle
 
       let new_bundle = { sigel = Sig_bundle (inductives_with_abbrevs_unfolded, new_members);
                          sigrng = rng;
-                         sigqual = quals }
+                         sigquals = quals;
+                         sigmeta = default_sigmeta }
       in
 
       (new_bundle, unfolded_type_abbrevs)

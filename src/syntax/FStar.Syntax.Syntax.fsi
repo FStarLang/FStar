@@ -297,6 +297,11 @@ type eff_decl = {
     actions     :list<action>
 }
 
+type sig_metadata = {
+    sigmeta_active:bool;
+    sigmeta_fact_db_ids:list<string>;
+}
+
 // JP/NS:
 //    the n-tuples hinder readability, make it difficult to maintain code (see
 //    lids_of_sigelt in syntax/util.fs) and do not help being familiar with the
@@ -308,7 +313,7 @@ type eff_decl = {
 //    But, given F*'s poor syntax for record arguments, this would require writing
 //    (Sig_inductive_typ ({...})) which is also painful, particularly since omitting
 //    the extra parentheses would not be caught by the F# parser during development.
-and sigelt' =
+type sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
@@ -346,10 +351,12 @@ and sigelt' =
                        * comp
                        * list<cflags>
   | Sig_pragma         of pragma
+
 and sigelt = {
-    sigel: sigelt';
-    sigrng: Range.range;
-    sigqual: list<qualifier>
+    sigel:    sigelt';
+    sigrng:   Range.range;
+    sigquals: list<qualifier>;
+    sigmeta:  sig_metadata
 }
 
 type sigelts = list<sigelt>
@@ -374,6 +381,7 @@ val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 val mk: 'a -> Tot<mk_t_a<'a,'b>>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
+val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
 val mk_Tm_uinst:    term -> universes -> term
