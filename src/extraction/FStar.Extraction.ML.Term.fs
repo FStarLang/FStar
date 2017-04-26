@@ -906,6 +906,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
+            | _, Tm_constant Const_reify ->
+              let e = TcUtil.reify_body_with_arg g.tcenv head (List.hd args) in
+              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
+              term_as_mlexpr' g tm
+
             | _ ->
 
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
