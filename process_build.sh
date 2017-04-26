@@ -153,11 +153,14 @@ BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
 ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
 echo "+++ ZIP COUNT:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
+echo "+++ File List 1"
   ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
+echo "+++ File List 2:"$ZIP_FILE_LIST
   for ZIP_FILE in $ZIP_FILE_LIST
   do
   echo "+++ Remove:"${ZIP_FILE}
      rm ${ZIP_FILE}
+  echo "+++ Git Remove:"${ZIP_FILE}
      git rm ${ZIP_FILE}
   done
 fi
@@ -178,8 +181,11 @@ echo "+++ PWD3:"$PWD
 
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
+echo "+++ git commit"
 git commit --amend -m "Adding new build package and removing oldest."
+echo "++ git push"
 git push git@github.com:FStarLang/binaries.git $FSTAR_BIN_BRANCH --force
+echo "+++ done"
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt
