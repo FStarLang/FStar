@@ -1,7 +1,7 @@
 %{
 (*
- We are expected to have only 6 shift-reduce conflicts.
- A lot (142) of end-of-stream conflicts are also reported and
+ We are expected to have only 7 shift-reduce conflicts.
+ A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
@@ -56,7 +56,7 @@ open FStar_String
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LARROW RARROW
+%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -506,7 +506,14 @@ term:
       { e }
   | e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr }
-
+(* Added this form for sequencing; *)
+(* but it results in an additional shift/reduce conflict *)
+(* ... which is actually be benign, since the same conflict already *)
+(*     exists for the previous production *)
+  | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
+      { mk_term (Bind(gen (rhs parseState 1), e1, e2)) (rhs2 parseState 1 3) Expr }
+  | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
+      { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
 noSeqTerm:
   | t=typ  { t }
