@@ -36,6 +36,7 @@ val modul_to_string   : modul -> string
 val lcomp_to_string   : lcomp -> string
 val univ_to_string    : universe -> string
 val sigelt_to_string  : sigelt -> string
+val binder_to_string  : binder -> string
 val binders_to_string : string -> binders ->string
 val args_to_string    : args -> string
 val eff_decl_to_string: bool -> eff_decl -> string
