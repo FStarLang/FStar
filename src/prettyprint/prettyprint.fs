@@ -93,8 +93,9 @@ let minus : document = C.minus
 let underscore : document = C.underscore
 let bang : document = C.bang
 let bar : document = C.bar
-let larrow : document = P.string "->"
-let rarrow : document = P.string "<-"
+let long_left_arrow : document = P.string "<--"
+let larrow : document = P.string "<-"
+let rarrow : document = P.string "->"
 
 let precede (l:document) (x:document) : document = C.precede l x
 
