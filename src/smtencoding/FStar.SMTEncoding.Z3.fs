@@ -159,7 +159,7 @@ let query_logging =
           let dir_name = match !current_module_name with
             | None -> failwith "current module not set"
             | Some n -> BU.format1 "queries-%s" n in
-          BU.mkdir_clean dir_name;
+          BU.mkdir true dir_name;
           current_file_name := Some dir_name;
           dir_name
         | Some n -> n in
@@ -382,7 +382,7 @@ let finish () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
-        then (running := false;FStar.Errors.report_all() |> ignore)
+        then running := false
         else let _ = BU.sleep(500) in
              aux() in
     aux()

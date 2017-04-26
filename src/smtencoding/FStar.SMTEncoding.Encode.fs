@@ -326,11 +326,11 @@ let is_app = function
 
 // [is_an_eta_expansion env vars body]:
 //       returns Some t'
-//               if (fun xs -> t) is an eta-expansion of t'
+//               if (fun xs -> body) is an eta-expansion of t'
 //       else returns None
 let is_an_eta_expansion env vars body =
     //assert vars <> []
-    let rec aux t xs =
+    let rec check_partial_applications t xs =
         match t.tm, xs with
         | App(app, [f; {tm=FreeV y}]), x::xs
           when (is_app app && Term.fv_eq x y) ->
@@ -338,26 +338,22 @@ let is_an_eta_expansion env vars body =
           //t is of the form (ApplyTT f x)
           //   i.e., it's a partial or curried application of f to x
           //recurse on f with the remaining arguments
-          aux f xs
+          check_partial_applications f xs
 
         | App(Var f, args), _ ->
-          //Case 2:
-          if List.length args = List.length vars
-          && List.forall2 (fun a v -> match a.tm with
-            | FreeV fv -> fv_eq fv v
-            | _ -> false) args vars
+          if List.length args = List.length xs
+          && List.forall2 (fun a v ->
+                            match a.tm with
+                            | FreeV fv -> fv_eq fv v
+                            | _ -> false)
+             args (List.rev xs)
           then //t is of the form (f vars) for all the lambda bound variables vars
                //In this case, the term is an eta-expansion of f; so we just return f@tok, if there is one
-               // --- Notice that this does not depend on the currently remaining variables xs
-               //     Although perhaps it should. As such, it does not detect the eta-expansion of
-               //     things like fun x -> (ApplyTT (App(p, []), [x])
-               //     Arguably, the encoding should never produce App(p, []) in the first place
-               //               but somehow it does
                tok_of_name env f
           else None
 
         | _, [] ->
-          //Case 3:
+          //Case 2:
           //We're left with a closed head term applied to no arguments.
           //This case is only reachable after unfolding the recursive calls in Case 1 (note vars <> [])
           //and checking that the body t is of the form (ApplyTT (... (ApplyTT t x0) ... xn))
@@ -368,8 +364,8 @@ let is_an_eta_expansion env vars body =
           then Some t
           else None
 
-        | _ -> None in
-  aux body (List.rev vars)
+        | _ -> None
+  in check_partial_applications body (List.rev vars)
 
 (* [reify_body env t] assumes that [t] has a reifiable computation type *)
 (* that is env |- t : M t' for some effect M and type t' where M is reifiable *)
@@ -1373,9 +1369,10 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let typing_pred = mk_HasType x refa in
         let typing_pred_b = mk_HasType x refb in
         [Term.Assume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, mk_tester "BoxRef" x)), Some "ref inversion", "ref_inversion");
-         Term.Assume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
-                     Some "ref typing is injective",
-                     "ref_injectivity")] in
+//         Term.Assume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
+//                     Some "ref typing is injective",
+//                     "ref_injectivity")
+        ] in
     let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
         [Term.Assume(valid, Some "True interpretation", "true_interp")] in
@@ -1784,10 +1781,15 @@ let encode_top_level_let :
 
               (* Open universes *)
               let flid = flid_fv.fv_name.v in
-              let univ_subst, univ_vars = SS.univ_var_opening uvs in
-              let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-              let t_norm = SS.subst univ_subst t_norm in
-              let e = SS.compress (SS.subst univ_subst e) in
+              let env', e, t_norm =
+                let tcenv', _, e_t =
+                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let e, t_norm =
+                    match e_t with
+                    | [e; t_norm] -> e, t_norm
+                    | _ -> failwith "Impossible" in
+                {env with tcenv=tcenv'}, e, t_norm
+              in
 
               (* Open binders *)
               let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
@@ -1839,10 +1841,15 @@ let encode_top_level_let :
           let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
 
             (* Open universes *)
-            let univ_subst, univ_vars = SS.univ_var_opening uvs in
-            let env' = { env with tcenv = Env.push_univ_vars env.tcenv univ_vars } in
-            let t_norm = SS.subst univ_subst t_norm in
-            let e = SS.subst univ_subst e in
+            let env', e, t_norm =
+                let tcenv', _, e_t =
+                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let e, t_norm =
+                    match e_t with
+                    | [e; t_norm] -> e, t_norm
+                    | _ -> failwith "Impossible" in
+                {env with tcenv=tcenv'}, e, t_norm
+            in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print3 "Encoding let rec %s : %s = %s\n"
                         (Print.lbname_to_string lbn)
@@ -1879,10 +1886,10 @@ let encode_top_level_let :
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Term.Assume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
-                                    ("fuel_correspondence_"^g)) in
+                                    ("@fuel_correspondence_"^g)) in
             let eqn_g' = Term.Assume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
                                     Some "Fuel irrelevance",
-                                    ("fuel_irrelevance_" ^g)) in
+                                    ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
               let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
               let vars_tm = List.map mkFreeV vars in
@@ -2243,23 +2250,31 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   let encoded_head = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
                   let guards_for_parameter (arg:term) xv =
-                    let fv = match arg.tm with
-                             | FreeV fv -> fv
-                             | _ -> failwith "Impossible: parameter must be a variable" in
+                    let fv =
+                      match arg.tm with
+                      | FreeV fv -> fv
+                      | _ -> failwith "Impossible: parameter must be a variable"
+                    in
                     let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
                         then [Term.subst g fv xv]
-                        else []) in
+                        else [])
+                    in
                     mk_and_l guards
                   in
-                  let _, arg_vars, elim_eqns_or_guards, _ = List.fold_left (fun (env, arg_vars, eqns_or_guards, i) arg ->
-                          let _, xv, env = gen_term_var env (S.new_bv None tun) in
-                          let eqns =
-                            if i < n_tps
-                            then guards_for_parameter arg xv::eqns_or_guards
-                            else mkEq(arg, xv)::eqns_or_guards in //we only get equations induced on the type indices, not parameters;
-                                                        //Also see https://github.com/FStarLang/FStar/issues/349
-                          (env, xv::arg_vars, eqns, i + 1)) (env', [], [], 0) encoded_args in
+                  let _, arg_vars, elim_eqns_or_guards, _ =
+                    List.fold_left (fun (env, arg_vars, eqns_or_guards, i) arg ->
+                      let _, xv, env = gen_term_var env (S.new_bv None tun) in
+                      (* we only get equations induced on the type indices, not parameters; *)
+                      (* Also see https://github.com/FStarLang/FStar/issues/349 *)
+                      let eqns =
+                        if i < n_tps
+                        then guards_for_parameter arg xv::eqns_or_guards
+                        else mkEq(arg, xv)::eqns_or_guards
+                      in
+                      (env, xv::arg_vars, eqns, i + 1))
+                      (env', [], [], 0) encoded_args
+                  in
                   let arg_vars = List.rev arg_vars in
                   let ty = mkApp(encoded_head, arg_vars) in
                   let xvars = List.map mkFreeV vars in
@@ -2280,16 +2295,19 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                      Some "lextop is top",
                                      (varops.mk_unique "lextop"))
                     else (* subterm ordering *)
-                        let prec =
-                            vars
-                         |> List.mapi (fun i v ->
-                                if i < n_tps //it's a parameter, so it's inaccessible and no need for a sub-term ordering on it
+                      let prec =
+                        vars
+                          |> List.mapi (fun i v ->
+                                (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
+                                if i < n_tps
                                 then []
                                 else [mk_Precedes (mkFreeV v) dapp])
-                         |> List.flatten in
-                        Term.Assume(mkForall([[ty_pred]], add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
+                          |> List.flatten
+                      in
+                      Term.Assume(mkForall([[ty_pred]], add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
-                                    ("subterm_ordering_"^ddconstrsym)) in
+                                    ("subterm_ordering_"^ddconstrsym))
+                  in
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->

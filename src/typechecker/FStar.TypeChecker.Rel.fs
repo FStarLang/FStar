@@ -2479,7 +2479,7 @@ let try_subtype' env t1 t2 smt_ok =
 let try_subtype env t1 t2 = try_subtype' env t1 t2 true
 
 let subtype_fail env e t1 t2 =
-    Errors.report (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+    Errors.err (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 
 let sub_comp env c1 c2 =
@@ -2653,10 +2653,10 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           Errors.report r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
-                                       (Print.term_to_string t)
-                                       (Print.term_to_string e)
-                                       reason)
+           Errors.err r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
+                                    (Print.term_to_string t)
+                                    (Print.term_to_string e)
+                                    reason)
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

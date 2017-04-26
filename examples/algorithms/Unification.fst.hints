@@ -1971,14 +1971,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "data_elim_Prims.Some", "disc_equation_Prims.None",
-        "equation_Unification.lsubst", "equation_Unification.op_At",
-        "equation_Unification.subst", "equation_Unification.unify_eqns",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_Unification.lsubst", "equation_Unification.unify_eqns",
         "fuel_correspondence_Unification.solved.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.option",
+        "function_token_typing_Unification.lsubst",
+        "lemma_Prims.invertOption",
         "lemma_Unification.lemma_lsubst_eqns_nil",
         "proj_equation_Prims.Some_v", "projection_inverse_BoxBool_proj_0",
-        "typing_Unification.lsubst_eqns", "typing_Unification.solved",
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some",
         "typing_Unification.unify_eqns", "unit_typing"
       ],
       0

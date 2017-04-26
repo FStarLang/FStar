@@ -88,7 +88,7 @@ let rec list_subterm_ordering_coercion #a #b l bound = match l with
     hd::list_subterm_ordering_coercion tl bound
 
 (* WARNING: pattern does not contain all quantified variables. *)
-val list_subterm_ordering_lemma: 
+val list_subterm_ordering_lemma:
 			#a:eqtype
 			-> #b:Type
 			-> l:list a
@@ -110,16 +110,60 @@ let rec move_refinement #a #p l = match l with
   | [] -> []
   | hd::tl -> hd::move_refinement #a #p tl
 
-type t (a:Type) =
-  | Leaf : a -> t a
-  | Node : list (t a) -> t a
+type tree (a:Type) =
+  | Leaf : a -> tree a
+  | Node : list (tree a) -> tree a
 
-val treeMap : #a:eqtype -> #b:Type -> (a -> Tot b) -> t a -> Tot (t b)
+val treeMap : #a:eqtype -> #b:Type -> (a -> Tot b) -> tree a -> Tot (tree b)
 let rec treeMap #a #b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list.
-           An alternative would be to give map a different type accouting for this "outside" refinement.
+           An alternative would be to give map a different type accounting for this "outside" refinement.
            But, it's seeems nicer to give map its normal type *)
     let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *)
     Node (map (treeMap f) l) //treeMap f: (x:T a{x << v} -> Tot (T b))
+
+(* CH: The problem I see with Nik's trick is that adding "ghost" in a
+       comment: doesn't make something Ghost in F*, and in fact
+       `move_refinement` has a significant computational cost. *)
+
+(* CH: here is the variant in which map gets a different type: *)
+
+let rec list_map (xs:list 'a) (f:(x:'a{x<<xs} -> 'b)) : list 'b =
+  match xs with
+  | [] -> []
+  | x::xs' -> f x :: list_map xs' f
+
+let rec tree_map (f:'a -> 'b) (t:tree 'a) : tree 'b =
+  match t with
+  | Leaf v -> Leaf (f v)
+  | Node ts -> Node (list_map ts (tree_map f))
+
+(* CH: here is a very similar example that came up in a mailing list discussion:
+       https://lists.gforge.inria.fr/pipermail/fstar-club/2017/000078.html *)
+
+let rec flatten_list (#a #b:Type) (l:(list b)) (f:(b -> list a)) : list a =
+  match l with
+  | []    -> []
+  | hd::tl -> FStar.List.append (f hd) (flatten_list tl f)
+
+(* solution #1 *)
+
+let rec flatten_tree (#a:eqtype) (t:tree a) : list a =
+  match t with
+  | Leaf v -> [v]
+  | Node l -> let l = move_refinement #_ #(fun aa -> aa << t) l in
+              flatten_list l flatten_tree
+
+(* solution #2 *)
+
+let rec flatten_list' (l:(list 'b)) (f:(x:'b{x << l} -> list 'a)) : list 'a =
+  match l with
+  | []    -> []
+  | hd::tl -> FStar.List.append (f hd) (flatten_list' tl f)
+
+let rec flatten_tree' (#a:Type) (t:tree a) : list a =
+  match t with
+  | Leaf v -> [v]
+  | Node l -> flatten_list' l flatten_tree'

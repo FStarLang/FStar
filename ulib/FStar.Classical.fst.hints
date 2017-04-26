@@ -1,5 +1,5 @@
 [
-  "C¥Ž\nI÷Õ¢\u0019R%R{i;F",
+  "98_O\u007fÁ²Î\u0007‡Ïxë°\\Æ",
   [
     [
       "FStar.Classical.give_witness",
@@ -10,6 +10,23 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
+      0
+    ],
+    [ "FStar.Classical.get_squashed", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Classical.get_equality",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.eq2" ],
+      0
+    ],
+    [
+      "FStar.Classical.get_forall",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Prims.l_Forall" ],
       0
     ],
     [ "FStar.Classical.impl_to_arrow", 1, 2, 1, [ "@query" ], 0 ],

@@ -1633,20 +1633,30 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let eta_expand_with_type (t:term) (sort:typ) =
-  let binders, c = U.arrow_formals_comp sort in
-  match binders with
-  | [] -> t
-  | _ ->
-      let binders, args = binders |> U.args_of_binders in
-      U.abs binders (mk_Tm_app t args None t.pos) (U.lcomp_of_comp c |> Inl |> Some)
+let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
 
-let eta_expand (env:Env.env) (t:typ) : typ =
+let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
+  //unfold_whnf env t_e in
+  //It would be nice to eta_expand based on the WHNF of t_e
+  //except that this triggers a brittleness in the unification algorithm and its interaction with SMT encoding
+  //in particular, see Rel.u_abs (roughly line 520)
+  let formals, c = U.arrow_formals_comp t_e in
+  match formals with
+  | [] -> e
+  | _ ->
+    let actuals, _, _ = U.abs_formals e in
+    if List.length actuals = List.length formals
+    then e
+    else let binders, args = formals |> U.args_of_binders in
+         U.abs binders (mk_Tm_app e args None e.pos)
+                       (U.lcomp_of_comp c |> Inl |> Some)
+
+let eta_expand (env:Env.env) (t:term) : term =
   match !t.tk, t.n with
   | Some sort, _ ->
-      eta_expand_with_type t (mk sort t.pos)
+      eta_expand_with_type env t (mk sort t.pos)
   | _, Tm_name x ->
-      eta_expand_with_type t x.sort
+      eta_expand_with_type env t x.sort
   | _ ->
       let head, args = U.head_and_args t in
       begin match (SS.compress head).n with
@@ -1655,8 +1665,8 @@ let eta_expand (env:Env.env) (t:typ) : typ =
         if List.length formals = List.length args
         then t
         else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-             eta_expand_with_type t ty
+             eta_expand_with_type env t ty
       | _ ->
         let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
-        eta_expand_with_type t ty
+        eta_expand_with_type env t ty
       end

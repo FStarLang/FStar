@@ -104,6 +104,7 @@ let minus: document = Doc ()
 let underscore: document = Doc ()
 let bang: document = Doc ()
 let bar: document = Doc ()
+let long_left_arrow: document = Doc ()
 let larrow: document = Doc ()
 let rarrow: document = Doc ()
 

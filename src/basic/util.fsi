@@ -130,6 +130,16 @@ val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
 
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+val default_printer : printer
+val set_printer : printer -> unit
+
+val print_raw : string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -142,7 +152,7 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
-val mkdir_clean: string -> unit (* creates a new dir with user read/write or delete content of dir if exists *)
+val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
@@ -204,6 +214,7 @@ val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
+val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
 (* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
@@ -228,6 +239,7 @@ val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
+val try_find: ('a -> bool) -> list<'a> -> option<'a>
 val try_find_i: (int -> 'a -> bool) -> list<'a> -> option<(int * 'a)>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val try_find_index: ('a -> bool) -> list<'a> -> option<int>
@@ -359,3 +371,14 @@ type hints_db = {
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> option<hints_db>
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
+
+val json_of_string : string -> option<json>
+val string_of_json : json -> string

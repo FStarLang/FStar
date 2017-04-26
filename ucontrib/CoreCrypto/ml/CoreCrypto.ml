@@ -479,11 +479,15 @@ type ec_curve =
   | ECC_P256
   | ECC_P384
   | ECC_P521
+  | ECC_X25519
+  | ECC_X448
 
 let ec_bytelen = function
   | ECC_P256 -> Z.of_int 32
   | ECC_P384 -> Z.of_int 48
   | ECC_P521 -> Z.of_int 66 (* ceil(521/8) *)
+  | ECC_X25519 -> Z.of_int 32
+  | ECC_X448 -> Z.of_int 56
 
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
@@ -523,6 +527,7 @@ let ssl_name_of_curve = function
   | ECC_P256 -> "prime256v1"
   | ECC_P384 -> "secp384r1"
   | ECC_P521 -> "secp521r1"
+  | ECC_X25519 -> "X25519"
 
 let ec_group_new curve =
   ocaml_ec_group_new_by_curve_name (ssl_name_of_curve curve)
