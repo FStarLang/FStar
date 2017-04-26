@@ -154,18 +154,20 @@ ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
 echo "+++ ZIP COUNT:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
 echo "+++ File List 1"
-  ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))` 
+  #ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))`
+  # Windows git rm just needs the file name and fails if give path so just get file name
+  ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1))` 
 echo "+++ File List 2:"$ZIP_FILE_LIST
   for ZIP_FILE in $ZIP_FILE_LIST
   do
      echo "+++ PWD3:"$PWD
-     cd $BN_BINARYSPATH
+     #cd $BN_BINARYSPATH
      echo "+++ Remove:"${ZIP_FILE}
      rm ${ZIP_FILE}
      echo "+++ Git Remove:"${ZIP_FILE}
      echo "+++ PWD4:"$PWD
      echo "++ Length"${#ZIP_FILE}
-     #git rm ${ZIP_FILE} -f  #this fails and not sure why ... works fine on Linux and if run in cygwin
+     git rm ${ZIP_FILE} -f  
   done
 fi
 
