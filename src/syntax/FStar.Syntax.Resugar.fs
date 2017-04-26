@@ -161,7 +161,6 @@ let rec resugar_term_as_op(t:S.term) : option<string> =
     (C.iff_lid     , "<==>");
     (C.precedes_lid, "<<");
     (C.eq2_lid     , "==");
-    (C.precedes_lid, "<<");
     (C.eq3_lid     , "===");
     (C.forall_lid  , "forall");
     (C.exists_lid  , "exists");
@@ -470,6 +469,7 @@ let rec resugar_term (t : S.term) : A.term =
           (* ignore the arguments added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           (* KM : I don't think that '-' is resugared correctly here *)
+          //NS: this seems to produce the wrong output on things like
           begin match D.handleable_args_length op with
             | 1 -> mk (A.Op(op, resugar (last args)))
             | 2 -> mk (A.Op(op, resugar (last_two args)))
