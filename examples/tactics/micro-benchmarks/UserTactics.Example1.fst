@@ -9,21 +9,21 @@ let test_grewrite =
 assert_by_tactic (grewrite (quote (1 + 2)) (quote 3)) (1 + 2 == 2 + 1)
 
 let test_grewrite2 (w x y z:int) =
-assert_by_tactic (seq (grewrite (quote (z + y)) (quote (y + z)))
-                 (seq (grewrite (quote (x + (y + z))) (quote ((y + z) + x)))
-                      (grewrite (quote (w + ((y + z) + x))) (quote (((y + z) + x) + w))))
-                 ) (w + (x + (z + y)) == (y + z) + (x + w))
+assert_by_tactic (tbind' (grewrite (quote (z + y)) (quote (y + z)))
+                 (tbind' (grewrite (quote (x + (y + z))) (quote ((y + z) + x)))
+                         (grewrite (quote (w + ((y + z) + x))) (quote (((y + z) + x) + w)))))
+                 (w + (x + (z + y)) == (y + z) + (x + w))
 
 let test_grewrite3 (w x y z : int) =
-assert_by_tactic (seq (grewrite (quote (1 + 2)) (quote 3))
-                      (grewrite (quote (3, 3+4)) (quote (3,7))))
-                 ( (1+2, 3+4) == (5-2, 7+0) )
+assert_by_tactic (tbind' (grewrite (quote (1 + 2)) (quote 3))
+                         (grewrite (quote (3, 3+4)) (quote (3,7))))
+                 ((1+2, 3+4) == (5-2, 7+0))
 
 // Should rewrite all at once, and does, but we get a weird hard query
 let test_grewrite4 (f : int -> int -> int) (w : int) =
 assert_by_tactic (tbind implies_intro (fun _ ->
                   seq (grewrite (quote (f w w)) (quote w)) revert))
-                 ( f w w == w ==> f (f w w) (f w w) == w)
+                 (f w w == w ==> f (f w w) (f w w) == w)
 
 let simple_equality_assertions =
   assert_by_tactic rewrite_all_equalities
