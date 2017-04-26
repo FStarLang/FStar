@@ -57,7 +57,7 @@ type edge = {
 
 
 type effects = {
-  decls :list<eff_decl>;
+  decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
@@ -203,7 +203,7 @@ val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 val identity_mlift      : mlift
 val join                : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq           : env -> lident -> lident -> option<edge>
-val effect_decl_opt     : env -> lident -> option<eff_decl>
+val effect_decl_opt     : env -> lident -> option<(eff_decl * list<qualifier>)>
 val get_effect_decl     : env -> lident -> eff_decl
 val wp_signature        : env -> lident -> (bv * term)
 val null_wp_for_eff     : env -> lident -> universe -> term -> comp
