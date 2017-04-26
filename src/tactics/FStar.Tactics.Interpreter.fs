@@ -232,7 +232,7 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
                 let (topen', gs) = traverse f e' topen in
-                (Tm_abs (bs, SS.close bs topen', k), gs)
+                ((U.abs bs topen' k).n, gs)
         | x -> (x, []) in
     let t' = { t with n = tn' } in
     let t', gs' = f e t' in

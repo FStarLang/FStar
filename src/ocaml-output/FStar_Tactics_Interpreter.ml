@@ -570,28 +570,25 @@ let rec traverse:
                    (match uu____1204 with
                     | (topen',gs) ->
                         let uu____1215 =
-                          let uu____1216 =
-                            let uu____1231 =
-                              FStar_Syntax_Subst.close bs1 topen' in
-                            (bs1, uu____1231, k) in
-                          FStar_Syntax_Syntax.Tm_abs uu____1216 in
+                          let uu____1216 = FStar_Syntax_Util.abs bs1 topen' k in
+                          uu____1216.FStar_Syntax_Syntax.n in
                         (uu____1215, gs)))
           | x -> (x, []) in
         match uu____994 with
         | (tn',gs) ->
             let t' =
-              let uu___109_1251 = t in
+              let uu___109_1232 = t in
               {
                 FStar_Syntax_Syntax.n = tn';
                 FStar_Syntax_Syntax.tk =
-                  (uu___109_1251.FStar_Syntax_Syntax.tk);
+                  (uu___109_1232.FStar_Syntax_Syntax.tk);
                 FStar_Syntax_Syntax.pos =
-                  (uu___109_1251.FStar_Syntax_Syntax.pos);
+                  (uu___109_1232.FStar_Syntax_Syntax.pos);
                 FStar_Syntax_Syntax.vars =
-                  (uu___109_1251.FStar_Syntax_Syntax.vars)
+                  (uu___109_1232.FStar_Syntax_Syntax.vars)
               } in
-            let uu____1256 = f e t' in
-            (match uu____1256 with
+            let uu____1237 = f e t' in
+            (match uu____1237 with
              | (t'1,gs') -> (t'1, (FStar_List.append gs gs')))
 let preprocess:
   FStar_TypeChecker_Env.env ->
@@ -601,25 +598,25 @@ let preprocess:
   fun env  ->
     fun goal  ->
       let initial = ((Prims.parse_int "1"), []) in
-      let uu____1291 = traverse by_tactic_interp env goal in
-      match uu____1291 with
+      let uu____1272 = traverse by_tactic_interp env goal in
+      match uu____1272 with
       | (t',gs) ->
           let s = initial in
           let s1 =
             FStar_List.fold_left
-              (fun uu____1319  ->
+              (fun uu____1300  ->
                  fun g  ->
-                   match uu____1319 with
+                   match uu____1300 with
                    | (n1,gs1) ->
                        let gt' =
-                         let uu____1340 =
-                           let uu____1341 = FStar_Util.string_of_int n1 in
-                           Prims.strcat "Goal #" uu____1341 in
-                         FStar_TypeChecker_Util.label uu____1340
+                         let uu____1321 =
+                           let uu____1322 = FStar_Util.string_of_int n1 in
+                           Prims.strcat "Goal #" uu____1322 in
+                         FStar_TypeChecker_Util.label uu____1321
                            FStar_Range.dummyRange
                            g.FStar_Tactics_Basic.goal_ty in
                        ((n1 + (Prims.parse_int "1")),
                          (((g.FStar_Tactics_Basic.context), gt') :: gs1))) s
               gs in
-          let uu____1347 = s1 in
-          (match uu____1347 with | (uu____1356,gs1) -> (env, t') :: gs1)
+          let uu____1328 = s1 in
+          (match uu____1328 with | (uu____1337,gs1) -> (env, t') :: gs1)
