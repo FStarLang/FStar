@@ -117,6 +117,7 @@ val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
 val push                        : unit    -> unit
 val record_hints                : unit    -> bool
+val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
