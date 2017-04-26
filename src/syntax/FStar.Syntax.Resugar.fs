@@ -68,7 +68,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
       | _ ->
         let e1 = mk (A.Const(Const_int(string_of_int n, None))) r in
         let e2 = resugar_universe u r in
-        mk (A.Op("+", [e1; e2])) r
+        mk (A.Op(Ident.id_of_text "+", [e1; e2])) r
       end
 
     | U_max l ->
@@ -94,6 +94,7 @@ let string_to_op s =
     | "Amp" -> Some "&"
     | "At" -> Some "@"
     | "Plus" -> Some "+"
+    (* TODO : there is some arity information which is lost here ! *)
     | "Minus" -> Some "-"
     | "Subtraction" -> Some "-"
     | "Slash" -> Some "/"
@@ -168,17 +169,17 @@ let rec resugar_term_as_op(t:S.term) : option<string> =
   ] in
   let fallback fv =
     match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
-        | Some op ->
-          Some(snd op)
-        | _ ->
-          let length = String.length(fv.fv_name.v.nsstr) in
-          let str = if length=0 then fv.fv_name.v.str
-              else BU.substring_from fv.fv_name.v.str (length+1) in
-          if BU.starts_with str "dtuple" then Some "dtuple"
-          else if BU.starts_with str "tuple" then Some "tuple"
-          else if BU.starts_with str "try_with" then Some "try_with"
-          else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
-          else None
+    | Some op ->
+      Some (snd op)
+    | _ ->
+      let length = String.length(fv.fv_name.v.nsstr) in
+      let str = if length=0 then fv.fv_name.v.str
+          else BU.substring_from fv.fv_name.v.str (length+1) in
+      if BU.starts_with str "dtuple" then Some "dtuple"
+      else if BU.starts_with str "tuple" then Some "tuple"
+      else if BU.starts_with str "try_with" then Some "try_with"
+      else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
+      else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
@@ -316,18 +317,18 @@ let rec resugar_term (t : S.term) : A.term =
             | hd :: [] -> [hd]
             | hd :: tl -> last tl
             | _ -> failwith "last of an empty list"
-      in 
+      in
       let rec last_two = function
             | [] | [_] -> failwith "last two elements of a list with less than two elements "
             | [a1;a2] -> [a1;a2]
             | _::t -> last_two t
-      in 
+      in
       let rec last_three = function
             | [] | [_] | [_;_] -> failwith "last three elements of a list with less than three elements "
             | [a1;a2;a3] -> [a1;a2;a3]
             | _::t -> last_three t
-      in 
-      let resugar_as_app e args =   
+      in
+      let resugar_as_app e args =
         let args = args |> List.map (fun (e, qual) ->
               resugar_term e) in
         let e = resugar_term e in
@@ -342,15 +343,15 @@ let rec resugar_term (t : S.term) : A.term =
             resugar_term e) in
           begin match args with
             | fst::snd::rest ->
-              let e = mk(A.Op("*", [fst; snd])) in
-              List.fold_left(fun acc x -> mk (A.Op("*", [e;x]))) e rest
+              let e = mk(A.Op(Ident.id_of_text "*", [fst; snd])) in
+              List.fold_left(fun acc x -> mk (A.Op(Ident.id_of_text "*", [e;x]))) e rest
             | _ -> failwith "tuple needs at least two arguments."
           end
 
         | Some "dtuple" ->
           (* this is desugared from Sum(binders*term) *)
           let args = last args in
-          let body = match args with 
+          let body = match args with
             | [(b, _)] -> b
             | _ -> failwith "wrong arguments to dtuple"
           in
@@ -380,10 +381,10 @@ let rec resugar_term (t : S.term) : A.term =
         | Some "try_with" ->
           (* only the last two args are from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
-          let new_args = last_two args in 
+          let new_args = last_two args in
           let body, handler = match new_args with
-            | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *) 
-            | _ -> 
+            | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *)
+            | _ ->
               failwith("wrong arguments to try_with")
           in
           let decomp term = match (SS.compress term).n with
@@ -395,18 +396,18 @@ let rec resugar_term (t : S.term) : A.term =
           let handler = resugar_term (decomp handler) in
           let rec resugar_body t = match (t.tm) with
             | A.Match(e, [(_,_,b)]) -> b
-            | A.Ascribed(t1, t2, t3) -> 
+            | A.Ascribed(t1, t2, t3) ->
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               mk (A.Ascribed(resugar_body t1, t2, t3))
             | _ -> failwith("unexpected body format to try_with") in
           let e = resugar_body body in
           let rec resugar_branches t = match (t.tm) with
             | A.Match(e, branches) -> branches
-            | A.Ascribed(t1, t2, t3) -> 
+            | A.Ascribed(t1, t2, t3) ->
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               (* TODO: where should we keep the information stored in Ascribed? *)
               resugar_branches t1
-            | _ -> 
+            | _ ->
               (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
               []
           in
@@ -443,31 +444,33 @@ let rec resugar_term (t : S.term) : A.term =
                 let xs = xs |> List.rev in
                 if op = "forall" then mk (A.QForall(xs, pats, body)) else mk (A.QExists(xs, pats, body))
 
-            | _ -> 
+            | _ ->
             (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
             (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-            if op = "forall" then mk (A.QForall([], [[]], resugar_term body)) 
+            if op = "forall" then mk (A.QForall([], [[]], resugar_term body))
             else mk (A.QExists([], [[]], resugar_term body))
           in
           (* only the last two args are from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
-          let args = last args in 
+          let args = last args in
           begin match args with
             | [(b, _)] -> resugar b
             | _ -> failwith "wrong args format to QForall"
           end
-           
+
         | Some "alloc" ->
           let (e, _ ) = List.hd args in
           resugar_term e
 
-        | Some op -> 
+        | Some op ->
+          let op = Ident.id_of_text op in
           let resugar args = args |> List.map (fun (e, qual) ->
-              resugar_term e) 
+              resugar_term e)
           in
           (* ignore the arguments added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
-          begin match D.handleable_args_length op with 
+          (* KM : I don't think that '-' is resugared correctly here *)
+          begin match D.handleable_args_length op with
             | 1 -> mk (A.Op(op, resugar (last args)))
             | 2 -> mk (A.Op(op, resugar (last_two args)))
             | 3 -> mk (A.Op(op, resugar (last_three args)))
@@ -550,7 +553,7 @@ let rec resugar_term (t : S.term) : A.term =
                     let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
                     let args = List.map (fun (t, _) -> (resugar_term t, A.Nothing)) args in
                     if (U.is_tuple_data_lid' head) then
-                      // ToDocument doesn't expect uvar that is added by the 
+                      // ToDocument doesn't expect uvar that is added by the
                       // typechecker in tuple constructor
                       // TODO: where should be store the universe information?
                       mk (A.Construct(head, args))
@@ -568,14 +571,14 @@ let rec resugar_term (t : S.term) : A.term =
               end
           | Sequence ->
               let term = resugar_term e in
-              let rec resugar_seq t = match t.tm with  
+              let rec resugar_seq t = match t.tm with
                 | A.Let(_, [p, t1], t2) ->
                    mk (A.Seq(t1, t2))
-                | A.Ascribed(t1, t2, t3) -> 
+                | A.Ascribed(t1, t2, t3) ->
                    (* this case happens when the let is wrapped in Meta_Monadic which is resugared to Ascribe*)
                    mk (A.Ascribed(resugar_seq t1, t2, t3))
                 | _ ->
-                   (* this case happens in typechecker.normalize when Tm_let is_pure_effect, then 
+                   (* this case happens in typechecker.normalize when Tm_let is_pure_effect, then
                       only the body of Tm_let is used. *)
                    (* TODO: How should it be resugared *)
                    t
@@ -736,7 +739,7 @@ and resugar_match_pat (p:S.pat) : A.pattern =
       // reverse the fields and args list to match them since the args added by the type checker
       // are inserted in the front of the args list.
       let fields = fields |> List.map (fun f -> FStar.Ident.lid_of_ids [f]) |> List.rev in
-      let args = args |> List.map (fun (p, b) -> aux p) |> List.rev in 
+      let args = args |> List.map (fun (p, b) -> aux p) |> List.rev in
       // make sure the fields and args are of the same length.
       let rec map2 l1 l2  = match (l1, l2) with
         | ([], []) -> []
@@ -746,8 +749,8 @@ and resugar_match_pat (p:S.pat) : A.pattern =
       in
       // reverse back the args list
       let args = map2 fields args |> List.rev in
-      mk (A.PatRecord(args))     
-      
+      mk (A.PatRecord(args))
+
 
     | Pat_cons (fv, args) ->
       let args = List.map (fun (p, b) -> aux p) args in
@@ -758,7 +761,7 @@ and resugar_match_pat (p:S.pat) : A.pattern =
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op v.ppname.idText with
-       | Some op -> mk (A.PatOp op)
+       | Some op -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
        | None -> mk (A.PatVar (bv_as_unique_ident v, None))
       end
 

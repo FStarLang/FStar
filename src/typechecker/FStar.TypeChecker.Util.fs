@@ -44,8 +44,8 @@ module C = FStar.Syntax.Const
 
 //Reporting errors
 let report env errs =
-    Errors.report (Env.get_range env)
-                  (Err.failed_to_prove_specification errs)
+    Errors.err (Env.get_range env)
+               (Err.failed_to_prove_specification errs)
 
 (************************************************************************)
 (* Unification variables *)
@@ -91,7 +91,7 @@ let check_uvars r t =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.report r
+    Errors.err r
       (BU.format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" us (Print.term_to_string t));
     Options.pop()
@@ -825,19 +825,23 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
-    match (SS.compress t).n with
-        | Tm_type _ ->
-          begin match (SS.compress lc.res_typ).n with
-            | Tm_fvar fv when S.fv_eq_lid fv Const.bool_lid ->
-              let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-              let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
-              let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
-              let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
-              e, lc
-            | _ -> e, lc
-          end
-
-        | _ -> e, lc
+    let is_type t =
+        let t = N.unfold_whnf env t in
+        match (SS.compress t).n with
+        | Tm_type _ -> true
+        | _ -> false
+    in
+    match (SS.compress lc.res_typ).n with
+    | Tm_fvar fv
+        when S.fv_eq_lid fv Const.bool_lid
+          && is_type t ->
+      let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
+      let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
+      let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
+      let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
+      e, lc
+    | _ ->
+      e, lc
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   let use_eq =
@@ -1362,7 +1366,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbdef = def;
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
-  // [Inline] triggers a "Impossible: locally nameless" error
+  // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [ Unfold_for_unification_and_vcgen ], [])) in
   sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
 
@@ -1560,7 +1564,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
-            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name; sigdoc = None }  in // FIXME: Doc
+            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name }  in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1597,7 +1601,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
-                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; sigdoc = None } in // FIXME: Doc
+                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1642,7 +1646,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
-          let decl = { sigel = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name; sigdoc = None } in // FIXME: Doc
+          let decl = { sigel = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1673,7 +1677,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
-              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p; sigdoc = None } in // FIXME: doc
+              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten

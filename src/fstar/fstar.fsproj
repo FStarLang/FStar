@@ -69,6 +69,7 @@
     <Compile Include="FStar.Dependencies.fs" />
     <Compile Include="FStar.Universal.fs" />
     <Compile Include="FStar.Interactive.fs" />
+    <Compile Include="FStar.Legacy.Interactive.fs" />
     <Compile Include="FStar.Indent.fs" />
     <Compile Include="FStar.Main.fs" />
     <Compile Include="FStar.Top.fs" />

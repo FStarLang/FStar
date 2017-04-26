@@ -159,8 +159,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let with_fuel label_assumptions p (n, i, rlimit) =
        [Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, None);
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, None);
+        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
+        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
         p]
         @label_assumptions
         @[Term.SetOption ("rlimit", string_of_int rlimit)]
@@ -169,7 +169,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @suffix in
 
     let check (p:decl) =
-        let rlimit = Prims.op_Multiply (Options.z3_rlimit ()) 544656 in
+        let rlimit = Prims.op_Multiply (Options.z3_rlimit_factor ()) (Prims.op_Multiply (Options.z3_rlimit ()) 544656) in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), rlimit in
         let hint_opt = next_hint query_name query_index in
         let unsat_core, initial_config =
@@ -188,7 +188,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
             (if Options.max_ifuel()    >  Options.initial_ifuel() then [Options.initial_fuel(), Options.max_ifuel(), rlimit] else []);
             (if Options.max_fuel() / 2 >  Options.initial_fuel()  then [Options.max_fuel() / 2, Options.max_ifuel(), rlimit] else []);
             (if Options.max_fuel()     >  Options.initial_fuel() &&
-                Options.max_ifuel()    >  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), rlimit] else []);
+                Options.max_ifuel()   >=  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), rlimit] else []);
             (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), 1, rlimit]                       else [])] in
         let report p (errs:z3_err) : unit =
             let errs : z3_err =
@@ -220,20 +220,12 @@ let ask_and_report_errors env all_labels prefix query suffix =
             | ([], _), _
             | _, Inl _ -> result
             | _, Inr _ -> Inr errs in
+            
         let rec try_alt_configs prev_f (p:decl) (errs:z3_err) cfgs (scope:scope_t) =
             set_minimum_workable_fuel prev_f errs;
             match cfgs, snd errs with
             | [], _
             | _, Kill -> report p errs
-            | [mi], _-> //we're down to our last config; last ditch effort to get a counterexample with very low fuel
-                begin match errs with
-                | [], _ ->
-                    Z3.ask None all_labels (with_fuel [] p mi) (Some scope) (cb false mi p [] scope)
-
-                | _ -> set_minimum_workable_fuel prev_f errs;
-                       report p errs
-                end
-
             | mi::tl, _ ->
                     Z3.ask None all_labels (with_fuel [] p mi) (Some scope)
                         (fun (result, elapsed_time) -> cb false mi p tl scope (use_errors errs result, elapsed_time))
@@ -242,7 +234,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
             if Options.z3_refresh() || Options.print_z3_statistics() then Z3.refresh();
             let query_info tag =
-                 BU.print "(%s%s)\n\tQuery (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
+                 BU.print "(%s%s)\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s\n"
                                 [Range.string_of_range (Env.get_range env);
                                  at_log_file();
                                  query_name;
@@ -273,7 +265,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
                  then query_info "failed";
                  try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope in
 
-        if Option.isSome unsat_core then Z3.refresh();
+        if Option.isSome unsat_core
+        || Options.z3_refresh() then Z3.refresh();
         Z3.ask unsat_core
                all_labels
                (with_fuel [] p initial_config)
@@ -281,10 +274,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                (cb (Option.isSome unsat_core) initial_config p alt_configs !Z3.fresh_scope) in
 
     let process_query (q:decl) :unit =
-        if (Options.split_cases()) > 0 then
-            let (b, cb) = SplitQueryCases.can_handle_query (Options.split_cases()) q in
-            if b then SplitQueryCases.handle_query cb check else check q
-        else check q
+        check q
     in
 
     if Options.admit_smt_queries() then () else process_query query

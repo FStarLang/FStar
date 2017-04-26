@@ -325,7 +325,8 @@ let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * 
     then match BU.smap_try_find (gamma_cache env) lid.str with
       | None ->
         BU.find_map env.gamma (function
-          | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
+          | Binding_lid(l,t) ->
+            if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
           | Binding_sig (_, { sigel = Sig_bundle(ses, _, _) }) ->
               BU.find_map ses (fun se ->
                 if lids_of_sigelt se |> BU.for_some (lid_equals lid)
@@ -336,12 +337,12 @@ let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * 
               | Sig_declare_typ _ -> Some t
               | _ -> cache t
             in
-            begin match List.tryFind (lid_equals lid) lids with 
+            begin match List.tryFind (lid_equals lid) lids with
                   | None -> None
                   | Some l -> maybe_cache (Inr (s, None), Ident.range_of_lid l)
             end
           | Binding_sig_inst (lids, s, us) ->
-            begin match List.tryFind (lid_equals lid) lids with 
+            begin match List.tryFind (lid_equals lid) lids with
                   | None -> None
                   | Some l -> Some (Inr (s, Some us), Ident.range_of_lid l)
             end
@@ -406,7 +407,7 @@ let effect_signature se =
     | _ -> None
 
 let try_lookup_lid_aux env lid =
-  let mapper (lr, rng) = 
+  let mapper (lr, rng) =
     match lr with
     | Inl t ->
       Some (t, rng)
@@ -434,10 +435,10 @@ let try_lookup_lid_aux env lid =
       end
 
     | Inr se ->
-      begin match se with
+      begin match se with // FIXME why does this branch not use rng?
         | { sigel = Sig_let _ }, None -> lookup_type_of_let (fst se) lid
         | _ -> effect_signature (fst se)
-      end
+      end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
   in
     match BU.bind_opt (lookup_qname env lid) mapper with
       | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
@@ -452,7 +453,7 @@ let try_lookup_lid_aux env lid =
 //        val lookup_lid             : env -> lident -> (universes * typ)
 //        val lookup_univ            : env -> univ_name -> bool
 //        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
-//        val lookup_val_decl        : env -> lident -> (universes * typ)
+//        val lookup_val_decl        : env -> lident -> universes * typ
 //        val lookup_datacon         : env -> lident -> universes * typ
 //        val datacons_of_typ        : env -> lident -> list<lident>
 //        val typ_of_datacon         : env -> lident -> lident
@@ -483,7 +484,7 @@ let lookup_bv env bv =
     let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
     | None -> raise (Error(variable_not_found bv, bvr))
-    | Some (t, r) -> Subst.set_use_range bvr t, 
+    | Some (t, r) -> Subst.set_use_range bvr t,
                      Range.set_use_range r bvr
 
 let try_lookup_lid env l =
@@ -497,7 +498,7 @@ let try_lookup_lid env l =
 let lookup_lid env l =
     match try_lookup_lid env l with
     | None -> raise (Error(name_not_found l, range_of_lid l))
-    | Some ((us, t), r) -> (us, t), r
+    | Some v -> v
 
 let lookup_univ env x =
     List.find (function
@@ -683,7 +684,7 @@ let is_interpreted =
         | _ -> false
 
 let is_type_constructor env lid =
-    let mapper x = 
+    let mapper x =
         match fst x with
         | Inl _ -> Some false
         | Inr (se, _) ->
@@ -1042,6 +1043,11 @@ let push_module env (m:modul) =
 
 let push_univ_vars (env:env_t) (xs:univ_names) : env_t =
     List.fold_left (fun env x -> push_local_binding env (Binding_univ x)) env xs
+
+let open_universes_in env uvs terms =
+    let univ_subst, univ_vars = Subst.univ_var_opening uvs in
+    let env' = push_univ_vars env univ_vars in
+    env', univ_vars, List.map (Subst.subst univ_subst) terms
 
 let set_expected_typ env t =
   {env with expected_typ = Some t; use_eq=false}

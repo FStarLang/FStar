@@ -68,12 +68,10 @@ type let_qualifier =
   | Rec
   | Mutable
 
-type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
-
 type term' =
   | Wild
   | Const     of sconst
-  | Op        of string * list<term>
+  | Op        of ident * list<term>
   | Tvar      of ident
   | Uvar      of ident                                (* universe variable *)
   | Var       of lid // a qualified identifier that starts with a lowercase (Foo.Bar.baz)
@@ -88,6 +86,7 @@ type term' =
   | Let       of let_qualifier * list<(pattern * term)> * term
   | LetOpen   of lid * term
   | Seq       of term * term
+  | Bind      of ident * term * term
   | If        of term * term * term
   | Match     of term * list<branch>
   | TryWith   of term * list<branch>
@@ -131,7 +130,7 @@ and pattern' =
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term
   | PatOr       of list<pattern>
-  | PatOp       of string
+  | PatOp       of ident
 and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
@@ -139,6 +138,13 @@ and branch = (pattern * option<term> * term)
 type knd = term
 type typ = term
 type expr = term
+
+// Documentation comment. May appear appear as follows:
+//  - Immediately before a top-level declaration
+//  - Immediately after a type constructor or record field
+//  - In the middle of a file, as a standalone documentation declaration
+(* KM : Would need some range information on fsdocs to be able to print them correctly *)
+type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
 type tycon =
@@ -251,13 +257,13 @@ let mk_decl d r decorations =
 
 let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
-let mk_uminus t r l =
+let mk_uminus t rminus r l =
   let t =
     match t.tm with
     | Const (Const_int (s, Some (Signed, width))) ->
         Const (Const_int ("-" ^ s, Some (Signed, width)))
     | _ ->
-        Op("-", [t])
+        Op(mk_ident ("-", rminus), [t])
   in
   mk_term t r l
 
@@ -442,7 +448,11 @@ let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<dec
             as_mlist out ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (d:decl) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+  let d, ds = match ds with
+    | d :: ds -> d, ds
+    | [] -> raise Empty_frag
+  in
   match d.d with
   | TopLevelModule m ->
       let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
@@ -498,6 +508,9 @@ let compile_op' s =
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+let string_of_fsdoc (comment,keywords) =
+    comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
+
 let string_of_let_qualifier = function
   | NoLetQualifier -> ""
   | Rec -> "rec"
@@ -513,7 +526,8 @@ let rec term_to_string (x:term) = match x.tm with
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> C.const_to_string c
-  | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
+  | Op(s, xs) ->
+      Util.format2 "%s(%s)" (text_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id
   | Uvar id -> id.idText
   | Var l
@@ -588,9 +602,9 @@ and binder_to_string x =
   Util.format2 "%s%s" (aqual_to_string x.aqual) s
 
 and aqual_to_string = function
-   | Some Equality -> "$"
-   | Some Implicit -> "#"
-   | _ -> ""
+  | Some Equality -> "$"
+  | Some Implicit -> "#"
+  | _ -> ""
 
 and pat_to_string x = match x.pat with
   | PatWild -> "_"
@@ -604,15 +618,15 @@ and pat_to_string x = match x.pat with
   | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
-  | PatOp op ->  Util.format1 "(%s)" op
+  | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
 
 let rec head_id_of_pat p = match p.pat with
-        | PatName l -> [l]
-        | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
-        | PatApp(p, _) -> head_id_of_pat p
-        | PatAscribed(p, _) -> head_id_of_pat p
-        | _ -> []
+  | PatName l -> [l]
+  | PatVar (i, _) -> [FStar.Ident.lid_of_ids [i]]
+  | PatApp(p, _) -> head_id_of_pat p
+  | PatAscribed(p, _) -> head_id_of_pat p
+  | _ -> []
 
 let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 

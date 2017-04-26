@@ -21,9 +21,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrFieldEq",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrFieldEq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
+        "refinement_interpretation_NetKat_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
       ],
       0
     ],
@@ -33,9 +33,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrFieldEq",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrFieldEq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
+        "refinement_interpretation_NetKat_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
       ],
       0
     ],
@@ -46,9 +46,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrOr",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrOr",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
+        "refinement_interpretation_NetKat_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
       ],
       0
     ],
@@ -58,9 +58,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrOr",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrOr",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
+        "refinement_interpretation_NetKat_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
       ],
       0
     ],
@@ -71,9 +71,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrAnd",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrAnd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
+        "refinement_interpretation_NetKat_Tm_refine_1946ce43305aefbee803bf8108076b85"
       ],
       0
     ],
@@ -83,9 +83,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrAnd",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrAnd",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
+        "refinement_interpretation_NetKat_Tm_refine_1946ce43305aefbee803bf8108076b85"
       ],
       0
     ],
@@ -96,9 +96,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PrNot",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrNot",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7760677cd8a5f6510bfc8a68ad245267"
+        "refinement_interpretation_NetKat_Tm_refine_7760677cd8a5f6510bfc8a68ad245267"
       ],
       0
     ],
@@ -109,9 +109,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoFilter",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoFilter",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e0380cdb056d7ca9abeae44e9ba6fa85"
+        "refinement_interpretation_NetKat_Tm_refine_e0380cdb056d7ca9abeae44e9ba6fa85"
       ],
       0
     ],
@@ -122,9 +122,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoMod",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoMod",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
+        "refinement_interpretation_NetKat_Tm_refine_cbdb8a3b39554f903e421008232b8117"
       ],
       0
     ],
@@ -134,9 +134,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoMod",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoMod",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
+        "refinement_interpretation_NetKat_Tm_refine_cbdb8a3b39554f903e421008232b8117"
       ],
       0
     ],
@@ -147,9 +147,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoUnion",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoUnion",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
+        "refinement_interpretation_NetKat_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
       ],
       0
     ],
@@ -159,9 +159,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoUnion",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoUnion",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
+        "refinement_interpretation_NetKat_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
       ],
       0
     ],
@@ -172,9 +172,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoSeq",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoSeq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
+        "refinement_interpretation_NetKat_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
       ],
       0
     ],
@@ -184,9 +184,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoSeq",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoSeq",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
+        "refinement_interpretation_NetKat_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
       ],
       0
     ],
@@ -197,9 +197,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_NetKat.PoStar",
+        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoStar",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_85f8b73a81bd8fc5fad5d793e629d0e4"
+        "refinement_interpretation_NetKat_Tm_refine_85f8b73a81bd8fc5fad5d793e629d0e4"
       ],
       0
     ],

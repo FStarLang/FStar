@@ -66,7 +66,7 @@ let frame_aead_entries_are_refined_mac_wrapper #i #rw #aadlen #plainlen aead_st 
     assert (entries_0 == entries_1);
     assert (table_0 == table_1);
     assert (aead_entries_are_refined table_0 entries_0 h0);
-    assert (HS.modifies_ref aead_st.prf.mac_rgn !{HS.as_ref (as_hsref (CMA.(ilog mac_st.log)))} h0 h1);
+    assert (HS.modifies_ref aead_st.prf.mac_rgn (Set.singleton (Heap.addr_of (HS.as_ref (as_hsref (CMA.(ilog mac_st.log)))))) h0 h1);
     let h1: (h:HS.mem{safeId i}) = h1 in
     let aux (e:aead_entry i) : Lemma
     	(requires (entries_1 `contains` e))

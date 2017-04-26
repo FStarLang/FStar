@@ -73,6 +73,8 @@
   <ItemGroup>
     <Compile Include="FStar.ToSyntax.Env.fsi" />
     <Compile Include="FStar.ToSyntax.Env.fs" />
+    <Compile Include="FStar.ToSyntax.Interleave.fsi" />
+    <Compile Include="FStar.ToSyntax.Interleave.fs" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fsi" />
     <Compile Include="FStar.ToSyntax.ToSyntax.fs" />
     <Content Include="packages.config" />

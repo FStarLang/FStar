@@ -8,7 +8,8 @@
       2,
       1,
       [
-        "@query", "interpretation_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
+        "@query",
+        "interpretation_Equivalence_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "unit_typing"
       ],
@@ -20,13 +21,13 @@
       2,
       1,
       [
-        "@query", "fuel_guarded_inversion_Prims.tuple2",
-        "interpretation_Tm_abs_86e6d9d94d01c3cfb388b33ae07f7d58",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "interpretation_Equivalence_Tm_abs_e8a79b2af607a45d90694405a59a3d44",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
         "projection_inverse_Prims.Mktuple2__a",
-        "refinement_interpretation_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac",
+        "refinement_interpretation_Equivalence_Tm_refine_a42317b01ab78cecaef883b8c781ecae",
         "unit_typing"
       ],
       0
@@ -37,8 +38,8 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Equivalence_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac"
       ],
       0
     ],
@@ -48,13 +49,13 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "equation_Prims.fst",
-        "interpretation_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_Prims.fst",
+        "interpretation_Equivalence_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
         "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_008ce3792f325163110297275391381d"
+        "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0
     ]

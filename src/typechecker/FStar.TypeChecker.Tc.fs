@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -322,6 +322,9 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
       let actions =
         let check_action act =
+          (* We should not have action params anymore, they should have been handled by dmff below *)
+          assert (match act.action_params with | [] -> true | _ -> false) ;
+
           // 0) The action definition has a (possibly) useless type; the
           // action cps'd type contains the "good" wp that tells us EVERYTHING
           // about what this action does. Please note that this "good" wp is
@@ -330,7 +333,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
-          let env' = Env.set_expected_typ env act_typ in
+          let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
           if Env.debug env (Options.Other "ED") then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
@@ -379,17 +382,21 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (* printfn "Checked action %s against type %s\n" *)
           (*         (Print.term_to_string act_defn) *)
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
+
           let univs, act_defn = TcUtil.generalize_universes env act_defn in
+
           let act_typ = N.normalize [N.Beta] env act_typ in
           {act with
               action_univs=univs;
               action_defn=act_defn;
-              action_typ =act_typ } in
+              action_typ =act_typ }
+        in
         ed.actions |> List.map check_action in
       repr, bind_repr, return_repr, actions
   in
 
   //generalize and close
+  (* QUESTION (KM) : Why do we close with ed.binders and not effect_params ?? *)
   let t = U.arrow ed.binders (S.mk_Total ed.signature) in
   let (univs, t) = TcUtil.generalize_universes env0 t in
   let signature = match effect_params, (SS.compress t).n with
@@ -418,12 +425,12 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     { act with
         action_univs=univs;
         action_defn=defn;
-        action_typ=typ; } in
-  let nunivs = List.length univs in
-  assert (List.length effect_params > 0 || nunivs = 1);
+        action_typ=typ; }
+  in
+  assert (List.length effect_params > 0 || List.length univs = 1);
   let ed = { ed with
       univs       = univs
-    ; binders     = effect_params
+    ; binders     = effect_params (* QUESTION (KM) : don't we need to close the effect params ? *)
     ; signature   = signature
     ; ret_wp      = close 0 return_wp
     ; bind_wp     = close 1 bind_wp
@@ -479,8 +486,8 @@ and cps_and_elaborate env ed =
       else a
   in
 
-  let open_and_check t =
-    let subst = SS.opening_of_binders effect_binders in
+  let open_and_check env other_binders t =
+    let subst = SS.opening_of_binders (effect_binders @ other_binders) in
     let t = SS.subst subst t in
     let t, comp, _ = tc_term env t in
     t, comp
@@ -488,7 +495,7 @@ and cps_and_elaborate env ed =
   let mk x = mk x None signature.pos in
 
   // TODO: check that [_comp] is [Tot Type]
-  let repr, _comp = open_and_check ed.repr in
+  let repr, _comp = open_and_check env [] ed.repr in
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
@@ -512,10 +519,11 @@ and cps_and_elaborate env ed =
 
   // TODO: we assume that reading the top-level definitions in the order that
   // they come in the effect definition is enough... probably not
-  let elaborate_and_star dmff_env item =
+  let elaborate_and_star dmff_env other_binders item =
+    let env = DMFF.get_env dmff_env in
     let u_item, item = item in
     // TODO: assert no universe polymorphism
-    let item, item_comp = open_and_check item in
+    let item, item_comp = open_and_check env other_binders item in
     if not (U.is_total_lcomp item_comp) then
       raise (Err (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
@@ -524,8 +532,8 @@ and cps_and_elaborate env ed =
     dmff_env, item_t, item_wp, item_elab
   in
 
-  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env ed.bind_repr in
-  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env ed.return_repr in
+  let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
+  let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
 
   (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
   (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
@@ -544,7 +552,7 @@ and cps_and_elaborate env ed =
           let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
           N.normalize [ N.Beta ] env0 raw_wp_b1
         in
-        let bs, body, what' = U.abs_formals <|  N.eta_expand_with_type body (U.unascribe wp_b1) in
+        let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
 
         (* We check that what' is Tot Type0 *)
         let fail () =
@@ -628,15 +636,42 @@ and cps_and_elaborate env ed =
   sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries false")) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
+    let params_un = SS.open_binders action.action_params in
+    let action_params, env', _ = tc_tparams (DMFF.get_env dmff_env) params_un in
+    let action_params = List.map (fun (bv, qual) ->
+      { bv with sort = N.normalize [ N.EraseUniverses ] env' bv.sort }, qual
+    ) action_params in
+    let dmff_env' = DMFF.set_env dmff_env env' in
     // We need to reverse-engineer what tc_eff_decl wants here...
     let dmff_env, action_t, action_wp, action_elab =
-      elaborate_and_star dmff_env (action.action_univs, action.action_defn)
+      elaborate_and_star dmff_env' action_params (action.action_univs, action.action_defn)
     in
     let name = action.action_name.ident.idText in
-    let action_typ_with_wp = DMFF.trans_F dmff_env action_t action_wp in
+    let action_typ_with_wp = DMFF.trans_F dmff_env' action_t action_wp in
+    let action_params = SS.close_binders action_params in
+    let action_elab = SS.close action_params action_elab in
+    let action_typ_with_wp = SS.close action_params action_typ_with_wp in
+    let action_elab = abs action_params action_elab None in
+    let action_typ_with_wp =
+      match action_params with
+      | [] -> action_typ_with_wp
+      | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
+    in
+    if Env.debug env <| Options.Other "ED"
+    then BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
+        (Print.binders_to_string "," params_un)
+        (Print.binders_to_string "," action_params)
+        (Print.term_to_string action_typ_with_wp)
+        (Print.term_to_string action_elab) ;
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
-    dmff_env, { action with action_defn = apply_close action_elab; action_typ = apply_close action_typ_with_wp } :: actions
+    (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
+    dmff_env,
+    { action with
+      action_params = [] ;
+      action_defn = apply_close action_elab;
+      action_typ = apply_close action_typ_with_wp
+    } :: actions
   ) (dmff_env, []) ed.actions in
   let actions = List.rev actions in
 
@@ -737,9 +772,9 @@ and tc_lex_t env ses quals lids =
         | _ -> assert false
     end;
     begin match ses with
-      | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r; sigdoc = d };
-         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1; sigdoc = d1 };
-         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2; sigdoc = d2 }]
+      | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _, []); sigrng = r };
+         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _); sigrng = r1 };
+         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _); sigrng = r2 }]
          when (lid_equals lex_t Const.lex_t_lid
             && lid_equals lex_top Const.lextop_lid
             && lid_equals lex_cons Const.lexcons_lid) ->
@@ -748,13 +783,13 @@ and tc_lex_t env ses quals lids =
         let t = mk (Tm_type(U_name u)) None r in
         let t = Subst.close_univ_vars [u] t in
         let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], []);
-                   sigrng = r; sigdoc = d } in
+                   sigrng = r } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], []);
-                          sigrng = r1; sigdoc = d1 } in
+                          sigrng = r1 } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -766,8 +801,8 @@ and tc_lex_t env ses quals lids =
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], []);
-                           sigrng = r2; sigdoc = d2 } in
-        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env; sigdoc = None } // FIXME: Doc
+                           sigrng = r2 } in
+        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids); sigrng = Env.get_range env }
       | _ ->
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, [], lids)))))
     end
@@ -777,7 +812,7 @@ and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    { sigel = Sig_assume(lid, phi, quals); sigrng = r; sigdoc = None } // FIXME: Doc
+    { sigel = Sig_assume(lid, phi, quals); sigrng = r }
 
 and tc_inductive env ses quals lids =
     let env0 = env in
@@ -802,7 +837,7 @@ and tc_inductive env ses quals lids =
              | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.report r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
+           Errors.err r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
          else ()
        ) tcs in
        ());
@@ -831,7 +866,7 @@ and tc_inductive env ses quals lids =
           if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
           else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
         in
-        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0; sigdoc = None }::ses, data_ops_ses // FIXME: Doc
+        { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0 }::ses, data_ops_ses
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
@@ -859,7 +894,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_bundle(ses, quals, lids) ->
     let env = Env.set_range env r in
-    let ses, projectors_ses = tc_inductive env ses quals lids  in
+    let ses, projectors_ses = tc_inductive env ses quals lids in
     ses, projectors_ses
 
   | Sig_pragma(p) ->
@@ -1114,10 +1149,12 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       | _ -> failwith "impossible"
     in
 
+    // CPC doc: Actually I don't need the let-val pairing; It's enough to register the docs of the val independently, since they won't be overwritten when the let is desugared with no docs.
+
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_identifier_info (Inr fv) lb.lbtyp (range_of_fv fv));
+        Common.insert_fv fv lb.lbtyp);
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
@@ -1216,8 +1253,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     if hidden |> BU.for_some (S.fv_eq_lid fv)
     then [], hidden //this projector definition already has a declare_typ
     else let dec = { sigel = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp, [Assumption]);
-                     sigrng = Ident.range_of_lid lid;
-                     sigdoc = se.sigdoc } in
+                     sigrng = Ident.range_of_lid lid } in
           [dec], lid::hidden
 
   | Sig_let(lbs, l, quals, _) ->

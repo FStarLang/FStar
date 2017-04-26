@@ -72,6 +72,7 @@ type token =
   | L_FALSE
   | LPAREN_RPAREN
   | LPAREN
+  | LONG_LEFT_ARROW
   | LOGIC
   | LET of (bool)
   | LENS_PAREN_RIGHT
@@ -208,6 +209,7 @@ type tokenId =
     | TOKEN_L_FALSE
     | TOKEN_LPAREN_RPAREN
     | TOKEN_LPAREN
+    | TOKEN_LONG_LEFT_ARROW
     | TOKEN_LOGIC
     | TOKEN_LET
     | TOKEN_LENS_PAREN_RIGHT
@@ -319,7 +321,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_separated_pair_qlident_EQUALS_tuplePattern__
+    | NONTERM_separated_nonempty_list_SEMICOLON_fieldPattern_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_mainDecl
@@ -348,6 +350,7 @@ type nonTerminalId =
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
     | NONTERM_atomicPattern
+    | NONTERM_fieldPattern
     | NONTERM_patternOrMultibinder
     | NONTERM_binder
     | NONTERM_multiBinder

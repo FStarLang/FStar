@@ -271,12 +271,12 @@ let detail_errors env
     let print_result ((_, msg, r), success) =
         if success
         then BU.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
-        else FStar.Errors.report r msg
+        else FStar.Errors.err r msg
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         (labs |> List.map (fun (l, _, _) ->
-                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
+                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", ("disable_label_"^fst l)))) in
 
     //check all active labels linearly and classify as eliminated/error
     let rec linear_check eliminated errors active =

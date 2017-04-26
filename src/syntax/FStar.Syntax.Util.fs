@@ -522,8 +522,6 @@ let quals_of_sigelt (x: sigelt) = match x.sigel with
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
-let docs_of_sigelt (x: sigelt) = x.sigdoc
-
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bv  x
   | (Inr l, _, _) -> range_of_lid l
@@ -624,18 +622,15 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (* closing types and terms *)
 (***********************************************************************************************)
 let abs bs t lopt =
-  if List.length bs = 0 then
-    t
-  else
-    let close_lopt lopt = match lopt with
-        | None
-        | Some (Inr _) -> lopt
-        | Some (Inl lc) ->
-            Some (Inl (close_lcomp bs lc))
-    in
-    match bs with
-    | [] -> t
-    | _ ->
+  let close_lopt lopt = match lopt with
+      | None
+      | Some (Inr _) -> lopt
+      | Some (Inl lc) ->
+          Some (Inl (close_lcomp bs lc))
+  in
+  match bs with
+  | [] -> t
+  | _ ->
     let body = compress (Subst.close bs t) in
     match body.n, lopt with
         | Tm_abs(bs', t, lopt'), None ->
@@ -863,16 +858,7 @@ let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
     | [] -> t_false
     | hd::tl -> List.fold_right mk_disj tl hd
-let mk_imp phi1 phi2  =
-    match (compress phi1).n with
-        | Tm_fvar tc when fv_eq_lid tc Const.false_lid -> t_true
-        | Tm_fvar tc when fv_eq_lid tc Const.true_lid  -> phi2
-        | _ ->
-            begin match (compress phi2).n with
-                | Tm_fvar tc when (fv_eq_lid tc Const.true_lid
-                                || fv_eq_lid tc Const.false_lid) -> phi2
-                | _ -> mk_binop timp phi1 phi2
-            end
+let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
@@ -1007,16 +993,18 @@ let destruct_typ_as_formula f : option<connective> =
 
 
   let action_as_lb eff_lid a =
-    let lb = close_univs_and_mk_letbinding
-                None
-                (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-                (Inr (lid_as_fv a.action_name Delta_equational None))
-                a.action_univs
-                a.action_typ
-                Const.effect_Tot_lid
-                a.action_defn in
-                // CPC @ a.action_defn.pos
-    mk_sigelt (Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []))
+    let lb =
+      close_univs_and_mk_letbinding
+        None
+        (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
+        (Inr (lid_as_fv a.action_name Delta_equational None))
+        a.action_univs
+        (arrow a.action_params (mk_Total a.action_typ))
+        Const.effect_Tot_lid
+        (abs a.action_params a.action_defn None)
+    in
+    { sigel = Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []);
+      sigrng = a.action_defn.pos }
 
 (* Some reification utilities *)
 let mk_reify t =
