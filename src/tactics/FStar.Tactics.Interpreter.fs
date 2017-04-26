@@ -48,9 +48,9 @@ let term_eq (nm:Ident.lid) (args:S.args) =
   | _ -> None
 
 let mk_pure_interpretation_1 (f:'a -> 'b) (unembed_a:term -> 'a) (embed_b:'b -> term) nm (args:args) :option<term> =
-    //BU.print2 "Reached %s, args are: %s\n"
-    //        (Ident.string_of_lid nm)
-    //        (Print.args_to_string args);
+    BU.print2 "Reached %s, args are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.args_to_string args);
     match args with
     | [a] -> Some (embed_b (f (unembed_a (fst a))))
     | _ -> failwith "Unexpected interpretation of pure primitive"
@@ -64,9 +64,9 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
   *)
   match args with
   | [(embedded_state, _)] ->
-    //BU.print2 "Reached %s, args are: %s\n"
-    //        (Ident.string_of_lid nm)
-    //        (Print.args_to_string args);
+    BU.print2 "Reached %s, args are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.args_to_string args);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run t ps in
@@ -80,9 +80,9 @@ let mk_tactic_interpretation_1 (ps:proofstate)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
-    //BU.print2 "Reached %s, goals are: %s\n"
-    //        (Ident.string_of_lid nm)
-    //        (Print.term_to_string embedded_state);
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_b b)) ps in
@@ -96,9 +96,9 @@ let mk_tactic_interpretation_2 (ps:proofstate)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (embedded_state, _)] ->
-    //BU.print2 "Reached %s, goals are: %s\n"
-    //        (Ident.string_of_lid nm)
-    //        (Print.term_to_string embedded_state);
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state);
     let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
@@ -166,11 +166,11 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
                           None
                           Range.dummyRange in
     let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
-                 //BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
+                 BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
                  Options.set_option "debug_level" (Options.List [Options.String "Norm"]);
     let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
             Options.set_option "debug_level" (Options.List []);
-            //BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
+            BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
     match E.unembed_result proof_state.main_context result unembed_b with
     | Inl (b, (goals, smt_goals)) ->
         bind dismiss (fun _ ->
@@ -239,16 +239,16 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
     (t', gs@gs')
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
-    //let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
+    let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
     let initial = (1, []) in
     match traverse by_tactic_interp env goal with
     | (t', gs) ->
-        //BU.print2 "Main goal simplified to: %s |- %s\n"
-        //        (Env.all_binders env |> Print.binders_to_string ", ")
-        //        (Print.term_to_string t');
+        BU.print2 "Main goal simplified to: %s |- %s\n"
+                (Env.all_binders env |> Print.binders_to_string ", ")
+                (Print.term_to_string t');
         let s = initial in
         let s = List.fold_left (fun (n,gs) g ->
-                     //BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
+                     BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                      let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
                      (n+1, (g.context, gt')::gs)) s gs in
         let (_, gs) = s in
