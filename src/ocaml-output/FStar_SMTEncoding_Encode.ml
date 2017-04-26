@@ -5820,7 +5820,7 @@ and encode_sigelt':
       | FStar_Syntax_Syntax.Sig_new_effect ed ->
           let uu____12957 =
             let uu____12958 =
-              FStar_All.pipe_right se.FStar_Syntax_Syntax.sigqual
+              FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
                 (FStar_List.contains FStar_Syntax_Syntax.Reifiable) in
             FStar_All.pipe_right uu____12958 Prims.op_Negation in
           if uu____12957
@@ -5945,7 +5945,7 @@ and encode_sigelt':
           let uu____13307 = new_term_constant_and_tok_from_lid env lid in
           (match uu____13307 with | (tname,ttok,env1) -> ([], env1))
       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____13318,t) ->
-          let quals = se.FStar_Syntax_Syntax.sigqual in
+          let quals = se.FStar_Syntax_Syntax.sigquals in
           let will_encode_definition =
             let uu____13323 =
               FStar_All.pipe_right quals
@@ -5996,7 +5996,7 @@ and encode_sigelt':
                  [uu____13362] in
                ((FStar_List.append decls g), env))
       | FStar_Syntax_Syntax.Sig_let (lbs,uu____13375,uu____13376) when
-          FStar_All.pipe_right se.FStar_Syntax_Syntax.sigqual
+          FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
             (FStar_List.contains FStar_Syntax_Syntax.Irreducible)
           ->
           let uu____13382 =
@@ -6025,8 +6025,10 @@ and encode_sigelt':
                                 (lb.FStar_Syntax_Syntax.lbtyp)));
                          FStar_Syntax_Syntax.sigrng =
                            (uu___166_13414.FStar_Syntax_Syntax.sigrng);
-                         FStar_Syntax_Syntax.sigqual =
-                           (uu___166_13414.FStar_Syntax_Syntax.sigqual)
+                         FStar_Syntax_Syntax.sigquals =
+                           (uu___166_13414.FStar_Syntax_Syntax.sigquals);
+                         FStar_Syntax_Syntax.sigmeta =
+                           (uu___166_13414.FStar_Syntax_Syntax.sigmeta)
                        } in
                      let uu____13418 = encode_sigelt' env1 val_decl in
                      match uu____13418 with | (decls,env2) -> (env2, decls)
@@ -6076,7 +6078,7 @@ and encode_sigelt':
                (decls, env1))
       | FStar_Syntax_Syntax.Sig_let (uu____13514,uu____13515,uu____13516)
           when
-          FStar_All.pipe_right se.FStar_Syntax_Syntax.sigqual
+          FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
             (FStar_Util.for_some
                (fun uu___133_13522  ->
                   match uu___133_13522 with
@@ -6092,7 +6094,7 @@ and encode_sigelt':
                      uu____13536.FStar_Ident.idText in
                    uu____13535 = "Prims")))
             &&
-            (FStar_All.pipe_right se.FStar_Syntax_Syntax.sigqual
+            (FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
                (FStar_Util.for_some
                   (fun uu___134_13538  ->
                      match uu___134_13538 with
@@ -6102,7 +6104,7 @@ and encode_sigelt':
           -> ([], env)
       | FStar_Syntax_Syntax.Sig_let ((false ,lb::[]),uu____13542,uu____13543)
           when
-          FStar_All.pipe_right se.FStar_Syntax_Syntax.sigqual
+          FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
             (FStar_Util.for_some
                (fun uu___135_13553  ->
                   match uu___135_13553 with
@@ -6123,14 +6125,16 @@ and encode_sigelt':
                         (l, (lb.FStar_Syntax_Syntax.lbunivs),
                           (lb.FStar_Syntax_Syntax.lbtyp)));
                    FStar_Syntax_Syntax.sigrng = (FStar_Ident.range_of_lid l);
-                   FStar_Syntax_Syntax.sigqual =
-                     (uu___167_13571.FStar_Syntax_Syntax.sigqual)
+                   FStar_Syntax_Syntax.sigquals =
+                     (uu___167_13571.FStar_Syntax_Syntax.sigquals);
+                   FStar_Syntax_Syntax.sigmeta =
+                     (uu___167_13571.FStar_Syntax_Syntax.sigmeta)
                  } in
                encode_sigelt env se1)
       | FStar_Syntax_Syntax.Sig_let
           ((is_rec,bindings),uu____13577,uu____13578) ->
           encode_top_level_let env (is_rec, bindings)
-            se.FStar_Syntax_Syntax.sigqual
+            se.FStar_Syntax_Syntax.sigquals
       | FStar_Syntax_Syntax.Sig_bundle (ses,uu____13590) ->
           let uu____13595 = encode_signature env ses in
           (match uu____13595 with
@@ -6160,7 +6164,7 @@ and encode_sigelt':
                              (FStar_List.append rest inversions)), env1))))
       | FStar_Syntax_Syntax.Sig_inductive_typ
           (t,uu____13656,tps,k,uu____13659,datas) ->
-          let quals = se.FStar_Syntax_Syntax.sigqual in
+          let quals = se.FStar_Syntax_Syntax.sigquals in
           let is_logical =
             FStar_All.pipe_right quals
               (FStar_Util.for_some
@@ -6560,7 +6564,7 @@ and encode_sigelt':
           ([], env)
       | FStar_Syntax_Syntax.Sig_datacon
           (d,uu____14264,t,uu____14266,n_tps,uu____14268) ->
-          let quals = se.FStar_Syntax_Syntax.sigqual in
+          let quals = se.FStar_Syntax_Syntax.sigquals in
           let uu____14273 = new_term_constant_and_tok_from_lid env d in
           (match uu____14273 with
            | (ddconstrsym,ddtok,env1) ->

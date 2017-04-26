@@ -1293,19 +1293,20 @@ let run_compute st term rules =
                          FStar_Syntax_Syntax.lbeff = uu____3384;
                          FStar_Syntax_Syntax.lbdef = def;_}::[]),uu____3386,uu____3387);
         FStar_Syntax_Syntax.sigrng = uu____3388;
-        FStar_Syntax_Syntax.sigqual = uu____3389;_}::[] -> Some def
-    | uu____3408 -> None in
+        FStar_Syntax_Syntax.sigquals = uu____3389;
+        FStar_Syntax_Syntax.sigmeta = uu____3390;_}::[] -> Some def
+    | uu____3409 -> None in
   let parse1 frag =
-    let uu____3418 = FStar_Parser_ParseIt.parse (FStar_Util.Inr frag) in
-    match uu____3418 with
-    | FStar_Util.Inl (FStar_Util.Inr decls,uu____3431) -> Some decls
-    | uu____3454 -> None in
+    let uu____3419 = FStar_Parser_ParseIt.parse (FStar_Util.Inr frag) in
+    match uu____3419 with
+    | FStar_Util.Inl (FStar_Util.Inr decls,uu____3432) -> Some decls
+    | uu____3455 -> None in
   let desugar dsenv decls =
-    let uu____3474 = FStar_ToSyntax_ToSyntax.desugar_decls dsenv decls in
-    Prims.snd uu____3474 in
+    let uu____3475 = FStar_ToSyntax_ToSyntax.desugar_decls dsenv decls in
+    Prims.snd uu____3475 in
   let typecheck tcenv decls =
-    let uu____3487 = FStar_TypeChecker_Tc.tc_decls tcenv decls in
-    match uu____3487 with | (ses,uu____3495,uu____3496) -> ses in
+    let uu____3488 = FStar_TypeChecker_Tc.tc_decls tcenv decls in
+    match uu____3488 with | (ses,uu____3496,uu____3497) -> ses in
   let rules1 =
     FStar_List.append
       (match rules with
@@ -1321,16 +1322,16 @@ let run_compute st term rules =
       FStar_TypeChecker_Normalize.Primops] in
   run_and_rewind st
     (fun st1  ->
-       let uu____3509 = st1.repl_env in
-       match uu____3509 with
+       let uu____3510 = st1.repl_env in
+       match uu____3510 with
        | (dsenv,tcenv) ->
            let frag = dummy_let_fragment term in
            (match st1.repl_curmod with
             | None  ->
                 (QueryNOK, (FStar_Util.JsonStr "Current module unset"))
-            | uu____3517 ->
-                let uu____3518 = parse1 frag in
-                (match uu____3518 with
+            | uu____3518 ->
+                let uu____3519 = parse1 frag in
+                (match uu____3519 with
                  | None  ->
                      (QueryNOK,
                        (FStar_Util.JsonStr "Count not parse this term"))
@@ -1345,22 +1346,22 @@ let run_compute st term rules =
                                  "Typechecking yielded an unexpected term"))
                         | Some def ->
                             let normalized = normalize_term1 tcenv rules1 def in
-                            let uu____3545 =
-                              let uu____3546 =
+                            let uu____3546 =
+                              let uu____3547 =
                                 FStar_Syntax_Print.term_to_string normalized in
-                              FStar_Util.JsonStr uu____3546 in
-                            (QueryOK, uu____3545)
+                              FStar_Util.JsonStr uu____3547 in
+                            (QueryOK, uu____3546)
                       with
                       | e ->
-                          let uu____3551 =
-                            let uu____3552 = FStar_Errors.issue_of_exn e in
-                            match uu____3552 with
+                          let uu____3552 =
+                            let uu____3553 = FStar_Errors.issue_of_exn e in
+                            match uu____3553 with
                             | Some issue ->
-                                let uu____3555 =
+                                let uu____3556 =
                                   FStar_Errors.format_issue issue in
-                                FStar_Util.JsonStr uu____3555
+                                FStar_Util.JsonStr uu____3556
                             | None  -> Prims.raise e in
-                          (QueryNOK, uu____3551)))))
+                          (QueryNOK, uu____3552)))))
 type search_term' =
   | NameContainsStr of Prims.string
   | TypeContainsLid of FStar_Ident.lid
@@ -1369,17 +1370,17 @@ and search_term = {
   st_term: search_term';}
 let uu___is_NameContainsStr: search_term' -> Prims.bool =
   fun projectee  ->
-    match projectee with | NameContainsStr _0 -> true | uu____3572 -> false
+    match projectee with | NameContainsStr _0 -> true | uu____3573 -> false
 let __proj__NameContainsStr__item___0: search_term' -> Prims.string =
   fun projectee  -> match projectee with | NameContainsStr _0 -> _0
 let uu___is_TypeContainsLid: search_term' -> Prims.bool =
   fun projectee  ->
-    match projectee with | TypeContainsLid _0 -> true | uu____3584 -> false
+    match projectee with | TypeContainsLid _0 -> true | uu____3585 -> false
 let __proj__TypeContainsLid__item___0: search_term' -> FStar_Ident.lid =
   fun projectee  -> match projectee with | TypeContainsLid _0 -> _0
 let st_cost: search_term' -> Prims.int =
-  fun uu___209_3602  ->
-    match uu___209_3602 with
+  fun uu___209_3603  ->
+    match uu___209_3603 with
     | NameContainsStr str -> - (FStar_String.length str)
     | TypeContainsLid lid -> Prims.parse_int "1"
 type search_candidate =
@@ -1389,25 +1390,25 @@ type search_candidate =
   sc_fvars: FStar_Ident.lid FStar_Util.set Prims.option FStar_ST.ref;}
 let sc_of_lid: FStar_Ident.lid -> search_candidate =
   fun lid  ->
-    let uu____3653 = FStar_Util.mk_ref None in
-    let uu____3658 = FStar_Util.mk_ref None in
-    { sc_lid = lid; sc_typ = uu____3653; sc_fvars = uu____3658 }
+    let uu____3654 = FStar_Util.mk_ref None in
+    let uu____3659 = FStar_Util.mk_ref None in
+    { sc_lid = lid; sc_typ = uu____3654; sc_fvars = uu____3659 }
 let sc_typ:
   FStar_TypeChecker_Env.env -> search_candidate -> FStar_Syntax_Syntax.typ =
   fun tcenv  ->
     fun sc  ->
-      let uu____3676 = FStar_ST.read sc.sc_typ in
-      match uu____3676 with
+      let uu____3677 = FStar_ST.read sc.sc_typ in
+      match uu____3677 with
       | Some t -> t
       | None  ->
           let typ =
-            let uu____3685 =
+            let uu____3686 =
               FStar_TypeChecker_Env.try_lookup_lid tcenv sc.sc_lid in
-            match uu____3685 with
+            match uu____3686 with
             | None  ->
                 (FStar_Syntax_Syntax.mk FStar_Syntax_Syntax.Tm_unknown) None
                   FStar_Range.dummyRange
-            | Some ((uu____3705,typ),uu____3707) -> typ in
+            | Some ((uu____3706,typ),uu____3708) -> typ in
           (FStar_ST.write sc.sc_typ (Some typ); typ)
 let sc_fvars:
   FStar_TypeChecker_Env.env ->
@@ -1415,13 +1416,13 @@ let sc_fvars:
   =
   fun tcenv  ->
     fun sc  ->
-      let uu____3727 = FStar_ST.read sc.sc_fvars in
-      match uu____3727 with
+      let uu____3728 = FStar_ST.read sc.sc_fvars in
+      match uu____3728 with
       | Some fv -> fv
       | None  ->
           let fv =
-            let uu____3741 = sc_typ tcenv sc in
-            FStar_Syntax_Free.fvars uu____3741 in
+            let uu____3742 = sc_typ tcenv sc in
+            FStar_Syntax_Free.fvars uu____3742 in
           (FStar_ST.write sc.sc_fvars (Some fv); fv)
 let json_of_search_result:
   FStar_ToSyntax_Env.env ->
@@ -1431,31 +1432,31 @@ let json_of_search_result:
     fun tcenv  ->
       fun sc  ->
         let typ_str =
-          let uu____3758 = sc_typ tcenv sc in
-          FStar_Syntax_Print.term_to_string uu____3758 in
-        let uu____3759 =
-          let uu____3763 =
-            let uu____3766 =
-              let uu____3767 =
-                let uu____3768 =
+          let uu____3759 = sc_typ tcenv sc in
+          FStar_Syntax_Print.term_to_string uu____3759 in
+        let uu____3760 =
+          let uu____3764 =
+            let uu____3767 =
+              let uu____3768 =
+                let uu____3769 =
                   FStar_ToSyntax_Env.shorten_lid dsenv sc.sc_lid in
-                uu____3768.FStar_Ident.str in
-              FStar_Util.JsonStr uu____3767 in
-            ("lid", uu____3766) in
-          [uu____3763; ("type", (FStar_Util.JsonStr typ_str))] in
-        FStar_Util.JsonAssoc uu____3759
+                uu____3769.FStar_Ident.str in
+              FStar_Util.JsonStr uu____3768 in
+            ("lid", uu____3767) in
+          [uu____3764; ("type", (FStar_Util.JsonStr typ_str))] in
+        FStar_Util.JsonAssoc uu____3760
 exception InvalidSearch of Prims.string
 let uu___is_InvalidSearch: Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with
-    | InvalidSearch uu____3780 -> true
-    | uu____3781 -> false
+    | InvalidSearch uu____3781 -> true
+    | uu____3782 -> false
 let __proj__InvalidSearch__item__uu___: Prims.exn -> Prims.string =
   fun projectee  ->
-    match projectee with | InvalidSearch uu____3788 -> uu____3788
+    match projectee with | InvalidSearch uu____3789 -> uu____3789
 let run_search st search_str =
-  let uu____3807 = st.repl_env in
-  match uu____3807 with
+  let uu____3808 = st.repl_env in
+  match uu____3808 with
   | (dsenv,tcenv) ->
       let empty_fv_set = FStar_Syntax_Syntax.new_fv_set () in
       let st_matches candidate term =
@@ -1464,8 +1465,8 @@ let run_search st search_str =
           | NameContainsStr str ->
               FStar_Util.contains (candidate.sc_lid).FStar_Ident.str str
           | TypeContainsLid lid ->
-              let uu____3828 = sc_fvars tcenv candidate in
-              FStar_Util.set_mem lid uu____3828 in
+              let uu____3829 = sc_fvars tcenv candidate in
+              FStar_Util.set_mem lid uu____3829 in
         found <> term.st_negate in
       let parse1 search_str1 =
         let parse_one term =
@@ -1485,29 +1486,29 @@ let run_search st search_str =
           let parsed =
             if beg_quote <> end_quote
             then
-              let uu____3856 =
-                let uu____3857 =
+              let uu____3857 =
+                let uu____3858 =
                   FStar_Util.format1 "Improperly quoted search term: %s"
                     term1 in
-                InvalidSearch uu____3857 in
-              Prims.raise uu____3856
+                InvalidSearch uu____3858 in
+              Prims.raise uu____3857
             else
               if beg_quote
               then
-                (let uu____3859 = strip_quotes term1 in
-                 NameContainsStr uu____3859)
+                (let uu____3860 = strip_quotes term1 in
+                 NameContainsStr uu____3860)
               else
                 (let lid = FStar_Ident.lid_of_str term1 in
-                 let uu____3862 =
+                 let uu____3863 =
                    FStar_ToSyntax_Env.resolve_to_fully_qualified_name dsenv
                      lid in
-                 match uu____3862 with
+                 match uu____3863 with
                  | None  ->
-                     let uu____3864 =
-                       let uu____3865 =
+                     let uu____3865 =
+                       let uu____3866 =
                          FStar_Util.format1 "Unknown identifier: %s" term1 in
-                       InvalidSearch uu____3865 in
-                     Prims.raise uu____3864
+                       InvalidSearch uu____3866 in
+                     Prims.raise uu____3865
                  | Some lid1 -> TypeContainsLid lid1) in
           { st_negate = negate; st_term = parsed } in
         let terms =
@@ -1515,11 +1516,11 @@ let run_search st search_str =
         let cmp x y = (st_cost x.st_term) - (st_cost y.st_term) in
         FStar_Util.sort_with cmp terms in
       let pprint_one term =
-        let uu____3880 =
+        let uu____3881 =
           match term.st_term with
           | NameContainsStr s -> FStar_Util.format1 "\"%s\"" s
           | TypeContainsLid l -> FStar_Util.format1 "%s" l.FStar_Ident.str in
-        Prims.strcat (if term.st_negate then "-" else "") uu____3880 in
+        Prims.strcat (if term.st_negate then "-" else "") uu____3881 in
       let results =
         try
           let terms = parse1 search_str in
@@ -1534,21 +1535,21 @@ let run_search st search_str =
           let sorted1 = FStar_Util.sort_with cmp results in
           let js =
             FStar_Options.with_saved_options
-              (fun uu____3916  ->
+              (fun uu____3917  ->
                  FStar_Options.set_option "print_effect_args"
                    (FStar_Options.Bool true);
                  FStar_List.map (json_of_search_result dsenv tcenv) sorted1) in
           match results with
           | [] ->
               let kwds =
-                let uu____3921 = FStar_List.map pprint_one terms in
-                FStar_Util.concat_l " " uu____3921 in
-              let uu____3923 =
-                let uu____3924 =
+                let uu____3922 = FStar_List.map pprint_one terms in
+                FStar_Util.concat_l " " uu____3922 in
+              let uu____3924 =
+                let uu____3925 =
                   FStar_Util.format1 "No results found for query [%s]" kwds in
-                InvalidSearch uu____3924 in
-              Prims.raise uu____3923
-          | uu____3927 -> (QueryOK, (FStar_Util.JsonList js))
+                InvalidSearch uu____3925 in
+              Prims.raise uu____3924
+          | uu____3928 -> (QueryOK, (FStar_Util.JsonList js))
         with | InvalidSearch s -> (QueryNOK, (FStar_Util.JsonStr s)) in
       (results, (FStar_Util.Inl st))
 let run_query:
@@ -1558,8 +1559,8 @@ let run_query:
         FStar_Util.either)
   =
   fun st  ->
-    fun uu___210_3956  ->
-      match uu___210_3956 with
+    fun uu___210_3957  ->
+      match uu___210_3957 with
       | Exit  -> run_exit st
       | DescribeProtocol  -> run_describe_protocol st
       | DescribeRepl  -> run_describe_repl st
@@ -1573,8 +1574,8 @@ let run_query:
 let rec go: repl_state -> Prims.unit =
   fun st  ->
     let query = read_interactive_query st.repl_stdin in
-    let uu____3994 = let uu____4001 = run_query st in uu____4001 query.qq in
-    match uu____3994 with
+    let uu____3995 = let uu____4002 = run_query st in uu____4002 query.qq in
+    match uu____3995 with
     | ((status,response),state_opt) ->
         (write_response query.qid status response;
          (match state_opt with
@@ -1583,19 +1584,19 @@ let rec go: repl_state -> Prims.unit =
 let interactive_error_handler: FStar_Errors.error_handler =
   let issues = FStar_Util.mk_ref [] in
   let add_one1 e =
-    let uu____4031 = let uu____4033 = FStar_ST.read issues in e :: uu____4033 in
-    FStar_ST.write issues uu____4031 in
-  let count_errors uu____4044 =
-    let uu____4045 =
-      let uu____4047 = FStar_ST.read issues in
+    let uu____4032 = let uu____4034 = FStar_ST.read issues in e :: uu____4034 in
+    FStar_ST.write issues uu____4032 in
+  let count_errors uu____4045 =
+    let uu____4046 =
+      let uu____4048 = FStar_ST.read issues in
       FStar_List.filter
         (fun e  -> e.FStar_Errors.issue_level = FStar_Errors.EError)
-        uu____4047 in
-    FStar_List.length uu____4045 in
-  let report uu____4058 =
-    let uu____4059 = FStar_ST.read issues in
-    FStar_List.sortWith FStar_Errors.compare_issues uu____4059 in
-  let clear1 uu____4067 = FStar_ST.write issues [] in
+        uu____4048 in
+    FStar_List.length uu____4046 in
+  let report uu____4059 =
+    let uu____4060 = FStar_ST.read issues in
+    FStar_List.sortWith FStar_Errors.compare_issues uu____4060 in
+  let clear1 uu____4068 = FStar_ST.write issues [] in
   {
     FStar_Errors.eh_add_one = add_one1;
     FStar_Errors.eh_count_errors = count_errors;
@@ -1611,32 +1612,32 @@ let interactive_printer: FStar_Util.printer =
 let interactive_mode': Prims.string -> Prims.unit =
   fun filename  ->
     write_hello ();
-    (let uu____4077 = deps_of_our_file filename in
-     match uu____4077 with
+    (let uu____4078 = deps_of_our_file filename in
+     match uu____4078 with
      | (filenames,maybe_intf) ->
          let env = tc_prims () in
-         let uu____4091 = tc_deps None [] env filenames [] in
-         (match uu____4091 with
+         let uu____4092 = tc_deps None [] env filenames [] in
+         (match uu____4092 with
           | (stack,env1,ts) ->
               let initial_range =
-                let uu____4107 =
-                  FStar_Range.mk_pos (Prims.parse_int "1")
-                    (Prims.parse_int "0") in
                 let uu____4108 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                FStar_Range.mk_range "<input>" uu____4107 uu____4108 in
+                let uu____4109 =
+                  FStar_Range.mk_pos (Prims.parse_int "1")
+                    (Prims.parse_int "0") in
+                FStar_Range.mk_range "<input>" uu____4108 uu____4109 in
               let env2 =
-                let uu____4112 =
+                let uu____4113 =
                   FStar_TypeChecker_Env.set_range (Prims.snd env1)
                     initial_range in
-                ((Prims.fst env1), uu____4112) in
+                ((Prims.fst env1), uu____4113) in
               let env3 =
                 match maybe_intf with
                 | Some intf -> FStar_Universal.load_interface_decls env2 intf
                 | None  -> env2 in
               let init_st =
-                let uu____4120 = FStar_Util.open_stdin () in
+                let uu____4121 = FStar_Util.open_stdin () in
                 {
                   repl_line = (Prims.parse_int "1");
                   repl_column = (Prims.parse_int "0");
@@ -1645,27 +1646,27 @@ let interactive_mode': Prims.string -> Prims.unit =
                   repl_curmod = None;
                   repl_env = env3;
                   repl_ts = ts;
-                  repl_stdin = uu____4120
+                  repl_stdin = uu____4121
                 } in
-              let uu____4121 =
+              let uu____4122 =
                 (FStar_Options.record_hints ()) ||
                   (FStar_Options.use_hints ()) in
-              if uu____4121
+              if uu____4122
               then
-                let uu____4122 =
-                  let uu____4123 = FStar_Options.file_list () in
-                  FStar_List.hd uu____4123 in
-                FStar_SMTEncoding_Solver.with_hints_db uu____4122
-                  (fun uu____4125  -> go init_st)
+                let uu____4123 =
+                  let uu____4124 = FStar_Options.file_list () in
+                  FStar_List.hd uu____4124 in
+                FStar_SMTEncoding_Solver.with_hints_db uu____4123
+                  (fun uu____4126  -> go init_st)
               else go init_st))
 let interactive_mode: Prims.string -> Prims.unit =
   fun filename  ->
     FStar_Util.set_printer interactive_printer;
     FStar_Errors.set_handler interactive_error_handler;
-    (let uu____4133 =
-       let uu____4134 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____4134 in
-     if uu____4133
+    (let uu____4134 =
+       let uu____4135 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____4135 in
+     if uu____4134
      then
        FStar_Util.print_warning
          "code-generation is not supported in interactive mode, ignoring the codegen flag"

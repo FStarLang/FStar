@@ -768,7 +768,7 @@ let lid_of_sigelt:
     match lids_of_sigelt se with | l::[] -> Some l | uu____1778 -> None
 let quals_of_sigelt:
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.qualifier Prims.list =
-  fun x  -> x.FStar_Syntax_Syntax.sigqual
+  fun x  -> x.FStar_Syntax_Syntax.sigquals
 let range_of_sigelt: FStar_Syntax_Syntax.sigelt -> FStar_Range.range =
   fun x  -> x.FStar_Syntax_Syntax.sigrng
 let range_of_lb uu___177_1800 =
@@ -1853,9 +1853,10 @@ let action_as_lb:
              ((false, [lb]), [a.FStar_Syntax_Syntax.action_name], []));
         FStar_Syntax_Syntax.sigrng =
           ((a.FStar_Syntax_Syntax.action_defn).FStar_Syntax_Syntax.pos);
-        FStar_Syntax_Syntax.sigqual =
+        FStar_Syntax_Syntax.sigquals =
           [FStar_Syntax_Syntax.Visible_default;
-          FStar_Syntax_Syntax.Action eff_lid]
+          FStar_Syntax_Syntax.Action eff_lid];
+        FStar_Syntax_Syntax.sigmeta = FStar_Syntax_Syntax.default_sigmeta
       }
 let mk_reify t =
   let reify_ =
