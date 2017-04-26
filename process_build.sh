@@ -111,7 +111,7 @@ echo "*** Upload the minor version of the package. Will only keep the most recen
 cd ../../..
 ORIG_PWD=$PWD
 BN_BINARYSPATH_ROOT=~/binaries
-BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly   # maybe this should be environment var or something like that similar to CI_LOGS
+BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
 FSTAR_BIN_BRANCH="master"
 BN_FILESTOKEEP=4
 
@@ -126,17 +126,12 @@ git checkout $FSTAR_BIN_BRANCH
 git pull origin master
 
 echo "-- copy files and add to Github --"
-echo "+++ PWD:"$PWD #binaries
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   echo "-- "$ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
-  #echo "+++ git add call:git add "$BN_BINARYSPATH/$MINOR_ZIP_FILE
-  echo "+++ git add call:git add "$MINOR_ZIP_FILE
-  cd $BN_BINARYSPATH  #binaries/weekly
-  echo "+++ PWD:"$PWD
+  cd $BN_BINARYSPATH
   git add $MINOR_ZIP_FILE
   cd ..  #go back to binaries
-  echo "+++ PWD After:"$PWD 
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "--" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
@@ -145,28 +140,16 @@ if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
 fi
 
 # Now that latest package is added, remove the oldest one so only keeping most recent 4 packages
-echo "+++ PWD:"$PWD 
 cd $BN_BINARYSPATH
-echo "+++ PWD 2:"$PWD 
 echo "-- Delete oldest ZIP file --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
 ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
-echo "+++ ZIP COUNT:"$ZIP_COUNT
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
-echo "+++ File List 1"
-  #ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | tail -n +$(($BN_FILESTOKEEP+1))`
   # Windows git rm just needs the file name and fails if give path so just get file name
-  ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1))` 
-echo "+++ File List 2:"$ZIP_FILE_LIST
+  ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1))`
   for ZIP_FILE in $ZIP_FILE_LIST
   do
-     echo "+++ PWD3:"$PWD
-     #cd $BN_BINARYSPATH
-     echo "+++ Remove:"${ZIP_FILE}
      rm ${ZIP_FILE}
-     echo "+++ Git Remove:"${ZIP_FILE}
-     echo "+++ PWD4:"$PWD
-     echo "++ Length"${#ZIP_FILE}
      git rm ${ZIP_FILE} -f  
   done
 fi
@@ -183,15 +166,10 @@ if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
   done
 fi
 
-echo "+++ PWD3:"$PWD
-
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
-echo "+++ git commit"
 git commit --amend -m "Adding new build package and removing oldest."
-echo "++ git push"
 git push git@github.com:FStarLang/binaries.git $FSTAR_BIN_BRANCH --force
-echo "+++ done"
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt
