@@ -45,7 +45,7 @@ type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(args -> option<term>)
+    interpretation:(FStar.Range.range -> args -> option<term>)
 }
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term

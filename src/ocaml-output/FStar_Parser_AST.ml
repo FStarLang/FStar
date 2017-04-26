@@ -766,24 +766,24 @@ let mk_decl: decl' -> FStar_Range.range -> decoration Prims.list -> decl =
         let doc1 =
           let uu____2511 =
             FStar_List.choose
-              (fun uu___104_2513  ->
-                 match uu___104_2513 with
+              (fun uu___107_2513  ->
+                 match uu___107_2513 with
                  | Doc d1 -> Some d1
                  | uu____2516 -> None) decorations in
           at_most_one "fsdoc" r uu____2511 in
         let attributes_ =
           let uu____2520 =
             FStar_List.choose
-              (fun uu___105_2524  ->
-                 match uu___105_2524 with
+              (fun uu___108_2524  ->
+                 match uu___108_2524 with
                  | DeclAttributes a -> Some a
                  | uu____2530 -> None) decorations in
           at_most_one "attribute set" r uu____2520 in
         let attributes_1 = FStar_Util.dflt [] attributes_ in
         let qualifiers =
           FStar_List.choose
-            (fun uu___106_2538  ->
-               match uu___106_2538 with
+            (fun uu___109_2538  ->
+               match uu___109_2538 with
                | Qualifier q -> Some q
                | uu____2541 -> None) decorations in
         { d; drange = r; doc = doc1; quals = qualifiers; attrs = attributes_1
@@ -1183,8 +1183,8 @@ let as_frag:
              | uu____3441 ->
                  let ds2 = d :: ds1 in
                  (FStar_List.iter
-                    (fun uu___107_3445  ->
-                       match uu___107_3445 with
+                    (fun uu___110_3445  ->
+                       match uu___110_3445 with
                        | { d = TopLevelModule uu____3446; drange = r;
                            doc = uu____3448; quals = uu____3449;
                            attrs = uu____3450;_} ->
@@ -1196,8 +1196,8 @@ let as_frag:
 let compile_op: Prims.int -> Prims.string -> Prims.string =
   fun arity  ->
     fun s  ->
-      let name_of_char uu___108_3464 =
-        match uu___108_3464 with
+      let name_of_char uu___111_3464 =
+        match uu___111_3464 with
         | '&' -> "Amp"
         | '@' -> "At"
         | '+' -> "Plus"
@@ -1244,16 +1244,16 @@ let string_of_fsdoc:
           FStar_String.concat "," uu____3497 in
         Prims.strcat comment uu____3496
 let string_of_let_qualifier: let_qualifier -> Prims.string =
-  fun uu___109_3508  ->
-    match uu___109_3508 with
+  fun uu___112_3508  ->
+    match uu___112_3508 with
     | NoLetQualifier  -> ""
     | Rec  -> "rec"
     | Mutable  -> "mutable"
 let to_string_l sep f l =
   let uu____3533 = FStar_List.map f l in FStar_String.concat sep uu____3533
 let imp_to_string: imp -> Prims.string =
-  fun uu___110_3537  ->
-    match uu___110_3537 with | Hash  -> "#" | uu____3538 -> ""
+  fun uu___113_3537  ->
+    match uu___113_3537 with | Hash  -> "#" | uu____3538 -> ""
 let rec term_to_string: term -> Prims.string =
   fun x  ->
     match x.tm with
@@ -1442,8 +1442,8 @@ and binder_to_string: binder -> Prims.string =
     let uu____3814 = aqual_to_string x.aqual in
     FStar_Util.format2 "%s%s" uu____3814 s
 and aqual_to_string: aqual -> Prims.string =
-  fun uu___111_3815  ->
-    match uu___111_3815 with
+  fun uu___114_3815  ->
+    match uu___114_3815 with
     | Some (Equality ) -> "$"
     | Some (Implicit ) -> "#"
     | uu____3816 -> ""
@@ -1499,8 +1499,8 @@ let lids_of_let defs =
        (fun uu____3902  ->
           match uu____3902 with | (p,uu____3907) -> head_id_of_pat p))
 let id_of_tycon: tycon -> Prims.string =
-  fun uu___112_3910  ->
-    match uu___112_3910 with
+  fun uu___115_3910  ->
+    match uu___115_3910 with
     | TyconAbstract (i,_,_)
       |TyconAbbrev (i,_,_,_)|TyconRecord (i,_,_,_)|TyconVariant (i,_,_,_) ->
         i.FStar_Ident.idText

@@ -7632,33 +7632,22 @@ let encode_query:
                                         uu____15640) in
                                     FStar_SMTEncoding_Term.Assume uu____15635 in
                                   let suffix =
-                                    let uu____15644 =
-                                      let uu____15646 =
-                                        let uu____15648 =
-                                          FStar_Options.print_z3_statistics
-                                            () in
-                                        if uu____15648
-                                        then
-                                          [FStar_SMTEncoding_Term.PrintStats]
-                                        else [] in
-                                      FStar_List.append uu____15646
-                                        [FStar_SMTEncoding_Term.Echo "Done!"] in
                                     FStar_List.append label_suffix
-                                      uu____15644 in
+                                      [FStar_SMTEncoding_Term.Echo "Done!"] in
                                   (query_prelude, labels, qry, suffix)))))))
 let is_trivial:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.typ -> Prims.bool =
   fun tcenv  ->
     fun q  ->
       let env =
-        let uu____15660 = FStar_TypeChecker_Env.current_module tcenv in
-        get_env uu____15660 tcenv in
+        let uu____15653 = FStar_TypeChecker_Env.current_module tcenv in
+        get_env uu____15653 tcenv in
       FStar_SMTEncoding_Z3.push "query";
-      (let uu____15662 = encode_formula q env in
-       match uu____15662 with
-       | (f,uu____15666) ->
+      (let uu____15655 = encode_formula q env in
+       match uu____15655 with
+       | (f,uu____15659) ->
            (FStar_SMTEncoding_Z3.pop "query";
             (match f.FStar_SMTEncoding_Term.tm with
              | FStar_SMTEncoding_Term.App
-                 (FStar_SMTEncoding_Term.TrueOp ,uu____15668) -> true
-             | uu____15671 -> false)))
+                 (FStar_SMTEncoding_Term.TrueOp ,uu____15661) -> true
+             | uu____15664 -> false)))
