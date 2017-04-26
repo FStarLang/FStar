@@ -257,7 +257,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
  *)
 let detail_errors env
                  (all_labels:labels)
-                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int))
+                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int * Z3.z3statistics))
     : error_labels =
 
     let print_banner () =
@@ -290,7 +290,7 @@ let detail_errors env
             | hd::tl ->
 	      BU.print1 "%s, " (BU.string_of_int (List.length active));
 	      FStar.SMTEncoding.Z3.refresh();
-              let result, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
+              let result, _, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
               if BU.is_left result //hd is provable
               then linear_check (hd::eliminated) errors tl
               else linear_check eliminated (hd::errors) tl in
