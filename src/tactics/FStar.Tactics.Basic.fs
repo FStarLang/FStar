@@ -96,14 +96,11 @@ let bind (t1:tac<'a>)
     = kernel_tac "bind"
         (fun p ->
 //        let tx = Unionfind.new_transaction () in //snapshot the state of the unionfind graph
-            if not t1.kernel then debug p t1.tac_name;
             match t1.tac_f p with
             | Success (a, q) ->
               let t2 = t2 a in
-              if not t2.kernel then debug q t2.tac_name;
               t2.tac_f q
             | Failed(msg, q) ->
-            if not t1.kernel then debug p (BU.format1 "%s failed!" t1.tac_name);
     //          Unionfind.rollback tx; //and restore the snapshot in case the tactic fails
               Failed(msg, q)) //need to repack for tac<'b>
 
@@ -114,7 +111,6 @@ let fail msg = kernel_tac "fail" (fun p ->
     BU.print1 ">>>>>%s\n" msg;
     Failed(msg, p))
 
-let show = kernel_tac "show" (fun p -> debug p "debug"; Success((), p))
 ////////////////////////////////////////////////////////////////////
 (* Some TRUSTED internal utilities *)
 
@@ -281,11 +277,9 @@ let or_else (t1:tac<'a>)
     : tac<'a>
     = kernel_tac "or_else" (fun p ->
 //        let tx = Unionfind.new_transaction () in
-        debug p (BU.format1 "or_else: trying %s" t1.tac_name);
         match t1.tac_f p with
         | Failed _ ->
 //          Unionfind.rollback tx;
-          debug p (BU.format2 "or_else: %s failed; trying %s" t1.tac_name t2.tac_name);
           t2.tac_f p
         | q -> q)
 
@@ -418,8 +412,7 @@ let split : tac<unit>
                  {goal with witness=None;
                             goal_ty=a}) in
           bind dismiss (fun _ ->
-          bind (add_goals new_goals) (fun _ ->
-          show))
+          add_goals new_goals)
         | _ ->
           fail "Cannot split this goal; expected a conjunction")
 
