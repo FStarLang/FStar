@@ -47,6 +47,7 @@ CFSTAR=$(subst CURRENT_DIR,ulib,$(CVERFSTAR))
 
 %-cver: % CVERCONFIG
 	$(CFSTAR) $*
+
 st-cver: CVERCONFIG
 	$(CFSTAR) FStar.Map.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst FStar.Util.fst		
 m_rref-cver: CVERCONFIG
@@ -54,7 +55,7 @@ m_rref-cver: CVERCONFIG
 bufferq-cver: CVERCONFIG
 	$(CFSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst
 struct-cver: CVERCONFIG
-	$(CFSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst FStar.Struct.fst
+	$(CFSTAR) hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Struct.fst
 
 all-cver: $(addsuffix -cver, $(ALL)) st-cver m_rref-cver bufferq-cver struct-cver
 	true
