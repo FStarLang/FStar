@@ -116,7 +116,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
-      N.interpretation=(fun _rng -> interpretation nm)
+      N.interpretation=(fun _rng args -> interpretation nm args)
     } in
     [ mk "forall_intros_" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
       mk "implies_intro_" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
