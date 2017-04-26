@@ -1,4 +1,4 @@
-﻿
+﻿1
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
@@ -44,7 +44,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosyntax", "..\tosyntax\tosyntax.fsproj", "{B0968012-B93C-4198-9085-B89669E8E4E8}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tactics", "..\tactics\tactics.fsproj", "{82336F31-A87C-4403-A2F4-2B90B4F0996B}"
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fabc-make", "..\fabc-make\fabc-make.csproj", "{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fabc-make", "..\fabc-make\fabc-make.csproj", "{F93BFCB1-6258-4BAC-B2B0-25545E49A45F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
