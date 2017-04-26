@@ -652,7 +652,7 @@ let file_get_contents f =
 let mkdir clean dname =
   if System.IO.Directory.Exists(dname) then
     let srcDir = new System.IO.DirectoryInfo(dname)
-    if clean then 
+    if clean then
         for file in srcDir.GetFiles() do
         System.IO.File.Delete file.FullName
   else
@@ -854,19 +854,23 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
         if (List.length core_list) = 0 then None else
         Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
     let hint_from_json_hint (h : System.Object) =
-        let ha = h :?> System.Object [] in
-        if (Array.length ha) = 0 then None else
-            if (Array.length ha) <> 6 then failwith "malformed hint" else
-            Some {
-                hint_name=ha.[0] :?> System.String;
-                hint_index=ha.[1] :?> int;
-                fuel=ha.[2] :?> int;
-                ifuel=ha.[3] :?> int;
-                unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                query_elapsed_time=ha.[5] :?> int
-            } in
+        if  h = null then None
+        else let ha = h :?> System.Object [] in
+             if (Array.length ha) = 0 then None else
+                if (Array.length ha) <> 6 then failwith "malformed hint" else
+                Some {
+                    hint_name=ha.[0] :?> System.String;
+                    hint_index=ha.[1] :?> int;
+                    fuel=ha.[2] :?> int;
+                    ifuel=ha.[3] :?> int;
+                    unsat_core=unsat_core_from_json_unsat_core ha.[4];
+                    query_elapsed_time=ha.[5] :?> int
+                } in
     let hints_from_json_hints (hs : System.Object) =
-        let hint_list = (hs :?> System.Object []) |> Array.toList in
+        let hint_list =
+            if hs = null
+            then []
+            else (hs :?> System.Object []) |> Array.toList in
         List.map (fun e -> (hint_from_json_hint e)) hint_list  in
     if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
     {
