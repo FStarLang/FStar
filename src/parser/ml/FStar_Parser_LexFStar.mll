@@ -163,7 +163,7 @@
   let clean_number x = String.strip ~chars:"uzyslLUnIN" x
 
   let comments : (string * FStar_Range.range) list ref = ref []
-  let fsdocs : (string * (string * string) list * FStar_Range.range) list ref = ref []
+  let fsdocs : (FStar_Parser_AST.fsdoc) list ref = ref []
 
   let flush comments =
     let lexed_comments = !comments in
@@ -206,16 +206,20 @@
     (0, fsdoc_buffer, fst (L.range lexbuf), [])
 
 
-  let terminate_comment buffer startpos lexbuf comments =
+  let terminate_comment buffer startpos lexbuf build_comment comments =
     let endpos = snd (L.range lexbuf) in
     Buffer.add_bytes buffer "*)" ;
     let comment = Buffer.contents buffer in
     let comment = maybe_trim_lines (startpos.pos_cnum - startpos.pos_bol) comment in
     Buffer.clear buffer ;
-    comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
+    let comment = build_comment comment (FStar_Parser_Util.mksyn_range startpos endpos)
+    comments := comment :: ! comments
 
-  let push_comment buffer startpos lexbuf = terminate_comment buffer startpos lexbuf comments
-  let push_fsdoc buffer startpos lexbuf = terminate_comment buffer startpos lexbuf fsdocs
+  let push_comment buffer startpos lexbuf =
+    terminate_comment buffer startpos lexbuf (fun c r -> (c,r)) comments
+
+  let push_fsdoc buffer startpos kwd_map lexbuf =
+    terminate_comment buffer startpos lexbuf (fun c r -> FStar_Parser_AST.to_fsdoc (c,kwd_map,r)) fsdocs
 
   let push_one_line_comment lexbuf =
     let startpos, endpos = L.range lexbuf in
@@ -501,12 +505,12 @@ and comment n buffer startpos = parse
          comment (n-1) buffer startpos
        end
        else begin
-         terminate_comment buffer startpos lexbuf;
+         push_comment buffer startpos lexbuf;
          token lexbuf
        end }
 
  | eof
-     { terminate_comment buffer startpos lexbuf;
+     { push_comment buffer startpos lexbuf;
        lc := 1; EOF }
 
  | _ as c
@@ -522,7 +526,7 @@ and fsdoc n doc startpos kw = parse
     { Buffer.add_string doc "*)" ;
       if n > 1 then fsdoc (n-1) doc startpos kw lexbuf
       else begin
-          terminate_fsdoc doc startpos kw lexbuf ;
+          push_fsdoc doc startpos kw lexbuf ;
           token lexbuf
         end }
 
@@ -540,7 +544,7 @@ and fsdoc n doc startpos kw = parse
       comment n doc startpos kw lexbuf }
 
  | eof
-    { terminate_fsdoc doc startpos kw lexbuf;
+    { push_fsdoc doc startpos kw lexbuf;
       lc := 1; EOF }
 
  | _ as c

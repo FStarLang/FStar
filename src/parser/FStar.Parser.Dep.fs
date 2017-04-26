@@ -309,8 +309,8 @@ let collect_one
     | ModuleAbbrev (ident, lid) ->
         add_dep (lowercase_join_longident lid true);
         record_module_alias ident lid
-    | TopLevelLet (_, patterms) ->
-        List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
+    | TopLevelLet (_, patterns) ->
+        List.iter (fun lb -> collect_pattern lb.letbindingpat; collect_term lb.letbindingdef) patterns
     | Main t
     | Assume (_, t)
     | SubEffect { lift_op = NonReifiableLift t }
@@ -321,7 +321,6 @@ let collect_one
         collect_term t0;
         collect_term t1
     | Tycon (_, ts) ->
-        let ts = List.map (fun (x,doc) -> x) ts in
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
@@ -336,22 +335,17 @@ let collect_one
             raise (Err (Util.format1 "Automatic dependency analysis demands one \
               module per file (module %s not supported)" (string_of_lid lid true)))
 
-  and collect_tycon = function
-    | TyconAbstract (_, binders, k) ->
-        collect_binders binders;
-        iter_opt k collect_term
-    | TyconAbbrev (_, binders, k, t) ->
-        collect_binders binders;
-        iter_opt k collect_term;
+  and collect_tycon tyc =
+    collect_binders tyc.typarams ;
+    iter_opt tyc.tytyp collect_term ;
+    match tyc.tydata with
+    | TyconAbstract -> ()
+    | TyconAbbrev t ->
         collect_term t
-    | TyconRecord (_, binders, k, identterms) ->
-        collect_binders binders;
-        iter_opt k collect_term;
-        List.iter (fun (_, t, _) -> collect_term t) identterms
-    | TyconVariant (_, binders, k, identterms) ->
-        collect_binders binders;
-        iter_opt k collect_term;
-        List.iter (fun (_, t, _, _) -> iter_opt t collect_term) identterms
+    | TyconRecord fields ->
+        List.iter (fun f -> collect_term f.field_type) fields
+    | TyconVariant (variants, _) ->
+        List.iter (fun v -> iter_opt v.variant_type collect_term) variants
 
   and collect_effect_decl = function
     | DefineEffect (_, binders, t, decls) ->
@@ -459,8 +453,7 @@ let collect_one
         collect_term t
     | Assign (_, t)
     | Requires (t, _)
-    | Ensures (t, _)
-    | Labeled (t, _, _) ->
+    | Ensures (t, _) ->
         collect_term t
     | Attributes cattributes  ->
         List.iter collect_term cattributes

@@ -188,6 +188,7 @@ type tycon' =
 type tycon = {
   tycon_id: ident ;
   typarams: list<binder> ;
+  tytyp: option<typ>;
   tydata : tycon' ;
   tydoc : list<fsdoc> ;
   tyrange : range
@@ -578,6 +579,7 @@ let compile_op' s =
 // Place fsdoc node
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+(* Used in the lexer *)
 let to_fsdoc (comment, kwd_args, range) =
   {
     comment = comment ;
@@ -587,8 +589,8 @@ let to_fsdoc (comment, kwd_args, range) =
 
 let is_nil = function | [] -> true | _ -> false
 
-let comments_before r1 (_, _, r) =
-  line_of_pos (end_of_range r) <= line_of_pos (end_of_range r1)
+let comments_before r1 d =
+  line_of_pos (end_of_range d.fsdrange) <= line_of_pos (end_of_range r1)
 
 let fold_and_retrieve (f:list<'a> -> 'b -> list<'a> * 'b) (resources:list<'a>) (lfolded:list<'b>) =
   let fold_map_adaptator (acc, l) y = let acc, y = f acc y in acc, y::l in
@@ -598,35 +600,35 @@ let fold_and_retrieve (f:list<'a> -> 'b -> list<'a> * 'b) (resources:list<'a>) (
 let place_fsdoc_in_record_field fsdocs field =
   let current_fsdocs, other_fsdocs = take (comments_before field.field_range) fsdocs in
   assert (is_nil field.field_doc) ;
-  other_fsdocs, {field with field_doc = List.map to_fsdoc current_fsdocs}
+  other_fsdocs, {field with field_doc = current_fsdocs}
 
 let place_fsdoc_in_variant fsdocs variant =
   let current_fsdocs, other_fsdocs = take (comments_before variant.variant_range) fsdocs in
   assert (is_nil variant.variant_doc) ;
-  other_fsdocs, {variant with variant_doc = List.map to_fsdoc current_fsdocs}
+  other_fsdocs, {variant with variant_doc = current_fsdocs}
 
 let place_fsdoc_in_tycon fsdocs tyc =
   let contained_fsdocs, fsdocs = take (comments_before tyc.tyrange) fsdocs in
   assert (is_nil tyc.tydoc) ;
   let tyc = match tyc.tydata with
-    | TyconAbstract | TyconAbbrev _ -> { tyc with tydoc = List.map to_fsdoc contained_fsdocs }
+    | TyconAbstract | TyconAbbrev _ -> { tyc with tydoc = contained_fsdocs }
     | TyconRecord fields ->
       let type_fsdocs, fields_fsdocs = take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
       let residual_fsdocs, fields = fold_and_retrieve place_fsdoc_in_record_field fields_fsdocs fields in
       assert (is_nil residual_fsdocs) ;
-      {tyc with tydoc = List.map to_fsdoc type_fsdocs ; tydata = TyconRecord fields}
+      {tyc with tydoc = type_fsdocs ; tydata = TyconRecord fields}
     | TyconVariant (variants, b) ->
       let type_fsdocs, variants_fsdocs = take (comments_before tyc.tycon_id.idRange) contained_fsdocs in
       let residual_fsdocs, variants = fold_and_retrieve place_fsdoc_in_variant variants_fsdocs variants in
       assert (is_nil residual_fsdocs) ;
-      {tyc with tydoc = List.map to_fsdoc type_fsdocs ; tydata = TyconVariant (variants, b)}
+      {tyc with tydoc = type_fsdocs ; tydata = TyconVariant (variants, b)}
   in
   fsdocs, tyc
 
 let place_fsdoc_in_toplevellet fsdocs lb =
   let contained_fsdocs, fsdocs = take (comments_before lb.letbindingrange) fsdocs in
   assert (is_nil lb.letbindingdoc) ;
-  fsdocs, {lb with letbindingdoc = List.map to_fsdoc contained_fsdocs}
+  fsdocs, {lb with letbindingdoc = contained_fsdocs}
 
 let place_fsdoc_in_decl fsdocs decl =
   let contained_fsdocs, fsdocs = take (comments_before decl.drange) fsdocs in
@@ -643,16 +645,16 @@ let place_fsdoc_in_decl fsdocs decl =
       assert (is_nil residual_fsdocs) ;
       {decl with d = TopLevelLet (lq, defs) }
     | _ ->
-      { decl with doc = List.map to_fsdoc fsdocs }
+      { decl with doc = fsdocs }
   in
   fsdocs, decl
 
 let place_fsdoc_before_decl (fsdocs, l) decl =
   let decl_line = line_of_pos (end_of_range decl.drange) in
-  let is_standalone_fsdoc (_, _, r) = line_of_pos (end_of_range r) + 2 <= decl_line in
+  let is_standalone_fsdoc d = line_of_pos (end_of_range d.fsdrange) + 2 <= decl_line in
   let standalone_fsdocs, fsdocs = take is_standalone_fsdoc fsdocs in
   let standalone_fsdocs =
-    List.map (fun c -> let d = to_fsdoc c in mk_decl (Fsdoc d) d.fsdrange []) standalone_fsdocs
+    List.map (fun c -> mk_decl (Fsdoc c) c.fsdrange []) standalone_fsdocs
   in
   let fsdocs, decl = place_fsdoc_in_decl fsdocs decl in
   fsdocs, decl:: standalone_fsdocs @ l
@@ -685,7 +687,7 @@ let place_fsdoc_in_frag fsdocs frag =
 
 (* KM (04/17) : Do we still need these functions since we have toDocument ? *)
 
-let string_of_fsdoc (comment,keywords) =
+let string_of_fsdoc { comment = comment ; key_val_map = keywords } =
   comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
 
 let string_of_let_qualifier = function

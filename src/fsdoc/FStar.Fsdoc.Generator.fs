@@ -77,7 +77,8 @@ let string_of_optiont f y xo =
     | Some x -> f x
     | None -> y
 
-let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ string_of_fsdoc x ^ "*)") "" d
+let string_of_fsdocs docs =
+  String.concat "\n" <| List.map (fun x -> "(*" ^ string_of_fsdoc x ^ "*)") docs
 let string_of_termo t = string_of_optiont term_to_string "" t
 
 // wrap-up s in MD code block.
@@ -89,25 +90,26 @@ let code_wrap s = "```fsharp\n" ^ s ^ "\n```\n"
 ///////////////////////////////////////////////////////////////////////////////
 
 let string_of_tycon tycon =
-    match tycon with
-    | TyconAbstract _ -> "abstract"
-    | TyconAbbrev _ -> "abbrev"
-    | TyconRecord(id,_bb,_ko,fields) ->
-        id.idText ^ " = { " ^
-        ( fields
-          |> List.map
-                    (fun (id,t,doco) -> (string_of_fsdoco doco) ^
-                                        id.idText ^ ":" ^ (term_to_string t))
-          |> String.concat "; " ) ^
-        " }"
-    | TyconVariant(id,_bb,_ko,vars) ->
-        id.idText ^ " = " ^
-        ( vars
-            |> List.map
-                    (fun (id,trmo,doco,u) ->
-                        (string_of_fsdoco doco) ^
-                        id.idText ^ ":" ^ (string_of_optiont term_to_string "" trmo))
-            |> String.concat " | " )
+  let id = tycon.tycon_id in
+  match tycon.tydata with
+  | TyconAbstract -> "abstract"
+  | TyconAbbrev _ -> "abbrev"
+  | TyconRecord fields ->
+    id.idText ^ " = { " ^
+    ( fields
+      |> List.map
+                (fun f -> (string_of_fsdocs f.field_doc) ^
+                          f.field_id.idText ^ ":" ^ (term_to_string f.field_type))
+      |> String.concat "; " ) ^
+    " }"
+  | TyconVariant vars ->
+    id.idText ^ " = " ^
+    ( vars
+        |> List.map
+                (fun v ->
+                    (string_of_fsdocs v.variant_doc) ^
+                    v.variant_id.idText ^ ":" ^ (string_of_termo v.variant_type))
+        |> String.concat " | " )
 
 ///////////////////////////////////////////////////////////////////////////////
 // decl
@@ -128,7 +130,7 @@ let string_of_decl' d =
   | Assume(i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
   | Tycon(_, tys) ->
             "type " ^
-             (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d))
+             (tys |> List.map (fun t-> (string_of_tycon t) ^ " " ^ (string_of_fsdocs tys.tydoc))
                  |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
   | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
   | Exception(i, _) -> "exception " ^ i.idText
@@ -144,14 +146,14 @@ let string_of_decl' d =
 let decl_documented (d:decl) =
     let tycon_documented (tt:list<(tycon * option<fsdoc>)>) =
         let tyconvars_documented tycon =
-            match tycon with
-            | TyconAbstract _ | TyconAbbrev _ -> false
-            | TyconRecord(_,_,_,fields) ->
-                List.existsb (fun (_id,_t,doco) -> is_some doco) fields
-            | TyconVariant(_,_,_,vars) ->
-                List.existsb (fun (_id,_t,doco,_u) -> is_some doco) vars in
+            match tycon.tydata with
+            | TyconAbstract | TyconAbbrev _ -> false
+            | TyconRecord fields ->
+                List.existsb (fun f -> is_non_nil f.field_doc) fields
+            | TyconVariant vars ->
+                List.existsb (fun v -> is_non_nil v.variant_doc) vars in
         List.existsb
-            (fun (tycon,doco) -> (tyconvars_documented tycon) || is_some doco)
+            (fun tycon -> (tyconvars_documented tycon) || is_non_nil tycon.tydoc)
             tt
     in
     // either d.doc attached at the top-level decl

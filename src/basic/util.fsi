@@ -233,6 +233,8 @@ val is_left: either<'a,'b> -> bool
 val is_right: either<'a,'b> -> bool
 val left: either<'a,'b> -> 'a
 val right: either<'a,'b> -> 'b
+val is_nil : list<'a> -> bool
+val is_non_nil : list<'a> -> bool
 val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>

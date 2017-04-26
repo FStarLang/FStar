@@ -495,6 +495,9 @@ let dflt x = function
   | None   -> x
   | Some x -> x
 
+let is_nil l = l = []
+let is_non_nil l = l <> []
+
 let find_opt f l =
   let rec aux = function
     | [] -> None

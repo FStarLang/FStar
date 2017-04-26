@@ -31,18 +31,21 @@ type fragment =
     | Modul of AST.modul // an entire module or interface -- unspecified
     | Decls of list<AST.decl> // a partial set of declarations
 
+(* TODO: take fsdocs into account ! *)
 let parse_fragment frag : fragment =
     match ParseIt.parse (Inr frag) with
-    | Inl (Inl [], _) ->
+    | Inl ({ ParseIt.frag = Inl [] }) ->
       Empty
 
-    | Inl (Inl [modul], _) -> //interactive mode: module
+    (* interactive mode: module *)
+    | Inl ({ ParseIt.frag = Inl [modul]}) ->
       Modul modul
 
-    | Inl (Inr decls, _) -> //interactive mode: more decls
+    (* interactive mode: more decls *)
+    | Inl ({ParseIt.frag = Inr decls}) ->
       Decls decls
 
-    | Inl (Inl _, _) ->
+    | Inl ({ParseIt.frag = Inl _}) ->
       raise (Err("Refusing to check more than one module at a time incrementally"))
 
     | Inr (msg,r) ->
@@ -51,10 +54,10 @@ let parse_fragment frag : fragment =
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
   match ParseIt.parse (Inl fn) with
-  | Inl (Inl ast, comments) ->
-    ast, comments
+  | Inl ({ParseIt.frag = Inl ast; ParseIt.comments = comments ; ParseIt.fsdocs = fsdocs}) ->
+    ast, fsdocs, comments
 
-  | Inl (Inr _ , _) ->
+  | Inl ({ ParseIt.frag = Inr _}) ->
     let msg = Util.format1 "%s: expected a module\n" fn in
     let r = Range.dummyRange in
     raise (Error(msg, r))

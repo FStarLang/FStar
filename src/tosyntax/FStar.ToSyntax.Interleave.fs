@@ -29,13 +29,13 @@ open FStar.Parser.AST
 let id_eq_lid i (l:lident) = i.idText = l.ident.idText
 
 let is_val x d = match d.d with
-    | Val(y, _) -> x.idText = y.idText
-    | _ -> false
+  | Val(y, _) -> x.idText = y.idText
+  | _ -> false
 
 let is_type x d = match d.d with
-    | Tycon(_, tys) ->
-        tys |> Util.for_some (fun (t,_) -> id_of_tycon t = x.idText)
-    | _ -> false
+  | Tycon(_, tys) ->
+      tys |> Util.for_some (fun t -> id_of_tycon t = x.idText)
+  | _ -> false
 
 //is d of of the form 'let x = ...' or 'type x = ...'
 let definition_lids d =
@@ -44,7 +44,7 @@ let definition_lids d =
         lids_of_let defs
     | Tycon(_, tys) ->
         tys |> List.collect (function
-                | TyconAbbrev(id, _, _, _), _ ->
+                | { tycon_id = id ; tydata = TyconAbbrev _ } ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
     | _ -> []
@@ -130,7 +130,7 @@ let rec prefix_with_iface_decls
    | [] -> [], [impl]
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
-     | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
+     | Tycon(_, tys) when (tys |> Util.for_some (function | {tydata = TyconAbstract}  -> true | _ -> false)) ->
         raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", impl.drange))
 
      | Val(x, t) ->
@@ -177,7 +177,7 @@ let check_initial_interface (iface:list<decl>) =
         | [] -> ()
         | hd::tl -> begin
             match hd.d with
-            | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
+            | Tycon(_, tys) when (tys |> Util.for_some (function | {tydata = TyconAbstract} -> true | _ -> false)) ->
               raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", hd.drange))
 
             | Val(x, t) ->  //we have a 'val x' in the interface
