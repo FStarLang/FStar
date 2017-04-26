@@ -158,9 +158,13 @@ echo "+++ File List 1"
 echo "+++ File List 2:"$ZIP_FILE_LIST
   for ZIP_FILE in $ZIP_FILE_LIST
   do
-  echo "+++ Remove:"${ZIP_FILE}
+echo "+++ PWD3:"$PWD
+  cd $BN_BINARYSPATH
+  #echo "+++ Remove:"${ZIP_FILE}
      #rm ${ZIP_FILE}
   echo "+++ Git Remove:"${ZIP_FILE}
+echo "+++ PWD4:"$PWD
+echo "++ Length"${#ZIP_FILE}
      git rm ${ZIP_FILE} -f
   done
 fi
