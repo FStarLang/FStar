@@ -159,9 +159,9 @@ echo "+++ File List 2:"$ZIP_FILE_LIST
   for ZIP_FILE in $ZIP_FILE_LIST
   do
   echo "+++ Remove:"${ZIP_FILE}
-     rm ${ZIP_FILE}
+     #rm ${ZIP_FILE}
   echo "+++ Git Remove:"${ZIP_FILE}
-     git rm ${ZIP_FILE}
+     git rm ${ZIP_FILE} -f
   done
 fi
 
@@ -173,7 +173,7 @@ if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
   for TAR_FILE in $TAR_FILE_LIST
   do
      rm ${TAR_FILE}
-     git rm ${TAR_FILE}
+     git rm ${TAR_FILE} -f
   done
 fi
 
