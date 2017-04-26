@@ -125,10 +125,9 @@ FStar_Parser_Parse.ml: parse.mly
 	# menhir) and removes the production as needed.
 	ocamlyacc parse.mly 2> yac-log
 	cat yac-log
-	@
-	@if (( $$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/') > 7 )); then \
+	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 7 ]; then \
 	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
-	  fi
+	fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
 
