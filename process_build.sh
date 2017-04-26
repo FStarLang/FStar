@@ -158,14 +158,14 @@ echo "+++ File List 1"
 echo "+++ File List 2:"$ZIP_FILE_LIST
   for ZIP_FILE in $ZIP_FILE_LIST
   do
-echo "+++ PWD3:"$PWD
-  cd $BN_BINARYSPATH
-  #echo "+++ Remove:"${ZIP_FILE}
-     #rm ${ZIP_FILE}
-  echo "+++ Git Remove:"${ZIP_FILE}
-echo "+++ PWD4:"$PWD
-echo "++ Length"${#ZIP_FILE}
-     git rm ${ZIP_FILE} -f
+     echo "+++ PWD3:"$PWD
+     cd $BN_BINARYSPATH
+     echo "+++ Remove:"${ZIP_FILE}
+     rm ${ZIP_FILE}
+     echo "+++ Git Remove:"${ZIP_FILE}
+     echo "+++ PWD4:"$PWD
+     echo "++ Length"${#ZIP_FILE}
+     #git rm ${ZIP_FILE} -f  #this fails and not sure why ... works fine on Linux and if run in cygwin
   done
 fi
 
