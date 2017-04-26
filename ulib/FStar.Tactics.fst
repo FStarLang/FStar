@@ -15,6 +15,9 @@ type state   = goals  //active goals
         handling the logical structure of a term 
    NB: rename this to term_view? or something like that
 *)
+
+#reset-options "--no_tactics"
+
 noeq type formula = 
   //the logical skeleton of a term
   | True_  : formula

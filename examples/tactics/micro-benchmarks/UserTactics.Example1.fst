@@ -1,8 +1,6 @@
 module UserTactics.Example1
 open FStar.Tactics
 
-#reset-options "--use_tactics"
-
 let test_print_goal =
   assert_by_tactic (print "User print:") //Some auto-thunking or at least some light notation for it
                    (forall (y:int). y==0 ==> 0==y)
