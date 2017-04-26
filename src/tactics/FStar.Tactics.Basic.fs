@@ -108,7 +108,7 @@ let bind (t1:tac<'a>)
 let get : tac<proofstate> = kernel_tac "get" (fun p -> Success(p, p))
 
 let fail msg = kernel_tac "fail" (fun p ->
-    BU.print1 ">>>>>%s\n" msg;
+    //BU.print1 ">>>>>%s\n" msg;
     Failed(msg, p))
 
 ////////////////////////////////////////////////////////////////////
@@ -206,8 +206,8 @@ let rec replace_in_term e1 e2 t =
     U.bottom_fold (replace_point e1 e2) t
 
 let treplace env (e1:term) (e2:term) (t:term) =
-    BU.print3 "TAC replacing %s for %s in %s\n"
-        (SP.term_to_string e1) (SP.term_to_string e2) (SP.term_to_string t);
+    //BU.print3 "TAC replacing %s for %s in %s\n"
+    //    (SP.term_to_string e1) (SP.term_to_string e2) (SP.term_to_string t);
     replace_in_term e1 e2 t
 
 // eq hardcoded to univ #0
@@ -358,7 +358,7 @@ let intros : tac<binders>
 //                    (Print.term_to_string body);
            bind dismiss (fun _ ->
            bind (add_goals [new_goal]) (fun _ ->
-           BU.print1 "intros: %s\n" (Print.binders_to_string ", " bs);
+           //BU.print1 "intros: %s\n" (Print.binders_to_string ", " bs);
            ret bs))
          | _ ->
            fail "Cannot intro this goal, expected a forall")
@@ -398,7 +398,7 @@ let imp_intro : tac<binder> =
       } in
       bind dismiss (fun _ ->
       bind (add_goals [new_goal]) (fun _ ->
-      BU.print1 "imp_intro: %s\n" (Print.bv_to_string name);
+      //BU.print1 "imp_intro: %s\n" (Print.bv_to_string name);
       ret (S.mk_binder name)))
     | _ ->
       fail "Cannot intro this goal, expected an '==>'")
@@ -498,7 +498,7 @@ let exact (tm:term)
 
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal "rewrite" (fun goal ->
-      BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort);
+      //BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort);
       match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
       | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
                 when Ident.lid_equals l SC.eq2_lid ->
@@ -644,12 +644,12 @@ let rec visit (callback:tac<unit>)
                       | Tm_meta _ ->
                         map_meta (visit callback)
                       | _ ->
-                        BU.print1 "Not a formula, split to smt %s\n" (Print.term_to_string goal.goal_ty);
+                        //BU.print1 "Not a formula, split to smt %s\n" (Print.term_to_string goal.goal_ty);
                         smt
                       end
 
                     | Some (U.QEx _) ->  //not yet handled
-                        BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (Print.term_to_string goal.goal_ty);
+                        //BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (Print.term_to_string goal.goal_ty);
                         ret ()
 
                     | Some (U.QAll(xs, _, _)) ->
@@ -658,7 +658,7 @@ let rec visit (callback:tac<unit>)
                       seq (visit callback) (
                       bind (revert_all_hd (List.map fst binders)) (fun _ ->
                       with_cur_goal "inner" (fun goal ->
-                      BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal);
+                      //BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal);
                       ret()))))
 
                     | Some (U.BaseConn(l, _))
