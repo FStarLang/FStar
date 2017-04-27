@@ -241,10 +241,8 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
     (t', gs@gs')
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
-    if Env.debug env (Options.Other "Tac") then
-        tacdbg := true
-    else
-        tacdbg := false;
+    // Check if we should print debug output
+    tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
         BU.print1 "About to preprocess %s\n" (Print.term_to_string goal);
     let initial = (1, []) in
