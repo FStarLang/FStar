@@ -28,14 +28,16 @@ val ax_fun: #s:Type
                   (ensures  (witnessed #s #rel p ==> witnessed #s #rel q))
 let ax_fun #s #rel p q = ()
 
-val ax_elim: #s:Type
+(* ax_elim is only valid in a witnessed-free environment *)
+
+(*val ax_elim: #s:Type
           -> #rel:preorder s
           -> p:predicate s
           -> q:predicate s
           -> x:s
           -> Lemma (requires ((witnessed #s #rel p ==> witnessed #s #rel q) /\ p x))
                    (ensures  (q x))
-let ax_elim #s #rel p q x = admit () //not provable with the current representation of witnessed
+let ax_elim #s #rel p q x = admit () //not provable with the current representation of witnessed*)
 
 (* Rules for the interaction of the witnessed modality with other logical connectives *)
 
