@@ -9,7 +9,7 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 FSTAR_ARGS=$(OTHERFLAGS)
 CODEGEN_ARGS=--lax --codegen OCaml --no_location_info $(FSTAR_DEFAULT_ARGS)
 
-KREMLIN_HOME=../../../kremlin
+KREMLIN_HOME?=../../../kremlin
 KREMLIN=$(KREMLIN_HOME)/Kremlin.native
 KREMLIN_ARGS=-tmpdir kremlin -cc clang
 
@@ -206,7 +206,6 @@ extract-krml-test:
 
 krml-test.exe: spartan_aes/aes.o crypto/*.fst
 	# -bundle Crypto_KrmlTest=Flag,Crypto.*
-	make -C $(KREMLIN_HOME)
 	$(KRML) spartan_aes/aes.o crypto/spartan_stub.c \
                 -no-prefix Crypto.KrmlTest \
                 $(KREMLIN_HOME)/test/../kremlib/testlib.c crypto/test_hacks.c \
