@@ -159,6 +159,7 @@ let split : tactic unit = fun () -> TAC?.reflect split_
 assume private val merge_   : _tac unit
 let merge : tactic unit = fun () -> TAC?.reflect merge_
 
+// TODO: isn't this is unsound if b is not the environment? I think so but couldn't quickly come up with a contradiction
 assume private val rewrite_ : binder -> _tac unit
 let rewrite (b:binder) : tactic unit = fun () -> TAC?.reflect (rewrite_ b)
 

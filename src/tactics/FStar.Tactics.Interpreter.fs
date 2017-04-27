@@ -207,7 +207,8 @@ let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
         | Success (_, ps) ->
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
         | Failed (s,ps) ->
-            raise (Failure "user tactic failed")
+            BU.print_string <| "GGG: user tactic failed: \"" ^ s ^ "\"\n";
+            raise (Failure ("user tactic failed: \"" ^ s ^ "\""))
         end
     | _ ->
         (t, [])

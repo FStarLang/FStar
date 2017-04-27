@@ -95,7 +95,7 @@ let dump_goal goal =
     ()
 
 let dump_proofstate p msg =
-    BU.print_string "TAC>> State dump:\n";
+    BU.print1 "TAC>> State dump (%s):\n" msg;
     BU.print1 "TAC>> ACTIVE goals (%s):\n" (string_of_int (List.length p.goals));
     List.iter dump_goal p.goals;
     BU.print1 "TAC>> SMT goals (%s):\n" (string_of_int (List.length p.smt_goals));
@@ -419,7 +419,8 @@ let trivial
             when Ident.lid_equals l SC.true_lid ->
         bind dismiss (fun _ ->
         add_goals ([{goal with goal_ty=t}]))
-      | _ -> fail "Not a trivial goal")
+      | _ -> bind (print_proof_state "`trivial` is failing") (fun _ ->
+             fail "Not a trivial goal"))
 
 
 let apply_lemma (tm:term)
