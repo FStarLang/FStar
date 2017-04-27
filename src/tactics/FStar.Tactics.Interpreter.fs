@@ -207,7 +207,7 @@ let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
         | Success (_, ps) ->
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
         | Failed (s,ps) ->
-            (assertion, []) // we clean the tactic out
+            raise (Failure "user tactic failed")
         end
     | _ ->
         (t, [])
@@ -241,15 +241,14 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     let _ = BU.print1 "About to preprocess %s\n" (Print.term_to_string goal) in
     let initial = (1, []) in
-    match traverse by_tactic_interp env goal with
-    | (t', gs) ->
-        BU.print2 "Main goal simplified to: %s |- %s\n"
-                (Env.all_binders env |> Print.binders_to_string ", ")
-                (Print.term_to_string t');
-        let s = initial in
-        let s = List.fold_left (fun (n,gs) g ->
-                     BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
-                     let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
-                     (n+1, (g.context, gt')::gs)) s gs in
-        let (_, gs) = s in
-        (env, t') :: gs
+    let (t', gs) = traverse by_tactic_interp env goal in
+    BU.print2 "Main goal simplified to: %s |- %s\n"
+            (Env.all_binders env |> Print.binders_to_string ", ")
+            (Print.term_to_string t');
+    let s = initial in
+    let s = List.fold_left (fun (n,gs) g ->
+                 BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
+                 let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
+                 (n+1, (g.context, gt')::gs)) s gs in
+    let (_, gs) = s in
+    (env, t') :: gs
