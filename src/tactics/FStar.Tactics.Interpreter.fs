@@ -222,6 +222,10 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
                              (Tm_uinst (t', us), gs)
         | Tm_meta (t, m) -> let (t', gs) = traverse f e t in
                             (Tm_meta (t', m), gs)
+        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv FStar.Syntax.Const.imp_lid ->
+               let x = S.new_bv None p in
+               let (q',gs) = traverse f (Env.push_bv e x) q in
+               ((U.mk_imp p q').n, gs)
         | Tm_app (hd, args) ->
                 let (hd', gs1) = traverse f e hd in
                 let (as', gs2) = List.fold_right (fun (a,q) (as',gs) ->
