@@ -843,6 +843,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   let tcs, datas = generalize_and_inst_within env0 g tcs datas in
 
   let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
-                    sigqual = quals;
-                    sigrng = Env.get_range env0 } in
+                    sigquals = quals;
+                    sigrng = Env.get_range env0;
+                    sigmeta = default_sigmeta  } in
   sig_bndle, tcs, datas

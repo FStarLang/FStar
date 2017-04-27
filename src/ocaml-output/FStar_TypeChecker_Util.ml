@@ -3746,8 +3746,10 @@ let mk_toplevel_definition:
                (uu___148_7175.FStar_Syntax_Syntax.sigel);
              FStar_Syntax_Syntax.sigrng =
                (uu___148_7175.FStar_Syntax_Syntax.sigrng);
-             FStar_Syntax_Syntax.sigqual =
-               [FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen]
+             FStar_Syntax_Syntax.sigquals =
+               [FStar_Syntax_Syntax.Unfold_for_unification_and_vcgen];
+             FStar_Syntax_Syntax.sigmeta =
+               (uu___148_7175.FStar_Syntax_Syntax.sigmeta)
            }), uu____7162))
 let check_sigelt_quals:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> Prims.unit =
@@ -4162,7 +4164,9 @@ let mk_discriminator_and_indexed_projectors:
                                     (discriminator_name, uvs, t));
                                FStar_Syntax_Syntax.sigrng =
                                  (FStar_Ident.range_of_lid discriminator_name);
-                               FStar_Syntax_Syntax.sigqual = quals
+                               FStar_Syntax_Syntax.sigquals = quals;
+                               FStar_Syntax_Syntax.sigmeta =
+                                 FStar_Syntax_Syntax.default_sigmeta
                              } in
                            (let uu____7580 =
                               FStar_TypeChecker_Env.debug env
@@ -4317,7 +4321,9 @@ let mk_discriminator_and_indexed_projectors:
                                 {
                                   FStar_Syntax_Syntax.sigel = uu____7757;
                                   FStar_Syntax_Syntax.sigrng = p;
-                                  FStar_Syntax_Syntax.sigqual = quals
+                                  FStar_Syntax_Syntax.sigquals = quals;
+                                  FStar_Syntax_Syntax.sigmeta =
+                                    FStar_Syntax_Syntax.default_sigmeta
                                 } in
                               (let uu____7782 =
                                  FStar_TypeChecker_Env.debug env
@@ -4453,8 +4459,11 @@ let mk_discriminator_and_indexed_projectors:
                                                  FStar_Syntax_Syntax.sigrng =
                                                    (FStar_Ident.range_of_lid
                                                       field_name);
-                                                 FStar_Syntax_Syntax.sigqual
-                                                   = quals1
+                                                 FStar_Syntax_Syntax.sigquals
+                                                   = quals1;
+                                                 FStar_Syntax_Syntax.sigmeta
+                                                   =
+                                                   FStar_Syntax_Syntax.default_sigmeta
                                                } in
                                              ((let uu____7887 =
                                                  FStar_TypeChecker_Env.debug
@@ -4644,8 +4653,11 @@ let mk_discriminator_and_indexed_projectors:
                                                        = uu____8054;
                                                      FStar_Syntax_Syntax.sigrng
                                                        = p1;
-                                                     FStar_Syntax_Syntax.sigqual
-                                                       = quals1
+                                                     FStar_Syntax_Syntax.sigquals
+                                                       = quals1;
+                                                     FStar_Syntax_Syntax.sigmeta
+                                                       =
+                                                       FStar_Syntax_Syntax.default_sigmeta
                                                    } in
                                                  (let uu____8079 =
                                                     FStar_TypeChecker_Env.debug
@@ -4738,7 +4750,7 @@ let mk_data_operations:
                                   let refine_domain =
                                     let uu____8253 =
                                       FStar_All.pipe_right
-                                        se.FStar_Syntax_Syntax.sigqual
+                                        se.FStar_Syntax_Syntax.sigquals
                                         (FStar_Util.for_some
                                            (fun uu___117_8255  ->
                                               match uu___117_8255 with
@@ -4759,7 +4771,7 @@ let mk_data_operations:
                                       | uu____8277 -> None in
                                     let uu____8278 =
                                       FStar_Util.find_map
-                                        se.FStar_Syntax_Syntax.sigqual
+                                        se.FStar_Syntax_Syntax.sigquals
                                         filter_records in
                                     match uu____8278 with
                                     | None  -> FStar_Syntax_Syntax.Data_ctor

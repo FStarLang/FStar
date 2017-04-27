@@ -1953,7 +1953,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_sub_effect _ -> [], env
 
      | Sig_new_effect(ed) ->
-       if se.sigqual |> List.contains Reifiable |> not
+       if se.sigquals |> List.contains Reifiable |> not
        then [], env
        else (* The basic idea:
                     1. Encode M.bind_repr: a:Type -> b:Type -> wp_a -> wp_b -> f:st_repr a wp_a -> g:(a -> st_repr b) : st_repr b
@@ -2011,7 +2011,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         [], env
 
      | Sig_declare_typ(lid, _, t) ->
-        let quals = se.sigqual in
+        let quals = se.sigquals in
         let will_encode_definition = not (quals |> BU.for_some (function
             | Assumption | Projector _ | Discriminator _ | Irreducible -> true
             | _ -> false)) in
@@ -2030,7 +2030,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = [Term.Assume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
-     | Sig_let(lbs, _, _) when (se.sigqual |> List.contains S.Irreducible) ->
+     | Sig_let(lbs, _, _) when (se.sigquals |> List.contains S.Irreducible) ->
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
@@ -2053,16 +2053,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 "b2t_def")] in
        decls, env
 
-    | Sig_let(_, _, _) when (se.sigqual |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
+    | Sig_let(_, _, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
     | Sig_let(_, lids, _) when (lids |> BU.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
-                             && se.sigqual |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
+                             && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
-    | Sig_let((false, [lb]), _, _) when (se.sigqual |> BU.for_some (function Projector _ -> true | _ -> false)) ->
+    | Sig_let((false, [lb]), _, _) when (se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
      let fv = BU.right lb.lbname in
@@ -2076,7 +2076,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      end
 
     | Sig_let((is_rec, bindings), _, _) ->
-      encode_top_level_let env (is_rec, bindings) se.sigqual
+      encode_top_level_let env (is_rec, bindings) se.sigquals
 
     | Sig_bundle(ses, _) ->
        let g, env = encode_signature env ses in
@@ -2089,7 +2089,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        decls@rest@inversions, env
 
      | Sig_inductive_typ(t, _, tps, k, _, datas) ->
-        let quals = se.sigqual in
+        let quals = se.sigquals in
         let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl (c:constructor_t) =
             if is_logical
@@ -2195,7 +2195,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
     | Sig_datacon(d, _, t, _, n_tps, _) ->
-        let quals = se.sigqual in
+        let quals = se.sigquals in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = U.arrow_formals t in

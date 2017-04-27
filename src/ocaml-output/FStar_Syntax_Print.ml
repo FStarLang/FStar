@@ -936,7 +936,7 @@ let rec sigelt_to_string: FStar_Syntax_Syntax.sigelt -> Prims.string =
         FStar_Util.format1 "#set-options \"%s\"" s
     | FStar_Syntax_Syntax.Sig_inductive_typ
         (lid,univs,tps,k,uu____1691,uu____1692) ->
-        let uu____1697 = quals_to_string' x.FStar_Syntax_Syntax.sigqual in
+        let uu____1697 = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
         let uu____1698 = binders_to_string " " tps in
         let uu____1699 = term_to_string k in
         FStar_Util.format4 "%stype %s %s : %s" uu____1697 lid.FStar_Ident.str
@@ -961,7 +961,7 @@ let rec sigelt_to_string: FStar_Syntax_Syntax.sigelt -> Prims.string =
         let uu____1721 = FStar_Syntax_Subst.open_univ_vars univs t in
         (match uu____1721 with
          | (univs1,t1) ->
-             let uu____1726 = quals_to_string' x.FStar_Syntax_Syntax.sigqual in
+             let uu____1726 = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
              let uu____1727 =
                let uu____1728 = FStar_Options.print_universes () in
                if uu____1728
@@ -976,7 +976,7 @@ let rec sigelt_to_string: FStar_Syntax_Syntax.sigelt -> Prims.string =
         let uu____1734 = term_to_string f in
         FStar_Util.format2 "val %s : %s" lid.FStar_Ident.str uu____1734
     | FStar_Syntax_Syntax.Sig_let (lbs,uu____1736,uu____1737) ->
-        lbs_to_string x.FStar_Syntax_Syntax.sigqual lbs
+        lbs_to_string x.FStar_Syntax_Syntax.sigquals lbs
     | FStar_Syntax_Syntax.Sig_main e ->
         let uu____1743 = term_to_string e in
         FStar_Util.format1 "let _ = %s" uu____1743

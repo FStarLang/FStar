@@ -505,7 +505,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
-let quals_of_sigelt (x: sigelt) = x.sigqual
+let quals_of_sigelt (x: sigelt) = x.sigquals
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
@@ -992,7 +992,8 @@ let destruct_typ_as_formula f : option<connective> =
     in
     { sigel = Sig_let((false, [lb]), [a.action_name], []);
       sigrng = a.action_defn.pos;
-      sigqual = [Visible_default ; Action eff_lid] }
+      sigquals = [Visible_default ; Action eff_lid];
+      sigmeta = default_sigmeta }
 
 (* Some reification utilities *)
 let mk_reify t =

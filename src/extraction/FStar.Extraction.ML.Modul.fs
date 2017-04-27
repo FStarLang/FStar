@@ -133,7 +133,7 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                   ; iparams=bs
                   ; ityp=t
                   ; idatas=datas
-                  ; iquals=se.sigqual  }]
+                  ; iquals=se.sigquals  }]
 
             | _ -> [])
 
@@ -163,7 +163,7 @@ let extract_bundle env se =
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
 
 
-    match se.sigel, se.sigqual with
+    match se.sigel, se.sigquals with
         | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
           let env, ctor = extract_ctor [] env ({dname=l; dtyp=t}) in
           env, [MLM_Exn ctor]
@@ -188,7 +188,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_datacon _ ->
           extract_bundle g se
 
-        | Sig_new_effect ed when se.sigqual |> List.contains Reifiable ->
+        | Sig_new_effect ed when se.sigquals |> List.contains Reifiable ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
             let lb = {
@@ -232,7 +232,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_declare_typ(lid, _, t)  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
-          let quals = se.sigqual in
+          let quals = se.sigquals in
           if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
           then g, []
           else let bs, _ = U.arrow_formals t in
@@ -242,7 +242,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let((false, [lb]), _, _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
-          let quals = se.sigqual in
+          let quals = se.sigquals in
           let tcenv, (lbdef, lbtyp) =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
@@ -253,7 +253,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           extract_typ_abbrev g (right lb.lbname) quals lbdef
 
         | Sig_let (lbs, _, attrs) ->
-          let quals = se.sigqual in
+          let quals = se.sigquals in
           let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
@@ -289,7 +289,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           end
 
        | Sig_declare_typ(lid, _, t) ->
-         let quals = se.sigqual in
+         let quals = se.sigquals in
          if quals |> List.contains Assumption
          then let always_fail =
                   let imp = match U.arrow_formals t with

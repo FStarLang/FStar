@@ -1368,7 +1368,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [])) in
-  {sig_ctx with sigqual=[ Unfold_for_unification_and_vcgen ]},
+  {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
   mk (Tm_fvar fv) None Range.dummyRange
 
 
@@ -1566,8 +1566,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
             let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t);
-                         sigqual = quals;
-                         sigrng = range_of_lid discriminator_name }  in
+                         sigquals = quals;
+                         sigrng = range_of_lid discriminator_name;
+                         sigmeta = default_sigmeta  }  in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1605,8 +1606,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbdef=SS.close_univ_vars uvs imp
                 } in
                 let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], []);
-                             sigqual = quals;
-                             sigrng = p } in
+                             sigquals = quals;
+                             sigrng = p;
+                             sigmeta = default_sigmeta  } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1652,8 +1654,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
-                       sigqual = quals;
-                       sigrng = range_of_lid field_name } in
+                       sigquals = quals;
+                       sigrng = range_of_lid field_name;
+                       sigmeta = default_sigmeta  } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1685,8 +1688,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbdef=SS.close_univ_vars uvs imp
               } in
               let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], []);
-                           sigqual = quals;
-                           sigrng = p } in
+                           sigquals = quals;
+                           sigrng = p;
+                           sigmeta = default_sigmeta  } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
@@ -1724,7 +1728,7 @@ let mk_data_operations iquals env tcs se =
     let indices, _ = U.arrow_formals typ0 in
 
     let refine_domain =
-        if se.sigqual |> BU.for_some (function RecordConstructor _ -> true | _ -> false)
+        if se.sigquals |> BU.for_some (function RecordConstructor _ -> true | _ -> false)
         then false
         else should_refine
     in
@@ -1733,7 +1737,7 @@ let mk_data_operations iquals env tcs se =
         let filter_records = function
             | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
             | _ -> None
-        in match BU.find_map se.sigqual filter_records with
+        in match BU.find_map se.sigquals filter_records with
             | None -> Data_ctor
             | Some q -> q
     in

@@ -496,7 +496,7 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
   | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
     U.format4 "%stype %s %s : %s"
-             (quals_to_string' x.sigqual)
+             (quals_to_string' x.sigquals)
              lid.str
              (binders_to_string " " tps)
              (term_to_string k)
@@ -507,13 +507,13 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
     else U.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, univs, t) ->
     let univs, t = Subst.open_univ_vars univs t in
-    U.format4 "%sval %s %s : %s" (quals_to_string' x.sigqual) lid.str
+    U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
         (if (Options.print_universes())
          then U.format1 "<%s>" (univ_names_to_string univs)
          else "")
         (term_to_string t)
   | Sig_assume(lid, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, _) -> lbs_to_string x.sigqual lbs
+  | Sig_let(lbs, _, _) -> lbs_to_string x.sigquals lbs
   | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed) -> eff_decl_to_string false ed
