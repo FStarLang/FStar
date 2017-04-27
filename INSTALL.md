@@ -307,7 +307,7 @@ that's over there (it's optimized for F*). This will install both OCaml and OPAM
 1. Make sure you follow the instructions above to get a working OCaml setup.
 
 1. On OSX, F\* has some extra dependencies on the GNU version of `head`, `sed`
-   and `find`. These can be installed using `brew install gsed coreutils`.
+   and `find`. These can be installed using `brew install gnu-sed coreutils`.
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F* sources from F# to OCaml using F* by running:
