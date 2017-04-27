@@ -38,19 +38,16 @@ if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
 fi
 
 # Need this to get back after unzip things
-ORIG_PWD=$PWD  #+++++
+ORIG_PWD=$PWD
 
 echo "*** Make package ***"
 cd src/ocaml-output
-#cd src   #+++++ Just put in one line
-#cd ocaml-output  #+++++ Just put in one line
 make package
 
-# For weekly build, we want to use TimeStamp since it is a minor release
+# 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 echo "*** Unzip and verify the Package  ***"
 TIME_STAMP=$(date +%s)
 
-# make package makes the package using the major version from version.txt. This process is weekly process to make minor versions so use timestamp in file name
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
 if [[ -f $MAJOR_ZIP_FILE ]]; then
@@ -110,28 +107,20 @@ else
   echo -e "* ${GREEN}PASSED!${NC} for all examples"
 fi
 
-# Got to this point, so know it passed - copy minor version out to see if it works
+# Got to this point, so know it passed - copy minor version out
 echo "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
-echo "+++PWD1"$PWD
-echo "++ BASE"$ORIG_PWD
-cd $ORIG_PWD  #++++ WILL THIS WORK???????
-#++++  cd ../../..  # DELETE THIS PROBABLY .... gets back to FStar directory from the unzipped fstar dir ... can't assume ~/FStar as not that way for Windows
-echo "+++PWD2"$PWD
-#ORIG_PWD=$PWD  +++ DELETE
-echo "+++ ORIG:"$ORIG_PWD
+cd $ORIG_PWD
 BN_BINARYSPATH_ROOT=~/binaries
 BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
-#FSTAR_BIN_BRANCH="master"  #+++ DELETE Not really needed since not debugging any more on other branches
 BN_FILESTOKEEP=4
 
 if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
   cd ~
   git clone https://github.com/FStarLang/binaries.git
-  #cd $BN_BINARYSPATH_ROOT  #+++++ DUPLICATE FROM LINE BELOW
 fi
 
 cd $BN_BINARYSPATH_ROOT
-git checkout master #++++++ $FSTAR_BIN_BRANCH remove this and make master
+git checkout master
 git pull origin master
 
 echo "-- copy files and add to Github --"
@@ -141,7 +130,6 @@ if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   cd $BN_BINARYSPATH
   git add $MINOR_ZIP_FILE
   cd ..
-echo "++++ Current PWD"$PWD  
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "--" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
@@ -149,9 +137,9 @@ if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   git add $BN_BINARYSPATH/$MINOR_TAR_FILE
 fi
 
-# Now that latest package is added, remove the oldest one so only keeping most recent 4 packages
+# Now that latest package is added, remove the oldest one because only keeping most recent 4 packages
 cd $BN_BINARYSPATH
-echo "-- Delete oldest ZIP file --"
+echo "-- Delete oldest ZIP file if more than 4 exist --"
 BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
 ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
 if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
@@ -160,11 +148,11 @@ if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
   for ZIP_FILE in $ZIP_FILE_LIST
   do
      rm ${ZIP_FILE}
-     git rm ${ZIP_FILE} -f  
+     git rm ${ZIP_FILE} -f
   done
 fi
 
-echo "-- Delete oldest TAR file --"
+echo "-- Delete oldest TAR file if more than 4 exist --"
 BN_TAR_FILES=$BN_BINARYSPATH/*.gz
 TAR_COUNT=`ls -1 $BN_TAR_FILES 2>/dev/null | wc -l`
 if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
@@ -179,7 +167,7 @@ fi
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
 git commit --amend -m "Adding new build package and removing oldest."
-git push git@github.com:FStarLang/binaries.git master --force  #+++++ REMOVED $FSTAR_BIN_BRANCH and just put master in there
+git push git@github.com:FStarLang/binaries.git master --force
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt
