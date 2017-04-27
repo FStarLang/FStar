@@ -1,5 +1,6 @@
-// This should be moved to the standard libary, e.g., FStar/ulib
 module FStar.Tactics
+open FStar.Tactics.Syntax
+
 assume type binder //FStar.Syntax.Syntax.binder
 assume type term
 assume type env
@@ -65,7 +66,13 @@ let _get () : _tac state = fun s0 -> Success s0 s0
 
 let tac_wp a = state -> (_result a -> Tot Type0) -> Tot Type0
 
-unfold let g_bind (r:range) (a:Type) (b:Type) (wp:tac_wp a) (f:a -> tac_wp b) = fun ps post ->
+(*
+ * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"
+ * optimization, which causes VCs (for well-formedness of tactics) to blow up.
+ *
+ * Work around that by overriding `bind_wp` for the effect with an efficient one.
+ *)
+unfold let g_bind (a:Type) (b:Type) (wp:tac_wp a) (f:a -> tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
                      | Success a q -> f a q post
                      | Failed msg q -> post (Failed msg q))
@@ -74,7 +81,7 @@ unfold let g_compact (a:Type) (wp:tac_wp a) : tac_wp a =
     fun ps post -> wp ps (fun _ -> True) /\ (forall (r:_result a). post r \/ wp ps (fun r' -> ~(r == r')))
 
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:tac_wp a) (f:a -> tac_wp b) =
-    g_compact b (g_bind r a b wp f)
+    g_compact b (g_bind a b wp f)
 
 (* total  *) //disable the termination check, although it remains reifiable
 reifiable reflectable new_effect {
@@ -108,11 +115,15 @@ let by_tactic (t:state -> _result unit) (a:Type) : Type = a
 let reify_tactic (t:tactic unit) : _tac unit =
   fun s -> reify (t ()) s
 
+// Must run with tactics off, as it will otherwise try to run `by_tactic
+// (reify_tactic t)`, which fails as `t` is not a concrete tactic
+#reset-options "--no_tactics"
 let assert_by_tactic (t:tactic unit) (p:Type)
   : Pure unit 
          (requires (by_tactic (reify_tactic t) p))
          (ensures (fun _ -> p))
   = ()
+#reset-options ""
 
   // TODO: naming convention.. underscore before or after?
 
