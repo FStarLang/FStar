@@ -19,7 +19,6 @@ assert_by_tactic (tbind' (grewrite (quote (1 + 2)) (quote 3))
                          (grewrite (quote (3, 3+4)) (quote (3,7))))
                  ((1+2, 3+4) == (5-2, 7+0))
 
-// Should rewrite all at once, and does, but we get a weird hard query
 let test_grewrite4 (f : int -> int -> int) (w : int) =
 assert_by_tactic (tbind implies_intro (fun _ ->
                   seq (grewrite (quote (f w w)) (quote w)) revert))
@@ -63,12 +62,10 @@ let partially_solved_using_smt =
                      pred_1 0 /\ //by 1 smt sub-goal
                      pred_1 1)  //by another smt sub-goal
 
-assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x == 10))
 
-let scanning_environment =
-  let x = return_ten () in
-  assert_by_tactic (seq (rewrite_equality (quote x))
-                        (seq rewrite_eqs_from_context trivial))
+// TODO: Very strange example
+let scanning_environment (x:int) (p:x == 10) =
+  assert_by_tactic (tbind' rewrite_eqs_from_context trivial)
                    (x + 0 == 10)
 
 assume val mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
