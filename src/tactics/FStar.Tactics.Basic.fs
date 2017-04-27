@@ -22,6 +22,8 @@ module N = FStar.TypeChecker.Normalize
 
 type name = bv
 
+let tacdbg = BU.mk_ref false
+
 (*
    f: x:int -> P
    ==================
@@ -90,16 +92,16 @@ let goal_to_string (g:goal) =
     let g_binders = Env.all_binders g.context |> Print.binders_to_string ", " in
     Util.format2 "%s |- %s" g_binders (Print.term_to_string g.goal_ty)
 
-let dump_goal goal =
+let dump_goal ps goal =
     BU.print1 "TAC>> %s\n" (goal_to_string goal);
     ()
 
-let dump_proofstate p msg =
+let dump_proofstate ps msg =
     BU.print1 "TAC>> State dump (%s):\n" msg;
-    BU.print1 "TAC>> ACTIVE goals (%s):\n" (string_of_int (List.length p.goals));
-    List.iter dump_goal p.goals;
-    BU.print1 "TAC>> SMT goals (%s):\n" (string_of_int (List.length p.smt_goals));
-    List.iter dump_goal p.smt_goals;
+    BU.print1 "TAC>> ACTIVE goals (%s):\n" (string_of_int (List.length ps.goals));
+    List.iter (dump_goal ps) ps.goals;
+    BU.print1 "TAC>> SMT goals (%s):\n" (string_of_int (List.length ps.smt_goals));
+    List.iter (dump_goal ps) ps.smt_goals;
     ()
 
 let print_proof_state (msg:string) : tac<unit> =
@@ -110,6 +112,14 @@ let print_proof_state (msg:string) : tac<unit> =
 let get : tac<proofstate> =
     mk_tac (fun p -> Success
     (p, p))
+
+let log ps f =
+    if !tacdbg
+    then f()
+    else ()
+
+let mlog f : tac<unit> =
+    bind get (fun ps -> log ps f; ret ())
 
 // TODO: print something? unclear we really want that (certainly not without a debug flag)
 // TODO: annotating this fails. bug?
@@ -351,8 +361,8 @@ let intros : tac<binders>
 //                    (Print.term_to_string body);
            bind dismiss (fun _ ->
            bind (add_goals [new_goal]) (fun _ ->
-           BU.print1 "intros: %s\n" (Print.binders_to_string ", " bs);
-           ret bs))
+           bind (mlog <| (fun _ -> BU.print1 "intros: %s\n" (Print.binders_to_string ", " bs))) (fun _ ->
+           ret bs)))
          | _ ->
            fail "Cannot intro this goal, expected a forall")
 
@@ -391,8 +401,8 @@ let imp_intro : tac<binder> =
       } in
       bind dismiss (fun _ ->
       bind (add_goals [new_goal]) (fun _ ->
-      BU.print1 "imp_intro: %s\n" (Print.bv_to_string name);
-      ret (S.mk_binder name)))
+      bind (mlog <| (fun _ -> BU.print1 "imp_intro: %s\n" (Print.bv_to_string name))) (fun _ ->
+      ret (S.mk_binder name))))
     | _ ->
       fail "Cannot intro this goal, expected an '==>'")
 
@@ -419,8 +429,7 @@ let trivial
             when Ident.lid_equals l SC.true_lid ->
         bind dismiss (fun _ ->
         add_goals ([{goal with goal_ty=t}]))
-      | _ -> bind (print_proof_state "`trivial` is failing") (fun _ ->
-             fail "Not a trivial goal"))
+      | _ -> fail "Not a trivial goal")
 
 
 let apply_lemma (tm:term)
@@ -492,7 +501,7 @@ let exact (tm:term)
 
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal "rewrite" (fun goal ->
-      BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort);
+      bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
       match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
       | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
                 when Ident.lid_equals l SC.eq2_lid ->
@@ -502,7 +511,7 @@ let rewrite (h:binder) : tac<unit>
            replace_cur goal
          | _ ->
            fail "Not an equality hypothesis with a variable on the LHS")
-      | _ -> fail "Not an equality hypothesis")
+      | _ -> fail "Not an equality hypothesis"))
 
 let clear : tac<unit>
     = with_cur_goal "clear" (fun goal ->
@@ -631,13 +640,13 @@ let rec visit (callback:tac<unit>) : tac<unit> =
                       | Tm_meta _ ->
                         map_meta (visit callback)
                       | _ ->
-                        BU.print1 "Not a formula, split to smt %s\n" (Print.term_to_string goal.goal_ty);
-                        smt
+                        bind (mlog <| (fun _ -> BU.print1 "Not a formula, split to smt %s\n" (Print.term_to_string goal.goal_ty))) (fun _ ->
+                        smt)
                       end
 
                     | Some (U.QEx _) ->  //not yet handled
-                        BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (Print.term_to_string goal.goal_ty);
-                        ret ()
+                        bind (mlog <| (fun _ -> BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (Print.term_to_string goal.goal_ty))) (fun _ ->
+                        ret ())
 
                     | Some (U.QAll(xs, _, _)) ->
                       bind intros (fun binders ->
@@ -645,8 +654,8 @@ let rec visit (callback:tac<unit>) : tac<unit> =
                       seq (visit callback) (
                       bind (revert_all_hd (List.map fst binders)) (fun _ ->
                       with_cur_goal "inner" (fun goal ->
-                      BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal);
-                      ret()))))
+                      bind (mlog <| (fun _ -> BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal))) (fun _ ->
+                      ret())))))
 
                     | Some (U.BaseConn(l, _))
                         when Ident.lid_equals l SC.and_lid ->
