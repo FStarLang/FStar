@@ -426,8 +426,8 @@ and term_as_mlty' env t =
         let mlbs, env = binders_as_ml_binders env bs in
         let t_ret =
             let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
-            let ed = TcEnv.get_effect_decl env.tcenv eff in
-            if ed.qualifiers |> List.contains Reifiable
+            let ed, qualifiers = must (TcEnv.effect_decl_opt env.tcenv eff) in
+            if qualifiers |> List.contains Reifiable
             then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
                  (* let _ = printfn "Translating comp type %s as %s\n" *)
                  (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
@@ -811,8 +811,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
-              let ed = TypeChecker.Env.get_effect_decl g.tcenv m in
-              if ed.qualifiers |> List.contains Reifiable |> not
+              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt g.tcenv m) in
+              if qualifiers |> List.contains Reifiable |> not
               then term_as_mlexpr' g t
               else //this should be interpreted as a bind
                    let ml_result_ty_1 = term_as_mlty g lb.lbtyp in

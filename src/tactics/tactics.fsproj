@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="FStar.Tactics.Basic.fs" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
+    <Compile Include="FStar.Tactics.Interpreter.fsi" />
     <Compile Include="FStar.Tactics.Interpreter.fs" />
   </ItemGroup>
   <PropertyGroup>

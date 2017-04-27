@@ -444,28 +444,28 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
   | Sig_pragma(ResetOptions None) -> "#reset-options"
   | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
   | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
-  | Sig_inductive_typ(lid, univs, tps, k, _, _, quals) ->
+  | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
     U.format4 "%stype %s %s : %s"
-             (quals_to_string' quals)
+             (quals_to_string' x.sigquals)
              lid.str
              (binders_to_string " " tps)
              (term_to_string k)
-  | Sig_datacon(lid, univs, t, _, _, _, _) ->
+  | Sig_datacon(lid, univs, t, _, _, _) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs t in
          U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
     else U.format2 "datacon %s : %s" lid.str (term_to_string t)
-  | Sig_declare_typ(lid, univs, t, quals) ->
+  | Sig_declare_typ(lid, univs, t) ->
     let univs, t = Subst.open_univ_vars univs t in
-    U.format4 "%sval %s %s : %s" (quals_to_string' quals) lid.str
+    U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
         (if (Options.print_universes())
          then U.format1 "<%s>" (univ_names_to_string univs)
          else "")
         (term_to_string t)
-  | Sig_assume(lid, f, _) -> U.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, qs, _) -> lbs_to_string qs lbs
+  | Sig_assume(lid, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
+  | Sig_let(lbs, _, _) -> lbs_to_string x.sigquals lbs
   | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
-  | Sig_bundle(ses, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+  | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed) -> eff_decl_to_string false ed
   | Sig_new_effect_for_free (ed) -> eff_decl_to_string true ed
   | Sig_sub_effect (se) ->
@@ -482,7 +482,7 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
     U.format4 "sub_effect %s ~> %s : <%s> %s"
         (lid_to_string se.source) (lid_to_string se.target)
         (univ_names_to_string us) (term_to_string t)
-  | Sig_effect_abbrev(l, univs, tps, c, _, flags) ->
+  | Sig_effect_abbrev(l, univs, tps, c, flags) ->
     if (Options.print_universes())
     then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
          let tps, c = match (Subst.compress t).n with
@@ -495,7 +495,7 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
-  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _, _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
+  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =

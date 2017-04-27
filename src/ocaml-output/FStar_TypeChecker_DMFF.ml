@@ -1307,8 +1307,6 @@ let gen_wps_for_free :
                         let uu____2078 = c wp_trivial2  in ([], uu____2078)
                          in
                       {
-                        FStar_Syntax_Syntax.qualifiers =
-                          (uu___104_2055.FStar_Syntax_Syntax.qualifiers);
                         FStar_Syntax_Syntax.cattributes =
                           (uu___104_2055.FStar_Syntax_Syntax.cattributes);
                         FStar_Syntax_Syntax.mname =

@@ -94,7 +94,8 @@ type decl =
   | CheckSat
   | GetUnsatCore
   | SetOption  of string * string
-  | PrintStats
+  | GetStatistics
+  | GetReasonUnknown
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)

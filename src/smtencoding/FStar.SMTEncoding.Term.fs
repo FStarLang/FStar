@@ -119,7 +119,8 @@ type decl =
   | CheckSat
   | GetUnsatCore
   | SetOption  of string * string
-  | PrintStats
+  | GetStatistics
+  | GetReasonUnknown
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)
@@ -565,7 +566,8 @@ let rec declToSmt z3options decl =
   | Push -> "(push)"
   | Pop -> "(pop)"
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
-  | PrintStats -> "(get-info :all-statistics)"
+  | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
+  | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
 and mkPrelude z3options =
   let basic = z3options ^
