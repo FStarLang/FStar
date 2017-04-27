@@ -230,7 +230,7 @@ let the_interactive_state: interactive_state =
 let rec read_chunk: Prims.unit -> input_chunks =
   fun uu____675  ->
     let s = the_interactive_state in
-    let log =
+    let log1 =
       let uu____680 = FStar_Options.debug_any () in
       if uu____680
       then
@@ -257,7 +257,7 @@ let rec read_chunk: Prims.unit -> input_chunks =
       match uu____712 with
       | None  -> FStar_All.exit (Prims.parse_int "0")
       | Some l -> l in
-    log line;
+    log1 line;
     (let l = FStar_Util.trim_string line in
      if FStar_Util.starts_with l "#end"
      then
