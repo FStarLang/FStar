@@ -5,7 +5,7 @@ let old_mk_tuple_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
       let t =
         let uu____8 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "Tuple%s" uu____8 in
-      let uu____9 = FStar_Syntax_Const.pconst t in
+      let uu____9 = FStar_Parser_Const.pconst t in
       FStar_Ident.set_lid_range uu____9 r
 let old_mk_tuple_data_lid:
   Prims.int -> FStar_Range.range -> FStar_Ident.lident =
@@ -14,7 +14,7 @@ let old_mk_tuple_data_lid:
       let t =
         let uu____17 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "MkTuple%s" uu____17 in
-      let uu____18 = FStar_Syntax_Const.pconst t in
+      let uu____18 = FStar_Parser_Const.pconst t in
       FStar_Ident.set_lid_range uu____18 r
 let old_mk_dtuple_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
   fun n1  ->
@@ -22,7 +22,7 @@ let old_mk_dtuple_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
       let t =
         let uu____26 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "DTuple%s" uu____26 in
-      let uu____27 = FStar_Syntax_Const.pconst t in
+      let uu____27 = FStar_Parser_Const.pconst t in
       FStar_Ident.set_lid_range uu____27 r
 let old_mk_dtuple_data_lid:
   Prims.int -> FStar_Range.range -> FStar_Ident.lident =
@@ -31,7 +31,7 @@ let old_mk_dtuple_data_lid:
       let t =
         let uu____35 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "MkDTuple%s" uu____35 in
-      let uu____36 = FStar_Syntax_Const.pconst t in
+      let uu____36 = FStar_Parser_Const.pconst t in
       FStar_Ident.set_lid_range uu____36 r
 type level =
   | Un
@@ -766,24 +766,24 @@ let mk_decl: decl' -> FStar_Range.range -> decoration Prims.list -> decl =
         let doc1 =
           let uu____2511 =
             FStar_List.choose
-              (fun uu___107_2513  ->
-                 match uu___107_2513 with
+              (fun uu___78_2513  ->
+                 match uu___78_2513 with
                  | Doc d1 -> Some d1
                  | uu____2516 -> None) decorations in
           at_most_one "fsdoc" r uu____2511 in
         let attributes_ =
           let uu____2520 =
             FStar_List.choose
-              (fun uu___108_2524  ->
-                 match uu___108_2524 with
+              (fun uu___79_2524  ->
+                 match uu___79_2524 with
                  | DeclAttributes a -> Some a
                  | uu____2530 -> None) decorations in
           at_most_one "attribute set" r uu____2520 in
         let attributes_1 = FStar_Util.dflt [] attributes_ in
         let qualifiers =
           FStar_List.choose
-            (fun uu___109_2538  ->
-               match uu___109_2538 with
+            (fun uu___80_2538  ->
+               match uu___80_2538 with
                | Qualifier q -> Some q
                | uu____2541 -> None) decorations in
         { d; drange = r; doc = doc1; quals = qualifiers; attrs = attributes_1
@@ -824,7 +824,7 @@ let mk_function:
   fun branches  ->
     fun r1  ->
       fun r2  ->
-        let x = let i = FStar_Syntax_Syntax.next_id () in FStar_Ident.gen r1 in
+        let x = let i = FStar_Parser_Const.next_id () in FStar_Ident.gen r1 in
         let uu____2632 =
           let uu____2633 =
             let uu____2637 =
@@ -859,14 +859,14 @@ let consPat: FStar_Range.range -> pattern -> pattern -> pattern' =
     fun hd1  ->
       fun tl1  ->
         PatApp
-          ((mk_pattern (PatName FStar_Syntax_Const.cons_lid) r), [hd1; tl1])
+          ((mk_pattern (PatName FStar_Parser_Const.cons_lid) r), [hd1; tl1])
 let consTerm: FStar_Range.range -> term -> term -> term =
   fun r  ->
     fun hd1  ->
       fun tl1  ->
         mk_term
           (Construct
-             (FStar_Syntax_Const.cons_lid, [(hd1, Nothing); (tl1, Nothing)]))
+             (FStar_Parser_Const.cons_lid, [(hd1, Nothing); (tl1, Nothing)]))
           r Expr
 let lexConsTerm: FStar_Range.range -> term -> term -> term =
   fun r  ->
@@ -874,27 +874,27 @@ let lexConsTerm: FStar_Range.range -> term -> term -> term =
       fun tl1  ->
         mk_term
           (Construct
-             (FStar_Syntax_Const.lexcons_lid,
+             (FStar_Parser_Const.lexcons_lid,
                [(hd1, Nothing); (tl1, Nothing)])) r Expr
 let mkConsList: FStar_Range.range -> term Prims.list -> term =
   fun r  ->
     fun elts  ->
-      let nil = mk_term (Construct (FStar_Syntax_Const.nil_lid, [])) r Expr in
+      let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
       FStar_List.fold_right (fun e  -> fun tl1  -> consTerm r e tl1) elts nil
 let mkLexList: FStar_Range.range -> term Prims.list -> term =
   fun r  ->
     fun elts  ->
       let nil =
-        mk_term (Construct (FStar_Syntax_Const.lextop_lid, [])) r Expr in
+        mk_term (Construct (FStar_Parser_Const.lextop_lid, [])) r Expr in
       FStar_List.fold_right (fun e  -> fun tl1  -> lexConsTerm r e tl1) elts
         nil
 let ml_comp: term -> term =
   fun t  ->
-    let ml = mk_term (Name FStar_Syntax_Const.effect_ML_lid) t.range Expr in
+    let ml = mk_term (Name FStar_Parser_Const.effect_ML_lid) t.range Expr in
     let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let tot_comp: term -> term =
   fun t  ->
-    let ml = mk_term (Name FStar_Syntax_Const.effect_Tot_lid) t.range Expr in
+    let ml = mk_term (Name FStar_Parser_Const.effect_Tot_lid) t.range Expr in
     let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let mkApp: term -> (term* imp) Prims.list -> FStar_Range.range -> term =
   fun t  ->
@@ -915,15 +915,15 @@ let mkRefSet: FStar_Range.range -> term Prims.list -> term =
   fun r  ->
     fun elts  ->
       let uu____2823 =
-        (FStar_Syntax_Const.tset_empty, FStar_Syntax_Const.tset_singleton,
-          FStar_Syntax_Const.tset_union) in
+        (FStar_Parser_Const.tset_empty, FStar_Parser_Const.tset_singleton,
+          FStar_Parser_Const.tset_union) in
       match uu____2823 with
       | (empty_lid,singleton_lid,union_lid) ->
           let empty1 =
             mk_term (Var (FStar_Ident.set_lid_range empty_lid r)) r Expr in
           let ref_constr =
             mk_term
-              (Var (FStar_Ident.set_lid_range FStar_Syntax_Const.heap_ref r))
+              (Var (FStar_Ident.set_lid_range FStar_Parser_Const.heap_ref r))
               r Expr in
           let singleton1 =
             mk_term (Var (FStar_Ident.set_lid_range singleton_lid r)) r Expr in
@@ -962,13 +962,13 @@ let mkAdmitMagic: FStar_Range.range -> term =
     let admit1 =
       let admit_name =
         mk_term
-          (Var (FStar_Ident.set_lid_range FStar_Syntax_Const.admit_lid r)) r
+          (Var (FStar_Ident.set_lid_range FStar_Parser_Const.admit_lid r)) r
           Expr in
       mkExplicitApp admit_name [unit_const] r in
     let magic1 =
       let magic_name =
         mk_term
-          (Var (FStar_Ident.set_lid_range FStar_Syntax_Const.magic_lid r)) r
+          (Var (FStar_Ident.set_lid_range FStar_Parser_Const.magic_lid r)) r
           Expr in
       mkExplicitApp magic_name [unit_const] r in
     let admit_magic = mk_term (Seq (admit1, magic1)) r Expr in admit_magic
@@ -1012,14 +1012,14 @@ let mkTuple: term Prims.list -> FStar_Range.range -> term =
   fun args  ->
     fun r  ->
       let cons1 =
-        FStar_Syntax_Util.mk_tuple_data_lid (FStar_List.length args) r in
+        FStar_Parser_Const.mk_tuple_data_lid (FStar_List.length args) r in
       let uu____3162 = FStar_List.map (fun x  -> (x, Nothing)) args in
       mkApp (mk_term (Name cons1) r Expr) uu____3162 r
 let mkDTuple: term Prims.list -> FStar_Range.range -> term =
   fun args  ->
     fun r  ->
       let cons1 =
-        FStar_Syntax_Util.mk_dtuple_data_lid (FStar_List.length args) r in
+        FStar_Parser_Const.mk_dtuple_data_lid (FStar_List.length args) r in
       let uu____3181 = FStar_List.map (fun x  -> (x, Nothing)) args in
       mkApp (mk_term (Name cons1) r Expr) uu____3181 r
 let mkRefinedBinder:
@@ -1183,8 +1183,8 @@ let as_frag:
              | uu____3441 ->
                  let ds2 = d :: ds1 in
                  (FStar_List.iter
-                    (fun uu___110_3445  ->
-                       match uu___110_3445 with
+                    (fun uu___81_3445  ->
+                       match uu___81_3445 with
                        | { d = TopLevelModule uu____3446; drange = r;
                            doc = uu____3448; quals = uu____3449;
                            attrs = uu____3450;_} ->
@@ -1196,8 +1196,8 @@ let as_frag:
 let compile_op: Prims.int -> Prims.string -> Prims.string =
   fun arity  ->
     fun s  ->
-      let name_of_char uu___111_3464 =
-        match uu___111_3464 with
+      let name_of_char uu___82_3464 =
+        match uu___82_3464 with
         | '&' -> "Amp"
         | '@' -> "At"
         | '+' -> "Plus"
@@ -1244,16 +1244,16 @@ let string_of_fsdoc:
           FStar_String.concat "," uu____3497 in
         Prims.strcat comment uu____3496
 let string_of_let_qualifier: let_qualifier -> Prims.string =
-  fun uu___112_3508  ->
-    match uu___112_3508 with
+  fun uu___83_3508  ->
+    match uu___83_3508 with
     | NoLetQualifier  -> ""
     | Rec  -> "rec"
     | Mutable  -> "mutable"
 let to_string_l sep f l =
   let uu____3533 = FStar_List.map f l in FStar_String.concat sep uu____3533
 let imp_to_string: imp -> Prims.string =
-  fun uu___113_3537  ->
-    match uu___113_3537 with | Hash  -> "#" | uu____3538 -> ""
+  fun uu___84_3537  ->
+    match uu___84_3537 with | Hash  -> "#" | uu____3538 -> ""
 let rec term_to_string: term -> Prims.string =
   fun x  ->
     match x.tm with
@@ -1267,7 +1267,7 @@ let rec term_to_string: term -> Prims.string =
     | Labeled (t,l,uu____3560) ->
         let uu____3561 = term_to_string t in
         FStar_Util.format2 "(labeled %s %s)" l uu____3561
-    | Const c -> FStar_Syntax_Print.const_to_string c
+    | Const c -> FStar_Parser_Const.const_to_string c
     | Op (s,xs) ->
         let uu____3567 =
           let uu____3568 =
@@ -1442,8 +1442,8 @@ and binder_to_string: binder -> Prims.string =
     let uu____3814 = aqual_to_string x.aqual in
     FStar_Util.format2 "%s%s" uu____3814 s
 and aqual_to_string: aqual -> Prims.string =
-  fun uu___114_3815  ->
-    match uu___114_3815 with
+  fun uu___85_3815  ->
+    match uu___85_3815 with
     | Some (Equality ) -> "$"
     | Some (Implicit ) -> "#"
     | uu____3816 -> ""
@@ -1451,7 +1451,7 @@ and pat_to_string: pattern -> Prims.string =
   fun x  ->
     match x.pat with
     | PatWild  -> "_"
-    | PatConst c -> FStar_Syntax_Print.const_to_string c
+    | PatConst c -> FStar_Parser_Const.const_to_string c
     | PatApp (p,ps) ->
         let uu____3823 = FStar_All.pipe_right p pat_to_string in
         let uu____3824 = to_string_l " " pat_to_string ps in
@@ -1499,8 +1499,8 @@ let lids_of_let defs =
        (fun uu____3902  ->
           match uu____3902 with | (p,uu____3907) -> head_id_of_pat p))
 let id_of_tycon: tycon -> Prims.string =
-  fun uu___115_3910  ->
-    match uu___115_3910 with
+  fun uu___86_3910  ->
+    match uu___86_3910 with
     | TyconAbstract (i,_,_)
       |TyconAbbrev (i,_,_,_)|TyconRecord (i,_,_,_)|TyconVariant (i,_,_,_) ->
         i.FStar_Ident.idText
