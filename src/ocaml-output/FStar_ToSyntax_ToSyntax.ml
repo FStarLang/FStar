@@ -1535,7 +1535,7 @@ and desugar_term_maybe_top:
               FStar_Ident.nsstr = uu____2964; FStar_Ident.str = "True";_}
             ->
             FStar_Syntax_Syntax.fvar
-              (FStar_Ident.set_lid_range FStar_Syntax_Const.true_lid
+              (FStar_Ident.set_lid_range FStar_Parser_Const.true_lid
                  top.FStar_Parser_AST.range)
               FStar_Syntax_Syntax.Delta_constant None
         | FStar_Parser_AST.Name
@@ -1543,7 +1543,7 @@ and desugar_term_maybe_top:
               FStar_Ident.nsstr = uu____2968; FStar_Ident.str = "False";_}
             ->
             FStar_Syntax_Syntax.fvar
-              (FStar_Ident.set_lid_range FStar_Syntax_Const.false_lid
+              (FStar_Ident.set_lid_range FStar_Parser_Const.false_lid
                  top.FStar_Parser_AST.range)
               FStar_Syntax_Syntax.Delta_constant None
         | FStar_Parser_AST.Projector
@@ -2727,7 +2727,7 @@ and desugar_comp:
                      && ((l.FStar_Ident.ident).FStar_Ident.idText = "Tot")
                    ->
                    (((FStar_Ident.set_lid_range
-                        FStar_Syntax_Const.effect_Tot_lid
+                        FStar_Parser_Const.effect_Tot_lid
                         head1.FStar_Parser_AST.range), []), args)
                | FStar_Parser_AST.Name l when
                    (let uu____5643 = FStar_ToSyntax_Env.current_module env in
@@ -2736,7 +2736,7 @@ and desugar_comp:
                      && ((l.FStar_Ident.ident).FStar_Ident.idText = "GTot")
                    ->
                    (((FStar_Ident.set_lid_range
-                        FStar_Syntax_Const.effect_GTot_lid
+                        FStar_Parser_Const.effect_GTot_lid
                         head1.FStar_Parser_AST.range), []), args)
                | FStar_Parser_AST.Name l when
                    (((l.FStar_Ident.ident).FStar_Ident.idText = "Type") ||
@@ -2744,14 +2744,14 @@ and desugar_comp:
                      || ((l.FStar_Ident.ident).FStar_Ident.idText = "Effect")
                    ->
                    (((FStar_Ident.set_lid_range
-                        FStar_Syntax_Const.effect_Tot_lid
+                        FStar_Parser_Const.effect_Tot_lid
                         head1.FStar_Parser_AST.range), []),
                      [(t1, FStar_Parser_AST.Nothing)])
                | uu____5663 ->
                    let default_effect =
                      let uu____5665 = FStar_Options.ml_ish () in
                      if uu____5665
-                     then FStar_Syntax_Const.effect_ML_lid
+                     then FStar_Parser_Const.effect_ML_lid
                      else
                        ((let uu____5668 =
                            FStar_Options.warn_default_effects () in
@@ -2760,7 +2760,7 @@ and desugar_comp:
                            FStar_Errors.warn head1.FStar_Parser_AST.range
                              "Using default effect Tot"
                          else ());
-                        FStar_Syntax_Const.effect_Tot_lid) in
+                        FStar_Parser_Const.effect_Tot_lid) in
                    (((FStar_Ident.set_lid_range default_effect
                         head1.FStar_Parser_AST.range), []),
                      [(t1, FStar_Parser_AST.Nothing)])) in
@@ -2888,7 +2888,7 @@ and desugar_comp:
                                                when
                                                FStar_Syntax_Syntax.fv_eq_lid
                                                  fv
-                                                 FStar_Syntax_Const.nil_lid
+                                                 FStar_Parser_Const.nil_lid
                                                ->
                                                let nil =
                                                  FStar_Syntax_Syntax.mk_Tm_uinst
@@ -2899,7 +2899,7 @@ and desugar_comp:
                                                  let uu____6075 =
                                                    FStar_Syntax_Syntax.fvar
                                                      (FStar_Ident.set_lid_range
-                                                        FStar_Syntax_Const.pattern_lid
+                                                        FStar_Parser_Const.pattern_lid
                                                         pat.FStar_Syntax_Syntax.pos)
                                                      FStar_Syntax_Syntax.Delta_constant
                                                      None in

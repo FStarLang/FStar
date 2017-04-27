@@ -33,8 +33,6 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 
-
-
 let trans_aqual = function
   | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality

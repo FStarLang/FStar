@@ -16,7 +16,7 @@
 // Using light syntax in this file because of object-oriented F# constructs
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Util
-
+open FSharp.Compatibility.OCaml
 open System
 open System.Text
 open System.Diagnostics
@@ -45,7 +45,7 @@ let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 exception Impos
 exception NYI of string
 exception Failure of string
-let max_int: int = System.Int32.MaxValue
+let max_int = System.Int32.MaxValue
 
 type proc = {m:Object;
              outbuf:StringBuilder;
@@ -767,10 +767,16 @@ let save_value_to_file (fname:string) value =
   output_value writer value
 
 let load_value_from_file (fname:string) =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`.
+  // this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
   try
-    use reader = new System.IO.StreamReader(fname) in
-    Some <| input_value reader
+    use reader = new System.IO.FileStream(fname,
+                                          FileMode.Open,
+                                          FileAccess.Read,
+                                          FileShare.Read) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    let result = formatter.Deserialize(reader) :?> 'a in
+    Some result
   with
   | _ ->
     None

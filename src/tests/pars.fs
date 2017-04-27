@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Tests.Pars
+open FSharp.Compatibility.OCaml
 open FStar
 open FStar.Range
 open FStar.Parser
