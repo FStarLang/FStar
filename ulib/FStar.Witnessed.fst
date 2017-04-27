@@ -64,7 +64,7 @@ let ax_and #s #rel p q = ()
 val ax_or: #s:Type
         -> #rel:preorder s
         -> p:predicate s{stable p rel}
-        -> q:predicate s{stable p rel}
+        -> q:predicate s{stable q rel}
         -> Lemma (requires (witnessed #s #rel (fun x -> p x \/ q x)))
                  (ensures  (witnessed #s #rel p \/ witnessed #s #rel q))
 let ax_or #s #rel p q = ()                  
@@ -72,10 +72,21 @@ let ax_or #s #rel p q = ()
 val ax_impl: #s:Type
           -> #rel:preorder s
           -> p:predicate s{stable p rel}
-          -> q:predicate s{stable q rel}
-          -> Lemma (requires ((witnessed #s #rel p ==> witnessed #s #rel q) /\ stable (fun x -> p x ==> q x) rel))
+          -> q:predicate s{stable q rel /\ stable (fun x -> p x ==> q x) rel}
+          -> Lemma (requires ((witnessed #s #rel p ==> witnessed #s #rel q)))
                    (ensures  (witnessed #s #rel (fun x -> p x ==> q x)))
 let ax_impl #s #rel p q = ()
+
+(* Showing that the stability of ax_forall precondition implies the stability of its conclusion *)
+private let lemma_forall_stability_aux (#s:Type) (#rel:preorder s) (p:predicate (s * s))
+  :Lemma (requires ((forall x . stable (fun y -> p (x,y)) rel)))
+         (ensures  (forall y y' . (forall x . p (x,y)) /\ rel y y' ==> (forall x. p (x,y'))))
+  = ()
+
+private let lemma_forall_stability (#s:Type) (#rel:preorder s) (p:predicate (s * s))
+  :Lemma (requires (forall x . stable (fun y -> p (x,y)) rel)) 
+         (ensures  (stable (fun y -> (forall x . p (x,y))) rel))
+  = lemma_forall_stability_aux #s #rel p
 
 val ax_forall: #s:Type
             -> #rel:preorder s
@@ -86,21 +97,25 @@ let ax_forall #s #rel p = admit () //not provable with the current representatio
 
 val ax_exists: #s:Type
             -> #rel:preorder s
-            -> p:predicate (s * s)
+            -> p:predicate (s * s){forall y . stable (fun x -> p (x,y)) rel} //analogous assumption to ax_or
             -> Lemma (requires (witnessed #s #rel (fun x -> exists y . p (x,y))))
-                     (ensures  (exists y . (witnessed #s #rel (fun x -> p (x,y)))))
+                     (ensures  (exists y . witnessed #s #rel (fun x -> p (x,y))))
 let ax_exists #s #rel p = admit () //not provable with the current representation of witnessed
 
-(* Using the axioms above, the witnessed modality in fact commutes with other logical connectives. *)
+(* Using the axioms above, the witnessed modality in fact commutes with other logical connectives *)
 
 val lemma_true: #s:Type
              -> #rel:preorder s
-             -> Lemma (witnessed #s #rel (fun _ -> True) <==> True)
+             -> Lemma (witnessed #s #rel (fun _ -> True) 
+                       <==> 
+                       True)
 let lemma_true #s #rel = ()
 
 val lemma_false: #s:Type
               -> #rel:preorder s
-              -> Lemma (witnessed #s #rel (fun _ -> False) <==> False)
+              -> Lemma (witnessed #s #rel (fun _ -> False) 
+                        <==> 
+                        False)
 let lemma_false #s #rel = ax_false #s #rel
 
 val lemma_and: #s:Type
@@ -115,9 +130,9 @@ let lemma_and #s #rel p q = ()
 
 val lemma_or: #s:Type
            -> #rel:preorder s
-           -> p:predicate s{stable p rel}
-           -> q:predicate s{stable p rel}
-           -> Lemma (requires (stable (fun x -> p x \/ q x) rel))
+           -> p:predicate s
+           -> q:predicate s
+           -> Lemma (requires (stable p rel /\ stable q rel))
                     (ensures  ((witnessed #s #rel (fun x -> p x \/ q x)) 
                                <==> 
                                (witnessed #s #rel p \/ witnessed #s #rel q)))
@@ -125,9 +140,9 @@ let lemma_or #s #rel p q = ()
 
 val lemma_impl: #s:Type
              -> #rel:preorder s
-             -> p:predicate s{stable p rel}
-             -> q:predicate s{stable q rel}
-             -> Lemma (requires (stable (fun x -> p x ==> q x) rel))
+             -> p:predicate s
+             -> q:predicate s
+             -> Lemma (requires (stable p rel /\ stable q rel /\ stable (fun x -> p x ==> q x) rel))
                       (ensures  (((witnessed #s #rel p ==> witnessed #s #rel q)) 
                                  <==> 
                                  (witnessed #s #rel (fun x -> p x ==> q x))))
@@ -140,16 +155,21 @@ val lemma_forall: #s:Type
                         (ensures  ((forall x . witnessed #s #rel (fun y -> p (x,y))) 
                                    <==> 
                                    (witnessed #s #rel (fun y -> forall x . p (x,y)))))
-let lemma_forall #s #rel p = ax_forall #s #rel p //not provable with the current representation of witnessed
+let lemma_forall #s #rel p = ax_forall #s #rel p
+
+let lemma_exists_aux (#s:Type) (#rel:preorder s) (p:predicate (s * s))
+  :Lemma (requires (forall y . stable (fun x -> p (x,y)) rel))
+         (ensures  (forall x x' . (exists y . p(x,y)) /\ rel x x' ==> (exists y . p (x',y))))
+  = ()
 
 val lemma_exists: #s:Type
                -> #rel:preorder s
                -> p:predicate (s * s)
-               -> Lemma (requires (stable (fun x -> (exists y . p (x,y))) rel))
+               -> Lemma (requires ((forall y . stable (fun x -> p (x,y)) rel)))
                         (ensures  ((witnessed #s #rel (fun x -> exists y . p (x,y))) 
                                    <==> 
                                    (exists y . (witnessed #s #rel (fun x -> p (x,y))))))
-let lemma_exists #s #rel p = ax_exists #s #rel p
+let lemma_exists #s #rel p = lemma_exists_aux #s #rel p; ax_exists #s #rel p
 
 (* A useful lemma for the metatheory, allows us to introduce witnessed relative to the "current" world *)
 
