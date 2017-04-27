@@ -27,15 +27,19 @@ let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid s)
 let fstar_tactics_term   = mk_tactic_lid_as_term "term"
 let fstar_tactics_env    = mk_tactic_lid_as_term "env"
+let fstar_tactics_fvar   = mk_tactic_lid_as_term "fvar"
 let fstar_tactics_binder = mk_tactic_lid_as_term "binder"
 let fstar_tactics_binders= mk_tactic_lid_as_term "binders"
 let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
 let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
 let fstar_tactics_formula= mk_tactic_lid_as_term "formula"
 let fstar_tactics_embed  = mk_tactic_lid_as_term "embed"
+let fstar_tactics_term_view = mk_tactic_lid_as_term "term_view"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))
 let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
+
+(* formula *)
 let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
 let fstar_tactics_True_ = fstar_tactics_lid_as_data_tm "True_"
@@ -50,6 +54,21 @@ let fstar_tactics_Forall = fstar_tactics_lid_as_data_tm "Forall"
 let fstar_tactics_Exists = fstar_tactics_lid_as_data_tm "Exists"
 let fstar_tactics_App = fstar_tactics_lid_as_data_tm "App"
 let fstar_tactics_Name = fstar_tactics_lid_as_data_tm "Name"
+
+(* term_view *)
+let fstar_tactics_Tv_Var = fstar_tactics_lid_as_data_tm "Tv_Var"
+let fstar_tactics_Tv_FVar = fstar_tactics_lid_as_data_tm "Tv_FVar"
+let fstar_tactics_Tv_App = fstar_tactics_lid_as_data_tm "Tv_App"
+let fstar_tactics_Tv_Abs = fstar_tactics_lid_as_data_tm "Tv_Abs"
+let fstar_tactics_Tv_Arrow = fstar_tactics_lid_as_data_tm "Tv_Arrow"
+let fstar_tactics_Tv_Type = fstar_tactics_lid_as_data_tm "Tv_Type"
+let fstar_tactics_Tv_Refine = fstar_tactics_lid_as_data_tm "Tv_Refine"
+let fstar_tactics_Tv_Const = fstar_tactics_lid_as_data_tm "Tv_Const"
+
+(* const *)
+let fstar_tactics_C_Unit = fstar_tactics_lid_as_data_tm "C_Unit"
+let fstar_tactics_C_Int = fstar_tactics_lid_as_data_tm "C_Int"
+
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
 
@@ -317,3 +336,111 @@ let term_as_formula (t:term) : option<formula> =
       | Tm_name bv ->
         Some (Name bv)
       | _ -> None
+
+type term_view =
+    | Tv_Var    of binder
+    | Tv_FVar   of fv
+    | Tv_App    of term * term
+    | Tv_Abs    of binder * term
+    | Tv_Arrow  of binder * term
+    | Tv_Type   of unit
+    | Tv_Refine of binder * term
+
+let embed_fvar (fv:fv) : term =
+    protect_embedded_term fstar_tactics_fvar (S.fv_to_tm fv)
+
+let unembed_fvar (t:term) : fv =
+    let t = un_protect_embedded_term t in
+    let t = U.unascribe t in
+    match t.n with
+    | Tm_fvar fv -> fv
+    | _ -> failwith "Not an embedded fv"
+
+let embed_term_view (t:term_view) : term =
+    match t with
+    | Tv_FVar fv ->
+        S.mk_Tm_app fstar_tactics_Tv_FVar [S.as_arg (embed_fvar fv)]
+                    None Range.dummyRange
+
+    | Tv_Var bv ->
+        S.mk_Tm_app fstar_tactics_Tv_Var [S.as_arg (embed_binder bv)]
+                    None Range.dummyRange
+
+    | Tv_App (hd, a) ->
+        S.mk_Tm_app fstar_tactics_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_term a)]
+                    None Range.dummyRange
+
+    | Tv_Abs (b, t) ->
+        S.mk_Tm_app fstar_tactics_Tv_Abs [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
+    | Tv_Arrow (b, t) ->
+        S.mk_Tm_app fstar_tactics_Tv_Arrow [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
+    | Tv_Type u ->
+        S.mk_Tm_app fstar_tactics_Tv_Type [S.as_arg (embed_unit ())]
+                    None Range.dummyRange
+
+    | Tv_Refine (bv, t) ->
+        S.mk_Tm_app fstar_tactics_Tv_Refine [S.as_arg (embed_binder bv); S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
+// TODO: move to library?
+let rec last (l:list<'a>) : 'a =
+    match l with
+    | [] -> failwith "last: empty list"
+    | [x] -> x
+    | _::xs -> last xs
+
+let rec init (l:list<'a>) : list<'a> =
+    match l with
+    | [] -> failwith "init: empty list"
+    | [x] -> []
+    | x::xs -> x :: init xs
+
+// TODO: consider effects? probably not too useful, but something should be done
+let inspect (t:term) : term_view =
+    BU.print1 "GGG inspecting %s\n" (Print.term_to_string t);
+    match (SS.compress t).n with
+    | Tm_name bv ->
+        Tv_Var (bv, None)
+
+    | Tm_fvar fv ->
+        Tv_FVar fv
+
+    | Tm_app (hd, []) ->
+        failwith "inspect: empty arguments on Tm_app"
+
+    | Tm_app (hd, args) ->
+        // We split at the last argument, since the term_view does not
+        // expose n-ary lambdas buy unary ones.
+        let (a, _) = last args in
+        Tv_App (S.mk_Tm_app hd (init args) None t.pos, a) // TODO: The range and tk are probably wrong. Fix
+
+    | Tm_abs ([], _, _) ->
+        failwith "inspect: empty arguments on Tm_abs"
+
+    | Tm_abs (b::bs, t, k) ->
+        let bs', t = SS.open_term (b::bs) t in
+        // `let b::bs = bs` gives a coverage warning, avoid it
+        let b, bs = match bs' with
+        | [] -> failwith "impossible"
+        | b::bs -> b, bs in
+        Tv_Abs (b, U.abs bs t k)
+
+    | Tm_type _ ->
+        Tv_Type ()
+
+    | Tm_arrow ([], k) ->
+        failwith "inspect: empty binders on arrow"
+        
+    | Tm_arrow ([b], k) ->
+        // TODO: drops effect
+        Tv_Arrow (b, (U.comp_to_comp_typ k).result_typ)
+
+    | Tm_arrow (b::bs, k) ->
+        Tv_Arrow (b, U.arrow bs k)
+
+    | _ ->
+        failwith "inspect: outside of expected syntax"

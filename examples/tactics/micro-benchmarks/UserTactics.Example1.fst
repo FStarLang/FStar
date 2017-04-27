@@ -92,3 +92,18 @@ let test_apply_ascription (x:nat) (y:nat) =
 (*   assert (op_Multiply x y == op_Multiply y x) *)
 (*   <: Tot unit *)
 (*   by (fun () -> apply_lemma (quote lemma_mul_comm)) *)
+
+// TODO: if patterns are incomplete, it appears as if the tactic runs anyway
+// and only afterwards is the error raised. Doesn't sounds like good behaviour
+let test_inspect =
+  assert_by_tactic (tbind (quote (1 + 1)) (fun x ->
+                    tbind (inspect x) (fun y ->
+                    match y with
+                    | Tv_App hd a -> print "application"
+                    | Tv_Abs bv t -> print "abstraction"
+                    | Tv_Arrow bv t -> print "arrow"
+                    | Tv_Type _ -> print "type"
+                    | Tv_Var _ -> print "var"
+                    | Tv_FVar _ -> print "fvar"
+                    | _ -> fail "unknown"
+                   ))) (True)

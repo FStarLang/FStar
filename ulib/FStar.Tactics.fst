@@ -1,9 +1,10 @@
 module FStar.Tactics
-open FStar.Tactics.Syntax
 
 assume type binder //FStar.Syntax.Syntax.binder
 assume type term
 assume type env
+assume type fv
+
 type typ     = term
 type binders = list binder
 type goal    = env * term
@@ -37,6 +38,23 @@ noeq type formula =
   | IntLit : int -> formula
   //Abs   : binders -> term -> formula //Named repr
   //Match : ....
+
+type const =
+  | C_Unit : const
+  | C_Int : int -> const // Not exposing the details, I presume
+  (* TODO: complete *)
+
+type term_view =
+  | Tv_Var    : binder -> term_view
+  | Tv_FVar   : fv -> term_view
+  | Tv_App    : term -> term -> term_view
+  | Tv_Abs    : binder -> term -> term_view
+  | Tv_Arrow  : binder -> term -> term_view
+  | Tv_Type   : unit -> term_view
+  | Tv_Refine : binder -> term -> term_view
+  | Tv_Const  : const -> term_view
+  (* TODO: complete *)
+
 
 noeq type _result (a:Type) =
   | Success: a -> state -> _result a
@@ -143,6 +161,9 @@ let quote #a (x:a) : tactic term = fun () -> embed x
 //TODO: We should add a formula_as_term also
 assume private val term_as_formula_ : term -> option formula
 let term_as_formula t : tactic (option formula) = fun () -> term_as_formula_ t
+
+assume val inspect_ : term -> term_view
+let inspect t : tactic term_view = fun () -> inspect_ t
 
 (* Many of these could be derived from apply_lemma, 
    rather than being assumed as primitives. 
