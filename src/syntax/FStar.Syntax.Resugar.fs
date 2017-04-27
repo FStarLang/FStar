@@ -36,8 +36,15 @@ module BU = FStar.Util
 module D = FStar.Parser.ToDocument
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
-  let unique_name =  x.ppname.idText in
+  let unique_name =  
+    if starts_with reserved_prefix x.ppname.idText then
+      x.ppname.idText ^ (string_of_int x.index)
+    else
+      x.ppname.idText
+  in
   I.mk_ident (unique_name, x.ppname.idRange)
+
+let filter_imp a = a |> List.filter (function (_, Some (S.Implicit _)) -> false | _ -> true)
 
 let resugar_arg_qual (q:option<S.arg_qualifier>) : option<A.arg_qualifier> =
   match q with
@@ -260,8 +267,11 @@ let rec resugar_term (t : S.term) : A.term =
           else
               mk (name s t.pos)
     | Tm_uinst(e, universes) ->
-      let e = resugar_term e in
-      List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x t.pos, A.UnivApp))) e universes
+      if (Options.print_universes()) then
+        let e = resugar_term e in
+        List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x t.pos, A.UnivApp))) e universes
+      else 
+        resugar_term e
 
     | Tm_constant c ->
       if is_teff t
@@ -273,15 +283,19 @@ let rec resugar_term (t : S.term) : A.term =
         | U_zero ->  mk (name "Type0" t.pos)
         | U_unknown -> mk (name "Type" t.pos)
         | _ ->
+          if (Options.print_universes()) then 
             let u = resugar_universe u t.pos in
             let l = lid_of_path ["Type"] t.pos in
             mk (A.Construct (l, [(u, UnivApp)]))
+          else 
+            mk (name "Type" t.pos)
         end
 
     | Tm_abs(xs, body, _) -> //fun x1 .. xn -> body
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
       let xs, body = SS.open_term xs body in
+      let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let patterns = xs |> List.map (fun (x, qual) ->
         //x.sort contains a type annotation for the bound variable
         //the pattern `p` below only contains the variable, not the annotation
@@ -294,6 +308,7 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_arrow(xs, body) ->
       let xs, body = SS.open_comp xs body in
+      let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp body in
       let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) |> List.rev in
       let rec aux body = function
@@ -333,21 +348,21 @@ let rec resugar_term (t : S.term) : A.term =
         let e = resugar_term e in
         List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
       in
+      let args = if (Options.print_implicits()) then args else filter_imp args
+      in
       begin match resugar_term_as_op e with
         | None->
           resugar_as_app e args
 
         | Some "tuple" ->
-          let args = args |> List.map (fun (e, qual) ->
-            resugar_term e) in
           begin match args with
-            | fst::snd::rest ->
-              let e = mk(A.Op(Ident.id_of_text "*", [fst; snd])) in
-              List.fold_left(fun acc x -> mk (A.Op(Ident.id_of_text "*", [e;x]))) e rest
-            | _ -> failwith "tuple needs at least two arguments."
+            | (fst, _)::(snd, _)::rest ->
+              let e = mk(A.Op(Ident.id_of_text "*", [(resugar_term fst); (resugar_term snd)])) in
+              List.fold_left(fun acc (x,_) -> mk (A.Op(Ident.id_of_text "*", [e; resugar_term x]))) e rest
+            | _ -> resugar_as_app e args
           end
 
-        | Some "dtuple" ->
+        | Some "dtuple" when List.length args > 0 ->
           (* this is desugared from Sum(binders*term) *)
           let args = last args in
           let body = match args with
@@ -357,6 +372,7 @@ let rec resugar_term (t : S.term) : A.term =
           begin match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
+                let xs = if (Options.print_implicits()) then xs else filter_imp xs in
                 let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
                 let body = resugar_term body in
                 mk (A.Sum(xs, body))
@@ -368,6 +384,9 @@ let rec resugar_term (t : S.term) : A.term =
               List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
           end
 
+        | Some "dtuple" ->
+          resugar_as_app e args
+
         | Some ref_read when (ref_read = C.sread_lid.str) ->
           let (t, _) = List.hd args in
           begin match (SS.compress t).n with
@@ -377,7 +396,7 @@ let rec resugar_term (t : S.term) : A.term =
             | _ -> resugar_term t
           end
 
-        | Some "try_with" ->
+        | Some "try_with" when List.length args > 1 ->
           (* only the last two args are from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           let new_args = last_two args in
@@ -413,6 +432,9 @@ let rec resugar_term (t : S.term) : A.term =
           let branches = resugar_branches handler in
           mk (A.TryWith(e, branches))
 
+        | Some "try_with" ->
+          resugar_as_app e args
+
         | Some op when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
           let rec uncurry xs pat (t:A.term) = match t.tm with
@@ -424,6 +446,7 @@ let rec resugar_term (t : S.term) : A.term =
           let resugar body = match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
+                let xs = if (Options.print_implicits()) then xs else filter_imp xs in
                 let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
                 let pats, body = match (SS.compress body).n with
                   | Tm_meta(e, m) ->
@@ -449,13 +472,16 @@ let rec resugar_term (t : S.term) : A.term =
             if op = "forall" then mk (A.QForall([], [[]], resugar_term body))
             else mk (A.QExists([], [[]], resugar_term body))
           in
-          (* only the last two args are from original AST terms, others are added by typechecker *)
+          (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
-          let args = last args in
-          begin match args with
-            | [(b, _)] -> resugar b
-            | _ -> failwith "wrong args format to QForall"
-          end
+          if List.length args > 0 then
+            let args = last args in
+            begin match args with
+              | [(b, _)] -> resugar b
+              | _ -> failwith "wrong args format to QForall"
+            end
+          else 
+            resugar_as_app e args
 
         | Some "alloc" ->
           let (e, _ ) = List.hd args in
@@ -471,9 +497,9 @@ let rec resugar_term (t : S.term) : A.term =
           (* KM : I don't think that '-' is resugared correctly here *)
           //NS: this seems to produce the wrong output on things like
           begin match D.handleable_args_length op with
-            | 1 -> mk (A.Op(op, resugar (last args)))
-            | 2 -> mk (A.Op(op, resugar (last_two args)))
-            | 3 -> mk (A.Op(op, resugar (last_three args)))
+            | 1 when List.length args > 0 -> mk (A.Op(op, resugar (last args)))
+            | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
+            | 3 when List.length args > 2 -> mk (A.Op(op, resugar (last_three args)))
             | _ -> resugar_as_app e args
           end
     end
@@ -511,9 +537,15 @@ let rec resugar_term (t : S.term) : A.term =
         let binders, term, is_pat_app = match (SS.compress def).n with
           | Tm_abs(b, t, _) ->
             let b, t = SS.open_term b t in
+            let b = if (Options.print_implicits()) then b else filter_imp b in
             b, t, true
           | _ -> [], def, false
         in
+        let universe_to_string univs = 
+          if (Options.print_universes()) then
+            List.map (fun x -> x.idText) univs |> String.concat  ", "
+          else ""
+        in   
         let pat, term = match bnd.lbname with
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
           | Inl bv ->
@@ -523,9 +555,9 @@ let rec resugar_term (t : S.term) : A.term =
         in
         if is_pat_app then
           let args = binders |> List.map (fun (bv, _) -> mk_pat(A.PatVar (bv_as_unique_ident bv, None))) in
-          ((mk_pat (A.PatApp (pat, args)), resugar_term term), (List.map (fun x -> x.idText) univs |> String.concat  ", "))
+          ((mk_pat (A.PatApp (pat, args)), resugar_term term), (universe_to_string univs))
         else
-          ((pat, resugar_term term), (List.map (fun x -> x.idText) univs |> String.concat  ", "))
+          ((pat, resugar_term term), (universe_to_string univs))
       in
       let r = List.map (resugar_one_binding) bnds in
       let bnds = List.map fst r in
@@ -558,7 +590,10 @@ let rec resugar_term (t : S.term) : A.term =
                       // TODO: where should be store the universe information?
                       mk (A.Construct(head, args))
                     else
-                      mk (A.Construct(head, args@universes))
+                      if (Options.print_universes()) then
+                        mk (A.Construct(head, args@universes))
+                      else 
+                        mk (A.Construct(head, args))
                 | Tm_meta(_, m) ->
                   // the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker
                   // applies monadic_application
@@ -637,8 +672,11 @@ and resugar_comp (c:S.comp) : A.term =
       mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
     | Some u ->
       // add the universe as the first argument
-      let u = resugar_universe u c.pos in
-      mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
+      if (Options.print_universes()) then
+        let u = resugar_universe u c.pos in
+        mk (A.Construct(C.effect_Tot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
+      else
+        mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
     end
 
   | GTotal (typ, u) ->
@@ -648,15 +686,19 @@ and resugar_comp (c:S.comp) : A.term =
       mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
     | Some u ->
       // add the universe as the first argument
-      let u = resugar_universe u c.pos in
-      mk (A.Construct(C.effect_GTot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
+      if (Options.print_universes()) then
+        let u = resugar_universe u c.pos in
+        mk (A.Construct(C.effect_GTot_lid, [(u, A.UnivApp);(t, A.Nothing)]))
+      else
+        mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
     end
 
   | Comp c ->
-    let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
     let result = (resugar_term c.result_typ, A.Nothing) in
-    let args =
-      if (lid_equals c.effect_name C.effect_Lemma_lid) then
+    if (Options.print_effect_args()) then
+      let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
+      let args =
+       if (lid_equals c.effect_name C.effect_Lemma_lid) then
         let rec aux l = function
           | [] -> l
           | (t,aq)::tl ->
@@ -669,21 +711,23 @@ and resugar_comp (c:S.comp) : A.term =
               aux ((t,aq)::l) tl
         in
         aux [] c.effect_args
-      else
+       else
         c.effect_args
-    in
-    let args = List.map(fun (e,_) -> (resugar_term e, A.Nothing)) args in
-    let rec aux l = function
-      | [] -> l
-      | hd::tl ->
-        match hd with
+      in
+      let args = List.map(fun (e,_) -> (resugar_term e, A.Nothing)) args in
+      let rec aux l = function
+       | [] -> l
+       | hd::tl ->
+          match hd with
           | DECREASES e ->
             let e = (resugar_term e, A.Nothing) in
             aux (e::l) tl
           | _ -> aux l tl
-    in
-    let decrease = aux [] c.flags in
-    mk (A.Construct(c.effect_name, result::decrease@args))
+      in
+      let decrease = aux [] c.flags in
+      mk (A.Construct(c.effect_name, result::decrease@args))
+    else
+      mk (A.Construct(c.effect_name, [result]))
 
 and resugar_bv_as_binder (x:S.bv) r: A.binder =
   let e = resugar_term x.sort in
@@ -708,7 +752,10 @@ and resugar_bv_as_pat (x:S.bv) qual: A.pattern =
       mk (A.PatVar(bv_as_unique_ident x, resugar_arg_qual qual))
   | _ ->
     let pat = mk (A.PatVar(bv_as_unique_ident x, resugar_arg_qual qual)) in
-    mk (A.PatAscribed(pat, resugar_term x.sort))
+    if Options.print_bound_var_types() then
+      mk (A.PatAscribed(pat, resugar_term x.sort))
+    else 
+      pat
 
 and resugar_match_pat (p:S.pat) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
