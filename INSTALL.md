@@ -216,7 +216,7 @@ Read on for the more complete solution involving Visual Studio itself.
       - http://www.mono-project.com/download/#download-lin
       - http://fsharp.org/use/linux/
 
-    - For Mac OS X install the MRE:
+    - For Mac OS X use HomeBrew or install the MRE:
       - http://www.mono-project.com/download/#download-mac
 
   - Depending on your distribution, you might need to manually import
@@ -232,7 +232,7 @@ Read on for the more complete solution involving Visual Studio itself.
           $ make -C src
 
   - Try out binary using [the instructions above](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#testing-a-binary-package).
-  
+
   - Another thing you can try is bootstrapping the F\* compiler:
 
           $ export PATH=/path/to/fstar/bin:$PATH
@@ -305,6 +305,9 @@ that's over there (it's optimized for F*). This will install both OCaml and OPAM
    or the OCaml build process (step 3 above).
 
 1. Make sure you follow the instructions above to get a working OCaml setup.
+
+1. On OSX, F\* has some extra dependencies on the GNU version of `head`, `sed`
+   and `find`. These can be installed using `brew install gsed coreutils`.
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F* sources from F# to OCaml using F* by running:
