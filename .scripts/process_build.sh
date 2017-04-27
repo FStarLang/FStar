@@ -37,9 +37,13 @@ if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
   rm src/ocaml-output/fstar/AllExamples.log
 fi
 
+# Need this to get back after unzip things
+ORIG_PWD=$PWD  #+++++
+
 echo "*** Make package ***"
-cd src
-cd ocaml-output
+cd src/ocaml-output
+#cd src   #+++++ Just put in one line
+#cd ocaml-output  #+++++ Just put in one line
 make package
 
 # For weekly build, we want to use TimeStamp since it is a minor release
@@ -108,21 +112,26 @@ fi
 
 # Got to this point, so know it passed - copy minor version out to see if it works
 echo "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
-cd ../../..
-ORIG_PWD=$PWD
+echo "+++PWD1"$PWD
+echo "++ BASE"$ORIG_PWD
+cd $ORIG_PWD  #++++ WILL THIS WORK???????
+#++++  cd ../../..  # DELETE THIS PROBABLY .... gets back to FStar directory from the unzipped fstar dir ... can't assume ~/FStar as not that way for Windows
+echo "+++PWD2"$PWD
+#ORIG_PWD=$PWD  +++ DELETE
+echo "+++ ORIG:"$ORIG_PWD
 BN_BINARYSPATH_ROOT=~/binaries
 BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
-FSTAR_BIN_BRANCH="master"
+#FSTAR_BIN_BRANCH="master"  #+++ DELETE Not really needed since not debugging any more on other branches
 BN_FILESTOKEEP=4
 
 if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
   cd ~
   git clone https://github.com/FStarLang/binaries.git
-  cd $BN_BINARYSPATH_ROOT
+  #cd $BN_BINARYSPATH_ROOT  #+++++ DUPLICATE FROM LINE BELOW
 fi
 
 cd $BN_BINARYSPATH_ROOT
-git checkout $FSTAR_BIN_BRANCH
+git checkout master #++++++ $FSTAR_BIN_BRANCH remove this and make master
 git pull origin master
 
 echo "-- copy files and add to Github --"
@@ -131,7 +140,8 @@ if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
   cd $BN_BINARYSPATH
   git add $MINOR_ZIP_FILE
-  cd ..  #go back to binaries
+  cd ..
+echo "++++ Current PWD"$PWD  
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   echo "--" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
@@ -169,7 +179,7 @@ fi
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
 git commit --amend -m "Adding new build package and removing oldest."
-git push git@github.com:FStarLang/binaries.git $FSTAR_BIN_BRANCH --force
+git push git@github.com:FStarLang/binaries.git master --force  #+++++ REMOVED $FSTAR_BIN_BRANCH and just put master in there
 
 # Manual steps on major releases - use the major version number from make package ... this process creates binary builds and minor version
 # 1) Update https://github.com/FStarLang/FStar/blob/master/version.txt
