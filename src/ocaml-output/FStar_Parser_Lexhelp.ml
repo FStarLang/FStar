@@ -8,7 +8,7 @@ let intern_string: Prims.string -> Prims.string =
     | None  -> (FStar_Util.smap_add strings s s; s)
 let default_string_finish endm b s = FStar_Parser_Parse.STRING s
 let call_string_finish fin buf endm b =
-  let _0_27 = FStar_Bytes.close buf in fin endm b _0_27
+  let _0_25 = FStar_Bytes.close buf in fin endm b _0_25
 let add_string: FStar_Bytes.bytebuf -> Prims.string -> Prims.unit =
   fun buf  ->
     fun x  ->

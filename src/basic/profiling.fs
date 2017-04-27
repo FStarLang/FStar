@@ -17,7 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Profiling
-
+open FSharp.Compatibility.OCaml
 let profiling = ref false
 
 module On = struct

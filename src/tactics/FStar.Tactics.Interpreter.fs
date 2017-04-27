@@ -22,27 +22,27 @@ type name = bv
 
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
-let quote (nm:Ident.lid) (args:S.args) = 
+let quote (nm:Ident.lid) (args:S.args) =
   match args with
   | [_; (y, _)] -> Some (E.embed_term y)
   | _ -> None
 
-let binders_of_env ps (nm:Ident.lid) (args:S.args) =    
-  match args with 
-  | [(embedded_env, _)] -> 
+let binders_of_env ps (nm:Ident.lid) (args:S.args) =
+  match args with
+  | [(embedded_env, _)] ->
     let env = E.unembed_env ps.main_context embedded_env in
     Some (E.embed_binders (Env.all_binders env))
   | _ -> None
-  
-let type_of_binder (nm:Ident.lid) (args:S.args) = 
-  match args with 
-  | [(embedded_binder, _)] -> 
+
+let type_of_binder (nm:Ident.lid) (args:S.args) =
+  match args with
+  | [(embedded_binder, _)] ->
     let b, _ = E.unembed_binder embedded_binder in
     Some (E.embed_term b.sort)
   | _ -> None
 
-let term_eq (nm:Ident.lid) (args:S.args) = 
-  match args with 
+let term_eq (nm:Ident.lid) (args:S.args) =
+  match args with
   | [(embedded_t1, _); (embedded_t2, _)] ->
     let t1 = E.unembed_term embedded_t1 in
     let t2 = E.unembed_term embedded_t2 in
@@ -116,7 +116,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
-      N.interpretation=interpretation nm
+      N.interpretation=(fun _rng args -> interpretation nm args)
     } in
     [ mk "forall_intros_" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
       mk "implies_intro_" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
