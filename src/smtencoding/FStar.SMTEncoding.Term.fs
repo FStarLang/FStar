@@ -612,6 +612,7 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
+                (declare-fun ActiveFactDB (Term Bool) Bool)\n
                 (assert (forall ((t Term))\n\
                             (! (implies (exists ((e Term)) (HasType e t))\n\
                                         (Valid t))\n\
@@ -643,6 +644,7 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
+let mk_ActiveFactDB x y = mkApp("ActiveFactDB", [x; y]) norng
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r

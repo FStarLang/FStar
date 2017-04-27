@@ -136,17 +136,31 @@ type binding =
                                                                      (* ... are mapped either to SMT2 functions, or to nullary tokens *)
 
 let binder_of_eithervar v = (v, None)
+type cache_entry = {
+    cache_symbol_name: string;
+    cache_symbol_arg_sorts: list<sort>;
+    cache_symbol_decls: list<decl>;
+    cache_symbol_activate_fact: list<decl>
+}
 type env_t = {
     bindings:list<binding>;
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
     warn:bool;
-    cache:BU.smap<(string * list<sort> * list<decl>)>;
+    cache:BU.smap<cache_entry>;
     nolabels:bool;
     use_zfuel_name:bool;
     encode_non_total_function_typ:bool;
-    current_module_name:string
+    current_module_name:string;
+    activate_current_sigelt_facts:list<decl>;
 }
+let mk_cache_entry env tsym cvar_sorts t_decls = {
+    cache_symbol_name=tsym;
+    cache_symbol_arg_sorts=cvar_sorts;
+    cache_symbol_decls=t_decls;
+    cache_symbol_activate_fact=env.activate_current_sigelt_facts;
+}
+
 let print_env e =
     e.bindings |> List.map (function
         | Binding_var  (x, _) -> Print.bv_to_string x
@@ -538,8 +552,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let tkey = mkForall([], fsym::cvars, t_interp) in
              let tkey_hash = hash_of_term tkey in
              begin match BU.smap_try_find env.cache tkey_hash with
-                | Some (t', sorts, _) ->
-                  mkApp(t', cvars |> List.map mkFreeV), []
+                | Some cache_entry ->
+                  mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
+                  cache_entry.cache_symbol_activate_fact
 
                 | None ->
                   let tsym = varops.mk_unique ("Tm_arrow_" ^ (BU.digest_of_string tkey_hash)) in
@@ -574,7 +589,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                 module_name ^ "_" ^ a_name) in
 
                   let t_decls = tdecl::decls@decls'@guard_decls@[k_assumption; pre_typing; t_interp] in
-                  BU.smap_add env.cache tkey_hash  (tsym, cvar_sorts, t_decls);
+                  BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
                   t, t_decls
              end
 
@@ -628,8 +643,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let tkey = mkForall([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
         begin match BU.smap_try_find env.cache tkey_hash with
-            | Some (t, _, _) ->
-              mkApp(t, cvars |> List.map mkFreeV), []
+            | Some cache_entry ->
+              mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
+              cache_entry.cache_symbol_activate_fact
 
             | None ->
               let module_name = env.current_module_name in
@@ -660,7 +676,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @[tdecl;
                               t_kinding;
                               t_interp;t_haseq] in
-              BU.smap_add env.cache tkey_hash (tsym, cvar_sorts, t_decls);
+
+              BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
               t, t_decls
         end
 
@@ -860,7 +877,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 let tkey = mkForall([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
                 match BU.smap_try_find env.cache tkey_hash with
-                | Some (t, _, _) -> mkApp(t, List.map mkFreeV cvars), []
+                | Some cache_entry ->
+                  mkApp(cache_entry.cache_symbol_name, List.map mkFreeV cvars),
+                  cache_entry.cache_symbol_activate_fact
+
                 | None ->
                   match is_an_eta_expansion env vars body with
                   | Some t ->
@@ -889,7 +909,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       Term.Assume(mkForall([[app]], vars@cvars, mkEq(app, body)), Some a_name, a_name)
                     in
                     let f_decls = decls@decls'@decls''@(fdecl::typing_f)@[interp_f] in
-                    BU.smap_add env.cache tkey_hash (fsym, cvar_sorts, f_decls);
+                    BU.smap_add env.cache tkey_hash (mk_cache_entry env fsym cvar_sorts f_decls);
                     f, f_decls
           end
 
@@ -1931,17 +1951,92 @@ let encode_top_level_let :
       let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in
       [decl], env
 
+type fact_db_id =
+    | Name of lid
+    | Namespace of lid
+    | Tag of string
+    | Global
+
+let term_of_string s : term =
+    let r = Range.dummyRange in
+    encode_const (FStar.Const.Const_string(BU.unicode_of_string s, r))
+
+let string_of_fact_db_id = function
+    | Name l -> "Name@" ^ l.str
+    | Namespace l -> "Namespace@" ^ l.str
+    | Tag s -> "Tag@" ^ s
+    | Global -> "__GLOBAL__"
+
+let encode_fact_db_id (env:env_t) (f:fact_db_id)
+  : term * decls_t
+  = let f_str = string_of_fact_db_id f in
+    let raw_term = term_of_string f_str in
+    match BU.smap_try_find env.cache (Term.print_smt_term raw_term) with
+    | Some cache_entry ->
+      Term.mkFreeV (cache_entry.cache_symbol_name, Term_sort) Range.dummyRange,
+      []
+    | None ->
+      let fact_db_name = varops.mk_unique f_str in
+      let decl = Term.DefineFun(fact_db_name, [], Term_sort, raw_term, None) in
+      BU.smap_add env.cache (Term.print_smt_term raw_term) (mk_cache_entry env fact_db_name [] [decl]);
+      Term.mkFreeV(fact_db_name, Term_sort) Range.dummyRange,
+      [decl]
+
+type fact_db_ids = list<fact_db_id>
+
+let open_fact_db_tags (env:env_t) : fact_db_ids = []
+
+let place_decl_in_fact_dbs (env:env_t) (fact_dbs:list<term>) (d:decl) : decl =
+    match d with
+    | Assume(term, caption, assumption_name) ->
+      let tag = ("guard", Bool_sort) in
+      let tag_tm = mkFreeV tag in
+      let fact_db_triggers =
+       fact_dbs |> List.map (fun fact_db -> [Term.mk_ActiveFactDB fact_db tag_tm]) in
+      let guarded_term_body = Term.mkImp (tag_tm, term) term.rng in
+      let guarded_term = Term.mkForall(fact_db_triggers, [tag], guarded_term_body) guarded_term_body.rng in
+      Assume(guarded_term, caption, varops.mk_unique assumption_name)
+    | _ -> d
+
+let fact_dbs_for_lid (env:env_t) (lid:Ident.lid) =
+    Name lid
+    ::Namespace (Ident.lid_of_ids lid.ns)
+    ::Global
+    ::open_fact_db_tags env
+
+let activate_fact_db env (f:fact_db_id) : decls_t =
+    let tm, decls = encode_fact_db_id env f in
+    let trigger = Term.mk_ActiveFactDB tm (Term.mkTrue Range.dummyRange) in
+    let nm = BU.format1 "activating_fact_db_%s" (string_of_fact_db_id f) in
+    Term.Assume(trigger, Some nm, nm)::decls
+
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"
     then BU.print1 ">>>>Encoding [%s]\n"
          <| (Print.sigelt_to_string se);//U.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
-    let nm = match U.lid_of_sigelt se with
-        | None -> ""
-        | Some l -> l.str in
-    let g, e = encode_sigelt' env se in
+    let nm, fact_db_terms, fact_db_decls, env =
+        match U.lid_of_sigelt se with
+        | None -> "", [], [], env
+        | Some l ->
+          let fact_db_terms, fact_db_decls =
+            fact_dbs_for_lid env l
+            |> List.map (encode_fact_db_id env)
+            |> List.unzip in
+          let env =
+             {env with activate_current_sigelt_facts=
+                       activate_fact_db env (Name l)} in
+          l.str,
+          fact_db_terms,
+          List.flatten fact_db_decls,
+          env
+    in
+    let g, env = encode_sigelt' env se in
+    let g = g |> List.map (place_decl_in_fact_dbs env fact_db_terms) in
+    let g = fact_db_decls @ g in
+    let env = {env with activate_current_sigelt_facts=[]} in
     match g with
-     | [] -> [Caption (BU.format1 "<Skipped %s/>" nm)], e
-     | _ -> Caption (BU.format1 "<Start encoding %s>" nm)::g@[Caption (BU.format1 "</end encoding %s>" nm)], e
+     | [] -> [Caption (BU.format1 "<Skipped %s/>" nm)], env
+     | _ -> Caption (BU.format1 "<Start encoding %s>" nm)::g@[Caption (BU.format1 "</end encoding %s>" nm)], env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     match se.sigel with
@@ -2416,7 +2511,8 @@ let last_env : ref<list<env_t>> = BU.mk_ref []
 let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0;
                                    cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true;
-                                   current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
+                                   current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
+                                   activate_current_sigelt_facts=[]}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
@@ -2523,8 +2619,10 @@ let encode_query use_env_msg tcenv q
     let phi, qdecls = encode_formula q env in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
+    let fact_db_decls = activate_fact_db env Global in
     let query_prelude =
         env_decls
+        @fact_db_decls
         @label_prefix
         @qdecls in
     let qry = Term.Assume(mkNot phi, Some "query", (varops.mk_unique "@query")) in

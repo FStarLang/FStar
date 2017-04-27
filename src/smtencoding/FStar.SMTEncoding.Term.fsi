@@ -163,6 +163,7 @@ val unboxString: term -> term
 val boxRef:      term -> term
 val unboxRef:    term -> term
 
+val mk_ActiveFactDB: term -> term -> term
 val mk_Range_const:  term
 val mk_Term_unit:    term
 
