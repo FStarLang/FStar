@@ -121,6 +121,7 @@ fi
 
 cd $BN_BINARYSPATH_ROOT
 git checkout master
+git reset --head HARD
 git pull origin master
 
 echo "-- copy files and add to Github --"
