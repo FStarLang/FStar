@@ -424,8 +424,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
     | _ -> lopt
 
 (*******************************************************************)
-(* Simplification steps are not part of definitional equality      *)
-(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
@@ -623,6 +622,10 @@ let reduce_primops cfg tm =
 let reduce_equality cfg tm =
     reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
 
+(*******************************************************************)
+(* Simplification steps are not part of definitional equality      *)
+(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(*******************************************************************)
 let maybe_simplify cfg tm =
     let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
