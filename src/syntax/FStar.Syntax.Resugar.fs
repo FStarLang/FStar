@@ -754,15 +754,15 @@ and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
     if i = 0 then
       Some (mk (A.PatWild))
     else
-      BU.bind_opt (resugar_arg_qual qual) (fun aq -> mk (A.PatVar(bv_as_unique_ident x, )))
+      BU.bind_opt (resugar_arg_qual qual) (fun aq -> Some (mk (A.PatVar(bv_as_unique_ident x, aq))))
   | _ ->
     BU.bind_opt (resugar_arg_qual qual)
       begin fun aq ->
         let pat = mk (A.PatVar(bv_as_unique_ident x, aq)) in
         if Options.print_bound_var_types() then
-          mk (A.PatAscribed(pat, resugar_term x.sort))
+          Some (mk (A.PatAscribed(pat, resugar_term x.sort)))
         else
-          pat
+          Some pat
       end
 
 and resugar_match_pat (p:S.pat) : A.pattern =
@@ -830,44 +830,45 @@ and resugar_match_pat (p:S.pat) : A.pattern =
   aux p
 
 let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
-  | Assumption -> Some A.Assumption
-  | New -> Some A.New
-  | Private -> Some A.Private
-  | Unfold_for_unification_and_vcgen -> Some A.Unfold_for_unification_and_vcgen
+  | S.Assumption -> Some A.Assumption
+  | S.New -> Some A.New
+  | S.Private -> Some A.Private
+  | S.Unfold_for_unification_and_vcgen -> Some A.Unfold_for_unification_and_vcgen
   (* TODO : Find the correct option to display this *)
   | Visible_default -> if true then None else Some A.Visible
-  | Irreducible -> Some A.Irreducible
-  | Abstract -> Some A.Abstract
-  | Inline_for_extraction -> Some A.Inline_for_extraction
-  | NoExtract -> Some A.NoExtract
-  | Noeq -> Some A.Noeq
-  | Unopteq -> Some A.Unopteq
-  | TotalEffect -> Some A.TotalEffect
+  | S.Irreducible -> Some A.Irreducible
+  | S.Abstract -> Some A.Abstract
+  | S.Inline_for_extraction -> Some A.Inline_for_extraction
+  | S.NoExtract -> Some A.NoExtract
+  | S.Noeq -> Some A.Noeq
+  | S.Unopteq -> Some A.Unopteq
+  | S.TotalEffect -> Some A.TotalEffect
   (* TODO : Find the correct option to display this *)
-  | Logic -> if true then None else Some A.Logic
-  | Reifiable -> Some A.Reifiable
-  | Reflectable _ -> Some A.Reflectable
-  | Discriminator _ -> None
-  | Projector _ -> None
-  | RecordType _ -> None
-  | RecordConstructor _ -> None
-  | Action _ -> None
-  | ExceptionConstructor -> None
-  | HasMaskedEffect -> None
-  | Effect -> Some A.Effect_qual
-  | OnlyName -> None
+  | S.Logic -> if true then None else Some A.Logic
+  | S.Reifiable -> Some A.Reifiable
+  | S.Reflectable _ -> Some A.Reflectable
+  | S.Discriminator _ -> None
+  | S.Projector _ -> None
+  | S.RecordType _ -> None
+  | S.RecordConstructor _ -> None
+  | S.Action _ -> None
+  | S.ExceptionConstructor -> None
+  | S.HasMaskedEffect -> None
+  | S.Effect -> Some A.Effect_qual
+  | S.OnlyName -> None
 
 
 let resugar_pragma = function
-  | SetOptions s -> A.SetOptions s
-  | ResetOptions s -> A.ResetOptions s
-  | LightOff -> A.LightOff
+  | S.SetOptions s -> A.SetOptions s
+  | S.ResetOptions s -> A.ResetOptions s
+  | S.LightOff -> A.LightOff
 
 let resugar_typ datacon_ses se : sigelts * A.tycon =
   match se.sigel with
   | Sig_inductive_typ (tylid, uvs, bs, t, _, datacons) ->
-      let current_datacons, other_datacons = List.partition (function
-        | Sig_datacon (_, _, _, inductive_lid, _, _) -> lid_equals inductive_lid tylid)
+      let current_datacons, other_datacons = datacon_ses |> List.partition (fun se -> match se.sigel with
+        | Sig_datacon (_, _, _, inductive_lid, _, _) -> lid_equals inductive_lid tylid
+        | _ -> failwith "unexpected" )
       in
       assert (List.length current_datacons = List.length datacons) ;
       let tyc =
@@ -898,7 +899,7 @@ let decl'_to_decl se d' =
 let resugar_sigelt se : option <A.decl> =
   match se.sigel with
   | Sig_bundle (ses, _) ->
-    let decl_typ_ses, datacon_ses = List.partition
+    let decl_typ_ses, datacon_ses = ses |> List.partition
       (fun se -> match se.sigel with
         | Sig_inductive_typ _ | Sig_declare_typ _ -> true
         | Sig_datacon _ -> false
@@ -911,18 +912,16 @@ let resugar_sigelt se : option <A.decl> =
     in
     let leftover_datacons, tycons = List.fold_left retrieve_datacons_and_resugar (datacon_ses, []) decl_typ_ses in
     begin match leftover_datacons with
-      | [] -> true
+      | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
         Some (decl'_to_decl se (Tycon (false, List.map (fun tyc -> tyc, None) tycons)))
       | [se] ->
-        assert (se.sigqual |> BU.for_some (function | ExceptionConstructor -> true | _ false))
+        //assert (se.sigqual |> BU.for_some (function | ExceptionConstructor -> true | _ -> false))
         (* Exception constructor declaration case *)
-        Some (decl'_to_decl (Exception (failwith "NIY")))
+        Some (decl'_to_decl se (Exception (failwith "NIY")))
       | _ ->
         failwith "Should not happen hopefully"
-
-  | Sig_decl_typ _ ->
-      (failwith "NIY")
+    end
 
   | Sig_let (lbs, _, attrs) ->
       (failwith "NIY")
@@ -943,7 +942,7 @@ let resugar_sigelt se : option <A.decl> =
       (failwith "NIY")
 
   | Sig_pragma p ->
-    Some (AST.pragma (resugar_pragma p))
+    Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
