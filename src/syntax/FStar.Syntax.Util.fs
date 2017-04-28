@@ -488,13 +488,13 @@ let destruct typ lid =
     | _ -> None
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
-  | Sig_let(_, lids, _, _)
-  | Sig_bundle(_, _, lids) -> lids
-  | Sig_inductive_typ (lid, _, _,  _, _, _, _)
-  | Sig_effect_abbrev(lid, _, _, _,  _, _)
-  | Sig_datacon (lid, _, _, _, _, _, _)
-  | Sig_declare_typ (lid, _, _, _)
-  | Sig_assume (lid, _, _) -> [lid]
+  | Sig_let(_, lids, _)
+  | Sig_bundle(_, lids) -> lids
+  | Sig_inductive_typ (lid, _,  _, _, _, _)
+  | Sig_effect_abbrev(lid, _, _,  _, _)
+  | Sig_datacon (lid, _, _, _, _, _)
+  | Sig_declare_typ (lid, _, _)
+  | Sig_assume (lid, _) -> [lid]
   | Sig_new_effect_for_free(n)
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
@@ -505,20 +505,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
 
-let quals_of_sigelt (x: sigelt) = match x.sigel with
-  | Sig_bundle(_, quals, _)
-  | Sig_inductive_typ (_, _, _,  _, _, _, quals)
-  | Sig_effect_abbrev  (_, _, _, _, quals, _)
-  | Sig_datacon (_, _, _, _, _, quals, _)
-  | Sig_declare_typ (_, _, _, quals)
-  | Sig_assume (_, _, quals)
-  | Sig_let(_, _, quals, _)
-  | Sig_new_effect({qualifiers=quals})
-  | Sig_new_effect_for_free({qualifiers=quals}) ->
-    quals
-  | Sig_sub_effect _
-  | Sig_pragma _
-  | Sig_main _ -> []
+let quals_of_sigelt (x: sigelt) = x.sigquals
 
 let range_of_sigelt (x: sigelt) = x.sigrng
 
@@ -1003,8 +990,10 @@ let destruct_typ_as_formula f : option<connective> =
         Const.effect_Tot_lid
         (abs a.action_params a.action_defn None)
     in
-    { sigel = Sig_let((false, [lb]), [a.action_name], [Visible_default ; Action eff_lid], []);
-      sigrng = a.action_defn.pos }
+    { sigel = Sig_let((false, [lb]), [a.action_name], []);
+      sigrng = a.action_defn.pos;
+      sigquals = [Visible_default ; Action eff_lid];
+      sigmeta = default_sigmeta }
 
 (* Some reification utilities *)
 let mk_reify t =

@@ -71,7 +71,7 @@ type primitive_step = {
     name:Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(args -> option<term>)
+    interpretation:(Range.range -> args -> option<term>)
 }
 
 type closure =
@@ -429,114 +429,153 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
-    let interp_math_op (f:int -> int -> FC.sconst) : args -> option<term> =
-        fun args ->
-          match args with
-          | [(a1, _); (a2, _)] -> begin
-            match (SS.compress a1).n, (SS.compress a2).n with
-            | Tm_constant (FC.Const_int(i, None)), Tm_constant (FC.Const_int(j, None)) ->
-              Some (const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos)
-            | _ ->
-              None
-            end
-          | _ -> failwith "Unexpected number of arguments"
+    let int_as_const  : Range.range -> int  -> term =
+        fun p i -> const_as_tm (FC.Const_int (BU.string_of_int i, None)) p
     in
-    let interp_bounded_op (f:int -> int -> FC.sconst) : args -> option<term> =
-        fun args ->
-          match args with
-          | [(a1, _); (a2, _)] -> begin
-             //Note: it's ok to do a deep pattern match on fvars and constants
-             //      they are never wrapped by Tm_delayed nodes
-             match (SS.compress a1).n, (SS.compress a2).n with
-             | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)]),
-               Tm_app ({n=Tm_fvar fv2}, [({n=Tm_constant (FC.Const_int (j, None))}, _)])
-                when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
-                     BU.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
-               // Machine integers are represented as applications, e.g.
-               // [FStar.UInt8.uint_to_t 0xff], so as to get proper
-               // bounds checking. Maintain that invariant.
-               let n = const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos in
-               Some (mk_app (mk (Tm_fvar fv1) a2.pos) [ n, None ])
-             | _ -> None
-            end
-          | _ -> failwith "Unexpected number of arguments"
+    let bool_as_const : Range.range -> bool -> term =
+        fun p b -> const_as_tm (FC.Const_bool b) p
     in
-    let as_primitive_step arity mk (l, f) = {name=l; arity=arity; strong_reduction_ok=true; interpretation=mk f} in
-    let int_as_const  : int -> FC.sconst = fun i -> FC.Const_int (BU.string_of_int i, None) in
-    let bool_as_const : bool -> FC.sconst = fun b -> FC.Const_bool b in
-    let basic_arith =
-        List.map (as_primitive_step 2 interp_math_op)
-            [(Const.op_Addition, (fun x y -> int_as_const (x + y)));
-             (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
-             (Const.op_Multiply,    (fun x y -> int_as_const (Prims.op_Multiply x y)));
-             (Const.op_Division,    (fun x y -> int_as_const (x / y)));
-             (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
-             (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
-             (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
-             (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-             (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] in
-    let bounded_arith =
-        List.map (as_primitive_step 2 interp_bounded_op)
-                 (List.flatten (List.map (fun m -> [
-                       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
-                       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
-                       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (Prims.op_Multiply x y))
-                     ])
-                     [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])) in
-    let unary_string_ops =
-        let mk x = mk x Range.dummyRange in
+    let arg_as_int (a, _) : option<int> =
+        match (SS.compress a).n with
+        | Tm_constant (FC.Const_int(i, None)) ->
+          Some (BU.int_of_string i)
+        | _ ->
+          None
+    in
+    let arg_as_bounded_int (a, _) : option<int> =
+        match (SS.compress a).n with
+        | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
+            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+          Some (BU.int_of_string i)
+        | _ -> None
+    in
+    let arg_as_bool (a, _) : option<bool> =
+        match (SS.compress a).n with
+        | Tm_constant (FC.Const_bool b) ->
+          Some b
+        | _ ->
+          None
+    in
+    let arg_as_string (a, _) : option<string> =
+        match (SS.compress a).n with
+        | Tm_constant (FC.Const_string(bytes, _)) ->
+          Some (BU.string_of_bytes bytes)
+        | _ ->
+          None
+    in
+    let lift_unary
+        : ('a -> 'b) -> list<option<'a>> ->option<'b>
+        = fun f aopts ->
+            match aopts with
+            | [Some a] -> Some (f a)
+            | _ -> None
+    in
+    let lift_binary
+        : ('a -> 'a -> 'b) -> list<option<'a>> -> option<'b>
+        = fun f aopts ->
+            match aopts with
+            | [Some a0; Some a1] -> Some (f a0 a1)
+            | _ -> None
+    in
+    let unary_op
+        :  (arg -> option<'a>)
+        -> (Range.range -> 'a -> term)
+        -> Range.range
+        -> args
+        -> option<term>
+        = fun as_a f r args -> lift_unary (f r) (List.map as_a args)
+    in
+    let binary_op
+        :  (arg -> option<'a>)
+        -> (Range.range -> 'a -> 'a -> term)
+        -> Range.range
+        -> args
+        -> option<term>
+        = fun as_a f r args -> lift_binary (f r) (List.map as_a args)
+    in
+    let as_primitive_step (l, arity, f) = {
+        name=l;
+        arity=arity;
+        strong_reduction_ok=true;
+        interpretation=f
+    } in
+    let unary_int_op (f:int -> int) =
+        unary_op arg_as_int (fun r x -> int_as_const r (f x))
+    in
+    let binary_int_op (f:int -> int -> int) =
+        binary_op arg_as_int (fun r x y -> int_as_const r (f x y))
+    in
+    let unary_bool_op (f:bool -> bool) =
+        unary_op arg_as_bool (fun r x -> bool_as_const r (f x))
+    in
+    let binary_bool_op (f:bool -> bool -> bool) =
+        binary_op arg_as_bool (fun r x y -> bool_as_const r (f x y))
+    in
+    let list_of_string rng (s:string) : term =
+        let mk x = mk x rng in
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
         let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
-        let interp (args:args) : option<term> =
-            match args with
-            | [(a, _)] -> begin
-              match (SS.compress a).n with
-              | Tm_constant (FC.Const_string(bytes, _)) ->
-                let s = BU.string_of_bytes bytes in
-                let char_t = name SC.char_lid in
-                let nil_char =
-                    S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
-                                [S.iarg char_t]
-                                None Range.dummyRange in
-                Some (FStar.List.fold_right (fun c a ->
-                            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
-                                        [S.iarg char_t;
-                                         S.as_arg (mk (Tm_constant (Const_char c)));
-                                         S.as_arg a]
-                                        None Range.dummyRange)
-                            (list_of_string s)
-                            nil_char)
-               | _ ->
-                 None
-               end
-
-            | _ -> failwith "Unexpected number of arguments"
-         in
-         [{ name = Const.p2l ["FStar"; "String"; "list_of_string"];
-            arity = 1;
-            strong_reduction_ok=true;
-            interpretation=interp}]
-      in
-      basic_arith@bounded_arith@unary_string_ops
+        let char_t = name SC.char_lid in
+        let nil_char =
+            S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
+                        [S.iarg char_t]
+                        None rng
+        in
+        FStar.List.fold_right (fun c a ->
+            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
+                        [S.iarg char_t;
+                            S.as_arg (mk (Tm_constant (Const_char c)));
+                            S.as_arg a]
+                        None rng)
+            (list_of_string s)
+            nil_char
+    in
+    let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
+            [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
+             (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
+             (Const.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
+             (Const.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
+             (Const.op_Division,    2, binary_int_op (fun x y -> (x / y)));
+             (Const.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
+             (Const.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
+             (Const.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
+             (Const.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
+             (Const.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
+             (Const.op_Negation,    1, unary_bool_op (fun x -> not x));
+             (Const.op_And,         2, binary_bool_op (fun x y -> x && y));
+             (Const.op_Or,          2, binary_bool_op (fun x y -> x || y));
+             (Const.p2l ["FStar"; "String"; "list_of_string"],
+                                    1, unary_op arg_as_string list_of_string)]
+    in
+    let bounded_arith_ops =
+        let bounded_int_types =
+           [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
+        in
+        bounded_int_types |> List.collect (fun m ->
+        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (x + y)));
+         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (x - y)));
+         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (Prims.op_Multiply x y)))])
+    in
+    List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
 let equality_ops : list<primitive_step> =
-    let interp_bool (args:args) : option<term> =
+    let interp_bool rng (args:args) : option<term> =
         match args with
         | [(_typ, _); (a1, _); (a2, _)] ->
             (match U.eq_tm a1 a2 with
-            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) a2.pos)
-            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) a2.pos)
+            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) rng)
+            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) rng)
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let interp_prop (args:args) : option<term> =
+    let interp_prop (r:Range.range) (args:args) : option<term> =
         match args with
         | [(_typ, _); (a1, _); (a2, _)]    //eq2
         | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
             (match U.eq_tm a1 a2 with
-            | U.Equal -> Some U.t_true
-            | U.NotEqual -> Some U.t_false
+            | U.Equal -> Some ({U.t_true with pos=r})
+            | U.NotEqual -> Some ({U.t_false with pos=r})
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
@@ -574,7 +613,7 @@ let reduce_primops cfg tm =
            | Some prim_step ->
              if List.length args < prim_step.arity
              then tm //partial application; can't step
-             else match prim_step.interpretation args with
+             else match prim_step.interpretation head.pos args with
                   | None -> tm
                   | Some reduced -> reduced
            end

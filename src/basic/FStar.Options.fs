@@ -93,6 +93,7 @@ let defaults =
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
       ("cardinality"                  , String "off");
+      ("check_hints"                  , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -191,6 +192,7 @@ let lookup_opt s c =
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_cardinality             ()      = lookup_opt "cardinality"              as_string
+let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -236,7 +238,6 @@ let get_print_effect_args       ()      = lookup_opt "print_effect_args"        
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
-
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
@@ -355,19 +356,19 @@ let rec specs () : list<Getopt.opt> =
                "[off|warn|check]"),
        "Check cardinality constraints on inductive data types (default 'off')");
 
-     ( noshort,
+      ( noshort,
        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
 
-     ( noshort,
+      ( noshort,
         "codegen-lib",
         OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
                  "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
-     ( noshort,
+      ( noshort,
         "debug",
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
                  "[module name]"),
@@ -611,6 +612,11 @@ let rec specs () : list<Getopt.opt> =
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
+        "check_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Check new hints for replayability");
+
+       ( noshort,
         "reuse_hint_for",
         OneArg (String, "top-level name in the current module"),
         "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
@@ -758,7 +764,7 @@ and validate_cardinality x = match x with
               display_usage_aux (specs ()); exit 1)
 
 and validate_dir p =
-  mkdir false p; 
+  mkdir false p;
   p
 
 let docs () =
@@ -932,6 +938,7 @@ let prepend_output_dir fname =
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let check_cardinality            () = get_cardinality () = "check"
+let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []

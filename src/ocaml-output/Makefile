@@ -76,14 +76,13 @@ endif
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
 	echo "open Prims" >> $@
+	echo "open FStar" >> $@
 	echo "open FStar.Errors" >> $@
 	echo "open FStar.List" >> $@
 	echo "open FStar.Util" >> $@
 	echo "open FStar.Range" >> $@
 	echo "open FStar.Options" >> $@
-	echo "open FStar.Syntax.Syntax" >> $@
-	echo "open FStar.Syntax.Const" >> $@
-	echo "open FStar.Syntax.Util" >> $@
+	echo "open FStar.Parser.Const" >> $@
 	echo "open FStar.Parser.AST" >> $@
 	echo "open FStar.Parser.Util" >> $@
 	echo "open FStar.Const" >> $@

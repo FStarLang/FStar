@@ -23,6 +23,11 @@ type name = bv
 
 let remove_unit (f: 'a -> unit -> 'b) (x:'a) : 'b = f x ()
 
+let quote (nm:Ident.lid) (args:S.args) =
+  match args with
+  | [_; (y, _)] -> Some (E.embed_term y)
+  | _ -> None
+
 let binders_of_env ps (nm:Ident.lid) (args:S.args) =
   match args with
   | [(embedded_env, _)] ->
@@ -126,7 +131,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
-      N.interpretation=interpretation nm
+      N.interpretation=(fun _rng args -> interpretation nm args)
     } in
     [ mk "forall_intros_" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
       mk "implies_intro_" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);

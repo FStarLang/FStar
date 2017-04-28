@@ -471,15 +471,15 @@ let resolve_in_open_namespaces'
   resolve_in_open_namespaces'' env lid Exported_id_term_type (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
 
 let fv_qual_of_se = fun se -> match se.sigel with
-    | Sig_datacon(_, _, _, l, _, quals, _) ->
-      let qopt = BU.find_map quals (function
+    | Sig_datacon(_, _, _, l, _, _) ->
+      let qopt = BU.find_map se.sigquals (function
           | RecordConstructor (_, fs) -> Some (Record_ctor(l, fs))
           | _ -> None) in
       begin match qopt with
         | None -> Some Data_ctor
         | x -> x
       end
-    | Sig_declare_typ (_, _, _, quals) ->  //TODO: record projectors?
+    | Sig_declare_typ (_, _, _) ->  //TODO: record projectors?
       None
     | _ -> None
 
@@ -501,10 +501,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         begin match se.sigel with
           | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
-          | Sig_let((_, lbs), _, _, _) ->
+          | Sig_let((_, lbs), _, _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
-          | Sig_declare_typ(lid, _, _, quals) ->
+          | Sig_declare_typ(lid, _, _) ->
+            let quals = se.sigquals in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
@@ -555,7 +556,7 @@ let try_lookup_effect_name_and_attributes env l =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some ({ sigel = Sig_new_effect(ne) }, l) -> Some (l, ne.cattributes)
         | Some ({ sigel = Sig_new_effect_for_free(ne) }, l) -> Some (l, ne.cattributes)
-        | Some ({ sigel = Sig_effect_abbrev(_,_,_,_,_,cattributes) }, l) -> Some (l, cattributes)
+        | Some ({ sigel = Sig_effect_abbrev(_,_,_,_,cattributes) }, l) -> Some (l, cattributes)
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
@@ -571,7 +572,7 @@ abbrevs. TODO: once indexed effects are in, also track how indices and
 other arguments are instantiated. *)
 let try_lookup_root_effect_name env l =
     match try_lookup_effect_name' (not env.iface) env l with
-	| Some ({ sigel = Sig_effect_abbrev (l', _, _, _, _, _) }, _) ->
+	| Some ({ sigel = Sig_effect_abbrev (l', _, _, _, _) }, _) ->
 	  let rec aux new_name =
 	      match BU.smap_try_find (sigmap env) new_name.str with
 	      | None -> None
@@ -580,7 +581,7 @@ let try_lookup_root_effect_name env l =
                 | Sig_new_effect_for_free (ne)
 		| Sig_new_effect(ne)
 		  -> Some (set_lid_range ne.mname (range_of_lid l))
-		| Sig_effect_abbrev (_, _, _, cmp, _, _) ->
+		| Sig_effect_abbrev (_, _, _, cmp, _) ->
                   let l'' = U.comp_effect_name cmp in
 		  aux l''
 	        | _ -> None
@@ -591,7 +592,7 @@ let try_lookup_root_effect_name env l =
 
 let lookup_letbinding_quals env lid =
   let k_global_def lid = function
-      | ({sigel = Sig_declare_typ(lid, _, _, quals) }, _) ->
+      | ({sigel = Sig_declare_typ(_, _, _); sigquals=quals }, _) ->
           Some quals
       | _ ->
           None in
@@ -606,7 +607,7 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_let((_, lbs), _, _, _) }, _) ->
+      | ({ sigel = Sig_let((_, lbs), _, _) }, _) ->
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
@@ -614,7 +615,7 @@ let try_lookup_let env (lid:lident) =
 
 let try_lookup_definition env (lid:lident) =
     let k_global_def lid = function
-      | ({ sigel = Sig_let(lbs, _, _, _) }, _) ->
+      | ({ sigel = Sig_let(lbs, _, _) }, _) ->
         BU.find_map (snd lbs) (fun lb ->
             match lb.lbname with
                 | Inr fv when S.fv_eq_lid fv lid ->
@@ -650,7 +651,7 @@ let try_lookup_doc (env: env) (l:lid) =
 
 let try_lookup_datacon env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_declare_typ(_, _, _, quals) }, _) ->
+      | ({ sigel = Sig_declare_typ(_, _, _); sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid Delta_constant None)
         else None
@@ -660,7 +661,7 @@ let try_lookup_datacon env (lid:lident) =
 
 let find_all_datacons env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_inductive_typ(_, _, _, _, _, datas, _) }, _) -> Some datas
+      | ({ sigel = Sig_inductive_typ(_, _, _, _, datas, _) }, _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -714,23 +715,23 @@ let commit_record_cache =
     commit
 
 let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match se.sigel with
-  | Sig_bundle(sigs, _, _) ->
-    let is_rec = BU.for_some (function
+  | Sig_bundle(sigs, _) ->
+    let is_record = BU.for_some (function
       | RecordType _
       | RecordConstructor _ -> true
       | _ -> false) in
 
     let find_dc dc =
       sigs |> BU.find_opt (function
-        | { sigel = Sig_datacon(lid, _, _, _, _, _, _) } -> lid_equals dc lid
+        | { sigel = Sig_datacon(lid, _, _, _, _, _) } -> lid_equals dc lid
         | _ -> false) in
 
     sigs |> List.iter (function
-      | { sigel = Sig_inductive_typ(typename, univs, parms, _, _, [dc], tags) } ->
+      | { sigel = Sig_inductive_typ(typename, univs, parms, _, _, [dc]); sigquals = typename_quals } ->
         begin match must <| find_dc dc with
-            | { sigel = Sig_datacon(constrname, _, t, _, _, _, _) } ->
+            | { sigel = Sig_datacon(constrname, _, t, _, _, _) } ->
                 let formals, _ = U.arrow_formals t in
-                let is_rec = is_rec tags in
+                let is_rec = is_record typename_quals in
                 let formals' = formals |> List.collect (fun (x,q) ->
                         if S.is_null_bv x
                         || (is_rec && S.is_implicit q)
@@ -746,8 +747,8 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                               parms=parms;
                               fields=fields;
                               is_private_or_abstract =
-                                List.contains Private tags ||
-                                List.contains Abstract tags;
+                                List.contains Private typename_quals ||
+                                List.contains Abstract typename_quals;
                               is_record=is_rec} in
                 (* the record is added to the current list of
                 top-level definitions, to allow shadowing field names
@@ -874,7 +875,7 @@ let push_sigelt env s =
       end in
   let env = {env with scope_mods = !globals} in
   let env, lss = match s.sigel with
-    | Sig_bundle(ses, _, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
+    | Sig_bundle(ses, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) ->
     lids |> List.iter (fun lid ->
@@ -973,30 +974,34 @@ let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
 
 let check_admits env =
   env.sigaccum |> List.iter (fun se -> match se.sigel with
-    | Sig_declare_typ(l, u, t, quals) ->
+    | Sig_declare_typ(l, u, t) ->
       begin match try_lookup_lid env l with
         | None ->
           if not (Options.interactive ()) then
             BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
-          BU.smap_add (sigmap env) l.str ({ se with sigel = Sig_declare_typ(l, u, t, Assumption::quals) }, false)
+          let quals = Assumption :: se.sigquals in
+          BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
+                                          false)
         | Some _ -> ()
       end
     | _ -> ())
 
 let finish env modul =
-  modul.declarations |> List.iter (fun se -> match se.sigel with
-    | Sig_bundle(ses, quals, _) ->
+  modul.declarations |> List.iter (fun se ->
+    let quals = se.sigquals in
+    match se.sigel with
+    | Sig_bundle(ses, _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then ses |> List.iter (fun se -> match se.sigel with
-                | Sig_datacon(lid, _, _, _, _, _, _) -> BU.smap_remove (sigmap env) lid.str
+                | Sig_datacon(lid, _, _, _, _, _) -> BU.smap_remove (sigmap env) lid.str
                 | _ -> ())
 
-    | Sig_declare_typ(lid, _, _, quals) ->
+    | Sig_declare_typ(lid, _, _) ->
       if List.contains Private quals
       then BU.smap_remove (sigmap env) lid.str
 
-    | Sig_let((_,lbs), _, quals, _) ->
+    | Sig_let((_,lbs), _, _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then begin
@@ -1006,7 +1011,9 @@ let finish env modul =
       && not (List.contains Private quals)
       then lbs |> List.iter (fun lb ->
            let lid = (right lb.lbname).fv_name.v in
-           let decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, Assumption::quals) } in
+           let quals = Assumption :: quals in
+           let decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
+                                sigquals = quals } in
            BU.smap_add (sigmap env) lid.str (decl, false))
 
     | _ -> ());
@@ -1073,7 +1080,8 @@ let export_interface (m:lident) env =
           BU.smap_remove sm' k;
 //          printfn "Exporting %s" k;
           let se = match se.sigel with
-            | Sig_declare_typ(l, u, t, q) -> { se with sigel = Sig_declare_typ(l, u, t, Assumption::q) }
+            | Sig_declare_typ(l, u, t) ->
+              { se with sigquals = Assumption::se.sigquals }
             | _ -> se in
           BU.smap_add sm' k (se, false)
         | _ -> ());

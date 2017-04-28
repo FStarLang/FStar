@@ -93,16 +93,39 @@
     <Compile Include="FStar.Errors.fs" />
     <Compile Include="version.fsi" />
     <Compile Include="version.fs" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FSharp.Compatibility.OCaml">
+      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
+      <HintPath>..\VS\packages\FSPowerPack.Core.Community.3.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
+    <Reference Include="FSharp.PowerPack.Linq">
+      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Metadata">
+      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Parallel.Seq">
+      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PPrint">
+      <HintPath>..\VS\packages\PPrintForFSharp.0.0.2\lib\net40\FSharp.PPrint.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FsLexYacc.Runtime">
+      <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />

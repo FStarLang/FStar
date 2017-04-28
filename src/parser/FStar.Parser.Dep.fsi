@@ -10,7 +10,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-module Const = FStar.Syntax.Const
+module Const = FStar.Parser.Const
 module BU = FStar.Util
 
 (* In case the user passed [--verify_all], we record every single module name we

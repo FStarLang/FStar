@@ -19,7 +19,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.Unionfind
-
+open FSharp.Compatibility.OCaml
 open FStar.All
 open FStar.Util
 

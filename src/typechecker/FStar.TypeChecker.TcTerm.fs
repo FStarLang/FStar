@@ -419,8 +419,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let reflect_op, _ = U.head_and_args top in
     begin match Env.effect_decl_opt env l with
     | None -> no_reflect()
-    | Some ed ->
-      if not (ed.qualifiers |> S.contains_reflectable) then
+    | Some (ed, qualifiers) ->
+      if not (qualifiers |> S.contains_reflectable) then
         no_reflect ()
       else
         let env_no_ex, topt = Env.clear_expected_typ env in
