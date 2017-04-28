@@ -136,6 +136,8 @@ let list_tot_append_lid: FStar_Ident.lident =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid: FStar_Ident.lident = p2l ["Prims"; "strcat"]
 let let_in_typ: FStar_Ident.lident = p2l ["Prims"; "Let"]
+let string_of_int_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_int"]
+let string_of_bool_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_bool"]
 let op_Eq: FStar_Ident.lident = pconst "op_Equality"
 let op_notEq: FStar_Ident.lident = pconst "op_disEquality"
 let op_LT: FStar_Ident.lident = pconst "op_LessThan"
