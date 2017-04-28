@@ -39,11 +39,13 @@ noeq type formula =
   //Abs   : binders -> term -> formula //Named repr
   //Match : ....
 
+noeq
 type const =
   | C_Unit : const
   | C_Int : int -> const // Not exposing the details, I presume
   (* TODO: complete *)
 
+noeq
 type term_view =
   | Tv_Var    : binder -> term_view
   | Tv_FVar   : fv -> term_view
@@ -162,8 +164,10 @@ let quote #a (x:a) : tactic term = fun () -> embed x
 assume private val term_as_formula_ : term -> option formula
 let term_as_formula t : tactic (option formula) = fun () -> term_as_formula_ t
 
-assume val inspect_ : term -> term_view
-let inspect t : tactic term_view = fun () -> inspect_ t
+assume val inspect_ : term -> option term_view
+let inspect t : tactic term_view = fun () -> match inspect_ t with
+                                             | Some x -> x
+                                             | None -> fail "inspect failed, possibly unknown syntax" ()
 
 (* Many of these could be derived from apply_lemma, 
    rather than being assumed as primitives. 

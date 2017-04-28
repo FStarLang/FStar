@@ -100,6 +100,7 @@ let eq3_lid    = pconst  "eq3"
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
 let exp_false_bool  = mk (Tm_constant (Const_bool false))
 let exp_unit        = mk (Tm_constant (Const_unit))
+let exp_int s       = mk (Tm_constant (Const_int (s,None))) // Makes an (unbounded) integer from its string repr.
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
 let some_lid        = pconst  "Some"

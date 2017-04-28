@@ -10,6 +10,7 @@ module SS = FStar.Syntax.Subst
 module SC = FStar.Syntax.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
+module C = FStar.Const
 module U = FStar.Syntax.Util
 module Rel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
@@ -337,6 +338,10 @@ let term_as_formula (t:term) : option<formula> =
         Some (Name bv)
       | _ -> None
 
+type vconst =
+    | C_Unit
+    | C_Int of string
+
 type term_view =
     | Tv_Var    of binder
     | Tv_FVar   of fv
@@ -345,6 +350,7 @@ type term_view =
     | Tv_Arrow  of binder * term
     | Tv_Type   of unit
     | Tv_Refine of binder * term
+    | Tv_Const  of vconst
 
 let embed_fvar (fv:fv) : term =
     protect_embedded_term fstar_tactics_fvar (S.fv_to_tm fv)
@@ -355,6 +361,15 @@ let unembed_fvar (t:term) : fv =
     match t.n with
     | Tm_fvar fv -> fv
     | _ -> failwith "Not an embedded fv"
+
+let embed_const (c:vconst) : term =
+    match c with
+    | C_Unit ->
+        fstar_tactics_C_Unit
+
+    | C_Int s ->
+        S.mk_Tm_app fstar_tactics_C_Int [S.as_arg (SC.exp_int s)]
+                    None Range.dummyRange
 
 let embed_term_view (t:term_view) : term =
     match t with
@@ -386,6 +401,10 @@ let embed_term_view (t:term_view) : term =
         S.mk_Tm_app fstar_tactics_Tv_Refine [S.as_arg (embed_binder bv); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
+    | Tv_Const c ->
+        S.mk_Tm_app fstar_tactics_Tv_Const [S.as_arg (embed_const c)]
+                    None Range.dummyRange
+
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
     match l with
@@ -400,14 +419,14 @@ let rec init (l:list<'a>) : list<'a> =
     | x::xs -> x :: init xs
 
 // TODO: consider effects? probably not too useful, but something should be done
-let inspect (t:term) : term_view =
+let inspect (t:term) : option<term_view> =
     BU.print1 "GGG inspecting %s\n" (Print.term_to_string t);
     match (SS.compress t).n with
     | Tm_name bv ->
-        Tv_Var (bv, None)
+        Some <| Tv_Var (bv, None)
 
     | Tm_fvar fv ->
-        Tv_FVar fv
+        Some <| Tv_FVar fv
 
     | Tm_app (hd, []) ->
         failwith "inspect: empty arguments on Tm_app"
@@ -416,7 +435,7 @@ let inspect (t:term) : term_view =
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
         let (a, _) = last args in
-        Tv_App (S.mk_Tm_app hd (init args) None t.pos, a) // TODO: The range and tk are probably wrong. Fix
+        Some <| Tv_App (S.mk_Tm_app hd (init args) None t.pos, a) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
         failwith "inspect: empty arguments on Tm_abs"
@@ -427,20 +446,32 @@ let inspect (t:term) : term_view =
         let b, bs = match bs' with
         | [] -> failwith "impossible"
         | b::bs -> b, bs in
-        Tv_Abs (b, U.abs bs t k)
+        Some <| Tv_Abs (b, U.abs bs t k)
 
     | Tm_type _ ->
-        Tv_Type ()
+        Some <| Tv_Type ()
 
     | Tm_arrow ([], k) ->
         failwith "inspect: empty binders on arrow"
         
     | Tm_arrow ([b], k) ->
         // TODO: drops effect
-        Tv_Arrow (b, (U.comp_to_comp_typ k).result_typ)
+        Some <| Tv_Arrow (b, (U.comp_to_comp_typ k).result_typ)
 
     | Tm_arrow (b::bs, k) ->
-        Tv_Arrow (b, U.arrow bs k)
+        Some <| Tv_Arrow (b, U.arrow bs k)
+
+    | Tm_refine (b, t) ->
+        Some <| Tv_Refine (S.mk_binder b, t)
+
+    | Tm_constant c ->
+        let c = match c with
+        | C.Const_unit -> C_Unit
+        | C.Const_int (s, _) -> C_Int s
+        | _ -> failwith "unknown constant"
+        in
+        Some <| Tv_Const c
 
     | _ ->
-        failwith "inspect: outside of expected syntax"
+        BU.print_string "inspect: outside of expected syntax\n";
+        None

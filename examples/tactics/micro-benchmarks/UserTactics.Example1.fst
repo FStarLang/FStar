@@ -96,7 +96,7 @@ let test_apply_ascription (x:nat) (y:nat) =
 // TODO: if patterns are incomplete, it appears as if the tactic runs anyway
 // and only afterwards is the error raised. Doesn't sounds like good behaviour
 let test_inspect =
-  assert_by_tactic (tbind (quote (1 + 1)) (fun x ->
+  assert_by_tactic (tbind (quote 8) (fun x ->
                     tbind (inspect x) (fun y ->
                     match y with
                     | Tv_App hd a -> print "application"
@@ -105,5 +105,8 @@ let test_inspect =
                     | Tv_Type _ -> print "type"
                     | Tv_Var _ -> print "var"
                     | Tv_FVar _ -> print "fvar"
+                    | Tv_Refine _ _ -> print "refinement"
+                    | Tv_Const C_Unit -> print "unit"
+                    | Tv_Const (C_Int i) -> print "int"
                     | _ -> fail "unknown"
                    ))) (True)

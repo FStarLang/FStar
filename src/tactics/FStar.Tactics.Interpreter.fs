@@ -155,7 +155,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "term_as_formula_" 1 (mk_pure_interpretation_1 E.term_as_formula
                                              E.unembed_term
                                              (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "inspect_" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term E.embed_term_view);
+      mk "inspect_" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term (E.embed_option E.embed_term_view E.fstar_tactics_term_view));
       mk "binders_of_env_"  1 (binders_of_env ps);
       mk "type_of_binder_"  1 type_of_binder;
       mk "term_eq_"         2 term_eq;
