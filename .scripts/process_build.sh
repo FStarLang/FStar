@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# This script is called from everest-ci/ci script for a weekly build of the FStar Binaries
+# If ran separately, the starting directory should be the root directory of FStar.
+
 # Sorry, everyone
 if (( ${BASH_VERSION%%.*} < 4 )); then
   echo "This script requires Bash >= 4. On OSX, try: brew install bash"
@@ -9,6 +12,28 @@ fi
 # Any error is fatal.
 set -e
 set -o pipefail
+
+# Expects to be called from $BN_BINARYSPATH_ROOT
+function cp_to_binaries () {
+  local file=$1
+  echo "--" $ORIG_PWD/src/ocaml-output/$file $BN_BINARYSPATH
+  cp $ORIG_PWD/src/ocaml-output/$file $BN_BINARYSPATH
+  git add $BN_BINARYSPATH/$file
+}
+
+function cleanup_files () {
+  local suffix=$1
+  local files=$BN_BINARYSPATH/*.$suffix
+  local file_count=$(ls -1 $files 2>/dev/null | wc -l)
+  if (( $file_count > $BN_FILESTOKEEP )); then
+    # Windows git rm just needs the file name and fails if give path so just get file name
+    local file_list=$(ls -t1 $files | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1)))
+    git rm ${file_list} -f
+#+++    for f in $file_list; do
+#+++      git rm $f -f
+#+++    done
+  fi
+}
 
 BUILD_DIR=$(pwd)
 if [[ -f ~/.bash_profile ]]; then
@@ -62,17 +87,17 @@ else
     cp $MAJOR_TAR_FILE $MINOR_TAR_FILE
     tar -x -f $MAJOR_TAR_FILE
   else
-    echo -e "* ${RED}FAIL!${NC} src/ocaml-output/make package did not create "$MAJOR_ZIP_FILE" or "$MAJOR_TAR_FILE
+    echo -e "* ${RED}FAIL!${NC} src/ocaml-output/make package did not create ${MAJOR_ZIP_FILE} or ${MAJOR_TAR_FILE}"
     exit 1
   fi
 fi
 
 echo "*** Make the examples ***"
 cd fstar
-make -C examples/micro-benchmarks 1> MicroBenchMarkOutput.log
-make -C examples/hello ocaml 1> HelloOcamlOutput.log
-make -C examples/hello fs 1> HelloFStarOutput.log
-make -j6 -C examples 1> AllExamples.log
+make -C examples/micro-benchmarks > MicroBenchMarkOutput.log
+make -C examples/hello ocaml > HelloOcamlOutput.log
+make -C examples/hello fs > HelloFStarOutput.log
+make -j6 -C examples > AllExamples.log
 
 echo "*** Verify the examples ***"
 echo "-- Verify Micro-benchmarks -- should output 'Success:' *"
@@ -116,7 +141,7 @@ BN_FILESTOKEEP=4
 
 if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
   cd ~
-  git clone https://github.com/FStarLang/binaries.git
+  git clone git@github.com:/FStarLang/binaries.git
 fi
 
 cd $BN_BINARYSPATH_ROOT
@@ -126,44 +151,19 @@ git pull origin master
 
 echo "-- copy files and add to Github --"
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
-  echo "-- "$ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
-  cp $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE $BN_BINARYSPATH
-  cd $BN_BINARYSPATH
-  git add $MINOR_ZIP_FILE
+  cp_to_binaries $MINOR_ZIP_FILE
   cd ..
 fi
 if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
-  echo "--" $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
-  cp $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE $BN_BINARYSPATH
-  git add $BN_BINARYSPATH/$MINOR_TAR_FILE
+  cp_to_binaries $MINOR_TAR_FILE
 fi
 
 # Now that latest package is added, remove the oldest one because only keeping most recent 4 packages
 cd $BN_BINARYSPATH
 echo "-- Delete oldest ZIP file if more than 4 exist --"
-BN_ZIP_FILES=$BN_BINARYSPATH/*.zip
-ZIP_COUNT=`ls -1 $BN_ZIP_FILES 2>/dev/null | wc -l`
-if [[ $ZIP_COUNT > $BN_FILESTOKEEP ]]; then
-  # Windows git rm just needs the file name and fails if give path so just get file name
-  ZIP_FILE_LIST=`ls -t1 $BN_ZIP_FILES | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1))`
-  for ZIP_FILE in $ZIP_FILE_LIST
-  do
-     rm ${ZIP_FILE}
-     git rm ${ZIP_FILE} -f
-  done
-fi
-
+cleanup_files ".zip"
 echo "-- Delete oldest TAR file if more than 4 exist --"
-BN_TAR_FILES=$BN_BINARYSPATH/*.gz
-TAR_COUNT=`ls -1 $BN_TAR_FILES 2>/dev/null | wc -l`
-if [[ $TAR_COUNT > $BN_FILESTOKEEP ]]; then
-  TAR_FILE_LIST=`ls -t1 $BN_TAR_FILES | tail -n +$(($BN_FILESTOKEEP+1))`
-  for TAR_FILE in $TAR_FILE_LIST
-  do
-     rm ${TAR_FILE}
-     git rm ${TAR_FILE} -f
-  done
-fi
+cleanup_files ".gz"
 
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
