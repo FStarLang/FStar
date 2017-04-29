@@ -125,6 +125,9 @@ let exp_false_bool: FStar_Syntax_Syntax.term =
   mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool false))
 let exp_unit: FStar_Syntax_Syntax.term =
   mk (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_unit)
+let exp_int: Prims.string -> FStar_Syntax_Syntax.term =
+  fun s  ->
+    mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int (s, None)))
 let cons_lid: FStar_Ident.lident = pconst "Cons"
 let nil_lid: FStar_Ident.lident = pconst "Nil"
 let some_lid: FStar_Ident.lident = pconst "Some"
@@ -136,6 +139,8 @@ let list_tot_append_lid: FStar_Ident.lident =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid: FStar_Ident.lident = p2l ["Prims"; "strcat"]
 let let_in_typ: FStar_Ident.lident = p2l ["Prims"; "Let"]
+let string_of_int_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_int"]
+let string_of_bool_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_bool"]
 let op_Eq: FStar_Ident.lident = pconst "op_Equality"
 let op_notEq: FStar_Ident.lident = pconst "op_disEquality"
 let op_LT: FStar_Ident.lident = pconst "op_LessThan"
