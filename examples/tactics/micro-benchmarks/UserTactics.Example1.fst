@@ -107,6 +107,6 @@ let test_inspect =
                     | Tv_FVar _ -> print "fvar"
                     | Tv_Refine _ _ -> print "refinement"
                     | Tv_Const C_Unit -> print "unit"
-                    | Tv_Const (C_Int i) -> print "int"
+                    | Tv_Const (C_Int i) -> print ("int: " ^ string_of_int i)
                     | _ -> fail "unknown"
                    ))) (True)
