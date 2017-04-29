@@ -114,22 +114,21 @@ let tactic (a:Type) = unit -> Tac a
 let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
-let or_else (#a:Type) (t1:tactic a) (t2:tactic a)
-        : tactic a
-        = fun () ->
-          TAC?.reflect (fun p -> 
-            match reify (t1 ()) p with
-            | Failed _ _ -> reify (t2 ()) p
-            | q -> q)
+let reify_tactic (t:tactic 'a) : __tac 'a =
+  fun s -> reify (t ()) s
+
+// TODO: SERIOUS: if I use `reify (t1 ()) p` down here, the combination
+// never backtracks. Must be related to the normalization of `reify`, but it's
+// weird anyway that going via reify_tactic "fixes" it
+let or_else (#a:Type) (t1:tactic a) (t2:tactic a) : tactic a = fun () ->
+    TAC?.reflect (fun p -> match reify_tactic t1 p with
+                           | Failed _ _ -> reify_tactic t2 p
+                           | q -> q)
 
 // TODO: forgot the underscore in result and F* blew up,
 // didn't mention a undefined "result". bug?
 abstract 
 let by_tactic (t:state -> __result unit) (a:Type) : Type = a
-
-// TODO: generalize to any type
-let reify_tactic (t:tactic unit) : __tac unit =
-  fun s -> reify (t ()) s
 
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
