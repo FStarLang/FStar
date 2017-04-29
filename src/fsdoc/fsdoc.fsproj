@@ -69,19 +69,19 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
+      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\Lib\Net40\FSharp.PowerPack.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
+      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\Lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
+      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\Lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
+      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\Lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -107,6 +107,11 @@
     <ProjectReference Include="..\parser\parser.fsproj">
       <Name>parser</Name>
       <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
+      <Name>prettyprint</Name>
+      <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\syntax\syntax.fsproj">

@@ -35,6 +35,9 @@ module SU  = FStar.Syntax.Util
 module U  = FStar.Util
 module C  = FStar.Syntax.Const
 
+module PP = FStar.Pprint
+module TD = FStar.Parser.ToDocument
+
 (*
 Notes:
 - a lot of the string_of functions and their concatenation should go away with
@@ -52,6 +55,8 @@ Notes:
 ///////////////////////////////////////////////////////////////////////////////
 // lib
 ///////////////////////////////////////////////////////////////////////////////
+
+let str = PP.doc_of_string
 
 // Test for a single TopLevelModule \in decls.
 let one_toplevel (decls:list<decl>) =
@@ -80,9 +85,16 @@ let string_of_optiont f y xo =
 let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ string_of_fsdoc x ^ "*)") "" d
 let string_of_termo t = string_of_optiont term_to_string "" t
 
+// SI: rm this function 
 // wrap-up s in MD code block.
 // SI: we pretend to be F# so that pandoc can produce prettier html.
 let code_wrap s = "```fsharp\n" ^ s ^ "\n```\n"
+
+let code_wrap' s = 
+    PP.concat [
+        str "```fsharp"; PP.hardline; 
+        s; PP.hardline;
+        str "```"; PP.hardline ]
 
 ///////////////////////////////////////////////////////////////////////////////
 // tycon
@@ -167,6 +179,12 @@ let decl_documented (d:decl) =
         | _ -> false
         end
 
+let document_of_ofsdoc ofsdoc = 
+    match ofsdoc with
+    | Some(doc,kw) -> TD.doc_of_fsdoc (doc,kw)
+    | _ -> PP.empty
+
+// SI: rm this function
 let document_decl (w:string->unit) (d:decl) =
   if decl_documented d then
     // This expr is OK F# code, but we need a few {begin, '('}s to make it OCaml as well.
@@ -175,14 +193,21 @@ let document_decl (w:string->unit) (d:decl) =
         w (code_wrap (string_of_decl' d.d));
         // print the doc, if there's one
         begin match fsdoc with
-        | Some(doc,_kw) -> w ("\n" ^ doc) // SI: do something with kw
+        | Some(doc,kw) -> w ("\n" ^ doc) // SI: do something with kw
         | _ -> ()
         end ;
         w "" // EOL
   else ()
 
+let document_of_decl (d:decl) = 
+  if decl_documented d then // SI: or do we want to drop this gate? See #861.
+    PP.concat [ 
+        PP.group (code_wrap' (TD.decl_to_document d)); PP.hardline;
+        document_of_ofsdoc d.doc; PP.hardline ]
+  else PP.empty 
+
 // return (opt_summary, opt_doc) pair
-let document_toplevel name topdecl =
+let fsdoc_of_toplevel name topdecl =
   match topdecl.d with
   | TopLevelModule _ ->
     // summary, or doc, or nodoc.
@@ -198,6 +223,7 @@ let document_toplevel name topdecl =
 ///////////////////////////////////////////////////////////////////////////////
 // modul
 ///////////////////////////////////////////////////////////////////////////////
+// SI: rm this function
 let document_module (m:modul) =
   //Util.print "doc_module: %s\n" [(modul_to_string m)] ;
   // Get m's name and decls.
@@ -215,7 +241,7 @@ let document_module (m:modul) =
           // SI: keep TopLevelModule special?
           let no_summary = "fsdoc: no-summary-found" in
           let no_comment = "fsdoc: no-comment-found" in
-          let summary, comment = document_toplevel name top_decl in
+          let summary, comment = fsdoc_of_toplevel name top_decl in
           let summary = (match summary with | Some(s) -> s | None -> no_summary) in
           let comment = (match comment with | Some(s) -> s | None -> no_comment) in
           w (format "# module %s" [name.str]);
@@ -228,18 +254,61 @@ let document_module (m:modul) =
         end
     | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
 
+let module_to_document (m:modul) : (lid * PP.document) = 
+  // Get m's name and decls.
+  let name, decls, _mt = match m with // SI: don't forget mt!
+    | Module(n,d) -> n, d, "module"
+    | Interface(n,d,_) -> n, d, "interface" in
+  // Run document_toplevel against the toplevel,
+  // then run document_decl against all the other decls.
+  match one_toplevel decls with
+  | Some (top_decl,other_decls) ->
+        begin
+          // SI: keep TopLevelModule special
+          let no_summary = "fsdoc: no-summary-found" in
+          let no_comment = "fsdoc: no-comment-found" in
+          let summary, comment = fsdoc_of_toplevel name top_decl in
+          let summary = (match summary with | Some(s) -> s | None -> no_summary) in
+          let comment = (match comment with | Some(s) -> s | None -> no_comment) in
+          let toplevel_doc = 
+            PP.concat [
+            PP.group (PP.(^^) (str "# module ") (str name.str)); PP.hardline;
+            PP.group (str summary); PP.hardline; 
+            PP.group (str comment); PP.hardline ] in
+          // non-TopLevelModule decls.
+          let otherdecl_docs = List.map document_of_decl other_decls in
+          let docs = PP.concat (toplevel_doc :: otherdecl_docs) in 
+          (name, PP.empty)
+        end
+    | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // entry point
 ///////////////////////////////////////////////////////////////////////////////
 let generate (files:list<string>) =
-  // fsdoc each module into it's own module.md.
+  // Parse modules 
   let modules = List.collect (fun fn -> fst (P.parse_file fn)) files in
-  let mods = List.map document_module modules in
+  // fsdoc each module into it's own module.md.
+  // SI: rm next line 
+  let m_ids = List.map document_module modules in
+  // PP each module into a PP.doc.  
+  let id_and_docs = List.map module_to_document modules in 
+  let m_ids = List.map fst id_and_docs in 
   // write mod_names into index.md
+  // SI: rm these lines ...
   let on = O.prepend_output_dir "index.md" in
   let fd = open_file_for_writing on in
-  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) mods;
-  close_file fd
+  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) m_ids;
+  close_file fd;
+  // ... instead: write each (id,doc) \in id_and_docs into id.md. 
+  List.iter
+    (fun (id,doc) -> 
+      let on = O.prepend_output_dir (id.str^".md2") in // SI: s/md2/md/
+      let fd = FStar.Util.open_file_for_writing on in
+      PP.pretty_out_channel (float_of_string "1.0") 100 doc fd;
+      close_file fd)
+    id_and_docs 
 
 
 
