@@ -1,4 +1,4 @@
-module UserTactics.Example1
+module UserTactics
 open FStar.Tactics
 
 let test_print_goal =
