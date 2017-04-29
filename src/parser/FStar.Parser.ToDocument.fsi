@@ -19,6 +19,7 @@
 module FStar.Parser.ToDocument
 open FStar.All
 
+val doc_of_fsdoc : FStar.Parser.AST.fsdoc -> FStar.Pprint.document
 val term_to_document : FStar.Parser.AST.term -> FStar.Pprint.document
 val decl_to_document   : FStar.Parser.AST.decl -> FStar.Pprint.document
 val modul_to_document  : FStar.Parser.AST.modul -> FStar.Pprint.document
