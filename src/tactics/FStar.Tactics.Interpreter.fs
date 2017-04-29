@@ -133,39 +133,39 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
-    [ mk "forall_intros_" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
-      mk "implies_intro_" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
-      mk "trivial_"  1 (mk_tactic_interpretation_0 ps trivial E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "revert_"  1 (mk_tactic_interpretation_0 ps revert E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "clear_"   1 (mk_tactic_interpretation_0 ps clear E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "split_"   1 (mk_tactic_interpretation_0 ps split E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "merge_"   1 (mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "rewrite_" 2 (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "smt_"     1 (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "exact_"   2 (mk_tactic_interpretation_1 ps exact E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "apply_lemma_" 2 (mk_tactic_interpretation_1 ps apply_lemma E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "visit_"   2 (mk_tactic_interpretation_1 ps visit
+    [ mk "__forall_intros" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
+      mk "__implies_intro" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
+      mk "__trivial"  1 (mk_tactic_interpretation_0 ps trivial E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__revert"  1 (mk_tactic_interpretation_0 ps revert E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__clear"   1 (mk_tactic_interpretation_0 ps clear E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__split"   1 (mk_tactic_interpretation_0 ps split E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__merge"   1 (mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__rewrite" 2 (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__smt"     1 (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__exact"   2 (mk_tactic_interpretation_1 ps exact E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__apply_lemma" 2 (mk_tactic_interpretation_1 ps apply_lemma E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__visit"   2 (mk_tactic_interpretation_1 ps visit
                                                 (unembed_tactic_0 E.unembed_unit)
                                                 E.embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
-      mk "focus_"   2  (mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
+      mk "__focus"   2  (mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
                                                 (unembed_tactic_0 E.unembed_unit)
                                                 E.embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
-      mk "seq_"     3 (mk_tactic_interpretation_2 ps seq
+      mk "__seq"     3 (mk_tactic_interpretation_2 ps seq
                                             (unembed_tactic_0 E.unembed_unit)
                                             (unembed_tactic_0 E.unembed_unit)
                                             E.embed_unit
                                             FStar.TypeChecker.Common.t_unit);
-      mk "term_as_formula_" 1 (mk_pure_interpretation_1 E.term_as_formula
+      mk "__term_as_formula" 1 (mk_pure_interpretation_1 E.term_as_formula
                                              E.unembed_term
                                              (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "inspect_" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term (E.embed_option E.embed_term_view E.fstar_tactics_term_view));
-      mk "binders_of_env_"  1 (binders_of_env ps);
-      mk "type_of_binder_"  1 type_of_binder;
-      mk "term_eq_"         2 term_eq;
-      mk "print_"           2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "grewrite_"        3 (grewrite_interpretation ps)
+      mk "__inspect" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term (E.embed_option E.embed_term_view E.fstar_tactics_term_view));
+      mk "__binders_of_env"  1 (binders_of_env ps);
+      mk "__type_of_binder"  1 type_of_binder;
+      mk "__term_eq"         2 term_eq;
+      mk "__print"           2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__grewrite"        3 (grewrite_interpretation ps)
     ]
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =

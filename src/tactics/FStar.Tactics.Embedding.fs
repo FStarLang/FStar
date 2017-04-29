@@ -34,7 +34,7 @@ let fstar_tactics_binders= mk_tactic_lid_as_term "binders"
 let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
 let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
 let fstar_tactics_formula= mk_tactic_lid_as_term "formula"
-let fstar_tactics_embed  = mk_tactic_lid_as_term "embed"
+let fstar_tactics_embed  = lid_as_tm SC.fstar_tactics_embed_lid
 let fstar_tactics_term_view = mk_tactic_lid_as_term "term_view"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))

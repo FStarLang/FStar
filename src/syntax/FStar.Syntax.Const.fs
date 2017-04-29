@@ -197,4 +197,4 @@ let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FSt
 let tactic_lid = fstar_tactics_lid "tactic"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
-let fstar_tactics_embed_lid = fstar_tactics_lid "embed"
+let fstar_tactics_embed_lid = fstar_tactics_lid "__embed"
