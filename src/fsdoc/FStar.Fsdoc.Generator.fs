@@ -58,88 +58,18 @@ Notes:
 
 let str = PP.doc_of_string
 
+// This is how we TD.brackets. 
 let fd_brackets = { TD.decl_openb = str "```"; TD.decl_closeb = str "```";
                     TD.fdoc_openb = PP.empty; TD.fdoc_closeb = PP.empty }
 
 // Test for a single TopLevelModule \in decls.
 let one_toplevel (decls:list<decl>) =
-let top,nontops = List.partition
-                    (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false)
-                    decls in
-match top with
-| t :: [] -> Some (t,nontops)
-| _ -> None
-
-// SI: rm these string_of functions. 
-// if xo=Some(x) then f x else y
-// SI: use the one in FStar.Option -- there must be one there!
-let string_of_optiont f y xo =
-    match xo with
-    | Some x -> f x
-    | None -> y
-
-let string_of_fsdoco d = string_of_optiont (fun x -> "(*" ^ string_of_fsdoc x ^ "*)") "" d
-let string_of_termo t = string_of_optiont term_to_string "" t
-
-// SI: rm this function 
-// wrap-up s in MD code block.
-// SI: we pretend to be F# so that pandoc can produce prettier html.
-let code_wrap s = "```fsharp\n" ^ s ^ "\n```\n"
-
-///////////////////////////////////////////////////////////////////////////////
-// tycon
-///////////////////////////////////////////////////////////////////////////////
-// SI: rm this function 
-let string_of_tycon tycon =
-    match tycon with
-    | TyconAbstract _ -> "abstract"
-    | TyconAbbrev _ -> "abbrev"
-    | TyconRecord(id,_bb,_ko,fields) ->
-        id.idText ^ " = { " ^
-        ( fields
-          |> List.map
-                    (fun (id,t,doco) -> (string_of_fsdoco doco) ^
-                                        id.idText ^ ":" ^ (term_to_string t))
-          |> String.concat "; " ) ^
-        " }"
-    | TyconVariant(id,_bb,_ko,vars) ->
-        id.idText ^ " = " ^
-        ( vars
-            |> List.map
-                    (fun (id,trmo,doco,u) ->
-                        (string_of_fsdoco doco) ^
-                        id.idText ^ ":" ^ (string_of_optiont term_to_string "" trmo))
-            |> String.concat " | " )
-
-///////////////////////////////////////////////////////////////////////////////
-// decl
-///////////////////////////////////////////////////////////////////////////////
-
-// SI: rm this function
-// SI: really only expecting non-TopLevelModule's.
-let string_of_decl' d =
-  match d with
-  | TopLevelModule l -> "module " ^ l.str // SI: should never get here
-  | Open l -> "open " ^ l.str
-  | Include l -> "include " ^ l.str
-  | ModuleAbbrev (i, l) -> "module " ^ i.idText ^ " = " ^ l.str
-  | TopLevelLet(_, pats) ->
-        let termty = List.map (fun (p,t) -> (pat_to_string p, term_to_string t)) pats in
-        let termty' = List.map (fun (p,t) -> p ^ ":" ^ t) termty in
-        "let " ^ (String.concat ", " termty')
-  | Main _ -> "main ..."
-  | Assume(i, t) -> "assume " ^ i.idText ^ ":" ^ (term_to_string t)
-  | Tycon(_, tys) ->
-            "type " ^
-             (tys |> List.map (fun (t,d)-> (string_of_tycon t) ^ " " ^ (string_of_fsdoco d))
-                 |> String.concat " and ") (* SI: sep will be "," for Record but "and" for Variant *)
-  | Val(i, t) -> "val " ^ i.idText ^ ":" ^ (term_to_string t)
-  | Exception(i, _) -> "exception " ^ i.idText
-  | NewEffect(DefineEffect(i, _, _, _))
-  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
-  | SubEffect _ -> "sub_effect"
-  | Pragma _ -> "pragma"
-  | Fsdoc (comm,_) -> comm
+    let top,nontops = List.partition
+                        (fun d -> match d.d with | TopLevelModule _ -> true | _ -> false)
+                        decls in
+    match top with
+    | t :: [] -> Some (t,nontops)
+    | _ -> None
 
 // A decl is documented if either:
 // - it's got a fsdoc attached to it (either at top-level or in it's subtree); or
@@ -175,26 +105,9 @@ let document_of_ofsdoc ofsdoc =
     | Some(doc,kw) -> TD.doc_of_fsdoc fd_brackets (doc,kw)
     | _ -> PP.empty
 
-// SI: rm this function
-let document_decl (w:string->unit) (d:decl) =
-  if decl_documented d then
-    // This expr is OK F# code, but we need a few {begin, '('}s to make it OCaml as well.
-        // print the decl
-        let {d = decl; drange = _; doc = fsdoc} = d in
-        w (code_wrap (string_of_decl' d.d));
-        // print the doc, if there's one
-        begin match fsdoc with
-        | Some(doc,kw) -> w ("\n" ^ doc) // SI: do something with kw
-        | _ -> ()
-        end ;
-        w "" // EOL
-  else ()
-
 let document_of_decl (d:decl) = 
   if decl_documented d then // SI: or do we want to drop this gate? See #861.
-    PP.concat [ 
-        TD.decl_to_document fd_brackets d; PP.hardline;
-        document_of_ofsdoc d.doc; PP.hardline ]
+    TD.decl_to_document fd_brackets d
   else PP.empty 
 
 // return (opt_summary, opt_doc) pair
@@ -214,37 +127,6 @@ let fsdoc_of_toplevel name topdecl =
 ///////////////////////////////////////////////////////////////////////////////
 // modul
 ///////////////////////////////////////////////////////////////////////////////
-// SI: rm this function
-let document_module (m:modul) =
-  //Util.print "doc_module: %s\n" [(modul_to_string m)] ;
-  // Get m's name and decls.
-  let name, decls, _mt = match m with // SI: don't forget mt!
-    | Module(n,d) -> n, d, "module"
-    | Interface(n,d,_) -> n, d, "interface" in
-  // Run document_toplevel against the toplevel,
-  // then run document_decl against all the other decls.
-  match one_toplevel decls with
-  | Some (top_decl,other_decls) ->
-        begin
-          let on = O.prepend_output_dir (name.str^".md") in
-          let fd = U.open_file_for_writing on in
-          let w = U.append_to_file fd in
-          // SI: keep TopLevelModule special?
-          let no_summary = "fsdoc: no-summary-found" in
-          let no_comment = "fsdoc: no-comment-found" in
-          let summary, comment = fsdoc_of_toplevel name top_decl in
-          let summary = (match summary with | Some(s) -> s | None -> no_summary) in
-          let comment = (match comment with | Some(s) -> s | None -> no_comment) in
-          w (U.format "# module %s" [name.str]);
-          w (U.format "%s\n" [summary]);
-          w (U.format "%s\n" [comment]);
-          // non-TopLevelModule decls.
-          List.iter (document_decl w) other_decls;
-          U.close_file fd;
-          name
-        end
-    | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
-
 let module_to_document (m:modul) : (lid * PP.document) = 
   // Get m's name and decls.
   let name, decls, _mt = match m with // SI: don't forget mt!
@@ -259,8 +141,8 @@ let module_to_document (m:modul) : (lid * PP.document) =
             let no_summary = "fsdoc: no-summary-found" in
             let no_comment = "fsdoc: no-comment-found" in
             let summary, comment = fsdoc_of_toplevel name top_decl in
-            let summary = (match summary with | Some(s) -> s | None -> no_summary) in
-            let comment = (match comment with | Some(s) -> s | None -> no_comment) in
+            let summary = (match summary with Some(s) -> s | _ -> no_summary) in
+            let comment = (match comment with Some(s) -> s | _ -> no_comment) in
             let toplevel_doc = 
             PP.concat [
             PP.group (PP.(^^) (str "# module ") (str name.str)); PP.hardline;
@@ -280,14 +162,10 @@ let module_to_document (m:modul) : (lid * PP.document) =
 let generate (files:list<string>) =
   // Parse modules 
   let modules = List.collect (fun fn -> fst (P.parse_file fn)) files in
-  // fsdoc each module into it's own module.md.
-  // SI: rm next line 
-  let m_ids = List.map document_module modules in
   // PP each module into a PP.doc.  
   let id_and_docs = List.map module_to_document modules in 
   let m_ids = List.map fst id_and_docs in 
   // write mod_names into index.md
-  // SI: rm these lines ...
   let on = O.prepend_output_dir "index.md" in
   let fd = U.open_file_for_writing on in
   List.iter (fun m -> U.append_to_file fd (U.format "%s\n" [m.str])) m_ids;
@@ -295,7 +173,7 @@ let generate (files:list<string>) =
   // ... instead: write each (id,doc) \in id_and_docs into id.md. 
   List.iter
     (fun (id,doc) -> 
-      let on = O.prepend_output_dir (id.str^".md2") in // SI: s/md2/md/
+      let on = O.prepend_output_dir (id.str^".md") in
       let fd = FStar.Util.open_file_for_writing on in
       PP.pretty_out_channel (U.float_of_string "1.0") 100 doc fd;
       U.close_file fd)
