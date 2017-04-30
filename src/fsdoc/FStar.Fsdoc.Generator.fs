@@ -67,6 +67,7 @@ match top with
 | t :: [] -> Some (t,nontops)
 | _ -> None
 
+// SI: rm forest/trees. 
 // We store a forest-like representation of the module namespaces for index generation.
 // SI: not used yet.
 type mforest =
@@ -99,7 +100,7 @@ let code_wrap' s =
 ///////////////////////////////////////////////////////////////////////////////
 // tycon
 ///////////////////////////////////////////////////////////////////////////////
-
+// SI: rm this function 
 let string_of_tycon tycon =
     match tycon with
     | TyconAbstract _ -> "abstract"
@@ -125,6 +126,7 @@ let string_of_tycon tycon =
 // decl
 ///////////////////////////////////////////////////////////////////////////////
 
+// SI: rm this function
 // SI: really only expecting non-TopLevelModule's.
 let string_of_decl' d =
   match d with
@@ -264,21 +266,21 @@ let module_to_document (m:modul) : (lid * PP.document) =
   match one_toplevel decls with
   | Some (top_decl,other_decls) ->
         begin
-          // SI: keep TopLevelModule special
-          let no_summary = "fsdoc: no-summary-found" in
-          let no_comment = "fsdoc: no-comment-found" in
-          let summary, comment = fsdoc_of_toplevel name top_decl in
-          let summary = (match summary with | Some(s) -> s | None -> no_summary) in
-          let comment = (match comment with | Some(s) -> s | None -> no_comment) in
-          let toplevel_doc = 
+            // SI: keep TopLevelModule special
+            let no_summary = "fsdoc: no-summary-found" in
+            let no_comment = "fsdoc: no-comment-found" in
+            let summary, comment = fsdoc_of_toplevel name top_decl in
+            let summary = (match summary with | Some(s) -> s | None -> no_summary) in
+            let comment = (match comment with | Some(s) -> s | None -> no_comment) in
+            let toplevel_doc = 
             PP.concat [
             PP.group (PP.(^^) (str "# module ") (str name.str)); PP.hardline;
             PP.group (str summary); PP.hardline; 
             PP.group (str comment); PP.hardline ] in
-          // non-TopLevelModule decls.
-          let otherdecl_docs = List.map document_of_decl other_decls in
-          let docs = PP.concat (toplevel_doc :: otherdecl_docs) in 
-          (name, PP.empty)
+            // non-TopLevelModule decls.
+            let otherdecl_docs = List.map document_of_decl other_decls in
+            let docs = PP.concat (toplevel_doc :: otherdecl_docs) in 
+            (name, docs)
         end
     | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
 
