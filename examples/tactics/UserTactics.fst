@@ -5,24 +5,29 @@ let test_print_goal =
   assert_by_tactic (print "User print:") //Some auto-thunking or at least some light notation for it
                    (forall (y:int). y==0 ==> 0==y)
 
+let test_or_else =
+    assert_by_tactic (or_else (fail "failed")
+                              (return ())) True
+
 let test_grewrite =
-assert_by_tactic (grewrite (quote (1 + 2)) (quote 3)) (1 + 2 == 2 + 1)
+assert_by_tactic (liftM2' grewrite (quote (1 + 2)) (quote 3)) (1 + 2 == 2 + 1)
 
 let test_grewrite2 (w x y z:int) =
-assert_by_tactic (tbind' (grewrite (quote (z + y)) (quote (y + z)))
-                 (tbind' (grewrite (quote (x + (y + z))) (quote ((y + z) + x)))
-                         (grewrite (quote (w + ((y + z) + x))) (quote (((y + z) + x) + w)))))
+assert_by_tactic (liftM2' grewrite (quote (z + y)) (quote (y + z));;
+                  liftM2' grewrite (quote (x + (y + z))) (quote ((y + z) + x));;
+                  liftM2' grewrite (quote (w + ((y + z) + x))) (quote (((y + z) + x) + w)))
                  (w + (x + (z + y)) == (y + z) + (x + w))
 
 let test_grewrite3 (w x y z : int) =
-assert_by_tactic (tbind' (grewrite (quote (1 + 2)) (quote 3))
-                         (grewrite (quote (3, 3+4)) (quote (3,7))))
+assert_by_tactic (liftM2' grewrite (quote (1 + 2)) (quote 3);;
+                  liftM2' grewrite (quote (3, 3+4)) (quote (3,7)))
                  ((1+2, 3+4) == (5-2, 7+0))
 
 // Should rewrite all at once, and does, but we get a weird hard query
 let test_grewrite4 (f : int -> int -> int) (w : int) =
-assert_by_tactic (tbind implies_intro (fun _ ->
-                  seq (grewrite (quote (f w w)) (quote w)) revert))
+assert_by_tactic (implies_intro;;
+                  seq (liftM2' grewrite (quote (f w w)) (quote w))
+                      revert)
                  (f w w == w ==> f (f w w) (f w w) == w)
 
 let simple_equality_assertions =
@@ -32,7 +37,6 @@ let simple_equality_assertions =
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y));
   assert_by_tactic rewrite_all_equalities
                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z))
-
 
 let visible_boolean (x:int) = true
 let explicitly_trigger_normalizer =
@@ -67,25 +71,41 @@ assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x ==
 
 let scanning_environment =
   let x = return_ten () in
-  assert_by_tactic (seq (rewrite_equality (quote x))
-                        (seq rewrite_eqs_from_context trivial))
+  assert_by_tactic (rewrite_equality (quote x);;
+                    rewrite_eqs_from_context;;
+                    trivial)
                    (x + 0 == 10)
 
 assume val mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
+val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
+let lemma_mul_comm x y = ()
+
 let test_exact (x:nat) (y:nat) =
   assert_by_tactic (exact (quote (mul_comm x y)))
                    (op_Multiply x y == op_Multiply y x)
-
 
 let test_apply (x:nat) (y:nat) =
   assert_by_tactic (apply_lemma (quote lemma_mul_comm))
                    (op_Multiply x y == op_Multiply y x)
 
+let mul_commute_ascription : tactic unit =
+    g <-- cur_goal;
+    let (_, t) = g in
+    f <-- term_as_formula t;
+    match f with
+    | Some (Eq _ _ _) ->
+        apply_lemma (quote lemma_mul_comm)
+    | _ ->
+        fail "Not an equality"
 
-let test_apply_ascription (x:nat) (y:nat) =
-  assert (op_Multiply x y == op_Multiply y x)
-  <: Tot unit
-  by (visit mul_commute_ascription)
+let test_apply_ascription' (x:nat) (y:nat) =
+  assert_by_tactic (visit (return ())) (op_Multiply x y == op_Multiply y x)
+
+//TODO: doesn't work. "missing universe instantiation on reify_tactic" (??)
+// let test_apply_ascription (x:nat) (y:nat) =
+//   assert (op_Multiply x y == op_Multiply y x)
+//   <: Tot unit
+//   by (visit (return ()))
 
 (* this fails, rightfully, since the top-level goal is not *)
 (* let test_apply_ascription_fail (x:nat) (y:nat) = *)
@@ -94,10 +114,10 @@ let test_apply_ascription (x:nat) (y:nat) =
 (*   by (fun () -> apply_lemma (quote lemma_mul_comm)) *)
 
 // TODO: if patterns are incomplete, it appears as if the tactic runs anyway
-// and only afterwards is the error raised. Doesn't sounds like good behaviour
+// and only afterwards is the error raised. Doesn't sound like good behaviour
 let test_inspect =
-  assert_by_tactic (tbind (quote 8) (fun x ->
-                    tbind (inspect x) (fun y ->
+  assert_by_tactic (x <-- quote 8;
+                    y <-- inspect x;
                     match y with
                     | Tv_App hd a -> print "application"
                     | Tv_Abs bv t -> print "abstraction"
@@ -109,4 +129,4 @@ let test_inspect =
                     | Tv_Const C_Unit -> print "unit"
                     | Tv_Const (C_Int i) -> print ("int: " ^ string_of_int i)
                     | _ -> fail "unknown"
-                   ))) (True)
+                   ) (True)
