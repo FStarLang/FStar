@@ -23,7 +23,7 @@ module FStar.Fsdoc.Generator
 open FStar.All
 
 open FStar
-open FStar.Util
+// open FStar.Util
 open FStar.Parser.AST
 open FStar.Ident
 
@@ -58,6 +58,9 @@ Notes:
 
 let str = PP.doc_of_string
 
+let fd_brackets = { TD.decl_openb = str "```"; TD.decl_closeb = str "```";
+                    TD.fdoc_openb = PP.empty; TD.fdoc_closeb = PP.empty }
+
 // Test for a single TopLevelModule \in decls.
 let one_toplevel (decls:list<decl>) =
 let top,nontops = List.partition
@@ -67,15 +70,7 @@ match top with
 | t :: [] -> Some (t,nontops)
 | _ -> None
 
-// SI: rm forest/trees. 
-// We store a forest-like representation of the module namespaces for index generation.
-// SI: not used yet.
-type mforest =
-| Leaf of string * string
-| Branch of smap<mforest>
-
-let htree : smap<mforest> = smap_create 50
-
+// SI: rm these string_of functions. 
 // if xo=Some(x) then f x else y
 // SI: use the one in FStar.Option -- there must be one there!
 let string_of_optiont f y xo =
@@ -90,12 +85,6 @@ let string_of_termo t = string_of_optiont term_to_string "" t
 // wrap-up s in MD code block.
 // SI: we pretend to be F# so that pandoc can produce prettier html.
 let code_wrap s = "```fsharp\n" ^ s ^ "\n```\n"
-
-let code_wrap' s = 
-    PP.concat [
-        str "```fsharp"; PP.hardline; 
-        s; PP.hardline;
-        str "```"; PP.hardline ]
 
 ///////////////////////////////////////////////////////////////////////////////
 // tycon
@@ -161,11 +150,11 @@ let decl_documented (d:decl) =
             match tycon with
             | TyconAbstract _ | TyconAbbrev _ -> false
             | TyconRecord(_,_,_,fields) ->
-                List.existsb (fun (_id,_t,doco) -> is_some doco) fields
+                List.existsb (fun (_id,_t,doco) -> U.is_some doco) fields
             | TyconVariant(_,_,_,vars) ->
-                List.existsb (fun (_id,_t,doco,_u) -> is_some doco) vars in
+                List.existsb (fun (_id,_t,doco,_u) -> U.is_some doco) vars in
         List.existsb
-            (fun (tycon,doco) -> (tyconvars_documented tycon) || is_some doco)
+            (fun (tycon,doco) -> (tyconvars_documented tycon) || U.is_some doco)
             tt
     in
     // either d.doc attached at the top-level decl
@@ -183,7 +172,7 @@ let decl_documented (d:decl) =
 
 let document_of_ofsdoc ofsdoc = 
     match ofsdoc with
-    | Some(doc,kw) -> TD.doc_of_fsdoc (doc,kw)
+    | Some(doc,kw) -> TD.doc_of_fsdoc fd_brackets (doc,kw)
     | _ -> PP.empty
 
 // SI: rm this function
@@ -204,7 +193,7 @@ let document_decl (w:string->unit) (d:decl) =
 let document_of_decl (d:decl) = 
   if decl_documented d then // SI: or do we want to drop this gate? See #861.
     PP.concat [ 
-        PP.group (code_wrap' (TD.decl_to_document d)); PP.hardline;
+        TD.decl_to_document fd_brackets d; PP.hardline;
         document_of_ofsdoc d.doc; PP.hardline ]
   else PP.empty 
 
@@ -238,20 +227,20 @@ let document_module (m:modul) =
   | Some (top_decl,other_decls) ->
         begin
           let on = O.prepend_output_dir (name.str^".md") in
-          let fd = open_file_for_writing on in
-          let w = append_to_file fd in
+          let fd = U.open_file_for_writing on in
+          let w = U.append_to_file fd in
           // SI: keep TopLevelModule special?
           let no_summary = "fsdoc: no-summary-found" in
           let no_comment = "fsdoc: no-comment-found" in
           let summary, comment = fsdoc_of_toplevel name top_decl in
           let summary = (match summary with | Some(s) -> s | None -> no_summary) in
           let comment = (match comment with | Some(s) -> s | None -> no_comment) in
-          w (format "# module %s" [name.str]);
-          w (format "%s\n" [summary]);
-          w (format "%s\n" [comment]);
+          w (U.format "# module %s" [name.str]);
+          w (U.format "%s\n" [summary]);
+          w (U.format "%s\n" [comment]);
           // non-TopLevelModule decls.
           List.iter (document_decl w) other_decls;
-          close_file fd;
+          U.close_file fd;
           name
         end
     | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
@@ -300,16 +289,16 @@ let generate (files:list<string>) =
   // write mod_names into index.md
   // SI: rm these lines ...
   let on = O.prepend_output_dir "index.md" in
-  let fd = open_file_for_writing on in
-  List.iter (fun m -> append_to_file fd (format "%s\n" [m.str])) m_ids;
-  close_file fd;
+  let fd = U.open_file_for_writing on in
+  List.iter (fun m -> U.append_to_file fd (U.format "%s\n" [m.str])) m_ids;
+  U.close_file fd;
   // ... instead: write each (id,doc) \in id_and_docs into id.md. 
   List.iter
     (fun (id,doc) -> 
       let on = O.prepend_output_dir (id.str^".md2") in // SI: s/md2/md/
       let fd = FStar.Util.open_file_for_writing on in
-      PP.pretty_out_channel (float_of_string "1.0") 100 doc fd;
-      close_file fd)
+      PP.pretty_out_channel (U.float_of_string "1.0") 100 doc fd;
+      U.close_file fd)
     id_and_docs 
 
 
