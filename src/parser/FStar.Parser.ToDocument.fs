@@ -42,10 +42,14 @@ module BU = FStar.Util
 (* - Removing the original parens of the ast [should_unparen] *)
 (* - Printing the comments [comment_stack] *)
 
+(* Provide a b:bracket to tell _to_document how to print *)
+(* decls and fsdocs. Two clients: the re-indender, fsdoc. *)
+type brackets = 
+    { decl_openb : FStar.Pprint.document; decl_closeb : FStar.Pprint.document;
+      fdoc_openb : FStar.Pprint.document; fdoc_closeb : FStar.Pprint.document }
 
-
-
-
+let pp_br = { decl_openb = empty; decl_closeb = empty;
+              fdoc_openb = doc_of_string "(**"; fdoc_closeb = doc_of_string "*)" }
 
 (* [should_print_fs_typ_app] is set when encountering a [LightOff] pragma and *)
 (* reset at the end of each module. If you are using individual print function you *)
@@ -153,12 +157,14 @@ let soft_surround_separate_map n b void_ opening sep closing f xs =
   then void_
   else soft_surround n b opening (separate_map sep f xs) closing
 
-let doc_of_fsdoc (comment,keywords) =
+let doc_of_fsdoc fdbracket (comment,keywords) =
   group (concat [
-    str comment; space;
+    fdbracket.fdoc_openb;
+    str comment; space; // SI: strip [comment] of (**,*)
     separate_map comma (fun (k,v) ->
       concat [str k; rarrow; str v]
-    ) keywords
+    ) keywords; 
+    fdbracket.fdoc_closeb
   ])
 
 // Really specific functions to retro-engineer the desugaring
@@ -450,13 +456,18 @@ let separate_map_with_comments prefix sep f xs extract_range =
 (*                                                                            *)
 (* ****************************************************************************)
 
-let rec p_decl d =
+let rec p_decl br d =
     group(
-        optional p_fsdoc d.doc ^^ p_attributes d.attrs ^^ p_qualifiers d.quals ^^
-        (if d.quals = [] then empty else break1) ^^ p_rawDecl d)
+        group (concat [br.fdoc_openb; (optional p_fsdoc d.doc); br.fdoc_closeb]) ^^
+        p_attributes d.attrs ^^ p_qualifiers d.quals ^^
+        (if d.quals = [] then empty else break1) ^^ 
+        // SI: will have to pass [br] down to p_rawDecl, otherwise FsDoc
+        // will get br.decl's brackets. Grr.
+        p_rawDecl br d)
 
 and p_attributes attrs =
   soft_surround_separate_map 0 2 empty
+
                         (lbracket ^^ str "@") space (rbracket ^^ hardline)
                         p_atomicTerm attrs
 
@@ -473,28 +484,39 @@ and p_fsdoc (doc, kwd_args) =
   (* TODO : these newlines should not always be there *)
   hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
-and p_rawDecl d = match d.d with
+and p_rawDecl br d = match d.d with
   | Open uid ->
-    group (str "open" ^/^ p_quident uid)
+    group (br.decl_openb ^/^ str "open" ^/^ p_quident uid ^/^ br.decl_closeb)
   | Include uid ->
-    group (str "include" ^/^ p_quident uid)
+    group (br.decl_openb ^/^ str "include" ^/^ p_quident uid ^/^ br.decl_closeb)
   | ModuleAbbrev (uid1, uid2) ->
-    (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2
+    group(br.decl_openb ^^
+          (str "module" ^^ space ^^ p_uident uid1 ^^ space ^^ equals) ^/+^ p_quident uid2 ^/+^ // SI: connector?
+          br.decl_closeb)
   | TopLevelModule uid ->
-    group(str "module" ^^ space ^^ p_quident uid)
+    group(br.decl_openb ^^ str "module" ^^ space ^^ p_quident uid ^^ br.decl_closeb)
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
-    surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
+    br.decl_openb ^^ 
+    surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t ^/+^
+    br.decl_closeb
   | Tycon(false, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
     (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
-    precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs
+    br.decl_openb ^^
+    // SI: pass br to p_fsdocTypeDeclPairs
+    precede_break_separate_map (str "type") (str "and") p_fsdocTypeDeclPairs tcdefs ^^
+    br.decl_closeb
   | TopLevelLet(q, lbs) ->
     let let_doc = str "let" ^^ p_letqualifier q ^^ space in
+    br.decl_openb ^^
     separate_map_with_comments let_doc (str "and" ^^ space) p_letbinding lbs
-      (fun (p, t) -> Range.union_ranges p.prange t.range)
+      (fun (p, t) -> Range.union_ranges p.prange t.range) ^^
+    br.decl_closeb
   | Val(lid, t) ->
-    (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+    br.decl_openb ^^ 
+    (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t ^/+^
+    br.decl_closeb
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
@@ -502,17 +524,27 @@ and p_rawDecl d = match d.d with
       then empty
       else str "val" ^^ space
     in
-    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t
+    br.decl_openb ^^
+    (decl_keyword ^^ p_ident id ^^ space ^^ colon) ^/+^ p_typ t ^/+^
+    br.decl_closeb
   | Exception(uid, t_opt) ->
-    str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt
+    br.decl_openb ^^
+    str "exception" ^^ space ^^ p_uident uid ^^ optional (fun t -> str "of" ^/+^ p_typ t) t_opt ^/+^
+    br.decl_closeb
   | NewEffect(ne) ->
-    str "new_effect" ^^ space ^^ p_newEffect ne
+    br.decl_openb ^^
+    str "new_effect" ^^ space ^^ p_newEffect ne ^^
+    br.decl_closeb
   | SubEffect(se) ->
-    str "sub_effect" ^^ space ^^ p_subEffect se
+    br.decl_openb ^^
+    str "sub_effect" ^^ space ^^ p_subEffect se ^^
+    br.decl_closeb
   | Pragma p ->
-    p_pragma p
+    br.decl_openb ^^ p_pragma p ^^ br.decl_closeb
   | Fsdoc doc ->
-    p_fsdoc doc ^^ hardline (* needed so that the comment is treated as standalone *)
+    br.fdoc_openb ^^
+    p_fsdoc doc ^^ hardline (* needed so that the comment is treated as standalone *) ^^
+    br.fdoc_closeb
   | Main _ ->
     failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _) ->
@@ -1245,15 +1277,15 @@ and p_atomicUniverse u = match (unparen u).tm with
 
     let term_to_document e = p_term e
 
-    let decl_to_document e = p_decl e
+    let decl_to_document brackets e = p_decl brackets e
 
-    let modul_to_document (m:modul) =
+    let modul_to_document brackets (m:modul) =
       should_print_fs_typ_app := false ;
       let res =
         match m with
         | Module (_, decls)
         | Interface (_, decls, _) ->
-            decls |> List.map decl_to_document |> separate hardline
+            decls |> List.map (decl_to_document brackets) |> separate hardline
       in  should_print_fs_typ_app := false ;
       res
 
@@ -1265,7 +1297,7 @@ and p_atomicUniverse u = match (unparen u).tm with
     (* pairs of a raw string and a position which is used to place the comment *)
     (* not too far from its original position. The rules for placing comments *)
     (* are described in the ``Taking care of comments`` section *)
-    let modul_with_comments_to_document (m:modul) comments =
+    let modul_with_comments_to_document brackets (m:modul) comments =
       let decls = match m with
         | Module (_, decls)
         | Interface (_, decls, _) -> decls
@@ -1287,7 +1319,7 @@ and p_atomicUniverse u = match (unparen u).tm with
           let extract_decl_range d = d.drange in
           comment_stack := comments ;
           let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
-      let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
+      let doc = separate_map_with_comments empty empty (decl_to_document brackets) decls extract_decl_range in
       let comments = !comment_stack in
       comment_stack := [] ;
       should_print_fs_typ_app := false ;
