@@ -147,7 +147,7 @@ let filter_using_facts_from (theory:decls_t) =
     | None -> theory
     | Some namespace_strings ->
       let fact_id_in_namespace ns = function
-        | Namespace lid -> Util.starts_with lid.str ns
+        | Namespace lid -> BU.starts_with (Ident.text_of_lid lid) ns
         | Name _lid -> false
         | Tag _s -> false
       in
@@ -158,8 +158,8 @@ let filter_using_facts_from (theory:decls_t) =
           true
         | _ ->
           List.contains a.assumption_name include_assumption_names
-          || a.assumption_fact_ids |> Util.for_some (fun fid ->
-             namespace_strings |> Util.for_some (fun ns -> fact_id_in_namespace ns fid))
+          || a.assumption_fact_ids |> BU.for_some (fun fid ->
+             namespace_strings |> BU.for_some (fun ns -> fact_id_in_namespace ns fid))
       in
       //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
       let theory_rev = List.rev theory in
@@ -432,8 +432,8 @@ let solve use_env_msg tcenv q : unit =
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     match qry with
-    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop(); ()
-    | _ when tcenv.admit -> pop();
+    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop()
+    | _ when tcenv.admit -> pop()
     | Assume _ ->
         ask_and_report_errors tcenv labels prefix qry suffix;
         pop ()

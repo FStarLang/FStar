@@ -587,13 +587,13 @@ let rec declToSmt z3options decl =
   | Assume a ->
     let fact_ids_to_string ids =
         ids |> List.map (function
-        | Name n -> "Name " ^n.str
-        | Namespace ns -> "Namespace " ^ns.str
+        | Name n -> "Name " ^Ident.text_of_lid n
+        | Namespace ns -> "Namespace " ^Ident.text_of_lid ns
         | Tag t -> "Tag " ^t)
     in
     let fids =
         if Options.log_queries()
-        then Util.format1 ";;; Fact-ids: %s\n" (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
+        then BU.format1 ";;; Fact-ids: %s\n" (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
         else "" in
     let n = escape a.assumption_name in
     format4 "%s%s(assert (! %s\n:named %s))"
