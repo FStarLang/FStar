@@ -424,7 +424,10 @@ let unembed_const (t:term) : vconst =
         C_Unit
 
     | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv tac_C_Int_lid ->
-        C_Int "99" // TODO: normalize and retrieve int?
+        begin match (SS.compress i).n with
+        | Tm_constant (C.Const_int (s, _)) -> C_Int s
+        | _ -> failwith "unembed_const: unexpected arg for C_Int"
+        end
 
     | _ ->
         failwith "not an embedded vconst"

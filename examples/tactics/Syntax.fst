@@ -25,4 +25,7 @@ let _ = assert_by_tactic (t <-- quote (1+1);
                           t <-- blah t;
                           s <-- term_to_string t; print ("t = " ^ s);;
                           return ()
-                          ) (True)
+                          ) True
+
+let _ = assert_by_tactic (pack (Tv_Const (C_Int (8 + 3)));;
+                          return ()) True
