@@ -166,6 +166,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "__type_of_binder"  1 type_of_binder;
       mk "__term_eq"         2 term_eq;
       mk "__print"           2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__term_to_string"  1 (mk_pure_interpretation_1 Print.term_to_string E.unembed_term E.embed_string);
       mk "__grewrite"        3 (grewrite_interpretation ps)
     ]
 

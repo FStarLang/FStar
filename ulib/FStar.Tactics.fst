@@ -164,6 +164,9 @@ let inspect t : tactic term_view = fun () -> match __inspect t with
 assume val __pack : term_view -> term
 let pack tv : tactic term = fun () -> __pack tv
 
+assume val __term_to_string : term -> string
+let term_to_string t : tactic string = fun () -> __term_to_string t
+
 (* Many of these could be derived from apply_lemma,
    rather than being assumed as primitives.
    E.g., forall_intros could be an application of
