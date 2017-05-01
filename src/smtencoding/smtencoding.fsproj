@@ -57,6 +57,7 @@
     <Compile Include="FStar.SMTEncoding.Term.fsi" />
     <Compile Include="FStar.SMTEncoding.Term.fs" />
     <Compile Include="FStar.SMTEncoding.Util.fs" />
+    <Compile Include="FStar.SMTEncoding.Z3.fsi" />
     <Compile Include="FStar.SMTEncoding.Z3.fs" />
     <Compile Include="FStar.SMTEncoding.SplitQueryCases.fs" />
     <Compile Include="FStar.SMTEncoding.ErrorReporting.fsi" />

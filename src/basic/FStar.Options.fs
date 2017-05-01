@@ -157,6 +157,7 @@ let defaults =
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
       ("use_tactics"                  , Bool false);
+      ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
       ("verify_module"                , List []);
@@ -253,6 +254,7 @@ let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
 let get_use_tactics             ()      = lookup_opt "use_tactics"              as_bool
+let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -336,6 +338,12 @@ let add_extract_namespace s =
 
 let cons_verify_module s  =
     List (String.lowercase s::get_verify_module() |> List.map String)
+
+let cons_using_facts_from s =
+    set_option "z3refresh" (Bool true);
+    match get_using_facts_from() with
+    | None -> List [String s]
+    | Some l -> List (List.map String (s :: l))
 
 let add_verify_module s =
     set_option "verify_module" (cons_verify_module s)
@@ -675,6 +683,13 @@ let rec specs () : list<Getopt.opt> =
         "Pre-process a verification condition using a user-provided tactic (a flag to support migration to tactics gradually)");
 
        ( noshort,
+        "using_facts_from",
+        OneArg (cons_using_facts_from, "[namespace | fact id]"),
+        "Implies --z3refresh; prunes the context to include facts from the given namespace of fact id \
+         (multiple uses of this option will prune the context to include those \
+         facts that match any of the provided namespaces / fact ids");
+
+       ( noshort,
         "verify_all",
         ZeroArgs (fun () -> Bool true),
         "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
@@ -808,6 +823,7 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "use_tactics"
+    | "using_facts_from"
     | "__temp_no_proj"
     | "no_warn_top_level_effects"
     | "reuse_hint_for"
@@ -993,6 +1009,7 @@ let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
 let use_tactics                  () = get_use_tactics                 ()
+let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_cardinality             () = get_cardinality() = "warn"

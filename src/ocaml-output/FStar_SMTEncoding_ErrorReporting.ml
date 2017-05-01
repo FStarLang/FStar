@@ -114,11 +114,11 @@ let label_goals:
                 match ropt with
                 | None  -> rng
                 | Some r1 ->
-                    let uu___107_297 = r1 in
+                    let uu___105_297 = r1 in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
-                        (uu___107_297.FStar_Range.use_range)
+                        (uu___105_297.FStar_Range.use_range)
                     } in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =
@@ -548,39 +548,45 @@ let detail_errors:
                (fun uu____986  ->
                   match uu____986 with
                   | (l,uu____993,uu____994) ->
-                      let uu____999 =
-                        let uu____1003 =
-                          let uu____1004 =
-                            let uu____1007 = FStar_SMTEncoding_Util.mkFreeV l in
-                            (uu____1007, FStar_SMTEncoding_Util.mkTrue) in
-                          FStar_SMTEncoding_Util.mkEq uu____1004 in
-                        (uu____1003, (Some "Disabling label"),
-                          (Prims.strcat "disable_label_" (Prims.fst l))) in
-                      FStar_SMTEncoding_Term.Assume uu____999)) in
+                      let a =
+                        let uu____1000 =
+                          let uu____1001 =
+                            let uu____1004 = FStar_SMTEncoding_Util.mkFreeV l in
+                            (uu____1004, FStar_SMTEncoding_Util.mkTrue) in
+                          FStar_SMTEncoding_Util.mkEq uu____1001 in
+                        {
+                          FStar_SMTEncoding_Term.assumption_term = uu____1000;
+                          FStar_SMTEncoding_Term.assumption_caption =
+                            (Some "Disabling label");
+                          FStar_SMTEncoding_Term.assumption_name =
+                            (Prims.strcat "disable_label_" (Prims.fst l));
+                          FStar_SMTEncoding_Term.assumption_fact_ids = []
+                        } in
+                      FStar_SMTEncoding_Term.Assume a)) in
         let rec linear_check eliminated errors active =
           match active with
           | [] ->
               let results =
-                let uu____1041 =
+                let uu____1037 =
                   FStar_List.map (fun x  -> (x, true)) eliminated in
-                let uu____1048 = FStar_List.map (fun x  -> (x, false)) errors in
-                FStar_List.append uu____1041 uu____1048 in
+                let uu____1044 = FStar_List.map (fun x  -> (x, false)) errors in
+                FStar_List.append uu____1037 uu____1044 in
               sort_labels results
           | hd1::tl1 ->
-              ((let uu____1061 =
+              ((let uu____1057 =
                   FStar_Util.string_of_int (FStar_List.length active) in
-                FStar_Util.print1 "%s, " uu____1061);
+                FStar_Util.print1 "%s, " uu____1057);
                FStar_SMTEncoding_Z3.refresh ();
-               (let uu____1066 =
-                  let uu____1074 =
+               (let uu____1062 =
+                  let uu____1070 =
                     FStar_All.pipe_left elim
                       (FStar_List.append eliminated
                          (FStar_List.append errors tl1)) in
-                  askZ3 uu____1074 in
-                match uu____1066 with
-                | (result,uu____1089,uu____1090) ->
-                    let uu____1099 = FStar_Util.is_left result in
-                    if uu____1099
+                  askZ3 uu____1070 in
+                match uu____1062 with
+                | (result,uu____1085,uu____1086) ->
+                    let uu____1095 = FStar_Util.is_left result in
+                    if uu____1095
                     then linear_check (hd1 :: eliminated) errors tl1
                     else linear_check eliminated (hd1 :: errors) tl1)) in
         print_banner ();

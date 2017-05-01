@@ -424,8 +424,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
     | _ -> lopt
 
 (*******************************************************************)
-(* Simplification steps are not part of definitional equality      *)
-(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
@@ -434,6 +433,9 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let bool_as_const : Range.range -> bool -> term =
         fun p b -> const_as_tm (FC.Const_bool b) p
+    in
+    let string_as_const : Range.range -> string -> term =
+        fun p b -> const_as_tm (FC.Const_string (BU.bytes_of_string b, p)) p
     in
     let arg_as_int (a, _) : option<int> =
         match (SS.compress a).n with
@@ -511,6 +513,9 @@ let built_in_primitive_steps : list<primitive_step> =
     let binary_bool_op (f:bool -> bool -> bool) =
         binary_op arg_as_bool (fun r x y -> bool_as_const r (f x y))
     in
+    let binary_string_op (f : string -> string -> string) =
+        binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
+    in
     let list_of_string rng (s:string) : term =
         let mk x = mk x rng in
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
@@ -530,6 +535,12 @@ let built_in_primitive_steps : list<primitive_step> =
             (list_of_string s)
             nil_char
     in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
+    in
     let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
             [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
              (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
@@ -544,6 +555,9 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.op_Negation,    1, unary_bool_op (fun x -> not x));
              (Const.op_And,         2, binary_bool_op (fun x y -> x && y));
              (Const.op_Or,          2, binary_bool_op (fun x y -> x || y));
+             (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
+             (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
+             (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string)]
     in
@@ -623,6 +637,10 @@ let reduce_primops cfg tm =
 let reduce_equality cfg tm =
     reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
 
+(*******************************************************************)
+(* Simplification steps are not part of definitional equality      *)
+(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(*******************************************************************)
 let maybe_simplify cfg tm =
     let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
