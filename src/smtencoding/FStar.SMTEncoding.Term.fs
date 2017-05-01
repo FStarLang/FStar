@@ -574,7 +574,9 @@ let rec declToSmt z3options decl =
   | DefPrelude ->
     mkPrelude z3options
   | Caption c ->
-    format1 "\n; %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
+    if Options.log_queries ()
+    then format1 "\n; %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
+    else ""
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
@@ -583,9 +585,20 @@ let rec declToSmt z3options decl =
     let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
     format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt (escape f) body)
   | Assume a ->
+    let fact_ids_to_string ids =
+        ids |> List.map (function
+        | Name n -> "Name " ^n.str
+        | Namespace ns -> "Namespace " ^ns.str
+        | Tag t -> "Tag " ^t)
+    in
+    let fids =
+        if Options.log_queries()
+        then Util.format1 ";;; Fact-ids: %s\n" (String.concat "; " (fact_ids_to_string a.assumption_fact_ids))
+        else "" in
     let n = escape a.assumption_name in
-    format3 "%s(assert (! %s\n:named %s))"
+    format4 "%s%s(assert (! %s\n:named %s))"
             (caption_to_string a.assumption_caption)
+            fids
             (termToSmt n a.assumption_term)
             n
   | Eval t ->

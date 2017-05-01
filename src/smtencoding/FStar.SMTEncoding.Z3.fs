@@ -478,52 +478,11 @@ let reset_mark msg =
     // followed by refresh
     pop msg;
     refresh ()
-let commit_mark msg =
+let commit_mark (msg:string) =
     begin match !fresh_scope with
         | hd::s::tl -> fresh_scope := (hd@s)::tl
         | _ -> failwith "Impossible"
     end
-
-let filter_assertions core theory =
-    match core with
-    | None -> theory, false
-    | Some core ->
-        let theory', n_retained, n_pruned =
-            List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
-            | Assume a ->
-                if List.contains a.assumption_name core
-                then d::theory, n_retained+1, n_pruned
-                else if BU.starts_with a.assumption_name "@"
-                then d::theory, n_retained, n_pruned
-                else theory, n_retained, n_pruned+1
-            | _ -> d::theory, n_retained, n_pruned)
-            theory ([], 0, 0) in
-        let missed_assertions th core =
-        let missed =
-            core |> List.filter (fun nm ->
-                th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
-            |> String.concat ", "
-        in
-        let included =
-            th
-            |> List.collect (function Assume a -> [a.assumption_name] | _ -> [])
-            |> String.concat ", "
-        in
-        BU.format2 "missed={%s}; included={%s}" missed included in
-        if Options.hint_info ()
-        && Options.debug_any()
-        then begin
-            let n = List.length core in
-            let missed = if n <> n_retained then missed_assertions theory' core else "" in
-            BU.print3 "\tHint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                            (BU.string_of_int n_retained)
-                            (if n <> n_retained
-                            then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                                (BU.string_of_int n) missed
-                            else "")
-                            (BU.string_of_int n_pruned)
-        end ;
-        theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
 
 let mk_cb used_unsat_core cb (uc_errs, time, statistics) =
     if used_unsat_core
@@ -544,9 +503,9 @@ type z3result =
 type cb = z3result -> unit
 
 let ask_1_core
-    (filter_theory:list<decl> -> list<decl> * bool)
+    (filter_theory:decls_t -> decls_t * bool)
     (label_messages:error_labels)
-    (qry:list<decl>)
+    (qry:decls_t)
     (cb: cb)
   = let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
     let theory, used_unsat_core = filter_theory theory in
@@ -556,9 +515,9 @@ let ask_1_core
     run_job ({job=z3_job false label_messages input; callback=cb})
 
 let ask_n_cores
-    (filter_theory:list<decl> -> list<decl> * bool)
+    (filter_theory:decls_t -> decls_t * bool)
     (label_messages:error_labels)
-    (qry:list<decl>)
+    (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
   = let theory = List.flatten (match scope with
@@ -572,13 +531,12 @@ let ask_n_cores
     enqueue ({job=z3_job true label_messages input; callback=cb})
 
 let ask
-    (core:unsat_core)
+    (filter:decls_t -> decls_t * bool)
     (label_messages:error_labels)
-    (qry:list<decl>)
+    (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
-  = let filter = filter_assertions core in
-    if Options.n_cores() = 1 then
+  = if Options.n_cores() = 1 then
         ask_1_core filter label_messages qry cb
     else
         ask_n_cores filter label_messages qry scope cb

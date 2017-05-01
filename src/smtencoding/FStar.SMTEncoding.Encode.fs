@@ -2521,9 +2521,8 @@ let fact_dbs_for_lid (env:env_t) (lid:Ident.lid) =
 
 let encode_top_level_facts (env:env_t) (se:sigelt) =
     let fact_db_ids =
-        match U.lid_of_sigelt se with
-        | None -> []
-        | Some l -> fact_dbs_for_lid env l in
+        U.lids_of_sigelt se |> List.collect (fact_dbs_for_lid env)
+    in
     let g, env = encode_sigelt env se in
     let g = g |> List.map (place_decl_in_fact_dbs env fact_db_ids) in
     g, env

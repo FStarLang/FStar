@@ -142,6 +142,86 @@ let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range)
     } in
     hint_stats := s::!hint_stats
 
+let filter_using_facts_from (theory:decls_t) =
+    match Options.using_facts_from () with
+    | None -> theory
+    | Some namespace_strings ->
+      let fact_id_in_namespace ns = function
+        | Namespace lid -> Util.starts_with lid.str ns
+        | Name _lid -> false
+        | Tag _s -> false
+      in
+      let matches_fact_ids (include_assumption_names:list<string>) (a:Term.assumption) =
+        match a.assumption_fact_ids with
+        | [] ->
+//          printfn "Retaining %s because it is not tagged with a fact_id\n" a.assumption_name;
+          true
+        | _ ->
+          List.contains a.assumption_name include_assumption_names
+          || a.assumption_fact_ids |> Util.for_some (fun fid ->
+             namespace_strings |> Util.for_some (fun ns -> fact_id_in_namespace ns fid))
+      in
+      //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
+      let theory_rev = List.rev theory in
+      let pruned_theory, _ =
+          List.fold_left (fun (out, include_assumption_names) d ->
+            match d with
+            | Assume a ->
+              if matches_fact_ids include_assumption_names a
+              then d::out, include_assumption_names
+              else out, include_assumption_names
+            | RetainAssumptions names ->
+//              printfn "Retaining names: %s\n" (String.concat ", " names);
+              d::out, names@include_assumption_names
+            | _ -> d::out, include_assumption_names)
+         ([], []) theory_rev
+      in
+      pruned_theory
+
+let filter_assertions (core:Z3.unsat_core) (theory:decls_t) =
+    match core with
+    | None ->
+      filter_using_facts_from theory, false
+    | Some core ->
+        let theory', n_retained, n_pruned =
+            List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
+            | Assume a ->
+                if List.contains a.assumption_name core
+                then d::theory, n_retained+1, n_pruned
+                else if BU.starts_with a.assumption_name "@"
+                then d::theory, n_retained, n_pruned
+                else theory, n_retained, n_pruned+1
+            | _ -> d::theory, n_retained, n_pruned)
+            theory ([], 0, 0) in
+        let missed_assertions th core =
+        let missed =
+            core |> List.filter (fun nm ->
+                th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
+            |> String.concat ", "
+        in
+        let included =
+            th
+            |> List.collect (function Assume a -> [a.assumption_name] | _ -> [])
+            |> String.concat ", "
+        in
+        BU.format2 "missed={%s}; included={%s}" missed included in
+        if Options.hint_info ()
+        && Options.debug_any()
+        then begin
+            let n = List.length core in
+            let missed = if n <> n_retained then missed_assertions theory' core else "" in
+            BU.print3 "\tHint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
+                            (BU.string_of_int n_retained)
+                            (if n <> n_retained
+                            then BU.format2 " (expected %s (%s); replay may be inaccurate)"
+                                (BU.string_of_int n) missed
+                            else "")
+                            (BU.string_of_int n_pruned)
+        end ;
+        theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
+
+let filter_facts_without_core x = filter_using_facts_from x, false
+
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
 (***********************************************************************************)
@@ -200,7 +280,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         | None -> (Options.min_fuel(), 1, rlimit), errs in
                      let ask_z3 label_assumptions =
                         let res = BU.mk_ref None in
-                        Z3.ask None all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
+                        Z3.ask filter_facts_without_core all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
                         Option.get (!res) in
                      detail_errors env all_labels ask_z3, Default
                 else match errs with
@@ -229,7 +309,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
             | [], _
             | _, Kill -> report p errs
             | mi::tl, _ ->
-                    Z3.ask None all_labels (with_fuel [] p mi) (Some scope)
+                    Z3.ask filter_facts_without_core all_labels (with_fuel [] p mi) (Some scope)
                         (fun (result, elapsed_time, statistics) -> cb false mi p tl scope (use_errors errs result, elapsed_time, statistics))
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (scope:scope_t) (result, elapsed_time, statistics) =
@@ -263,7 +343,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                             if Options.hint_info() then
                                 query_info None "Hint-check" tag statistics in
                         Z3.refresh() ;
-                        Z3.ask !current_core all_labels
+                        Z3.ask (filter_assertions !current_core) all_labels
                             (with_fuel [] p (prev_fuel, prev_ifuel, rlimit))
                             (Some scope)
                             (hint_check_cb) ;
@@ -283,7 +363,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                                     query_info None "Hint-refinement" tag statistics in
                             Z3.refresh() ;
                             // This could be done without actually solving the problem a second time.
-                            Z3.ask None all_labels
+                            Z3.ask filter_facts_without_core all_labels
                                 (with_fuel [] p (prev_fuel, prev_ifuel, rlimit))
                                 (Some scope)
                                 (hint_refinement_cb) ;
@@ -333,7 +413,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
         if Option.isSome unsat_core || Options.z3_refresh() then Z3.refresh();
         let wf = (with_fuel [] p initial_config) in
-        Z3.ask unsat_core
+        Z3.ask (filter_assertions unsat_core)
                all_labels
                wf
                None

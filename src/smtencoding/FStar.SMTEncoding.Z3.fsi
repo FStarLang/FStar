@@ -36,13 +36,29 @@ type z3result =
     * z3statistics
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
-val ask : core:unsat_core
+val ask : filter:(decls_t -> decls_t * bool)
        -> label_messages:error_labels
        -> qry:list<decl>
        -> scope:option<scope_t>
        -> cb:cb
        -> unit
+
 val refresh: unit -> unit
 val finish: unit -> unit
 val at_log_file : unit -> string
 val mk_fresh_scope: unit -> scope_t
+val init : unit -> unit
+val push : msg:string -> unit
+val pop : msg:string -> unit
+val mark : msg:string -> unit
+val reset_mark : msg:string -> unit
+val commit_mark : msg:string -> unit
+
+type query_log = {
+    get_module_name: unit -> string;
+    set_module_name: string -> unit;
+    write_to_log:   string -> unit;
+    close_log:       unit -> unit;
+    log_file_name:   unit -> string
+}
+val query_logging : query_log
