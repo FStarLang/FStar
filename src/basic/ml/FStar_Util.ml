@@ -401,6 +401,7 @@ let hex_string_of_byte (i:int) =
   if (String.length hs = 1) then "0" ^ hs
   else hs
 let string_of_bytes = string_of_unicode
+let bytes_of_string = unicode_of_string
 let starts_with = BatString.starts_with
 let trim_string = BatString.trim
 let ends_with = BatString.ends_with
