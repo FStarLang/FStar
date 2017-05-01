@@ -92,7 +92,6 @@ let defaults =
       ("_fstar_home"                  , String "");
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
-      ("cardinality"                  , String "off");
       ("check_hints"                  , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
@@ -131,7 +130,6 @@ let defaults =
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
-      ("no_warn_top_level_effects"    , Bool true);
       ("odir"                         , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -192,7 +190,6 @@ let lookup_opt s c =
   c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
-let get_cardinality             ()      = lookup_opt "cardinality"              as_string
 let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
@@ -230,7 +227,6 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
@@ -357,12 +353,6 @@ let rec specs () : list<Getopt.opt> =
                          else failwith("Invalid argument to --admit_smt_queries")),
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
-
-       ( noshort,
-       "cardinality",
-       OneArg ((fun x -> String (validate_cardinality x)),
-               "[off|warn|check]"),
-       "Check cardinality constraints on inductive data types (default 'off')");
 
       ( noshort,
        "codegen",
@@ -771,13 +761,6 @@ and parse_codegen s =
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage_aux (specs ()); exit 1)
 
-and validate_cardinality x = match x with
-    | "warn"
-    | "check"
-    | "off" -> x
-    | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
-              display_usage_aux (specs ()); exit 1)
-
 and validate_dir p =
   mkdir false p;
   p
@@ -789,7 +772,6 @@ let docs () =
 //Additionaly, the --smt option is a security concern
 let settable = function
     | "admit_smt_queries"
-    | "cardinality"
     | "debug"
     | "debug_level"
     | "detail_errors"
@@ -825,7 +807,6 @@ let settable = function
     | "use_tactics"
     | "using_facts_from"
     | "__temp_no_proj"
-    | "no_warn_top_level_effects"
     | "reuse_hint_for"
     | "z3rlimit_factor"
     | "z3rlimit"
@@ -953,7 +934,6 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
-let check_cardinality            () = get_cardinality () = "check"
 let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
@@ -1012,9 +992,7 @@ let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
-let warn_cardinality             () = get_cardinality() = "warn"
 let warn_default_effects         () = get_warn_default_effects        ()
-let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
