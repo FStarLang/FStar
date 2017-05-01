@@ -1,0 +1,48 @@
+﻿(*
+   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+#light "off"
+
+module FStar.SMTEncoding.Z3
+open FStar.All
+open FStar
+open FStar.SMTEncoding.Term
+open FStar.BaseTypes
+open FStar.Util
+module BU = FStar.Util
+
+type unsat_core = option<list<string>>
+type scope_t = list<list<decl>>
+type error_kind =
+    | Timeout
+    | Kill
+    | Default
+type z3statistics = BU.smap<string>
+type z3result =
+    either<unsat_core, (error_labels*error_kind)>
+    * int
+    * z3statistics
+type cb = z3result -> unit
+val giveZ3 : list<decl> -> unit
+val ask : core:unsat_core
+       -> label_messages:error_labels
+       -> qry:list<decl>
+       -> scope:option<scope_t>
+       -> cb:cb
+       -> unit
+val refresh: unit -> unit
+val finish: unit -> unit
+val at_log_file : unit -> string
+val mk_fresh_scope: unit -> scope_t
