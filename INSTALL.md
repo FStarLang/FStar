@@ -250,7 +250,7 @@ into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml setup. Any version of OCaml from 4.02.2 to 4.04.1 should do, but we recommend 4.04.0 or later to F\* developers who plan to commit their extracted ML files.
+Steps 2 and 3 below require a working OCaml setup. Any version of OCaml from 4.02.2 to 4.04.1 should do, but we recommend to F\* developers who plan to commit their extracted ML files to master to stick with 4.02.3, which is the latest OCaml version that works with opam on Windows.
 
 #### Instructions for Windows ####
 
