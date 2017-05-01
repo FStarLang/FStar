@@ -219,12 +219,12 @@ endif
 
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
-	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
+#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*.dll $(PREFIX)/bin
+#	cp ../../bin/msvc*.dll $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
 	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
 	zip -r -9 $(NAME).zip fstar
 else
