@@ -159,8 +159,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let with_fuel label_assumptions p (n, i, rlimit) =
        [Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
-        Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
         p]
         @label_assumptions
         @[Term.SetOption ("rlimit", string_of_int rlimit)]
@@ -337,7 +337,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                all_labels
                wf
                None
-               (cb (Option.isSome unsat_core) initial_config p alt_configs !Z3.fresh_scope) in
+               (cb (Option.isSome unsat_core) initial_config p alt_configs (Z3.mk_fresh_scope())) in
 
     let process_query (q:decl) :unit =
         check q
@@ -352,9 +352,9 @@ let solve use_env_msg tcenv q : unit =
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     match qry with
-    | Assume({tm=App(FalseOp, _)}, _, _) -> pop(); ()
-    | _ when tcenv.admit -> pop(); ()
-    | Assume(q, _, _) ->
+    | Assume({assumption_term={tm=App(FalseOp, _)}}) -> pop(); ()
+    | _ when tcenv.admit -> pop();
+    | Assume _ ->
         ask_and_report_errors tcenv labels prefix qry suffix;
         pop ()
 

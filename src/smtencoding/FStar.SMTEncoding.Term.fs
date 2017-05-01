@@ -106,14 +106,25 @@ type constructor_field = string  //name of the field
                        * bool    //true if the field is projectible
 type constructor_t = (string * list<constructor_field> * sort * int * bool)
 type constructors  = list<constructor_t>
+type fact_db_id =
+    | Name of Ident.lid
+    | Namespace of Ident.lid
+    | Tag of string
+type assumption = {
+    assumption_term: term;
+    assumption_caption: caption;
+    assumption_name: string;
+    assumption_fact_ids:list<fact_db_id>
+}
 type decl =
   | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
-  | DefineFun  of string * list<sort> * sort * term * caption //defined function
-  | Assume     of term   * caption * string                   //named top-level assertion
+  | DeclFun    of string * list<sort> * sort * caption
+  | DefineFun  of string * list<sort> * sort * term * caption
+  | Assume     of assumption
   | Caption    of string
   | Eval       of term
   | Echo       of string
+  | RetainAssumptions of list<string>
   | Push
   | Pop
   | CheckSat
@@ -365,7 +376,13 @@ let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, a
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
-    Assume(mkEq(mkInteger' id norng, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[]) norng]) norng) norng, Some "fresh token", a_name)
+    let a = {assumption_name=a_name;
+             assumption_caption=Some "fresh token";
+             assumption_term=mkEq(mkInteger' id norng,
+                                  mkApp(constr_id_of_sort sort,
+                                        [mkApp (tok_name,[]) norng]) norng) norng;
+             assumption_fact_ids=[]} in
+    Assume a
 
 let fresh_constructor (name, arg_sorts, sort, id) =
   let id = string_of_int id in
@@ -374,7 +391,13 @@ let fresh_constructor (name, arg_sorts, sort, id) =
   let capp = mkApp(name, bvars) norng in
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
   let a_name = "constructor_distinct_" ^name in
-  Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng, Some "Constructor distinct", a_name)
+  let a = {
+    assumption_name=a_name;
+    assumption_caption=Some "Consrtructor distinct";
+    assumption_term=mkForall([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) norng;
+    assumption_fact_ids=[]
+  } in
+  Assume a
 
 let injective_constructor (name, fields, sort) =
     let n_bvars = List.length fields in
@@ -389,9 +412,13 @@ let injective_constructor (name, fields, sort) =
             let cproj_app = mkApp(name, [capp]) norng in
             let proj_name = DeclFun(name, [sort], s, Some "Projector") in
             if projectible
-            then let a_name = "projection_inverse_"^name in
-                 [proj_name;
-                  Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng, Some "Projection inverse", a_name)]
+            then let a = {
+                    assumption_name = "projection_inverse_"^name;
+                    assumption_caption = Some "Projection inverse";
+                    assumption_term = mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) norng;
+                    assumption_fact_ids = []
+                 } in
+                 [proj_name; Assume a]
             else [proj_name])
     |> List.flatten
 
@@ -544,7 +571,8 @@ let caption_to_string = function
 let rec declToSmt z3options decl =
   let escape (s:string) = BU.replace_char s '\'' '_' in
   match decl with
-  | DefPrelude -> mkPrelude z3options
+  | DefPrelude ->
+    mkPrelude z3options
   | Caption c ->
     format1 "\n; %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
   | DeclFun(f,argsorts,retsort,c) ->
@@ -554,13 +582,18 @@ let rec declToSmt z3options decl =
     let names, binders = name_macro_binders arg_sorts in
     let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
     format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt (escape f) body)
-  | Assume(t,c,n) ->
-    let n = escape n in
-    format3 "%s(assert (! %s\n:named %s))" (caption_to_string c) (termToSmt n t) n
+  | Assume a ->
+    let n = escape a.assumption_name in
+    format3 "%s(assert (! %s\n:named %s))"
+            (caption_to_string a.assumption_caption)
+            (termToSmt n a.assumption_term)
+            n
   | Eval t ->
     format1 "(eval %s)" (termToSmt "eval" t)
   | Echo s ->
     format1 "(echo \"%s\")" s
+  | RetainAssumptions _ ->
+    ""
   | CheckSat -> "(check-sat)"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | Push -> "(push)"
@@ -612,7 +645,6 @@ and mkPrelude z3options =
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
-                (declare-fun ActiveFactDB (Term Bool) Bool)\n
                 (assert (forall ((t Term))\n\
                             (! (implies (exists ((e Term)) (HasType e t))\n\
                                         (Valid t))\n\
@@ -644,7 +676,6 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
-let mk_ActiveFactDB x y = mkApp("ActiveFactDB", [x; y]) norng
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
