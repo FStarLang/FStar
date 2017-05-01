@@ -532,7 +532,7 @@ let rec resugar_term (t : S.term) : A.term =
 
   | Tm_let((is_rec, bnds), body) ->
     let mk_pat a = A.mk_pattern a t.pos in
-    let bnd, body = SS.open_let_rec bnds body in
+    let bnds, body = SS.open_let_rec bnds body in
     let resugar_one_binding bnd =
       let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
       let typ, def = match (SS.compress td).n with
@@ -554,8 +554,6 @@ let rec resugar_term (t : S.term) : A.term =
       let pat, term = match bnd.lbname with
         | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
         | Inl bv ->
-          let x, term = SS.open_term [S.mk_binder bv] term in
-          let (bv, _) = List.hd x in
           mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
       in
       if is_pat_app then
@@ -825,7 +823,10 @@ and resugar_match_pat (p:S.pat) : A.pattern =
     | Pat_dot_term (bv, term) ->
       // no sure if this is correct resugar since the term is not generated from desugar
       let pat = mk (A.PatVar(bv_as_unique_ident bv, None)) in
-      mk (A.PatAscribed(pat, resugar_term term))
+      if Options.print_bound_var_types() then
+        mk (A.PatAscribed(pat, resugar_term term))
+      else
+        pat
   in
   aux p
 
