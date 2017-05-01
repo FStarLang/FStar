@@ -161,6 +161,10 @@ let inspect t : tactic term_view = fun () -> match __inspect t with
                                              | Some tv -> tv
                                              | None -> fail "inspect failed, possibly unknown syntax" ()
 
+// Don't think we need this in TAC... do we?
+assume val __inspectfv : fv -> string
+let inspectfv (fv:fv) = __inspectfv fv
+
 assume val __pack : term_view -> term
 let pack tv : tactic term = fun () -> __pack tv
 

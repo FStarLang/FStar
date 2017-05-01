@@ -251,7 +251,7 @@ let unembed_string (t:term) : string =
     | Tm_constant(FStar.Const.Const_string(bytes, _)) ->
       BU.string_of_unicode bytes
     | _ ->
-      failwith "Not an embedded string"
+      failwith ("Not an embedded string (" ^ Print.term_to_string t ^ ")")
 
 let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with
@@ -475,6 +475,9 @@ let rec init (l:list<'a>) : list<'a> =
     | [] -> failwith "init: empty list"
     | [x] -> []
     | x::xs -> x :: init xs
+
+let inspectfv (fv:fv) : string =
+    Ident.string_of_lid (lid_of_fv fv)
 
 // TODO: consider effects? probably not too useful, but something should be done
 let inspect (t:term) : option<term_view> =

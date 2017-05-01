@@ -2,11 +2,23 @@ module Syntax
 
 open FStar.Tactics
 
+
+let test1 = assert_by_tactic (pack (Tv_Const (C_Int ((10 + 8) + (3 + 9))));;
+                              return ()) True
+
+let test2 = assert_by_tactic (x <-- quote test1;
+                              v <-- inspect x;
+                              match v with
+                              | Tv_FVar fv -> print ("FV: " ^ inspectfv fv)
+                              | _ -> fail "wat") True
+
+
 let blah : term -> tactic term = fix1 (fun ff t ->
     tv <-- inspect t;
     tv <-- (match tv with
            | Tv_Var b -> return (Tv_Var b)
-           | Tv_FVar f -> return (Tv_FVar f)
+           | Tv_FVar f -> print ("FVar = " ^ inspectfv f);;
+                          return (Tv_FVar f)
            | Tv_App l r -> l <-- ff l;
                            r <-- ff r;
                            return (Tv_App l r)
@@ -26,6 +38,3 @@ let _ = assert_by_tactic (t <-- quote (1+1);
                           s <-- term_to_string t; print ("t = " ^ s);;
                           return ()
                           ) True
-
-let _ = assert_by_tactic (pack (Tv_Const (C_Int (8 + 3)));;
-                          return ()) True

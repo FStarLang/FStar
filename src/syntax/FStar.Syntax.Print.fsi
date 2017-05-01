@@ -24,6 +24,7 @@ open FStar.Util
 
 val db_to_string      : bv -> string
 val bv_to_string      : bv -> string
+val fv_to_string      : fv -> string
 val nm_to_string      : bv -> string
 val lid_to_string     : lid -> string
 val term_to_string    : term -> string
