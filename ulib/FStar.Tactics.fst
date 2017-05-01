@@ -150,8 +150,11 @@ let term_as_formula t : tactic (option formula) = fun () -> __term_as_formula t
 
 assume val __inspect : term -> option term_view
 let inspect t : tactic term_view = fun () -> match __inspect t with
-                                             | Some x -> x
+                                             | Some tv -> tv
                                              | None -> fail "inspect failed, possibly unknown syntax" ()
+
+assume val __pack : term_view -> term
+let pack tv : tactic term = fun () -> __pack tv
 
 (* Many of these could be derived from apply_lemma,
    rather than being assumed as primitives.

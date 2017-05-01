@@ -57,18 +57,29 @@ let fstar_tactics_App = fstar_tactics_lid_as_data_tm "App"
 let fstar_tactics_Name = fstar_tactics_lid_as_data_tm "Name"
 
 (* term_view *)
-let fstar_tactics_Tv_Var = fstar_tactics_lid_as_data_tm "Tv_Var"
-let fstar_tactics_Tv_FVar = fstar_tactics_lid_as_data_tm "Tv_FVar"
-let fstar_tactics_Tv_App = fstar_tactics_lid_as_data_tm "Tv_App"
-let fstar_tactics_Tv_Abs = fstar_tactics_lid_as_data_tm "Tv_Abs"
-let fstar_tactics_Tv_Arrow = fstar_tactics_lid_as_data_tm "Tv_Arrow"
-let fstar_tactics_Tv_Type = fstar_tactics_lid_as_data_tm "Tv_Type"
-let fstar_tactics_Tv_Refine = fstar_tactics_lid_as_data_tm "Tv_Refine"
-let fstar_tactics_Tv_Const = fstar_tactics_lid_as_data_tm "Tv_Const"
+let tac_Tv_Var_lid    = fstar_tactics_lid "Tv_Var"
+let tac_Tv_FVar_lid   = fstar_tactics_lid "Tv_FVar"
+let tac_Tv_App_lid    = fstar_tactics_lid "Tv_App"
+let tac_Tv_Abs_lid    = fstar_tactics_lid "Tv_Abs"
+let tac_Tv_Arrow_lid  = fstar_tactics_lid "Tv_Arrow"
+let tac_Tv_Type_lid   = fstar_tactics_lid "Tv_Type"
+let tac_Tv_Refine_lid = fstar_tactics_lid "Tv_Refine"
+let tac_Tv_Const_lid  = fstar_tactics_lid "Tv_Const"
+
+let tac_Tv_Var    = lid_as_data_tm tac_Tv_Var_lid
+let tac_Tv_FVar   = lid_as_data_tm tac_Tv_FVar_lid
+let tac_Tv_App    = lid_as_data_tm tac_Tv_App_lid
+let tac_Tv_Abs    = lid_as_data_tm tac_Tv_Abs_lid
+let tac_Tv_Arrow  = lid_as_data_tm tac_Tv_Arrow_lid
+let tac_Tv_Type   = lid_as_data_tm tac_Tv_Type_lid
+let tac_Tv_Refine = lid_as_data_tm tac_Tv_Refine_lid
+let tac_Tv_Const  = lid_as_data_tm tac_Tv_Const_lid
 
 (* const *)
-let fstar_tactics_C_Unit = fstar_tactics_lid_as_data_tm "C_Unit"
-let fstar_tactics_C_Int = fstar_tactics_lid_as_data_tm "C_Int"
+let tac_C_Unit_lid = fstar_tactics_lid "C_Unit"
+let tac_C_Int_lid  = fstar_tactics_lid "C_Int"
+let tac_C_Unit = lid_as_data_tm tac_C_Unit_lid
+let tac_C_Int  = lid_as_data_tm tac_C_Int_lid
 
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
@@ -365,45 +376,89 @@ let unembed_fvar (t:term) : fv =
 let embed_const (c:vconst) : term =
     match c with
     | C_Unit ->
-        fstar_tactics_C_Unit
+        tac_C_Unit
 
     | C_Int s ->
-        S.mk_Tm_app fstar_tactics_C_Int [S.as_arg (SC.exp_int s)]
+        S.mk_Tm_app tac_C_Int [S.as_arg (SC.exp_int s)]
                     None Range.dummyRange
 
 let embed_term_view (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
-        S.mk_Tm_app fstar_tactics_Tv_FVar [S.as_arg (embed_fvar fv)]
+        S.mk_Tm_app tac_Tv_FVar [S.as_arg (embed_fvar fv)]
                     None Range.dummyRange
 
     | Tv_Var bv ->
-        S.mk_Tm_app fstar_tactics_Tv_Var [S.as_arg (embed_binder bv)]
+        S.mk_Tm_app tac_Tv_Var [S.as_arg (embed_binder bv)]
                     None Range.dummyRange
 
     | Tv_App (hd, a) ->
-        S.mk_Tm_app fstar_tactics_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_term a)]
+        S.mk_Tm_app tac_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_term a)]
                     None Range.dummyRange
 
     | Tv_Abs (b, t) ->
-        S.mk_Tm_app fstar_tactics_Tv_Abs [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
+        S.mk_Tm_app tac_Tv_Abs [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
     | Tv_Arrow (b, t) ->
-        S.mk_Tm_app fstar_tactics_Tv_Arrow [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
+        S.mk_Tm_app tac_Tv_Arrow [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
     | Tv_Type u ->
-        S.mk_Tm_app fstar_tactics_Tv_Type [S.as_arg (embed_unit ())]
+        S.mk_Tm_app tac_Tv_Type [S.as_arg (embed_unit ())]
                     None Range.dummyRange
 
     | Tv_Refine (bv, t) ->
-        S.mk_Tm_app fstar_tactics_Tv_Refine [S.as_arg (embed_binder bv); S.as_arg (embed_term t)]
+        S.mk_Tm_app tac_Tv_Refine [S.as_arg (embed_binder bv); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
     | Tv_Const c ->
-        S.mk_Tm_app fstar_tactics_Tv_Const [S.as_arg (embed_const c)]
+        S.mk_Tm_app tac_Tv_Const [S.as_arg (embed_const c)]
                     None Range.dummyRange
+
+let unembed_const (t:term) : vconst =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv tac_C_Unit_lid ->
+        C_Unit
+
+    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv tac_C_Int_lid ->
+        C_Int "99" // TODO: normalize and retrieve int?
+
+    | _ ->
+        failwith "not an embedded vconst"
+
+let unembed_term_view (t:term) : term_view =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv tac_Tv_Var_lid ->
+        Tv_Var (unembed_binder b)
+
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv tac_Tv_FVar_lid ->
+        Tv_FVar (unembed_fvar b)
+
+    | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv tac_Tv_App_lid ->
+        Tv_App (unembed_term l, unembed_term r)
+
+    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv tac_Tv_Abs_lid ->
+        Tv_Abs (unembed_binder b, unembed_term t)
+
+    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv tac_Tv_Arrow_lid ->
+        Tv_Arrow (unembed_binder b, unembed_term t)
+
+    | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv tac_Tv_Type_lid ->
+        Tv_Type (unembed_unit u)
+
+    | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv tac_Tv_Refine_lid ->
+        Tv_Refine (unembed_binder b, unembed_term t)
+
+    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv tac_Tv_Const_lid ->
+        Tv_Const (unembed_const c)
+
+    | _ ->
+        failwith "not an embedded term_view"
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
@@ -420,10 +475,9 @@ let rec init (l:list<'a>) : list<'a> =
 
 // TODO: consider effects? probably not too useful, but something should be done
 let inspect (t:term) : option<term_view> =
-    BU.print1 "GGG inspecting %s\n" (Print.term_to_string t);
     match (SS.compress t).n with
     | Tm_name bv ->
-        Some <| Tv_Var (bv, None)
+        Some <| Tv_Var (S.mk_binder bv)
 
     | Tm_fvar fv ->
         Some <| Tv_FVar fv
@@ -443,9 +497,10 @@ let inspect (t:term) : option<term_view> =
     | Tm_abs (b::bs, t, k) ->
         let bs', t = SS.open_term (b::bs) t in
         // `let b::bs = bs` gives a coverage warning, avoid it
-        let b, bs = match bs' with
+        let b, bs = begin match bs' with
+        | b::bs -> b, bs
         | [] -> failwith "impossible"
-        | b::bs -> b, bs in
+        end in
         Some <| Tv_Abs (b, U.abs bs t k)
 
     | Tm_type _ ->
@@ -454,24 +509,66 @@ let inspect (t:term) : option<term_view> =
     | Tm_arrow ([], k) ->
         failwith "inspect: empty binders on arrow"
         
-    | Tm_arrow ([b], k) ->
-        // TODO: drops effect
-        Some <| Tv_Arrow (b, (U.comp_to_comp_typ k).result_typ)
-
     | Tm_arrow (b::bs, k) ->
-        Some <| Tv_Arrow (b, U.arrow bs k)
+        let b', k =  SS.open_comp [b] k in
+        // `let [b] = b'` gives a coverage warning, avoid it
+        let b = begin match b' with
+        | [b'] -> b'
+        | _ -> failwith "impossible"
+        end in
+        Some <| Tv_Arrow (b, U.arrow bs k) // TODO: this drops the effect
 
-    | Tm_refine (b, t) ->
-        Some <| Tv_Refine (S.mk_binder b, t)
+    | Tm_refine (bv, t) ->
+        let b = S.mk_binder bv in
+        let b', t = SS.open_term [b] t in
+        // `let [b] = b'` gives a coverage warning, avoid it
+        let b = begin match b' with
+        | [b'] -> b'
+        | _ -> failwith "impossible"
+        end in
+        Some <| Tv_Refine (b, t)
 
     | Tm_constant c ->
-        let c = match c with
+        let c = begin match c with
         | C.Const_unit -> C_Unit
         | C.Const_int (s, _) -> C_Int s
         | _ -> failwith "unknown constant"
-        in
+        end in
         Some <| Tv_Const c
 
     | _ ->
         BU.print_string "inspect: outside of expected syntax\n";
         None
+
+// TODO: pass in range?
+let pack (tv:term_view) : term =
+    match tv with
+    | Tv_Var (bv, _) ->
+        S.bv_to_tm bv
+
+    | Tv_FVar fv ->
+        S.fv_to_tm fv
+
+    | Tv_App (l, r) ->
+        U.mk_app l [S.as_arg r]
+
+    | Tv_Abs (b, t) ->
+        U.abs [b] t None // TODO: effect?
+
+    | Tv_Arrow (b, t) ->
+        U.arrow [b] (mk_Total t)
+
+    | Tv_Type () ->
+        U.ktype
+
+    | Tv_Refine ((bv, _), t) ->
+        U.refine bv t
+
+    | Tv_Const (C_Unit) ->
+        SC.exp_unit
+
+    | Tv_Const (C_Int s) ->
+        SC.exp_int s
+
+    | _ ->
+        failwith "pack: unexpected term view"
