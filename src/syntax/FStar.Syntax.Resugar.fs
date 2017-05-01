@@ -510,6 +510,13 @@ let rec resugar_term (t : S.term) : A.term =
         | _ -> resugar_as_app e args
         end 
   end
+  | Tm_match(e, [(pat, _, t)]) -> 
+    (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1` 
+       it would be better to print it as `let P = e in e1`. *)
+    let bnds = [(resugar_match_pat pat, resugar_term e)] in
+    let body = resugar_term t in
+    mk (A.Let(A.NoLetQualifier, bnds, body))
+
   | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
     mk (A.If(resugar_term e, resugar_term t1, resugar_term t2))
 
