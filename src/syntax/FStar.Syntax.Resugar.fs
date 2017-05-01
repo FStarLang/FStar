@@ -102,31 +102,30 @@ let rec resugar_universe (u:S.universe) r: A.term =
 
 let string_to_op s =
   let name_of_op = function
-    | "Amp" -> Some "&"
-    | "At" -> Some "@"
-    | "Plus" -> Some "+"
-    (* TODO : there is some arity information which is lost here ! *)
-    | "Minus" -> Some "-"
-    | "Subtraction" -> Some "-"
-    | "Slash" -> Some "/"
-    | "Less" -> Some "<"
-    | "Equals" -> Some "="
-    | "Greater" -> Some ">"
-    | "Underscore" -> Some "_"
-    | "Bar" -> Some "|"
-    | "Bang" -> Some "!"
-    | "Hat" -> Some "^"
-    | "Percent" -> Some "%"
-    | "Star" -> Some "*"
-    | "Question" -> Some "?"
-    | "Colon" -> Some ":"
+    | "Amp" -> Some ("&", 0)
+    | "At" -> Some ("@", 0)
+    | "Plus" -> Some ("+", 0)
+    | "Minus" -> Some ("-", 0)
+    | "Subtraction" -> Some ("-", 2)
+    | "Slash" -> Some ("/", 0)
+    | "Less" -> Some ("<", 0)
+    | "Equals" -> Some ("=", 0)
+    | "Greater" -> Some (">", 0)
+    | "Underscore" -> Some ("_", 0)
+    | "Bar" -> Some ("|", 0)
+    | "Bang" -> Some ("!", 0)
+    | "Hat" -> Some ("^", 0)
+    | "Percent" -> Some ("%", 0)
+    | "Star" -> Some ("*", 0)
+    | "Question" -> Some ("?", 0)
+    | "Colon" -> Some (":", 0)
     | _ -> None
   in
   match s with
-  | "op_String_Assignment" -> Some ".[]<-"
-  | "op_Array_Assignment" -> Some ".()<-"
-  | "op_String_Access" -> Some ".[]"
-  | "op_Array_Access" -> Some ".()"
+  | "op_String_Assignment" -> Some (".[]<-", 0)
+  | "op_Array_Assignment" -> Some (".()<-", 0)
+  | "op_String_Access" -> Some (".[]", 0)
+  | "op_Array_Access" -> Some (".()", 0)
   | _ ->
     if BU.starts_with s "op_" then
       let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
@@ -134,14 +133,14 @@ let string_to_op s =
       | [op] -> name_of_op op
       | _ ->
         let op = List.fold_left(fun acc x -> match x with
-                                  | Some op -> acc ^ op
+                                  | Some (op, _) -> acc ^ op
                                   | None -> failwith "wrong composed operator format")
                                   "" (List.map name_of_op s)  in
-        Some op
+        Some (op, 0)
     else
       None
 
-let rec resugar_term_as_op(t:S.term) : option<string> =
+let rec resugar_term_as_op(t:S.term) : option<(string*int)> =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
@@ -180,15 +179,15 @@ let rec resugar_term_as_op(t:S.term) : option<string> =
   let fallback fv =
     match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
     | Some op ->
-      Some (snd op)
+      Some (snd op, 0)
     | _ ->
       let length = String.length(fv.fv_name.v.nsstr) in
       let str = if length=0 then fv.fv_name.v.str
           else BU.substring_from fv.fv_name.v.str (length+1) in
-      if BU.starts_with str "dtuple" then Some "dtuple"
-      else if BU.starts_with str "tuple" then Some "tuple"
-      else if BU.starts_with str "try_with" then Some "try_with"
-      else if fv_eq_lid fv C.sread_lid then Some fv.fv_name.v.str
+      if BU.starts_with str "dtuple" then Some ("dtuple", 0)
+      else if BU.starts_with str "tuple" then Some ("tuple", 0)
+      else if BU.starts_with str "try_with" then Some ("try_with", 0)
+      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, 0)
       else None
   in
   match (SS.compress t).n with
@@ -359,7 +358,7 @@ let rec resugar_term (t : S.term) : A.term =
       | None->
         resugar_as_app e args
 
-      | Some "tuple" ->
+      | Some ("tuple", _) ->
         begin match args with
           | (fst, _)::(snd, _)::rest ->
             let e = mk(A.Op(Ident.id_of_text "*", [(resugar_term fst); (resugar_term snd)])) in
@@ -367,7 +366,7 @@ let rec resugar_term (t : S.term) : A.term =
           | _ -> resugar_as_app e args
         end
 
-      | Some "dtuple" when List.length args > 0 ->
+      | Some ("dtuple", _) when List.length args > 0 ->
         (* this is desugared from Sum(binders*term) *)
         let args = last args in
         let body = match args with
@@ -389,10 +388,10 @@ let rec resugar_term (t : S.term) : A.term =
             List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
         end
 
-      | Some "dtuple" ->
+      | Some ("dtuple",_) ->
         resugar_as_app e args
 
-      | Some ref_read when (ref_read = C.sread_lid.str) ->
+      | Some (ref_read, _) when (ref_read = C.sread_lid.str) ->
         let (t, _) = List.hd args in
         begin match (SS.compress t).n with
           | Tm_fvar fv when (U.field_projector_contains_constructor fv.fv_name.v.str) ->
@@ -401,7 +400,7 @@ let rec resugar_term (t : S.term) : A.term =
           | _ -> resugar_term t
         end
 
-      | Some "try_with" when List.length args > 1 ->
+      | Some ("try_with", _) when List.length args > 1 ->
         (* only the last two args are from original AST terms, others are added by typechecker *)
         (* TODO: we need a place to store the information in the args added by the typechecker *)
         let new_args = last_two args in
@@ -437,10 +436,10 @@ let rec resugar_term (t : S.term) : A.term =
         let branches = resugar_branches handler in
         mk (A.TryWith(e, branches))
 
-      | Some "try_with" ->
+      | Some ("try_with", _) ->
         resugar_as_app e args
 
-      | Some op when op = "forall" || op = "exists" ->
+      | Some (op, _) when op = "forall" || op = "exists" ->
         (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
         let rec uncurry xs pat (t:A.term) = match t.tm with
           | A.QExists(x, p , body)
@@ -488,25 +487,28 @@ let rec resugar_term (t : S.term) : A.term =
         else
           resugar_as_app e args
 
-      | Some "alloc" ->
+      | Some ("alloc", _) ->
         let (e, _ ) = List.hd args in
         resugar_term e
 
-      | Some op ->
+      | Some (op, arity) ->
         let op = Ident.id_of_text op in
         let resugar args = args |> List.map (fun (e, qual) ->
             resugar_term e)
         in
         (* ignore the arguments added by typechecker *)
         (* TODO: we need a place to store the information in the args added by the typechecker *)
-        (* KM : I don't think that '-' is resugared correctly here *)
         //NS: this seems to produce the wrong output on things like
-        begin match D.handleable_args_length op with
-          | 1 when List.length args > 0 -> mk (A.Op(op, resugar (last args)))
-          | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
-          | 3 when List.length args > 2 -> mk (A.Op(op, resugar (last_three args)))
-          | _ -> resugar_as_app e args
-        end
+        begin match arity with 
+        | 0 -> begin match D.handleable_args_length op with
+               | 1 when List.length args > 0 -> mk (A.Op(op, resugar (last args)))
+               | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
+               | 3 when List.length args > 2 -> mk (A.Op(op, resugar (last_three args)))
+               | _ -> resugar_as_app e args
+               end
+        | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
+        | _ -> resugar_as_app e args
+        end 
   end
   | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
     mk (A.If(resugar_term e, resugar_term t1, resugar_term t2))
@@ -814,7 +816,7 @@ and resugar_match_pat (p:S.pat) : A.pattern =
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op v.ppname.idText with
-       | Some op -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
+       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
        | None -> mk (A.PatVar (bv_as_unique_ident v, None))
       end
 
