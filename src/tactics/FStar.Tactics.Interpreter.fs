@@ -176,6 +176,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "__inspect_fv" 1 (mk_pure_interpretation_1 E.inspectfv E.unembed_fvar (E.embed_list E.embed_string FStar.TypeChecker.Common.t_string));
       mk "__pack_fv"    1 (mk_pure_interpretation_1 E.packfv (E.unembed_list E.unembed_string) E.embed_fvar);
 
+      mk "__inspect_bv" 1 (mk_pure_interpretation_1 E.inspectbv E.unembed_binder E.embed_string);
       mk "__compare_binder" 2 (mk_pure_interpretation_2 order_binder E.unembed_binder E.unembed_binder E.embed_order);
 
       mk "__binders_of_env"  1 (binders_of_env ps);

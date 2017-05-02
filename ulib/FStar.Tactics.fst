@@ -7,7 +7,7 @@ assume type term
 assume type env
 assume type fv
 
-type gname = list string
+type name = list string
 
 type typ     = term
 type binders = list binder
@@ -60,22 +60,26 @@ type term_view =
   (* TODO: complete *)
 
 
-// Don't think we need these 5 in TAC... do we?
-assume val __inspect_fv : fv -> gname
+// Don't think we need these 4 in TAC... do we?
+assume val __inspect_fv : fv -> name
 let inspect_fv (fv:fv) = __inspect_fv fv
 
-assume val __pack_fv : gname -> fv
-let pack_fv (ns:gname) = __pack_fv ns
-
-val flatten_gname : gname -> Tot string
-let rec flatten_gname ns =
-    match ns with
-    | [] -> ""
-    | [n] -> n
-    | n::ns -> n ^ "." ^ flatten_gname ns
+assume val __pack_fv : name -> fv
+let pack_fv (ns:name) = __pack_fv ns
 
 assume val __compare_binder : binder -> binder -> order
 let compare_binder (b1:binder) (b2:binder) = __compare_binder b1 b2
+
+assume val __inspect_bv : binder -> string
+let inspect_bv (b:binder) = __inspect_bv b
+
+val flatten_name : name -> Tot string
+let rec flatten_name ns =
+    match ns with
+    | [] -> ""
+    | [n] -> n
+    | n::ns -> n ^ "." ^ flatten_name ns
+
 
 noeq type __result (a:Type) =
   | Success: a -> state -> __result a

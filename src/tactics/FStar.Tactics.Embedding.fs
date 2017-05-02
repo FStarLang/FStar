@@ -488,6 +488,11 @@ let packfv (ns:list<string>) : fv =
     // TODO: Delta_equational and None ok?
     lid_as_fv (SC.p2l ns) Delta_equational None
 
+let inspectbv (b:binder) : string =
+    Print.bv_to_string (fst b)
+    // calling into Print, which really doesn't make guarantees
+    // ... should be safe as we give no semantics to these names: they're just for debugging
+
 // TODO: consider effects? probably not too useful, but something should be done
 let inspect (t:term) : option<term_view> =
     match (SS.compress t).n with

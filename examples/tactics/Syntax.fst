@@ -9,15 +9,16 @@ let test1 = assert_by_tactic (pack (Tv_Const (C_Int ((10 + 8) + (3 + 9))));;
 let test2 = assert_by_tactic (x <-- quote test1;
                               v <-- inspect x;
                               match v with
-                              | Tv_FVar fv -> print ("FV: " ^ flatten_gname (inspect_fv fv))
+                              | Tv_FVar fv -> print ("FV: " ^ flatten_name (inspect_fv fv))
                               | _ -> fail "wat") True
 
 
 let blah : term -> tactic term = fix1 (fun ff t ->
     tv <-- inspect t;
     tv <-- (match tv with
-           | Tv_Var b -> return (Tv_Var b)
-           | Tv_FVar f -> print ("FVar = " ^ flatten_gname (inspect_fv f));;
+           | Tv_Var b -> //print ("BVar = " ^ inspect_bv b);;
+                         return (Tv_Var b)
+           | Tv_FVar f -> //print ("FVar = " ^ flatten_name (inspect_fv f));;
                           return (Tv_FVar f)
            | Tv_App l r -> l <-- ff l;
                            r <-- ff r;
@@ -43,7 +44,7 @@ let _ = assert_by_tactic (t <-- quote blah;
                           tv <-- inspect t;
                           (match tv with
                           | Tv_FVar fv ->
-                              print (flatten_gname (inspect_fv fv));;
+                              print (flatten_name (inspect_fv fv));;
                               return ()
                           | _ ->
                               fail "wat")) True
