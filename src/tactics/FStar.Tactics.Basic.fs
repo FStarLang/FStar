@@ -92,15 +92,20 @@ let goal_to_string (g:goal) =
     let g_binders = Env.all_binders g.context |> Print.binders_to_string ", " in
     Util.format2 "%s |- %s" g_binders (Print.term_to_string g.goal_ty)
 
+let tacprint (s:string)        = BU.print1 "TAC>> %s\n" s
+let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
+let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
+let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
+
 let dump_goal ps goal =
-    BU.print1 "TAC>> %s\n" (goal_to_string goal);
+    tacprint (goal_to_string goal);
     ()
 
 let dump_proofstate ps msg =
-    BU.print1 "TAC>> State dump (%s):\n" msg;
-    BU.print1 "TAC>> ACTIVE goals (%s):\n" (string_of_int (List.length ps.goals));
+    tacprint1 "State dump (%s):" msg;
+    tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
     List.iter (dump_goal ps) ps.goals;
-    BU.print1 "TAC>> SMT goals (%s):\n" (string_of_int (List.length ps.smt_goals));
+    tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
     List.iter (dump_goal ps) ps.smt_goals;
     ()
 

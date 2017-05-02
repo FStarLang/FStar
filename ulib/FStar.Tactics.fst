@@ -246,6 +246,9 @@ let apply_lemma (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.
 assume val __print : string -> __tac unit
 let print (msg:string) : tactic unit = fun () -> TAC?.reflect (__print msg)
 
+assume val __dump : string -> __tac unit
+let dump (msg:string) : tactic unit = fun () -> TAC?.reflect (__dump msg)
+
 assume val __grewrite : term -> term -> __tac unit
 let grewrite (t1:term) (t2:term) : tactic unit =
     fun () -> TAC?.reflect (__grewrite t1 t2)
