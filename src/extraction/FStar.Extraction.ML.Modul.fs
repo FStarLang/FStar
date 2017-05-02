@@ -223,11 +223,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 (Print.term_to_string a.action_typ)
                 (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
-            let lbname = Inl (S.new_bv (Some a.action_defn.pos) C.exp_unit) in
+            let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
             let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+              BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
             let exp, tysc = match a_let.expr with
               | MLE_Let((_, _, [mllb]), _) ->
                   (match mllb.mllb_tysc with
