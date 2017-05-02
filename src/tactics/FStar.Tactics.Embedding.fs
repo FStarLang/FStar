@@ -154,7 +154,7 @@ let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
      Some (unembed_a a)
    | _ -> failwith "Not an embedded option"
 
-let rec embed_list (l:list<'a>) (embed_a: ('a -> term)) (t_a:term) : term =
+let rec embed_list (embed_a: ('a -> term)) (t_a:term) (l:list<'a>) : term =
     match l with
     | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm FStar.Syntax.Const.nil_lid) [U_zero])
                         [S.iarg t_a]
@@ -164,11 +164,11 @@ let rec embed_list (l:list<'a>) (embed_a: ('a -> term)) (t_a:term) : term =
             S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm FStar.Syntax.Const.cons_lid) [U_zero])
                         [S.iarg t_a;
                          S.as_arg (embed_a hd);
-                         S.as_arg (embed_list tl embed_a t_a)]
+                         S.as_arg (embed_list embed_a t_a tl)]
                         None
                         Range.dummyRange
 
-let rec unembed_list (l:term) (unembed_a: (term -> 'a)) : list<'a> =
+let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
     let l = U.unascribe l in
     let hd, args = U.head_and_args l in
     match (U.un_uinst hd).n, args with
@@ -177,22 +177,22 @@ let rec unembed_list (l:term) (unembed_a: (term -> 'a)) : list<'a> =
 
     | Tm_fvar fv, [_t; (hd, _); (tl, _)]
         when S.fv_eq_lid fv SC.cons_lid ->
-      unembed_a hd :: unembed_list tl unembed_a
+      unembed_a hd :: unembed_list unembed_a tl
 
     | _ ->
       failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
 
-let embed_binders l = embed_list l embed_binder fstar_tactics_binder
-let unembed_binders t = unembed_list t unembed_binder
+let embed_binders l = embed_list embed_binder fstar_tactics_binder l
+let unembed_binders t = unembed_list unembed_binder t
 
 let embed_env (env:Env.env) : term =
     protect_embedded_term
         fstar_tactics_env
-        (embed_list (Env.all_binders env) embed_binder fstar_tactics_binder)
+        (embed_list embed_binder fstar_tactics_binder (Env.all_binders env))
 
 let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
     let embedded_env = un_protect_embedded_term protected_embedded_env in
-    let binders = unembed_list embedded_env unembed_binder in
+    let binders = unembed_list unembed_binder embedded_env in
     // TODO: Why try????
     List.fold_left (fun env b ->
         match Env.try_lookup_bv env (fst b) with
@@ -219,8 +219,8 @@ let unembed_goal (env:Env.env) (t:term) : goal =
     }
 
 
-let embed_goals (l:list<goal>) : term = embed_list l embed_goal fstar_tactics_goal
-let unembed_goals (env:Env.env) (egs:term) : list<goal> = unembed_list egs (unembed_goal env)
+let embed_goals (l:list<goal>) : term = embed_list embed_goal fstar_tactics_goal l
+let unembed_goals (env:Env.env) (egs:term) : list<goal> = unembed_list (unembed_goal env) egs
 
 type state = list<goal> * list<goal>
 
@@ -327,7 +327,7 @@ let embed_formula (f:formula) : term =
     | App(t, ts) ->
       S.mk_Tm_app fstar_tactics_App
                 [S.as_arg (embed_term t);
-                 S.as_arg (embed_list ts embed_term fstar_tactics_term)]
+                 S.as_arg (embed_list embed_term fstar_tactics_term ts)]
                 None
                 Range.dummyRange
 
