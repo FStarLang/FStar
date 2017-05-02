@@ -1793,16 +1793,39 @@ and check_inner_let_rec env top =
 (******************************************************************************)
 and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let env0 = env in
-   let termination_check_enabled s =
-     let t = N.unfold_whnf env s in
-     match (SS.compress t).n with
-     | Tm_arrow (_, c) ->
+   let termination_check_enabled lbname lbdef lbtyp =
+     let t = N.unfold_whnf env lbtyp in
+     match (SS.compress t).n, (SS.compress lbdef).n with
+     | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->
+       if List.length formals <> List.length actuals
+       then begin
+            let actuals_msg =
+                let n = List.length actuals in
+                if n = 1
+                then "1 argument was found"
+                else BU.format1 "%s arguments were found" (string_of_int n)
+            in
+            let formals_msg =
+                let n = List.length formals in
+                if n = 1
+                then "1 argument"
+                else BU.format1 "%s arguments" (string_of_int n)
+            in
+            let msg =
+                BU.format4 "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
+                            (Print.term_to_string lbtyp)
+                            (Print.lbname_to_string lbname)
+                            formals_msg
+                            actuals_msg in
+            raise (Error(msg, lbdef.pos))
+       end;
        let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
        quals |> List.contains TotalEffect
      | _ ->
-       raise (Error(BU.format1 "Only values of function type can be defined recursively; %s is not a function type"
-                               (Print.term_to_string s),
-                    s.pos))
+       raise (Error(BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+                               (Print.term_to_string lbdef)
+                               (Print.term_to_string lbtyp),
+                    lbtyp.pos))
    in
    let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
@@ -1815,7 +1838,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   let g = Rel.resolve_implicits g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
-        let env = if termination_check_enabled t
+        let env = if termination_check_enabled lb.lbname e t
                   && Env.should_verify env (* store the let rec names separately for termination checks *)
                   then {env with letrecs=(lb.lbname,t)::env.letrecs}
                   else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
