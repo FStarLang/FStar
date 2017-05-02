@@ -13,7 +13,7 @@ let test2 = assert_by_tactic (x <-- quote test1;
                               | _ -> fail "wat") True
 
 
-let blah : term -> tactic term = fix1 (fun ff t ->
+let blah' (ff : term -> tactic term) (t : term) =
     tv <-- inspect t;
     tv <-- (match tv with
            | Tv_Var b -> //print ("BVar = " ^ inspect_bv b);;
@@ -31,7 +31,10 @@ let blah : term -> tactic term = fix1 (fun ff t ->
                               return (Tv_Refine b t)
            | Tv_Type u -> return (Tv_Type ())
            | Tv_Const c -> return (Tv_Const c));
-    pack tv)
+     pack tv
+
+let rec blah : term -> tactic term =
+    fix1 blah'
 
 let _ = assert_by_tactic (t <-- quote (1+1);
                           s <-- term_to_string t; print ("t = " ^ s);;
@@ -48,3 +51,10 @@ let _ = assert_by_tactic (t <-- quote blah;
                               return ()
                           | _ ->
                               fail "wat")) True
+
+let _ = assert_by_tactic (print "GGG 1";;
+                          t <-- quote (fun (x y x : int) -> y + x);
+                          print "GGG 2";;
+                          blah t;;
+                          print "GGG 3";;
+                          return ()) True
