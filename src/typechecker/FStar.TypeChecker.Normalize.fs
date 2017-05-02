@@ -162,9 +162,9 @@ let downgrade_ghost_effect_name l =
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
 (*  either u, where u <> U_max                                                                                      *)
-(*  or     U_max [k;                        //constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
+(*  or     U_max [k;                        --constant                                                              *)
+(*               S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
+(*               S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg env u =
@@ -516,24 +516,11 @@ let built_in_primitive_steps : list<primitive_step> =
     let binary_string_op (f : string -> string -> string) =
         binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
     in
-    let list_of_string rng (s:string) : term =
-        let mk x = mk x rng in
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
-        let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
+    let list_of_string' rng (s:string) : term =
+        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
         let char_t = name SC.char_lid in
-        let nil_char =
-            S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
-                        [S.iarg char_t]
-                        None rng
-        in
-        FStar.List.fold_right (fun c a ->
-            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
-                        [S.iarg char_t;
-                            S.as_arg (mk (Tm_constant (Const_char c)));
-                            S.as_arg a]
-                        None rng)
-            (list_of_string s)
-            nil_char
+        let charterm c = mk (Tm_constant (Const_char c)) rng in
+        U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
@@ -559,7 +546,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
-                                    1, unary_op arg_as_string list_of_string)]
+                                    1, unary_op arg_as_string list_of_string')]
     in
     let bounded_arith_ops =
         let bounded_int_types =

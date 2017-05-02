@@ -28,6 +28,7 @@ open FStar.Syntax.Syntax
 open FStar.Const
 module U = FStar.Util
 module List = FStar.List
+module SC = FStar.Syntax.Const
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -1044,6 +1045,12 @@ let rec list_elements (e:term) : option<list<term>> =
       Some (hd::must (list_elements tl))
   | _ ->
       None
+
+let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
+    let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
+    let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero]) args None pos in
+    let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid)  [U_zero]) args None pos in
+    List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
 let eqlen (xs : list<'a>) (ys : list<'a>) : bool =
     List.length xs = List.length ys
