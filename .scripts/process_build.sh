@@ -29,9 +29,6 @@ function cleanup_files () {
     # Windows git rm just needs the file name and fails if give path so just get file name
     local file_list=$(ls -t1 $files | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1)))
     git rm ${file_list} -f
-#+++    for f in $file_list; do
-#+++      git rm $f -f
-#+++    done
   fi
 }
 
@@ -55,9 +52,6 @@ fi
 if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
   rm src/ocaml-output/fstar/HelloOcamlOutput.log
 fi
-#+++ if [[ -f src/ocaml-output/fstar/HelloFStarOutput.log ]]; then
-#+++   rm src/ocaml-output/fstar/HelloFStarOutput.log
-#+++ fi
 if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
   rm src/ocaml-output/fstar/AllExamples.log
 fi
@@ -96,7 +90,6 @@ echo "*** Make the examples ***"
 cd fstar
 make -C examples/micro-benchmarks > MicroBenchMarkOutput.log
 make -C examples/hello ocaml > HelloOcamlOutput.log
-#+++ make -C examples/hello fs > HelloFStarOutput.log  #++++ 
 make -j6 -C examples > AllExamples.log
 
 echo "*** Verify the examples ***"
@@ -115,14 +108,6 @@ if ! egrep 'F*!' HelloOcamlOutput.log; then
 else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello ocaml"
 fi
-
-#+++ echo "-- Verify hello fs -- should output Hello F*!"
-#+++ if ! egrep 'F*!' HelloFStarOutput.log; then
-#+++   echo -e "* ${RED}FAIL!${NC} for examples/hello fs - F*! was not found in HelloFStarOutput.log"
-#++++++  exit 1
-#+++ else
-#+++   echo -e "* ${GREEN}PASSED!${NC} for examples/hello fs"
-#+++ fi
 
 echo "-- Verify all examples -- Look for Success:"
 if ! egrep 'Success:' AllExamples.log; then
@@ -161,9 +146,9 @@ fi
 # Now that latest package is added, remove the oldest one because only keeping most recent 4 packages
 cd $BN_BINARYSPATH
 echo "-- Delete oldest ZIP file if more than 4 exist --"
-cleanup_files ".zip"
+cleanup_files "zip"
 echo "-- Delete oldest TAR file if more than 4 exist --"
-cleanup_files ".gz"
+cleanup_files "gz"
 
 # Commit and push - adding a new one and removing the oldest - commit with amend to keep history limited
 echo "--- now commit it but keep history truncated ... then push --- "
