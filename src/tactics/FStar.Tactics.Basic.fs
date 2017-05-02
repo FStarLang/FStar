@@ -670,6 +670,16 @@ let rec visit (callback:tac<unit>) : tac<unit> =
                     | Some (U.BaseConn(l, _)) ->
                       or_else trivial smt)))
 
+// Should probably be moved somewhere else
+type order = | Lt | Eq | Gt
+
+let order_binder (x:binder) (y:binder) : order =
+    let n = S.order_bv (fst x) (fst y) in
+    if n < 0 then Lt
+    else if n = 0 then Eq
+    else Gt
+
+
 let proofstate_of_goal_ty env g =
     let g =
         {

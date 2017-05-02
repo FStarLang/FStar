@@ -1,9 +1,13 @@
 module FStar.Tactics
 
+open FStar.Order
+
 assume type binder //FStar.Syntax.Syntax.binder
 assume type term
 assume type env
 assume type fv
+
+type gname = list string
 
 type typ     = term
 type binders = list binder
@@ -55,6 +59,23 @@ type term_view =
   | Tv_Const  : const -> term_view
   (* TODO: complete *)
 
+
+// Don't think we need these 5 in TAC... do we?
+assume val __inspect_fv : fv -> gname
+let inspect_fv (fv:fv) = __inspect_fv fv
+
+assume val __pack_fv : gname -> fv
+let pack_fv (ns:gname) = __pack_fv ns
+
+val flatten_gname : gname -> Tot string
+let rec flatten_gname ns =
+    match ns with
+    | [] -> ""
+    | [n] -> n
+    | n::ns -> n ^ "." ^ flatten_gname ns
+
+assume val __compare_binder : binder -> binder -> order
+let compare_binder (b1:binder) (b2:binder) = __compare_binder b1 b2
 
 noeq type __result (a:Type) =
   | Success: a -> state -> __result a
@@ -160,10 +181,6 @@ assume val __inspect : term -> option term_view
 let inspect t : tactic term_view = fun () -> match __inspect t with
                                              | Some tv -> tv
                                              | None -> fail "inspect failed, possibly unknown syntax" ()
-
-// Don't think we need this in TAC... do we?
-assume val __inspectfv : fv -> string
-let inspectfv (fv:fv) = __inspectfv fv
 
 assume val __pack : term_view -> term
 let pack tv : tactic term = fun () -> __pack tv

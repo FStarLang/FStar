@@ -20,8 +20,6 @@ open FStar.Tactics.Basic
 module Core = FStar.Tactics.Basic
 type name = bv
 
-
-
 let fstar_tactics_lid s = Ident.lid_of_path (["FStar"; "Tactics"]@[s]) Range.dummyRange
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
@@ -81,6 +79,13 @@ let tac_C_Int_lid  = fstar_tactics_lid "C_Int"
 let tac_C_Unit = lid_as_data_tm tac_C_Unit_lid
 let tac_C_Int  = lid_as_data_tm tac_C_Int_lid
 
+(* FStar.Order *)
+let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange
+let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange
+let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
+let ord_Lt = lid_as_data_tm ord_Lt_lid
+let ord_Eq = lid_as_data_tm ord_Eq_lid
+let ord_Gt = lid_as_data_tm ord_Gt_lid
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
 
@@ -476,8 +481,12 @@ let rec init (l:list<'a>) : list<'a> =
     | [x] -> []
     | x::xs -> x :: init xs
 
-let inspectfv (fv:fv) : string =
-    Ident.string_of_lid (lid_of_fv fv)
+let inspectfv (fv:fv) : list<string> =
+    Ident.path_of_lid (lid_of_fv fv)
+
+let packfv (ns:list<string>) : fv =
+    // TODO: Delta_equational and None ok?
+    lid_as_fv (SC.p2l ns) Delta_equational None
 
 // TODO: consider effects? probably not too useful, but something should be done
 let inspect (t:term) : option<term_view> =
@@ -578,3 +587,18 @@ let pack (tv:term_view) : term =
 
     | _ ->
         failwith "pack: unexpected term view"
+
+let embed_order (o:order) : term =
+    match o with
+    | Lt -> ord_Lt
+    | Eq -> ord_Eq
+    | Gt -> ord_Gt
+
+let unembed_order (t:term) : order =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Lt
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Eq
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Gt
+    | _ -> failwith "not an embedded order"

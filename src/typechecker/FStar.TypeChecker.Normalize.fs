@@ -22,6 +22,7 @@ open FStar
 open FStar.Util
 open FStar.String
 open FStar.Const
+open FStar.Char
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -484,7 +485,7 @@ let built_in_primitive_steps : list<primitive_step> =
         in
         match U.list_elements a with
         | None -> None
-        | Some elts -> sequence (List.map (as_arg >> f) elts)
+        | Some elts -> sequence (List.map (fun x -> f (as_arg x)) elts)
     in
     let lift_unary
         : ('a -> 'b) -> list<option<'a>> ->option<'b>

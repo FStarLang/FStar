@@ -52,6 +52,16 @@ let term_eq (nm:Ident.lid) (args:S.args) =
      | _ -> Some (E.embed_bool false))
   | _ -> None
 
+let mk_pure_interpretation_2 (f:'a -> 'b -> 'c)
+                             (unembed_a:term -> 'a) (unembed_b:term -> 'b)
+                             (embed_c:'c -> term) nm (args:args) :option<term> =
+    if !tacdbg then
+    BU.print2 "Reached %s, args are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.args_to_string args);
+    match args with
+    | [(a, _); (b, _)] -> Some (embed_c (f (unembed_a a) (unembed_b b)))
+    | _ -> failwith "Unexpected interpretation of pure primitive"
 let mk_pure_interpretation_1 (f:'a -> 'b) (unembed_a:term -> 'a) (embed_b:'b -> term) nm (args:args) :option<term> =
     if !tacdbg then
     BU.print2 "Reached %s, args are: %s\n"
@@ -161,8 +171,13 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                              E.unembed_term
                                              (E.embed_option E.embed_formula E.fstar_tactics_formula));
       mk "__inspect" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term (E.embed_option E.embed_term_view E.fstar_tactics_term_view));
-      mk "__inspectfv" 1 (mk_pure_interpretation_1 E.inspectfv E.unembed_fvar E.embed_string);
       mk "__pack" 1 (mk_pure_interpretation_1 E.pack E.unembed_term_view E.embed_term);
+
+      mk "__inspect_fv" 1 (mk_pure_interpretation_1 E.inspectfv E.unembed_fvar (E.embed_list E.embed_string FStar.TypeChecker.Common.t_string));
+      mk "__pack_fv"    1 (mk_pure_interpretation_1 E.packfv (E.unembed_list E.unembed_string) E.embed_fvar);
+
+      mk "__compare_binder" 2 (mk_pure_interpretation_2 order_binder E.unembed_binder E.unembed_binder E.embed_order);
+
       mk "__binders_of_env"  1 (binders_of_env ps);
       mk "__type_of_binder"  1 type_of_binder;
       mk "__term_eq"         2 term_eq;
