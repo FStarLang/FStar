@@ -1054,7 +1054,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | If(t1, t2, t3) ->
       let x = Syntax.new_bv (Some t3.range) S.tun in
-      mk (Tm_match(desugar_term env t1,
+      let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid Delta_constant None)) in
+      mk (Tm_match(ascribe (desugar_term env t1) (Inl t_bool, None),
                     [(withinfo (Pat_constant (Const_bool true)) tun.n t2.range, None, desugar_term env t2);
                      (withinfo (Pat_wild x) tun.n t3.range, None, desugar_term env t3)]))
 
