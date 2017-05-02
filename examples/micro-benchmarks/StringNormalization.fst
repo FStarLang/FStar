@@ -21,3 +21,5 @@ let _ = assert_norm (list_of_string "a8X" == ['a'; '8'; 'X'])
 
 // int_of_char doesn't reduce, so this fails
 //let _ = assert_norm (List.Tot.map int_of_char (list_of_string "a8X") == [97; 56; 88])
+
+let _ = assert_norm (string_of_list ['a'; '8'; 'X'] == "a8X")

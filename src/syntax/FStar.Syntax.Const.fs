@@ -101,6 +101,7 @@ let exp_true_bool   = mk (Tm_constant (Const_bool true))
 let exp_false_bool  = mk (Tm_constant (Const_bool false))
 let exp_unit        = mk (Tm_constant (Const_unit))
 let exp_int s       = mk (Tm_constant (Const_int (s,None))) // Makes an (unbounded) integer from its string repr.
+let exp_string s    = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange)))
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
 let some_lid        = pconst  "Some"

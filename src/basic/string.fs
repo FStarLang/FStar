@@ -29,3 +29,4 @@ let substring s i j = String.sub s i j
 let get s i = String.get s i
 
 let rec list_of_string (s:string) = [for c in s -> c]
+let string_of_list (l:list<char>) = List.fold_right (fun c a -> (string c) ^ a) l ""

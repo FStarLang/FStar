@@ -458,12 +458,33 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
           None
     in
+    let arg_as_char (a, _) : option<char> =
+        match (SS.compress a).n with
+        | Tm_constant (Const_char c) ->
+          Some c
+        | _ ->
+          None
+    in
     let arg_as_string (a, _) : option<string> =
         match (SS.compress a).n with
         | Tm_constant (FC.Const_string(bytes, _)) ->
           Some (BU.string_of_bytes bytes)
         | _ ->
           None
+    in
+    let arg_as_list (f : arg -> option<'a>) (a, _) : option<list<'a>> =
+        let rec sequence (l:list<option<'a>>) : option<list<'a>> =
+            match l with
+            | [] -> Some []
+            | None::_ -> None
+            | Some x::xs -> begin match sequence xs with
+                            | None -> None
+                            | Some xs' -> Some (x::xs')
+                            end
+        in
+        match U.list_elements a with
+        | None -> None
+        | Some elts -> sequence (List.map (as_arg >> f) elts)
     in
     let lift_unary
         : ('a -> 'b) -> list<option<'a>> ->option<'b>
@@ -522,6 +543,10 @@ let built_in_primitive_steps : list<primitive_step> =
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
+    let string_of_list' rng (l:list<char>) : term =
+        let s = string_of_list l in
+        SC.exp_string s
+    in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
     in
@@ -546,7 +571,9 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
-                                    1, unary_op arg_as_string list_of_string')]
+                                    1, unary_op arg_as_string list_of_string');
+             (Const.p2l ["FStar"; "String"; "string_of_list"],
+                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
     in
     let bounded_arith_ops =
         let bounded_int_types =
