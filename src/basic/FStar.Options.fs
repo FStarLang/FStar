@@ -151,6 +151,7 @@ let defaults =
       ("split_cases"                  , Int 0);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
+      ("ugly"                         , Bool false);
       ("unthrottle_inductives"        , Bool false);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
@@ -228,6 +229,7 @@ let get_no_default_includes     ()      = lookup_opt "no_default_includes"      
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
+let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
@@ -343,6 +345,7 @@ let cons_using_facts_from s =
 
 let add_verify_module s =
     set_option "verify_module" (cons_verify_module s)
+
 
 let rec specs () : list<Getopt.opt> =
   let specs =
@@ -652,6 +655,11 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Don't print an error message; show an exception trace instead");
 
+      ( noshort,
+        "ugly",
+        ZeroArgs (fun () -> Bool true),
+        "Emit output formatted for debugging");
+
        ( noshort,
         "unthrottle_inductives",
         ZeroArgs (fun () -> Bool true),
@@ -761,6 +769,13 @@ and parse_codegen s =
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage_aux (specs ()); exit 1)
 
+and string_as_bool option_name = function
+    | "true" -> Bool true
+    | "false" -> Bool false
+    | _ ->
+      Util.print1 "Wrong argument to %s\n" option_name;
+      display_usage_aux (specs ()); exit 1
+
 and validate_dir p =
   mkdir false p;
   p
@@ -788,6 +803,7 @@ let settable = function
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
+    | "ugly"
     | "print_before_norm"
     | "print_bound_var_types"
     | "print_effect_args"
@@ -972,6 +988,7 @@ let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
 let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
+let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()

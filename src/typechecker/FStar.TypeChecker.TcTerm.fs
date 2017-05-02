@@ -1797,6 +1797,12 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
      let t = N.unfold_whnf env lbtyp in
      match (SS.compress t).n, (SS.compress lbdef).n with
      | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->
+       //add implicit binders, in case, for instance
+       //lbtyp is of the form x:'a -> t
+       //lbdef is of the form (fun x -> t)
+       //in which case, we need to add (#'a:Type) to the actuals
+       //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
+       let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
        if List.length formals <> List.length actuals
        then begin
             let actuals_msg =
