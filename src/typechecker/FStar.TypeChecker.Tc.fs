@@ -626,7 +626,7 @@ and cps_and_elaborate env ed =
     let l' = lid_of_path p' Range.dummyRange in
     match try_lookup_lid env l' with
     | Some (_us,_t) -> begin
-        BU.print1 "Applying override %s\n" (string_of_lid l');
+        BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
         // TODO: GM: get exact delta depth, needs a change of interfaces
         fv_to_tm (lid_as_fv l' Delta_equational None)
         end
