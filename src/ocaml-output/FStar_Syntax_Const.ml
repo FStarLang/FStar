@@ -128,6 +128,12 @@ let exp_unit: FStar_Syntax_Syntax.term =
 let exp_int: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
     mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int (s, None)))
+let exp_string: Prims.string -> FStar_Syntax_Syntax.term =
+  fun s  ->
+    mk
+      (FStar_Syntax_Syntax.Tm_constant
+         (FStar_Const.Const_string
+            ((FStar_Util.unicode_of_string s), FStar_Range.dummyRange)))
 let cons_lid: FStar_Ident.lident = pconst "Cons"
 let nil_lid: FStar_Ident.lident = pconst "Nil"
 let some_lid: FStar_Ident.lident = pconst "Some"
@@ -207,4 +213,4 @@ let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
 let tactic_lid: FStar_Ident.lident = fstar_tactics_lid "tactic"
 let by_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "reify_tactic"
-let fstar_tactics_embed_lid: FStar_Ident.lident = fstar_tactics_lid "embed"
+let fstar_tactics_embed_lid: FStar_Ident.lident = fstar_tactics_lid "__embed"

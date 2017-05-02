@@ -1064,21 +1064,39 @@ let rec visit: Prims.unit tac -> Prims.unit tac =
                  or_else trivial smt) in
       or_else callback uu____1940 in
     focus_cur_goal "visit_strengthen" uu____1938
+type order =
+  | Lt
+  | Eq
+  | Gt
+let uu___is_Lt: order -> Prims.bool =
+  fun projectee  -> match projectee with | Lt  -> true | uu____2020 -> false
+let uu___is_Eq: order -> Prims.bool =
+  fun projectee  -> match projectee with | Eq  -> true | uu____2024 -> false
+let uu___is_Gt: order -> Prims.bool =
+  fun projectee  -> match projectee with | Gt  -> true | uu____2028 -> false
+let order_binder:
+  FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> order =
+  fun x  ->
+    fun y  ->
+      let n1 = FStar_Syntax_Syntax.order_bv (Prims.fst x) (Prims.fst y) in
+      if n1 < (Prims.parse_int "0")
+      then Lt
+      else if n1 = (Prims.parse_int "0") then Eq else Gt
 let proofstate_of_goal_ty:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> proofstate =
   fun env  ->
     fun g  ->
       let g1 =
-        let uu____2024 =
+        let uu____2045 =
           FStar_TypeChecker_Normalize.normalize
             [FStar_TypeChecker_Normalize.Beta] env g in
-        { context = env; witness = None; goal_ty = uu____2024 } in
-      let uu____2025 = FStar_Unionfind.new_transaction () in
+        { context = env; witness = None; goal_ty = uu____2045 } in
+      let uu____2046 = FStar_Unionfind.new_transaction () in
       {
         main_context = env;
         main_goal = g1;
         all_implicits = [];
         goals = [g1];
         smt_goals = [];
-        transaction = uu____2025
+        transaction = uu____2046
       }
