@@ -281,9 +281,8 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
         end
     | _ -> return None
 
-// TODO: aux isn't used. wtf?
-let rec user_visit (callback:tactic unit) : unit -> Tac unit
-    = or_else callback (user_visit callback)
+let rec user_visit (callback:tactic unit) (u:unit) : Tac unit
+    = or_else callback (user_visit callback) ()
 
 // Need to thunk it like to this for proper handling of non-termination.
 // (not doing it would still work, because of issue #1017, but should not)
