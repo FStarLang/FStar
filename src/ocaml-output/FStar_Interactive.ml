@@ -698,19 +698,19 @@ let json_of_range: FStar_Range.range -> FStar_Util.json =
     let uu____1616 =
       let uu____1620 =
         let uu____1623 =
-          let uu____1624 = FStar_Range.file_of_range r in
+          let uu____1624 = FStar_Range.file_of_use_range r in
           FStar_Util.JsonStr uu____1624 in
         ("fname", uu____1623) in
       let uu____1625 =
         let uu____1629 =
           let uu____1632 =
-            let uu____1633 = FStar_Range.start_of_range r in
+            let uu____1633 = FStar_Range.start_of_use_range r in
             json_of_pos uu____1633 in
           ("beg", uu____1632) in
         let uu____1634 =
           let uu____1638 =
             let uu____1641 =
-              let uu____1642 = FStar_Range.end_of_range r in
+              let uu____1642 = FStar_Range.end_of_use_range r in
               json_of_pos uu____1642 in
             ("end", uu____1641) in
           [uu____1638] in

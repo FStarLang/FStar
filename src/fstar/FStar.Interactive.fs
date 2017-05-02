@@ -407,9 +407,9 @@ let json_of_pos pos =
   JsonList [JsonInt (Range.line_of_pos pos); JsonInt (Range.col_of_pos pos)]
 
 let json_of_range r =
-  JsonAssoc [("fname", JsonStr (Range.file_of_range r));
-             ("beg", json_of_pos (Range.start_of_range r));
-             ("end", json_of_pos (Range.end_of_range r))]
+  JsonAssoc [("fname", JsonStr (Range.file_of_use_range r));
+             ("beg", json_of_pos (Range.start_of_use_range r));
+             ("end", json_of_pos (Range.end_of_use_range r))]
 
 let json_of_issue_level i =
   JsonStr (match i with
