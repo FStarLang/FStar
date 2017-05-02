@@ -40,10 +40,6 @@ module TD = FStar.Parser.ToDocument
 
 (*
 Notes:
-- a lot of the string_of functions and their concatenation should go away with
-  a better pretty-printer.
-- there are too many strings being passed around/returned. Need to wrap up the F#
-  and OCaml Buffer libraries in a buffer.fsti one.
 - x-ref will come, but not yet. One way to implement x-ref would be do fully-expand
   all names, as if there weren't any "open"s at the top of the file. But dep and tc
   already do this, and we'd be adding another pass, very sim
@@ -137,17 +133,17 @@ let module_to_document (m:modul) : (lid * PP.document) =
   match one_toplevel decls with
   | Some (top_decl,other_decls) ->
         begin
-            // SI: keep TopLevelModule special
+            // Keep TopLevelModule special
             let no_summary = "fsdoc: no-summary-found" in
             let no_comment = "fsdoc: no-comment-found" in
             let summary, comment = fsdoc_of_toplevel name top_decl in
             let summary = (match summary with Some(s) -> s | _ -> no_summary) in
             let comment = (match comment with Some(s) -> s | _ -> no_comment) in
             let toplevel_doc = 
-            PP.concat [
-            PP.group (PP.(^^) (str "# module ") (str name.str)); PP.hardline;
-            PP.group (str summary); PP.hardline; 
-            PP.group (str comment); PP.hardline ] in
+                PP.concat [
+                PP.group (PP.(^^) (str "# module ") (str name.str)); PP.hardline;
+                PP.group (str summary); PP.hardline; 
+                PP.group (str comment); PP.hardline ] in
             // non-TopLevelModule decls.
             let otherdecl_docs = List.map document_of_decl other_decls in
             let docs = PP.concat (toplevel_doc :: otherdecl_docs) in 
@@ -165,12 +161,12 @@ let generate (files:list<string>) =
   // PP each module into a PP.doc.  
   let id_and_docs = List.map module_to_document modules in 
   let m_ids = List.map fst id_and_docs in 
-  // write mod_names into index.md
+  // Write mod_names into index.md
   let on = O.prepend_output_dir "index.md" in
   let fd = U.open_file_for_writing on in
   List.iter (fun m -> U.append_to_file fd (U.format "%s\n" [m.str])) m_ids;
   U.close_file fd;
-  // ... instead: write each (id,doc) \in id_and_docs into id.md. 
+  // Write each (id,doc) \in id_and_docs into id.md. 
   List.iter
     (fun (id,doc) -> 
       let on = O.prepend_output_dir (id.str^".md") in
