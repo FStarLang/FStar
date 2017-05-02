@@ -270,9 +270,9 @@ let rec resugar_term (t : S.term) : A.term =
       else if (lid_equals a C.assert_lid
           || lid_equals a C.assume_lid
           || Char.uppercase (String.get s 0) <> String.get s 0) then
-            mk (var s t.pos)
+            mk (var a.str t.pos)
         else
-            mk (name s t.pos)
+            mk (name a.str t.pos)
   | Tm_uinst(e, universes) ->
     if (Options.print_universes()) then
       let e = resugar_term e in
