@@ -55,9 +55,9 @@ fi
 if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
   rm src/ocaml-output/fstar/HelloOcamlOutput.log
 fi
-if [[ -f src/ocaml-output/fstar/HelloFStarOutput.log ]]; then
-  rm src/ocaml-output/fstar/HelloFStarOutput.log
-fi
+#+++ if [[ -f src/ocaml-output/fstar/HelloFStarOutput.log ]]; then
+#+++   rm src/ocaml-output/fstar/HelloFStarOutput.log
+#+++ fi
 if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
   rm src/ocaml-output/fstar/AllExamples.log
 fi
@@ -96,7 +96,7 @@ echo "*** Make the examples ***"
 cd fstar
 make -C examples/micro-benchmarks > MicroBenchMarkOutput.log
 make -C examples/hello ocaml > HelloOcamlOutput.log
-#make -C examples/hello fs > HelloFStarOutput.log  #++++ 
+#+++ make -C examples/hello fs > HelloFStarOutput.log  #++++ 
 make -j6 -C examples > AllExamples.log
 
 echo "*** Verify the examples ***"
@@ -109,20 +109,20 @@ else
 fi
 
 echo "-- Verify hello ocaml -- should output Hello F*! *"
-if ! egrep 'F*!' HelloFStarOutput.log; then
+if ! egrep 'F*!' HelloOcamlOutput.log; then
   echo -e "* ${RED}FAIL!${NC} for examples/hello ocaml - F*! was not found in HelloOcamlOutput.log"
   exit 1
 else
   echo -e "* ${GREEN}PASSED!${NC} for examples/hello ocaml"
 fi
 
-echo "-- Verify hello fs -- should output Hello F*!"
-if ! egrep 'F*!' HelloFStarOutput.log; then
-  echo -e "* ${RED}FAIL!${NC} for examples/hello fs - F*! was not found in HelloFStarOutput.log"
+#+++ echo "-- Verify hello fs -- should output Hello F*!"
+#+++ if ! egrep 'F*!' HelloFStarOutput.log; then
+#+++   echo -e "* ${RED}FAIL!${NC} for examples/hello fs - F*! was not found in HelloFStarOutput.log"
 #++++++  exit 1
-else
-  echo -e "* ${GREEN}PASSED!${NC} for examples/hello fs"
-fi
+#+++ else
+#+++   echo -e "* ${GREEN}PASSED!${NC} for examples/hello fs"
+#+++ fi
 
 echo "-- Verify all examples -- Look for Success:"
 if ! egrep 'Success:' AllExamples.log; then
