@@ -1577,10 +1577,7 @@ let rec norm:
                let tm = get_norm_request args in
                let s =
                  [Reify;
-                 Beta;
                  UnfoldUntil FStar_Syntax_Syntax.Delta_constant;
-                 Zeta;
-                 Iota;
                  Primops] in
                let cfg' =
                  let uu___164_5025 = cfg in
