@@ -912,7 +912,7 @@ let decl'_to_decl se d' =
     attrs = [] ;
   }
 
-let resugar_sigelt se : option <A.decl> =
+let resugar_sigelt se : option<A.decl> =
   match se.sigel with
   | Sig_bundle (ses, _) ->
     let decl_typ_ses, datacon_ses = ses |> List.partition
@@ -962,5 +962,6 @@ let resugar_sigelt se : option <A.decl> =
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
+  | Sig_declare_typ _
   | Sig_datacon _
   | Sig_main _ -> None
