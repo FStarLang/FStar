@@ -2022,7 +2022,7 @@ and cps_and_elaborate:
                                                    FStar_Ident.string_of_lid
                                                      l' in
                                                  FStar_Util.print1
-                                                   "Applying override %s\n"
+                                                   "DM4F: Applying override %s\n"
                                                    uu____2138);
                                                 (let uu____2139 =
                                                    FStar_Syntax_Syntax.lid_as_fv
