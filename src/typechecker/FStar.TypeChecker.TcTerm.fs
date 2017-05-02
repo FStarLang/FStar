@@ -1629,8 +1629,7 @@ and check_top_level_let env e =
                 let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                 if ok
                 then e2, c1
-                else (if Options.warn_top_level_effects() //otherwise warn
-                      then Errors.warn (Env.get_range env) Err.top_level_effect;
+                else (Errors.warn (Env.get_range env) Err.top_level_effect;
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  let _ = Rel.force_trivial_guard env g1 in
@@ -1794,10 +1793,45 @@ and check_inner_let_rec env top =
 (******************************************************************************)
 and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let env0 = env in
-   let termination_check_enabled t =
-     let _, c = U.arrow_formals_comp t in
-     let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
-     quals |> List.contains TotalEffect
+   let termination_check_enabled lbname lbdef lbtyp =
+     let t = N.unfold_whnf env lbtyp in
+     match (SS.compress t).n, (SS.compress lbdef).n with
+     | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->
+       //add implicit binders, in case, for instance
+       //lbtyp is of the form x:'a -> t
+       //lbdef is of the form (fun x -> t)
+       //in which case, we need to add (#'a:Type) to the actuals
+       //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
+       let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
+       if List.length formals <> List.length actuals
+       then begin
+            let actuals_msg =
+                let n = List.length actuals in
+                if n = 1
+                then "1 argument was found"
+                else BU.format1 "%s arguments were found" (string_of_int n)
+            in
+            let formals_msg =
+                let n = List.length formals in
+                if n = 1
+                then "1 argument"
+                else BU.format1 "%s arguments" (string_of_int n)
+            in
+            let msg =
+                BU.format4 "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
+                            (Print.term_to_string lbtyp)
+                            (Print.lbname_to_string lbname)
+                            formals_msg
+                            actuals_msg in
+            raise (Error(msg, lbdef.pos))
+       end;
+       let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
+       quals |> List.contains TotalEffect
+     | _ ->
+       raise (Error(BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+                               (Print.term_to_string lbdef)
+                               (Print.term_to_string lbtyp),
+                    lbtyp.pos))
    in
    let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
@@ -1810,21 +1844,27 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   let g = Rel.resolve_implicits g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
-        let env = if termination_check_enabled t
+        let env = if termination_check_enabled lb.lbname e t
                   && Env.should_verify env (* store the let rec names separately for termination checks *)
                   then {env with letrecs=(lb.lbname,t)::env.letrecs}
                   else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
-       let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
-       lb::lbs,  env)
+        let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
+        lb::lbs,  env)
     ([],env)
     lbs  in
   List.rev lbs, env
 
 and check_let_recs env lbs =
     let lbs, gs = lbs |> List.map (fun lb ->
-        (* here we set the expected type in the environment to the annotated expected type and use it in order
-         * to type check the body of the lb
+        (* here we set the expected type in the environment to the annotated expected type
+         * and use it in order to type check the body of the lb
          * *)
+        let _ = //see issue #1017
+           match (SS.compress lb.lbdef).n with
+            | Tm_abs _ -> ()
+            | _ -> raise (Error("Only function literals may be defined recursively",
+                                 S.range_of_lbname lb.lbname))
+        in
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (U.is_total_lcomp c)
         then raise (Error ("Expected let rec to be a Tot term; got effect GTot", e.pos));

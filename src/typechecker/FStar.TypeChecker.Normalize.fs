@@ -445,11 +445,11 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
           None
     in
-    let arg_as_bounded_int (a, _) : option<int> =
+    let arg_as_bounded_int (a, _) : option<(fv * int)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
-          Some (BU.int_of_string i)
+          Some (fv1, BU.int_of_string i)
         | _ -> None
     in
     let arg_as_bool (a, _) : option<bool> =
@@ -554,6 +554,12 @@ let built_in_primitive_steps : list<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         string_as_const rng (if b then "true" else "false")
     in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
+    in
     let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
             [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
              (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
@@ -580,10 +586,15 @@ let built_in_primitive_steps : list<primitive_step> =
         let bounded_int_types =
            [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
         in
+        let int_as_bounded r int_to_t n =
+            let c = int_as_const r n in
+            let int_to_t = S.fv_to_tm int_to_t in
+            S.mk_Tm_app int_to_t [S.as_arg c] None r
+        in
         bounded_int_types |> List.collect (fun m ->
-        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (x + y)));
-         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (x - y)));
-         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (Prims.op_Multiply x y)))])
+        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
+         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
+         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
