@@ -210,6 +210,10 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
   | Pat_wild _ -> true
   | _ -> false
 
+let is_disj_pat (p:S.pat) : bool = match p.v with
+  | Pat_disj _ -> true
+  | _ -> false
+
 let rec resugar_term (t : S.term) : A.term =
   (* Cannot resugar term back to NamedTyp or Paren *)
   let mk (a:A.term') : A.term =
@@ -418,6 +422,7 @@ let rec resugar_term (t : S.term) : A.term =
         let handler = resugar_term (decomp handler) in
         let rec resugar_body t = match (t.tm) with
           | A.Match(e, [(_,_,b)]) -> b
+          | A.Let(_, _, b) -> b
           | A.Ascribed(t1, t2, t3) ->
             (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
             mk (A.Ascribed(resugar_body t1, t2, t3))
@@ -510,9 +515,10 @@ let rec resugar_term (t : S.term) : A.term =
         | _ -> resugar_as_app e args
         end 
   end
-  | Tm_match(e, [(pat, _, t)]) -> 
+  | Tm_match(e, [(pat, _, t)]) when not (is_disj_pat pat) -> 
     (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1` 
        it would be better to print it as `let P = e in e1`. *)
+    (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
     let bnds = [(resugar_match_pat pat, resugar_term e)] in
     let body = resugar_term t in
     mk (A.Let(A.NoLetQualifier, bnds, body))
