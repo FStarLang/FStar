@@ -18,6 +18,7 @@
 module FStar.Interactive
 open FStar.All
 open FStar
+open FStar.Range
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
