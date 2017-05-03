@@ -1052,44 +1052,59 @@ let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
-let eqlen (xs : list<'a>) (ys : list<'a>) : bool =
-    List.length xs = List.length ys
+// Some generic equalities
+let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
+    match xs, ys with
+    | [], [] -> true
+    | x::xs, y::ys -> eq x y && eqlist eq xs ys
+    | _ -> false
 
-// TODO Ignoring arg qualifiers, OK?
-// TODO universes should unify?
-// TODO do we need the environment?
+let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either<'a,'b>) (y : either<'a,'b>) : bool =
+    match x, y with
+    | Inl x, Inl y -> e1 x y
+    | Inr x, Inr y -> e2 x y
+    | _ -> false
+
+let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a * 'b) : bool =
+    match x, y with
+    | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
+
+let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
+    match x, y with
+    | Some x, Some y -> e x y
+    | _ -> false
+
+// TODO: canonize applications?
+// TODO: do alpha renaming, otherwise there's no hope for abstractions
+// Checks for syntactic equality. A returned false doesn't guarantee anything.
 let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
   | Tm_constant x, Tm_constant y -> x = y
   | Tm_type x, Tm_type y -> x = y
-  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlen b1 b2 &&
-                                               List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
-                                               term_eq t1 t2 &&
-                                               true //k1 = k2 TODO Fix?
-  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 &&
-                                        eqlen a1 a2 &&
-                                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) a1 a2
-  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> List.forall2 (fun (bv1, a1) (bv2, a2) -> bv_eq bv1 bv2 && a1 = a2) b1 b2 &&
-                                          comp_eq c1 c2
+  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 && eqopt (eqsum lcomp_eq residual_eq) k1 k2
+  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2
+  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> eqlist binder_eq b1 b2 && comp_eq c1 c2
   | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
-  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 &&
-                                            eqlen bs1 bs2 &&
-                                            List.forall2 branch_eq bs1 bs2
+  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 && eqlist branch_eq bs1 bs2
   | _, _ -> false // TODO missing cases
+and arg_eq = eqprod term_eq (fun q1 q2 -> q1 = q2)
+and binder_eq = eqprod bv_eq (fun q1 q2 -> q1 = q2)
+and lcomp_eq c1 c2 = false// TODO
+and residual_eq r1 r2 = false// TODO
 and comp_eq c1 c2 = match c1.n, c2.n with
-  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO match u's?
-  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2 // TODO match u's?
+  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO what are the u's for? isn't the universe on t?
+  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2
   | Comp c1, Comp c2 -> c1.comp_univs = c2.comp_univs &&
                         c1.effect_name = c2.effect_name &&
                         term_eq c1.result_typ c2.result_typ &&
-                        List.forall2 (fun (x,_) (y,_) -> term_eq x y) c1.effect_args c2.effect_args &&
+                        eqlist arg_eq c1.effect_args c2.effect_args &&
                         eq_flags c1.flags c2.flags
   | _, _ -> false
 and eq_flags f1 f2 = false // TODO
 and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
 
-let rec bottom_fold (f : term -> term) (t : term) : term = 
+let rec bottom_fold (f : term -> term) (t : term) : term =
     let ff = bottom_fold f in
     let tn = (un_uinst t).n in
     let tn = match tn with
