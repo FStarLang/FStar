@@ -76,6 +76,7 @@
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
+    <Compile Include="FStar.Parser.Const.fs" />
     <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
     <Compile Include="parse.fs" />
@@ -96,16 +97,29 @@
       <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\syntax\syntax.fsproj">
-      <Name>syntax</Name>
-      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+    <Reference Include="FSharp.Compatibility.OCaml">
+      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
       <Private>True</Private>
-    </ProjectReference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
     </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
+    <Reference Include="FSharp.PowerPack">
+      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Linq">
+      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Metadata">
+      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PowerPack.Parallel.Seq">
+      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.PPrint">
+      <HintPath>..\VS\packages\PPrintForFSharp.0.0.2\lib\net40\FSharp.PPrint.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="FsLexYacc.Runtime">
       <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>

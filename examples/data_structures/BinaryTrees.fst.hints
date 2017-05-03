@@ -192,7 +192,7 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_Some", "uvar_typing_28038"
+        "typing_Prims.uu___is_Some", "uvar_typing_28060"
       ],
       0
     ],
@@ -746,7 +746,7 @@
     [
       "BinaryTrees.count_remove_root",
       5,
-      4,
+      8,
       2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",

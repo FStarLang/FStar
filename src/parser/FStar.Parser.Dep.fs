@@ -32,7 +32,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-module Const = FStar.Syntax.Const
+module Const = FStar.Parser.Const
 module BU = FStar.Util
 
 (* In case the user passed [--verify_all], we record every single module name we
@@ -390,7 +390,7 @@ let collect_one
     | Const c ->
         collect_constant c
     | Op (s, ts) ->
-        if s = "@" then
+        if Ident.text_of_id s = "@" then
           (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
           collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
         List.iter collect_term ts
@@ -418,6 +418,7 @@ let collect_one
     | LetOpen (lid, t) ->
         record_open true lid;
         collect_term t
+    | Bind(_, t1, t2)
     | Seq (t1, t2) ->
         collect_term t1;
         collect_term t2

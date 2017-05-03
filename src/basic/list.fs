@@ -1,5 +1,6 @@
 #light "off"
 module FStar.List
+open FSharp.Compatibility.OCaml
 let isEmpty = (fun ( l  :  'a Prims.list ) -> (match (l) with
 | [] -> begin
 true

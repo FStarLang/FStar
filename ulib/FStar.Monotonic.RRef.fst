@@ -26,15 +26,16 @@ type rid = r:HH.rid{is_eternal_region r}
  *)
 abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
 
-let haseq_m_rref (r:rid) (a:Type) (b:reln a) 
-    : Lemma (requires True)
-	    (ensures (hasEq (m_rref r a b)))
-	    [SMTPat (hasEq (m_rref r a b))]
-    = ()
+(* let haseq_m_rref (r:rid) (a:Type) (b:reln a)  *)
+(*     : Lemma (requires True) *)
+(* 	    (ensures (hasEq (m_rref r a b))) *)
+(* 	    [SMTPat (hasEq (m_rref r a b))] *)
+(*     = () *)
 
 (* val as_rref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (rref r a) *)
 (* let as_rref #r #a #b x = x *)
 
+(* assume HasEq_m_rref: forall (r:rid) (a:Type) (b:reln a).{:pattern (hasEq (m_rref r a b))} hasEq (m_rref r a b) *)
 (*
  * AR: the refinement is important here, for as_rref rid was part of the type index
  *)
@@ -45,6 +46,8 @@ let as_hsref #r #a #b x = x
 (* let m_contains #r #a #b mr m = HyperHeap.contains_ref (as_rref mr) m *)
 
 let m_contains (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.contains m (as_hsref mr)
+
+let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.unused_in (as_hsref mr) m
 
 (* let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:t) (m1:t) : GTot Type0 = *)
 (*   HyperHeap.fresh_rref (as_rref mr) m0 m1 *)

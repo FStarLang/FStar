@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -53,6 +53,16 @@
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\parser\parser.fsproj">
+      <Name>parser</Name>
+      <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
+      <Name>prettyprint</Name>
+      <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\smtencoding\smtencoding.fsproj">
       <Name>smtencoding</Name>
       <Project>{f6879027-a97f-4857-8f52-cc5641455652}</Project>
@@ -72,6 +82,7 @@
   <ItemGroup>
     <Compile Include="FStar.Tactics.Basic.fs" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
+    <Compile Include="FStar.Tactics.Interpreter.fsi" />
     <Compile Include="FStar.Tactics.Interpreter.fs" />
   </ItemGroup>
   <PropertyGroup>

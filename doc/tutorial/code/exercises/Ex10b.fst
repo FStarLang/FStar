@@ -4,14 +4,15 @@ module Ex10b
 open FStar.Heap
 open FStar.ST
 
-type point =
-  | Point : x:ref int -> y:ref int{y<>x} -> point
+noeq type point =
+  | Point : x:ref int -> y:ref int{addr_of y <> addr_of x} -> point
 
 val new_point: x:int -> y:int -> ST point
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
-                modifies TSet.empty h0 h1
-                /\ fresh (Point?.x p ^+^ Point?.y p) h0 h1
+                modifies Set.empty h0 h1
+                /\ fresh (Point?.x p) h0 h1
+		/\ fresh (Point?.y p) h0 h1
                 /\ Heap.sel h1 (Point?.x p) = x
                 /\ Heap.sel h1 (Point?.y p) = y))
 let new_point x y =
@@ -24,8 +25,8 @@ let shift_x p =
 
 // BEGIN: ShiftXP1Spec
 val shift_x_p1: p1:point
-           -> p2:point{   Point?.x p2 <> Point?.x p1
-                       /\ Point?.y p2 <> Point?.x p1 }
+           -> p2:point{   addr_of (Point?.x p2) <> addr_of (Point?.x p1)
+                       /\ addr_of (Point?.y p2) <> addr_of (Point?.x p1) }
            -> ST unit
     (requires (fun h -> Heap.contains h (Point?.x p2)
                     /\  Heap.contains h (Point?.y p2)))

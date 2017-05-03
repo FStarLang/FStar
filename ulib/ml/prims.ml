@@ -132,11 +132,38 @@ let string_of_int = to_string
 type ('a, 'b) dtuple2 =
   | Mkdtuple2 of 'a * 'b
 
+let dfst = function Mkdtuple2 (x, y) -> x
+let dsnd = function Mkdtuple2 (x, y) -> y
+
+let __proj__Mkdtuple2__item___1 = dfst
+let __proj__Mkdtuple2__item___2 = dsnd
+
 type ('a, 'b, 'c) dtuple3 =
   | Mkdtuple3 of 'a * 'b * 'c
 
+let __proj__Mkdtuple3__item___1 = function
+  | Mkdtuple3 (x1, x2, x3) -> x1
+
+let __proj__Mkdtuple3__item___2 = function
+  | Mkdtuple3 (x1, x2, x3) -> x2
+
+let __proj__Mkdtuple3__item___3 = function
+  | Mkdtuple3 (x1, x2, x3) -> x3
+
 type ('a, 'b, 'c, 'd) dtuple4 =
   | Mkdtuple4 of 'a * 'b * 'c * 'd
+
+let __proj__Mkdtuple4__item___1 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x1
+
+let __proj__Mkdtuple4__item___2 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x2
+
+let __proj__Mkdtuple4__item___3 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x3
+
+let __proj__Mkdtuple4__item___4 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x4
 
 let rec pow2 n =
   let open Z in

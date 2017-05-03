@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Tests.Test
+open FSharp.Compatibility.OCaml
 open FStar.Syntax
 open FStar
 open FStar.Errors
@@ -13,7 +14,6 @@ let main argv =
     try
         Pars.init() |> ignore;
         FStar.Tests.Tactics.test();
-//        Tactics.test()
 //        Norm.run_all ();
 //        Unif.run_all ();
         0

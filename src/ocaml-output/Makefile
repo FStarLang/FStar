@@ -76,14 +76,13 @@ endif
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
 	echo "open Prims" >> $@
+	echo "open FStar" >> $@
 	echo "open FStar.Errors" >> $@
 	echo "open FStar.List" >> $@
 	echo "open FStar.Util" >> $@
 	echo "open FStar.Range" >> $@
 	echo "open FStar.Options" >> $@
-	echo "open FStar.Syntax.Syntax" >> $@
-	echo "open FStar.Syntax.Const" >> $@
-	echo "open FStar.Syntax.Util" >> $@
+	echo "open FStar.Parser.Const" >> $@
 	echo "open FStar.Parser.AST" >> $@
 	echo "open FStar.Parser.Util" >> $@
 	echo "open FStar.Const" >> $@
@@ -126,7 +125,7 @@ FStar_Parser_Parse.ml: parse.mly
 	ocamlyacc parse.mly 2> yac-log
 	cat yac-log
 	@
-	@if (( $$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/') > 6 )); then \
+	@if (( $$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/') > 7 )); then \
 	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
 	  fi
 	cat parse.ml >> $@

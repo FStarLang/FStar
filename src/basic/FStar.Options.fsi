@@ -117,6 +117,7 @@ val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
 val push                        : unit    -> unit
 val record_hints                : unit    -> bool
+val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
@@ -131,6 +132,7 @@ val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
 val use_tactics                 : unit    -> bool
+val using_facts_from            : unit    -> option<list<string>>
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_cardinality            : unit    -> bool

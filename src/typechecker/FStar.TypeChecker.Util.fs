@@ -485,7 +485,7 @@ let return_value env t v =
   let c =
     if not <| Env.lid_exists env Const.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
     then mk_Total t
-    else let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
+    else let m = Env.get_effect_decl env Const.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
          let wp =
             if env.lax
@@ -847,7 +847,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   let use_eq =
     env.use_eq ||
     (match Env.effect_decl_opt env lc.eff_name with
-     | Some ed -> ed.qualifiers |> List.contains Reifiable
+     | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
      | _ -> false) in
   let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
              then Rel.try_teq true env lc.res_typ t, false
@@ -1401,8 +1401,9 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
-  let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [ Unfold_for_unification_and_vcgen ], [])) in
-  sig_ctx, mk (Tm_fvar fv) None Range.dummyRange
+  let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [])) in
+  {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
+  mk (Tm_fvar fv) None Range.dummyRange
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1487,7 +1488,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
       match se.sigel with
-      | Sig_let((is_rec, _), _, _, _) -> //let rec
+      | Sig_let((is_rec, _), _, _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
@@ -1598,7 +1599,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 let bool_typ = (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid Delta_constant None))) in
                 SS.close_univ_vars uvs <| U.arrow binders bool_typ
             in
-            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t, quals); sigrng = range_of_lid discriminator_name }  in
+            let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t);
+                         sigquals = quals;
+                         sigrng = range_of_lid discriminator_name;
+                         sigmeta = default_sigmeta  }  in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1635,7 +1639,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
-                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p } in
+                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], []);
+                             sigquals = quals;
+                             sigrng = p;
+                             sigmeta = default_sigmeta  } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1680,7 +1687,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
-          let decl = { sigel = Sig_declare_typ(field_name, uvs, t, quals); sigrng = range_of_lid field_name } in
+          let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
+                       sigquals = quals;
+                       sigrng = range_of_lid field_name;
+                       sigmeta = default_sigmeta  } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1711,15 +1721,19 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
-              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], quals, []); sigrng = p } in
+              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], []);
+                           sigquals = quals;
+                           sigrng = p;
+                           sigmeta = default_sigmeta  } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
     in
     discriminator_ses @ projectors_ses
 
-let mk_data_operations iquals env tcs se = match se.sigel with
-  | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, quals, _) when not (lid_equals constr_lid C.lexcons_lid) ->
+let mk_data_operations iquals env tcs se =
+  match se.sigel with
+  | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, _) when not (lid_equals constr_lid C.lexcons_lid) ->
 
     let univ_opening, uvs = SS.univ_var_opening uvs in
     let t = SS.subst univ_opening t in
@@ -1729,7 +1743,7 @@ let mk_data_operations iquals env tcs se = match se.sigel with
         let tps_opt = BU.find_map tcs (fun se ->
             if lid_equals typ_lid (must (U.lid_of_sigelt se))
             then match se.sigel with
-                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs, _) ->
+                  | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs) ->
                       assert (List.length uvs = List.length uvs') ;
                       Some (tps, typ0, List.length constrs > 1)
                   | _ -> failwith "Impossible"
@@ -1748,7 +1762,7 @@ let mk_data_operations iquals env tcs se = match se.sigel with
     let indices, _ = U.arrow_formals typ0 in
 
     let refine_domain =
-        if (quals |> BU.for_some (function RecordConstructor _ -> true | _ -> false))
+        if se.sigquals |> BU.for_some (function RecordConstructor _ -> true | _ -> false)
         then false
         else should_refine
     in
@@ -1757,7 +1771,7 @@ let mk_data_operations iquals env tcs se = match se.sigel with
         let filter_records = function
             | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
             | _ -> None
-        in match BU.find_map quals filter_records with
+        in match BU.find_map se.sigquals filter_records with
             | None -> Data_ctor
             | Some q -> q
     in

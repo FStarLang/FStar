@@ -20,7 +20,7 @@ module FStar.LexFStar
  * whitespace etc.
  * (c) Microsoft Corporation. All rights reserved
  *-----------------------------------------------------------------------*)
-
+open FSharp.Compatibility.OCaml
 open FStar.Range
 open FStar.Parser
 open FStar.Parser.Parse
@@ -361,6 +361,7 @@ rule token args = parse
  | ',' { COMMA }
  | "~>" { SQUIGGLY_RARROW }
  | "->" { RARROW }
+ | "<--" { LONG_LEFT_ARROW }
  | "<-" { LARROW }
  | "<==>" { IFF }
  | "==>" { IMPLIES }
