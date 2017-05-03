@@ -33,7 +33,7 @@ let blah' (ff : term -> tactic term) (t : term) =
            | Tv_Const c -> return (Tv_Const c));
      pack tv
 
-let rec blah : term -> tactic term =
+let blah : term -> tactic term =
     fix1 blah'
 
 let _ = assert_by_tactic (t <-- quote (1+1);
