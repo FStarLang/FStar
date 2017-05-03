@@ -22,6 +22,7 @@ open FStar
 open FStar.Util
 open FStar.String
 open FStar.Const
+open FStar.Char
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -162,9 +163,9 @@ let downgrade_ghost_effect_name l =
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
 (*  either u, where u <> U_max                                                                                      *)
-(*  or     U_max [k;                        //constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
+(*  or     U_max [k;                        --constant                                                              *)
+(*               S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
+(*               S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg env u =
@@ -458,12 +459,33 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
           None
     in
+    let arg_as_char (a, _) : option<char> =
+        match (SS.compress a).n with
+        | Tm_constant (Const_char c) ->
+          Some c
+        | _ ->
+          None
+    in
     let arg_as_string (a, _) : option<string> =
         match (SS.compress a).n with
         | Tm_constant (FC.Const_string(bytes, _)) ->
           Some (BU.string_of_bytes bytes)
         | _ ->
           None
+    in
+    let arg_as_list (f : arg -> option<'a>) (a, _) : option<list<'a>> =
+        let rec sequence (l:list<option<'a>>) : option<list<'a>> =
+            match l with
+            | [] -> Some []
+            | None::_ -> None
+            | Some x::xs -> begin match sequence xs with
+                            | None -> None
+                            | Some xs' -> Some (x::xs')
+                            end
+        in
+        match U.list_elements a with
+        | None -> None
+        | Some elts -> sequence (List.map (fun x -> f (as_arg x)) elts)
     in
     let lift_unary
         : ('a -> 'b) -> list<option<'a>> ->option<'b>
@@ -516,24 +538,21 @@ let built_in_primitive_steps : list<primitive_step> =
     let binary_string_op (f : string -> string -> string) =
         binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
     in
-    let list_of_string rng (s:string) : term =
-        let mk x = mk x rng in
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
-        let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
+    let list_of_string' rng (s:string) : term =
+        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
         let char_t = name SC.char_lid in
-        let nil_char =
-            S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
-                        [S.iarg char_t]
-                        None rng
-        in
-        FStar.List.fold_right (fun c a ->
-            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
-                        [S.iarg char_t;
-                            S.as_arg (mk (Tm_constant (Const_char c)));
-                            S.as_arg a]
-                        None rng)
-            (list_of_string s)
-            nil_char
+        let charterm c = mk (Tm_constant (Const_char c)) rng in
+        U.mk_list char_t rng <| List.map charterm (list_of_string s)
+    in
+    let string_of_list' rng (l:list<char>) : term =
+        let s = string_of_list l in
+        SC.exp_string s
+    in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
     in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
@@ -559,7 +578,9 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
-                                    1, unary_op arg_as_string list_of_string)]
+                                    1, unary_op arg_as_string list_of_string');
+             (Const.p2l ["FStar"; "String"; "string_of_list"],
+                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
     in
     let bounded_arith_ops =
         let bounded_int_types =
@@ -726,9 +747,9 @@ let is_reify_head = function
     | _ ->
       false
 
-let is_fstar_tactics_quote t =
+let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -758,18 +779,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)
-            when is_fstar_tactics_quote hd ->
+            when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
             let t = {t with n=Tm_app(hd, args)} in
             let t = reduce_primops cfg t in
-            rebuild cfg env stack t //quoted terms should not be normalized, but they may have free variables
+            rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let tm = get_norm_request args in
-            let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let s = [Reify; UnfoldUntil Delta_constant; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
@@ -1231,7 +1252,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                         norm cfg env (List.tl stack) body
                     | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                        let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
+                        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
                         norm cfg env (List.tl stack) lifted
                     | Tm_match(e, branches) ->
                       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
@@ -1258,7 +1279,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 if should_reify
                 then
-                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' t)
+                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
                 (* TODO : don't we need to normalize t here ? *)
                 // let t = norm cfg env stack t in

@@ -5,8 +5,8 @@ type z3_result = (FStar_SMTEncoding_Z3.unsat_core,z3_err) FStar_Util.either
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
-let z3_result_as_replay_result uu___85_23 =
-  match uu___85_23 with
+let z3_result_as_replay_result uu___86_23 =
+  match uu___86_23 with
   | FStar_Util.Inl l -> FStar_Util.Inl l
   | FStar_Util.Inr (r,uu____32) -> FStar_Util.Inr r
 type hint_stat =
@@ -109,8 +109,8 @@ let next_hint: Prims.string -> Prims.int -> FStar_Util.hint Prims.option =
       match uu____200 with
       | Some hints ->
           FStar_Util.find_map hints
-            (fun uu___86_208  ->
-               match uu___86_208 with
+            (fun uu___87_208  ->
+               match uu___87_208 with
                | Some hint when
                    (hint.FStar_Util.hint_name = qname) &&
                      (hint.FStar_Util.hint_index = qindex)
@@ -124,13 +124,13 @@ let record_hint: FStar_Util.hint Prims.option -> Prims.unit =
       | None  -> None
       | Some h ->
           Some
-            (let uu___91_225 = h in
+            (let uu___92_225 = h in
              {
-               FStar_Util.hint_name = (uu___91_225.FStar_Util.hint_name);
-               FStar_Util.hint_index = (uu___91_225.FStar_Util.hint_index);
-               FStar_Util.fuel = (uu___91_225.FStar_Util.fuel);
-               FStar_Util.ifuel = (uu___91_225.FStar_Util.ifuel);
-               FStar_Util.unsat_core = (uu___91_225.FStar_Util.unsat_core);
+               FStar_Util.hint_name = (uu___92_225.FStar_Util.hint_name);
+               FStar_Util.hint_index = (uu___92_225.FStar_Util.hint_index);
+               FStar_Util.fuel = (uu___92_225.FStar_Util.fuel);
+               FStar_Util.ifuel = (uu___92_225.FStar_Util.ifuel);
+               FStar_Util.unsat_core = (uu___92_225.FStar_Util.unsat_core);
                FStar_Util.query_elapsed_time = (Prims.parse_int "0")
              }) in
     let uu____226 = FStar_ST.read recorded_hints in
@@ -163,8 +163,8 @@ let filter_using_facts_from:
     match uu____270 with
     | None  -> theory
     | Some namespace_strings ->
-        let fact_id_in_namespace ns uu___87_283 =
-          match uu___87_283 with
+        let fact_id_in_namespace ns uu___88_283 =
+          match uu___88_283 with
           | FStar_SMTEncoding_Term.Namespace lid ->
               FStar_Util.starts_with (FStar_Ident.text_of_lid lid) ns
           | FStar_SMTEncoding_Term.Name _lid -> false
@@ -253,8 +253,8 @@ let filter_assertions:
                              let uu____443 =
                                FStar_All.pipe_right th
                                  (FStar_Util.for_some
-                                    (fun uu___88_445  ->
-                                       match uu___88_445 with
+                                    (fun uu___89_445  ->
+                                       match uu___89_445 with
                                        | FStar_SMTEncoding_Term.Assume a ->
                                            nm =
                                              a.FStar_SMTEncoding_Term.assumption_name
@@ -265,8 +265,8 @@ let filter_assertions:
                    let uu____450 =
                      FStar_All.pipe_right th
                        (FStar_List.collect
-                          (fun uu___89_454  ->
-                             match uu___89_454 with
+                          (fun uu___90_454  ->
+                             match uu___90_454 with
                              | FStar_SMTEncoding_Term.Assume a ->
                                  [a.FStar_SMTEncoding_Term.assumption_name]
                              | uu____457 -> [])) in
@@ -333,8 +333,8 @@ let ask_and_report_errors:
              match uu____513 with
              | (query_name,query_index) ->
                  let minimum_workable_fuel = FStar_Util.mk_ref None in
-                 let set_minimum_workable_fuel f uu___90_569 =
-                   match uu___90_569 with
+                 let set_minimum_workable_fuel f uu___91_569 =
+                   match uu___91_569 with
                    | ([],uu____576) -> ()
                    | errs ->
                        let uu____582 = FStar_ST.read minimum_workable_fuel in
