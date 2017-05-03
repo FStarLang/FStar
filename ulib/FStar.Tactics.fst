@@ -388,6 +388,13 @@ let assert_by_tactic (t:tactic unit) (p:Type)
 
 (* Monadic helpers, could be made generic for do notation? *)
 
+val liftM1' : ('a -> tactic 'b) -> (tactic 'a -> tactic 'b)
+let liftM1' f ma = a <-- ma;
+                   f a
+
+val liftM1 : ('a -> 'b) -> (tactic 'a -> tactic 'b)
+let liftM1 f = liftM1' (fun x -> return (f x))
+
 val liftM2' : ('a -> 'b -> tactic 'c) -> (tactic 'a -> tactic 'b -> tactic 'c)
 let liftM2' f ma mb = a <-- ma;
                       b <-- mb;

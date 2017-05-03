@@ -28,7 +28,9 @@ let test_grewrite4 (f : int -> int -> int) (w : int) =
                           revert)
                      (f w w == w ==> f (f w w) (f w w) == w)
 
-let test_grewrite5 (n m : int) (p : n == m) =
+let test_grewrite5 (n m : int) (p1 : n == m)
+                               (p2 : (fun x -> x + n) == (fun x -> m + x)) =
     assert_by_tactic (liftM2' grewrite (quote n) (quote m);;
-                      dump "GGG")
+                      liftM1' exact (quote p1);;
+                      trivial)
                      ((fun x -> x + n) == (fun x -> m + x))
