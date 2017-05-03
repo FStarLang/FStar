@@ -155,7 +155,7 @@ let defaults =
       ("unthrottle_inductives"        , Bool false);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
-      ("use_tactics"                  , Bool false);
+      ("no_tactics"                   , Bool false);
       ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
@@ -251,7 +251,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
-let get_use_tactics             ()      = lookup_opt "use_tactics"              as_bool
+let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
@@ -676,9 +676,9 @@ let rec specs () : list<Getopt.opt> =
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
-        "use_tactics",
+        "no_tactics",
         ZeroArgs (fun () -> Bool true),
-        "Pre-process a verification condition using a user-provided tactic (a flag to support migration to tactics gradually)");
+        "Do not run the tactic engine before discharging a VC");
 
        ( noshort,
         "using_facts_from",
@@ -820,7 +820,7 @@ let settable = function
     | "trace_error"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
-    | "use_tactics"
+    | "no_tactics"
     | "using_facts_from"
     | "__temp_no_proj"
     | "reuse_hint_for"
