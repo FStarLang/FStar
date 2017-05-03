@@ -47,9 +47,8 @@ let term_eq (nm:Ident.lid) (args:S.args) =
   | [(embedded_t1, _); (embedded_t2, _)] ->
     let t1 = E.unembed_term embedded_t1 in
     let t2 = E.unembed_term embedded_t2 in
-    (match FStar.Syntax.Util.eq_tm t1 t2 with
-     | U.Equal -> Some (E.embed_bool true)
-     | _ -> Some (E.embed_bool false))
+    let b = FStar.Syntax.Util.term_eq t1 t2 in
+    Some (E.embed_bool b)
   | _ -> None
 
 let mk_pure_interpretation_2 (f:'a -> 'b -> 'c)

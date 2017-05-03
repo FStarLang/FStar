@@ -2208,6 +2208,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
+              // TODO: GM: shouldn't we fail immediately if `eq_tm`
+              // returns `NotEqual`?
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
                                else Some <| mk_eq2 env t1 t2 in
