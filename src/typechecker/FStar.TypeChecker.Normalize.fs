@@ -747,9 +747,10 @@ let is_reify_head = function
     | _ ->
       false
 
+// TODO: GM: kinda flaky and ill named
 let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv SC.fstar_refl_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -773,10 +774,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
-
-          | Tm_app({n=Tm_fvar fv}, _)
-            when S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid ->
-            rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)
             when is_fstar_tactics_embed hd ->

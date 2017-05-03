@@ -1,6 +1,6 @@
-module FStar.Syntax.Formula
+module FStar.Reflection.Formula
 
-open FStar.Syntax.Base
+open FStar.Reflction.Syntax
 
 noeq type formula =
   | True_  : formula
@@ -43,7 +43,7 @@ let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
 
 (* We could prove the previous two functions are inverses given some specs about pack/inspect *)
 
-let term_as_formula (t:term) : formula =
+let term_as_formula (t:term) : Tot formula =
     match inspect t with
     | Tv_Var n ->
         Name n

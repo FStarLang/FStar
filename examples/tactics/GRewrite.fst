@@ -41,8 +41,8 @@ let guard (b:bool) : tactic unit =
 
 // Sanity checks for term_eq
 let test_term_eq (m n o : int) =
-    assert_by_tactic (liftM1' guard (liftM2' term_eq (quote n) (quote n))) True;
-    assert_by_tactic (liftM1' guard (liftM2' term_eq (quote (n+m)) (quote (n+m)))) True;
+    assert_by_tactic (liftM1' guard (liftM2 term_eq (quote n) (quote n))) True;
+    assert_by_tactic (liftM1' guard (liftM2 term_eq (quote (n+m)) (quote (n+m)))) True;
 
     // These fail because of uvars present in types (of the arguments)
     //assert_by_tactic (liftM1' guard (liftM2' term_eq (quote (fun x -> n)) (quote (fun x -> n)))) True;

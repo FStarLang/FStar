@@ -1,4 +1,4 @@
-module FStar.Syntax.Base
+module FStar.Reflection.Syntax
 
 open FStar.Order
 

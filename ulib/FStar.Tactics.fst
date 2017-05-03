@@ -1,60 +1,12 @@
 module FStar.Tactics
 
 open FStar.Order
-include FStar.Formula
+include FStar.Syntax
 
-assume type binder //FStar.Syntax.Syntax.binder
-assume type term
-assume type env
-assume type fv
-
-type name = list string
-
-type typ     = term
-type binders = list binder
 type goal    = env * term
 type goals   = list goal
 type state   = goals  //active goals
              * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program
-
-noeq
-type const =
-  | C_Unit : const
-  | C_Int : int -> const // Not exposing the details, I presume
-  (* TODO: complete *)
-
-noeq
-type term_view =
-  | Tv_Var    : binder -> term_view
-  | Tv_FVar   : fv -> term_view
-  | Tv_App    : term -> term -> term_view
-  | Tv_Abs    : binder -> term -> term_view
-  | Tv_Arrow  : binder -> term -> term_view
-  | Tv_Type   : unit -> term_view
-  | Tv_Refine : binder -> term -> term_view
-  | Tv_Const  : const -> term_view
-  (* TODO: complete *)
-
-// Don't think we need these 4 in TAC... do we?
-assume val __inspect_fv : fv -> name
-let inspect_fv (fv:fv) = __inspect_fv fv
-
-assume val __pack_fv : name -> fv
-let pack_fv (ns:name) = __pack_fv ns
-
-assume val __compare_binder : binder -> binder -> order
-let compare_binder (b1:binder) (b2:binder) = __compare_binder b1 b2
-
-assume val __inspect_bv : binder -> string
-let inspect_bv (b:binder) = __inspect_bv b
-
-val flatten_name : name -> Tot string
-let rec flatten_name ns =
-    match ns with
-    | [] -> ""
-    | [n] -> n
-    | n::ns -> n ^ "." ^ flatten_name ns
-
 
 noeq type __result (a:Type) =
   | Success: a -> state -> __result a
@@ -139,28 +91,19 @@ let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
     | Some x -> return x
     | None -> t2)
 
-assume private val __binders_of_env : env -> binders
-let binders_of_env (e:env) : tactic binders = fun () -> __binders_of_env e
-
-assume private val __type_of_binder: binder -> term
-let type_of_binder (b:binder) : tactic term = fun () -> __type_of_binder b
-
-assume private val __term_eq : term -> term -> bool
-let term_eq t1 t2 : tactic bool = fun () ->  __term_eq t1 t2
-
+(*
+ * This is the way we inspect goals and any other term. We can quote them
+ * to turn them into a representation of them. Having a total function
+ * that does this is completely unsound (1 + 1 == 2, but not syntactically,
+ * contradiction).
+ *
+ * So, we encapsulate the syntax inspection effect as a tactic (in the TAC effect)
+ * so it cannot taint user code (pure or impure!). The cleanest way would be to directly
+ * assume __embed as a `a -> tactic term` computation (TODO?)
+ *)
 assume private val __embed  : #a:Type -> a -> term
 let quote #a (x:a) : tactic term = fun () -> __embed x
 
-assume val __inspect : term -> option term_view
-let inspect t : tactic term_view = fun () -> match __inspect t with
-                                             | Some tv -> tv
-                                             | None -> fail "inspect failed, possibly unknown syntax" ()
-
-assume val __pack : term_view -> term
-let pack tv : tactic term = fun () -> __pack tv
-
-assume val __term_to_string : term -> string
-let term_to_string t : tactic string = fun () -> __term_to_string t
 
 (* Many of these could be derived from apply_lemma,
    rather than being assumed as primitives.
@@ -240,13 +183,11 @@ let cur_goal : tactic goal =
   | hd::_ -> return hd
 
 let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
-    f <-- trytac (term_as_formula t);
-    match f with
-    | Some (Implies lhs rhs) ->
-        begin
-        lhs <-- trytac (term_as_formula lhs);
-        match f with
-        | Some (Eq _ _ _) -> return (Some (Some?.v lhs, rhs))
+    match term_as_formula t with
+    | Implies lhs rhs ->
+        let lhs = term_as_formula lhs in
+        begin match lhs with
+        | Eq _ _ _ -> return (Some (lhs, rhs))
         | _ -> return None
         end
     | _ -> return None
@@ -273,12 +214,9 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     match bs with
     | [] -> return ()
     | x_t::bs ->
-        t <-- type_of_binder x_t;
-        f <-- trytac (term_as_formula t);
-        begin match f with
-        | Some (Eq _ y _) ->
-            b <-- term_eq x y;
-            if b
+        begin match term_as_formula (type_of_binder x_t) with
+        | Eq _ y _ ->
+            if term_eq x y
             then rewrite x_t
             else try_rewrite_equality x bs
         | _ ->
@@ -290,10 +228,8 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
     | [] ->
         return ()
     | x_t::bs -> begin
-        tx <-- type_of_binder x_t;
-        f <-- trytac (term_as_formula tx);
-        match f with
-        | Some (Eq _ _ _) ->
+        match term_as_formula (type_of_binder x_t) with
+        | Eq _ _ _ ->
             rewrite x_t;;
             rewrite_all_context_equalities bs
         | _ ->
@@ -303,15 +239,13 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
 let rewrite_eqs_from_context : tactic unit =
     g <-- cur_goal;
     let context, _ = g in
-    bs <-- binders_of_env context;
-    rewrite_all_context_equalities bs
+    rewrite_all_context_equalities (binders_of_env context)
 
 let rewrite_equality (x:tactic term) : tactic unit =
     g <-- cur_goal;
     let context, _ = g in
     t <-- x;
-    bs <-- binders_of_env context;
-    try_rewrite_equality t bs
+    try_rewrite_equality t (binders_of_env context)
 
 let rewrite_all_equalities : tactic unit =
     visit (simplify_eq_implication)
@@ -320,11 +254,9 @@ let rewrite_all_equalities : tactic unit =
 let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
     g <-- cur_goal;
     let (_, goal_t) = g in
-    f <-- trytac (term_as_formula goal_t);
-    match f with
-    | Some (App hd arg) ->
-        b <-- term_eq hd tm;
-        if b
+    match term_as_formula goal_t with
+    | App hd arg ->
+        if term_eq hd tm
         then trivial
         else return ()
     | _ -> begin
