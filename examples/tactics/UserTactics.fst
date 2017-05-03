@@ -9,27 +9,6 @@ let test_or_else =
     assert_by_tactic (or_else (fail "failed")
                               (return ())) True
 
-let test_grewrite =
-assert_by_tactic (liftM2' grewrite (quote (1 + 2)) (quote 3)) (1 + 2 == 2 + 1)
-
-let test_grewrite2 (w x y z:int) =
-assert_by_tactic (liftM2' grewrite (quote (z + y)) (quote (y + z));;
-                  liftM2' grewrite (quote (x + (y + z))) (quote ((y + z) + x));;
-                  liftM2' grewrite (quote (w + ((y + z) + x))) (quote (((y + z) + x) + w)))
-                 (w + (x + (z + y)) == (y + z) + (x + w))
-
-let test_grewrite3 (w x y z : int) =
-assert_by_tactic (liftM2' grewrite (quote (1 + 2)) (quote 3);;
-                  liftM2' grewrite (quote (3, 3+4)) (quote (3,7)))
-                 ((1+2, 3+4) == (5-2, 7+0))
-
-// Should rewrite all at once, and does, but we get a weird hard query
-let test_grewrite4 (f : int -> int -> int) (w : int) =
-assert_by_tactic (implies_intro;;
-                  seq (liftM2' grewrite (quote (f w w)) (quote w))
-                      revert)
-                 (f w w == w ==> f (f w w) (f w w) == w)
-
 let simple_equality_assertions =
   assert_by_tactic rewrite_all_equalities
                    (forall (y:int). y==0 ==> 0==y);
@@ -81,7 +60,8 @@ val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x
 let lemma_mul_comm x y = ()
 
 let test_exact (x:nat) (y:nat) =
-  assert_by_tactic (exact (quote (mul_comm x y)))
+  assert_by_tactic (m <-- quote (mul_comm x y);
+                    exact m)
                    (op_Multiply x y == op_Multiply y x)
 
 let test_apply (x:nat) (y:nat) =

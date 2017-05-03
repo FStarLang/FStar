@@ -238,7 +238,7 @@ let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
   TAC?.reflect (__seq (reify_tactic f) (reify_tactic g))
 
 assume private val __exact : term -> __tac unit
-let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
+let exact (t:term) : tactic unit = fun () -> TAC?.reflect (__exact t)
 
 assume private val __apply_lemma : term -> __tac unit
 let apply_lemma (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply_lemma tt)
