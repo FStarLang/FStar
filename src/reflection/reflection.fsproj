@@ -43,7 +43,9 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FStar.Reflection.Placeholder.fs" />
+    <Compile Include="FStar.Reflection.Data.fs" />
+    <Compile Include="FStar.Reflection.Basic.fs" />
+    <Compile Include="FStar.Reflection.Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

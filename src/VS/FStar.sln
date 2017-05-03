@@ -43,9 +43,9 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "prettyprint", "..\prettypri
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosyntax", "..\tosyntax\tosyntax.fsproj", "{B0968012-B93C-4198-9085-B89669E8E4E8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tactics", "..\tactics\tactics.fsproj", "{82336F31-A87C-4403-A2F4-2B90B4F0996B}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "reflection", "..\reflection\reflection.fsproj", "{8869FA4E-96AF-4E01-99BC-B52C88610E3D}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tactics", "..\tactics\tactics.fsproj", "{82336F31-A87C-4403-A2F4-2B90B4F0996B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
