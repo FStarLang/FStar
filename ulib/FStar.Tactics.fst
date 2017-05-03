@@ -1,6 +1,7 @@
 module FStar.Tactics
 
 open FStar.Order
+include FStar.Formula
 
 assume type binder //FStar.Syntax.Syntax.binder
 assume type term
@@ -15,31 +16,6 @@ type goal    = env * term
 type goals   = list goal
 type state   = goals  //active goals
              * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program
-
-(* This is meant to be all named representation
-     -- while providing some conveniences for
-        handling the logical structure of a term
-   NB: rename this to term_view? or something like that
-*)
-
-noeq type formula =
-  //the logical skeleton of a term
-  | True_  : formula
-  | False_ : formula
-  | Eq     : typ -> term -> term -> formula
-  | And    : term -> term -> formula  //Prims.l_and
-  | Or     : term -> term -> formula
-  | Not    : term -> formula
-  | Implies: term -> term -> formula
-  | Iff    : term -> term -> formula
-  | Forall : binders -> term -> formula
-  | Exists : binders -> term -> formula
-  | App    : term -> term -> formula
-  | Name   : binder -> formula
-   (* TODO more cases *)
-  | IntLit : int -> formula
-  //Abs   : binders -> term -> formula //Named repr
-  //Match : ....
 
 noeq
 type const =
@@ -58,7 +34,6 @@ type term_view =
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : const -> term_view
   (* TODO: complete *)
-
 
 // Don't think we need these 4 in TAC... do we?
 assume val __inspect_fv : fv -> name
@@ -176,11 +151,6 @@ let term_eq t1 t2 : tactic bool = fun () ->  __term_eq t1 t2
 assume private val __embed  : #a:Type -> a -> term
 let quote #a (x:a) : tactic term = fun () -> __embed x
 
-//This primitive provides a way to destruct a term as a formula
-//TODO: We should add a formula_as_term also
-assume private val __term_as_formula : term -> option formula
-let term_as_formula t : tactic (option formula) = fun () -> __term_as_formula t
-
 assume val __inspect : term -> option term_view
 let inspect t : tactic term_view = fun () -> match __inspect t with
                                              | Some tv -> tv
@@ -270,11 +240,11 @@ let cur_goal : tactic goal =
   | hd::_ -> return hd
 
 let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
-    f <-- term_as_formula t;
+    f <-- trytac (term_as_formula t);
     match f with
     | Some (Implies lhs rhs) ->
         begin
-        lhs <-- term_as_formula lhs;
+        lhs <-- trytac (term_as_formula lhs);
         match f with
         | Some (Eq _ _ _) -> return (Some (Some?.v lhs, rhs))
         | _ -> return None
@@ -304,7 +274,7 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     | [] -> return ()
     | x_t::bs ->
         t <-- type_of_binder x_t;
-        f <-- term_as_formula t;
+        f <-- trytac (term_as_formula t);
         begin match f with
         | Some (Eq _ y _) ->
             b <-- term_eq x y;
@@ -321,7 +291,7 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
         return ()
     | x_t::bs -> begin
         tx <-- type_of_binder x_t;
-        f <-- term_as_formula tx;
+        f <-- trytac (term_as_formula tx);
         match f with
         | Some (Eq _ _ _) ->
             rewrite x_t;;
@@ -350,7 +320,7 @@ let rewrite_all_equalities : tactic unit =
 let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
     g <-- cur_goal;
     let (_, goal_t) = g in
-    f <-- term_as_formula goal_t;
+    f <-- trytac (term_as_formula goal_t);
     match f with
     | Some (App hd arg) ->
         b <-- term_eq hd tm;
