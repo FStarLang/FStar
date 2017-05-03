@@ -59,7 +59,6 @@ val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
-val check_cardinality           : unit    -> bool
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
@@ -128,6 +127,7 @@ val silent                      : unit    -> bool
 val split_cases                 : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
+val ugly                        : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
@@ -135,9 +135,7 @@ val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> option<list<string>>
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
-val warn_cardinality            : unit    -> bool
 val warn_default_effects        : unit    -> bool
-val warn_top_level_effects      : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>

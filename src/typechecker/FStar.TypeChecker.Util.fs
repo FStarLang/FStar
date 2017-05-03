@@ -162,14 +162,15 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     in
 
     let t, b = aux false (t_binders env) e in
-    let t = match t with
-        | Inr c ->
-	  if U.is_tot_or_gtot_comp c
-	  then U.comp_result c
-	  else raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-				       (Print.comp_to_string c),
-                      rng))
-        | Inl t -> t in
+    let t =
+       match t with
+       | Inr c ->
+	     if U.is_tot_or_gtot_comp c
+	     then U.comp_result c
+	     else raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+				                        (Print.comp_to_string c),
+                           rng))
+       | Inl t -> t in
     [], t, b
 
   | _ ->
