@@ -1,7 +1,7 @@
 module FStar.Tactics
 
 open FStar.Order
-include FStar.Syntax
+include FStar.Reflection
 
 type goal    = env * term
 type goals   = list goal
