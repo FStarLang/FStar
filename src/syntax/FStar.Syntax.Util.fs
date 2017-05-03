@@ -1093,8 +1093,8 @@ let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
   | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
   | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 && eqlist branch_eq bs1 bs2
   | _, _ -> false // TODO missing cases
-and arg_eq = eqprod term_eq (fun q1 q2 -> q1 = q2)
-and binder_eq = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2)
+and arg_eq a1 a2 = eqprod term_eq (fun q1 q2 -> q1 = q2) a1 a2
+and binder_eq b1 b2 = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2) b1 b2
 and lcomp_eq c1 c2 = false// TODO
 and residual_eq r1 r2 = false// TODO
 and comp_eq c1 c2 = match c1.n, c2.n with
