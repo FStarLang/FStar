@@ -1075,9 +1075,11 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
     | _ -> false
 
 // TODO: canonize applications?
-// TODO: do alpha renaming, otherwise there's no hope for abstractions
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
+// We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
+// indices.
 let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
+  | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
   | Tm_constant x, Tm_constant y -> x = y
@@ -1089,7 +1091,7 @@ let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
   | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 && eqlist branch_eq bs1 bs2
   | _, _ -> false // TODO missing cases
 and arg_eq = eqprod term_eq (fun q1 q2 -> q1 = q2)
-and binder_eq = eqprod bv_eq (fun q1 q2 -> q1 = q2)
+and binder_eq = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2)
 and lcomp_eq c1 c2 = false// TODO
 and residual_eq r1 r2 = false// TODO
 and comp_eq c1 c2 = match c1.n, c2.n with
@@ -1110,7 +1112,7 @@ let rec bottom_fold (f : term -> term) (t : term) : term =
     let tn = match tn with
              | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
              // TODO: types
-             | Tm_abs (bs, t, k) -> let _, t' = open_term bs t in
+             | Tm_abs (bs, t, k) -> let bs, t' = open_term bs t in
                                     let t'' = ff t' in
                                     Tm_abs (bs, close bs t'', k)
 
