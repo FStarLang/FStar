@@ -275,8 +275,16 @@ let detail_errors env
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
-        (labs |> List.map (fun (l, _, _) ->
-                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", ("disable_label_"^fst l)))) in
+        labs
+        |> List.map (fun (l, _, _) ->
+            let a = {
+                    assumption_name="disable_label_"^fst l;
+                    assumption_caption=Some "Disabling label";
+                    assumption_term=mkEq(mkFreeV l, mkTrue);
+                    assumption_fact_ids=[]
+                }
+            in
+            Term.Assume a) in
 
     //check all active labels linearly and classify as eliminated/error
     let rec linear_check eliminated errors active =

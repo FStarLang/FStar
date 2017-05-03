@@ -201,7 +201,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 4.6.x.y) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 4.8.x.y) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
@@ -250,7 +250,7 @@ into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.04.0) setup.
+Steps 2 and 3 below require a working OCaml setup. Any version of OCaml from 4.02.2 to 4.04.1 should do, but we recommend to F\* developers who plan to commit their extracted ML files to master to stick with 4.02.3, which is the latest OCaml version that works with opam on Windows.
 
 #### Instructions for Windows ####
 

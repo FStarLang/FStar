@@ -616,10 +616,23 @@ and cps_and_elaborate env ed =
     else
       close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
   in
+  let rec apply_last f l = match l with
+  | [] -> failwith "empty path.."
+  | [a] -> [f a]
+  | (x::xs) -> x :: (apply_last f xs) in
   let register name item =
-    let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
-    sigelts := sigelt :: !sigelts;
-    fv
+    let p = path_of_lid ed.mname in
+    let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
+    let l' = lid_of_path p' Range.dummyRange in
+    match try_lookup_lid env l' with
+    | Some (_us,_t) -> begin
+        BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
+        // TODO: GM: get exact delta depth, needs a change of interfaces
+        fv_to_tm (lid_as_fv l' Delta_equational None)
+        end
+    | None -> let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
+              sigelts := sigelt :: !sigelts;
+              fv
   in
   let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
 
@@ -1098,7 +1111,8 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls
       *)
-    let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
+    let should_generalize, lbs', quals_opt =
+       snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
           let lbname = right lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
             | None ->

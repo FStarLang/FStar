@@ -1098,7 +1098,12 @@ and p_atomicTermNotQUident e = match (unparen e).tm with
   | Var lid when lid_equals lid C.assert_lid ->
     str "assert"
   | Tvar tv -> p_tvar tv
-  | Const c -> p_constant c
+  | Const c ->
+    begin match c with
+    | Const.Const_char x  when x = '\n' ->
+       str "0x0Az"
+    | _ -> p_constant c
+    end
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
   | Name lid when lid_equals lid C.false_lid ->
