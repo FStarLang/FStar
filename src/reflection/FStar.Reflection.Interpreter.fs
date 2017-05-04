@@ -1,40 +1,51 @@
+#light "off"
 module FStar.Reflection.Interpreter
 
-let x = 2
-(*
-      mk "__compare_binder" 2 (mk_pure_interpretation_2 order_binder E.unembed_binder E.unembed_binder E.embed_order);
-      mk "__inspect" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term E.embed_term_view);
-      mk "__pack" 1 (mk_pure_interpretation_1 E.pack E.unembed_term_view E.embed_term);
+open FStar.Reflection.Data
+open FStar.Reflection.Basic
+open FStar.Ident
+module Range = FStar.Range
+open FStar.List
+module Env = FStar.TypeChecker.Env
+open FStar.TypeChecker.Normalizer
+open FStar.Syntax.Syntax
+module Print = FStar.Syntax.Print
 
-      mk "__inspect_fv" 1 (mk_pure_interpretation_1 E.inspectfv E.unembed_fvar (E.embed_list E.embed_string FStar.TypeChecker.Common.t_string));
-      mk "__pack_fv"    1 (mk_pure_interpretation_1 E.packfv (E.unembed_list E.unembed_string) E.embed_fvar);
+let int1 (nm:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)
+                 (r:Range.range) (args : list term) : option<term> =
+    match args with
+    | [(a, _)] -> Some (em (f (ua a)))
+    | _ -> None
 
-      mk "__inspect_bv" 1 (mk_pure_interpretation_1 E.inspectbv E.unembed_binder E.embed_string);
-      mk "__term_to_string"  1 (mk_pure_interpretation_1 Print.term_to_string E.unembed_term E.embed_string);
+let int2 (nm:lid) (f:'a -> 'b -> 'c) (ua:term -> 'a) (ub:term -> 'b) (em:'c -> term)
+                 (r:Range.range) (args : list term) : option<term> =
+    match args with
+    | [(a, _); (b, _)] -> Some (em (f (ua a) (ub b)))
+    | _ -> None
 
+let reflection_primops : primitive_steps =
+    let mklid nm = fstar_refl_syntax_lid nm in
+    let mk nm arity fn =
+        {
+            name = nm;
+            arity = arity;
+            strong_reduction_ok = false; //TODO: revisit?
+            interpretation = fn
+        } in
+    let mk1 nm f u1 em    = let nm = mklid nm in mk nm 1 (int1 nm f u1 em) in
+    let mk2 nm f u1 u2 em = let nm = mklid nm in mk nm 2 (int2 nm f u1 u2 em) in
+    [
+        mk1 "__inspect" inspect unembed_term embed_term_view;
+        mk1 "__pack"    pack    unembed_term_view (embed_option embed_term fstar_refl_term);
 
+        mk1 "__inspect_fv" inspect_fv unembed_fvar (embed_list embed_string FStar.TypeChecker.Common.t_string);
+        mk1 "__pack_fv" pack_fv (unembed_list unembed_string) embed_fvar;
 
-let binders_of_env ps (nm:Ident.lid) (args:S.args) =
-  match args with
-  | [(embedded_env, _)] ->
-    let env = E.unembed_env ps.main_context embedded_env in
-    Some (E.embed_binders (Env.all_binders env))
-  | _ -> None
+        mk1 "__inspect_bv" inspect_bv unembed_binder embed_string;
+        mk2 "__compare_binder" order_binder unembed_binder unembed_binder embed_order;
 
-let type_of_binder (nm:Ident.lid) (args:S.args) =
-  match args with
-  | [(embedded_binder, _)] ->
-    let b, _ = E.unembed_binder embedded_binder in
-    Some (E.embed_term b.sort)
-  | _ -> None
+        mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
+        mk1 "__type_of_binder" (fun (b,q) -> b.sort) unembed_binder embed_term;
 
-      mk "__binders_of_env"  1 (binders_of_env ps);
-      mk "__type_of_binder"  1 type_of_binder;
-      mk "__term_eq"         2 term_eq;
-
-let quote (nm:Ident.lid) (args:S.args) =
-  match args with
-  | [_; (y, _)] -> Some (E.embed_term y)
-  | _ -> None
-
-      *)
+        mk1 "__term_to_string" Print.term_to_string unembed_term embed_string
+    ]

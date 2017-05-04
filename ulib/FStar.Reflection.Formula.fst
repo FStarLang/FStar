@@ -1,6 +1,6 @@
 module FStar.Reflection.Formula
 
-open FStar.Reflction.Syntax
+open FStar.Reflection.Syntax
 
 noeq type formula =
   | True_  : formula

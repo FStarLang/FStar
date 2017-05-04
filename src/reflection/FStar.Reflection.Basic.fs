@@ -1,3 +1,4 @@
+#light "off"
 module FStar.Reflection.Basic
 
 open FStar.Reflection.Data
@@ -117,7 +118,6 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
 
     | _ ->
       failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
-
 
 let embed_binders l = embed_list embed_binder Data.fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
@@ -298,14 +298,14 @@ let rec init (l:list<'a>) : list<'a> =
     | [x] -> []
     | x::xs -> x :: init xs
 
-let inspectfv (fv:fv) : list<string> =
+let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
 
-let packfv (ns:list<string>) : fv =
+let pack_fv (ns:list<string>) : fv =
     // TODO: Delta_equational and None ok?
     lid_as_fv (SC.p2l ns) Delta_equational None
 
-let inspectbv (b:binder) : string =
+let inspect_bv (b:binder) : string =
     Print.bv_to_string (fst b)
     // calling into Print, which really doesn't make guarantees
     // ... should be safe as we give no semantics to these names: they're just for debugging
@@ -374,37 +374,38 @@ let inspect (t:term) : term_view =
         Tv_Unknown
 
 // TODO: pass in range?
-let pack (tv:term_view) : term =
+let pack (tv:term_view) : option<term> =
     match tv with
     | Tv_Var (bv, _) ->
-        S.bv_to_tm bv
+        Some <| S.bv_to_tm bv
 
     | Tv_FVar fv ->
-        S.fv_to_tm fv
+        Some <| S.fv_to_tm fv
 
     | Tv_App (l, r) ->
-        U.mk_app l [S.as_arg r]
+        Some <| U.mk_app l [S.as_arg r]
 
     | Tv_Abs (b, t) ->
-        U.abs [b] t None // TODO: effect?
+        Some <| U.abs [b] t None // TODO: effect?
 
     | Tv_Arrow (b, t) ->
-        U.arrow [b] (mk_Total t)
+        Some <| U.arrow [b] (mk_Total t)
 
     | Tv_Type () ->
-        U.ktype
+        Some <| U.ktype
 
     | Tv_Refine ((bv, _), t) ->
-        U.refine bv t
+        Some <| U.refine bv t
 
     | Tv_Const (C_Unit) ->
-        SC.exp_unit
+        Some <| SC.exp_unit
 
     | Tv_Const (C_Int s) ->
-        SC.exp_int s
+        Some <| SC.exp_int s
 
     | _ ->
-        failwith "pack: unexpected term view"
+        //warn "pack: unexpected term view";
+        None
 
 let embed_order (o:order) : term =
     match o with
@@ -426,5 +427,3 @@ let order_binder (x:binder) (y:binder) : order =
     if n < 0 then Lt
     else if n = 0 then Eq
     else Gt
-
-
