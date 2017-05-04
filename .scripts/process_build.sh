@@ -13,11 +13,18 @@ fi
 set -e
 set -o pipefail
 
+# Make sure we are starting in the right place (F* repository)
+if ! [[ -d ulib ]]; then
+  echo "This script is intended to be run from the root of the F* repository"
+  exit 1
+fi
+FSTAR_HOME=$PWD
+
 # Expects to be called from $BN_BINARYSPATH_ROOT
 function cp_to_binaries () {
   local file=$1
-  echo "--" $ORIG_PWD/src/ocaml-output/$file $BN_BINARYSPATH
-  cp $ORIG_PWD/src/ocaml-output/$file $BN_BINARYSPATH
+  echo "--" $FSTAR_HOME/src/ocaml-output/$file $BN_BINARYSPATH
+  cp $FSTAR_HOME/src/ocaml-output/$file $BN_BINARYSPATH
   git add $BN_BINARYSPATH/$file
 }
 
@@ -31,12 +38,6 @@ function cleanup_files () {
     git rm ${file_list} -f
   fi
 }
-
-BUILD_DIR=$(pwd)
-if [[ -f ~/.bash_profile ]]; then
-  source ~/.bash_profile
-fi
-cd "$BUILD_DIR"
 
 # Constants for showing color in output window
 RED='\033[0;31m'
@@ -55,9 +56,6 @@ fi
 if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
   rm src/ocaml-output/fstar/AllExamples.log
 fi
-
-# Need this to get back after unzip things
-ORIG_PWD=$PWD
 
 echo "*** Make package ***"
 cd src/ocaml-output
@@ -119,7 +117,7 @@ fi
 
 # Got to this point, so know it passed - copy minor version out
 echo "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
-cd $ORIG_PWD
+cd $FSTAR_HOME
 BN_BINARYSPATH_ROOT=~/binaries
 BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
 BN_FILESTOKEEP=4
@@ -130,21 +128,19 @@ if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
 fi
 
 cd $BN_BINARYSPATH_ROOT
+git fetch
 git checkout master
-git reset --hard HEAD
-git pull origin master
+git reset --hard origin/master
 
 echo "-- copy files and add to Github --"
-if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
+if [[ -f $FSTAR_HOME/src/ocaml-output/$MINOR_ZIP_FILE ]]; then
   cp_to_binaries $MINOR_ZIP_FILE
-  cd ..
 fi
-if [[ -f $ORIG_PWD/src/ocaml-output/$MINOR_TAR_FILE ]]; then
+if [[ -f $FSTAR_HOME/src/ocaml-output/$MINOR_TAR_FILE ]]; then
   cp_to_binaries $MINOR_TAR_FILE
 fi
 
 # Now that latest package is added, remove the oldest one because only keeping most recent 4 packages
-cd $BN_BINARYSPATH
 echo "-- Delete oldest ZIP file if more than 4 exist --"
 cleanup_files "zip"
 echo "-- Delete oldest TAR file if more than 4 exist --"
