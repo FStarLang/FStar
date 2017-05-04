@@ -15,6 +15,7 @@ let test2 = assert_by_tactic (x <-- quote test1;
 
 let blah' (ff : term -> tactic term) (t : term) =
     print ("GGG Trace: " ^ term_to_string t);;
+    print ("GGG Trace2: " ^ print_formula (term_as_formula t));;
     tv <-- (match inspect t with
             | Tv_Var b -> print ("BVar = " ^ inspect_bv b);;
                           return (Tv_Var b)

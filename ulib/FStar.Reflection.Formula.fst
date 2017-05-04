@@ -60,11 +60,11 @@ let term_as_formula (t:term) : Tot formula =
             if eq_qn qn imp_qn then Implies a1 a2
             else if eq_qn qn and_qn then And a1 a2
             else if eq_qn qn or_qn  then Or a1 a2
-            else F_Unknown
+            else App h0 t
         | Tv_FVar fv, [a] ->
             let qn = inspect_fv fv in
             if eq_qn qn not_qn then Not a
-            else F_Unknown
+            else App h0 t
         | _ ->
             App h0 t
         end
@@ -83,5 +83,23 @@ let term_as_formula (t:term) : Tot formula =
     | Tv_Const (C_Unit)
     | _ -> 
         F_Unknown
+
+let print_formula (f:formula) : string =
+    match f with
+    | True_ -> "True_"
+    | False_ -> "False_"
+    | Eq t l r -> "Eq (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | And p q -> "And (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
+    | Or  p q ->  "Or (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
+    | Implies p q ->  "Implies (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
+    | Not p ->  "Not (" ^ term_to_string p ^ ")"
+    | Iff p q ->  "Iff (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
+    | Forall bs t -> "Forall <bs> (" ^ term_to_string t ^ ")"
+    | Exists bs t -> "Exists <bs> (" ^ term_to_string t ^ ")"
+    | App p q ->  "App (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
+    | Name b ->  "Name (" ^ inspect_bv b ^ ")"
+    | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
+    | IntLit i -> "Int " ^ string_of_int i
+    | F_Unknown -> "?"
 
 // TODO: formula as term
