@@ -5,30 +5,30 @@ open FStar.Reflection.Basic
 open FStar.Ident
 module Range = FStar.Range
 open FStar.List
-open FStar.TypeChecker.Normalizer
 open FStar.Syntax.Syntax
 module Print = FStar.Syntax.Print
+module N = FStar.TypeChecker.Normalize
 
 let int1 (nm:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)
-                 (r:Range.range) (args : args) : option<term> =
+                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _)] -> Some (em (f (ua a)))
     | _ -> None
 
 let int2 (nm:lid) (f:'a -> 'b -> 'c) (ua:term -> 'a) (ub:term -> 'b) (em:'c -> term)
-                 (r:Range.range) (args : args) : option<term> =
+                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _); (b, _)] -> Some (em (f (ua a) (ub b)))
     | _ -> None
 
-let reflection_primops : primitive_steps =
+let reflection_primops : list<N.primitive_step> =
     let mklid nm = fstar_refl_syntax_lid nm in
     let mk nm arity fn =
         {
-            name = nm;
-            arity = arity;
-            strong_reduction_ok = false; //TODO: revisit?
-            interpretation = fn
+            N.name = nm;
+            N.arity = arity;
+            N.strong_reduction_ok = false;
+            N.interpretation = fn
         } in
     let mk1 nm f u1 em    = let nm = mklid nm in mk nm 1 (int1 nm f u1 em) in
     let mk2 nm f u1 u2 em = let nm = mklid nm in mk nm 2 (int2 nm f u1 u2 em) in
