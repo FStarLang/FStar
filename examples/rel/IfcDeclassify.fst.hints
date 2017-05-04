@@ -11,9 +11,9 @@
       ],
       0
     ],
-    [ "IfcDeclassify.STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "IfcDeclassify._dm4f_STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "IfcDeclassify.STATE___proj__STATE__item__get_elab",
+      "IfcDeclassify._dm4f_STATE___proj__STATE__item__get_elab",
       1,
       2,
       1,
@@ -21,7 +21,7 @@
       0
     ],
     [
-      "IfcDeclassify.STATE___proj__STATE__item__put_elab",
+      "IfcDeclassify._dm4f_STATE___proj__STATE__item__put_elab",
       1,
       2,
       1,
