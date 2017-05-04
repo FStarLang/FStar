@@ -403,7 +403,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                              else hint_opt)
             | Inr errs ->
                  query_info (Some env) "Query-stats" "failed" statistics;
-                 if used_hint then (
+                 if used_hint && Options.hint_info() then (
                  print_string "Failed hint:\n";
                  match unsat_core with
                  | None -> BU.print_string "<empty>"
