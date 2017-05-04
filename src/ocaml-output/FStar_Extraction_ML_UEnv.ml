@@ -339,7 +339,7 @@ let sanitize: Prims.string -> Prims.string =
         [] in
     let cs'1 =
       match cs' with
-      | c::cs1 when mem1 c num -> '_' :: c :: cs1
+      | c::cs1 when (mem1 c num) || (c = '\'') -> '_' :: c :: cs1
       | uu____604 -> cs in
     FStar_String.string_of_list cs'1
 let find_uniq: binding Prims.list -> Prims.string -> Prims.string =

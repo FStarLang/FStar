@@ -201,7 +201,7 @@ let sanitize (s:string) : string =
   let valid c = mem c (low@high@num@spec) in
   let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
   let cs' = match cs' with
-            | (c::cs) when mem c num ->
+            | (c::cs) when mem c num || c = '\'' ->
                   '_'::c::cs
             | _ -> cs in
   FStar.String.string_of_list cs'
