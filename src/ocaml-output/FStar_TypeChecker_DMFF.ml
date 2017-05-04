@@ -63,12 +63,7 @@ let gen_wps_for_free:
                    FStar_List.append bs uu____120
                | FStar_Syntax_Syntax.Tm_type uu____126 -> []
                | uu____129 -> failwith "wp_a doesn't end in Type0" in
-             let mk_lid name =
-               FStar_Ident.lid_of_path
-                 (FStar_Ident.path_of_text
-                    (Prims.strcat
-                       (FStar_Ident.text_of_lid ed.FStar_Syntax_Syntax.mname)
-                       (Prims.strcat "_" name))) FStar_Range.dummyRange in
+             let mk_lid name = FStar_Syntax_Util.dm4f_lid ed name in
              let gamma =
                let uu____141 = collect_binders wp_a1 in
                FStar_All.pipe_right uu____141 FStar_Syntax_Util.name_binders in
@@ -1946,7 +1941,7 @@ and infer:
                            FStar_Syntax_Syntax.gen_bv
                              (Prims.strcat
                                 (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-                                "^w") None uu____3692 in
+                                "__w") None uu____3692 in
                          let x =
                            let uu___114_3694 = bv in
                            let uu____3695 =
@@ -2919,7 +2914,7 @@ and trans_F_:
                                    FStar_Syntax_Syntax.gen_bv
                                      (Prims.strcat
                                         (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-                                        "-w'") None uu____6182 in
+                                        "__w'") None uu____6182 in
                                  let uu____6183 =
                                    let uu____6187 =
                                      let uu____6191 =
@@ -2941,7 +2936,7 @@ and trans_F_:
                                     FStar_Syntax_Syntax.gen_bv
                                       (Prims.strcat
                                          (bv.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-                                         "-x") None uu____6208 in
+                                         "__x") None uu____6208 in
                                   (x, [(x, q)]))) binders_orig in
                     FStar_List.split uu____6148 in
                   (match uu____6140 with
