@@ -297,7 +297,8 @@ let inspect_bv (b:binder) : string =
 
 // TODO: consider effects? probably not too useful, but something should be done
 let inspect (t:term) : term_view =
-    match (SS.compress t).n with
+    let t = U.un_uinst t in
+    match t.n with
     | Tm_name bv ->
         Tv_Var (S.mk_binder bv)
 
@@ -355,7 +356,7 @@ let inspect (t:term) : term_view =
         Tv_Const c
 
     | _ ->
-        BU.print_string "inspect: outside of expected syntax\n";
+        BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
         Tv_Unknown
 
 // TODO: pass in range?
