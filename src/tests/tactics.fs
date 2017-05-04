@@ -40,7 +40,7 @@ let proofstate_of_goal g = {
 
 
 let rec simplify_eq_impl : tac<unit>
-    = with_cur_goal "simplify_eq_impl" (fun goal ->
+    = with_cur_goal (fun goal ->
           match destruct_equality_imp goal.goal_ty with
           | Some (x, e, rhs) -> //we have x==e ==> rhs
                  //imp_intro: introduce x=e in the context; goal is rhs

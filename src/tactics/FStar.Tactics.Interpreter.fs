@@ -109,7 +109,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                                 (unembed_tactic_0 unembed_unit)
                                                 embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
-      mk "__focus"   2  (mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
+      mk "__focus"   2  (mk_tactic_interpretation_1 ps focus_cur_goal
                                                 (unembed_tactic_0 unembed_unit)
                                                 embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
@@ -150,13 +150,13 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         fail msg))))))
 
 let evaluate_user_tactic : tac<unit>
-    = with_cur_goal "evaluate_user_tactic" (fun goal ->
+    = with_cur_goal (fun goal ->
       bind get (fun proof_state ->
           let hd, args = U.head_and_args goal.goal_ty in
           match (U.un_uinst hd).n, args with
           | Tm_fvar fv, [(tactic, _); (assertion, _)]
                 when S.fv_eq_lid fv E.by_tactic_lid ->
-            focus_cur_goal "user tactic"
+            focus_cur_goal
             (bind (replace_cur ({goal with goal_ty=assertion})) (fun _ ->
                    unembed_tactic_0 unembed_unit tactic))
           | _ ->
