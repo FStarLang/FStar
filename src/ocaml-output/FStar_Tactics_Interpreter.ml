@@ -272,8 +272,7 @@ let rec primitive_steps:
                             let uu____474 =
                               mk1 "__focus" (Prims.parse_int "2")
                                 (mk_tactic_interpretation_1 ps
-                                   (FStar_Tactics_Basic.focus_cur_goal
-                                      "user_tactic")
+                                   FStar_Tactics_Basic.focus_cur_goal
                                    (unembed_tactic_0
                                       FStar_Reflection_Basic.unembed_unit)
                                    FStar_Reflection_Basic.embed_unit
@@ -396,7 +395,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
                                  (fun uu____590  ->
                                     FStar_Tactics_Basic.fail msg))))))
 let evaluate_user_tactic: Prims.unit FStar_Tactics_Basic.tac =
-  FStar_Tactics_Basic.with_cur_goal "evaluate_user_tactic"
+  FStar_Tactics_Basic.with_cur_goal
     (fun goal  ->
        FStar_Tactics_Basic.bind FStar_Tactics_Basic.get
          (fun proof_state  ->
@@ -431,8 +430,7 @@ let evaluate_user_tactic: Prims.unit FStar_Tactics_Basic.tac =
                          (fun uu____674  ->
                             unembed_tactic_0
                               FStar_Reflection_Basic.unembed_unit tactic) in
-                     FStar_Tactics_Basic.focus_cur_goal "user tactic"
-                       uu____669
+                     FStar_Tactics_Basic.focus_cur_goal uu____669
                  | uu____675 -> FStar_Tactics_Basic.fail "Not a user tactic")))
 let by_tactic_interp:
   FStar_TypeChecker_Env.env ->
