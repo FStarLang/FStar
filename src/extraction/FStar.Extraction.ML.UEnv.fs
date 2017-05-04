@@ -22,6 +22,8 @@ open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
+
+module U  = FStar.Syntax.Util
 module BU = FStar.Util
 
 // JP: my understanding of this is: we either bind a type (left injection) or a
@@ -135,37 +137,12 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
 
 let lookup_tyvar (g:env) (bt:bv) : mlty = lookup_ty_local g.gamma bt
 
-let lookup_eff_action (g:env) (x:either<fv,lident>) : ty_or_exp_b =
-    // effect actions are extracted as projectors in a namespace named after the effect
-    // check if that's the case and if so lookup in this namespace
-    let name, range = match x with
-        | Inl fv -> fv.fv_name.v, Range.string_of_range fv.fv_name.p
-        | Inr lid -> lid, Range.string_of_range Range.dummyRange in
-    let fv_not_found = (BU.format2 "(%s) free Variable %s not found\n" range (Print.lid_to_string name)) in
-
-    let eff_name =
-        // assumes action names are in the format __proj__[eff]__item__[action]
-        // if found, return eff
-        let idents = String.split ['_'] name.ident.idText in
-        try
-            let i,j = List.index (fun x -> x = "proj") idents, List.index (fun x -> x = "item") idents in
-            String.concat "_" <| snd (List.splitAt (i+2) (fst (List.splitAt (j-1) idents)))
-        with _ -> failwith fv_not_found in
-    let action_name = String.concat "." <| (List.map (fun x -> x.idText) name.ns)@[eff_name; name.ident.idText] in
-
-    let x = BU.find_map g.gamma (function
-        | Fv (fv', t) when fv'.fv_name.v.str = action_name -> Some t
-        | _ -> None) in
-    match x with
-        | None -> failwith fv_not_found
-        | Some y -> y
-
 let lookup_fv_by_lid (g:env) (lid:lident) : ty_or_exp_b =
     let x = BU.find_map g.gamma (function
         | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
-        | None -> lookup_eff_action g (Inr lid)
+        | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
         | Some y -> y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
@@ -174,7 +151,7 @@ let lookup_fv (g:env) (fv:fv) : ty_or_exp_b =
         | Fv (fv', t) when fv_eq fv fv' -> Some t
         | _ -> None) in
     match x with
-        | None -> lookup_eff_action g (Inl fv)
+        | None -> failwith (BU.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.fv_name.p) (Print.lid_to_string fv.fv_name.v))
         | Some y -> y
 
 let lookup_bv (g:env) (bv:bv) : ty_or_exp_b =
@@ -316,18 +293,13 @@ let mkContext (e:TypeChecker.Env.env) : env =
    extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
 
 let monad_op_name (ed:Syntax.eff_decl) nm =
-    let module_name, eff_name = ed.mname.ns, ed.mname.ident in
-    let mangled_name = Ident.reserved_prefix ^ eff_name.idText ^ "_" ^ nm in
-    let mangled_lid = Ident.lid_of_ids (module_name@[Ident.id_of_text mangled_name]) in
-    let ml_name = mlpath_of_lident mangled_lid in
-    let lid = Ident.ids_of_lid ed.mname @ [Ident.id_of_text nm] |> Ident.lid_of_ids in
-    ml_name, lid
+    (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
+    (* same as for actions. However, extracted code should not make explicit use of them. *)
+    let lid = U.mk_field_projector_name_from_ident (ed.mname) (id_of_text nm) in
+    (mlpath_of_lident lid), lid
 
 let action_name (ed:Syntax.eff_decl) (a:Syntax.action) =
-    monad_op_name ed a.action_name.ident.idText
-
-let bind_name (ed:Syntax.eff_decl) =
-    monad_op_name ed "bind"
-
-let return_name (ed:Syntax.eff_decl) =
-    monad_op_name ed "return"
+    let nm = a.action_name.ident.idText in
+    let module_name = ed.mname.ns in
+    let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
+    (mlpath_of_lident lid), lid
