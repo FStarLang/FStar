@@ -220,7 +220,7 @@ endif
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*.dll $(PREFIX)/bin
+	cp ../../bin/msvc*.dll ../../bin/vcomp*.dll $(PREFIX)/bin
 	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
 	zip -r -9 $(NAME).zip fstar
 else
