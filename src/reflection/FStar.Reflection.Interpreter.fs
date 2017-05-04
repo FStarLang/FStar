@@ -37,7 +37,7 @@ let reflection_primops : list<N.primitive_step> =
     let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
     [
         mk1 "__inspect" inspect unembed_term embed_term_view;
-        mk1 "__pack"    pack    unembed_term_view (embed_option embed_term fstar_refl_term);
+        mk1 "__pack"    pack    unembed_term_view embed_term;
 
         mk1 "__inspect_fv" inspect_fv unembed_fvar (embed_list embed_string FStar.TypeChecker.Common.t_string);
         mk1 "__pack_fv" pack_fv (unembed_list unembed_string) embed_fvar;

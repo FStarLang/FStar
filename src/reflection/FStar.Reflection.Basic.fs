@@ -359,38 +359,37 @@ let inspect (t:term) : term_view =
         Tv_Unknown
 
 // TODO: pass in range?
-let pack (tv:term_view) : option<term> =
+let pack (tv:term_view) : term =
     match tv with
     | Tv_Var (bv, _) ->
-        Some <| S.bv_to_tm bv
+        S.bv_to_tm bv
 
     | Tv_FVar fv ->
-        Some <| S.fv_to_tm fv
+        S.fv_to_tm fv
 
     | Tv_App (l, r) ->
-        Some <| U.mk_app l [S.as_arg r]
+        U.mk_app l [S.as_arg r]
 
     | Tv_Abs (b, t) ->
-        Some <| U.abs [b] t None // TODO: effect?
+        U.abs [b] t None // TODO: effect?
 
     | Tv_Arrow (b, t) ->
-        Some <| U.arrow [b] (mk_Total t)
+        U.arrow [b] (mk_Total t)
 
     | Tv_Type () ->
-        Some <| U.ktype
+        U.ktype
 
     | Tv_Refine ((bv, _), t) ->
-        Some <| U.refine bv t
+        U.refine bv t
 
     | Tv_Const (C_Unit) ->
-        Some <| SC.exp_unit
+        SC.exp_unit
 
     | Tv_Const (C_Int s) ->
-        Some <| SC.exp_int s
+        SC.exp_int s
 
     | _ ->
-        //warn "pack: unexpected term view";
-        None
+        failwith "pack: unexpected term view"
 
 let embed_order (o:order) : term =
     match o with
