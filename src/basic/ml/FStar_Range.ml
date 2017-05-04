@@ -207,6 +207,9 @@ let string_of_pos   pos = let line,col = line_of_pos_int pos,col_of_pos_int pos 
 let string_of_def_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
 let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
 let string_of_range r       = string_of_def_range r
+let file_of_use_range r     = file_of_range {r with def_range=r.use_range}
+let start_of_use_range r    = start_of_range {r with def_range=r.use_range}
+let end_of_use_range r      = end_of_range {r with def_range=r.use_range}
 
 let compare r1 r2 : Prims.int =
   let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
