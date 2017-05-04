@@ -1558,14 +1558,8 @@ and desugar_term_maybe_top:
                 FStar_ToSyntax_Env.try_lookup_effect_defn env eff_name in
               match uu____2974 with
               | Some ed ->
-                  let uu____2977 =
-                    FStar_Ident.lid_of_path
-                      (FStar_Ident.path_of_text
-                         (Prims.strcat
-                            (FStar_Ident.text_of_lid
-                               ed.FStar_Syntax_Syntax.mname)
-                            (Prims.strcat "_" txt))) FStar_Range.dummyRange in
-                  FStar_Syntax_Syntax.fvar uu____2977
+                  let lid = FStar_Syntax_Util.dm4f_lid ed txt in
+                  FStar_Syntax_Syntax.fvar lid
                     (FStar_Syntax_Syntax.Delta_defined_at_level
                        (Prims.parse_int "1")) None
               | None  ->

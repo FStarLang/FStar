@@ -80,6 +80,9 @@ val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
+val reify_body: env -> term -> term
+val reify_body_with_arg: env -> term -> arg -> term
+val remove_reify: term -> term
 
 //decorating terms with monadic operators
 val maybe_lift: env -> term -> lident -> lident -> typ -> term

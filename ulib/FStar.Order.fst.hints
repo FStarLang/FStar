@@ -1,0 +1,56 @@
+[
+  "NhoýÜþ¶\\ÊúL\u0010¥Ò\u0014o",
+  [
+    [ "FStar.Order.uu___is_Lt", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Order.uu___is_Eq", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Order.uu___is_Gt", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Order.ge",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "FStar.Order.le",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "FStar.Order.ne",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "FStar.Order.gt",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "FStar.Order.lt",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "FStar.Order.eq",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ]
+  ]
+]
