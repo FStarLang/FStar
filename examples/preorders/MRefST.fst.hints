@@ -2,9 +2,9 @@
   "+$ˆ/bœ\u0001t>Î\u001eø°÷\u0000H",
   [
     [ "MRefST.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MRefST.ISTATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MRefST._dm4f_ISTATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "MRefST.ISTATE___proj__ISTATE__item__get_elab",
+      "MRefST._dm4f_ISTATE___proj__ISTATE__item__get_elab",
       1,
       2,
       1,
@@ -12,7 +12,7 @@
       0
     ],
     [
-      "MRefST.ISTATE___proj__ISTATE__item__put_elab",
+      "MRefST._dm4f_ISTATE___proj__ISTATE__item__put_elab",
       1,
       2,
       1,
