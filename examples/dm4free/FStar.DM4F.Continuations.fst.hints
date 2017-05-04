@@ -104,7 +104,7 @@
     ],
     [ "FStar.DM4F.Continuations.em", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.CONT_wp_if_then_else",
+      "FStar.DM4F.Continuations._dm4f_CONT_wp_if_then_else",
       1,
       2,
       1,
@@ -113,7 +113,7 @@
     ],
     [ "FStar.DM4F.Continuations.CONT", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.CONTINUATION_wp_if_then_else",
+      "FStar.DM4F.Continuations._dm4f_CONTINUATION_wp_if_then_else",
       1,
       2,
       1,

@@ -15,10 +15,17 @@
       ],
       0
     ],
-    [ "FStar.DM4F.Random.RAND_lift_from_pure", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Random.RAND_return_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Random.RAND_bind_wp",
+      "FStar.DM4F.Random._dm4f_RAND_lift_from_pure",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [ "FStar.DM4F.Random._dm4f_RAND_return_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.Random._dm4f_RAND_bind_wp",
       1,
       2,
       1,
@@ -31,7 +38,7 @@
       0
     ],
     [
-      "FStar.DM4F.Random.RAND___proj__RAND__item__get_elab",
+      "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__get_elab",
       1,
       2,
       1,
@@ -39,7 +46,7 @@
       0
     ],
     [
-      "FStar.DM4F.Random.RAND___proj__RAND__item__put_elab",
+      "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__put_elab",
       1,
       2,
       1,
@@ -47,7 +54,7 @@
       0
     ],
     [
-      "FStar.DM4F.Random.RAND___proj__RAND__item__raise_elab",
+      "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__raise_elab",
       1,
       2,
       1,
