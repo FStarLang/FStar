@@ -13,6 +13,7 @@ module BU = FStar.Util
 module C = FStar.Const
 module U = FStar.Syntax.Util
 module Rel = FStar.TypeChecker.Rel
+module Env = FStar.TypeChecker.Env
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
@@ -37,6 +38,20 @@ let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
 
 let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
+
+let embed_env (env:Env.env) : term =
+    protect_embedded_term
+        fstar_refl_env
+        (embed_list embed_binder fstar_refl_binder (Env.all_binders env))
+
+let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
+    let embedded_env = un_protect_embedded_term protected_embedded_env in
+    let binders = unembed_list unembed_binder embedded_env in
+    // TODO: Why try????
+    FStar.List.fold_left (fun env b ->
+        match Env.try_lookup_bv env (fst b) with
+        | None -> Env.push_binders env [b]
+        | _ -> env) env binders
 
 let embed_goal (g:goal) : term =
     embed_pair (g.context, g.goal_ty)

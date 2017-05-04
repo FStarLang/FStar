@@ -19,8 +19,8 @@ module N = FStar.TypeChecker.Normalize
 open FStar.Tactics.Basic
 module E = FStar.Tactics.Embedding
 module Core = FStar.Tactics.Basic
-
 open FStar.Reflection.Basic
+open FStar.Reflection.Interpreter
 
 let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (nm:Ident.lid) (args:args) : option<term> =
  (*  We have: t () embedded_state
@@ -123,7 +123,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                                               FStar.TypeChecker.Common.t_unit);
       mk "__dump"            2 (mk_tactic_interpretation_1 ps print_proof_state unembed_string embed_unit FStar.TypeChecker.Common.t_unit);
       mk "__grewrite"        3 (grewrite_interpretation ps)
-    ]
+    ]@reflection_primops
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =

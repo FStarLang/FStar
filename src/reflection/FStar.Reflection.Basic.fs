@@ -10,7 +10,6 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module Range = FStar.Range
 module U = FStar.Syntax.Util
-module Env = FStar.TypeChecker.Env
 module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 
@@ -121,20 +120,6 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
 
 let embed_binders l = embed_list embed_binder Data.fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
-
-let embed_env (env:Env.env) : term =
-    protect_embedded_term
-        Data.fstar_refl_env
-        (embed_list embed_binder Data.fstar_refl_binder (Env.all_binders env))
-
-let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
-    let embedded_env = un_protect_embedded_term protected_embedded_env in
-    let binders = unembed_list unembed_binder embedded_env in
-    // TODO: Why try????
-    FStar.List.fold_left (fun env b ->
-        match Env.try_lookup_bv env (fst b) with
-        | None -> Env.push_binders env [b]
-        | _ -> env) env binders
 
 let embed_term (t:term) : term =
     protect_embedded_term Data.fstar_refl_term t

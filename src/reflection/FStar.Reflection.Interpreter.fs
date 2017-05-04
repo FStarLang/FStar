@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Reflection.Interpreter
 
+module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
 open FStar.Ident
@@ -8,8 +9,6 @@ module Range = FStar.Range
 open FStar.List
 open FStar.Syntax.Syntax
 module Print = FStar.Syntax.Print
-module N = FStar.TypeChecker.Normalize
-module Env = FStar.TypeChecker.Env
 
 let int1 (m:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)
                  (r:Range.range) (args : args) : option<term> =
