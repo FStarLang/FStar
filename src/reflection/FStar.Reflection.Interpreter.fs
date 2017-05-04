@@ -1,4 +1,3 @@
-#light "off"
 module FStar.Reflection.Interpreter
 
 open FStar.Reflection.Data
@@ -6,19 +5,18 @@ open FStar.Reflection.Basic
 open FStar.Ident
 module Range = FStar.Range
 open FStar.List
-module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Normalizer
 open FStar.Syntax.Syntax
 module Print = FStar.Syntax.Print
 
 let int1 (nm:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)
-                 (r:Range.range) (args : list term) : option<term> =
+                 (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _)] -> Some (em (f (ua a)))
     | _ -> None
 
 let int2 (nm:lid) (f:'a -> 'b -> 'c) (ua:term -> 'a) (ub:term -> 'b) (em:'c -> term)
-                 (r:Range.range) (args : list term) : option<term> =
+                 (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _); (b, _)] -> Some (em (f (ua a) (ub b)))
     | _ -> None
@@ -44,7 +42,7 @@ let reflection_primops : primitive_steps =
         mk1 "__inspect_bv" inspect_bv unembed_binder embed_string;
         mk2 "__compare_binder" order_binder unembed_binder unembed_binder embed_order;
 
-        mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
+        //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
         mk1 "__type_of_binder" (fun (b,q) -> b.sort) unembed_binder embed_term;
 
         mk1 "__term_to_string" Print.term_to_string unembed_term embed_string

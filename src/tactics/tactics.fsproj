@@ -79,7 +79,7 @@
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\reflection\reflection.fsproj">
-      <Name>typechecker</Name>
+      <Name>reflection</Name>
       <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
       <Private>True</Private>
     </ProjectReference>
