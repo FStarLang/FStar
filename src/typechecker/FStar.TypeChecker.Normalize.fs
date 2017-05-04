@@ -548,6 +548,10 @@ let built_in_primitive_steps : list<primitive_step> =
         let s = string_of_list l in
         SC.exp_string s
     in
+    let string_compare' rng (s1:string) (s2:string) : term =
+        let r = String.compare s1 s2 in
+        int_as_const rng r
+    in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
     in
@@ -577,6 +581,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
+             (Const.string_compare, 2, binary_op arg_as_string string_compare');
              (Const.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (Const.p2l ["FStar"; "String"; "string_of_list"],

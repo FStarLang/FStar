@@ -58,3 +58,11 @@ let _ = assert_by_tactic (print "GGG 1";;
                           blah t;;
                           print "GGG 3";;
                           return ()) True
+
+let _ = assert_by_tactic (t <-- quote (2 + 3);
+                          match term_as_formula t with
+                          | Eq _ _ _ -> return ()
+                          | _ -> return ();;
+
+                          return ())
+                          True

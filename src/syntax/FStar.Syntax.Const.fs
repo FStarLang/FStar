@@ -116,6 +116,7 @@ let strcat_lid      = p2l ["Prims"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
+let string_compare = p2l ["FStar"; "String"; "compare"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
