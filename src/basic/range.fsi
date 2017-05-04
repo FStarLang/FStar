@@ -38,6 +38,9 @@ val string_of_use_range: range -> string
 val file_of_range: range -> string
 val start_of_range: range -> pos
 val end_of_range: range -> pos
+val file_of_use_range: range -> string
+val start_of_use_range: range -> pos
+val end_of_use_range: range -> pos
 val line_of_pos: pos -> int
 val col_of_pos: pos -> int
 val end_range: range -> range
