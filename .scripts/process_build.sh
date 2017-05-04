@@ -29,14 +29,16 @@ function cp_to_binaries () {
 }
 
 function cleanup_files () {
+pushd $BN_BINARYSPATH
   local suffix=$1
-  local files=$BN_BINARYSPATH/*.$suffix
+  local files=*.$suffix
   local file_count=$(ls -1 $files 2>/dev/null | wc -l)
   if (( $file_count > $BN_FILESTOKEEP )); then
     # Windows git rm just needs the file name and fails if give path so just get file name
     local file_list=$(ls -t1 $files | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1)))
     git rm ${file_list} -f
   fi
+popd
 }
 
 # Constants for showing color in output window
@@ -63,7 +65,7 @@ make package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
 echo "*** Unzip and verify the Package  ***"
-TIME_STAMP=$(date +%s)
+TIME_STAMP=$(date +%Y%m%d%H%M)
 
 TYPE="_Windows_x64.zip"
 MAJOR_ZIP_FILE=fstar_$CURRENT_VERSION$TYPE
