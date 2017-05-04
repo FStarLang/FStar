@@ -48,5 +48,7 @@ let reflection_primops : list<N.primitive_step> =
         //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
         mk1 "__type_of_binder" (fun (b,q) -> b.sort) unembed_binder embed_term;
 
+        mk2 "__term_eq" FStar.Syntax.Util.term_eq unembed_term unembed_term embed_bool;
+
         mk1 "__term_to_string" Print.term_to_string unembed_term embed_string
     ]
