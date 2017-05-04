@@ -192,8 +192,8 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
         end
     | _ -> return None
 
-let rec user_visit (callback:tactic unit) (u:unit) : Tac unit
-    = or_else callback (user_visit callback) ()
+//let rec user_visit (callback:tactic unit) (u:unit) : Tac unit
+//    = or_else callback (user_visit callback) ()
 
 // Need to thunk it like to this for proper handling of non-termination.
 // (not doing it would still work, because of issue #1017, but should not)
@@ -208,7 +208,7 @@ let rec simplify_eq_implication (u:unit) : Tac unit = (
         eq_h <-- implies_intro; // G, eq_h:x=e |- P
         rewrite eq_h;; // G, eq_h:x=e |- P[e/x]
         clear;; // G |- P[e/x]
-        user_visit simplify_eq_implication) ()
+        visit simplify_eq_implication) ()
 
 let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     match bs with

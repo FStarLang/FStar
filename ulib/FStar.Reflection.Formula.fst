@@ -55,6 +55,10 @@ let term_as_formula (t:term) : Tot formula =
         let (h, ts) = collect_app' [t] h0 in
         // Cannot use `when` clauses when verifying!
         match inspect h, ts with
+        | Tv_FVar fv, [a1; a2; a3] ->
+            let qn = inspect_fv fv in
+            if eq_qn qn eq2_qn then Eq a1 a2 a3
+            else App h0 t
         | Tv_FVar fv, [a1; a2] ->
             let qn = inspect_fv fv in
             if eq_qn qn imp_qn then Implies a1 a2
