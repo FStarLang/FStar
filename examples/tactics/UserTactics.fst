@@ -71,9 +71,8 @@ let test_apply (x:nat) (y:nat) =
 let mul_commute_ascription : tactic unit =
     g <-- cur_goal;
     let (_, t) = g in
-    f <-- term_as_formula t;
-    match f with
-    | Some (Eq _ _ _) ->
+    match term_as_formula t with
+    | Eq _ _ _ ->
         apply_lemma (quote lemma_mul_comm)
     | _ ->
         fail "Not an equality"
@@ -97,8 +96,7 @@ let test_apply_ascription' (x:nat) (y:nat) =
 // and only afterwards is the error raised. Doesn't sound like good behaviour
 let test_inspect =
   assert_by_tactic (x <-- quote 8;
-                    y <-- inspect x;
-                    match y with
+                    match inspect x with
                     | Tv_App hd a -> print "application"
                     | Tv_Abs bv t -> print "abstraction"
                     | Tv_Arrow bv t -> print "arrow"

@@ -94,6 +94,18 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
+    let mk_refl nm arity interpretation =
+      let nm = FStar.Reflection.Data.fstar_refl_lid nm in {
+      N.name=nm;
+      N.arity=arity;
+      N.strong_reduction_ok=false;
+      N.interpretation=(fun _rng args -> interpretation nm args)
+    } in
+    let binders_of_env_int nm args : option<term> =
+        match args with
+        | [(e, _)] -> Some (embed_binders (Env.all_binders (E.unembed_env ps.main_context e)))
+        | _ -> failwith (Util.format2 "Unexpected application %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+    in
     [ mk "__forall_intros" 1 (mk_tactic_interpretation_0 ps intros embed_binders   FStar.Reflection.Data.fstar_refl_binders);
       mk "__implies_intro" 1 (mk_tactic_interpretation_0 ps imp_intro embed_binder FStar.Reflection.Data.fstar_refl_binder);
       mk "__trivial"  1 (mk_tactic_interpretation_0 ps trivial embed_unit FStar.TypeChecker.Common.t_unit);
@@ -118,6 +130,10 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                             (unembed_tactic_0 unembed_unit)
                                             embed_unit
                                             FStar.TypeChecker.Common.t_unit);
+
+      //TODO: this is more well-suited to be in FStar.Reflection
+      //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
+      mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
 
       mk "__print"           2 (mk_tactic_interpretation_1 ps (fun x -> ret (tacprint x)) unembed_string embed_unit
                                                               FStar.TypeChecker.Common.t_unit);
