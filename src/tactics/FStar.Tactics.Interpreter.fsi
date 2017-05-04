@@ -1,6 +1,7 @@
-﻿module FStar.Tactics.Interpreter
+﻿#light "off"
+module FStar.Tactics.Interpreter
 
 open FStar.Syntax.Syntax
-open FStar.TypeChecker.Env
+module Env = FStar.TypeChecker.Env
 
-val preprocess: env -> term -> list<(env * term)>
+val preprocess: Env.env -> term -> list<(Env.env * term)>

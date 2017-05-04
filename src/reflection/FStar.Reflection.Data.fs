@@ -1,3 +1,4 @@
+#light "off"
 module FStar.Reflection.Data
 
 open FStar.Syntax.Syntax
