@@ -63,9 +63,9 @@ let rec decide (t:term) =
         // Maybe the do notation is twisting the terms somehow unexpected?
         let ll = decide (l <: x:term{x << t}) in
         let rr = decide (r <: x:term{x << t}) in
-        if eq_qn qn add_qn then (l <-- ll;
-                                 r <-- rr;
-                                 return (Plus l r))
+        if qn = add_qn then (l <-- ll;
+                             r <-- rr;
+                             return (Plus l r))
         else fail
     | Tv_Const (C_Int i), _ ->
         return (Lit i)

@@ -27,8 +27,8 @@ let term_view_as_formula (tv:term_view) : Tot formula =
     | Tv_FVar fv ->
         // Cannot use `when` clauses when verifying!
         let qn = inspect_fv fv in
-        if eq_qn qn true_qn then True_
-        else if eq_qn qn false_qn then False_
+        if qn = true_qn then True_
+        else if qn = false_qn then False_
         else FV fv
 
     | Tv_App h0 t -> begin
@@ -36,17 +36,17 @@ let term_view_as_formula (tv:term_view) : Tot formula =
         match inspect h, ts with
         | Tv_FVar fv, [a1; a2; a3] ->
             let qn = inspect_fv fv in
-            if eq_qn qn eq2_qn then Eq a1 a2 a3
+            if qn = eq2_qn then Eq a1 a2 a3
             else App h0 t
         | Tv_FVar fv, [a1; a2] ->
             let qn = inspect_fv fv in
-            if eq_qn qn imp_qn then Implies a1 a2
-            else if eq_qn qn and_qn then And a1 a2
-            else if eq_qn qn or_qn  then Or a1 a2
+            if qn = imp_qn then Implies a1 a2
+            else if qn = and_qn then And a1 a2
+            else if qn = or_qn  then Or a1 a2
             else App h0 t
         | Tv_FVar fv, [a] ->
             let qn = inspect_fv fv in
-            if eq_qn qn not_qn then Not a
+            if qn = not_qn then Not a
             else App h0 t
         | _ ->
             App h0 t

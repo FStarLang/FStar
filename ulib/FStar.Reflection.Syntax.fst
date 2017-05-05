@@ -118,12 +118,3 @@ let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
     match args with
     | [] -> t
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
-
-// TODO: move away
-let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
-    match xs, ys with
-    | [], [] -> true
-    | x::xs, y::ys -> f x y && eqlist f xs ys
-    | _ -> false
-
-let eq_qn = eqlist (fun s1 s2 -> String.compare s1 s2 = 0) 
