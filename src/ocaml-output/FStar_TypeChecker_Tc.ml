@@ -1661,13 +1661,7 @@ and cps_and_elaborate:
                                     effect_signature in
                                 let sigelts = FStar_Util.mk_ref [] in
                                 let mk_lid name =
-                                  FStar_Ident.lid_of_path
-                                    (FStar_Ident.path_of_text
-                                       (Prims.strcat
-                                          (FStar_Ident.text_of_lid
-                                             ed.FStar_Syntax_Syntax.mname)
-                                          (Prims.strcat "_" name)))
-                                    FStar_Range.dummyRange in
+                                  FStar_Syntax_Util.dm4f_lid ed name in
                                 let elaborate_and_star dmff_env1
                                   other_binders item =
                                   let env2 =
@@ -1988,7 +1982,7 @@ and cps_and_elaborate:
                                                 mk1 uu____2067 in
                                               FStar_Syntax_Subst.close
                                                 effect_binders1 uu____2066) in
-                                         let rec apply_last f l =
+                                         let rec apply_last1 f l =
                                            match l with
                                            | [] -> failwith "empty path.."
                                            | a2::[] ->
@@ -1996,14 +1990,14 @@ and cps_and_elaborate:
                                                [uu____2102]
                                            | x::xs ->
                                                let uu____2106 =
-                                                 apply_last f xs in
+                                                 apply_last1 f xs in
                                                x :: uu____2106 in
                                          let register name item =
                                            let p =
                                              FStar_Ident.path_of_lid
                                                ed.FStar_Syntax_Syntax.mname in
                                            let p' =
-                                             apply_last
+                                             apply_last1
                                                (fun s  ->
                                                   Prims.strcat "__"
                                                     (Prims.strcat s
