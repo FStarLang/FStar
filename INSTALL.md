@@ -77,7 +77,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -j6 -C examples
    
-   Note: Currently this is known to fail for the F# build of F\*.
+   Note: Currently this is [known to fail for the F# build of F\*](https://github.com/FStarLang/FStar/issues/1023).
 
 ### OPAM package ###
 
