@@ -679,6 +679,22 @@ let rec visit (callback:tac<unit>) : tac<unit> =
                     | Some (U.BaseConn(l, _)) ->
                       or_else trivial smt)))
 
+let prune (s:list<string>) : tac<unit> =
+    with_cur_goal (fun g ->
+        let ctx = g.context in
+        let ctx' = Env.rem_proof_ns ctx s in
+        let g' = { g with context = ctx' } in
+        bind dismiss (fun _ -> add_goals [g'])
+    )
+
+let addns (s:list<string>) : tac<unit> =
+    with_cur_goal (fun g ->
+        let ctx = g.context in
+        let ctx' = Env.add_proof_ns ctx s in
+        let g' = { g with context = ctx' } in
+        bind dismiss (fun _ -> add_goals [g'])
+    )
+
 // Should probably be moved somewhere else
 type order = | Lt | Eq | Gt
 

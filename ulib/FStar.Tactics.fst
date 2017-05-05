@@ -270,6 +270,13 @@ let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
             visit (unfold_definition_and_simplify_eq' tm)
         end) ()
 
+// Proof namespace management
+assume val __prune : list string -> __tac unit
+let prune ns : tactic unit = fun () -> TAC?.reflect (__prune ns)
+
+assume val __addns : list string -> __tac unit
+let addns ns : tactic unit = fun () -> TAC?.reflect (__addns ns)
+
 let unfold_definition_and_simplify_eq (tm:tactic term) : tactic unit =
     tm' <-- tm;
     unfold_definition_and_simplify_eq' tm'

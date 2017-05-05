@@ -131,6 +131,15 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                             embed_unit
                                             FStar.TypeChecker.Common.t_unit);
 
+      mk "__prune"   2 (mk_tactic_interpretation_1 ps prune
+                                            (unembed_list unembed_string)
+                                            embed_unit
+                                            FStar.TypeChecker.Common.t_unit);
+      mk "__addns"   2 (mk_tactic_interpretation_1 ps addns
+                                            (unembed_list unembed_string)
+                                            embed_unit
+                                            FStar.TypeChecker.Common.t_unit);
+
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
       mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
