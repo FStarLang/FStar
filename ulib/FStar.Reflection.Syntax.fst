@@ -100,3 +100,17 @@ let iff_qn       = ["Prims"; "l_iff"]
 let eq2_qn       = ["Prims"; "eq2"]
 let true_qn      = ["Prims"; "True"]
 let false_qn     = ["Prims"; "False"]
+let add_qn       = ["Prims"; "op_Addition"]
+
+(* Helpers for dealing with nested applications *)
+let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =
+    match inspect t with
+    | Tv_App l r ->
+        collect_app' (r::args) l
+    | _ -> (t, args)
+let collect_app = collect_app' []
+
+let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
+    match args with
+    | [] -> t
+    | (x::xs) -> mk_app (pack (Tv_App t x)) xs
