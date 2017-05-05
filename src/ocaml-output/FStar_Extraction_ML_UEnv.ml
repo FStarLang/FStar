@@ -503,26 +503,11 @@ let monad_op_name:
   =
   fun ed  ->
     fun nm  ->
-      let uu____968 =
-        (((ed.FStar_Syntax_Syntax.mname).FStar_Ident.ns),
-          ((ed.FStar_Syntax_Syntax.mname).FStar_Ident.ident)) in
-      match uu____968 with
-      | (module_name,eff_name) ->
-          let mangled_name =
-            Prims.strcat FStar_Ident.reserved_prefix
-              (Prims.strcat eff_name.FStar_Ident.idText (Prims.strcat "_" nm)) in
-          let mangled_lid =
-            FStar_Ident.lid_of_ids
-              (FStar_List.append module_name
-                 [FStar_Ident.id_of_text mangled_name]) in
-          let ml_name =
-            FStar_Extraction_ML_Syntax.mlpath_of_lident mangled_lid in
-          let lid =
-            FStar_All.pipe_right
-              (FStar_List.append
-                 (FStar_Ident.ids_of_lid ed.FStar_Syntax_Syntax.mname)
-                 [FStar_Ident.id_of_text nm]) FStar_Ident.lid_of_ids in
-          (ml_name, lid)
+      let lid =
+        FStar_Syntax_Util.mk_field_projector_name_from_ident
+          ed.FStar_Syntax_Syntax.mname (FStar_Ident.id_of_text nm) in
+      let uu____969 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid in
+      (uu____969, lid)
 let action_name:
   FStar_Syntax_Syntax.eff_decl ->
     FStar_Syntax_Syntax.action ->
@@ -530,13 +515,11 @@ let action_name:
   =
   fun ed  ->
     fun a  ->
-      monad_op_name ed
-        ((a.FStar_Syntax_Syntax.action_name).FStar_Ident.ident).FStar_Ident.idText
-let bind_name:
-  FStar_Syntax_Syntax.eff_decl ->
-    (FStar_Extraction_ML_Syntax.mlpath* FStar_Ident.lident)
-  = fun ed  -> monad_op_name ed "bind"
-let return_name:
-  FStar_Syntax_Syntax.eff_decl ->
-    (FStar_Extraction_ML_Syntax.mlpath* FStar_Ident.lident)
-  = fun ed  -> monad_op_name ed "return"
+      let nm =
+        ((a.FStar_Syntax_Syntax.action_name).FStar_Ident.ident).FStar_Ident.idText in
+      let module_name = (ed.FStar_Syntax_Syntax.mname).FStar_Ident.ns in
+      let lid =
+        FStar_Ident.lid_of_ids
+          (FStar_List.append module_name [FStar_Ident.id_of_text nm]) in
+      let uu____982 = FStar_Extraction_ML_Syntax.mlpath_of_lident lid in
+      (uu____982, lid)

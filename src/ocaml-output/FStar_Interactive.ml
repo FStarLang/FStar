@@ -1610,14 +1610,14 @@ let interactive_error_handler: FStar_Errors.error_handler =
         (fun e  -> e.FStar_Errors.issue_level = FStar_Errors.EError)
         uu____4076 in
     FStar_List.length uu____4074 in
-  let report uu____4087 =
+  let report1 uu____4087 =
     let uu____4088 = FStar_ST.read issues in
     FStar_List.sortWith FStar_Errors.compare_issues uu____4088 in
   let clear1 uu____4096 = FStar_ST.write issues [] in
   {
     FStar_Errors.eh_add_one = add_one1;
     FStar_Errors.eh_count_errors = count_errors;
-    FStar_Errors.eh_report = report;
+    FStar_Errors.eh_report = report1;
     FStar_Errors.eh_clear = clear1
   }
 let interactive_printer: FStar_Util.printer =

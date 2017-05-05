@@ -2,7 +2,7 @@
   "7+2‹\u0015y≈-·ü®%jÎ¿z",
   [
     [
-      "FStar.DM4F.IntStoreFixedReader.INT_STORE_READER___proj__INT_STORE_READER__item__get_elab",
+      "FStar.DM4F.IntStoreFixedReader._dm4f_INT_STORE_READER___proj__INT_STORE_READER__item__get_elab",
       1,
       2,
       1,
@@ -10,7 +10,7 @@
       0
     ],
     [
-      "FStar.DM4F.IntStoreFixedReader.INT_STORE_READER_wp_if_then_else",
+      "FStar.DM4F.IntStoreFixedReader._dm4f_INT_STORE_READER_wp_if_then_else",
       1,
       2,
       1,

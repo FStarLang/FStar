@@ -16,7 +16,7 @@
       0
     ],
     [
-      "FStar.DM4F.Exceptions.EXN_bind_wp",
+      "FStar.DM4F.Exceptions._dm4f_EXN_bind_wp",
       1,
       2,
       1,
@@ -27,7 +27,7 @@
       0
     ],
     [
-      "FStar.DM4F.Exceptions.EXN___proj__EXN__item__raise_elab",
+      "FStar.DM4F.Exceptions._dm4f_EXN___proj__EXN__item__raise_elab",
       1,
       2,
       1,
