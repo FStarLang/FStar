@@ -888,14 +888,36 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
         | _ -> failwith "unexpected" )
       in
       assert (List.length current_datacons = List.length datacons) ;
+      let bs = if (Options.print_implicits()) then bs else filter_imp bs in
+      let bs = bs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
       let tyc =
         if se.sigquals |> BU.for_some (function | RecordType _ -> true | _ -> false)
         then
           (* Resugar as a record *)
-          (failwith "NIY")
+          let resugar_datacon_as_fields fields se = match se.sigel with 
+            | Sig_datacon (_, univs, term, _, num, _) ->
+              (* Todo: resugar univs *)
+              begin match (SS.compress term).n with
+                | Tm_arrow(bs, _) -> 
+                  let mfields = bs |> List.map (fun (b, qual) -> (U.unmangle_field_name (bv_as_unique_ident b), resugar_term b.sort, None)) in
+                  mfields@fields
+                | _ -> failwith "unexpected"
+              end
+            | _ -> failwith "unexpected"
+          in
+          let fields =  List.fold_left resugar_datacon_as_fields [] current_datacons in
+          A.TyconRecord(tylid.ident, bs, None, fields)
         else
           (* Resugar as a variant *)
-          (failwith "NIY")
+          let resugar_datacon constructors se = match se.sigel with 
+            | Sig_datacon (l, univs, term, _, num, _) ->
+              (* Todo: resugar univs *)
+              let c = (l.ident, Some (resugar_term term), None, false)  in
+              c::constructors       
+            | _ -> failwith "unexpected"
+          in
+          let constructors =  List.fold_left resugar_datacon [] current_datacons in
+          A.TyconVariant(tylid.ident, bs, None, [])
       in
       other_datacons, tyc
   | Sig_declare_typ (tylid, uvs, t) ->
@@ -914,6 +936,19 @@ let decl'_to_decl se d' =
   }
 
 let resugar_sigelt se : option<A.decl> =
+  let resugar_action se d for_free = 
+    let action_params = if (Options.print_implicits()) then d.action_params else filter_imp d.action_params in
+    let action_params = action_params |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) |> List.rev in
+    (* Todo open binder in def and typ *)
+    let action_defn = resugar_term d.action_defn in
+    let action_typ = resugar_term d.action_typ in
+    if for_free then
+      let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
+      let t = A.mk_term a se.sigrng A.Un in
+      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
+    else 
+      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
+  in
   match se.sigel with
   | Sig_bundle (ses, _) ->
     let decl_typ_ses, datacon_ses = ses |> List.partition
@@ -941,19 +976,89 @@ let resugar_sigelt se : option<A.decl> =
     end
 
   | Sig_let (lbs, _, attrs) ->
-      (failwith "NIY")
+    let mk e = S.mk e None se.sigrng in
+    let dummy = mk Tm_unknown in
+    let desugared_let = mk (Tm_let(lbs, dummy)) in
+    let t = resugar_term desugared_let in
+    begin match t.tm with
+      | A.Let(isrec, lets, _) ->
+        Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
+      | _ -> failwith "Should not happen hopefully"
+    end
 
   | Sig_assume (lid, fml) ->
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term fml)))
 
   | Sig_new_effect ed ->
-      (failwith "NIY")
+    let eff_name = ed.mname.ident in
+    (* Todo: open binder? *)
+    let eff_binders = if (Options.print_implicits()) then ed.binders else filter_imp ed.binders in
+    let eff_binders = eff_binders |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) |> List.rev in
+    let eff_typ = resugar_term ed.signature in
+    let resugar_tscheme_as_decl name ts = 
+      let (univs, typ) = ts in
+      let name = I.mk_ident (name, se.sigrng) in
+      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
+    in
+    let ret_wp = resugar_tscheme_as_decl "ret_wp" ed.ret_wp in
+    let bind_wp = resugar_tscheme_as_decl "bind_wp" ed.ret_wp in
+    let if_then_else = resugar_tscheme_as_decl "if_then_else" ed.if_then_else in
+    let ite_wp = resugar_tscheme_as_decl "ite_wp" ed.ite_wp in
+    let stronger = resugar_tscheme_as_decl "stronger" ed.stronger in
+    let close_wp = resugar_tscheme_as_decl "close_wp" ed.close_wp in
+    let assert_p = resugar_tscheme_as_decl "assert_p" ed.assert_p in
+    let assume_p = resugar_tscheme_as_decl "assume_p" ed.assume_p in
+    let null_wp = resugar_tscheme_as_decl "null_wp" ed.null_wp in
+    let trivial = resugar_tscheme_as_decl "trivial" ed.trivial in
+    let repr = resugar_tscheme_as_decl "repr" ([], ed.repr) in
+    let return_repr = resugar_tscheme_as_decl "return_repr" ed.return_repr in
+    let bind_repr = resugar_tscheme_as_decl "bind_repr" ed.bind_repr in
+    let mandatory_members_decls = [repr; return_repr; bind_repr; ret_wp; bind_wp; 
+                                   if_then_else; ite_wp; stronger; close_wp; assert_p; 
+                                   assume_p; null_wp; trivial] in
+    let actions = ed.actions |> List.map (fun a -> resugar_action se a false) in    
+    let decls = mandatory_members_decls@actions in
+    Some (decl'_to_decl se (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, mandatory_members_decls))))
 
   | Sig_new_effect_for_free ed ->
-      (failwith "NIY")
+    let eff_name = ed.mname.ident in
+    (* Todo: open binder? *)
+    let eff_binders = if (Options.print_implicits()) then ed.binders else filter_imp ed.binders in
+    let eff_binders = eff_binders |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) |> List.rev in
+    let eff_typ = resugar_term ed.signature in
+    let resugar_tscheme_as_decl name ts = 
+      let (univs, typ) = ts in
+      let name = I.mk_ident (name, se.sigrng) in
+      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
+    in
+    let repr = resugar_tscheme_as_decl "repr" ([], ed.repr) in
+    let return_repr = resugar_tscheme_as_decl "return_repr" ed.return_repr in
+    let bind_repr = resugar_tscheme_as_decl "bind_repr" ed.bind_repr in
+    let mandatory_members_decls = [repr; return_repr; bind_repr] in
+    let actions = ed.actions |> List.map (fun a -> resugar_action se a true) in      
+    let decls = mandatory_members_decls@actions in
+    Some (decl'_to_decl se (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, mandatory_members_decls))))
 
-  | Sig_sub_effect se ->
-      (failwith "NIY")
+  | Sig_sub_effect e ->
+    let src = e.source in
+    let dst = e.target in 
+    let lift_wp = match e.lift_wp with 
+      | Some (_, t) ->
+          Some (resugar_term t)
+      | _ -> None
+    in
+    let lift = match e.lift with
+      | Some (_, t) ->
+          Some (resugar_term t)
+      | _ -> None
+    in  
+    let op = match (lift_wp, lift) with
+      | Some t, None -> A.NonReifiableLift t
+      | Some wp, Some t -> A.ReifiableLift (wp, t)
+      | None, Some t -> A.LiftForFree t
+      | _ -> failwith "Should not happen hopefully"
+    in
+    Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op})))
 
   | Sig_effect_abbrev (lid, vs, bs, c, flags) ->
       (failwith "NIY")
