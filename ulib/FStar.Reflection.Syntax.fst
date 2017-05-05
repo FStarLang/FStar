@@ -7,7 +7,7 @@ assume type term
 assume type bv
 assume type fv
 assume type binder
-assume type env
+assume type env // would maybe make more sense in tactics, as they're special cased
 
 type name    = list string
 type typ     = term
@@ -33,6 +33,7 @@ type term_view =
   (* TODO: complete *)
 
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
+// TODO: might need to say something about the types of binders, in the future.
 val smaller : term_view -> term -> Type0
 let smaller tv t =
     match tv with
