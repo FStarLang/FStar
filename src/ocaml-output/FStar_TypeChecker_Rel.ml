@@ -6236,8 +6236,11 @@ let discharge_guard':
              | FStar_TypeChecker_Common.Trivial  -> Some ret_g
              | FStar_TypeChecker_Common.NonTrivial vc ->
                  ((let uu____12710 =
-                     FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                       (FStar_Options.Other "Norm") in
+                     (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                        (FStar_Options.Other "Norm"))
+                       ||
+                       (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                          (FStar_Options.Other "SMTQuery")) in
                    if uu____12710
                    then
                      let uu____12711 = FStar_TypeChecker_Env.get_range env in
