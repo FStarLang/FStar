@@ -59,8 +59,12 @@ let rec decide (t:term) =
         collect_app_order t;
         assert(l << t);
         assert(r << t);
-        if eq_qn qn add_qn then (l <-- decide l;
-                                 r <-- decide r;
+        // Have to go through hoops to get F* to typecheck this.
+        // Maybe the do notation is twisting the terms somehow unexpected?
+        let ll = decide (l <: x:term{x << t}) in
+        let rr = decide (r <: x:term{x << t}) in
+        if eq_qn qn add_qn then (l <-- ll;
+                                 r <-- rr;
                                  return (Plus l r))
         else fail
     | Tv_Const (C_Int i), _ ->
