@@ -107,7 +107,7 @@ let lemma_equal_intro #a s1 s2 = ()
 let lemma_equal_elim  #a s1 s2 = PredicateExtensionality.predicateExtensionality a s1 s2
 let lemma_equal_refl  #a s1 s2 = ()
 
-let tset_of_set (#a:eqtype) (s:Set.set a) :set a =
+abstract let tset_of_set (#a:eqtype) (s:Set.set a) :set a =
   fun (x:a) -> squash (b2t (Set.mem x s))
 
 private let lemma_mem_tset_of_set_l (#a:eqtype) (s:Set.set a) (x:a)
