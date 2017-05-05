@@ -465,7 +465,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident(compile_op' id, rhs parseState 2) }
+    { {id with idText = compile_op' id.idText} }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -515,7 +515,7 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        mk_term (Op(op ^ "<-", [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
@@ -609,12 +609,12 @@ patternBranch:
 
 tmIff:
   | e1=tmImplies IFF e2=tmIff
-      { mk_term (Op("<==>", [e1; e2])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(mk_ident("<==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Formula }
   | e=tmImplies { e }
 
 tmImplies:
   | e1=tmArrow(tmFormula) IMPLIES e2=tmImplies
-      { mk_term (Op("==>", [e1; e2])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(mk_ident("==>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Formula }
   | e=tmArrow(tmFormula)
       { e }
 
@@ -639,12 +639,12 @@ tmArrow(Tm):
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
-      { mk_term (Op("\\/", [e1;e2])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(mk_ident("\\/", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) Formula }
   | e=tmConjunction { e }
 
 tmConjunction:
   | e1=tmConjunction CONJUNCTION e2=tmTuple
-      { mk_term (Op("/\\", [e1;e2])) (rhs2 parseState 1 3) Formula }
+      { mk_term (Op(mk_ident("/\\", rhs parseState 2), [e1;e2])) (rhs2 parseState 1 3) Formula }
   | e=tmTuple { e }
 
 tmTuple:
@@ -660,13 +660,13 @@ tmEq:
   | e1=tmEq BACKTICK id=qlident BACKTICK e2=tmEq
       { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
   | e1=tmEq EQUALS e2=tmEq
-      { mk_term (Op("=", [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
   (* see https:/ /github.com/fsprojects/FsLexYacc/issues/39 *)
   | e1=tmEq COLON_EQUALS e2=tmEq
-      { mk_term (Op(":=", [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(":=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq PIPE_RIGHT e2=tmEq
-      { mk_term (Op("|>", [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq op=operatorInfix0ad12 e2=tmEq
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
   | e=tmNoEq
@@ -688,13 +688,13 @@ tmNoEq:
         mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
   | e1=tmNoEq MINUS e2=tmNoEq
-      { mk_term (Op("-", [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmNoEq op=OPINFIX3 e2=tmNoEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
-      { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
+      { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | MINUS e=tmNoEq
-      { mk_uminus e (rhs2 parseState 1 2) Expr }
+      { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with
@@ -704,7 +704,7 @@ tmNoEq:
       }
   | LBRACE e=recordExp RBRACE { e }
   | op=TILDE e=atomicTerm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Formula }
+      { mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula }
   | e=appTerm { e }
 
 refineOpt:
@@ -787,7 +787,7 @@ atomicTermNotQUident:
 (* Tm: atomicTermQUident or atomicTermNotQUident *)
 opPrefixTerm(Tm):
   | op=OPPREFIX e=Tm
-      { mk_term (Op(op, [e])) (rhs2 parseState 1 2) Expr }
+      { mk_term (Op(mk_ident(op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Expr }
 
 
 projectionLHS:
@@ -900,7 +900,7 @@ universeFrom:
          then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
                            ^ "The only allowed operator in that context is +.",
                            rhs parseState 2)) ;
-         mk_term (Op(op_plus, [u1 ; u2])) (rhs2 parseState 1 3) Expr
+         mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
@@ -938,14 +938,15 @@ atomicUniverse:
   | op=OPPREFIX
   | op=OPINFIX3
   | op=OPINFIX4
+     { mk_ident (op, rhs parseState 1) }
   | op=operatorInfix0ad12
      { op }
   | op=PIPE_RIGHT
-     { "|>" }
+     { mk_ident("|>", rhs parseState 1) }
   | op=COLON_EQUALS
-     { ":=" }
+     { mk_ident(":=", rhs parseState 1) }
   | op=COLON_COLON
-     { "::" }
+     { mk_ident("::", rhs parseState 1) }
 
 /* These infix operators have a lower precedence than EQUALS */
 %inline operatorInfix0ad12:
@@ -955,11 +956,11 @@ atomicUniverse:
   | op=OPINFIX0d
   | op=OPINFIX1
   | op=OPINFIX2
-     { op }
+     { mk_ident (op, rhs parseState 1) }
 
 %inline dotOperator:
-  | DOT_LPAREN e=term RPAREN { ".()", e, rhs2 parseState 1 3 }
-  | DOT_LBRACK e=term RBRACK { ".[]", e, rhs2 parseState 1 3 }
+  | DOT_LPAREN e=term RPAREN { mk_ident (".()", rhs parseState 1), e, rhs2 parseState 1 3 }
+  | DOT_LBRACK e=term RBRACK { mk_ident (".[]", rhs parseState 1), e, rhs2 parseState 1 3 }
 
 some(X):
   | x=X { Some x }

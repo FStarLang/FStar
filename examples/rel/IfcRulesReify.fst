@@ -358,7 +358,7 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-#set-options "--z3rlimit 200"
+#set-options "--z3rlimit 400"
 
 val while_inv_com'
   : env:label_fun ->

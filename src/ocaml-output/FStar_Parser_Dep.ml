@@ -465,7 +465,7 @@ let collect_one:
                | FStar_Parser_AST.Wild  -> ()
                | FStar_Parser_AST.Const c -> collect_constant c
                | FStar_Parser_AST.Op (s,ts) ->
-                   (if s = "@"
+                   (if (FStar_Ident.text_of_id s) = "@"
                     then
                       (let uu____876 =
                          let uu____877 =
