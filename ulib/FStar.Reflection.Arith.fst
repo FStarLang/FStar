@@ -1,6 +1,7 @@
 module FStar.Reflection.Arith
 
 open FStar.Reflection.Syntax
+open FStar.Tactics
 
 (*
  * Simple decision procedure to decide if a term is an "arithmetic
@@ -14,7 +15,7 @@ open FStar.Reflection.Syntax
 
 type expr =
     | Lit : int -> expr
-    | Sum   : expr -> expr -> expr
+    | Plus  : expr -> expr -> expr
     | Mult  : expr -> expr -> expr
     | Neg   : expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
@@ -35,20 +36,42 @@ let ge e1 e2 = MkProp (Plus (Lit 1) e1) Gt e2
 (* Define a traversal monad! Makes exception handling and counter-keeping easy *)
 let tm a = nat -> option (a * nat)
 let return (x:'a) : tm 'a = fun i -> Some (x, i)
-let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b = fun i -> match m i with
-                                                          | Some (x, j) -> f x j
-                                                          | None -> None
+let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
+    fun i -> match m i with
+             | Some (x, j) -> f x j
+             | None -> None
+
 let atom : tm nat = fun i -> Some (i, i + 1)
-let fail : tm 'a = fun i -> None
+val fail : (#a:Type) -> tm a
+let fail #a = fun i -> None
+
+let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+    match l with
+    | [] -> True
+    | x::xs -> p x /\ forall_list p xs
 
 val decide : term -> tm expr
 let rec decide t =
-    let hd, tl = collect_app t in
+    admit(); // TODO: show it terminating in a proper way
+    let (hd, tl) = collect_app t in
     match inspect hd, tl with
-    | Tm_fvar fv, [l; r] ->
-        let qn = inspectfv fv in
+    | Tv_FVar fv, [l; r] ->
+        let qn = inspect_fv fv in
         if eq_qn qn add_qn then (l <-- decide l;
                                  r <-- decide r;
-                                 return (Sum l r))
+                                 return (Plus l r))
         else fail
-    | _ -> fail
+    | Tv_Const (C_Int i), _ ->
+        return (Lit i)
+    | _, _ ->
+        fail
+
+
+let test =
+    let bind = FStar.Tactics.bind in
+    let fail = FStar.Tactics.fail in
+    assert_by_tactic (t <-- quote (1 + 2);
+                             match decide t 0 with
+                             | Some (Plus (Lit 1) (Lit 2), _) -> print "alright!"
+                             | _ -> fail "oops")
+                            True

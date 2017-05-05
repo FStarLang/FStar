@@ -19,15 +19,6 @@ noeq type formula =
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
-// TODO: move away
-let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
-    match xs, ys with
-    | [], [] -> true
-    | x::xs, y::ys -> f x y && eqlist f xs ys
-    | _ -> false
-
-let eq_qn = eqlist (fun s1 s2 -> String.compare s1 s2 = 0) 
-
 let term_view_as_formula (tv:term_view) : Tot formula =
     match tv with
     | Tv_Var n ->
