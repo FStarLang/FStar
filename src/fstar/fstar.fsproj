@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--use_hints FStar.Int.fst</StartArguments>
+    <StartArguments>test.fst --debug Test --debug_level SMTQuery --dump_module Test --print_implicits</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\everest\FStar\ulib\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

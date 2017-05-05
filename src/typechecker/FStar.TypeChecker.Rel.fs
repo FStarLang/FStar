@@ -2447,6 +2447,11 @@ let with_guard env prob dopt = match dopt with
     | Some d ->
       Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
+let with_guard_no_simp env prob dopt = match dopt with
+    | None -> None
+    | Some d ->
+      Some ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
+
 let try_teq smt_ok env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
  then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
@@ -2489,7 +2494,7 @@ let sub_comp env c1 c2 =
   then BU.print2 "sub_comp of %s and %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2);
   let rel = if env.use_eq then EQ else SUB in
   let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
-  with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
+  with_guard_no_simp env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
 
 let solve_universe_inequalities' tx env (variables, ineqs) =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute

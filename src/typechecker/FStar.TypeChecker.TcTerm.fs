@@ -175,13 +175,13 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
   match expected_c_opt with
     | None -> e, norm_c env c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
-       if debug env Options.Low
-       then BU.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-       let c = norm_c env c in
-       if debug env Options.Low
-       then BU.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
+//       if debug env Options.Low
+//       then BU.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
+//               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
+//       let c = norm_c env c in
+//       if debug env Options.Low
+//       then BU.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
+//               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
 
        //let expected_c' = TcUtil.refresh_comp_label env true (U.lcomp_of_comp <| expected_c) in
        let e, _, g = TcUtil.check_comp env e c expected_c in
