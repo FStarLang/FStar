@@ -1,7 +1,7 @@
 (* ******************************************************************************** *)
 module NegativeTests.Termination
-val bug15 : m : int -> z : int ->
-            Lemma (ensures (False))
+val bug15 : m : int -> Tot (z : int ->
+            Lemma (ensures (False)))
 let rec bug15 m =
   match m with
   | _ -> (fun l -> bug15 m l)

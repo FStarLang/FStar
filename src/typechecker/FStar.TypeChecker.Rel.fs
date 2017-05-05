@@ -2208,6 +2208,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
+              // TODO: GM: shouldn't we fail immediately if `eq_tm`
+              // returns `NotEqual`?
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
                                else Some <| mk_eq2 env t1 t2 in
@@ -2274,8 +2276,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              in
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
-             else let c2_decl = Env.get_effect_decl env c2.effect_name in
-                  if c2_decl.qualifiers |> List.contains Reifiable
+             else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
+                  if qualifiers |> List.contains Reifiable
                   then let c1_repr =
                            N.normalize [N.UnfoldUntil Delta_constant; N.WHNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
@@ -2606,7 +2608,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-            let vcs = 
+            let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
                 else [env,vc] in

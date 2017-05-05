@@ -92,7 +92,7 @@ let defaults =
       ("_fstar_home"                  , String "");
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
-      ("cardinality"                  , String "off");
+      ("check_hints"                  , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -130,7 +130,6 @@ let defaults =
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
-      ("no_warn_top_level_effects"    , Bool true);
       ("odir"                         , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -152,10 +151,12 @@ let defaults =
       ("split_cases"                  , Int 0);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
+      ("ugly"                         , Bool false);
       ("unthrottle_inductives"        , Bool false);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
-      ("use_tactics"                  , Bool false);
+      ("no_tactics"                   , Bool false);
+      ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
       ("verify_module"                , List []);
@@ -190,7 +191,7 @@ let lookup_opt s c =
   c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
-let get_cardinality             ()      = lookup_opt "cardinality"              as_string
+let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -227,8 +228,8 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
+let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
@@ -236,7 +237,6 @@ let get_print_effect_args       ()      = lookup_opt "print_effect_args"        
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
-
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
@@ -251,7 +251,8 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
-let get_use_tactics             ()      = lookup_opt "use_tactics"              as_bool
+let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
+let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -336,8 +337,15 @@ let add_extract_namespace s =
 let cons_verify_module s  =
     List (String.lowercase s::get_verify_module() |> List.map String)
 
+let cons_using_facts_from s =
+    set_option "z3refresh" (Bool true);
+    match get_using_facts_from() with
+    | None -> List [String s]
+    | Some l -> List (List.map String (s :: l))
+
 let add_verify_module s =
     set_option "verify_module" (cons_verify_module s)
+
 
 let rec specs () : list<Getopt.opt> =
   let specs =
@@ -349,25 +357,19 @@ let rec specs () : list<Getopt.opt> =
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
 
-       ( noshort,
-       "cardinality",
-       OneArg ((fun x -> String (validate_cardinality x)),
-               "[off|warn|check]"),
-       "Check cardinality constraints on inductive data types (default 'off')");
-
-     ( noshort,
+      ( noshort,
        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
 
-     ( noshort,
+      ( noshort,
         "codegen-lib",
         OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
                  "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
-     ( noshort,
+      ( noshort,
         "debug",
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
                  "[module name]"),
@@ -611,6 +613,11 @@ let rec specs () : list<Getopt.opt> =
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
+        "check_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Check new hints for replayability");
+
+       ( noshort,
         "reuse_hint_for",
         OneArg (String, "top-level name in the current module"),
         "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
@@ -648,6 +655,11 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Don't print an error message; show an exception trace instead");
 
+      ( noshort,
+        "ugly",
+        ZeroArgs (fun () -> Bool true),
+        "Emit output formatted for debugging");
+
        ( noshort,
         "unthrottle_inductives",
         ZeroArgs (fun () -> Bool true),
@@ -664,9 +676,16 @@ let rec specs () : list<Getopt.opt> =
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
-        "use_tactics",
+        "no_tactics",
         ZeroArgs (fun () -> Bool true),
-        "Pre-process a verification condition using a user-provided tactic (a flag to support migration to tactics gradually)");
+        "Do not run the tactic engine before discharging a VC");
+
+       ( noshort,
+        "using_facts_from",
+        OneArg (cons_using_facts_from, "[namespace | fact id]"),
+        "Implies --z3refresh; prunes the context to include facts from the given namespace of fact id \
+         (multiple uses of this option will prune the context to include those \
+         facts that match any of the provided namespaces / fact ids");
 
        ( noshort,
         "verify_all",
@@ -750,15 +769,15 @@ and parse_codegen s =
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage_aux (specs ()); exit 1)
 
-and validate_cardinality x = match x with
-    | "warn"
-    | "check"
-    | "off" -> x
-    | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
-              display_usage_aux (specs ()); exit 1)
+and string_as_bool option_name = function
+    | "true" -> Bool true
+    | "false" -> Bool false
+    | _ ->
+      Util.print1 "Wrong argument to %s\n" option_name;
+      display_usage_aux (specs ()); exit 1
 
 and validate_dir p =
-  mkdir false p; 
+  mkdir false p;
   p
 
 let docs () =
@@ -768,7 +787,6 @@ let docs () =
 //Additionaly, the --smt option is a security concern
 let settable = function
     | "admit_smt_queries"
-    | "cardinality"
     | "debug"
     | "debug_level"
     | "detail_errors"
@@ -785,6 +803,7 @@ let settable = function
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
+    | "ugly"
     | "print_before_norm"
     | "print_bound_var_types"
     | "print_effect_args"
@@ -801,9 +820,9 @@ let settable = function
     | "trace_error"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
-    | "use_tactics"
+    | "no_tactics"
+    | "using_facts_from"
     | "__temp_no_proj"
-    | "no_warn_top_level_effects"
     | "reuse_hint_for"
     | "z3rlimit_factor"
     | "z3rlimit"
@@ -931,7 +950,7 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
-let check_cardinality            () = get_cardinality () = "check"
+let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
@@ -969,6 +988,7 @@ let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
 let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
+let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()
@@ -986,11 +1006,10 @@ let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
 let use_tactics                  () = get_use_tactics                 ()
+let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
-let warn_cardinality             () = get_cardinality() = "warn"
 let warn_default_effects         () = get_warn_default_effects        ()
-let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s

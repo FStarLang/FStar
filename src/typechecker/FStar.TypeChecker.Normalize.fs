@@ -22,6 +22,7 @@ open FStar
 open FStar.Util
 open FStar.String
 open FStar.Const
+open FStar.Char
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -71,7 +72,7 @@ type primitive_step = {
     name:Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(args -> option<term>)
+    interpretation:(Range.range -> args -> option<term>)
 }
 
 type closure =
@@ -162,9 +163,9 @@ let downgrade_ghost_effect_name l =
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
 (*  either u, where u <> U_max                                                                                      *)
-(*  or     U_max [k;                        //constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
+(*  or     U_max [k;                        --constant                                                              *)
+(*               S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
+(*               S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg env u =
@@ -424,119 +425,197 @@ and close_lcomp_opt cfg env lopt = match lopt with
     | _ -> lopt
 
 (*******************************************************************)
-(* Simplification steps are not part of definitional equality      *)
-(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
-    let interp_math_op (f:int -> int -> FC.sconst) : args -> option<term> =
-        fun args ->
-          match args with
-          | [(a1, _); (a2, _)] -> begin
-            match (SS.compress a1).n, (SS.compress a2).n with
-            | Tm_constant (FC.Const_int(i, None)), Tm_constant (FC.Const_int(j, None)) ->
-              Some (const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos)
-            | _ ->
-              None
-            end
-          | _ -> failwith "Unexpected number of arguments"
+    let int_as_const  : Range.range -> int  -> term =
+        fun p i -> const_as_tm (FC.Const_int (BU.string_of_int i, None)) p
     in
-    let interp_bounded_op (f:int -> int -> FC.sconst) : args -> option<term> =
-        fun args ->
-          match args with
-          | [(a1, _); (a2, _)] -> begin
-             //Note: it's ok to do a deep pattern match on fvars and constants
-             //      they are never wrapped by Tm_delayed nodes
-             match (SS.compress a1).n, (SS.compress a2).n with
-             | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)]),
-               Tm_app ({n=Tm_fvar fv2}, [({n=Tm_constant (FC.Const_int (j, None))}, _)])
-                when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" &&
-                     BU.ends_with (Ident.text_of_lid fv2.fv_name.v) "int_to_t" ->
-               // Machine integers are represented as applications, e.g.
-               // [FStar.UInt8.uint_to_t 0xff], so as to get proper
-               // bounds checking. Maintain that invariant.
-               let n = const_as_tm (f (BU.int_of_string i) (BU.int_of_string j)) a2.pos in
-               Some (mk_app (mk (Tm_fvar fv1) a2.pos) [ n, None ])
-             | _ -> None
-            end
-          | _ -> failwith "Unexpected number of arguments"
+    let bool_as_const : Range.range -> bool -> term =
+        fun p b -> const_as_tm (FC.Const_bool b) p
     in
-    let as_primitive_step arity mk (l, f) = {name=l; arity=arity; strong_reduction_ok=true; interpretation=mk f} in
-    let int_as_const  : int -> FC.sconst = fun i -> FC.Const_int (BU.string_of_int i, None) in
-    let bool_as_const : bool -> FC.sconst = fun b -> FC.Const_bool b in
-    let basic_arith =
-        List.map (as_primitive_step 2 interp_math_op)
-            [(Const.op_Addition, (fun x y -> int_as_const (x + y)));
-             (Const.op_Subtraction, (fun x y -> int_as_const (x - y)));
-             (Const.op_Multiply,    (fun x y -> int_as_const (Prims.op_Multiply x y)));
-             (Const.op_Division,    (fun x y -> int_as_const (x / y)));
-             (Const.op_LT,          (fun x y -> bool_as_const (x < y)));
-             (Const.op_LTE,         (fun x y -> bool_as_const (x <= y)));
-             (Const.op_GT,          (fun x y -> bool_as_const (x > y)));
-             (Const.op_GTE,         (fun x y -> bool_as_const (x >= y)));
-             (Const.op_Modulus,     (fun x y -> int_as_const (x % y)))] in
-    let bounded_arith =
-        List.map (as_primitive_step 2 interp_bounded_op)
-                 (List.flatten (List.map (fun m -> [
-                       Const.p2l ["FStar"; m; "add"], (fun x y -> int_as_const (x + y));
-                       Const.p2l ["FStar"; m; "sub"], (fun x y -> int_as_const (x - y));
-                       Const.p2l ["FStar"; m; "mul"], (fun x y -> int_as_const (Prims.op_Multiply x y))
-                     ])
-                     [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128" ])) in
-    let unary_string_ops =
-        let mk x = mk x Range.dummyRange in
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
-        let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
-        let interp (args:args) : option<term> =
-            match args with
-            | [(a, _)] -> begin
-              match (SS.compress a).n with
-              | Tm_constant (FC.Const_string(bytes, _)) ->
-                let s = BU.string_of_bytes bytes in
-                let char_t = name SC.char_lid in
-                let nil_char =
-                    S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
-                                [S.iarg char_t]
-                                None Range.dummyRange in
-                Some (FStar.List.fold_right (fun c a ->
-                            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
-                                        [S.iarg char_t;
-                                         S.as_arg (mk (Tm_constant (Const_char c)));
-                                         S.as_arg a]
-                                        None Range.dummyRange)
-                            (list_of_string s)
-                            nil_char)
-               | _ ->
-                 None
-               end
-
-            | _ -> failwith "Unexpected number of arguments"
-         in
-         [{ name = Const.p2l ["FStar"; "String"; "list_of_string"];
-            arity = 1;
-            strong_reduction_ok=true;
-            interpretation=interp}]
-      in
-      basic_arith@bounded_arith@unary_string_ops
+    let string_as_const : Range.range -> string -> term =
+        fun p b -> const_as_tm (FC.Const_string (BU.bytes_of_string b, p)) p
+    in
+    let arg_as_int (a, _) : option<int> =
+        match (SS.compress a).n with
+        | Tm_constant (FC.Const_int(i, None)) ->
+          Some (BU.int_of_string i)
+        | _ ->
+          None
+    in
+    let arg_as_bounded_int (a, _) : option<(fv * int)> =
+        match (SS.compress a).n with
+        | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
+            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+          Some (fv1, BU.int_of_string i)
+        | _ -> None
+    in
+    let arg_as_bool (a, _) : option<bool> =
+        match (SS.compress a).n with
+        | Tm_constant (FC.Const_bool b) ->
+          Some b
+        | _ ->
+          None
+    in
+    let arg_as_char (a, _) : option<char> =
+        match (SS.compress a).n with
+        | Tm_constant (Const_char c) ->
+          Some c
+        | _ ->
+          None
+    in
+    let arg_as_string (a, _) : option<string> =
+        match (SS.compress a).n with
+        | Tm_constant (FC.Const_string(bytes, _)) ->
+          Some (BU.string_of_bytes bytes)
+        | _ ->
+          None
+    in
+    let arg_as_list (f : arg -> option<'a>) (a, _) : option<list<'a>> =
+        let rec sequence (l:list<option<'a>>) : option<list<'a>> =
+            match l with
+            | [] -> Some []
+            | None::_ -> None
+            | Some x::xs -> begin match sequence xs with
+                            | None -> None
+                            | Some xs' -> Some (x::xs')
+                            end
+        in
+        match U.list_elements a with
+        | None -> None
+        | Some elts -> sequence (List.map (fun x -> f (as_arg x)) elts)
+    in
+    let lift_unary
+        : ('a -> 'b) -> list<option<'a>> ->option<'b>
+        = fun f aopts ->
+            match aopts with
+            | [Some a] -> Some (f a)
+            | _ -> None
+    in
+    let lift_binary
+        : ('a -> 'a -> 'b) -> list<option<'a>> -> option<'b>
+        = fun f aopts ->
+            match aopts with
+            | [Some a0; Some a1] -> Some (f a0 a1)
+            | _ -> None
+    in
+    let unary_op
+        :  (arg -> option<'a>)
+        -> (Range.range -> 'a -> term)
+        -> Range.range
+        -> args
+        -> option<term>
+        = fun as_a f r args -> lift_unary (f r) (List.map as_a args)
+    in
+    let binary_op
+        :  (arg -> option<'a>)
+        -> (Range.range -> 'a -> 'a -> term)
+        -> Range.range
+        -> args
+        -> option<term>
+        = fun as_a f r args -> lift_binary (f r) (List.map as_a args)
+    in
+    let as_primitive_step (l, arity, f) = {
+        name=l;
+        arity=arity;
+        strong_reduction_ok=true;
+        interpretation=f
+    } in
+    let unary_int_op (f:int -> int) =
+        unary_op arg_as_int (fun r x -> int_as_const r (f x))
+    in
+    let binary_int_op (f:int -> int -> int) =
+        binary_op arg_as_int (fun r x y -> int_as_const r (f x y))
+    in
+    let unary_bool_op (f:bool -> bool) =
+        unary_op arg_as_bool (fun r x -> bool_as_const r (f x))
+    in
+    let binary_bool_op (f:bool -> bool -> bool) =
+        binary_op arg_as_bool (fun r x y -> bool_as_const r (f x y))
+    in
+    let binary_string_op (f : string -> string -> string) =
+        binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
+    in
+    let list_of_string' rng (s:string) : term =
+        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
+        let char_t = name SC.char_lid in
+        let charterm c = mk (Tm_constant (Const_char c)) rng in
+        U.mk_list char_t rng <| List.map charterm (list_of_string s)
+    in
+    let string_of_list' rng (l:list<char>) : term =
+        let s = string_of_list l in
+        SC.exp_string s
+    in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
+    in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
+    in
+    let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
+            [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
+             (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
+             (Const.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
+             (Const.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
+             (Const.op_Division,    2, binary_int_op (fun x y -> (x / y)));
+             (Const.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
+             (Const.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
+             (Const.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
+             (Const.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
+             (Const.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
+             (Const.op_Negation,    1, unary_bool_op (fun x -> not x));
+             (Const.op_And,         2, binary_bool_op (fun x y -> x && y));
+             (Const.op_Or,          2, binary_bool_op (fun x y -> x || y));
+             (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
+             (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
+             (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
+             (Const.p2l ["FStar"; "String"; "list_of_string"],
+                                    1, unary_op arg_as_string list_of_string');
+             (Const.p2l ["FStar"; "String"; "string_of_list"],
+                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
+    in
+    let bounded_arith_ops =
+        let bounded_int_types =
+           [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
+        in
+        let int_as_bounded r int_to_t n =
+            let c = int_as_const r n in
+            let int_to_t = S.fv_to_tm int_to_t in
+            S.mk_Tm_app int_to_t [S.as_arg c] None r
+        in
+        bounded_int_types |> List.collect (fun m ->
+        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
+         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
+         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
+    in
+    List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
 let equality_ops : list<primitive_step> =
-    let interp_bool (args:args) : option<term> =
+    let interp_bool rng (args:args) : option<term> =
         match args with
         | [(_typ, _); (a1, _); (a2, _)] ->
             (match U.eq_tm a1 a2 with
-            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) a2.pos)
-            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) a2.pos)
+            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) rng)
+            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) rng)
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
     in
-    let interp_prop (args:args) : option<term> =
+    let interp_prop (r:Range.range) (args:args) : option<term> =
         match args with
         | [(_typ, _); (a1, _); (a2, _)]    //eq2
         | [(_typ, _); _; (a1, _); (a2, _)] ->    //eq3
             (match U.eq_tm a1 a2 with
-            | U.Equal -> Some U.t_true
-            | U.NotEqual -> Some U.t_false
+            | U.Equal -> Some ({U.t_true with pos=r})
+            | U.NotEqual -> Some ({U.t_false with pos=r})
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
@@ -574,7 +653,7 @@ let reduce_primops cfg tm =
            | Some prim_step ->
              if List.length args < prim_step.arity
              then tm //partial application; can't step
-             else match prim_step.interpretation args with
+             else match prim_step.interpretation head.pos args with
                   | None -> tm
                   | Some reduced -> reduced
            end
@@ -584,6 +663,10 @@ let reduce_primops cfg tm =
 let reduce_equality cfg tm =
     reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
 
+(*******************************************************************)
+(* Simplification steps are not part of definitional equality      *)
+(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(*******************************************************************)
 let maybe_simplify cfg tm =
     let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
@@ -664,9 +747,9 @@ let is_reify_head = function
     | _ ->
       false
 
-let is_fstar_tactics_quote t =
+let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -696,18 +779,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)
-            when is_fstar_tactics_quote hd ->
+            when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
             let t = {t with n=Tm_app(hd, args)} in
             let t = reduce_primops cfg t in
-            rebuild cfg env stack t //quoted terms should not be normalized, but they may have free variables
+            rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let tm = get_norm_request args in
-            let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let s = [Reify; UnfoldUntil Delta_constant; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
@@ -1169,7 +1252,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                         norm cfg env (List.tl stack) body
                     | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                        let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
+                        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
                         norm cfg env (List.tl stack) lifted
                     | Tm_match(e, branches) ->
                       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
@@ -1196,10 +1279,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 if should_reify
                 then
-                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' t)
+                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
-                (* TODO : don't we need to normalize t here ? *)
-                // let t = norm cfg env stack t in
+                (* KM: We need to normalize at least to erase universes when extracting *)
+                let t = norm cfg env [] t in
                 if (U.is_pure_effect m
                     || U.is_ghost_effect m)
                 && cfg.steps |> List.contains PureSubtermsWithinComputations

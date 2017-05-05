@@ -31,14 +31,8 @@
 module FStar.Range
 
 open System.Collections.Generic
-(* open Internal.Utilities *)
-(* open Internal.Utilities.Pervasives *)
-(* open Microsoft.FSharp.Compiler.AbstractIL  *)
-(* open Microsoft.FSharp.Compiler.AbstractIL.Internal  *)
-(* module Ildiag = Microsoft.FSharp.Compiler.AbstractIL.Diagnostics  *)
-
+open FSharp.Compatibility.OCaml
 open Printf
-(* open Microsoft.FSharp.Compiler.Lib *)
 
 let b0 n =  (n          &&& 0xFF)
 let b1 n =  ((n >>> 8)  &&& 0xFF)
@@ -249,6 +243,9 @@ let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in sprin
 let string_of_def_range r   = sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
 let string_of_use_range r   = string_of_def_range {r with def_range=r.use_range}
 let string_of_range r       = string_of_def_range r
+let file_of_use_range r     = file_of_range {r with def_range=r.use_range}
+let start_of_use_range r    = start_of_range {r with def_range=r.use_range}
+let end_of_use_range r      = end_of_range {r with def_range=r.use_range}
 
 let compare r1 r2 =
     let fcomp = String.compare (file_of_range r1) (file_of_range r2) in

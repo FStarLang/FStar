@@ -37,6 +37,7 @@ module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
+module TcUtil = FStar.TypeChecker.Util
 
 exception Un_extractable
 
@@ -96,9 +97,9 @@ let err_value_restriction t =
 let err_unexpected_eff t f0 f1 =
     fail t.pos (BU.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1))
 
-(********************************************************************)
-(* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_ANY} *)
-(********************************************************************)
+(***********************************************************************)
+(* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)
+(***********************************************************************)
 let effect_as_etag =
     let cache = BU.smap_create 20 in
     let rec delta_norm_eff g (l:lident) =
@@ -116,7 +117,18 @@ let effect_as_etag =
         then E_PURE
         else if lid_equals l C.effect_GHOST_lid
         then E_GHOST
-        else E_IMPURE
+        else
+            // Reifiable effects should be pure. Added guard because some effect declarations
+            // don't seem to be in the environment at this point, in particular FStar.All.ML
+            // (maybe because it's primitive?)
+            let ed_opt = TcEnv.effect_decl_opt g.tcenv l in
+            match ed_opt with
+            | Some (ed, qualifiers) ->
+                if qualifiers |> List.contains Reifiable
+                then E_PURE
+                else E_IMPURE
+            | None -> E_IMPURE
+
 (********************************************************************************************)
 (* Basic syntactic operations on a term                                                     *)
 (********************************************************************************************)
@@ -210,7 +222,7 @@ let rec is_type_aux env t =
     | Tm_match(_, branches) ->
       begin match branches with
         | (_, _, e)::_ -> is_type_aux env e
-        | _ -> failwith "Empty branches"
+        | _ -> false
       end
 
     | Tm_meta(t, _) ->
@@ -426,8 +438,8 @@ and term_as_mlty' env t =
         let mlbs, env = binders_as_ml_binders env bs in
         let t_ret =
             let eff = TcEnv.norm_eff_name env.tcenv (U.comp_effect_name c) in
-            let ed = TcEnv.get_effect_decl env.tcenv eff in
-            if ed.qualifiers |> List.contains Reifiable
+            let ed, qualifiers = must (TcEnv.effect_decl_opt env.tcenv eff) in
+            if qualifiers |> List.contains Reifiable
             then let t = FStar.TypeChecker.Env.reify_comp env.tcenv c U_unknown in
                  (* let _ = printfn "Translating comp type %s as %s\n" *)
                  (*        (Print.comp_to_string c) (Print.term_to_string t) in *)
@@ -811,21 +823,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
-              let ed = TypeChecker.Env.get_effect_decl g.tcenv m in
-              if ed.qualifiers |> List.contains Reifiable |> not
+              let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt g.tcenv m) in
+              if qualifiers |> List.contains Reifiable |> not
               then term_as_mlexpr' g t
-              else //this should be interpreted as a bind
-                   let ml_result_ty_1 = term_as_mlty g lb.lbtyp in
-                   let comp_1, _, _ = term_as_mlexpr g lb.lbdef in
-                   let ml_k, ty =
-                        let k = U.abs [left (lb.lbname) |> S.mk_binder] body None in
-                        let ml_k, _, t_k = term_as_mlexpr g k in
-                        let m_2 = match t_k with
-                            | MLTY_Fun(_, _, m_2) -> m_2
-                            | _ -> failwith "Impossible" in
-                        ml_k, m_2 in
-                   let bind = with_ty MLTY_Top <| MLE_Name (monad_op_name ed "bind" |> fst) in
-                   with_ty ty <| MLE_App(bind, [comp_1; ml_k]), E_IMPURE, ty
+              else
+                failwith "This should not happen (should have been handled at Tm_abs level)"
             | _ -> term_as_mlexpr' g t
          end
 
@@ -855,22 +857,27 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                   end
                end
 
-        | Tm_abs(bs, body, copt(* the annotated computation type of the body ... probably don't need it *)) ->
+        | Tm_abs(bs, body, copt (* the annotated computation type of the body *)) ->
           let bs, body = SS.open_term bs body in
           let ml_bs, env = binders_as_ml_binders g bs in
+          let body =
+            match copt with
+            | Some c ->
+                debug g (fun () ->
+                    (match c with
+                    | Inl lc -> BU.print1 "Computation lc: %s\n" (Print.lcomp_to_string lc)
+                    | Inr rc -> BU.print1 "Computation rc: %s\n" (Ident.text_of_lid (fst rc))));
+                if TcEnv.is_reifiable env.tcenv c
+                then TcUtil.reify_body env.tcenv body
+                else body
+            | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
             (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
 
-        | Tm_app({n=Tm_constant Const_reify}, [t]) ->
-          let ml, e_tag, mlty = term_as_mlexpr' g (fst t) in
-          ml, E_PURE, mlty
-
-        | Tm_app({n=Tm_constant (Const_reflect _)}, [t]) ->
-          let ml, e_tag, mlty = term_as_mlexpr' g (fst t) in
-          ml, E_IMPURE, mlty
+        | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
         | Tm_app(head, args) ->
           let is_total = function
@@ -887,6 +894,11 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
+            | _, Tm_constant Const_reify ->
+              let e = TcUtil.reify_body_with_arg g.tcenv head (List.hd args) in
+              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
+              term_as_mlexpr' g tm
+
             | _ ->
 
               let rec extract_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs =
@@ -902,8 +914,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
-                             S.fv_eq_lid fv Syntax.Const.op_And ||
-                             S.fv_eq_lid fv Syntax.Const.op_Or
+			                    S.fv_eq_lid fv Syntax.Const.op_And ||
+			                    S.fv_eq_lid fv Syntax.Const.op_Or
                            | _ ->
                               false)
                         in
@@ -1072,7 +1084,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                    let n_tbinders = List.length tbinders in
                    let e = normalize_abs e |> U.unmeta in
                    begin match e.n with
-                      | Tm_abs(bs, body, _) ->
+                      | Tm_abs(bs, body, copt) ->
                         let bs, body = SS.open_term bs body in
                         if n_tbinders <= List.length bs
                         then let targs, rest_args = BU.first_N n_tbinders bs in
@@ -1096,7 +1108,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                              let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
                              let body = match rest_args with
                                 | [] -> body
-                                | _ -> U.abs rest_args body None in
+                                | _ -> U.abs rest_args body copt in
                              (lbname_, f_e, (t, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:

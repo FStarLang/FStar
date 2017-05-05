@@ -100,6 +100,8 @@ let eq3_lid    = pconst  "eq3"
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
 let exp_false_bool  = mk (Tm_constant (Const_bool false))
 let exp_unit        = mk (Tm_constant (Const_unit))
+let exp_int s       = mk (Tm_constant (Const_int (s,None))) // Makes an (unbounded) integer from its string repr.
+let exp_string s    = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange)))
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
 let some_lid        = pconst  "Some"
@@ -112,6 +114,8 @@ let list_append_lid = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
+let string_of_int_lid = p2l ["Prims"; "string_of_int"]
+let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -194,5 +198,4 @@ let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FSt
 let tactic_lid = fstar_tactics_lid "tactic"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
-let fstar_tactics_embed_lid = fstar_tactics_lid "embed"
-let fstar_tactics_quote_lid = fstar_tactics_lid "quote"
+let fstar_tactics_embed_lid = fstar_tactics_lid "__embed"

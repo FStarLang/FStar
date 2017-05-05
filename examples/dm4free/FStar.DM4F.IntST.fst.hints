@@ -1,9 +1,9 @@
 [
   "á‹ëƒ”€)‹B\u001d|JN–ž`",
   [
-    [ "FStar.DM4F.IntST.STINT_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IntST._dm4f_STINT_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.IntST.STINT___proj__STINT__item__get_elab",
+      "FStar.DM4F.IntST._dm4f_STINT___proj__STINT__item__get_elab",
       1,
       2,
       1,
@@ -11,7 +11,7 @@
       0
     ],
     [
-      "FStar.DM4F.IntST.STINT___proj__STINT__item__put_elab",
+      "FStar.DM4F.IntST._dm4f_STINT___proj__STINT__item__put_elab",
       1,
       2,
       1,

@@ -16,7 +16,7 @@
 // Using light syntax in this file because of object-oriented F# constructs
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Util
-
+open FSharp.Compatibility.OCaml
 open System
 open System.Text
 open System.Diagnostics
@@ -45,7 +45,7 @@ let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 exception Impos
 exception NYI of string
 exception Failure of string
-let max_int: int = System.Int32.MaxValue
+let max_int = System.Int32.MaxValue
 
 type proc = {m:Object;
              outbuf:StringBuilder;
@@ -379,6 +379,7 @@ let hex_string_of_byte  (i:byte) =
     else hs
 let string_of_char  (i:char) = spr "%c" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
+let bytes_of_string (s:string) = unicode_of_string s
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let trim_string (s:string) = s.Trim()
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
@@ -652,7 +653,7 @@ let file_get_contents f =
 let mkdir clean dname =
   if System.IO.Directory.Exists(dname) then
     let srcDir = new System.IO.DirectoryInfo(dname)
-    if clean then 
+    if clean then
         for file in srcDir.GetFiles() do
         System.IO.File.Delete file.FullName
   else
@@ -767,10 +768,16 @@ let save_value_to_file (fname:string) value =
   output_value writer value
 
 let load_value_from_file (fname:string) =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`.
+  // this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
   try
-    use reader = new System.IO.StreamReader(fname) in
-    Some <| input_value reader
+    use reader = new System.IO.FileStream(fname,
+                                          FileMode.Open,
+                                          FileAccess.Read,
+                                          FileShare.Read) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    let result = formatter.Deserialize(reader) :?> 'a in
+    Some result
   with
   | _ ->
     None
@@ -798,7 +805,7 @@ let digest_of_string (s:string) =
 
 let ensure_decimal (s: string) =
   if s.StartsWith "0x" then
-    sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
+    sprintf "%A" (System.Numerics.BigInteger.Parse ("0"+s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
   else
     s
 
@@ -854,19 +861,23 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
         if (List.length core_list) = 0 then None else
         Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
     let hint_from_json_hint (h : System.Object) =
-        let ha = h :?> System.Object [] in
-        if (Array.length ha) = 0 then None else
-            if (Array.length ha) <> 6 then failwith "malformed hint" else
-            Some {
-                hint_name=ha.[0] :?> System.String;
-                hint_index=ha.[1] :?> int;
-                fuel=ha.[2] :?> int;
-                ifuel=ha.[3] :?> int;
-                unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                query_elapsed_time=ha.[5] :?> int
-            } in
+        if  h = null then None
+        else let ha = h :?> System.Object [] in
+             if (Array.length ha) = 0 then None else
+                if (Array.length ha) <> 6 then failwith "malformed hint" else
+                Some {
+                    hint_name=ha.[0] :?> System.String;
+                    hint_index=ha.[1] :?> int;
+                    fuel=ha.[2] :?> int;
+                    ifuel=ha.[3] :?> int;
+                    unsat_core=unsat_core_from_json_unsat_core ha.[4];
+                    query_elapsed_time=ha.[5] :?> int
+                } in
     let hints_from_json_hints (hs : System.Object) =
-        let hint_list = (hs :?> System.Object []) |> Array.toList in
+        let hint_list =
+            if hs = null
+            then []
+            else (hs :?> System.Object []) |> Array.toList in
         List.map (fun e -> (hint_from_json_hint e)) hint_list  in
     if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
     {

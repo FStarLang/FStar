@@ -18,6 +18,7 @@ GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX=$(shell pwd)/fstar
+PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -76,14 +77,13 @@ endif
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
 	echo "open Prims" >> $@
+	echo "open FStar" >> $@
 	echo "open FStar.Errors" >> $@
 	echo "open FStar.List" >> $@
 	echo "open FStar.Util" >> $@
 	echo "open FStar.Range" >> $@
 	echo "open FStar.Options" >> $@
-	echo "open FStar.Syntax.Syntax" >> $@
-	echo "open FStar.Syntax.Const" >> $@
-	echo "open FStar.Syntax.Util" >> $@
+	echo "open FStar.Parser.Const" >> $@
 	echo "open FStar.Parser.AST" >> $@
 	echo "open FStar.Parser.Util" >> $@
 	echo "open FStar.Const" >> $@
@@ -125,10 +125,9 @@ FStar_Parser_Parse.ml: parse.mly
 	# menhir) and removes the production as needed.
 	ocamlyacc parse.mly 2> yac-log
 	cat yac-log
-	@
-	@if (( $$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/') > 6 )); then \
+	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 7 ]; then \
 	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
-	  fi
+	fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
 
@@ -215,14 +214,16 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
+	if [ -f "$(PREFIX)/bin/z3.exe" ]; then chmod 755 $(PREFIX)/bin/*z3*.*; fi
+
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
-	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
+#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*.dll $(PREFIX)/bin
+#	cp ../../bin/msvc*.dll $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
 	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
 	zip -r -9 $(NAME).zip fstar
 else

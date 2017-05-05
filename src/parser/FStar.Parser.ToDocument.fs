@@ -31,7 +31,7 @@ open FStar.Const
 open FStar.Pprint
 open FStar.Range
 
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 module BU = FStar.Util
 
 
@@ -172,8 +172,8 @@ let matches_var t x =
         | Var y -> x.idText = text_of_lid y
         | _ -> false
 
-let is_tuple_constructor = FStar.Syntax.Util.is_tuple_data_lid'
-let is_dtuple_constructor = FStar.Syntax.Util.is_dtuple_data_lid'
+let is_tuple_constructor = C.is_tuple_data_lid'
+let is_dtuple_constructor = C.is_dtuple_data_lid'
 
 let is_list_structure cons_lid nil_lid =
   let rec aux e = match (unparen e).tm with
@@ -326,6 +326,15 @@ let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
     fun op -> List.tryFind (matches_level <| Ident.text_of_id op) opinfix34 <> None
 
+let handleable_args_length (op:ident) =
+  let op_s = Ident.text_of_id op in
+  if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
+  else if (is_operatorInfix0ad12 op ||
+    is_operatorInfix34 op ||
+    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+  then 2
+  else if (List.mem op_s [".()<-" ; ".[]<-"]) then 3
+  else 0
 
 let handleable_op op args =
   match List.length args with
@@ -813,6 +822,8 @@ and p_lidentOrUnderscore id =
 and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
+  | Bind(x, e1, e2) ->
+      group (p_lident x ^^ long_left_arrow ^^ p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
@@ -1087,7 +1098,12 @@ and p_atomicTermNotQUident e = match (unparen e).tm with
   | Var lid when lid_equals lid C.assert_lid ->
     str "assert"
   | Tvar tv -> p_tvar tv
-  | Const c -> p_constant c
+  | Const c ->
+    begin match c with
+    | Const.Const_char x  when x = '\n' ->
+       str "0x0Az"
+    | _ -> p_constant c
+    end
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
   | Name lid when lid_equals lid C.false_lid ->
@@ -1126,6 +1142,10 @@ and p_projectionLHS e = match (unparen e).tm with
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
+  (* KM : I still think that it is wrong to print a term that's not parseable... *)
+  | Labeled (e, s, b) ->
+      break_ 0 ^^ str ("(*" ^ s ^ "*)") ^/^ p_term e
+
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
@@ -1133,7 +1153,6 @@ and p_projectionLHS e = match (unparen e).tm with
     failwith ("Operation " ^ Ident.text_of_id op ^ " with " ^ string_of_int (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
   | Uvar _ -> failwith "Unexpected universe variable out of universe context"
-  | Labeled _   -> failwith "Not valid in universe"
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
@@ -1149,6 +1168,7 @@ and p_projectionLHS e = match (unparen e).tm with
   | Let _       (* p_noSeqTerm *)
   | LetOpen _   (* p_noSeqTerm *)
   | Seq _       (* p_term *)
+  | Bind _      (* p_term *)
   | If _        (* p_noSeqTerm *)
   | Match _     (* p_noSeqTerm *)
   | TryWith _   (* p_noSeqTerm *)

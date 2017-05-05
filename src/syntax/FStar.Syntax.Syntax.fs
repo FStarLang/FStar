@@ -256,8 +256,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    qualifiers  :list<qualifier>;
-    cattributes  :list<cflags>;
+    cattributes :list<cflags>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
@@ -282,42 +281,40 @@ type eff_decl = {
     actions     :list<action>
 }
 
-and sigelt' =
+type sig_metadata = {
+    sigmeta_active:bool;
+    sigmeta_fact_db_ids:list<string>;
+}
+
+type sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
                        * list<lident>              //data constructors for this type
-                       * list<qualifier>
-// JP: the comment below seems out of date -- Sig_tycons is gone?!
-(* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
+(* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
-   i.e., all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
+   i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
-                       * list<qualifier>
                        * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon        of lident
                        * univ_names                 //universe variables of the inductive type it belongs to
                        * typ
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
-                       * list<qualifier>
                        * list<lident>               //mutually defined types
   | Sig_declare_typ    of lident
                        * univ_names
                        * typ
-                       * list<qualifier>
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<qualifier>
                        * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
                        * formula
-                       * list<qualifier>
   | Sig_new_effect     of eff_decl
   | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
@@ -325,12 +322,13 @@ and sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<qualifier>
                        * list<cflags>
   | Sig_pragma         of pragma
 and sigelt = {
-    sigel: sigelt';
-    sigrng: Range.range;
+    sigel:    sigelt';
+    sigrng:   Range.range;
+    sigquals: list<qualifier>;
+    sigmeta:  sig_metadata
 }
 
 type sigelts = list<sigelt>
@@ -438,7 +436,8 @@ let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange }
+let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

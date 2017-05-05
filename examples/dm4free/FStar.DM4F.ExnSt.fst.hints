@@ -19,7 +19,7 @@
       0
     ],
     [
-      "FStar.DM4F.ExnSt.EXNST_bind_wp",
+      "FStar.DM4F.ExnSt._dm4f_EXNST_bind_wp",
       1,
       2,
       1,
@@ -27,13 +27,13 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "function_token_typing_Prims.int", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption", "typing_Prims.uu___is_None",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
         "typing_Prims.uu___is_Some"
       ],
       0
     ],
     [
-      "FStar.DM4F.ExnSt.EXNST___proj__EXNST__item__raise_elab",
+      "FStar.DM4F.ExnSt._dm4f_EXNST___proj__EXNST__item__raise_elab",
       1,
       2,
       1,
