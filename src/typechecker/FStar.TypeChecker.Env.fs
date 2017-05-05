@@ -64,11 +64,14 @@ type effects = {
 
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = list<string>
-// A choice of which name prefixes are enable/disabled
+// A choice of which name prefixes are enabled/disabled
 // The leftmost match takes precedence. Empty list means everything is on.
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
-// TODO: push/pop behaviour
-type proof_namespace = list<name_prefix * bool>
+type flat_proof_namespace = list<(name_prefix * bool)>
+
+// A stack of namespace choices. Provides simple push/pop behaviour.
+// For the purposes of filtering facts, this is just flattened.
+type proof_namespace = list<flat_proof_namespace>
 
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
@@ -169,7 +172,7 @@ let initial_env type_of universe_of solver module_lid =
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
-    proof_ns = []
+    proof_ns = [[]]
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -1171,7 +1174,7 @@ let should_enc_path env path =
         | x::xs, y::ys -> x = y && list_prefix xs ys
         | _, _ -> false
     in
-    let rec should_enc_path' (pns:proof_namespace) path =
+    let rec should_enc_path' (pns:flat_proof_namespace) path =
         match pns with
         | [] -> true
         | (p,b)::pns ->
@@ -1179,10 +1182,30 @@ let should_enc_path env path =
             then b
             else should_enc_path' pns path
     in
-    should_enc_path' (env.proof_ns) path
+    should_enc_path' (List.flatten env.proof_ns) path
 
 let should_enc_lid env lid =
     should_enc_path env (path_of_lid lid)
+
+let cons_proof_ns b e path =
+    match e.proof_ns with
+    | [] -> failwith "empty proof_ns stack!"
+    | pns::rest ->
+        let pns' = (path, b) :: pns in
+    { e with proof_ns = pns'::rest }
+
+// F# forces me to fully apply this... ugh
+let add_proof_ns e path = cons_proof_ns true  e path
+let rem_proof_ns e path = cons_proof_ns false e path
+
+let push_proof_ns e =
+    { e with proof_ns = []::e.proof_ns }
+
+let pop_proof_ns e =
+    match e.proof_ns with
+    | [] -> failwith "empty proof_ns stack!"
+    | _::rest ->
+        { e with proof_ns = rest }
 
 (* <Move> this out of here *)
 let dummy_solver = {

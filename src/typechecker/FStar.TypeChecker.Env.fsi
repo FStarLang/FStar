@@ -64,11 +64,15 @@ type effects = {
 
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = list<string>
-// A choice of which name prefixes are enable/disabled
+// A choice of which name prefixes are enabled/disabled
 // The leftmost match takes precedence. Empty list means everything is on.
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
-// TODO: push/pop behaviour
-type proof_namespace = list<name_prefix * bool>
+type flat_proof_namespace = list<(name_prefix * bool)>
+
+// A stack of namespace choices. Provides simple push/pop behaviour.
+// For the purposes of filtering facts, this is just flattened.
+// CAN NEVER BE EMPTY
+type proof_namespace = list<flat_proof_namespace>
 
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
@@ -232,6 +236,9 @@ val is_reifiable_function : env -> term -> bool
 val binders_of_bindings : list<binding> -> binders
 
 (* Toggling of encoding of namespaces *)
-// TODO: add, remvoe/ push, pop
 val should_enc_path : env -> list<string> -> bool
 val should_enc_lid  : env -> lident -> bool
+val add_proof_ns    : env -> name_prefix -> env
+val rem_proof_ns    : env -> name_prefix -> env
+val push_proof_ns   : env -> env
+val pop_proof_ns    : env -> env
