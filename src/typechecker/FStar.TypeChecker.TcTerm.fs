@@ -468,7 +468,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let c =
-      if Env.should_verify env &&
+      if not (Env.debug env <| Options.Other "Quadratic")
+         && Env.should_verify env &&
          not (U.is_lcomp_partial_return c) &&
          //not (U.is_unit c.res_typ) &&
          U.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
@@ -1078,7 +1079,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                   //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
                   //not (U.is_unit cres.res_typ)
                   //&&
-                  U.is_pure_or_ghost_lcomp cres
+                  not (Env.debug env <| Options.Other "Quadratic")
+                  && U.is_pure_or_ghost_lcomp cres
                   && arg_comps_rev |> BU.for_some (function
                       | (_, _, Inl _) -> false
                       | (_, _, Inr c) -> not (U.is_pure_or_ghost_lcomp c))
@@ -1121,6 +1123,16 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       (* where chead = b1 -> ... bn -> cres *)
 
+      (* if cres is pure or ghost, we augment it with a return *)
+      let cres =
+        if Util.is_pure_or_ghost_lcomp cres
+        && Env.debug env <| Options.Other "Quadratic"
+        then let term =
+                S.mk_Tm_app head (List.rev arg_rets) None head.pos in
+              TcUtil.maybe_assume_result_eq_pure_term env term cres
+        else cres
+      in
+
       (* 1. We compute the final computation type comp  *)
       let comp =
         List.fold_left
@@ -1129,7 +1141,11 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             (* Looking at the code of tc_args below, Inl seems to be reserved for Tot or GTot *)
             | Inl (eff_name, arg_typ) -> out_c
             (* proving (Some e) here instead of None causes significant Z3 overhead *)
-            | Inr c -> TcUtil.bind e.pos env None c (x, out_c))
+            | Inr c ->
+              if Util.is_pure_or_ghost_lcomp c
+              && Env.debug env <| Options.Other "Quadratic"
+              then TcUtil.bind e.pos env (Some e) c (x, out_c)
+              else TcUtil.bind e.pos env None c (x, out_c))
           cres
           arg_comps_rev
       in
@@ -1231,20 +1247,38 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let g = Rel.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
-            if U.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
-            then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, None, Inl (c.eff_name, c.res_typ))::outargs, arg::arg_rets, g, fvs) rest rest'
-            else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
-            then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, Some x, Inr c)::outargs, arg::arg_rets, g, fvs) rest rest'
-            else if is_null_binder (List.hd bs) //it's not pure, but the function isn't dependent; just check its WP
-            then let newx = S.new_bv (Some e.pos) c.res_typ in
-                    let arg' = S.as_arg <| S.bv_to_name newx in
-                    tc_args head_info (subst, (arg, Some newx, Inr c)::outargs, arg'::arg_rets, g, fvs) rest rest'
-            else //e is impure and the function may be dependent...
-                 //need to check that the variable does not occur free in the rest of the function type
-                 //by adding x to fvs
-                 tc_args head_info (subst, (arg, Some x, Inr c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
+            let xterm = S.as_arg (S.bv_to_name x) in
+            if Env.debug env <| Options.Other "Quadratic"
+            then begin
+                if TcUtil.is_pure_or_ghost_effect env c.eff_name
+                then let subst = maybe_extend_subst subst (List.hd bs) e in
+                     tc_args head_info (subst, (arg, Some x, Inr c)::outargs, xterm::arg_rets, g, fvs) rest rest'
+                else tc_args head_info (subst, (arg, Some x, Inr c)::outargs, xterm::arg_rets, g, x::fvs) rest rest'
+            end
+            else
+                (* Case 1: e is Tot or GTot; we can just substitute it *)
+                if U.is_tot_or_gtot_lcomp c
+                then let subst = maybe_extend_subst subst (List.hd bs) e in
+                        tc_args head_info (subst, (arg, None, Inl (c.eff_name, c.res_typ))::outargs, arg::arg_rets, g, fvs) rest rest'
+                (* Case 2: e is only conditionally pure;
+                           we can substitute, but must check its WPTot or GTot
+                 *)
+                else if TcUtil.is_pure_or_ghost_effect env c.eff_name
+                then let subst = maybe_extend_subst subst (List.hd bs) e in
+                        tc_args head_info (subst, (arg, Some x, Inr c)::outargs, arg::arg_rets, g, fvs) rest rest'
+                (* Case 3: e is neither pure not ghost,
+                           but the function isn't dependent; just check its WP
+                 *)
+                else if is_null_binder (List.hd bs) //function isn't dependent
+                then let newx = S.new_bv (Some e.pos) c.res_typ in
+                        let arg' = S.as_arg <| S.bv_to_name newx in
+                        tc_args head_info (subst, (arg, Some newx, Inr c)::outargs, arg'::arg_rets, g, fvs) rest rest'
+                (* Case 4:
+                      e is impure and the function may be dependent...
+                      need to check that the variable does not occur free in the rest of the function type
+                      by adding x to fvs
+                *)
+                else tc_args head_info (subst, (arg, Some x, Inr c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
 
         | _, [] -> (* no more args; full or partial application *)
             monadic_application head_info subst outargs arg_rets g fvs bs

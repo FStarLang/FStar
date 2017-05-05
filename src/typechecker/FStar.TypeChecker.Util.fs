@@ -506,6 +506,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
   let lc2 = N.ghost_to_pure_lcomp env lc2 in
   let joined_eff = join_lcomp env lc1 lc2 in
   if debug env Options.Extreme
+  || debug env <| Options.Other "bind"
   then
     (let bstr = match b with
       | None -> "none"
@@ -523,6 +524,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let c1 = lc1.comp () in
           let c2 = lc2.comp () in
           if debug env Options.Extreme
+          || debug env <| Options.Other "bind"
           then BU.print5 "b=%s,Evaluated %s to %s\n And %s to %s\n"
                 (match b with
                   | None -> "none"
@@ -565,6 +567,10 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           in
           match try_simplify () with
             | Some (c, reason) ->
+              if debug env Options.Extreme
+              || debug env <| Options.Other "bind"
+              then BU.print4 "Simplified (because %s) bind %s %s to %s\n"
+                                reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c);
               c
             | None ->
               let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
@@ -794,7 +800,10 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
       if not (is_pure_or_ghost_effect env lc.eff_name)
       || env.lax
       then c
-      else if U.is_partial_return c then c
+      else if U.is_partial_return c then
+           (if Env.debug env <| Options.Other "Quadratic"
+            then printfn "not returning %s" (Print.term_to_string e);
+           c)
       else if U.is_tot_or_gtot_comp c
            && not (Env.lid_exists env Const.effect_GTot_lid)
       then failwith (BU.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
