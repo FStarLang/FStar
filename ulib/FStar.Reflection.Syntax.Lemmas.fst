@@ -24,3 +24,25 @@ let rec mk_app_collect_inv t = mk_app_collect_inv_s t []
  * The way back is not stricly true: the list of arguments could grow.
  * It's annoying to even state, might do it later
  *)
+let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+    match l with
+    | [] -> True
+    | x::xs -> p x /\ forall_list p xs
+
+val collect_app_order' : (args:list term) -> (tt:term) -> (t:term) ->
+            Lemma (requires (forall_list (fun a -> a << tt) args)
+                             /\ t << tt)
+                  (ensures (forall_list (fun a -> a << tt) (snd (collect_app' args t)))
+                           /\ fst (collect_app' args t) << tt)
+                  (decreases t)
+let rec collect_app_order' args tt t =
+    match inspect t with
+    | Tv_App l r -> collect_app_order' (r::args) tt l
+    | _ -> ()
+
+val collect_app_order : (t:term) ->
+            Lemma (ensures (forall_list (fun a -> a << t) (snd (collect_app t))))
+let collect_app_order t =
+    match inspect t with
+    | Tv_App l r -> collect_app_order' [r] t l
+    | _ -> ()

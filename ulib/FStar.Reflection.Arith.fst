@@ -51,12 +51,14 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | x::xs -> p x /\ forall_list p xs
 
 val decide : term -> tm expr
-let rec decide t =
-    admit(); // TODO: show it terminating in a proper way
-    let (hd, tl) = collect_app t in
+let rec decide (t:term) =
+    let (hd, tl) : term * list term = collect_app t in
     match inspect hd, tl with
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in
+        collect_app_order t;
+        assert(l << t);
+        assert(r << t);
         if eq_qn qn add_qn then (l <-- decide l;
                                  r <-- decide r;
                                  return (Plus l r))

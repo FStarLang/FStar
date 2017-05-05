@@ -108,6 +108,8 @@ let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (dec
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
+
+val collect_app : term -> term * list term
 let collect_app = collect_app' []
 
 (* TODO: prove that resulting args are all smaller than t *)
