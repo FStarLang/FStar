@@ -42,18 +42,20 @@ let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
 
 (* We could prove the previous two functions are inverses given some specs about pack/inspect *)
-
-let term_as_formula (t:term) : Tot formula =
-    match inspect t with
+let term_view_as_formula (tv:term_view) : Tot formula =
+    match tv with
     | Tv_Var n ->
         Name n
 
-    | Tv_FVar qn ->
-        FV qn
+    | Tv_FVar fv ->
+        // Cannot use `when` clauses when verifying!
+        let qn = inspect_fv fv in
+        if eq_qn qn true_qn then True_
+        else if eq_qn qn false_qn then False_
+        else FV fv
 
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app' [t] h0 in
-        // Cannot use `when` clauses when verifying!
         match inspect h, ts with
         | Tv_FVar fv, [a1; a2; a3] ->
             let qn = inspect_fv fv in
@@ -88,6 +90,41 @@ let term_as_formula (t:term) : Tot formula =
     | _ -> 
         F_Unknown
 
+let term_as_formula (t:term) : Tot formula =
+    term_view_as_formula (inspect t)
+
+let formula_as_term_view (f:formula) : Tot term_view =
+    let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
+    match f with
+    | True_  -> Tv_FVar (pack_fv true_qn)
+    | False_ -> Tv_FVar (pack_fv false_qn)
+    | Eq t l r    -> mk_app' (Tv_FVar (pack_fv eq2_qn)) [t;l;r]
+    | And p q     -> mk_app' (Tv_FVar (pack_fv and_qn)) [p;q]
+    | Or  p q     -> mk_app' (Tv_FVar (pack_fv  or_qn)) [p;q]
+    | Implies p q -> mk_app' (Tv_FVar (pack_fv imp_qn)) [p;q]
+    | Not p       -> mk_app' (Tv_FVar (pack_fv not_qn)) [p]
+    | Iff p q     -> mk_app' (Tv_FVar (pack_fv iff_qn)) [p;q]
+    | Forall bs t -> Tv_Unknown // TODO: decide on meaning of this
+    | Exists bs t -> Tv_Unknown // TODO: ^
+
+    | App p q ->
+        Tv_App p q
+
+    | Name b ->
+        Tv_Var b
+
+    | FV fv ->
+        Tv_FVar fv
+
+    | IntLit i ->
+        Tv_Const (C_Int i)
+
+    | F_Unknown ->
+        Tv_Unknown
+
+let formula_as_term (f:formula) : Tot term =
+    pack (formula_as_term_view f)
+
 let print_formula (f:formula) : string =
     match f with
     | True_ -> "True_"
@@ -105,5 +142,3 @@ let print_formula (f:formula) : string =
     | FV fv -> "FV (" ^ flatten_name (inspect_fv fv) ^ ")"
     | IntLit i -> "Int " ^ string_of_int i
     | F_Unknown -> "?"
-
-// TODO: formula as term

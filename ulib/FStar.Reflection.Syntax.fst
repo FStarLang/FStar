@@ -73,8 +73,11 @@ let rec flatten_name ns =
     | [n] -> n
     | n::ns -> n ^ "." ^ flatten_name ns
 
-let imp_qn = ["Prims"; "l_imp"]
-let and_qn = ["Prims"; "l_and"]
-let or_qn  = ["Prims"; "l_or"]
-let not_qn = ["Prims"; "l_not"]
-let eq2_qn = ["Prims"; "eq2"]
+let imp_qn       = ["Prims"; "l_imp"]
+let and_qn       = ["Prims"; "l_and"]
+let or_qn        = ["Prims"; "l_or"]
+let not_qn       = ["Prims"; "l_not"]
+let iff_qn       = ["Prims"; "l_iff"]
+let eq2_qn       = ["Prims"; "eq2"]
+let true_qn      = ["Prims"; "True"]
+let false_qn     = ["Prims"; "False"]
