@@ -14,6 +14,7 @@ FSTAR=$(FSTAR_ALWAYS)
 CVEREXE_ALWAYS=$(shell cd $(FSTAR_HOME) && pwd)/bin/fabc-make.exe
 CVEREXE=$(CVEREXE_ALWAYS)
 
+
 DG=$(.DEFAULT_GOAL)
 
 BATCH_TMP=$(shell cd $(FSTAR_HOME) && pwd)/tmp
@@ -22,15 +23,16 @@ $(BATCH_TMP):
 
 FABC_HINTS?="-h $(FSTAR_HOME)"
 
+CURRENT_SUBDIR:=$(subst $(abspath $(FSTAR_HOME))/,,$(abspath $(shell pwd)))
+
 .PHONY : CVERCONFIG
 CVERCONFIG: $(BATCH_TMP)
-ifndef BATCH_IDS_FILE_ABS
+ifndef BATCH_IDS_FILE
 	$(eval export BATCH_IDS_FILE_ABS:=$(shell mktemp -p $(BATCH_TMP)))
-	$(CVEREXE) create $(FABC_EXTRA) -i $(shell realpath --relative-to=. $(BATCH_IDS_FILE_ABS))
+	$(eval export BATCH_IDS_FILE:=$(shell realpath --relative-to=. $(BATCH_IDS_FILE_ABS)))
+	$(CVEREXE) create $(FABC_EXTRA) -i $(BATCH_IDS_FILE)
 endif
 
-BATCH_IDS_FILE=$(shell realpath --relative-to=. $(BATCH_IDS_FILE_ABS))
-
-CVERFSTAR=$(CVEREXE) add $(FABC_EXTRA) -i $(BATCH_IDS_FILE) -d 'CURRENT_DIR' -- \$$H/bin/fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED)
+CFSTAR=$(CVEREXE) add -i $$BATCH_IDS_FILE -d '$(CURRENT_SUBDIR)' $(FABC_EXTRA) -- $(subst $(abspath $(FSTAR_HOME)),\$$H,$(FSTAR))
 
 .DEFAULT_GOAL := $(DG)

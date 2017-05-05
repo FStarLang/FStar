@@ -60,8 +60,8 @@ namespace fabc_make
             {
                 do
                 {
-                    string line = sr.ReadLine();
-                    if (line.TrimStart()[0] == '#')
+                    string line = sr.ReadLine().Trim(new char[] { ' ', '\n', '\r' });
+                    if (line == "" || line[0] == '#')
                         continue;
                     string[] tokens = line.Split(new char[] { '=' }, 2);
                     string option = tokens[0];

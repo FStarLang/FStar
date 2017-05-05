@@ -53,5 +53,4 @@ out:
 # /Users/jonathan/.opam/4.03.0/lib/stdint/stdint.cma: loaded
 # # #require "batteries";;
 
-CFSTAR=$(subst CURRENT_DIR,examples/algorithms,$(CVERFSTAR))
 all-cver: BinarySearch.ucver IntSort.ucver InsertionSort.ucver MergeSort.ucver QuickSort.List.ucver QuickSort.Seq.ucver QuickSort.Array.ucver GC.ucver Unification.ucver Huffman.ucver

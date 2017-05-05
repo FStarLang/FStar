@@ -17,7 +17,6 @@ propImpredicative:
 	--verify_module $(basename $(notdir $@))
 
 
-CFSTAR=$(subst CURRENT_DIR,examples/paradoxes,$(CVERFSTAR))
 all-cver: 
 	$(CFSTAR) PropositionalExtensionalityInconsistent.fst
 	$(CFSTAR) --__no_positivity propImpredicativeAndNonStrictlyPositiveinductives.fst

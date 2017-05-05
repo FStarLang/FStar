@@ -33,7 +33,6 @@ old:
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-CFSTAR=$(subst CURRENT_DIR,examples/dm4free,$(CVERFSTAR))
 all-cver: FStar.DM4F.MonadLaws.ucver \
 	Effects.Def.ucver \
 	FStar.DM4F.IntST.ucver \

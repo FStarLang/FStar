@@ -48,5 +48,5 @@ wc:
 
 all-cver: $(addsuffix .all-cver, $(ALL_EXAMPLE_DIRS)) 
 
-%.all-cver: % 
-	+make -C $^ all-cver
+%.all-cver: % CVERCONFIG
+	+make -C $< all-cver

@@ -52,6 +52,4 @@ all: $(subst fst,uver,$(FILES))
 pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free
 
-CFSTAR=$(subst CURRENT_DIR,examples/rel,$(CVERFSTAR))
-
 all-cver: $(subst fst,ucver,$(FILES))

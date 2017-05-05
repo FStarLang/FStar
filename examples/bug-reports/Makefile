@@ -67,5 +67,4 @@ extraction-bug734: bug734.fst
 
 all-cver:
 
-export CFSTAR=$(subst CURRENT_DIR,examples/bug-reports,$(CVERFSTAR))
 uall-cver: $(subst .fst,.ucver,$(VERFILES))

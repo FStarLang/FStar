@@ -13,6 +13,5 @@ ocaml: SimplePrintf.fst
 	$(OCAMLOPT) out/SimplePrintf.ml -o SimplePrintf.exe
 	./SimplePrintf.exe
 
-CFSTAR=$(subst CURRENT_DIR,examples/printf,$(CVERFSTAR))
 all-cver: SimplePrintf.ucver
 

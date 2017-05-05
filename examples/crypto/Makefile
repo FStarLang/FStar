@@ -111,7 +111,6 @@ deploy-tutorial:
 clean:
 	rm -fr RPC *.ml *.cmi *.cmx *.o *.exe *~
 
-CFSTAR=$(subst CURRENT_DIR,examples/crypto,$(CVERFSTAR))
 cverify-%: __force__ CVERCONFIG
 	$(CFSTAR) $(FSTAR_INCLUDE_PATHS) \
 		 --z3rlimit 20 $*

@@ -43,8 +43,6 @@ EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.
 	mkdir -p ml/extracted
 	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_ALL)
 
-CFSTAR=$(subst CURRENT_DIR,ulib,$(CVERFSTAR))
-
 %-cver: % CVERCONFIG
 	$(CFSTAR) $*
 
