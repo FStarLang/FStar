@@ -537,54 +537,61 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             let aux () =
                 if U.is_trivial_wp c1
                 then match b with
-                        | None -> Some (c2, "trivial no binder")
-                        | Some _ ->
-                            if U.is_ml_comp c2 //|| not (U.is_free [Inr x] (U.freevars_comp c2))
-                            then Some (c2, "trivial ml")
-                            else None
+                     | None ->
+                       Inl (c2, "trivial no binder")
+                     | Some _ ->
+                       if U.is_ml_comp c2 //|| not (U.is_free [Inr x] (U.freevars_comp c2))
+                       then Inl (c2, "trivial ml")
+                       else Inr "c1 trivial; but c2 is not ML"
                 else if U.is_ml_comp c1 && U.is_ml_comp c2
-                then Some (c2, "both ml")
-                else None
+                then Inl (c2, "both ml")
+                else Inr "c1 not trivial, and both are not ML"
             in
             let subst_c2 reason =
                 match e1opt, b with
-                    | Some e, Some x ->
-                      Some (SS.subst_comp [NT(x,e)] c2, reason)
-                    | _ -> aux()
+                | Some e, Some x ->
+                  Inl (SS.subst_comp [NT(x,e)] c2, reason)
+                | _ -> aux()
             in
-            if U.is_total_comp c1
-            && U.is_total_comp c2
+            if Option.isNone (Env.try_lookup_effect_lid env Const.effect_GTot_lid) //if we're very early in prims
+            then if U.is_tot_or_gtot_comp c1
+                 && U.is_tot_or_gtot_comp c2
+                 then Inl (c2, "Early in prims; we don't have bind yet")
+                 else raise (Error("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad", Env.get_range env))
+            else if U.is_total_comp c1
+                 && U.is_total_comp c2
             then subst_c2 "both total"
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
-            then Some (S.mk_GTotal (U.comp_result c2), "both gtot")
+            then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
             else match e1opt, b with
-                | Some e, Some x ->
-                    if U.is_total_comp c1 && not (Syntax.is_null_bv x)
-                    then subst_c2 "substituted e"
-                    else aux ()
-                | _ -> aux ()
+                 | Some e, Some x ->
+                   if U.is_total_comp c1 && not (Syntax.is_null_bv x)
+                   then subst_c2 "substituted e"
+                   else aux ()
+                 | _ -> aux ()
           in
           match try_simplify () with
-            | Some (c, reason) ->
-              if debug env Options.Extreme
-              || debug env <| Options.Other "bind"
-              then BU.print4 "Simplified (because %s) bind %s %s to %s\n"
-                                reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c);
-              c
-            | None ->
-              let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
-              let bs = match b with
+          | Inl (c, reason) ->
+            if debug env Options.Extreme
+            || debug env <| Options.Other "bind"
+            then BU.print4 "Simplified (because %s) bind %s %s to %s\n"
+                            reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c);
+            c
+          | Inr reason ->
+            let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
+            let bs =
+                match b with
                 | None -> [null_binder t1]
-                | Some x -> [S.mk_binder x] in
-              let mk_lam wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in //we know it's total; let the normalizer reduce it
-              let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
-              let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
-              let k = SS.subst [NT(a, t2)] kwp in
-              let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp)  wp_args None t2.pos in
-              let c = mk_comp md u_t2 t2 wp [] in
-              c
-        end
+                | Some x -> [S.mk_binder x]
+            in
+            let mk_lam wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in //we know it's total; let the normalizer reduce it
+            let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
+            let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
+            let k = SS.subst [NT(a, t2)] kwp in
+            let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp)  wp_args None t2.pos in
+            mk_comp md u_t2 t2 wp []
+      end
   in {eff_name=joined_eff;
       res_typ=lc2.res_typ;
       (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
@@ -795,19 +802,32 @@ let close_comp env bvs (lc:lcomp) =
   {lc with comp=close}
 
 let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
+  let flags =
+    if not (U.is_function_typ lc.res_typ)
+    && U.is_pure_or_ghost_lcomp lc
+    && not (U.is_lcomp_partial_return lc)
+    then PARTIAL_RETURN::lc.cflags
+    else lc.cflags
+  in
   let refine () =
       let c = lc.comp() in
       if not (is_pure_or_ghost_effect env lc.eff_name)
       || env.lax
       then c
-      else if U.is_partial_return c then
-           (if Env.debug env <| Options.Other "Quadratic"
-            then printfn "not returning %s" (Print.term_to_string e);
-           c)
+      else if U.is_partial_return c //it's already a return; no need to add another equality
+      then c
       else if U.is_tot_or_gtot_comp c
-           && not (Env.lid_exists env Const.effect_GTot_lid)
-      then failwith (BU.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
-      else
+      then begin //insert a return
+           if not (Env.lid_exists env Const.effect_GTot_lid)
+           then failwith (BU.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
+           else let retc = return_value env (U.comp_result c) e in
+                if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
+                then let retc = U.comp_to_comp_typ retc in
+                     let retc = {retc with effect_name=Const.effect_GHOST_lid; flags=flags} in
+                     S.mk_Comp retc
+                else U.comp_set_flags retc flags
+      end
+      else //augment c's post-condition with a return
            let c = Env.unfold_effect_abbrev env c in
            let t = c.result_typ in
            let c = mk_Comp c in
@@ -816,16 +836,8 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let ret = U.lcomp_of_comp <| (U.comp_set_flags (return_value env t xexp) [PARTIAL_RETURN]) in
            let eq = U.mk_eq2 (env.universe_of env t) t xexp e in
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
-
-           let c = U.comp_set_flags ((bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
-           c in
-
-  let flags =
-    if not (U.is_function_typ lc.res_typ)
-    && U.is_pure_or_ghost_lcomp lc
-    && not (U.is_lcomp_partial_return lc)
-    then PARTIAL_RETURN::lc.cflags
-    else lc.cflags in
+           U.comp_set_flags ((bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret)).comp()) flags
+  in
   {lc with comp=refine; cflags=flags}
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
