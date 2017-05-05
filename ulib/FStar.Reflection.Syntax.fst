@@ -100,7 +100,17 @@ let iff_qn       = ["Prims"; "l_iff"]
 let eq2_qn       = ["Prims"; "eq2"]
 let true_qn      = ["Prims"; "True"]
 let false_qn     = ["Prims"; "False"]
+
 let add_qn       = ["Prims"; "op_Addition"]
+let neg_qn       = ["Prims"; "op_Minus"]
+let minus_qn     = ["Prims"; "op_Subtraction"]
+let mult_qn      = ["Prims"; "op_Multiply"]
+let div_qn       = ["Prims"; "op_Division"]
+let lt_qn        = ["Prims"; "op_LT"]
+let lte_qn       = ["Prims"; "op_LTE"]
+let gt_qn        = ["Prims"; "op_GT"]
+let gte_qn       = ["Prims"; "op_GTE"]
+let mod_qn       = ["Prims"; "op_Modulus"]
 
 (* Helpers for dealing with nested applications *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =

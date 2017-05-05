@@ -50,6 +50,19 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
+val liftM : ('a -> 'b) -> (tm 'a -> tm 'b)
+let liftM f x =
+    xx <-- x;
+    return (f xx)
+
+val liftM2 : ('a -> 'b -> 'c) -> (tm 'a -> tm 'b -> tm 'c)
+let liftM2 f x y =
+    xx <-- x;
+    yy <-- y;
+    return (f xx yy)
+
+let minus x y = Plus x (Neg y)
+
 val decide : term -> tm expr
 let rec decide (t:term) =
     let (hd, tl) : term * list term = collect_app t in
@@ -57,15 +70,19 @@ let rec decide (t:term) =
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in
         collect_app_order t;
-        assert(l << t);
-        assert(r << t);
         // Have to go through hoops to get F* to typecheck this.
         // Maybe the do notation is twisting the terms somehow unexpected?
         let ll = decide (l <: x:term{x << t}) in
         let rr = decide (r <: x:term{x << t}) in
-        if qn = add_qn then (l <-- ll;
-                             r <-- rr;
-                             return (Plus l r))
+        if      qn = add_qn   then liftM2 Plus ll rr
+        else if qn = minus_qn then liftM2 minus ll rr
+        else if qn = mult_qn  then liftM2 Mult ll rr
+        else fail
+    | Tv_FVar fv, [a] ->
+        let qn = inspect_fv fv in
+        collect_app_order t;
+        let aa = decide (a <: x:term{x << t}) in
+        if      qn = neg_qn   then liftM Neg aa
         else fail
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
