@@ -172,7 +172,9 @@ let initial_env type_of universe_of solver module_lid =
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
-    proof_ns = [[]]
+    proof_ns = match Options.using_facts_from () with
+               | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
+               | None -> [[]]
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
