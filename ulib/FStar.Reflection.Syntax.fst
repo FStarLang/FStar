@@ -32,6 +32,34 @@ type term_view =
   | Tv_Unknown : term_view // Baked in "None"
   (* TODO: complete *)
 
+(* Comparison of a term_view to term. Allows to recurse while changing the view *)
+val smaller : term_view -> term -> Type0
+let smaller tv t =
+    match tv with
+    | Tv_App l r ->
+        l << t /\ r << t
+
+    | Tv_Abs _ t'
+    | Tv_Arrow _ t'
+    | Tv_Refine _ t' ->
+        t' << t
+
+    | Tv_Type _
+    | Tv_Const _
+    | Tv_Unknown
+    | Tv_Var _
+    | Tv_FVar _ -> True
+
+(* The main characters *)
+assume val __inspect : t:term -> tv:term_view{smaller tv t}
+let inspect t : term_view = __inspect t
+
+assume val __pack : term_view -> term
+let pack tv : term = __pack tv
+
+(* They are inverses *)
+assume val pack_inspect_inv : (t:term) -> Lemma (pack (inspect t) == t)
+assume val inspect_pack_inv : (tv:term_view) -> Lemma (inspect (pack tv) == tv)
 
 // TODO: cleanup assume/let, makes no sense but the compiler currently expects __ versions
 // or maybe leave as it for better maintanibility...
@@ -56,12 +84,6 @@ let type_of_binder (b:binder) : term = __type_of_binder b
 
 assume private val __term_eq : term -> term -> bool
 let term_eq t1 t2 : bool = __term_eq t1 t2
-
-assume val __inspect : term -> term_view
-let inspect t : term_view = __inspect t
-
-assume val __pack : term_view -> term
-let pack tv : term = __pack tv
 
 assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t

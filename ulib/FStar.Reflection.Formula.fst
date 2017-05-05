@@ -31,7 +31,6 @@ let eq_qn = eqlist (fun s1 s2 -> String.compare s1 s2 = 0)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =
     match inspect t with
     | Tv_App l r ->
-        assume(l << t);
         collect_app' (r::args) l
     | _ -> (t, args)
 let collect_app = collect_app' []
