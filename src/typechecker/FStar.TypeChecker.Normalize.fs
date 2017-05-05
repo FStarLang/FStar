@@ -1281,8 +1281,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 then
                     norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
-                (* TODO : don't we need to normalize t here ? *)
-                // let t = norm cfg env stack t in
+                (* KM: We need to normalize at least to erase universes when extracting *)
+                let t = norm cfg env [] t in
                 if (U.is_pure_effect m
                     || U.is_ghost_effect m)
                 && cfg.steps |> List.contains PureSubtermsWithinComputations

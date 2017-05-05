@@ -3,9 +3,9 @@
   [
     [ "Memo.dom", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [ "Memo.bind", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Memo.MEMO_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Memo._dm4f_MEMO_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Memo.MEMO___proj__MEMO__item__get_elab",
+      "Memo._dm4f_MEMO___proj__MEMO__item__get_elab",
       1,
       2,
       1,
@@ -14,14 +14,13 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Memo.dom", "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2"
       ],
       0
     ],
     [
-      "Memo.MEMO___proj__MEMO__item__get_complete_type",
+      "Memo._dm4f_MEMO___proj__MEMO__item__get_complete_type",
       1,
       2,
       1,
@@ -32,7 +31,14 @@
       ],
       0
     ],
-    [ "Memo.MEMO___proj__MEMO__item__put_elab", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Memo._dm4f_MEMO___proj__MEMO__item__put_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "Memo.MEMO", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Memo.MEMO",
@@ -1266,7 +1272,7 @@
       ],
       0
     ],
-    [ "Memo.PARTIAL_wp_if_then_else", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Memo._dm4f_PARTIAL_wp_if_then_else", 1, 2, 1, [ "@query" ], 0 ],
     [ "Memo.PARTIAL", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

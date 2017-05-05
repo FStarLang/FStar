@@ -30,14 +30,17 @@ the [online F\* editor] that's part of the [F\* tutorial].
 
 ## Binary releases ##
 
-Every now and then we release [F\* binaries on GitHub].
+Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
+and for Windows and Linux we also provide [automatic weekly builds].
 This is the easiest way to get F\* quickly running on your machine,
-but if the release you use is old you might be missing out on new
+but if the build you use is old you might be missing out on new
 features and bug fixes. Please do not report bugs in old releases
 until making sure they still exist in the `master` branch (see
-Building F\* from sources section below).
+Building F\* from sources section below) or at least in the latest
+[automatic weekly builds].
 
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
+[automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
 
 ### Testing a binary package ###
 
@@ -49,11 +52,11 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.4.0
+        F* 0.9.4.3
         platform=Linux_x86_64
-        compiler=OCaml 4.03.0
-        date=2017-02-02T11:54:08+01:00
-        commit=9fc07cf
+        compiler=OCaml 4.02.3
+        date=2017-05-04T08:24:02+02:00
+        commit=c0784052f
         $ z3 --version
         Z3 version 4.5.0
 
@@ -74,9 +77,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -j6 -C examples
    
-   Note: Currently this is known to fail for the F# build of F\*
-   ([#633](https://github.com/FStarLang/FStar/issues/633)).
-   Use the OCaml build for this or stop passing `--use_hints`.
+   Note: Currently this is known to fail for the F# build of F\*.
 
 ### OPAM package ###
 

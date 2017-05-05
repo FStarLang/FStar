@@ -36,6 +36,7 @@ module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Syntax.Const
 module Util = FStar.Extraction.ML.Util
+module Env = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -191,16 +192,23 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_new_effect ed when se.sigquals |> List.contains Reifiable ->
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+            BU.print1 "Mangled name: %s\n" (fst mangled_name);
             let lb = {
                 mllb_name=mangled_name;
                 mllb_tysc=None;
                 mllb_add_unit=false;
                 mllb_def=tm;
                 print_typ=false
-              } in
-            g, MLM_Let(NonRec, [], [lb]) in
+              }
+            in
+            g, MLM_Let(NonRec, [], [lb])
+          in
 
-          let rec extract_fv tm = match (SS.compress tm).n with
+          let rec extract_fv tm =
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+              BU.print1 "extract_fv term: %s\n" (Print.term_to_string tm);
+            match (SS.compress tm).n with
             | Tm_uinst (tm, _) -> extract_fv tm
             | Tm_fvar fv ->
               let mlp = mlpath_of_lident fv.fv_name.v in
@@ -209,9 +217,29 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             | _ -> failwith "Not an fv" in
 
           let extract_action g (a:S.action) =
-            let a_tm, ty_sc = extract_fv a.action_defn in
+            assert (match a.action_params with | [] -> true | _ -> false);
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+              BU.print2 "Action type %s and term %s\n"
+                (Print.term_to_string a.action_typ)
+                (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
-            extend_env g a_lid a_nm a_tm ty_sc in
+            let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
+            let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
+            let lbs = (false, [lb]) in
+            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
+            let a_let, _, ty = Term.term_as_mlexpr g action_lb in
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
+              BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
+            let exp, tysc = match a_let.expr with
+              | MLE_Let((_, _, [mllb]), _) ->
+                  (match mllb.mllb_tysc with
+                  | Some(tysc) -> mllb.mllb_def, tysc
+                  | None -> failwith "No type scheme")
+              | _ -> failwith "Impossible" in
+            if Env.debug g.tcenv <| Options.Other "ExtractionReify" then begin
+              BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
+              List.iter (fun x -> BU.print1 "and binders: %s\n" (fst x)) (fst tysc) end;
+            extend_env g a_lid a_nm exp tysc in
 
           let g, return_decl =
             let return_tm, ty_sc = extract_fv (snd ed.return_repr) in
