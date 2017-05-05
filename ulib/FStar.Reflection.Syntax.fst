@@ -61,9 +61,6 @@ let pack tv : term = __pack tv
 assume val pack_inspect_inv : (t:term) -> Lemma (pack (inspect t) == t)
 assume val inspect_pack_inv : (tv:term_view) -> Lemma (inspect (pack tv) == tv)
 
-// TODO: cleanup assume/let, makes no sense but the compiler currently expects __ versions
-// or maybe leave as it for better maintanibility...
-// "every problem in computer science is solved by adding another level of indirection"
 assume val __inspect_fv : fv -> name
 let inspect_fv (fv:fv) = __inspect_fv fv
 
