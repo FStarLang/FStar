@@ -65,7 +65,7 @@ let minus x y = Plus x (Neg y)
 
 val decide : term -> tm expr
 let rec decide (t:term) =
-    let (hd, tl) : term * list term = collect_app t in
+    let hd, tl = collect_app t in
     match inspect hd, tl with
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in
@@ -74,15 +74,15 @@ let rec decide (t:term) =
         // Maybe the do notation is twisting the terms somehow unexpected?
         let ll = decide (l <: x:term{x << t}) in
         let rr = decide (r <: x:term{x << t}) in
-        if      qn = add_qn   then liftM2 Plus ll rr
-        else if qn = minus_qn then liftM2 minus ll rr
-        else if qn = mult_qn  then liftM2 Mult ll rr
+        if      eq_qn qn add_qn   then liftM2 Plus ll rr
+        else if eq_qn qn minus_qn then liftM2 minus ll rr
+        else if eq_qn qn mult_qn  then liftM2 Mult ll rr
         else fail
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in
         collect_app_order t;
         let aa = decide (a <: x:term{x << t}) in
-        if      qn = neg_qn   then liftM Neg aa
+        if   eq_qn qn neg_qn then liftM Neg aa
         else fail
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
