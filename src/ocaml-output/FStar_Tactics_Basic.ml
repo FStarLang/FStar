@@ -1092,16 +1092,44 @@ let rec visit: Prims.unit tac -> Prims.unit tac =
                  or_else trivial smt) in
       or_else callback uu____1966 in
     focus_cur_goal uu____1964
+let prune: Prims.string Prims.list -> Prims.unit tac =
+  fun s  ->
+    with_cur_goal
+      (fun g  ->
+         let ctx = g.context in
+         let ctx' = FStar_TypeChecker_Env.rem_proof_ns ctx s in
+         let g' =
+           let uu___108_2054 = g in
+           {
+             context = ctx';
+             witness = (uu___108_2054.witness);
+             goal_ty = (uu___108_2054.goal_ty)
+           } in
+         bind dismiss (fun uu____2055  -> add_goals [g']))
+let addns: Prims.string Prims.list -> Prims.unit tac =
+  fun s  ->
+    with_cur_goal
+      (fun g  ->
+         let ctx = g.context in
+         let ctx' = FStar_TypeChecker_Env.add_proof_ns ctx s in
+         let g' =
+           let uu___109_2067 = g in
+           {
+             context = ctx';
+             witness = (uu___109_2067.witness);
+             goal_ty = (uu___109_2067.goal_ty)
+           } in
+         bind dismiss (fun uu____2068  -> add_goals [g']))
 type order =
   | Lt
   | Eq
   | Gt
 let uu___is_Lt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____2046 -> false
+  fun projectee  -> match projectee with | Lt  -> true | uu____2072 -> false
 let uu___is_Eq: order -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____2050 -> false
+  fun projectee  -> match projectee with | Eq  -> true | uu____2076 -> false
 let uu___is_Gt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Gt  -> true | uu____2054 -> false
+  fun projectee  -> match projectee with | Gt  -> true | uu____2080 -> false
 let order_binder:
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> order =
   fun x  ->
@@ -1115,16 +1143,16 @@ let proofstate_of_goal_ty:
   fun env  ->
     fun g  ->
       let g1 =
-        let uu____2071 =
+        let uu____2097 =
           FStar_TypeChecker_Normalize.normalize
             [FStar_TypeChecker_Normalize.Beta] env g in
-        { context = env; witness = None; goal_ty = uu____2071 } in
-      let uu____2072 = FStar_Unionfind.new_transaction () in
+        { context = env; witness = None; goal_ty = uu____2097 } in
+      let uu____2098 = FStar_Unionfind.new_transaction () in
       {
         main_context = env;
         main_goal = g1;
         all_implicits = [];
         goals = [g1];
         smt_goals = [];
-        transaction = uu____2072
+        transaction = uu____2098
       }

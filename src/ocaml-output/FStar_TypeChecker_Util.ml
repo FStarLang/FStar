@@ -3481,7 +3481,9 @@ let check_and_ascribe:
               FStar_TypeChecker_Env.use_bv_sorts =
                 (uu___148_6582.FStar_TypeChecker_Env.use_bv_sorts);
               FStar_TypeChecker_Env.qname_and_index =
-                (uu___148_6582.FStar_TypeChecker_Env.qname_and_index)
+                (uu___148_6582.FStar_TypeChecker_Env.qname_and_index);
+              FStar_TypeChecker_Env.proof_ns =
+                (uu___148_6582.FStar_TypeChecker_Env.proof_ns)
             } in
           let uu____6584 = check env2 t1 t2 in
           match uu____6584 with

@@ -60,7 +60,9 @@ let set_hint_correlator:
             FStar_TypeChecker_Env.use_bv_sorts =
               (uu___92_12.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qname_and_index =
-              (Some (lid, (Prims.parse_int "0")))
+              (Some (lid, (Prims.parse_int "0")));
+            FStar_TypeChecker_Env.proof_ns =
+              (uu___92_12.FStar_TypeChecker_Env.proof_ns)
           }
       | None  ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se in
@@ -122,7 +124,9 @@ let set_hint_correlator:
             FStar_TypeChecker_Env.use_bv_sorts =
               (uu___93_24.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qname_and_index =
-              (Some (lid, (Prims.parse_int "0")))
+              (Some (lid, (Prims.parse_int "0")));
+            FStar_TypeChecker_Env.proof_ns =
+              (uu___93_24.FStar_TypeChecker_Env.proof_ns)
           }
 let log: FStar_TypeChecker_Env.env -> Prims.bool =
   fun env  ->
@@ -988,7 +992,10 @@ let rec tc_eff_decl:
                                                   (uu___97_965.FStar_TypeChecker_Env.use_bv_sorts);
                                                 FStar_TypeChecker_Env.qname_and_index
                                                   =
-                                                  (uu___97_965.FStar_TypeChecker_Env.qname_and_index)
+                                                  (uu___97_965.FStar_TypeChecker_Env.qname_and_index);
+                                                FStar_TypeChecker_Env.proof_ns
+                                                  =
+                                                  (uu___97_965.FStar_TypeChecker_Env.proof_ns)
                                               } in
                                             let br =
                                               check_and_gen' env3
@@ -1134,7 +1141,9 @@ let rec tc_eff_decl:
                                                (uu___98_1057.FStar_TypeChecker_Env.use_bv_sorts);
                                              FStar_TypeChecker_Env.qname_and_index
                                                =
-                                               (uu___98_1057.FStar_TypeChecker_Env.qname_and_index)
+                                               (uu___98_1057.FStar_TypeChecker_Env.qname_and_index);
+                                             FStar_TypeChecker_Env.proof_ns =
+                                               (uu___98_1057.FStar_TypeChecker_Env.proof_ns)
                                            } in
                                          ((let uu____1059 =
                                              FStar_TypeChecker_Env.debug env1
@@ -3287,7 +3296,9 @@ and tc_decl:
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___109_3359.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qname_and_index =
-                                (uu___109_3359.FStar_TypeChecker_Env.qname_and_index)
+                                (uu___109_3359.FStar_TypeChecker_Env.qname_and_index);
+                              FStar_TypeChecker_Env.proof_ns =
+                                (uu___109_3359.FStar_TypeChecker_Env.proof_ns)
                             } in
                           let lift1 =
                             match lift with
@@ -3739,7 +3750,9 @@ and tc_decl:
                          FStar_TypeChecker_Env.use_bv_sorts =
                            (uu___115_4003.FStar_TypeChecker_Env.use_bv_sorts);
                          FStar_TypeChecker_Env.qname_and_index =
-                           (uu___115_4003.FStar_TypeChecker_Env.qname_and_index)
+                           (uu___115_4003.FStar_TypeChecker_Env.qname_and_index);
+                         FStar_TypeChecker_Env.proof_ns =
+                           (uu___115_4003.FStar_TypeChecker_Env.proof_ns)
                        }) e in
                   match uu____3999 with
                   | ({
@@ -4201,7 +4214,9 @@ let tc_partial_modul:
            FStar_TypeChecker_Env.use_bv_sorts =
              (uu___121_4689.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qname_and_index =
-             (uu___121_4689.FStar_TypeChecker_Env.qname_and_index)
+             (uu___121_4689.FStar_TypeChecker_Env.qname_and_index);
+           FStar_TypeChecker_Env.proof_ns =
+             (uu___121_4689.FStar_TypeChecker_Env.proof_ns)
          } in
        (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.push msg;
        (let env2 =
@@ -4302,7 +4317,9 @@ let check_exports:
             FStar_TypeChecker_Env.use_bv_sorts =
               (uu___124_4758.FStar_TypeChecker_Env.use_bv_sorts);
             FStar_TypeChecker_Env.qname_and_index =
-              (uu___124_4758.FStar_TypeChecker_Env.qname_and_index)
+              (uu___124_4758.FStar_TypeChecker_Env.qname_and_index);
+            FStar_TypeChecker_Env.proof_ns =
+              (uu___124_4758.FStar_TypeChecker_Env.proof_ns)
           } in
         let check_term lid univs1 t =
           let uu____4769 = FStar_Syntax_Subst.open_univ_vars univs1 t in
@@ -4548,7 +4565,9 @@ let check_module:
            FStar_TypeChecker_Env.use_bv_sorts =
              (uu___126_4989.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qname_and_index =
-             (uu___126_4989.FStar_TypeChecker_Env.qname_and_index)
+             (uu___126_4989.FStar_TypeChecker_Env.qname_and_index);
+           FStar_TypeChecker_Env.proof_ns =
+             (uu___126_4989.FStar_TypeChecker_Env.proof_ns)
          } in
        let uu____4992 = tc_modul env1 m in
        match uu____4992 with

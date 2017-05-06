@@ -1129,7 +1129,9 @@ and encode_term:
                               FStar_TypeChecker_Env.use_bv_sorts =
                                 (uu___138_2586.FStar_TypeChecker_Env.use_bv_sorts);
                               FStar_TypeChecker_Env.qname_and_index =
-                                (uu___138_2586.FStar_TypeChecker_Env.qname_and_index)
+                                (uu___138_2586.FStar_TypeChecker_Env.qname_and_index);
+                              FStar_TypeChecker_Env.proof_ns =
+                                (uu___138_2586.FStar_TypeChecker_Env.proof_ns)
                             }) res in
                        (match uu____2582 with
                         | (pre_opt,res_t) ->
@@ -1876,7 +1878,9 @@ and encode_term:
                                FStar_TypeChecker_Env.use_bv_sorts =
                                  (uu___139_3849.FStar_TypeChecker_Env.use_bv_sorts);
                                FStar_TypeChecker_Env.qname_and_index =
-                                 (uu___139_3849.FStar_TypeChecker_Env.qname_and_index)
+                                 (uu___139_3849.FStar_TypeChecker_Env.qname_and_index);
+                               FStar_TypeChecker_Env.proof_ns =
+                                 (uu___139_3849.FStar_TypeChecker_Env.proof_ns)
                              }) uu____3848 FStar_Syntax_Syntax.U_unknown in
                         let uu____3850 =
                           let uu____3851 = FStar_Syntax_Syntax.mk_Total typ in
@@ -4220,7 +4224,9 @@ let encode_free_var:
                                    FStar_TypeChecker_Env.use_bv_sorts =
                                      (uu___147_9857.FStar_TypeChecker_Env.use_bv_sorts);
                                    FStar_TypeChecker_Env.qname_and_index =
-                                     (uu___147_9857.FStar_TypeChecker_Env.qname_and_index)
+                                     (uu___147_9857.FStar_TypeChecker_Env.qname_and_index);
+                                   FStar_TypeChecker_Env.proof_ns =
+                                     (uu___147_9857.FStar_TypeChecker_Env.proof_ns)
                                  }) comp FStar_Syntax_Syntax.U_unknown in
                             FStar_Syntax_Syntax.mk_Total uu____9856
                           else comp in
@@ -4814,7 +4820,9 @@ let encode_top_level_let:
                        FStar_TypeChecker_Env.use_bv_sorts =
                          (uu___150_10762.FStar_TypeChecker_Env.use_bv_sorts);
                        FStar_TypeChecker_Env.qname_and_index =
-                         (uu___150_10762.FStar_TypeChecker_Env.qname_and_index)
+                         (uu___150_10762.FStar_TypeChecker_Env.qname_and_index);
+                       FStar_TypeChecker_Env.proof_ns =
+                         (uu___150_10762.FStar_TypeChecker_Env.proof_ns)
                      }) c FStar_Syntax_Syntax.U_unknown
                 else FStar_Syntax_Util.comp_result c in
               let rec aux norm1 t_norm1 =

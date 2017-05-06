@@ -109,7 +109,9 @@ let push:
                   FStar_TypeChecker_Env.use_bv_sorts =
                     (uu___212_241.FStar_TypeChecker_Env.use_bv_sorts);
                   FStar_TypeChecker_Env.qname_and_index =
-                    (uu___212_241.FStar_TypeChecker_Env.qname_and_index)
+                    (uu___212_241.FStar_TypeChecker_Env.qname_and_index);
+                  FStar_TypeChecker_Env.proof_ns =
+                    (uu___212_241.FStar_TypeChecker_Env.proof_ns)
                 } in
               let dsenv1 =
                 FStar_ToSyntax_Env.set_syntax_only dsenv (kind = SyntaxCheck) in

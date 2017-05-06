@@ -6396,7 +6396,9 @@ let resolve_implicits:
                                  (uu___187_12889.FStar_TypeChecker_Env.universe_of);
                                FStar_TypeChecker_Env.use_bv_sorts = true;
                                FStar_TypeChecker_Env.qname_and_index =
-                                 (uu___187_12889.FStar_TypeChecker_Env.qname_and_index)
+                                 (uu___187_12889.FStar_TypeChecker_Env.qname_and_index);
+                               FStar_TypeChecker_Env.proof_ns =
+                                 (uu___187_12889.FStar_TypeChecker_Env.proof_ns)
                              }) tm1 in
                         match uu____12885 with
                         | (uu____12890,uu____12891,g1) ->
