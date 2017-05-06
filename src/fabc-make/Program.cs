@@ -439,7 +439,13 @@ namespace fabc_make
                     @"ucontrib|*.fst",
                     @"ucontrib|*.fsti",
                     @"doc|*.fst",
-                    @"doc|*.fsti"
+                    @"doc|*.fsti",
+                    @"F:\dev\sec|kremlin\*.fst",
+                    @"F:\dev\sec|kremlin\*.fsti",
+                    @"F:\dev\sec\hacl-star|code\*.fst",
+                    @"F:\dev\sec\hacl-star|code\*.fsti",
+                    @"F:\dev\sec\hacl-star|specs\*.fst",
+                    @"F:\dev\sec\hacl-star|specs\*.fsti"
                 };
 
             // myargs.PackageContents.Add(@"bin|*.dll");
@@ -451,7 +457,8 @@ namespace fabc_make
             if (!InitPackage(myargs))
                 return 1;
 
-            j = MkJob(JobDisplayName, myargs.BatchIDFile != null);
+            j = MkJob(myargs.JobDisplayName != null ? myargs.JobDisplayName : JobDisplayName, 
+                      myargs.BatchIDFile != null);
 
             if (myargs.BatchIDFile != null)
             {
