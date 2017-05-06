@@ -1187,15 +1187,15 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
               solve_c env (maybe_invert cp) probs
 
             | TProb tp ->
-              if not probs.defer_ok
+              if not probs.defer_ok // not allowed to defer constraints
               && flex_refine_inner <= rank
-              && rank <= flex_rigid
+              && rank <= flex_rigid // rank is more than rigid-rigid but less than rigid-flex
               then match solve_flex_rigid_join env tp probs with
                     | None -> solve_t' env (maybe_invert tp) probs //giveup env "join doesn't exist" hd
                     | Some wl -> solve env wl
-              else if not probs.defer_ok
+              else if not probs.defer_ok // not allowed to defer constrains
                    && rigid_flex <= rank
-                   && rank <= refine_flex
+                   && rank <= refine_flex // rank is more than rigid-flex but less than flex-flex
               then match solve_rigid_flex_meet env tp probs with
                     | None -> solve_t' env (maybe_invert tp) probs //giveup env "meet doesn't exist" hd
                     | Some wl -> solve env wl
@@ -2149,7 +2149,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
       (* flex-rigid: subtyping *)
       | Tm_uvar _, _
-      | Tm_app({n=Tm_uvar _}, _), _ -> (* equate with the base type of the refinement on the RHS, and add a logical guard for the refinement formula *)
+      | Tm_app({n=Tm_uvar _}, _), _ -> (* equate with the base type of the refinement on the RHS, and add a logical guard for the
+                                          refinement formula *)
         if wl.defer_ok
         then solve env (defer "flex-rigid subtyping deferred" orig wl)
         else
