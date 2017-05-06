@@ -2644,7 +2644,7 @@ let resolve_implicits g =
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
                let g' =
-                 match discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g true with
+                 match discharge_guard' (Some (fun () -> Print.term_to_string tm)) env g false with
                  | Some g -> g
                  | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
                in
