@@ -156,22 +156,29 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
 let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t =
-  let expected_c_opt = match copt with
-    | Some _ -> copt
+  let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
+     if U.is_pure_comp c
+     then mk_Total (U.comp_result c)
+     else if U.is_pure_or_ghost_comp c
+     then mk_GTotal (U.comp_result c)
+     else failwith "Impossible: Expected pure_or_ghost comp"
+  in
+  let expected_c_opt, c =
+    match copt with
+    | Some _ -> copt, c
     | None  ->
         if (Options.ml_ish()
             && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
-        then Some (U.ml_comp (U.comp_result c) e.pos)
+        then Some (U.ml_comp (U.comp_result c) e.pos), c
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
-        then None
-        else if U.is_pure_comp c
-             then Some (mk_Total (U.comp_result c))
-             else if U.is_pure_or_ghost_comp c
-             then Some (mk_GTotal (U.comp_result c))
-             else None in
+        then None, tot_or_gtot c //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
+        else if U.is_pure_or_ghost_comp c
+             then Some (tot_or_gtot c), c
+             else None, c
+  in
   match expected_c_opt with
     | None -> e, norm_c env c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
@@ -470,10 +477,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, g' = comp_check_expected_typ env0 e c in
     let gimp =
         match (SS.compress head).n with
-            | Tm_uvar(u, _) ->
-              let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
-              {Rel.trivial_guard with implicits=[imp]}
-            | _ -> Rel.trivial_guard in
+        | Tm_uvar(u, _) ->
+            let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
+            {Rel.trivial_guard with implicits=[imp]}
+        | _ -> Rel.trivial_guard in
     let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
     if Env.debug env Options.Extreme
     then BU.print2 "Guard from application node %s is %s\n"
