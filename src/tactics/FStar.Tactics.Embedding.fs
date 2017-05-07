@@ -54,12 +54,12 @@ let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
         | _ -> env) env binders
 
 let embed_goal (g:goal) : term =
-    embed_pair (g.context, g.goal_ty)
-                embed_env fstar_refl_env
-                embed_term fstar_refl_term
+    embed_pair embed_env fstar_refl_env
+               embed_term fstar_refl_term
+               (g.context, g.goal_ty)
 
 let unembed_goal (env:Env.env) (t:term) : goal =
-    let env, goal_ty = unembed_pair t (unembed_env env) unembed_term in
+    let env, goal_ty = unembed_pair (unembed_env env) unembed_term t in
     {
       context = env;
       goal_ty = goal_ty;
@@ -72,11 +72,11 @@ let unembed_goals (env:Env.env) (egs:term) : list<goal> = unembed_list (unembed_
 type state = list<goal> * list<goal>
 
 let embed_state (s:state) : term =
-    embed_pair s embed_goals fstar_tactics_goals embed_goals fstar_tactics_goals
+    embed_pair embed_goals fstar_tactics_goals embed_goals fstar_tactics_goals s
 
 let unembed_state (env:Env.env) (s:term) : state =
     let s = U.unascribe s in
-    unembed_pair s (unembed_goals env) (unembed_goals env)
+    unembed_pair (unembed_goals env) (unembed_goals env) s
 
 let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with

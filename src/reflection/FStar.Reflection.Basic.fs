@@ -90,17 +90,17 @@ let unembed_binder (t:term) : binder =
     | Tm_name bv -> S.mk_binder bv
     | _ -> failwith "Not an embedded binder"
 
-let rec embed_list (embed_a: ('a -> term)) (t_a:term) (l:list<'a>) : term =
+let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
     match l with
     | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.nil_lid) [U_zero])
-                        [S.iarg t_a]
+                        [S.iarg typ]
                         None
                         Range.dummyRange
     | hd::tl ->
             S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.cons_lid) [U_zero])
-                        [S.iarg t_a;
+                        [S.iarg typ;
                          S.as_arg (embed_a hd);
-                         S.as_arg (embed_list embed_a t_a tl)]
+                         S.as_arg (embed_list embed_a typ tl)]
                         None
                         Range.dummyRange
 
@@ -128,7 +128,9 @@ let unembed_term (t:term) : term =
     un_protect_embedded_term t
 
 
-let embed_pair (x:('a * 'b)) (embed_a:'a -> term) (t_a:term) (embed_b:'b -> term) (t_b:term) : term =
+let embed_pair (embed_a:'a -> term) (t_a:term)
+               (embed_b:'b -> term) (t_b:term)
+               (x:('a * 'b)) : term =
     S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm lid_Mktuple2) [U_zero;U_zero])
                 [S.iarg t_a;
                  S.iarg t_b;
@@ -137,7 +139,7 @@ let embed_pair (x:('a * 'b)) (embed_a:'a -> term) (t_a:term) (embed_b:'b -> term
                 None
                 Range.dummyRange
 
-let unembed_pair (pair:term) (unembed_a:term -> 'a) (unembed_b:term -> 'b) : ('a * 'b) =
+let unembed_pair (unembed_a:term -> 'a) (unembed_b:term -> 'b) (pair:term) : ('a * 'b) =
     let pairs = U.unascribe pair in
     let hd, args = U.head_and_args pair in
     match (U.un_uinst hd).n, args with
