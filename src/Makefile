@@ -249,12 +249,12 @@ boot-ocaml:
 OTHERFLAGS+=--hint_info
 
 utest:
-# 	make all
-# ifeq ($(OS),Windows_NT)
-# 	make fsharp-regressions #normalizer failures on linux so only run on windows
-# endif
+	make all
+ifeq ($(OS),Windows_NT)
+	make fsharp-regressions #normalizer failures on linux so only run on windows
+endif
 	+make -C ocaml-output
-	# +make fstar-ocaml
+	+make fstar-ocaml
 	+make uregressions interactive-test
 
 # Interactive mode regressions
