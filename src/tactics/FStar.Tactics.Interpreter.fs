@@ -103,7 +103,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
     } in
     let binders_of_env_int nm args : option<term> =
         match args with
-        | [(e, _)] -> Some (embed_binders (Env.all_binders (E.unembed_env ps.main_context e)))
+        | [(e, _)] -> Some (embed_binders (Env.all_binders (E.unembed_env ps e)))
         | _ -> failwith (Util.format2 "Unexpected application %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
     in
     [ mk "__forall_intros" 1 (mk_tactic_interpretation_0 ps intros embed_binders   FStar.Reflection.Data.fstar_refl_binders);

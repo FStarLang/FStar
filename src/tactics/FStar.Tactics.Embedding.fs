@@ -44,30 +44,33 @@ let embed_env (env:Env.env) : term =
         fstar_refl_env
         (embed_list embed_binder fstar_refl_binder (Env.all_binders env))
 
-let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
+let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
     let embedded_env = un_protect_embedded_term protected_embedded_env in
     let binders = unembed_list unembed_binder embedded_env in
     // TODO: This needs to "try" because of `visit`. Try to remove this behaviour.
     FStar.List.fold_left (fun env b ->
         match Env.try_lookup_bv env (fst b) with
         | None -> Env.push_binders env [b]
-        | _ -> env) env binders
+        | _ -> env) ps.main_context binders
 
 let embed_goal (g:goal) : term =
     embed_pair embed_env fstar_refl_env
                embed_term fstar_refl_term
                (g.context, g.goal_ty)
 
-let unembed_goal (env:Env.env) (t:term) : goal =
-    let env, goal_ty = unembed_pair (unembed_env env) unembed_term t in
+let unembed_goal (ps:proofstate) (t:term) : goal =
+    let env, goal_ty = unembed_pair (unembed_env ps) unembed_term t in
     {
       context = env;
       goal_ty = goal_ty;
       witness = None //TODO: sort this out for proof-relevant goals
     }
 
-let embed_goals (l:list<goal>) : term = embed_list embed_goal fstar_tactics_goal l
-let unembed_goals (env:Env.env) (egs:term) : list<goal> = unembed_list (unembed_goal env) egs
+let embed_goals (l:list<goal>) : term =
+    embed_list embed_goal fstar_tactics_goal l
+
+let unembed_goals (ps:proofstate) (egs:term) : list<goal> =
+    unembed_list (unembed_goal ps) egs
 
 type state = list<goal> * list<goal>
 
@@ -76,7 +79,7 @@ let embed_state (s:state) : term =
 
 let unembed_state (ps:proofstate) (s:term) : state =
     let s = U.unascribe s in
-    unembed_pair (unembed_goals ps.main_context) (unembed_goals ps.main_context) s
+    unembed_pair (unembed_goals ps) (unembed_goals ps) s
 
 let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with
