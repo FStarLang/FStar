@@ -35,7 +35,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args);
-    let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
+    let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run t ps in
     Some (E.embed_result res embed_a t_a)
@@ -52,7 +52,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state);
-    let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
+    let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_b b)) ps in
     Some (E.embed_result res embed_a t_a)
@@ -69,7 +69,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state);
-    let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
+    let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
     Some (E.embed_result res embed_c t_c)
@@ -79,7 +79,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
 let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(et1, _); (et2, _); (embedded_state, _)] ->
-    let goals, smt_goals = E.unembed_state ps.main_context embedded_state in
+    let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (grewrite_impl (type_of_embedded et1) (type_of_embedded et2) (unembed_term et1) (unembed_term et2)) ps in
     Some (E.embed_result res embed_unit FStar.TypeChecker.Common.t_unit)
@@ -161,7 +161,7 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
     bind (mlog <| (fun _ -> BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm))) (fun _ ->
     let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
     bind (mlog <| (fun _ -> BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result))) (fun _ ->
-    match E.unembed_result proof_state.main_context result unembed_b with
+    match E.unembed_result proof_state result unembed_b with
     | Inl (b, (goals, smt_goals)) ->
         bind dismiss (fun _ ->
         bind (add_goals goals) (fun _ ->

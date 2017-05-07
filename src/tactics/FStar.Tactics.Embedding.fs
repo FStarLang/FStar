@@ -74,9 +74,9 @@ type state = list<goal> * list<goal>
 let embed_state (s:state) : term =
     embed_pair embed_goals fstar_tactics_goals embed_goals fstar_tactics_goals s
 
-let unembed_state (env:Env.env) (s:term) : state =
+let unembed_state (ps:proofstate) (s:term) : state =
     let s = U.unascribe s in
-    unembed_pair (unembed_goals env) (unembed_goals env) s
+    unembed_pair (unembed_goals ps.main_context) (unembed_goals ps.main_context) s
 
 let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with
@@ -95,16 +95,16 @@ let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
                   None
                   Range.dummyRange
 
-let unembed_result (env:Env.env) (res:term) (unembed_a:term -> 'a) : either<('a * state), (string * state)> =
+let unembed_result (ps:proofstate) (res:term) (unembed_a:term -> 'a) : either<('a * state), (string * state)> =
     let res = U.unascribe res in
     let hd, args = U.head_and_args res in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_t; (a, _); (embedded_state, _)]
         when S.fv_eq_lid fv (fstar_tactics_lid "Success") ->
-      Inl (unembed_a a, unembed_state env embedded_state)
+      Inl (unembed_a a, unembed_state ps embedded_state)
 
     | Tm_fvar fv, [_t; (embedded_string, _); (embedded_state, _)]
         when S.fv_eq_lid fv (fstar_tactics_lid "Failed") ->
-      Inr (unembed_string embedded_string, unembed_state env embedded_state)
+      Inr (unembed_string embedded_string, unembed_state ps embedded_state)
 
     | _ -> failwith (BU.format1 "Not an embedded result: %s" (Print.term_to_string res))
