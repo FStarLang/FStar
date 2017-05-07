@@ -104,6 +104,8 @@ let unembed_string: FStar_Syntax_Syntax.term -> Prims.string =
 let lid_Mktuple2: FStar_Ident.lident =
   FStar_Syntax_Util.mk_tuple_data_lid (Prims.parse_int "2")
     FStar_Range.dummyRange
+let lid_tuple2: FStar_Ident.lident =
+  FStar_Syntax_Util.mk_tuple_lid (Prims.parse_int "2") FStar_Range.dummyRange
 let embed_binder:
   FStar_Syntax_Syntax.binder ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
@@ -119,7 +121,7 @@ let unembed_binder: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.binder =
     match t2.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_name bv -> FStar_Syntax_Syntax.mk_binder bv
     | uu____244 -> failwith "Not an embedded binder"
-let rec embed_list embed_a t_a l =
+let rec embed_list embed_a typ l =
   match l with
   | [] ->
       let uu____269 =
@@ -129,7 +131,7 @@ let rec embed_list embed_a t_a l =
           FStar_Syntax_Syntax.mk_Tm_uinst uu____271
             [FStar_Syntax_Syntax.U_zero] in
         let uu____272 =
-          let uu____273 = FStar_Syntax_Syntax.iarg t_a in [uu____273] in
+          let uu____273 = FStar_Syntax_Syntax.iarg typ in [uu____273] in
         FStar_Syntax_Syntax.mk_Tm_app uu____270 uu____272 in
       uu____269 None FStar_Range.dummyRange
   | hd1::tl1 ->
@@ -140,14 +142,14 @@ let rec embed_list embed_a t_a l =
           FStar_Syntax_Syntax.mk_Tm_uinst uu____283
             [FStar_Syntax_Syntax.U_zero] in
         let uu____284 =
-          let uu____285 = FStar_Syntax_Syntax.iarg t_a in
+          let uu____285 = FStar_Syntax_Syntax.iarg typ in
           let uu____286 =
             let uu____288 =
               let uu____289 = embed_a hd1 in
               FStar_Syntax_Syntax.as_arg uu____289 in
             let uu____290 =
               let uu____292 =
-                let uu____293 = embed_list embed_a t_a tl1 in
+                let uu____293 = embed_list embed_a typ tl1 in
                 FStar_Syntax_Syntax.as_arg uu____293 in
               [uu____292] in
             uu____288 :: uu____290 in
@@ -191,7 +193,7 @@ let embed_term:
   = fun t  -> protect_embedded_term FStar_Reflection_Data.fstar_refl_term t
 let unembed_term: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  -> un_protect_embedded_term t
-let embed_pair x embed_a t_a embed_b t_b =
+let embed_pair embed_a t_a embed_b t_b x =
   let uu____485 =
     let uu____486 =
       let uu____487 = FStar_Reflection_Data.lid_as_data_tm lid_Mktuple2 in
@@ -215,7 +217,7 @@ let embed_pair x embed_a t_a embed_b t_b =
       uu____489 :: uu____490 in
     FStar_Syntax_Syntax.mk_Tm_app uu____486 uu____488 in
   uu____485 None FStar_Range.dummyRange
-let unembed_pair pair unembed_a unembed_b =
+let unembed_pair unembed_a unembed_b pair =
   let pairs = FStar_Syntax_Util.unascribe pair in
   let uu____537 = FStar_Syntax_Util.head_and_args pair in
   match uu____537 with

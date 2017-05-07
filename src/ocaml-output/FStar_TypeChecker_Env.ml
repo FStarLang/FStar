@@ -2829,19 +2829,51 @@ let pop_proof_ns: env -> env =
           qname_and_index = (uu___135_6231.qname_and_index);
           proof_ns = rest
         }
+let get_proof_ns: env -> proof_namespace = fun e  -> e.proof_ns
+let set_proof_ns: proof_namespace -> env -> env =
+  fun ns  ->
+    fun e  ->
+      let uu___136_6241 = e in
+      {
+        solver = (uu___136_6241.solver);
+        range = (uu___136_6241.range);
+        curmodule = (uu___136_6241.curmodule);
+        gamma = (uu___136_6241.gamma);
+        gamma_cache = (uu___136_6241.gamma_cache);
+        modules = (uu___136_6241.modules);
+        expected_typ = (uu___136_6241.expected_typ);
+        sigtab = (uu___136_6241.sigtab);
+        is_pattern = (uu___136_6241.is_pattern);
+        instantiate_imp = (uu___136_6241.instantiate_imp);
+        effects = (uu___136_6241.effects);
+        generalize = (uu___136_6241.generalize);
+        letrecs = (uu___136_6241.letrecs);
+        top_level = (uu___136_6241.top_level);
+        check_uvars = (uu___136_6241.check_uvars);
+        use_eq = (uu___136_6241.use_eq);
+        is_iface = (uu___136_6241.is_iface);
+        admit = (uu___136_6241.admit);
+        lax = (uu___136_6241.lax);
+        lax_universes = (uu___136_6241.lax_universes);
+        type_of = (uu___136_6241.type_of);
+        universe_of = (uu___136_6241.universe_of);
+        use_bv_sorts = (uu___136_6241.use_bv_sorts);
+        qname_and_index = (uu___136_6241.qname_and_index);
+        proof_ns = ns
+      }
 let dummy_solver: solver_t =
   {
-    init = (fun uu____6232  -> ());
-    push = (fun uu____6233  -> ());
-    pop = (fun uu____6234  -> ());
-    mark = (fun uu____6235  -> ());
-    reset_mark = (fun uu____6236  -> ());
-    commit_mark = (fun uu____6237  -> ());
-    encode_modul = (fun uu____6238  -> fun uu____6239  -> ());
-    encode_sig = (fun uu____6240  -> fun uu____6241  -> ());
+    init = (fun uu____6242  -> ());
+    push = (fun uu____6243  -> ());
+    pop = (fun uu____6244  -> ());
+    mark = (fun uu____6245  -> ());
+    reset_mark = (fun uu____6246  -> ());
+    commit_mark = (fun uu____6247  -> ());
+    encode_modul = (fun uu____6248  -> fun uu____6249  -> ());
+    encode_sig = (fun uu____6250  -> fun uu____6251  -> ());
     preprocess = (fun e  -> fun g  -> [(e, g)]);
-    solve = (fun uu____6248  -> fun uu____6249  -> fun uu____6250  -> ());
-    is_trivial = (fun uu____6254  -> fun uu____6255  -> false);
-    finish = (fun uu____6256  -> ());
-    refresh = (fun uu____6257  -> ())
+    solve = (fun uu____6258  -> fun uu____6259  -> fun uu____6260  -> ());
+    is_trivial = (fun uu____6264  -> fun uu____6265  -> false);
+    finish = (fun uu____6266  -> ());
+    refresh = (fun uu____6267  -> ())
   }

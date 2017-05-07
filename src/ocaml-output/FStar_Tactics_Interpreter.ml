@@ -10,8 +10,7 @@ let mk_tactic_interpretation_0 ps t embed_a t_a nm args =
           FStar_Util.print2 "Reached %s, args are: %s\n" uu____59 uu____60
         else ());
        (let uu____62 =
-          FStar_Tactics_Embedding.unembed_state
-            ps.FStar_Tactics_Basic.main_context embedded_state in
+          FStar_Tactics_Embedding.unembed_state ps embedded_state in
         match uu____62 with
         | (goals,smt_goals) ->
             let ps1 =
@@ -30,7 +29,7 @@ let mk_tactic_interpretation_0 ps t embed_a t_a nm args =
               } in
             let res = FStar_Tactics_Basic.run t ps1 in
             let uu____74 =
-              FStar_Tactics_Embedding.embed_result res embed_a t_a in
+              FStar_Tactics_Embedding.embed_result ps1 res embed_a t_a in
             Some uu____74))
   | uu____75 -> failwith "Unexpected application of tactic primitive"
 let mk_tactic_interpretation_1 ps t unembed_b embed_a t_a nm args =
@@ -44,8 +43,7 @@ let mk_tactic_interpretation_1 ps t unembed_b embed_a t_a nm args =
           FStar_Util.print2 "Reached %s, goals are: %s\n" uu____162 uu____163
         else ());
        (let uu____165 =
-          FStar_Tactics_Embedding.unembed_state
-            ps.FStar_Tactics_Basic.main_context embedded_state in
+          FStar_Tactics_Embedding.unembed_state ps embedded_state in
         match uu____165 with
         | (goals,smt_goals) ->
             let ps1 =
@@ -66,7 +64,7 @@ let mk_tactic_interpretation_1 ps t unembed_b embed_a t_a nm args =
               let uu____177 = let uu____179 = unembed_b b in t uu____179 in
               FStar_Tactics_Basic.run uu____177 ps1 in
             let uu____180 =
-              FStar_Tactics_Embedding.embed_result res embed_a t_a in
+              FStar_Tactics_Embedding.embed_result ps1 res embed_a t_a in
             Some uu____180))
   | uu____181 ->
       let uu____182 =
@@ -86,8 +84,7 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
           FStar_Util.print2 "Reached %s, goals are: %s\n" uu____298 uu____299
         else ());
        (let uu____301 =
-          FStar_Tactics_Embedding.unembed_state
-            ps.FStar_Tactics_Basic.main_context embedded_state in
+          FStar_Tactics_Embedding.unembed_state ps embedded_state in
         match uu____301 with
         | (goals,smt_goals) ->
             let ps1 =
@@ -110,7 +107,7 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
                 let uu____316 = unembed_b b in t uu____315 uu____316 in
               FStar_Tactics_Basic.run uu____313 ps1 in
             let uu____317 =
-              FStar_Tactics_Embedding.embed_result res embed_c t_c in
+              FStar_Tactics_Embedding.embed_result ps1 res embed_c t_c in
             Some uu____317))
   | uu____318 ->
       let uu____319 =
@@ -130,8 +127,7 @@ let grewrite_interpretation:
         match args with
         | (et1,uu____336)::(et2,uu____338)::(embedded_state,uu____340)::[] ->
             let uu____369 =
-              FStar_Tactics_Embedding.unembed_state
-                ps.FStar_Tactics_Basic.main_context embedded_state in
+              FStar_Tactics_Embedding.unembed_state ps embedded_state in
             (match uu____369 with
              | (goals,smt_goals) ->
                  let ps1 =
@@ -160,7 +156,7 @@ let grewrite_interpretation:
                        uu____385 uu____386 in
                    FStar_Tactics_Basic.run uu____381 ps1 in
                  let uu____387 =
-                   FStar_Tactics_Embedding.embed_result res
+                   FStar_Tactics_Embedding.embed_result ps1 res
                      FStar_Reflection_Basic.embed_unit
                      FStar_TypeChecker_Common.t_unit in
                  Some uu____387)
@@ -200,9 +196,7 @@ let rec primitive_steps:
       | (e,uu____481)::[] ->
           let uu____486 =
             let uu____487 =
-              let uu____489 =
-                FStar_Tactics_Embedding.unembed_env
-                  ps.FStar_Tactics_Basic.main_context e in
+              let uu____489 = FStar_Tactics_Embedding.unembed_env ps e in
               FStar_TypeChecker_Env.all_binders uu____489 in
             FStar_Reflection_Basic.embed_binders uu____487 in
           Some uu____486
@@ -395,7 +389,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
            let uu____575 =
              let uu____576 =
                let uu____577 =
-                 FStar_Tactics_Embedding.embed_state
+                 FStar_Tactics_Embedding.embed_state proof_state
                    ((proof_state.FStar_Tactics_Basic.goals), []) in
                FStar_Syntax_Syntax.as_arg uu____577 in
              [uu____576] in
@@ -429,8 +423,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
             FStar_Tactics_Basic.bind uu____597
               (fun uu____604  ->
                  let uu____605 =
-                   FStar_Tactics_Embedding.unembed_result
-                     proof_state.FStar_Tactics_Basic.main_context result
+                   FStar_Tactics_Embedding.unembed_result proof_state result
                      unembed_b in
                  match uu____605 with
                  | FStar_Util.Inl (b,(goals,smt_goals)) ->
