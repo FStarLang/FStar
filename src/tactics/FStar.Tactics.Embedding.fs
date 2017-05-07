@@ -39,19 +39,61 @@ let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
 let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
 
+let t_bool = FStar.TypeChecker.Common.t_bool
+let t_string = FStar.TypeChecker.Common.t_string
+
+let fstar_tac_prefix_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm SC.list_lid) [U_zero])
+                                       [S.as_arg t_string]
+                                       None
+                                       Range.dummyRange
+
+let fstar_tac_nselt_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
+                                      [S.as_arg fstar_tac_prefix_typ;
+                                       S.as_arg t_bool]
+                                      None
+                                      Range.dummyRange
+
+let fstar_tac_ns_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
+                                   [S.as_arg fstar_tac_nselt_typ;
+                                    S.as_arg t_bool]
+                                   None
+                                   Range.dummyRange
+
+// TODO: for now, we just embed the head of the list. Tactics cannot
+// push/pop proof namespaces
+let embed_proof_namespace (ps:proofstate) (ns:Env.proof_namespace) : term =
+    let embed_prefix prf = embed_list embed_string t_string prf in
+    let embed_elt e = embed_pair embed_prefix fstar_tac_prefix_typ embed_bool t_bool e in
+    embed_list embed_elt fstar_tac_nselt_typ (List.hd ns)
+
+let unembed_proof_namespace (ps:proofstate) (t:term) : Env.proof_namespace =
+    let orig = ps.main_context.proof_ns in
+    let hd = unembed_list (unembed_pair (unembed_list unembed_string) unembed_bool) t in
+    hd::orig
+
+// Unsure we need to thunk these, they are normal forms already.
+// They also cannot be `eliminated` because the abstract types we give them.
 let embed_env (ps:proofstate) (env:Env.env) : term =
     protect_embedded_term
         fstar_refl_env
-        (embed_list embed_binder fstar_refl_binder (Env.all_binders env))
+        (embed_pair
+            (embed_list embed_binder fstar_refl_binder)
+            fstar_refl_binders
+            (embed_proof_namespace ps)
+            fstar_tac_ns_typ
+            (Env.all_binders env, env.proof_ns))
 
 let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
     let embedded_env = un_protect_embedded_term protected_embedded_env in
-    let binders = unembed_list unembed_binder embedded_env in
+    let binders, ns = unembed_pair (unembed_list unembed_binder) (unembed_proof_namespace ps) embedded_env in
+    let env = ps.main_context in
+    let env = {env with proof_ns = ns} in
     // TODO: This needs to "try" because of `visit`. Try to remove this behaviour.
-    FStar.List.fold_left (fun env b ->
-        match Env.try_lookup_bv env (fst b) with
-        | None -> Env.push_binders env [b]
-        | _ -> env) ps.main_context binders
+    let env = FStar.List.fold_left (fun env b ->
+                    match Env.try_lookup_bv env (fst b) with
+                    | None -> Env.push_binders env [b]
+                    | _ -> env) env binders in
+    env
 
 let embed_goal (ps:proofstate) (g:goal) : term =
     embed_pair (embed_env ps) fstar_refl_env

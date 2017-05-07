@@ -79,6 +79,7 @@ let unembed_string (t:term) : string =
 
 
 let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
+let lid_tuple2   = U.mk_tuple_lid 2 Range.dummyRange
 
 let embed_binder (b:binder) : term =
     protect_embedded_term Data.fstar_refl_binder (S.bv_to_name (fst b))
