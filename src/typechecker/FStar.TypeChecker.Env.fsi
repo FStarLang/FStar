@@ -242,3 +242,5 @@ val add_proof_ns    : env -> name_prefix -> env
 val rem_proof_ns    : env -> name_prefix -> env
 val push_proof_ns   : env -> env
 val pop_proof_ns    : env -> env
+val get_proof_ns    : env -> proof_namespace
+val set_proof_ns    : proof_namespace -> env -> env

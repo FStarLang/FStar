@@ -13,7 +13,6 @@ module BU = FStar.Util
 module C = FStar.Const
 module U = FStar.Syntax.Util
 module Rel = FStar.TypeChecker.Rel
-module Env = FStar.TypeChecker.Env
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
@@ -67,9 +66,9 @@ let embed_proof_namespace (ps:proofstate) (ns:Env.proof_namespace) : term =
     embed_list embed_elt fstar_tac_nselt_typ (List.hd ns)
 
 let unembed_proof_namespace (ps:proofstate) (t:term) : Env.proof_namespace =
-    let orig = ps.main_context.proof_ns in
+    let orig_ns = Env.get_proof_ns ps.main_context in
     let hd = unembed_list (unembed_pair (unembed_list unembed_string) unembed_bool) t in
-    hd::orig
+    hd::orig_ns
 
 // Unsure we need to thunk these, they are normal forms already.
 // They also cannot be `eliminated` because the abstract types we give them.
@@ -81,13 +80,13 @@ let embed_env (ps:proofstate) (env:Env.env) : term =
             fstar_refl_binders
             (embed_proof_namespace ps)
             fstar_tac_ns_typ
-            (Env.all_binders env, env.proof_ns))
+            (Env.all_binders env, Env.get_proof_ns env))
 
 let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
     let embedded_env = un_protect_embedded_term protected_embedded_env in
     let binders, ns = unembed_pair (unembed_list unembed_binder) (unembed_proof_namespace ps) embedded_env in
     let env = ps.main_context in
-    let env = {env with proof_ns = ns} in
+    let env = Env.set_proof_ns ns env in
     // TODO: This needs to "try" because of `visit`. Try to remove this behaviour.
     let env = FStar.List.fold_left (fun env b ->
                     match Env.try_lookup_bv env (fst b) with

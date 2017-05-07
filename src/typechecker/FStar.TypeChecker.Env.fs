@@ -1209,6 +1209,9 @@ let pop_proof_ns e =
     | _::rest ->
         { e with proof_ns = rest }
 
+let get_proof_ns e = e.proof_ns
+let set_proof_ns ns e = {e with proof_ns = ns}
+
 (* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
