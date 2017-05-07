@@ -5,4 +5,6 @@ module Pruning
 open FStar.Tactics
 open FStar.List
 
-let _ = assert_by_tactic (prune []) (rev [1;2] == [2;1])
+let _ = assert_by_tactic (prune [];;
+                          addns ["FStar";"List"];;
+                          addns ["Prims"]) (rev [1;2] == [2;1])
