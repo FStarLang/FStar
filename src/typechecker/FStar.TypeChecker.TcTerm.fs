@@ -179,8 +179,10 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
              then Some (tot_or_gtot c), c
              else None, c
   in
+  let c = norm_c env c in
   match expected_c_opt with
-    | None -> e, norm_c env c, Rel.trivial_guard
+    | None ->
+      e, c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
 //       if debug env Options.Low
 //       then BU.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"

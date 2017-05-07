@@ -5994,7 +5994,7 @@ let sub_comp:
          let uu____12420 =
            let uu____12422 = singleton env prob in
            solve_and_commit env uu____12422 (fun uu____12423  -> None) in
-         FStar_All.pipe_left (with_guard_no_simp env prob) uu____12420)
+         FStar_All.pipe_left (with_guard env prob) uu____12420)
 let solve_universe_inequalities':
   FStar_Unionfind.tx ->
     FStar_TypeChecker_Env.env ->

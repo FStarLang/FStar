@@ -451,10 +451,10 @@ let check_expected_effect:
                         else (None, c))) in
             (match uu____405 with
              | (expected_c_opt,c1) ->
+                 let c1 = norm_c env c1 in
                  (match expected_c_opt with
                   | None  ->
-                      let uu____451 = norm_c env c1 in
-                      (e, uu____451, FStar_TypeChecker_Rel.trivial_guard)
+                      (e, c1, FStar_TypeChecker_Rel.trivial_guard)
                   | Some expected_c ->
                       let uu____453 =
                         FStar_TypeChecker_Util.check_comp env e c1 expected_c in
