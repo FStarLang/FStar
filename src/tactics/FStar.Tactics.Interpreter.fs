@@ -38,7 +38,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run t ps in
-    Some (E.embed_result res embed_a t_a)
+    Some (E.embed_result ps res embed_a t_a)
   | _ ->
     failwith ("Unexpected application of tactic primitive")
 
@@ -55,7 +55,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_b b)) ps in
-    Some (E.embed_result res embed_a t_a)
+    Some (E.embed_result ps res embed_a t_a)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -72,7 +72,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
-    Some (E.embed_result res embed_c t_c)
+    Some (E.embed_result ps res embed_c t_c)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -82,7 +82,7 @@ let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (grewrite_impl (type_of_embedded et1) (type_of_embedded et2) (unembed_term et1) (unembed_term et2)) ps in
-    Some (E.embed_result res embed_unit FStar.TypeChecker.Common.t_unit)
+    Some (E.embed_result ps res embed_unit FStar.TypeChecker.Common.t_unit)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -154,7 +154,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
     bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_tac_b
-                         [S.as_arg (E.embed_state (proof_state.goals, []))]
+                         [S.as_arg (E.embed_state proof_state (proof_state.goals, []))]
                           None
                           Range.dummyRange in
     let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in

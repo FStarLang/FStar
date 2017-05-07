@@ -39,7 +39,7 @@ let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
 let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
 
-let embed_env (env:Env.env) : term =
+let embed_env (ps:proofstate) (env:Env.env) : term =
     protect_embedded_term
         fstar_refl_env
         (embed_list embed_binder fstar_refl_binder (Env.all_binders env))
@@ -53,8 +53,8 @@ let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
         | None -> Env.push_binders env [b]
         | _ -> env) ps.main_context binders
 
-let embed_goal (g:goal) : term =
-    embed_pair embed_env fstar_refl_env
+let embed_goal (ps:proofstate) (g:goal) : term =
+    embed_pair (embed_env ps) fstar_refl_env
                embed_term fstar_refl_term
                (g.context, g.goal_ty)
 
@@ -66,35 +66,35 @@ let unembed_goal (ps:proofstate) (t:term) : goal =
       witness = None //TODO: sort this out for proof-relevant goals
     }
 
-let embed_goals (l:list<goal>) : term =
-    embed_list embed_goal fstar_tactics_goal l
+let embed_goals (ps:proofstate) (l:list<goal>) : term =
+    embed_list (embed_goal ps) fstar_tactics_goal l
 
 let unembed_goals (ps:proofstate) (egs:term) : list<goal> =
     unembed_list (unembed_goal ps) egs
 
 type state = list<goal> * list<goal>
 
-let embed_state (s:state) : term =
-    embed_pair embed_goals fstar_tactics_goals embed_goals fstar_tactics_goals s
+let embed_state (ps:proofstate) (s:state) : term =
+    embed_pair (embed_goals ps) fstar_tactics_goals (embed_goals ps) fstar_tactics_goals s
 
 let unembed_state (ps:proofstate) (s:term) : state =
     let s = U.unascribe s in
     unembed_pair (unembed_goals ps) (unembed_goals ps) s
 
-let embed_result (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
+let embed_result (ps:proofstate) (res:result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with
     | Failed (msg, ps) ->
       S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed [U_zero])
                   [S.iarg t_a;
                    S.as_arg (embed_string msg);
-                   S.as_arg (embed_state (ps.goals, ps.smt_goals))]
+                   S.as_arg (embed_state ps (ps.goals, ps.smt_goals))]
                   None
                   Range.dummyRange
     | Success (a, ps) ->
       S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success [U_zero])
                   [S.iarg t_a;
                    S.as_arg (embed_a a);
-                   S.as_arg (embed_state (ps.goals, ps.smt_goals))]
+                   S.as_arg (embed_state ps (ps.goals, ps.smt_goals))]
                   None
                   Range.dummyRange
 
