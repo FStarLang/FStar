@@ -11,7 +11,6 @@ termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
-rel \
 maths \
 paradoxes \
 printf \
@@ -24,6 +23,8 @@ struct \
 micro-benchmarks \
 bytes \
 tactics
+
+# rel \
 
 # low-level \  ... NS: removing from CI for this branch
 
