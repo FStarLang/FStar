@@ -47,7 +47,7 @@ let embed_env (env:Env.env) : term =
 let unembed_env (env:Env.env) (protected_embedded_env:term) : Env.env =
     let embedded_env = un_protect_embedded_term protected_embedded_env in
     let binders = unembed_list unembed_binder embedded_env in
-    // TODO: Why try????
+    // TODO: This needs to "try" because of `visit`. Try to remove this behaviour.
     FStar.List.fold_left (fun env b ->
         match Env.try_lookup_bv env (fst b) with
         | None -> Env.push_binders env [b]
