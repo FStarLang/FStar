@@ -472,7 +472,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
     let e, c, g = if not env.lax && TcUtil.short_circuit_head head
-                  then check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
+                  then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
+                       //TODO: this is not efficient:
+                       //      It is quadratic in the size of boolean terms
+                       //      e.g., a && b && c && d ... & zzzz will be huge
+                       let c = if Env.should_verify env &&
+                               not (U.is_lcomp_partial_return c) &&
+                               U.is_pure_or_ghost_lcomp c
+                               then TcUtil.maybe_assume_result_eq_pure_term env e c
+                               else c in
+                       e, c, g
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
