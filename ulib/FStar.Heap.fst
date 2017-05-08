@@ -342,16 +342,41 @@ let op_Plus_Plus_Hat #a s r = union s (only r)
 val op_Hat_Plus_Hat: #a:Type -> #b:Type -> ref a -> ref b -> GTot (set nat)
 let op_Hat_Plus_Hat #a #b r1 r2 = union (only r1) (only r2)
 
-abstract let upd_addr (a:Type0) (h:heap) (addr:nat) (x:a) :heap =
+abstract let upd_addr (#a:Type0) (h:heap) (addr:nat) (x:a) :heap =
   let next = if addr >= h.next_addr then addr + 1 else h.next_addr in
   let m = fun r -> if r = addr then Some (| a, x |) else h.memory r in
   { h with next_addr = next; memory = m }
 
-let lemma_upd_addr_sel (a:Type0) (h0:heap) (addr:nat) (x:a)
-  :Lemma (requires True)
-         (ensures  (let h1 = upd_addr a h0 addr x in
-	            (forall (r:ref a). addr_of r = addr ==> sel h1 r == x) /\
-		    (forall (b:Type) (r:ref b). addr_of r <> addr ==> sel h1 r == sel h0 r)))
-	 [SMTPat (upd_addr a h0 addr x)]
+let lemma_upd_addr_sel_same_addr (#a:Type0) (h0:heap) (addr:nat) (x:a) (r:ref a)
+  :Lemma (requires (addr_of r = addr))
+         (ensures  (let h1 = upd_addr h0 addr x in
+	            sel h1 r == x))
+	 [SMTPat (sel (upd_addr h0 addr x) r)]
   = ()
 
+let lemma_upd_addr_sel_different_addr (#a:Type0) (#b:Type0) (h0:heap) (addr:nat) (x:a) (r:ref b)
+  :Lemma (requires (addr_of r <> addr))
+         (ensures  (let h1 = upd_addr h0 addr x in
+		    sel h1 r == sel h0 r))
+	 [SMTPat (sel (upd_addr h0 addr x) r)]
+  = ()
+
+let lemma_upd_addr_contains_same_addr (#a:Type0) (h0:heap) (addr:nat) (x:a) (r:ref a)
+  :Lemma (requires (addr_of r = addr))
+         (ensures  (let h1 = upd_addr h0 addr x in
+                    h1 `contains` r))
+	 [SMTPat ((upd_addr h0 addr x) `contains` r)]
+  = ()
+
+let lemma_upd_addr_contains_different_addr (#a:Type0) (#b:Type0) (h0:heap) (addr:nat) (x:a) (r:ref b)
+  :Lemma (requires (addr_of r <> addr))
+         (ensures  (let h1 = upd_addr h0 addr x in
+	            h1 `contains` r <==> h0 `contains` r))
+	 [SMTPat ((upd_addr h0 addr x) `contains` r)]
+  = ()
+
+let lemma_upd_addr_unused (#a:Type) (h0:heap) (addr:nat) (x:a) (r:ref a)
+  :Lemma (requires True)
+         (ensures  ((addr_of r <> addr /\ r `unused_in` h0) <==> r `unused_in` (upd_addr h0 addr x)))
+	 [SMTPat (r `unused_in` (upd_addr h0 addr x))]
+  = ()

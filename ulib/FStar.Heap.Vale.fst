@@ -122,7 +122,7 @@ let update_lo_view (r:rtti) (l:lo_view) (a0:lo_addr) (b:bytes{length b = size_of
 let update_hi_view (r:rtti) (h:heap) (s:sync_t) (h_addr:nat) (b:bytes) :(heap * sync_t) =
   let v_opt = unmarshal r b in
   match v_opt with
-  | Some v -> upd_addr (type_of r) h h_addr v, (fun x -> if x = h_addr then true else s x)  //success
+  | Some v -> upd_addr #(type_of r) h h_addr v, (fun x -> if x = h_addr then true else s x)  //success
   | None   -> h, (fun x -> if x = h_addr then false else s x)  //failure
     
 (*
@@ -266,10 +266,6 @@ let test (m0:mem{sync m0}) =
   assert (sel m3 href = true);
   assert (sync m3);
 
-  assert (m3.hi `contains` href)
-
-
-
   (* store a bad value in the lo-level, check that the hi-level view is unchanged and the mem is no longer synchronized *)
   let m4 = store m3 a b2 in
   assert (sel m4 href = true);
@@ -283,8 +279,15 @@ let test (m0:mem{sync m0}) =
   let href1, m6 = alloc #Bool m5 true in
   let a1 = get_lo_start m6 (addr_of href1) in
 
-  assert (m5.hi `contains` href)
-  
-  assert (addr_of href =!= addr_of href1)
+  assert (addr_of href =!= addr_of href1);
 
-  assert (sel m6 href == false)
+  assert (sel m6 href == false);
+  assert (load m6 a1 == b1);
+
+  let m7 = store m6 a1 b1 in
+
+  assert (sel m7 href1 == true);
+  assert (sel m7 href == false);
+  assert (load m7 a == b0);
+
+  ()
