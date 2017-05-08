@@ -1,14 +1,16 @@
-﻿#light "off"
+#light "off"
 module FStar.Tactics.Interpreter
 open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Range
+open FStar.TypeChecker.Env
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module SC = FStar.Syntax.Const
+module C = FStar.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -20,6 +22,7 @@ open FStar.Tactics.Basic
 module E = FStar.Tactics.Embedding
 module Core = FStar.Tactics.Basic
 open FStar.Reflection.Basic
+open FStar.Tactics.LeanTactic
 open FStar.Reflection.Interpreter
 
 let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (nm:Ident.lid) (args:args) : option<term> =
@@ -143,6 +146,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__trefl"         trefl embed_unit t_unit;
       mktac0 "__later"         later embed_unit t_unit;
       mktac0 "__tdone"         tdone embed_unit t_unit;
+      mktac0 "__lean"          lean_tactic embed_unit t_unit;
 
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;

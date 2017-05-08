@@ -87,6 +87,8 @@
   <ItemGroup>
     <Compile Include="FStar.Tactics.Basic.fs" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
+    <Compile Include="FStar.Tactics.LeanTactic.fsi" />
+    <Compile Include="FStar.Tactics.LeanTactic.fs" />
     <Compile Include="FStar.Tactics.Interpreter.fsi" />
     <Compile Include="FStar.Tactics.Interpreter.fs" />
   </ItemGroup>
@@ -106,7 +108,7 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
