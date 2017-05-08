@@ -12,6 +12,7 @@ software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
 maths \
+rel \
 paradoxes \
 printf \
 metatheory \
@@ -24,7 +25,6 @@ micro-benchmarks \
 bytes \
 tactics
 
-# rel \
 
 # low-level \  ... NS: removing from CI for this branch
 
