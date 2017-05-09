@@ -11,8 +11,8 @@ noeq type formula =
   | Not    : term -> formula
   | Implies: term -> term -> formula
   | Iff    : term -> term -> formula
-  | Forall : binders -> term -> formula
-  | Exists : binders -> term -> formula
+  | Forall : binder -> term -> formula
+  | Exists : binder -> term -> formula
   | App    : term -> term -> formula
   | Name   : binder -> formula
   | FV     : fv -> formula
@@ -31,6 +31,8 @@ let term_view_as_formula (tv:term_view) : Tot formula =
         else if eq_qn qn false_qn then False_
         else FV fv
 
+    // TODO: l_Forall
+    // ...or should we just try to drop all squashes?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app' [t] h0 in
         match inspect h, ts with
@@ -53,9 +55,10 @@ let term_view_as_formula (tv:term_view) : Tot formula =
         end
 
     | Tv_Arrow b t ->
-        // TODO: collect binders?
-        // TODO: if not free, it's an implication?
-        Forall [b] t
+        if is_free b t
+        then Forall b t
+        else Implies (type_of_binder b) t
+
     | Tv_Const (C_Int i) ->
         IntLit i
 
@@ -81,8 +84,8 @@ let formula_as_term_view (f:formula) : Tot term_view =
     | Implies p q -> mk_app' (Tv_FVar (pack_fv imp_qn)) [p;q]
     | Not p       -> mk_app' (Tv_FVar (pack_fv not_qn)) [p]
     | Iff p q     -> mk_app' (Tv_FVar (pack_fv iff_qn)) [p;q]
-    | Forall bs t -> Tv_Unknown // TODO: decide on meaning of this
-    | Exists bs t -> Tv_Unknown // TODO: ^
+    | Forall b t  -> Tv_Unknown // TODO: decide on meaning of this
+    | Exists b t  -> Tv_Unknown // TODO: ^
 
     | App p q ->
         Tv_App p q

@@ -67,3 +67,13 @@ let _ = assert_by_tactic (t <-- quote (2 + 3);
 
                           return ())
                           True
+
+let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
+                          match term_as_formula t with
+                          | Forall _ _ -> return ()
+                          | _ -> fail ("This should be a forall: " ^ term_to_string t)) True
+
+let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
+                          match term_as_formula t with
+                          | Implies _ _ -> return ()
+                          | _ -> fail "This should be an implication: " ^ term_to_string t) True
