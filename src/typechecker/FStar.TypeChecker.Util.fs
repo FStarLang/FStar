@@ -482,6 +482,30 @@ let is_function t = match (compress t).n with
     | Tm_arrow _ -> true
     | _ -> false
 
+let close_comp env bvs (c:comp) =
+    if U.is_ml_comp c then c
+    else if env.lax
+    && Options.ml_ish() //NS: disabling this optimization temporarily
+    then c
+    else begin
+            let close_wp u_res md res_t bvs wp0 =
+              List.fold_right (fun x wp ->
+                  let bs = [mk_binder x] in
+                  let us = u_res::[env.universe_of env x.sort] in
+                  let wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
+                  mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
+              bvs wp0 in
+            let c = Env.unfold_effect_abbrev env c in
+            let u_res_t, res_t, wp = destruct_comp c in
+            let md = Env.get_effect_decl env c.effect_name in
+            let wp = close_wp u_res_t md res_t bvs wp in
+            mk_comp md u_res_t c.result_typ wp c.flags
+        end
+
+let close_lcomp env bvs (lc:lcomp) =
+  let close () = close_comp env bvs (lc.comp()) in
+  {lc with comp=close}
+
 let return_value env t v =
   let c =
     if not <| Env.lid_exists env Const.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
@@ -498,7 +522,9 @@ let return_value env t v =
          mk_comp m u_t t wp [RETURN] in
   if debug env <| Options.Other "Return"
   then BU.print3 "(%s) returning %s at comp type %s\n"
-                    (Range.string_of_range v.pos)  (P.term_to_string v) (N.comp_to_string env c);
+                    (Range.string_of_range v.pos)
+                    (P.term_to_string v)
+                    (N.comp_to_string env c);
   c
 
 let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
@@ -564,7 +590,19 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else aux()
+            else match e1opt, b with
+                 | Some e, Some x ->
+                   if U.is_total_comp c1
+                   && not (Syntax.is_null_bv x)
+                   then let c2 = SS.subst_comp [NT(x,e)] c2 in
+                        let x = {x with sort = U.comp_result c1} in
+                        //forall (_:t). c2[e/x]
+                        //It's important to have that (forall (_:t)) since
+                        //if x does not appear free in e,
+                        //then it may till be important to know that t is inhabited
+                        Inl(close_comp env [x] c2, "c1 Tot")
+                   else aux ()
+                 | _ -> aux ()
           in
           match try_simplify () with
           | Inl (c, reason) ->
@@ -769,32 +807,6 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
      res_typ=res_t;
      cflags=[];
      comp=bind_cases}
-
-let close_comp env bvs (lc:lcomp) =
-  let close () =
-      let c = lc.comp() in
-      if U.is_ml_comp c then c
-      else
-        if env.lax
-	&& Options.ml_ish() //NS: disabling this optimization temporarily
-        then
-           c
-        else begin
-            let close_wp u_res md res_t bvs wp0 =
-              List.fold_right (fun x wp ->
-                  let bs = [mk_binder x] in
-                  let us = u_res::[env.universe_of env x.sort] in
-                  let wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
-                  mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
-              bvs wp0 in
-            let c = Env.unfold_effect_abbrev env c in
-            let u_res_t, res_t, wp = destruct_comp c in
-            let md = Env.get_effect_decl env c.effect_name in
-            let wp = close_wp u_res_t md res_t bvs wp in
-            mk_comp md u_res_t c.result_typ wp c.flags
-        end
-  in
-  {lc with comp=close}
 
 let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let flags =

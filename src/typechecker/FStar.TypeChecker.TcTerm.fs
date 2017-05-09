@@ -1494,7 +1494,7 @@ and tc_eqn scrutinee env branch
 
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
-    TcUtil.close_comp env pat_bvs c_weak,
+    TcUtil.close_lcomp env pat_bvs c_weak,
     Rel.close_guard env binders g_when_weak,
     g_branch
   in
@@ -1767,7 +1767,7 @@ and check_inner_let_rec env top =
 
           let e2, cres, g2 = tc_term env e2 in
           let guard = Rel.conj_guard g_lbs (Rel.close_guard env (List.map S.mk_binder bvs) g2) in
-          let cres = TcUtil.close_comp env bvs cres in
+          let cres = TcUtil.close_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
 
