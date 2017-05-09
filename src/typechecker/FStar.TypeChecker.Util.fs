@@ -564,12 +564,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else match e1opt, b with
-                 | Some e, Some x ->
-                   if U.is_total_comp c1 && not (Syntax.is_null_bv x)
-                   then subst_c2 "substituted e"
-                   else aux ()
-                 | _ -> aux ()
+            else aux()
           in
           match try_simplify () with
           | Inl (c, reason) ->
