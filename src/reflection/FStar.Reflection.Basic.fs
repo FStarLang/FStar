@@ -320,13 +320,13 @@ let inspect (t:term) : term_view =
     | Tm_abs ([], _, _) ->
         failwith "inspect: empty arguments on Tm_abs"
 
-    | Tm_abs (b::bs, t, k) ->
-        let bs', t = SS.open_term (b::bs) t in
+    | Tm_abs (bs, t, k) ->
+        let bs, t = SS.open_term bs t in
         // `let b::bs = bs` gives a coverage warning, avoid it
-        let b, bs = (match bs' with
-        | b::bs -> b, bs
-        | [] -> failwith "impossible") in
-        Tv_Abs (b, U.abs bs t k)
+        begin match bs with
+        | [] -> failwith "impossible"
+        | b::bs -> Tv_Abs (b, U.abs bs t k)
+        end
 
     | Tm_type _ ->
         Tv_Type ()
@@ -334,13 +334,12 @@ let inspect (t:term) : term_view =
     | Tm_arrow ([], k) ->
         failwith "inspect: empty binders on arrow"
 
-    | Tm_arrow (b::bs, k) ->
-        let b', k =  SS.open_comp [b] k in
-        // `let [b] = b'` gives a coverage warning, avoid it
-        let b = (match b' with
-        | [b'] -> b'
-        | _ -> failwith "impossible") in
-        Tv_Arrow (b, U.arrow bs k) // TODO: this drops the effect
+    | Tm_arrow (bs, k) ->
+        let bs, k =  SS.open_comp bs k in
+        begin match bs with
+        | [] -> failwith "impossible"
+        | b::bs -> Tv_Arrow (b, U.arrow bs k) // TODO: this drops the effect
+        end
 
     | Tm_refine (bv, t) ->
         let b = S.mk_binder bv in
