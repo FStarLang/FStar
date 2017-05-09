@@ -317,8 +317,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
             if Options.z3_refresh() || Options.check_hints() then Z3.refresh();
             let query_info env name tag statistics =
                 if Options.print_fuels() || Options.hint_info() || Options.print_z3_statistics() then
-                    BU.print ("%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s" ^ 
-                              (if Options.print_z3_statistics() then " %s" else "") ^ "\n")
+                    BU.print "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
                         ([(match env with | Some e -> "(" ^ (Range.string_of_range (Env.get_range e)) ^ at_log_file() ^ ")" | None -> "");
                          name;
                          query_name;
