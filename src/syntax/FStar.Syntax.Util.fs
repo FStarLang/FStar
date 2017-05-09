@@ -1133,3 +1133,14 @@ let rec bottom_fold (f : term -> term) (t : term) : term =
              | _ -> tn in
     f ({ t with n = tn })
 
+// An estimation of the size of a term
+let rec sizeof (t:term) : int =
+    match t.n with
+    | Tm_delayed _ -> 1 + sizeof (compress t)
+    | Tm_bvar bv
+    | Tm_name bv -> 1 + sizeof bv.sort
+    | Tm_uinst (t,us) -> List.length us + sizeof t
+    | Tm_abs (bs, t, _) -> sizeof t  + List.fold_left (fun acc (bv, _) -> acc + sizeof bv.sort) 0 bs
+    | Tm_app (hd, args) -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
+    // TODO: obviously want much more
+    | _ -> 1
