@@ -4123,7 +4123,7 @@ and tc_eqn:
                                                     FStar_Syntax_Syntax.mk_binder
                                                     pat_bvs1 in
                                                 let uu____7763 =
-                                                  FStar_TypeChecker_Util.close_comp
+                                                  FStar_TypeChecker_Util.close_lcomp
                                                     env pat_bvs1 c_weak in
                                                 let uu____7764 =
                                                   FStar_TypeChecker_Rel.close_guard
@@ -4954,7 +4954,7 @@ and check_inner_let_rec:
                                           FStar_TypeChecker_Rel.conj_guard
                                             g_lbs uu____8747 in
                                         let cres1 =
-                                          FStar_TypeChecker_Util.close_comp
+                                          FStar_TypeChecker_Util.close_lcomp
                                             env2 bvs cres in
                                         let tres =
                                           norm env2
