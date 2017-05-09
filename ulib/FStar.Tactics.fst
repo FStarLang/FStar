@@ -65,12 +65,11 @@ let bind (#a:Type) (#b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
     fun () -> let r = t () in f r ()
 
 (* Fix combinator, so we need not expose the TAC effect (c.f. 1017) *)
-val fix : (tactic 'a -> tactic 'a) -> unit -> Tac 'a
-let rec fix ff (u:unit) = ff (fix ff) ()
+val fix : #a:Type -> (tactic a -> tactic a) -> unit -> Tac a
+let rec fix #a ff (u:unit) = ff (fix #a ff) ()
 
-val fix1 : (('b -> tactic 'a) -> ('b -> tactic 'a)) -> 'b -> unit -> Tac 'a
-let rec fix1 ff x (u:unit) = ff (fix1 ff) x ()
-
+val fix1 : #a:Type -> #b:Type -> ((b -> tactic a) -> (b -> tactic a)) -> b -> unit -> Tac a
+let rec fix1 #a #b ff x (u:unit) = ff (fix1 #a #b ff) x ()
 
 (* working around #885 *)
 let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
