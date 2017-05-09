@@ -579,6 +579,15 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   Inl (SS.subst_comp [NT(x,e)] c2, reason)
                 | _ -> aux()
             in
+            let rec maybe_close t x c =
+                match (N.unfold_whnf env t).n with
+                | Tm_refine(y, _) ->
+                  maybe_close y.sort x c
+                | Tm_fvar fv
+                    when S.fv_eq_lid fv Const.unit_lid ->
+                  close_comp env [x] c
+                | _ -> c
+            in
             if Option.isNone (Env.try_lookup_effect_lid env Const.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
@@ -596,11 +605,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                    && not (Syntax.is_null_bv x)
                    then let c2 = SS.subst_comp [NT(x,e)] c2 in
                         let x = {x with sort = U.comp_result c1} in
+                        Inl (maybe_close x.sort x c2, "c1 Tot")
                         //forall (_:t). c2[e/x]
                         //It's important to have that (forall (_:t)) since
                         //if x does not appear free in e,
-                        //then it may till be important to know that t is inhabited
-                        Inl(close_comp env [x] c2, "c1 Tot")
+                        //then it may still be important to know that t is inhabited
                    else aux ()
                  | _ -> aux ()
           in
