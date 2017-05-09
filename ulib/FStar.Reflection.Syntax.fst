@@ -80,6 +80,9 @@ let binders_of_env (e:env) : binders = __binders_of_env e
 assume private val __type_of_binder: binder -> term
 let type_of_binder (b:binder) : term = __type_of_binder b
 
+assume private val __is_free : binder -> term -> bool
+let is_free (b:binder) (t:term) : bool = __is_free b t
+
 assume private val __term_eq : term -> term -> bool
 let term_eq t1 t2 : bool = __term_eq t1 t2
 
@@ -122,8 +125,6 @@ let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (dec
 
 val collect_app : term -> term * list term
 let collect_app = collect_app' []
-
-(* TODO: prove that resulting args are all smaller than t *)
 
 let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
     match args with

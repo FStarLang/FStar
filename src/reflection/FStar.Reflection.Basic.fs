@@ -415,3 +415,6 @@ let order_binder (x:binder) (y:binder) : order =
     if n < 0 then Lt
     else if n = 0 then Eq
     else Gt
+
+let is_free (x:binder) (t:term) : bool =
+    BU.set_mem (fst x) (FStar.Syntax.Free.names t)
