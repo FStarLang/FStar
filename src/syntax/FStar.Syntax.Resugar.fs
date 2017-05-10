@@ -917,12 +917,10 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
             | _ -> failwith "unexpected"
           in
           let constructors =  List.fold_left resugar_datacon [] current_datacons in
-          A.TyconVariant(tylid.ident, bs, None, [])
+          A.TyconVariant(tylid.ident, bs, None, constructors)
       in
       other_datacons, tyc
-  | Sig_declare_typ (tylid, uvs, t) ->
-      (failwith "NIY")
-  | _ -> failwith "Impossible : only Sig_inductive_typ and Sig_declare_typ can be resugared as types"
+  | _ -> failwith "Impossible : only Sig_inductive_typ can be resugared as types"
 
 let decl'_to_decl se d' =
   {
@@ -968,23 +966,30 @@ let resugar_sigelt se : option<A.decl> =
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
         Some (decl'_to_decl se (Tycon (false, List.map (fun tyc -> tyc, None) tycons)))
       | [se] ->
-        //assert (se.sigqual |> BU.for_some (function | ExceptionConstructor -> true | _ -> false))
+        //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)
-        Some (decl'_to_decl se (Exception (failwith "NIY")))
+        begin match se.sigel with
+        | Sig_datacon(l, _, _, _, _, _) ->
+          Some (decl'_to_decl se (A.Exception (l.ident, None)))
+        | _ -> failwith "wrong format for resguar to Exception"
+        end
       | _ ->
         failwith "Should not happen hopefully"
     end
 
   | Sig_let (lbs, _, attrs) ->
-    let mk e = S.mk e None se.sigrng in
-    let dummy = mk Tm_unknown in
-    let desugared_let = mk (Tm_let(lbs, dummy)) in
-    let t = resugar_term desugared_let in
-    begin match t.tm with
-      | A.Let(isrec, lets, _) ->
-        Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
-      | _ -> failwith "Should not happen hopefully"
-    end
+    if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
+      None
+    else
+      let mk e = S.mk e None se.sigrng in
+      let dummy = mk Tm_unknown in
+      let desugared_let = mk (Tm_let(lbs, dummy)) in
+      let t = resugar_term desugared_let in
+      begin match t.tm with
+        | A.Let(isrec, lets, _) ->
+          Some (decl'_to_decl se (TopLevelLet (isrec, lets)))
+        | _ -> failwith "Should not happen hopefully"
+      end
 
   | Sig_assume (lid, fml) ->
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term fml)))
@@ -1061,13 +1066,20 @@ let resugar_sigelt se : option<A.decl> =
     Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op})))
 
   | Sig_effect_abbrev (lid, vs, bs, c, flags) ->
-      (failwith "NIY")
+    let bs = if (Options.print_implicits()) then bs else filter_imp bs in
+    let bs = bs |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) in
+    Some (decl'_to_decl se (A.Tycon(false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp c), None])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
 
+  | Sig_declare_typ (lid, uvs, t) ->
+    if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
+      None
+    else
+      Some (decl'_to_decl se (A.Val(lid.ident, resugar_term t))) 
+
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
-  | Sig_declare_typ _
   | Sig_datacon _
   | Sig_main _ -> None

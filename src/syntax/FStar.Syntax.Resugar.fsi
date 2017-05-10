@@ -30,4 +30,4 @@ module U = FStar.Syntax.Util
 module BU = FStar.Util
 
 val resugar_term: S.term -> A.term
-
+val resugar_sigelt: S.sigelt-> option<A.decl>
