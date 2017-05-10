@@ -2,12 +2,18 @@ module Syntax
 
 open FStar.Tactics
 
+let quote_sanity_check =
+    assert_by_tactic (t <-- quote (1+1);
+                      match inspect t with
+                      | Tv_App _ _ -> return ()
+                      | _ -> fail ("oops!: " ^ term_to_string t)) True
 
 // should reduce to 30
 let test1 = assert_by_tactic (let _ = pack (Tv_Const (C_Int ((10 + 8) + (3 + 9)))) in
                               return ()) True
 
 let test2 = assert_by_tactic (x <-- quote test1;
+                              print ("quote test1 returned = " ^ term_to_string x);;
                               match inspect x with
                               | Tv_FVar fv -> print ("FV: " ^ flatten_name (inspect_fv fv))
                               | _ -> fail "wat") True
@@ -15,7 +21,7 @@ let test2 = assert_by_tactic (x <-- quote test1;
 
 let blah' (ff : term -> tactic term) (t : term) =
     print ("GGG Trace: " ^ term_to_string t);;
-    print ("GGG Trace2: " ^ print_formula (term_as_formula t));;
+    print ("GGG Trace2: " ^ formula_to_string (term_as_formula t));;
     tv <-- (match inspect t with
             | Tv_Var b -> print ("BVar = " ^ inspect_bv b);;
                           return (Tv_Var b)
@@ -76,4 +82,4 @@ let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
 let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
                           match term_as_formula t with
                           | Implies _ _ -> return ()
-                          | _ -> fail "This should be an implication: " ^ term_to_string t) True
+                          | f -> fail ("This should be an implication: " ^ formula_to_string f)) True

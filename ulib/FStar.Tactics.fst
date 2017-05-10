@@ -101,7 +101,7 @@ let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
  * assume __embed as a `a -> tactic term` computation (TODO?)
  *)
 assume private val __embed  : #a:Type -> a -> term
-let quote #a (x:a) : tactic term = fun () -> __embed x
+unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
 
 (* Many of these could be derived from apply_lemma,
