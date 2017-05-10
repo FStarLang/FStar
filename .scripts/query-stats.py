@@ -148,8 +148,10 @@ def add_query(stats, k, v):
 def process_file(infile, outfile, stat, n, collate = False, append = False, reverse = False, global_stats = False):
     # "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s"
     # (.\FStar.UInt.fst(11,11-11,14))	Query-stats (FStar.UInt.pow2_values, 1)	succeeded (with hint) in 467 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280 statistics={added-eqs=2 binary-propagations=3629 conflicts=1 datatype-accessor-ax=3 max-memory=8.96 memory=8.96 mk-bool-var=7332 mk-clause=54 num-allocs=25468507 num-checks=1 propagations=3632 rlimit-count=378055 time=0.00}
+    # From CI:
+    # 2017-05-10T12:50:45.6397264Z (.\FStar.Int.fst(8,11-8,14))       Query-stats (FStar.Int.pow2_values, 1)  succeeded (with hint) in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280
 
-    rx=re.compile("^\((?P<fstar_range>.*)\)\tQuery-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)\t(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+) statistics=\{(?P<fstar_z3stats>.*)\}$")
+    rx=re.compile("^([ 0-9-TZ:.]*)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
     z3rx=re.compile("([^ =]+)=([^ =]+)")
 
     queries = {}
@@ -165,11 +167,12 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                     add_query(stats, k, v)
                 if "fstar_usedhints" not in stats:
                     stats["fstar_usedhints"] = "-"
-                z3stats_str = get_value(stats, "fstar_z3stats")
-                del stats["fstar_z3stats"]
-                for k, v in z3rx.findall(z3stats_str):
-                    add_query(stats, k, v)
-                    columns.add(k)
+                if "fstar_z3stats" in stats:
+                    z3stats_str = get_value(stats, "fstar_z3stats")
+                    del stats["fstar_z3stats"]
+                    for k, v in z3rx.findall(z3stats_str):
+                        add_query(stats, k, v)
+                        columns.add(k)
                 stats[ec] = 1
                 id = str(get_value(stats, "fstar_name")) + "," + str(get_value(stats, "fstar_index"))
                 if not collate:
@@ -183,7 +186,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
 
     oq = sorted(queries.items(), key=lambda row: row[1][stat] if stat in row[1] else 0, reverse=not reverse)
     result = []
-    for i in range(0, n):
+    for i in range(0, min(len(oq), n)):
         result.append(oq.pop(0))
 
     with (open(outfile, "w" if append == False else "a") if outfile != "" else sys.stdout) as f:
@@ -224,8 +227,13 @@ def process_global_statsstats(f, queries):
     f.write("\"Max(rlimit)\",%s,%s\n" % (stats[7], "\"\""))
     
     rlimit_cnst = float(544656)
-    budget_used = 100.0 * (float(stats[4])/(float(stats[5])*rlimit_cnst))# 100 * Sum(rlimit-count)/Sum(fstar_rlimit)
-    f.write("\"rlimit budget used\",%s,%s\n" % (budget_used, "\"%\""))
+    rlimit_budget_used = float("inf") if (stats[5] == 0.0) else 100.0 * (float(stats[4])/(float(stats[5])*rlimit_cnst))
+    f.write("\"rlimit budget used\",%s,%s\n" % (rlimit_budget_used, "\"%\""))
+
+    time_per_rlimit = float("inf") if (stats[0] == 0) else float(stats[0])/float(stats[6])
+    rlimit_per_sec = float("inf") if (stats[6] == 0) else float(stats[6])/float(stats[0])
+    f.write("\"time/rlimit\",%s,%s\n" % (time_per_rlimit, "\"sec\""))
+    f.write("\"rlimit/sec\",%s,%s\n" % (rlimit_per_sec, "\"\""))
 
     f.write("\"Max(memory)\",%s,%s\n" % (stats[8], "\"MB\""))
 
