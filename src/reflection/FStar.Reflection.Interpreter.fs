@@ -33,7 +33,7 @@ let reflection_primops : list<N.primitive_step> =
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets
-    let mk1 nm (f : 'a -> 'b) u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
+    let mk1 nm (f : 'a -> 'b)       u1 em    : N.primitive_step = let l = mklid nm in mk l 1 (int1 l f u1 em) in
     let mk2 nm (f : 'a -> 'b -> 'c) u1 u2 em : N.primitive_step = let l = mklid nm in mk l 2 (int2 l f u1 u2 em) in
     [
         mk1 "__inspect" inspect unembed_term embed_term_view;

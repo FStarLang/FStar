@@ -81,9 +81,9 @@ let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
 
 // The implicit type argument for eq2 (==) mentions x and y, so this is not seen as an implication...
 // In detail, initially the type is `?u y x` for some unification variable `?u`, and unification
-// then resolves it to `(fun _ _ -> int) y x`, with `y` and `x` are still free.
+// then resolves it to `(fun _ _ -> int) y x`, so `y` and `x` are still free.
 //
-// Tweaking inference could get rid of this.
+// Tweaking inference to do some normalization could get rid of this, I think..
 let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
                           match term_as_formula t with
                           | Implies _ _ -> return ()
