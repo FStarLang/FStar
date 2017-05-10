@@ -79,18 +79,8 @@ open FStar_String
 %nonassoc ELSE
 
 
-/********************************************************************************/
-/* TODO : check that precedence of the following section mix well with the rest */
-
-(* %right IFF *)
-(* %right IMPLIES *)
-
-(* %left DISJUNCTION *)
-(* %left CONJUNCTION *)
-
 %right COLON_COLON
 %right AMP
-/********************************************************************************/
 
 %nonassoc COLON_EQUALS
 %left     OPINFIX0a
@@ -411,7 +401,7 @@ fieldPattern:
       { lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
-  (* we do NOT allow _ in multibinder () since it creates reduce/reduce conflicts when  *)
+  (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
   | pat=atomicPattern { [pat] }
@@ -626,7 +616,7 @@ tmImplies:
       { e }
 
 
-(* Tm : tmDisjunction (now tmFormula, containing EQUALS) or tmCons (now tmNoEq, without EQUALS) *)
+(* Tm : either tmFormula, containing EQUALS or tmNoEq, without EQUALS *)
 tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
