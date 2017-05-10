@@ -705,8 +705,7 @@ let maybe_simplify cfg tm =
                      | [(Some true, _)] ->  w U.t_false
                      | [(Some false, _)] -> w U.t_true
                      | _ -> tm
-              else if  S.fv_eq_lid fv Const.forall_lid
-                    || S.fv_eq_lid fv Const.exists_lid
+              else if S.fv_eq_lid fv Const.forall_lid
               then match args with
                      | [(t, _)]
                      | [(_, Some (Implicit _)); (t, _)] ->
@@ -714,6 +713,17 @@ let maybe_simplify cfg tm =
                                 | Tm_abs([_], body, _) ->
                                    (match simp_t body with
                                         | Some true ->  w U.t_true
+                                        | _ -> tm)
+                                | _ -> tm
+                       end
+                    | _ -> tm
+              else if S.fv_eq_lid fv Const.exists_lid
+              then match args with
+                     | [(t, _)]
+                     | [(_, Some (Implicit _)); (t, _)] ->
+                       begin match (SS.compress t).n with
+                                | Tm_abs([_], body, _) ->
+                                   (match simp_t body with
                                         | Some false -> w U.t_false
                                         | _ -> tm)
                                 | _ -> tm

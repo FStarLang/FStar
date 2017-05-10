@@ -5,6 +5,7 @@
     * [Testing a binary package](#testing-a-binary-package)
     * [OPAM package](#opam-package)
     * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
+    * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
     * [Running F* from a docker image](#running-f-from-a-docker-image)
   * [Building F* from sources](#building-f-from-sources)
     * [Step 1. Building F* from sources using the F# compiler](#step-1-building-f-from-sources-using-the-f-compiler)
@@ -77,7 +78,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -j6 -C examples
    
-   Note: Currently this is known to fail for the F# build of F\*.
+   Note: Currently this is [known to fail for the F# build of F\*](https://github.com/FStarLang/FStar/issues/1023).
 
 ### OPAM package ###
 
@@ -102,6 +103,18 @@ For building and installing the latest F\* sources from GitHub (the `master` bra
 instead of the latest release you can do:
 
         $ brew install --HEAD fstar
+        
+### Chocolatey Package on Windows ###
+
+On windows you can use chocolatey package manager to install and update fstar
+    
+    > choco install fstar
+
+or
+    
+    > cinst fstar
+    
+you can find the package description [here](https://chocolatey.org/packages/FStar)
 
 ### Running F* from a docker image ###
 
