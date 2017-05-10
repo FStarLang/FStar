@@ -101,53 +101,48 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
+    let t_unit = FStar.TypeChecker.Common.t_unit in
+    let mktac0 (name : string) (f : tac<'a>) (e_a : 'a -> term) (ta : typ) : N.primitive_step =
+        mk name 1 (mk_tactic_interpretation_0 ps f e_a ta)
+    in
+    let mktac1 (name : string) (f : 'a -> tac<'b>) (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
+        mk name 2 (mk_tactic_interpretation_1 ps f u_a e_b tb)
+    in
+    let mktac2 (name : string) (f : 'a -> 'b -> tac<'c>) (u_a : term -> 'a) (u_b : term -> 'b) (e_c : 'c -> term) (tc : typ) : N.primitive_step =
+        mk name 3 (mk_tactic_interpretation_2 ps f u_a u_b e_c tc)
+    in
     let binders_of_env_int nm args : option<term> =
         match args with
         | [(e, _)] -> Some (embed_binders (Env.all_binders (E.unembed_env ps e)))
         | _ -> failwith (Util.format2 "Unexpected application %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
     in
-    [ mk "__forall_intros" 1 (mk_tactic_interpretation_0 ps intros embed_binders   FStar.Reflection.Data.fstar_refl_binders);
-      mk "__implies_intro" 1 (mk_tactic_interpretation_0 ps imp_intro embed_binder FStar.Reflection.Data.fstar_refl_binder);
-      mk "__trivial"  1 (mk_tactic_interpretation_0 ps trivial embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__revert"  1 (mk_tactic_interpretation_0 ps revert embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__clear"   1 (mk_tactic_interpretation_0 ps clear embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__split"   1 (mk_tactic_interpretation_0 ps split embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__merge"   1 (mk_tactic_interpretation_0 ps merge_sub_goals embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__rewrite" 2 (mk_tactic_interpretation_1 ps rewrite unembed_binder embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__smt"     1 (mk_tactic_interpretation_0 ps smt embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__exact"   2 (mk_tactic_interpretation_1 ps exact unembed_term embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__apply_lemma" 2 (mk_tactic_interpretation_1 ps apply_lemma unembed_term embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__visit"   2 (mk_tactic_interpretation_1 ps visit
-                                                (unembed_tactic_0 unembed_unit)
-                                                embed_unit
-                                                FStar.TypeChecker.Common.t_unit);
-      mk "__focus"   2  (mk_tactic_interpretation_1 ps focus_cur_goal
-                                                (unembed_tactic_0 unembed_unit)
-                                                embed_unit
-                                                FStar.TypeChecker.Common.t_unit);
-      mk "__seq"     3 (mk_tactic_interpretation_2 ps seq
-                                            (unembed_tactic_0 unembed_unit)
-                                            (unembed_tactic_0 unembed_unit)
-                                            embed_unit
-                                            FStar.TypeChecker.Common.t_unit);
+    [
+      mktac0 "__forall_intros" intros embed_binders   FStar.Reflection.Data.fstar_refl_binders;
+      mktac0 "__implies_intro" imp_intro embed_binder FStar.Reflection.Data.fstar_refl_binder;
+      mktac0 "__trivial"       trivial embed_unit t_unit;
+      mktac0 "__revert"        revert embed_unit t_unit;
+      mktac0 "__clear"         clear embed_unit t_unit;
+      mktac0 "__split"         split embed_unit t_unit;
+      mktac0 "__merge"         merge_sub_goals embed_unit t_unit;
+      mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
+      mktac0 "__smt"           smt embed_unit t_unit;
+      mktac1 "__exact"         exact unembed_term embed_unit t_unit;
+      mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
+      mktac1 "__visit"         visit (unembed_tactic_0 unembed_unit) embed_unit t_unit;
+      mktac1 "__focus"         focus_cur_goal (unembed_tactic_0 unembed_unit) embed_unit t_unit;
+      mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
 
-      mk "__prune"   2 (mk_tactic_interpretation_1 ps prune
-                                            (unembed_list unembed_string)
-                                            embed_unit
-                                            FStar.TypeChecker.Common.t_unit);
-      mk "__addns"   2 (mk_tactic_interpretation_1 ps addns
-                                            (unembed_list unembed_string)
-                                            embed_unit
-                                            FStar.TypeChecker.Common.t_unit);
+      mktac1 "__prune"         prune (unembed_list unembed_string) embed_unit t_unit;
+      mktac1 "__addns"         addns (unembed_list unembed_string) embed_unit t_unit;
+
+
+      mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
+      mktac1 "__dump"          print_proof_state unembed_string embed_unit t_unit;
+      mk "__grewrite"        3 (grewrite_interpretation ps); // custom impl since it looks at the types
 
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
       mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
-
-      mk "__print"           2 (mk_tactic_interpretation_1 ps (fun x -> ret (tacprint x)) unembed_string embed_unit
-                                                              FStar.TypeChecker.Common.t_unit);
-      mk "__dump"            2 (mk_tactic_interpretation_1 ps print_proof_state unembed_string embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__grewrite"        3 (grewrite_interpretation ps)
     ]@reflection_primops
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
