@@ -784,7 +784,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
             let t = {t with n=Tm_app(hd, args)} in
-            let t = reduce_primops cfg t in
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
