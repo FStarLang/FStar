@@ -73,16 +73,24 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                   FStar_Reflection_Basic.embed_term in
               let uu____323 =
                 let uu____325 =
-                  mk2 "__term_eq" FStar_Syntax_Util.term_eq
-                    FStar_Reflection_Basic.unembed_term
+                  mk2 "__is_free" FStar_Reflection_Basic.is_free
+                    FStar_Reflection_Basic.unembed_binder
                     FStar_Reflection_Basic.unembed_term
                     FStar_Reflection_Basic.embed_bool in
                 let uu____326 =
                   let uu____328 =
-                    mk11 "__term_to_string" FStar_Syntax_Print.term_to_string
+                    mk2 "__term_eq" FStar_Syntax_Util.term_eq
                       FStar_Reflection_Basic.unembed_term
-                      FStar_Reflection_Basic.embed_string in
-                  [uu____328] in
+                      FStar_Reflection_Basic.unembed_term
+                      FStar_Reflection_Basic.embed_bool in
+                  let uu____329 =
+                    let uu____331 =
+                      mk11 "__term_to_string"
+                        FStar_Syntax_Print.term_to_string
+                        FStar_Reflection_Basic.unembed_term
+                        FStar_Reflection_Basic.embed_string in
+                    [uu____331] in
+                  uu____328 :: uu____329 in
                 uu____325 :: uu____326 in
               uu____311 :: uu____323 in
             uu____308 :: uu____309 in

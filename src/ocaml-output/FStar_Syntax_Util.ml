@@ -1707,7 +1707,7 @@ let destruct_typ_as_formula:
         (FStar_Syntax_Const.eq2_lid, (Prims.parse_int "2"));
         (FStar_Syntax_Const.eq3_lid, (Prims.parse_int "4"));
         (FStar_Syntax_Const.eq3_lid, (Prims.parse_int "2"))] in
-      let rec aux f2 uu____4192 =
+      let aux f2 uu____4192 =
         match uu____4192 with
         | (lid,arity) ->
             let uu____4198 =
@@ -2173,3 +2173,38 @@ let rec bottom_fold:
            FStar_Syntax_Syntax.vars =
              (uu___183_6030.FStar_Syntax_Syntax.vars)
          })
+let rec sizeof: FStar_Syntax_Syntax.term -> Prims.int =
+  fun t  ->
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_delayed uu____6038 ->
+        let uu____6059 =
+          let uu____6060 = FStar_Syntax_Subst.compress t in sizeof uu____6060 in
+        (Prims.parse_int "1") + uu____6059
+    | FStar_Syntax_Syntax.Tm_bvar bv|FStar_Syntax_Syntax.Tm_name bv ->
+        let uu____6062 = sizeof bv.FStar_Syntax_Syntax.sort in
+        (Prims.parse_int "1") + uu____6062
+    | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
+        let uu____6069 = sizeof t1 in (FStar_List.length us) + uu____6069
+    | FStar_Syntax_Syntax.Tm_abs (bs,t1,uu____6075) ->
+        let uu____6098 = sizeof t1 in
+        let uu____6099 =
+          FStar_List.fold_left
+            (fun acc  ->
+               fun uu____6103  ->
+                 match uu____6103 with
+                 | (bv,uu____6107) ->
+                     let uu____6108 = sizeof bv.FStar_Syntax_Syntax.sort in
+                     acc + uu____6108) (Prims.parse_int "0") bs in
+        uu____6098 + uu____6099
+    | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
+        let uu____6125 = sizeof hd1 in
+        let uu____6126 =
+          FStar_List.fold_left
+            (fun acc  ->
+               fun uu____6130  ->
+                 match uu____6130 with
+                 | (arg,uu____6134) ->
+                     let uu____6135 = sizeof arg in acc + uu____6135)
+            (Prims.parse_int "0") args in
+        uu____6125 + uu____6126
+    | uu____6136 -> Prims.parse_int "1"
