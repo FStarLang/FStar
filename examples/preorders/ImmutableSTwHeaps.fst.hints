@@ -88,6 +88,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.modifies",
+        "equation_FStar.Heap.modifies_t",
         "equation_ImmutableSTwHeaps.heap_rel",
         "lemma_FStar.Heap.lemma_contains_upd_modifies",
         "lemma_FStar.Heap.lemma_distinct_addrs_distinct_types",
