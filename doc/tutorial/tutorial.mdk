@@ -2919,7 +2919,7 @@ but it seems quite interesting)
 
 # Higher kinds, indexed types, implicit arguments, and type-level functions
 
-So far, we have mostly programmed total functions and give them
+So far, we have mostly programmed total functions and given them
 specifications using rich types. Under the covers, F\* has a second
 level of checking at work to ensure that the specifications that you
 write are also meaningful---this is F\*'s kind system. Before moving
@@ -3089,7 +3089,7 @@ and [Leino] both study this problem and provide equivalent
 solutions. In essence, they show that for a first-order,
 assignment-free guarded command language the weakest pre-condition can
 be computed in a size nearly linear in the size of the program. Then,
-they show that first-order imperative WHILE language can be converted
+they show that the first-order imperative WHILE language can be converted
 into SSA form and then into a guarded command language.
 
 [Flanagan and Saxe]: http://dl.acm.org/citation.cfm?id=360220
@@ -3186,7 +3186,7 @@ predicate transformer that is not weaker than the weakest
 pre-condition of `e`; and `wlp` is a predicate transformer not weaker
 than the weakest liberal pre-condition of `e`. For the sake of
 brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
-liberal pre-condition.
+liberal pre-condition, even though they might be stronger conditions.
 
 For the purposes of the presentation here, we start by discussing a
 simplified form of these `C` types, i.e, we will consider computation
@@ -3283,7 +3283,8 @@ type bind_PURE (#a:Type) (#b:Type)
  = fun (post:pure_post b) -> wp1 (fun (x:a) -> wp2 x post)
 ```
 
-One can show that `return_PURE` and `bind_PURE` together form a monad.
+One can show that `return_PURE` and `bind_PURE` together form a monad over
+`PureWP`.
 
 ### `Pure` and `Tot`
 
@@ -3335,7 +3336,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
 ~Remark
 
- The second last argument to `as_Pure` is named `f` and is tagged with
+ The second-to-last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
  with the equality symbol, i.e., `=f`. Given an application
  `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
