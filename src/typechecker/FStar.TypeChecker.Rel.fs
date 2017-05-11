@@ -2612,7 +2612,9 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 then env.solver.preprocess env vc
                 else let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
                      [env,vc] in
-            vcs |> List.iter (fun (env, goal) -> env.solver.solve use_env_range_msg env goal)
+            vcs |> List.iter (fun (env, goal) ->
+                    env.solver.refresh ();
+                    env.solver.solve use_env_range_msg env goal)
           in
           Some ret_g
 
