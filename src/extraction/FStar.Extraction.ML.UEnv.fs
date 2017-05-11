@@ -192,16 +192,11 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
     {g with gamma=gamma; tcenv=tcenv}
 
 let sanitize (s:string) : string =
-  let mem = FStar.List.mem in
-  let low  = ['a';'b';'c';'d';'e';'f';'g';'h';'i';'j';'k';'l';'m';'o';'p';'q';'r';'s';'t';'u';'v';'w';'x';'y';'z'] in
-  let high = ['A';'B';'C';'D';'E';'F';'G';'H';'I';'J';'K';'L';'M';'O';'P';'Q';'R';'S';'T';'U';'V';'W';'X';'Y';'Z'] in
-  let num  = ['0';'1';'2';'3';'4';'5';'6';'7';'8';'9'] in
-  let spec = ['_';'\''] in
   let cs = FStar.String.list_of_string s in
-  let valid c = mem c (low@high@num@spec) in
+  let valid c = BU.is_letter_or_digit c || c = '_' || c = '\'' in
   let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
   let cs' = match cs' with
-            | (c::cs) when mem c num || c = '\'' ->
+            | (c::cs) when BU.is_digit c || c = '\'' ->
                   '_'::c::cs
             | _ -> cs in
   FStar.String.string_of_list cs'
