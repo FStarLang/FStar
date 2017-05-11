@@ -27,10 +27,12 @@ CURRENT_SUBDIR:=$(subst $(abspath $(FSTAR_HOME))/,,$(abspath $(shell pwd)))
 
 .PHONY : CVERCONFIG
 CVERCONFIG: $(BATCH_TMP)
-ifndef BATCH_IDS_FILE
+ifndef BATCH_IDS_FILE_ABS
 	$(eval export BATCH_IDS_FILE_ABS:=$(shell mktemp -p $(BATCH_TMP)))
 	$(eval export BATCH_IDS_FILE:=$(shell realpath --relative-to=. $(BATCH_IDS_FILE_ABS)))
 	$(CVEREXE) create $(FABC_EXTRA) -i $(BATCH_IDS_FILE)
+else
+$(eval export BATCH_IDS_FILE:=$(shell realpath --relative-to=. $(BATCH_IDS_FILE_ABS)))
 endif
 
 CFSTAR=$(CVEREXE) add -i $$BATCH_IDS_FILE -d '$(CURRENT_SUBDIR)' $(FABC_EXTRA) -- $(subst $(abspath $(FSTAR_HOME)),\$$H,$(FSTAR))
