@@ -3186,7 +3186,7 @@ predicate transformer that is not weaker than the weakest
 pre-condition of `e`; and `wlp` is a predicate transformer not weaker
 than the weakest liberal pre-condition of `e`. For the sake of
 brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
-liberal pre-condition, even though they might be stronger conditions.
+liberal pre-condition.
 
 For the purposes of the presentation here, we start by discussing a
 simplified form of these `C` types, i.e, we will consider computation
