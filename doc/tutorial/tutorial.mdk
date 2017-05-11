@@ -2191,11 +2191,11 @@ it is shadowed by the local `x`. The other cases are straightforward.
 
 > _Note for experts: Because we will only reduce closed expressions,
   where all variables
-  are bound by previous lambdas, we will ever only substitute closed
-  expressions (closed values in fact), and this naive definition of
+  are bound by previous lambdas, we will only ever substitute closed
+  expressions `e`, and this naive definition of
   substitution is good enough. Substitution would become trickier to define
   or the representation of variables would have to change if we were considering
-  the case where e, the expression replacing a variable in
+  the case where `e`, the expression replacing a variable in
   some other expression, may itself contain free variables._
 
 Given the definition of values and of substitution we can now define
@@ -2236,7 +2236,8 @@ val step : exp -> Tot (option exp)
 
 ```
 We execute an application expression `EApp e1 e2` in multiple steps by first reducing
-`e1` to a value, then reducing `e2` to a value, and if additionally `e1`
+`e1` to a value, then reducing `e2` to a value (following a *call-by-value*
+evaluation order), and if additionally `e1`
 is an abstraction `EAbs x t e' `we continue by substituting the formal
 argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
 (a non-functional value is applied to arguments) by returning `None`.
@@ -2246,8 +2247,8 @@ and if the guard reduces to something else (e.g. a function) we report a
 dynamic typing error. The `None -> None` cases simply propagate errors to
 the top level.
 ```
-assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
-assert (step (EApp ETrue ETrue) = None)
+let _ = assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
+let _ = assert (step (EApp ETrue ETrue) = None)
 ```
 
 ## Type-checker
@@ -2834,9 +2835,8 @@ strong type ensuring that `v` has the same type as `e`
              Dv (v:exp{is_value v && typing empty v = typing empty e})
 ~~
 The `Dv` effect is that of potentially divergent computations.
-We cannot mark this as `Tot` since a priori STLC computations could loop,
-and it is hard to prove that well-typed ones don't, while defining an
-interpreter.
+We cannot mark this as `Tot` since _a priori_ STLC computations could loop,
+and it is hard to prove that well-typed ones don't.
 ~~Answer
 Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
 ~~~ SolutionFragment {exname=Ex07d}
