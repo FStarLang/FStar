@@ -1212,6 +1212,14 @@ let pop_proof_ns e =
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
+let string_of_proof_ns env =
+    let string_of_proof_ns' pns =
+        String.concat ";"
+            (List.map (fun fpns -> "["
+                                   ^ String.concat "," (List.map (fun (p,b) -> (if b then "+" else "-")^(String.concat "." p)) fpns)
+                                   ^ "]") pns)
+    in string_of_proof_ns' (env.proof_ns)
+
 (* <Move> this out of here *)
 let dummy_solver = {
     init=(fun _ -> ());
