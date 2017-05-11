@@ -64,6 +64,9 @@ let return (#a:Type) (x:a) : tactic a =
 let bind (#a:Type) (#b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
     fun () -> let r = t () in f r ()
 
+let idtac : tactic unit =
+    return ()
+
 (* Fix combinator, so we need not expose the TAC effect (c.f. 1017) *)
 val fix : #a:Type -> (tactic a -> tactic a) -> unit -> Tac a
 let rec fix #a ff (u:unit) = ff (fix #a ff) ()
