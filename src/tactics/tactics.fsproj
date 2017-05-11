@@ -84,6 +84,8 @@
     <Compile Include="FStar.Tactics.Embedding.fs" />
     <Compile Include="FStar.Tactics.Interpreter.fsi" />
     <Compile Include="FStar.Tactics.Interpreter.fs" />
+    <Compile Include="FStar.Tactics.Load.fsi" />
+    <Compile Include="FStar.Tactics.Load.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

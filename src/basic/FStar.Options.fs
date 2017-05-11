@@ -120,6 +120,7 @@ let defaults =
       ("initial_ifuel"                , Int 1);
       ("inline_arith"                 , Bool false);
       ("lax"                          , Bool false);
+      ("load"                         , Unset);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -218,6 +219,7 @@ let get_initial_fuel            ()      = lookup_opt "initial_fuel"             
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_inline_arith            ()      = lookup_opt "inline_arith"             as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
+let get_load                    ()      = lookup_opt "load"                     (as_option as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -494,6 +496,12 @@ let rec specs () : list<Getopt.opt> =
         "lax",
         ZeroArgs (fun () -> Bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
+
+      ( noshort,
+       "load",
+        OneArg ((fun s -> String s),
+                 "[module]"),
+        "Load compiled module");
 
        ( noshort,
         "log_types",
@@ -974,6 +982,7 @@ let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel 
 let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
+let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()

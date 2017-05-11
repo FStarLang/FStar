@@ -200,47 +200,51 @@ let go uu____151 =
                          let filenames1 =
                            FStar_Dependencies.find_deps_if_needed verify_mode
                              filenames in
-                         let uu____226 =
-                           FStar_Universal.batch_mode_tc filenames1 in
-                         match uu____226 with
-                         | (fmods,dsenv,env) ->
-                             let module_names_and_times =
-                               FStar_All.pipe_right fmods
-                                 (FStar_List.map
-                                    (fun uu____262  ->
-                                       match uu____262 with
-                                       | (x,t) ->
-                                           ((FStar_Universal.module_or_interface_name
-                                               x), t))) in
-                             (report_errors module_names_and_times;
-                              (let uu____275 =
-                                 let uu____279 =
-                                   FStar_All.pipe_right fmods
-                                     (FStar_List.map Prims.fst) in
-                                 (uu____279, env) in
-                               codegen uu____275);
-                              finished_message module_names_and_times
-                                (Prims.parse_int "0")))
+                         (let uu____227 = FStar_Options.load () in
+                          match uu____227 with
+                          | Some s -> FStar_Tactics_Load.load_tactic s
+                          | None  -> ());
+                         (let uu____230 =
+                            FStar_Universal.batch_mode_tc filenames1 in
+                          match uu____230 with
+                          | (fmods,dsenv,env) ->
+                              let module_names_and_times =
+                                FStar_All.pipe_right fmods
+                                  (FStar_List.map
+                                     (fun uu____266  ->
+                                        match uu____266 with
+                                        | (x,t) ->
+                                            ((FStar_Universal.module_or_interface_name
+                                                x), t))) in
+                              (report_errors module_names_and_times;
+                               (let uu____279 =
+                                  let uu____283 =
+                                    FStar_All.pipe_right fmods
+                                      (FStar_List.map Prims.fst) in
+                                  (uu____283, env) in
+                                codegen uu____279);
+                               finished_message module_names_and_times
+                                 (Prims.parse_int "0"))))
                       else FStar_Util.print_error "no file provided\n"))))
-let main uu____295 =
+let main uu____299 =
   try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
   with
   | e ->
       let trace = FStar_Util.trace_of_exn e in
       (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-       (let uu____305 = FStar_Options.trace_error () in
-        if uu____305
+       (let uu____309 = FStar_Options.trace_error () in
+        if uu____309
         then
-          let uu____306 = FStar_Util.message_of_exn e in
-          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____306
+          let uu____310 = FStar_Util.message_of_exn e in
+          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____310
             trace
         else
           if Prims.op_Negation (FStar_Errors.handleable e)
           then
-            (let uu____308 = FStar_Util.message_of_exn e in
+            (let uu____312 = FStar_Util.message_of_exn e in
              FStar_Util.print1_error
                "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-               uu____308)
+               uu____312)
           else ());
        cleanup ();
        report_errors [];
