@@ -246,8 +246,7 @@ let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit> =
 let smt : tac<unit> =
     with_cur_goal (fun g ->
     bind dismiss (fun _ ->
-    bind (add_goals [({g with goal_ty=U.t_true})]) (fun _ -> //TODO: why add a true goal?
-    add_smt_goals [g])))
+    add_smt_goals [g]))
 
 (* focus_cur_goal: runs f on the current goal only, and then restores all the goals *)
 let focus_cur_goal (f:tac<'a>) : tac<'a>
