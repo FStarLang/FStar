@@ -13,7 +13,11 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Ex12.BMAC.key",
         "equation_Ex12.BMAC.keysize", "equation_Ex12.BMAC.pkey",
-        "equation_Ex12.Pad.nbytes", "proj_equation_Ex12g.TMAC2.Keys_k0",
+        "equation_Ex12.Pad.block", "equation_Ex12.Pad.blocksize",
+        "equation_Ex12.Pad.nbytes",
+        "partial_app_typing_58076f92f313e17c7d4a464aa7e8cfac",
+        "partial_app_typing_cef420ad8f8ddf26e23998561b58810d",
+        "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",

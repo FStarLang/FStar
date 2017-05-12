@@ -1459,7 +1459,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_14926119ebab3267c253117ae0ad44b3",
+        "FStar.Buffer_interpretation_Tm_arrow_52b766491670d6b558ffd9b568e2537e",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "equation_FStar.Buffer.as_addr",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
@@ -1488,7 +1488,7 @@
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.as_ref",
         "typing_FStar.Buffer.content", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.singleton",
-        "unit_typing", "uvar_typing_202808", "uvar_typing_202831"
+        "unit_typing", "uvar_typing_240090", "uvar_typing_240113"
       ],
       0
     ],
@@ -1525,7 +1525,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_db05b3db28c0351f49ed0563d3774ad0",
+        "FStar.Buffer_interpretation_Tm_arrow_f4088073e43e8827872e10ddb39e98a0",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "equation_FStar.Buffer.as_addr",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
@@ -1549,7 +1549,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.singleton",
-        "unit_typing", "uvar_typing_203762", "uvar_typing_203785"
+        "unit_typing", "uvar_typing_241088", "uvar_typing_241111"
       ],
       0
     ],
@@ -1560,7 +1560,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_acf6ff914431b6c22d82bcd6897d839c",
+        "FStar.Buffer_interpretation_Tm_arrow_fabfa963678386c4c9c5b349ac6efe22",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "bool_inversion",
         "equation_FStar.Buffer.as_addr", "equation_FStar.Buffer.as_ref",
@@ -1584,8 +1584,8 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.mem",
-        "typing_FStar.Set.singleton", "unit_typing", "uvar_typing_204270",
-        "uvar_typing_204298"
+        "typing_FStar.Set.singleton", "unit_typing", "uvar_typing_241622",
+        "uvar_typing_241650"
       ],
       0
     ],
@@ -1622,7 +1622,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_bdbe8c50c971ae7d03c33a549102dfbc",
+        "FStar.Buffer_interpretation_Tm_arrow_873d7bacd3627953b22fa544cc715107",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "equation_FStar.Buffer.as_addr",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
@@ -1646,7 +1646,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.singleton",
-        "unit_typing", "uvar_typing_205271", "uvar_typing_205276"
+        "unit_typing", "uvar_typing_242669", "uvar_typing_242674"
       ],
       0
     ],
@@ -6215,10 +6215,10 @@
         "lemma_FStar.TSet.lemma_mem_tset_of_set",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Buffer.MkBuffer_content",
         "proj_equation_FStar.HyperStack.HS_h",
         "proj_equation_FStar.HyperStack.HS_tip",
-        "proj_equation_FStar.HyperStack.MkRef_id",
         "proj_equation_FStar.HyperStack.MkRef_ref",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0", "ref_inversion",
@@ -6233,9 +6233,7 @@
         "typing_FStar.Buffer.as_ref", "typing_FStar.Buffer.content",
         "typing_FStar.Buffer.frameOf", "typing_FStar.Heap.addr_of",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.unused_in",
-        "typing_FStar.HyperHeap.contains_ref",
         "typing_FStar.HyperStack.__proj__HS__item__h",
-        "typing_FStar.HyperStack.__proj__MkRef__item__ref",
         "typing_FStar.HyperStack.is_in", "typing_FStar.Map.concat",
         "typing_FStar.Map.contains", "typing_FStar.Map.domain",
         "typing_FStar.Map.restrict", "typing_FStar.Map.sel",
@@ -6398,6 +6396,7 @@
         "equation_FStar.Buffer.modifies_3_2",
         "equation_FStar.Buffer.modifies_buf_0",
         "equation_FStar.Buffer.modifies_buf_1", "equation_FStar.Buffer.sel",
+        "equation_FStar.Heap.modifies", "equation_FStar.Heap.modifies_t",
         "equation_FStar.HyperHeap.contains_ref",
         "equation_FStar.HyperHeap.modifies_just",
         "equation_FStar.HyperHeap.modifies_one",
@@ -6407,6 +6406,7 @@
         "equation_FStar.HyperStack.as_ref",
         "equation_FStar.HyperStack.contains",
         "equation_FStar.HyperStack.frameOf", "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperStack.is_above",
         "equation_FStar.HyperStack.is_in", "equation_FStar.HyperStack.is_mm",
         "equation_FStar.HyperStack.is_tip",
         "equation_FStar.HyperStack.live_region",
@@ -6441,9 +6441,9 @@
         "lemma_FStar.Map.lemma_equal_intro",
         "lemma_FStar.Set.mem_complement", "lemma_FStar.Set.mem_singleton",
         "lemma_FStar.Set.mem_subset", "lemma_FStar.Set.mem_union",
-        "lemma_FStar.Set.subset_mem", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Negation", "primitive_Prims.op_disEquality",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Buffer.MkBuffer_content",
         "proj_equation_FStar.HyperStack.HS_h",
         "proj_equation_FStar.HyperStack.HS_tip",

@@ -23,7 +23,6 @@
       0
     ],
     [ "Syntax.blah", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___29", 2, 2, 1, [ "@query" ], 0 ],
     [ "Syntax.uu___30", 1, 2, 1, [ "@query" ], 0 ],
     [ "Syntax.uu___30", 2, 2, 1, [ "@query" ], 0 ]
   ]
