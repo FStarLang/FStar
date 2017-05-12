@@ -318,7 +318,7 @@ let rec resugar_term (t : S.term) : A.term =
       let xs, body = SS.open_comp xs body in
       let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp body in
-      let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) |> List.rev in
+      let xs = xs |> List.map (fun b -> resugar_binder b t.pos) |> List.rev in
       let rec aux body = function
         | [] -> body
         | hd::tl ->
@@ -329,8 +329,7 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_refine(x, phi) ->
       (* bv * term -> binder * term *)
       let x, phi = SS.open_term [S.mk_binder x] phi in
-      let (b, _) = List.hd x in
-      let b = resugar_bv_as_binder b t.pos in
+      let b = resugar_binder (List.hd x) t.pos in
       mk (A.Refine(b, resugar_term phi))
 
     | Tm_app(e, args) ->
@@ -381,7 +380,7 @@ let rec resugar_term (t : S.term) : A.term =
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
-                let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
+                let xs = xs |> List.map (fun b -> resugar_binder b t.pos) in
                 let body = resugar_term body in
                 mk (A.Sum(xs, body))
 
@@ -456,13 +455,12 @@ let rec resugar_term (t : S.term) : A.term =
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
-                let xs = xs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
+                let xs = xs |> List.map (fun b -> resugar_binder b t.pos) in
                 let pats, body = match (SS.compress body).n with
                   | Tm_meta(e, m) ->
                     let body = resugar_term e in
-                    let resugar_pats pats = List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats in
                     let pats = match m with
-                      | Meta_pattern pats -> resugar_pats pats
+                      | Meta_pattern pats -> List.map (fun es -> es |> List.map (fun (e, _) -> resugar_term e)) pats
                       | Meta_labeled (s, r, _) ->
                         // this case can occur in typechecker when a failure is wrapped in meta_labeled
                         [[mk (name s r)]]
@@ -520,7 +518,7 @@ let rec resugar_term (t : S.term) : A.term =
     (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1` 
        it would be better to print it as `let P = e in e1`. *)
     (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
-    let bnds = [(resugar_match_pat pat, resugar_term e)] in
+    let bnds = [(resugar_pat pat, resugar_term e)] in
     let body = resugar_term t in
     mk (A.Let(A.NoLetQualifier, bnds, body))
 
@@ -529,7 +527,7 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_match(e, branches) ->
       let resugar_branch (pat, wopt,b) =
-        let pat = resugar_match_pat pat in
+        let pat = resugar_pat pat in
         let wopt = match wopt with
           | None -> None
           | Some e -> Some (resugar_term e) in
@@ -748,7 +746,8 @@ and resugar_comp (c:S.comp) : A.term =
     else
       mk (A.Construct(c.effect_name, [result]))
 
-and resugar_bv_as_binder (x:S.bv) r: A.binder =
+and resugar_binder (b:S.binder) r: A.binder =
+  let (x, imp) = b in
   let e = resugar_term x.sort in
   match (e.tm) with
     | A.Wild ->
@@ -779,7 +778,7 @@ and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
           Some pat
       end
 
-and resugar_match_pat (p:S.pat) : A.pattern =
+and resugar_pat (p:S.pat) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let rec aux (p:S.pat) =
@@ -889,7 +888,7 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
       in
       assert (List.length current_datacons = List.length datacons) ;
       let bs = if (Options.print_implicits()) then bs else filter_imp bs in
-      let bs = bs |> List.map (fun (b, qual) -> resugar_bv_as_binder b t.pos) in
+      let bs = bs |> List.map (fun b -> resugar_binder b t.pos) in
       let tyc =
         if se.sigquals |> BU.for_some (function | RecordType _ -> true | _ -> false)
         then
@@ -922,31 +921,74 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
       other_datacons, tyc
   | _ -> failwith "Impossible : only Sig_inductive_typ can be resugared as types"
 
-let decl'_to_decl se d' =
+let mk_decl r q d' = 
   {
     d = d' ;
-    drange = se.sigrng ;
+    drange = r ;
     (* TODO : documentation should be retrieved from the desugaring environment at some point *)
     doc = None ;
-    quals = List.choose resugar_qualifier se.sigquals ;
+    quals = List.choose resugar_qualifier q ;
     (* TODO : are these stocked up somewhere ? *)
     attrs = [] ;
   }
 
-let resugar_sigelt se : option<A.decl> =
-  let resugar_action se d for_free = 
-    let action_params = if (Options.print_implicits()) then d.action_params else filter_imp d.action_params in
-    let action_params = action_params |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) |> List.rev in
-    (* Todo open binder in def and typ *)
-    let action_defn = resugar_term d.action_defn in
-    let action_typ = resugar_term d.action_typ in
+let decl'_to_decl se d' =
+  mk_decl se.sigrng se.sigquals d'
+
+let resugar_tscheme' name (ts:S.tscheme) = 
+  let (univs, typ) = ts in
+  let name = I.mk_ident (name, typ.pos) in
+  mk_decl typ.pos [] (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
+
+let resugar_tscheme (ts:S.tscheme) = 
+  resugar_tscheme' "tsheme" ts
+
+let resugar_eff_decl for_free r q ed =
+  let resugar_action d for_free = 
+    let action_params = SS.open_binders d.action_params in
+    let bs, action_defn = SS.open_term action_params d.action_defn in
+    let bs, action_typ = SS.open_term action_params d.action_typ in
+    let action_params = if (Options.print_implicits()) then action_params else filter_imp action_params in
+    let action_params = action_params |> List.map (fun b -> resugar_binder b r) |> List.rev in
+    let action_defn = resugar_term action_defn in
+    let action_typ = resugar_term action_typ in
     if for_free then
       let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
-      let t = A.mk_term a se.sigrng A.Un in
-      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
+      let t = A.mk_term a r A.Un in
+      mk_decl r q (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
     else 
-      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
+      mk_decl r q (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
   in
+  let eff_name = ed.mname.ident in
+  let eff_binders, eff_typ = SS.open_term ed.binders ed.signature in
+  let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
+  let eff_binders = eff_binders |> List.map (fun b -> resugar_binder b r) |> List.rev in
+  let eff_typ = resugar_term eff_typ in
+  let ret_wp = resugar_tscheme' "ret_wp" ed.ret_wp in
+  let bind_wp = resugar_tscheme' "bind_wp" ed.ret_wp in
+  let if_then_else = resugar_tscheme' "if_then_else" ed.if_then_else in
+  let ite_wp = resugar_tscheme' "ite_wp" ed.ite_wp in
+  let stronger = resugar_tscheme' "stronger" ed.stronger in
+  let close_wp = resugar_tscheme' "close_wp" ed.close_wp in
+  let assert_p = resugar_tscheme' "assert_p" ed.assert_p in
+  let assume_p = resugar_tscheme' "assume_p" ed.assume_p in
+  let null_wp = resugar_tscheme' "null_wp" ed.null_wp in
+  let trivial = resugar_tscheme' "trivial" ed.trivial in
+  let repr = resugar_tscheme' "repr" ([], ed.repr) in
+  let return_repr = resugar_tscheme' "return_repr" ed.return_repr in
+  let bind_repr = resugar_tscheme' "bind_repr" ed.bind_repr in
+  let mandatory_members_decls = 
+    if for_free then
+      [repr; return_repr; bind_repr] 
+    else 
+      [repr; return_repr; bind_repr; ret_wp; bind_wp; 
+       if_then_else; ite_wp; stronger; close_wp; assert_p; 
+        assume_p; null_wp; trivial] in
+  let actions = ed.actions |> List.map (fun a -> resugar_action a false) in    
+  let decls = mandatory_members_decls@actions in
+  mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
+
+let resugar_sigelt se : option<A.decl> =
   match se.sigel with
   | Sig_bundle (ses, _) ->
     let decl_typ_ses, datacon_ses = ses |> List.partition
@@ -995,54 +1037,10 @@ let resugar_sigelt se : option<A.decl> =
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term fml)))
 
   | Sig_new_effect ed ->
-    let eff_name = ed.mname.ident in
-    (* Todo: open binder? *)
-    let eff_binders = if (Options.print_implicits()) then ed.binders else filter_imp ed.binders in
-    let eff_binders = eff_binders |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) |> List.rev in
-    let eff_typ = resugar_term ed.signature in
-    let resugar_tscheme_as_decl name ts = 
-      let (univs, typ) = ts in
-      let name = I.mk_ident (name, se.sigrng) in
-      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
-    in
-    let ret_wp = resugar_tscheme_as_decl "ret_wp" ed.ret_wp in
-    let bind_wp = resugar_tscheme_as_decl "bind_wp" ed.ret_wp in
-    let if_then_else = resugar_tscheme_as_decl "if_then_else" ed.if_then_else in
-    let ite_wp = resugar_tscheme_as_decl "ite_wp" ed.ite_wp in
-    let stronger = resugar_tscheme_as_decl "stronger" ed.stronger in
-    let close_wp = resugar_tscheme_as_decl "close_wp" ed.close_wp in
-    let assert_p = resugar_tscheme_as_decl "assert_p" ed.assert_p in
-    let assume_p = resugar_tscheme_as_decl "assume_p" ed.assume_p in
-    let null_wp = resugar_tscheme_as_decl "null_wp" ed.null_wp in
-    let trivial = resugar_tscheme_as_decl "trivial" ed.trivial in
-    let repr = resugar_tscheme_as_decl "repr" ([], ed.repr) in
-    let return_repr = resugar_tscheme_as_decl "return_repr" ed.return_repr in
-    let bind_repr = resugar_tscheme_as_decl "bind_repr" ed.bind_repr in
-    let mandatory_members_decls = [repr; return_repr; bind_repr; ret_wp; bind_wp; 
-                                   if_then_else; ite_wp; stronger; close_wp; assert_p; 
-                                   assume_p; null_wp; trivial] in
-    let actions = ed.actions |> List.map (fun a -> resugar_action se a false) in    
-    let decls = mandatory_members_decls@actions in
-    Some (decl'_to_decl se (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, mandatory_members_decls))))
+    Some (resugar_eff_decl false se.sigrng se.sigquals ed)
 
   | Sig_new_effect_for_free ed ->
-    let eff_name = ed.mname.ident in
-    (* Todo: open binder? *)
-    let eff_binders = if (Options.print_implicits()) then ed.binders else filter_imp ed.binders in
-    let eff_binders = eff_binders |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) |> List.rev in
-    let eff_typ = resugar_term ed.signature in
-    let resugar_tscheme_as_decl name ts = 
-      let (univs, typ) = ts in
-      let name = I.mk_ident (name, se.sigrng) in
-      decl'_to_decl se (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
-    in
-    let repr = resugar_tscheme_as_decl "repr" ([], ed.repr) in
-    let return_repr = resugar_tscheme_as_decl "return_repr" ed.return_repr in
-    let bind_repr = resugar_tscheme_as_decl "bind_repr" ed.bind_repr in
-    let mandatory_members_decls = [repr; return_repr; bind_repr] in
-    let actions = ed.actions |> List.map (fun a -> resugar_action se a true) in      
-    let decls = mandatory_members_decls@actions in
-    Some (decl'_to_decl se (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, mandatory_members_decls))))
+    Some (resugar_eff_decl true se.sigrng se.sigquals ed)
 
   | Sig_sub_effect e ->
     let src = e.source in
@@ -1066,8 +1064,9 @@ let resugar_sigelt se : option<A.decl> =
     Some (decl'_to_decl se (A.SubEffect({msource=src; mdest=dst; lift_op=op})))
 
   | Sig_effect_abbrev (lid, vs, bs, c, flags) ->
+    let bs, c = SS.open_comp bs c in
     let bs = if (Options.print_implicits()) then bs else filter_imp bs in
-    let bs = bs |> List.map (fun (b, qual) -> resugar_bv_as_binder b se.sigrng) in
+    let bs = bs |> List.map (fun b -> resugar_binder b se.sigrng) in
     Some (decl'_to_decl se (A.Tycon(false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp c), None])))
 
   | Sig_pragma p ->

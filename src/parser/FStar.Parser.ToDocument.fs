@@ -1247,6 +1247,10 @@ and p_atomicUniverse u = match (unparen u).tm with
 
     let decl_to_document e = p_decl e
 
+    let pat_to_document p = p_disjunctivePattern p
+
+    let binder_to_document b = p_binder true b
+
     let modul_to_document (m:modul) =
       should_print_fs_typ_app := false ;
       let res =
