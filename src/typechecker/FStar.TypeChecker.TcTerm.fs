@@ -184,15 +184,6 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
     | None ->
       e, c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
-//       if debug env Options.Low
-//       then BU.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-//               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-//       let c = norm_c env c in
-//       if debug env Options.Low
-//       then BU.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-//               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-
-       //let expected_c' = TcUtil.refresh_comp_label env true (U.lcomp_of_comp <| expected_c) in
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
