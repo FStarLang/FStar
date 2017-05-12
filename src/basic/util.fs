@@ -680,6 +680,8 @@ let expand_environment_variable s =
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
+let is_letter = Char.IsLetter
+let is_digit  = Char.IsDigit
 let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
 let is_symbol = Char.IsSymbol

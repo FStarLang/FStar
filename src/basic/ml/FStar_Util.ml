@@ -1,5 +1,7 @@
 let max_int = Z.of_int max_int
-let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
+let is_letter c = BatChar.is_letter c
+let is_digit  c = BatChar.is_digit  c
+let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
 let is_symbol c = BatChar.is_symbol c
 
 (* Modeled after: Char.IsPunctuation in .NET
