@@ -1311,7 +1311,7 @@ and desugar_machine_integer:
                             | FStar_Const.Int16  -> "16"
                             | FStar_Const.Int32  -> "32"
                             | FStar_Const.Int64  -> "64")
-                           (Prims.strcat "."
+                           (Prims.strcat ".__"
                               (Prims.strcat
                                  (match signedness with
                                   | FStar_Const.Unsigned  -> "u"
