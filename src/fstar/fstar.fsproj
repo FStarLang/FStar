@@ -87,6 +87,11 @@
       <Project>{a2300238-cc63-4651-922e-88e7c0201bc9}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\reflection\reflection.fsproj">
+      <Name>reflection</Name>
+      <Project>{8869fa4e-96af-4e01-99bc-b52c88610e3d}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\smtencoding\smtencoding.fsproj">
       <Name>smtencoding</Name>
       <Project>{f6879027-a97f-4857-8f52-cc5641455652}</Project>
