@@ -121,10 +121,7 @@ let int_to_t x = Mk x
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __int_to_t (x:int)
-    : Pure t
-      (requires True)
-      (ensures (fun y -> v y = x))
+let __int_to_t (x:int) : Tot t
     = int_to_t x
 #reset-options
 

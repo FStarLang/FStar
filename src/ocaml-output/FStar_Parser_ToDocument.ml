@@ -494,15 +494,15 @@ let handleable_args_length: FStar_Ident.ident -> Prims.int =
          else Prims.parse_int "0")
 let handleable_op op args =
   match FStar_List.length args with
-  | _0_26 when _0_26 = (Prims.parse_int "0") -> true
-  | _0_27 when _0_27 = (Prims.parse_int "1") ->
+  | _0_27 when _0_27 = (Prims.parse_int "0") -> true
+  | _0_28 when _0_28 = (Prims.parse_int "1") ->
       (is_general_prefix_op op) ||
         (FStar_List.mem (FStar_Ident.text_of_id op) ["-"; "~"])
-  | _0_28 when _0_28 = (Prims.parse_int "2") ->
+  | _0_29 when _0_29 = (Prims.parse_int "2") ->
       ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
         (FStar_List.mem (FStar_Ident.text_of_id op)
            ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
-  | _0_29 when _0_29 = (Prims.parse_int "3") ->
+  | _0_30 when _0_30 = (Prims.parse_int "3") ->
       FStar_List.mem (FStar_Ident.text_of_id op) [".()<-"; ".[]<-"]
   | uu____1377 -> false
 let comment_stack: (Prims.string* FStar_Range.range) Prims.list FStar_ST.ref
