@@ -768,7 +768,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (stack_to_string (fst <| firstn 4 stack)));
         match t.n with
           | Tm_delayed _ ->
-            failwith "Impossible"
+            failwith "Impossible: got a delayed substitution"
 
           | Tm_unknown
           | Tm_uvar _
@@ -1484,6 +1484,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   | Arg (Clos(env, tm, m, _), aq, r) :: stack ->
     log cfg  (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
     //this needs to be tail recursive for reducing large terms
+
+    // GM: This is basically saying "if exclude iota, don't memoize".
+    // what's up with that?
     if List.contains (Exclude Iota) cfg.steps
     then if List.contains WHNF cfg.steps
           then let arg = closure_as_term cfg env tm in
