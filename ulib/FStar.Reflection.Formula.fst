@@ -19,6 +19,10 @@ noeq type formula =
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
+let mk_Forall (typ : term) (pred : term) : formula =
+    let b = fresh_binder typ in
+    Forall b (pack (Tv_App pred (pack (Tv_Var b))))
+
 let term_view_as_formula (tv:term_view) : Tot formula =
     match tv with
     | Tv_Var n ->
@@ -33,6 +37,7 @@ let term_view_as_formula (tv:term_view) : Tot formula =
 
     // TODO: l_Forall
     // ...or should we just try to drop all squashes?
+    // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app' [t] h0 in
         match inspect h, ts with
@@ -45,6 +50,7 @@ let term_view_as_formula (tv:term_view) : Tot formula =
             if eq_qn qn imp_qn then Implies a1 a2
             else if eq_qn qn and_qn then And a1 a2
             else if eq_qn qn or_qn  then Or a1 a2
+            else if eq_qn qn forall_qn then mk_Forall a1 a2 //a1 is type, a2 predicate
             else App h0 t
         | Tv_FVar fv, [a] ->
             let qn = inspect_fv fv in
