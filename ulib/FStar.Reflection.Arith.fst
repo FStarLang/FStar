@@ -28,6 +28,7 @@ type prop =
     | CompProp : expr -> connective -> expr -> prop
     | AndProp  : prop -> prop -> prop
     | OrProp   : prop -> prop -> prop
+    | NotProp  : prop -> prop
 
 let lt e1 e2 = CompProp e1 C_Lt e2
 let le e1 e2 = CompProp e1 C_Lt (Plus (Lit 1) e2)
@@ -100,11 +101,27 @@ let rec is_arith_expr (t:term) =
 
 val is_arith_prop : term -> tm prop
 let rec is_arith_prop (t:term) =
-    match term_as_formula t with
-    | Eq _ l r -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
-    | And l r  -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
-    | Or l r   -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
-    | _ -> fail "connector"
+    let hd, tl = collect_app t in
+    match term_as_formula hd, tl with
+    | FV fv, [a1] ->
+        let qn = inspect_fv fv in
+        if eq_qn qn b2t_qn then is_arith_prop a1
+        else if eq_qn qn not_qn then liftM NotProp (is_arith_prop a1)
+        else fail "unknown unary app"
+
+    | FV fv, [a1; a2] ->
+        let qn = inspect_fv fv in
+        if      eq_qn qn lt_qn  then liftM2 lt (is_arith_expr a1) (is_arith_expr a2)
+        else if eq_qn qn lte_qn then liftM2 le (is_arith_expr a1) (is_arith_expr a2)
+        else if eq_qn qn gt_qn  then liftM2 gt (is_arith_expr a1) (is_arith_expr a2)
+        else if eq_qn qn gte_qn then liftM2 ge (is_arith_expr a1) (is_arith_expr a2)
+        //else if eq_qn qn ne_qn  then liftM2 ne (is_arith_expr a1) (is_arith_expr a2)
+        else fail "unknown binary app"
+
+    | Eq _ l r, [] -> liftM2 eq (is_arith_expr l) (is_arith_expr r)
+    | And l r,  [] -> liftM2 AndProp (is_arith_prop l) (is_arith_prop r)
+    | Or l r,   [] -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
+    | _, _ -> fail "connector"
 
 let test =
     let bind = FStar.Tactics.bind in
