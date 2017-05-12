@@ -10,6 +10,8 @@ module SS = FStar.Syntax.Subst
 module I  = FStar.Ident
 module P  = FStar.Syntax.Print
 module N  = FStar.TypeChecker.Normalize
+module BU = FStar.Util
+module SC = FStar.Syntax.Const
 open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
@@ -38,6 +40,46 @@ let proofstate_of_goal g = {
     transaction=Unionfind.new_transaction()
 }
 
+let rec visit (callback:tac<unit>) : tac<unit> =
+      focus_cur_goal
+        (or_else callback
+                (with_cur_goal (fun goal ->
+                    match U.destruct_typ_as_formula goal.goal_ty with
+                    | None -> begin
+                      match (SS.compress goal.goal_ty).n with
+                      | Tm_meta _ ->
+                        map_meta (visit callback)
+                      | _ ->
+                        bind (mlog <| (fun _ -> BU.print1 "Not a formula, split to smt %s\n" (P.term_to_string goal.goal_ty))) (fun _ ->
+                        smt)
+                      end
+
+                    | Some (U.QEx _) ->  //not yet handled
+                        bind (mlog <| (fun _ -> BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (P.term_to_string goal.goal_ty))) (fun _ ->
+                        ret ())
+
+                    | Some (U.QAll(xs, _, _)) ->
+                      bind intros (fun binders ->
+                      //printfn "At forall %s" (List.map P.bv_to_string names |> String.concat ", ");
+                      seq (visit callback) (
+                      bind (revert_all_hd (List.map fst binders)) (fun _ ->
+                      with_cur_goal (fun goal ->
+                      bind (mlog <| (fun _ -> BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal))) (fun _ ->
+                      ret())))))
+
+                    | Some (U.BaseConn(l, _))
+                        when Ident.lid_equals l SC.and_lid ->
+                      bind (seq split (visit callback)) (fun _ ->
+                            merge_sub_goals)
+
+                    | Some (U.BaseConn(l, _))
+                        when Ident.lid_equals l SC.imp_lid ->
+                      bind imp_intro (fun h ->
+                      seq (visit callback) revert)
+
+                    | Some (U.BaseConn(l, _)) ->
+                      or_else trivial smt)))
+
 
 let rec simplify_eq_impl : tac<unit>
     = with_cur_goal (fun goal ->
@@ -60,7 +102,7 @@ let test () =
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     printfn "Goal is %s" (P.term_to_string g1.goal_ty);
     let p1 = proofstate_of_goal g1 in
-    match FStar.Tactics.Basic.run (FStar.Tactics.Basic.visit simplify_eq_impl) p1 with
+    match FStar.Tactics.Basic.run (visit simplify_eq_impl) p1 with
     | Success (_, p2) ->
       p2.goals |> List.iter (fun g ->
       printfn "Goal: %s" (P.term_to_string g.goal_ty))

@@ -141,9 +141,6 @@ let rewrite (b:binder) : tactic unit = fun () -> TAC?.reflect (__rewrite b)
 assume private val __smt     : __tac unit
 let smt : tactic unit = fun () -> TAC?.reflect __smt
 
-assume private val __visit   : __tac unit -> __tac unit
-let visit (f:tactic unit) : tactic unit = fun () -> TAC?.reflect (__visit (reify_tactic f))
-
 assume private val __focus: __tac unit -> __tac unit
 let focus (f:tactic unit) : tactic unit = fun () -> TAC?.reflect (__focus (reify_tactic f))
 
@@ -194,8 +191,29 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
         end
     | _ -> return None
 
-//let rec user_visit (callback:tactic unit) (u:unit) : Tac unit
-//    = or_else callback (user_visit callback) ()
+let rec visit (callback:tactic unit) () : Tac unit =
+    focus (or_else callback
+                   (eg <-- cur_goal;
+                    let e, g = eg in
+                    match term_as_formula g with
+                    | Forall b phi ->
+                        binders <-- forall_intros;
+                        seq (visit callback) (
+                            revert_all binders
+                        )
+                    | And p q ->
+                        seq split (
+                            visit callback;;
+                            merge
+                        )
+                    | Implies p q ->
+                        implies_intro;;
+                        seq (visit callback)
+                            revert
+                    | _ ->
+                        or_else trivial smt
+                   )
+          ) ()
 
 // Need to thunk it like to this for proper handling of non-termination.
 // (not doing it would still work, because of issue #1017, but should not)

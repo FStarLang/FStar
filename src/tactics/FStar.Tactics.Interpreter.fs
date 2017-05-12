@@ -128,7 +128,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac1 "__exact"         exact unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
-      mktac1 "__visit"         visit (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac1 "__focus"         focus_cur_goal (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
 

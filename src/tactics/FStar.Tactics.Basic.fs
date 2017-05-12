@@ -638,46 +638,6 @@ let merge_sub_goals : tac<unit> =
          let goals = p.goals |> List.map (fun x -> Print.term_to_string x.goal_ty) |> String.concat "\n\t" in
          fail (BU.format1 "Cannot merge sub-goals: not enough sub-goals\n\tGoals are: %s" goals))
 
-let rec visit (callback:tac<unit>) : tac<unit> =
-      focus_cur_goal
-        (or_else callback
-                (with_cur_goal (fun goal ->
-                    match U.destruct_typ_as_formula goal.goal_ty with
-                    | None -> begin
-                      match (SS.compress goal.goal_ty).n with
-                      | Tm_meta _ ->
-                        map_meta (visit callback)
-                      | _ ->
-                        bind (mlog <| (fun _ -> BU.print1 "Not a formula, split to smt %s\n" (Print.term_to_string goal.goal_ty))) (fun _ ->
-                        smt)
-                      end
-
-                    | Some (U.QEx _) ->  //not yet handled
-                        bind (mlog <| (fun _ -> BU.print1 "Not yet handled: exists\n\tGoal is %s\n" (Print.term_to_string goal.goal_ty))) (fun _ ->
-                        ret ())
-
-                    | Some (U.QAll(xs, _, _)) ->
-                      bind intros (fun binders ->
-                      //printfn "At forall %s" (List.map Print.bv_to_string names |> String.concat ", ");
-                      seq (visit callback) (
-                      bind (revert_all_hd (List.map fst binders)) (fun _ ->
-                      with_cur_goal (fun goal ->
-                      bind (mlog <| (fun _ -> BU.print1 "After reverting intros, goal is %s\n" (goal_to_string goal))) (fun _ ->
-                      ret())))))
-
-                    | Some (U.BaseConn(l, _))
-                        when Ident.lid_equals l SC.and_lid ->
-                      bind (seq split (visit callback)) (fun _ ->
-                            merge_sub_goals)
-
-                    | Some (U.BaseConn(l, _))
-                        when Ident.lid_equals l SC.imp_lid ->
-                      bind imp_intro (fun h ->
-                      seq (visit callback) revert)
-
-                    | Some (U.BaseConn(l, _)) ->
-                      or_else trivial smt)))
-
 let prune (s:string) : tac<unit> =
     with_cur_goal (fun g ->
         let ctx = g.context in
