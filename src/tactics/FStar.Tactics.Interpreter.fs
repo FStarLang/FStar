@@ -132,9 +132,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__focus"         focus_cur_goal (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
 
-      mktac1 "__prune"         prune (unembed_list unembed_string) embed_unit t_unit;
-      mktac1 "__addns"         addns (unembed_list unembed_string) embed_unit t_unit;
-
+      mktac1 "__prune"         prune unembed_string embed_unit t_unit;
+      mktac1 "__addns"         addns unembed_string embed_unit t_unit;
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
       mktac1 "__dump"          print_proof_state unembed_string embed_unit t_unit;

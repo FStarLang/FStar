@@ -20,8 +20,8 @@ val split_arith : unit -> Tac unit
 let rec split_arith = fun () -> (
     b <-- is_arith_goal;
     if b then (
-        prune [];;
-        addns ["Prims"];;
+        prune "";;
+        addns "Prims";;
         smt
     ) else (
         eg <-- cur_goal;
@@ -37,20 +37,20 @@ let rec split_arith = fun () -> (
 //assume val x : int
 
 let lem0 (x:int) =
-    assert_by_tactic (prune [];;
-                      addns ["Prims"]
+    assert_by_tactic (prune "";;
+                      addns "Prims"
                      ) (op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)
 
 // Can't locally define tactics
 let tau1 : tactic unit =
-    prune [];;
+    prune "";;
     FStar.Tactics.split;;
     (* rev part *)
-      addns ["FStar";"List"];;
-      addns ["Prims"];;
+      addns "FStar.List";;
+      addns "Prims";;
       smt;;
     (* arithmetic part *)
-      addns ["Prims"];;
+      addns "Prims";;
       g <-- cur_goal;
       let _, t = g in
       print ("goal = " ^ term_to_string t);;

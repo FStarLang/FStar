@@ -678,18 +678,18 @@ let rec visit (callback:tac<unit>) : tac<unit> =
                     | Some (U.BaseConn(l, _)) ->
                       or_else trivial smt)))
 
-let prune (s:list<string>) : tac<unit> =
+let prune (s:string) : tac<unit> =
     with_cur_goal (fun g ->
         let ctx = g.context in
-        let ctx' = Env.rem_proof_ns ctx s in
+        let ctx' = Env.rem_proof_ns ctx (path_of_text s) in
         let g' = { g with context = ctx' } in
         bind dismiss (fun _ -> add_goals [g'])
     )
 
-let addns (s:list<string>) : tac<unit> =
+let addns (s:string) : tac<unit> =
     with_cur_goal (fun g ->
         let ctx = g.context in
-        let ctx' = Env.add_proof_ns ctx s in
+        let ctx' = Env.add_proof_ns ctx (path_of_text s) in
         let g' = { g with context = ctx' } in
         bind dismiss (fun _ -> add_goals [g'])
     )
