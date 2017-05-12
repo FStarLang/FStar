@@ -2191,11 +2191,11 @@ it is shadowed by the local `x`. The other cases are straightforward.
 
 > _Note for experts: Because we will only reduce closed expressions,
   where all variables
-  are bound by previous lambdas, we will ever only substitute closed
-  expressions (closed values in fact), and this naive definition of
+  are bound by previous lambdas, we will only ever substitute closed
+  expressions `e`, and this naive definition of
   substitution is good enough. Substitution would become trickier to define
   or the representation of variables would have to change if we were considering
-  the case where e, the expression replacing a variable in
+  the case where `e`, the expression replacing a variable in
   some other expression, may itself contain free variables._
 
 Given the definition of values and of substitution we can now define
@@ -2236,7 +2236,8 @@ val step : exp -> Tot (option exp)
 
 ```
 We execute an application expression `EApp e1 e2` in multiple steps by first reducing
-`e1` to a value, then reducing `e2` to a value, and if additionally `e1`
+`e1` to a value, then reducing `e2` to a value (following a *call-by-value*
+evaluation order), and if additionally `e1`
 is an abstraction `EAbs x t e' `we continue by substituting the formal
 argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
 (a non-functional value is applied to arguments) by returning `None`.
@@ -2246,8 +2247,8 @@ and if the guard reduces to something else (e.g. a function) we report a
 dynamic typing error. The `None -> None` cases simply propagate errors to
 the top level.
 ```
-assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
-assert (step (EApp ETrue ETrue) = None)
+let _ = assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
+let _ = assert (step (EApp ETrue ETrue) = None)
 ```
 
 ## Type-checker
@@ -2834,9 +2835,8 @@ strong type ensuring that `v` has the same type as `e`
              Dv (v:exp{is_value v && typing empty v = typing empty e})
 ~~
 The `Dv` effect is that of potentially divergent computations.
-We cannot mark this as `Tot` since a priori STLC computations could loop,
-and it is hard to prove that well-typed ones don't, while defining an
-interpreter.
+We cannot mark this as `Tot` since _a priori_ STLC computations could loop,
+and it is hard to prove that well-typed ones don't.
 ~~Answer
 Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
 ~~~ SolutionFragment {exname=Ex07d}
@@ -2919,7 +2919,7 @@ but it seems quite interesting)
 
 # Higher kinds, indexed types, implicit arguments, and type-level functions
 
-So far, we have mostly programmed total functions and give them
+So far, we have mostly programmed total functions and given them
 specifications using rich types. Under the covers, F\* has a second
 level of checking at work to ensure that the specifications that you
 write are also meaningful---this is F\*'s kind system. Before moving
@@ -3031,17 +3031,6 @@ The type `fun x -> phi(x)` is type function, a lambda abstraction at
 the level of types, which when applied to a particular value, say,
 `0`, reduces as usual to `phi(0)`.
 
-## Kind abbreviations
-
-F\* allows top-level declarations to define abbreviations for kinds. For example,
-one can write:
-
-```
-kind Predicate (a:Type) = a -> Type
-```
-
-Now, the kind `Predicate a` is an abbreviation for `a -> Type`.
-
 # Specifying effects
 
 ~CH
@@ -3100,7 +3089,7 @@ and [Leino] both study this problem and provide equivalent
 solutions. In essence, they show that for a first-order,
 assignment-free guarded command language the weakest pre-condition can
 be computed in a size nearly linear in the size of the program. Then,
-they show that first-order imperative WHILE language can be converted
+they show that the first-order imperative WHILE language can be converted
 into SSA form and then into a guarded command language.
 
 [Flanagan and Saxe]: http://dl.acm.org/citation.cfm?id=360220
@@ -3258,9 +3247,9 @@ following form---they transform pure post-conditions to pure
 pre-conditions.
 
 ```
-kind PurePost (a:Type) = a -> Type
-kind PurePre = Type
-kind PureWP (a:Type) = PurePost a -> PurePre
+let pure_post (a:Type) = a -> Type
+let pure_pre = Type
+let pure_wp (a:Type) = pure_post a -> pure_pre
 ```
 
 For example, one computation type for `0` is
@@ -3275,7 +3264,7 @@ expect. The type `return_zero` is an instance of the more general form
 below:
 
 ```
-type return_PURE (#a:Type) (x:a) = fun (post: PurePost a) -> post x
+type return_PURE (#a:Type) (x:a) = fun (post: pure_post a) -> post x
 ```
 
 When sequentially composing two pure computations using
@@ -3289,12 +3278,13 @@ PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)
 where:
 ```
 type bind_PURE (#a:Type) (#b:Type)
-               (wp1: PureWP a)
-               (wp2: a -> PureWP b)
- = fun (post:PurePost b) -> wp1 (fun (x:a) -> wp2 x post)
+               (wp1: pure_wp a)
+               (wp2: a -> pure_wp b)
+ = fun (post:pure_post b) -> wp1 (fun (x:a) -> wp2 x post)
 ```
 
-One can show that `return_PURE` and `bind_PURE` together form a monad.
+One can show that `return_PURE` and `bind_PURE` together form a monad over
+`PureWP`.
 
 ### `Pure` and `Tot`
 
@@ -3304,8 +3294,8 @@ predicate transformers. It is defined as follows:
 
 ```
 effect Pure (a:Type) (pre:Type) (post: a -> Type) =
-       PURE a (fun (p:PurePost a) -> pre /\ forall (x:a). post x ==> p x)
-              (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
+       PURE a (fun (p:pure_post a) -> pre /\ forall (x:a). post x ==> p x)
+              (fun (p:pure_post a) -> forall (x:a). pre /\ post x ==> p x)
 ```
 
 That is `Pure a pre post` is a computation which when `pre` is true
@@ -3315,8 +3305,8 @@ The `Tot` effect is defined below:
 
 ```
 effect Tot (a:Type) =
-       PURE a (fun (p:PurePost a) -> forall (x:a). p x)
-              (fun (p:PurePost a) -> forall (x:a). p x)
+       PURE a (fun (p:pure_post a) -> forall (x:a). p x)
+              (fun (p:pure_post a) -> forall (x:a). p x)
 ```
 
 This means that a computation type `Tot a` only reveals that the
@@ -3334,11 +3324,11 @@ derived form `Pure`. Instead, one uses an explicit coercion for this
 purpose, with the signature shown below.
 
 ```
-type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
-type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
+type as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
+type as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> ~(y==x)))
 assume val as_Pure: #a:Type -> #b:(a -> Type)
-          -> #wp:(x:a -> PureWP (b x))
-          -> #wlp:(x:a -> PureWP (b x))
+          -> #wp:(x:a -> pure_wp (b x))
+          -> #wlp:(x:a -> pure_wp (b x))
           -> =f:(x:a -> PURE (b x) (wp x) (wlp x))
           -> x:a -> Pure (b x) (as_requires (wp x))
                                (as_ensures (wlp x))
@@ -3346,7 +3336,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
 ~Remark
 
- The second last argument to `as_Pure` is named `f` and is tagged with
+ The second-to-last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
  with the equality symbol, i.e., `=f`. Given an application
  `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
@@ -3371,7 +3361,7 @@ with the `as_ensures wlp` function. Perhaps the easiest way to
 understand it is by studying the roundtrip transformation of `PURE` to
 `Pure` and back to `PURE`. The key step below is in the transformation
 from (b) to (c), where we see that by ensuring
-`~wlp (fun y -> y <> x)`, we make use precisely of the Identity 1
+`~wlp (fun y -> y <> x)`, we make use precisely of Identity 1
 from the previous section. Given only a `wp` without a `wlp`, we would be
 stuck not being able to construct `as_ensures`.
 
@@ -3475,12 +3465,12 @@ Pure t (p)
 
 Stateful programs operate on an input heap producing a result and an
 output heap. The computation type `STATE t wp wlp` describes such a
-computation, where `wp, wlp : StateWP t` has the signature below.
+computation, where `wp, wlp : state_wp t` has the signature below.
 
 ```
-kind StatePost t = t -> heap -> Type
-kind StatePre    = heap -> Type
-kind StateWP t   = StatePost t -> StatePre
+let state_post t = t -> heap -> Type
+let state_pre    = heap -> Type
+let state_wp t   = state_post t -> state_pre
 ```
 
 In other words, WPs and WLPs for stateful programs transform stateful
@@ -3537,11 +3527,11 @@ Let's start with the signature of `read`:
 
 ```
 assume val read: #a:Type -> r:ref a -> STATE a (wp_read r) (wp_read r)
-where wp_read r = fun (post:StatePost a) (h0:heap) ->  post (sel h0 r) h0
+where wp_read r = fun (post:state_post a) (h0:heap) ->  post (sel h0 r) h0
 ```
 
 This says that `read r` returns a result `v:a` when `r:ref a`;
-and, to prove for any post-condition `post:StatePost a` relating the
+and, to prove for any post-condition `post:state_post a` relating the
 `v` to the resulting heap, it suffices to prove `post (sel h0 r) h0`
 when `read r` is run in the initial heap `h0`.
 
@@ -3549,11 +3539,11 @@ Next, here's the signature of `write`:
 
 ```
 assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write r)
-where wp_write r = fun (post:StatePost a) (h0:heap) -> post () (upd h0 r v)
+where wp_write r = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
 ```
 
 This says that `write r v` returns a a `unit`-typed result when
-`r:ref a` and `v:a`; and, to prove any post-condition `post:StatePost a`
+`r:ref a` and `v:a`; and, to prove any post-condition `post:state_post a`
 relating the `()` to the resulting heap, it suffices to prove
 `post () (upd h0 r v)` when `write r v` is run in the initial heap `h0`.
 
@@ -3569,14 +3559,14 @@ let op_Colon_Equals x v = ST.write x v
 ```
 ~
 
-As with the `PureWP`, the predicate transformers `StateWP t` form a
+As with the `pure_wp`, the predicate transformers `state_wp t` form a
 monad, as shown by the combinators below.
 
 ```
-type return_STATE (#a:Type) (v:a) = fun (post:StatePost a) (h0:heap) -> post v h0
+type return_STATE (#a:Type) (v:a) = fun (post:state_post a) (h0:heap) -> post v h0
 
-type bind_STATE (#a:Type) (wp1:StateWP a) (wp2:a -> StateWP b)
-     = fun (post:StatePost b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
+type bind_STATE (#a:Type) (wp1:state_wp a) (wp2:a -> state_wp b)
+     = fun (post:state_post b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
 ```
 
 ### The `ST` effect
@@ -3587,10 +3577,10 @@ of predicate transformers. It is defined as shown below (in
 `lib/st.fst`):
 
 ```
-effect ST (a:Type) (pre:StatePre) (post: (heap -> StatePost a)) = STATE a
-  (fun (p:StatePost a) (h:heap) ->
+effect ST (a:Type) (pre:state_pre) (post: (heap -> state_post a)) = STATE a
+  (fun (p:state_post a) (h:heap) ->
      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-  (fun (p:StatePost a) (h:heap) ->
+  (fun (p:state_post a) (h:heap) ->
      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 ```
 
@@ -3656,20 +3646,20 @@ from `lib/prims.fst`):
 
 ```
 sub_effect
-  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:StatePost a) (h:heap) ->
+  PURE   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:state_post a) (h:heap) ->
                     wp (fun a -> p a h)
 ```
 
 This says that in order to lift a `PURE` computation to `STATE`, we
-lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
+lift its `wp:pure_wp a` (equivalently for its `wlp`) to a `state_wp a`
 that says that that pure computation leaves the state unmodified.
 
 Note that the type of `PURE ~> STATE` is
-`(a:Type) -> PureWP a -> StatePost a -> heap -> Type` which corresponds
-to `(a:Type) -> PureWP a -> StateWP a` since:
+`(a:Type) -> pure_wp a -> state_post a -> heap -> Type` which corresponds
+to `(a:Type) -> pure_wp a -> state_wp a` since:
 ```
-kind StateWP a   = StatePost a -> StatePre
-kind StatePre    = heap -> Type
+let state_wp a   = state_post a -> state_pre
+let state_pre    = heap -> Type
 ```
 
 ## Indexed computation types

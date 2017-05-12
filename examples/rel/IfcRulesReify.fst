@@ -228,31 +228,59 @@ let seq_inv_com' env c1 c2 l h0 =
 
 #set-options "--z3rlimit 200"
 
+let seq_nil1 (c1:com) (c2:com) (h:heap)
+   : Lemma
+  (requires (fst (reify (interpret_com_st c1 h) h) = None))
+  (ensures  (fst (reify (interpret_com_st (Seq c1 c2) h) h) = None))
+   = ()
+
+let seq_nil2 (c1:com) (c2:com) (h0:heap) (h1:heap)
+   : Lemma
+  (requires (h1 == snd (reify (interpret_com_st c1 h0) h0) /\
+             fst (reify (interpret_com_st c2 h1) h1) = None))
+  (ensures  (fst (reify (interpret_com_st (Seq c1 c2) h0) h0) = None))
+   = ()
+
+let use_ni_com (env:label_fun) (c:com) (l:label) (h:rel heap{low_equiv env h})
+  : Lemma
+    (requires ni_com env c l)
+    (ensures
+          (let R hl hr = h in
+           match reify (interpret_com_st c hl) hl,
+                 reify (interpret_com_st c hr) hr with
+           | (Some _, hl'),
+             (Some _, hr') -> low_equiv env (R hl' hr')
+           | _ -> True))
+   = ()
+
 val seq_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0: rel heap ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
         (ensures  (ni_com' env (Seq c1 c2) l h0))
 let seq_com' env c1 c2 l h0 =
   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
   then ()
-  else
+  else begin
+    assert (low_equiv env h0);
     let R h0l h0r = h0 in
     match reify (interpret_com_st c1 h0l) h0l with
-    | None, _ -> ()
+    | None, _ -> seq_nil1 c1 c2 h0l
     | Some (), h1l ->
       match reify (interpret_com_st c1 h0r) h0r with
-      | None, _ -> ()
+      | None, _ -> seq_nil1 c1 c2 h0r
       | Some (), h1r ->
         match reify (interpret_com_st c2 h1l) h1l with
-        | None, _ -> ()
+        | None, _ -> seq_nil2 c1 c2 h0l h1l
         | Some (), h2l ->
           match reify (interpret_com_st c2 h1r) h1r with
-          | None, _ -> ()
+          | None, _ -> seq_nil2 c1 c2 h0r h1r
           | Some (), h2r ->
               let h1 = R h1l h1r in
+              use_ni_com env c1 l h0;
               assert (low_equiv env h1) ;
               let h2 = R h2l h2r in
+              use_ni_com env c2 l h1;
               assert (low_equiv env h2)
-
+   end
 
 val seq_com : env:label_fun -> c1:com -> c2:com -> l:label ->
   Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
@@ -451,4 +479,3 @@ let while_com env e c v l =
   forall_intro
     (fun (h0:heap) ->
       while_inv_com' env e c v l h0 <: Lemma (ensures (inv_com' env (While e c v) l h0)))
-

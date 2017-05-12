@@ -468,7 +468,7 @@
     [
       "FStar.Math.Lib.powx_lemma2",
       3,
-      4,
+      2,
       2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",

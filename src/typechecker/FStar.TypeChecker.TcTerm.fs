@@ -156,34 +156,34 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
 let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t =
-  let expected_c_opt = match copt with
-    | Some _ -> copt
+  let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
+     if U.is_pure_comp c
+     then mk_Total (U.comp_result c)
+     else if U.is_pure_or_ghost_comp c
+     then mk_GTotal (U.comp_result c)
+     else failwith "Impossible: Expected pure_or_ghost comp"
+  in
+  let expected_c_opt, c =
+    match copt with
+    | Some _ -> copt, c
     | None  ->
         if (Options.ml_ish()
             && Ident.lid_equals Const.effect_ALL_lid (U.comp_effect_name c))
         || (Options.ml_ish ()
             && env.lax
             && not (U.is_pure_or_ghost_comp c))
-        then Some (U.ml_comp (U.comp_result c) e.pos)
+        then Some (U.ml_comp (U.comp_result c) e.pos), c
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
-        then None
-        else if U.is_pure_comp c
-             then Some (mk_Total (U.comp_result c))
-             else if U.is_pure_or_ghost_comp c
-             then Some (mk_GTotal (U.comp_result c))
-             else None in
+        then None, tot_or_gtot c //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
+        else if U.is_pure_or_ghost_comp c
+             then Some (tot_or_gtot c), c
+             else None, c
+  in
+  let c = norm_c env c in
   match expected_c_opt with
-    | None -> e, norm_c env c, Rel.trivial_guard
+    | None ->
+      e, c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
-       if debug env Options.Low
-       then BU.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-       let c = norm_c env c in
-       if debug env Options.Low
-       then BU.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
-
-       //let expected_c' = TcUtil.refresh_comp_label env true (U.lcomp_of_comp <| expected_c) in
        let e, _, g = TcUtil.check_comp env e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then BU.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -463,25 +463,26 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
     let e, c, g = if not env.lax && TcUtil.short_circuit_head head
-                  then check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
+                  then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
+                       //TODO: this is not efficient:
+                       //      It is quadratic in the size of boolean terms
+                       //      e.g., a && b && c && d ... & zzzz will be huge
+                       let c = if Env.should_verify env &&
+                               not (U.is_lcomp_partial_return c) &&
+                               U.is_pure_or_ghost_lcomp c
+                               then TcUtil.maybe_assume_result_eq_pure_term env e c
+                               else c in
+                       e, c, g
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
-    let c =
-      if Env.should_verify env &&
-         not (U.is_lcomp_partial_return c) &&
-         //not (U.is_unit c.res_typ) &&
-         U.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
-      then TcUtil.maybe_assume_result_eq_pure_term env e c
-      else c
-    in
     let e, c, g' = comp_check_expected_typ env0 e c in
     let gimp =
         match (SS.compress head).n with
-            | Tm_uvar(u, _) ->
-              let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
-              {Rel.trivial_guard with implicits=[imp]}
-            | _ -> Rel.trivial_guard in
+        | Tm_uvar(u, _) ->
+            let imp = ("head of application is a uvar", env0, u, e, c.res_typ, head.pos) in
+            {Rel.trivial_guard with implicits=[imp]}
+        | _ -> Rel.trivial_guard in
     let gres = Rel.conj_guard g (Rel.conj_guard g' gimp) in
     if Env.debug env Options.Extreme
     then BU.print2 "Guard from application node %s is %s\n"
@@ -1051,8 +1052,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
     let monadic_application
       (head, chead, ghead, cres)
       subst
-      (arg_comps_rev:list<(arg * option<bv> * either<(lident * typ),lcomp>)>)
-      arg_rets
+      (arg_comps_rev:list<(arg * option<bv> * lcomp)>)
+      arg_rets_rev
       guard
       fvs
       bs
@@ -1072,33 +1073,6 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                   where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
               *)
               let g = Rel.conj_guard ghead guard in
-
-              let refine_with_equality =
-                  //if the function is pure, but its arguments are not, then add an equality refinement here
-                  //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
-                  //not (U.is_unit cres.res_typ)
-                  //&&
-                  U.is_pure_or_ghost_lcomp cres
-                  && arg_comps_rev |> BU.for_some (function
-                      | (_, _, Inl _) -> false
-                      | (_, _, Inr c) -> not (U.is_pure_or_ghost_lcomp c))
-                  (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
-              in
-
-              let cres =
-                  (* NS: Choosing when to add an equality refinement is VERY important for performance. *)
-                  (* Adding it unconditionally impacts run time by >5x *)
-                  if refine_with_equality
-                  then TcUtil.maybe_assume_result_eq_pure_term env
-                          (mk_Tm_app head (List.rev arg_rets) (Some cres.res_typ.n) r)
-                          cres
-                  else (if Env.debug env Options.Low
-                        then BU.print3 "Not refining result: f=%s; cres=%s; guard=%s\n"
-                                                (Print.term_to_string head)
-                                                (Print.lcomp_to_string cres)
-                                                (guard_to_string env g);
-                        cres)
-              in
               cres, g
 
           | _ ->  (* partial app *)
@@ -1121,15 +1095,37 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       (* where chead = b1 -> ... bn -> cres *)
 
+      (* if cres is pure or ghost, we augment it with a return
+           i.e., in the case where the head f is a pure or ghost function,
+                 treat the application as (e e1 e2 .. en) as
+                    f <-- e;
+                    x1 <-- e1; ...
+                    xn <-- en;
+                    return (f x1 ... xn)
+           1. The return at the end enhances f's result type with an equality
+                e.g., if (f : xs -> Tot t)
+                the type of the application becomes
+                      Pure t (ensures (fun y -> y = f x1 ...xn))
+           2. It's VERY important that the return is inserted using the bound names x1...xn.
+              Previously, in case e1..en were pure, we were inserting
+                      Pure t (ensures (fun y -> y = f e1 ...en))
+              But this leads to a massive blow up in the size of generated VCs (cf issue #971)
+              arg_rets below are those xn...x1 bound variables
+       *)
+      let cres =
+        if Util.is_pure_or_ghost_lcomp cres
+        then let term = S.mk_Tm_app head (List.rev arg_rets_rev) None head.pos in
+             TcUtil.maybe_assume_result_eq_pure_term env term cres
+        else cres
+      in
+
       (* 1. We compute the final computation type comp  *)
       let comp =
         List.fold_left
           (fun out_c ((e, q), x, c) ->
-            match c with
-            (* Looking at the code of tc_args below, Inl seems to be reserved for Tot or GTot *)
-            | Inl (eff_name, arg_typ) -> out_c
-            (* proving (Some e) here instead of None causes significant Z3 overhead *)
-            | Inr c -> TcUtil.bind e.pos env None c (x, out_c))
+              if Util.is_pure_or_ghost_lcomp c
+              then TcUtil.bind e.pos env (Some e) c (x, out_c)
+              else TcUtil.bind e.pos env None c (x, out_c))
           cres
           arg_comps_rev
       in
@@ -1147,6 +1143,10 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
       let app =
         if shortcuts_evaluation_order then
+          (* Question (NS): Why is this even possible here?
+                            I thought this would be taken care of in
+                            check_short_circuit_args
+          *)
           (* If the head is shortcutting we cannot hoist its arguments *)
           (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
           let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
@@ -1158,19 +1158,15 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           (* 2. For each monadic argument (including the head of the application) we introduce *)
           (*    a fresh variable and lift the actual argument to comp.       *)
           let lifted_args, head, args =
-            let map_fun ((e, q), _ , c0) =
-              match c0 with
-              | Inl _ ->
-                None, (e, q)
-              | Inr c when U.is_pure_or_ghost_lcomp c ->
-                None, (e, q)
-              | Inr c ->
-                let x = S.new_bv None c.res_typ in
-                let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
-                Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
+            let map_fun ((e, q), _ , c) =
+               if U.is_pure_or_ghost_lcomp c
+               then None, (e, q)
+               else let x = S.new_bv None c.res_typ in
+                    let e = TcUtil.maybe_lift env e c.eff_name comp.eff_name c.res_typ in
+                    Some (x, c.eff_name, c.res_typ, e), (S.bv_to_name x, q)
             in
             let lifted_args, reverse_args =
-                List.split <| List.map map_fun ((as_arg head, None, Inr chead)::arg_comps_rev)
+                List.split <| List.map map_fun ((as_arg head, None, chead)::arg_comps_rev)
             in
             lifted_args, fst (List.hd reverse_args), List.rev (List.tl reverse_args)
           in
@@ -1198,8 +1194,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
     let rec tc_args (head_info:(term * lcomp * guard_t * lcomp)) //the head of the application, its lcomp and guard, returning a bs -> cres
                     (subst,   (* substituting actuals for formals seen so far, when actual is pure *)
-                     outargs, (* type-checked actual arguments, so far *)
-                     arg_rets,(* The results of each argument at the logic level *)
+                     outargs, (* type-checked actual arguments, so far; in reverse order *)
+                     arg_rets,(* The results of each argument at the logic level, in reverse order *)
                      g,       (* conjoined guard formula for all the actuals *)
                      fvs)     (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
                      bs       (* formal parameters *)
@@ -1211,7 +1207,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            tc_args head_info (subst, (arg, None, Inl (Const.effect_Tot_lid, t))::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
+            tc_args head_info (subst, (arg, None, S.mk_Total t |> U.lcomp_of_comp)::outargs, arg::arg_rets, Rel.conj_guard implicits g, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
             let _ =
@@ -1231,20 +1227,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let g = Rel.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
-            if U.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
+            let xterm = S.as_arg (S.bv_to_name x) in
+            if U.is_tot_or_gtot_lcomp c //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
+            || TcUtil.is_pure_or_ghost_effect env c.eff_name
             then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, None, Inl (c.eff_name, c.res_typ))::outargs, arg::arg_rets, g, fvs) rest rest'
-            else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
-            then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    tc_args head_info (subst, (arg, Some x, Inr c)::outargs, arg::arg_rets, g, fvs) rest rest'
-            else if is_null_binder (List.hd bs) //it's not pure, but the function isn't dependent; just check its WP
-            then let newx = S.new_bv (Some e.pos) c.res_typ in
-                    let arg' = S.as_arg <| S.bv_to_name newx in
-                    tc_args head_info (subst, (arg, Some newx, Inr c)::outargs, arg'::arg_rets, g, fvs) rest rest'
-            else //e is impure and the function may be dependent...
-                 //need to check that the variable does not occur free in the rest of the function type
-                 //by adding x to fvs
-                 tc_args head_info (subst, (arg, Some x, Inr c)::outargs, S.as_arg (S.bv_to_name x)::arg_rets, g, x::fvs) rest rest'
+                 tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, fvs) rest rest'
+            else tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, x::fvs) rest rest'
 
         | _, [] -> (* no more args; full or partial application *)
             monadic_application head_info subst outargs arg_rets g fvs bs
@@ -1497,7 +1485,7 @@ and tc_eqn scrutinee env branch
 
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
-    TcUtil.close_comp env pat_bvs c_weak,
+    TcUtil.close_lcomp env pat_bvs c_weak,
     Rel.close_guard env binders g_when_weak,
     g_branch
   in
@@ -1770,7 +1758,7 @@ and check_inner_let_rec env top =
 
           let e2, cres, g2 = tc_term env e2 in
           let guard = Rel.conj_guard g_lbs (Rel.close_guard env (List.map S.mk_binder bvs) g2) in
-          let cres = TcUtil.close_comp env bvs cres in
+          let cres = TcUtil.close_lcomp env bvs cres in
           let tres = norm env cres.res_typ in
           let cres = {cres with res_typ=tres} in
 

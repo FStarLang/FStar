@@ -81,7 +81,8 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_Prims.V@tok", "eq2-interp",
         "equation_Ex10a.canWrite_t", "equation_Ex10a.file",
-        "equation_FStar.Heap.modifies", "equation_FStar.ST.modifies_none",
+        "equation_FStar.Heap.modifies", "equation_FStar.Heap.modifies_t",
+        "equation_FStar.ST.modifies_none",
         "function_token_typing_Prims.unit", "proj_equation_Prims.V_v",
         "projection_inverse_Prims.V_v", "string_inversion", "unit_inversion",
         "unit_typing"

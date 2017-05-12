@@ -19,7 +19,7 @@
       0
     ],
     [
-      "FStar.DM4F.StExnC.STEXNC_bind_wp",
+      "FStar.DM4F.StExnC._dm4f_STEXNC_bind_wp",
       1,
       2,
       1,
@@ -34,7 +34,7 @@
       0
     ],
     [
-      "FStar.DM4F.StExnC.STEXNC___proj__STEXNC__item__raise_elab",
+      "FStar.DM4F.StExnC._dm4f_STEXNC___proj__STEXNC__item__raise_elab",
       1,
       2,
       1,

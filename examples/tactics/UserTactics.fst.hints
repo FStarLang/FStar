@@ -2,7 +2,6 @@
   "öf|*å¥¦y§;Ê\u001bXÍj)",
   [
     [ "UserTactics.test_print_goal", 2, 2, 1, [ "@query" ], 0 ],
-    [ "UserTactics.test_or_else", 2, 2, 1, [ "@query" ], 0 ],
     [
       "UserTactics.simple_equality_assertions",
       2,

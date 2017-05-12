@@ -314,11 +314,11 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
         and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (scope:scope_t) (result, elapsed_time, statistics) =
             if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
-            if Options.z3_refresh() || Options.print_z3_statistics() || Options.check_hints() then Z3.refresh();
+            if Options.z3_refresh() || Options.check_hints() then Z3.refresh();
             let query_info env name tag statistics =
-                if Options.print_fuels() || Options.hint_info() then
-                    BU.print "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s%s%s\n"
-                        [(match env with | Some e -> "(" ^ (Range.string_of_range (Env.get_range e)) ^ at_log_file() ^ ")" | None -> "");
+                if Options.print_fuels() || Options.hint_info() || Options.print_z3_statistics() then
+                    BU.print "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
+                        ([(match env with | Some e -> "(" ^ (Range.string_of_range (Env.get_range e)) ^ at_log_file() ^ ")" | None -> "");
                          name;
                          query_name;
                          BU.string_of_int query_index;
@@ -327,9 +327,15 @@ let ask_and_report_errors env all_labels prefix query suffix =
                          BU.string_of_int elapsed_time;
                          BU.string_of_int prev_fuel;
                          BU.string_of_int prev_ifuel;
-                         BU.string_of_int rlimit;
-                         (match smap_try_find statistics "rlimit-count" with | Some v -> " (consumed " ^ v ^ ")" | _ -> "" );
-                         (match smap_try_find statistics "reason-unknown" with | Some v -> " (failure reason: " ^ v ^ ")" | _ -> "") ]
+                         BU.string_of_int rlimit]
+                         @
+                         [(if Options.print_z3_statistics() then
+                            let f k v a = a ^ k ^ "=" ^ v ^ " " in
+                            let str = smap_fold statistics f "statistics={" in
+                             (substring str 0 ((String.length str) - 1)) ^ "}"
+                           else
+                            (match smap_try_find statistics "reason-unknown" with
+                             | Some v -> "(reason-unknown=" ^ v ^ ")" | _ -> ""))])
             in
             let refine_hint unsat_core scope =
                 let current_core = BU.mk_ref unsat_core in

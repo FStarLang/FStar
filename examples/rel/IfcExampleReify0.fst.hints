@@ -59,7 +59,6 @@
       ],
       0
     ],
-    [ "IfcExampleReify0.ifc_c_r", 1, 2, 1, [ "@query" ], 0 ],
     [ "IfcExampleReify0.ni_ifc_c1", 1, 2, 1, [ "@query", "unit_typing" ], 0 ],
     [
       "IfcExampleReify0.ni_ifc_c2",

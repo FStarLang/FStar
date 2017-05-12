@@ -5,6 +5,7 @@
 *.ml* eol=lf
 Makefile eol=lf
 *.sh eol=lf
+*.mdk eol=lf
 
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf
