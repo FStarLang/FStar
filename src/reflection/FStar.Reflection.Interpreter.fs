@@ -46,6 +46,7 @@ let reflection_primops : list<N.primitive_step> =
         mk2 "__compare_binder" order_binder unembed_binder unembed_binder embed_order;
         mk1 "__type_of_binder" (fun (b,q) -> b.sort) unembed_binder embed_term;
         mk2 "__is_free" is_free unembed_binder unembed_term embed_bool;
+        mk1 "__fresh_binder" (fun t -> (gen_bv "__refl" None t, None)) unembed_term embed_binder;
 
         mk2 "__term_eq" FStar.Syntax.Util.term_eq unembed_term unembed_term embed_bool;
 

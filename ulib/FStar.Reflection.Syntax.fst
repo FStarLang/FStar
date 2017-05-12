@@ -89,6 +89,9 @@ let term_eq t1 t2 : bool = __term_eq t1 t2
 assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t
 
+assume val __fresh_binder : typ -> binder
+let fresh_binder t : binder = __fresh_binder t
+
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
     match ns with
