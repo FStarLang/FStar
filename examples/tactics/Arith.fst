@@ -12,15 +12,12 @@ let is_arith_goal : tactic bool =
     let _, g = eg in
     match is_arith_prop g 0 with
     | Inr _ -> return true
-    | Inl s -> (print ("arith: not an arith prop: " ^ term_to_string g);;
-                print ("message: " ^ s);;
-                return false)
+    | Inl s -> return false
 
 val split_arith : unit -> Tac unit
 let rec split_arith = fun () -> (
     eg <-- cur_goal;
     let _, g = eg in
-    print ("GGG trace: " ^ term_to_string g);;
     b <-- is_arith_goal;
     if b then (
         prune "";;
@@ -29,14 +26,12 @@ let rec split_arith = fun () -> (
     ) else (
         eg <-- cur_goal;
         let _, g = eg in
-        print ("GGG descending on: " ^ term_to_string g);;
         match term_as_formula g with
         | True_ -> trivial
         | And l r -> seq FStar.Tactics.split split_arith
         | Implies p q -> (implies_intro;; seq split_arith revert)
         | Forall x p -> (bs <-- forall_intros; seq split_arith (revert_all bs))
         | _ ->
-                print ("GGG no case for: " ^ term_to_string g);;
                 return ()
     )) ()
     
@@ -61,7 +56,6 @@ let tau1 : tactic unit =
       addns "Prims";;
       g <-- cur_goal;
       let _, t = g in
-      print ("goal = " ^ term_to_string t);;
       smt;;
     return ()
 
