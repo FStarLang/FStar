@@ -266,13 +266,13 @@ let focus_cur_goal (f:tac<'a>) : tac<'a>
                       runs g on the rest of the goals
                       Collects all the remaining goals, in order sub_goals f @ sub_goals g
 *)
-let cur_goal_and_rest (f:tac<'a>) (g:tac<'b>) : tac<('a*option<'b>)>
+let cur_goal_and_rest (f:tac<'a>) (g:tac<'b>) : tac<(option<'a>*option<'b>)>
     = bind get (fun p ->
           match p.goals with
-          | [] -> fail "No more goals"
+          | [] -> ret (None, None)
           | [_] ->
             bind f (fun a ->
-            ret (a, None))
+            ret (Some a, None))
           | hd::tl ->
             bind dismiss_all (fun _ ->
             bind (add_goals [hd]) (fun _ ->
@@ -282,7 +282,7 @@ let cur_goal_and_rest (f:tac<'a>) (g:tac<'b>) : tac<('a*option<'b>)>
             bind (add_goals tl) (fun _ ->
             bind g (fun b ->
             bind (add_goals sub_goals_f) (fun _ ->
-            ret (a, Some b))))))))))
+            ret (Some a, Some b))))))))))
 
 (* or_else: try t1; if it fails, try t2 *)
 let or_else (t1:tac<'a>) (t2:tac<'a>) : tac<'a> =
@@ -301,8 +301,9 @@ let or_else (t1:tac<'a>) (t2:tac<'a>) : tac<'a> =
 let rec map (t:tac<'a>): tac<(list<'a>)> =
     mk_tac (fun ps -> run (bind (cur_goal_and_rest t (map t))
                                 (function
-                                 | hd, None -> ret [hd]
-                                 | hd, Some tl -> ret (hd::tl))
+                                 | None, None -> ret []
+                                 | Some hd, None -> ret [hd]
+                                 | Some hd, Some tl -> ret (hd::tl))
                           ) ps)
 
 (* map_goal_term f:
