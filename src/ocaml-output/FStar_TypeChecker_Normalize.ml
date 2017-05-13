@@ -1539,7 +1539,7 @@ let rec norm:
                  uu____5054 uu____5055);
           (match t1.FStar_Syntax_Syntax.n with
            | FStar_Syntax_Syntax.Tm_delayed uu____5070 ->
-               failwith "Impossible"
+               failwith "Impossible: got a delayed substitution"
            | FStar_Syntax_Syntax.Tm_unknown 
              |FStar_Syntax_Syntax.Tm_uvar _
               |FStar_Syntax_Syntax.Tm_constant _

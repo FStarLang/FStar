@@ -2861,19 +2861,39 @@ let set_proof_ns: proof_namespace -> env -> env =
         qname_and_index = (uu___136_6241.qname_and_index);
         proof_ns = ns
       }
+let string_of_proof_ns: env -> Prims.string =
+  fun env  ->
+    let string_of_proof_ns' pns =
+      let uu____6259 =
+        FStar_List.map
+          (fun fpns  ->
+             let uu____6270 =
+               let uu____6271 =
+                 let uu____6272 =
+                   FStar_List.map
+                     (fun uu____6277  ->
+                        match uu____6277 with
+                        | (p,b) ->
+                            Prims.strcat (if b then "+" else "-")
+                              (FStar_String.concat "." p)) fpns in
+                 FStar_String.concat "," uu____6272 in
+               Prims.strcat uu____6271 "]" in
+             Prims.strcat "[" uu____6270) pns in
+      FStar_String.concat ";" uu____6259 in
+    string_of_proof_ns' env.proof_ns
 let dummy_solver: solver_t =
   {
-    init = (fun uu____6242  -> ());
-    push = (fun uu____6243  -> ());
-    pop = (fun uu____6244  -> ());
-    mark = (fun uu____6245  -> ());
-    reset_mark = (fun uu____6246  -> ());
-    commit_mark = (fun uu____6247  -> ());
-    encode_modul = (fun uu____6248  -> fun uu____6249  -> ());
-    encode_sig = (fun uu____6250  -> fun uu____6251  -> ());
+    init = (fun uu____6286  -> ());
+    push = (fun uu____6287  -> ());
+    pop = (fun uu____6288  -> ());
+    mark = (fun uu____6289  -> ());
+    reset_mark = (fun uu____6290  -> ());
+    commit_mark = (fun uu____6291  -> ());
+    encode_modul = (fun uu____6292  -> fun uu____6293  -> ());
+    encode_sig = (fun uu____6294  -> fun uu____6295  -> ());
     preprocess = (fun e  -> fun g  -> [(e, g)]);
-    solve = (fun uu____6258  -> fun uu____6259  -> fun uu____6260  -> ());
-    is_trivial = (fun uu____6264  -> fun uu____6265  -> false);
-    finish = (fun uu____6266  -> ());
-    refresh = (fun uu____6267  -> ())
+    solve = (fun uu____6302  -> fun uu____6303  -> fun uu____6304  -> ());
+    is_trivial = (fun uu____6308  -> fun uu____6309  -> false);
+    finish = (fun uu____6310  -> ());
+    refresh = (fun uu____6311  -> ())
   }
