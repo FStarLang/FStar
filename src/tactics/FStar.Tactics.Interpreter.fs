@@ -150,7 +150,7 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
                          [S.as_arg (E.embed_state proof_state (proof_state.goals, []))]
                           None
                           Range.dummyRange in
-    let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops] in
     bind (mlog <| (fun _ -> BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm))) (fun _ ->
     let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
     bind (mlog <| (fun _ -> BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result))) (fun _ ->
