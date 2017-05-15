@@ -2598,6 +2598,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       if Env.debug env <| Options.Other "Norm"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
+      let vc = N.normalize [N.Eager_unfolding] env vc in
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
@@ -2610,7 +2611,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
-                else let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
+                else let vc = N.normalize [N.Simplify] env vc in
                      [env,vc] in
             vcs |> List.iter (fun (env, goal) ->
                     env.solver.refresh ();
