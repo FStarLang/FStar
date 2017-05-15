@@ -654,8 +654,6 @@ tmTuple:
 
 
 tmEq:
-  | e1=tmEq BACKTICK id=qlident BACKTICK e2=tmEq
-      { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
   | e1=tmEq EQUALS e2=tmEq
       { mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   (* non-associativity of COLON_EQUALS is currently not well handled by fsyacc which reports a s/r conflict *)
@@ -666,6 +664,10 @@ tmEq:
       { mk_term (Op(mk_ident("|>", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmEq op=operatorInfix0ad12 e2=tmEq
       { mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un}
+  | e1=tmEq MINUS e2=tmEq
+      { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | MINUS e=tmEq
+      { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
   | e=tmNoEq
       { e }
 
@@ -684,14 +686,12 @@ tmNoEq:
             | _ -> [dom], tail in
         mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       }
-  | e1=tmNoEq MINUS e2=tmNoEq
-      { mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
   | e1=tmNoEq op=OPINFIX3 e2=tmNoEq
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
+  | e1=tmNoEq BACKTICK id=qlident BACKTICK e2=tmNoEq
+      { mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) }
   | e1=tmNoEq op=OPINFIX4 e2=tmNoEq
       { mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un}
-  | MINUS e=tmNoEq
-      { mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr }
   | id=lidentOrUnderscore COLON e=appTerm phi_opt=refineOpt
       {
         let t = match phi_opt with

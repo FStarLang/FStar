@@ -203,13 +203,15 @@ let unicodegraph_long:
          ((Some
              (FStar_Util.uint16_of_int
                 ((Prims.parse_int "0xD800") +
-                   (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
-                       (low - (Prims.parse_int "0x10000")))
+                   ((((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
+                        low)
+                       - (Prims.parse_int "0x10000"))
                       / (Prims.parse_int "0x400"))))),
            (FStar_Util.uint16_of_int
               ((Prims.parse_int "0xDF30") +
-                 (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
-                     (low - (Prims.parse_int "0x10000")))
+                 ((((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
+                      low)
+                     - (Prims.parse_int "0x10000"))
                     mod (Prims.parse_int "0x400"))))))
 let escape: FStar_Char.char -> FStar_Char.char =
   fun c  ->

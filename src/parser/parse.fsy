@@ -1794,10 +1794,7 @@ tmTuple:
       )}
 
 tmEq:
-  tmEq BACKTICK qlident BACKTICK tmEq
-    {let (e1, _2, id, _4, e2) = ($1, (), $3, (), $5) in
-      ( mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) )}
-| tmEq EQUALS tmEq
+  tmEq EQUALS tmEq
     {let (e1, _2, e2) = ($1, (), $3) in
       ( mk_term (Op(mk_ident("=", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
 | tmEq COLON_EQUALS tmEq
@@ -1848,6 +1845,12 @@ let op =
        ( mk_ident (op, rhs parseState 1) )
 in
       ( mk_term (Op(op, [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmEq MINUS tmEq
+    {let (e1, _2, e2) = ($1, (), $3) in
+      ( mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| MINUS tmEq
+    {let (_1, e) = ((), $2) in
+      ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
 | tmNoEq
     {let e = $1 in
       ( e )}
@@ -1869,18 +1872,15 @@ tmNoEq:
             | _ -> [dom], tail in
         mk_term (Sum(dom, res)) (rhs2 parseState 1 3) Type_level
       )}
-| tmNoEq MINUS tmNoEq
-    {let (e1, _2, e2) = ($1, (), $3) in
-      ( mk_term (Op(mk_ident("-", rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
 | tmNoEq OPINFIX3 tmNoEq
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmNoEq BACKTICK qlident BACKTICK tmNoEq
+    {let (e1, _2, id, _4, e2) = ($1, (), $3, (), $5) in
+      ( mkApp (mk_term (Var id) (rhs2 parseState 2 4) Un) [ e1, Nothing; e2, Nothing ] (rhs2 parseState 1 5) )}
 | tmNoEq OPINFIX4 tmNoEq
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
-| MINUS tmNoEq
-    {let (_1, e) = ((), $2) in
-      ( mk_uminus e (rhs parseState 1) (rhs2 parseState 1 2) Expr )}
 | lidentOrUnderscore COLON appTerm refineOpt
     {let (id, _2, e, phi_opt) = ($1, (), $3, $4) in
       (
