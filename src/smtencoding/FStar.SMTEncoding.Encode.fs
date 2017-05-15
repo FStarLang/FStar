@@ -135,7 +135,7 @@ type binding =
     | Binding_fvar  of lident       (* the source lident underlying a Tm_fvar *)
                      * string       (* its encoding as a declare-fun, the string name *)
                      * option<term> (* for partial applications, a token name *)
-                     * option<(int -> term)> (* for recursive functions, the fuel-instrumented name applied to n:int *)
+                     * option<(term -> term)> (* for recursive functions, the fuel-instrumented name applied to nfuel:term *)
 
 let binder_of_eithervar v = (v, None)
 type cache_entry = {
@@ -151,7 +151,7 @@ type env_t = {
     warn:bool;
     cache:BU.smap<cache_entry>;
     nolabels:bool;
-    use_zfuel_name:bool;
+    use_fuel_instrumented_version:option<term>; //when Some n, use `f_fuel_intrumented n` instead of `f`, where `f` is a recursive function
     encode_non_total_function_typ:bool;
     current_module_name:string;
 }
@@ -230,14 +230,14 @@ let push_free_var env (x:lident) fname ftok =
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let push_zfuel_name env (x:lident) f =
     let t1, t2, _ = lookup_lid env x in
-    let t3 n = mkApp(f, [Term.n_fuel n]) in
+    let t3 n = mkApp(f, [n]) in
     {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
 let try_lookup_free_var env l =
     match try_lookup_lid env l with
         | None -> None
         | Some (name, sym, zf_opt) ->
-            match zf_opt with
-                | Some f when (env.use_zfuel_name) -> Some (f 0)
+            match zf_opt, env.use_fuel_instrumented_version with
+                | Some f, Some fuel -> Some (f fuel)
                 | _ ->
                   match sym with
                     | Some t ->
@@ -256,9 +256,9 @@ let lookup_free_var env a =
 let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
 let lookup_free_var_sym env a =
     let name, sym, zf_opt = lookup_lid env a.v in
-    match zf_opt with
-    | Some mkf when env.use_zfuel_name ->
-      begin match (mkf 0).tm with
+    match zf_opt, env.use_fuel_instrumented_version with
+    | Some mkf, Some fuel ->
+      begin match (mkf fuel).tm with
         | App(g, zf) -> g, zf
         | _ -> failwith "Impossible"
       end
@@ -1065,15 +1065,18 @@ and encode_function_type_as_formula (new_pats:option<S.term>) (t:typ) (env:env_t
         | _ -> failwith "Impos"
     in
 
+    //See issue #1028; SMT lemmas should be used to launder away the fuel instrumentation
+    let env = {env with use_fuel_instrumented_version=Some (Term.n_fuel 0)} in
     let vars, guards, env, decls, _ = encode_binders None binders env in
-    let env = {env with use_zfuel_name=true} in
     let pats, decls' =
+        let env = {env with use_fuel_instrumented_version=Some (Term.n_fuel 1)} in
         patterns |>
         List.map (fun branch ->
                     branch |>
                     List.map (fun t ->  encode_term t env) |>
                     List.unzip) |>
-        List.unzip in
+        List.unzip
+    in
 
     let decls' = List.flatten decls' in
 
@@ -1195,7 +1198,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (fun p ->
-          let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
+          let p, decls = p |> List.map (fun (t, _) -> encode_term t ({env with use_fuel_instrumented_version=Some (Term.n_fuel 0)})) |> List.unzip in
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
     let guards = match pats with
@@ -1819,13 +1822,19 @@ let encode_top_level_let :
           (* We create a new variable corresponding to the current fuel *)
           let fuel = varops.fresh "fuel", Fuel_sort in
           let fuel_tm = mkFreeV fuel in
+          //we define g (SFuel (SFuel fuel)
+          //where recursive occurrences of g are tagged with  `g (SFuel fuel)`
+          //i.e., consuming 1 unit of fuel
+          //Note, we start with (SFuel (SFuel fuel)), since lemmas about recursive
+          //functions are guarded with fuel 1.
+          let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
           let env0 = env in
           (* For each declaration, we push in the environment its fuel-guarded copy (using current fuel) *)
           let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid_fv, (f, ftok)) ->
             let flid = flid_fv.fv_name.v in
             let g = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented") in
             let gtok = varops.new_fvar (Ident.lid_add_suffix flid "fuel_instrumented_token") in
-            let env = push_free_var env flid gtok (Some <| mkApp(g, [fuel_tm])) in
+            let env = push_free_var env flid gtok (Some <| mkApp(g, [s_fuel_tm])) in
             (flid, f, ftok, g, gtok)::gtoks, env) ([], env)
           in
           let gtoks = List.rev gtoks in
@@ -1865,7 +1874,7 @@ let encode_top_level_let :
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
             let vars_tm = List.map mkFreeV vars in
             let app = mkApp(f, List.map mkFreeV vars) in
-            let gsapp = mkApp(g, mkApp("SFuel", [fuel_tm])::vars_tm) in
+            let gsapp = mkApp(g, mkApp("SFuel", [s_fuel_tm])::vars_tm) in
             let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
             let body = if is_reifiable_function env'.tcenv t_norm then TcUtil.reify_body env'.tcenv body else body in
             let body_tm, decls2 = encode_term body env' in
@@ -1879,7 +1888,10 @@ let encode_top_level_let :
             let eqn_f = Util.mkAssume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
                                     ("@fuel_correspondence_"^g)) in
-            let eqn_g' = Util.mkAssume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
+            let eqn_g' = Util.mkAssume(mkForall([[gsapp]],
+                                                fuel::vars,
+                                                mkAnd(mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm)),   //g (SFuel (SFuel f)) xs = g ZFuel xs
+                                                      mkEq(gsapp,  mkApp(g, Term.n_fuel 1::vars_tm)))), //g (SFuel (SFuel f)) xs = g (SFuel ZFuel) xs <-- this one is needed because triggers of SMT lemmas require 1 unit of fuel
                                     Some "Fuel irrelevance",
                                     ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
@@ -2409,10 +2421,16 @@ let encode_labels labs =
 
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref<list<env_t>> = BU.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0;
-                                   cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
-                                   encode_non_total_function_typ=true;
-                                   current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
+let init_env tcenv =
+    last_env := [{bindings=[];
+                  tcenv=tcenv;
+                  warn=true;
+                  depth=0;
+                  cache=BU.smap_create 100;
+                  nolabels=false;
+                  use_fuel_instrumented_version=None;
+                  encode_non_total_function_typ=true;
+                  current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}

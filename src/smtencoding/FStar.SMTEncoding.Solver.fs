@@ -239,7 +239,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
 
     let with_fuel label_assumptions p (n, i, rlimit) =
        [Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
-        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel (n + 1)), None, "@MaxFuel_assumption"); //NS: Notice the (n + 1); fuel is based on 1, with ZFuel reserved for recursive occurrences in lemmas
         Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
         p]
         @label_assumptions
