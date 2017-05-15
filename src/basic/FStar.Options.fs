@@ -854,12 +854,17 @@ let fstar_home () =
     | Some x ->
       x
 
+exception File_argument of string
+
 let set_options o s =
     let specs = match o with
         | Set -> resettable_specs
         | Reset -> resettable_specs
         | Restore -> all_specs in
-    Getopt.parse_string specs (fun _ -> ()) s
+    try
+        Getopt.parse_string specs (fun s -> raise (File_argument s)) s
+    with
+      | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
