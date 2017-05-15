@@ -1874,7 +1874,7 @@ let encode_top_level_let :
             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
             let vars_tm = List.map mkFreeV vars in
             let app = mkApp(f, List.map mkFreeV vars) in
-            let gsapp = mkApp(g, mkApp("SFuel", [s_fuel_tm])::vars_tm) in
+            let gss_app = mkApp(g, mkApp("SFuel", [s_fuel_tm])::vars_tm) in
             let gmax = mkApp(g, mkApp("MaxFuel", [])::vars_tm) in
             let body = if is_reifiable_function env'.tcenv t_norm then TcUtil.reify_body env'.tcenv body else body in
             let body_tm, decls2 = encode_term body env' in
@@ -1882,18 +1882,20 @@ let encode_top_level_let :
             //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
             //But, the pattern ensures that this only applies to well-typed terms
             //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
-            let eqn_g = Util.mkAssume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
+            let eqn_g = Util.mkAssume(mkForall'([[gss_app]], Some 0, fuel::vars, mkEq(gss_app, body_tm)),
                                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Util.mkAssume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
                                     ("@fuel_correspondence_"^g)) in
-            let eqn_g' = Util.mkAssume(mkForall([[gsapp]],
-                                                fuel::vars,
-                                                mkAnd(mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm)),   //g (SFuel (SFuel f)) xs = g ZFuel xs
-                                                      mkEq(gsapp,  mkApp(g, Term.n_fuel 1::vars_tm)))), //g (SFuel (SFuel f)) xs = g (SFuel ZFuel) xs <-- this one is needed because triggers of SMT lemmas require 1 unit of fuel
-                                    Some "Fuel irrelevance",
-                                    ("@fuel_irrelevance_" ^g)) in
+            let eqn_g' =
+                let gs_app = mkApp(g, s_fuel_tm::vars_tm) in
+                let g_app = mkApp(g, fuel_tm::vars_tm) in
+                Util.mkAssume(mkForall([[gs_app]],
+                                        fuel::vars,
+                                        mkEq(gss_app, g_app)), //g (S fuel) xs = g fuel xs; see #1028; this allows using irrelevance axioms at all fuel levels
+                              Some "Fuel irrelevance",
+                              ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
               let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
               let vars_tm = List.map mkFreeV vars in
