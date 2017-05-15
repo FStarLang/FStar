@@ -453,7 +453,7 @@ let new_term_constant_and_tok_from_lid:
             let uu____1186 =
               let uu____1193 =
                 let uu____1195 = FStar_SMTEncoding_Util.mkApp (ftok, []) in
-                FStar_All.pipe_left (fun _0_28  -> Some _0_28) uu____1195 in
+                FStar_All.pipe_left (fun _0_29  -> Some _0_29) uu____1195 in
               (x, fname, uu____1193, None) in
             Binding_fvar uu____1186 in
           uu____1185 :: (env.bindings) in
@@ -591,7 +591,7 @@ let try_lookup_free_var:
                                  (name, FStar_SMTEncoding_Term.Term_sort) in
                              FStar_SMTEncoding_Term.mk_ApplyTF uu____1410
                                fuel in
-                           FStar_All.pipe_left (fun _0_29  -> Some _0_29)
+                           FStar_All.pipe_left (fun _0_30  -> Some _0_30)
                              uu____1409
                          else Some t
                      | uu____1413 -> Some t)
@@ -1444,7 +1444,9 @@ and encode_term:
                                            FStar_SMTEncoding_Util.mkApp
                                              uu____2971 in
                                          (uu____2970,
-                                           (use_cache_entry cache_entry))
+                                           (FStar_List.append decls
+                                              (FStar_List.append decls'
+                                                 (use_cache_entry cache_entry))))
                                      | None  ->
                                          let module_name =
                                            env.current_module_name in
@@ -1891,7 +1893,7 @@ and encode_term:
                         let uu____3890 = lc1.FStar_Syntax_Syntax.comp () in
                         FStar_Syntax_Subst.subst_comp opening uu____3890 in
                       FStar_All.pipe_right uu____3889
-                        (fun _0_30  -> Some _0_30)
+                        (fun _0_31  -> Some _0_31)
                   | FStar_Util.Inr (eff,flags) ->
                       let new_uvar1 uu____3902 =
                         let uu____3903 =
@@ -1907,7 +1909,7 @@ and encode_term:
                           let uu____3912 = new_uvar1 () in
                           FStar_Syntax_Syntax.mk_Total uu____3912 in
                         FStar_All.pipe_right uu____3911
-                          (fun _0_31  -> Some _0_31)
+                          (fun _0_32  -> Some _0_32)
                       else
                         if
                           FStar_Ident.lid_equals eff
@@ -1917,7 +1919,7 @@ and encode_term:
                              let uu____3917 = new_uvar1 () in
                              FStar_Syntax_Syntax.mk_GTotal uu____3917 in
                            FStar_All.pipe_right uu____3916
-                             (fun _0_32  -> Some _0_32))
+                             (fun _0_33  -> Some _0_33))
                         else None in
                 (match lopt with
                  | None  ->
@@ -4465,8 +4467,8 @@ let encode_free_var:
                                                          (vname,
                                                            FStar_SMTEncoding_Term.Term_sort) in
                                                      FStar_All.pipe_left
-                                                       (fun _0_33  ->
-                                                          Some _0_33)
+                                                       (fun _0_34  ->
+                                                          Some _0_34)
                                                        uu____10181 in
                                                    push_free_var env1 lid
                                                      vname uu____10179 in
@@ -4747,7 +4749,7 @@ let encode_top_level_let:
                       let uu____10711 =
                         let uu____10712 = FStar_Syntax_Subst.subst subst1 t in
                         uu____10712.FStar_Syntax_Syntax.n in
-                      FStar_All.pipe_left (fun _0_34  -> Some _0_34)
+                      FStar_All.pipe_left (fun _0_35  -> Some _0_35)
                         uu____10711 in
                     let uu____10716 =
                       let uu____10717 = FStar_Syntax_Subst.compress body in
@@ -5209,7 +5211,7 @@ let encode_top_level_let:
                                                  FStar_SMTEncoding_Util.mkApp
                                                    (g, [fuel_tm]) in
                                                FStar_All.pipe_left
-                                                 (fun _0_35  -> Some _0_35)
+                                                 (fun _0_36  -> Some _0_36)
                                                  uu____11915 in
                                              push_free_var env2 flid gtok
                                                uu____11913 in
@@ -5775,7 +5777,7 @@ and encode_sigelt':
                      let uu____12744 =
                        let uu____12745 =
                          let uu____12760 =
-                           FStar_All.pipe_left (fun _0_36  -> Some _0_36)
+                           FStar_All.pipe_left (fun _0_37  -> Some _0_37)
                              (FStar_Util.Inr
                                 (FStar_Syntax_Const.effect_Tot_lid,
                                   [FStar_Syntax_Syntax.TOTAL])) in
@@ -6405,7 +6407,7 @@ and encode_sigelt':
                                             FStar_SMTEncoding_Util.mkApp
                                               (tname, []) in
                                           FStar_All.pipe_left
-                                            (fun _0_37  -> Some _0_37)
+                                            (fun _0_38  -> Some _0_38)
                                             uu____13904 in
                                         push_free_var env1 t tname
                                           uu____13902 in
@@ -7262,7 +7264,7 @@ let encode_labels labs =
             | (l,uu____14927,uu____14928) ->
                 let uu____14933 =
                   FStar_All.pipe_left
-                    (fun _0_38  -> FStar_SMTEncoding_Term.Echo _0_38)
+                    (fun _0_39  -> FStar_SMTEncoding_Term.Echo _0_39)
                     (Prims.fst l) in
                 let uu____14934 =
                   let uu____14936 =

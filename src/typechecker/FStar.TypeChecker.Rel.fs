@@ -2447,6 +2447,11 @@ let with_guard env prob dopt = match dopt with
     | Some d ->
       Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
+let with_guard_no_simp env prob dopt = match dopt with
+    | None -> None
+    | Some d ->
+      Some ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
+
 let try_teq smt_ok env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
  then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
@@ -2596,6 +2601,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
     | Trivial -> Some ret_g
     | NonTrivial vc ->
       if Env.debug env <| Options.Other "Norm"
+      || Env.debug env <| Options.Other "SMTQuery"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
       let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in

@@ -1025,14 +1025,15 @@ let rec delta_qualifier t =
         | Tm_abs(_, t, _)
         | Tm_let(_, t) -> delta_qualifier t
 
+let rec incr_delta_depth d =
+    match d with
+    | Delta_equational -> d
+    | Delta_constant -> Delta_defined_at_level 1
+    | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
+    | Delta_abstract d -> incr_delta_depth d
+
 let incr_delta_qualifier t =
-    let d = delta_qualifier t in
-    let rec aux d = match d with
-        | Delta_equational -> d
-        | Delta_constant -> Delta_defined_at_level 1
-        | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
-        | Delta_abstract d -> aux d in
-    aux d
+    incr_delta_depth (delta_qualifier t)
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
 
