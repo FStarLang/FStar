@@ -550,7 +550,7 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "-z3rlimit 40 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 40 --max_fuel 0 --max_ifuel 0"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
@@ -563,7 +563,7 @@ let modulo_modulo_lemma a b c =
   cut( a % b = (a - (a / (b * c)) * (b * c)) % b );
   euclidean_division_definition a (b * c)
 
-#reset-options "-z3rlimit 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
 val pow2_multiplication_division_lemma_1: a:nat -> b:nat -> c:nat{c >= b} ->
     Lemma ( (a * pow2 c) / pow2 b = a * pow2 (c - b))

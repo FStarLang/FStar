@@ -232,23 +232,31 @@ let push_zfuel_name env (x:lident) f =
     let t1, t2, _ = lookup_lid env x in
     let t3 n = mkApp(f, [n]) in
     {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
+let is_fuel_term t =
+    match t.tm with
+    | FreeV _ ->
+      BU.starts_with (Term.fv_of_term t |> fst) "fuel" //this is super-ugly syntactic test
+    | App(Var "SFuel", _)
+    | App(Var "ZFuel", _) ->
+      true
+    | _ -> false
 let try_lookup_free_var env l =
     match try_lookup_lid env l with
         | None -> None
-        | Some (name, sym, zf_opt) ->
-            match zf_opt, env.use_fuel_instrumented_version with
-                | Some f, Some fuel -> Some (f fuel)
-                | _ ->
-                  match sym with
-                    | Some t ->
-                        begin match t.tm with
-                            | App(_, [fuel]) ->
-                                if (BU.starts_with (Term.fv_of_term fuel |> fst) "fuel")
-                                then Some <| mk_ApplyTF(mkFreeV (name, Term_sort)) fuel
-                                else Some t
-                            | _ -> Some t
-                        end
-                    | _ -> None
+        | Some (name, sym, zf_opt) -> begin
+          match zf_opt, env.use_fuel_instrumented_version with
+          | Some f, Some fuel -> Some (f fuel)
+          | _ -> begin
+            match sym with
+            | Some t -> begin
+              match t.tm with
+              | App(_, [fuel]) when is_fuel_term fuel ->
+                Some <| mk_ApplyTF(mkFreeV (name, Term_sort)) fuel
+              | _ -> Some t
+              end
+            | _ -> None
+            end
+          end
 let lookup_free_var env a =
     match try_lookup_free_var env a.v with
         | Some t -> t
@@ -1893,7 +1901,7 @@ let encode_top_level_let :
                 let g_app = mkApp(g, fuel_tm::vars_tm) in
                 Util.mkAssume(mkForall([[gs_app]],
                                         fuel::vars,
-                                        mkEq(gss_app, g_app)), //g (S fuel) xs = g fuel xs; see #1028; this allows using irrelevance axioms at all fuel levels
+                                        mkEq(gs_app, g_app)), //g (S fuel) xs = g fuel xs; see #1028; this allows using irrelevance axioms at all fuel levels
                               Some "Fuel irrelevance",
                               ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
