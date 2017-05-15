@@ -1444,7 +1444,9 @@ and encode_term:
                                            FStar_SMTEncoding_Util.mkApp
                                              uu____2971 in
                                          (uu____2970,
-                                           (use_cache_entry cache_entry))
+                                           (FStar_List.append decls
+                                              (FStar_List.append decls'
+                                                 (use_cache_entry cache_entry))))
                                      | None  ->
                                          let module_name =
                                            env.current_module_name in
