@@ -79,6 +79,8 @@ int:
 
 reflection: $(patsubst %.fst,%.fst-ver,$(wildcard FStar.Reflection.*.fst))
 
+tactics: $(patsubst %.fst,%.fst-ver,$(wildcard FStar.Tactics.fst))
+
 wc:	
 	wc -l prims.fst $(ALL)
 
