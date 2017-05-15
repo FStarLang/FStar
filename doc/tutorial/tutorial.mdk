@@ -479,6 +479,22 @@ the other hand, the body of a function may perform some non-trivial
 computation and so the result is always given both a type and an
 effect, as explained above.
 
+Like many functional languages, function application has higher precedence
+than almost any other operation.  Remembering this can help you keep track
+of when you do (and do not) need parentheses.  For example, if, using the 
+definitions for `is_positive` and `max` above, you try to write:
+```
+let x = is_positive max 1 2
+```
+you will get a type resolution failure, since F\* will try to apply
+`is_positive` to the `max` function itself, and it will complain that
+`is_positive` expects an `int` argument, whereas `max` is a function
+that maps two integers to another integer.  In this case, you need one 
+set of parentheses around `max`:
+```
+let x = is_positive (max 1 2)
+```
+
 ~Exercise
 As you could see above, we use `val` to ask F\* to check that a
 definition has a certain expected type.  Write down the expected types
