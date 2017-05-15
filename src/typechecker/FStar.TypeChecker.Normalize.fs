@@ -266,9 +266,7 @@ let rec closure_as_term cfg env t =
               mk (Tm_type (norm_universe cfg env u)) t.pos
 
             | Tm_uinst(t', us) -> (* head symbol must be an fvar *)
-              if is_fstar_tactics_embed t'
-              then t
-              else mk_Tm_uinst t' (List.map (norm_universe cfg env) us)
+              mk_Tm_uinst t' (List.map (norm_universe cfg env) us)
 
             | Tm_bvar x ->
               begin match lookup_bvar env x with
@@ -782,6 +780,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_app(hd, args)
             when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
+            let hd = closure_as_term cfg env hd in
             let t = {t with n=Tm_app(hd, args)} in
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
