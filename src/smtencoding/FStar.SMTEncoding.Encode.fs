@@ -641,7 +641,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         begin match BU.smap_try_find env.cache tkey_hash with
             | Some cache_entry ->
               mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
-              use_cache_entry cache_entry
+              decls @ decls' @ (use_cache_entry cache_entry)  //AR: I think it is safe to add decls and decls' to returned decls because
+                                                              //if any of the decl in decls@decls' is in the cache, then it must be Term.RetainAssumption, whose encoding is ""
+                                                              //on the other hand, not adding these results in some missing definitions in the smt encoding
 
             | None ->
               let module_name = env.current_module_name in
