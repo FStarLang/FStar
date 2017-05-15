@@ -109,8 +109,8 @@ can be found on the [F\* website].
 
 It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
-with [Haskell]---we provide a quick review of basic concepts if you're
-a little rusty. If you feel you need more background, there are many useful
+with [Haskell]---we provide a quick review of some basic concepts if you're
+a little rusty, but if you feel you need more background, there are many useful
 resources freely available on the web, e.g., [TryF#],
 [F# for fun and profit], [Introduction to Caml], or the
 [Real World OCaml] book.
@@ -131,7 +131,7 @@ exercises are very hard to solve, as some of the notation was not obvious to me.
 knowing the correct solution, I had to either infer syntax from the exercise
 code (which is fine) or go by trial and error (which was frustrating at times).
 I will leave comments on the exercises detailing what kind of notation I was (or
-am still) missing Is there a resource (maybe in the wiki) that we can point
+am still) missing. Is there a resource (maybe in the wiki) that we can point
 readers to, that includes examples for most of the concepts? Something like the
 [F# reference] would be really helpful. Also, it might help to specify the
 audience of this tutorial a bit more. As a programmer with slightly faded memory
@@ -161,24 +161,28 @@ the [source code on github] using these [instructions].
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can edit F\* code using your favorite text editor, but [Emacs] has an
-extension that add special support for F\*, including syntax highlighting and
-interactive development. More details on [editor support] on the [F\* wiki].
-You can find the code for the exercises and the solutions in the [F\* repository] 
-on Github. However, note that for some exercises, you have to include additional
-libraries. Details on how to do this for Emacs can be found in the wiki.
+You can edit F\* code using your favorite text editor, but for Emacs
+we provide [fstar-mode.el], a sophisticated extension that adds special
+support for F\*, including syntax highlighting, completion, type
+hints, navigation, documentation queries, and interactive development
+(in the style of CoqIDE or ProofGeneral).
+You can find more details about [editor support] on the [F\* wiki].
+
+The code for the exercises in this tutorial and their solutions are in the [F\*
+repository] on Github. For some exercises, you have to include
+additional libraries, as done by the provided Makefiles.
+To include libraries for the Emacs interactive mode follow the
+[instructions here](https://github.com/FStarLang/fstar-mode.el#including-non-standard-libraries-when-using-fstar-mode).
 
 ~KK
-Both Atom and Vim support seems to be either broken or discontinued (or both),
-so it might be misleading to list them as viable options for the audience of this
-tutorial. Also, the code available on the tutorial page and on github differs
+The code available on the tutorial page and on github differs
 quite a bit (as does the F\* version I guess). In my case, this lead to some
 unexpected errors when copying code from the online-editor to Emacs. It would be
 nice to have a pointer to the actual file and maybe the proper parameters to
 verify it, in case someone prefers emacs over the online editor.
 ~
 
-[Emacs]: https://github.com/FStarLang/fstar-mode.el
+[fstar-mode.el]: https://github.com/FStarLang/fstar-mode.el
 [Atom]: https://github.com/FStarLang/fstar-interactive
 [Vim]: https://github.com/FStarLang/VimFStar
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
