@@ -132,8 +132,10 @@ let varops =
 (* Each entry maps a Syntax variable to its encoding as a SMT2 term *)
 type binding =
     | Binding_var   of bv * term
-    | Binding_fvar  of lident * string * option<term> * option<term> (* free variables, depending on whether or not they are fully applied ...  *)
-                                                                     (* ... are mapped either to SMT2 functions, or to nullary tokens *)
+    | Binding_fvar  of lident       (* the source lident underlying a Tm_fvar *)
+                     * string       (* its encoding as a declare-fun, the string name *)
+                     * option<term> (* for partial applications, a token name *)
+                     * option<(int -> term)> (* for recursive functions, the fuel-instrumented name applied to n:int *)
 
 let binder_of_eithervar v = (v, None)
 type cache_entry = {
@@ -228,14 +230,14 @@ let push_free_var env (x:lident) fname ftok =
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let push_zfuel_name env (x:lident) f =
     let t1, t2, _ = lookup_lid env x in
-    let t3 = mkApp(f, [mkApp("ZFuel", [])]) in
+    let t3 n = mkApp(f, [Term.n_fuel n]) in
     {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
 let try_lookup_free_var env l =
     match try_lookup_lid env l with
         | None -> None
         | Some (name, sym, zf_opt) ->
             match zf_opt with
-                | Some f when (env.use_zfuel_name) -> Some f
+                | Some f when (env.use_zfuel_name) -> Some (f 0)
                 | _ ->
                   match sym with
                     | Some t ->
@@ -255,14 +257,18 @@ let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
 let lookup_free_var_sym env a =
     let name, sym, zf_opt = lookup_lid env a.v in
     match zf_opt with
-        | Some({tm=App(g, zf)}) when env.use_zfuel_name -> g, zf
-        | _ ->
-            match sym with
-                | None -> Var name, []
-                | Some sym ->
-                    match sym.tm with
-                        | App(g, [fuel]) -> g, [fuel]
-                        | _ -> Var name, []
+    | Some mkf when env.use_zfuel_name ->
+      begin match (mkf 0).tm with
+        | App(g, zf) -> g, zf
+        | _ -> failwith "Impossible"
+      end
+    | _ ->
+      match sym with
+      | None -> Var name, []
+      | Some sym ->
+        match sym.tm with
+        | App(g, [fuel]) -> g, [fuel]
+        | _ -> Var name, []
 
 let tok_of_name env nm =
     BU.find_map env.bindings (function
@@ -1009,7 +1015,7 @@ and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
     List.rev l, decls
 
 (* this assumes t is a Lemma *)
-and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
+and encode_function_type_as_formula (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
     let list_elements (e:S.term) : list<S.term> =
       match U.list_elements e with
       | Some l -> l
@@ -1018,9 +1024,10 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
     let one_pat p =
         let head, args = U.unmeta p |> U.head_and_args in
         match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(_, _); (e, _)] when S.fv_eq_lid fv Const.smtpat_lid -> (e, None)
-        | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatT_lid -> (e, None)
-        | _ -> failwith "Unexpected pattern term"  in
+        | Tm_fvar fv, [(_, _); (e, _)] when S.fv_eq_lid fv Const.smtpat_lid -> e
+        | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatT_lid -> e
+        | _ -> failwith "Unexpected pattern term"
+    in
 
     let lemma_pats p =
         let elts = list_elements p in
@@ -1029,7 +1036,8 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
             match (U.un_uinst head).n, args with
                 | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatOr_lid ->
                   Some e
-                | _ -> None in
+                | _ -> None
+        in
         match elts with
             | [t] ->
              begin match smt_pat_or t with
@@ -1037,7 +1045,8 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
                   list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
                 | _ -> [elts |> List.map one_pat]
               end
-            | _ -> [elts |> List.map one_pat] in
+            | _ -> [elts |> List.map one_pat]
+    in
 
     let binders, pre, post, patterns = match (SS.compress t).n with
         | Tm_arrow(binders, c) ->
@@ -1051,33 +1060,20 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
             | _ -> failwith "impos"
           end
 
-        | _ -> failwith "Impos" in
+        | _ -> failwith "Impos"
+    in
 
     let vars, guards, env, decls, _ = encode_binders None binders env in
-
-
-    let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun (t, _) ->  encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
-        pats, decls) |> List.unzip in
+    let env = {env with use_zfuel_name=true} in
+    let pats, decls' =
+        patterns |>
+        List.map (fun branch ->
+                    branch |>
+                    List.map (fun t ->  encode_term t env) |>
+                    List.unzip) |>
+        List.unzip in
 
     let decls' = List.flatten decls' in
-
-    let pats =
-      match induction_on with
-      | None -> pats
-      | Some e ->
-        begin match vars with
-          | [] -> pats
-          | [l] -> pats |> List.map (fun p -> mk_Precedes (mkFreeV l) e::p)
-          | _ ->
-            let rec aux tl vars = match vars with
-              | [] -> pats |> List.map (fun p -> mk_Precedes tl e::p)
-              | (x, Term_sort)::vars -> aux (mk_LexCons (mkFreeV(x,Term_sort)) tl) vars
-              | _ -> pats
-            in
-            aux (mkFreeV ("Prims.LexTop", Term_sort)) vars
-        end
-    in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
@@ -1497,7 +1493,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
 
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name.v in
-    let form, decls = encode_function_type_as_formula None None t env in
+    let form, decls = encode_function_type_as_formula None t env in
     decls@[Util.mkAssume(form, Some ("Lemma: " ^ lid.str), ("lemma_"^lid.str))]
 
 let encode_free_var env fv tt t_norm quals =
