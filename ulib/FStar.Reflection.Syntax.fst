@@ -32,6 +32,9 @@ type term_view =
   | Tv_Unknown : term_view // Baked in "None"
   (* TODO: complete *)
 
+assume private val __type_of_binder: binder -> term
+let type_of_binder (b:binder) : term = __type_of_binder b
+
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
 // TODO: might need to say something about the types of binders, in the future.
 val smaller : term_view -> term -> Type0
@@ -40,10 +43,10 @@ let smaller tv t =
     | Tv_App l r ->
         l << t /\ r << t
 
-    | Tv_Abs _ t'
-    | Tv_Arrow _ t'
-    | Tv_Refine _ t' ->
-        t' << t
+    | Tv_Abs b t'
+    | Tv_Arrow b t'
+    | Tv_Refine b t' ->
+        type_of_binder b << t /\ t' << t
 
     | Tv_Type _
     | Tv_Const _
@@ -76,9 +79,6 @@ let inspect_bv (b:binder) = __inspect_bv b
 
 assume private val __binders_of_env : env -> binders
 let binders_of_env (e:env) : binders = __binders_of_env e
-
-assume private val __type_of_binder: binder -> term
-let type_of_binder (b:binder) : term = __type_of_binder b
 
 assume private val __is_free : binder -> term -> bool
 let is_free (b:binder) (t:term) : bool = __is_free b t

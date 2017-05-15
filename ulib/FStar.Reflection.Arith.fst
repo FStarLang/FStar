@@ -102,6 +102,7 @@ let rec is_arith_expr (t:term) =
 val is_arith_prop : term -> tm prop
 let rec is_arith_prop (t:term) =
     let hd, tl = collect_app t in
+    collect_app_order t;
     match term_as_formula hd, tl with
     | FV fv, [a1] ->
         let qn = inspect_fv fv in
@@ -123,11 +124,12 @@ let rec is_arith_prop (t:term) =
     | Or l r,   [] -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
     | _, _ -> fail "connector"
 
-let test =
+private let test =
     let bind = FStar.Tactics.bind in
     let fail = FStar.Tactics.fail in
     assert_by_tactic (t <-- quote (1 + 2);
                              match is_arith_expr t 0 with
                              | Inr (Plus (Lit 1) (Lit 2), _) -> print "alright!"
+                             | Inr _ -> fail "different thing"
                              | Inl s -> fail ("oops: " ^ s))
                             True

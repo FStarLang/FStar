@@ -1,6 +1,7 @@
 module FStar.Reflection.Formula
 
 open FStar.Reflection.Syntax
+open FStar.Reflection.Syntax.Lemmas
 
 noeq type formula =
   | True_  : formula
@@ -23,8 +24,34 @@ let mk_Forall (typ : term) (pred : term) : formula =
     let b = fresh_binder typ in
     Forall b (pack (Tv_App pred (pack (Tv_Var b))))
 
-let term_view_as_formula (tv:term_view) : Tot formula =
-    match tv with
+val smaller : formula -> term -> Type0
+let smaller f t =
+    match f with
+    | And l r
+    | Or l r
+    | App l r
+    | Implies l r
+    | Iff l r ->
+        l << t /\ r << t
+
+    | Forall _ p
+    | Exists _ p
+    | Not p ->
+        p << t
+
+    | Eq typ l r ->
+        typ << t /\ l << t /\ r << t
+
+    | F_Unknown
+    | Name _
+    | FV _
+    | IntLit _
+    | True_
+    | False_ ->
+        True
+
+let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+    match inspect t with
     | Tv_Var n ->
         Name n
 
@@ -39,8 +66,9 @@ let term_view_as_formula (tv:term_view) : Tot formula =
     // ...or should we just try to drop all squashes?
     // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
-        let (h, ts) = collect_app' [t] h0 in
-        match inspect h, ts with
+        let (h, ts) = collect_app h0 in
+        collect_app_order h0;
+        match inspect h, ts@[t] with
         | Tv_FVar fv, [a1; a2; a3] ->
             let qn = inspect_fv fv in
             if eq_qn qn eq2_qn then Eq a1 a2 a3
@@ -50,7 +78,8 @@ let term_view_as_formula (tv:term_view) : Tot formula =
             if eq_qn qn imp_qn then Implies a1 a2
             else if eq_qn qn and_qn then And a1 a2
             else if eq_qn qn or_qn  then Or a1 a2
-            else if eq_qn qn forall_qn then mk_Forall a1 a2 //a1 is type, a2 predicate
+            else if eq_qn qn forall_qn then (admit(); //TODO: admitting termination check for now
+                                             mk_Forall a1 a2) //a1 is type, a2 predicate
             else App h0 t
         | Tv_FVar fv, [a] ->
             let qn = inspect_fv fv in
@@ -75,9 +104,6 @@ let term_view_as_formula (tv:term_view) : Tot formula =
     | Tv_Const (C_Unit)
     | _ -> 
         F_Unknown
-
-let term_as_formula (t:term) : Tot formula =
-    term_view_as_formula (inspect t)
 
 let formula_as_term_view (f:formula) : Tot term_view =
     let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
