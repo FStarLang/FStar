@@ -484,8 +484,8 @@
     [
       "UnionFind.Functions.find_opt",
       8,
+      4,
       2,
-      1,
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_UnionFind.Forest.set_n.fuel_instrumented",
@@ -517,7 +517,6 @@
         "lemma_FStar.DM4F.Heap.sel_upd1", "lemma_FStar.DM4F.Heap.sel_upd2",
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "lemma_FStar.OrdSet.lemma_strict_subset_minus_size",
-        "lemma_FStar.OrdSet.lemma_strict_subset_size",
         "lemma_FStar.OrdSet.lemma_strict_subset_transitive",
         "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_Prims.Mktuple3__1", "proj_equation_Prims.Mktuple3__3",

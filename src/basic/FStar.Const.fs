@@ -43,3 +43,28 @@ let eq_const c1 c2 =
     | Const_string(a, _), Const_string(b, _) -> a=b
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
     | _ -> c1=c2
+
+open FStar.Mul
+let rec pow2 (x:int) : int =
+  match x with
+  | 0  -> 1
+  | _  -> Prims.op_Multiply 2 (pow2 (x-1))
+
+
+let bounds signedness width =
+    let n =
+        match width with
+        | Int8 -> 8
+        | Int16 -> 16
+        | Int32 -> 32
+        | Int64 -> 64
+    in
+    let lower, upper =
+      match signedness with
+      | Unsigned ->
+        0, pow2 n - 1
+      | Signed ->
+        let upper = pow2 (n - 1) in
+        - upper, upper - 1
+    in
+    lower, upper
