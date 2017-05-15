@@ -491,18 +491,52 @@ let write_hello () =
 (******************************************************************************************)
 open FStar.Parser.ParseIt
 
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_stack: stack_t; repl_curmod: modul_t;
-                    repl_env: env_t; repl_ts: m_timestamps;
-                    repl_stdin: stream_reader }
+type repl_tc_state = {
+     repl_stack: stack_t;
+     repl_env: env_t;
+     repl_ts: m_timestamps;
+     repl_curmod : modul_t
+}
 
-let json_of_repl_state st =
+type repl_basic_state = {
+     repl_line: int;
+     repl_column: int;
+     repl_fname: string;
+     repl_stdin: stream_reader;
+}
+
+type repl_state = {
+     repl_basic_state: repl_basic_state;
+     repl_tc_state: repl_tc_state
+}
+
+let set_line l st =
+    let bs = {st.repl_basic_state with repl_line=l} in
+    {st with repl_basic_state = bs}
+let set_col l st =
+    let bs = {st.repl_basic_state with repl_column=l} in
+    {st with repl_basic_state = bs}
+
+let set_stack s st =
+    let tc = {st.repl_tc_state with repl_stack = s} in
+    {st with repl_tc_state=tc}
+let set_env e st =
+    let tc = {st.repl_tc_state with repl_env = e} in
+    {st with repl_tc_state=tc}
+let set_ts ts st =
+    let tc = {st.repl_tc_state with repl_ts = ts} in
+    {st with repl_tc_state=tc}
+let set_curmod m st =
+    let tc = {st.repl_tc_state with repl_curmod = m} in
+    {st with repl_tc_state=tc}
+
+let json_of_repl_state (st:repl_state) =
   let opts_and_defaults =
     let opt_docs = Util.smap_of_list (Options.docs ()) in
     let get_doc k = Util.smap_try_find opt_docs k in
     List.map (fun (k, v) -> (k, Options.get_option k, get_doc k, v)) Options.defaults in
   [("loaded-dependencies",
-    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
+    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_tc_state.repl_ts));
    ("options",
     JsonList (List.map (fun (name, value, doc, dflt) ->
                         JsonAssoc [("name", JsonStr name);
@@ -523,64 +557,71 @@ let run_describe_repl st =
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
 
-let run_pop st = // This shrinks all internal stacks by 1
-  match st.repl_stack with
+let run_pop (st:repl_state) = // This shrinks all internal stacks by 1
+  match st.repl_tc_state.repl_stack with
   | [] -> // FIXME this isn't strict enough: the initial dependency checks create
          // multiple entries in the stack (so an error should be raised when
          // length <= length_after_deps_check, not when length = 0.
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
 
   | (env, curmod) :: stack ->
-    pop st.repl_env "#pop";
+    pop st.repl_tc_state.repl_env "#pop";
 
     // Clean up if all the fragments from the current buffer have been popped
-    if List.length stack = List.length st.repl_ts then cleanup env;
+    if List.length stack = List.length st.repl_tc_state.repl_ts then cleanup env;
 
     ((QueryOK, JsonNull),
-      Inl ({ st with repl_env = env; repl_curmod = curmod; repl_stack = stack }))
+      Inl (st |> set_env env |> set_curmod curmod |> set_stack stack))
 
-let run_push st kind text line column peek_only =
-  let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
+let run_push (st:repl_state) kind text line column peek_only =
+  let stack, env, ts =
+      st.repl_tc_state.repl_stack,
+      st.repl_tc_state.repl_env,
+      st.repl_tc_state.repl_ts in
 
   // If we are at a stage where we have not yet pushed a fragment from the
   // current buffer, see if some dependency is stale. If so, update it. Also
   // if this is the first chunk, we need to restore the command line options.
   let restore_cmd_line_options, (stack, env, ts) =
     if List.length stack = List.length ts
-    then true, update_deps st.repl_fname st.repl_curmod stack env ts
+    then true, update_deps st.repl_basic_state.repl_fname st.repl_tc_state.repl_curmod stack env ts
     else false, (stack, env, ts) in
 
-  let stack = (env, st.repl_curmod) :: stack in
+  let stack = (env, st.repl_tc_state.repl_curmod) :: stack in
   let env = push env kind restore_cmd_line_options "#push" in
 
   // This pushes to an internal, hidden stack
   let env_mark = mark env in
 
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
-  let res = check_frag env_mark st.repl_curmod (frag, false) in
+  let res = check_frag env_mark st.repl_tc_state.repl_curmod (frag, false) in
 
   let errors = FStar.Errors.report_all() |> List.map json_of_issue in
   FStar.Errors.clear ();
 
-  let st' = { st with repl_stack = stack; repl_ts = ts;
-                      repl_line = line; repl_column = column } in
+  let st' =
+    st |>
+    set_line line |>
+    set_col column |>
+    set_ts ts |>
+    set_stack stack in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
     // At this stage, the internal stack has grown with size 1.
     let env = commit_mark env in
     ((QueryOK, JsonList errors),
-      Inl ({ st' with repl_curmod = curmod; repl_env = env }))
+      Inl (st' |> set_curmod curmod |> set_env env))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
     let env = reset_mark env_mark in
-    let _, st'' = run_pop ({ st' with repl_env = env }) in
+    let _, st'' = run_pop (st' |> set_env env) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
 
 let run_lookup st symbol pos_opt requested_info =
-  let dsenv, tcenv = st.repl_env in
+  let dsenv, tcenv = st.repl_tc_state.repl_env in
 
   let info_of_lid_str lid_str =
     let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
@@ -633,7 +674,7 @@ let run_lookup st symbol pos_opt requested_info =
   (response, Inl st)
 
 let run_completions st search_term =
-  let dsenv, tcenv = st.repl_env in
+  let dsenv, tcenv = st.repl_tc_state.repl_env in
   //search_term is the partially written identifer by the user
   // FIXME a regular expression might be faster than this explicit matching
   let rec measure_anchored_match
@@ -750,10 +791,10 @@ let run_completions st search_term =
 
 let run_compute st term rules =
   let run_and_rewind st task =
-    let env_mark = mark st.repl_env in
+    let env_mark = mark st.repl_tc_state.repl_env in
     let results = task st in
     let env = reset_mark env_mark in
-    let st' = { st with repl_env = env } in
+    let st' = st |> set_env env in
     (results, Inl st') in
 
   let dummy_let_fragment term =
@@ -792,9 +833,9 @@ let run_compute st term rules =
        FStar.TypeChecker.Normalize.Primops] in
 
   run_and_rewind st (fun st ->
-    let dsenv, tcenv = st.repl_env in
+    let dsenv, tcenv = st.repl_tc_state.repl_env in
     let frag = dummy_let_fragment term in
-    match st.repl_curmod with
+    match st.repl_tc_state.repl_curmod with
     | None -> (QueryNOK, JsonStr "Current module unset")
     | _ ->
       match parse frag with
@@ -850,8 +891,8 @@ let json_of_search_result dsenv tcenv sc =
 
 exception InvalidSearch of string
 
-let run_search st search_str =
-  let dsenv, tcenv = st.repl_env in
+let run_search (st:repl_state) search_str =
+  let dsenv, tcenv = st.repl_tc_state.repl_env in
   let empty_fv_set = SS.new_fv_set () in
 
   let st_matches candidate term =
@@ -925,13 +966,22 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Search term -> run_search st term
   | ProtocolViolation query -> run_protocol_violation st query
 
-let rec go st : unit =
-  let query = read_interactive_query st.repl_stdin in
-  let (status, response), state_opt = run_query st query.qq in
-  write_response query.qid status response;
-  match state_opt with
-  | Inl st' -> go st'
-  | Inr exitcode -> exit exitcode
+let go (bst:repl_basic_state) (init: unit -> repl_tc_state) =
+  let query = read_interactive_query bst.repl_stdin in
+  let st = {repl_basic_state = bst; repl_tc_state=init()} in
+  let do_query st query k =
+      let (status, response), state_opt = run_query st query.qq in
+      write_response query.qid status response;
+      match state_opt with
+      | Inl st' -> k st'
+      | Inr exitcode ->
+        exit exitcode
+  in
+  let rec aux st =
+    let query = read_interactive_query bst.repl_stdin in
+    do_query st query aux
+  in
+  do_query st query aux
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
@@ -952,30 +1002,43 @@ let interactive_printer =
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
   write_hello ();
-  //type check prims and the dependencies
-  let filenames, maybe_intf = deps_of_our_file filename in
-  let env = tc_prims () in
-  let stack, env, ts = tc_deps None [] env filenames [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
-  let env =
-    match maybe_intf with
-    | Some intf ->
-        // We found an interface: record its contents in the desugaring environment
-        // to be interleaved with the module implementation on-demand
-        FStar.Universal.load_interface_decls env intf
-    | None ->
-        env
+  let init () =
+      //type check prims and the dependencies
+      let filenames, maybe_intf = deps_of_our_file filename in
+      let env = tc_prims () in
+      let stack, env, ts = tc_deps None [] env filenames [] in
+      let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+      let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+      let env =
+        match maybe_intf with
+        | Some intf ->
+            // We found an interface: record its contents in the desugaring environment
+            // to be interleaved with the module implementation on-demand
+            FStar.Universal.load_interface_decls env intf
+        | None ->
+            env
+      in
+      {
+        repl_stack = stack;
+        repl_curmod = None;
+        repl_env = env;
+        repl_ts = ts
+      }
   in
 
-  let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
-                  repl_stack = stack; repl_curmod = None;
-                  repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
+  let init_st = {
+        repl_line = 1;
+        repl_column = 0;
+        repl_fname = filename;
+        repl_stdin = open_stdin ()
+   }
+
+  in
 
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
-    FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
+    FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st init)
   else
-    go init_st
+    go init_st init
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
