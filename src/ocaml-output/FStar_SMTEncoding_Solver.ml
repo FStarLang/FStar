@@ -363,7 +363,8 @@ let ask_and_report_errors:
                                      FStar_SMTEncoding_Util.mkApp
                                        ("MaxFuel", []) in
                                    let uu____695 =
-                                     FStar_SMTEncoding_Term.n_fuel n1 in
+                                     FStar_SMTEncoding_Term.n_fuel
+                                       (n1 + (Prims.parse_int "1")) in
                                    (uu____693, uu____695) in
                                  FStar_SMTEncoding_Util.mkEq uu____690 in
                                (uu____689, None, "@MaxFuel_assumption") in
