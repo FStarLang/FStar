@@ -111,7 +111,10 @@ type stack_elt =
 
 type stack = list<stack_elt>
 
-
+let is_fstar_tactics_embed t =
+    match (U.un_uinst t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv SC.fstar_refl_embed_lid
+    | _ -> false
 
 let mk t r = mk t None r
 let set_memo r t =
@@ -262,8 +265,10 @@ let rec closure_as_term cfg env t =
             | Tm_type u ->
               mk (Tm_type (norm_universe cfg env u)) t.pos
 
-            | Tm_uinst(t, us) -> (* head symbol must be an fvar *)
-              mk_Tm_uinst t (List.map (norm_universe cfg env) us)
+            | Tm_uinst(t', us) -> (* head symbol must be an fvar *)
+              if is_fstar_tactics_embed t'
+              then t
+              else mk_Tm_uinst t' (List.map (norm_universe cfg env) us)
 
             | Tm_bvar x ->
               begin match lookup_bvar env x with
@@ -751,12 +756,6 @@ let is_reify_head = function
       true
     | _ ->
       false
-
-// TODO: GM: kinda flaky and ill named
-let is_fstar_tactics_embed t =
-    match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv SC.fstar_refl_embed_lid
-    | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
