@@ -203,33 +203,6 @@ let push_context (dsenv, env) msg =
     let env = TcEnv.push env msg in
     (dsenv, env)
 
-let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:DsEnv.env) (env:env) = //:(modul * int) list * Parser.Env.env * env =
-  Syntax.reset_gensym ();
-  match intf with
-    | None -> //no interface; easy
-      tc_one_file dsenv env None impl
-    | Some _ when ((Options.codegen()) <> None) ->
-        if not (Options.lax())
-        then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
-        tc_one_file dsenv env intf impl
-    | Some iname ->
-        if Options.debug_any () then
-        FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
-        let caption = "interface: " ^ iname in
-        //push a new solving context, so that we can blow away implementation details below
-
-        // JP: TcEnv.pop and TcEnv.push in turn call z3 push & pop -- the z3
-        // queries have a notion of push & pop that allow one to "scope" a bunch
-        // of queries and make them invisible to the outside -- what we're doing
-        // in addition to that is we're being paranoid and are killing the z3 process to be
-        // absolutely sure it doesn't use any knowledge acquired from checking the queries
-        // that stem from the implementation
-        let dsenv', env' = push_context (dsenv, env) caption in
-        let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
-        // discard the impl and check the interface alone for the rest of the program
-        let _ = pop_context env' caption in
-        tc_one_file dsenv env None iname //check the interface alone
-
 type uenv = DsEnv.env * env
 
 let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string list * (modul* int) list * uenv) =
@@ -237,9 +210,9 @@ let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string
   let remaining, (nmods, dsenv, env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          remaining, tc_one_file_and_intf (Some intf) impl dsenv env
+          remaining, tc_one_file dsenv env (Some intf) impl
         | intf_or_impl :: remaining ->
-          remaining, tc_one_file_and_intf None intf_or_impl dsenv env
+          remaining, tc_one_file dsenv env None intf_or_impl
         | [] -> [], ([], dsenv, env)
   in
   remaining, nmods, (dsenv, env)

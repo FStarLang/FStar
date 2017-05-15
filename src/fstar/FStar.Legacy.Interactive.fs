@@ -35,10 +35,10 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   let (intf, impl), dsenv, env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
+          let _, dsenv, env = tc_one_file dsenv env (Some intf) impl in
           (Some intf, impl), dsenv, env, remaining
         | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
+          let _, dsenv, env = tc_one_file dsenv env None intf_or_impl in
           (None, intf_or_impl), dsenv, env, remaining
         | [] -> failwith "Impossible"
   in
