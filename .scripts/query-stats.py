@@ -165,7 +165,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                 stats = {}
                 for k, v in mr.groupdict().items():
                     add_query(stats, k, v)
-                if "fstar_usedhints" not in stats:
+                if ("fstar_usedhints" not in stats) or (stats["fstar_usedhints"] == ""):
                     stats["fstar_usedhints"] = "-"
                 if "fstar_z3stats" in stats:
                     z3stats_str = get_value(stats, "fstar_z3stats")
@@ -195,47 +195,85 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
             write_query_row(f, item, stat, fstar_output_columns, columns)
         write_footer(f)
         if global_stats:
-            process_global_statsstats(f, queries)
+            process_global_stats(f, queries)
 
 
-def process_global_statsstats(f, queries):
+def process_global_stats(f, queries):
     f.write("\"Name\",\"Value\",\"Unit\"\n")
-    stats = [ 0.0, 0, 0.0, 0, 0, 0, 0, 0, 0.0 ]
+    time = 0.0
+    fstar_time = 0
+    max_time = 0.0
+    max_fstar_time = 0
+    sum_rlimit_count = 0
+    max_rlimit_count = 0
+    sum_fstar_rlimit = 0
+    max_fstar_rlimit = 0
+    max_max_memory = 0.0
+    succeeded_without_hint = 0
+    succeeded_with_hint = 0
+    failed_without_hint = 0
+    failed_with_hint = 0
+
     for k, v in queries.items():
-        time = get_float_value(v, "time")
-        fstar_time = get_int_value(v, "fstar_time")
-        rlimit_count = get_int_value(v, "rlimit-count")
-        fstar_rlimit = get_int_value(v, "fstar_rlimit")
-        max_memory = get_float_value(v, "max-memory")
-        stats[0] += time
-        stats[1] += fstar_time
-        stats[2] = max(stats[2], time)
-        stats[3] = max(stats[3], fstar_time)
-        stats[4] += rlimit_count
-        stats[5] = max(stats[5], rlimit_count)
-        stats[6] += fstar_rlimit
-        stats[7] = max(stats[7], fstar_rlimit)
-        stats[8] = max(stats[8], max_memory)
+        kv_time = get_float_value(v, "time")
+        kv_fstar_time = get_int_value(v, "fstar_time")
+        kv_rlimit_count = get_int_value(v, "rlimit-count")
+        kv_fstar_rlimit = get_int_value(v, "fstar_rlimit")
+        kv_max_memory = get_float_value(v, "max-memory")
+
+        time += kv_time
+        fstar_time += kv_fstar_time
+        max_time = max(max_time, kv_time)
+        max_fstar_time = max(max_fstar_time, kv_fstar_time)
+        sum_rlimit_count += kv_rlimit_count
+        max_rlimit_count = max(max_rlimit_count, kv_rlimit_count)
+        sum_fstar_rlimit += kv_fstar_rlimit
+        max_fstar_rlimit = max(max_fstar_rlimit, kv_fstar_rlimit)
+        max_max_memory = max(max_max_memory, kv_max_memory)
+
+        tags = list(cfmt_tag(get_string_value(v, "fstar_tag")))
+        usedhints = list(cfmt_usedhint(get_string_value(v, "fstar_usedhints")))
+        assert(len(tags) == len(usedhints))
+        for i in range(0, len(tags)):
+            t = tags[i]
+            u = usedhints[i]
+            if t == "+" and u == "+":
+                succeeded_with_hint += 1
+            elif t == "+" and u == "-":
+                succeeded_without_hint += 1
+            elif t == "-" and u == "+":
+                failed_with_hint += 1
+            else:
+                assert(t == "-" and u == "-")
+                failed_without_hint += 1
+            
     f.write("\"# Queries\",%s,%s\n" % (len(queries), "\"\""))
-    f.write("\"Sum(time)\",%s,%s\n" % (stats[0], "\"sec\""))
-    f.write("\"Sum(fstar_time)\",%s,%s\n" % (stats[1], "\"msec\""))
-    f.write("\"Max(time)\",%s,%s\n" % (stats[2], "\"sec\""))
-    f.write("\"Max(fstar_time)\",%s,%s\n" % (stats[3], "\"msec\""))
-    f.write("\"Sum(rlimit-count)\",%s,%s\n" % (stats[4], "\"\""))
-    f.write("\"Max(rlimit-count)\",%s,%s\n" % (stats[5], "\"\""))
-    f.write("\"Sum(rlimit)\",%s,%s\n" % (stats[6], "\"\""))
-    f.write("\"Max(rlimit)\",%s,%s\n" % (stats[7], "\"\""))
+    f.write("\"# succeeded\",%s,%s\n" % ((succeeded_with_hint + succeeded_without_hint), "\"\""))
+    f.write("\"# succeeded (with hint)\",%d,%s\n" % (succeeded_with_hint, "\"\""))
+    f.write("\"# succeeded (without hint)\",%d,%s\n" % (succeeded_without_hint, "\"\""))
+    f.write("\"# failed\",%d,%s\n" % ((failed_with_hint + failed_without_hint), "\"\""))
+    f.write("\"# failed (with hint)\",%d,%s\n" % (failed_with_hint, "\"\""))
+    f.write("\"# failed (without hint)\",%d,%s\n" % (failed_without_hint, "\"\""))
+    f.write("\"Sum(time)\",%s,%s\n" % (time, "\"sec\""))
+    f.write("\"Sum(fstar_time)\",%s,%s\n" % (fstar_time, "\"msec\""))
+    f.write("\"Max(time)\",%s,%s\n" % (max_time, "\"sec\""))
+    f.write("\"Max(fstar_time)\",%s,%s\n" % (max_fstar_time, "\"msec\""))
+    f.write("\"Sum(rlimit-count)\",%s,%s\n" % (sum_rlimit_count, "\"\""))
+    f.write("\"Max(rlimit-count)\",%s,%s\n" % (max_rlimit_count, "\"\""))
+    f.write("\"Sum(rlimit)\",%s,%s\n" % (sum_fstar_rlimit, "\"\""))
+    f.write("\"Max(rlimit)\",%s,%s\n" % (max_fstar_rlimit, "\"\""))
+
     
     rlimit_cnst = float(544656)
-    rlimit_budget_used = float("inf") if (stats[5] == 0.0) else 100.0 * (float(stats[4])/(float(stats[5])*rlimit_cnst))
+    rlimit_budget_used = float("inf") if (max_rlimit_count == 0.0) else 100.0 * (float(sum_rlimit_count)/(float(max_rlimit_count)*rlimit_cnst))
     f.write("\"rlimit budget used\",%s,%s\n" % (rlimit_budget_used, "\"%\""))
 
-    time_per_rlimit = float("inf") if (stats[0] == 0) else float(stats[0])/float(stats[6])
-    rlimit_per_sec = float("inf") if (stats[6] == 0) else float(stats[6])/float(stats[0])
+    time_per_rlimit = float("inf") if (sum_fstar_rlimit == 0) else float(time)/float(sum_fstar_rlimit)
+    rlimit_per_sec = float("inf") if (time == 0.0) else float(sum_fstar_rlimit)/float(time)
     f.write("\"time/rlimit\",%s,%s\n" % (time_per_rlimit, "\"sec\""))
     f.write("\"rlimit/sec\",%s,%s\n" % (rlimit_per_sec, "\"\""))
 
-    f.write("\"Max(memory)\",%s,%s\n" % (stats[8], "\"MB\""))
+    f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
 
     f.write("\n")
 
