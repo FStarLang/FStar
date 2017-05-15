@@ -357,11 +357,8 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
          uu____712 None FStar_Range.dummyRange in
        let steps =
          [FStar_TypeChecker_Normalize.Reify;
-         FStar_TypeChecker_Normalize.Beta;
          FStar_TypeChecker_Normalize.UnfoldUntil
            FStar_Syntax_Syntax.Delta_constant;
-         FStar_TypeChecker_Normalize.Zeta;
-         FStar_TypeChecker_Normalize.Iota;
          FStar_TypeChecker_Normalize.Primops] in
        let uu____724 =
          FStar_All.pipe_left FStar_Tactics_Basic.mlog
