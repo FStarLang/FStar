@@ -204,7 +204,8 @@ let rec visit (callback:tactic unit) () : Tac unit =
                     | And p q ->
                         seq split (
                             visit callback;;
-                            merge
+                            trytac merge;;
+                            return ()
                         )
                     | Implies p q ->
                         implies_intro;;

@@ -2,12 +2,12 @@ module FStar.Reflection.Syntax
 
 open FStar.Order
 
-assume type term
+assume val term : Type0
 
-assume type bv
-assume type fv
-assume type binder
-assume type env // would maybe make more sense in tactics, as they're special cased
+assume val bv : Type0
+assume val fv : Type0
+assume val binder : Type0
+assume val env : Type0// would maybe make more sense in tactics, as they're special cased
 
 type name    = list string
 type typ     = term
