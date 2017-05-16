@@ -81,7 +81,7 @@ let rec sort l = match l with
   | pivot::tl ->
     let hi, lo = partition (fun j -> pivot <= j) tl in
     let m = append (sort lo) (pivot::sort hi) in
-    assert (forall i. mem i (pivot :: sort hi) = mem i [pivot] || mem i (sort hi));
+    assert (forall i. mem i (pivot :: sort hi) = mem i (append [pivot] (sort hi)));
     m
 
     

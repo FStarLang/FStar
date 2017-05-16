@@ -250,20 +250,17 @@ val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> 
  	     /\ l `sub` ((V x, y)::tl) = (V x, y)::tl
  	     /\ solved (l'' `sub` ([x, y] `sub` tl))))
   (ensures (solved (l'' `sub` ((V x,y)::tl))))
+
 let key_lemma x y tl l lpre l'' =
   let xy = [x,y] in
   let xyl = xy++l in
   let vxy = V x, y in
   assert  (l'' `sub` (vxy::tl)
-        == lpre `sub` (xyl `sub` (vxy::tl)));
-  assert  (lpre `sub` (xyl `sub` (vxy::tl))
         == lpre `sub` (xy `sub` (l `sub` (vxy::tl))));
   lemma_lsubst_eqns_commutes (x,y) l (vxy :: tl);
   assert  (lpre `sub` (xy `sub` (l `sub` (vxy::tl)))
         == lpre `sub` (xy `sub` (l `sub` (xy `sub` (vxy::tl)))));
   assert  (lpre `sub` (xy `sub` (l `sub` (xy `sub` (vxy::tl))))
-        == lpre `sub` (xyl `sub` (xy `sub` (vxy :: tl))));
-  assert  (lpre `sub` (xyl `sub` (xy `sub` (vxy::tl)))
         == l'' `sub` (xy `sub` (vxy :: tl)));
   lemma_subst_id x y y
 

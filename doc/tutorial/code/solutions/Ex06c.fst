@@ -94,5 +94,5 @@ let rec sort l = match l with
   | pivot::tl ->
     let hi, lo = partition (cmp pivot) tl in
     let l' = append (sort lo) (pivot::sort hi) in
-    assert (forall i. mem i (pivot::sort hi) = mem i [pivot] || mem i (sort hi));
+    assert (forall i. mem i (pivot::sort hi) = mem i (append [pivot] (sort hi)));
     dedup l'

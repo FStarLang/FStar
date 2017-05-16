@@ -87,10 +87,10 @@ let permutation_app_lemma (#a:eqtype) (hd:a) (tl:list a)
      //    count' ZFuel x (l1 @ (hd :: l2)) = count' ZFuel x l1 + count' ZFuel x (hd :: l2))
      //where count' is the fuel-instrumented variant of count
      //But, this variant prevents further progress, since we can't unfold the last term in the sum
-     //By assertion the equality, we explicitly introduce `count x (hd::l2)` 
+     //By assertion the equality, we explicitly introduce `count x (hd::l2)`
      //which can then be unfolded as needed.
      //This is rather counterintuitive.
-     assert (forall x. count x (l1 @ (hd :: l2)) = count x l1 + count x (hd :: l2))
+    assert (forall x. count x (l1 @ (hd :: l2)) = count x l1 + count x (hd :: l2))
 
 val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
   Tot (m:list a{sorted f m /\ is_permutation a l m})
@@ -101,8 +101,6 @@ let rec quicksort #a f l =
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
     let m = quicksort f lo @ pivot :: quicksort f hi in
-    partition_lemma (f pivot) tl;
-    sorted_app_lemma f (quicksort f lo) (quicksort f hi) pivot;
-    permutation_app_lemma #a pivot tl (quicksort f lo) (quicksort f hi);
+    permutation_app_lemma pivot tl (quicksort f lo) (quicksort f hi);
     m
     
