@@ -13,20 +13,15 @@ let test1 = assert_by_tactic (let _ = pack (Tv_Const (C_Int ((10 + 8) + (3 + 9))
                               return ()) True
 
 let test2 = assert_by_tactic (x <-- quote test1;
-                              print ("quote test1 returned = " ^ term_to_string x);;
                               match inspect x with
-                              | Tv_FVar fv -> print ("FV: " ^ flatten_name (inspect_fv fv))
+                              | Tv_FVar fv -> return ()
                               | _ -> fail "wat") True
 
 
 let blah' (ff : term -> tactic term) (t : term) =
-    print ("GGG Trace: " ^ term_to_string t);;
-    print ("GGG Trace2: " ^ formula_to_string (term_as_formula t));;
     tv <-- (match inspect t with
-            | Tv_Var b -> print ("BVar = " ^ inspect_bv b);;
-                          return (Tv_Var b)
-            | Tv_FVar f -> print ("FVar = " ^ flatten_name (inspect_fv f));;
-                           return (Tv_FVar f)
+            | Tv_Var b -> return (Tv_Var b)
+            | Tv_FVar f -> return (Tv_FVar f)
             | Tv_App l r -> l <-- ff l;
                             r <-- ff r;
                             return (Tv_App l r)
@@ -45,33 +40,24 @@ let blah : term -> tactic term =
     fix1 blah'
 
 let _ = assert_by_tactic (t <-- quote (1+1);
-                          print ("t = " ^ term_to_string t);;
-                          t <-- blah t;
-                          print ("t = " ^ term_to_string t);;
-                          return ()
+                          t' <-- blah t;
+                          if term_eq t t'
+                          then return ()
+                          else fail "blah not an identity?"
                           ) True
 
 let _ = assert_by_tactic (t <-- quote blah;
                           (match inspect t with
                           | Tv_FVar fv ->
-                              print (flatten_name (inspect_fv fv));;
                               return ()
                           | _ ->
-                              fail "wat")) True
+                              fail "Free variable did not return an FV")) True
 
-let _ = assert_by_tactic (print "GGG 1";;
-                          t <-- quote (fun (x y x : int) -> y + x);
-                          print "GGG 2";;
-                          blah t;;
-                          print "GGG 3";;
-                          return ()) True
-
-let _ = assert_by_tactic (t <-- quote (2 + 3);
+let _ = assert_by_tactic (t <-- quote (5 == 2 + 3);
                           match term_as_formula t with
                           | Eq _ _ _ -> return ()
-                          | _ -> return ();;
-
-                          return ())
+                          | _ -> fail "term_as_formula did not recognize an equality"
+                          )
                           True
 
 let _ = assert_by_tactic (t <-- quote ((fun (x:int) -> x) 5);
@@ -93,7 +79,7 @@ let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
 // Tweaking inference to do some normalization could get rid of this, I think..
 let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
                           match term_as_formula t with
-                          | Implies _ _ -> return ()
+                          | Implies _ _ -> fail "" // make it fail for now, but this is the wanted result, I think
                           | f -> print ("This should be an implication: " ^ formula_to_string f);;
                                  print "But that's a known issue...";;
                                  return ()
