@@ -74,6 +74,13 @@ let _ = assert_by_tactic (t <-- quote (2 + 3);
                           return ())
                           True
 
+let _ = assert_by_tactic (t <-- quote ((fun (x:int) -> x) 5);
+                          match inspect t with
+                          | Tv_App _ _ -> return ()
+                          | Tv_Const (C_Int 5) -> fail "Quoted term got reduced!"
+                          | _ -> fail "What?"
+                          ) True
+
 let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
                           match term_as_formula t with
                           | Forall _ _ -> return ()
