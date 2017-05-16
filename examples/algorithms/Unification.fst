@@ -246,14 +246,37 @@ val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> 
  	     /\ solved (lsubst_eqns l'' (lsubst_eqns [x, y] tl))))
   (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))))
 let key_lemma x y tl l lpre l'' =
+  l of (V x, y)::tl = V x,y :: tl
+  l'' = (pre, x/y, l)
+  l'' of (x/y of tl)   solved
+
+  l'' of (V x, y)::tl  solved
+
+  l'' of (V x, y)::tl =
+  pre of (x/y of (l of (V x, y)::tl) =
+  pre of (x/y of (V x, y)::tl) = 
+  pre of ((V y, y)::(x/y of tl)) = 
+  V (pre y, pre y)::(pre of (x/y of tl))
+                   ... 
+
+                =
+                   
+                   =l'' of tl
+
+   
   lemma_lsubst_eqns_commutes (x,y) l tl;
   lemma_subst_id x y y;
-  assert (lsubst_eqns l'' [V x, y] =
-  	  lsubst_eqns lpre (lsubst_eqns [x,y] (lsubst_eqns l [V x, y])));
-  assert (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]) =
-  	  lsubst_eqns [x,y] [V x, y]);
-  assert (lsubst_eqns [x,y] [V x, y] =
-	  [y,y])
+  lemma_extend_lsubst_distributes_eqns
+  assert (lsubst_eqns l'' ((V x,y)::tl) = 
+         (lsubst_eqns l'' [(V x, y)]) @ (lsubst_eqns l'' tl));
+  admit()
+  
+  (* assume (lsubst_eqns l'' [V x, y] = *)
+  (* 	  lsubst_eqns lpre (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]))); *)
+  (* assume (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]) = *)
+  (* 	  lsubst_eqns [x,y] [V x, y]); *)
+  (* assume (lsubst_eqns [x,y] [V x, y] = *)
+  (*         [y,y]) *)
 
 val lemma_subst_term_idem: s:subst -> t:term -> Lemma
   (requires (ok s))

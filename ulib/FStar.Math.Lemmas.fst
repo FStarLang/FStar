@@ -452,7 +452,7 @@ let division_sub_lemma a b n =
   multiple_division_lemma n b;
   division_definition (a - n * b) b (a / b - n)
 
-#reset-options "-z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 20 --initial_fuel 1 --max_fuel 1"
 
 (* Lemma: Modulo distributivity *)
 val modulo_distributivity: a:nat -> b:nat -> c:pos ->
@@ -466,7 +466,7 @@ let modulo_distributivity a b c =
   division_addition_lemma (a - (a / c) * c + b - (b / c) * c) c (a / c + b / c)
 
 
-#reset-options "-z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 (* Lemma: Modulo distributivity under special condition *)
 val modulo_addition_lemma: a:nat -> b:pos -> n:nat ->
