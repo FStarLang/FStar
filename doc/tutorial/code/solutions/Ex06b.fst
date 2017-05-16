@@ -93,4 +93,6 @@ let rec sort #t f l = match l with
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
-    append (sort f lo) (pivot::sort f hi)
+    let m = append (sort f lo) (pivot::sort f hi) in
+    assert (forall i. mem i (pivot :: sort f hi) = mem i [pivot] || mem i (sort f hi));
+    m
