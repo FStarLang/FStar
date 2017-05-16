@@ -53,5 +53,5 @@ let subst_extensional s1 s2 e = ()
    no way to prove this without the SMTPat (e.g. manually), or to use
    the SMTPat only locally, in this definition (`using` needed). *)
 val sub_lam_hoist : e:exp -> s:sub -> Lemma (requires True)
-      (ensures (subst s (ELam e) = ELam (subst (sub_lam s) e)))
+      (ensures (subst s (ELam e) = ELam (subst (sub_elam s) e)))
 let sub_lam_hoist e s = ()
