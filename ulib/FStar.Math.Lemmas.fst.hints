@@ -2126,7 +2126,7 @@
       "FStar.Math.Lemmas.modulo_distributivity",
       3,
       1,
-      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
         "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
