@@ -23,11 +23,17 @@ let rec trees_of_size (s: nat) : list bin_tree =
       (fun (s1, s2) -> List.Tot.map Branch (product (trees_of_size s1) (trees_of_size s2)))
       (pairs_with_sum (s - 1))
 
-let unfold_tos (s: nat) :
-  Lemma (trees_of_size s ==
+let unfold_tos (s: nat) : Lemma (trees_of_size s ==
+             (if s = 0 then
+               [Leaf]
+             else
+               List.Tot.concatMap #(p: (nat * nat){(fst p) + (snd p) == s - 1})
+                 (fun (s1, s2) -> List.Tot.map Branch (product (trees_of_size s1) (trees_of_size s2)))
+                 (pairs_with_sum (s - 1)))) =
+  assert_norm (trees_of_size s ==
          (if s = 0 then
            [Leaf]
          else
            List.Tot.concatMap #(p: (nat * nat){(fst p) + (snd p) == s - 1})
              (fun (s1, s2) -> List.Tot.map Branch (product (trees_of_size s1) (trees_of_size s2)))
-             (pairs_with_sum (s - 1)))) = ()
+             (pairs_with_sum (s - 1))))
