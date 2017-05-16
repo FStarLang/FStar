@@ -6,12 +6,16 @@ let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd :: tl -> hd :: append tl l2
 
-assume val mem: #t:Type{hasEq t} -> t -> list t -> Tot bool
+// BEGIN: Mem
+val mem: #a:eqtype -> a -> list a -> Tot bool
+let rec mem #a x xs =
+  match xs with
+  | [] -> false
+  | hd::tl -> hd=x || mem x tl
+// END: Mem
 
-
-
-
-
-val append_mem:  #t:Type{hasEq t} -> l1:list t -> l2:list t -> a:t
-        -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
-let rec append_mem #t l1 l2 a = admit() //replace admit() by proof
+// BEGIN: AppendMem
+val append_mem:  #a:eqtype -> l1:list a -> l2:list a -> x:a
+        -> Lemma (ensures (mem x (append l1 l2) <==>  mem x l1 || mem x l2))
+// END: AppendMem
+let rec append_mem #a l1 l2 x = admit() //replace admit() by proof
