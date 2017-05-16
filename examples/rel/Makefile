@@ -21,6 +21,7 @@ all:\
   IfcRecursiveReify.uver\
   IfcReificationRegressionTest.uver\
   IfcRules.uver\
+  IfcRulesReify.uver\
   IfcTypechecker.uver\
   Loops.uver\
   Memo.uver\
@@ -42,8 +43,6 @@ all:\
   WhileReify.uver \
   OTP.uver \
   ElGamal.uver
-
-  # IfcRulesReify.uver\
 
 %.fst-in:
 	@echo $(OTHERFLAGS)

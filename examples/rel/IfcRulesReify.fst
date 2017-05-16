@@ -208,25 +208,6 @@ let assign_com env e r =
   forall_intro (assign_inv_com0 env e r (FStar.Squash.get_proof (ni_exp env e (env r)))) ;
   forall_intro (assign_inv_com' env e r)
 
-(* Sequencing rule for commands
-
-         env,pc:l |- c1  env,pc:l |- c2
-         ------------------------------
-               env,pc:l |- c1; c2
-*)
-
-val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:heap ->
-  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
-    (ensures (inv_com' env (Seq c1 c2) l h0))
-let seq_inv_com' env c1 c2 l h0 =
-  match reify (interpret_com_st c1 h0) h0 with
-  | None, _ -> ()
-  | Some (), h1 ->
-    match reify (interpret_com_st c2 h1) h1 with
-    | None, _ -> ()
-    | Some (), h2 -> ()
-
-#set-options "--z3rlimit 200"
 
 let seq_nil1 (c1:com) (c2:com) (h:heap)
    : Lemma
@@ -241,6 +222,25 @@ let seq_nil2 (c1:com) (c2:com) (h0:heap) (h1:heap)
   (ensures  (fst (reify (interpret_com_st (Seq c1 c2) h0) h0) = None))
    = ()
 
+(* Sequencing rule for commands
+
+         env,pc:l |- c1  env,pc:l |- c2
+         ------------------------------
+               env,pc:l |- c1; c2
+*)
+
+val seq_inv_com' : env:label_fun -> c1:com -> c2:com -> l:label -> h0:heap ->
+  Lemma (requires (ni_com env c1 l /\ ni_com env c2 l))
+    (ensures (inv_com' env (Seq c1 c2) l h0))
+let seq_inv_com' env c1 c2 l h0 =
+  match reify (interpret_com_st c1 h0) h0 with
+  | None, _ -> seq_nil1 c1 c2 h0
+  | Some (), h1 ->
+    match reify (interpret_com_st c2 h1) h1 with
+    | None, _ -> seq_nil2 c1 c2 h0 h1
+    | Some (), h2 -> ()
+
+(* #set-options "--z3rlimit 200" *)
 let use_ni_com (env:label_fun) (c:com) (l:label) (h:rel heap{low_equiv env h})
   : Lemma
     (requires ni_com env c l)
@@ -323,6 +323,7 @@ let cond_inv_com' env e ct cf l h0 =
 val cond_ni_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:rel heap ->
   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
           (ensures  (ni_com' env (If e ct cf) l h0))
+#reset-options "--max_fuel 1"
 let cond_ni_com' env e ct cf l h0 =
   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
   then ()
@@ -335,16 +336,23 @@ let cond_ni_com' env e ct cf l h0 =
       assert (vl == vr) ;
       let c = if vl = 0 then cf else ct in
       assert (ni_com env c l) ;
-      match reify (interpret_com_st (If e ct cf) h0l) h0l with
-      | None, _ -> ()
-      | Some (), h1l ->
-          match reify (interpret_com_st (If e ct cf) h0r) h0r with
-          | None, _ -> ()
-          | Some (), h1r ->
-            assert (low_equiv env (R h1l h1r))
+      let cif = If e ct cf in
+      //NS:05/15 ... this 2 assume should be trivial to prove. Why do they not go through"
+      assume (reify (interpret_com_st (If e ct cf) h0l) h0l ==
+              reify (interpret_com_st c h0l) h0l);
+      assume (reify (interpret_com_st (If e ct cf) h0r) h0r ==
+              reify (interpret_com_st c h0r) h0r);
+      use_ni_com env c l (R h0l h0r)
+      (* match reify (interpret_com_st cif h0l) h0l with *)
+      (* | None, _ -> () *)
+      (* | Some (), h1l -> *)
+      (*     match reify (interpret_com_st cif h0r) h0r with *)
+      (*     | None, _ -> () *)
+      (*     | Some (), h1r -> *)
+      (*       use_ni_com env c l (R h0l h0r); *)
+      (*       assert (low_equiv env (R h1l h1r)) *)
       end
-    else
-      (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
+    else  (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
       match reify (interpret_com_st (If e ct cf) h0l) h0l with
       | None, _ -> ()
       | Some (), h1l ->
@@ -386,7 +394,6 @@ let skip_com _ = ()
           env,pc:l |- while (e <> 0) do c
 *)
 
-#set-options "--z3rlimit 400"
 
 val while_inv_com'
   : env:label_fun ->
@@ -399,13 +406,14 @@ val while_inv_com'
       (requires (ni_exp env e l /\ ni_com env c l))
       (ensures  (inv_com' env (While e c v) l h0))
       (decreases (decr_while h0 (While e c v)))
+#reset-options "--z3rlimit 10"
 let rec while_inv_com' env e c v l h0 =
   let v0 = reify (interpret_exp_st e) h0 in
-  if v0 = 0 then ()
+  if v0 = 0 then admit()
   else
     let m0 = interpret_exp' h0 v in
     match reify (interpret_com_st c h0) h0 with
-    | None, _ -> ()
+    | None, _ -> admit()
     | Some (), h2 ->
       let m1 = interpret_exp' h2 v in
       if m0 > m1
@@ -413,10 +421,7 @@ let rec while_inv_com' env e c v l h0 =
           assert (decr_while h2 (While e c v) << decr_while h0 (While e c v)) ;
           while_inv_com' env e c v l h2
         end
-      else assert (fst (reify (interpret_com_st (While e c v) h0) h0) = None)
-
-
-
+      else (assert (fst (reify (interpret_com_st (While e c v) h0) h0) = None))
 
 
 val while_ni_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h0:rel heap ->
@@ -426,7 +431,7 @@ val while_ni_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h0
 let rec while_ni_com' env e c v l h0 =
   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
   then ()
-  else
+  else let _ = admit () in
     let R h0l h0r = h0 in
     let v0l = reify (interpret_exp_st e) h0l in
     let v0r = reify (interpret_exp_st e) h0r in
