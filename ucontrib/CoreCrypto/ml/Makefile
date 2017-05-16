@@ -70,8 +70,8 @@ $(DB)/DB.cmx: $(DB)/DB.ml
 	$(MAKE) -C $(DB)
 
 openssl/Configure:
-	echo "openssl folder is empty, running git submodule update..."
-	git submodule update --init --recursive
+	echo "openssl folder is empty, running git submodule update... no recursion"
+	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
 	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs

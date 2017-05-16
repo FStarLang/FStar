@@ -713,8 +713,7 @@ let maybe_simplify cfg tm =
                      | [(Some true, _)] ->  w U.t_false
                      | [(Some false, _)] -> w U.t_true
                      | _ -> tm
-              else if  S.fv_eq_lid fv Const.forall_lid
-                    || S.fv_eq_lid fv Const.exists_lid
+              else if S.fv_eq_lid fv Const.forall_lid
               then match args with
                      | [(t, _)]
                      | [(_, Some (Implicit _)); (t, _)] ->
@@ -722,6 +721,17 @@ let maybe_simplify cfg tm =
                                 | Tm_abs([_], body, _) ->
                                    (match simp_t body with
                                         | Some true ->  w U.t_true
+                                        | _ -> tm)
+                                | _ -> tm
+                       end
+                    | _ -> tm
+              else if S.fv_eq_lid fv Const.exists_lid
+              then match args with
+                     | [(t, _)]
+                     | [(_, Some (Implicit _)); (t, _)] ->
+                       begin match (SS.compress t).n with
+                                | Tm_abs([_], body, _) ->
+                                   (match simp_t body with
                                         | Some false -> w U.t_false
                                         | _ -> tm)
                                 | _ -> tm
@@ -1700,8 +1710,19 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
            lc
     else lc
 
-let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverses] env t)
-let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
+let term_to_string env t =
+  let t =
+    try normalize [AllowUnboundUniverses] env t
+    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; t
+  in
+  Print.term_to_string t
+
+let comp_to_string env c =
+  let c =
+    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; c
+  in
+  Print.comp_to_string c
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in

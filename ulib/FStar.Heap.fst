@@ -1,7 +1,6 @@
 module FStar.Heap
 
 open FStar.Classical
-open FStar.Set
 
 (* Heap is a tuple of a source of freshness (the no. of the next 
    reference to be allocated) and a mapping of allocated raw 
@@ -41,7 +40,8 @@ abstract let unused_in (#a:Type) (r:ref a) (h:heap) :Type0
 let fresh (#a:Type) (r:ref a) (h0:heap) (h1:heap) =
   r `unused_in` h0 /\ h1 `contains` r
 
-let only x = singleton (addr_of x)
+let only_t x = FStar.TSet.singleton (addr_of x)
+let only x = FStar.Set.singleton (addr_of x)
 
 (* Select. *)
 private abstract let sel_tot (#a:Type) (h:heap) (r:ref a{h `contains` r}) :a
@@ -83,13 +83,15 @@ abstract let free_mm (#a:Type) (h:heap) (r:ref a{h `contains` r /\ is_mm r})
   :GTot heap
   = { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
 
-let modifies (s:set nat) (h0:heap) (h1:heap) =
+let modifies_t (s:TSet.set nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
-                         ((~ (mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
+                         ((~ (TSet.mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
   (forall (a:Type) (r:ref a).{:pattern (contains h1 r)}
                         h0 `contains` r ==> h1 `contains` r) /\
   (forall (a:Type) (r:ref a).{:pattern (r `unused_in` h0)}
                         r `unused_in` h1 ==> r `unused_in` h0)
+
+let modifies (s:Set.set nat) (h0:heap) (h1:heap) = modifies_t (TSet.tset_of_set s) h0 h1
 
 (** some lemmas that summarize the behavior **)
 
@@ -159,7 +161,7 @@ private let lemma_free_mm_test (#a:Type) (h0:heap) (r:ref a{h0 `contains` r /\ i
 
 private let lemma_alloc_fresh_test (#a:Type) (h0:heap) (x:a) (mm:bool)
   :Lemma (let r, h1 = alloc h0 x mm in
-          fresh r h0 h1 /\ modifies empty h0 h1)
+          fresh r h0 h1 /\ modifies Set.empty h0 h1)
   = ()
 
 (** **)
@@ -333,11 +335,11 @@ let upd_upd_same_ref (#a:Type) (h:heap) (r:ref a) (x:a) (y:a)
 	 [SMTPat (upd (upd h r x) r y)]
   = assert (equal (upd (upd h r x) r y) (upd h r y))
 
-val op_Hat_Plus_Plus: #a:Type -> r:ref a -> set nat -> GTot (set nat)
-let op_Hat_Plus_Plus #a r s = union (only r) s
+val op_Hat_Plus_Plus: #a:Type -> r:ref a -> Set.set nat -> GTot (Set.set nat)
+let op_Hat_Plus_Plus #a r s = Set.union (only r) s
 
-val op_Plus_Plus_Hat: #a:Type -> set nat -> r:ref a -> GTot (set nat)
-let op_Plus_Plus_Hat #a s r = union s (only r)
+val op_Plus_Plus_Hat: #a:Type -> Set.set nat -> r:ref a -> GTot (Set.set nat)
+let op_Plus_Plus_Hat #a s r = Set.union s (only r)
 
-val op_Hat_Plus_Hat: #a:Type -> #b:Type -> ref a -> ref b -> GTot (set nat)
-let op_Hat_Plus_Hat #a #b r1 r2 = union (only r1) (only r2)
+val op_Hat_Plus_Hat: #a:Type -> #b:Type -> ref a -> ref b -> GTot (Set.set nat)
+let op_Hat_Plus_Hat #a #b r1 r2 = Set.union (only r1) (only r2)

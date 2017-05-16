@@ -121,14 +121,6 @@ let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
 = let f (x:a) : Lemma (~(mem x (intersect s1 s2))) = () in
   FStar.Classical.forall_intro f
 
-(* TODO: how do we define these *)
-assume val set_to_tset: #key:eqtype -> set key -> Tot (TSet.set key)
-assume val lemma_set_to_tset:
-  #key:eqtype -> s:set key -> x:key
-  -> Lemma (requires (True))
-          (ensures (mem x s <==> TSet.mem x (set_to_tset s)))
-    [SMTPat (TSet.mem x (set_to_tset s))]
-
 (* Converting lists to sets *)
 #reset-options //restore fuel usage here
 type eqtype = a:Type0{hasEq a}
