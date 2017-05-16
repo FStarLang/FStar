@@ -343,7 +343,7 @@ let cond_ni_com' env e ct cf l h0 =
       let c = if vl = 0 then cf else ct in
       assert (ni_com env c l) ;
       let cif = If e ct cf in
-      //NS:05/15 ... this 2 assume should be trivial to prove.
+      //NS:05/15 ... this 2 should be trivial to prove.
       //             Why do they require a lemma?
       interpret_cond e ct cf h0l;
       interpret_cond e ct cf h0r;      
@@ -411,7 +411,16 @@ let interpret_while_nil e c v h
                      fst (reify (interpret_com_st c h) h) == None))
           (ensures (interpret_com h (While e c v) == None))
   = ()
-  
+
+let interpret_while_loops (e:exp) (c:com) (v:metric) (h:heap)
+  : Lemma (requires (reify (interpret_exp_st e) h <> 0 /\
+                     (match reify (interpret_com_st c h) h with 
+                       | None, _ -> True
+                       | Some _, h' -> 
+                         interpret_exp' h' v >= interpret_exp' h v)))
+          (ensures (interpret_com h (While e c v) == None))
+  = ()
+
 let rec while_inv_com' env e c v l h0 =
   let v0 = reify (interpret_exp_st e) h0 in
   if v0 = 0 then assert (interpret_com h0 (While e c v) == Some h0)
@@ -426,32 +435,36 @@ let rec while_inv_com' env e c v l h0 =
           assert (decr_while h2 (While e c v) << decr_while h0 (While e c v)) ;
           while_inv_com' env e c v l h2
         end
-      else (assert (fst (reify (interpret_com_st (While e c v) h0) h0) = None))
+      else interpret_while_loops e c v h0
 
 
 val while_ni_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h0:rel heap ->
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com' env (While e c v) l h0))
         (decreases (decr_while (R?.l h0) (While e c v) + decr_while (R?.r h0) (While e c v)))
+#set-options "--max_fuel 1 --max_ifuel 1"
 let rec while_ni_com' env e c v l h0 =
   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
   then ()
-  else let _ = admit () in
+  else 
     let R h0l h0r = h0 in
     let v0l = reify (interpret_exp_st e) h0l in
     let v0r = reify (interpret_exp_st e) h0r in
     if Low? l
     then begin
       assert (v0l == v0r) ;
-      if v0l = 0 then ()
+      if v0l = 0 then begin
+        assert (interpret_com h0l (While e c v) == Some h0l);
+        assert (interpret_com h0r (While e c v) == Some h0r)
+      end
       else
         let m0l = interpret_exp' h0l v in
         let m0r = interpret_exp' h0r v in
         match reify (interpret_com_st c h0l) h0l with
-        | None, _ -> ()
+        | None, _ -> interpret_while_nil e c v h0l
         | Some (), h2l ->
           match reify (interpret_com_st c h0r) h0r with
-          | None, _ -> ()
+          | None, _ -> interpret_while_nil e c v h0r
           | Some (), h2r ->
             let m1l = interpret_exp' h2l v in
             let m1r = interpret_exp' h2r v in
@@ -461,9 +474,8 @@ let rec while_ni_com' env e c v l h0 =
                   assert (decr_while h2l (While e c v) << decr_while h0l (While e c v)) ;
                   while_ni_com' env e c v l (R h2l h2r)
                 end
-              else assert (fst (reify (interpret_com_st (While e c v) h0r) h0r) = None)
-            else
-              assert (fst (reify (interpret_com_st (While e c v) h0l) h0l) = None)
+              else interpret_while_loops e c v h0r
+            else interpret_while_loops e c v h0l
       end
     else
       (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
