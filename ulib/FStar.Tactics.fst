@@ -121,6 +121,9 @@ let implies_intro : tactic binder = fun () -> TAC?.reflect __implies_intro
 assume private val __trivial  : __tac unit
 let trivial : tactic unit = fun () -> TAC?.reflect __trivial
 
+assume private val __simpl  : __tac unit
+let simpl : tactic unit = fun () -> TAC?.reflect __simpl
+
 assume private val __revert  : __tac unit
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 

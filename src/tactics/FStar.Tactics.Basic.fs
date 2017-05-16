@@ -428,10 +428,17 @@ let split : tac<unit>
         | _ ->
           fail "Cannot split this goal; expected a conjunction")
 
+let simpl : tac<unit> =
+    with_cur_goal (fun goal ->
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify] in
+    let t = N.normalize steps goal.context goal.goal_ty in
+    replace_cur ({goal with goal_ty=t})
+    )
+
 let trivial
     : tac<unit>
     = with_cur_goal (fun goal ->
-      let steps = [N.Reify; N.Beta; N.UnfoldUntil Delta_constant; N.Zeta; N.Iota; N.Primops] in
+      let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops] in
       let t = N.normalize steps goal.context goal.goal_ty in
       match U.destruct_typ_as_formula t with
       | Some (U.BaseConn(l, []))
@@ -439,7 +446,6 @@ let trivial
         bind dismiss (fun _ ->
         add_goals ([{goal with goal_ty=t}]))
       | _ -> fail "Not a trivial goal")
-
 
 let apply_lemma (tm:term)
     : tac<unit>

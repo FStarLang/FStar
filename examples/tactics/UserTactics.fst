@@ -110,3 +110,17 @@ let test_inspect =
                     | Tv_Const (C_Int i) -> print ("int: " ^ string_of_int i)
                     | _ -> fail "unknown"
                    ) (True)
+
+let test_simpl =
+    assert_by_tactic (eg <-- cur_goal;
+                      let e, g = eg in
+                      (match term_as_formula g with
+                      | And _ _ -> return ()
+                      | _ -> fail "not a conjunction?");;
+                      simpl;;
+                      eg <-- cur_goal;
+                      let e, g = eg in
+                      (match term_as_formula g with
+                      | True_ -> return ()
+                      | _ -> fail ("not true after simpl? " ^ term_to_string g)))
+                     (True /\ 1 == 1)
