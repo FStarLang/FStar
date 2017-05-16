@@ -1021,6 +1021,9 @@ section._
 Depending on the audience of this tutorial, we might want to move this to
 further towards the end of the tutorial.
 ~
+~CH
+Agreed
+~
 
 We mentioned earlier that a refinement type has the form `:x:t{phi(x)}`.
 In its primitive form, `phi` is in fact a type, a predicate on the value
@@ -1174,33 +1177,49 @@ let rec append_len l1 l2 = match l1 with
 ~~
 ~
 
+We wrote the type of the function `append` above using an ML-like type
+variable `:'a` to stand for an arbitrary type. Under the hood F*
+expands this out to something like this:
+```
+val append : #a:Type -> list a -> list a -> Tot (list a)
+let rec append #a l1 l2 = match l1 with
+  | [] -> l2
+  | hd :: tl -> hd :: append #a tl l2
+```
+
+This exposes the fact that `a` is really just an implicit argument of
+`append`. The implicit argument `a` is preceded by the `#` symbol
+both in the type of append, where we say that `a` has type `Type`,
+and in the definition of append, which takes an extra `a` argument.
+When calling `append` recursively we have a choice, we can either
+pass `a` explicitly by preceding it with the `#` sign, or we can
+leave it out and the F* type-checker will infer it automatically.
+(Implicit argument are further discussed in [#sec-implicit-arguments].)
+
+We would like to define a function `mem: x:'a -> l:list 'a -> Tot bool`
+that decides whether `x` is present in a list `l` or
+not. However, not all types in F\* have decidable equality, so in
+order to write `mem` we cannot quantify over arbitrary types, but only
+over those with decidable equality. Thus the following definition of
+`mem` has to use `:#a:eqtype` instead of `:#a:Type`.
+```
+[INCLUDE=code/exercises/Ex04c.fst:Mem]
+```
+
 ~ Exercise
-Define a function `mem: x:'a -> l:list 'a -> Tot bool` that
-decides whether `x` is present in the `l` or not, then prove it satisfies the
+Prove that mem satisfies the
 following property:
 ~~ ExerciseFragment {exname=Ex04c}
-val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
-        -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
+[INCLUDE=code/exercises/Ex04c.fst:AppendMem]
 ~~
 ~~ AnswerFragment {exname=Ex04c}
-
-val mem: 'a -> list 'a -> Tot bool
-let rec mem a l = match l with
-  | [] -> false
-  | hd::tl -> hd=a || mem a tl
-
-val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
-    -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
-let rec append_mem l1 l2 a = match l1 with
-  | [] -> ()
-  | hd::tl -> append_mem tl l2 a
+[INCLUDE=code/solutions/Ex04c.fst:AppendMemProof]
 ~~
 ~
 
-~KK 
-Implicit type parameters were not yet introduced, neither was the "hasEq"
-function or what it means. The implicity type parameters are not visible in the
-code snippet above, but are present in the code that is loaded into the editor.
+~CH
+Introduced implicits and eqtypes here already because they are
+used in mem exercise. Alternatively, could get rid of this exercise.
 ~
 
 ## To type intrinsically, or to prove lemmas?
@@ -4766,18 +4785,17 @@ In order to verify capabilities, they only need to store the cryptographic key
 used to generate the capability. The tokens generated in this fashion work in a
 similar fashion as tokens in the *Kerberos* authentication protocol.
 
-~ Exercise
-Relying on `ACLs` and `MAC`, implement a pair of functions with
-the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CMA. Use `failwith "bad capability"` in
-case the verification fails.
-
 ~KK
 So far we have only introduced UF-CMA. It might be better to either introduce
 the reader to the security assumptions we use here or to just omit them for
 simplicity.
 ~
 
+~ Exercise
+Relying on `ACLs` and `MAC`, implement a pair of functions with
+the following specification, and verify them by typing under the
+security assumption that HMACSHA1 is INT-CMA. Use `failwith "bad capability"` in
+case the verification fails.
 ~~ ExerciseFragment {exname=Ex12a.Cap}
 [INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
 ~~
@@ -4801,17 +4819,17 @@ The patterns instructs the SMT solver to associate the injectivity axiom only wi
 
 How would we extend it to also cover write access?
 
-~KK
-Added Ex12a1.Cap.fst as a proposed answer to this question. It would be nice if
-someone could review my code and confirm that it is actually a valid solution.
-~
-
 ~~ Answer
 ```
 [INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation2]
 ```
 ~~
 
+~
+
+~KK
+Added Ex12a1.Cap.fst as a proposed answer to this question. It would be nice if
+someone could review my code and confirm that it is actually a valid solution.
 ~
 
 ## Secure RPC
