@@ -92,7 +92,7 @@ def get_string_value(stats, column):
 
 
 def write_header(f, order_column, fstar_output_columns, columns):
-    f.write("\"ID (Name,Index)\"" + column_separator)
+    f.write("\"ID (Name, Index)\"" + column_separator)
     f.write("\"Location\"" + column_separator)
     f.write("\"" + ec + "\"" + column_separator)
     f.write("\"" + order_column + "\"")
@@ -174,7 +174,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                         add_query(stats, k, v)
                         columns.add(k)
                 stats[ec] = 1
-                id = str(get_value(stats, "fstar_name")) + "," + str(get_value(stats, "fstar_index"))
+                id = str(get_value(stats, "fstar_name")) + ", " + str(get_value(stats, "fstar_index"))
                 if not collate:
                     while id in queries:
                         id = id + "'"
@@ -213,6 +213,7 @@ def process_global_stats(f, queries):
     succeeded_with_hint = 0
     failed_without_hint = 0
     failed_with_hint = 0
+    sum_num_checks = 0
 
     for k, v in queries.items():
         kv_time = get_float_value(v, "time")
@@ -220,6 +221,7 @@ def process_global_stats(f, queries):
         kv_rlimit_count = get_int_value(v, "rlimit-count")
         kv_fstar_rlimit = get_int_value(v, "fstar_rlimit")
         kv_max_memory = get_float_value(v, "max-memory")
+        kv_num_checks = get_int_value(v, "num-checks")
 
         time += kv_time
         fstar_time += kv_fstar_time
@@ -230,6 +232,7 @@ def process_global_stats(f, queries):
         sum_fstar_rlimit += kv_fstar_rlimit
         max_fstar_rlimit = max(max_fstar_rlimit, kv_fstar_rlimit)
         max_max_memory = max(max_max_memory, kv_max_memory)
+        sum_num_checks += kv_num_checks
 
         tags = list(cfmt_tag(get_string_value(v, "fstar_tag")))
         usedhints = list(cfmt_usedhint(get_string_value(v, "fstar_usedhints")))
@@ -254,6 +257,7 @@ def process_global_stats(f, queries):
     f.write("\"# failed\",%d,%s\n" % ((failed_with_hint + failed_without_hint), "\"\""))
     f.write("\"# failed (with hint)\",%d,%s\n" % (failed_with_hint, "\"\""))
     f.write("\"# failed (without hint)\",%d,%s\n" % (failed_without_hint, "\"\""))
+    f.write("\"Sum(num_checks)\",%s,%s\n" % (sum_num_checks, "\"\""))
     f.write("\"Sum(time)\",%s,%s\n" % (time, "\"sec\""))
     f.write("\"Sum(fstar_time)\",%s,%s\n" % (fstar_time, "\"msec\""))
     f.write("\"Max(time)\",%s,%s\n" % (max_time, "\"sec\""))
