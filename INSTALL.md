@@ -32,7 +32,7 @@ the [online F\* editor] that's part of the [F\* tutorial].
 ## Binary releases ##
 
 Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
-and for Windows and Linux we also provide [automatic weekly builds].
+and for Windows and Linux we also provide **experimental** [automatic weekly builds].
 This is the easiest way to get F\* quickly running on your machine,
 but if the build you use is old you might be missing out on new
 features and bug fixes. Please do not report bugs in old releases

@@ -219,10 +219,10 @@ programming in general and a couple of F\*-specific features.
 
 Let's say we want to model a simple access control discipline on
 files---certain files are readable or writable, whereas others may be
-inaccessible. We'd like to write a policy to describe the privileges
-on each file, and we'd like to write programs whose file access
-patterns are checked against this policy, guaranteeing statically that an
-inaccessible file is never accessed mistakenly.
+unauthorized. We'd like to write a policy to describe the privileges
+on each file, and we'd like to write programs whose file accesses
+are checked against this policy, guaranteeing statically that an
+unauthorized file is never accessed mistakenly.
 
 Our model of this scenario (which we'll make more realistic in later
 sections) proceeds in three easy steps.
