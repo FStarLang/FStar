@@ -318,12 +318,18 @@ let cond_inv_com' env e ct cf l h0 =
   (* match reify (interpret_com_st c h0) h0 with *)
   (* | None, _ -> () *)
   (* | Some (), h1 -> () *)
-
+#reset-options "--max_fuel 1"
+let interpret_cond (e:exp) (ct:com) (cf:com) (h:heap)
+  : Lemma (let v = reify (interpret_exp_st e) h in
+           let c = if v = 0 then cf else ct in
+           (reify (interpret_com_st (If e ct cf) h) h ==
+            reify (interpret_com_st c h) h))
+  = ()            
+    
 
 val cond_ni_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:rel heap ->
   Lemma (requires ((ni_exp env e l) /\ (ni_com env ct l) /\ (ni_com env cf l)))
           (ensures  (ni_com' env (If e ct cf) l h0))
-#reset-options "--max_fuel 1"
 let cond_ni_com' env e ct cf l h0 =
   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
   then ()
@@ -337,20 +343,11 @@ let cond_ni_com' env e ct cf l h0 =
       let c = if vl = 0 then cf else ct in
       assert (ni_com env c l) ;
       let cif = If e ct cf in
-      //NS:05/15 ... this 2 assume should be trivial to prove. Why do they not go through"
-      assume (reify (interpret_com_st (If e ct cf) h0l) h0l ==
-              reify (interpret_com_st c h0l) h0l);
-      assume (reify (interpret_com_st (If e ct cf) h0r) h0r ==
-              reify (interpret_com_st c h0r) h0r);
+      //NS:05/15 ... this 2 assume should be trivial to prove.
+      //             Why do they require a lemma?
+      interpret_cond e ct cf h0l;
+      interpret_cond e ct cf h0r;      
       use_ni_com env c l (R h0l h0r)
-      (* match reify (interpret_com_st cif h0l) h0l with *)
-      (* | None, _ -> () *)
-      (* | Some (), h1l -> *)
-      (*     match reify (interpret_com_st cif h0r) h0r with *)
-      (*     | None, _ -> () *)
-      (*     | Some (), h1r -> *)
-      (*       use_ni_com env c l (R h0l h0r); *)
-      (*       assert (low_equiv env (R h1l h1r)) *)
       end
     else  (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
       match reify (interpret_com_st (If e ct cf) h0l) h0l with
@@ -406,14 +403,22 @@ val while_inv_com'
       (requires (ni_exp env e l /\ ni_com env c l))
       (ensures  (inv_com' env (While e c v) l h0))
       (decreases (decr_while h0 (While e c v)))
-#reset-options "--z3rlimit 10"
+
+#reset-options "--z3rlimit 40"
+
+let interpret_while_nil e c v h 
+  : Lemma (requires (reify (interpret_exp_st e) h <> 0 /\
+                     fst (reify (interpret_com_st c h) h) == None))
+          (ensures (interpret_com h (While e c v) == None))
+  = ()
+  
 let rec while_inv_com' env e c v l h0 =
   let v0 = reify (interpret_exp_st e) h0 in
-  if v0 = 0 then admit()
-  else
+  if v0 = 0 then assert (interpret_com h0 (While e c v) == Some h0)
+  else 
     let m0 = interpret_exp' h0 v in
     match reify (interpret_com_st c h0) h0 with
-    | None, _ -> admit()
+    | None, _ -> interpret_while_nil e c v h0
     | Some (), h2 ->
       let m1 = interpret_exp' h2 v in
       if m0 > m1
