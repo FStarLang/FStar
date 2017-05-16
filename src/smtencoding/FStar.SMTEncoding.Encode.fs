@@ -1055,11 +1055,12 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
 
         | _ -> failwith "Impos" in
 
+    let env = {env with use_zfuel_name=true} in //see #1028; SMT lemmas should not violate the fuel instrumentation
+
     let vars, guards, env, decls, _ = encode_binders None binders env in
 
-
     let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun (t, _) ->  encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
+        let pats, decls = branch |> List.map (fun (t, _) ->  encode_term t env) |> List.unzip in
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
