@@ -286,6 +286,14 @@ let head_and_args t =
         | Tm_app(head, args) -> head, args
         | _ -> t, []
 
+let rec head_and_args' t =
+    let t = compress t in
+    match t.n with
+        | Tm_app(head, args) ->
+            let (head, args') = head_and_args' head
+            in (head, args'@args)
+        | _ -> t, []
+
  let un_uinst t =
     let t = Subst.compress t in
     match t.n with
@@ -1088,11 +1096,19 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices.
-// TODO: canonize applications?
 // TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
 // TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
 // that's ok.
-let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
+let rec term_eq t1 t2 =
+  let canon_app t =
+    match t.n with
+    | Tm_app _ -> let (hd, args) = head_and_args' t in
+                  { t with n = Tm_app (hd, args) }
+    | _ -> t
+  in
+  let t1 = canon_app t1 in
+  let t2 = canon_app t2 in
+  match t1.n, t2.n with
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
