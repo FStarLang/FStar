@@ -92,14 +92,14 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                         FStar_Reflection_Basic.unembed_term
                         FStar_Reflection_Basic.unembed_term
                         FStar_Reflection_Basic.embed_bool in
-                    let uu____338 =
-                      let uu____340 =
+                    let uu____342 =
+                      let uu____344 =
                         mk11 "__term_to_string"
                           FStar_Syntax_Print.term_to_string
                           FStar_Reflection_Basic.unembed_term
                           FStar_Reflection_Basic.embed_string in
-                      [uu____340] in
-                    uu____337 :: uu____338 in
+                      [uu____344] in
+                    uu____337 :: uu____342 in
                   uu____328 :: uu____335 in
                 uu____325 :: uu____326 in
               uu____311 :: uu____323 in
