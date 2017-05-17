@@ -634,7 +634,8 @@ let preprocess:
                            (let gt' =
                               let uu____1452 =
                                 let uu____1453 = FStar_Util.string_of_int n1 in
-                                Prims.strcat "Goal #" uu____1453 in
+                                Prims.strcat "Could not prove goal #"
+                                  uu____1453 in
                               FStar_TypeChecker_Util.label uu____1452
                                 FStar_Range.dummyRange
                                 g.FStar_Tactics_Basic.goal_ty in
