@@ -10,8 +10,8 @@ ec = entry_count = "#"
 fstar_output_columns = [ "fstar_tag", "fstar_usedhints", "fstar_time", "fstar_fuel", "fstar_ifuel", "fstar_rlimit" ]
 column_separator = ","
 
-SHORTOPTS="harcgf:o:s:n:"
-LONGOPTS=["help", "infile=", "outfile=", "stat=", "--top=", "--collate", "--append", "--reverse", "--global"]
+SHORTOPTS="harcgf:o:s:t:n:"
+LONGOPTS=["help", "infile=", "outfile=", "stat=", "top=", "collate", "append", "reverse", "global"]
 
 def show_help():
     print("Usage: query-stats <options>")
@@ -20,10 +20,10 @@ def show_help():
     print("  -f x, --infile=x\t\tprocess file <x> (instead of stdin)")
     print("  -o x, --outfile=x\t\twrite output to file <x> (instead of stdout)")
     print("  -s x, --stat=x\t\trank entries by <x> (instead of time)")
-    print("  -t n, --top=n\t\t\tshow the <n> highest ranked queries (default 10)")
+    print("  -n n, -t n, --top=n\t\tshow the <n> highest ranked queries (default 10)")
     print("  -a, --append\t\t\tappend to output (instead of overwriting it)")
-    print("  -r, --reverse\t\treverse sort order")
-    print("  -c, --collate\t\tcollate queries of the same name (instead of adding ticks)")
+    print("  -r, --reverse\t\t\treverse sort order")
+    print("  -c, --collate\t\t\tcollate queries of the same name (instead of adding ticks)")
     print("  -g, --global\t\t\tadd global statistics table")
 
 
@@ -295,8 +295,8 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, SHORTOPTS, LONGOPTS)
     except getopt.error as err:
-        print("Error: " + error)
-        print()
+        print("Error: " + str(err))
+        print("")
         show_help()
         return 1
     for o, a in opts:
@@ -311,7 +311,7 @@ def main(argv):
             append = True
         elif o in ("-s", "--stat"):
             stat = a
-        elif o in ("-n", "--top"):
+        elif o in ("-t", "-n","--top"):
             n = a
         elif o in ("-r", "--reverse"):
             reverse = True
