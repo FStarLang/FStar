@@ -367,6 +367,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
          [FStar_TypeChecker_Normalize.Reify;
          FStar_TypeChecker_Normalize.UnfoldUntil
            FStar_Syntax_Syntax.Delta_constant;
+         FStar_TypeChecker_Normalize.UnfoldTac;
          FStar_TypeChecker_Normalize.Primops] in
        let uu____727 =
          FStar_All.pipe_left FStar_Tactics_Basic.mlog

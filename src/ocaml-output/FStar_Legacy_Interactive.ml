@@ -8,14 +8,13 @@ let tc_one_file remaining uenv =
         | intf::impl::remaining1 when
             FStar_Universal.needs_interleaving intf impl ->
             let uu____61 =
-              FStar_Universal.tc_one_file_and_intf (Some intf) impl dsenv env in
+              FStar_Universal.tc_one_file dsenv env (Some intf) impl in
             (match uu____61 with
              | (uu____76,dsenv1,env1) ->
                  (((Some intf), impl), dsenv1, env1, remaining1))
         | intf_or_impl::remaining1 ->
             let uu____93 =
-              FStar_Universal.tc_one_file_and_intf None intf_or_impl dsenv
-                env in
+              FStar_Universal.tc_one_file dsenv env None intf_or_impl in
             (match uu____93 with
              | (uu____108,dsenv1,env1) ->
                  ((None, intf_or_impl), dsenv1, env1, remaining1))
@@ -778,7 +777,7 @@ let rec go:
                              match (uu____2153, uu____2154) with
                              | ((cd1,ns1,uu____2169),(cd2,ns2,uu____2172)) ->
                                  (match FStar_String.compare cd1 cd2 with
-                                  | _0_40 when _0_40 = (Prims.parse_int "0")
+                                  | _0_41 when _0_41 = (Prims.parse_int "0")
                                       -> FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches in
                     FStar_List.iter

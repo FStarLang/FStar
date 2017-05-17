@@ -495,9 +495,9 @@ let generalize_and_inst_within:
                                       let uvs_universes =
                                         FStar_All.pipe_right uvs1
                                           (FStar_List.map
-                                             (fun _0_28  ->
+                                             (fun _0_29  ->
                                                 FStar_Syntax_Syntax.U_name
-                                                  _0_28)) in
+                                                  _0_29)) in
                                       let tc_insts =
                                         FStar_All.pipe_right tcs1
                                           (FStar_List.map
