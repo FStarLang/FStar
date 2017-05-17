@@ -556,6 +556,19 @@ let built_in_primitive_steps : list<primitive_step> =
         let r = String.compare s1 s2 in
         int_as_const rng r
     in
+    let string_concat' rng args : option<term> =
+        match args with
+        | [a1; a2] ->
+            match arg_as_string a1 with
+            | Some s1 ->
+                match arg_as_list arg_as_string a2 with
+                | Some s2 ->
+                    let r = String.concat s1 s2 in
+                    Some (string_as_const rng r)
+                | _ -> None
+            | _ -> None
+        | _ -> None
+    in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
     in
@@ -589,7 +602,8 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (Const.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
+                                    1, unary_op (arg_as_list arg_as_char) string_of_list');
+             (Const.p2l ["FStar"; "String"; "concat"], 2, string_concat')]
     in
     let bounded_arith_ops =
         let bounded_int_types =

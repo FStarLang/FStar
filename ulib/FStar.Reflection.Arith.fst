@@ -83,7 +83,7 @@ let rec is_arith_expr (t:term) =
         if      eq_qn qn add_qn   then liftM2 Plus ll rr
         else if eq_qn qn minus_qn then liftM2 minus ll rr
         else if eq_qn qn mult_qn  then liftM2 Mult ll rr
-        else fail "binary"
+        else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in
         collect_app_order t;
