@@ -16,7 +16,7 @@ val addr_of: #a:Type0 -> ref a -> GTot nat
 
 val is_mm: #a:Type0 -> ref a -> GTot bool
 
-val compare_addrs: #a:Type0 -> #b:Type0 -> r1:ref a -> r2:ref b -> (b:bool{b = (addr_of r1 = addr_of r2)})
+val compare_addrs: #a:Type0 -> #b:Type0 -> r1:ref a -> r2:ref b -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 
 val contains: #a:Type0 -> heap -> ref a -> Type0
 
@@ -35,11 +35,11 @@ let op_Plus_Plus_Hat (#a:Type0) (s:set nat) (r:ref a) = S.union s (only r)
 
 let op_Hat_Plus_Hat (#a:Type0) (#b:Type0) (r1:ref a) (r2:ref b) = S.union (only r1) (only r2)
 
-val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> a
+val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot a
 
 val sel: #a:Type0 -> heap -> ref a -> GTot a
 
-val upd_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> a -> heap
+val upd_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> a -> Tot heap
 
 val upd: #a:Type0 -> heap -> ref a -> a -> GTot heap
 
