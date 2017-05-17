@@ -29,6 +29,12 @@ let only_t x = TS.singleton (addr_of x)
 
 let only x = S.singleton (addr_of x)
 
+let op_Hat_Plus_Plus (#a:Type0) (r:ref a) (s:set nat) = S.union (only r) s
+
+let op_Plus_Plus_Hat (#a:Type0) (s:set nat) (r:ref a) = S.union s (only r)
+
+let op_Hat_Plus_Hat (#a:Type0) (#b:Type0) (r1:ref a) (r2:ref b) = S.union (only r1) (only r2)
+
 val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> a
 
 val sel: #a:Type0 -> heap -> ref a -> GTot a
@@ -166,9 +172,3 @@ val upd_upd_same_ref (#a:Type) (h:heap) (r:ref a) (x:a) (y:a)
   :Lemma (requires True)
          (ensures  (upd (upd h r x) r y == upd h r y))
 	 [SMTPat (upd (upd h r x) r y)]
-
-let op_Hat_Plus_Plus (#a:Type0) (r:ref a) (s:set nat) = S.union (only r) s
-
-let op_Plus_Plus_Hat (#a:Type0) (s:set nat) (r:ref a) = S.union s (only r)
-
-let op_Hat_Plus_Hat (#a:Type0) (#b:Type0) (r1:ref a) (r2:ref a) = S.union (only r1) (only r2)
