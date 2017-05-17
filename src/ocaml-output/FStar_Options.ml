@@ -74,27 +74,27 @@ let __set_unit_tests: Prims.unit -> Prims.unit =
 let __clear_unit_tests: Prims.unit -> Prims.unit =
   fun uu____143  -> FStar_ST.write __unit_tests__ false
 let as_bool: option_val -> Prims.bool =
-  fun uu___52_148  ->
-    match uu___52_148 with
+  fun uu___49_148  ->
+    match uu___49_148 with
     | Bool b -> b
     | uu____150 -> failwith "Impos: expected Bool"
 let as_int: option_val -> Prims.int =
-  fun uu___53_153  ->
-    match uu___53_153 with
+  fun uu___50_153  ->
+    match uu___50_153 with
     | Int b -> b
     | uu____155 -> failwith "Impos: expected Int"
 let as_string: option_val -> Prims.string =
-  fun uu___54_158  ->
-    match uu___54_158 with
+  fun uu___51_158  ->
+    match uu___51_158 with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____161 -> failwith "Impos: expected String"
-let as_list as_t uu___55_177 =
-  match uu___55_177 with
+let as_list as_t uu___52_177 =
+  match uu___52_177 with
   | List ts -> FStar_All.pipe_right ts (FStar_List.map as_t)
   | uu____184 -> failwith "Impos: expected List"
-let as_option as_t uu___56_201 =
-  match uu___56_201 with
+let as_option as_t uu___53_201 =
+  match uu___53_201 with
   | Unset  -> None
   | v1 -> let uu____205 = as_t v1 in Some uu____205
 let fstar_options: option_val FStar_Util.smap Prims.list FStar_ST.ref =
@@ -386,8 +386,8 @@ let get_z3timeout: Prims.unit -> Prims.int =
 let get_no_positivity: Prims.unit -> Prims.bool =
   fun uu____807  -> lookup_opt "__no_positivity" as_bool
 let dlevel: Prims.string -> debug_level_t =
-  fun uu___57_810  ->
-    match uu___57_810 with
+  fun uu___54_810  ->
+    match uu___54_810 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -889,8 +889,8 @@ and parse_codegen: Prims.string -> Prims.string =
          FStar_All.exit (Prims.parse_int "1"))
 and string_as_bool: Prims.string -> Prims.string -> option_val =
   fun option_name  ->
-    fun uu___58_1760  ->
-      match uu___58_1760 with
+    fun uu___55_1760  ->
+      match uu___55_1760 with
       | "true" -> Bool true
       | "false" -> Bool false
       | uu____1761 ->
@@ -907,8 +907,8 @@ let docs: Prims.unit -> (Prims.string* Prims.string) Prims.list =
          match uu____1793 with
          | (uu____1801,name,uu____1803,doc) -> (name, doc)) uu____1779
 let settable: Prims.string -> Prims.bool =
-  fun uu___59_1809  ->
-    match uu___59_1809 with
+  fun uu___56_1809  ->
+    match uu___56_1809 with
     | "admit_smt_queries"
       |"debug"
        |"debug_level"
