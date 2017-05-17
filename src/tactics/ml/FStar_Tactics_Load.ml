@@ -1,5 +1,5 @@
 open Dynlink
-
+open FStar_Tactics_Native
 module U = FStar_Util
 
 let load_tactic s =

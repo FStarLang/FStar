@@ -21,6 +21,9 @@ end) -> struct
   type nonrec exn = exn
   type nonrec 'a list = 'a list
   type nonrec 'a option = 'a option
+  let __proj__Some__item__v = function
+    | Some x -> x
+    | _ -> assert false
 
   type nat       = int
   type pos       = int
@@ -54,11 +57,11 @@ end) -> struct
 
   type ' p l_not = (' p, l__False) l_imp
 
-  type (' a, ' p) l__Forall = ' a  ->  ' p
+  type (' a, ' p) l_Forall = ' a  ->  ' p
 
-  type ' f l__ForallTyp = unit  ->  ' f
+  type ' f l_ForallTyp = unit  ->  ' f
 
-  type (' a, ' p) l__Exists =
+  type (' a, ' p) l_Exists =
   | MkExists of ' a * ' p
 
 
