@@ -241,7 +241,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     let s = List.fold_left (fun (n,gs) g ->
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
-                 let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
+                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange g.goal_ty in
                  (n+1, (g.context, gt')::gs)) s gs in
     let (_, gs) = s in
     (env, t') :: gs
