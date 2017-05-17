@@ -1011,7 +1011,7 @@ and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
     List.rev l, decls
 
 (* this assumes t is a Lemma *)
-and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
+and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let list_elements (e:S.term) : list<S.term> =
       match U.list_elements e with
       | Some l -> l
@@ -1046,40 +1046,21 @@ and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option
           let binders, c = SS.open_comp binders c in
           begin match c.n with
             | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
-              let pats' = (match new_pats with
-                          | Some new_pats' -> new_pats'
-                          | None           -> pats) in
-              binders, pre, post, lemma_pats pats'
+              binders, pre, post, lemma_pats pats
             | _ -> failwith "impos"
           end
 
         | _ -> failwith "Impos" in
 
+    let env = {env with use_zfuel_name=true} in //see #1028; SMT lemmas should not violate the fuel instrumentation
+
     let vars, guards, env, decls, _ = encode_binders None binders env in
 
-
     let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun (t, _) ->  encode_term t ({env with use_zfuel_name=true})) |> List.unzip in
+        let pats, decls = branch |> List.map (fun (t, _) ->  encode_term t env) |> List.unzip in
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
-
-    let pats =
-      match induction_on with
-      | None -> pats
-      | Some e ->
-        begin match vars with
-          | [] -> pats
-          | [l] -> pats |> List.map (fun p -> mk_Precedes (mkFreeV l) e::p)
-          | _ ->
-            let rec aux tl vars = match vars with
-              | [] -> pats |> List.map (fun p -> mk_Precedes tl e::p)
-              | (x, Term_sort)::vars -> aux (mk_LexCons (mkFreeV(x,Term_sort)) tl) vars
-              | _ -> pats
-            in
-            aux (mkFreeV ("Prims.LexTop", Term_sort)) vars
-        end
-    in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
@@ -1499,7 +1480,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
 
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name.v in
-    let form, decls = encode_function_type_as_formula None None t env in
+    let form, decls = encode_function_type_as_formula t env in
     decls@[Util.mkAssume(form, Some ("Lemma: " ^ lid.str), ("lemma_"^lid.str))]
 
 let encode_free_var env fv tt t_norm quals =
