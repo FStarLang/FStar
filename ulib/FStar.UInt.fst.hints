@@ -3584,10 +3584,12 @@
       0,
       1,
       [
-        "@MaxIFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.BitVector.logor_vec.fuel_instrumented",
         "@fuel_correspondence_FStar.UInt.from_vec.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@fuel_correspondence_FStar.UInt.to_vec.fuel_instrumented",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "b2t_def",
         "bool_inversion", "bool_typing", "equation_FStar.BitVector.bv_t",
         "equation_FStar.Seq.Properties.split", "equation_FStar.UInt.fits",
@@ -3631,7 +3633,8 @@
         "typing_FStar.BitVector.logor_vec", "typing_FStar.Seq.Base.index",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
         "typing_FStar.Seq.Properties.split", "typing_FStar.UInt.to_vec",
-        "typing_Prims.fst", "typing_Prims.snd"
+        "typing_Prims.__proj__Mktuple2__item___1",
+        "typing_Prims.__proj__Mktuple2__item___2"
       ],
       0
     ],
