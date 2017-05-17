@@ -32,11 +32,11 @@ let type_of (r:rtti) :Type =
   match r with
   | Bool -> bool
 
-let lemma_rtti_injective (r1:rtti) (r2:rtti)
-  :Lemma (requires True)
-         (ensures  (type_of r1 == type_of r2 ==> r1 == r2))
-         [SMTPat (type_of r1); SMTPat (type_of r2)]
-  = ()
+(* let lemma_rtti_injective (r1:rtti) (r2:rtti) *)
+(*   :Lemma (requires True) *)
+(*          (ensures  (type_of r1 == type_of r2 ==> r1 == r2)) *)
+(*          [SMTPat (type_of r1); SMTPat (type_of r2)] *)
+(*   = () *)
 
 let size_of (r:rtti) :nat =
   match r with
@@ -59,13 +59,13 @@ type hi_addr = nat
 type lo_addr = nat
 
 (* low-level view of the memory, map from address to byte *)
-type lo_view = lo_addr -> byte
+private type lo_view = lo_addr -> byte
 
 (*
  * high level view of the memory is just heap
  * Heap.addr_of gives address of a hi-level reference
  *)
-type hi_view = heap
+private type hi_view = heap
 
 (** start metadata components **)
 
@@ -73,24 +73,24 @@ type hi_view = heap
  * map low-level address a to (rtti, addr), where addr is the address of the high level reference
  * whose low-level view contains a
  *)
-type md_lo_to_hi = lo_addr -> (rtti * hi_addr)
+private type md_lo_to_hi = lo_addr -> (rtti * hi_addr)
 
 (*
  * map hi-level address a to (lo_start, lo_end), the range of addresses in the lo-level view of a's value
  *)
-type md_hi_to_lo = hi_addr -> (p:(lo_addr * lo_addr){snd p >= fst p})
+private type md_hi_to_lo = hi_addr -> (p:(lo_addr * lo_addr){snd p >= fst p})
 
 (*
  * if this hi-level address value is synchronized with its lo-level view
  *)
-type sync_t = hi_addr -> bool
+private type sync_t = hi_addr -> bool
 
 (*
  * metadata maintains mappings from hi-to-lo, lo-to-hi
  * a lo_ctr to keep track of the next lo-level address to use for next alloc
  * and sync to maintain which refs in hi-level are not synchronized with their lo-level view
  *)
-noeq type metadata_t = {
+private noeq type metadata_t = {
   hi_lo : md_hi_to_lo;
   lo_hi : md_lo_to_hi;
   lo_ctr: nat;
@@ -98,9 +98,9 @@ noeq type metadata_t = {
 }
 
 (*
- * mem contains the hi-level heao, lo-level map from addresses to bytes, and the metadata
+ * mem contains the hi-level heap, lo-level map from addresses to bytes, and the metadata
  *)
-noeq type mem = {
+abstract noeq type mem = {
   hi:hi_view;
   lo:lo_view;
   md:metadata_t;
@@ -109,7 +109,7 @@ noeq type mem = {
 (*
  * starting at address a0, update the low-level view with bytes b
  *)
-let update_lo_view (r:rtti) (l:lo_view) (a0:lo_addr) (b:bytes{length b = size_of r}) :lo_view =
+private let update_lo_view (r:rtti) (l:lo_view) (a0:lo_addr) (b:bytes{length b = size_of r}) :lo_view =
   match r with
   | Bool ->
     fun a -> if a = a0 then index b 0 else l a
@@ -119,7 +119,7 @@ let update_lo_view (r:rtti) (l:lo_view) (a0:lo_addr) (b:bytes{length b = size_of
  * unmarshaling either succeeds, in which case the heap is updated and sync map is updated to reflect that the ref is now synced
  * or it fails, in which case the heap is left unchanged and the sync map is updated to reflect that this ref is now not in sync
  *)
-let update_hi_view (r:rtti) (h:heap) (s:sync_t) (h_addr:nat) (b:bytes) :(heap * sync_t) =
+private let update_hi_view (r:rtti) (h:heap) (s:sync_t) (h_addr:nat) (b:bytes) :(heap * sync_t) =
   let v_opt = unmarshal r b in
   match v_opt with
   | Some v -> upd_addr #(type_of r) h h_addr v, (fun x -> if x = h_addr then true else s x)  //success
@@ -129,7 +129,7 @@ let update_hi_view (r:rtti) (h:heap) (s:sync_t) (h_addr:nat) (b:bytes) :(heap * 
  * update the lo-to-hi metadata to map addresses starting at a0 to rtti r and hi-level address ha
  * it will map (size_of rtti) addresses starting from a0 in lh
  *)
-let update_md_lo_to_hi (r:rtti) (lh:md_lo_to_hi) (a0:lo_addr) (ha:hi_addr) :md_lo_to_hi =
+private let update_md_lo_to_hi (r:rtti) (lh:md_lo_to_hi) (a0:lo_addr) (ha:hi_addr) :md_lo_to_hi =
   match r with
   | Bool ->
     fun a -> if a = a0 then (r, ha) else lh a
@@ -137,10 +137,10 @@ let update_md_lo_to_hi (r:rtti) (lh:md_lo_to_hi) (a0:lo_addr) (ha:hi_addr) :md_l
 (*
  * update hi-to-lo metadata
  *)
-let update_md_hi_to_lo (hl:md_hi_to_lo) (href:hi_addr) (lo_start:lo_addr) (lo_end:lo_addr{lo_end >= lo_start}) :md_hi_to_lo =
+private let update_md_hi_to_lo (hl:md_hi_to_lo) (href:hi_addr) (lo_start:lo_addr) (lo_end:lo_addr{lo_end >= lo_start}) :md_hi_to_lo =
   fun r -> if r = href then (lo_start, lo_end) else hl r
 
-let get_lo_start (m:mem) (a:nat) :nat =
+let get_lo_start (m:mem) (a:hi_addr) :lo_addr =
   fst (m.md.hi_lo a)
 
 (*
@@ -148,7 +148,7 @@ let get_lo_start (m:mem) (a:nat) :nat =
  * uses Heap.alloc to allocate in the hi-level
  * then allocates addresses in the lo-level view, maps them appropriately, and record the metadata
  *)
-let alloc (#r:rtti) (m:mem) (x:type_of r) :GTot (ref (type_of r) * mem) =
+abstract let alloc (#r:rtti) (m:mem) (x:type_of r) :GTot (ref (type_of r) * mem) =
   let hi0, lo0, md0 = m.hi, m.lo, m.md in
   let hl0, lh0, c0, s0 = md0.hi_lo, md0.lo_hi, md0.lo_ctr, md0.sync in
   
@@ -181,14 +181,14 @@ let alloc (#r:rtti) (m:mem) (x:type_of r) :GTot (ref (type_of r) * mem) =
 (*
  * sel function -- use Heap.sel
  *)
-let sel (#r:rtti) (m:mem) (href:ref (type_of r)) :GTot (type_of r) =
+abstract let sel (#r:rtti) (m:mem) (href:ref (type_of r)) :GTot (type_of r) =
   sel m.hi href
 
 (*
  * upd function
  * use Heap.upd, and sync the lo-level view and update the metadata
  *)
-let upd (#r:rtti) (m:mem) (href:ref (type_of r)) (x:type_of r) :GTot mem =
+abstract let upd (#r:rtti) (m:mem) (href:ref (type_of r)) (x:type_of r) :GTot mem =
   let hi0, lo0, md0 = m.hi, m.lo, m.md in
   let s0 = md0.sync in
   let href_addr = addr_of href in
@@ -216,13 +216,13 @@ assume val read_lo (lo:lo_view) (lo_start:nat) (lo_end:nat{lo_end >= lo_start})
 (*
  * lo-level read operation, just return the byte
  *)
-let load (m:mem) (a:nat) :byte = m.lo a
+abstract let load (m:mem) (a:nat) :byte = m.lo a
 
 (*
  * lo-level store
  * change the lo-level memory, reflect it in the hi-level heap, and update the sync map
  *)
-let store (m:mem) (a:nat) (b:byte) :GTot mem =
+abstract let store (m:mem) (a:nat) (b:byte) :GTot mem =
   let hi0, lo0, md0 = m.hi, m.lo, m.md in
 
   let hl, lh, s0 = md0.hi_lo, md0.lo_hi, md0.sync in
@@ -242,52 +242,6 @@ let store (m:mem) (a:nat) (b:byte) :GTot mem =
   { m with hi = hi1; lo = lo1; md = md1 }
 
 (* predicate for if the memory is synchronized *)
-let sync (m:mem) = forall (a:nat). m.md.sync a == true
+abstract let sync (m:mem) = forall (a:nat). m.md.sync a == true
 
-(*
- * test the model
- *)
-let test (m0:mem{sync m0}) =
-  let href, m1 = alloc #Bool m0 true in  //allocate a boolean value
-
-  let a = get_lo_start m1 (addr_of href) in  //a is the address in the lo-level view
-
-  (* check that the lo-level view is correct and that m1 is synchronized *)
-  assert (load m1 a = b1);
-  assert (sync m1);
-
-  (* update the hi-level heap, and check that the updates are reflected in the lo-level view *)
-  let m2 = upd m1 href false in
-  assert (load m2 a = b0);
-  assert (sync m2);
-
-  (* update the lo-level view and check that the updates are reflected in the hi-level view *)
-  let m3 = store m2 a b1 in
-  assert (sel m3 href = true);
-  assert (sync m3);
-
-  (* store a bad value in the lo-level, check that the hi-level view is unchanged and the mem is no longer synchronized *)
-  let m4 = store m3 a b2 in
-  assert (sel m4 href = true);
-  assert (~ (sync m4));
-
-  (* store back a good value, and check that the hi-level view is again in sync *)
-  let m5 = store m4 a b0 in
-  assert (sel m5 href = false);
-  assert (sync m5);
-
-  let href1, m6 = alloc #Bool m5 true in
-  let a1 = get_lo_start m6 (addr_of href1) in
-
-  assert (addr_of href =!= addr_of href1);
-
-  assert (sel m6 href == false);
-  assert (load m6 a1 == b1);
-
-  let m7 = store m6 a1 b1 in
-
-  assert (sel m7 href1 == true);
-  assert (sel m7 href == false);
-  assert (load m7 a == b0);
-
-  ()
+let lemma_low_view_is_projection
