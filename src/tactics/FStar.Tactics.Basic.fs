@@ -302,6 +302,7 @@ let rec map (t:tac<'a>): tac<(list<'a>)> =
     mk_tac (fun ps -> run (bind (cur_goal_and_rest t (map t))
                                 (function
                                  | None, None -> ret []
+                                 | None, Some _ -> failwith "impossible"
                                  | Some hd, None -> ret [hd]
                                  | Some hd, Some tl -> ret (hd::tl))
                           ) ps)
