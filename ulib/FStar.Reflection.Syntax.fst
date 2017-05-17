@@ -99,12 +99,15 @@ let rec flatten_name ns =
     | [n] -> n
     | n::ns -> n ^ "." ^ flatten_name ns
 
+
+// TODO: these are awful names, especially when `eq_qn` is around
 let imp_qn       = ["Prims"; "l_imp"]
 let and_qn       = ["Prims"; "l_and"]
 let or_qn        = ["Prims"; "l_or"]
 let not_qn       = ["Prims"; "l_not"]
 let iff_qn       = ["Prims"; "l_iff"]
 let eq2_qn       = ["Prims"; "eq2"]
+let eq1_qn       = ["Prims"; "eq"]
 let true_qn      = ["Prims"; "l_True"]
 let false_qn     = ["Prims"; "l_False"]
 let b2t_qn       = ["Prims"; "b2t"]

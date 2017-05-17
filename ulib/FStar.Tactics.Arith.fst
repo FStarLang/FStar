@@ -1,6 +1,4 @@
-module Arith
-
-// Testing out an arithmetic tactic.
+module FStar.Tactics.Arith
 
 open FStar.Tactics
 open FStar.Reflection.Arith
@@ -16,9 +14,11 @@ let is_arith_goal : tactic bool =
 
 val split_arith : unit -> Tac unit
 let rec split_arith = fun () -> (
+    print "GGGG";;
     eg <-- cur_goal;
     let _, g = eg in
     b <-- is_arith_goal;
+    print (term_to_string g ^ ": " ^ (if b then "is" else "is not") ^ " an arith goal");;
     if b then (
         prune "";;
         addns "Prims";;

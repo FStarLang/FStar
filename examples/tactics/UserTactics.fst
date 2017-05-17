@@ -74,7 +74,7 @@ let mul_commute_ascription : tactic unit =
     g <-- cur_goal;
     let (_, t) = g in
     match term_as_formula t with
-    | Eq _ _ _ ->
+    | Comp Eq _ _ _ ->
         apply_lemma (quote lemma_mul_comm)
     | _ ->
         fail "Not an equality"

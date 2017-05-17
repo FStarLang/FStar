@@ -55,7 +55,7 @@ let _ = assert_by_tactic (t <-- quote blah;
 
 let _ = assert_by_tactic (t <-- quote (5 == 2 + 3);
                           match term_as_formula t with
-                          | Eq _ _ _ -> return ()
+                          | Comp Eq _ _ _ -> return ()
                           | _ -> fail "term_as_formula did not recognize an equality"
                           )
                           True

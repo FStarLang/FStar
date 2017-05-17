@@ -3,10 +3,15 @@ module FStar.Reflection.Formula
 open FStar.Reflection.Syntax
 open FStar.Reflection.Syntax.Lemmas
 
+type comparison =
+  | Eq            (* Propositional equality (eq2) *)
+  | BoolEq        (* Decidable, boolean equality (eq) *)
+  | Lt | Le       (* Orderings *)
+
 noeq type formula =
   | True_  : formula
   | False_ : formula
-  | Eq     : typ -> term -> term -> formula
+  | Comp   : comparison -> typ -> term -> term -> formula
   | And    : term -> term -> formula
   | Or     : term -> term -> formula
   | Not    : term -> formula
@@ -39,7 +44,7 @@ let smaller f t =
     | Not p ->
         p << t
 
-    | Eq typ l r ->
+    | Comp _ typ l r ->
         typ << t /\ l << t /\ r << t
 
     | F_Unknown
@@ -71,7 +76,12 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
         match inspect h, ts@[t] with
         | Tv_FVar fv, [a1; a2; a3] ->
             let qn = inspect_fv fv in
-            if eq_qn qn eq2_qn then Eq a1 a2 a3
+            if      eq_qn qn eq2_qn then Comp Eq a1 a2 a3
+            else if eq_qn qn eq1_qn  then Comp BoolEq a1 a2 a3
+            else if eq_qn qn lt_qn  then Comp Lt a1 a2 a3
+            else if eq_qn qn lte_qn then Comp Le a1 a2 a3
+            else if eq_qn qn gt_qn  then Comp Lt a1 a3 a2
+            else if eq_qn qn gte_qn then Comp Le a1 a3 a2
             else App h0 t
         | Tv_FVar fv, [a1; a2] ->
             let qn = inspect_fv fv in
@@ -110,14 +120,17 @@ let formula_as_term_view (f:formula) : Tot term_view =
     match f with
     | True_  -> Tv_FVar (pack_fv true_qn)
     | False_ -> Tv_FVar (pack_fv false_qn)
-    | Eq t l r    -> mk_app' (Tv_FVar (pack_fv eq2_qn)) [t;l;r]
-    | And p q     -> mk_app' (Tv_FVar (pack_fv and_qn)) [p;q]
-    | Or  p q     -> mk_app' (Tv_FVar (pack_fv  or_qn)) [p;q]
-    | Implies p q -> mk_app' (Tv_FVar (pack_fv imp_qn)) [p;q]
-    | Not p       -> mk_app' (Tv_FVar (pack_fv not_qn)) [p]
-    | Iff p q     -> mk_app' (Tv_FVar (pack_fv iff_qn)) [p;q]
-    | Forall b t  -> Tv_Unknown // TODO: decide on meaning of this
-    | Exists b t  -> Tv_Unknown // TODO: ^
+    | Comp Eq t l r     -> mk_app' (Tv_FVar (pack_fv eq2_qn)) [t;l;r]
+    | Comp BoolEq t l r -> mk_app' (Tv_FVar (pack_fv eq1_qn)) [t;l;r]
+    | Comp Lt t l r     -> mk_app' (Tv_FVar (pack_fv lt_qn)) [t;l;r]
+    | Comp Le t l r     -> mk_app' (Tv_FVar (pack_fv lte_qn)) [t;l;r]
+    | And p q           -> mk_app' (Tv_FVar (pack_fv and_qn)) [p;q]
+    | Or  p q           -> mk_app' (Tv_FVar (pack_fv  or_qn)) [p;q]
+    | Implies p q       -> mk_app' (Tv_FVar (pack_fv imp_qn)) [p;q]
+    | Not p             -> mk_app' (Tv_FVar (pack_fv not_qn)) [p]
+    | Iff p q           -> mk_app' (Tv_FVar (pack_fv iff_qn)) [p;q]
+    | Forall b t        -> Tv_Unknown // TODO: decide on meaning of this
+    | Exists b t        -> Tv_Unknown // TODO: ^
 
     | App p q ->
         Tv_App p q
@@ -141,7 +154,10 @@ let formula_to_string (f:formula) : string =
     match f with
     | True_ -> "True_"
     | False_ -> "False_"
-    | Eq t l r -> "Eq (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Eq t l r -> "Eq (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp BoolEq t l r -> "BoolEq (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Lt t l r -> "Lt (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
+    | Comp Le t l r -> "Le (" ^ term_to_string t ^ ") (" ^ term_to_string l ^ ") (" ^ term_to_string r ^ ")"
     | And p q -> "And (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
     | Or  p q ->  "Or (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"
     | Implies p q ->  "Implies (" ^ term_to_string p ^ ") (" ^ term_to_string q ^ ")"

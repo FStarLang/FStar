@@ -189,7 +189,7 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
     | Implies lhs rhs ->
         let lhs = term_as_formula lhs in
         begin match lhs with
-        | Eq _ _ _ -> return (Some (lhs, rhs))
+        | Comp Eq _ _ _ -> return (Some (lhs, rhs))
         | _ -> return None
         end
     | _ -> return None
@@ -239,7 +239,7 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     | [] -> return ()
     | x_t::bs ->
         begin match term_as_formula (type_of_binder x_t) with
-        | Eq _ y _ ->
+        | Comp Eq _ y _ ->
             if term_eq x y
             then rewrite x_t
             else try_rewrite_equality x bs
@@ -253,7 +253,7 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
         return ()
     | x_t::bs -> begin
         match term_as_formula (type_of_binder x_t) with
-        | Eq _ _ _ ->
+        | Comp Eq _ _ _ ->
             rewrite x_t;;
             rewrite_all_context_equalities bs
         | _ ->
