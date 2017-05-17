@@ -2,7 +2,7 @@ module FStar.Heap
 
 open FStar.Classical
 
-abstract noeq type heap_rec = {
+private noeq type heap_rec = {
   next_addr: nat;
   memory   : nat -> Tot (option (a:Type0 & a))
 }
@@ -14,7 +14,7 @@ let emp = {
   memory    = (fun (r:nat) -> None)
 }
 
-type ref' (a:Type0) :Type0 = {
+private type ref' (a:Type0) :Type0 = {
   addr: nat;
   init: a;
   mm:   bool;  //manually managed flag
