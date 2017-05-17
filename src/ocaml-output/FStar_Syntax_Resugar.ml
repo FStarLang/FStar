@@ -15,8 +15,8 @@ let bv_as_unique_ident: FStar_Syntax_Syntax.bv -> FStar_Ident.ident =
 let filter_imp a =
   FStar_All.pipe_right a
     (FStar_List.filter
-       (fun uu___199_37  ->
-          match uu___199_37 with
+       (fun uu___196_37  ->
+          match uu___196_37 with
           | (uu____41,Some (FStar_Syntax_Syntax.Implicit uu____42)) -> false
           | uu____44 -> true))
 let resugar_arg_qual:
@@ -109,8 +109,8 @@ let rec resugar_universe:
       | FStar_Syntax_Syntax.U_unknown  -> mk1 FStar_Parser_AST.Wild r
 let string_to_op: Prims.string -> (Prims.string* Prims.int) Prims.option =
   fun s  ->
-    let name_of_op uu___200_173 =
-      match uu___200_173 with
+    let name_of_op uu___197_173 =
+      match uu___197_173 with
       | "Amp" -> Some ("&", (Prims.parse_int "0"))
       | "At" -> Some ("@", (Prims.parse_int "0"))
       | "Plus" -> Some ("+", (Prims.parse_int "0"))
@@ -426,8 +426,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                          | (b,qual) ->
                              resugar_bv_as_binder b t.FStar_Syntax_Syntax.pos)) in
                FStar_All.pipe_right uu____732 FStar_List.rev in
-             let rec aux body3 uu___201_751 =
-               match uu___201_751 with
+             let rec aux body3 uu___198_751 =
+               match uu___198_751 with
                | [] -> body3
                | hd1::tl1 ->
                    let body4 = mk1 (FStar_Parser_AST.Product ([hd1], body3)) in
@@ -450,20 +450,20 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                     FStar_Parser_AST.Refine uu____780 in
                   mk1 uu____779))
     | FStar_Syntax_Syntax.Tm_app (e,args) ->
-        let rec last1 uu___202_813 =
-          match uu___202_813 with
+        let rec last1 uu___199_813 =
+          match uu___199_813 with
           | hd1::[] -> [hd1]
           | hd1::tl1 -> last1 tl1
           | uu____860 -> failwith "last of an empty list" in
-        let rec last_two uu___203_884 =
-          match uu___203_884 with
+        let rec last_two uu___200_884 =
+          match uu___200_884 with
           | []|_::[] ->
               failwith
                 "last two elements of a list with less than two elements "
           | a1::a2::[] -> [a1; a2]
           | uu____947::t1 -> last_two t1 in
-        let rec last_three uu___204_975 =
-          match uu___204_975 with
+        let rec last_three uu___201_975 =
+          match uu___201_975 with
           | []|_::[]|_::_::[] ->
               failwith
                 "last three elements of a list with less than three elements "
@@ -973,8 +973,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
           Prims.strcat "uu___unification_ " uu____2594 in
         let uu____2599 = var s t.FStar_Syntax_Syntax.pos in mk1 uu____2599
     | FStar_Syntax_Syntax.Tm_meta (e,m) ->
-        let resugar_meta_desugared uu___205_2609 =
-          match uu___205_2609 with
+        let resugar_meta_desugared uu___202_2609 =
+          match uu___202_2609 with
           | FStar_Syntax_Syntax.Data_app  ->
               let uu____2610 =
                 let uu____2611 = FStar_Syntax_Subst.compress e in
@@ -1180,8 +1180,8 @@ and resugar_comp: FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term =
               FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
                 FStar_Syntax_Const.effect_Lemma_lid
             then
-              let rec aux l uu___206_3006 =
-                match uu___206_3006 with
+              let rec aux l uu___203_3006 =
+                match uu___203_3006 with
                 | [] -> l
                 | (t,aq)::tl1 ->
                     (match t.FStar_Syntax_Syntax.n with
@@ -1200,8 +1200,8 @@ and resugar_comp: FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term =
                  | (e,uu____3079) ->
                      let uu____3080 = resugar_term e in
                      (uu____3080, FStar_Parser_AST.Nothing)) args in
-          let rec aux l uu___207_3094 =
-            match uu___207_3094 with
+          let rec aux l uu___204_3094 =
+            match uu___204_3094 with
             | [] -> l
             | hd1::tl1 ->
                 (match hd1 with
@@ -1423,8 +1423,8 @@ and resugar_match_pat: FStar_Syntax_Syntax.pat -> FStar_Parser_AST.pattern =
     aux p
 let resugar_qualifier:
   FStar_Syntax_Syntax.qualifier -> FStar_Parser_AST.qualifier Prims.option =
-  fun uu___208_3487  ->
-    match uu___208_3487 with
+  fun uu___205_3487  ->
+    match uu___205_3487 with
     | FStar_Syntax_Syntax.Assumption  -> Some FStar_Parser_AST.Assumption
     | FStar_Syntax_Syntax.New  -> Some FStar_Parser_AST.New
     | FStar_Syntax_Syntax.Private  -> Some FStar_Parser_AST.Private
@@ -1455,8 +1455,8 @@ let resugar_qualifier:
     | FStar_Syntax_Syntax.Effect  -> Some FStar_Parser_AST.Effect_qual
     | FStar_Syntax_Syntax.OnlyName  -> None
 let resugar_pragma: FStar_Syntax_Syntax.pragma -> FStar_Parser_AST.pragma =
-  fun uu___209_3511  ->
-    match uu___209_3511 with
+  fun uu___206_3511  ->
+    match uu___206_3511 with
     | FStar_Syntax_Syntax.SetOptions s -> FStar_Parser_AST.SetOptions s
     | FStar_Syntax_Syntax.ResetOptions s -> FStar_Parser_AST.ResetOptions s
     | FStar_Syntax_Syntax.LightOff  -> FStar_Parser_AST.LightOff
@@ -1485,8 +1485,8 @@ let resugar_typ:
                  let uu____3569 =
                    FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
                      (FStar_Util.for_some
-                        (fun uu___210_3571  ->
-                           match uu___210_3571 with
+                        (fun uu___207_3571  ->
+                           match uu___207_3571 with
                            | FStar_Syntax_Syntax.RecordType uu____3572 ->
                                true
                            | uu____3577 -> false)) in

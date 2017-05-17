@@ -128,57 +128,57 @@ let dismiss: Prims.unit tac =
   bind get
     (fun p  ->
        let uu____416 =
-         let uu___83_417 = p in
+         let uu___80_417 = p in
          let uu____418 = FStar_List.tl p.goals in
          {
-           main_context = (uu___83_417.main_context);
-           main_goal = (uu___83_417.main_goal);
-           all_implicits = (uu___83_417.all_implicits);
+           main_context = (uu___80_417.main_context);
+           main_goal = (uu___80_417.main_goal);
+           all_implicits = (uu___80_417.all_implicits);
            goals = uu____418;
-           smt_goals = (uu___83_417.smt_goals);
-           transaction = (uu___83_417.transaction)
+           smt_goals = (uu___80_417.smt_goals);
+           transaction = (uu___80_417.transaction)
          } in
        set uu____416)
 let dismiss_all: Prims.unit tac =
   bind get
     (fun p  ->
        set
-         (let uu___84_422 = p in
+         (let uu___81_422 = p in
           {
-            main_context = (uu___84_422.main_context);
-            main_goal = (uu___84_422.main_goal);
-            all_implicits = (uu___84_422.all_implicits);
+            main_context = (uu___81_422.main_context);
+            main_goal = (uu___81_422.main_goal);
+            all_implicits = (uu___81_422.all_implicits);
             goals = [];
-            smt_goals = (uu___84_422.smt_goals);
-            transaction = (uu___84_422.transaction)
+            smt_goals = (uu___81_422.smt_goals);
+            transaction = (uu___81_422.transaction)
           }))
 let add_goals: goal Prims.list -> Prims.unit tac =
   fun gs  ->
     bind get
       (fun p  ->
          set
-           (let uu___85_431 = p in
+           (let uu___82_431 = p in
             {
-              main_context = (uu___85_431.main_context);
-              main_goal = (uu___85_431.main_goal);
-              all_implicits = (uu___85_431.all_implicits);
+              main_context = (uu___82_431.main_context);
+              main_goal = (uu___82_431.main_goal);
+              all_implicits = (uu___82_431.all_implicits);
               goals = (FStar_List.append gs p.goals);
-              smt_goals = (uu___85_431.smt_goals);
-              transaction = (uu___85_431.transaction)
+              smt_goals = (uu___82_431.smt_goals);
+              transaction = (uu___82_431.transaction)
             }))
 let add_smt_goals: goal Prims.list -> Prims.unit tac =
   fun gs  ->
     bind get
       (fun p  ->
          set
-           (let uu___86_440 = p in
+           (let uu___83_440 = p in
             {
-              main_context = (uu___86_440.main_context);
-              main_goal = (uu___86_440.main_goal);
-              all_implicits = (uu___86_440.all_implicits);
-              goals = (uu___86_440.goals);
+              main_context = (uu___83_440.main_context);
+              main_goal = (uu___83_440.main_goal);
+              all_implicits = (uu___83_440.all_implicits);
+              goals = (uu___83_440.goals);
               smt_goals = (FStar_List.append gs p.smt_goals);
-              transaction = (uu___86_440.transaction)
+              transaction = (uu___83_440.transaction)
             }))
 let replace_cur: goal -> Prims.unit tac =
   fun g  -> bind dismiss (fun uu____446  -> add_goals [g])
@@ -187,14 +187,14 @@ let add_implicits: FStar_TypeChecker_Env.implicits -> Prims.unit tac =
     bind get
       (fun p  ->
          set
-           (let uu___87_453 = p in
+           (let uu___84_453 = p in
             {
-              main_context = (uu___87_453.main_context);
-              main_goal = (uu___87_453.main_goal);
+              main_context = (uu___84_453.main_context);
+              main_goal = (uu___84_453.main_goal);
               all_implicits = (FStar_List.append i p.all_implicits);
-              goals = (uu___87_453.goals);
-              smt_goals = (uu___87_453.smt_goals);
-              transaction = (uu___87_453.transaction)
+              goals = (uu___84_453.goals);
+              smt_goals = (uu___84_453.smt_goals);
+              transaction = (uu___84_453.transaction)
             }))
 let is_true: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
@@ -223,11 +223,11 @@ let conj_goals: goal -> goal -> goal =
          if uu____504
          then g1
          else
-           (let uu___88_506 = g1 in
+           (let uu___85_506 = g1 in
             let uu____507 = FStar_Syntax_Util.mk_conj t1 t2 in
             {
-              context = (uu___88_506.context);
-              witness = (uu___88_506.witness);
+              context = (uu___85_506.context);
+              witness = (uu___85_506.witness);
               goal_ty = uu____507
             }))
 let with_cur_goal f =
@@ -248,14 +248,14 @@ let set_cur_goal: goal -> Prims.unit tac =
          | hd1::tl1 ->
              Success
                ((),
-                 (let uu___89_546 = ps in
+                 (let uu___86_546 = ps in
                   {
-                    main_context = (uu___89_546.main_context);
-                    main_goal = (uu___89_546.main_goal);
-                    all_implicits = (uu___89_546.all_implicits);
+                    main_context = (uu___86_546.main_context);
+                    main_goal = (uu___86_546.main_goal);
+                    all_implicits = (uu___86_546.all_implicits);
                     goals = (g :: tl1);
-                    smt_goals = (uu___89_546.smt_goals);
-                    transaction = (uu___89_546.transaction)
+                    smt_goals = (uu___86_546.smt_goals);
+                    transaction = (uu___86_546.transaction)
                   }))
          | uu____547 -> Failed ("No goals left", ps))
 let replace_point:
@@ -297,10 +297,10 @@ let grewrite_impl:
                  let goal_ty' = treplace env e1 e2 g.goal_ty in
                  let uu____620 =
                    set_cur_goal
-                     (let uu___90_622 = g in
+                     (let uu___87_622 = g in
                       {
-                        context = (uu___90_622.context);
-                        witness = (uu___90_622.witness);
+                        context = (uu___87_622.context);
+                        witness = (uu___87_622.witness);
                         goal_ty = goal_ty'
                       }) in
                  bind uu____620
@@ -332,14 +332,14 @@ let focus_cur_goal f =
        | [] -> fail "No more goals"
        | hd1::tl1 ->
            let q =
-             let uu___91_653 = p in
+             let uu___88_653 = p in
              {
-               main_context = (uu___91_653.main_context);
-               main_goal = (uu___91_653.main_goal);
-               all_implicits = (uu___91_653.all_implicits);
+               main_context = (uu___88_653.main_context);
+               main_goal = (uu___88_653.main_goal);
+               all_implicits = (uu___88_653.all_implicits);
                goals = [hd1];
-               smt_goals = (uu___91_653.smt_goals);
-               transaction = (uu___91_653.transaction)
+               smt_goals = (uu___88_653.smt_goals);
+               transaction = (uu___88_653.transaction)
              } in
            let uu____654 = set q in
            bind uu____654
@@ -349,14 +349,14 @@ let focus_cur_goal f =
                      bind get
                        (fun q'  ->
                           let q2 =
-                            let uu___92_660 = q' in
+                            let uu___89_660 = q' in
                             {
-                              main_context = (uu___92_660.main_context);
-                              main_goal = (uu___92_660.main_goal);
-                              all_implicits = (uu___92_660.all_implicits);
+                              main_context = (uu___89_660.main_context);
+                              main_goal = (uu___89_660.main_goal);
+                              all_implicits = (uu___89_660.all_implicits);
                               goals = (FStar_List.append q'.goals tl1);
-                              smt_goals = (uu___92_660.smt_goals);
-                              transaction = (uu___92_660.transaction)
+                              smt_goals = (uu___89_660.smt_goals);
+                              transaction = (uu___89_660.transaction)
                             } in
                           let uu____661 = set q2 in
                           bind uu____661 (fun uu____663  -> ret a)))))
@@ -408,8 +408,8 @@ let rec map t =
          let uu____825 =
            let uu____832 = map t in cur_goal_and_rest t uu____832 in
          bind uu____825
-           (fun uu___82_842  ->
-              match uu___82_842 with
+           (fun uu___79_842  ->
+              match uu___79_842 with
               | (None ,None ) -> ret []
               | (None ,Some uu____855) -> failwith "impossible"
               | (Some hd1,None ) -> ret [hd1]
@@ -422,11 +422,11 @@ let map_goal_term:
       with_cur_goal
         (fun g  ->
            let uu____891 =
-             let uu___93_892 = g in
+             let uu___90_892 = g in
              let uu____893 = f g.goal_ty in
              {
-               context = (uu___93_892.context);
-               witness = (uu___93_892.witness);
+               context = (uu___90_892.context);
+               witness = (uu___90_892.witness);
                goal_ty = uu____893
              } in
            replace_cur uu____891) in
@@ -441,10 +441,10 @@ let map_meta t =
        | FStar_Syntax_Syntax.Tm_meta (f,annot) ->
            let uu____922 =
              replace_cur
-               (let uu___94_924 = g in
+               (let uu___91_924 = g in
                 {
-                  context = (uu___94_924.context);
-                  witness = (uu___94_924.witness);
+                  context = (uu___91_924.context);
+                  witness = (uu___91_924.witness);
                   goal_ty = f
                 }) in
            bind uu____922
@@ -574,9 +574,9 @@ let split: Prims.unit tac =
                   (fun uu____1178  ->
                      match uu____1178 with
                      | (a,uu____1182) ->
-                         let uu___95_1183 = goal in
+                         let uu___92_1183 = goal in
                          {
-                           context = (uu___95_1183.context);
+                           context = (uu___92_1183.context);
                            witness = None;
                            goal_ty = a
                          })) in
@@ -596,10 +596,10 @@ let simpl: Prims.unit tac =
          FStar_TypeChecker_Normalize.normalize steps goal.context
            goal.goal_ty in
        replace_cur
-         (let uu___96_1192 = goal in
+         (let uu___93_1192 = goal in
           {
-            context = (uu___96_1192.context);
-            witness = (uu___96_1192.witness);
+            context = (uu___93_1192.context);
+            witness = (uu___93_1192.witness);
             goal_ty = t
           }))
 let trivial: Prims.unit tac =
@@ -620,10 +620,10 @@ let trivial: Prims.unit tac =
            bind dismiss
              (fun uu____1211  ->
                 add_goals
-                  [(let uu___97_1212 = goal in
+                  [(let uu___94_1212 = goal in
                     {
-                      context = (uu___97_1212.context);
-                      witness = (uu___97_1212.witness);
+                      context = (uu___94_1212.context);
+                      witness = (uu___94_1212.witness);
                       goal_ty = t
                     })])
        | uu____1213 -> fail "Not a trivial goal")
@@ -740,9 +740,9 @@ let apply_lemma: FStar_Syntax_Syntax.term -> Prims.unit tac =
                                                            (Some term);
                                                          goal_ty = typ
                                                        })) in
-                                         (let uu___100_1568 = goal in
+                                         (let uu___97_1568 = goal in
                                           {
-                                            context = (uu___100_1568.context);
+                                            context = (uu___97_1568.context);
                                             witness = None;
                                             goal_ty = pre
                                           }) :: uu____1539 in
@@ -770,9 +770,9 @@ let exact: FStar_Syntax_Syntax.term -> Prims.unit tac =
                then
                  (solve goal tm;
                   replace_cur
-                    (let uu___103_1596 = goal in
+                    (let uu___100_1596 = goal in
                      {
-                       context = (uu___103_1596.context);
+                       context = (uu___100_1596.context);
                        witness = None;
                        goal_ty = FStar_Syntax_Util.t_true
                      }))
@@ -825,13 +825,13 @@ let rewrite: FStar_Syntax_Syntax.binder -> Prims.unit tac =
                   (match uu____1670 with
                    | FStar_Syntax_Syntax.Tm_name x1 ->
                        let goal1 =
-                         let uu___104_1677 = goal in
+                         let uu___101_1677 = goal in
                          let uu____1678 =
                            FStar_Syntax_Subst.subst
                              [FStar_Syntax_Syntax.NT (x1, e)] goal.goal_ty in
                          {
-                           context = (uu___104_1677.context);
-                           witness = (uu___104_1677.witness);
+                           context = (uu___101_1677.context);
+                           witness = (uu___101_1677.witness);
                            goal_ty = uu____1678
                          } in
                        replace_cur goal1
@@ -852,11 +852,11 @@ let clear: Prims.unit tac =
            then fail "Cannot clear; variable appears in goal"
            else
              (let new_goal =
-                let uu___105_1703 = goal in
+                let uu___102_1703 = goal in
                 {
                   context = env';
-                  witness = (uu___105_1703.witness);
-                  goal_ty = (uu___105_1703.goal_ty)
+                  witness = (uu___102_1703.witness);
+                  goal_ty = (uu___102_1703.goal_ty)
                 } in
               bind dismiss (fun uu____1704  -> add_goals [new_goal])))
 let clear_hd: name -> Prims.unit tac =
@@ -882,7 +882,7 @@ let revert: Prims.unit tac =
              let uu____1740 = FStar_Util.set_mem x fvs in
              if uu____1740
              then
-               let uu___106_1741 = goal in
+               let uu___103_1741 = goal in
                let uu____1742 =
                  let uu____1743 =
                    FStar_TypeChecker_TcTerm.universe_of env'
@@ -890,17 +890,17 @@ let revert: Prims.unit tac =
                  FStar_Syntax_Util.mk_forall uu____1743 x goal.goal_ty in
                {
                  context = env';
-                 witness = (uu___106_1741.witness);
+                 witness = (uu___103_1741.witness);
                  goal_ty = uu____1742
                }
              else
-               (let uu___107_1745 = goal in
+               (let uu___104_1745 = goal in
                 let uu____1746 =
                   FStar_Syntax_Util.mk_imp x.FStar_Syntax_Syntax.sort
                     goal.goal_ty in
                 {
                   context = env';
-                  witness = (uu___107_1745.witness);
+                  witness = (uu___104_1745.witness);
                   goal_ty = uu____1746
                 }) in
            bind dismiss (fun uu____1747  -> add_goals [new_goal]))
@@ -991,16 +991,16 @@ let merge_sub_goals: Prims.unit tac =
            if uu____1986
            then
              let uu____1988 =
-               let uu___108_1989 = p in
+               let uu___105_1989 = p in
                let uu____1990 =
                  let uu____1992 = conj_goals g1 g2 in uu____1992 :: rest in
                {
-                 main_context = (uu___108_1989.main_context);
-                 main_goal = (uu___108_1989.main_goal);
-                 all_implicits = (uu___108_1989.all_implicits);
+                 main_context = (uu___105_1989.main_context);
+                 main_goal = (uu___105_1989.main_goal);
+                 all_implicits = (uu___105_1989.all_implicits);
                  goals = uu____1990;
-                 smt_goals = (uu___108_1989.smt_goals);
-                 transaction = (uu___108_1989.transaction)
+                 smt_goals = (uu___105_1989.smt_goals);
+                 transaction = (uu___105_1989.transaction)
                } in
              set uu____1988
            else
@@ -1044,11 +1044,11 @@ let prune: Prims.string -> Prims.unit tac =
            FStar_TypeChecker_Env.rem_proof_ns ctx
              (FStar_Ident.path_of_text s) in
          let g' =
-           let uu___109_2022 = g in
+           let uu___106_2022 = g in
            {
              context = ctx';
-             witness = (uu___109_2022.witness);
-             goal_ty = (uu___109_2022.goal_ty)
+             witness = (uu___106_2022.witness);
+             goal_ty = (uu___106_2022.goal_ty)
            } in
          bind dismiss (fun uu____2023  -> add_goals [g']))
 let addns: Prims.string -> Prims.unit tac =
@@ -1060,11 +1060,11 @@ let addns: Prims.string -> Prims.unit tac =
            FStar_TypeChecker_Env.add_proof_ns ctx
              (FStar_Ident.path_of_text s) in
          let g' =
-           let uu___110_2033 = g in
+           let uu___107_2033 = g in
            {
              context = ctx';
-             witness = (uu___110_2033.witness);
-             goal_ty = (uu___110_2033.goal_ty)
+             witness = (uu___107_2033.witness);
+             goal_ty = (uu___107_2033.goal_ty)
            } in
          bind dismiss (fun uu____2034  -> add_goals [g']))
 type order =
