@@ -431,7 +431,7 @@ let split : tac<unit>
 
 let simpl : tac<unit> =
     with_cur_goal (fun goal ->
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify] in
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops; N.Simplify] in
     let t = N.normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty=t})
     )

@@ -45,6 +45,7 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
+  | UnfoldTac
 
 type mlift = {
   mlift_wp:typ -> typ -> typ ;

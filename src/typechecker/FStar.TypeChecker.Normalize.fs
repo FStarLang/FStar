@@ -59,6 +59,7 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
+  | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -859,6 +860,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Env.Inlining
                     | Eager_unfolding_only -> true
                     | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
+            let should_delta =
+                if List.mem Env.UnfoldTac cfg.delta_level &&
+                   (  S.fv_eq_lid f SC.and_lid
+                   || S.fv_eq_lid f SC.or_lid
+                   || S.fv_eq_lid f SC.imp_lid
+                   || S.fv_eq_lid f SC.forall_lid
+                   || S.fv_eq_lid f SC.exists_lid
+                   || S.fv_eq_lid f SC.true_lid
+                   || S.fv_eq_lid f SC.false_lid)
+                then false
+                else should_delta
+            in
 
             if not should_delta
             then rebuild cfg env stack t
@@ -1682,6 +1695,7 @@ let config s e =
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
         | Inlining -> [Env.Inlining]
+        | UnfoldTac -> [Env.UnfoldTac]
         | _ -> []) in
     let d = match d with
         | [] -> [Env.NoDelta]
