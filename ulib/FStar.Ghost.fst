@@ -21,16 +21,20 @@
 *)
 
 module FStar.Ghost
-abstract type erased (a:Type) = a
-val reveal: #a:Type -> erased a -> GTot a
-let reveal #a x = x
 
-val hide: #a:Type -> a -> Tot (erased a)
-let hide #a x = x
+abstract
+type erased (a:Type) = a
+
+abstract
+let reveal (#a:Type) (x:erased a) : GTot a = x
+
+abstract
+let hide (#a:Type) (x:a) : Tot (erased a) = x
 
 val lemma_hide_reveal: #a:Type
                    -> x:erased a
                    -> Lemma (ensures (hide (reveal x) == x))
+                           [SMTPat (hide (reveal x))]
 let lemma_hide_reveal #a x = ()
 
 (*just hide can do this now. remove?*)
