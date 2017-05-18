@@ -4,6 +4,7 @@ type t = uint128
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
+let n = Prims.parse_int "128"
 let v (x:uint128) : Prims.int = Prims.parse_int (Stdint.Uint128.to_string x)
 
 let zero = Stdint.Uint128.zero
@@ -49,6 +50,13 @@ let gt (a:uint128) (b:uint128) : bool = a > b
 let gte (a:uint128) (b:uint128) : bool = a >= b
 let lt (a:uint128) (b:uint128) : bool = a < b
 let lte (a:uint128) (b:uint128) : bool =  a <= b
+
+let eq_mask (a:uint128) (b:uint128) : uint128 =
+  if a = b then Stdint.Uint128.pred Stdint.Uint128.zero
+  else Stdint.Uint128.zero
+let gte_mask (a:uint128) (b:uint128) : uint128 =
+  if a >= b then Stdint.Uint128.pred Stdint.Uint128.zero
+  else Stdint.Uint128.zero
 
 (* Infix notations *)
 let op_Plus_Hat = add

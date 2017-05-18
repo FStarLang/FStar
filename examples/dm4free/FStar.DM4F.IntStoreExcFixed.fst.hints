@@ -7,26 +7,28 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "lemma_Prims.invertOption",
-        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ],
     [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC_bind_wp",
+      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC_bind_wp",
       1,
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "fuel_guarded_inversion_Prims.option"
+        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "typing_Prims.uu___is_None"
       ],
       0
     ],
     [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC___proj__INT_STORE_EXC__item__get_elab",
+      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__get_elab",
       1,
       2,
       1,
@@ -34,7 +36,7 @@
       0
     ],
     [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC___proj__INT_STORE_EXC__item__put_elab",
+      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__put_elab",
       1,
       2,
       1,
@@ -42,7 +44,7 @@
       0
     ],
     [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC___proj__INT_STORE_EXC__item__raise__elab",
+      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__raise__elab",
       1,
       2,
       1,
@@ -59,7 +61,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
         "data_typing_intro_Prims.None@tok", "disc_equation_Prims.None",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.None_a"

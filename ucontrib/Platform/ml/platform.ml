@@ -145,6 +145,11 @@ module Bytes = struct
       try abytes (String.make len value)
       with _ -> failwith "Default integer for createBytes was greater than max_value"
 
+  let initBytes len f : bytes =
+      let len = Z.to_int len in
+      try abytes (String.init len (fun i -> f (Z.of_int i)))
+      with _ -> failwith "Platform.Bytes.initBytes: invalid char returned"
+
   type 'a lbytes = bytes
 
   let bytes_of_int nb i =

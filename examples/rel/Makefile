@@ -44,5 +44,8 @@ all:\
   OTP.uver \
   ElGamal.uver
 
+%.fst-in:
+	@echo $(OTHERFLAGS)
+
 pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free

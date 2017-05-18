@@ -1,5 +1,6 @@
 (** The [int] type and the various default operators. *)
 type int      = Big_int_Z.big_int
+type nonzero  = int
 let ( + )     = Big_int_Z.add_big_int
 let ( - )     = Big_int_Z.sub_big_int
 let ( * )     = Big_int_Z.mult_big_int
@@ -10,6 +11,7 @@ let ( < )     = Big_int_Z.lt_big_int
 let ( > )     = Big_int_Z.gt_big_int
 let ( mod )   = Big_int_Z.mod_big_int
 let ( ~- )    = Big_int_Z.minus_big_int
+let abs       = Big_int_Z.abs_big_int
 let parse_int = Big_int_Z.big_int_of_string
 let to_string = Big_int_Z.string_of_big_int
 
@@ -72,7 +74,9 @@ type prop     = Obj.t
 let ignore _ = ()
 let cut = ()
 let fst = fst
+let __proj__Mktuple2__item___1 = fst
 let snd = snd
+let __proj__Mktuple2__item___2 = snd
 let admit () = failwith "no admits"
 let _assume () = ()
 let _assert x = ()
@@ -130,11 +134,38 @@ let string_of_int = to_string
 type ('a, 'b) dtuple2 =
   | Mkdtuple2 of 'a * 'b
 
+let dfst = function Mkdtuple2 (x, y) -> x
+let dsnd = function Mkdtuple2 (x, y) -> y
+
+let __proj__Mkdtuple2__item___1 = dfst
+let __proj__Mkdtuple2__item___2 = dsnd
+
 type ('a, 'b, 'c) dtuple3 =
   | Mkdtuple3 of 'a * 'b * 'c
 
+let __proj__Mkdtuple3__item___1 = function
+  | Mkdtuple3 (x1, x2, x3) -> x1
+
+let __proj__Mkdtuple3__item___2 = function
+  | Mkdtuple3 (x1, x2, x3) -> x2
+
+let __proj__Mkdtuple3__item___3 = function
+  | Mkdtuple3 (x1, x2, x3) -> x3
+
 type ('a, 'b, 'c, 'd) dtuple4 =
   | Mkdtuple4 of 'a * 'b * 'c * 'd
+
+let __proj__Mkdtuple4__item___1 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x1
+
+let __proj__Mkdtuple4__item___2 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x2
+
+let __proj__Mkdtuple4__item___3 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x3
+
+let __proj__Mkdtuple4__item___4 = function
+  | Mkdtuple4 (x1, x2, x3, x4) -> x4
 
 let rec pow2 n =
   let open Z in

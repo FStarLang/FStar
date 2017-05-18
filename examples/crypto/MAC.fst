@@ -49,7 +49,7 @@ val mac:    k:key -> t:text{key_prop k t} -> ST tag
   (requires (fun h -> True)) 
   (ensures (fun h x h' -> 
      x == hmac_sha1 k t /\
-     modifies !{ log } h h' /\
+     Heap.modifies (Heap.only log) h h' /\
      Some?
       (List.Tot.find
         (fun (Entry k' text' _) -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes t text')
@@ -77,6 +77,7 @@ let keygen (p: (text -> Type)) =
 
 let mac k t =
   let m = hmac_sha1 k t in
+  ST.recall log;  //upd guarantees modifies singleton, only if the modified reference is contained in the heap
   log := Entry k t m :: !log;
   m
 

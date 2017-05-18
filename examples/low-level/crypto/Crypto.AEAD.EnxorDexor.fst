@@ -79,7 +79,7 @@ let modifies_table_above_x_and_buffer (#i:id) (#l:nat) (t:PRF.state i)
     let contents0 = HS.sel h0 r in
     let contents1 = HS.sel h1 r in
     HS.modifies rgns h0 h1 /\
-    HS.modifies_ref t.rgn (TSet.singleton (FStar.Heap.Ref (HS.as_ref r))) h0 h1 /\
+    HS.modifies_ref t.rgn (Set.singleton (FStar.Heap.addr_of (HS.as_ref r))) h0 h1 /\
     Buffer.modifies_buf_1 rb b h0 h1 /\
     Seq.length contents0 <= Seq.length contents1 /\
     Seq.equal (Seq.slice contents1 0 (Seq.length contents0)) contents0 /\
@@ -907,7 +907,7 @@ let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
        let prf_entries_1 = HS.sel h1 (PRF.itable i st.prf) in
        let prf_entries_0 = HS.sel h0 (PRF.itable i st.prf) in
        assert (aead_entries_1 == aead_entries_0);
-       assert (HS.modifies_ref st.prf.mac_rgn TSet.empty h0 h1);
+       assert (HS.modifies_ref st.prf.mac_rgn Set.empty h0 h1);
        assert (fresh_nonces_are_unused prf_entries_0 aead_entries_1 h0);
        let open FStar.Classical in
        let h0':(h:mem{safeMac i}) = h0 in

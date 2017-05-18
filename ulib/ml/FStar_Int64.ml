@@ -65,4 +65,4 @@ let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
 
 let to_string = Int64.to_string                     
-let int_to_t s = s
+let int_to_t s = int_to_int64 s

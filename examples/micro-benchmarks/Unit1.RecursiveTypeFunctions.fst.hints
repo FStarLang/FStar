@@ -8,9 +8,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "pretyping_ae567c2fb75be05905677af440075565",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -21,9 +19,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_Unit1.RecursiveTypeFunctions.T",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.RecursiveTypeFunctions.T",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_dcce9542b98cdc0b1ce1526881708dd3"
       ],
       0
     ],
@@ -34,9 +33,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_e6a5d49e9de9d9d32d37d5b69a69eb80"
       ],
       0
     ],
@@ -47,9 +47,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_Unit1.RecursiveTypeFunctions.S",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_463ab24589f7b97a63a32a93a8999adc"
       ],
       0
     ],
@@ -60,9 +61,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_6c51bbe51c5c443619d248c8823721da"
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_6c51bbe51c5c443619d248c8823721da"
       ],
       0
     ],
@@ -72,11 +74,11 @@
       2,
       1,
       [
-        "@query", "binder_x_cc9ff0d18b8ae93a269cb8f937c1a8f6_0",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_cc9ff0d18b8ae93a269cb8f937c1a8f6_0",
         "disc_equation_Unit1.RecursiveTypeFunctions.T",
         "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
         "fuel_guarded_inversion_Unit1.RecursiveTypeFunctions.pre_t",
-        "projection_inverse_Unit1.RecursiveTypeFunctions.TofS__0",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
       ],
       0
@@ -87,11 +89,11 @@
       2,
       1,
       [
-        "@query", "binder_x_d6110439aedb0e447d30a7318693477e_0",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_d6110439aedb0e447d30a7318693477e_0",
         "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "fuel_guarded_inversion_Unit1.RecursiveTypeFunctions.pre_s",
-        "projection_inverse_Unit1.RecursiveTypeFunctions.SofT__0",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0
@@ -102,8 +104,10 @@
       2,
       1,
       [
-        "@query", "b2t_def", "binder_x_82f527a714db151b64042595dd98fc3a_0",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query", "b2t_def",
+        "binder_x_82f527a714db151b64042595dd98fc3a_0",
         "constructor_distinct_Unit1.RecursiveTypeFunctions.T",
+        "constructor_distinct_Unit1.RecursiveTypeFunctions.TofS",
         "disc_equation_Unit1.RecursiveTypeFunctions.T",
         "disc_equation_Unit1.RecursiveTypeFunctions.TofS",
         "equation_Prims.nat", "equation_Unit1.RecursiveTypeFunctions.t",
@@ -116,8 +120,8 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.T__0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.TofS__0",
-        "refinement_interpretation_Tm_refine_7538d5cfc8ae2f1d54df096c5c1addde",
-        "refinement_interpretation_Tm_refine_86f282249d297a33ba135b0add2a12cf",
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_7538d5cfc8ae2f1d54df096c5c1addde",
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_86f282249d297a33ba135b0add2a12cf",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.TofS"
       ],
       0
@@ -128,8 +132,10 @@
       2,
       1,
       [
-        "@query", "b2t_def", "binder_x_f8d4faaab6031329d2d2f13175552828_0",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query", "b2t_def",
+        "binder_x_f8d4faaab6031329d2d2f13175552828_0",
         "constructor_distinct_Unit1.RecursiveTypeFunctions.S",
+        "constructor_distinct_Unit1.RecursiveTypeFunctions.SofT",
         "disc_equation_Unit1.RecursiveTypeFunctions.S",
         "disc_equation_Unit1.RecursiveTypeFunctions.SofT",
         "equation_Unit1.RecursiveTypeFunctions.s",
@@ -143,7 +149,7 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.S__0",
         "projection_inverse_Unit1.RecursiveTypeFunctions.SofT__0",
-        "refinement_interpretation_Tm_refine_5d9358545336a9f6995749c0b6c89ac7",
+        "refinement_interpretation_Unit1.RecursiveTypeFunctions_Tm_refine_5d9358545336a9f6995749c0b6c89ac7",
         "subterm_ordering_Unit1.RecursiveTypeFunctions.SofT"
       ],
       0
@@ -154,7 +160,8 @@
       2,
       1,
       [
-        "@query", "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.l_False", "equation_Prims.l_True",
@@ -173,7 +180,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -183,12 +190,11 @@
       2,
       1,
       [
-        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
         "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
-        "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Mktuple2", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_FStar.List.Tot.Base.test_sort",
-        "equation_Prims._assert",
+        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
         "false_interp",
@@ -197,16 +203,13 @@
         "fuel_guarded_inversion_Prims.list",
         "fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_irrelevance_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "function_token_typing_FStar.List.Tot.Base.test_sort",
         "l_and-interp", "proj_equation_Prims.Mktuple2__1",
         "proj_equation_Prims.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_tl",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Mktuple2__a",
-        "projection_inverse_Prims.Mktuple2__b",
-        "subterm_ordering_Prims.Cons", "unit_inversion"
+        "projection_inverse_Prims.Nil_a", "subterm_ordering_Prims.Cons",
+        "unit_typing"
       ],
       0
     ],
@@ -217,7 +220,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqTm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ]

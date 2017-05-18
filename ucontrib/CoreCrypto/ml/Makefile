@@ -70,8 +70,8 @@ $(DB)/DB.cmx: $(DB)/DB.ml
 	$(MAKE) -C $(DB)
 
 openssl/Configure:
-	echo "openssl folder is empty, running git submodule update..."
-	git submodule update --init --recursive
+	echo "openssl folder is empty, running git submodule update... no recursion"
+	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
 	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
@@ -103,7 +103,7 @@ test: Tests.exe
 clean:
 	$(MAKE) -C $(DB) clean
 	$(MAKE) -C $(PLATFORM) clean
-	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
+	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
 depend:
 	$(OCAMLDEP) *.ml *.mli > .depend

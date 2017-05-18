@@ -32,26 +32,26 @@ let cat: doc -> doc -> doc =
       match (uu____48, uu____49) with
       | (Doc d1,Doc d2) -> Doc (Prims.strcat d1 d2)
 let reduce: doc Prims.list -> doc =
-  fun docs  -> FStar_List.fold_left cat empty docs
+  fun docs1  -> FStar_List.fold_left cat empty docs1
 let group: doc -> doc = fun uu____59  -> match uu____59 with | Doc d -> Doc d
 let groups: doc Prims.list -> doc =
-  fun docs  -> let uu____66 = reduce docs in group uu____66
+  fun docs1  -> let uu____66 = reduce docs1 in group uu____66
 let combine: doc -> doc Prims.list -> doc =
   fun uu____72  ->
-    fun docs  ->
+    fun docs1  ->
       match uu____72 with
       | Doc sep ->
           let select uu____80 =
             match uu____80 with | Doc d -> if d = "" then None else Some d in
-          let docs1 = FStar_List.choose select docs in
-          Doc (FStar_String.concat sep docs1)
+          let docs2 = FStar_List.choose select docs1 in
+          Doc (FStar_String.concat sep docs2)
 let cat1: doc -> doc -> doc = fun d1  -> fun d2  -> reduce [d1; break1; d2]
-let reduce1: doc Prims.list -> doc = fun docs  -> combine break1 docs
+let reduce1: doc Prims.list -> doc = fun docs1  -> combine break1 docs1
 let nest: Prims.int -> doc -> doc =
   fun i  -> fun uu____103  -> match uu____103 with | Doc d -> Doc d
 let align: doc Prims.list -> doc =
-  fun docs  ->
-    let uu____110 = combine hardline docs in
+  fun docs1  ->
+    let uu____110 = combine hardline docs1 in
     match uu____110 with | Doc doc1 -> Doc doc1
 let hbox: doc -> doc = fun d  -> d
 let pretty: Prims.int -> doc -> Prims.string =

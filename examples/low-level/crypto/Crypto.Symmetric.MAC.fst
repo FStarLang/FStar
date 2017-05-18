@@ -159,8 +159,8 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (requires (fun h0 -> True))
   (ensures  (fun h0 r h1 ->
     HS.modifies (Set.singleton rgn) h0 h1 /\
-    HS.modifies_ref rgn TSet.empty h0 h1 /\
-    ~(HS.((Buffer.content (as_buffer r)).mm)) /\
+    HS.modifies_ref rgn Set.empty h0 h1 /\
+    ~(HS.is_mm ((Buffer.content (as_buffer r)))) /\
     Buffer.frameOf (as_buffer r) == rgn /\
     ~(live h0 r) /\live h1 r))
 let rcreate rgn i =

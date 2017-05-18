@@ -16,7 +16,13 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
-
+let mkAssume (tm, cap, nm) =
+    Term.Assume ({
+        assumption_name=nm;
+        assumption_caption=cap;
+        assumption_term=tm;
+        assumption_fact_ids=[]
+    })
 let norng f = fun x -> f x Range.dummyRange
 let mkTrue   = Term.mkTrue Range.dummyRange
 let mkFalse  = Term.mkFalse Range.dummyRange

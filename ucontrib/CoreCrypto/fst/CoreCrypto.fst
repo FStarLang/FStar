@@ -177,13 +177,17 @@ type ec_curve =
   | ECC_P256
   | ECC_P384
   | ECC_P521
+  | ECC_X25519
+  | ECC_X448
 
 (* Bytelen of field elements *)
-val ec_bytelen: ec_curve -> Tot int
+val ec_bytelen: ec_curve -> Tot (n:nat{n <= 127})
 let ec_bytelen = function
   | ECC_P256 -> 32
   | ECC_P384 -> 48
   | ECC_P521 -> 66 (* ceil(521/8) *)
+  | ECC_X25519 -> 32
+  | ECC_X448 -> 56
 
 type ec_params = {
   curve: ec_curve;

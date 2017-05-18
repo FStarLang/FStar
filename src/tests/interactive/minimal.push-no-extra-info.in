@@ -1,0 +1,2 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Minimal\nlet hello : string = \"Hello F*!\"\n","line":1,"column":0}}
+{"query-id":"2","query":"lookup","args":{"symbol":"hello","location":{"filename":"<input>","line":2,"column":4},"requested-info":[]}}

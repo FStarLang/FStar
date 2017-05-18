@@ -2208,6 +2208,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
          then let uv1 = Free.uvars t1 in
               let uv2 = Free.uvars t2 in
               if BU.set_is_empty uv1 && BU.set_is_empty uv2 //and we don't have any unification variables left to solve within the terms
+              // TODO: GM: shouldn't we fail immediately if `eq_tm`
+              // returns `NotEqual`?
               then let guard = if U.eq_tm t1 t2 = U.Equal
                                then None
                                else Some <| mk_eq2 env t1 t2 in
@@ -2274,8 +2276,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              in
              if BU.physical_equality wpc1 wpc2
              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
-             else let c2_decl = Env.get_effect_decl env c2.effect_name in
-                  if c2_decl.qualifiers |> List.contains Reifiable
+             else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
+                  if qualifiers |> List.contains Reifiable
                   then let c1_repr =
                            N.normalize [N.UnfoldUntil Delta_constant; N.WHNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
@@ -2445,6 +2447,11 @@ let with_guard env prob dopt = match dopt with
     | Some d ->
       Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
 
+let with_guard_no_simp env prob dopt = match dopt with
+    | None -> None
+    | Some d ->
+      Some ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=([], []); implicits=[]})
+
 let try_teq smt_ok env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
  then BU.print2 "try_teq of %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
@@ -2479,7 +2486,7 @@ let try_subtype' env t1 t2 smt_ok =
 let try_subtype env t1 t2 = try_subtype' env t1 t2 true
 
 let subtype_fail env e t1 t2 =
-    Errors.report (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+    Errors.err (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 
 let sub_comp env c1 c2 =
@@ -2594,6 +2601,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
     | Trivial -> Some ret_g
     | NonTrivial vc ->
       if Env.debug env <| Options.Other "Norm"
+      || Env.debug env <| Options.Other "SMTQuery"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
       let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
@@ -2606,7 +2614,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
-            let vcs = 
+            let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
                 else [env,vc] in
@@ -2653,10 +2661,10 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           Errors.report r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
-                                       (Print.term_to_string t)
-                                       (Print.term_to_string e)
-                                       reason)
+           Errors.err r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
+                                    (Print.term_to_string t)
+                                    (Print.term_to_string e)
+                                    reason)
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

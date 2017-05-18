@@ -90,6 +90,7 @@ type z3status =
     | UNKNOWN of list<label>          //error labels
     | TIMEOUT of list<label>          //error labels
     | KILLED
+type z3statistics = BU.smap<string>
 
 let status_to_string = function
     | SAT  _ -> "sat"
@@ -159,7 +160,7 @@ let query_logging =
           let dir_name = match !current_module_name with
             | None -> failwith "current module not set"
             | Some n -> BU.format1 "queries-%s" n in
-          BU.mkdir_clean dir_name;
+          BU.mkdir true dir_name;
           current_file_name := Some dir_name;
           dir_name
         | Some n -> n in
@@ -218,51 +219,72 @@ let at_log_file () =
   then "@" ^ (query_logging.log_file_name())
   else ""
 
-let doZ3Exe' (fresh:bool) (input:string) =
+let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let print_stats (lines:list<string>) =
-       let starts_with c s = String.length s >= 1 && String.get s 0 = c in
-       let ends_with c s = String.length s >= 1 && String.get s (String.length s - 1) = c in
-       let last l = List.nth l (List.length l - 1) in
-       if Options.print_z3_statistics() then
-         if List.length lines >= 2 && starts_with '(' (List.hd lines) && ends_with ')' (last lines) then
-          (BU.print_string (BU.format1 "BEGIN-STATS %s\n" (query_logging.get_module_name()) ^ at_log_file ());
-           List.iter (fun s -> BU.print_string (BU.format1 "%s\n" s)) lines;
-           BU.print_string "END-STATS\n")
-         else failwith "Unexpected output from Z3: could not find statistics\n" //-- only works if rest doesn't include labels
-    in
-    let unsat_core lines =
-        let parse_core s =
+    let get_data lines =
+        let parse_core s : unsat_core =
             let s = BU.trim_string s in
             let s = BU.substring s 1 (String.length s - 2) in
             if BU.starts_with s "error"
             then None
             else BU.split s " " |> BU.sort_with String.compare |> Some in
-        match lines with
-        | "<unsat-core>"::core::"</unsat-core>"::rest ->
-          parse_core core, lines
-        | _ -> None, lines in
-    let rec lblnegs lines succeeded = match lines with
-      | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest succeeded
-      | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest succeeded
-      | _ -> if succeeded then print_stats lines; [] in
-    let unsat_core_and_lblnegs lines succeeded =
-       let core_opt, rest = unsat_core lines in
-       core_opt, lblnegs rest succeeded in
-
-    let rec result x = match x with
+        let core = BU.mk_ref None in
+        let statistics : z3statistics = BU.smap_create 0 in
+        let reason_unknown = BU.mk_ref "" in
+        let in_core = BU.mk_ref false in
+        let in_statistics = BU.mk_ref false in
+        let in_reason_unknown = BU.mk_ref false in
+        let parse line =
+            match line with
+            | "<unsat-core>" -> in_core := true
+            | "<statistics>" -> in_statistics := true
+            | "<reason-unknown>" -> in_reason_unknown := true
+            | "</unsat-core>" -> in_core := false
+            | "</statistics>" -> in_statistics := false
+            | "</reason-unknown>" -> in_reason_unknown := false
+            | _ ->
+                if !in_core then
+                    core := parse_core line
+                else if !in_statistics then
+                    let pline = BU.split (BU.trim_string line) ":" in
+                    match pline with
+                    | "(" :: entry :: []
+                    |  "" :: entry :: [] ->
+                        let tokens = BU.split entry " " in
+                        let key = List.hd tokens in
+                        let ltok = List.nth tokens ((List.length tokens) - 1) in
+                        let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
+                        BU.smap_add statistics key value
+                    | _ -> ()
+                else if !in_reason_unknown then
+                    let tkns = BU.split line "\"" in
+                    let rsn = match tkns with
+                    | _ :: txt :: _ :: [] -> txt
+                    | _ -> line in
+                    if rsn <> "unknown" then
+                        BU.smap_add statistics "reason-unknown" rsn in
+        List.iter (fun line -> parse line) lines ;
+        !core, statistics, !reason_unknown
+    in
+    let rec lblnegs lines = match lines with
+      | lname::"false"::rest when BU.starts_with lname "label_" -> lname::lblnegs rest
+      | lname::_::rest when BU.starts_with lname "label_" -> lblnegs rest
+      | _ -> [] in
+    let rec result lines core = match lines with
       | "timeout"::tl -> TIMEOUT []
-      | "unknown"::tl -> UNKNOWN (snd (unsat_core_and_lblnegs tl false))
-      | "sat"::tl     -> SAT     (snd (unsat_core_and_lblnegs tl false))
-      | "unsat"::tl   -> UNSAT   (fst (unsat_core_and_lblnegs tl true))
+      | "unknown"::tl -> UNKNOWN (lblnegs tl)
+      | "sat"::tl     -> SAT     (lblnegs tl)
+      | "unsat"::tl   -> UNSAT   core
       | "killed"::tl  -> bg_z3_proc.restart(); KILLED
       | hd::tl ->
         FStar.Errors.warn Range.dummyRange (BU.format2 "%s: Unexpected output from Z3: %s\n" (query_logging.get_module_name()) hd);
-        result tl
+        result tl core
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
-    result lines in
+    let core, statistics, reason_unknown = get_data lines in
+    result lines core, statistics in
+
   let cond pid (s:string) =
     (let x = BU.trim_string s = "Done!" in
 //     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
@@ -295,7 +317,7 @@ type error_kind =
     | Timeout
     | Kill
     | Default
-type z3job = job<(either<unsat_core, (error_labels * error_kind)> * int)>
+type z3job = job<(either<unsat_core, (error_labels * error_kind)> * int * z3statistics)>
 
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
@@ -306,7 +328,7 @@ let with_monitor m f =
     BU.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () : either<unsat_core, (error_labels * error_kind)> * int =
+let z3_job fresh (label_messages:error_labels) input () : either<unsat_core, (error_labels * error_kind)> * int * z3statistics =
   let ekind = function
     | TIMEOUT _ -> Timeout
     | SAT _
@@ -314,11 +336,11 @@ let z3_job fresh label_messages input () : either<unsat_core, (error_labels * er
     | KILLED -> Kill
     | _ -> failwith "Impossible" in
   let start = BU.now() in
-  let status = doZ3Exe fresh input in
+  let status, statistics = doZ3Exe fresh input in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
   let result = match status with
-    | UNSAT core -> Inl core, elapsed_time
-    | KILLED -> Inr ([], Kill), elapsed_time
+    | UNSAT core -> Inl core, elapsed_time, statistics
+    | KILLED -> Inr ([], Kill), elapsed_time, statistics
     | TIMEOUT lblnegs
     | SAT lblnegs
     | UNKNOWN lblnegs ->
@@ -327,7 +349,7 @@ let z3_job fresh label_messages input () : either<unsat_core, (error_labels * er
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
             | Some (lbl, msg, r) -> [(lbl, msg, r)]) in
-        Inr (failing_assertions, ekind status), elapsed_time in
+        Inr (failing_assertions, ekind status), elapsed_time, statistics in
     result
 
 let running = BU.mk_ref false
@@ -382,7 +404,7 @@ let finish () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0
-        then (running := false;FStar.Errors.report_all() |> ignore)
+        then running := false
         else let _ = BU.sleep(500) in
              aux() in
     aux()
@@ -396,6 +418,7 @@ type scope_t = list<list<decl>>
 // declarations immediately, then call pop so that subsequent queries will not
 // reverify or use these declarations
 let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
+let mk_fresh_scope () = !fresh_scope
 
 // bg_scope: Is the flat sequence of declarations already given to Z3
 //           When refreshing the solver, the bg_scope is set to
@@ -448,80 +471,65 @@ let reset_mark msg =
     // followed by refresh
     pop msg;
     refresh ()
-let commit_mark msg =
+let commit_mark (msg:string) =
     begin match !fresh_scope with
         | hd::s::tl -> fresh_scope := (hd@s)::tl
         | _ -> failwith "Impossible"
     end
 
-let filter_assertions core theory = match core with
-| None -> theory, false
-| Some core ->
-    let theory', n_retained, n_pruned =
-        List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
-        | Assume(_, _, name) ->
-            if List.contains name core
-            then d::theory, n_retained+1, n_pruned
-            else if BU.starts_with name "@"
-            then d::theory, n_retained, n_pruned
-            else theory, n_retained, n_pruned+1
-        | _ -> d::theory, n_retained, n_pruned)
-        theory ([], 0, 0) in
-    let missed_assertions th core =
-    let missed =
-        core |> List.filter (fun nm ->
-            th |> BU.for_some (function Assume(_, _, nm') -> nm=nm' | _ -> false) |> not)
-        |> String.concat ", " in
-    let included = th |> List.collect (function Assume(_, _, nm) -> [nm] | _ -> []) |> String.concat ", " in
-    BU.format2 "missed={%s}; included={%s}" missed included in
-    if Options.hint_info ()
-    && Options.debug_any()
-    then begin
-        let n = List.length core in
-        let missed = if n <> n_retained then missed_assertions theory' core else "" in
-        BU.print3 "Hint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                        (BU.string_of_int n_retained)
-                        (if n <> n_retained
-                        then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                            (BU.string_of_int n) missed
-                        else "")
-                        (BU.string_of_int n_pruned)
-    end ;
-    theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
-
-let mk_cb used_unsat_core cb (uc_errs, time) =
+let mk_cb used_unsat_core cb (uc_errs, time, statistics) =
     if used_unsat_core
     then match uc_errs with
-        | Inl _ -> cb (uc_errs, time)
-        | Inr (_, ek) -> cb (Inr ([],ek), time) // if we filtered the theory, then the error message is unreliable
-    else cb (uc_errs, time)
+        | Inl _ -> cb (uc_errs, time, statistics)
+        | Inr (_, ek) -> cb (Inr ([],ek), time, statistics) // if we filtered the theory, then the error message is unreliable
+    else cb (uc_errs, time, statistics)
 
 let mk_input theory =
     let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if Options.log_queries() then query_logging.write_to_log r ;
     r
 
-let ask_1_core (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
-    let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
-    let theory, used_unsat_core = filter_assertions core theory in
+type z3result =
+    either<unsat_core, (error_labels*error_kind)>
+    * int
+    * z3statistics
+type cb = z3result -> unit
+
+let ask_1_core
+    (filter_theory:decls_t -> decls_t * bool)
+    (label_messages:error_labels)
+    (qry:decls_t)
+    (cb: cb)
+  = let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
+    let theory, used_unsat_core = filter_theory theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
     bg_scope := [] ; // Now consumed.
     run_job ({job=z3_job false label_messages input; callback=cb})
 
-let ask_n_cores (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
-    let theory = List.flatten (match scope with
+let ask_n_cores
+    (filter_theory:decls_t -> decls_t * bool)
+    (label_messages:error_labels)
+    (qry:decls_t)
+    (scope:option<scope_t>)
+    (cb:cb)
+  = let theory = List.flatten (match scope with
         | Some s -> (List.rev s)
         | None   -> bg_scope := [] ; // Not needed; discard.
                     (List.rev !fresh_scope)) in
     let theory = theory@[Term.Push]@qry@[Term.Pop] in
-    let theory, used_unsat_core = filter_assertions core theory in
+    let theory, used_unsat_core = filter_theory theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
     enqueue ({job=z3_job true label_messages input; callback=cb})
 
-let ask (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int) -> unit) =
-    if Options.n_cores() = 1 then
-        ask_1_core core label_messages qry cb
+let ask
+    (filter:decls_t -> decls_t * bool)
+    (label_messages:error_labels)
+    (qry:decls_t)
+    (scope:option<scope_t>)
+    (cb:cb)
+  = if Options.n_cores() = 1 then
+        ask_1_core filter label_messages qry cb
     else
-        ask_n_cores core label_messages qry scope cb
+        ask_n_cores filter label_messages qry scope cb

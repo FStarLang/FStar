@@ -11,8 +11,8 @@ termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
-rel \
 maths \
+rel \
 paradoxes \
 printf \
 metatheory \
@@ -24,6 +24,8 @@ struct \
 micro-benchmarks \
 bytes \
 tactics
+
+
 # low-level \  ... NS: removing from CI for this branch
 
 # WARNING: this target shouldn't depend on anything other than the F*
