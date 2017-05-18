@@ -4,11 +4,11 @@ open FStar.Tactics
 open FStar.Reflection.Arith
 open FStar.List
 
-// decide if the current goal is arith
+// decide if the current goal is arith, drop the built representation of it
 let is_arith_goal : tactic bool =
     eg <-- cur_goal;
     let _, g = eg in
-    match is_arith_prop g 0 with
+    match run_tm (is_arith_prop g) with
     | Inr _ -> return true
     | Inl s -> return false
 

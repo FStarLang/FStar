@@ -110,6 +110,13 @@ let rec is_arith_prop (t:term) =
     | Or l r            -> liftM2  OrProp (is_arith_prop l) (is_arith_prop r)
     | _                 -> fail ("connector (" ^ term_to_string t ^ ")")
 
+
+// Run the monadic computations, disregard the counter
+let run_tm (m : tm 'a) : either string 'a =
+    match m 0 with
+    | Inl s -> Inl s
+    | Inr (x, _) -> Inr x
+
 private let test =
     let bind = FStar.Tactics.bind in
     let fail = FStar.Tactics.fail in
