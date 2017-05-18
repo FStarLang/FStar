@@ -249,11 +249,18 @@ let collect_one
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
+  (*
+   * AR: adding FStar.Pervasives to dependencies
+   * the name auto_open is a bit of misnomer, it only includes the file in the dependencies, and not actually open the namespace
+   * if you want to open a namespace, look in src/tosyntax/FStar.ToSyntax.Env.fs
+   *)
   let auto_open =
     if basename filename = Options.prims_basename () then
       []
     else
-      [ Const.fstar_ns_lid; Const.prims_lid ]
+      let l = [ Const.fstar_ns_lid; Const.prims_lid ] in
+      if basename filename = Options.pervasives_basename () then l
+      else l @ [ Const.pervasives_lid ]
   in
   List.iter (record_open false) auto_open;
 

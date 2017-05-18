@@ -23,9 +23,11 @@ open FStar.Const
 module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
-let pconst s     = p2l ["Prims";s]
-let prims_lid    = p2l ["Prims"]
-let fstar_ns_lid = p2l ["FStar"]
+let pconst s       = p2l ["Prims";s]
+let psconst s      = p2l ["FStar"; "Pervasives"; s]
+let prims_lid      = p2l ["Prims"]
+let pervasives_lid = p2l ["FStar"; "Pervasives"]
+let fstar_ns_lid   = p2l ["FStar"]
 
 (* Primitive types *)
 let bool_lid     = pconst "bool"
@@ -37,7 +39,7 @@ let int_lid      = pconst "int"
 let exn_lid      = pconst "exn"
 let list_lid     = pconst "list"
 let option_lid   = pconst "option"
-let either_lid   = pconst "either"
+let either_lid   = psconst "either"
 let pattern_lid  = pconst "pattern"
 let precedes_lid = pconst "precedes"
 let lex_t_lid    = pconst "lex_t"
@@ -202,19 +204,23 @@ let const_to_string x = match x with
   | Const_reify -> "reify"
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
+(* tuple is defined in prims if n = 2, in pervasives otherwise *)
+let mod_prefix_tuple (n:int) :(string -> lident) =
+  if n = 2 then pconst else psconst
+
  let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (pconst t) r
+  set_lid_range ((mod_prefix_tuple n) t) r
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range (pconst t) r
+  set_lid_range ((mod_prefix_tuple n) t) r
 
 let is_dtuple_data_lid' f =
     U.starts_with (FStar.Ident.text_of_lid f) "Mkdtuple"
 
 let is_tuple_data_lid' f =
-    f.nsstr = "Prims" && U.starts_with f.ident.idText "Mktuple"
+    (f.nsstr = "Prims" || f.nsstr = "FStar.Pervasives") && U.starts_with f.ident.idText "Mktuple"
 
 let is_name (lid:lident) =
   let c = U.char_at lid.ident.idText 0 in

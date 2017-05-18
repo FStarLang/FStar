@@ -5177,8 +5177,8 @@ and build_let_rec_env:
                                    ((let uu____8974 =
                                        FStar_TypeChecker_Rel.discharge_guard
                                          env2 g1 in
-                                     FStar_All.pipe_left Prims.ignore
-                                       uu____8974);
+                                     FStar_All.pipe_left
+                                       FStar_Pervasives.ignore uu____8974);
                                     norm env0 t1)) in
                           let env3 =
                             let uu____8976 =
@@ -6102,7 +6102,8 @@ let rec universe_of_aux:
                            ((let uu____10328 =
                                FStar_TypeChecker_Rel.solve_deferred_constraints
                                  env2 g in
-                             FStar_All.pipe_right uu____10328 Prims.ignore);
+                             FStar_All.pipe_right uu____10328
+                               FStar_Pervasives.ignore);
                             (t, args1))))) in
           let uu____10336 = type_of_head true hd1 args in
           (match uu____10336 with
