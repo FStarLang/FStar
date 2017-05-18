@@ -31,19 +31,13 @@ let reveal (#a:Type) (x:erased a) : GTot a = x
 abstract
 let hide (#a:Type) (x:a) : Tot (erased a) = x
 
+//reveal is injective
+//hide is its inverse
 val lemma_hide_reveal: #a:Type
                    -> x:erased a
                    -> Lemma (ensures (hide (reveal x) == x))
-                           [SMTPat (hide (reveal x))]
+                           [SMTPat (reveal x)]
 let lemma_hide_reveal #a x = ()
-
-(*just hide can do this now. remove?*)
-val as_ghost: #a:Type
-             -> f:(unit -> Tot a)
-             -> Pure (erased a)
-                    (requires True)
-                    (ensures (fun x -> reveal x == f ()))
-let as_ghost #a f = f ()
 
 (*Just like Coq's prop, it is okay to use erased types freely as long as we produce an erased type*)
 val elift1 : #a:Type -> #b:Type -> f:(a->GTot b) -> erased a -> Tot (erased b)
