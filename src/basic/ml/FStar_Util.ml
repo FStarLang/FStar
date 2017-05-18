@@ -970,5 +970,7 @@ let string_of_json json =
 (* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
 (* Export it at the end of the file so that we don't break other internal uses of ref *)
 type 'a ref = 'a FStar_Heap.ref
+let read = FStar_ST.read
+let write = FStar_ST.write
 let (!) = FStar_ST.read
 let (:=) = FStar_ST.write

@@ -128,8 +128,8 @@ let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
 let gen_reset: ((Prims.unit -> Prims.int)* (Prims.unit -> Prims.unit)) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0") in
-  let gen1 uu____24 = FStar_Util.incr x; FStar_ST.read x in
-  let reset uu____34 = FStar_ST.write x (Prims.parse_int "0") in
+  let gen1 uu____24 = FStar_Util.incr x; FStar_Util.read x in
+  let reset uu____34 = FStar_Util.write x (Prims.parse_int "0") in
   (gen1, reset)
 let next_id: Prims.unit -> Prims.int = Prims.fst gen_reset
 let sli: FStar_Ident.lident -> Prims.string =
