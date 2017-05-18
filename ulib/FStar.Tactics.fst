@@ -316,7 +316,7 @@ let assert_by_tactic (t:tactic unit) (p:Type)
          (requires (by_tactic (reify_tactic t) p))
          (ensures (fun _ -> p))
   = ()
-#reset-options ""
+#reset-options
 
 
 (* Monadic helpers, could be made generic for do notation? *)
