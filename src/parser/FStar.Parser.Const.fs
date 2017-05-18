@@ -179,7 +179,7 @@ let normalize_term = pconst "normalize_term"
 
 let gen_reset =
     let x = U.mk_ref 0 in
-    let gen () = incr x; !x in
+    let gen () = U.(incr x; !x) in
     let reset () = x := 0 in
     gen, reset
 let next_id = fst gen_reset
