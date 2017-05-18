@@ -22,7 +22,7 @@ let rec split_arith = fun () -> (
     if b then (
         prune "";;
         addns "Prims";;
-        smt
+        smt ()
     ) else (
         eg <-- cur_goal;
         let _, g = eg in

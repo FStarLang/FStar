@@ -142,7 +142,7 @@ assume private val __rewrite : binder -> __tac unit
 let rewrite (b:binder) : tactic unit = fun () -> TAC?.reflect (__rewrite b)
 
 assume private val __smt     : __tac unit
-let smt : tactic unit = fun () -> TAC?.reflect __smt
+let smt () : tactic unit = fun () -> TAC?.reflect __smt
 
 assume private val __focus: __tac unit -> __tac unit
 let focus (f:tactic unit) : tactic unit = fun () -> TAC?.reflect (__focus (reify_tactic f))
@@ -215,7 +215,7 @@ let rec visit (callback:tactic unit) () : Tac unit =
                         seq (visit callback)
                             revert
                     | _ ->
-                        or_else trivial smt
+                        or_else trivial (smt ())
                    )
           ) ()
 
