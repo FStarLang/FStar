@@ -3633,8 +3633,7 @@
         "typing_FStar.BitVector.logor_vec", "typing_FStar.Seq.Base.index",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
         "typing_FStar.Seq.Properties.split", "typing_FStar.UInt.to_vec",
-        "typing_Prims.__proj__Mktuple2__item___1",
-        "typing_Prims.__proj__Mktuple2__item___2"
+        "typing_Prims.fst", "typing_Prims.snd"
       ],
       0
     ],

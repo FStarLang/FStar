@@ -490,7 +490,8 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_3", "bool_inversion",
         "bool_typing", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "fuel_guarded_inversion_Prims.list", "lemma_Prims.invertOption",
+        "fuel_guarded_inversion_Prims.list",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
@@ -510,7 +511,8 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_3", "bool_inversion",
         "bool_typing", "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "fuel_guarded_inversion_Prims.list", "lemma_Prims.invertOption",
+        "fuel_guarded_inversion_Prims.list",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
@@ -609,7 +611,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_0cfff1ad1a099b51a709a49cd7271930_6",
+        "binder_x_f735a6f4f628f38c27f5ae4ec871b3ba_6",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
