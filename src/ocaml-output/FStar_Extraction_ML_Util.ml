@@ -88,8 +88,8 @@ let udelta_unfold:
       FStar_Extraction_ML_Syntax.mlty Prims.option
   =
   fun g  ->
-    fun uu___115_140  ->
-      match uu___115_140 with
+    fun uu___112_140  ->
+      match uu___112_140 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____146 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1 in
           (match uu____146 with
@@ -110,8 +110,8 @@ let eff_leq:
          ,FStar_Extraction_ML_Syntax.E_IMPURE ) -> true
       | uu____161 -> false
 let eff_to_string: FStar_Extraction_ML_Syntax.e_tag -> Prims.string =
-  fun uu___116_166  ->
-    match uu___116_166 with
+  fun uu___113_166  ->
+    match uu___113_166 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -251,7 +251,7 @@ let rec type_leq_c:
                         (let uu____361 =
                            let uu____365 =
                              let uu____367 = mk_fun xs body in
-                             FStar_All.pipe_left (fun _0_29  -> Some _0_29)
+                             FStar_All.pipe_left (fun _0_30  -> Some _0_30)
                                uu____367 in
                            type_leq_c unfold_ty uu____365 t2 t2' in
                          match uu____361 with
@@ -313,8 +313,8 @@ and type_leq:
       fun t2  ->
         let uu____510 = type_leq_c g None t1 t2 in
         FStar_All.pipe_right uu____510 Prims.fst
-let is_type_abstraction uu___117_536 =
-  match uu___117_536 with
+let is_type_abstraction uu___114_536 =
+  match uu___114_536 with
   | (FStar_Util.Inl uu____542,uu____543)::uu____544 -> true
   | uu____556 -> false
 let is_xtuple:
@@ -349,8 +349,8 @@ let resugar_exp:
     | uu____592 -> e
 let record_field_path:
   FStar_Ident.lident Prims.list -> Prims.string Prims.list =
-  fun uu___118_597  ->
-    match uu___118_597 with
+  fun uu___115_597  ->
+    match uu___115_597 with
     | f::uu____601 ->
         let uu____603 = FStar_Util.prefix f.FStar_Ident.ns in
         (match uu____603 with

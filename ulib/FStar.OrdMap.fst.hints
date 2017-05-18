@@ -562,7 +562,7 @@
         "projection_inverse_FStar.OrdMap.Mk_map_d",
         "projection_inverse_FStar.OrdMap.Mk_map_m",
         "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "typing_FStar.OrdMap.contains"
+        "typing_FStar.OrdMap.const_on", "typing_FStar.OrdMap.contains"
       ],
       0
     ],

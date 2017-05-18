@@ -2,7 +2,7 @@
   "¸Nçâ†P­¾ÂU:CEá§Ã",
   [
     [
-      "AllocSTwHeaps.2061",
+      "AllocSTwHeaps.277373",
       1,
       2,
       1,
@@ -92,16 +92,19 @@
         "equation_AllocSTwHeaps.contains", "equation_AllocSTwHeaps.heap_rel",
         "equation_AllocSTwHeaps.ref", "equation_FStar.ST.ref",
         "equation_Preorder.stable", "lemma_AllocSTwHeaps.contains_lemma",
-        "lemma_FStar.Heap.lemma_unused_upd_contains",
+        "lemma_FStar.Heap.lemma_contains_implies_used",
+        "lemma_FStar.Heap.lemma_distinct_addrs_unused",
         "lemma_FStar.Heap.lemma_upd_contains",
+        "lemma_FStar.Heap.lemma_upd_contains_different_addr",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_AllocSTwHeaps_Tm_refine_124951a135cbe5bd22b961cb01b0bbcc",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_572a38bbd13f86f374f9c1d684eda1dd",
+        "refinement_interpretation_AllocSTwHeaps_Tm_refine_c8ac13ed36b6a9786309a4676a282b65",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_d65d28ced9bd270e062ee8e42fc74fcb",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "token_correspondence_AllocSTwHeaps.contains",
         "token_correspondence_AllocSTwHeaps.heap_rel",
-        "typing_AllocSTwHeaps.gen_ref", "typing_FStar.Heap.contains",
+        "typing_AllocSTwHeaps.gen_ref", "typing_AllocSTwHeaps.upd",
+        "typing_FStar.Heap.contains",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0
