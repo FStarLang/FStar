@@ -1758,13 +1758,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "equation_Unification.lsubst",
-        "fuel_correspondence_Unification.unify.fuel_instrumented",
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Unification.unify.fuel_instrumented", "@query",
+        "bool_inversion", "disc_equation_Prims.None",
+        "disc_equation_Prims.Some", "equation_Unification.lsubst",
         "function_token_typing_Unification.lsubst",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_None", "typing_Unification.unify"
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None",
+        "typing_Unification.unify"
       ],
       0
     ],
@@ -1938,10 +1939,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.None", "equation_Unification.lsubst",
-        "equation_Unification.unify_eqns",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "equation_Unification.lsubst", "equation_Unification.unify_eqns",
         "function_token_typing_Unification.lsubst",
-        "lemma_Prims.invertOption", "typing_Unification.unify_eqns"
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_Unification.unify_eqns"
       ],
       0
     ],

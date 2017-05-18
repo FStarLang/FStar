@@ -83,7 +83,7 @@
         "equation_Prims.eqtype", "equation_Prims.l_True",
         "equation_WhileReify.interpret_com",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
-        "lemma_Prims.invertOption",
+        "lemma_FStar.Pervasives.invertOption",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some",
         "typing_WhileReify.interpret_com"

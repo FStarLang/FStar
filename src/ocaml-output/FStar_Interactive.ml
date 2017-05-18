@@ -118,7 +118,7 @@ let push:
                then
                  (let uu____248 =
                     FStar_Options.restore_cmd_line_options false in
-                  FStar_All.pipe_right uu____248 Prims.ignore)
+                  FStar_All.pipe_right uu____248 FStar_Pervasives.ignore)
                else ();
                res)
 let mark:

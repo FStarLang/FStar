@@ -306,7 +306,8 @@
         "disc_equation_Prims.Some", "equation_FStar.UInt32.n",
         "fuel_guarded_inversion_Unit1.Basic.record",
         "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.int", "lemma_Prims.invertOption",
+        "function_token_typing_Prims.int",
+        "lemma_FStar.Pervasives.invertOption",
         "typing_Unit1.Basic.__proj__Mkrecord__item__f"
       ],
       0

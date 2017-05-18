@@ -322,9 +322,9 @@ let pop_context: FStar_TypeChecker_Env.env -> Prims.string -> Prims.unit =
   fun env  ->
     fun msg  ->
       (let uu____648 = FStar_ToSyntax_Env.pop () in
-       FStar_All.pipe_right uu____648 Prims.ignore);
+       FStar_All.pipe_right uu____648 FStar_Pervasives.ignore);
       (let uu____650 = FStar_TypeChecker_Env.pop env msg in
-       FStar_All.pipe_right uu____650 Prims.ignore);
+       FStar_All.pipe_right uu____650 FStar_Pervasives.ignore);
       (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ()
 let push_context:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->

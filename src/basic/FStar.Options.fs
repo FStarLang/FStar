@@ -947,6 +947,14 @@ let prims () =
 
 let prims_basename () = basename (prims ())
 
+let pervasives () =
+  let filename = "FStar.Pervasives.fst" in
+  match find_file filename with
+  | Some result -> result
+  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+
+let pervasives_basename () = basename (pervasives ())
+
 let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
