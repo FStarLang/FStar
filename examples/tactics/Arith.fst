@@ -18,12 +18,12 @@ let tau1 : tactic unit =
     (* rev part *)
       addns "FStar.List";;
       addns "Prims";;
-      smt;;
+      smt ();;
     (* arithmetic part *)
       addns "Prims";;
       g <-- cur_goal;
       let _, t = g in
-      smt;;
+      smt ();;
     return ()
 
 let lem1 (x:int) =
