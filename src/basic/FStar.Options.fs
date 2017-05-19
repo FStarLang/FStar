@@ -832,7 +832,7 @@ let settable = function
 // JP: the two options below are options that are passed to z3 using
 // command-line arguments; only #reset_options re-starts the z3 process, meaning
 // these two options are resettable, but not settable
-let resettable s = settable s || s="z3timeout" || s="z3seed"
+let resettable s = settable s || s="z3timeout" || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)

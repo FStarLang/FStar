@@ -952,7 +952,7 @@ let settable: Prims.string -> Prims.bool =
         -> true
     | uu____1810 -> false
 let resettable: Prims.string -> Prims.bool =
-  fun s  -> ((settable s) || (s = "z3timeout")) || (s = "z3seed")
+  fun s  -> ((settable s) || (s = "z3timeout")) || (s = "z3seed") || (s = "z3cliopt")
 let all_specs: FStar_Getopt.opt Prims.list = specs ()
 let settable_specs:
   (FStar_BaseTypes.char* Prims.string* Prims.unit FStar_Getopt.opt_variant*
