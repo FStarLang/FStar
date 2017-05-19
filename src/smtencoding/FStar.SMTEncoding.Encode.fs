@@ -912,9 +912,11 @@ and encode_let
         let ee1, decls1 = encode_term e1 env in
         let xs, e2 = SS.open_term [(x, None)] e2 in
         let x, _ = List.hd xs in
-        let env' = push_term_var env x ee1 in
+        let xsym, xtm = fresh_fvar "x" Term_sort in
+        let env' = push_term_var env x xtm in
         let ee2, decls2 = encode_body e2 env' in
-        ee2, decls1@decls2
+        let tlet = Term.mkLet' ([((xsym, Term_sort), ee1)], ee2) e2.pos in
+        tlet, decls1@decls2
 
 and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
@@ -1781,6 +1783,16 @@ let encode_top_level_let :
                 (* Reify the body if needed *)
                 if is_reifiable_function env'.tcenv t_norm
                 then TcUtil.reify_body env'.tcenv body
+                else if quals |> List.contains Inline_for_extraction
+                then let b = N.normalize [N.Inlining;
+                                  N.Eager_unfolding;
+                                  N.Exclude N.Zeta;
+                                  N.PureSubtermsWithinComputations;
+                                  N.Primops] env'.tcenv body in
+                     (* printfn "Normalized %s to %s" *)
+                     (*        (Print.term_to_string body) *)
+                     (*        (Print.term_to_string b); *)
+                    b
                 else body
               in
               let app = mk_app curry f ftok vars in
