@@ -1172,7 +1172,7 @@ let termToSmt: Prims.string -> term -> Prims.string =
             (match uu____2817 with
              | (names1,binders,n2) ->
                  let uu____2886 = aux1 n2 names1 body in
-                 FStar_Util.format2 "(let (%s) %s)"
+                 FStar_Util.format2 "(let (%s)\n%s)"
                    (FStar_String.concat " " binders) uu____2886)
       and aux depth n1 names t1 =
         let s = aux' depth n1 names t1 in
