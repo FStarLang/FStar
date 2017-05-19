@@ -604,8 +604,8 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "typing_Prims.uu___is_None",
-        "typing_Prims.uu___is_Some"
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some"
       ],
       0
     ],
@@ -692,7 +692,8 @@
         "equation_FStar.Tactics.goal", "equation_FStar.Tactics.goals",
         "equation_FStar.Tactics.state",
         "fuel_guarded_inversion_Prims.tuple2",
-        "kinding_FStar.Tactics.term_view@tok", "lemma_Prims.invertOption",
+        "kinding_FStar.Tactics.term_view@tok",
+        "lemma_FStar.Pervasives.invertOption",
         "typing_FStar.Tactics.__inspect", "typing_Prims.uu___is_None",
         "typing_Prims.uu___is_Some"
       ],
@@ -820,8 +821,8 @@
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "function_token_typing_FStar.Tactics.term",
         "kinding_FStar.Tactics.formula@tok", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption", "typing_Prims.uu___is_None",
-        "typing_Prims.uu___is_Some"
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None"
       ],
       0
     ],
@@ -869,8 +870,8 @@
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "function_token_typing_FStar.Tactics.term",
         "kinding_FStar.Tactics.formula@tok", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_None"
+        "lemma_FStar.Pervasives.invertOption", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some"
       ],
       0
     ],

@@ -17,7 +17,8 @@
         "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "equation_FStar.DM4F.IFC.ifc", "kinding_FStar.DM4F.IFC.label@tok",
-        "kinding_Prims.tuple2@tok", "lemma_Prims.invertOption"
+        "kinding_Prims.tuple2@tok", "lemma_FStar.Pervasives.invertOption",
+        "typing_Prims.uu___is_Some"
       ],
       0
     ],
@@ -76,8 +77,8 @@
         "bool_inversion", "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
         "kinding_FStar.DM4F.IFC.label@tok", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_Some"
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some"
       ],
       0
     ],

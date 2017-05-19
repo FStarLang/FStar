@@ -6472,7 +6472,7 @@ let force_trivial_guard:
       match g1.FStar_TypeChecker_Env.implicits with
       | [] ->
           let uu____12986 = discharge_guard env g1 in
-          FStar_All.pipe_left Prims.ignore uu____12986
+          FStar_All.pipe_left FStar_Pervasives.ignore uu____12986
       | (reason,uu____12988,uu____12989,e,t,r)::uu____12993 ->
           let uu____13007 =
             let uu____13008 = FStar_Syntax_Print.term_to_string t in

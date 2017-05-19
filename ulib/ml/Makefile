@@ -6,7 +6,7 @@ else
 	ST=FStar_ST.ml FStar_All.ml
 endif
 
-FILES=prims.ml FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
+FILES=prims.ml $(ULIB_GEN_DIR)/FStar_Pervasives.ml FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
       FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml FStar_UInt16.ml \
       FStar_Int32.ml FStar_UInt32.ml FStar_Int64.ml FStar_UInt64.ml FStar_UInt128.ml \
       FStar_Int_Cast.ml \

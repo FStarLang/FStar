@@ -750,6 +750,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
             head;
             hardline;
             text "open Prims";
+            text "open FStar_Pervasives";
             hardline;
             (match doc with
              | None   -> empty
