@@ -93,6 +93,13 @@ let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
     | Some x -> return x
     | None -> t2)
 
+let rec repeat (#a:Type) (t : tactic a) () : Tac (list a) =
+    (r <-- trytac t;
+    match r with
+    | None -> return []
+    | Some x -> (xs <-- repeat t;
+                 return (x::xs))) ()
+
 (*
  * This is the way we inspect goals and any other term. We can quote them
  * to turn them into a representation of them. Having a total function
