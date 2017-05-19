@@ -439,14 +439,14 @@ let simpl : tac<unit> =
 let trivial
     : tac<unit>
     = with_cur_goal (fun goal ->
-      let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops] in
+      let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.UnfoldTac] in
       let t = N.normalize steps goal.context goal.goal_ty in
       match U.destruct_typ_as_formula t with
       | Some (U.BaseConn(l, []))
             when Ident.lid_equals l SC.true_lid ->
         bind dismiss (fun _ ->
         add_goals ([{goal with goal_ty=t}]))
-      | _ -> fail "Not a trivial goal")
+      | _ -> fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string t)))
 
 let apply_lemma (tm:term)
     : tac<unit>
