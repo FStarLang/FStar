@@ -887,7 +887,7 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "typing_Prims.uu___is_None",
+        "lemma_FStar.Pervasives.invertOption", "typing_Prims.uu___is_None",
         "typing_Prims.uu___is_Some"
       ],
       0

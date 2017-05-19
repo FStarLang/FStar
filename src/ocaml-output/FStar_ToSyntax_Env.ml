@@ -2212,9 +2212,11 @@ let prepare_module_or_interface:
                     (FStar_Ident.text_of_lid mname)
                 then
                   [FStar_Parser_Const.prims_lid;
+                  FStar_Parser_Const.pervasives_lid;
                   FStar_Parser_Const.fstar_ns_lid]
                 else
                   [FStar_Parser_Const.prims_lid;
+                  FStar_Parser_Const.pervasives_lid;
                   FStar_Parser_Const.st_lid;
                   FStar_Parser_Const.all_lid;
                   FStar_Parser_Const.fstar_ns_lid] in

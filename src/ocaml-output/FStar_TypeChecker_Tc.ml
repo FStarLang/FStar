@@ -3054,7 +3054,7 @@ and tc_decl:
             | FStar_Syntax_Syntax.ResetOptions sopt ->
                 ((let uu____3091 =
                     FStar_Options.restore_cmd_line_options false in
-                  FStar_All.pipe_right uu____3091 Prims.ignore);
+                  FStar_All.pipe_right uu____3091 FStar_Pervasives.ignore);
                  (match sopt with
                   | None  -> ()
                   | Some s -> set_options1 FStar_Options.Reset s);
@@ -4335,7 +4335,7 @@ let check_exports:
                (let env2 = FStar_TypeChecker_Env.push_univ_vars env1 univs2 in
                 let uu____4790 =
                   FStar_TypeChecker_TcTerm.tc_trivial_guard env2 t1 in
-                FStar_All.pipe_right uu____4790 Prims.ignore)) in
+                FStar_All.pipe_right uu____4790 FStar_Pervasives.ignore)) in
         let check_term1 lid univs1 t =
           (let uu____4808 =
              let uu____4809 =
@@ -4464,7 +4464,7 @@ let finish_partial_modul:
          if uu____4951
          then
            let uu____4953 = FStar_Options.restore_cmd_line_options true in
-           FStar_All.pipe_right uu____4953 Prims.ignore
+           FStar_All.pipe_right uu____4953 FStar_Pervasives.ignore
          else ());
         (modul1, env1)
 let tc_modul:

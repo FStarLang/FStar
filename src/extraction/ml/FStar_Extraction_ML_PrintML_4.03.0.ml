@@ -168,7 +168,8 @@ let rec build_core_type (ty: mlty): core_type =
      let c_tys = map build_core_type tys in
      let p = path_to_ident path in
      (match path with
-      | (["Prims"], c) ->
+      | (["Prims"], c)
+      | (["FStar"; "Pervasives"], c) ->
         if ((BatString.length c == 6) && 
             (BatString.equal (BatString.sub c 0 5) "tuple")) then
           (* resugar tuples (Prims.tupleX) *) 

@@ -65,7 +65,7 @@ let report_errors:
   ((Prims.bool* FStar_Ident.lident)* Prims.int) Prims.list -> Prims.unit =
   fun fmods  ->
     (let uu____85 = FStar_Errors.report_all () in
-     FStar_All.pipe_right uu____85 Prims.ignore);
+     FStar_All.pipe_right uu____85 FStar_Pervasives.ignore);
     (let nerrs = FStar_Errors.get_err_count () in
      if nerrs > (Prims.parse_int "0")
      then

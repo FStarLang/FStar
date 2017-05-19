@@ -862,7 +862,9 @@ let set_options o s =
         | Reset -> resettable_specs
         | Restore -> all_specs in
     try
-        Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
+        if s = ""
+        then Success
+        else Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
     with
       | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
@@ -946,6 +948,14 @@ let prims () =
   | Some x -> x
 
 let prims_basename () = basename (prims ())
+
+let pervasives () =
+  let filename = "FStar.Pervasives.fst" in
+  match find_file filename with
+  | Some result -> result
+  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+
+let pervasives_basename () = basename (pervasives ())
 
 let prepend_output_dir fname =
   match get_odir() with

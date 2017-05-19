@@ -103,7 +103,7 @@ let push:
                then
                  (let uu____235 =
                     FStar_Options.restore_cmd_line_options false in
-                  FStar_All.pipe_right uu____235 Prims.ignore)
+                  FStar_All.pipe_right uu____235 FStar_Pervasives.ignore)
                else ();
                res)
 let mark:
@@ -174,7 +174,7 @@ let check_frag:
 let report_fail: Prims.unit -> Prims.unit =
   fun uu____445  ->
     (let uu____447 = FStar_Errors.report_all () in
-     FStar_All.pipe_right uu____447 Prims.ignore);
+     FStar_All.pipe_right uu____447 FStar_Pervasives.ignore);
     FStar_Errors.clear ()
 type input_chunks =
   | Push of (Prims.bool* Prims.int* Prims.int)

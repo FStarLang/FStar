@@ -1191,7 +1191,7 @@ let rec desugar_data_pat:
          match uu____2506 with
          | (uu____2517,env1,b,p1,uu____2521) ->
              ((let uu____2527 = check_linear_pattern_variables p1 in
-               FStar_All.pipe_left Prims.ignore uu____2527);
+               FStar_All.pipe_left FStar_Pervasives.ignore uu____2527);
               (env1, b, p1)))
 and desugar_binding_pat_maybe_top:
   Prims.bool ->
