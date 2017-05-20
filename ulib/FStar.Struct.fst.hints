@@ -3174,7 +3174,6 @@
         "typing_FStar.Buffer.__proj__MkBuffer__item__length",
         "typing_FStar.Buffer.as_seq",
         "typing_FStar.Struct.__proj__StructPtr__item__p",
-        "typing_FStar.Struct.__proj__StructPtr__item__to",
         "typing_FStar.Struct.as_buffer",
         "typing_FStar.Struct.as_buffer_type", "typing_FStar.UInt32.v"
       ],
