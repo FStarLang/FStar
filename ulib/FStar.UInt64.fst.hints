@@ -1,5 +1,5 @@
 [
-  "\u0019\u001a9v7b’Ë´Àã˙å¥%E",
+  "\u007f\u0001Ø±xØ“\u0006fùÃe\fâE\n",
   [
     [
       "FStar.UInt64.t'",
@@ -478,6 +478,66 @@
     ],
     [
       "FStar.UInt64.mul_mod",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.UInt64.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt64.mul_div",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "FStar.UInt64.mul_div",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Prims.pow2.fuel_instrumented",
+        "@fuel_irrelevance_Prims.pow2.fuel_instrumented", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "data_elim_FStar.UInt64.Mk", "equation_FStar.Mul.op_Star",
+        "equation_FStar.UInt.fits", "equation_FStar.UInt.max_int",
+        "equation_FStar.UInt.min_int", "equation_FStar.UInt.size",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt64.n", "equation_FStar.UInt64.t",
+        "equation_FStar.UInt64.v",
+        "equation_with_fuel_Prims.pow2.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.UInt64.t_",
+        "function_token_typing_FStar.UInt32.n", "int_inversion",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
+        "proj_equation_FStar.UInt64.Mk_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt64.mul_div",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.UInt.mul_div", "equation_FStar.UInt64.n",
+        "equation_FStar.UInt64.t", "equation_FStar.UInt64.v",
+        "proj_equation_FStar.UInt64.Mk_v",
+        "projection_inverse_FStar.UInt64.Mk_v"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt64.mul_div",
       4,
       2,
       1,

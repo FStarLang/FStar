@@ -4,7 +4,7 @@ open FStar.Mul
 open FStar.Math.Lib
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
-
+  
 (* Lemma: definition of Euclidean division for nats *)
 val euclidean_div_axiom: a:nat -> b:pos -> Lemma
   ((a - b * (a / b) >= 0 /\ a - b * (a / b) < b))
@@ -35,6 +35,10 @@ val lemma_mult_lt_right: a:nat -> b:int -> c:int -> Lemma
   (ensures  (b * a <= c * a))
 let lemma_mult_lt_right a b c = ()
 
+let lemma_mult_lt_sqr (n:nat) (m:nat) (k:nat{n < k && m < k})
+  : Lemma (FStar.Mul.(n * m < k * k))
+  = ()
+  
 (* Lemma: multiplication is right distributive over addition *)
 val distributivity_add_left: a:int -> b:int -> c:int -> Lemma
   ((a + b) * c = a * c + b * c)
