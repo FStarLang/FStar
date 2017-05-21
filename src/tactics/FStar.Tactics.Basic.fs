@@ -18,6 +18,9 @@ module Rel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcErr  = FStar.TypeChecker.Err
+module TcEnv  = FStar.TypeChecker.Env
+module TcRel  = FStar.TypeChecker.Rel
+module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 
 type name = bv
@@ -125,7 +128,7 @@ let mlog f : tac<unit> =
 
 //val fail : string -> tac<'a>
 let fail msg =
-    mk_tac (fun ps -> 
+    mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
         then dump_proofstate ps "TACTING FAILING";
         Failed (msg, ps)
@@ -223,7 +226,7 @@ let treplace env (e1:term) (e2:term) (t:term) =
 // eq hardcoded to univ #0
 // TODO: move to (part of this) FStar.Reflection?
 let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit> =
-    bind cur_goal (fun g -> 
+    bind cur_goal (fun g ->
         let env = g.context in
         let ok = match Rel.try_teq true env t1 t2 with
                  | None -> false
@@ -258,6 +261,75 @@ let focus_cur_goal (f:tac<'a>) : tac<'a>
             let q2 = {q' with goals=q'.goals@tl} in
             bind (set q2) (fun _ ->
             ret a)))))
+
+
+let rec bottom_fold_env (f : env -> term -> term) (env : env) (t : term) : term =
+    let tn = (SS.compress t).n in
+    let tn = match tn with
+             | Tm_app (hd, args) ->
+                let ff = bottom_fold_env f env in
+                Tm_app (ff hd, List.map (fun (a, q) -> (ff a, q)) args)
+             | Tm_abs (bs, t, k) -> let bs, t' = SS.open_term bs t in
+                                    let t'' = bottom_fold_env f (TcEnv.push_binders env bs) t' in
+                                    Tm_abs (bs, SS.close bs t'', k)
+             | Tm_arrow (bs, k) -> tn //TODO
+             | _ -> tn in
+    f env ({ t with n = tn })
+
+(*
+ * Allows for replacement of individual subterms in the goal, asking the user to provide
+ * a proof of the equality. Users are presented with goals of the form `t == ?u` for `t`
+ * subterms of the current goal and `?u` a fresh unification variable. The users then
+ * calls apply_lemma to fully instantiate `u` and provide a proof of the equality.
+ * If all that is successful, the term is rewritten.
+ *)
+// TODO: allow for auxiliary goals added by tau? in that case we should return a tac<term>
+// most definitely we do want that.
+
+exception Pointwise_Fail of string
+
+let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term) : term =
+    let env = { env with instantiate_imp = false } in
+    let t, lcomp, g = TcTerm.tc_term env t in
+    if not (U.is_total_lcomp lcomp) || not (TcRel.is_trivial g) then
+        t // Don't do anything for possibly impure terms
+    else
+        let typ = lcomp.res_typ in
+        let ut, uvs, guard  = TcUtil.new_implicit_var "pointwise tactic" t.pos env typ in
+        if !tacdbg then
+            BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
+                                                                 (Print.term_to_string ut);
+        let g' = { context = env ; witness = None; goal_ty = U.mk_eq2 (U_succ U_zero) typ t ut } in
+        let ps' = { ps with goals = [g'] ; smt_goals = [] } in
+        match run tau ps' with
+        | Success ((), ps') ->
+            // check that uv is fully determined
+            TcRel.force_trivial_guard env guard;
+            if !tacdbg then
+                BU.print1 "Pointwise_rec: Suceeded! Returning %s\n" (Print.term_to_string ut);
+            ut
+        | Failed (s, ps') ->
+            raise (Pointwise_Fail s)
+
+let pointwise (tau:tac<unit>) : tac<unit> =
+    focus_cur_goal (
+        mk_tac (fun ps ->
+            let g = match ps.goals with
+                    | [g] -> g
+                    | gs -> failwith (BU.format1 "pointwise: got %s goals?" (string_of_int (List.length gs)))
+            in
+            let gt = g.goal_ty in
+            try
+                if !tacdbg then
+                    BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt);
+                let gt' = bottom_fold_env (pointwise_rec ps tau) g.context gt in
+                if !tacdbg then
+                    BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt');
+                Success ((), {ps with goals = [{g with goal_ty = gt'}]})
+            with Pointwise_Fail s ->
+                Failed ("pointwise_rec failed: " ^ s, ps)
+       )
+    )
 
 (* cur_goal_and_rest: runs f on the current goal only,
                       runs g on the rest of the goals
@@ -470,7 +542,9 @@ let apply_lemma (tm:term)
                       | pre::post::_ -> fst pre, fst post
                       | _ -> failwith "Impossible: not a lemma" in
                  match Rel.try_teq false goal.context post goal.goal_ty with
-                 | None -> fail "apply_lemma: does not unify with goal"
+                 | None -> fail (BU.format2 "apply_lemma: does not unify with goal: %s vs %s"
+                                              (Print.term_to_string post)
+                                              (Print.term_to_string goal.goal_ty))
                  | Some g ->
                    let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
                    let solution = S.mk_Tm_app tm uvs None goal.context.range in

@@ -371,7 +371,7 @@ let pack (tv:term_view) : term =
         S.fv_to_tm fv
 
     | Tv_App (l, r) ->
-        U.mk_app l [S.as_arg r]
+        U.mk_app l [S.as_arg r] // TODO: implicits
 
     | Tv_Abs (b, t) ->
         U.abs [b] t None // TODO: effect?

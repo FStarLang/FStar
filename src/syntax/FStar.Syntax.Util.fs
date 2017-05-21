@@ -1139,7 +1139,7 @@ and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
 
 let rec bottom_fold (f : term -> term) (t : term) : term =
     let ff = bottom_fold f in
-    let tn = (un_uinst t).n in
+    let tn = (compress t).n in
     let tn = match tn with
              | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
              // TODO: We ignore the types. Bug or feature?
@@ -1147,10 +1147,12 @@ let rec bottom_fold (f : term -> term) (t : term) : term =
                                     let t'' = ff t' in
                                     Tm_abs (bs, close bs t'', k)
              | Tm_arrow (bs, k) -> tn //TODO
+             | Tm_uinst (t, us) ->
+                Tm_uinst (ff t, us)
              | _ -> tn in
     f ({ t with n = tn })
 
-// An estimation of the size of a term
+// An estimation of the size of a term, only for debugging
 let rec sizeof (t:term) : int =
     match t.n with
     | Tm_delayed _ -> 1 + sizeof (compress t)
