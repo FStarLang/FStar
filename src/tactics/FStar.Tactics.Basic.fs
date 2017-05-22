@@ -742,6 +742,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         bind (add_goals [g']) (fun _ ->
         focus_cur_goal (
             bind tau (fun _ ->
+            TcRel.force_trivial_guard env guard;
             ret ut))
         )
 
