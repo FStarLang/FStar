@@ -357,6 +357,5 @@ unopteq type dtuple8 (a:Type)
 
 val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
-
-val false_elim : #a:Type -> u:unit{false} -> Tot a
-let rec false_elim #a u = false_elim ()
+irreducible
+let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
