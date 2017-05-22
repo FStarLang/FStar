@@ -24,11 +24,11 @@ let congr #a x y z p1 p2 = ()
 
 assume val p : (y + z == x + y)
 
-val distr : (x : int) -> (y : int) -> (z : int) -> Lemma (x `op_Multiply` (y + z) == x `op_Multiply` y + x `op_Multiply` z)
-let distr x y z = ()
+val distr : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x `op_Multiply` (y + z) == x `op_Multiply` y + x `op_Multiply` z)
+let distr #x #y #z = ()
 
-val distl : (x : int) -> (y : int) -> (z : int) -> Lemma ((x + y) `op_Multiply` z == x `op_Multiply` z + y `op_Multiply` z)
-let distl x y z = ()
+val distl : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) `op_Multiply` z == x `op_Multiply` z + y `op_Multiply` z)
+let distl #x #y #z = ()
 
 (* // When taking a goal of the form *)
 (* //   a * (b + c) = ?u *)
