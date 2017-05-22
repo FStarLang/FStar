@@ -236,7 +236,4 @@ let __proj__Mkdtuple8__item___7 projectee =
 let __proj__Mkdtuple8__item___8 projectee =
   match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
 let ignore x = ()
-let normalize_term x = x
-type 'Aa normalize = 'Aa
-let assert_norm = ()
 let rec false_elim u = false_elim ()

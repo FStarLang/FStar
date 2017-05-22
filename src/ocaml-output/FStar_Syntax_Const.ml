@@ -207,8 +207,8 @@ let range_of_lid: FStar_Ident.lident = pconst "range_of"
 let labeled_lid: FStar_Ident.lident = pconst "labeled"
 let range_0: FStar_Ident.lident = pconst "range_0"
 let guard_free: FStar_Ident.lident = pconst "guard_free"
-let normalize: FStar_Ident.lident = psconst "normalize"
-let normalize_term: FStar_Ident.lident = psconst "normalize_term"
+let normalize: FStar_Ident.lident = pconst "normalize"
+let normalize_term: FStar_Ident.lident = pconst "normalize_term"
 let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
   fun s  ->
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] [s])

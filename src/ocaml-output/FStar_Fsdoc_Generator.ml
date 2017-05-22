@@ -220,8 +220,7 @@ let document_toplevel name topdecl =
             | None  -> (None, (Some doc1))
             | Some (uu____657,summary) -> ((Some summary), (Some doc1)))
        | None  -> (None, None))
-  | uu____665 ->
-      FStar_Pervasives.raise (FStar_Errors.Err "Not a TopLevelModule")
+  | uu____665 -> raise (FStar_Errors.Err "Not a TopLevelModule")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____673 =
@@ -263,7 +262,7 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str in
                FStar_Errors.Err uu____744 in
-             FStar_Pervasives.raise uu____743)
+             raise uu____743)
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->
     let modules =

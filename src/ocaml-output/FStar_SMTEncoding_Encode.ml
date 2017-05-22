@@ -4896,9 +4896,7 @@ let encode_top_level_let:
                                       FStar_Syntax_Util.is_lemma
                                         lb.FStar_Syntax_Syntax.lbtyp in
                                     if uu____11297
-                                    then
-                                      FStar_Pervasives.raise
-                                        Let_rec_unencodeable
+                                    then raise Let_rec_unencodeable
                                     else ());
                                    (let t_norm =
                                       whnf env1 lb.FStar_Syntax_Syntax.lbtyp in

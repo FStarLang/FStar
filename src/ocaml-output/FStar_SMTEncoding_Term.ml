@@ -1338,7 +1338,7 @@ let boxTerm: sort -> term -> term =
       | Bool_sort  -> boxBool t
       | String_sort  -> boxString t
       | Ref_sort  -> boxRef t
-      | uu____3286 -> FStar_Pervasives.raise FStar_Util.Impos
+      | uu____3286 -> raise FStar_Util.Impos
 let unboxTerm: sort -> term -> term =
   fun sort  ->
     fun t  ->
@@ -1347,7 +1347,7 @@ let unboxTerm: sort -> term -> term =
       | Bool_sort  -> unboxBool t
       | String_sort  -> unboxString t
       | Ref_sort  -> unboxRef t
-      | uu____3293 -> FStar_Pervasives.raise FStar_Util.Impos
+      | uu____3293 -> raise FStar_Util.Impos
 let mk_PreType: term -> term = fun t  -> mkApp ("PreType", [t]) t.rng
 let mk_Valid: term -> term =
   fun t  ->

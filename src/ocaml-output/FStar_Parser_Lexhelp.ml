@@ -354,7 +354,7 @@ let kwd_or_id:
              | uu____538 ->
                  if FStar_Util.starts_with s FStar_Ident.reserved_prefix
                  then
-                   FStar_Pervasives.raise
+                   raise
                      (FStar_Errors.Error
                         ((Prims.strcat FStar_Ident.reserved_prefix
                             " is a reserved prefix for an identifier"), r))

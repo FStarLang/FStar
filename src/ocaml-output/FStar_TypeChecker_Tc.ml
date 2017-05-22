@@ -209,7 +209,7 @@ let monad_signature:
                 FStar_TypeChecker_Err.unexpected_signature_for_monad env m s in
               (uu____135, (FStar_Ident.range_of_lid m)) in
             FStar_Errors.Error uu____132 in
-          FStar_Pervasives.raise uu____131 in
+          raise uu____131 in
         let s1 = FStar_Syntax_Subst.compress s in
         match s1.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_arrow (bs,c) ->
@@ -371,7 +371,7 @@ let rec tc_eff_decl:
                                 env1 mname t in
                             (uu____343, (FStar_Ident.range_of_lid mname)) in
                           FStar_Errors.Error uu____340 in
-                        FStar_Pervasives.raise uu____339 in
+                        raise uu____339 in
                       let uu____348 =
                         let uu____349 =
                           FStar_Syntax_Subst.compress signature1 in
@@ -1059,7 +1059,7 @@ let rec tc_eff_decl:
                                             (match univs1 with
                                              | [] -> ([], repr1)
                                              | uu____1035 ->
-                                                 FStar_Pervasives.raise
+                                                 raise
                                                    (FStar_Errors.Error
                                                       ("Unexpected universe-polymorphic return for effect",
                                                         (repr1.FStar_Syntax_Syntax.pos))))) in
@@ -1219,8 +1219,7 @@ let rec tc_eff_decl:
                                                            (act_defn1.FStar_Syntax_Syntax.pos)) in
                                                        FStar_Errors.Error
                                                          uu____1117 in
-                                                     FStar_Pervasives.raise
-                                                       uu____1116 in
+                                                     raise uu____1116 in
                                                (match uu____1072 with
                                                 | (expected_k,g_k) ->
                                                     let g =
@@ -1694,8 +1693,7 @@ and cps_and_elaborate:
                                                      "Computation for [%s] is not total : %s !"
                                                      uu____1605 uu____1606 in
                                                  FStar_Errors.Err uu____1604 in
-                                               FStar_Pervasives.raise
-                                                 uu____1603
+                                               raise uu____1603
                                              else ());
                                             (let uu____1608 =
                                                FStar_TypeChecker_DMFF.star_expr
@@ -3037,12 +3035,12 @@ and tc_decl:
              match uu____3074 with
              | FStar_Getopt.Success  -> ()
              | FStar_Getopt.Help  ->
-                 FStar_Pervasives.raise
+                 raise
                    (FStar_Errors.Error
                       ("Failed to process pragma: use 'fstar --help' to see which options are available",
                         r))
              | FStar_Getopt.Error s1 ->
-                 FStar_Pervasives.raise
+                 raise
                    (FStar_Errors.Error
                       ((Prims.strcat "Failed to process pragma: " s1), r)) in
            (match p with
@@ -3162,7 +3160,7 @@ and tc_decl:
                                FStar_TypeChecker_Env.get_range env1 in
                              (uu____3209, uu____3210) in
                            FStar_Errors.Error uu____3206 in
-                         FStar_Pervasives.raise uu____3205 in
+                         raise uu____3205 in
                        let uu____3213 =
                          FStar_TypeChecker_Env.effect_decl_opt env1 eff_name in
                        match uu____3213 with
@@ -3473,8 +3471,7 @@ and tc_decl:
                                                      uu____3624 in
                                                  (uu____3619, r) in
                                                FStar_Errors.Error uu____3616 in
-                                             FStar_Pervasives.raise
-                                               uu____3615)
+                                             raise uu____3615)
                                       else ();
                                       (let se1 =
                                          let uu___109_3627 = se in
@@ -3605,7 +3602,7 @@ and tc_decl:
                             uu____3779 uu____3780 uu____3781 in
                         (uu____3778, r) in
                       FStar_Errors.Error uu____3775 in
-                    FStar_Pervasives.raise uu____3774) in
+                    raise uu____3774) in
            let uu____3784 =
              FStar_All.pipe_right (Prims.snd lbs)
                (FStar_List.fold_left
@@ -3641,7 +3638,7 @@ and tc_decl:
                                           lb.FStar_Syntax_Syntax.lbunivs)
                                          <> (FStar_List.length uvs))
                                   then
-                                    FStar_Pervasives.raise
+                                    raise
                                       (FStar_Errors.Error
                                          ("Inline universes are incoherent with annotation from val declaration",
                                            r))

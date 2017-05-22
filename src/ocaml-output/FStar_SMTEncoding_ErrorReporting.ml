@@ -261,8 +261,7 @@ let label_goals:
                                                     uu____501 in
                                                 Not_a_wp_implication
                                                   uu____500 in
-                                              FStar_Pervasives.raise
-                                                uu____499))
+                                              raise uu____499))
                                 | uu____507 ->
                                     let uu____508 =
                                       let uu____509 =
@@ -272,7 +271,7 @@ let label_goals:
                                         Prims.strcat "LHS not a conjunct: "
                                           uu____510 in
                                       Not_a_wp_implication uu____509 in
-                                    FStar_Pervasives.raise uu____508 in
+                                    raise uu____508 in
                               (match uu____408 with
                                | (labels1,lhs2) ->
                                    let uu____521 =

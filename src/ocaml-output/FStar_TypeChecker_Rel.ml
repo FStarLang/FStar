@@ -5186,7 +5186,7 @@ and solve_c:
                            uu____11630 uu____11631 in
                        (uu____11629, (env.FStar_TypeChecker_Env.range)) in
                      FStar_Errors.Error uu____11626 in
-                   FStar_Pervasives.raise uu____11625 in
+                   raise uu____11625 in
              match uu____11543 with
              | (wpc1,wpc2) ->
                  let uu____11648 = FStar_Util.physical_equality wpc1 wpc2 in
@@ -5880,7 +5880,7 @@ let teq:
                 let uu____12323 = FStar_TypeChecker_Env.get_range env in
                 (uu____12322, uu____12323) in
               FStar_Errors.Error uu____12319 in
-            FStar_Pervasives.raise uu____12318
+            raise uu____12318
         | Some g ->
             ((let uu____12326 =
                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -6019,7 +6019,7 @@ let solve_universe_inequalities':
                    let uu____12474 = FStar_TypeChecker_Env.get_range env in
                    (uu____12471, uu____12474) in
                  FStar_Errors.Error uu____12468 in
-               FStar_Pervasives.raise uu____12467) in
+               raise uu____12467) in
             let equiv v1 v' =
               let uu____12482 =
                 let uu____12485 = FStar_Syntax_Subst.compress_univ v1 in
@@ -6157,7 +6157,7 @@ let solve_universe_inequalities':
                     ("Failed to solve universe inequalities for inductives",
                       uu____12640) in
                   FStar_Errors.Error uu____12637 in
-                FStar_Pervasives.raise uu____12636))
+                raise uu____12636))
 let solve_universe_inequalities:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.universe Prims.list* (FStar_Syntax_Syntax.universe*
@@ -6177,7 +6177,7 @@ let rec solve_deferred_constraints:
         match uu____12673 with
         | (d,s) ->
             let msg = explain env d s in
-            FStar_Pervasives.raise (FStar_Errors.Error (msg, (p_loc d))) in
+            raise (FStar_Errors.Error (msg, (p_loc d))) in
       let wl = wl_of_guard env g.FStar_TypeChecker_Env.deferred in
       (let uu____12683 =
          FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
