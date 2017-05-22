@@ -55,7 +55,7 @@ let smaller f t =
     | False_ ->
         True
 
-#reset-options "--z3limit 2"
+#reset-options "--z3rlimit 10"
 let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
     | Tv_Var n ->
