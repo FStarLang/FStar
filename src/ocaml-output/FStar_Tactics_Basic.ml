@@ -116,7 +116,7 @@ let solve: goal -> FStar_Syntax_Syntax.typ -> Prims.unit =
                  FStar_Util.format3 "%s does not solve %s : %s" uu____408
                    uu____409 uu____410 in
                Failure uu____407 in
-             Prims.raise uu____406)
+             FStar_Pervasives.raise uu____406)
 let dismiss: Prims.unit tac =
   bind get
     (fun p  ->

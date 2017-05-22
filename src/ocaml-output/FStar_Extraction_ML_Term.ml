@@ -905,7 +905,8 @@ let rec extract_one_pat:
                                                        FStar_Util.print1
                                                          "Pattern %s is not extractable"
                                                          uu____2047);
-                                                  Prims.raise Un_extractable)))) in
+                                                  FStar_Pervasives.raise
+                                                    Un_extractable)))) in
                               let f_ty =
                                 FStar_Extraction_ML_Util.subst tys mlty_args in
                               let uu____2049 =

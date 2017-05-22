@@ -1,15 +1,57 @@
 open Prims
+type 'Aa result =
+  | V of 'Aa
+  | E of Prims.exn
+  | Err of Prims.string
+let uu___is_V projectee =
+  match projectee with | V v -> true | uu____27 -> false
+let __proj__V__item__v projectee = match projectee with | V v -> v
+let uu___is_E projectee =
+  match projectee with | E e -> true | uu____52 -> false
+let __proj__E__item__e projectee = match projectee with | E e -> e
+let uu___is_Err projectee =
+  match projectee with | Err msg -> true | uu____77 -> false
+let __proj__Err__item__msg projectee = match projectee with | Err msg -> msg
+type ex_pre = Obj.t
+type 'Aa ex_post = 'Aa result -> Obj.t
+type 'Aa ex_wp = Prims.unit -> ex_pre
+type ('Aa,'Ax,'Ap) ex_return = 'Ap
+type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) ex_bind_wp = Prims.unit
+type ('Aa,'Awp,'Apost) ex_ite_wp = Prims.unit
+type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) ex_if_then_else = Prims.unit
+type ('Aa,'Awp1,'Awp2) ex_stronger = Prims.unit
+type ('Aa,'Ab,'Awp,'Ap) ex_close_wp = Prims.unit
+type ('Aa,'Aq,'Awp,'Ap) ex_assert_p = Prims.unit
+type ('Aa,'Aq,'Awp,'Ap) ex_assume_p = Prims.unit
+type ('Aa,'Ap) ex_null_wp = Prims.unit
+type ('Aa,'Awp) ex_trivial = 'Awp
+type ('Aa,'Awp,'Ap) lift_div_exn = 'Awp
+let raise uu____349 = failwith "Not yet implemented:raise"
+type 'Ah all_pre_h = 'Ah -> Obj.t
+type ('Ah,'Aa) all_post_h = 'Aa result -> 'Ah -> Obj.t
+type ('Ah,'Aa) all_wp_h = Prims.unit -> 'Ah all_pre_h
+type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = Prims.unit
+type ('Aheap,'Aa,'Ax,'Ap,'Auu____454) all_return = 'Ap
+type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1
+type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else =
+  Prims.unit
+type ('Aheap,'Aa,'Awp1,'Awp2) all_stronger = Prims.unit
+type ('Aheap,'Aa,'Ab,'Awp,'Ap,'Ah) all_close_wp = Prims.unit
+type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assert_p = Prims.unit
+type ('Aheap,'Aa,'Ap,'Awp,'Aq,'Ah) all_assume_p = Prims.unit
+type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = Prims.unit
+type ('Aheap,'Aa,'Awp) all_trivial = Prims.unit
 type 'Aa inversion = Prims.unit
 let allow_inversion = ()
-let invertOption uu____9 = ()
+let invertOption uu____714 = ()
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
 let uu___is_Inl projectee =
-  match projectee with | Inl v -> true | uu____41 -> false
+  match projectee with | Inl v -> true | uu____746 -> false
 let __proj__Inl__item__v projectee = match projectee with | Inl v -> v
 let uu___is_Inr projectee =
-  match projectee with | Inr v -> true | uu____75 -> false
+  match projectee with | Inr v -> true | uu____780 -> false
 let __proj__Inr__item__v projectee = match projectee with | Inr v -> v
 type ('a,'b,'c) tuple3 =
   | Mktuple3 of 'a* 'b* 'c
@@ -180,3 +222,7 @@ let __proj__Mkdtuple8__item___7 projectee =
 let __proj__Mkdtuple8__item___8 projectee =
   match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
 let ignore x = ()
+let normalize_term x = x
+type 'Aa normalize = 'Aa
+let assert_norm = ()
+let rec false_elim u = false_elim ()

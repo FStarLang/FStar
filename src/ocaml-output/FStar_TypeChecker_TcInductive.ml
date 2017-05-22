@@ -145,7 +145,7 @@ let tc_data:
                   if FStar_Ident.lid_equals tc_lid FStar_Syntax_Const.exn_lid
                   then (env, [], FStar_Syntax_Syntax.U_zero)
                   else
-                    Prims.raise
+                    FStar_Pervasives.raise
                       (FStar_Errors.Error
                          ("Unexpected data constructor",
                            (se.FStar_Syntax_Syntax.sigrng))) in
@@ -229,7 +229,7 @@ let tc_data:
                                            (uu____445,
                                              (se.FStar_Syntax_Syntax.sigrng)) in
                                          FStar_Errors.Error uu____442 in
-                                       Prims.raise uu____441);
+                                       FStar_Pervasives.raise uu____441);
                                   (let uu____448 =
                                      FStar_Syntax_Util.head_and_args result1 in
                                    match uu____448 with
@@ -261,7 +261,7 @@ let tc_data:
                                                  (uu____487,
                                                    (se.FStar_Syntax_Syntax.sigrng)) in
                                                FStar_Errors.Error uu____484 in
-                                             Prims.raise uu____483);
+                                             FStar_Pervasives.raise uu____483);
                                         (let g =
                                            FStar_List.fold_left2
                                              (fun g  ->
@@ -1806,7 +1806,7 @@ let check_inductive_well_typedness:
                       ("Mutually defined type contains a non-inductive element",
                         uu____3226) in
                     FStar_Errors.Error uu____3223 in
-                  Prims.raise uu____3222
+                  FStar_Pervasives.raise uu____3222
                 else ());
                (let env0 = env in
                 let uu____3229 =

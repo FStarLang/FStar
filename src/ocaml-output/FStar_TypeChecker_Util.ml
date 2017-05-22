@@ -296,7 +296,7 @@ let extract_let_rec_annotation:
                                       uu____708 in
                                   (uu____707, rng) in
                                 FStar_Errors.Error uu____704 in
-                              Prims.raise uu____703)
+                              FStar_Pervasives.raise uu____703)
                        | FStar_Util.Inl t3 -> t3 in
                      ([], t3, b)))
            | uu____715 ->
@@ -487,7 +487,7 @@ let pat_as_exps:
                           match (formals, pats2) with
                           | ([],[]) -> []
                           | ([],uu____1444::uu____1445) ->
-                              Prims.raise
+                              FStar_Pervasives.raise
                                 (FStar_Errors.Error
                                    ("Too many pattern arguments",
                                      (FStar_Ident.range_of_lid
@@ -532,7 +532,8 @@ let pat_as_exps:
                                                         (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)) in
                                                  FStar_Errors.Error
                                                    uu____1555 in
-                                               Prims.raise uu____1554)))
+                                               FStar_Pervasives.raise
+                                                 uu____1554)))
                           | (f1::formals',(p2,p_imp)::pats') ->
                               (match f1 with
                                | (uu____1610,Some
@@ -589,7 +590,7 @@ let pat_as_exps:
                          FStar_TypeChecker_Err.nonlinear_pattern_variable x in
                        (uu____1766, (p3.FStar_Syntax_Syntax.p)) in
                      FStar_Errors.Error uu____1763 in
-                   Prims.raise uu____1762
+                   FStar_Pervasives.raise uu____1762
                | uu____1775 -> (b, a, w, arg, p3)) in
         let top_level_pat_as_args env1 p1 =
           match p1.FStar_Syntax_Syntax.v with
@@ -624,7 +625,7 @@ let pat_as_exps:
                                                env1 in
                                            (uu____1921, uu____1922) in
                                          FStar_Errors.Error uu____1918 in
-                                       Prims.raise uu____1917
+                                       FStar_Pervasives.raise uu____1917
                                      else
                                        (let uu____1930 =
                                           let uu____1932 =
@@ -1411,7 +1412,7 @@ let bind:
                                     ("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad",
                                       uu____3288) in
                                   FStar_Errors.Error uu____3285 in
-                                Prims.raise uu____3284))
+                                FStar_Pervasives.raise uu____3284))
                           else
                             (let uu____3296 =
                                (FStar_Syntax_Util.is_total_comp c1) &&
@@ -2321,7 +2322,7 @@ let check_comp:
                   let uu____4222 = FStar_TypeChecker_Env.get_range env in
                   (uu____4221, uu____4222) in
                 FStar_Errors.Error uu____4218 in
-              Prims.raise uu____4217
+              FStar_Pervasives.raise uu____4217
           | Some g -> (e, c', g)
 let maybe_coerce_bool_to_type:
   FStar_TypeChecker_Env.env ->
@@ -2740,7 +2741,7 @@ let pure_or_ghost_pre_and_post:
                             uu____4618 in
                         (uu____4617, (comp.FStar_Syntax_Syntax.pos)) in
                       FStar_Errors.Error uu____4614 in
-                    Prims.raise uu____4613)
+                    FStar_Pervasives.raise uu____4613)
              else
                (let ct1 = FStar_TypeChecker_Env.unfold_effect_abbrev env comp in
                 match ct1.FStar_Syntax_Syntax.effect_args with
@@ -2954,7 +2955,7 @@ let maybe_instantiate:
                        let uu____5054 = FStar_TypeChecker_Env.get_range env in
                        (uu____5044, uu____5054) in
                      FStar_Errors.Error uu____5041 in
-                   Prims.raise uu____5040
+                   FStar_Pervasives.raise uu____5040
                  else Some (n_available - n_expected) in
            let decr_inst uu___100_5067 =
              match uu___100_5067 with
@@ -3131,7 +3132,7 @@ let check_universe_generalization:
                     uu____5604 in
                 (uu____5603, (t.FStar_Syntax_Syntax.pos)) in
               FStar_Errors.Error uu____5600 in
-            Prims.raise uu____5599
+            FStar_Pervasives.raise uu____5599
 let generalize_universes:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -3618,7 +3619,7 @@ let check_and_ascribe:
                   let uu____6709 = FStar_TypeChecker_Env.get_range env2 in
                   (uu____6708, uu____6709) in
                 FStar_Errors.Error uu____6705 in
-              Prims.raise uu____6704
+              FStar_Pervasives.raise uu____6704
           | Some g ->
               ((let uu____6714 =
                   FStar_All.pipe_left (FStar_TypeChecker_Env.debug env2)
@@ -4093,7 +4094,7 @@ let check_sigelt_quals:
                   uu____7495 msg in
               (uu____7494, r) in
             FStar_Errors.Error uu____7491 in
-          Prims.raise uu____7490 in
+          FStar_Pervasives.raise uu____7490 in
         let err1 msg = err' (Prims.strcat ": " msg) in
         let err'1 uu____7503 = err' "" in
         (if (FStar_List.length quals) <> (FStar_List.length no_dup_quals)
@@ -4940,7 +4941,7 @@ let mk_data_operations:
                                   FStar_Syntax_Const.exn_lid
                               then ([], FStar_Syntax_Util.ktype0, true)
                               else
-                                Prims.raise
+                                FStar_Pervasives.raise
                                   (FStar_Errors.Error
                                      ("Unexpected data constructor",
                                        (se.FStar_Syntax_Syntax.sigrng))) in

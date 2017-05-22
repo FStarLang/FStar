@@ -68,7 +68,7 @@ let lowercase_module_name: Prims.string -> Prims.string =
         let uu____132 =
           let uu____133 = FStar_Util.format1 "not a valid FStar file: %s\n" f in
           FStar_Errors.Err uu____133 in
-        Prims.raise uu____132
+        FStar_Pervasives.raise uu____132
 let build_map:
   Prims.string Prims.list ->
     (Prims.string Prims.option* Prims.string Prims.option) FStar_Util.smap
@@ -116,7 +116,7 @@ let build_map:
               let uu____230 =
                 FStar_Util.format1 "not a valid include directory: %s\n" d in
               FStar_Errors.Err uu____230 in
-            Prims.raise uu____229)) include_directories2;
+            FStar_Pervasives.raise uu____229)) include_directories2;
     FStar_List.iter
       (fun f  ->
          let uu____233 = lowercase_module_name f in add_entry uu____233 f)
@@ -224,7 +224,7 @@ let collect_one:
                   then
                     (if let_open
                      then
-                       Prims.raise
+                       FStar_Pervasives.raise
                          (FStar_Errors.Err
                             "let-open only supported for modules, not namespaces")
                      else
@@ -246,7 +246,7 @@ let collect_one:
                       FStar_Util.format1
                         "module not found in search path: %s\n" alias in
                     FStar_Errors.Err uu____472 in
-                  Prims.raise uu____471 in
+                  FStar_Pervasives.raise uu____471 in
             let record_lid lid =
               let try_key key =
                 let uu____481 = FStar_Util.smap_try_find working_map key in
@@ -398,7 +398,7 @@ let collect_one:
                              "Automatic dependency analysis demands one module per file (module %s not supported)"
                              uu____729 in
                          FStar_Errors.Err uu____728 in
-                       Prims.raise uu____727
+                       FStar_Pervasives.raise uu____727
                      else ()))
              and collect_tycon uu___89_731 =
                match uu___89_731 with
@@ -807,7 +807,7 @@ let collect:
                         "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph.%s\n"
                         m1 m1 maybe_fst in
                     FStar_Errors.Err uu____1634 in
-                  Prims.raise uu____1633
+                  FStar_Pervasives.raise uu____1633
                 else ()) verify_flags;
        (by_target, topologically_sorted1, immediate_graph))
 let print_make:
@@ -830,5 +830,6 @@ let print uu____1689 =
        | Some "make" -> print_make make_deps
        | Some "graph" -> print_graph graph
        | Some uu____1722 ->
-           Prims.raise (FStar_Errors.Err "unknown tool for --dep\n")
+           FStar_Pervasives.raise
+             (FStar_Errors.Err "unknown tool for --dep\n")
        | None  -> ())

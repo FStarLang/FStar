@@ -211,7 +211,7 @@ let err_exn: Prims.exn -> Prims.unit =
     let uu____461 = issue_of_exn exn in
     match uu____461 with
     | Some issue -> add_one issue
-    | None  -> Prims.raise exn
+    | None  -> FStar_Pervasives.raise exn
 let handleable: Prims.exn -> Prims.bool =
   fun uu___60_466  ->
     match uu___60_466 with

@@ -373,7 +373,8 @@ let __proj__UnexpectedJsonType__item__uu___:
   Prims.exn -> (Prims.string* FStar_Util.json) =
   fun projectee  ->
     match projectee with | UnexpectedJsonType uu____1031 -> uu____1031
-let js_fail expected got = Prims.raise (UnexpectedJsonType (expected, got))
+let js_fail expected got =
+  FStar_Pervasives.raise (UnexpectedJsonType (expected, got))
 let js_int: FStar_Util.json -> Prims.int =
   fun uu___200_1048  ->
     match uu___200_1048 with
@@ -542,7 +543,7 @@ let unpack_interactive_query: FStar_Util.json -> query =
             let uu____1406 =
               FStar_Util.format2 "Missing key [%s] in %s." key errloc in
             InvalidQuery uu____1406 in
-          Prims.raise uu____1405 in
+          FStar_Pervasives.raise uu____1405 in
     let request = FStar_All.pipe_right json js_assoc in
     let qid =
       let uu____1415 = assoc1 "query" "query-id" request in
@@ -1376,7 +1377,7 @@ let run_compute st term rules =
                                 let uu____3584 =
                                   FStar_Errors.format_issue issue in
                                 FStar_Util.JsonStr uu____3584
-                            | None  -> Prims.raise e in
+                            | None  -> FStar_Pervasives.raise e in
                           (QueryNOK, uu____3580)))))
 type search_term' =
   | NameContainsStr of Prims.string
@@ -1495,7 +1496,7 @@ let run_search st search_str =
           let end_quote = FStar_Util.ends_with term1 "\"" in
           let strip_quotes str =
             if (FStar_String.length str) < (Prims.parse_int "2")
-            then Prims.raise (InvalidSearch "Empty search term")
+            then FStar_Pervasives.raise (InvalidSearch "Empty search term")
             else
               FStar_Util.substring str (Prims.parse_int "1")
                 ((FStar_String.length term1) - (Prims.parse_int "2")) in
@@ -1507,7 +1508,7 @@ let run_search st search_str =
                   FStar_Util.format1 "Improperly quoted search term: %s"
                     term1 in
                 InvalidSearch uu____3886 in
-              Prims.raise uu____3885
+              FStar_Pervasives.raise uu____3885
             else
               if beg_quote
               then
@@ -1524,7 +1525,7 @@ let run_search st search_str =
                        let uu____3894 =
                          FStar_Util.format1 "Unknown identifier: %s" term1 in
                        InvalidSearch uu____3894 in
-                     Prims.raise uu____3893
+                     FStar_Pervasives.raise uu____3893
                  | Some lid1 -> TypeContainsLid lid1) in
           { st_negate = negate; st_term = parsed } in
         let terms =
@@ -1564,7 +1565,7 @@ let run_search st search_str =
                 let uu____3953 =
                   FStar_Util.format1 "No results found for query [%s]" kwds in
                 InvalidSearch uu____3953 in
-              Prims.raise uu____3952
+              FStar_Pervasives.raise uu____3952
           | uu____3956 -> (QueryOK, (FStar_Util.JsonList js))
         with | InvalidSearch s -> (QueryNOK, (FStar_Util.JsonStr s)) in
       (results, (FStar_Util.Inl st))
@@ -1691,4 +1692,4 @@ let interactive_mode: Prims.string -> Prims.unit =
      with
      | e ->
          (FStar_Errors.set_handler FStar_Errors.default_handler;
-          Prims.raise e))
+          FStar_Pervasives.raise e))

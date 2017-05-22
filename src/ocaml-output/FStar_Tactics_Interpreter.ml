@@ -672,7 +672,7 @@ let by_tactic_interp:
                       (FStar_List.append ps.FStar_Tactics_Basic.goals
                          ps.FStar_Tactics_Basic.smt_goals))
                 | FStar_Tactics_Basic.Failed (s,ps) ->
-                    Prims.raise
+                    FStar_Pervasives.raise
                       (FStar_Errors.Error
                          ((Prims.strcat "user tactic failed: \""
                              (Prims.strcat s "\"")),

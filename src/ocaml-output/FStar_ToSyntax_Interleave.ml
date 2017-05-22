@@ -62,7 +62,7 @@ let rec prefix_with_iface_decls:
                            -> true
                        | uu____168 -> false))
                ->
-               Prims.raise
+               FStar_Pervasives.raise
                  (FStar_Errors.Error
                     ("Interface contains an abstract 'type' declaration; use 'val' instead",
                       (impl.FStar_Parser_AST.drange)))
@@ -94,7 +94,7 @@ let rec prefix_with_iface_decls:
                             x.FStar_Ident.idText uu____198 in
                         (uu____197, (impl.FStar_Parser_AST.drange)) in
                       FStar_Errors.Error uu____194 in
-                    Prims.raise uu____193
+                    FStar_Pervasives.raise uu____193
                   else (iface1, [impl]))
                else
                  (let mutually_defined_with_x =
@@ -135,7 +135,7 @@ let rec prefix_with_iface_decls:
                                  (uu____293,
                                    (iface_hd1.FStar_Parser_AST.drange)) in
                                FStar_Errors.Error uu____290 in
-                             Prims.raise uu____289
+                             FStar_Pervasives.raise uu____289
                            else aux ys iface2) in
                   let uu____301 = aux mutually_defined_with_x iface_tl in
                   match uu____301 with
@@ -163,7 +163,7 @@ let check_initial_interface:
                            -> true
                        | uu____381 -> false))
                ->
-               Prims.raise
+               FStar_Pervasives.raise
                  (FStar_Errors.Error
                     ("Interface contains an abstract 'type' declaration; use 'val' instead",
                       (hd1.FStar_Parser_AST.drange)))
@@ -179,14 +179,14 @@ let check_initial_interface:
                          x.FStar_Ident.idText x.FStar_Ident.idText in
                      (uu____392, (hd1.FStar_Parser_AST.drange)) in
                    FStar_Errors.Error uu____389 in
-                 Prims.raise uu____388
+                 FStar_Pervasives.raise uu____388
                else
                  (let uu____394 =
                     FStar_All.pipe_right hd1.FStar_Parser_AST.quals
                       (FStar_List.contains FStar_Parser_AST.Assumption) in
                   if uu____394
                   then
-                    Prims.raise
+                    FStar_Pervasives.raise
                       (FStar_Errors.Error
                          ("Interfaces cannot use `assume val x : t`; just write `val x : t` instead",
                            (hd1.FStar_Parser_AST.drange)))
@@ -266,7 +266,7 @@ let initialize_interface:
                     "Interface %s has already been processed" uu____522 in
                 (uu____521, (FStar_Ident.range_of_lid mname)) in
               FStar_Errors.Error uu____518 in
-            Prims.raise uu____517
+            FStar_Pervasives.raise uu____517
         | None  -> FStar_ToSyntax_Env.set_iface_decls env mname decls
 let prefix_with_interface_decls:
   FStar_ToSyntax_Env.env ->
@@ -337,5 +337,5 @@ let interleave_module:
                                    uu____667 err1 in
                                (uu____666, (FStar_Ident.range_of_lid l)) in
                              FStar_Errors.Error uu____663 in
-                           Prims.raise uu____662
+                           FStar_Pervasives.raise uu____662
                        | uu____670 -> (env1, a1))))
