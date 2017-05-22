@@ -522,7 +522,7 @@ let exact (tm:term)
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
             if Rel.teq_nosmt goal.context t goal.goal_ty
             then let _ = solve goal tm in
-                 replace_cur ({goal with witness=None; goal_ty=U.t_true})
+                 dismiss
             else
                  let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
                             (Print.term_to_string tm)

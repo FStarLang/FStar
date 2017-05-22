@@ -62,8 +62,7 @@ val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x
 let lemma_mul_comm x y = ()
 
 let test_exact (x:nat) (y:nat) =
-  assert_by_tactic (m <-- quote (mul_comm x y);
-                    exact m)
+  assert_by_tactic (exact (quote (mul_comm x y)))
                    (op_Multiply x y == op_Multiply y x)
 
 let test_apply (x:nat) (y:nat) =
