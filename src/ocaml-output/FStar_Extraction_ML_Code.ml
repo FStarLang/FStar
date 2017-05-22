@@ -1304,77 +1304,86 @@ let rec doc_of_mllib_r:
               FStar_Format.reduce uu____1878
         and for1_mod istop uu____1887 =
           match uu____1887 with
-          | (x,sigmod,FStar_Extraction_ML_Syntax.MLLib sub1) ->
-              let x1 = FStar_Extraction_ML_Util.flatten_mlpath x in
+          | (mod_name,sigmod,FStar_Extraction_ML_Syntax.MLLib sub1) ->
+              let target_mod_name =
+                FStar_Extraction_ML_Util.flatten_mlpath mod_name in
+              let maybe_open_pervasives =
+                match mod_name with
+                | ("FStar"::[],"Pervasives") -> []
+                | uu____1924 ->
+                    let pervasives1 =
+                      FStar_Extraction_ML_Util.flatten_mlpath
+                        (["FStar"], "Pervasives") in
+                    [FStar_Format.hardline;
+                    FStar_Format.text (Prims.strcat "open " pervasives1)] in
               let head1 =
-                let uu____1921 =
-                  let uu____1923 = FStar_Extraction_ML_Util.codegen_fsharp () in
-                  if uu____1923
-                  then [FStar_Format.text "module"; FStar_Format.text x1]
+                let uu____1931 =
+                  let uu____1933 = FStar_Extraction_ML_Util.codegen_fsharp () in
+                  if uu____1933
+                  then
+                    [FStar_Format.text "module";
+                    FStar_Format.text target_mod_name]
                   else
                     if Prims.op_Negation istop
                     then
                       [FStar_Format.text "module";
-                      FStar_Format.text x1;
+                      FStar_Format.text target_mod_name;
                       FStar_Format.text "=";
                       FStar_Format.text "struct"]
                     else [] in
-                FStar_Format.reduce1 uu____1921 in
+                FStar_Format.reduce1 uu____1931 in
               let tail1 =
                 if Prims.op_Negation istop
                 then FStar_Format.reduce1 [FStar_Format.text "end"]
                 else FStar_Format.reduce1 [] in
               let doc1 =
                 FStar_Option.map
-                  (fun uu____1934  ->
-                     match uu____1934 with
-                     | (uu____1937,m) -> doc_of_mod x1 m) sigmod in
+                  (fun uu____1944  ->
+                     match uu____1944 with
+                     | (uu____1947,m) -> doc_of_mod target_mod_name m) sigmod in
               let sub2 = FStar_List.map (for1_mod false) sub1 in
               let sub3 =
                 FStar_List.map
-                  (fun x2  ->
+                  (fun x  ->
                      FStar_Format.reduce
-                       [x2; FStar_Format.hardline; FStar_Format.hardline])
+                       [x; FStar_Format.hardline; FStar_Format.hardline])
                   sub2 in
               let prefix1 =
-                let uu____1955 = FStar_Extraction_ML_Util.codegen_fsharp () in
-                if uu____1955
+                let uu____1965 = FStar_Extraction_ML_Util.codegen_fsharp () in
+                if uu____1965
                 then
                   [FStar_Format.cat (FStar_Format.text "#light \"off\"")
                      FStar_Format.hardline]
                 else [] in
-              let uu____1958 =
-                let uu____1960 =
-                  let uu____1962 =
-                    let uu____1964 =
-                      let uu____1966 =
-                        let uu____1968 =
-                          let uu____1970 =
-                            let uu____1972 =
-                              let uu____1974 = FStar_Format.reduce sub3 in
-                              [uu____1974;
-                              FStar_Format.cat tail1 FStar_Format.hardline] in
-                            (match doc1 with
-                             | None  -> FStar_Format.empty
-                             | Some s ->
-                                 FStar_Format.cat s FStar_Format.hardline)
-                              :: uu____1972 in
-                          FStar_Format.hardline :: uu____1970 in
-                        (FStar_Format.text "open FStar_Pervasives") ::
-                          uu____1968 in
-                      (FStar_Format.text "open Prims") :: uu____1966 in
-                    FStar_Format.hardline :: uu____1964 in
-                  head1 :: uu____1962 in
-                FStar_List.append prefix1 uu____1960 in
-              FStar_All.pipe_left FStar_Format.reduce uu____1958 in
+              let uu____1968 =
+                let uu____1970 =
+                  let uu____1972 =
+                    let uu____1974 =
+                      let uu____1976 =
+                        let uu____1978 =
+                          let uu____1980 = FStar_Format.reduce sub3 in
+                          [uu____1980;
+                          FStar_Format.cat tail1 FStar_Format.hardline] in
+                        (match doc1 with
+                         | None  -> FStar_Format.empty
+                         | Some s -> FStar_Format.cat s FStar_Format.hardline)
+                          :: uu____1978 in
+                      FStar_Format.hardline :: uu____1976 in
+                    FStar_List.append maybe_open_pervasives uu____1974 in
+                  FStar_List.append
+                    [head1;
+                    FStar_Format.hardline;
+                    FStar_Format.text "open Prims"] uu____1972 in
+                FStar_List.append prefix1 uu____1970 in
+              FStar_All.pipe_left FStar_Format.reduce uu____1968 in
         let docs1 =
           FStar_List.map
-            (fun uu____1992  ->
-               match uu____1992 with
+            (fun uu____1998  ->
+               match uu____1998 with
                | (x,s,m) ->
-                   let uu____2019 = FStar_Extraction_ML_Util.flatten_mlpath x in
-                   let uu____2020 = for1_mod true (x, s, m) in
-                   (uu____2019, uu____2020)) mllib in
+                   let uu____2025 = FStar_Extraction_ML_Util.flatten_mlpath x in
+                   let uu____2026 = for1_mod true (x, s, m) in
+                   (uu____2025, uu____2026)) mllib in
         docs1
 let doc_of_mllib:
   FStar_Extraction_ML_Syntax.mllib ->
@@ -1387,8 +1396,8 @@ let string_of_mlexpr:
   fun cmod  ->
     fun e  ->
       let doc1 =
-        let uu____2040 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
-        doc_of_expr uu____2040 (min_op_prec, NonAssoc) e in
+        let uu____2046 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
+        doc_of_expr uu____2046 (min_op_prec, NonAssoc) e in
       FStar_Format.pretty (Prims.parse_int "0") doc1
 let string_of_mlty:
   FStar_Extraction_ML_Syntax.mlpath ->
@@ -1397,6 +1406,6 @@ let string_of_mlty:
   fun cmod  ->
     fun e  ->
       let doc1 =
-        let uu____2050 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
-        doc_of_mltype uu____2050 (min_op_prec, NonAssoc) e in
+        let uu____2056 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
+        doc_of_mltype uu____2056 (min_op_prec, NonAssoc) e in
       FStar_Format.pretty (Prims.parse_int "0") doc1
