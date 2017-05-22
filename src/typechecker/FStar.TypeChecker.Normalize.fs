@@ -559,14 +559,16 @@ let built_in_primitive_steps : list<primitive_step> =
     let string_concat' rng args : option<term> =
         match args with
         | [a1; a2] ->
-            match arg_as_string a1 with
+            begin match arg_as_string a1 with
             | Some s1 ->
-                match arg_as_list arg_as_string a2 with
+                begin match arg_as_list arg_as_string a2 with
                 | Some s2 ->
                     let r = String.concat s1 s2 in
                     Some (string_as_const rng r)
                 | _ -> None
+                end
             | _ -> None
+            end
         | _ -> None
     in
     let string_of_int rng (i:int) : term =
@@ -870,6 +872,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t0 = t in
             let should_delta =
                 cfg.delta_level |> BU.for_some (function
+                    | Env.UnfoldTac
                     | NoDelta -> false
                     | Env.Inlining
                     | Eager_unfolding_only -> true
