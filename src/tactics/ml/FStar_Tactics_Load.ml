@@ -2,6 +2,9 @@ open Dynlink
 open FStar_Tactics_Native
 module U = FStar_Util
 
+(* This module needs to be referenced in order for Dynlink to work *)
+module X = FStar_Tactics
+
 let load_tactic s =
     let _ = (try Dynlink.loadfile s with
     | e ->
@@ -13,3 +16,4 @@ let load_tactic s =
         failwith str) in
     U.print1 "Dynlinked %s\n" s;
     ()
+
