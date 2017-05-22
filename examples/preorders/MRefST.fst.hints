@@ -127,21 +127,18 @@
     [ "MRefST.heap_rel", 6, 2, 1, [ "@query" ], 0 ],
     [ "MRefST.heap_rel", 7, 2, 1, [ "@query" ], 0 ],
     [
-      "MRefST.798817",
+      "MRefST.804266",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "MRefHeap_interpretation_Tm_arrow_64c387af3e01c1ddfd67c2dc0275ef79",
-        "equation_MRefHeap.contains", "equation_MRefHeap.preorder_t",
-        "equation_MRefHeap.sel", "equation_MRefST.contains",
-        "equation_MRefST.heap_rel", "equation_Preorder.preorder",
-        "equation_Prims.snd", "function_token_typing_MRefHeap.sel",
+        "@MaxIFuel_assumption", "@query", "equation_MRefHeap.contains",
+        "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
+        "equation_MRefST.contains", "equation_MRefST.heap_rel",
+        "equation_Preorder.preorder", "equation_Prims.snd",
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466",
         "refinement_interpretation_MRefST_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6",
         "refinement_interpretation_Preorder_Tm_refine_a34ac7e38d58ed200592467059dc53b3",
-        "token_correspondence_MRefHeap.sel",
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.sel"
       ],
       0

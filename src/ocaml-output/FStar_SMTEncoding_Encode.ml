@@ -1195,7 +1195,12 @@ and encode_term:
                                              FStar_SMTEncoding_Util.mkApp
                                                uu____2663 in
                                            (uu____2662,
-                                             (use_cache_entry cache_entry))
+                                             (FStar_List.append decls
+                                                (FStar_List.append decls'
+                                                   (FStar_List.append
+                                                      guard_decls
+                                                      (use_cache_entry
+                                                         cache_entry)))))
                                        | None  ->
                                            let tsym =
                                              let uu____2678 =
@@ -2023,8 +2028,13 @@ and encode_term:
                                                   FStar_SMTEncoding_Util.mkApp
                                                     uu____4079 in
                                                 (uu____4078,
-                                                  (use_cache_entry
-                                                     cache_entry))
+                                                  (FStar_List.append decls
+                                                     (FStar_List.append
+                                                        decls'
+                                                        (FStar_List.append
+                                                           decls''
+                                                           (use_cache_entry
+                                                              cache_entry)))))
                                             | None  ->
                                                 let uu____4089 =
                                                   is_an_eta_expansion env
@@ -2042,7 +2052,9 @@ and encode_term:
                                                        then []
                                                        else
                                                          FStar_List.append
-                                                           decls decls' in
+                                                           decls
+                                                           (FStar_List.append
+                                                              decls' decls'') in
                                                      (t1, decls1)
                                                  | None  ->
                                                      let cvar_sorts =
@@ -4896,7 +4908,7 @@ let encode_top_level_let:
                                       FStar_Syntax_Util.is_lemma
                                         lb.FStar_Syntax_Syntax.lbtyp in
                                     if uu____11297
-                                    then Prims.raise Let_rec_unencodeable
+                                    then raise Let_rec_unencodeable
                                     else ());
                                    (let t_norm =
                                       whnf env1 lb.FStar_Syntax_Syntax.lbtyp in

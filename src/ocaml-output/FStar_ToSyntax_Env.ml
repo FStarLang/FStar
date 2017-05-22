@@ -596,7 +596,7 @@ let fail_if_curmodule:
                       ns_original.FStar_Ident.str in
                   (uu____1396, (FStar_Ident.range_of_lid ns_original)) in
                 FStar_Errors.Error uu____1393 in
-              Prims.raise uu____1392))
+              raise uu____1392))
         else ()
 let fail_if_qualified_by_curmodule: env -> FStar_Ident.lident -> Prims.unit =
   fun env  ->
@@ -1624,7 +1624,7 @@ let push_top_level_rec_binding:
         if uu____3729
         then push_scope_mod env (Rec_binding (x, l, dd))
         else
-          Prims.raise
+          raise
             (FStar_Errors.Error
                ((Prims.strcat "Duplicate top-level names " l.FStar_Ident.str),
                  (FStar_Ident.range_of_lid l)))
@@ -1653,7 +1653,7 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                 (FStar_Ident.text_of_lid l) r in
             (uu____3761, (FStar_Ident.range_of_lid l)) in
           FStar_Errors.Error uu____3758 in
-        Prims.raise uu____3757 in
+        raise uu____3757 in
       let globals = FStar_Util.mk_ref env.scope_mods in
       let env1 =
         let uu____3768 =
@@ -1817,7 +1817,7 @@ let push_namespace: env -> FStar_Ident.lident -> env =
                        (FStar_Ident.text_of_lid ns) in
                    (uu____3967, (FStar_Ident.range_of_lid ns)) in
                  FStar_Errors.Error uu____3964 in
-               Prims.raise uu____3963)
+               raise uu____3963)
         | Some ns' -> (fail_if_curmodule env ns ns'; (ns', Open_module)) in
       match uu____3938 with
       | (ns',kd) -> push_scope_mod env (Open_module_or_namespace (ns', kd))
@@ -1884,7 +1884,7 @@ let push_include: env -> FStar_Ident.lident -> env =
                               ns1.FStar_Ident.str in
                           (uu____4126, (FStar_Ident.range_of_lid ns1)) in
                         FStar_Errors.Error uu____4123 in
-                      Prims.raise uu____4122))))
+                      raise uu____4122))))
       | uu____4127 ->
           let uu____4129 =
             let uu____4130 =
@@ -1893,7 +1893,7 @@ let push_include: env -> FStar_Ident.lident -> env =
                   ns.FStar_Ident.str in
               (uu____4133, (FStar_Ident.range_of_lid ns)) in
             FStar_Errors.Error uu____4130 in
-          Prims.raise uu____4129
+          raise uu____4129
 let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
   =
   fun env  ->
@@ -1912,7 +1912,7 @@ let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
                    (FStar_Ident.text_of_lid l) in
                (uu____4150, (FStar_Ident.range_of_lid l)) in
              FStar_Errors.Error uu____4147 in
-           Prims.raise uu____4146)
+           raise uu____4146)
 let push_doc:
   env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc Prims.option -> env =
   fun env  ->
@@ -2292,7 +2292,7 @@ let prepare_module_or_interface:
                           mname.FStar_Ident.str in
                       (uu____4603, (FStar_Ident.range_of_lid mname)) in
                     FStar_Errors.Error uu____4600 in
-                  Prims.raise uu____4599
+                  raise uu____4599
                 else ());
                (let uu____4605 = let uu____4606 = push env in prep uu____4606 in
                 (uu____4605, true)))
@@ -2301,7 +2301,7 @@ let enter_monad_scope: env -> FStar_Ident.ident -> env =
     fun mname  ->
       match env.curmonad with
       | Some mname' ->
-          Prims.raise
+          raise
             (FStar_Errors.Error
                ((Prims.strcat "Trying to define monad "
                    (Prims.strcat mname.FStar_Ident.idText
@@ -2369,13 +2369,13 @@ let fail_or env lookup lid =
                  "%s\nModule %s resolved into %s, definition %s not found"
                  msg modul.FStar_Ident.str modul'.FStar_Ident.str
                  (lid.FStar_Ident.ident).FStar_Ident.idText) in
-      Prims.raise (FStar_Errors.Error (msg1, (FStar_Ident.range_of_lid lid)))
+      raise (FStar_Errors.Error (msg1, (FStar_Ident.range_of_lid lid)))
   | Some r -> r
 let fail_or2 lookup id =
   let uu____4684 = lookup id in
   match uu____4684 with
   | None  ->
-      Prims.raise
+      raise
         (FStar_Errors.Error
            ((Prims.strcat "Identifier not found ["
                (Prims.strcat id.FStar_Ident.idText "]")),

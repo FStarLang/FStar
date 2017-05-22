@@ -260,6 +260,7 @@
         "equation_with_fuel_Ex07c.step.fuel_instrumented",
         "equation_with_fuel_Ex07c.typing.fuel_instrumented",
         "fuel_guarded_inversion_Ex07c.exp",
+        "fuel_guarded_inversion_Prims.option",
         "function_token_typing_Ex07c.empty", "kinding_Ex07c.exp@tok",
         "kinding_Ex07c.ty@tok", "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
@@ -276,13 +277,13 @@
         "projection_inverse_FStar.Pervasives.Mktuple3__3",
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
-        "subterm_ordering_Ex07c.EAbs", "subterm_ordering_Ex07c.EApp",
-        "subterm_ordering_Ex07c.EIf", "token_correspondence_Ex07c.empty",
-        "typing_Ex07c.is_value", "typing_Ex07c.step", "typing_Ex07c.typing",
+        "projection_inverse_Prims.Some_v", "subterm_ordering_Ex07c.EAbs",
+        "subterm_ordering_Ex07c.EApp", "subterm_ordering_Ex07c.EIf",
+        "token_correspondence_Ex07c.empty", "typing_Ex07c.is_value",
+        "typing_Ex07c.step", "typing_Ex07c.typing",
         "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some",
-        "typing_tok_Ex07c.EFalse@tok", "typing_tok_Ex07c.ETrue@tok",
-        "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
+        "typing_tok_Ex07c.EFalse@tok", "typing_tok_Ex07c.TBool@tok",
+        "unit_inversion", "unit_typing"
       ],
       0
     ],

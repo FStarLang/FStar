@@ -209,9 +209,7 @@ let issue_of_exn: Prims.exn -> issue Prims.option =
 let err_exn: Prims.exn -> Prims.unit =
   fun exn  ->
     let uu____461 = issue_of_exn exn in
-    match uu____461 with
-    | Some issue -> add_one issue
-    | None  -> Prims.raise exn
+    match uu____461 with | Some issue -> add_one issue | None  -> raise exn
 let handleable: Prims.exn -> Prims.bool =
   fun uu___60_466  ->
     match uu___60_466 with

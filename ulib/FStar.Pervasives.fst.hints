@@ -1,6 +1,49 @@
 [
-  "ïy\u0013é«’ÓXx\u0010û½Ûi\u0017Š",
+  "È2ErÚRÓ/¬¹²¦\u001dnZ‚",
   [
+    [ "FStar.Pervasives.uu___is_V", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.__proj__V__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.V",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_9db520b26a7f39c5a01493a3f375290d"
+      ],
+      0
+    ],
+    [ "FStar.Pervasives.uu___is_E", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.__proj__E__item__e",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.E",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_95e1e2ee29104754cc3740f5575fc6e5"
+      ],
+      0
+    ],
+    [ "FStar.Pervasives.uu___is_Err", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.__proj__Err__item__msg",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Err",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_22fb403854eba07427f92e79848f9d9f"
+      ],
+      0
+    ],
+    [ "FStar.Pervasives.ex_return", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.ex_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.all_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Pervasives.allow_inversion",
       1,
@@ -777,6 +820,19 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple8__5",
         "projection_inverse_FStar.Pervasives.Mkdtuple8__6",
         "projection_inverse_FStar.Pervasives.Mkdtuple8__7"
+      ],
+      0
+    ],
+    [
+      "FStar.Pervasives.false_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "binder_x_27672a0694ca5377bbd1682fdc19a13b_2",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_16d7dda25a162db0722685f27f707102"
       ],
       0
     ]

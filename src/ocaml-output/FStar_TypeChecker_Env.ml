@@ -977,7 +977,7 @@ let lookup_bv:
             let uu____2662 =
               let uu____2665 = variable_not_found bv in (uu____2665, bvr) in
             FStar_Errors.Error uu____2662 in
-          Prims.raise uu____2661
+          raise uu____2661
       | Some (t,r) ->
           let uu____2672 = FStar_Syntax_Subst.set_use_range bvr t in
           let uu____2673 = FStar_Range.set_use_range r bvr in
@@ -1018,7 +1018,7 @@ let lookup_lid:
               let uu____2770 = name_not_found l in
               (uu____2770, (FStar_Ident.range_of_lid l)) in
             FStar_Errors.Error uu____2767 in
-          Prims.raise uu____2766
+          raise uu____2766
       | Some v1 -> v1
 let lookup_univ: env -> FStar_Syntax_Syntax.univ_name -> Prims.bool =
   fun env  ->
@@ -1083,7 +1083,7 @@ let lookup_val_decl:
               let uu____2947 = name_not_found lid in
               (uu____2947, (FStar_Ident.range_of_lid lid)) in
             FStar_Errors.Error uu____2944 in
-          Prims.raise uu____2943
+          raise uu____2943
 let lookup_datacon:
   env ->
     FStar_Ident.lident ->
@@ -1109,7 +1109,7 @@ let lookup_datacon:
               let uu____3021 = name_not_found lid in
               (uu____3021, (FStar_Ident.range_of_lid lid)) in
             FStar_Errors.Error uu____3018 in
-          Prims.raise uu____3017
+          raise uu____3017
 let datacons_of_typ:
   env -> FStar_Ident.lident -> (Prims.bool* FStar_Ident.lident Prims.list) =
   fun env  ->
@@ -1214,7 +1214,7 @@ let lookup_effect_lid: env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ =
               let uu____3371 = name_not_found ftv in
               (uu____3371, (FStar_Ident.range_of_lid ftv)) in
             FStar_Errors.Error uu____3368 in
-          Prims.raise uu____3367
+          raise uu____3367
       | Some k -> k
 let lookup_effect_abbrev:
   env ->
@@ -1531,7 +1531,7 @@ let num_inductive_ty_params: env -> FStar_Ident.lident -> Prims.int =
               let uu____4150 = name_not_found lid in
               (uu____4150, (FStar_Ident.range_of_lid lid)) in
             FStar_Errors.Error uu____4147 in
-          Prims.raise uu____4146
+          raise uu____4146
 let effect_decl_opt:
   env ->
     FStar_Ident.lident ->
@@ -1558,7 +1558,7 @@ let get_effect_decl:
               let uu____4198 = name_not_found l in
               (uu____4198, (FStar_Ident.range_of_lid l)) in
             FStar_Errors.Error uu____4195 in
-          Prims.raise uu____4194
+          raise uu____4194
       | Some md -> Prims.fst md
 let identity_mlift: mlift =
   {
@@ -1608,7 +1608,7 @@ let join:
                          uu____4290 in
                      (uu____4288, (env.range)) in
                    FStar_Errors.Error uu____4285 in
-                 Prims.raise uu____4284
+                 raise uu____4284
              | Some (uu____4294,uu____4295,m3,j1,j2) -> (m3, j1, j2))
 let monad_leq:
   env -> FStar_Ident.lident -> FStar_Ident.lident -> edge Prims.option =
@@ -1930,7 +1930,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                          let uu____4903 = get_range env in
                          (uu____4902, uu____4903) in
                        FStar_Errors.Error uu____4899 in
-                     Prims.raise uu____4898
+                     raise uu____4898
                    else ()));
            (let joins =
               FStar_All.pipe_right ms
@@ -2081,7 +2081,7 @@ let rec unfold_effect_abbrev:
                            uu____5130 uu____5136 uu____5144 in
                        (uu____5129, (comp.FStar_Syntax_Syntax.pos)) in
                      FStar_Errors.Error uu____5126 in
-                   Prims.raise uu____5125)
+                   raise uu____5125)
                 else ();
                 (let inst1 =
                    let uu____5149 =
@@ -2181,7 +2181,7 @@ let reify_comp:
                 FStar_Util.format1 "Effect %s cannot be reified" uu____5374 in
               let uu____5375 = get_range env in (uu____5373, uu____5375) in
             FStar_Errors.Error uu____5370 in
-          Prims.raise uu____5369 in
+          raise uu____5369 in
         let uu____5376 = effect_repr_aux true env c u_c in
         match uu____5376 with
         | None  -> no_reify (FStar_Syntax_Util.comp_effect_name c)

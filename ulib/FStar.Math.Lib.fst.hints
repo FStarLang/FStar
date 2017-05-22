@@ -469,7 +469,7 @@
       "FStar.Math.Lib.powx_lemma2",
       3,
       2,
-      2,
+      1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Math.Lib.powx.fuel_instrumented",
