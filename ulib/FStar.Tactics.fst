@@ -175,6 +175,9 @@ assume val __grewrite : term -> term -> __tac unit
 let grewrite (t1:term) (t2:term) : tactic unit =
     fun () -> TAC?.reflect (__grewrite t1 t2)
 
+assume val __refl : __tac unit
+let refl : tactic unit = fun () -> TAC?.reflect __refl
+
 assume val __pointwise : __tac unit -> __tac unit
 let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise (reify_tactic tau))
 

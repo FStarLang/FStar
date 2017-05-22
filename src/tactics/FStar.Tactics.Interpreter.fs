@@ -140,6 +140,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "__grewrite"        3 (grewrite_interpretation ps); // custom impl since it looks at the types
 
       mktac1 "__pointwise"     pointwise (unembed_tactic_0 unembed_unit) embed_unit t_unit;
+      mktac0 "__refl"          refl embed_unit t_unit;
 
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
