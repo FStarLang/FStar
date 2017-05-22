@@ -201,5 +201,6 @@ let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FSt
 let tactic_lid = fstar_tactics_lid "tactic"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
+let quote_lid = lid_of_path (["FStar"; "Tactics"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_refl_embed = lid_as_tm fstar_refl_embed_lid

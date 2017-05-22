@@ -31,6 +31,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 module S  = FStar.Syntax.Syntax
+module SC = FStar.Syntax.Const
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
@@ -459,6 +460,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
+    let isquote = match head.n with
+                  | Tm_fvar fv when S.fv_eq_lid fv SC.quote_lid -> true
+                  | _ -> false
+    in
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
@@ -473,7 +478,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                then TcUtil.maybe_assume_result_eq_pure_term env e c
                                else c in
                        e, c, g
-                  else check_application_args env head chead g_head args (Env.expected_typ env0) in
+                  else
+                    // If we're descending under `quote`, don't instantiate implicits
+                    let env = if isquote then no_inst env else env
+                    in check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in
