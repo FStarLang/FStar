@@ -444,16 +444,21 @@ let simpl : tac<unit> =
     replace_cur ({goal with goal_ty=t})
     )
 
-let trivial
-    : tac<unit>
-    = with_cur_goal (fun goal ->
-      let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.UnfoldTac] in
-      let t = N.normalize steps goal.context goal.goal_ty in
-      match U.destruct_typ_as_formula t with
-      | Some (U.BaseConn(l, []))
-            when Ident.lid_equals l SC.true_lid ->
-        dismiss
-      | _ -> fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string t)))
+let istrivial (e:env) (t:term) : bool =
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.UnfoldTac] in
+    let t = N.normalize steps e t in
+    match U.destruct_typ_as_formula t with
+    | Some (U.BaseConn(l, [])) when Ident.lid_equals l SC.true_lid ->
+        true
+    | _ ->
+        false
+
+let trivial : tac<unit> =
+    with_cur_goal (fun goal ->
+        if istrivial goal.context goal.goal_ty
+        then dismiss
+        else fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty))
+    )
 
 let apply_lemma (tm:term)
     : tac<unit>
@@ -493,11 +498,16 @@ let apply_lemma (tm:term)
                         | _ -> false) in
                    solve goal solution;
                    let sub_goals =
-                        {goal with witness=None; goal_ty=pre} //pre-condition is proof irrelevant
-                        ::(implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
+                        implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
                                 {context=goal.context;
                                  witness=Some term;
-                                 goal_ty=typ}))
+                                 goal_ty=typ})
+                   in
+                   let sub_goals =
+                       if istrivial goal.context pre
+                       then sub_goals
+                       else {goal with witness=None; goal_ty=pre} //pre-condition is proof irrelevant
+                             :: sub_goals
                    in
                    bind (add_implicits g.implicits) (fun _ ->
                    bind dismiss (fun _ ->
