@@ -105,7 +105,8 @@ let dump_goal ps goal =
     ()
 
 let dump_proofstate ps msg =
-    tacprint1 "\nState dump (%s):" msg;
+    tacprint "";
+    tacprint1 "State dump (%s):" msg;
     tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
     List.iter (dump_goal ps) ps.goals;
     tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
