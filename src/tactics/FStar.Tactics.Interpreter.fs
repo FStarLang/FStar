@@ -170,23 +170,10 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (add_smt_goals smt_goals) (fun _ ->
         fail msg))))))
 
-let evaluate_user_tactic : tac<unit>
-    = with_cur_goal (fun goal ->
-      bind get (fun proof_state ->
-          let hd, args = U.head_and_args goal.goal_ty in
-          match (U.un_uinst hd).n, args with
-          | Tm_fvar fv, [(tactic, _); (assertion, _)]
-                when S.fv_eq_lid fv E.by_tactic_lid ->
-            focus_cur_goal
-            (bind (replace_cur ({goal with goal_ty=assertion})) (fun _ ->
-                   unembed_tactic_0 unembed_unit tactic))
-          | _ ->
-            fail "Not a user tactic"))
-
 let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid ->
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid ->
         begin
         // kinda unclean
         match run (unembed_tactic_0 unembed_unit tactic) (proofstate_of_goal_ty e assertion) with

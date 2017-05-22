@@ -316,12 +316,12 @@ let unfold_definition_and_simplify_eq (tm:tactic term) : tactic unit =
     unfold_definition_and_simplify_eq' tm'
 
 abstract
-let by_tactic (t:__tac unit) (a:Type) : Type = a
+let by_tactic (t:__tac 'a) (p:Type) : Type = p
 
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
 #reset-options "--no_tactics"
-let assert_by_tactic (t:tactic unit) (p:Type)
+let assert_by_tactic (t:tactic 'a) (p:Type)
   : Pure unit
          (requires (by_tactic (reify_tactic t) p))
          (ensures (fun _ -> p))
