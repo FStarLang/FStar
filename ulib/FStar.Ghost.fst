@@ -21,37 +21,35 @@
 *)
 
 module FStar.Ghost
-abstract type erased (a:Type) = a
-val reveal: #a:Type -> erased a -> GTot a
-let reveal #a x = x
 
-val hide: #a:Type -> a -> Tot (erased a)
-let hide #a x = x
+abstract
+type erased (a:Type) = a
 
+abstract
+let reveal (#a:Type) (x:erased a) : GTot a = x
+
+abstract
+let hide (#a:Type) (x:a) : Tot (erased a) = x
+
+//reveal is injective
+//hide is its inverse
 val lemma_hide_reveal: #a:Type
                    -> x:erased a
                    -> Lemma (ensures (hide (reveal x) == x))
+                           [SMTPat (reveal x)]
 let lemma_hide_reveal #a x = ()
-
-(*just hide can do this now. remove?*)
-val as_ghost: #a:Type
-             -> f:(unit -> Tot a)
-             -> Pure (erased a)
-                    (requires True)
-                    (ensures (fun x -> reveal x == f ()))
-let as_ghost #a f = f ()
 
 (*Just like Coq's prop, it is okay to use erased types freely as long as we produce an erased type*)
 val elift1 : #a:Type -> #b:Type -> f:(a->GTot b) -> erased a -> Tot (erased b)
 let elift1 #a #b f ga = f ga
 
-val elift2 : #a:Type -> #b:Type -> #c:Type  -> f:(a-> c ->GTot b) -> erased a -> erased c -> Tot (erased b)
+val elift2 : #a:Type -> #b:Type -> #c:Type  -> f:(a-> c ->GTot b) -> ga:erased a -> gc:erased c -> Tot (e:erased b{reveal e == f (reveal ga) (reveal gc)})
 let elift2 #a #b #c f ga gc = f ga gc
 
-val elift3 : #a:Type -> #b:Type -> #c:Type-> #d:Type  -> f:(a-> c -> d ->GTot b) -> erased a -> erased c ->  erased d -> Tot (erased b)
+val elift3 : #a:Type -> #b:Type -> #c:Type-> #d:Type  -> f:(a-> c -> d ->GTot b) -> ga:erased a -> gc:erased c ->  gd:erased d -> Tot (e:erased b{reveal e == f (reveal ga) (reveal gc) (reveal gd)})
 let elift3 #a #b #c #d f ga gc gd = f ga gc gd
 
-val elift1_p : #a:Type -> #b:Type -> #p:(a->Type) -> $f:(x:a{p x} ->GTot b) -> r:(erased a){p (reveal r) } -> Tot (erased b)
+val elift1_p : #a:Type -> #b:Type -> #p:(a->Type) -> $f:(x:a{p x} ->GTot b) -> r:erased a{p (reveal r) } -> Tot (erased b)
 let elift1_p #a #b #p f ga = f ga
 
 val elift2_p : #a:Type  -> #c:Type -> #p:(a->c->Type) -> #b:Type -> f:(xa:a-> xc:c{p xa xc} ->GTot b)

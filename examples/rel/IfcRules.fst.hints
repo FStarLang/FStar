@@ -307,13 +307,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Heap_pretyping_6c86c071b92797cdf01eb016249a9465",
-        "bool_inversion", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "function_token_typing_FStar.Heap.emp",
-        "function_token_typing_FStar.Heap.heap", "lemma_Prims.invertOption",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_Prims.None", "disc_equation_Prims.Some",
+        "function_token_typing_FStar.Heap.heap",
+        "lemma_FStar.Pervasives.invertOption",
         "primitive_Prims.op_GreaterThan",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None"
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some"
       ],
       0
     ],

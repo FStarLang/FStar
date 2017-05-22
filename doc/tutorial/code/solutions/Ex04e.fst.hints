@@ -51,9 +51,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex04e.None",
-        "disc_equation_Ex04e.Some", "fuel_guarded_inversion_Ex04e.option",
-        "projection_inverse_BoxBool_proj_0"
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Ex04e.find_.fuel_instrumented", "@query",
+        "disc_equation_Ex04e.None", "disc_equation_Ex04e.Some",
+        "fuel_guarded_inversion_Ex04e.option",
+        "projection_inverse_BoxBool_proj_0", "typing_Ex04e.find_"
       ],
       0
     ],

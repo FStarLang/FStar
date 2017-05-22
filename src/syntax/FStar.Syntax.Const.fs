@@ -24,9 +24,11 @@ open FStar.Const
 
 let mk t : term = mk t None dummyRange
 let p2l l = lid_of_path l dummyRange
-let pconst s     = p2l ["Prims";s]
-let prims_lid    = p2l ["Prims"]
-let fstar_ns_lid = p2l ["FStar"]
+let pconst s       = p2l ["Prims";s]
+let psconst s      = p2l ["FStar"; "Pervasives"; s]
+let prims_lid      = p2l ["Prims"]
+let pervasives_lid = p2l ["FStar"; "Pervasives"]
+let fstar_ns_lid   = p2l ["FStar"]
 
 (* Primitive types *)
 let bool_lid     = pconst "bool"
@@ -38,7 +40,7 @@ let int_lid      = pconst "int"
 let exn_lid      = pconst "exn"
 let list_lid     = pconst "list"
 let option_lid   = pconst "option"
-let either_lid   = pconst "either"
+let either_lid   = psconst "either"
 let pattern_lid  = pconst "pattern"
 let precedes_lid = pconst "precedes"
 let lex_t_lid    = pconst "lex_t"

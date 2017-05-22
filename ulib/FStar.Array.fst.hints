@@ -56,7 +56,8 @@
         "projection_inverse_Prims.Mktuple2__1",
         "projection_inverse_Prims.Mktuple2__2", "ref_inversion",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
-        "typing_FStar.Heap.contains", "typing_FStar.Seq.Base.seq",
+        "typing_FStar.Heap.contains", "typing_FStar.Heap.sel",
+        "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.seq",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0
@@ -143,7 +144,7 @@
         "projection_inverse_Prims.Mktuple2__2",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "typing_FStar.Heap.contains", "typing_FStar.Heap.unused_in",
-        "typing_FStar.Seq.Base.seq",
+        "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.seq",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0

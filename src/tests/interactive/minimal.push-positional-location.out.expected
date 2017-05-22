@@ -1,3 +1,3 @@
 {"features": ["autocomplete", "compute", "describe-protocol", "describe-repl", "exit", "lookup", "lookup/documentation", "lookup/definition", "pop", "peek", "push", "search"], "kind": "protocol-info", "version": 1}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
-{"kind": "response", "query-id": "2", "response": {"defined-at": {"beg": [2, 4], "end": [2, 9], "fname": "<input>"}, "definition": null, "documentation": null, "name": "Minimal.hello", "type": "string"}, "status": "success"}
+{"kind": "response", "query-id": "2", "response": {"defined-at": {"beg": [2, 4], "end": [2, 9], "fname": "<input>"}, "definition": null, "documentation": null, "name": "Minimal.hello", "type": "Prims.string"}, "status": "success"}

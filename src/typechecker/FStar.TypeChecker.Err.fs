@@ -52,26 +52,22 @@ let add_errors env errs =
                              else msg, r) in
     FStar.Errors.add_errors errs
 
-let possibly_verbose_message env t1 t2 =
+let err_msg_type_strings env t1 t2 :(string * string) =
   let s1 = N.term_to_string env t1 in
   let s2 = N.term_to_string env t2 in
-  let extra =
-    if s1 = s2 then
-      let _ = Options.set_options Options.Set "--prn --print_universes" in
-      let s1 = N.term_to_string env t1 in
-      let s2 = N.term_to_string env t2 in
-      BU.format2 "\nMore precisely: expected type:\n%s\ngot:\n%s\n" s1 s2
-    else
-      ""
-  in
-  s1, s2, extra
+  if s1 = s2 then
+    Options.with_saved_options (fun _ ->
+      ignore (Options.set_options Options.Set "--print_full_names --print_universes");
+      N.term_to_string env t1, N.term_to_string env t2
+    )
+  else s1, s2
 
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
 let subtyping_failed : env -> typ -> typ -> unit -> string =
      fun env t1 t2 x ->
-       let s2, s1, extra = possibly_verbose_message env t2 t1 in
-       BU.format3 "Subtyping check failed; expected type %s; got type %s%s" s2 s1 extra
+       let s1, s2 = err_msg_type_strings env t1 t2 in
+       BU.format2 "Subtyping check failed; expected type %s; got type %s" s2 s1
 let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
@@ -87,22 +83,25 @@ let unexpected_implicit_argument =
   "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"
 
 let expected_expression_of_type env t1 e t2 =
+  let s1, s2 = err_msg_type_strings env t1 t2 in
   format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
-    (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
+    s1 (Print.term_to_string e) s2
 
 let expected_function_with_parameter_of_type env t1 t2 =
+  let s1, s2 = err_msg_type_strings env t1 t2 in
   format3 "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\""
-    (N.term_to_string env t1) (N.term_to_string env t2)
+    s1 s2
 
 let expected_pattern_of_type env t1 e t2 =
+  let s1, s2 = err_msg_type_strings env t1 t2 in
   format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
-    (N.term_to_string env t1) (Print.term_to_string e) (N.term_to_string env t2)
+    s1 (Print.term_to_string e) s2
 
 let basic_type_error env eopt t1 t2 =
-  let s1, s2, extra = possibly_verbose_message env t1 t2 in
+  let s1, s2 = err_msg_type_strings env t1 t2 in
   match eopt with
-    | None -> format3 "Expected type \"%s\"; got type \"%s\"%s" s1 s2 extra
-    | Some e -> format4 "Expected type \"%s\"; but \"%s\" has type \"%s\"%s" s1 (Print.term_to_string e) s2 extra
+    | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
+    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (Print.term_to_string e) s2
 
 let occurs_check =
   "Possibly infinite typ (occurs check failed)"
@@ -129,18 +128,6 @@ let inline_type_annotation_and_val_decl l =
 let inferred_type_causes_variable_to_escape env t x =
   format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
     (N.term_to_string env t) (Print.bv_to_string x)
-
-let expected_typ_of_kind env k1 t k2 =
-  format3 "Expected type of kind \"%s\"; got \"%s\" of kind \"%s\""
-    (N.term_to_string env k1) (N.term_to_string env t) (N.term_to_string env k2)
-
-let expected_tcon_kind env t k =
-  format2 "Expected a type-to-type constructor or function; got a type \"%s\" of kind \"%s\""
-    (N.term_to_string env t) (N.term_to_string env k)
-
-let expected_dcon_kind env t k =
-  format2 "Expected a term-to-type constructor or function; got a type \"%s\" of kind \"%s\""
-    (N.term_to_string env t) (N.term_to_string env k)
 
 let expected_function_typ env t =
   format1 "Expected a function; got an expression of type \"%s\""
@@ -169,9 +156,10 @@ let name_and_result c = match c.n with
 let computed_computation_type_does_not_match_annotation env e c c' =
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
+  let s1, s2 = err_msg_type_strings env r1 r2 in
   format4
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-      (N.term_to_string env r1) f1 (N.term_to_string env r2) f2
+      s1 f1 s2 f2
 
 let unexpected_non_trivial_precondition_on_term env f =
  format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)

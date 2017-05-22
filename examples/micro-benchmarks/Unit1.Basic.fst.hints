@@ -306,7 +306,8 @@
         "disc_equation_Prims.Some", "equation_FStar.UInt32.n",
         "fuel_guarded_inversion_Unit1.Basic.record",
         "function_token_typing_FStar.UInt32.n",
-        "function_token_typing_Prims.int", "lemma_Prims.invertOption",
+        "function_token_typing_Prims.int",
+        "lemma_FStar.Pervasives.invertOption",
         "typing_Unit1.Basic.__proj__Mkrecord__item__f"
       ],
       0
@@ -693,12 +694,24 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Unit1.Basic.find.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "data_elim_Prims.Some", "disc_equation_Prims.Some",
-        "equation_FStar.UInt32.n", "function_token_typing_FStar.UInt32.n",
-        "int_inversion", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Unit1.Basic_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.None", "disc_equation_Prims.Some",
+        "equation_FStar.UInt32.n", "equation_Unit1.Basic._T",
+        "equation_Unit1.Basic.apply",
+        "equation_with_fuel_Unit1.Basic.find.fuel_instrumented",
+        "function_token_typing_FStar.UInt32.n",
+        "function_token_typing_Unit1.Basic._T", "int_inversion",
+        "interpretation_Unit1.Basic_Tm_abs_27513552ced7a5d60a267f588d436e11",
+        "interpretation_Unit1.Basic_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0
     ],

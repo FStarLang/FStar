@@ -48,13 +48,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
-        "data_elim_Prims.V", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "disc_equation_Prims.V",
-        "equation_HyE.PlainPKE.t",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_Prims.V", "disc_equation_Prims.Some",
+        "disc_equation_Prims.V", "equation_HyE.PlainPKE.t",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
-        "function_token_typing_HyE.AE.key", "lemma_Prims.invertOption",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0"
+        "function_token_typing_HyE.AE.key",
+        "lemma_FStar.Pervasives.invertOption", "proj_equation_Prims.V_v",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some"
       ],
       0
     ]

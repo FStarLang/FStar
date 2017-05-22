@@ -278,8 +278,8 @@ let escape_char_hex: FStar_BaseTypes.char -> Prims.string =
 let escape_or:
   (FStar_Char.char -> Prims.string) -> FStar_Char.char -> Prims.string =
   fun fallback  ->
-    fun uu___121_614  ->
-      match uu___121_614 with
+    fun uu___118_614  ->
+      match uu___118_614 with
       | c when c = '\\' -> "\\\\"
       | c when c = ' ' -> " "
       | c when c = '\b' -> "\\b"
@@ -1350,15 +1350,18 @@ let rec doc_of_mllib_r:
                       let uu____1966 =
                         let uu____1968 =
                           let uu____1970 =
-                            let uu____1972 = FStar_Format.reduce sub3 in
-                            [uu____1972;
-                            FStar_Format.cat tail1 FStar_Format.hardline] in
-                          (match doc1 with
-                           | None  -> FStar_Format.empty
-                           | Some s ->
-                               FStar_Format.cat s FStar_Format.hardline)
-                            :: uu____1970 in
-                        FStar_Format.hardline :: uu____1968 in
+                            let uu____1972 =
+                              let uu____1974 = FStar_Format.reduce sub3 in
+                              [uu____1974;
+                              FStar_Format.cat tail1 FStar_Format.hardline] in
+                            (match doc1 with
+                             | None  -> FStar_Format.empty
+                             | Some s ->
+                                 FStar_Format.cat s FStar_Format.hardline)
+                              :: uu____1972 in
+                          FStar_Format.hardline :: uu____1970 in
+                        (FStar_Format.text "open FStar_Pervasives") ::
+                          uu____1968 in
                       (FStar_Format.text "open Prims") :: uu____1966 in
                     FStar_Format.hardline :: uu____1964 in
                   head1 :: uu____1962 in
@@ -1366,12 +1369,12 @@ let rec doc_of_mllib_r:
               FStar_All.pipe_left FStar_Format.reduce uu____1958 in
         let docs1 =
           FStar_List.map
-            (fun uu____1990  ->
-               match uu____1990 with
+            (fun uu____1992  ->
+               match uu____1992 with
                | (x,s,m) ->
-                   let uu____2017 = FStar_Extraction_ML_Util.flatten_mlpath x in
-                   let uu____2018 = for1_mod true (x, s, m) in
-                   (uu____2017, uu____2018)) mllib in
+                   let uu____2019 = FStar_Extraction_ML_Util.flatten_mlpath x in
+                   let uu____2020 = for1_mod true (x, s, m) in
+                   (uu____2019, uu____2020)) mllib in
         docs1
 let doc_of_mllib:
   FStar_Extraction_ML_Syntax.mllib ->
@@ -1384,8 +1387,8 @@ let string_of_mlexpr:
   fun cmod  ->
     fun e  ->
       let doc1 =
-        let uu____2038 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
-        doc_of_expr uu____2038 (min_op_prec, NonAssoc) e in
+        let uu____2040 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
+        doc_of_expr uu____2040 (min_op_prec, NonAssoc) e in
       FStar_Format.pretty (Prims.parse_int "0") doc1
 let string_of_mlty:
   FStar_Extraction_ML_Syntax.mlpath ->
@@ -1394,6 +1397,6 @@ let string_of_mlty:
   fun cmod  ->
     fun e  ->
       let doc1 =
-        let uu____2048 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
-        doc_of_mltype uu____2048 (min_op_prec, NonAssoc) e in
+        let uu____2050 = FStar_Extraction_ML_Util.flatten_mlpath cmod in
+        doc_of_mltype uu____2050 (min_op_prec, NonAssoc) e in
       FStar_Format.pretty (Prims.parse_int "0") doc1

@@ -1,4 +1,4 @@
-open FStar_Util
+module U = FStar_Util
 open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
@@ -49,12 +49,12 @@ let parse fn =
     | e -> Printf.printf "There was some warning (TODO)\n");
 
   let filename,lexbuf,line,col = match fn with
-    | Inl(f) ->
+    | U.Inl(f) ->
         check_extension f;
         let f' = find_file f in
         (try f', Lexing.from_string (read_file f'), 1, 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
-    | Inr s ->
+    | U.Inr s ->
       "<input>", Lexing.from_string s.frag_text, Z.to_int s.frag_line, Z.to_int s.frag_col in
 
   setLexbufPos filename lexbuf line col;
@@ -64,24 +64,24 @@ let parse fn =
   try
       let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
-          | Inl mods ->
+          | U.Inl mods ->
              if FStar_Util.ends_with filename ".fsti"
-             then Inl (mods |> FStar_List.map (function
+             then U.Inl (mods |> FStar_List.map (function
                   | FStar_Parser_AST.Module(l,d) ->
                     FStar_Parser_AST.Interface(l, d, true)
                   | _ -> failwith "Impossible"))
-             else Inl mods
+             else U.Inl mods
           | _ -> fileOrFragment
       in
-      Inl (frags, FStar_Parser_LexFStar.flush_comments ())
+      U.Inl (frags, FStar_Parser_LexFStar.flush_comments ())
   with
     | FStar_Errors.Empty_frag ->
-      Inl (Inl [], [])
+      U.Inl (U.Inl [], [])
 
     | FStar_Errors.Error(msg, r) ->
-      Inr (msg, r)
+      U.Inr (msg, r)
 
     | e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.lex_curr_p in
       let r = FStar_Range.mk_range filename pos pos in
-      Inr ("Syntax error: " ^ (Printexc.to_string e), r)
+      U.Inr ("Syntax error: " ^ (Printexc.to_string e), r)

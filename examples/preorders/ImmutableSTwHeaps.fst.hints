@@ -2,7 +2,7 @@
   "z-6◊=Í•c˚\u007fÊ£≥è\u0015N",
   [
     [
-      "ImmutableSTwHeaps.2446",
+      "ImmutableSTwHeaps.808554",
       1,
       2,
       1,
@@ -55,18 +55,19 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.modifies",
+        "equation_FStar.Heap.modifies_t",
         "equation_ImmutableSTwHeaps.heap_rel",
         "lemma_FStar.Heap.lemma_contains_implies_used",
         "lemma_FStar.Heap.lemma_distinct_addrs_unused",
         "lemma_FStar.Heap.lemma_sel_upd2",
-        "lemma_FStar.Heap.lemma_upd_contains",
-        "lemma_FStar.Heap.lemma_upd_contains_different_addr",
-        "ref_inversion",
-        "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_401dbd1958040d734de5a1df15825811",
+        "lemma_FStar.Heap.lemma_unused_upd_modifies",
+        "lemma_FStar.Heap.lemma_upd_contains", "ref_inversion",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_c443bed4b5cd174ac857a1cb26ece6b1",
+        "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_c8ac13ed36b6a9786309a4676a282b65",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_d65d28ced9bd270e062ee8e42fc74fcb",
-        "typing_ImmutableSTwHeaps.gen_ref", "typing_ImmutableSTwHeaps.sel"
+        "typing_ImmutableSTwHeaps.gen_ref", "typing_ImmutableSTwHeaps.sel",
+        "typing_ImmutableSTwHeaps.upd"
       ],
       0
     ],

@@ -69,12 +69,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Effects.Def_interpretation_Tm_arrow_7c94c96dc293d3467019c1d15bb27fe9",
-        "bool_inversion", "disc_equation_Prims.None",
+        "bool_inversion", "bool_typing", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equation_Effects.Def.ex",
         "equation_Effects.Def.st_laws",
         "function_token_typing_Effects.Def.st_laws",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_Some", "unit_inversion"
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0
     ],
@@ -90,8 +90,7 @@
         "disc_equation_Prims.Some", "equation_Effects.Def.ex",
         "equation_Effects.Def.st_laws",
         "function_token_typing_Effects.Def.st_laws",
-        "lemma_Prims.invertOption", "typing_Prims.uu___is_Some",
-        "unit_inversion"
+        "lemma_FStar.Pervasives.invertOption", "unit_inversion"
       ],
       0
     ],
@@ -141,10 +140,10 @@
         "bool_inversion", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equation_Effects.Def.stexn",
         "function_token_typing_Effects.Def.s", "kinding_Prims.option@tok",
-        "lemma_Prims.invertOption", "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_Prims.Mktuple2__1",
         "typing_Prims.__proj__Mktuple2__item___1",
-        "typing_Prims.uu___is_Some"
+        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
       ],
       0
     ],
@@ -193,7 +192,7 @@
         "bool_inversion", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equation_Effects.Def.exnst",
         "function_token_typing_Effects.Def.s", "kinding_Prims.tuple2@tok",
-        "lemma_Prims.invertOption", "typing_Prims.uu___is_None",
+        "lemma_FStar.Pervasives.invertOption", "typing_Prims.uu___is_None",
         "typing_Prims.uu___is_Some"
       ],
       0
@@ -356,7 +355,7 @@
         "disc_equation_Prims.Some", "equation_Effects.Def.ex",
         "equation_Effects.Def.st_laws",
         "function_token_typing_Effects.Def.st_laws",
-        "lemma_Prims.invertOption", "unit_inversion"
+        "lemma_FStar.Pervasives.invertOption", "unit_inversion"
       ],
       0
     ],

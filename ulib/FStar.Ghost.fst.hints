@@ -1,5 +1,5 @@
 [
-  "Ð÷Jzˆ[ûÇDñR2\"\u001eR”",
+  "\u0016\u001e}ót¼â\r’a‚6Ç<¨_",
   [
     [
       "FStar.Ghost.reveal",
@@ -29,19 +29,6 @@
       0
     ],
     [
-      "FStar.Ghost.as_ghost",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "equation_FStar.Ghost.erased", "equation_FStar.Ghost.reveal",
-        "unit_typing"
-      ],
-      0
-    ],
-    [
       "FStar.Ghost.elift1",
       1,
       2,
@@ -54,7 +41,10 @@
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Ghost.erased" ],
+      [
+        "@query", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal"
+      ],
       0
     ],
     [
@@ -62,7 +52,10 @@
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Ghost.erased" ],
+      [
+        "@query", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal"
+      ],
       0
     ],
     [
