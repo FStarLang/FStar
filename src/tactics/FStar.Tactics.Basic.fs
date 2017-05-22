@@ -760,7 +760,7 @@ let refl : tac<unit> =
             then dismiss
             else fail "refl: not a trivial equality"
         | hd, _ ->
-            fail (BU.format1 "refl: not an equality (%s)" (Print.term_to_string {g.goal_ty with n = hd}))
+            fail (BU.format1 "refl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
     )
 
 // Should probably be moved somewhere else
