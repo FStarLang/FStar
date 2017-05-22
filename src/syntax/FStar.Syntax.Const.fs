@@ -192,8 +192,8 @@ let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
 
 (* Constants for marking terms with normalization hints *)
-let normalize      = psconst "normalize"
-let normalize_term = psconst "normalize_term"
+let normalize      = pconst "normalize"
+let normalize_term = pconst "normalize_term"
 
 (* tactic constants *)
 let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
