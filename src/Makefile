@@ -255,6 +255,7 @@ ifeq ($(OS),Windows_NT)
 endif
 	+make -C ocaml-output
 	+make fstar-ocaml
+	+make -C ../examples/hello ocaml #a basic regression test for extraction
 	+make uregressions interactive-test
 
 # Interactive mode regressions
