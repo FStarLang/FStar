@@ -550,7 +550,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              begin match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
                   mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
-                  use_cache_entry cache_entry
+                  decls @ decls' @ guard_decls @ (use_cache_entry cache_entry)
 
                 | None ->
                   let tsym = varops.mk_unique ("Tm_arrow_" ^ (BU.digest_of_string tkey_hash)) in
@@ -855,13 +855,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
                   mkApp(cache_entry.cache_symbol_name, List.map mkFreeV cvars),
-                  use_cache_entry cache_entry
+                  decls @ decls' @ decls'' @ use_cache_entry cache_entry
 
                 | None ->
                   match is_an_eta_expansion env vars body with
                   | Some t ->
                     //if the cache has not changed, we need not generate decls and decls', but if the cache has changed, someone might use them in future
-                    let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls' in
+                    let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls'@decls'' in
                     t, decls
                   | None ->
                     let cvar_sorts = List.map snd cvars in

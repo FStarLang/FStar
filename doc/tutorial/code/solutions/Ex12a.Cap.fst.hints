@@ -40,20 +40,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Heap.Extensional", "b2t_def",
-        "constructor_distinct_Prims.V", "disc_equation_Prims.V",
-        "equation_Ex12.MAC.pkey", "equation_Ex12.SHA1.key",
-        "equation_Ex12.SHA1.keysize", "equation_Ex12a.Cap.capRead",
-        "equation_FStar.ST.modifies", "equation_Platform.Bytes.lbytes",
-        "function_token_typing_Ex12a.Cap.k", "kinding_FStar.Heap.aref@tok",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.V_a", "projection_inverse_Prims.V_v",
+        "constructor_distinct_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.V", "equation_Ex12.MAC.pkey",
+        "equation_Ex12.SHA1.key", "equation_Ex12.SHA1.keysize",
+        "equation_Ex12a.Cap.capRead", "equation_Platform.Bytes.lbytes",
+        "function_token_typing_Ex12a.Cap.k",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Ex12.MAC_Tm_refine_0b607766ca6a829e168912ff886fe83d",
         "refinement_interpretation_Ex12a.Cap_Tm_refine_40b23c06210f10bc3c5257ef1ca5518a",
         "string_inversion", "token_correspondence_Ex12.MAC.key_prop",
-        "token_correspondence_Ex12a.Cap.capRead", "typing_FStar.Heap.concat",
-        "typing_FStar.Heap.restrict", "typing_FStar.TSet.complement",
-        "typing_FStar.TSet.empty"
+        "token_correspondence_Ex12a.Cap.capRead"
       ],
       0
     ]
