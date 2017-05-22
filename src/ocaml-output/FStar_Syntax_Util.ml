@@ -2169,7 +2169,8 @@ let rec bottom_fold:
     fun t  ->
       let ff = bottom_fold f in
       let tn =
-        let uu____6055 = un_uinst t in uu____6055.FStar_Syntax_Syntax.n in
+        let uu____6055 = FStar_Syntax_Subst.compress t in
+        uu____6055.FStar_Syntax_Syntax.n in
       let tn1 =
         match tn with
         | FStar_Syntax_Syntax.Tm_app (f1,args) ->
@@ -2193,48 +2194,51 @@ let rec bottom_fold:
                    (bs1, uu____6151, k) in
                  FStar_Syntax_Syntax.Tm_abs uu____6136)
         | FStar_Syntax_Syntax.Tm_arrow (bs,k) -> tn
-        | uu____6170 -> tn in
+        | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
+            let uu____6176 = let uu____6181 = ff t1 in (uu____6181, us) in
+            FStar_Syntax_Syntax.Tm_uinst uu____6176
+        | uu____6182 -> tn in
       f
-        (let uu___181_6171 = t in
+        (let uu___181_6183 = t in
          {
            FStar_Syntax_Syntax.n = tn1;
-           FStar_Syntax_Syntax.tk = (uu___181_6171.FStar_Syntax_Syntax.tk);
-           FStar_Syntax_Syntax.pos = (uu___181_6171.FStar_Syntax_Syntax.pos);
+           FStar_Syntax_Syntax.tk = (uu___181_6183.FStar_Syntax_Syntax.tk);
+           FStar_Syntax_Syntax.pos = (uu___181_6183.FStar_Syntax_Syntax.pos);
            FStar_Syntax_Syntax.vars =
-             (uu___181_6171.FStar_Syntax_Syntax.vars)
+             (uu___181_6183.FStar_Syntax_Syntax.vars)
          })
 let rec sizeof: FStar_Syntax_Syntax.term -> Prims.int =
   fun t  ->
     match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu____6179 ->
-        let uu____6200 =
-          let uu____6201 = FStar_Syntax_Subst.compress t in sizeof uu____6201 in
-        (Prims.parse_int "1") + uu____6200
+    | FStar_Syntax_Syntax.Tm_delayed uu____6191 ->
+        let uu____6212 =
+          let uu____6213 = FStar_Syntax_Subst.compress t in sizeof uu____6213 in
+        (Prims.parse_int "1") + uu____6212
     | FStar_Syntax_Syntax.Tm_bvar bv|FStar_Syntax_Syntax.Tm_name bv ->
-        let uu____6203 = sizeof bv.FStar_Syntax_Syntax.sort in
-        (Prims.parse_int "1") + uu____6203
+        let uu____6215 = sizeof bv.FStar_Syntax_Syntax.sort in
+        (Prims.parse_int "1") + uu____6215
     | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
-        let uu____6210 = sizeof t1 in (FStar_List.length us) + uu____6210
-    | FStar_Syntax_Syntax.Tm_abs (bs,t1,uu____6216) ->
-        let uu____6239 = sizeof t1 in
-        let uu____6240 =
+        let uu____6222 = sizeof t1 in (FStar_List.length us) + uu____6222
+    | FStar_Syntax_Syntax.Tm_abs (bs,t1,uu____6228) ->
+        let uu____6251 = sizeof t1 in
+        let uu____6252 =
           FStar_List.fold_left
             (fun acc  ->
-               fun uu____6244  ->
-                 match uu____6244 with
-                 | (bv,uu____6248) ->
-                     let uu____6249 = sizeof bv.FStar_Syntax_Syntax.sort in
-                     acc + uu____6249) (Prims.parse_int "0") bs in
-        uu____6239 + uu____6240
+               fun uu____6256  ->
+                 match uu____6256 with
+                 | (bv,uu____6260) ->
+                     let uu____6261 = sizeof bv.FStar_Syntax_Syntax.sort in
+                     acc + uu____6261) (Prims.parse_int "0") bs in
+        uu____6251 + uu____6252
     | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
-        let uu____6266 = sizeof hd1 in
-        let uu____6267 =
+        let uu____6278 = sizeof hd1 in
+        let uu____6279 =
           FStar_List.fold_left
             (fun acc  ->
-               fun uu____6271  ->
-                 match uu____6271 with
-                 | (arg,uu____6275) ->
-                     let uu____6276 = sizeof arg in acc + uu____6276)
+               fun uu____6283  ->
+                 match uu____6283 with
+                 | (arg,uu____6287) ->
+                     let uu____6288 = sizeof arg in acc + uu____6288)
             (Prims.parse_int "0") args in
-        uu____6266 + uu____6267
-    | uu____6277 -> Prims.parse_int "1"
+        uu____6278 + uu____6279
+    | uu____6289 -> Prims.parse_int "1"
