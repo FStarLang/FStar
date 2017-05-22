@@ -299,7 +299,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         if !tacdbg then
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
                                                                  (Print.term_to_string ut);
-        let g' = { context = env ; witness = None; goal_ty = U.mk_eq2 (U_succ U_zero) typ t ut } in
+        let g' = { context = env ; witness = None; goal_ty = U.mk_eq2 (TcTerm.universe_of env typ) typ t ut } in
         let ps' = { ps with goals = [g'] ; smt_goals = [] } in
         match run tau ps' with
         | Success ((), ps') ->
@@ -309,7 +309,8 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
                 BU.print1 "Pointwise_rec: Suceeded! Returning %s\n" (Print.term_to_string ut);
             ut
         | Failed (s, ps') ->
-            raise (Pointwise_Fail s)
+            t
+            //raise (Pointwise_Fail s)
 
 let pointwise (tau:tac<unit>) : tac<unit> =
     focus_cur_goal (

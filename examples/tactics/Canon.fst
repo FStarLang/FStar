@@ -52,12 +52,10 @@ let distl x y z = ()
 let canon : tactic unit =
     eg <-- cur_goal;
     let e, g = eg in
-    print ("GGG " ^ term_to_string g);;
     match term_as_formula g with
     | Comp Eq t l r ->
         begin match run_tm (is_arith_expr l) with
         | Inl s ->
-            print ("not arith: " ^ s);;
             apply_lemma (quote (refl u#1))
 
         | Inr (Lit i) ->
@@ -79,7 +77,8 @@ let canon : tactic unit =
             apply_lemma (quote (refl u#0))
 
         | Inr (Atom n) ->
-            apply_lemma (quote (refl u#0))
+            apply_lemma (quote (refl u#1))
+
         end
     | _ ->
         fail "impossible"
