@@ -514,8 +514,7 @@ let trivial
       match U.destruct_typ_as_formula t with
       | Some (U.BaseConn(l, []))
             when Ident.lid_equals l SC.true_lid ->
-        bind dismiss (fun _ ->
-        add_goals ([{goal with goal_ty=t}]))
+        dismiss
       | _ -> fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string t)))
 
 let apply_lemma (tm:term)
