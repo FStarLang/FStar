@@ -14,7 +14,6 @@ let is_arith_goal : tactic bool =
 
 val split_arith : unit -> Tac unit
 let rec split_arith = fun () -> (
-    print "GGGG";;
     eg <-- cur_goal;
     let _, g = eg in
     b <-- is_arith_goal;
