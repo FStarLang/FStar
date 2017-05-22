@@ -55,6 +55,7 @@ let smaller f t =
     | False_ ->
         True
 
+#reset-options "--z3limit 2"
 let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
     | Tv_Var n ->
@@ -77,7 +78,7 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
         | Tv_FVar fv, [a1; a2; a3] ->
             let qn = inspect_fv fv in
             if      eq_qn qn eq2_qn then Comp Eq a1 a2 a3
-            else if eq_qn qn eq1_qn  then Comp BoolEq a1 a2 a3
+            else if eq_qn qn eq1_qn then Comp BoolEq a1 a2 a3
             else if eq_qn qn lt_qn  then Comp Lt a1 a2 a3
             else if eq_qn qn lte_qn then Comp Le a1 a2 a3
             else if eq_qn qn gt_qn  then Comp Lt a1 a3 a2
@@ -114,6 +115,8 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     | Tv_Const (C_Unit)
     | _ -> 
         F_Unknown
+
+#reset-options
 
 let formula_as_term_view (f:formula) : Tot term_view =
     let mk_app' tv args = List.Tot.fold_left (fun tv a -> Tv_App (pack tv) a) tv args in
