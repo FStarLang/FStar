@@ -14,8 +14,8 @@ let rec factorial_is_increasing = function
   | x -> factorial_is_increasing (x - 1)
 
 val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= op_Multiply 2 x})
-let rec factorial_is_doubling = function
-  | 3 -> ()
+let rec factorial_is_doubling x = match x with
+  | 3 -> assert (factorial x = 6)
   | x -> factorial_is_doubling (x - 1)
 
 // This fails on strider

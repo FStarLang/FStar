@@ -171,11 +171,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.V",
-        "data_typing_intro_Prims.V@tok", "disc_equation_Prims.V",
-        "equation_Prims.eqtype", "proj_equation_Prims.V_v",
-        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_a",
-        "projection_inverse_Prims.V_v",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.V",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "disc_equation_FStar.Pervasives.V", "equation_Prims.eqtype",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
