@@ -612,36 +612,40 @@ let inspect: FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view =
           | FStar_Const.Const_unit  -> FStar_Reflection_Data.C_Unit
           | FStar_Const.Const_int (s,uu____1578) ->
               FStar_Reflection_Data.C_Int s
-          | uu____1585 -> failwith "unknown constant" in
+          | uu____1585 ->
+              let uu____1586 =
+                let uu____1587 = FStar_Syntax_Print.const_to_string c in
+                FStar_Util.format1 "unknown constant: %s" uu____1587 in
+              failwith uu____1586 in
         FStar_Reflection_Data.Tv_Const c1
-    | uu____1586 ->
-        ((let uu____1588 = FStar_Syntax_Print.tag_of_term t1 in
-          let uu____1589 = FStar_Syntax_Print.term_to_string t1 in
+    | uu____1588 ->
+        ((let uu____1590 = FStar_Syntax_Print.tag_of_term t1 in
+          let uu____1591 = FStar_Syntax_Print.term_to_string t1 in
           FStar_Util.print2 "inspect: outside of expected syntax (%s, %s)\n"
-            uu____1588 uu____1589);
+            uu____1590 uu____1591);
          FStar_Reflection_Data.Tv_Unknown)
 let pack: FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term =
   fun tv  ->
     match tv with
-    | FStar_Reflection_Data.Tv_Var (bv,uu____1594) ->
+    | FStar_Reflection_Data.Tv_Var (bv,uu____1596) ->
         FStar_Syntax_Syntax.bv_to_tm bv
     | FStar_Reflection_Data.Tv_FVar fv -> FStar_Syntax_Syntax.fv_to_tm fv
     | FStar_Reflection_Data.Tv_App (l,r) ->
-        let uu____1598 =
-          let uu____1604 = FStar_Syntax_Syntax.as_arg r in [uu____1604] in
-        FStar_Syntax_Util.mk_app l uu____1598
+        let uu____1600 =
+          let uu____1606 = FStar_Syntax_Syntax.as_arg r in [uu____1606] in
+        FStar_Syntax_Util.mk_app l uu____1600
     | FStar_Reflection_Data.Tv_Abs (b,t) -> FStar_Syntax_Util.abs [b] t None
     | FStar_Reflection_Data.Tv_Arrow (b,t) ->
-        let uu____1614 = FStar_Syntax_Syntax.mk_Total t in
-        FStar_Syntax_Util.arrow [b] uu____1614
+        let uu____1616 = FStar_Syntax_Syntax.mk_Total t in
+        FStar_Syntax_Util.arrow [b] uu____1616
     | FStar_Reflection_Data.Tv_Type () -> FStar_Syntax_Util.ktype
-    | FStar_Reflection_Data.Tv_Refine ((bv,uu____1618),t) ->
+    | FStar_Reflection_Data.Tv_Refine ((bv,uu____1620),t) ->
         FStar_Syntax_Util.refine bv t
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Unit ) ->
         FStar_Syntax_Const.exp_unit
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Int s) ->
         FStar_Syntax_Const.exp_int s
-    | uu____1623 -> failwith "pack: unexpected term view"
+    | uu____1625 -> failwith "pack: unexpected term view"
 let embed_order: FStar_Reflection_Data.order -> FStar_Syntax_Syntax.term =
   fun o  ->
     match o with
@@ -651,15 +655,15 @@ let embed_order: FStar_Reflection_Data.order -> FStar_Syntax_Syntax.term =
 let unembed_order: FStar_Syntax_Syntax.term -> FStar_Reflection_Data.order =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t in
-    let uu____1631 = FStar_Syntax_Util.head_and_args t1 in
-    match uu____1631 with
+    let uu____1633 = FStar_Syntax_Util.head_and_args t1 in
+    match uu____1633 with
     | (hd1,args) ->
-        let uu____1657 =
-          let uu____1665 =
-            let uu____1666 = FStar_Syntax_Util.un_uinst hd1 in
-            uu____1666.FStar_Syntax_Syntax.n in
-          (uu____1665, args) in
-        (match uu____1657 with
+        let uu____1659 =
+          let uu____1667 =
+            let uu____1668 = FStar_Syntax_Util.un_uinst hd1 in
+            uu____1668.FStar_Syntax_Syntax.n in
+          (uu____1667, args) in
+        (match uu____1659 with
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ord_Lt_lid
@@ -672,7 +676,7 @@ let unembed_order: FStar_Syntax_Syntax.term -> FStar_Reflection_Data.order =
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ord_Gt_lid
              -> FStar_Reflection_Data.Gt
-         | uu____1704 -> failwith "not an embedded order")
+         | uu____1706 -> failwith "not an embedded order")
 let order_binder:
   FStar_Syntax_Syntax.binder ->
     FStar_Syntax_Syntax.binder -> FStar_Reflection_Data.order
@@ -690,5 +694,5 @@ let is_free:
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term -> Prims.bool =
   fun x  ->
     fun t  ->
-      let uu____1727 = FStar_Syntax_Free.names t in
-      FStar_Util.set_mem (Prims.fst x) uu____1727
+      let uu____1729 = FStar_Syntax_Free.names t in
+      FStar_Util.set_mem (Prims.fst x) uu____1729

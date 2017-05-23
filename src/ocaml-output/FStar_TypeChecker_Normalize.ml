@@ -1084,9 +1084,9 @@ let built_in_primitive_steps: primitive_step Prims.list =
               | Some s2 ->
                   let r = FStar_String.concat s1 s2 in
                   let uu____3137 = string_as_const rng r in Some uu____3137
-              | uu____3138 -> None
-              | uu____3141 -> None
-              | uu____3144 -> None)) in
+              | uu____3138 -> None)
+         | uu____3141 -> None)
+    | uu____3143 -> None in
   let string_of_int1 rng i =
     let uu____3154 = FStar_Util.string_of_int i in
     string_as_const rng uu____3154 in
@@ -1747,7 +1747,8 @@ let rec norm:
                    (FStar_Util.for_some
                       (fun uu___141_5598  ->
                          match uu___141_5598 with
-                         | FStar_TypeChecker_Env.NoDelta  -> false
+                         | FStar_TypeChecker_Env.UnfoldTac 
+                           |FStar_TypeChecker_Env.NoDelta  -> false
                          | FStar_TypeChecker_Env.Inlining 
                            |FStar_TypeChecker_Env.Eager_unfolding_only  ->
                              true

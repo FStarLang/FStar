@@ -219,6 +219,9 @@ let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
 let tactic_lid: FStar_Ident.lident = fstar_tactics_lid "tactic"
 let by_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "reify_tactic"
+let quote_lid: FStar_Ident.lident =
+  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "quote"]
+    FStar_Range.dummyRange
 let fstar_refl_embed_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Tactics"; "__embed"]
     FStar_Range.dummyRange
