@@ -88,7 +88,7 @@ let mul_div a b =
 
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
-  (requires (size (v a / v b) n))
+  (requires (True))
   (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
 let div a b =
   Mk (div (v a) (v b))
@@ -96,7 +96,7 @@ let div a b =
 val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
   (requires True)
   (ensures (fun c ->
-    (v b <> 0 /\ size (v a / v b) n) ==> v a / v b = v c))
+    (v b <> 0) ==> v a / v b = v c))
 let div_underspec a b =
   Mk (div_underspec (v a) (v b))
 
