@@ -46,6 +46,8 @@ type (' p, ' q) l_and = (' p, ' q) c_and
 
 let uu___is_And _ = true
 
+type 'a squash = unit
+
 type l_True =
   | T
 

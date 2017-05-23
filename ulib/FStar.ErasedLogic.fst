@@ -22,7 +22,7 @@ open FStar.Ghost
 
 (*you can get the withness x, that the proof part is erased*)
 (*https://coq.inria.fr/library/Coq.Init.Specif.html#sig*)
-type sig (a:Type) (p: a->Type) = exists (x:a). (erased (p x))
+type sig_ (a:Type) (p: a->Type) = exists (x:a). (erased (p x))
 
 
 (*you get nothing. ofcourse, in ghost contexts, or to build other erased date, you get everything*)
