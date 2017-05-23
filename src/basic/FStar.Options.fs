@@ -118,7 +118,6 @@ let defaults =
       ("indent"                       , Bool false);
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
-      ("inline_arith"                 , Bool false);
       ("lax"                          , Bool false);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
@@ -148,6 +147,9 @@ let defaults =
       ("show_signatures"              , List []);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
+      ("smtencoding.elim_box"         , Bool true);
+      ("smtencoding.nl_arith_repr"    , String "boxwrap");
+      ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("split_cases"                  , Int 0);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
@@ -216,7 +218,6 @@ let get_include                 ()      = lookup_opt "include"                  
 let get_indent                  ()      = lookup_opt "indent"                   as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
-let get_inline_arith            ()      = lookup_opt "inline_arith"             as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
@@ -245,6 +246,9 @@ let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
+let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
+let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
+let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
@@ -639,6 +643,31 @@ let rec specs () : list<Getopt.opt> =
                  "[path]"),
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
+       (noshort,
+        "smtencoding.elim_box",
+        OneArg (string_as_bool "smtencoding.elim_box",
+                "true|false"),
+        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'true')");
+
+       (noshort,
+        "smtencoding.nl_arith_repr",
+        OneArg (String,
+                "native|wrapped|boxwrap"),
+        "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\t\
+         i.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\t\
+               if 'native' use '*, div, mod';\n\t\t\
+               if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'; \n\t\t\
+               (default 'boxwrap')");
+
+       (noshort,
+        "smtencoding.l_arith_repr",
+        OneArg (String,
+                "native|boxwrap"),
+        "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\t\
+         i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
+               if 'native', use '+, -, -'; \n\t\t\
+               (default 'boxwrap')");
+
        ( noshort,
         "split_cases",
         OneArg ((fun n -> Int (int_of_string n)),
@@ -815,6 +844,9 @@ let settable = function
     | "prn"
     | "show_signatures"
     | "silent"
+    | "smtencoding.elim_box"
+    | "smtencoding.nl_arith_repr"
+    | "smtencoding.l_arith_repr"
     | "split_cases"
     | "timing"
     | "trace_error"
@@ -986,7 +1018,6 @@ let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
-let inline_arith                 () = get_inline_arith                ()
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let legacy_interactive           () = get_in                          ()
@@ -1014,6 +1045,12 @@ let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
+let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
+let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
+let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
+let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
+let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
+let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()

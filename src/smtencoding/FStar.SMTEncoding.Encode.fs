@@ -502,32 +502,54 @@ and encode_term_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : ter
 
 and encode_arith_term env head args_e =
     let arg_tms, decls = encode_args args_e env in
-    let unary() =
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary arg_tms =
         Term.unboxInt (List.hd arg_tms)
     in
-    let binary () =
+    let binary arg_tms =
         Term.unboxInt (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
-    let mk : (unit -> 'a) -> ('a -> term) -> unit -> term =
-      fun arity f () -> Term.boxInt (f (arity()))
+    let mk_default () =
+        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
+        Util.mkApp'(fname, fuel_args@arg_tms)
     in
+    let mk_l op mk_args ts =
+      if Options.smtencoding_l_arith_native () then
+         op (mk_args ts) |> Term.boxInt
+      else mk_default ()
+    in
+    let mk_nl nm op ts =
+      if Options.smtencoding_nl_arith_wrapped () then
+          let t1, t2 = binary ts in
+          Util.mkApp(nm, [t1;t2]) |> Term.boxInt
+      else if Options.smtencoding_nl_arith_native () then
+          op (binary ts) |> Term.boxInt
+      else mk_default ()
+    in
+    let add     = mk_l Util.mkAdd binary in
+    let sub     = mk_l Util.mkSub binary in
+    let minus   = mk_l Util.mkMinus unary in
+    let mul     = mk_nl "_mul" Util.mkMul in
+    let div     = mk_nl "_div" Util.mkDiv in
+    let modulus = mk_nl "_mod" Util.mkMod in
     let ops =
-        [(Const.op_Addition, mk binary Util.mkAdd);
-         (Const.op_Subtraction, mk binary Util.mkSub);
-         (Const.op_Multiply, mk binary Util.mkMul);
-         (Const.op_Division, mk binary Util.mkDiv);
-         (Const.op_Modulus, mk binary Util.mkMod);
-         (Const.op_Minus, mk unary Util.mkMinus)]
+        [(Const.op_Addition, add);
+         (Const.op_Subtraction, sub);
+         (Const.op_Multiply, mul);
+         (Const.op_Division, div);
+         (Const.op_Modulus, modulus);
+         (Const.op_Minus, minus)]
     in
-    match head.n with
-    | Tm_fvar fv ->
-      let _, op =
-        List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops |>
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
         BU.must
-      in
-      op(), decls
-    | _ -> failwith "Impossible"
+    in
+    op arg_tms, decls
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
