@@ -88,8 +88,8 @@ let udelta_unfold:
       FStar_Extraction_ML_Syntax.mlty Prims.option
   =
   fun g  ->
-    fun uu___112_140  ->
-      match uu___112_140 with
+    fun uu___113_140  ->
+      match uu___113_140 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____146 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1 in
           (match uu____146 with
@@ -110,8 +110,8 @@ let eff_leq:
          ,FStar_Extraction_ML_Syntax.E_IMPURE ) -> true
       | uu____161 -> false
 let eff_to_string: FStar_Extraction_ML_Syntax.e_tag -> Prims.string =
-  fun uu___113_166  ->
-    match uu___113_166 with
+  fun uu___114_166  ->
+    match uu___114_166 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -313,8 +313,8 @@ and type_leq:
       fun t2  ->
         let uu____510 = type_leq_c g None t1 t2 in
         FStar_All.pipe_right uu____510 Prims.fst
-let is_type_abstraction uu___114_536 =
-  match uu___114_536 with
+let is_type_abstraction uu___115_536 =
+  match uu___115_536 with
   | (FStar_Util.Inl uu____542,uu____543)::uu____544 -> true
   | uu____556 -> false
 let is_xtuple:
@@ -346,24 +346,24 @@ let is_raise:
              if (ns = ["FStar"; "Pervasives"]) && (n1 = "raise")
              then
                let head' =
-                 let uu___118_601 = head1 in
+                 let uu___119_601 = head1 in
                  {
                    FStar_Extraction_ML_Syntax.expr =
                      (FStar_Extraction_ML_Syntax.MLE_Name ([], "raise"));
                    FStar_Extraction_ML_Syntax.mlty =
-                     (uu___118_601.FStar_Extraction_ML_Syntax.mlty);
+                     (uu___119_601.FStar_Extraction_ML_Syntax.mlty);
                    FStar_Extraction_ML_Syntax.loc =
-                     (uu___118_601.FStar_Extraction_ML_Syntax.loc)
+                     (uu___119_601.FStar_Extraction_ML_Syntax.loc)
                  } in
                Some
-                 (let uu___119_603 = e in
+                 (let uu___120_603 = e in
                   {
                     FStar_Extraction_ML_Syntax.expr =
                       (FStar_Extraction_ML_Syntax.MLE_App (head', args));
                     FStar_Extraction_ML_Syntax.mlty =
-                      (uu___119_603.FStar_Extraction_ML_Syntax.mlty);
+                      (uu___120_603.FStar_Extraction_ML_Syntax.mlty);
                     FStar_Extraction_ML_Syntax.loc =
-                      (uu___119_603.FStar_Extraction_ML_Syntax.loc)
+                      (uu___120_603.FStar_Extraction_ML_Syntax.loc)
                   })
              else None
          | uu____606 -> None)
@@ -386,8 +386,8 @@ let resugar_exp:
     | uu____626 -> e
 let record_field_path:
   FStar_Ident.lident Prims.list -> Prims.string Prims.list =
-  fun uu___115_631  ->
-    match uu___115_631 with
+  fun uu___116_631  ->
+    match uu___116_631 with
     | f::uu____635 ->
         let uu____637 = FStar_Util.prefix f.FStar_Ident.ns in
         (match uu____637 with
