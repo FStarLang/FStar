@@ -509,7 +509,9 @@ and encode_arith_term env head args_e =
         Term.unboxInt (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
-    let mk arity f () = Term.boxInt (f (arity())) in
+    let mk : (unit -> 'a) -> ('a -> term) -> unit -> term =
+      fun arity f () -> Term.boxInt (f (arity()))
+    in
     let ops =
         [(Const.op_Addition, mk binary Util.mkAdd);
          (Const.op_Subtraction, mk binary Util.mkSub);
@@ -521,7 +523,7 @@ and encode_arith_term env head args_e =
     match head.n with
     | Tm_fvar fv ->
       let _, op =
-        List.find (fun (l, _) -> S.fv_eq_lid fv l) ops |>
+        List.tryFind (fun (l, _) -> S.fv_eq_lid fv l) ops |>
         BU.must
       in
       op(), decls
