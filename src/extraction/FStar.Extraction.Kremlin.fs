@@ -477,7 +477,7 @@ and translate_type env t: typ =
   | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
-  | MLTY_Named (args, ([ "Prims" ], t)) when BU.starts_with t "tuple" ->
+  | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"]) && BU.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
   | MLTY_Named (args, lid) ->
       if List.length args > 0 then
