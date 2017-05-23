@@ -5,8 +5,7 @@ open FStar.Tactics
 
 let test_grewrite (a b c : int) (l : b == c) =
     assert_by_tactic (liftM2' grewrite (quote b) (quote c);;
-                      ql <-- quote l;
-                      exact ql;;
+                      exact (quote l);;
                       trivial;;
                       return ()) (a + b == a + c)
 
@@ -31,8 +30,7 @@ let test_grewrite4 (f : int -> int -> int) (w : int) =
 let test_grewrite5 (n m : int) (p1 : n == m)
                                (p2 : (fun x -> x + n) == (fun x -> m + x)) =
     assert_by_tactic (liftM2' grewrite (quote n) (quote m);;
-                      liftM1' exact (quote p1);;
-                      trivial)
+                      exact (quote p1))
                      ((fun x -> x + n) == (fun x -> m + x))
 
 let guard (b:bool) : tactic unit =
