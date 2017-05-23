@@ -668,7 +668,8 @@ and mkPrelude z3options =
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n\
-                (declare-fun Range_const () Term)\n" in
+                (declare-fun Range_const () Term)\n"
+   in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
@@ -694,8 +695,14 @@ let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
-let boxInt t            = mkApp("BoxInt", [t]) t.rng
-let unboxInt t          = mkApp("BoxInt_proj_0", [t]) t.rng
+let boxInt t            =
+    match t.tm with
+    | App(Var "BoxInt_proj_0", [t]) -> t
+    | _ -> mkApp("BoxInt", [t]) t.rng
+let unboxInt t          =
+    match t.tm with
+    | App(Var "BoxInt", [t]) -> t
+    | _ -> mkApp("BoxInt_proj_0", [t]) t.rng
 let boxBool t           = mkApp("BoxBool", [t]) t.rng
 let unboxBool t         = mkApp("BoxBool_proj_0", [t]) t.rng
 let boxString t         = mkApp("BoxString", [t]) t.rng
