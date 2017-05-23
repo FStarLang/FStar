@@ -91,6 +91,7 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
 
 
 (* names of F* functions which need to be handled differently *)
+let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 
@@ -168,7 +169,8 @@ let rec build_core_type (ty: mlty): core_type =
      let c_tys = map build_core_type tys in
      let p = path_to_ident path in
      (match path with
-      | (["Prims"], c) ->
+      | (["Prims"], c)
+      | (["FStar"; "Pervasives"], c) ->
         if ((BatString.length c == 6) &&
             (BatString.equal (BatString.sub c 0 5) "tuple")) then
           (* resugar tuples (Prims.tupleX) *)
@@ -291,6 +293,8 @@ and resugar_app f args es: expression =
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with" in
     Exp.try_ body variants
+  | Pexp_ident x when (x = raise_ident) ->
+    Exp.apply (Exp.ident (mk_lident "raise")) args
   | _ -> Exp.apply f args
 
 and build_seq args =

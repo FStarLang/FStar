@@ -158,7 +158,7 @@ clean_u_extract_ocaml:
 
 u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
 					 FStar.Format.fst)
-	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst) \
@@ -258,6 +258,7 @@ ifeq ($(OS),Windows_NT)
 endif
 	+make -C ocaml-output
 	+make fstar-ocaml
+	+make -C ../examples/hello ocaml #a basic regression test for extraction
 	+make uregressions interactive-test
 
 # Interactive mode regressions

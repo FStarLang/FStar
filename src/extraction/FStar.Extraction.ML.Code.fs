@@ -81,7 +81,7 @@ let path_of_ns (currentModule : mlsymbol) ns =
                  then Some (pfx@[Util.flatten_ns sfx])
                  else None
             else None) in
-         match found with 
+         match found with
             | None -> [ns']
             | Some x -> x
 
@@ -570,7 +570,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                     | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
 //                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
-                      reduce1 [text ":"; ty] 
+                      reduce1 [text ":"; ty]
             else text "" in
         reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
 
@@ -582,7 +582,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         lets in
 
     combine hardline lets
-    
+
 
 and doc_of_loc (lineno, file) =
     if (Options.no_location_info()) || Util.codegen_fsharp () then
@@ -594,7 +594,7 @@ and doc_of_loc (lineno, file) =
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     let for1 (_, x, mangle_opt, tparams, body) =
-        let x = match mangle_opt with 
+        let x = match mangle_opt with
                 | None -> x
                 | Some y -> y in
         let tparams =
@@ -731,26 +731,34 @@ let rec doc_of_mllib_r (MLLib mllib) =
             reduce sub;
             cat tail hardline;
         ]
-    and for1_mod istop (x, sigmod, MLLib sub) =
-        let x = Util.flatten_mlpath x in
+    and for1_mod istop (mod_name, sigmod, MLLib sub) =
+        let target_mod_name = Util.flatten_mlpath mod_name in
+        let maybe_open_pervasives =
+            match mod_name with
+            | ["FStar"], "Pervasives" -> []
+            | _ ->
+              let pervasives = Util.flatten_mlpath (["FStar"], "Pervasives") in
+              [hardline;
+               text ("open " ^ pervasives)]
+        in
         let head = reduce1 (if Util.codegen_fsharp()
-                            then [text "module";  text x]
+                            then [text "module";  text target_mod_name]
                             else if not istop
-                            then [text "module";  text x; text "="; text "struct"]
+                            then [text "module";  text target_mod_name; text "="; text "struct"]
                             else []) in
         let tail = if not istop
                    then reduce1 [text "end"]
                    else reduce1 [] in
-        let doc  = Option.map (fun (_, m) -> doc_of_mod x m) sigmod in
+        let doc  = Option.map (fun (_, m) -> doc_of_mod target_mod_name m) sigmod in
         let sub  = List.map (for1_mod false)  sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
         let prefix = if Util.codegen_fsharp () then [cat (text "#light \"off\"") hardline] else [] in
-
         reduce <| (prefix @ [
             head;
             hardline;
-            text "open Prims";
-            hardline;
+            text "open Prims"] @
+            maybe_open_pervasives @
+            [hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);

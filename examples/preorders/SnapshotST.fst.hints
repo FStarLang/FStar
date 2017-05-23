@@ -41,17 +41,18 @@
         "equation_Prims.snd", "equation_SnapshotST.snapshot_rel",
         "equation_SnapshotST.snapshot_state",
         "equation_SnapshotST.witnessing_predicate",
+        "fuel_guarded_inversion_Prims.option",
         "fuel_guarded_inversion_Prims.tuple2", "kinding_Prims.option@tok",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.None_a", "projection_inverse_Prims.Some_v",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Some_v",
         "refinement_interpretation_SnapshotST_Tm_refine_69f4507bee77a61657e8d68850a06b96",
-        "typing_Prims.fst", "typing_Prims.snd", "typing_Prims.uu___is_Some",
-        "unit_typing"
+        "typing_Prims.fst", "typing_Prims.snd", "unit_typing"
       ],
       0
     ],
     [
-      "SnapshotST.216112",
+      "SnapshotST.755828",
       1,
       2,
       1,

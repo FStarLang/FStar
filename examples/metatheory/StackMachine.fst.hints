@@ -207,7 +207,8 @@
         "equation_StackMachine.prog", "equation_StackMachine.stack",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_StackMachine.stack",
-        "lemma_Prims.invertOption", "projection_inverse_Prims.Cons_hd",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
         "typing_StackMachine.instrDenote"
       ],

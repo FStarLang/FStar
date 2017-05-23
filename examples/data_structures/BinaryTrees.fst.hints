@@ -146,8 +146,8 @@
       [
         "@fuel_correspondence_BinaryTrees.find.fuel_instrumented", "@query",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "function_token_typing_Prims.int", "lemma_Prims.invertOption",
-        "typing_BinaryTrees.find"
+        "function_token_typing_Prims.int",
+        "lemma_FStar.Pervasives.invertOption", "typing_BinaryTrees.find"
       ],
       0
     ],
@@ -193,8 +193,8 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_Some", "uvar_typing_30181"
+        "lemma_FStar.Pervasives.invertOption", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some", "uvar_typing_74971"
       ],
       0
     ],

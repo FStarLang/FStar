@@ -2,6 +2,7 @@
    https://www.lri.fr/~filliatr/puf/ *)
 
 module U = FStar_Util
+open U
 
 (* Persistent arrays *)
 type 'a pa_t = 'a data ref
@@ -9,9 +10,9 @@ and 'a data =
   | PArray of 'a array
   | PDiff of int * 'a * 'a pa_t
 
-let pa_create n v = ref (PArray (Array.make n v))
+let pa_create n v = mk_ref (PArray (Array.make n v))
 
-let pa_init n f = ref (PArray (Array.init n f))
+let pa_init n f = mk_ref (PArray (Array.init n f))
 
 let rec pa_rerootk t k = match !t with
   | PArray _ -> k ()
@@ -43,7 +44,7 @@ let pa_set t i v =
         t
       else begin
         a.(i) <- v;
-        let res = ref n in
+        let res = mk_ref n in
         t := PDiff (i, old, res);
         res
       end
@@ -72,7 +73,7 @@ let pa_new_double t x l empty =
 
 (* Union-find implementation based on persistent arrays *)
 type 'a puf_t = {
-  mutable parent: (int, 'a) U.either pa_t; (* mutable to allow path compression *)
+  mutable parent: (int, 'a) either pa_t; (* mutable to allow path compression *)
   ranks: int pa_t;
   (* keep track of how many elements are allocated in the array *)
   count: int ref
@@ -81,13 +82,13 @@ type 'a puf = 'a puf_t
 type 'a p_uvar = P of int
 
 let puf_empty () =
-    { parent = pa_create 2 (U.Inl (-1)) ;
+    { parent = pa_create 2 (Inl (-1)) ;
       ranks = pa_create 2 0;
-      count = ref 0 }
+      count = mk_ref 0 }
 
 let puf_fresh (h: 'a puf) (x: 'a) =
     let count = !(h.count) in
-    pa_new_double h.parent (U.Inr x) count (U.Inl (-1));
+    pa_new_double h.parent (Inr x) count (Inl (-1));
     pa_new_double h.ranks 0 count 0;
     h.count := count + 1;
     P count
@@ -95,11 +96,11 @@ let puf_fresh (h: 'a puf) (x: 'a) =
 (* implements path compression, returns new array *)
 let rec puf_find_aux f i =
     match (pa_get f i) with
-        | U.Inl fi ->
+        | Inl fi ->
             let f, r, id = puf_find_aux f fi in
             let f = pa_set f i r in
             f, r, id
-        | U.Inr x -> f, U.Inr x, i
+        | Inr x -> f, Inr x, i
 
 (* return both rep and previous version of parent array *)
 let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
@@ -107,8 +108,8 @@ let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
     let f, rx, i = puf_find_aux h.parent x in
         h.parent <- f;
         match rx with
-            | U.Inr r -> r, i
-            | U.Inl _ -> failwith "Impossible"
+            | Inr r -> r, i
+            | Inl _ -> failwith "Impossible"
 
 (* only return the rep *)
 let puf_find (h: 'a puf) (x: 'a p_uvar) =
@@ -122,15 +123,15 @@ let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
         let rxc = pa_get h.ranks ix in
         let ryc = pa_get h.ranks iy in
         if rxc > ryc then
-            { parent = pa_set h.parent iy (U.Inl ix);
+            { parent = pa_set h.parent iy (Inl ix);
               ranks = h.ranks;
               count = h.count}
         else if rxc < ryc then
-            { parent = pa_set h.parent ix (U.Inl iy);
+            { parent = pa_set h.parent ix (Inl iy);
               ranks = h.ranks;
               count = h.count}
         else
-            { parent = pa_set h.parent iy (U.Inl ix);
+            { parent = pa_set h.parent iy (Inl ix);
               ranks = pa_set h.ranks ix (rxc+1);
               count = h.count }
         end else
@@ -150,29 +151,33 @@ exception Impos
 
 type tx = int
 
-let log : ((tx * (unit -> unit) list) list) ref = ref []
+let log : ((tx * (unit -> unit) list) list) ref = mk_ref []
 
 let log_undo x = match !log with
-    | (tx, undos)::rest -> log := (tx, x::undos)::rest
-    | _ -> () (* no current transaction; nothing to log  *)
+  | (tx, undos)::rest -> log := (tx, x::undos)::rest
+  | _ -> () (* no current transaction; nothing to log  *)
 
 let new_transaction =
-    let tx_ctr = ref 0 in
-    fun () ->
-        let tx = incr tx_ctr; !tx_ctr in
-        log := (tx, [])::!log ;
-        tx
+  (* Ugly clash of names *)
+  let log' = log in
+  let open Pervasives in
+  let tx_ctr = ref 0 in
+  fun () ->
+    let tx = incr tx_ctr; !tx_ctr in
+    U.(log' := (tx, [])::!log') ;
+    tx
 
 (* apply undo logs for all transactions succeeding tx, including tx itself  *)
 let rollback tx =
-    let rec aux = function
-        | [] -> failwith "Transaction identifier is invalid"
-        | (tx', undo)::rest ->
-          List.iter (fun f -> f()) undo;
-          if tx=tx'
-          then log := rest
-          else aux rest in
-   aux !log
+  let rec aux = function
+    | [] -> failwith "Transaction identifier is invalid"
+    | (tx', undo)::rest ->
+      List.iter (fun f -> f()) undo;
+      if tx=tx'
+      then log := rest
+      else aux rest
+  in
+  aux !log
 
 (* discard undo logs for all transactions succeeding tx, including tx itself *)
 let commit tx =
@@ -190,7 +195,7 @@ let update_in_tx r v =
     log_undo undo;
     r := v
 
-let counter = ref 0
+let counter = mk_ref 0
 
 let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }
 
@@ -243,7 +248,7 @@ let puf_test () =
     let u_a = puf_fresh u "a" in
     let u_b = puf_fresh u "b" in
     let u_c = puf_fresh u "c" in
-    (U.print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)));
+    (print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)));
     let u_d = puf_fresh u "d" in
     let u_e = puf_fresh u "e" in
     let u_f = puf_fresh u "f" in
@@ -254,15 +259,15 @@ let puf_test () =
     let u = puf_union u u_b u_c in
     let la = puf_find u u_a in
     let lc = puf_find u u_c in
-    (U.print1 "Rep of e is %s\n" le);
-    (U.print1 "Rep of a is %s\n" la);
-    (U.print1 "Rep of c is %s\n" lc);
+    (print1 "Rep of e is %s\n" le);
+    (print1 "Rep of a is %s\n" la);
+    (print1 "Rep of c is %s\n" lc);
     let u_i = (puf_fresh u "i") in
     let u_i2 = match u_i with | P a -> a in
-    (U.print2 "Id of i and count are %s %s\n" (Printf.sprintf "%i" u_i2) (Printf.sprintf "%i" !(u.count)));
+    (print2 "Id of i and count are %s %s\n" (Printf.sprintf "%i" u_i2) (Printf.sprintf "%i" !(u.count)));
     let li = puf_find u u_i in
-    (U.print1 "Rep of i is %s\n" li);
+    (print1 "Rep of i is %s\n" li);
     let u = puf_union u u_b u_i in
     let li = puf_find u u_i in
-    (U.print1 "Rep of i is %s\n" li);
-    (U.print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)))
+    (print1 "Rep of i is %s\n" li);
+    (print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)))

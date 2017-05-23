@@ -9,7 +9,7 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
+        "lemma_FStar.Pervasives.invertOption", "typing_Prims.uu___is_None",
         "typing_Prims.uu___is_Some"
       ],
       0
@@ -22,8 +22,9 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_None"
+        "fuel_guarded_inversion_Prims.option",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some"
       ],
       0
     ],

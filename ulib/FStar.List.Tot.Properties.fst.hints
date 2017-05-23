@@ -1661,11 +1661,12 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "constructor_distinct_Prims.None", "constructor_distinct_Prims.Some",
-        "data_elim_Prims.Mktuple2", "disc_equation_Prims.None",
-        "equation_Prims.fst", "fuel_guarded_inversion_Prims.tuple2",
-        "lemma_Prims.invertOption", "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Mktuple2__1", "typing_Prims.uu___is_Some"
+        "data_elim_Prims.Mktuple2", "equation_Prims.fst",
+        "fuel_guarded_inversion_Prims.tuple2",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__1", "typing_Prims.uu___is_None",
+        "typing_Prims.uu___is_Some"
       ],
       0
     ],

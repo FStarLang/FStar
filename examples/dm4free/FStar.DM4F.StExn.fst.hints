@@ -13,7 +13,8 @@
         "bool_typing", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "equation_FStar.DM4F.StExn.stexn",
         "function_token_typing_Prims.int", "int_inversion",
-        "kinding_Prims.option@tok", "lemma_Prims.invertOption",
+        "kinding_Prims.option@tok", "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_Prims.Mktuple2__1",
         "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
@@ -29,7 +30,8 @@
         "bool_typing", "disc_equation_Prims.None",
         "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.tuple2",
         "function_token_typing_Prims.int", "kinding_Prims.option@tok",
-        "lemma_Prims.invertOption", "typing_Prims.__proj__Mktuple2__item___1"
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_Prims.__proj__Mktuple2__item___1"
       ],
       0
     ],
@@ -110,8 +112,9 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
         "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "function_token_typing_Prims.int", "lemma_Prims.invertOption",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None"
+        "function_token_typing_Prims.int",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_Some"
       ],
       0
     ],

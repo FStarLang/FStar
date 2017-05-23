@@ -37,7 +37,7 @@ let parse:
                             (match uu____76 with
                              | (env2,ast1) -> (env2, [ast1]))
                         | uu____85 ->
-                            Prims.raise
+                            raise
                               (FStar_Errors.Err
                                  "mismatch between pre-module and module\n"))) in
             (match uu____40 with
@@ -53,34 +53,34 @@ let tc_prims:
       if uu____109
       then FStar_SMTEncoding_Solver.dummy
       else
-        (let uu___195_111 = FStar_SMTEncoding_Solver.solver in
+        (let uu___196_111 = FStar_SMTEncoding_Solver.solver in
          {
            FStar_TypeChecker_Env.init =
-             (uu___195_111.FStar_TypeChecker_Env.init);
+             (uu___196_111.FStar_TypeChecker_Env.init);
            FStar_TypeChecker_Env.push =
-             (uu___195_111.FStar_TypeChecker_Env.push);
+             (uu___196_111.FStar_TypeChecker_Env.push);
            FStar_TypeChecker_Env.pop =
-             (uu___195_111.FStar_TypeChecker_Env.pop);
+             (uu___196_111.FStar_TypeChecker_Env.pop);
            FStar_TypeChecker_Env.mark =
-             (uu___195_111.FStar_TypeChecker_Env.mark);
+             (uu___196_111.FStar_TypeChecker_Env.mark);
            FStar_TypeChecker_Env.reset_mark =
-             (uu___195_111.FStar_TypeChecker_Env.reset_mark);
+             (uu___196_111.FStar_TypeChecker_Env.reset_mark);
            FStar_TypeChecker_Env.commit_mark =
-             (uu___195_111.FStar_TypeChecker_Env.commit_mark);
+             (uu___196_111.FStar_TypeChecker_Env.commit_mark);
            FStar_TypeChecker_Env.encode_modul =
-             (uu___195_111.FStar_TypeChecker_Env.encode_modul);
+             (uu___196_111.FStar_TypeChecker_Env.encode_modul);
            FStar_TypeChecker_Env.encode_sig =
-             (uu___195_111.FStar_TypeChecker_Env.encode_sig);
+             (uu___196_111.FStar_TypeChecker_Env.encode_sig);
            FStar_TypeChecker_Env.preprocess =
              FStar_Tactics_Interpreter.preprocess;
            FStar_TypeChecker_Env.solve =
-             (uu___195_111.FStar_TypeChecker_Env.solve);
+             (uu___196_111.FStar_TypeChecker_Env.solve);
            FStar_TypeChecker_Env.is_trivial =
-             (uu___195_111.FStar_TypeChecker_Env.is_trivial);
+             (uu___196_111.FStar_TypeChecker_Env.is_trivial);
            FStar_TypeChecker_Env.finish =
-             (uu___195_111.FStar_TypeChecker_Env.finish);
+             (uu___196_111.FStar_TypeChecker_Env.finish);
            FStar_TypeChecker_Env.refresh =
-             (uu___195_111.FStar_TypeChecker_Env.refresh)
+             (uu___196_111.FStar_TypeChecker_Env.refresh)
          }) in
     let env =
       FStar_TypeChecker_Env.initial_env
@@ -155,7 +155,7 @@ let tc_one_fragment:
                                        uu____228 <> uu____232 in
                                      if uu____227
                                      then
-                                       Prims.raise
+                                       raise
                                          (FStar_Errors.Err
                                             "Interactive mode only supports a single module at the top-level")
                                      else env
@@ -213,7 +213,7 @@ let tc_one_fragment:
                     None)
                | e when
                    let uu____360 = FStar_Options.trace_error () in
-                   Prims.op_Negation uu____360 -> Prims.raise e)
+                   Prims.op_Negation uu____360 -> raise e)
 let load_interface_decls:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
     FStar_Parser_ParseIt.filename ->
@@ -243,9 +243,9 @@ let load_interface_decls:
                        "Unexpected result from parsing %s; expected a single interface"
                        interface_file_name in
                    FStar_Errors.Err uu____445 in
-                 Prims.raise uu____444
+                 raise uu____444
              | FStar_Util.Inr (err1,rng) ->
-                 Prims.raise (FStar_Errors.Error (err1, rng))
+                 raise (FStar_Errors.Error (err1, rng))
            with
            | FStar_Errors.Error (msg,r) when
                let uu____464 = FStar_Options.trace_error () in
@@ -259,7 +259,7 @@ let load_interface_decls:
                 (dsenv, env))
            | e when
                let uu____478 = FStar_Options.trace_error () in
-               Prims.op_Negation uu____478 -> Prims.raise e)
+               Prims.op_Negation uu____478 -> raise e)
 let tc_one_file:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->
@@ -322,9 +322,9 @@ let pop_context: FStar_TypeChecker_Env.env -> Prims.string -> Prims.unit =
   fun env  ->
     fun msg  ->
       (let uu____648 = FStar_ToSyntax_Env.pop () in
-       FStar_All.pipe_right uu____648 Prims.ignore);
+       FStar_All.pipe_right uu____648 FStar_Pervasives.ignore);
       (let uu____650 = FStar_TypeChecker_Env.pop env msg in
-       FStar_All.pipe_right uu____650 Prims.ignore);
+       FStar_All.pipe_right uu____650 FStar_Pervasives.ignore);
       (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ()
 let push_context:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
