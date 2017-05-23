@@ -1309,7 +1309,15 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_pragma (p) ->
     (match p with
-     | ResetOptions _ -> env.solver.refresh (); env
+     | ResetOptions _ ->
+        env.solver.refresh ();
+        // `using_facts_from` requires some special handling..
+        begin match Options.using_facts_from () with
+        | Some ns ->
+            let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
+            { env with proof_ns = proof_ns }
+        | None -> env
+        end
      | _ -> env)
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect (ne) ->
