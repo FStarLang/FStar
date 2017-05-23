@@ -5,7 +5,9 @@ OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_G
 
 .PHONY:clean
 
-fstarlib.mllib: .mgen *.ml extracted/*.ml
+all: .mgen fstarlib.cmxa
+
+fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	echo $^ | $(SED) -e 's/.mgen //' \
 	                 -e 's;extracted/;;g' \
 	                 -e 's/\.ml//g' \
@@ -20,7 +22,6 @@ fstarlib.cmxa:fstarlib.mllib
 .mgen:
 	make -C .. mgen
 
-all: .mgen fstarlib.cmxa
 
 # Common rules
 clean:
