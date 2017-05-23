@@ -354,7 +354,8 @@ let inspect (t:term) : term_view =
         let c = (match c with
         | FStar.Const.Const_unit -> C_Unit
         | FStar.Const.Const_int (s, _) -> C_Int s
-        | _ -> failwith "unknown constant") in
+        | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c)))
+        in
         Tv_Const c
 
     | _ ->

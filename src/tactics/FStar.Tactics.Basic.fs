@@ -448,11 +448,7 @@ let simpl : tac<unit> =
 let istrivial (e:env) (t:term) : bool =
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.UnfoldTac] in
     let t = N.normalize steps e t in
-    match U.destruct_typ_as_formula t with
-    | Some (U.BaseConn(l, [])) when Ident.lid_equals l SC.true_lid ->
-        true
-    | _ ->
-        false
+    is_true t
 
 let trivial : tac<unit> =
     with_cur_goal (fun goal ->
