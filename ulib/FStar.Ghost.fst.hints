@@ -1,5 +1,5 @@
 [
-  "\u0016\u001e}ót¼â\r’a‚6Ç<¨_",
+  "\u000eç_,dÁ³1Šìf¹ªÔ\u0012",
   [
     [
       "FStar.Ghost.reveal",
@@ -29,11 +29,25 @@
       0
     ],
     [
+      "FStar.Ghost.lemma_reveal_hide",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
       "FStar.Ghost.elift1",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Ghost.erased" ],
+      [
+        "@query", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal"
+      ],
       0
     ],
     [
@@ -61,6 +75,18 @@
     [
       "FStar.Ghost.elift1_p",
       1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
+        "equation_FStar.Ghost.reveal",
+        "refinement_interpretation_FStar.Ghost_Tm_refine_4861ff30b18822886452f698558931e8"
+      ],
+      0
+    ],
+    [
+      "FStar.Ghost.elift1_p",
+      2,
       2,
       1,
       [
