@@ -518,10 +518,11 @@ and encode_arith_term env head args_e =
         let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
         Util.mkApp'(fname, fuel_args@arg_tms)
     in
-    let mk_l op mk_args ts =
-      if Options.smtencoding_l_arith_native () then
-         op (mk_args ts) |> Term.boxInt
-      else mk_default ()
+    let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts ->
+          if Options.smtencoding_l_arith_native () then
+             op (mk_args ts) |> Term.boxInt
+          else mk_default ()
     in
     let mk_nl nm op ts =
       if Options.smtencoding_nl_arith_wrapped () then
