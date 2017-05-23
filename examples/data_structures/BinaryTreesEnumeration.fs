@@ -42,14 +42,15 @@ let rec trees_of_size (s: nat) : list (bt: bin_tree{size bt == s}) =
          (product (trees_of_size s1) (trees_of_size s2)))
       (pairs_with_sum (s - 1))
 
-(*> Why do I need to re-state the goal as an [assert] here? *)
+(*> * Why do I need to re-state the goal as an [assert]?
+    * Why do I need to re-state the lemma as an [assert]? *)
 abstract let rec pws'_complete (m d n: nat) :
   Lemma (List.memP (m, n + d) (pairs_with_sum' (m + d) n)) =
     if d = 0 then ()
     else begin
       assert (m + d <> 0);
       pws'_complete m (d - 1) (n + 1);
-      assert (List.memP (m, n + d) (pairs_with_sum' (m + d - 1) (n + 1)));
+      assert (List.memP (m, (n + 1) + (d - 1)) (pairs_with_sum' (m + (d - 1)) (n + 1)));
       assert (List.memP (m, n + d) (pairs_with_sum' (m + d) n))
     end
 
