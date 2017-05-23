@@ -59,7 +59,7 @@ val elift1_p : #a:Type -> #b:Type -> #p:(a->Type) -> $f:(x:a{p x} ->GTot b) -> r
 let elift1_p #a #b #p f ga = f ga
 
 val elift2_p : #a:Type  -> #c:Type -> #p:(a->c->Type) -> #b:Type -> f:(xa:a-> xc:c{p xa xc} ->GTot b)
-  -> ra:(erased a) -> rc:(erased c){p (reveal ra) (reveal rc)}  -> Pure (erased b) (requires True) (ensures (fun x -> reveal x == f ra rc))
+  -> ra:(erased a) -> rc:(erased c){p (reveal ra) (reveal rc)}  -> Tot (x:erased b{reveal x == f (reveal ra) (reveal rc)})
 let elift2_p #a #c #p #b f ga gc = f ga gc
 
 (*
