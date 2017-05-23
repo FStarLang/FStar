@@ -197,8 +197,8 @@ u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst Interleave.f
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
-u_extract_tactics:$(addprefix u_boot_fsts/FStar.Tactics., Basic.fst Embedding.fst Interpreter.fst Native.fst)
-	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics
+u_extract_tactics:../ulib/FStar.Tactics.Types.fsti $(addprefix u_boot_fsts/FStar.Tactics., Types.fst Basic.fst Embedding.fst Interpreter.fst Native.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding

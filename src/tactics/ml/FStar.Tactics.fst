@@ -2,6 +2,11 @@ module FStar.Tactics
 
 open FStar.Order
 
+assume type binder //FStar.Syntax.Syntax.binder
+assume type term
+assume type env
+assume type fv
+
 type name = list string
 
 type typ     = term
