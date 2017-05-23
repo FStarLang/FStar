@@ -134,7 +134,6 @@ let defaults =
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
       ("prims_ref"                    , Unset);
-      ("print_before_norm"            , Bool false);
       ("print_bound_var_types"        , Bool false);
       ("print_effect_args"            , Bool false);
       ("print_fuels"                  , Bool false);
@@ -231,7 +230,6 @@ let get_no_location_info        ()      = lookup_opt "no_location_info"         
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
-let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
@@ -563,11 +561,6 @@ let rec specs () : list<Getopt.opt> =
         "");
 
        ( noshort,
-        "print_before_norm",
-        ZeroArgs(fun () -> Bool true), // norm_then_print := false),
-        "Do not normalize types before printing (for debugging)");
-
-       ( noshort,
         "print_bound_var_types",
         ZeroArgs(fun () -> Bool true),
         "Print the types of bound variables");
@@ -804,7 +797,6 @@ let settable = function
     | "max_ifuel"
     | "min_fuel"
     | "ugly"
-    | "print_before_norm"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
@@ -1001,7 +993,6 @@ let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
-let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
