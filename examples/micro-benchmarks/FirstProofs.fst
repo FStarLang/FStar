@@ -21,13 +21,16 @@ let rec factorial_is_doubling x = match x with
   | 3 -> ()
   | x -> factorial_is_doubling (x - 1)
 
-#set-options "--z3rlimit 50 --max_fuel 5 --initial_fuel 5 --max_ifuel 0"
-val factorial_is_squaring: x:nat{x >= 4} -> Lemma (factorial x > x * x)
-let rec factorial_is_squaring = function
-  | 4 -> ()
-  | x -> factorial_is_squaring (x - 1)
+(* These next two are already getting too unpredictable with Z3's
+   non-linear theory. You can try to provide an more explicit proof
+   using FStar.Math.Lemmas *)
 
-//This is getting to be a bit too much for Z3's non-linear arithmentic theory to do automatically
+(* #set-options "--z3rlimit 100 --max_fuel 5 --initial_fuel 5 --max_ifuel 0" *)
+(* val factorial_is_squaring: x:nat{x >= 4} -> Lemma (factorial x > x * x) *)
+(* let rec factorial_is_squaring = function *)
+(*   | 4 -> () *)
+(*   | x -> factorial_is_squaring (x - 1) *)
+
 (* #set-options "--z3rlimit 100 --max_fuel 7 --initial_fuel 7 --max_ifuel 0" *)
 (* val factorial_is_cubing: x:nat{x > 5} -> Tot (u:unit{factorial x >= x * x * x}) *)
 (* let rec factorial_is_cubing = function *)
