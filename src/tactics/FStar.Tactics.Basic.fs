@@ -498,7 +498,8 @@ let apply_lemma (tm:term)
                         implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
                                 {context=goal.context;
                                  witness=Some term;
-                                 goal_ty=typ})
+                                 // Try to get rid of all the unification lambdas, which should all be at the head
+                                 goal_ty = N.normalize [N.WHNF] goal.context typ})
                    in
                    let sub_goals =
                        if istrivial goal.context pre
@@ -739,7 +740,10 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         bind (add_goals [g']) (fun _ ->
         focus_cur_goal (
             bind tau (fun _ ->
+            let guard = Rel.solve_deferred_constraints env guard |> Rel.resolve_implicits in
             TcRel.force_trivial_guard env guard;
+            // Try to get rid of all the unification lambdas, which should all be at the head
+            let ut = N.normalize [N.WHNF] env ut in
             ret ut))
         )
 
