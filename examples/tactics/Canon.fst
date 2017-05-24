@@ -1,7 +1,5 @@
 module Canon
 
-#reset-options "--eager_inference"
-
 unfold let op_Star = op_Multiply
 
 //
@@ -31,8 +29,11 @@ let distr #x #y #z = ()
 val distl : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) * z == x * z + y * z)
 let distl #x #y #z = ()
 
-val ass_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x + (y + z) == (x + y) + z)
-let ass_l #x #y #z = ()
+val ass_plus_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x + (y + z) == (x + y) + z)
+let ass_plus_l #x #y #z = ()
+
+val ass_mult_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y * z) == (x * y) * z)
+let ass_mult_l #x #y #z = ()
 
 (* // When taking a goal of the form *)
 (* //   a * (b + c) = ?u *)
@@ -67,6 +68,11 @@ val cong_plus : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 Lemma (w + x == y + z)
 let cong_plus #w #x #y #z p q = ()
 
+val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
+                (w == y) -> (x == z) ->
+                Lemma (w * x == y * z)
+let cong_mult #w #x #y #z p q = ()
+
 let mkplus (a b : term) : term =
     let plus = pack (Tv_FVar (pack_fv add_qn)) in
     pack (Tv_App (pack (Tv_App plus a)) b)
@@ -85,25 +91,35 @@ let rec canon : unit -> Tac unit = fun () -> (
         | Inl s ->
             refl
 
-        // TODO: recurse properly
         | Inr (Plus a (Plus b c)) ->
             apply_lemma (quote trans);;
-            apply_lemma (quote ass_l);;
+            apply_lemma (quote ass_plus_l);;
             apply_lemma (quote cong_plus);;
+            canon;;
+            refl
+
+        | Inr (Mult a (Mult b c)) ->
+            apply_lemma (quote trans);;
+            apply_lemma (quote ass_mult_l);;
+            apply_lemma (quote cong_mult);;
             canon;;
             refl
 
         | Inr (Mult (Plus a b) c) ->
             apply_lemma (quote trans);;
             apply_lemma (quote distl);; // now need to show a*c + b*c = ?u
+            apply_lemma (quote trans);;
             apply_lemma (quote cong_plus);; // now two goals. |- a*c = ?u1 ; |- b*c = ?u2
+            canon;;
             canon;;
             canon
 
         | Inr (Mult a (Plus b c)) ->
             apply_lemma (quote trans);;
             apply_lemma (quote distr);;
+            apply_lemma (quote trans);;
             apply_lemma (quote cong_plus);;
+            canon;;
             canon;;
             canon
 
@@ -115,7 +131,6 @@ let rec canon : unit -> Tac unit = fun () -> (
     ) ()
 
 let tau : tactic unit =
-    pointwise canon;;
     pointwise canon
 
 let lem1 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") ((x + y) * (z + z) == 2 * z * (y + x))
