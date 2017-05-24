@@ -74,19 +74,6 @@ let mkmult (a b : term) : term =
     let mult = pack (Tv_FVar (pack_fv mult_qn)) in
     pack (Tv_App (pack (Tv_App mult a)) b)
 
-// This is of course a load of crap
-let dropint : tactic unit =
-    eg <-- cur_goal;
-    let (e, g), _ = eg in
-    match inspect g with
-    | Tv_FVar fv ->
-        let qn = inspect_fv fv in
-        if eq_qn qn int_lid
-        then later
-        else fail "not literally int (1)"
-    | _ ->
-        fail "not literally int (2)"
-
 let rec canon : unit -> Tac unit = fun () -> (
     simpl;; // Needed to unfold op_Star into op_Multiply...
     eg <-- cur_goal;
@@ -100,34 +87,22 @@ let rec canon : unit -> Tac unit = fun () -> (
         // TODO: recurse properly
         | Inr (Plus a (Plus b c)) ->
             apply_lemma (quote trans);;
-            repeat dropint;; // TODO: take out
             apply_lemma (quote ass_l);;
-            apply_lemma (quote cong_plus);; // now two goals. |- a*c = ?u1 ; |- b*c = ?u2
-            repeat dropint;; // TODO: take out
+            apply_lemma (quote cong_plus);;
             canon;;
             refl
 
         | Inr (Mult (Plus a b) c) ->
             apply_lemma (quote trans);;
-            repeat dropint;; // TODO: take out
-            (* exact (return r);; // instantiate `z` to the uvar *)
-            (* later;; // move y over *)
             apply_lemma (quote distl);; // now need to show a*c + b*c = ?u
             apply_lemma (quote cong_plus);; // now two goals. |- a*c = ?u1 ; |- b*c = ?u2
-            (* later;; later;; *) // move the two uvars away
-            repeat dropint;; // TODO: take out
             canon;;
             canon
 
         | Inr (Mult a (Plus b c)) ->
             apply_lemma (quote trans);;
-            repeat dropint;; // TODO: take out
-            (* exact (return r);; *)
-            (* later;; *)
             apply_lemma (quote distr);;
             apply_lemma (quote cong_plus);;
-            (* later;; later;; *)
-            repeat dropint;; // TODO: take out
             canon;;
             canon
 
