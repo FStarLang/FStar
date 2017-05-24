@@ -1,5 +1,5 @@
 [
-  "Æ˝k‰\u0006‰§≥$èS(È¯˘U",
+  "\u001eq#\fÌG\u0002\n¡>ôdæi›Ñ",
   [
     [
       "Ex10a.entry",
@@ -89,21 +89,25 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.filter.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.filter.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@query",
         "Ex10a_interpretation_Tm_arrow_449d659811cde73f2fac6653669a9d13",
         "Ex10a_pretyping_9ab526030749815b532b60f20894130b",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Ex10a.entry_haseq", "bool_typing", "equation_Ex10a.db",
         "equation_FStar.ST.ref", "equation_Prims.eqtype",
-        "fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
         "interpretation_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
         "kinding_Ex10a.entry@tok", "lemma_FStar.Heap.lemma_sel_upd1",
         "lemma_FStar.List.Tot.Base.mem_filter_forall",
         "primitive_Prims.op_disEquality",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Ex10a_Tm_refine_3fe51265bfaf4f905b76cff89cbeb76e",
+        "refinement_interpretation_Ex10a_Tm_refine_0545a782c2cab0ee720525f274129dc5",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
         "typing_FStar.Heap.sel"
@@ -126,13 +130,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_Prims.V@tok", "eq2-interp",
+        "data_typing_intro_FStar.Pervasives.V@tok", "eq2-interp",
         "equation_Ex10a.canWrite_t", "equation_Ex10a.file",
         "equation_FStar.Heap.modifies", "equation_FStar.Heap.modifies_t",
         "equation_FStar.ST.modifies_none",
-        "function_token_typing_Prims.unit", "proj_equation_Prims.V_v",
-        "projection_inverse_Prims.V_v", "string_inversion", "unit_inversion",
-        "unit_typing"
+        "function_token_typing_Prims.unit",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_FStar.Pervasives.V_v", "string_inversion",
+        "unit_inversion", "unit_typing"
       ],
       0
     ],
@@ -142,21 +147,30 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "@query",
+        "Ex10a_interpretation_Tm_arrow_449d659811cde73f2fac6653669a9d13",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Ex10a.Readable",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Some",
-        "disc_equation_Prims.Some", "disc_equation_Prims.V", "eq2-interp",
+        "constructor_distinct_FStar.Pervasives.Some",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.V", "eq2-interp",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
+        "equation_Ex10a.db", "equation_FStar.ST.ref",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.option",
+        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
         "interpretation_Ex10a_Tm_abs_bfa07ed00b702381db27b21147165776",
-        "primitive_Prims.op_Equality",
+        "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v"
+        "typing_Ex10a_Tm_abs_bfa07ed00b702381db27b21147165776",
+        "typing_FStar.Heap.sel", "typing_FStar.List.Tot.Base.tryFind"
       ],
       0
     ]

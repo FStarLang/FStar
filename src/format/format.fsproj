@@ -94,6 +94,13 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
+      <Name>prettyprint</Name>
+      <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

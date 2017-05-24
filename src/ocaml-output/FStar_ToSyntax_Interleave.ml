@@ -29,8 +29,8 @@ let definition_lids: FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
     | FStar_Parser_AST.Tycon (uu____61,tys) ->
         FStar_All.pipe_right tys
           (FStar_List.collect
-             (fun uu___196_79  ->
-                match uu___196_79 with
+             (fun uu___193_79  ->
+                match uu___193_79 with
                 | (FStar_Parser_AST.TyconAbbrev
                    (id,uu____85,uu____86,uu____87),uu____88) ->
                     let uu____95 = FStar_Ident.lid_of_ids [id] in [uu____95]
@@ -56,13 +56,13 @@ let rec prefix_with_iface_decls:
            | FStar_Parser_AST.Tycon (uu____138,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___197_155  ->
-                       match uu___197_155 with
+                    (fun uu___194_155  ->
+                       match uu___194_155 with
                        | (FStar_Parser_AST.TyconAbstract uu____159,uu____160)
                            -> true
                        | uu____168 -> false))
                ->
-               Prims.raise
+               raise
                  (FStar_Errors.Error
                     ("Interface contains an abstract 'type' declaration; use 'val' instead",
                       (impl.FStar_Parser_AST.drange)))
@@ -94,7 +94,7 @@ let rec prefix_with_iface_decls:
                             x.FStar_Ident.idText uu____198 in
                         (uu____197, (impl.FStar_Parser_AST.drange)) in
                       FStar_Errors.Error uu____194 in
-                    Prims.raise uu____193
+                    raise uu____193
                   else (iface1, [impl]))
                else
                  (let mutually_defined_with_x =
@@ -135,7 +135,7 @@ let rec prefix_with_iface_decls:
                                  (uu____293,
                                    (iface_hd1.FStar_Parser_AST.drange)) in
                                FStar_Errors.Error uu____290 in
-                             Prims.raise uu____289
+                             raise uu____289
                            else aux ys iface2) in
                   let uu____301 = aux mutually_defined_with_x iface_tl in
                   match uu____301 with
@@ -157,13 +157,13 @@ let check_initial_interface:
            | FStar_Parser_AST.Tycon (uu____351,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___198_368  ->
-                       match uu___198_368 with
+                    (fun uu___195_368  ->
+                       match uu___195_368 with
                        | (FStar_Parser_AST.TyconAbstract uu____372,uu____373)
                            -> true
                        | uu____381 -> false))
                ->
-               Prims.raise
+               raise
                  (FStar_Errors.Error
                     ("Interface contains an abstract 'type' declaration; use 'val' instead",
                       (hd1.FStar_Parser_AST.drange)))
@@ -179,14 +179,14 @@ let check_initial_interface:
                          x.FStar_Ident.idText x.FStar_Ident.idText in
                      (uu____392, (hd1.FStar_Parser_AST.drange)) in
                    FStar_Errors.Error uu____389 in
-                 Prims.raise uu____388
+                 raise uu____388
                else
                  (let uu____394 =
                     FStar_All.pipe_right hd1.FStar_Parser_AST.quals
                       (FStar_List.contains FStar_Parser_AST.Assumption) in
                   if uu____394
                   then
-                    Prims.raise
+                    raise
                       (FStar_Errors.Error
                          ("Interfaces cannot use `assume val x : t`; just write `val x : t` instead",
                            (hd1.FStar_Parser_AST.drange)))
@@ -266,7 +266,7 @@ let initialize_interface:
                     "Interface %s has already been processed" uu____522 in
                 (uu____521, (FStar_Ident.range_of_lid mname)) in
               FStar_Errors.Error uu____518 in
-            Prims.raise uu____517
+            raise uu____517
         | None  -> FStar_ToSyntax_Env.set_iface_decls env mname decls
 let prefix_with_interface_decls:
   FStar_ToSyntax_Env.env ->
@@ -337,5 +337,5 @@ let interleave_module:
                                    uu____667 err1 in
                                (uu____666, (FStar_Ident.range_of_lid l)) in
                              FStar_Errors.Error uu____663 in
-                           Prims.raise uu____662
+                           raise uu____662
                        | uu____670 -> (env1, a1))))

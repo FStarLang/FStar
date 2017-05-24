@@ -323,16 +323,38 @@ module Tcp = struct
       let str = String.sub str 0 recvlen in
       abytes str
 
+  type 'a recv_result = 
+  | RecvWouldBlock
+  | RecvError of string
+  | Received of Bytes.bytes
+
+  let recv_async s i =
+      let i = Z.to_int i in
+      try Received (sock_recv s i) with
+      | Unix_error ((EAGAIN | EWOULDBLOCK),_,_) -> RecvWouldBlock
+      | Unix_error (e,s1,s2) -> RecvError (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
+
+  let set_nonblock = set_nonblock 
+  let clear_nonblock = clear_nonblock
+
   let recv s i =
       let i = Z.to_int i in
       try Correct (sock_recv s i)
       with Unix_error (e,s1,s2) ->
        Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
-  let send s b =
-      try (let n = sock_send s b in if n < Z.to_int (Bytes.length b) then Error(Printf.sprintf "Network error, wrote %d bytes" n) else Correct())
-      with Unix_error (e,s1,s2) ->
-       Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
+  let rec send s b =
+      try (
+          let n = sock_send s b in 
+          let m = Z.to_int (Bytes.length b) in 
+          if n < m
+          then 
+              (* send s (String.sub str n (m - n) *)
+              Error(Printf.sprintf "Network error, wrote %d bytes" n) 
+          else Correct())
+      with 
+      | Unix_error ((EAGAIN | EWOULDBLOCK),_,_) -> send s b
+      | Unix_error (e,s1,s2) -> Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
   let close s =
       close s

@@ -43,7 +43,7 @@ type issue =
   {
   issue_message: Prims.string;
   issue_level: issue_level;
-  issue_range: FStar_Range.range Prims.option;}
+  issue_range: FStar_Range.range option;}
 type error_handler =
   {
   eh_add_one: issue -> Prims.unit;
@@ -112,7 +112,7 @@ let default_handler: error_handler =
 let current_handler: error_handler FStar_ST.ref =
   FStar_Util.mk_ref default_handler
 let mk_issue:
-  issue_level -> FStar_Range.range Prims.option -> Prims.string -> issue =
+  issue_level -> FStar_Range.range option -> Prims.string -> issue =
   fun level  ->
     fun range  ->
       fun msg  ->
@@ -187,9 +187,9 @@ let add_errors: (Prims.string* FStar_Range.range) Prims.list -> Prims.unit =
               | (msg,r) ->
                   let uu____441 = message_prefix.append_prefix msg in
                   err r uu____441) errs)
-let issue_of_exn: Prims.exn -> issue Prims.option =
-  fun uu___60_445  ->
-    match uu___60_445 with
+let issue_of_exn: Prims.exn -> issue option =
+  fun uu___59_445  ->
+    match uu___59_445 with
     | Error (msg,r) ->
         let uu____449 =
           let uu____450 = message_prefix.append_prefix msg in
@@ -209,11 +209,9 @@ let issue_of_exn: Prims.exn -> issue Prims.option =
 let err_exn: Prims.exn -> Prims.unit =
   fun exn  ->
     let uu____461 = issue_of_exn exn in
-    match uu____461 with
-    | Some issue -> add_one issue
-    | None  -> Prims.raise exn
+    match uu____461 with | Some issue -> add_one issue | None  -> raise exn
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___61_466  ->
-    match uu___61_466 with
+  fun uu___60_466  ->
+    match uu___60_466 with
     | Error _|FStar_Util.NYI _|Err _ -> true
     | uu____470 -> false

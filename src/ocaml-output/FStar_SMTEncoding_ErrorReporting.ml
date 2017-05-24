@@ -34,7 +34,7 @@ let remove_dups:
            | ((uu____105,m1,r1),(uu____108,m2,r2)) -> (r1 = r2) && (m1 = m2))
       l
 type msg = (Prims.string* FStar_Range.range)
-type ranges = (Prims.string Prims.option* FStar_Range.range) Prims.list
+type ranges = (Prims.string option* FStar_Range.range) Prims.list
 let fresh_label:
   Prims.string ->
     FStar_Range.range ->
@@ -58,7 +58,7 @@ let fresh_label:
         let lt1 = FStar_SMTEncoding_Term.mkOr (lterm, t) range in
         (label, lt1)
 let label_goals:
-  (Prims.unit -> Prims.string) Prims.option ->
+  (Prims.unit -> Prims.string) option ->
     FStar_Range.range ->
       FStar_SMTEncoding_Term.term -> (labels* FStar_SMTEncoding_Term.term)
   =
@@ -114,11 +114,11 @@ let label_goals:
                 match ropt with
                 | None  -> rng
                 | Some r1 ->
-                    let uu___106_297 = r1 in
+                    let uu___103_297 = r1 in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
-                        (uu___106_297.FStar_Range.use_range)
+                        (uu___103_297.FStar_Range.use_range)
                     } in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =
@@ -261,7 +261,7 @@ let label_goals:
                                                     uu____501 in
                                                 Not_a_wp_implication
                                                   uu____500 in
-                                              Prims.raise uu____499))
+                                              raise uu____499))
                                 | uu____507 ->
                                     let uu____508 =
                                       let uu____509 =
@@ -271,7 +271,7 @@ let label_goals:
                                         Prims.strcat "LHS not a conjunct: "
                                           uu____510 in
                                       Not_a_wp_implication uu____509 in
-                                    Prims.raise uu____508 in
+                                    raise uu____508 in
                               (match uu____408 with
                                | (labels1,lhs2) ->
                                    let uu____521 =
@@ -559,7 +559,7 @@ let detail_errors:
                           FStar_SMTEncoding_Term.assumption_caption =
                             (Some "Disabling label");
                           FStar_SMTEncoding_Term.assumption_name =
-                            (Prims.strcat "disable_label_" (Prims.fst l));
+                            (Prims.strcat "disable_label_" (fst l));
                           FStar_SMTEncoding_Term.assumption_fact_ids = []
                         } in
                       FStar_SMTEncoding_Term.Assume a)) in

@@ -174,7 +174,7 @@ let embed_binder:
       FStar_Syntax_Syntax.syntax
   =
   fun b  ->
-    let uu____225 = FStar_Syntax_Syntax.bv_to_name (Prims.fst b) in
+    let uu____225 = FStar_Syntax_Syntax.bv_to_name (fst b) in
     protect_embedded_term fstar_tactics_binder uu____225
 let unembed_binder: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.binder =
   fun t  ->
@@ -195,11 +195,11 @@ let embed_pair x embed_a t_a embed_b t_b =
         let uu____283 = FStar_Syntax_Syntax.iarg t_b in
         let uu____284 =
           let uu____286 =
-            let uu____287 = embed_a (Prims.fst x) in
+            let uu____287 = embed_a (fst x) in
             FStar_Syntax_Syntax.as_arg uu____287 in
           let uu____288 =
             let uu____290 =
-              let uu____291 = embed_b (Prims.snd x) in
+              let uu____291 = embed_b (snd x) in
               FStar_Syntax_Syntax.as_arg uu____291 in
             [uu____290] in
           uu____286 :: uu____288 in
@@ -353,8 +353,7 @@ let unembed_env:
       FStar_List.fold_left
         (fun env1  ->
            fun b  ->
-             let uu____808 =
-               FStar_TypeChecker_Env.try_lookup_bv env1 (Prims.fst b) in
+             let uu____808 = FStar_TypeChecker_Env.try_lookup_bv env1 (fst b) in
              match uu____808 with
              | None  -> FStar_TypeChecker_Env.push_binders env1 [b]
              | uu____818 -> env1) env binders
@@ -652,7 +651,7 @@ let embed_formula: formula -> FStar_Syntax_Syntax.term =
             [uu____1331] in
           FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_Name uu____1330 in
         uu____1329 None FStar_Range.dummyRange
-let term_as_formula: FStar_Syntax_Syntax.term -> formula Prims.option =
+let term_as_formula: FStar_Syntax_Syntax.term -> formula option =
   fun t  ->
     let uu____1343 = FStar_Syntax_Util.destruct_typ_as_formula t in
     match uu____1343 with
@@ -668,7 +667,8 @@ let term_as_formula: FStar_Syntax_Syntax.term -> formula Prims.option =
               | (hd1,args) ->
                   let uu____1391 =
                     let uu____1392 =
-                      let uu____1396 = FStar_List.map Prims.fst args in
+                      let uu____1396 =
+                        FStar_List.map FStar_Pervasives.fst args in
                       (hd1, uu____1396) in
                     App uu____1392 in
                   Some uu____1391)
@@ -966,8 +966,8 @@ let packfv: Prims.string Prims.list -> FStar_Syntax_Syntax.fv =
     FStar_Syntax_Syntax.lid_as_fv uu____2130
       FStar_Syntax_Syntax.Delta_equational None
 let inspectbv: FStar_Syntax_Syntax.binder -> Prims.string =
-  fun b  -> FStar_Syntax_Print.bv_to_string (Prims.fst b)
-let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
+  fun b  -> FStar_Syntax_Print.bv_to_string (fst b)
+let inspect: FStar_Syntax_Syntax.term -> term_view option =
   fun t  ->
     let uu____2139 =
       let uu____2140 = FStar_Syntax_Subst.compress t in
@@ -977,9 +977,9 @@ let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
         let uu____2145 =
           let uu____2146 = FStar_Syntax_Syntax.mk_binder bv in
           Tv_Var uu____2146 in
-        FStar_All.pipe_left (fun _0_28  -> Some _0_28) uu____2145
+        FStar_All.pipe_left (fun _0_29  -> Some _0_29) uu____2145
     | FStar_Syntax_Syntax.Tm_fvar fv ->
-        FStar_All.pipe_left (fun _0_29  -> Some _0_29) (Tv_FVar fv)
+        FStar_All.pipe_left (fun _0_30  -> Some _0_30) (Tv_FVar fv)
     | FStar_Syntax_Syntax.Tm_app (hd1,[]) ->
         failwith "inspect: empty arguments on Tm_app"
     | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
@@ -995,7 +995,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
                    uu____2204 None t.FStar_Syntax_Syntax.pos in
                  (uu____2201, a) in
                Tv_App uu____2198 in
-             FStar_All.pipe_left (fun _0_30  -> Some _0_30) uu____2197)
+             FStar_All.pipe_left (fun _0_31  -> Some _0_31) uu____2197)
     | FStar_Syntax_Syntax.Tm_abs ([],uu____2219,uu____2220) ->
         failwith "inspect: empty arguments on Tm_abs"
     | FStar_Syntax_Syntax.Tm_abs (b::bs,t1,k) ->
@@ -1013,9 +1013,9 @@ let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
                       let uu____2336 = FStar_Syntax_Util.abs bs1 t2 k in
                       (b1, uu____2336) in
                     Tv_Abs uu____2333 in
-                  FStar_All.pipe_left (fun _0_31  -> Some _0_31) uu____2332))
+                  FStar_All.pipe_left (fun _0_32  -> Some _0_32) uu____2332))
     | FStar_Syntax_Syntax.Tm_type uu____2340 ->
-        FStar_All.pipe_left (fun _0_32  -> Some _0_32) (Tv_Type ())
+        FStar_All.pipe_left (fun _0_33  -> Some _0_33) (Tv_Type ())
     | FStar_Syntax_Syntax.Tm_arrow ([],k) ->
         failwith "inspect: empty binders on arrow"
     | FStar_Syntax_Syntax.Tm_arrow (b::bs,k) ->
@@ -1031,7 +1031,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
                  let uu____2399 = FStar_Syntax_Util.arrow bs k1 in
                  (b1, uu____2399) in
                Tv_Arrow uu____2396 in
-             FStar_All.pipe_left (fun _0_33  -> Some _0_33) uu____2395)
+             FStar_All.pipe_left (fun _0_34  -> Some _0_34) uu____2395)
     | FStar_Syntax_Syntax.Tm_refine (bv,t1) ->
         let b = FStar_Syntax_Syntax.mk_binder bv in
         let uu____2414 = FStar_Syntax_Subst.open_term [b] t1 in
@@ -1041,7 +1041,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
                match b' with
                | b'1::[] -> b'1
                | uu____2432 -> failwith "impossible" in
-             FStar_All.pipe_left (fun _0_34  -> Some _0_34)
+             FStar_All.pipe_left (fun _0_35  -> Some _0_35)
                (Tv_Refine (b1, t2)))
     | FStar_Syntax_Syntax.Tm_constant c ->
         let c1 =
@@ -1049,7 +1049,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
           | FStar_Const.Const_unit  -> C_Unit
           | FStar_Const.Const_int (s,uu____2441) -> C_Int s
           | uu____2448 -> failwith "unknown constant" in
-        FStar_All.pipe_left (fun _0_35  -> Some _0_35) (Tv_Const c1)
+        FStar_All.pipe_left (fun _0_36  -> Some _0_36) (Tv_Const c1)
     | uu____2450 ->
         (FStar_Util.print_string "inspect: outside of expected syntax\n";
          None)

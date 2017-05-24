@@ -43,10 +43,10 @@ let rec black_height t = match t with
     let hhb = black_height b in
     match (hha, hhb) with
       | Some ha, Some hb ->
-	if ha = hb then
-	  if c = R then Some ha else Some (ha + 1)
-	else
-	  None
+        if ha = hb then
+          if c = R then Some ha else Some (ha + 1)
+        else
+          None
       | _, _ -> None
 
 (* returns the minimum element in a T tree (E tree has no element) *)
@@ -118,7 +118,7 @@ let rec in_tree t k = match t with
  * Okasaki's insertion algorithm inserts the element at its bst place
  * in a red node, and then uses a balance function to re-establish
  * the red black tree invariants.
- * 
+ *
  * not_c_inv represents violation of c_inv property, i.e. when a red node
  * may have a red child either on left branch or right branch.
  *)
@@ -137,7 +137,7 @@ type lr_c_inv (t:rbtree') = T? t /\ c_inv (T?.left t) /\ c_inv (T?.right t)
  * this is the predicate satisfied by a tree before call to balance
  *)
 type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
-    (* 
+    (*
      * lt satisfies k_inv, rt satisfies k_inv, and key is a candidate root key for
      * a tree with lt as left branch and rt as right.
      *)
@@ -148,7 +148,7 @@ type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
     )
 
     /\
-    
+
     (*
      * lt and rt satisfy h_inv, moreover, their black heights is same.
      * the second condition ensures that if resulting tree has (lt k rt), it
@@ -172,43 +172,43 @@ type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
     )
 
 type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
-	      (* TODO: this should come from requires *)
-	      Some? (black_height lt) /\
-              
-	      (* returned tree is a T tree *)
-	      (T? r) /\
-	       
-	      (*
-	       * returned tree satisfies k_inv
-	       * in addition, either lt is E and ky is min elt in r OR
-	       * min elt in returned tree is same as min elt in lt
-	       * (resp. for max elt and rt)
-	       *)
-	      (k_inv r /\
-	      ((E? lt /\ min_elt r = ky) \/ (T? lt /\ min_elt r = min_elt lt)) /\
+              (* TODO: this should come from requires *)
+              Some? (black_height lt) /\
+
+              (* returned tree is a T tree *)
+              (T? r) /\
+
+              (*
+               * returned tree satisfies k_inv
+               * in addition, either lt is E and ky is min elt in r OR
+               * min elt in returned tree is same as min elt in lt
+               * (resp. for max elt and rt)
+               *)
+              (k_inv r /\
+              ((E? lt /\ min_elt r = ky) \/ (T? lt /\ min_elt r = min_elt lt)) /\
               ((E? rt /\ max_elt r = ky) \/ (T? rt /\ max_elt r = max_elt rt))) /\
 
-	      (*
-	       * returned tree satisfies h_inv
-	       * in addition, black height of returned tree is either same as or
-	       * one more than lt (and hence rt) depending on c = R or c = B
-	       *)
-		 
+              (*
+               * returned tree satisfies h_inv
+               * in addition, black height of returned tree is either same as or
+               * one more than lt (and hence rt) depending on c = R or c = B
+               *)
+
               ((h_inv r) /\
-	      ((c = B /\ Some?.v(black_height r) = Some?.v(black_height lt) + 1) \/
+              ((c = B /\ Some?.v(black_height r) = Some?.v(black_height lt) + 1) \/
                (c = R /\ Some?.v(black_height r) = Some?.v(black_height lt)))) /\
 
               (*
-	       * returned tree either satisfies c_inv OR
-	       * if it doesn't, it must be the case that c (and hence T?.col r) = R
-	       *)
-	      (c_inv r  \/
-	      (T?.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
-	      
+               * returned tree either satisfies c_inv OR
+               * if it doesn't, it must be the case that c (and hence T?.col r) = R
+               *)
+              (c_inv r  \/
+              (T?.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
+
               (*
-	       * resulting tree contains all elements from lt, ly, and rt, and
-	       * nothing else
-	       *)
+               * resulting tree contains all elements from lt, ly, and rt, and
+               * nothing else
+               *)
               (forall k. in_tree r k <==> (in_tree lt k \/ k = ky \/ in_tree rt k))
 
 (*
@@ -219,14 +219,16 @@ type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              Pure rbtree'
              (requires (pre_balance c lt ky rt))
-	     (ensures (fun r -> post_balance c lt ky rt r))
-#reset-options "--z3rlimit 10"
+             (ensures (fun r -> post_balance c lt ky rt r))
+
+#reset-options "--z3rlimit 20"
+
 (* it's pretty cool that the spec is proved easily without any hints ! *)
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
-    | (B, (T R (T R a x b) y c), z, d) 
-    | (B, (T R a x (T R b y c)), z, d) 
-    | (B, a, x, (T R (T R b y c) z d)) 
+    | (B, (T R (T R a x b) y c), z, d)
+    | (B, (T R a x (T R b y c)), z, d)
+    | (B, a, x, (T R (T R b y c) z d))
     | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
 
@@ -239,41 +241,41 @@ let balance c lt ky rt =
 val ins: t:rbtree' -> k:nat ->
          Pure rbtree'
          (requires (c_inv t /\ h_inv t /\ k_inv t))
-	 (ensures (fun r ->
-	          
-          (* returned tree is a T *)
-	  (T? r) /\
+         (ensures (fun r ->
 
-	  (*
-	   * returned tree satisfies k_inv
-	   * moreover, min elt in returned tree is either k (the new key)
-	   * or same as the min elt in input t (resp. for max element)
-	   * if t is E, then min (and max) elt in returned tree must be k
-	   *)
-	     
-	  (k_inv r /\
-	  (min_elt r = k \/ (T? t /\ min_elt r = min_elt t)) /\
-	  (max_elt r = k \/ (T? t /\ max_elt r = max_elt t))) /\
+          (* returned tree is a T *)
+          (T? r) /\
 
           (*
-	   * returned tree satisfies h_inv
-	   * and has same black height as the input tree
-	   * (the new node is introduced at color R, and no node is re-colored)
-	   *)
-          (h_inv r /\ black_height r = black_height t) /\         
-          
-	  (*
-	   * these are copied from post condition of balance
-	   *)
-	  (c_inv r \/
-	  (T? t /\ T?.col r = R /\ T?.col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
-	  
+           * returned tree satisfies k_inv
+           * moreover, min elt in returned tree is either k (the new key)
+           * or same as the min elt in input t (resp. for max element)
+           * if t is E, then min (and max) elt in returned tree must be k
+           *)
+
+          (k_inv r /\
+          (min_elt r = k \/ (T? t /\ min_elt r = min_elt t)) /\
+          (max_elt r = k \/ (T? t /\ max_elt r = max_elt t))) /\
+
+          (*
+           * returned tree satisfies h_inv
+           * and has same black height as the input tree
+           * (the new node is introduced at color R, and no node is re-colored)
+           *)
+          (h_inv r /\ black_height r = black_height t) /\
+
+          (*
+           * these are copied from post condition of balance
+           *)
+          (c_inv r \/
+          (T? t /\ T?.col r = R /\ T?.col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
+
           (*
            * returned tree has all the elements of t and k and nothing else
-	   *)
+           *)
           (forall k'. (in_tree t k' ==> in_tree r k') /\
-	              (in_tree r k' ==> (in_tree t k' \/ k' = k)))
-          
+                      (in_tree r k' ==> (in_tree t k' \/ k' = k)))
+
           ))
 (* once again, very cool that spec is verified without any hints in the code *)
 let rec ins t x =
@@ -281,16 +283,16 @@ let rec ins t x =
     | E -> T R E x E
     | T c a y b ->
       if x < y then
-	(* TODO: ideally we would have inlined this call in the balance call *)
-	(* NS: You can write it this way. We're generating a semantically correct VC, but the shape of it causes Z3 to blowup *)
+        (* TODO: ideally we would have inlined this call in the balance call *)
+        (* NS: You can write it this way. We're generating a semantically correct VC, but the shape of it causes Z3 to blowup *)
         (* balance c (ins a x) y b *)
         let lt = ins a x in
-	balance c lt y b
+        balance c lt y b
       else if x = y then
-	t
+        t
       else
-	let rt = ins b x in
-	balance c a y rt
+        let rt = ins b x in
+        balance c a y rt
 
 (*
  * a red black tree is balanced if it satisfies r_inv, h_inv, c_inv, and k_inv
@@ -314,7 +316,7 @@ val insert: t:rbtree' -> x:nat -> Pure rbtree'
                                   (ensures (fun r -> balanced_rbtree' r /\
                                   (forall k'.
                                   (in_tree t k' ==> in_tree r k') /\
-	                          (in_tree r k' ==> (in_tree t k' \/ k' = x))
+                                  (in_tree r k' ==> (in_tree t k' \/ k' = x))
                                   )))
 
 let insert t x =

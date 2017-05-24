@@ -108,7 +108,7 @@
   type delimiters = { angle:int ref; paren:int ref; }
 
   let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
-  let n_typ_apps = FStar_Util.mk_ref 0
+  let n_typ_apps = ref 0
   let is_typ_app lexbuf =
     if not (FStar_Options.fs_typ_app lexbuf.lex_start_p.pos_fname) then false
     else try
@@ -133,7 +133,7 @@
       let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
       let rec aux i =
         if !(d.angle)=0 && !(d.paren)=0 then true
-        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || (FStar_Util.starts_with (FStar_Util.substring_from contents (Z.of_int i)) "then") then false
+        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || FStar_Util.(starts_with (substring_from contents (Z.of_int i)) "then") then false
         else (upd i; aux (i + 1))
       in
       aux (pos + 1)

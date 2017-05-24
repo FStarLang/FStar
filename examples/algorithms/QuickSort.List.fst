@@ -33,17 +33,6 @@ let rec mem_count #a x = function
   | [] -> ()
   | _::tl -> mem_count x tl
 
-
-val append_count: #a:eqtype -> l:list a -> m:list a -> x:a ->
-  Lemma (requires True)
-        (ensures (count x (l @ m) = (count x l + count x m)))
-  [SMTPat (count x (l @ m))]
-let rec append_count #a l m x =
-  match l with
-  | [] -> ()
-  | hd::tl -> append_count tl m x
-
-
 val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 let rec partition f = function
   | [] -> [], []
@@ -64,7 +53,6 @@ let rec partition_lemma #a f l = match l with
   | [] -> ()
   | hd::tl ->  partition_lemma f tl
 
-
 val sorted_app_lemma: #a:eqtype -> f:total_order a
   -> l1:list a{sorted f l1} -> l2:list a{sorted f l2} -> pivot:a
   -> Lemma (requires (forall y. (mem y l1 ==> ~(f pivot y))
@@ -79,15 +67,40 @@ let rec sorted_app_lemma #a f l1 l2 pivot =
 type is_permutation (a:eqtype) (l:list a) (m:list a) =
   forall x. count x l = count x m
 
+val append_count: #a:eqtype -> l:list a -> m:list a -> x:a ->
+  Lemma (requires True)
+        (ensures (count x (l @ m) = (count x l + count x m)))
+  [SMTPat (count x (l @ m))]
+let rec append_count #a l m x =
+  match l with
+  | [] -> ()
+  | hd::tl -> append_count tl m x
+
+let permutation_app_lemma (#a:eqtype) (hd:a) (tl:list a)
+                          (l1:list a) (l2:list a)
+   : Lemma (requires (is_permutation a tl (l1 @ l2)))
+           (ensures (is_permutation a (hd::tl) (l1 @ (hd::l2))))
+   = //NS: 05/15
+     //This proof required an interesting change following issue #1028
+     //From append_count, we can automatically prove what the assert below says
+     //However, what we get from append_count is
+     //    count' ZFuel x (l1 @ (hd :: l2)) = count' ZFuel x l1 + count' ZFuel x (hd :: l2))
+     //where count' is the fuel-instrumented variant of count
+     //But, this variant prevents further progress, since we can't unfold the last term in the sum
+     //By assertion the equality, we explicitly introduce `count x (hd::l2)`
+     //which can then be unfolded as needed.
+     //This is rather counterintuitive.
+    assert (forall x. count x (l1 @ (hd :: l2)) = count x l1 + count x (hd :: l2))
+
 val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
   Tot (m:list a{sorted f m /\ is_permutation a l m})
   (decreases (length l))
-//NS: for CI, replaying this with hints fails; 
-//    Then it requires finding a proof in a fresh solver context
-//    which now seems to take a lot of time ... without the lemma invocation below
-let rec quicksort #a f = function
+let rec quicksort #a f l =
+  match l with
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
-    partition_lemma (f pivot) tl;  //without this, proof takes a much longer now (e.g., ~20s)
-    (quicksort f lo) @ pivot :: quicksort f hi
+    let m = quicksort f lo @ pivot :: quicksort f hi in
+    permutation_app_lemma pivot tl (quicksort f lo) (quicksort f hi);
+    m
+    

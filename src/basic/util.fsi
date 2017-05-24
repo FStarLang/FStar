@@ -383,3 +383,8 @@ type json =
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string
+
+(* Common interface between F#, Ocaml and F* to read and write references *)
+(* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)
+val read : ref<'a> -> 'a
+val write : ref<'a> -> 'a -> unit

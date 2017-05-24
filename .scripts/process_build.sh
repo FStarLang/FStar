@@ -46,7 +46,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-CURRENT_VERSION=$(head -n 1 version.txt)
+CURRENT_VERSION=$(head -n 1 version.txt | tr -d '\r')
 
 echo "*** Clean up log files ***"
 if [[ -f src/ocaml-output/fstar/MicroBenchMarkOutput.log ]]; then
@@ -59,8 +59,9 @@ if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
   rm src/ocaml-output/fstar/AllExamples.log
 fi
 
-echo "*** Make package ***"
+echo "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
+make -C ../../ulib/ml clean
 make package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version

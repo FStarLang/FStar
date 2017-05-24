@@ -1,5 +1,5 @@
 open Prims
-let uu___233: Prims.unit = FStar_Version.dummy ()
+let uu___230: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit -> (FStar_Getopt.parse_cmdline_res* Prims.string Prims.list) =
   fun uu____6  -> FStar_Options.parse_cmd_line ()
@@ -65,7 +65,7 @@ let report_errors:
   ((Prims.bool* FStar_Ident.lident)* Prims.int) Prims.list -> Prims.unit =
   fun fmods  ->
     (let uu____85 = FStar_Errors.report_all () in
-     FStar_All.pipe_right uu____85 Prims.ignore);
+     FStar_All.pipe_right uu____85 FStar_Pervasives.ignore);
     (let nerrs = FStar_Errors.get_err_count () in
      if nerrs > (Prims.parse_int "0")
      then
@@ -86,7 +86,7 @@ let codegen:
               let uu____116 = FStar_Extraction_ML_UEnv.mkContext env in
               FStar_Util.fold_map FStar_Extraction_ML_Modul.extract uu____116
                 umods in
-            FStar_All.pipe_left Prims.snd uu____111 in
+            FStar_All.pipe_left FStar_Pervasives.snd uu____111 in
           let mllibs1 = FStar_List.flatten mllibs in
           let ext =
             match opt with
@@ -216,7 +216,7 @@ let go uu____151 =
                               (let uu____275 =
                                  let uu____279 =
                                    FStar_All.pipe_right fmods
-                                     (FStar_List.map Prims.fst) in
+                                     (FStar_List.map FStar_Pervasives.fst) in
                                  (uu____279, env) in
                                codegen uu____275);
                               finished_message module_names_and_times

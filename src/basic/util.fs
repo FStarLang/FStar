@@ -970,3 +970,6 @@ let json_of_string str : option<json> =
 let string_of_json json : string =
   let serializer = new System.Web.Script.Serialization.JavaScriptSerializer() in
   serializer.Serialize (json_to_obj json)
+
+let read r = !r
+let write r x = r := x

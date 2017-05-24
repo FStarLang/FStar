@@ -63,13 +63,9 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
   let codegen_libs = FStar_Options.codegen_libs() in
   match l with
   | [] -> mk_lident sym
-  | ["Prims"] -> 
-     (* as in the original printer, stripping "Prims" from some constructors *)
-     let remove_qual = ["Some"; "None"] in
-     if (BatList.mem sym remove_qual) then
-       mk_lident sym
-     else 
-       mk_lident (BatString.concat "." ["Prims"; sym])
+  | ["FStar"; "Pervasives"] when BatList.mem sym ["Some"; "None"] -> 
+     (* as in the original printer, stripping module from some constructors *)
+     mk_lident sym
   | hd::tl -> 
      let m_name = !current_module in
      let suffix, prefix = 
@@ -91,6 +87,9 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
 
 
 (* names of F* functions which need to be handled differently *)
+let fst_ident = path_to_ident (["FStar"; "Pervasives"], "fst")
+let snd_ident = path_to_ident (["FStar"; "Pervasives"], "snd")
+let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 
@@ -169,11 +168,13 @@ let rec build_core_type (ty: mlty): core_type =
      let c_tys = map build_core_type tys in
      let p = path_to_ident path in
      (match path with
-      | (["Prims"], c) ->
+      | (["FStar"; "Pervasives"], c) ->
         if ((BatString.length c == 6) && 
             (BatString.equal (BatString.sub c 0 5) "tuple")) then
           (* resugar tuples (Prims.tupleX) *) 
           Typ.mk (Ptyp_tuple (map build_core_type tys))
+        else if BatString.equal c "option" then
+          Typ.mk (Ptyp_constr (path_to_ident ([], "option"), (map build_core_type tys)))
         else
           Typ.mk (Ptyp_constr (p, c_tys))
       | _ -> Typ.mk (Ptyp_constr (p, c_tys)))
@@ -295,6 +296,12 @@ and resugar_app f args es: expression =
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with" in
     Exp.try_ body variants
+  | Pexp_ident x when (x = fst_ident) ->
+    Exp.apply (Exp.ident (mk_lident "fst")) args
+  | Pexp_ident x when (x = snd_ident) ->
+    Exp.apply (Exp.ident (mk_lident "snd")) args
+  | Pexp_ident x when (x = raise_ident) ->
+    Exp.apply (Exp.ident (mk_lident "raise")) args
   | _ -> Exp.apply f args
 
 and build_seq args =

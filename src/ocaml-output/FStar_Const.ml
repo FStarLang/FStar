@@ -24,7 +24,7 @@ type sconst =
   | Const_effect
   | Const_unit
   | Const_bool of Prims.bool
-  | Const_int of (Prims.string* (signedness* width) Prims.option)
+  | Const_int of (Prims.string* (signedness* width) option)
   | Const_char of FStar_BaseTypes.char
   | Const_float of FStar_BaseTypes.double
   | Const_bytearray of (FStar_BaseTypes.byte Prims.array* FStar_Range.range)
@@ -47,7 +47,7 @@ let uu___is_Const_int: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_int _0 -> true | uu____89 -> false
 let __proj__Const_int__item___0:
-  sconst -> (Prims.string* (signedness* width) Prims.option) =
+  sconst -> (Prims.string* (signedness* width) option) =
   fun projectee  -> match projectee with | Const_int _0 -> _0
 let uu___is_Const_char: sconst -> Prims.bool =
   fun projectee  ->
@@ -96,3 +96,29 @@ let eq_const: sconst -> sconst -> Prims.bool =
         |(Const_string (a,_),Const_string (b,_)) -> a = b
       | (Const_reflect l1,Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
       | uu____256 -> c1 = c2
+let rec pow2: Prims.int -> Prims.int =
+  fun x  ->
+    match x with
+    | _0_25 when _0_25 = (Prims.parse_int "0") -> Prims.parse_int "1"
+    | uu____262 ->
+        let uu____263 = pow2 (x - (Prims.parse_int "1")) in
+        (Prims.parse_int "2") * uu____263
+let bounds: signedness -> width -> (Prims.int* Prims.int) =
+  fun signedness  ->
+    fun width  ->
+      let n1 =
+        match width with
+        | Int8  -> Prims.parse_int "8"
+        | Int16  -> Prims.parse_int "16"
+        | Int32  -> Prims.parse_int "32"
+        | Int64  -> Prims.parse_int "64" in
+      let uu____273 =
+        match signedness with
+        | Unsigned  ->
+            let uu____278 =
+              let uu____279 = pow2 n1 in uu____279 - (Prims.parse_int "1") in
+            ((Prims.parse_int "0"), uu____278)
+        | Signed  ->
+            let upper = pow2 (n1 - (Prims.parse_int "1")) in
+            ((- upper), (upper - (Prims.parse_int "1"))) in
+      match uu____273 with | (lower,upper) -> (lower, upper)

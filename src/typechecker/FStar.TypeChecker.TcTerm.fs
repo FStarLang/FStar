@@ -928,6 +928,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                           let t = N.unfold_whnf env (U.comp_result c) in
                           match t.n with
                           | Tm_arrow(bs_expected, c_expected) ->
+                            let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
                             let (env, bs', more, guard', subst) = check_binders env more_bs bs_expected in
                             handle_more (env, bs@bs', more, Rel.conj_guard guard guard', subst) c_expected
                           | _ -> fail (BU.format1 "More arguments than annotated type (%s)" (Print.term_to_string t)) t
