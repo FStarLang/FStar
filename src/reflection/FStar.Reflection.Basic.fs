@@ -418,3 +418,21 @@ let order_binder (x:binder) (y:binder) : order =
 
 let is_free (x:binder) (t:term) : bool =
     BU.set_mem (fst x) (FStar.Syntax.Free.names t)
+
+let embed_norm_step (n:norm_step) : term =
+    match n with
+    | Simpl ->
+        ref_Simpl
+    | WHNF ->
+        ref_WHNF
+
+let unembed_norm_step (t:term) : norm_step =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Simpl_lid ->
+        Simpl
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_WHNF_lid ->
+        WHNF
+    | _ ->
+        failwith "not an embedded norm_step"

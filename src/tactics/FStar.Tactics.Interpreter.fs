@@ -120,7 +120,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__forall_intros" intros embed_binders   FStar.Reflection.Data.fstar_refl_binders;
       mktac0 "__implies_intro" imp_intro embed_binder FStar.Reflection.Data.fstar_refl_binder;
       mktac0 "__trivial"       trivial embed_unit t_unit;
-      mktac0 "__simpl"         simpl embed_unit t_unit;
+      mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
       mktac0 "__split"         split embed_unit t_unit;

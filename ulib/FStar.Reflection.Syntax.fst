@@ -151,3 +151,8 @@ let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
 let eq_qn = eqlist (fun s1 s2 -> String.compare s1 s2 = 0)
 
 let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+
+noeq
+type norm_step =
+    | Simpl
+    | WHNF

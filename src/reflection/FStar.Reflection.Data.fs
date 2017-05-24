@@ -5,7 +5,6 @@ open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
 
-
 type vconst =
     | C_Unit
     | C_Int of string
@@ -20,6 +19,10 @@ type term_view =
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Unknown
+
+type norm_step =
+    | Simpl
+    | WHNF
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
@@ -78,3 +81,11 @@ let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
 let ord_Lt = lid_as_data_tm ord_Lt_lid
 let ord_Eq = lid_as_data_tm ord_Eq_lid
 let ord_Gt = lid_as_data_tm ord_Gt_lid
+
+let fstar_refl_norm_step = mk_refl_syntax_lid_as_term "norm_step"
+
+let ref_Simpl_lid = fstar_refl_syntax_lid "Simpl"
+let ref_WHNF_lid  = fstar_refl_syntax_lid "WHNF"
+
+let ref_Simpl     = lid_as_data_tm ref_Simpl_lid
+let ref_WHNF      = lid_as_data_tm ref_WHNF_lid

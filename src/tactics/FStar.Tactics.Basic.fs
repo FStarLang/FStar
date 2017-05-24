@@ -23,6 +23,7 @@ module TcEnv  = FStar.TypeChecker.Env
 module TcRel  = FStar.TypeChecker.Rel
 module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
+module RD = FStar.Reflection.Data
 
 type name = bv
 
@@ -446,9 +447,14 @@ let split : tac<unit>
         | _ ->
           fail "Cannot split this goal; expected a conjunction")
 
-let simpl : tac<unit> =
+let norm (s : list<RD.norm_step>) : tac<unit> =
     with_cur_goal (fun goal ->
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops; N.Simplify] in
+    // Translate to actual normalizer steps
+    let tr s = match s with
+        | RD.Simpl -> [N.Simplify]
+        | RD.WHNF -> [N.WHNF]
+    in
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops]@(List.flatten (List.map tr s)) in
     let t = N.normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty=t})
     )
