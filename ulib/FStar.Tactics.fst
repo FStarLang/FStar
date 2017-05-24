@@ -1,6 +1,7 @@
 module FStar.Tactics
 
 open FStar.Order
+open FStar.Tactics.Types
 
 type name = list string
 

@@ -134,6 +134,14 @@ let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let step_from_native_step (ps: proofstate) (s: FStar.Tactics.Native.native_primitive_step): N.primitive_step =
+    let open FStar.Tactics.Native in
+    BU.print1 "Registered primitive step %s\n" (Ident.string_of_lid s.name);
+    { N.name=s.name;
+      N.arity=s.arity;
+      N.strong_reduction_ok=s.strong_reduction_ok;
+      N.interpretation=(fun _rng args -> s.tactic ps args) }
+
 let rec primitive_steps ps : list<N.primitive_step> =
     let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid nm in {
@@ -142,6 +150,9 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
+    let native_tactics = FStar.Tactics.Native.list_all () in
+    let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
+    BU.print1 "Loaded %s native tactics\n" (string_of_int <| List.length native_tactics);
     [ mk "__forall_intros" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
       mk "__implies_intro" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
       mk "__trivial"  1 (mk_tactic_interpretation_0 ps trivial E.embed_unit FStar.TypeChecker.Common.t_unit);
@@ -186,7 +197,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk "__dump"            2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
       mk "__term_to_string"  1 (mk_pure_interpretation_1 Print.term_to_string E.unembed_term E.embed_string);
       mk "__grewrite"        3 (grewrite_interpretation ps)
-    ]
+    ] @ native_tactics_steps
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =

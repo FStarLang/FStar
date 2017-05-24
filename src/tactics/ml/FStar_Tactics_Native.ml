@@ -1,20 +1,28 @@
 open FStar_Tactics_Types
 open FStar_Tactics
 open FStar_Tactics_Basic
-open FStar_Tactics_Interpreter
-
 open FStar_Syntax_Syntax
 module Core = FStar_Tactics_Basic
-module S = FStar_Syntax_Syntax
 module BU = FStar_Util
 
 type itac = proofstate -> args -> term option
+type native_primitive_step =
+    { name: FStar_Ident.lid;
+      arity: Prims.int;
+      strong_reduction_ok: bool;
+      tactic: itac}
 
-let n: itac list = []
-let compiled_tactics = BU.mk_ref n
+let compiled_tactics: native_primitive_step list ref = ref []
 
-let register_tactic (s: string) (t: itac) =
-    (*compiled_tactics := (t::!compiled_tactics);*)
+let list_all () = !compiled_tactics
+
+let register_tactic (s: string) (arity: int) (t: itac)=
+    let step =
+        { name=FStar_Ident.lid_of_str s;
+          arity = Z.of_int arity;
+          strong_reduction_ok=false;
+          tactic=t } in
+    compiled_tactics := step :: !compiled_tactics;
     BU.print1 "Registered tactic %s\n" s
 
 let interpret_goal (g: FStar_Tactics.goal): Core.goal =

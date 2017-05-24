@@ -1,0 +1,15 @@
+UserPrintTactic.fst is a dummy tactic which just reads the proof state
+
+1. fstar --codegen OCaml UserPrintTactic.fst
+    (Note: this will overwrite UserPrintTactic.ml, which currently also contains the manual invocation
+     needed to register the native tactic)
+2. In UserPrintTactic.ml, manually adding the invocation to Tactics.Native.register_tactic
+3. At the root
+    ocamlfind ocamlopt -shared -I src/ocaml-output/_build/src/tactics/ml -I src/ocaml-output/_build/ulib/ml -I src/ocaml-output/_build/src/ocaml-output/ -linkpkg -package zarith -o examples/native_tactics/UserPrintTactic.cmxs examples/native_tactics/UserPrintTactic.ml
+which results in UserPrintTactic.cmxs
+4. In the original UserPrintTactic.fst, remove the tactic itself, assume it and manually add a reflect,
+similar to the way it's done in ulib/FStar.Tactics.fst
+
+In order to use it:
+fstar --load UserPrintTactic.cmxs UserTacTest.fst
+
