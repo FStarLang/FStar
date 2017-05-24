@@ -89,21 +89,21 @@ let rec canon : unit -> Tac unit = fun () -> (
     | Comp Eq t l r ->
         begin match run_tm (is_arith_expr l) with
         | Inl s ->
-            refl
+            trefl
 
         | Inr (Plus a (Plus b c)) ->
             apply_lemma (quote trans);;
             apply_lemma (quote ass_plus_l);;
             apply_lemma (quote cong_plus);;
             canon;;
-            refl
+            trefl
 
         | Inr (Mult a (Mult b c)) ->
             apply_lemma (quote trans);;
             apply_lemma (quote ass_mult_l);;
             apply_lemma (quote cong_mult);;
             canon;;
-            refl
+            trefl
 
         | Inr (Mult (Plus a b) c) ->
             apply_lemma (quote trans);;
@@ -124,7 +124,7 @@ let rec canon : unit -> Tac unit = fun () -> (
             canon
 
         | Inr _ ->
-            refl
+            trefl
         end
     | _ ->
         fail ("impossible: " ^ term_to_string g)

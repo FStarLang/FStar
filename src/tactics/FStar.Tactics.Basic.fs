@@ -794,16 +794,16 @@ let pointwise (tau:tac<unit>) : tac<unit> =
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 
-let refl : tac<unit> =
+let trefl : tac<unit> =
     with_cur_goal (fun g ->
         let hd, args = U.head_and_args' g.goal_ty in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv SC.eq2_lid ->
             if TcRel.teq_nosmt g.context l r
             then dismiss
-            else fail "refl: not a trivial equality"
+            else fail "trefl: not a trivial equality"
         | hd, _ ->
-            fail (BU.format1 "refl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
+            fail (BU.format1 "trefl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
     )
 
 let later : tac<unit> =
