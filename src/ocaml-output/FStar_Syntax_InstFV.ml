@@ -94,7 +94,7 @@ let rec inst:
       | FStar_Syntax_Syntax.Tm_let (lbs,t2) ->
           let lbs1 =
             let uu____558 =
-              FStar_All.pipe_right (Prims.snd lbs)
+              FStar_All.pipe_right (snd lbs)
                 (FStar_List.map
                    (fun lb  ->
                       let uu___159_564 = lb in
@@ -110,7 +110,7 @@ let rec inst:
                           (uu___159_564.FStar_Syntax_Syntax.lbeff);
                         FStar_Syntax_Syntax.lbdef = uu____568
                       })) in
-            ((Prims.fst lbs), uu____558) in
+            ((fst lbs), uu____558) in
           let uu____573 =
             let uu____574 = let uu____582 = inst s t2 in (lbs1, uu____582) in
             FStar_Syntax_Syntax.Tm_let uu____574 in

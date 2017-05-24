@@ -196,9 +196,9 @@ let rec resugar_term_as_op:
       let uu____356 =
         FStar_All.pipe_right infix_prim_ops
           (FStar_Util.find_opt
-             (fun d  -> FStar_Syntax_Syntax.fv_eq_lid fv (Prims.fst d))) in
+             (fun d  -> FStar_Syntax_Syntax.fv_eq_lid fv (fst d))) in
       match uu____356 with
-      | Some op -> Some ((Prims.snd op), (Prims.parse_int "0"))
+      | Some op -> Some ((snd op), (Prims.parse_int "0"))
       | uu____381 ->
           let length1 =
             FStar_String.length
@@ -957,8 +957,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                                        universe_to_string univs1 in
                                      (uu____2537, uu____2541))))) in
              let r = FStar_List.map resugar_one_binding bnds1 in
-             let bnds2 = FStar_List.map Prims.fst r in
-             let comments = FStar_List.map Prims.snd r in
+             let bnds2 = FStar_List.map FStar_Pervasives.fst r in
+             let comments = FStar_List.map FStar_Pervasives.snd r in
              let body2 = resugar_term body1 in
              mk1
                (FStar_Parser_AST.Let

@@ -309,9 +309,8 @@ let uu___is_GetReasonUnknown: decl -> Prims.bool =
 type decls_t = decl Prims.list
 type error_label = (fv* Prims.string* FStar_Range.range)
 type error_labels = error_label Prims.list
-let fv_eq: fv -> fv -> Prims.bool =
-  fun x  -> fun y  -> (Prims.fst x) = (Prims.fst y)
-let fv_sort x = Prims.snd x
+let fv_eq: fv -> fv -> Prims.bool = fun x  -> fun y  -> (fst x) = (fst y)
+let fv_sort x = snd x
 let freevar_eq: term -> term -> Prims.bool =
   fun x  ->
     fun y  ->
@@ -388,8 +387,8 @@ let rec hash_of_term': term' -> Prims.string =
         Prims.strcat "@" uu____946
     | FreeV x ->
         let uu____950 =
-          let uu____951 = strSort (Prims.snd x) in Prims.strcat ":" uu____951 in
-        Prims.strcat (Prims.fst x) uu____950
+          let uu____951 = strSort (snd x) in Prims.strcat ":" uu____951 in
+        Prims.strcat (fst x) uu____950
     | App (op,tms) ->
         let uu____956 =
           let uu____957 =
@@ -1101,8 +1100,8 @@ let termToSmt: Prims.string -> term -> Prims.string =
         | Integer i -> i
         | BoundV i ->
             let uu____2724 = FStar_List.nth names i in
-            FStar_All.pipe_right uu____2724 Prims.fst
-        | FreeV x -> Prims.fst x
+            FStar_All.pipe_right uu____2724 FStar_Pervasives.fst
+        | FreeV x -> fst x
         | App (op,[]) -> op_to_string op
         | App (op,tms) ->
             let uu____2734 =
@@ -1550,7 +1549,7 @@ let rec print_smt_term: term -> Prims.string =
     | BoundV n1 ->
         let uu____3655 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "(BoundV %s)" uu____3655
-    | FreeV fv -> FStar_Util.format1 "(FreeV %s)" (Prims.fst fv)
+    | FreeV fv -> FStar_Util.format1 "(FreeV %s)" (fst fv)
     | App (op,l) ->
         let uu____3663 = print_smt_term_list l in
         FStar_Util.format2 "(%s %s)" (op_to_string op) uu____3663

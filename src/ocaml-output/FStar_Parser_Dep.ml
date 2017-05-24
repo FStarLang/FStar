@@ -594,7 +594,7 @@ let print_graph graph =
                   let uu____1152 =
                     let uu____1156 = FStar_Util.smap_try_find graph k in
                     FStar_Util.must uu____1156 in
-                  Prims.fst uu____1152 in
+                  fst uu____1152 in
                 let r s = FStar_Util.replace_char s '.' '_' in
                 FStar_List.map
                   (fun dep1  ->

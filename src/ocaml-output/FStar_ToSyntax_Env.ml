@@ -543,8 +543,8 @@ let module_is_defined: env -> FStar_Ident.lident -> Prims.bool =
            let uu____1328 = current_module env in
            FStar_Ident.lid_equals lid uu____1328)
         ||
-        (FStar_List.existsb
-           (fun x  -> FStar_Ident.lid_equals lid (Prims.fst x)) env.modules)
+        (FStar_List.existsb (fun x  -> FStar_Ident.lid_equals lid (fst x))
+           env.modules)
 let resolve_module_name:
   env -> FStar_Ident.lident -> Prims.bool -> FStar_Ident.lident Prims.option
   =
@@ -1079,7 +1079,7 @@ let try_lookup_definition:
              FStar_Syntax_Syntax.sigquals = uu____2423;
              FStar_Syntax_Syntax.sigmeta = uu____2424;_},uu____2425)
             ->
-            FStar_Util.find_map (Prims.snd lbs)
+            FStar_Util.find_map (snd lbs)
               (fun lb  ->
                  match lb.FStar_Syntax_Syntax.lbname with
                  | FStar_Util.Inr fv when

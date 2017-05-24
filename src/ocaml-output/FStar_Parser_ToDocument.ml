@@ -439,13 +439,13 @@ let max_level l =
       FStar_List.tryFind
         (fun uu____1128  ->
            match uu____1128 with
-           | (uu____1137,tokens) -> tokens = (Prims.snd level)) level_table in
+           | (uu____1137,tokens) -> tokens = (snd level)) level_table in
     match uu____1110 with
     | Some ((uu____1157,l1,uu____1159),uu____1160) -> max n1 l1
     | None  ->
         let uu____1186 =
           let uu____1187 =
-            let uu____1188 = FStar_List.map token_to_string (Prims.snd level) in
+            let uu____1188 = FStar_List.map token_to_string (snd level) in
             FStar_String.concat "," uu____1188 in
           FStar_Util.format1 "Undefined associativity level %s" uu____1187 in
         failwith uu____1186 in
@@ -540,7 +540,7 @@ let with_comment printer tm tmrange =
         then
           let pos = FStar_Range.end_of_range tmrange in
           let uu____1469 = comments_before_pos comments pos pos in
-          Prims.fst uu____1469
+          fst uu____1469
         else comments in
       let uu____1473 = FStar_Pprint.op_Hat_Hat comments1 printed_e in
       FStar_Pprint.group uu____1473
@@ -617,7 +617,7 @@ let separate_map_with_comments prefix1 sep f xs extract_range =
           let uu____1610 = f x in FStar_Pprint.op_Hat_Hat prefix1 uu____1610 in
         (uu____1606, uu____1609) in
       let uu____1611 = FStar_List.fold_left fold_fun init1 xs1 in
-      Prims.snd uu____1611
+      snd uu____1611
 let rec p_decl: FStar_Parser_AST.decl -> FStar_Pprint.document =
   fun d  ->
     let uu____1857 =
@@ -2174,7 +2174,7 @@ and p_argTerm:
     | ({ FStar_Parser_AST.tm = FStar_Parser_AST.Uvar uu____3485;
          FStar_Parser_AST.range = uu____3486;
          FStar_Parser_AST.level = uu____3487;_},FStar_Parser_AST.UnivApp
-       ) -> p_univar (Prims.fst arg_imp)
+       ) -> p_univar (fst arg_imp)
     | (u,FStar_Parser_AST.UnivApp ) -> p_universe u
     | (e,FStar_Parser_AST.FsTypApp ) ->
         (FStar_Util.print_warning
@@ -2282,7 +2282,7 @@ and p_atomicTermNotQUident: FStar_Parser_AST.term -> FStar_Pprint.document =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen FStar_Pprint.bar in
         let uu____3573 =
           let uu____3574 = FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1 in
-          let uu____3575 = FStar_List.map Prims.fst args in
+          let uu____3575 = FStar_List.map FStar_Pervasives.fst args in
           FStar_Pprint.separate_map uu____3574 p_tmEq uu____3575 in
         let uu____3579 =
           FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rparen in

@@ -999,7 +999,7 @@ let mk_sigelt: sigelt' -> sigelt =
 let mk_subst: subst_t -> subst_t = fun s  -> s
 let extend_subst: subst_elt -> subst_elt Prims.list -> subst_elt Prims.list =
   fun x  -> fun s  -> x :: s
-let argpos: arg -> FStar_Range.range = fun x  -> (Prims.fst x).pos
+let argpos: arg -> FStar_Range.range = fun x  -> (fst x).pos
 let tun: (term',term') syntax = (mk Tm_unknown) None FStar_Range.dummyRange
 let teff: (term',term') syntax =
   (mk (Tm_constant FStar_Const.Const_effect)) (Some Tm_unknown)
@@ -1024,7 +1024,7 @@ let iarg: term -> (term* arg_qualifier Prims.option) =
 let as_arg: term -> (term* arg_qualifier Prims.option) = fun t  -> (t, None)
 let is_null_bv: bv -> Prims.bool =
   fun b  -> (b.ppname).FStar_Ident.idText = null_id.FStar_Ident.idText
-let is_null_binder: binder -> Prims.bool = fun b  -> is_null_bv (Prims.fst b)
+let is_null_binder: binder -> Prims.bool = fun b  -> is_null_bv (fst b)
 let is_top_level: letbinding Prims.list -> Prims.bool =
   fun uu___90_3910  ->
     match uu___90_3910 with
@@ -1073,8 +1073,8 @@ let gen_reset: ((Prims.unit -> Prims.int)* (Prims.unit -> Prims.unit)) =
   let gen1 uu____4052 = FStar_Util.incr x; FStar_ST.read x in
   let reset uu____4062 = FStar_ST.write x (Prims.parse_int "0") in
   (gen1, reset)
-let next_id: Prims.unit -> Prims.int = Prims.fst gen_reset
-let reset_gensym: Prims.unit -> Prims.unit = Prims.snd gen_reset
+let next_id: Prims.unit -> Prims.int = fst gen_reset
+let reset_gensym: Prims.unit -> Prims.unit = snd gen_reset
 let range_of_ropt: FStar_Range.range Prims.option -> FStar_Range.range =
   fun uu___93_4084  ->
     match uu___93_4084 with | None  -> FStar_Range.dummyRange | Some r -> r

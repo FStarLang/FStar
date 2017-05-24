@@ -518,7 +518,7 @@ let z3_job:
                                             (fun uu____1238  ->
                                                match uu____1238 with
                                                | (m,uu____1245,uu____1246) ->
-                                                   (Prims.fst m) = l)) in
+                                                   (fst m) = l)) in
                                      match uu____1220 with
                                      | None  -> []
                                      | Some (lbl,msg,r) -> [(lbl, msg, r)])) in

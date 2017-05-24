@@ -89,8 +89,7 @@ let mk_pure_interpretation_1 f unembed_a embed_b nm args =
   (match args with
    | a::[] ->
        let uu____319 =
-         let uu____320 =
-           let uu____321 = unembed_a (Prims.fst a) in f uu____321 in
+         let uu____320 = let uu____321 = unembed_a (fst a) in f uu____321 in
          embed_b uu____320 in
        Some uu____319
    | uu____324 -> failwith "Unexpected interpretation of pure primitive")

@@ -438,7 +438,8 @@ let rec closure_as_term:
                          let uu____1248 =
                            let uu____1253 =
                              let uu____1254 = FStar_List.hd x1 in
-                             FStar_All.pipe_right uu____1254 Prims.fst in
+                             FStar_All.pipe_right uu____1254
+                               FStar_Pervasives.fst in
                            (uu____1253, phi1) in
                          FStar_Syntax_Syntax.Tm_refine uu____1248 in
                        mk uu____1247 t1.FStar_Syntax_Syntax.pos)
@@ -601,7 +602,7 @@ let rec closure_as_term:
                                           (fun p1  ->
                                              let uu____1779 =
                                                norm_pat env2 p1 in
-                                             Prims.fst uu____1779)) in
+                                             fst uu____1779)) in
                                    ((let uu___147_1791 = p in
                                      {
                                        FStar_Syntax_Syntax.v =
@@ -1362,7 +1363,7 @@ let maybe_simplify:
             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.false_lid ->
             Some false
         | uu____4070 -> None in
-      let simplify arg = ((simp_t (Prims.fst arg)), arg) in
+      let simplify arg = ((simp_t (fst arg)), arg) in
       let uu____4097 =
         FStar_All.pipe_left Prims.op_Negation
           (FStar_List.contains Simplify steps) in
@@ -1541,7 +1542,7 @@ let rec norm:
                let uu____5104 =
                  let uu____5105 =
                    let uu____5107 = firstn (Prims.parse_int "4") stack1 in
-                   FStar_All.pipe_left Prims.fst uu____5107 in
+                   FStar_All.pipe_left FStar_Pervasives.fst uu____5107 in
                  stack_to_string uu____5105 in
                FStar_Util.print3
                  ">>> %s\nNorm %s with top of the stack %s \n" uu____5102
@@ -1657,7 +1658,7 @@ let rec norm:
                  && (is_reify_head stack1)
                ->
                let uu____5369 = FStar_List.tl stack1 in
-               norm cfg env uu____5369 (Prims.fst a)
+               norm cfg env uu____5369 (fst a)
            | FStar_Syntax_Syntax.Tm_app
                ({
                   FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
@@ -1673,7 +1674,7 @@ let rec norm:
                     let a1 =
                       let uu____5424 =
                         FStar_All.pipe_left FStar_Syntax_Util.unascribe
-                          (Prims.fst a) in
+                          (fst a) in
                       FStar_Syntax_Subst.compress uu____5424 in
                     (match a1.FStar_Syntax_Syntax.n with
                      | FStar_Syntax_Syntax.Tm_app
@@ -1684,7 +1685,7 @@ let rec norm:
                             FStar_Syntax_Syntax.tk = uu____5428;
                             FStar_Syntax_Syntax.pos = uu____5429;
                             FStar_Syntax_Syntax.vars = uu____5430;_},a2::[])
-                         -> norm cfg env stack1 (Prims.fst a2)
+                         -> norm cfg env stack1 (fst a2)
                      | uu____5455 ->
                          let stack2 =
                            (App
@@ -2158,7 +2159,8 @@ let rec norm:
                         let uu____6254 =
                           let uu____6257 =
                             let uu____6258 = FStar_List.hd bs in
-                            FStar_All.pipe_right uu____6258 Prims.fst in
+                            FStar_All.pipe_right uu____6258
+                              FStar_Pervasives.fst in
                           FStar_All.pipe_right uu____6257
                             (fun _0_33  -> FStar_Util.Inl _0_33) in
                         let uu____6267 =
@@ -2213,7 +2215,7 @@ let rec norm:
                             let rec_env1 = (Clos (env, fix_f_i, memo, true))
                               :: rec_env in
                             (rec_env1, (memo :: memos),
-                              (i + (Prims.parse_int "1")))) (Prims.snd lbs)
+                              (i + (Prims.parse_int "1")))) (snd lbs)
                    (env, [], (Prims.parse_int "0")) in
                (match uu____6309 with
                 | (rec_env,memos,uu____6431) ->
@@ -2224,7 +2226,7 @@ let rec norm:
                              FStar_ST.write memo
                                (Some
                                   (rec_env, (lb.FStar_Syntax_Syntax.lbdef))))
-                        (Prims.snd lbs) memos in
+                        (snd lbs) memos in
                     let body_env =
                       FStar_List.fold_right
                         (fun lb  ->
@@ -2235,7 +2237,7 @@ let rec norm:
                                  (rec_env, (lb.FStar_Syntax_Syntax.lbdef),
                                    uu____6499, false) in
                                Clos uu____6489 in
-                             uu____6488 :: env1) (Prims.snd lbs) env in
+                             uu____6488 :: env1) (snd lbs) env in
                     norm cfg body_env stack1 body)
            | FStar_Syntax_Syntax.Tm_meta (head1,m) ->
                (match m with
@@ -3273,7 +3275,7 @@ and rebuild:
                                   (FStar_List.map
                                      (fun p1  ->
                                         let uu____7984 = norm_pat env2 p1 in
-                                        Prims.fst uu____7984)) in
+                                        fst uu____7984)) in
                               ((let uu___187_7996 = p in
                                 {
                                   FStar_Syntax_Syntax.v =

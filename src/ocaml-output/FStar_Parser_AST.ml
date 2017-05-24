@@ -942,18 +942,18 @@ let mkWildAdmitMagic r =
   let uu____2870 = mkAdmitMagic r in
   ((mk_pattern PatWild r), None, uu____2870)
 let focusBranches branches r =
-  let should_filter = FStar_Util.for_some Prims.fst branches in
+  let should_filter = FStar_Util.for_some FStar_Pervasives.fst branches in
   if should_filter
   then
     (FStar_Errors.warn r "Focusing on only some cases";
      (let focussed =
-        let uu____2926 = FStar_List.filter Prims.fst branches in
-        FStar_All.pipe_right uu____2926 (FStar_List.map Prims.snd) in
+        let uu____2926 = FStar_List.filter FStar_Pervasives.fst branches in
+        FStar_All.pipe_right uu____2926 (FStar_List.map FStar_Pervasives.snd) in
       let uu____2970 = let uu____2976 = mkWildAdmitMagic r in [uu____2976] in
       FStar_List.append focussed uu____2970))
-  else FStar_All.pipe_right branches (FStar_List.map Prims.snd)
+  else FStar_All.pipe_right branches (FStar_List.map FStar_Pervasives.snd)
 let focusLetBindings lbs r =
-  let should_filter = FStar_Util.for_some Prims.fst lbs in
+  let should_filter = FStar_Util.for_some FStar_Pervasives.fst lbs in
   if should_filter
   then
     (FStar_Errors.warn r
@@ -965,9 +965,9 @@ let focusLetBindings lbs r =
               if f
               then lb
               else
-                (let uu____3078 = mkAdmitMagic r in
-                 ((Prims.fst lb), uu____3078))) lbs)
-  else FStar_All.pipe_right lbs (FStar_List.map Prims.snd)
+                (let uu____3078 = mkAdmitMagic r in ((fst lb), uu____3078)))
+       lbs)
+  else FStar_All.pipe_right lbs (FStar_List.map FStar_Pervasives.snd)
 let mkFsTypApp: term -> term Prims.list -> FStar_Range.range -> term =
   fun t  ->
     fun args  ->

@@ -268,8 +268,8 @@ let generate: Prims.string Prims.list -> Prims.unit =
     let modules =
       FStar_List.collect
         (fun fn  ->
-           let uu____753 = FStar_Parser_Driver.parse_file fn in
-           Prims.fst uu____753) files in
+           let uu____753 = FStar_Parser_Driver.parse_file fn in fst uu____753)
+        files in
     let mods = FStar_List.map document_module modules in
     let on = FStar_Options.prepend_output_dir "index.md" in
     let fd = FStar_Util.open_file_for_writing on in

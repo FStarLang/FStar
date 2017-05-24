@@ -284,7 +284,7 @@ let find_uniq: binding Prims.list -> Prims.string -> Prims.string =
                match uu___107_586 with
                | Bv (_,FStar_Util.Inl (mlident',_))|Fv
                  (_,FStar_Util.Inl (mlident',_)) ->
-                   target_mlident = (Prims.fst mlident')
+                   target_mlident = (fst mlident')
                | Fv (_,FStar_Util.Inr (mlident',_,_,_))|Bv
                  (_,FStar_Util.Inr (mlident',_,_,_)) ->
                    target_mlident = mlident') gamma in
@@ -369,8 +369,7 @@ let rec subsetMlidents:
       | [] -> true
 let tySchemeIsClosed: FStar_Extraction_ML_Syntax.mltyscheme -> Prims.bool =
   fun tys  ->
-    let uu____755 = mltyFvars (Prims.snd tys) in
-    subsetMlidents uu____755 (Prims.fst tys)
+    let uu____755 = mltyFvars (snd tys) in subsetMlidents uu____755 (fst tys)
 let extend_fv':
   env ->
     FStar_Syntax_Syntax.fv ->
@@ -496,7 +495,7 @@ let mkContext: FStar_TypeChecker_Env.env -> env =
             FStar_Syntax_Syntax.Delta_constant None in
         FStar_Util.Inr uu____957 in
       extend_lb env uu____956 FStar_Syntax_Syntax.tun failwith_ty false false in
-    FStar_All.pipe_right uu____953 Prims.fst
+    FStar_All.pipe_right uu____953 FStar_Pervasives.fst
 let monad_op_name:
   FStar_Syntax_Syntax.eff_decl ->
     Prims.string -> (FStar_Extraction_ML_Syntax.mlpath* FStar_Ident.lident)

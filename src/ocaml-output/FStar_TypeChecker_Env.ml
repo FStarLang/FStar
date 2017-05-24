@@ -556,7 +556,7 @@ let inst_effect_fun_with:
                        inst_tscheme_with
                          ((FStar_List.append ed.FStar_Syntax_Syntax.univs us),
                            t) insts in
-                     Prims.snd uu____1453))
+                     snd uu____1453))
                | uu____1457 ->
                    let uu____1458 =
                      let uu____1459 =
@@ -934,8 +934,8 @@ let try_lookup_lid_aux:
                         FStar_Syntax_Syntax.sigrng = uu____2475;
                         FStar_Syntax_Syntax.sigquals = uu____2476;
                         FStar_Syntax_Syntax.sigmeta = uu____2477;_},None
-                      ) -> lookup_type_of_let (Prims.fst se) lid
-                   | uu____2486 -> effect_signature (Prims.fst se) in
+                      ) -> lookup_type_of_let (fst se) lid
+                   | uu____2486 -> effect_signature (fst se) in
                  FStar_All.pipe_right uu____2463
                    (FStar_Util.map_option
                       (fun uu____2509  ->
@@ -1384,9 +1384,8 @@ let lookup_projector:
                  else
                    (let b = FStar_List.nth binders i in
                     let uu____3696 =
-                      FStar_Syntax_Util.mk_field_projector_name lid
-                        (Prims.fst b) i in
-                    FStar_All.pipe_right uu____3696 Prims.fst)
+                      FStar_Syntax_Util.mk_field_projector_name lid (fst b) i in
+                    FStar_All.pipe_right uu____3696 FStar_Pervasives.fst)
              | uu____3701 -> fail ())
 let is_projector: env -> FStar_Ident.lident -> Prims.bool =
   fun env  ->
@@ -1496,7 +1495,7 @@ let is_type_constructor: env -> FStar_Ident.lident -> Prims.bool =
   fun env  ->
     fun lid  ->
       let mapper x =
-        match Prims.fst x with
+        match fst x with
         | FStar_Util.Inl uu____4021 -> Some false
         | FStar_Util.Inr (se,uu____4030) ->
             (match se.FStar_Syntax_Syntax.sigel with
@@ -1559,7 +1558,7 @@ let get_effect_decl:
               (uu____4198, (FStar_Ident.range_of_lid l)) in
             FStar_Errors.Error uu____4195 in
           raise uu____4194
-      | Some md -> Prims.fst md
+      | Some md -> fst md
 let identity_mlift: mlift =
   {
     mlift_wp = (fun t  -> fun wp  -> wp);
@@ -2363,7 +2362,7 @@ let binding_of_lb:
                 (uu___125_5558.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
                 (uu___125_5558.FStar_Syntax_Syntax.index);
-              FStar_Syntax_Syntax.sort = (Prims.snd t)
+              FStar_Syntax_Syntax.sort = (snd t)
             } in
           Binding_var x2
       | FStar_Util.Inr fv ->

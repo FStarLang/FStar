@@ -590,18 +590,15 @@ let ask_and_report_errors:
                               | ([],FStar_SMTEncoding_Z3.Timeout ) ->
                                   ([(("", FStar_SMTEncoding_Term.Term_sort),
                                       "Timeout: Unknown assertion failed",
-                                      FStar_Range.dummyRange)],
-                                    (Prims.snd errs))
+                                      FStar_Range.dummyRange)], (snd errs))
                               | ([],FStar_SMTEncoding_Z3.Default ) ->
                                   ([(("", FStar_SMTEncoding_Term.Term_sort),
                                       "Unknown assertion failed",
-                                      FStar_Range.dummyRange)],
-                                    (Prims.snd errs))
+                                      FStar_Range.dummyRange)], (snd errs))
                               | (uu____1200,FStar_SMTEncoding_Z3.Kill ) ->
                                   ([(("", FStar_SMTEncoding_Term.Term_sort),
                                       "Killed: Unknown assertion failed",
-                                      FStar_Range.dummyRange)],
-                                    (Prims.snd errs))
+                                      FStar_Range.dummyRange)], (snd errs))
                               | uu____1219 -> errs) in
                          record_hint None;
                          (let uu____1222 = FStar_Options.print_fuels () in
@@ -624,7 +621,7 @@ let ask_and_report_errors:
                               uu____1223 uu____1225 uu____1227
                           else ());
                          (let uu____1230 =
-                            FStar_All.pipe_right (Prims.fst errs1)
+                            FStar_All.pipe_right (fst errs1)
                               (FStar_List.map
                                  (fun uu____1242  ->
                                     match uu____1242 with
@@ -637,7 +634,7 @@ let ask_and_report_errors:
                              FStar_Util.Inr errs in
                        let rec try_alt_configs prev_f p1 errs cfgs scope =
                          set_minimum_workable_fuel prev_f errs;
-                         (match (cfgs, (Prims.snd errs)) with
+                         (match (cfgs, (snd errs)) with
                           | ([],_)|(_,FStar_SMTEncoding_Z3.Kill ) ->
                               report1 p1 errs
                           | (mi::tl1,uu____1359) ->

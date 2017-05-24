@@ -559,7 +559,7 @@ let detail_errors:
                           FStar_SMTEncoding_Term.assumption_caption =
                             (Some "Disabling label");
                           FStar_SMTEncoding_Term.assumption_name =
-                            (Prims.strcat "disable_label_" (Prims.fst l));
+                            (Prims.strcat "disable_label_" (fst l));
                           FStar_SMTEncoding_Term.assumption_fact_ids = []
                         } in
                       FStar_SMTEncoding_Term.Assume a)) in

@@ -67,6 +67,15 @@ let __proj__Inl__item__v projectee = match projectee with | Inl v -> v
 let uu___is_Inr projectee =
   match projectee with | Inr v -> true | uu____1131 -> false
 let __proj__Inr__item__v projectee = match projectee with | Inr v -> v
+type ('a,'b) tuple2 =
+  | Mktuple2 of 'a* 'b
+let uu___is_Mktuple2 projectee = true
+let __proj__Mktuple2__item___1 projectee =
+  match projectee with | (_1,_2) -> _1
+let __proj__Mktuple2__item___2 projectee =
+  match projectee with | (_1,_2) -> _2
+let fst x = __proj__Mktuple2__item___1 x
+let snd x = __proj__Mktuple2__item___2 x
 type ('a,'b,'c) tuple3 =
   | Mktuple3 of 'a* 'b* 'c
 let uu___is_Mktuple3 projectee = true
@@ -151,6 +160,8 @@ let __proj__Mktuple8__item___7 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _7
 let __proj__Mktuple8__item___8 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
+let dfst t = Prims.__proj__Mkdtuple2__item___1 t
+let dsnd t = Prims.__proj__Mkdtuple2__item___2 t
 type ('Aa,'Ab,'Ac) dtuple3 =
   | Mkdtuple3 of 'Aa* 'Ab* 'Ac
 let uu___is_Mkdtuple3 projectee = true
