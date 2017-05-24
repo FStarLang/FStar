@@ -286,6 +286,14 @@ let head_and_args t =
         | Tm_app(head, args) -> head, args
         | _ -> t, []
 
+let rec head_and_args' t =
+    let t = compress t in
+    match t.n with
+        | Tm_app(head, args) ->
+            let (head, args') = head_and_args' head
+            in (head, args'@args)
+        | _ -> t, []
+
  let un_uinst t =
     let t = Subst.compress t in
     match t.n with
@@ -948,7 +956,7 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq3_lid, 4);
                             (Const.eq3_lid, 2)
                         ] in
-        let rec aux f (lid, arity) =
+        let aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
             let t = un_uinst t in
             if is_constructor t lid
@@ -996,21 +1004,21 @@ let destruct_typ_as_formula f : option<connective> =
         | None -> destruct_q_conn phi
 
 
-  let action_as_lb eff_lid a =
-    let lb =
-      close_univs_and_mk_letbinding
-        None
-        (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-        (Inr (lid_as_fv a.action_name Delta_equational None))
-        a.action_univs
-        (arrow a.action_params (mk_Total a.action_typ))
-        Const.effect_Tot_lid
-        (abs a.action_params a.action_defn None)
-    in
-    { sigel = Sig_let((false, [lb]), [a.action_name], []);
-      sigrng = a.action_defn.pos;
-      sigquals = [Visible_default ; Action eff_lid];
-      sigmeta = default_sigmeta }
+let action_as_lb eff_lid a =
+  let lb =
+    close_univs_and_mk_letbinding
+      None
+      (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
+      (Inr (lid_as_fv a.action_name Delta_equational None))
+      a.action_univs
+      (arrow a.action_params (mk_Total a.action_typ))
+      Const.effect_Tot_lid
+      (abs a.action_params a.action_defn None)
+  in
+  { sigel = Sig_let((false, [lb]), [a.action_name], []);
+    sigrng = a.action_defn.pos;
+    sigquals = [Visible_default ; Action eff_lid];
+    sigmeta = default_sigmeta }
 
 (* Some reification utilities *)
 let mk_reify t =
@@ -1105,11 +1113,19 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices.
-// TODO: canonize applications?
 // TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
 // TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
 // that's ok.
-let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
+let rec term_eq t1 t2 =
+  let canon_app t =
+    match t.n with
+    | Tm_app _ -> let (hd, args) = head_and_args' t in
+                  { t with n = Tm_app (hd, args) }
+    | _ -> t
+  in
+  let t1 = canon_app t1 in
+  let t2 = canon_app t2 in
+  match t1.n, t2.n with
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
@@ -1139,7 +1155,7 @@ and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
 
 let rec bottom_fold (f : term -> term) (t : term) : term =
     let ff = bottom_fold f in
-    let tn = (un_uinst t).n in
+    let tn = (compress t).n in
     let tn = match tn with
              | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
              // TODO: We ignore the types. Bug or feature?
@@ -1147,6 +1163,19 @@ let rec bottom_fold (f : term -> term) (t : term) : term =
                                     let t'' = ff t' in
                                     Tm_abs (bs, close bs t'', k)
              | Tm_arrow (bs, k) -> tn //TODO
+             | Tm_uinst (t, us) ->
+                Tm_uinst (ff t, us)
              | _ -> tn in
     f ({ t with n = tn })
 
+// An estimation of the size of a term, only for debugging
+let rec sizeof (t:term) : int =
+    match t.n with
+    | Tm_delayed _ -> 1 + sizeof (compress t)
+    | Tm_bvar bv
+    | Tm_name bv -> 1 + sizeof bv.sort
+    | Tm_uinst (t,us) -> List.length us + sizeof t
+    | Tm_abs (bs, t, _) -> sizeof t  + List.fold_left (fun acc (bv, _) -> acc + sizeof bv.sort) 0 bs
+    | Tm_app (hd, args) -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
+    // TODO: obviously want much more
+    | _ -> 1

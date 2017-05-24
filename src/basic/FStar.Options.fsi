@@ -102,7 +102,6 @@ val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
-val norm_then_print             : unit    -> bool
 val output_dir                  : unit    -> option<string>
 val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
@@ -146,7 +145,6 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
-val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,

@@ -59,6 +59,7 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
+  | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -111,7 +112,10 @@ type stack_elt =
 
 type stack = list<stack_elt>
 
-
+let is_fstar_tactics_embed t =
+    match (U.un_uinst t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv SC.fstar_refl_embed_lid
+    | _ -> false
 
 let mk t r = mk t None r
 let set_memo r t =
@@ -262,8 +266,8 @@ let rec closure_as_term cfg env t =
             | Tm_type u ->
               mk (Tm_type (norm_universe cfg env u)) t.pos
 
-            | Tm_uinst(t, us) -> (* head symbol must be an fvar *)
-              mk_Tm_uinst t (List.map (norm_universe cfg env) us)
+            | Tm_uinst(t', us) -> (* head symbol must be an fvar *)
+              mk_Tm_uinst t' (List.map (norm_universe cfg env) us)
 
             | Tm_bvar x ->
               begin match lookup_bvar env x with
@@ -548,6 +552,25 @@ let built_in_primitive_steps : list<primitive_step> =
         let s = string_of_list l in
         SC.exp_string s
     in
+    let string_compare' rng (s1:string) (s2:string) : term =
+        let r = String.compare s1 s2 in
+        int_as_const rng r
+    in
+    let string_concat' rng args : option<term> =
+        match args with
+        | [a1; a2] ->
+            begin match arg_as_string a1 with
+            | Some s1 ->
+                begin match arg_as_list arg_as_string a2 with
+                | Some s2 ->
+                    let r = String.concat s1 s2 in
+                    Some (string_as_const rng r)
+                | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+    in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
     in
@@ -577,10 +600,12 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
+             (Const.string_compare, 2, binary_op arg_as_string string_compare');
              (Const.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (Const.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
+                                    1, unary_op (arg_as_list arg_as_char) string_of_list');
+             (Const.p2l ["FStar"; "String"; "concat"], 2, string_concat')]
     in
     let bounded_arith_ops =
         let bounded_int_types =
@@ -757,11 +782,6 @@ let is_reify_head = function
     | _ ->
       false
 
-let is_fstar_tactics_embed t =
-    match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
-    | _ -> false
-
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
@@ -772,7 +792,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                         (stack_to_string (fst <| firstn 4 stack)));
         match t.n with
           | Tm_delayed _ ->
-            failwith "Impossible"
+            failwith "Impossible: got a delayed substitution"
 
           | Tm_unknown
           | Tm_uvar _
@@ -784,15 +804,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
 
-          | Tm_app({n=Tm_fvar fv}, _)
-            when S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid ->
-            rebuild cfg env stack t //embedded terms should not be normalized
-
           | Tm_app(hd, args)
             when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
+            let hd = closure_as_term cfg env hd in
             let t = {t with n=Tm_app(hd, args)} in
-            let t = reduce_primops cfg t in
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
@@ -856,10 +872,23 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t0 = t in
             let should_delta =
                 cfg.delta_level |> BU.for_some (function
+                    | Env.UnfoldTac
                     | NoDelta -> false
                     | Env.Inlining
                     | Eager_unfolding_only -> true
                     | Unfold l -> Common.delta_depth_greater_than f.fv_delta l) in
+            let should_delta =
+                if List.mem Env.UnfoldTac cfg.delta_level &&
+                   (  S.fv_eq_lid f SC.and_lid
+                   || S.fv_eq_lid f SC.or_lid
+                   || S.fv_eq_lid f SC.imp_lid
+                   || S.fv_eq_lid f SC.forall_lid
+                   || S.fv_eq_lid f SC.exists_lid
+                   || S.fv_eq_lid f SC.true_lid
+                   || S.fv_eq_lid f SC.false_lid)
+                then false
+                else should_delta
+            in
 
             if not should_delta
             then rebuild cfg env stack t
@@ -1493,6 +1522,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   | Arg (Clos(env, tm, m, _), aq, r) :: stack ->
     log cfg  (fun () -> BU.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
     //this needs to be tail recursive for reducing large terms
+
+    // GM: This is basically saying "if exclude iota, don't memoize".
+    // what's up with that?
     if List.contains (Exclude Iota) cfg.steps
     then if List.contains WHNF cfg.steps
           then let arg = closure_as_term cfg env tm in
@@ -1680,6 +1712,7 @@ let config s e =
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
         | Inlining -> [Env.Inlining]
+        | UnfoldTac -> [Env.UnfoldTac]
         | _ -> []) in
     let d = match d with
         | [] -> [Env.NoDelta]

@@ -77,6 +77,10 @@ bitvector:
 int:
 	$(FSTAR) FStar.UInt.fst FStar.UInt8.fst FStar.UInt16.fst FStar.UInt31.fst FStar.UInt32.fst FStar.UInt63.fst FStar.UInt64.fst FStar.Int.fst FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst FStar.Int.Cast.fst
 
+reflection: $(patsubst %.fst,%.fst-ver,$(wildcard FStar.Reflection.*.fst))
+
+tactics: $(patsubst %.fst,%.fst-ver,$(wildcard FStar.Tactics.fst))
+
 wc:	
 	wc -l prims.fst $(ALL)
 

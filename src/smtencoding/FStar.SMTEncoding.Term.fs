@@ -546,7 +546,7 @@ let termToSmt
             (names, [], n)
             es
           in
-          BU.format2 "(let (%s) %s)"
+          BU.format2 "(let (%s)\n%s)"
                      (String.concat " " binders)
                      (aux n names body)
 

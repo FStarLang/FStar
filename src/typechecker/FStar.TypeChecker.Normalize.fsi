@@ -33,6 +33,7 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of delta_depth
+  | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses

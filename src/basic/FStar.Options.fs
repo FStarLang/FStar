@@ -135,7 +135,6 @@ let defaults =
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
       ("prims_ref"                    , Unset);
-      ("print_before_norm"            , Bool false);
       ("print_bound_var_types"        , Bool false);
       ("print_effect_args"            , Bool false);
       ("print_fuels"                  , Bool false);
@@ -166,7 +165,6 @@ let defaults =
       ("z3rlimit"                     , Int 5);
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
-      ("z3timeout"                    , Int 5);
       ("z3cliopt"                     , List []);
       ("__no_positivity"              , Bool false)]
 
@@ -233,7 +231,6 @@ let get_no_location_info        ()      = lookup_opt "no_location_info"         
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
-let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
@@ -265,7 +262,6 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 
 let dlevel = function
@@ -571,11 +567,6 @@ let rec specs () : list<Getopt.opt> =
         "");
 
        ( noshort,
-        "print_before_norm",
-        ZeroArgs(fun () -> Bool true), // norm_then_print := false),
-        "Do not normalize types before printing (for debugging)");
-
-       ( noshort,
         "print_bound_var_types",
         ZeroArgs(fun () -> Bool true),
         "Print the types of bound variables");
@@ -751,12 +742,6 @@ let rec specs () : list<Getopt.opt> =
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
-        "z3timeout",
-         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
-                  "[positive integer]"),
-        "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
-
-       ( noshort,
         "__no_positivity",
         ZeroArgs (fun () -> Bool true),
         "Don't check positivity of inductive types");
@@ -812,7 +797,6 @@ let settable = function
     | "max_ifuel"
     | "min_fuel"
     | "ugly"
-    | "print_before_norm"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
@@ -840,7 +824,7 @@ let settable = function
 // JP: the two options below are options that are passed to z3 using
 // command-line arguments; only #reset_options re-starts the z3 process, meaning
 // these two options are resettable, but not settable
-let resettable s = settable s || s="z3timeout" || s="z3seed" || s="z3cliopt"
+let resettable s = settable s || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -1010,7 +994,6 @@ let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
-let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
@@ -1042,7 +1025,6 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let z3_timeout                   () = get_z3timeout                   ()
 let no_positivity                () = get_no_positivity               ()
 
 

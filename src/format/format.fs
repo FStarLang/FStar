@@ -72,7 +72,8 @@ let align (docs : list<doc>) =
 let hbox (d : doc) = d (* FIXME *)
 
 (* -------------------------------------------------------------------- *)
-let pretty (sz : int) (Doc doc : doc) : string = failwith "Not yet implemented"
+let pretty (sz : int) (Doc doc : doc) : string =
+    FStar.Pprint.pretty_string 0.8 sz doc
 //    let buffer = Buffer.create 0 in
 //    PPrint.Engine.ToBuffer.pretty 0.8 sz buffer doc;
 //    Buffer.contents buffer

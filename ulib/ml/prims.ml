@@ -104,7 +104,6 @@ let uu___is_Some = function (*consider redefining Option.isSome as this function
   | Some _ -> true
   | None -> false
 let uu___is_None o = not (uu___is_Some o)
-let raise e = raise e
 
 let __proj__Some__item__v x = match x with
   | Some v -> v
@@ -132,8 +131,5 @@ let rec pow2 n =
 let __proj__Cons__item__tl = function
   | _::tl -> tl
   | _     -> failwith "Impossible"
-
-
-let rec false_elim () = false_elim ()
 
 let min = min

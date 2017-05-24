@@ -59,8 +59,9 @@ if [[ -f src/ocaml-output/fstar/AllExamples.log ]]; then
   rm src/ocaml-output/fstar/AllExamples.log
 fi
 
-echo "*** Make package ***"
+echo "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
+make -C ../../ulib/ml clean
 make package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version

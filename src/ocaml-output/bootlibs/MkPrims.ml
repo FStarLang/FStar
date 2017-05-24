@@ -57,12 +57,20 @@ end) -> struct
 
   type ' p l_not = (' p, l__False) l_imp
 
+
   type (' a, ' p) l_Forall = ' a  ->  ' p
 
   type ' f l_ForallTyp = unit  ->  ' f
 
   type (' a, ' p) l_Exists =
   | MkExists of ' a * ' p
+  type (' a, ' p) l__Forall = ' a  ->  ' p
+
+  type ' f l__ForallTyp = unit  ->  ' f
+
+  type (' a, ' p) l__Exists =
+  | MkExists of ' a * ' p
+
 
 
   type (' p, ' q, 'dummyP, 'dummyQ) l__Eq2 =  unit

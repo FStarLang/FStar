@@ -23,7 +23,7 @@ let explicitly_trigger_normalizer =
 
 unfold let unfoldable_predicate (x:int) = True
 let implicitly_unfolfed_before_preprocessing =
-  assert_by_tactic smt
+  assert_by_tactic (smt ())
                    (unfoldable_predicate 0 /\ visible_boolean 2) //only "b2t (visible_boolean 2)" goes to SMT
 
 let visible_predicate (x:int) = True
@@ -50,7 +50,9 @@ assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x ==
 
 let scanning_environment =
   let x = return_ten () in
-  assert_by_tactic (rewrite_equality (quote x);;
+  assert_by_tactic (dump "GGG 1";;
+                    rewrite_equality (quote x);;
+                    dump "GGG 2";;
                     rewrite_eqs_from_context;;
                     trivial)
                    (x + 0 == 10)
@@ -60,8 +62,7 @@ val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x
 let lemma_mul_comm x y = ()
 
 let test_exact (x:nat) (y:nat) =
-  assert_by_tactic (m <-- quote (mul_comm x y);
-                    exact m)
+  assert_by_tactic (exact (quote (mul_comm x y)))
                    (op_Multiply x y == op_Multiply y x)
 
 let test_apply (x:nat) (y:nat) =
@@ -71,9 +72,8 @@ let test_apply (x:nat) (y:nat) =
 let mul_commute_ascription : tactic unit =
     g <-- cur_goal;
     let (_, t) = g in
-    f <-- term_as_formula t;
-    match f with
-    | Some (Eq _ _ _) ->
+    match term_as_formula t with
+    | Comp Eq _ _ _ ->
         apply_lemma (quote lemma_mul_comm)
     | _ ->
         fail "Not an equality"
@@ -97,8 +97,7 @@ let test_apply_ascription' (x:nat) (y:nat) =
 // and only afterwards is the error raised. Doesn't sound like good behaviour
 let test_inspect =
   assert_by_tactic (x <-- quote 8;
-                    y <-- inspect x;
-                    match y with
+                    match inspect x with
                     | Tv_App hd a -> print "application"
                     | Tv_Abs bv t -> print "abstraction"
                     | Tv_Arrow bv t -> print "arrow"
@@ -110,3 +109,17 @@ let test_inspect =
                     | Tv_Const (C_Int i) -> print ("int: " ^ string_of_int i)
                     | _ -> fail "unknown"
                    ) (True)
+
+let test_simpl =
+    assert_by_tactic (eg <-- cur_goal;
+                      let e, g = eg in
+                      (match term_as_formula g with
+                      | And _ _ -> return ()
+                      | _ -> fail "not a conjunction?");;
+                      simpl;;
+                      eg <-- cur_goal;
+                      let e, g = eg in
+                      (match term_as_formula g with
+                      | True_ -> return ()
+                      | _ -> fail ("not true after simpl? " ^ term_to_string g)))
+                     (True /\ 1 == 1)

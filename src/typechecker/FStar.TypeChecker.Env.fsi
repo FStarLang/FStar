@@ -34,6 +34,7 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
+  | UnfoldTac
 
 (* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
 (* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
@@ -62,6 +63,18 @@ type effects = {
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
+// A name prefix, such as ["FStar";"Math"]
+type name_prefix = list<string>
+// A choice of which name prefixes are enabled/disabled
+// The leftmost match takes precedence. Empty list means everything is on.
+// To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
+type flat_proof_namespace = list<(name_prefix * bool)>
+
+// A stack of namespace choices. Provides simple push/pop behaviour.
+// For the purposes of filtering facts, this is just flattened.
+// CAN NEVER BE EMPTY
+type proof_namespace = list<flat_proof_namespace>
+
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 type env = {
@@ -89,6 +102,7 @@ type env = {
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
+  proof_ns       :proof_namespace                 (* the current names that will be encoded to SMT (a.k.a. hint db) *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -221,3 +235,14 @@ val is_reifiable_function : env -> term -> bool
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
+
+(* Toggling of encoding of namespaces *)
+val should_enc_path : env -> list<string> -> bool
+val should_enc_lid  : env -> lident -> bool
+val add_proof_ns    : env -> name_prefix -> env
+val rem_proof_ns    : env -> name_prefix -> env
+val push_proof_ns   : env -> env
+val pop_proof_ns    : env -> env
+val get_proof_ns    : env -> proof_namespace
+val set_proof_ns    : proof_namespace -> env -> env
+val string_of_proof_ns : env -> string

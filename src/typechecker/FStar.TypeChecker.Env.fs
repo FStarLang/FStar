@@ -45,7 +45,7 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
-
+  | UnfoldTac
 
 type mlift = {
   mlift_wp:typ -> typ -> typ ;
@@ -62,6 +62,18 @@ type effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
+
+// A name prefix, such as ["FStar";"Math"]
+type name_prefix = list<string>
+// A choice of which name prefixes are enabled/disabled
+// The leftmost match takes precedence. Empty list means everything is on.
+// To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
+type flat_proof_namespace = list<(name_prefix * bool)>
+
+// A stack of namespace choices. Provides simple push/pop behaviour.
+// For the purposes of filtering facts, this is just flattened.
+type proof_namespace = list<flat_proof_namespace>
+
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 type env = {
@@ -89,6 +101,7 @@ type env = {
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
+  proof_ns       :proof_namespace                    (* the current names that will be encoded to SMT *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -159,7 +172,10 @@ let initial_env type_of universe_of solver module_lid =
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
-    qname_and_index=None
+    qname_and_index=None;
+    proof_ns = match Options.using_facts_from () with
+               | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
+               | None -> [[]]
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -1153,6 +1169,57 @@ let lidents env : list<lident> =
     | _ -> keys) [] env.gamma in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
+let should_enc_path env path =
+    // TODO: move
+    let rec list_prefix xs ys =
+        match xs, ys with
+        | [], _ -> true
+        | x::xs, y::ys -> x = y && list_prefix xs ys
+        | _, _ -> false
+    in
+    let rec should_enc_path' (pns:flat_proof_namespace) path =
+        match pns with
+        | [] -> true
+        | (p,b)::pns ->
+            if list_prefix p path
+            then b
+            else should_enc_path' pns path
+    in
+    should_enc_path' (List.flatten env.proof_ns) path
+
+let should_enc_lid env lid =
+    should_enc_path env (path_of_lid lid)
+
+let cons_proof_ns b e path =
+    match e.proof_ns with
+    | [] -> failwith "empty proof_ns stack!"
+    | pns::rest ->
+        let pns' = (path, b) :: pns in
+    { e with proof_ns = pns'::rest }
+
+// F# forces me to fully apply this... ugh
+let add_proof_ns e path = cons_proof_ns true  e path
+let rem_proof_ns e path = cons_proof_ns false e path
+
+let push_proof_ns e =
+    { e with proof_ns = []::e.proof_ns }
+
+let pop_proof_ns e =
+    match e.proof_ns with
+    | [] -> failwith "empty proof_ns stack!"
+    | _::rest ->
+        { e with proof_ns = rest }
+
+let get_proof_ns e = e.proof_ns
+let set_proof_ns ns e = {e with proof_ns = ns}
+
+let string_of_proof_ns env =
+    let string_of_proof_ns' pns =
+        String.concat ";"
+            (List.map (fun fpns -> "["
+                                   ^ String.concat "," (List.map (fun (p,b) -> (if b then "+" else "-")^(String.concat "." p)) fpns)
+                                   ^ "]") pns)
+    in string_of_proof_ns' (env.proof_ns)
 
 (* <Move> this out of here *)
 let dummy_solver = {

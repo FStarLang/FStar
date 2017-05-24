@@ -257,7 +257,7 @@ def process_global_stats(f, queries):
     f.write("\"# failed\",%d,%s\n" % ((failed_with_hint + failed_without_hint), "\"\""))
     f.write("\"# failed (with hint)\",%d,%s\n" % (failed_with_hint, "\"\""))
     f.write("\"# failed (without hint)\",%d,%s\n" % (failed_without_hint, "\"\""))
-    f.write("\"Sum(num_checks)\",%s,%s\n" % (sum_num_checks, "\"\""))
+    f.write("\"Sum(num-checks)\",%s,%s\n" % (sum_num_checks, "\"\""))
     f.write("\"Sum(time)\",%s,%s\n" % (time, "\"sec\""))
     f.write("\"Sum(fstar_time)\",%s,%s\n" % (fstar_time, "\"msec\""))
     f.write("\"Max(time)\",%s,%s\n" % (max_time, "\"sec\""))
