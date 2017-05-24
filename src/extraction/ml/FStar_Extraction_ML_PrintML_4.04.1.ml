@@ -368,7 +368,7 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration =
+let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration option =
   if skip_type_defn !current_module x then None
   else
     let ptype_name = match mangle_opt with
@@ -381,8 +381,8 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_dec
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
   let recf = Recursive in
-  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in 
-  if type_declarations = [] then None else Some (Pstr_type type_declarations)
+  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in
+  if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
 
 let build_exn (sym, tys): extension_constructor =
   let name = mk_sym sym in
