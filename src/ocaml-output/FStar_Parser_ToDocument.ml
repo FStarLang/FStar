@@ -2543,6 +2543,10 @@ let term_to_document: FStar_Parser_AST.term -> FStar_Pprint.document =
   fun e  -> p_term e
 let decl_to_document: FStar_Parser_AST.decl -> FStar_Pprint.document =
   fun e  -> p_decl e
+let pat_to_document: FStar_Parser_AST.pattern -> FStar_Pprint.document =
+  fun p  -> p_disjunctivePattern p
+let binder_to_document: FStar_Parser_AST.binder -> FStar_Pprint.document =
+  fun b  -> p_binder true b
 let modul_to_document: FStar_Parser_AST.modul -> FStar_Pprint.document =
   fun m  ->
     FStar_ST.write should_print_fs_typ_app false;
@@ -2550,17 +2554,17 @@ let modul_to_document: FStar_Parser_AST.modul -> FStar_Pprint.document =
        match m with
        | FStar_Parser_AST.Module (_,decls)|FStar_Parser_AST.Interface
          (_,decls,_) ->
-           let uu____3829 =
+           let uu____3835 =
              FStar_All.pipe_right decls (FStar_List.map decl_to_document) in
-           FStar_All.pipe_right uu____3829
+           FStar_All.pipe_right uu____3835
              (FStar_Pprint.separate FStar_Pprint.hardline) in
      FStar_ST.write should_print_fs_typ_app false; res)
 let comments_to_document:
   (Prims.string* FStar_Range.range) Prims.list -> FStar_Pprint.document =
   fun comments  ->
     FStar_Pprint.separate_map FStar_Pprint.hardline
-      (fun uu____3848  ->
-         match uu____3848 with | (comment,range) -> str comment) comments
+      (fun uu____3854  ->
+         match uu____3854 with | (comment,range) -> str comment) comments
 let modul_with_comments_to_document:
   FStar_Parser_AST.modul ->
     (Prims.string* FStar_Range.range) Prims.list ->
@@ -2576,30 +2580,30 @@ let modul_with_comments_to_document:
       (match decls with
        | [] -> (FStar_Pprint.empty, comments)
        | d::ds ->
-           let uu____3895 =
+           let uu____3901 =
              match ds with
              | {
                  FStar_Parser_AST.d = FStar_Parser_AST.Pragma
                    (FStar_Parser_AST.LightOff );
-                 FStar_Parser_AST.drange = uu____3902;
-                 FStar_Parser_AST.doc = uu____3903;
-                 FStar_Parser_AST.quals = uu____3904;
-                 FStar_Parser_AST.attrs = uu____3905;_}::uu____3906 ->
+                 FStar_Parser_AST.drange = uu____3908;
+                 FStar_Parser_AST.doc = uu____3909;
+                 FStar_Parser_AST.quals = uu____3910;
+                 FStar_Parser_AST.attrs = uu____3911;_}::uu____3912 ->
                  let d0 = FStar_List.hd ds in
-                 let uu____3910 =
-                   let uu____3912 =
-                     let uu____3914 = FStar_List.tl ds in d :: uu____3914 in
-                   d0 :: uu____3912 in
-                 (uu____3910, (d0.FStar_Parser_AST.drange))
-             | uu____3917 -> ((d :: ds), (d.FStar_Parser_AST.drange)) in
-           (match uu____3895 with
+                 let uu____3916 =
+                   let uu____3918 =
+                     let uu____3920 = FStar_List.tl ds in d :: uu____3920 in
+                   d0 :: uu____3918 in
+                 (uu____3916, (d0.FStar_Parser_AST.drange))
+             | uu____3923 -> ((d :: ds), (d.FStar_Parser_AST.drange)) in
+           (match uu____3901 with
             | (decls1,first_range) ->
                 let extract_decl_range d1 = d1.FStar_Parser_AST.drange in
                 (FStar_ST.write comment_stack comments;
                  (let initial_comment =
-                    let uu____3940 = FStar_Range.start_of_range first_range in
+                    let uu____3946 = FStar_Range.start_of_range first_range in
                     place_comments_until_pos (Prims.parse_int "0")
-                      (Prims.parse_int "1") uu____3940 FStar_Pprint.empty in
+                      (Prims.parse_int "1") uu____3946 FStar_Pprint.empty in
                   let doc1 =
                     separate_map_with_comments FStar_Pprint.empty
                       FStar_Pprint.empty decl_to_document decls1
@@ -2607,6 +2611,6 @@ let modul_with_comments_to_document:
                   let comments1 = FStar_ST.read comment_stack in
                   FStar_ST.write comment_stack [];
                   FStar_ST.write should_print_fs_typ_app false;
-                  (let uu____3962 =
+                  (let uu____3968 =
                      FStar_Pprint.op_Hat_Hat initial_comment doc1 in
-                   (uu____3962, comments1))))))
+                   (uu____3968, comments1))))))

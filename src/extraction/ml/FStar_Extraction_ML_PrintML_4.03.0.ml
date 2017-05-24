@@ -364,19 +364,25 @@ let build_ty_manifest (b: mltybody): core_type option=
   | MLTD_Record l -> None
   | MLTD_DType l -> None
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration = 
- let ptype_name = match mangle_opt with
-    | Some y -> mk_sym y
-    | None -> mk_sym x in
-  let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
-  let (ptype_manifest: core_type option) = BatOption.map_default build_ty_manifest None body in
-  let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-  (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name)
+                  
+let skip_type_defn (current_module:string) (type_name:string) :bool =
+  current_module = "FStar_Pervasives" && type_name = "option"  
 
-let build_tydecl (td: mltydecl): structure_item_desc =
+let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration option = 
+  if skip_type_defn !current_module x then None
+  else
+    let ptype_name = match mangle_opt with
+      | Some y -> mk_sym y
+      | None -> mk_sym x in
+    let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
+    let (ptype_manifest: core_type option) = BatOption.map_default build_ty_manifest None body in
+    let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
+    Some (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name)
+
+let build_tydecl (td: mltydecl): structure_item_desc option =
   let recf = Recursive in
-  let type_declarations = map build_one_tydecl td in 
-  Pstr_type(recf, type_declarations)
+  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in 
+  if type_declarations = [] then None else Some (Pstr_type type_declarations)
 
 let build_exn (sym, tys): extension_constructor =
   let name = mk_sym sym in
@@ -391,7 +397,10 @@ let build_mlsig1 = function
 
 let build_module1 path (m1: mlmodule1): structure_item option = 
   match m1 with
-  | MLM_Ty tydecl -> Some (Str.mk (build_tydecl tydecl))
+  | MLM_Ty tydecl ->
+     (match build_tydecl tydecl with
+      | Some t -> Some (Str.mk t)
+      | None   -> None)
   | MLM_Let (flav, flags, mllbs) -> 
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
      let bindings = map (build_binding true) mllbs in
