@@ -240,7 +240,7 @@ let seq_inv_com' env c1 c2 l h0 =
     | None, _ -> seq_nil2 c1 c2 h0 h1
     | Some (), h2 -> ()
 
-(* #set-options "--z3rlimit 200" *)
+#set-options "--z3rlimit 50"
 let use_ni_com (env:label_fun) (c:com) (l:label) (h:rel heap{low_equiv env h})
   : Lemma
     (requires ni_com env c l)
@@ -324,7 +324,7 @@ let interpret_cond (e:exp) (ct:com) (cf:com) (h:heap)
            let c = if v = 0 then cf else ct in
            (reify (interpret_com_st (If e ct cf) h) h ==
             reify (interpret_com_st c h) h))
-  = ()            
+  = ()
     
 
 val cond_ni_com' : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label -> h0:rel heap ->
@@ -346,7 +346,7 @@ let cond_ni_com' env e ct cf l h0 =
       //NS:05/15 ... this 2 should be trivial to prove.
       //             Why do they require a lemma?
       interpret_cond e ct cf h0l;
-      interpret_cond e ct cf h0r;      
+      interpret_cond e ct cf h0r;
       use_ni_com env c l (R h0l h0r)
       end
     else  (* h0 and h1 are low_equiv since cl and cr cannot write at low cells *)
@@ -406,7 +406,7 @@ val while_inv_com'
 
 #reset-options "--z3rlimit 40"
 
-let interpret_while_nil e c v h 
+let interpret_while_nil e c v h
   : Lemma (requires (reify (interpret_exp_st e) h <> 0 /\
                      fst (reify (interpret_com_st c h) h) == None))
           (ensures (interpret_com h (While e c v) == None))
@@ -414,9 +414,9 @@ let interpret_while_nil e c v h
 
 let interpret_while_loops (e:exp) (c:com) (v:metric) (h:heap)
   : Lemma (requires (reify (interpret_exp_st e) h <> 0 /\
-                     (match reify (interpret_com_st c h) h with 
+                     (match reify (interpret_com_st c h) h with
                        | None, _ -> True
-                       | Some _, h' -> 
+                       | Some _, h' ->
                          interpret_exp' h' v >= interpret_exp' h v)))
           (ensures (interpret_com h (While e c v) == None))
   = ()
@@ -424,7 +424,7 @@ let interpret_while_loops (e:exp) (c:com) (v:metric) (h:heap)
 let rec while_inv_com' env e c v l h0 =
   let v0 = reify (interpret_exp_st e) h0 in
   if v0 = 0 then assert (interpret_com h0 (While e c v) == Some h0)
-  else 
+  else
     let m0 = interpret_exp' h0 v in
     match reify (interpret_com_st c h0) h0 with
     | None, _ -> interpret_while_nil e c v h0
@@ -442,11 +442,11 @@ val while_ni_com' : env:label_fun -> e:exp -> c:com -> v:metric -> l:label -> h0
   Lemma (requires (ni_exp env e l /\ ni_com env c l))
         (ensures  (ni_com' env (While e c v) l h0))
         (decreases (decr_while (R?.l h0) (While e c v) + decr_while (R?.r h0) (While e c v)))
-#set-options "--max_fuel 1 --max_ifuel 1"
+#set-options "--max_fuel 1 --max_ifuel 1 --z3rlimit 50"
 let rec while_ni_com' env e c v l h0 =
   if not (FStar.StrongExcludedMiddle.strong_excluded_middle (low_equiv env h0))
   then ()
-  else 
+  else
     let R h0l h0r = h0 in
     let v0l = reify (interpret_exp_st e) h0l in
     let v0r = reify (interpret_exp_st e) h0r in

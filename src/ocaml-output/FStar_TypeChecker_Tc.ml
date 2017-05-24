@@ -284,7 +284,7 @@ let rec tc_eff_decl:
                       | uu____261 ->
                           let op ts =
                             let t1 =
-                              FStar_Syntax_Subst.subst opening (Prims.snd ts) in
+                              FStar_Syntax_Subst.subst opening (snd ts) in
                             ([], t1) in
                           let uu___92_279 = ed1 in
                           let uu____280 = op ed1.FStar_Syntax_Syntax.ret_wp in
@@ -301,7 +301,7 @@ let rec tc_eff_decl:
                           let uu____290 =
                             let uu____291 =
                               op ([], (ed1.FStar_Syntax_Syntax.repr)) in
-                            Prims.snd uu____291 in
+                            snd uu____291 in
                           let uu____297 =
                             op ed1.FStar_Syntax_Syntax.return_repr in
                           let uu____298 =
@@ -315,13 +315,13 @@ let rec tc_eff_decl:
                                      op
                                        ([],
                                          (a.FStar_Syntax_Syntax.action_defn)) in
-                                   Prims.snd uu____304 in
+                                   snd uu____304 in
                                  let uu____310 =
                                    let uu____311 =
                                      op
                                        ([],
                                          (a.FStar_Syntax_Syntax.action_typ)) in
-                                   Prims.snd uu____311 in
+                                   snd uu____311 in
                                  {
                                    FStar_Syntax_Syntax.action_name =
                                      (uu___93_302.FStar_Syntax_Syntax.action_name);
@@ -501,7 +501,8 @@ let rec tc_eff_decl:
                              let p =
                                let uu____511 =
                                  let uu____512 = FStar_Syntax_Util.type_u () in
-                                 FStar_All.pipe_right uu____512 Prims.fst in
+                                 FStar_All.pipe_right uu____512
+                                   FStar_Pervasives.fst in
                                FStar_Syntax_Syntax.new_bv
                                  (Some
                                     (FStar_Ident.range_of_lid
@@ -574,7 +575,8 @@ let rec tc_eff_decl:
                              let b =
                                let uu____577 =
                                  let uu____578 = FStar_Syntax_Util.type_u () in
-                                 FStar_All.pipe_right uu____578 Prims.fst in
+                                 FStar_All.pipe_right uu____578
+                                   FStar_Pervasives.fst in
                                FStar_Syntax_Syntax.new_bv
                                  (Some
                                     (FStar_Ident.range_of_lid
@@ -619,7 +621,7 @@ let rec tc_eff_decl:
                                        let uu____625 =
                                          FStar_Syntax_Util.type_u () in
                                        FStar_All.pipe_right uu____625
-                                         Prims.fst in
+                                         FStar_Pervasives.fst in
                                      FStar_Syntax_Syntax.null_binder
                                        uu____624 in
                                    let uu____630 =
@@ -644,7 +646,7 @@ let rec tc_eff_decl:
                                        let uu____649 =
                                          FStar_Syntax_Util.type_u () in
                                        FStar_All.pipe_right uu____649
-                                         Prims.fst in
+                                         FStar_Pervasives.fst in
                                      FStar_Syntax_Syntax.null_binder
                                        uu____648 in
                                    let uu____654 =
@@ -821,7 +823,7 @@ let rec tc_eff_decl:
                                                  FStar_TypeChecker_Env.inst_tscheme
                                                    bind_wp in
                                                FStar_All.pipe_right uu____893
-                                                 Prims.snd in
+                                                 FStar_Pervasives.snd in
                                              let uu____898 =
                                                let uu____899 =
                                                  let uu____901 =
@@ -916,7 +918,7 @@ let rec tc_eff_decl:
                                             let env2 =
                                               FStar_TypeChecker_Env.set_range
                                                 env1
-                                                (Prims.snd
+                                                (snd
                                                    ed2.FStar_Syntax_Syntax.bind_repr).FStar_Syntax_Syntax.pos in
                                             let env3 =
                                               let uu___94_965 = env2 in
@@ -1009,7 +1011,7 @@ let rec tc_eff_decl:
                                              FStar_TypeChecker_Env.inst_tscheme
                                                return_wp in
                                            FStar_All.pipe_right uu____981
-                                             Prims.snd in
+                                             FStar_Pervasives.snd in
                                          let uu____986 =
                                            let uu____987 =
                                              let uu____989 =
@@ -1048,7 +1050,7 @@ let rec tc_eff_decl:
                                    | (expected_k1,uu____1019,uu____1020) ->
                                        let env2 =
                                          FStar_TypeChecker_Env.set_range env1
-                                           (Prims.snd
+                                           (snd
                                               ed2.FStar_Syntax_Syntax.return_repr).FStar_Syntax_Syntax.pos in
                                        let uu____1023 =
                                          check_and_gen' env2
@@ -1365,13 +1367,12 @@ let rec tc_eff_decl:
                                             effect_params ts in
                                         FStar_Syntax_Subst.close_univ_vars_tscheme
                                           univs1 uu____1263 in
-                                      let m =
-                                        FStar_List.length (Prims.fst ts1) in
+                                      let m = FStar_List.length (fst ts1) in
                                       (let uu____1268 =
                                          ((n1 >= (Prims.parse_int "0")) &&
                                             (let uu____1269 =
                                                FStar_Syntax_Util.is_unknown
-                                                 (Prims.snd ts1) in
+                                                 (snd ts1) in
                                              Prims.op_Negation uu____1269))
                                            && (m <> n1) in
                                        if uu____1268
@@ -1453,7 +1454,7 @@ let rec tc_eff_decl:
                                         let uu____1312 =
                                           close1 (Prims.parse_int "0")
                                             ([], repr) in
-                                        Prims.snd uu____1312 in
+                                        snd uu____1312 in
                                       let uu____1318 =
                                         close1 (Prims.parse_int "0")
                                           return_repr in
@@ -1520,7 +1521,7 @@ and cps_and_elaborate:
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.eff_decl ->
       (FStar_Syntax_Syntax.sigelt Prims.list* FStar_Syntax_Syntax.eff_decl*
-        FStar_Syntax_Syntax.sigelt Prims.option)
+        FStar_Syntax_Syntax.sigelt option)
   =
   fun env  ->
     fun ed  ->
@@ -1760,8 +1761,7 @@ and cps_and_elaborate:
                                                                   =
                                                                   FStar_Syntax_Syntax.bv_to_name
                                                                     (
-                                                                    Prims.fst
-                                                                    b11) in
+                                                                    fst b11) in
                                                                 let uu____1795
                                                                   =
                                                                   FStar_Syntax_Syntax.as_implicit
@@ -1854,7 +1854,7 @@ and cps_and_elaborate:
                                                                else ());
                                                           (let wp =
                                                              let t2 =
-                                                               (Prims.fst b21).FStar_Syntax_Syntax.sort in
+                                                               (fst b21).FStar_Syntax_Syntax.sort in
                                                              let pure_wp_type
                                                                =
                                                                FStar_TypeChecker_DMFF.double_star
@@ -1975,7 +1975,7 @@ and cps_and_elaborate:
                                                       let uu____2079 =
                                                         FStar_Syntax_Util.args_of_binders
                                                           effect_binders1 in
-                                                      Prims.snd uu____2079 in
+                                                      snd uu____2079 in
                                                     (t, uu____2078) in
                                                   FStar_Syntax_Syntax.Tm_app
                                                     uu____2068 in
@@ -2439,7 +2439,7 @@ and cps_and_elaborate:
                                                                     FStar_All.pipe_right
                                                                     uu____2536
                                                                     (FStar_Util.set_mem
-                                                                    (Prims.fst
+                                                                    (fst
                                                                     type_param1)) in
                                                                     FStar_All.pipe_right
                                                                     uu____2535
@@ -2482,8 +2482,7 @@ and cps_and_elaborate:
                                                                     (type_param1
                                                                     ::
                                                                     effect_param1)
-                                                                    (Prims.fst
-                                                                    post).FStar_Syntax_Syntax.sort
+                                                                    (fst post).FStar_Syntax_Syntax.sort
                                                                     None in
                                                                     (uu____2577,
                                                                     uu____2580)))
@@ -3318,7 +3317,7 @@ and tc_decl:
                                          FStar_TypeChecker_Normalize.normalize
                                            [FStar_TypeChecker_Normalize.EraseUniverses;
                                            FStar_TypeChecker_Normalize.AllowUnboundUniverses]
-                                           env2 (Prims.snd lift_wp) in
+                                           env2 (snd lift_wp) in
                                        let lift_wp_a =
                                          let uu____3397 =
                                            FStar_TypeChecker_Env.get_range
@@ -3503,7 +3502,7 @@ and tc_decl:
              then
                let uu____3655 =
                  let uu____3656 = FStar_Syntax_Util.type_u () in
-                 Prims.fst uu____3656 in
+                 fst uu____3656 in
                check_and_gen env2 t uu____3655
              else
                (let uu____3660 = FStar_Syntax_Subst.open_univ_vars uvs t in
@@ -3512,7 +3511,7 @@ and tc_decl:
                     let t2 =
                       let uu____3666 =
                         let uu____3667 = FStar_Syntax_Util.type_u () in
-                        Prims.fst uu____3667 in
+                        fst uu____3667 in
                       tc_check_trivial_guard env2 t1 uu____3666 in
                     let t3 =
                       FStar_TypeChecker_Normalize.normalize
@@ -3604,7 +3603,7 @@ and tc_decl:
                       FStar_Errors.Error uu____3775 in
                     raise uu____3774) in
            let uu____3784 =
-             FStar_All.pipe_right (Prims.snd lbs)
+             FStar_All.pipe_right (snd lbs)
                (FStar_List.fold_left
                   (fun uu____3805  ->
                      fun lb  ->
@@ -3685,7 +3684,7 @@ and tc_decl:
                           FStar_Syntax_Syntax.mk
                             (FStar_Syntax_Syntax.Tm_constant
                                FStar_Const.Const_unit) None r in
-                        (((Prims.fst lbs), lbs'1), uu____3971) in
+                        (((fst lbs), lbs'1), uu____3971) in
                       FStar_Syntax_Syntax.Tm_let uu____3963 in
                     FStar_Syntax_Syntax.mk uu____3962 in
                   uu____3959 None r in
@@ -3777,7 +3776,7 @@ and tc_decl:
                                                "Dropping inline_for_extraction from %s because it is not a pure function\n"
                                                uu____4048)
                                           else ();
-                                          ok) (Prims.snd lbs1) in
+                                          ok) (snd lbs1) in
                                    Prims.op_Negation uu____4044 in
                                  if uu____4043
                                  then None
@@ -3798,7 +3797,7 @@ and tc_decl:
                   | uu____4063 -> failwith "impossible" in
                 (match uu____3993 with
                  | (se1,lbs1) ->
-                     (FStar_All.pipe_right (Prims.snd lbs1)
+                     (FStar_All.pipe_right (snd lbs1)
                         (FStar_List.iter
                            (fun lb  ->
                               let fv =
@@ -3811,7 +3810,7 @@ and tc_decl:
                        then
                          let uu____4091 =
                            let uu____4092 =
-                             FStar_All.pipe_right (Prims.snd lbs1)
+                             FStar_All.pipe_right (snd lbs1)
                                (FStar_List.map
                                   (fun lb  ->
                                      let should_log =
@@ -3987,7 +3986,7 @@ let for_export:
           if uu____4363
           then
             let uu____4368 =
-              FStar_All.pipe_right (Prims.snd lbs)
+              FStar_All.pipe_right (snd lbs)
                 (FStar_List.map
                    (fun lb  ->
                       let uu___117_4374 = se in

@@ -76,8 +76,8 @@ let uu___is_Exported_id_field: exported_id_kind -> Prims.bool =
 type exported_id_set = exported_id_kind -> string_set FStar_ST.ref
 type env =
   {
-  curmodule: FStar_Ident.lident Prims.option;
-  curmonad: FStar_Ident.ident Prims.option;
+  curmodule: FStar_Ident.lident option;
+  curmonad: FStar_Ident.ident option;
   modules: (FStar_Ident.lident* FStar_Syntax_Syntax.modul) Prims.list;
   scope_mods: scope_mod Prims.list;
   exported_ids: exported_id_set FStar_Util.smap;
@@ -219,8 +219,7 @@ let current_module: env -> FStar_Ident.lident =
     | None  -> failwith "Unset current module"
     | Some m -> m
 let iface_decls:
-  env -> FStar_Ident.lident -> FStar_Parser_AST.decl Prims.list Prims.option
-  =
+  env -> FStar_Ident.lident -> FStar_Parser_AST.decl Prims.list option =
   fun env  ->
     fun l  ->
       let uu____459 =
@@ -351,13 +350,13 @@ let bv_to_name:
   fun bv  -> fun r  -> FStar_Syntax_Syntax.bv_to_name (set_bv_range bv r)
 let unmangleMap:
   (Prims.string* Prims.string* FStar_Syntax_Syntax.delta_depth*
-    FStar_Syntax_Syntax.fv_qual Prims.option) Prims.list
+    FStar_Syntax_Syntax.fv_qual option) Prims.list
   =
   [("op_ColonColon", "Cons", FStar_Syntax_Syntax.Delta_constant,
      (Some FStar_Syntax_Syntax.Data_ctor));
   ("not", "op_Negation", FStar_Syntax_Syntax.Delta_equational, None)]
 let unmangleOpName:
-  FStar_Ident.ident -> (FStar_Syntax_Syntax.term* Prims.bool) Prims.option =
+  FStar_Ident.ident -> (FStar_Syntax_Syntax.term* Prims.bool) option =
   fun id  ->
     let t =
       FStar_Util.find_map unmangleMap
@@ -410,10 +409,10 @@ let find_in_record ns id record cont =
                else None) in
     match find1 with | Some r -> cont r | None  -> Cont_ignore
   else Cont_ignore
-let get_exported_id_set: env -> Prims.string -> exported_id_set Prims.option
-  = fun e  -> fun mname  -> FStar_Util.smap_try_find e.exported_ids mname
-let get_trans_exported_id_set:
-  env -> Prims.string -> exported_id_set Prims.option =
+let get_exported_id_set: env -> Prims.string -> exported_id_set option =
+  fun e  -> fun mname  -> FStar_Util.smap_try_find e.exported_ids mname
+let get_trans_exported_id_set: env -> Prims.string -> exported_id_set option
+  =
   fun e  -> fun mname  -> FStar_Util.smap_try_find e.trans_exported_ids mname
 let string_of_exported_id_kind: exported_id_kind -> Prims.string =
   fun uu___146_866  ->
@@ -499,9 +498,7 @@ let find_in_module env lid k_global_def k_not_found =
   | Some sb -> k_global_def lid sb
   | None  -> k_not_found
 let try_lookup_id:
-  env ->
-    FStar_Ident.ident -> (FStar_Syntax_Syntax.term* Prims.bool) Prims.option
-  =
+  env -> FStar_Ident.ident -> (FStar_Syntax_Syntax.term* Prims.bool) option =
   fun env  ->
     fun id  ->
       let uu____1194 = unmangleOpName id in
@@ -543,11 +540,10 @@ let module_is_defined: env -> FStar_Ident.lident -> Prims.bool =
            let uu____1328 = current_module env in
            FStar_Ident.lid_equals lid uu____1328)
         ||
-        (FStar_List.existsb
-           (fun x  -> FStar_Ident.lid_equals lid (Prims.fst x)) env.modules)
+        (FStar_List.existsb (fun x  -> FStar_Ident.lid_equals lid (fst x))
+           env.modules)
 let resolve_module_name:
-  env -> FStar_Ident.lident -> Prims.bool -> FStar_Ident.lident Prims.option
-  =
+  env -> FStar_Ident.lident -> Prims.bool -> FStar_Ident.lident option =
   fun env  ->
     fun lid  ->
       fun honor_ns  ->
@@ -701,7 +697,7 @@ let resolve_in_open_namespaces' env lid k_local_binding k_rec_binding
        cont_of_option Cont_fail uu____1793) (fun uu____1795  -> Cont_ignore)
     f_module l_default
 let fv_qual_of_se:
-  FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.fv_qual Prims.option =
+  FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.fv_qual option =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_datacon
@@ -742,9 +738,7 @@ let ns_of_lid_equals: FStar_Ident.lident -> FStar_Ident.lident -> Prims.bool
         (let uu____1854 = FStar_Ident.lid_of_ids lid.FStar_Ident.ns in
          FStar_Ident.lid_equals uu____1854 ns)
 let try_lookup_name:
-  Prims.bool ->
-    Prims.bool -> env -> FStar_Ident.lident -> foundname Prims.option
-  =
+  Prims.bool -> Prims.bool -> env -> FStar_Ident.lident -> foundname option =
   fun any_val  ->
     fun exclude_interf  ->
       fun env  ->
@@ -890,7 +884,7 @@ let try_lookup_effect_name':
   Prims.bool ->
     env ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.sigelt* FStar_Ident.lident) Prims.option
+        (FStar_Syntax_Syntax.sigelt* FStar_Ident.lident) option
   =
   fun exclude_interf  ->
     fun env  ->
@@ -900,7 +894,7 @@ let try_lookup_effect_name':
         | Some (Eff_name (o,l)) -> Some (o, l)
         | uu____2075 -> None
 let try_lookup_effect_name:
-  env -> FStar_Ident.lident -> FStar_Ident.lident Prims.option =
+  env -> FStar_Ident.lident -> FStar_Ident.lident option =
   fun env  ->
     fun l  ->
       let uu____2086 =
@@ -909,8 +903,7 @@ let try_lookup_effect_name:
 let try_lookup_effect_name_and_attributes:
   env ->
     FStar_Ident.lident ->
-      (FStar_Ident.lident* FStar_Syntax_Syntax.cflags Prims.list)
-        Prims.option
+      (FStar_Ident.lident* FStar_Syntax_Syntax.cflags Prims.list) option
   =
   fun env  ->
     fun l  ->
@@ -944,7 +937,7 @@ let try_lookup_effect_name_and_attributes:
           -> Some (l1, cattributes)
       | uu____2159 -> None
 let try_lookup_effect_defn:
-  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.eff_decl Prims.option =
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.eff_decl option =
   fun env  ->
     fun l  ->
       let uu____2173 =
@@ -973,7 +966,7 @@ let is_effect_name: env -> FStar_Ident.lident -> Prims.bool =
       let uu____2204 = try_lookup_effect_name env lid in
       match uu____2204 with | None  -> false | Some uu____2206 -> true
 let try_lookup_root_effect_name:
-  env -> FStar_Ident.lident -> FStar_Ident.lident Prims.option =
+  env -> FStar_Ident.lident -> FStar_Ident.lident option =
   fun env  ->
     fun l  ->
       let uu____2214 =
@@ -1028,7 +1021,7 @@ let lookup_letbinding_quals:
           (fun uu____2311  -> None) k_global_def in
       match uu____2305 with | Some quals -> quals | uu____2317 -> []
 let try_lookup_module:
-  env -> Prims.string Prims.list -> FStar_Syntax_Syntax.modul Prims.option =
+  env -> Prims.string Prims.list -> FStar_Syntax_Syntax.modul option =
   fun env  ->
     fun path  ->
       let uu____2329 =
@@ -1042,7 +1035,7 @@ let try_lookup_module:
       | Some (uu____2344,modul) -> Some modul
       | None  -> None
 let try_lookup_let:
-  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term Prims.option =
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term option =
   fun env  ->
     fun lid  ->
       let k_global_def lid1 uu___162_2366 =
@@ -1066,7 +1059,7 @@ let try_lookup_definition:
   env ->
     FStar_Ident.lident ->
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax Prims.option
+        FStar_Syntax_Syntax.syntax option
   =
   fun env  ->
     fun lid  ->
@@ -1079,7 +1072,7 @@ let try_lookup_definition:
              FStar_Syntax_Syntax.sigquals = uu____2423;
              FStar_Syntax_Syntax.sigmeta = uu____2424;_},uu____2425)
             ->
-            FStar_Util.find_map (Prims.snd lbs)
+            FStar_Util.find_map (snd lbs)
               (fun lb  ->
                  match lb.FStar_Syntax_Syntax.lbname with
                  | FStar_Util.Inr fv when
@@ -1096,8 +1089,7 @@ let try_lookup_lid':
   Prims.bool ->
     Prims.bool ->
       env ->
-        FStar_Ident.lident ->
-          (FStar_Syntax_Syntax.term* Prims.bool) Prims.option
+        FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) option
   =
   fun any_val  ->
     fun exclude_interf  ->
@@ -1108,11 +1100,10 @@ let try_lookup_lid':
           | Some (Term_name (e,mut)) -> Some (e, mut)
           | uu____2492 -> None
 let try_lookup_lid:
-  env ->
-    FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) Prims.option
+  env -> FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) option
   = fun env  -> fun l  -> try_lookup_lid' env.iface false env l
 let resolve_to_fully_qualified_name:
-  env -> FStar_Ident.lident -> FStar_Ident.lident Prims.option =
+  env -> FStar_Ident.lident -> FStar_Ident.lident option =
   fun env  ->
     fun l  ->
       let uu____2512 = try_lookup_lid env l in
@@ -1127,8 +1118,7 @@ let resolve_to_fully_qualified_name:
                Some ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
            | uu____2533 -> None)
 let try_lookup_lid_no_resolve:
-  env ->
-    FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) Prims.option
+  env -> FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) option
   =
   fun env  ->
     fun l  ->
@@ -1152,11 +1142,10 @@ let try_lookup_lid_no_resolve:
           syntax_only = (uu___180_2544.syntax_only)
         } in
       try_lookup_lid env' l
-let try_lookup_doc:
-  env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc Prims.option =
+let try_lookup_doc: env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc option =
   fun env  -> fun l  -> FStar_Util.smap_try_find env.docs l.FStar_Ident.str
 let try_lookup_datacon:
-  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.fv Prims.option =
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.fv option =
   fun env  ->
     fun lid  ->
       let k_global_def lid1 uu___165_2568 =
@@ -1198,7 +1187,7 @@ let try_lookup_datacon:
       resolve_in_open_namespaces' env lid (fun uu____2604  -> None)
         (fun uu____2605  -> None) k_global_def
 let find_all_datacons:
-  env -> FStar_Ident.lident -> FStar_Ident.lident Prims.list Prims.option =
+  env -> FStar_Ident.lident -> FStar_Ident.lident Prims.list option =
   fun env  ->
     fun lid  ->
       let k_global_def lid1 uu___166_2624 =
@@ -1457,7 +1446,7 @@ let extract_record:
                     | uu____3515 -> ()))
         | uu____3516 -> ()
 let try_lookup_record_or_dc_by_field_name:
-  env -> FStar_Ident.lident -> record_or_dc Prims.option =
+  env -> FStar_Ident.lident -> record_or_dc option =
   fun env  ->
     fun fieldname  ->
       let find_in_cache fieldname1 =
@@ -1479,7 +1468,7 @@ let try_lookup_record_or_dc_by_field_name:
            cont_of_option Cont_ignore uu____3550)
         (fun k  -> fun uu____3553  -> k)
 let try_lookup_record_by_field_name:
-  env -> FStar_Ident.lident -> record_or_dc Prims.option =
+  env -> FStar_Ident.lident -> record_or_dc option =
   fun env  ->
     fun fieldname  ->
       let uu____3562 = try_lookup_record_or_dc_by_field_name env fieldname in
@@ -1511,8 +1500,7 @@ let belongs_to_record:
              | uu____3590 -> false)
         | uu____3592 -> false
 let try_lookup_dc_by_field_name:
-  env -> FStar_Ident.lident -> (FStar_Ident.lident* Prims.bool) Prims.option
-  =
+  env -> FStar_Ident.lident -> (FStar_Ident.lident* Prims.bool) option =
   fun env  ->
     fun fieldname  ->
       let uu____3603 = try_lookup_record_or_dc_by_field_name env fieldname in
@@ -1913,8 +1901,8 @@ let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
                (uu____4150, (FStar_Ident.range_of_lid l)) in
              FStar_Errors.Error uu____4147 in
            raise uu____4146)
-let push_doc:
-  env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc Prims.option -> env =
+let push_doc: env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc option -> env
+  =
   fun env  ->
     fun l  ->
       fun doc_opt  ->

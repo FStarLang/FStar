@@ -11,7 +11,7 @@
       1,
       [
         "@query", "function_token_typing_Prims.int",
-        "lemma_FStar.Ghost.lemma_hide_reveal"
+        "lemma_FStar.Ghost.hide_reveal"
       ],
       0
     ],
