@@ -205,22 +205,22 @@ let const_to_string x = match x with
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
 (* tuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_tuple (n:int) :(string -> lident) =
+let mod_prefix_dtuple (n:int) :(string -> lident) =
   if n = 2 then pconst else psconst
 
  let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_tuple n) t) r
+  set_lid_range (psconst t) r
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_tuple n) t) r
+  set_lid_range ((mod_prefix_dtuple n) t) r
 
 let is_dtuple_data_lid' f =
     U.starts_with (FStar.Ident.text_of_lid f) "Mkdtuple"
 
 let is_tuple_data_lid' f =
-    (f.nsstr = "Prims" || f.nsstr = "FStar.Pervasives") && U.starts_with f.ident.idText "Mktuple"
+    f.nsstr = "FStar.Pervasives" && U.starts_with f.ident.idText "Mktuple"
 
 let is_name (lid:lident) =
   let c = U.char_at lid.ident.idText 0 in

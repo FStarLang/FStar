@@ -91,6 +91,8 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
 
 
 (* names of F* functions which need to be handled differently *)
+let fst_ident = path_to_ident (["FStar"; "Pervasives"], "fst")
+let snd_ident = path_to_ident (["FStar"; "Pervasives"], "snd")
 let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
@@ -293,6 +295,10 @@ and resugar_app f args es: expression =
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with" in
     Exp.try_ body variants
+  | Pexp_ident x when (x = fst_ident) ->
+    Exp.apply (Exp.ident (mk_lident "fst")) args
+  | Pexp_ident x when (x = snd_ident) ->
+    Exp.apply (Exp.ident (mk_lident "snd")) args
   | Pexp_ident x when (x = raise_ident) ->
     Exp.apply (Exp.ident (mk_lident "raise")) args
   | _ -> Exp.apply f args

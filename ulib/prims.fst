@@ -256,26 +256,8 @@ type lex_t =
   | LexTop  : lex_t
   | LexCons : #a:Type -> a -> lex_t -> lex_t
 
-(* 'a * 'b *)
-type tuple2 'a 'b =
-  | Mktuple2: _1:'a
-           -> _2:'b
-           -> tuple2 'a 'b
-
 let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
 let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
-
-val fst : ('a * 'b) -> Tot 'a
-let fst x = Mktuple2?._1 x
-
-val snd : ('a * 'b) -> Tot 'b
-let snd x = Mktuple2?._2 x
-
-val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
-let dfst #a #b t = Mkdtuple2?._1 t
-
-val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
-let dsnd #a #b t = Mkdtuple2?._2 t
 
 assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
