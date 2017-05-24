@@ -105,9 +105,10 @@ let powx_lemma1 a = ()
 val powx_lemma2: x:int -> n:nat -> m:nat -> Lemma
   (powx x n * powx x m = powx x (n + m))
 let rec powx_lemma2 x n m =
+  let ass (x y z : int) : Lemma ((x*y)*z == x*(y*z)) = () in
   match n with
   | 0 -> ()
-  | _ -> powx_lemma2 x (n-1) m
+  | _ -> powx_lemma2 x (n-1) m; ass x (powx x (n-1)) (powx x m)
 
 (* Lemma: absolute value of product is the product of the absolute values *)
 val abs_mul_lemma: a:int -> b:int -> Lemma (abs (a * b) = abs a * abs b)
