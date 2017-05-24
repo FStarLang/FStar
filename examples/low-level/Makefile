@@ -40,9 +40,9 @@ extra:
 	+make -C crypto all extra
 # removed tests poly-test and aead-test, relying on older code.
 
-ulib: $(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
+ulib: $(FSTARLIB_DIR)/fstarlib.cmxa
 
-$(FSTAR_HOME)/ulib/ml/fstarlib.cmxa:
+$(FSTARLIB_DIR)/fstarlib.cmxa:
 	make -j 1 -C $(FSTAR_HOME)/ulib/ml MEM=HST clean all
 
 # Verification target for the low-level libraries of F* in universes
