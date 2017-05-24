@@ -1,5 +1,5 @@
 [
-  "\u000eùÁ_,d¡≥1äÏfπ™‘\u0012",
+  "¥\f6kI\u0007Vﬁ\u007fÏÊ¶ß\b…j",
   [
     [
       "FStar.Ghost.reveal",
@@ -18,7 +18,7 @@
       0
     ],
     [
-      "FStar.Ghost.lemma_hide_reveal",
+      "FStar.Ghost.hide_reveal",
       1,
       2,
       1,
@@ -29,7 +29,7 @@
       0
     ],
     [
-      "FStar.Ghost.lemma_reveal_hide",
+      "FStar.Ghost.reveal_hide",
       1,
       2,
       1,

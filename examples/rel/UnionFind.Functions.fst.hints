@@ -490,7 +490,6 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_UnionFind.Forest.set_n.fuel_instrumented",
         "@query",
-        "FStar.DM4F.Heap_interpretation_Tm_arrow_70a52c6db0f4051196ef25c73ee29697",
         "FStar.Ghost_interpretation_Tm_arrow_54aa9a6abefc706c9471366116678213",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
@@ -508,7 +507,6 @@
         "equation_UnionFind.Forest.uf_forest",
         "equation_UnionFind.Functions.diff",
         "equation_UnionFind.Functions.well_formed",
-        "function_token_typing_FStar.DM4F.Heap.sel",
         "function_token_typing_FStar.Ghost.reveal",
         "function_token_typing_Prims.nat",
         "function_token_typing_UnionFind.Forest.subtree_t",
@@ -532,7 +530,6 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_UnionFind.Forest_Tm_refine_b9e11f705ac7edee3fdb554505ed9f50",
-        "token_correspondence_FStar.DM4F.Heap.sel",
         "token_correspondence_FStar.Ghost.reveal",
         "token_correspondence_Prims.op_LessThanOrEqual",
         "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel",
@@ -544,7 +541,7 @@
         "typing_FStar.Pervasives.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n",
-        "typing_UnionFind.Functions.diff", "well-founded-ordering-on-nat"
+        "well-founded-ordering-on-nat"
       ],
       0
     ],

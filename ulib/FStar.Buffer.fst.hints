@@ -1459,7 +1459,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_a5699dfaf30d28fc736099845be220c7",
+        "FStar.Buffer_interpretation_Tm_arrow_bdb3fcef22b54bc194a9f0507f3c0494",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "equation_FStar.Buffer.as_addr",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
@@ -1491,7 +1491,7 @@
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.as_ref",
         "typing_FStar.Buffer.content", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.singleton",
-        "uvar_typing_278467", "uvar_typing_278490"
+        "uvar_typing_278403", "uvar_typing_278426"
       ],
       0
     ],
@@ -1528,7 +1528,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_e9960ca8473033d1940e63ee6e50f51f",
+        "FStar.Buffer_interpretation_Tm_arrow_1e214e2bc7f2a46cfe5de518e4d29937",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "equation_FStar.Buffer.as_addr",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
@@ -1555,7 +1555,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.singleton",
-        "uvar_typing_279465", "uvar_typing_279488"
+        "uvar_typing_279401", "uvar_typing_279424"
       ],
       0
     ],
@@ -1566,7 +1566,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_5e690776b07aaf869d4a83050d045d74",
+        "FStar.Buffer_interpretation_Tm_arrow_23455273a58aad071fd8607778790981",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "bool_inversion",
         "equation_FStar.Buffer.as_addr", "equation_FStar.Buffer.as_ref",
@@ -1593,8 +1593,8 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.mem",
-        "typing_FStar.Set.singleton", "uvar_typing_279999",
-        "uvar_typing_280027"
+        "typing_FStar.Set.singleton", "uvar_typing_279935",
+        "uvar_typing_279963"
       ],
       0
     ],
@@ -1631,7 +1631,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Buffer_interpretation_Tm_arrow_f29742d3b38dcab2127bf82f74cab70c",
+        "FStar.Buffer_interpretation_Tm_arrow_312cf5f5c99e3edb4fb8446c177c8b4c",
         "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "assumption_Prims.HasEq_int", "equation_FStar.Buffer.as_addr",
         "equation_FStar.Buffer.as_ref", "equation_FStar.Buffer.buffer",
@@ -1658,7 +1658,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Buffer.as_addr", "typing_FStar.Buffer.to_set_2",
         "typing_FStar.Heap.addr_of", "typing_FStar.Set.singleton",
-        "uvar_typing_281046", "uvar_typing_281051"
+        "uvar_typing_280982", "uvar_typing_280987"
       ],
       0
     ],
@@ -6426,7 +6426,6 @@
         "equation_FStar.HyperHeap.weak_contains_ref",
         "equation_FStar.HyperStack.contains",
         "equation_FStar.HyperStack.frameOf", "equation_FStar.HyperStack.hh",
-        "equation_FStar.HyperStack.is_above",
         "equation_FStar.HyperStack.is_in", "equation_FStar.HyperStack.is_mm",
         "equation_FStar.HyperStack.is_tip",
         "equation_FStar.HyperStack.live_region",
@@ -6475,7 +6474,6 @@
         "proj_equation_FStar.HyperStack.MkRef_ref",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Buffer_Tm_refine_ba56e54aa82f2631b0e7a66e112023c8",
         "refinement_interpretation_FStar.HyperStack_Tm_refine_17c32ea1674222a60392f05cf1ea594b",
         "refinement_interpretation_FStar.HyperStack_Tm_refine_4c3d3c35ed77aaa549ae6f40eebffd27",
         "refinement_interpretation_FStar.HyperStack_Tm_refine_f724abd6de992fc2f861487694296e1a",
