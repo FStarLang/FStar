@@ -254,8 +254,11 @@ let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit> =
 
 let smt : tac<unit> =
     with_cur_goal (fun g ->
-    bind dismiss (fun _ ->
-    add_smt_goals [g]))
+    match g.witness with
+    | None -> bind dismiss (fun _ ->
+              add_smt_goals [g])
+    | Some _ -> fail "goal needs a witness: cannot dispatch to smt"
+    )
 
 (* focus_cur_goal: runs f on the current goal only, and then restores all the goals *)
 let focus_cur_goal (f:tac<'a>) : tac<'a>
