@@ -779,7 +779,7 @@ let later : tac<unit> =
     bind get (fun ps ->
     match ps.goals with
     | [] -> ret ()
-    | g::gs -> set {ps with goals=gs@[g]}
+    | g::gs -> set ({ps with goals=gs@[g]})
     )
 
 // Should probably be moved somewhere else
