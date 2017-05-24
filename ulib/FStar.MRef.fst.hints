@@ -13,8 +13,8 @@
         "equation_FStar.MRef.mref", "equation_FStar.MRef.upd",
         "equation_FStar.ST.ref", "lemma_FStar.Heap.lemma_alloc",
         "lemma_FStar.Heap.lemma_contains_implies_used",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
         "refinement_interpretation_FStar.MRef_Tm_refine_28803da2dc9d0e5b35a3c9fc92bfae51"
       ],
       0

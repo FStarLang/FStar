@@ -37,10 +37,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mktuple2",
-        "fuel_guarded_inversion_Prims.tuple2",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2"
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Mktuple2",
+        "fuel_guarded_inversion_FStar.Pervasives.tuple2",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2"
       ],
       0
     ],

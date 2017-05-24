@@ -1,7 +1,7 @@
 open Prims
 let one_toplevel:
   FStar_Parser_AST.decl Prims.list ->
-    (FStar_Parser_AST.decl* FStar_Parser_AST.decl Prims.list) Prims.option
+    (FStar_Parser_AST.decl* FStar_Parser_AST.decl Prims.list) option
   =
   fun decls  ->
     let uu____10 =
@@ -30,7 +30,7 @@ let htree: mforest FStar_Util.smap =
   FStar_Util.smap_create (Prims.parse_int "50")
 let string_of_optiont f y xo = match xo with | Some x -> f x | None  -> y
 let string_of_fsdoco:
-  (Prims.string* (Prims.string* Prims.string) Prims.list) Prims.option ->
+  (Prims.string* (Prims.string* Prims.string) Prims.list) option ->
     Prims.string
   =
   fun d  ->
@@ -40,7 +40,7 @@ let string_of_fsdoco:
            let uu____142 = FStar_Parser_AST.string_of_fsdoc x in
            Prims.strcat uu____142 "*)" in
          Prims.strcat "(*" uu____141) "" d
-let string_of_termo: FStar_Parser_AST.term Prims.option -> Prims.string =
+let string_of_termo: FStar_Parser_AST.term option -> Prims.string =
   fun t  -> string_of_optiont FStar_Parser_AST.term_to_string "" t
 let code_wrap: Prims.string -> Prims.string =
   fun s  -> Prims.strcat "```fsharp\n" (Prims.strcat s "\n```\n")
@@ -220,7 +220,7 @@ let document_toplevel name topdecl =
             | None  -> (None, (Some doc1))
             | Some (uu____657,summary) -> ((Some summary), (Some doc1)))
        | None  -> (None, None))
-  | uu____665 -> Prims.raise (FStar_Errors.Err "Not a TopLevelModule")
+  | uu____665 -> raise (FStar_Errors.Err "Not a TopLevelModule")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____673 =
@@ -262,14 +262,14 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str in
                FStar_Errors.Err uu____744 in
-             Prims.raise uu____743)
+             raise uu____743)
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->
     let modules =
       FStar_List.collect
         (fun fn  ->
-           let uu____753 = FStar_Parser_Driver.parse_file fn in
-           Prims.fst uu____753) files in
+           let uu____753 = FStar_Parser_Driver.parse_file fn in fst uu____753)
+        files in
     let mods = FStar_List.map document_module modules in
     let on = FStar_Options.prepend_output_dir "index.md" in
     let fd = FStar_Util.open_file_for_writing on in

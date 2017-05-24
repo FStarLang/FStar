@@ -5,7 +5,7 @@ let module_or_interface_name:
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
 let parse:
   FStar_ToSyntax_Env.env ->
-    Prims.string Prims.option ->
+    Prims.string option ->
       Prims.string ->
         (FStar_ToSyntax_Env.env* FStar_Syntax_Syntax.modul Prims.list)
   =
@@ -37,7 +37,7 @@ let parse:
                             (match uu____76 with
                              | (env2,ast1) -> (env2, [ast1]))
                         | uu____85 ->
-                            Prims.raise
+                            raise
                               (FStar_Errors.Err
                                  "mismatch between pre-module and module\n"))) in
             (match uu____40 with
@@ -103,12 +103,12 @@ let tc_prims:
           | ((prims_mod1,env1),elapsed_time) ->
               ((prims_mod1, elapsed_time), dsenv, env1)))
 let tc_one_fragment:
-  FStar_Syntax_Syntax.modul Prims.option ->
+  FStar_Syntax_Syntax.modul option ->
     FStar_ToSyntax_Env.env ->
       FStar_TypeChecker_Env.env ->
         (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-          (FStar_Syntax_Syntax.modul Prims.option* FStar_ToSyntax_Env.env*
-            FStar_TypeChecker_Env.env) Prims.option
+          (FStar_Syntax_Syntax.modul option* FStar_ToSyntax_Env.env*
+            FStar_TypeChecker_Env.env) option
   =
   fun curmod  ->
     fun dsenv  ->
@@ -155,7 +155,7 @@ let tc_one_fragment:
                                        uu____228 <> uu____232 in
                                      if uu____227
                                      then
-                                       Prims.raise
+                                       raise
                                          (FStar_Errors.Err
                                             "Interactive mode only supports a single module at the top-level")
                                      else env
@@ -213,7 +213,7 @@ let tc_one_fragment:
                     None)
                | e when
                    let uu____360 = FStar_Options.trace_error () in
-                   Prims.op_Negation uu____360 -> Prims.raise e)
+                   Prims.op_Negation uu____360 -> raise e)
 let load_interface_decls:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
     FStar_Parser_ParseIt.filename ->
@@ -243,9 +243,9 @@ let load_interface_decls:
                        "Unexpected result from parsing %s; expected a single interface"
                        interface_file_name in
                    FStar_Errors.Err uu____445 in
-                 Prims.raise uu____444
+                 raise uu____444
              | FStar_Util.Inr (err1,rng) ->
-                 Prims.raise (FStar_Errors.Error (err1, rng))
+                 raise (FStar_Errors.Error (err1, rng))
            with
            | FStar_Errors.Error (msg,r) when
                let uu____464 = FStar_Options.trace_error () in
@@ -259,11 +259,11 @@ let load_interface_decls:
                 (dsenv, env))
            | e when
                let uu____478 = FStar_Options.trace_error () in
-               Prims.op_Negation uu____478 -> Prims.raise e)
+               Prims.op_Negation uu____478 -> raise e)
 let tc_one_file:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->
-      Prims.string Prims.option ->
+      Prims.string option ->
         Prims.string ->
           ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list*
             FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
@@ -322,9 +322,9 @@ let pop_context: FStar_TypeChecker_Env.env -> Prims.string -> Prims.unit =
   fun env  ->
     fun msg  ->
       (let uu____648 = FStar_ToSyntax_Env.pop () in
-       FStar_All.pipe_right uu____648 Prims.ignore);
+       FStar_All.pipe_right uu____648 FStar_Pervasives.ignore);
       (let uu____650 = FStar_TypeChecker_Env.pop env msg in
-       FStar_All.pipe_right uu____650 Prims.ignore);
+       FStar_All.pipe_right uu____650 FStar_Pervasives.ignore);
       (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ()
 let push_context:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->

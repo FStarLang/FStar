@@ -24,7 +24,7 @@ type sconst =
   | Const_effect
   | Const_unit
   | Const_bool of Prims.bool
-  | Const_int of (Prims.string* (signedness* width) Prims.option)
+  | Const_int of (Prims.string* (signedness* width) option)
   | Const_char of FStar_BaseTypes.char
   | Const_float of FStar_BaseTypes.double
   | Const_bytearray of (FStar_BaseTypes.byte Prims.array* FStar_Range.range)
@@ -47,7 +47,7 @@ let uu___is_Const_int: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_int _0 -> true | uu____89 -> false
 let __proj__Const_int__item___0:
-  sconst -> (Prims.string* (signedness* width) Prims.option) =
+  sconst -> (Prims.string* (signedness* width) option) =
   fun projectee  -> match projectee with | Const_int _0 -> _0
 let uu___is_Const_char: sconst -> Prims.bool =
   fun projectee  ->

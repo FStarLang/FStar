@@ -4,7 +4,7 @@ let tacdbg: Prims.bool FStar_ST.ref = FStar_Util.mk_ref false
 type goal =
   {
   context: FStar_TypeChecker_Env.env;
-  witness: FStar_Syntax_Syntax.term Prims.option;
+  witness: FStar_Syntax_Syntax.term option;
   goal_ty: FStar_Syntax_Syntax.term;}
 type proofstate =
   {
@@ -116,7 +116,7 @@ let solve: goal -> FStar_Syntax_Syntax.typ -> Prims.unit =
                  FStar_Util.format3 "%s does not solve %s : %s" uu____408
                    uu____409 uu____410 in
                Failure uu____407 in
-             Prims.raise uu____406)
+             raise uu____406)
 let dismiss: Prims.unit tac =
   bind get
     (fun p  ->
@@ -499,7 +499,7 @@ let mk_squash p =
 let un_squash:
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax Prims.option
+      FStar_Syntax_Syntax.syntax option
   =
   fun t  ->
     let uu____965 = FStar_Syntax_Util.head_and_args t in
@@ -654,7 +654,7 @@ let apply_lemma: FStar_Syntax_Syntax.term -> Prims.unit tac =
                              let c = FStar_Syntax_Util.comp_to_comp_typ comp1 in
                              match c.FStar_Syntax_Syntax.effect_args with
                              | pre::post::uu____1340 ->
-                                 ((Prims.fst pre), (Prims.fst post))
+                                 ((fst pre), (fst post))
                              | uu____1370 ->
                                  failwith "Impossible: not a lemma" in
                            (match uu____1324 with
@@ -777,11 +777,10 @@ let rewrite: FStar_Syntax_Syntax.binder -> Prims.unit tac =
          let uu____1564 =
            FStar_All.pipe_left mlog
              (fun uu____1569  ->
-                let uu____1570 =
-                  FStar_Syntax_Print.bv_to_string (Prims.fst h) in
+                let uu____1570 = FStar_Syntax_Print.bv_to_string (fst h) in
                 let uu____1571 =
                   FStar_Syntax_Print.term_to_string
-                    (Prims.fst h).FStar_Syntax_Syntax.sort in
+                    (fst h).FStar_Syntax_Syntax.sort in
                 FStar_Util.print2 "+++Rewrite %s : %s\n" uu____1570
                   uu____1571) in
          bind uu____1564
@@ -789,9 +788,8 @@ let rewrite: FStar_Syntax_Syntax.binder -> Prims.unit tac =
               let uu____1573 =
                 let uu____1575 =
                   let uu____1576 =
-                    FStar_TypeChecker_Env.lookup_bv goal.context
-                      (Prims.fst h) in
-                  FStar_All.pipe_left Prims.fst uu____1576 in
+                    FStar_TypeChecker_Env.lookup_bv goal.context (fst h) in
+                  FStar_All.pipe_left FStar_Pervasives.fst uu____1576 in
                 FStar_Syntax_Util.destruct_typ_as_formula uu____1575 in
               match uu____1573 with
               | Some (FStar_Syntax_Util.BaseConn
@@ -929,7 +927,7 @@ let destruct_equality_imp:
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax*
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax) Prims.option
+      FStar_Syntax_Syntax.syntax) option
   =
   fun t  ->
     let uu____1764 = FStar_Syntax_Util.destruct_typ_as_formula t in
@@ -1054,7 +1052,8 @@ let rec visit: Prims.unit tac -> Prims.unit tac =
                       let uu____2016 = visit callback in
                       let uu____2018 =
                         let uu____2020 =
-                          let uu____2022 = FStar_List.map Prims.fst binders in
+                          let uu____2022 =
+                            FStar_List.map FStar_Pervasives.fst binders in
                           revert_all_hd uu____2022 in
                         bind uu____2020
                           (fun uu____2026  ->
@@ -1099,7 +1098,7 @@ let order_binder:
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> order =
   fun x  ->
     fun y  ->
-      let n1 = FStar_Syntax_Syntax.order_bv (Prims.fst x) (Prims.fst y) in
+      let n1 = FStar_Syntax_Syntax.order_bv (fst x) (fst y) in
       if n1 < (Prims.parse_int "0")
       then Lt
       else if n1 = (Prims.parse_int "0") then Eq else Gt

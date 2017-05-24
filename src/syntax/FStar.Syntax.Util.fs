@@ -718,29 +718,45 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
+let is_tuple_constructor_string (s:string) :bool =
+  U.starts_with s "FStar.Pervasives.tuple"
+
+let is_dtuple_constructor_string (s:string) :bool =
+  s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
+
+let is_tuple_datacon_string (s:string) :bool =
+  U.starts_with s "FStar.Pervasives.Mktuple"
+
+let is_dtuple_datacon_string (s:string) :bool =
+  s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
+
+(* dtuple is defined in prims if n = 2, in pervasives otherwise *)
+let mod_prefix_dtuple (n:int) :(string -> lident) =
+  if n = 2 then Const.pconst else Const.psconst
+
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> U.starts_with fv.fv_name.v.str "Prims.tuple"
+  | Tm_fvar fv -> is_tuple_constructor_string fv.fv_name.v.str
   | _ -> false
 
 let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range (Const.pconst t) r
+  set_lid_range (Const.psconst t) r
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (Const.pconst t) r
+  set_lid_range (Const.psconst t) r
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
-let is_tuple_data_lid' f =
-    f.nsstr = "Prims" && U.starts_with f.ident.idText "Mktuple"
+let is_tuple_data_lid' f = is_tuple_datacon_string f.str
+    //f.nsstr = "Prims" && U.starts_with f.ident.idText "Mktuple"
 
-let is_tuple_constructor_lid lid =
-    U.starts_with (Ident.text_of_lid lid) "Prims.tuple"
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (Ident.text_of_id lid)
+    //U.starts_with (Ident.text_of_lid lid) "Prims.tuple"
 
-let is_dtuple_constructor_lid lid =
-  lid.nsstr = "Prims" && U.starts_with lid.ident.idText "Prims.dtuple"
+let is_dtuple_constructor_lid lid = is_dtuple_constructor_string lid.str
+  //lid.nsstr = "Prims" && U.starts_with lid.ident.idText "Prims.dtuple"
 
 let is_dtuple_constructor (t:typ) = match t.n with
   | Tm_fvar fv -> is_dtuple_constructor_lid fv.fv_name.v
@@ -748,14 +764,14 @@ let is_dtuple_constructor (t:typ) = match t.n with
 
 let mk_dtuple_lid n r =
   let t = U.format1 "dtuple%s" (U.string_of_int n) in
-  set_lid_range (Const.pconst t) r
+  set_lid_range ((mod_prefix_dtuple n) t) r
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range (Const.pconst t) r
+  set_lid_range ((mod_prefix_dtuple n) t) r
 
-let is_dtuple_data_lid' f =
-    U.starts_with (Ident.text_of_lid f) "Mkdtuple"
+let is_dtuple_data_lid' f = is_dtuple_datacon_string (Ident.text_of_lid f)
+    //U.starts_with (Ident.text_of_lid f) "Mkdtuple"
 
 let is_lid_equality x = lid_equals x Const.eq2_lid
 

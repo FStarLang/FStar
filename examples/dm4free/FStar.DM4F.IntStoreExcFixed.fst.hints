@@ -8,9 +8,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_None"
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Pervasives.uu___is_None",
+        "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ],
@@ -21,9 +23,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_Prims.invertOption", "projection_inverse_BoxBool_proj_0",
-        "typing_Prims.uu___is_None"
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
+        "fuel_guarded_inversion_FStar.Pervasives.option",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ],
@@ -61,10 +66,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
-        "data_typing_intro_Prims.None@tok", "disc_equation_Prims.None",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.None",
+        "data_typing_intro_FStar.Pervasives.None@tok",
+        "disc_equation_FStar.Pervasives.None",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.None_a"
+        "projection_inverse_FStar.Pervasives.None_a"
       ],
       0
     ],

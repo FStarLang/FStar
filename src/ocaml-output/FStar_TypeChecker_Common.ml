@@ -16,12 +16,12 @@ type ('a,'b) problem =
   lhs: 'a;
   relation: rel;
   rhs: 'a;
-  element: 'b Prims.option;
+  element: 'b option;
   logical_guard: (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.term);
   scope: FStar_Syntax_Syntax.binders;
   reason: Prims.string Prims.list;
   loc: FStar_Range.range;
-  rank: Prims.int Prims.option;}
+  rank: Prims.int option;}
 type prob =
   | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem
   | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem
@@ -178,9 +178,7 @@ let rec delta_depth_greater_than:
       | (uu____415,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
 let rec decr_delta_depth:
-  FStar_Syntax_Syntax.delta_depth ->
-    FStar_Syntax_Syntax.delta_depth Prims.option
-  =
+  FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth option =
   fun uu___96_420  ->
     match uu___96_420 with
     | FStar_Syntax_Syntax.Delta_constant 
@@ -266,7 +264,7 @@ let insert_identifier_info:
                         insert_col_info col info uu____648 in
                       FStar_ST.write col_infos uu____647))
 let info_at_pos:
-  Prims.string -> Prims.int -> Prims.int -> identifier_info Prims.option =
+  Prims.string -> Prims.int -> Prims.int -> identifier_info option =
   fun fn  ->
     fun row  ->
       fun col  ->

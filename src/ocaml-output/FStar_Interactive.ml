@@ -28,7 +28,7 @@ let tc_prims:
     let uu____166 = FStar_Universal.tc_prims () in
     match uu____166 with | (uu____174,dsenv,env) -> (dsenv, env)
 type env_t = (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
-type modul_t = FStar_Syntax_Syntax.modul Prims.option
+type modul_t = FStar_Syntax_Syntax.modul option
 type stack_t = (env_t* modul_t) Prims.list
 let pop uu____199 msg =
   match uu____199 with
@@ -118,7 +118,7 @@ let push:
                then
                  (let uu____248 =
                     FStar_Options.restore_cmd_line_options false in
-                  FStar_All.pipe_right uu____248 Prims.ignore)
+                  FStar_All.pipe_right uu____248 FStar_Pervasives.ignore)
                else ();
                res)
 let mark:
@@ -151,10 +151,10 @@ let commit_mark:
         let env1 = FStar_TypeChecker_Env.commit_mark env in (dsenv1, env1)
 let check_frag:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
-    FStar_Syntax_Syntax.modul Prims.option ->
+    FStar_Syntax_Syntax.modul option ->
       (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-        (FStar_Syntax_Syntax.modul Prims.option* (FStar_ToSyntax_Env.env*
-          FStar_TypeChecker_Env.env)* Prims.int) Prims.option
+        (FStar_Syntax_Syntax.modul option* (FStar_ToSyntax_Env.env*
+          FStar_TypeChecker_Env.env)* Prims.int) option
   =
   fun uu____330  ->
     fun curmod  ->
@@ -187,7 +187,7 @@ let check_frag:
                    FStar_TypeChecker_Err.add_errors env uu____438);
                   None))
 let deps_of_our_file:
-  Prims.string -> (Prims.string Prims.list* Prims.string Prims.option) =
+  Prims.string -> (Prims.string Prims.list* Prims.string option) =
   fun filename  ->
     let deps =
       FStar_Dependencies.find_deps_if_needed
@@ -226,7 +226,7 @@ let deps_of_our_file:
                None) in
         (deps1, maybe_intf)
 type m_timestamps =
-  (Prims.string Prims.option* Prims.string* FStar_Util.time Prims.option*
+  (Prims.string option* Prims.string* FStar_Util.time option*
     FStar_Util.time) Prims.list
 let rec tc_deps:
   modul_t ->
@@ -373,7 +373,7 @@ let __proj__UnexpectedJsonType__item__uu___:
   Prims.exn -> (Prims.string* FStar_Util.json) =
   fun projectee  ->
     match projectee with | UnexpectedJsonType uu____1031 -> uu____1031
-let js_fail expected got = Prims.raise (UnexpectedJsonType (expected, got))
+let js_fail expected got = raise (UnexpectedJsonType (expected, got))
 let js_int: FStar_Util.json -> Prims.int =
   fun uu___200_1048  ->
     match uu___200_1048 with
@@ -419,10 +419,10 @@ type query' =
   | Pop
   | Push of (push_kind* Prims.string* Prims.int* Prims.int* Prims.bool)
   | AutoComplete of Prims.string
-  | Lookup of (Prims.string* (Prims.string* Prims.int* Prims.int)
-  Prims.option* Prims.string Prims.list)
+  | Lookup of (Prims.string* (Prims.string* Prims.int* Prims.int) option*
+  Prims.string Prims.list)
   | Compute of (Prims.string* FStar_TypeChecker_Normalize.step Prims.list
-  Prims.option)
+  option)
   | Search of Prims.string
   | ProtocolViolation of Prims.string
 and query = {
@@ -455,15 +455,15 @@ let uu___is_Lookup: query' -> Prims.bool =
     match projectee with | Lookup _0 -> true | uu____1218 -> false
 let __proj__Lookup__item___0:
   query' ->
-    (Prims.string* (Prims.string* Prims.int* Prims.int) Prims.option*
-      Prims.string Prims.list)
+    (Prims.string* (Prims.string* Prims.int* Prims.int) option* Prims.string
+      Prims.list)
   = fun projectee  -> match projectee with | Lookup _0 -> _0
 let uu___is_Compute: query' -> Prims.bool =
   fun projectee  ->
     match projectee with | Compute _0 -> true | uu____1258 -> false
 let __proj__Compute__item___0:
   query' ->
-    (Prims.string* FStar_TypeChecker_Normalize.step Prims.list Prims.option)
+    (Prims.string* FStar_TypeChecker_Normalize.step Prims.list option)
   = fun projectee  -> match projectee with | Compute _0 -> _0
 let uu___is_Search: query' -> Prims.bool =
   fun projectee  ->
@@ -518,7 +518,7 @@ let try_assoc key a =
     FStar_Util.try_find
       (fun uu____1364  -> match uu____1364 with | (k,uu____1368) -> k = key)
       a in
-  FStar_Util.map_option Prims.snd uu____1358
+  FStar_Util.map_option FStar_Pervasives.snd uu____1358
 let wrap_js_failure: Prims.string -> Prims.string -> FStar_Util.json -> query
   =
   fun qid  ->
@@ -542,7 +542,7 @@ let unpack_interactive_query: FStar_Util.json -> query =
             let uu____1406 =
               FStar_Util.format2 "Missing key [%s] in %s." key errloc in
             InvalidQuery uu____1406 in
-          Prims.raise uu____1405 in
+          raise uu____1405 in
     let request = FStar_All.pipe_right json js_assoc in
     let qid =
       let uu____1415 = assoc1 "query" "query-id" request in
@@ -763,10 +763,10 @@ let json_of_issue: FStar_Errors.issue -> FStar_Util.json =
 type lookup_result =
   {
   lr_name: Prims.string;
-  lr_def_range: FStar_Range.range Prims.option;
-  lr_typ: Prims.string Prims.option;
-  lr_doc: Prims.string Prims.option;
-  lr_def: Prims.string Prims.option;}
+  lr_def_range: FStar_Range.range option;
+  lr_typ: Prims.string option;
+  lr_doc: Prims.string option;
+  lr_def: Prims.string option;}
 let json_of_lookup_result: lookup_result -> FStar_Util.json =
   fun lr  ->
     let uu____1764 =
@@ -1048,7 +1048,8 @@ let run_lookup st symbol pos_opt requested_info =
                 | ((uu____2506,typ),r) -> ((FStar_Util.Inr lid1), typ, r))) in
       let docs_of_lid lid =
         let uu____2518 = FStar_ToSyntax_Env.try_lookup_doc dsenv lid in
-        FStar_All.pipe_right uu____2518 (FStar_Util.map_option Prims.fst) in
+        FStar_All.pipe_right uu____2518
+          (FStar_Util.map_option FStar_Pervasives.fst) in
       let def_of_lid lid =
         let uu____2535 = FStar_TypeChecker_Env.lookup_qname tcenv lid in
         FStar_Util.bind_opt uu____2535
@@ -1319,7 +1320,7 @@ let run_compute st term rules =
     | uu____3483 -> None in
   let desugar dsenv decls =
     let uu____3503 = FStar_ToSyntax_ToSyntax.desugar_decls dsenv decls in
-    Prims.snd uu____3503 in
+    snd uu____3503 in
   let typecheck tcenv decls =
     let uu____3516 = FStar_TypeChecker_Tc.tc_decls tcenv decls in
     match uu____3516 with | (ses,uu____3524,uu____3525) -> ses in
@@ -1376,7 +1377,7 @@ let run_compute st term rules =
                                 let uu____3584 =
                                   FStar_Errors.format_issue issue in
                                 FStar_Util.JsonStr uu____3584
-                            | None  -> Prims.raise e in
+                            | None  -> raise e in
                           (QueryNOK, uu____3580)))))
 type search_term' =
   | NameContainsStr of Prims.string
@@ -1402,8 +1403,8 @@ let st_cost: search_term' -> Prims.int =
 type search_candidate =
   {
   sc_lid: FStar_Ident.lid;
-  sc_typ: FStar_Syntax_Syntax.typ Prims.option FStar_ST.ref;
-  sc_fvars: FStar_Ident.lid FStar_Util.set Prims.option FStar_ST.ref;}
+  sc_typ: FStar_Syntax_Syntax.typ option FStar_ST.ref;
+  sc_fvars: FStar_Ident.lid FStar_Util.set option FStar_ST.ref;}
 let sc_of_lid: FStar_Ident.lid -> search_candidate =
   fun lid  ->
     let uu____3682 = FStar_Util.mk_ref None in
@@ -1495,7 +1496,7 @@ let run_search st search_str =
           let end_quote = FStar_Util.ends_with term1 "\"" in
           let strip_quotes str =
             if (FStar_String.length str) < (Prims.parse_int "2")
-            then Prims.raise (InvalidSearch "Empty search term")
+            then raise (InvalidSearch "Empty search term")
             else
               FStar_Util.substring str (Prims.parse_int "1")
                 ((FStar_String.length term1) - (Prims.parse_int "2")) in
@@ -1507,7 +1508,7 @@ let run_search st search_str =
                   FStar_Util.format1 "Improperly quoted search term: %s"
                     term1 in
                 InvalidSearch uu____3886 in
-              Prims.raise uu____3885
+              raise uu____3885
             else
               if beg_quote
               then
@@ -1524,7 +1525,7 @@ let run_search st search_str =
                        let uu____3894 =
                          FStar_Util.format1 "Unknown identifier: %s" term1 in
                        InvalidSearch uu____3894 in
-                     Prims.raise uu____3893
+                     raise uu____3893
                  | Some lid1 -> TypeContainsLid lid1) in
           { st_negate = negate; st_term = parsed } in
         let terms =
@@ -1564,7 +1565,7 @@ let run_search st search_str =
                 let uu____3953 =
                   FStar_Util.format1 "No results found for query [%s]" kwds in
                 InvalidSearch uu____3953 in
-              Prims.raise uu____3952
+              raise uu____3952
           | uu____3956 -> (QueryOK, (FStar_Util.JsonList js))
         with | InvalidSearch s -> (QueryNOK, (FStar_Util.JsonStr s)) in
       (results, (FStar_Util.Inl st))
@@ -1645,9 +1646,8 @@ let interactive_mode': Prims.string -> Prims.unit =
                 FStar_Range.mk_range "<input>" uu____4136 uu____4137 in
               let env2 =
                 let uu____4141 =
-                  FStar_TypeChecker_Env.set_range (Prims.snd env1)
-                    initial_range in
-                ((Prims.fst env1), uu____4141) in
+                  FStar_TypeChecker_Env.set_range (snd env1) initial_range in
+                ((fst env1), uu____4141) in
               let env3 =
                 match maybe_intf with
                 | Some intf -> FStar_Universal.load_interface_decls env2 intf
@@ -1689,6 +1689,4 @@ let interactive_mode: Prims.string -> Prims.unit =
      else ());
     (try interactive_mode' filename
      with
-     | e ->
-         (FStar_Errors.set_handler FStar_Errors.default_handler;
-          Prims.raise e))
+     | e -> (FStar_Errors.set_handler FStar_Errors.default_handler; raise e))

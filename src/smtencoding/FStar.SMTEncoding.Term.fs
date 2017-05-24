@@ -546,7 +546,7 @@ let termToSmt
             (names, [], n)
             es
           in
-          BU.format2 "(let (%s) %s)"
+          BU.format2 "(let (%s)\n%s)"
                      (String.concat " " binders)
                      (aux n names body)
 
@@ -668,7 +668,12 @@ and mkPrelude z3options =
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n\
-                (declare-fun Range_const () Term)\n" in
+                (declare-fun Range_const () Term)\n\
+                (declare-fun _mul (Int Int) Int)\n\
+                (declare-fun _div (Int Int) Int)\n\
+                (assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n\
+                (assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))"
+   in
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
@@ -694,14 +699,19 @@ let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
-let boxInt t            = mkApp("BoxInt", [t]) t.rng
-let unboxInt t          = mkApp("BoxInt_proj_0", [t]) t.rng
-let boxBool t           = mkApp("BoxBool", [t]) t.rng
-let unboxBool t         = mkApp("BoxBool_proj_0", [t]) t.rng
-let boxString t         = mkApp("BoxString", [t]) t.rng
-let unboxString t       = mkApp("BoxString_proj_0", [t]) t.rng
-let boxRef t            = mkApp("BoxRef", [t]) t.rng
-let unboxRef t          = mkApp("BoxRef_proj_0", [t]) t.rng
+let maybe_elim_box u v t =
+    match t.tm with
+    | App(Var v', [t])
+        when v=v' && Options.smtencoding_elim_box() -> t
+    | _ -> mkApp(u, [t]) t.rng
+let boxInt t      = maybe_elim_box "BoxInt" "BoxInt_proj_0" t
+let unboxInt t    = maybe_elim_box "BoxInt_proj_0" "BoxInt" t
+let boxBool t     = maybe_elim_box "BoxBool" "BoxBool_proj_0" t
+let unboxBool t   = maybe_elim_box "BoxBool_proj_0" "BoxBool" t
+let boxString t   = maybe_elim_box "BoxString" "BoxString_proj_0" t
+let unboxString t = maybe_elim_box "BoxString_proj_0" "BoxString" t
+let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
+let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t

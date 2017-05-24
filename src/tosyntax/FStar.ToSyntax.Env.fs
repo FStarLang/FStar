@@ -1092,16 +1092,16 @@ let finish_module_or_interface env modul =
   then check_admits env;
   finish env modul
 
-let prepare_module_or_interface intf admitted env mname =
+let prepare_module_or_interface intf admitted env mname = (* AR: open the pervasives namespace *)
   let prep env =
     (* These automatically-prepended directives must be kept in sync with [dep.fs]. *)
     let open_ns =
       if lid_equals mname Const.prims_lid then
         []
       else if starts_with "FStar." (text_of_lid mname) then
-        [ Const.prims_lid; Const.fstar_ns_lid ]
+        [ Const.prims_lid; Const.pervasives_lid; Const.fstar_ns_lid ]
       else
-        [ Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid ]
+        [ Const.prims_lid; Const.pervasives_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid ]
     in
     let open_ns =
       // JP: auto-deps is not aware of that. Fix it once [universes] is the default.

@@ -3,7 +3,6 @@ include Makefile.include
 
 ALL_EXAMPLE_DIRS=\
 bug-reports \
-hello \
 data_structures \
 algorithms \
 crypto \

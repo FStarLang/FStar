@@ -150,7 +150,7 @@ let disentangle_abbrevs_from_bundle:
                                FStar_Util.format1
                                  "Cycle on %s in mutually recursive type abbreviations"
                                  ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str in
-                             Prims.raise
+                             raise
                                (FStar_Errors.Error
                                   (msg,
                                     (FStar_Ident.range_of_lid

@@ -21,7 +21,7 @@ let z3version_as_string: z3version -> Prims.string =
         let uu____55 = FStar_Util.string_of_int k in
         FStar_Util.format3 "%s.%s.%s" uu____53 uu____54 uu____55
 let z3v_compare:
-  z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.int Prims.option =
+  z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.int option =
   fun known  ->
     fun uu____65  ->
       match uu____65 with
@@ -39,7 +39,7 @@ let z3v_le: z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.bool =
       match z3v_compare known wanted with
       | None  -> false
       | Some i -> i >= (Prims.parse_int "0")
-let _z3version: z3version Prims.option FStar_ST.ref = FStar_Util.mk_ref None
+let _z3version: z3version option FStar_ST.ref = FStar_Util.mk_ref None
 let get_z3version: Prims.unit -> z3version =
   fun uu____100  ->
     let prefix1 = "Z3 version " in
@@ -87,7 +87,7 @@ let ini_params: Prims.unit -> Prims.string =
              "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n"
              uu____152 in
          FStar_Util.Failure uu____151 in
-       FStar_All.pipe_left Prims.raise uu____150
+       FStar_All.pipe_left FStar_Pervasives.raise uu____150
      else ());
     (let uu____154 =
        let uu____156 =
@@ -104,7 +104,7 @@ let ini_params: Prims.unit -> Prims.string =
        FStar_List.append uu____156 uu____163 in
      FStar_String.concat " " uu____154)
 type label = Prims.string
-type unsat_core = Prims.string Prims.list Prims.option
+type unsat_core = Prims.string Prims.list option
 type z3status =
   | UNSAT of unsat_core
   | SAT of label Prims.list
@@ -518,7 +518,7 @@ let z3_job:
                                             (fun uu____1238  ->
                                                match uu____1238 with
                                                | (m,uu____1245,uu____1246) ->
-                                                   (Prims.fst m) = l)) in
+                                                   (fst m) = l)) in
                                      match uu____1220 with
                                      | None  -> []
                                      | Some (lbl,msg,r) -> [(lbl, msg, r)])) in
@@ -723,8 +723,7 @@ let ask_n_cores:
      (FStar_SMTEncoding_Term.decls_t* Prims.bool))
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t ->
-        scope_t Prims.option -> cb -> Prims.unit
+      FStar_SMTEncoding_Term.decls_t -> scope_t option -> cb -> Prims.unit
   =
   fun filter_theory  ->
     fun label_messages  ->
@@ -757,8 +756,7 @@ let ask:
      (FStar_SMTEncoding_Term.decls_t* Prims.bool))
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t ->
-        scope_t Prims.option -> cb -> Prims.unit
+      FStar_SMTEncoding_Term.decls_t -> scope_t option -> cb -> Prims.unit
   =
   fun filter1  ->
     fun label_messages  ->

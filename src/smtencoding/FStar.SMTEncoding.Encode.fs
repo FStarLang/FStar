@@ -449,6 +449,19 @@ let curried_arrow_formals_comp k =
   | Tm_arrow(bs, c) -> Subst.open_comp bs c
   | _ -> [], Syntax.mk_Total k
 
+let is_arithmetic_primitive head args =
+    match head.n, args with
+    | Tm_fvar fv, [_;_]->
+      S.fv_eq_lid fv Const.op_Addition
+      || S.fv_eq_lid fv Const.op_Subtraction
+      || S.fv_eq_lid fv Const.op_Multiply
+      || S.fv_eq_lid fv Const.op_Division
+      || S.fv_eq_lid fv Const.op_Modulus
+
+    | Tm_fvar fv, [_] ->
+      S.fv_eq_lid fv Const.op_Minus
+
+    | _ -> false
 
 let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
@@ -486,6 +499,58 @@ and encode_term_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : ter
     match fuel_opt with
         | None -> mk_HasTypeZ e t, decls
         | Some f -> mk_HasTypeFuel f e t, decls
+
+and encode_arith_term env head args_e =
+    let arg_tms, decls = encode_args args_e env in
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary arg_tms =
+        Term.unboxInt (List.hd arg_tms)
+    in
+    let binary arg_tms =
+        Term.unboxInt (List.hd arg_tms),
+        Term.unboxInt (List.hd (List.tl arg_tms))
+    in
+    let mk_default () =
+        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
+        Util.mkApp'(fname, fuel_args@arg_tms)
+    in
+    let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts ->
+          if Options.smtencoding_l_arith_native () then
+             op (mk_args ts) |> Term.boxInt
+          else mk_default ()
+    in
+    let mk_nl nm op ts =
+      if Options.smtencoding_nl_arith_wrapped () then
+          let t1, t2 = binary ts in
+          Util.mkApp(nm, [t1;t2]) |> Term.boxInt
+      else if Options.smtencoding_nl_arith_native () then
+          op (binary ts) |> Term.boxInt
+      else mk_default ()
+    in
+    let add     = mk_l Util.mkAdd binary in
+    let sub     = mk_l Util.mkSub binary in
+    let minus   = mk_l Util.mkMinus unary in
+    let mul     = mk_nl "_mul" Util.mkMul in
+    let div     = mk_nl "_div" Util.mkDiv in
+    let modulus = mk_nl "_mod" Util.mkMod in
+    let ops =
+        [(Const.op_Addition, add);
+         (Const.op_Subtraction, sub);
+         (Const.op_Multiply, mul);
+         (Const.op_Division, div);
+         (Const.op_Modulus, modulus);
+         (Const.op_Minus, minus)]
+    in
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
+        BU.must
+    in
+    op arg_tms, decls
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -550,7 +615,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              begin match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
                   mkApp(cache_entry.cache_symbol_name, cvars |> List.map mkFreeV),
-                  use_cache_entry cache_entry
+                  decls @ decls' @ guard_decls @ (use_cache_entry cache_entry)
 
                 | None ->
                   let tsym = varops.mk_unique ("Tm_arrow_" ^ (BU.digest_of_string tkey_hash)) in
@@ -695,32 +760,33 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let head, args_e = U.head_and_args t0 in
         (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
         (* then printfn "Encoding app head=%s, n_args=%d" (Print.term_to_string head) (List.length args_e); *)
-        begin match (SS.compress head).n, args_e with
-            | _, _ when head_redex env head -> encode_term (whnf env t) env
+        begin
+        match (SS.compress head).n, args_e with
+        | _ when head_redex env head ->
+            encode_term (whnf env t) env
 
-            | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
-            | Tm_fvar fv,  [_; (v1, _); (v2, _)] when S.fv_eq_lid fv Const.lexcons_lid ->
-              //lex tuples are primitive
-              let v1, decls1 = encode_term v1 env in
-              let v2, decls2 = encode_term v2 env in
-              mk_LexCons v1 v2, decls1@decls2
+        | _ when is_arithmetic_primitive head args_e ->
+            encode_arith_term env head args_e
 
-            | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-              let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
-              if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
-              then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
-              let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
-              encode_term e env
+        | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
+        | Tm_fvar fv,  [_; (v1, _); (v2, _)]
+            when S.fv_eq_lid fv Const.lexcons_lid ->
+            //lex tuples are primitive
+            let v1, decls1 = encode_term v1 env in
+            let v2, decls2 = encode_term v2 env in
+            mk_LexCons v1 v2, decls1@decls2
 
+        | Tm_constant Const_reify, _ (* (_::_::_) *) ->
+            let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
+            if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+            then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
+            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
+            encode_term e env
 
-            (* | Tm_constant Const_reify, [(arg, _)] -> *)
-            (*   let tm, decls = encode_term arg env in *)
-            (*   mkApp("Reify", [tm]), decls *)
+        | Tm_constant (Const_reflect _), [(arg, _)] ->
+            encode_term arg env
 
-            | Tm_constant (Const_reflect _), [(arg, _)] ->
-              encode_term arg env
-
-            | _ ->
+        | _ ->
             let args, decls = encode_args args_e env in
 
             let encode_partial_app ht_opt =
@@ -855,13 +921,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 match BU.smap_try_find env.cache tkey_hash with
                 | Some cache_entry ->
                   mkApp(cache_entry.cache_symbol_name, List.map mkFreeV cvars),
-                  use_cache_entry cache_entry
+                  decls @ decls' @ decls'' @ use_cache_entry cache_entry
 
                 | None ->
                   match is_an_eta_expansion env vars body with
                   | Some t ->
                     //if the cache has not changed, we need not generate decls and decls', but if the cache has changed, someone might use them in future
-                    let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls' in
+                    let decls = if BU.smap_size env.cache = cache_size then [] else decls@decls'@decls'' in
                     t, decls
                   | None ->
                     let cvar_sorts = List.map snd cvars in
@@ -1275,9 +1341,14 @@ let prims =
         (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
         (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
         (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
-        ] in
+        ]
+    in
     let mk : lident -> string -> term * list<decl> =
-        fun l v -> prims |> List.find (fun (l', _) -> lid_equals l l') |> Option.map (fun (_, b) -> b v) |> Option.get in
+        fun l v ->
+            prims |>
+            List.find (fun (l', _) -> lid_equals l l') |>
+            Option.map (fun (_, b) -> b v) |>
+            Option.get in
     let is : lident -> bool =
         fun l -> prims |> BU.for_some (fun (l', _) -> lid_equals l l') in
     {mk=mk;

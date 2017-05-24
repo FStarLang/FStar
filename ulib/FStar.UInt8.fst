@@ -80,9 +80,15 @@ val mul_mod: a:t -> b:t -> Pure t
 let mul_mod a b =
   Mk (mul_mod (v a) (v b))
 
+val mul_div: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a * v b) / pow2 n = v c))
+let mul_div a b =
+  Mk (mul_div (v a) (v b))
+
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
-  (requires (size (v a / v b) n))
+  (requires (True))
   (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
 let div a b =
   Mk (div (v a) (v b))
@@ -90,7 +96,7 @@ let div a b =
 val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
   (requires True)
   (ensures (fun c ->
-    (v b <> 0 /\ size (v a / v b) n) ==> v a / v b = v c))
+    (v b <> 0) ==> v a / v b = v c))
 let div_underspec a b =
   Mk (div_underspec (v a) (v b))
 
@@ -162,6 +168,7 @@ unfold let op_Subtraction_Percent_Hat = sub_mod
 unfold let op_Star_Hat = mul
 unfold let op_Star_Question_Hat = mul_underspec
 unfold let op_Star_Percent_Hat = mul_mod
+unfold let op_Star_Slash_Hat = mul_div
 unfold let op_Slash_Hat = div
 unfold let op_Percent_Hat = rem
 unfold let op_Hat_Hat = logxor

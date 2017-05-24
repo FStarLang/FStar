@@ -607,7 +607,7 @@ let string_to_ascii_bytes (s:string) : char array =
   BatArray.of_list (BatString.explode s)
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
-let mk_ref a = ref a
+let mk_ref a = FStar_ST.alloc a
 
 (* A simple state monad *)
 type ('s,'a) state = 's -> ('a*'s)
@@ -688,8 +688,8 @@ let for_range lo hi f =
   done
 
 
-let incr r = Z.(r := !r + one)
-let decr r = Z.(r := !r - one)
+let incr r = FStar_ST.(Z.(write r (read r + one)))
+let decr r = FStar_ST.(Z.(write r (read r - one)))
 let geq (i:int) (j:int) = i >= j
 
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
@@ -966,3 +966,11 @@ let json_of_string str : json option =
 
 let string_of_json json =
   Yojson.Basic.to_string (yojson_of_json json)
+
+(* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
+(* Export it at the end of the file so that we don't break other internal uses of ref *)
+type 'a ref = 'a FStar_Heap.ref
+let read = FStar_ST.read
+let write = FStar_ST.write
+let (!) = FStar_ST.read
+let (:=) = FStar_ST.write

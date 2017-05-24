@@ -253,7 +253,7 @@ let extract_bundle:
         let uu____579 =
           let uu____580 =
             FStar_Extraction_ML_UEnv.extend_fv env1 fvv tys false false in
-          Prims.fst uu____580 in
+          fst uu____580 in
         let uu____583 =
           let uu____587 = lident_as_mlsymbol ctor.dname in
           let uu____588 = FStar_Extraction_ML_Util.argTypes mlt in
@@ -370,7 +370,7 @@ let rec extract_sig:
                    if uu____965
                    then
                      FStar_Util.print1 "Mangled name: %s\n"
-                       (Prims.fst mangled_name)
+                       (fst mangled_name)
                    else ());
                   (let lb =
                      {
@@ -495,18 +495,18 @@ let rec extract_sig:
                                then
                                  ((let uu____1132 =
                                      FStar_Extraction_ML_Code.string_of_mlty
-                                       a_nm (Prims.snd tysc) in
+                                       a_nm (snd tysc) in
                                    FStar_Util.print1
                                      "Extracted action type: %s\n" uu____1132);
                                   FStar_List.iter
                                     (fun x  ->
                                        FStar_Util.print1 "and binders: %s\n"
-                                         (Prims.fst x)) (Prims.fst tysc))
+                                         (fst x)) (fst tysc))
                                else ());
                               extend_env g1 a_lid a_nm exp tysc))))) in
            let uu____1139 =
              let uu____1142 =
-               extract_fv (Prims.snd ed.FStar_Syntax_Syntax.return_repr) in
+               extract_fv (snd ed.FStar_Syntax_Syntax.return_repr) in
              match uu____1142 with
              | (return_tm,ty_sc) ->
                  let uu____1150 =
@@ -518,7 +518,7 @@ let rec extract_sig:
             | (g1,return_decl) ->
                 let uu____1162 =
                   let uu____1165 =
-                    extract_fv (Prims.snd ed.FStar_Syntax_Syntax.bind_repr) in
+                    extract_fv (snd ed.FStar_Syntax_Syntax.bind_repr) in
                   match uu____1165 with
                   | (bind_tm,ty_sc) ->
                       let uu____1173 =
@@ -656,7 +656,7 @@ let rec extract_sig:
                                                {
                                                  FStar_Extraction_ML_Syntax.mllb_name
                                                    =
-                                                   ((Prims.snd mname),
+                                                   ((snd mname),
                                                      (Prims.parse_int "0"));
                                                  FStar_Extraction_ML_Syntax.mllb_tysc
                                                    =
@@ -681,13 +681,13 @@ let rec extract_sig:
                                                env lbname t uu____1419
                                                ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit
                                                false in
-                                           FStar_All.pipe_left Prims.fst
-                                             uu____1416 in
+                                           FStar_All.pipe_left
+                                             FStar_Pervasives.fst uu____1416 in
                                          (uu____1415, ml_lb)) in
                                     (match uu____1389 with
                                      | (g1,ml_lb1) ->
                                          (g1, (ml_lb1 :: ml_lbs)))) (g, [])
-                         bindings (Prims.snd lbs) in
+                         bindings (snd lbs) in
                      (match uu____1341 with
                       | (g1,ml_lbs') ->
                           let flags =
@@ -860,7 +860,7 @@ let extract_iface:
     fun m  ->
       let uu____1639 =
         FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations in
-      FStar_All.pipe_right uu____1639 Prims.fst
+      FStar_All.pipe_right uu____1639 FStar_Pervasives.fst
 let extract:
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.modul ->
