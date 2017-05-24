@@ -77,7 +77,7 @@ bitvector:
 int:
 	$(FSTAR) FStar.UInt.fst FStar.UInt8.fst FStar.UInt16.fst FStar.UInt31.fst FStar.UInt32.fst FStar.UInt63.fst FStar.UInt64.fst FStar.Int.fst FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst FStar.Int.Cast.fst
 
-wc:	
+wc:
 	wc -l prims.fst $(ALL)
 
 ##
@@ -88,12 +88,9 @@ REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
 EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.*.fsti))
 
 .mgen: *.fst
+	@# creating a dummy file so that the target is not regenerated unless a file has changed
 	touch .mgen
 	mkdir -p ml/extracted
-	@echo $(REALIZED)
-	@echo $(EXTRACT_ALL)
-	# What about the files present in HYPERSTACK ?
+	@# What about the files present in HYPERSTACK ?
 	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_ALL)
 	# $(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) --include hyperstack $(HYPERSTACK)
-
-# --no_extract FStar.List.Tot --no_extract FStar.List.Tot.Base --no_extract FStar.Heap --no_extract FStar.List.Tot.Properties --no_extract FStar.Set FStar.TSet.fst FStar.Map.fst FStar.HyperHeap.fst FStar.HyperStack.fst
