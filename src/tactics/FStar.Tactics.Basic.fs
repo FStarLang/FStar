@@ -504,9 +504,9 @@ let apply_lemma (tm:term)
                    solve goal solution;
                    let is_free_uvar uv t =
                        let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
-                       List.existsb (fun u -> Unionfind.equivalent u uv) free_uvars
+                       List.existsML (fun u -> Unionfind.equivalent u uv) free_uvars
                    in
-                   let appears uv goals = List.existsb (fun g' -> is_free_uvar uv g'.goal_ty) goals in
+                   let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
                    let checkone t goals =
                         match t with
                         | None -> false
