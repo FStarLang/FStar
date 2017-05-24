@@ -11,6 +11,7 @@ module SP = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module SC = FStar.Syntax.Const
+module SF = FStar.Syntax.Free
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -501,6 +502,21 @@ let apply_lemma (tm:term)
                         | Tm_uvar _ -> true //still unresolved
                         | _ -> false) in
                    solve goal solution;
+                   let is_free_uvar uv t =
+                       let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
+                       List.existsb (fun u -> Unionfind.equivalent u uv) free_uvars
+                   in
+                   let appears uv goals = List.existsb (fun g' -> is_free_uvar uv g'.goal_ty) goals in
+                   let checkone t goals =
+                        match t with
+                        | None -> false
+                        | Some t ->
+                            let hd, _ = U.head_and_args t in
+                            begin match hd.n with
+                            | Tm_uvar (uv, _) -> appears uv goals
+                            | _ -> false
+                            end
+                   in
                    let sub_goals =
                         implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
                                 {context=goal.context;
@@ -508,6 +524,14 @@ let apply_lemma (tm:term)
                                  // Try to get rid of all the unification lambdas, which should all be at the head
                                  goal_ty = N.normalize [N.WHNF] goal.context typ})
                    in
+                   // Optimization: if a uvar appears in a later goal, don't ask for it, since
+                   // it will be instantiated later. TODO: maybe keep and check later?
+                   let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
+                        match xs with
+                        | [] -> []
+                        | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
+                   in
+                   let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
                    let sub_goals =
                        if istrivial goal.context pre
                        then sub_goals
