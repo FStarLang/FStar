@@ -99,7 +99,13 @@ let rec canon : unit -> Tac unit = fun () -> (
 
         // TODO: recurse properly
         | Inr (Plus a (Plus b c)) ->
-            apply_lemma (quote ass_l)
+            apply_lemma (quote trans);;
+            repeat dropint;; // TODO: take out
+            apply_lemma (quote ass_l);;
+            apply_lemma (quote cong_plus);; // now two goals. |- a*c = ?u1 ; |- b*c = ?u2
+            repeat dropint;; // TODO: take out
+            canon;;
+            refl
 
         | Inr (Mult (Plus a b) c) ->
             apply_lemma (quote trans);;
@@ -133,6 +139,7 @@ let rec canon : unit -> Tac unit = fun () -> (
     ) ()
 
 let tau : tactic unit =
+    pointwise canon;;
     pointwise canon
 
 let lem1 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") ((x + y) * (z + z) == 2 * z * (y + x))
