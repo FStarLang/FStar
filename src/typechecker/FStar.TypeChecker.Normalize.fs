@@ -872,6 +872,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Some (us, t) ->
                       log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
+                      let t =
+                        if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+                        //we're really trying to compute here; no point propagating range information
+                        //which can be expensive
+                        then t
+                        else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+                      in
                       let n = List.length us in
                       if n > 0
                       then match stack with //universe beta reduction

@@ -547,7 +547,7 @@ let lookup_definition delta_levels env lid =
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
-              then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (U.unascribe lb.lbdef))
+              then Some (lb.lbunivs, lb.lbdef)
               else None)
       | _ -> None
     end
