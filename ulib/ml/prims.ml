@@ -96,15 +96,6 @@ let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
 let uu___is_Cons l = not (uu___is_Nil l)
 let strcat x y = x ^ y
 
-let uu___is_Some = function (*consider redefining Option.isSome as this function*)
-  | Some _ -> true
-  | None -> false
-let uu___is_None o = not (uu___is_Some o)
-
-let __proj__Some__item__v x = match x with
-  | Some v -> v
-  | None   -> failwith "impossible"
-
 let string_of_bool = string_of_bool
 let string_of_int = to_string
 

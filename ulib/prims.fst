@@ -221,10 +221,6 @@ assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string
 
-type option (a:Type) =
-  | None : option a
-  | Some : v:a -> option a
-
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a

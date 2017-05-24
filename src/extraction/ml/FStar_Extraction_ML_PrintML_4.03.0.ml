@@ -63,13 +63,9 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
   let codegen_libs = FStar_Options.codegen_libs() in
   match l with
   | [] -> mk_lident sym
-  | ["Prims"] -> 
-     (* as in the original printer, stripping "Prims" from some constructors *)
-     let remove_qual = ["Some"; "None"] in
-     if (BatList.mem sym remove_qual) then
-       mk_lident sym
-     else 
-       mk_lident (BatString.concat "." ["Prims"; sym])
+  | ["FStar"; "Pervasives"] when BatList.mem sym ["Some"; "None"] ->
+     (* as in the original printer, stripping module from some constructors *)
+     mk_lident sym
   | hd::tl -> 
      let m_name = !current_module in
      let suffix, prefix = 
@@ -171,12 +167,13 @@ let rec build_core_type (ty: mlty): core_type =
      let c_tys = map build_core_type tys in
      let p = path_to_ident path in
      (match path with
-      | (["Prims"], c)
       | (["FStar"; "Pervasives"], c) ->
         if ((BatString.length c == 6) && 
             (BatString.equal (BatString.sub c 0 5) "tuple")) then
           (* resugar tuples (Prims.tupleX) *) 
           Typ.mk (Ptyp_tuple (map build_core_type tys))
+        else if BatString.equal c "option" then
+          Typ.mk (Ptyp_constr (path_to_ident ([], "option"), (map build_core_type tys)))
         else
           Typ.mk (Ptyp_constr (p, c_tys))
       | _ -> Typ.mk (Ptyp_constr (p, c_tys)))

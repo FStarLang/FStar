@@ -203,6 +203,10 @@ let allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
   = ()
 
+type option (a:Type) =
+  | None : option a
+  | Some : v:a -> option a
+
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
