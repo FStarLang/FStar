@@ -269,16 +269,19 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_469181b3de8c335ece34fd70f472f78d_3",
+        "constructor_distinct_Eval.DB.App",
+        "constructor_distinct_Eval.DB.Lam", "data_elim_Eval.DB.App",
         "data_elim_Eval.DB.Lam", "data_elim_Eval.DB.Var",
         "disc_equation_Eval.DB.App", "disc_equation_Eval.DB.Lam",
         "disc_equation_Eval.DB.Var", "fuel_guarded_inversion_Eval.DB.tm",
-        "projection_inverse_Eval.DB.App_b",
-        "projection_inverse_Eval.DB.App_e1",
-        "projection_inverse_Eval.DB.App_e2",
-        "projection_inverse_Eval.DB.App_g",
-        "projection_inverse_Eval.DB.Lam_g", "subterm_ordering_Eval.DB.App",
+        "projection_inverse_Eval.DB.Lam_a",
+        "projection_inverse_Eval.DB.Lam_b",
+        "projection_inverse_Eval.DB.Lam_body",
+        "projection_inverse_Eval.DB.Lam_g",
+        "projection_inverse_Eval.DB.Var_a",
+        "projection_inverse_Eval.DB.Var_g", "subterm_ordering_Eval.DB.App",
         "subterm_ordering_Eval.DB.Lam",
-        "typing_Eval.DB_Tm_abs_dde244bf5a809fa418a6fd22d4526790"
+        "typing_Eval.DB_Tm_abs_a4e72968b85e6db50c919b38d151bf1a"
       ],
       0
     ]

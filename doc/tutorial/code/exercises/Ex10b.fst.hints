@@ -73,7 +73,8 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_typing",
         "equation_FStar.Heap.fresh", "equation_FStar.Heap.modifies",
         "equation_FStar.Heap.modifies_t", "equation_FStar.ST.ref",
-        "function_token_typing_Prims.int", "lemma_FStar.Heap.lemma_alloc",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Heap.lemma_alloc",
         "lemma_FStar.Heap.lemma_contains_implies_used",
         "lemma_FStar.Heap.lemma_distinct_addrs_unused",
         "lemma_FStar.Heap.lemma_sel_upd1", "lemma_FStar.Heap.lemma_sel_upd2",
@@ -81,8 +82,8 @@
         "lemma_FStar.Heap.lemma_upd_unused", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y", "projection_inverse_Ex10b.Point_x",
         "projection_inverse_Ex10b.Point_y",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2", "ref_inversion",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2", "ref_inversion",
         "typing_Ex10b.__proj__Point__item__x"
       ],
       0
@@ -115,8 +116,8 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.tuple2_haseq", "function_token_typing_Prims.int"
+        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0
     ],
