@@ -775,6 +775,13 @@ let refl : tac<unit> =
             fail (BU.format1 "refl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
     )
 
+let later : tac<unit> =
+    bind get (fun ps ->
+    match ps.goals with
+    | [] -> ret ()
+    | g::gs -> set {ps with goals=gs@[g]}
+    )
+
 // Should probably be moved somewhere else
 type order = | Lt | Eq | Gt
 
