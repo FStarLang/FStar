@@ -52,14 +52,40 @@ let ass_l #x #y #z = ()
 (*     | _ -> *)
 (*         apply_lemma refl *)
 
-val midway : (#a:Type) -> (#x:a) -> (#y:a) -> (z:a) -> squash (x == z) -> squash (z == y) -> Lemma (x == y)
-let midway #a #x #y z e1 e2 = ()
+val trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) -> (x == y) -> (y == z) -> Lemma (x == z)
+let trans #a #x #z #y e1 e2 = ()
 
 val midl : (#x:int) -> (#y:int) -> (#z:int) -> (#w:int) -> (x * z + y * z == w) -> Lemma ((x + y) * z == w)
 let midl #x #y #z #w e = ()
 
 val midr : (#x:int) -> (#y:int) -> (#z:int) -> (#w:int) -> (z * x + z * y == w) -> Lemma (z * (x + y) == w)
 let midr #x #y #z #w e = ()
+
+val cong_plus : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
+                (w == y) -> (x == z) ->
+                Lemma (w + x == y + z)
+let cong_plus #w #x #y #z p q = ()
+
+let mkplus (a b : term) : term =
+    let plus = pack (Tv_FVar (pack_fv add_qn)) in
+    pack (Tv_App (pack (Tv_App plus a)) b)
+
+let mkmult (a b : term) : term =
+    let mult = pack (Tv_FVar (pack_fv mult_qn)) in
+    pack (Tv_App (pack (Tv_App mult a)) b)
+
+// This is of course a load of crap
+let dropint : tactic unit =
+    eg <-- cur_goal;
+    let e, g = eg in
+    match inspect g with
+    | Tv_FVar fv ->
+        let qn = inspect_fv fv in
+        if eq_qn qn int_lid
+        then exact (quote 42)
+        else fail "not literally int (1)"
+    | _ ->
+        fail "not literally int (2)"
 
 let rec canon : unit -> Tac unit = fun () -> (
     simpl;; // Needed to unfold op_Star into op_Multiply...
@@ -71,14 +97,33 @@ let rec canon : unit -> Tac unit = fun () -> (
         | Inl s ->
             refl
 
+        // TODO: recurse properly
         | Inr (Plus a (Plus b c)) ->
             apply_lemma (quote ass_l)
 
         | Inr (Mult (Plus a b) c) ->
-            apply_lemma (quote distl)
+            apply_lemma (quote trans);;
+            repeat dropint;; // TODO: take out
+            (* exact (return r);; // instantiate `z` to the uvar *)
+            (* later;; // move y over *)
+            apply_lemma (quote distl);; // now need to show a*c + b*c = ?u
+            apply_lemma (quote cong_plus);; // now two goals. |- a*c = ?u1 ; |- b*c = ?u2
+            (* later;; later;; *) // move the two uvars away
+            repeat dropint;; // TODO: take out
+            canon;;
+            canon
 
         | Inr (Mult a (Plus b c)) ->
-            apply_lemma (quote distr)
+            apply_lemma (quote trans);;
+            repeat dropint;; // TODO: take out
+            (* exact (return r);; *)
+            (* later;; *)
+            apply_lemma (quote distr);;
+            apply_lemma (quote cong_plus);;
+            (* later;; later;; *)
+            repeat dropint;; // TODO: take out
+            canon;;
+            canon
 
         | Inr _ ->
             refl
@@ -88,13 +133,6 @@ let rec canon : unit -> Tac unit = fun () -> (
     ) ()
 
 let tau : tactic unit =
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
     pointwise canon
 
 let lem1 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") ((x + y) * (z + z) == 2 * z * (y + x))

@@ -113,6 +113,8 @@ let false_qn     = ["Prims"; "l_False"]
 let b2t_qn       = ["Prims"; "b2t"]
 let forall_qn    = ["Prims"; "l_Forall"]
 
+let int_lid      = ["Prims"; "int"]
+
 let add_qn       = ["Prims"; "op_Addition"]
 let neg_qn       = ["Prims"; "op_Minus"]
 let minus_qn     = ["Prims"; "op_Subtraction"]
