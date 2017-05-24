@@ -13,9 +13,6 @@ module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 
-//TODO:figure out why I need to annotate Data. everywhere.
-// might be due to the fsproj hack
-
 (* These file provides implementation for reflection primitives in F*.
  * 
  * Users can be exposed to (mostly) raw syntax of terms when working in
@@ -82,7 +79,7 @@ let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
 let lid_tuple2   = U.mk_tuple_lid 2 Range.dummyRange
 
 let embed_binder (b:binder) : term =
-    protect_embedded_term Data.fstar_refl_binder (S.bv_to_name (fst b))
+    protect_embedded_term fstar_refl_binder (S.bv_to_name (fst b))
 
 let unembed_binder (t:term) : binder =
     let t = un_protect_embedded_term t in
@@ -119,11 +116,11 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
     | _ ->
       failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
 
-let embed_binders l = embed_list embed_binder Data.fstar_refl_binder l
+let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (t:term) : term =
-    protect_embedded_term Data.fstar_refl_term t
+    protect_embedded_term fstar_refl_term t
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t
@@ -168,7 +165,7 @@ let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
    | _ -> failwith "Not an embedded option"
 
 let embed_fvar (fv:fv) : term =
-    protect_embedded_term Data.fstar_refl_fvar (S.fv_to_tm fv)
+    protect_embedded_term fstar_refl_fvar (S.fv_to_tm fv)
 
 let unembed_fvar (t:term) : fv =
     let t = un_protect_embedded_term t in
