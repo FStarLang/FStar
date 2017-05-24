@@ -14,8 +14,8 @@ let main argv =
     try
         Pars.init() |> ignore;
         FStar.Tests.Tactics.test();
-//        Norm.run_all ();
-//        Unif.run_all ();
+        Norm.run_all ();
+        Unif.run_all ();
         0
     with Error(msg, r) when not <| Options.trace_error()->
          if r = Range.dummyRange
