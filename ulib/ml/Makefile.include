@@ -13,14 +13,15 @@ NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
 
 FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(NOEXTRACT_MODULES))
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
+FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
 
-ifeq ($(MEM),HST)
-     OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)/extracted -I $(ULIB_ML)/hyperstack -I $(ULIB_ML)
-else
-     OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)/extracted -I $(ULIB_ML)
-endif
+# ifeq ($(MEM),HST)
+#      OCAML_DEFAULT_FLAGS=$(FSTARLIB_DIR)/fstarlib.cmxa -I $(FSTARLIB_DIR)
+# else
+#      OCAML_DEFAULT_FLAGS=$(FSTARLIB_DIR)/fstarlib.cmxa -I $(FSTARLIB_DIR)
+# endif
 
-OCAMLOPT_=ocamlfind opt -package batteries,stdint,zarith -linkpkg -g
+OCAMLOPT_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt -package fstarlib -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)
-OCAMLC_=ocamlfind c -package batteries,stdint,zarith -linkpkg -g -I $(ULIB_ML)
+OCAMLC_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind c -package fstarlib -linkpkg -g
 OCAMLC=$(OCAMLC_) $(OCAML_DEFAULT_FLAGS)

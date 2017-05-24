@@ -87,7 +87,8 @@ include ml/Makefile.include
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
 EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.*.fsti))
 
-mgen: *.fst
+.mgen: *.fst
+	touch .mgen
 	mkdir -p ml/extracted
 	@echo $(REALIZED)
 	@echo $(EXTRACT_ALL)

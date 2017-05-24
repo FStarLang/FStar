@@ -15,12 +15,23 @@ fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	                 -e 's/\<./\u&/g' \
 	                 -e 's/ /\n/g' > $@
 
+FSTARLIB_DIR=../../bin/fstarlib/
+
 fstarlib.cmxa:fstarlib.mllib
 	$(OCAMLBUILD) fstarlib.cmxa
-	cp _build/ulib/ml/fstarlib.cmxa ../../bin/
+	make install
+
+fstarlib.cma:fstarlib.mllib
+	$(OCAMLBUILD) fstarlib.cma
+	make install
+
+install:
+	cp _build/ulib/ml/fstarlib.{cmxa,cma,a} $(FSTARLIB_DIR) 2>/dev/null || :
+	cp _build/ulib/ml/*.cmi $(FSTARLIB_DIR)
+	cp _build/ulib/ml/extracted/*.cmi $(FSTARLIB_DIR)
 
 .mgen:
-	make -C .. mgen
+	make -C .. .mgen
 
 
 # Common rules
