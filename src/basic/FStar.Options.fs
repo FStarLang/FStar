@@ -147,7 +147,7 @@ let defaults =
       ("show_signatures"              , List []);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
-      ("smtencoding.elim_box"         , Bool true);
+      ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("split_cases"                  , Int 0);
@@ -647,7 +647,7 @@ let rec specs () : list<Getopt.opt> =
         "smtencoding.elim_box",
         OneArg (string_as_bool "smtencoding.elim_box",
                 "true|false"),
-        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'true')");
+        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
 
        (noshort,
         "smtencoding.nl_arith_repr",

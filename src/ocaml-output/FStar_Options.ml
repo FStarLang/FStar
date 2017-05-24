@@ -188,7 +188,7 @@ let defaults: (Prims.string* option_val) Prims.list =
   ("show_signatures", (List []));
   ("silent", (Bool false));
   ("smt", Unset);
-  ("smtencoding.elim_box", (Bool true));
+  ("smtencoding.elim_box", (Bool false));
   ("smtencoding.nl_arith_repr", (String "boxwrap"));
   ("smtencoding.l_arith_repr", (String "boxwrap"));
   ("split_cases", (Int (Prims.parse_int "0")));
@@ -787,7 +787,7 @@ let rec specs:
       (FStar_Getopt.noshort, "smtencoding.elim_box",
         (FStar_Getopt.OneArg
            ((string_as_bool "smtencoding.elim_box"), "true|false")),
-        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'true')");
+        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
       (FStar_Getopt.noshort, "smtencoding.nl_arith_repr",
         (FStar_Getopt.OneArg
            (((fun _0_42  -> String _0_42)), "native|wrapped|boxwrap")),
