@@ -28,9 +28,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--use_hints FStar.Int.fst</StartArguments>
+    <StartArguments>test.fst --debug Test --debug_level SMTQuery --dump_module Test --print_implicits</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\everest\FStar\ulib\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\workspace\test\</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -133,7 +133,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
-      <HintPath>..\VS\packages\PPrintForFSharp.0.0.1\lib\net40\FSharp.PPrint.dll</HintPath>
+      <HintPath>..\VS\packages\PPrintForFSharp.0.0.2\lib\net40\FSharp.PPrint.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsLexYacc.Runtime">

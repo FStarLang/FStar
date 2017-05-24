@@ -79,7 +79,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
-      <HintPath>..\VS\packages\PPrintForFSharp.0.0.1\lib\net40\FSharp.PPrint.dll</HintPath>
+      <HintPath>..\VS\packages\PPrintForFSharp.0.0.2\lib\net40\FSharp.PPrint.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FsLexYacc.Runtime">

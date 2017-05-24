@@ -202,9 +202,13 @@ let rec tcompile_correct' #t (e : texp t) ts (s : vstack ts) :
   match e with
     | TNConst _ -> ()
     | TBConst _ -> ()
-    | TBinop #t1 #t2 b e1 e2 -> tcompile_correct' e1 (t2 :: ts) (texpDenote e2, s);
-                                tcompile_correct' e2 ts s
-                                (* again just taking Adam's instantiations *)
+    | TBinop #t1 #t2 b e1 e2 -> 
+      tcompile_correct' e1 (t2 :: ts) (texpDenote e2, s);
+      tcompile_correct' e2 ts s;
+      let p1 = tcompile e1 (t1::ts) in
+      let p = TCons (TiBinop b) TNil in
+      tconcat_correct p1 p (texpDenote e2, s) //NS: added this explicitly after #1028
+      (* again just taking Adam's instantiations *)
 
 let tcompile_correct #t (e : texp t) :
     Lemma (tprogDenote (tcompile e []) () == (texpDenote e, ())) =

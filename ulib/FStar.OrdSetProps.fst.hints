@@ -25,9 +25,9 @@
         "projection_inverse_Prims.Some_v",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.OrdSet.choose", "typing_FStar.OrdSet.singleton",
-        "typing_FStar.OrdSet.size", "typing_Prims.uu___is_Some",
-        "well-founded-ordering-on-nat"
+        "typing_FStar.OrdSet.choose", "typing_FStar.OrdSet.remove",
+        "typing_FStar.OrdSet.singleton", "typing_FStar.OrdSet.size",
+        "typing_Prims.uu___is_Some", "well-founded-ordering-on-nat"
       ],
       0
     ],

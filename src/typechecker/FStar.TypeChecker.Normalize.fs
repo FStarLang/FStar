@@ -22,6 +22,7 @@ open FStar
 open FStar.Util
 open FStar.String
 open FStar.Const
+open FStar.Char
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -162,9 +163,9 @@ let downgrade_ghost_effect_name l =
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
 (*  either u, where u <> U_max                                                                                      *)
-(*  or     U_max [k;                        //constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
+(*  or     U_max [k;                        --constant                                                              *)
+(*               S^n1 u1 ; ...; S^nm um;    --offsets of distinct names, in order of the names                      *)
+(*               S^p1 ?v1; ...; S^pq ?vq]   --offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg env u =
@@ -424,8 +425,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
     | _ -> lopt
 
 (*******************************************************************)
-(* Simplification steps are not part of definitional equality      *)
-(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
@@ -435,6 +435,9 @@ let built_in_primitive_steps : list<primitive_step> =
     let bool_as_const : Range.range -> bool -> term =
         fun p b -> const_as_tm (FC.Const_bool b) p
     in
+    let string_as_const : Range.range -> string -> term =
+        fun p b -> const_as_tm (FC.Const_string (BU.bytes_of_string b, p)) p
+    in
     let arg_as_int (a, _) : option<int> =
         match (SS.compress a).n with
         | Tm_constant (FC.Const_int(i, None)) ->
@@ -442,11 +445,11 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
           None
     in
-    let arg_as_bounded_int (a, _) : option<int> =
+    let arg_as_bounded_int (a, _) : option<(fv * int)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
-          Some (BU.int_of_string i)
+          Some (fv1, BU.int_of_string i)
         | _ -> None
     in
     let arg_as_bool (a, _) : option<bool> =
@@ -456,12 +459,33 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
           None
     in
+    let arg_as_char (a, _) : option<char> =
+        match (SS.compress a).n with
+        | Tm_constant (Const_char c) ->
+          Some c
+        | _ ->
+          None
+    in
     let arg_as_string (a, _) : option<string> =
         match (SS.compress a).n with
         | Tm_constant (FC.Const_string(bytes, _)) ->
           Some (BU.string_of_bytes bytes)
         | _ ->
           None
+    in
+    let arg_as_list (f : arg -> option<'a>) (a, _) : option<list<'a>> =
+        let rec sequence (l:list<option<'a>>) : option<list<'a>> =
+            match l with
+            | [] -> Some []
+            | None::_ -> None
+            | Some x::xs -> begin match sequence xs with
+                            | None -> None
+                            | Some xs' -> Some (x::xs')
+                            end
+        in
+        match U.list_elements a with
+        | None -> None
+        | Some elts -> sequence (List.map (fun x -> f (as_arg x)) elts)
     in
     let lift_unary
         : ('a -> 'b) -> list<option<'a>> ->option<'b>
@@ -511,24 +535,30 @@ let built_in_primitive_steps : list<primitive_step> =
     let binary_bool_op (f:bool -> bool -> bool) =
         binary_op arg_as_bool (fun r x y -> bool_as_const r (f x y))
     in
-    let list_of_string rng (s:string) : term =
-        let mk x = mk x rng in
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) in
-        let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) in
+    let binary_string_op (f : string -> string -> string) =
+        binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
+    in
+    let list_of_string' rng (s:string) : term =
+        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
         let char_t = name SC.char_lid in
-        let nil_char =
-            S.mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid) [U_zero])
-                        [S.iarg char_t]
-                        None rng
-        in
-        FStar.List.fold_right (fun c a ->
-            S.mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero])
-                        [S.iarg char_t;
-                            S.as_arg (mk (Tm_constant (Const_char c)));
-                            S.as_arg a]
-                        None rng)
-            (list_of_string s)
-            nil_char
+        let charterm c = mk (Tm_constant (Const_char c)) rng in
+        U.mk_list char_t rng <| List.map charterm (list_of_string s)
+    in
+    let string_of_list' rng (l:list<char>) : term =
+        let s = string_of_list l in
+        SC.exp_string s
+    in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
+    in
+    let string_of_int rng (i:int) : term =
+        string_as_const rng (BU.string_of_int i)
+    in
+    let string_of_bool rng (b:bool) : term =
+        string_as_const rng (if b then "true" else "false")
     in
     let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
             [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
@@ -544,17 +574,27 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.op_Negation,    1, unary_bool_op (fun x -> not x));
              (Const.op_And,         2, binary_bool_op (fun x y -> x && y));
              (Const.op_Or,          2, binary_bool_op (fun x y -> x || y));
+             (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
+             (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
+             (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
-                                    1, unary_op arg_as_string list_of_string)]
+                                    1, unary_op arg_as_string list_of_string');
+             (Const.p2l ["FStar"; "String"; "string_of_list"],
+                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
     in
     let bounded_arith_ops =
         let bounded_int_types =
            [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
         in
+        let int_as_bounded r int_to_t n =
+            let c = int_as_const r n in
+            let int_to_t = S.fv_to_tm int_to_t in
+            S.mk_Tm_app int_to_t [S.as_arg c] None r
+        in
         bounded_int_types |> List.collect (fun m ->
-        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (x + y)));
-         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (x - y)));
-         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r x y -> int_as_const r (Prims.op_Multiply x y)))])
+        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
+         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
+         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
@@ -623,6 +663,10 @@ let reduce_primops cfg tm =
 let reduce_equality cfg tm =
     reduce_primops ({cfg with steps=[Primops]; primitive_steps=equality_ops}) tm
 
+(*******************************************************************)
+(* Simplification steps are not part of definitional equality      *)
+(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(*******************************************************************)
 let maybe_simplify cfg tm =
     let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
@@ -661,8 +705,7 @@ let maybe_simplify cfg tm =
                      | [(Some true, _)] ->  w U.t_false
                      | [(Some false, _)] -> w U.t_true
                      | _ -> tm
-              else if  S.fv_eq_lid fv Const.forall_lid
-                    || S.fv_eq_lid fv Const.exists_lid
+              else if S.fv_eq_lid fv Const.forall_lid
               then match args with
                      | [(t, _)]
                      | [(_, Some (Implicit _)); (t, _)] ->
@@ -670,6 +713,17 @@ let maybe_simplify cfg tm =
                                 | Tm_abs([_], body, _) ->
                                    (match simp_t body with
                                         | Some true ->  w U.t_true
+                                        | _ -> tm)
+                                | _ -> tm
+                       end
+                    | _ -> tm
+              else if S.fv_eq_lid fv Const.exists_lid
+              then match args with
+                     | [(t, _)]
+                     | [(_, Some (Implicit _)); (t, _)] ->
+                       begin match (SS.compress t).n with
+                                | Tm_abs([_], body, _) ->
+                                   (match simp_t body with
                                         | Some false -> w U.t_false
                                         | _ -> tm)
                                 | _ -> tm
@@ -703,9 +757,9 @@ let is_reify_head = function
     | _ ->
       false
 
-let is_fstar_tactics_quote t =
+let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_quote_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -735,18 +789,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)
-            when is_fstar_tactics_quote hd ->
+            when is_fstar_tactics_embed hd ->
             let args = closures_as_args_delayed cfg env args in
             let t = {t with n=Tm_app(hd, args)} in
             let t = reduce_primops cfg t in
-            rebuild cfg env stack t //quoted terms should not be normalized, but they may have free variables
+            rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
             let tm = get_norm_request args in
-            let s = [Reify; Beta; UnfoldUntil Delta_constant; Zeta; Iota; Primops] in
+            let s = [Reify; UnfoldUntil Delta_constant; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
@@ -1208,7 +1262,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                         norm cfg env (List.tl stack) body
                     | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                        let lifted = reify_lift cfg.tcenv e msrc mtgt t' in
+                        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
                         norm cfg env (List.tl stack) lifted
                     | Tm_match(e, branches) ->
                       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
@@ -1235,10 +1289,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 if should_reify
                 then
-                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' t)
+                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
-                (* TODO : don't we need to normalize t here ? *)
-                // let t = norm cfg env stack t in
+                (* KM: We need to normalize at least to erase universes when extracting *)
+                let t = norm cfg env [] t in
                 if (U.is_pure_effect m
                     || U.is_ghost_effect m)
                 && cfg.steps |> List.contains PureSubtermsWithinComputations
@@ -1654,8 +1708,19 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
            lc
     else lc
 
-let term_to_string env t = Print.term_to_string (normalize [AllowUnboundUniverses] env t)
-let comp_to_string env c = Print.comp_to_string (norm_comp (config [AllowUnboundUniverses] env) [] c)
+let term_to_string env t =
+  let t =
+    try normalize [AllowUnboundUniverses] env t
+    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; t
+  in
+  Print.term_to_string t
+
+let comp_to_string env c =
+  let c =
+    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; c
+  in
+  Print.comp_to_string c
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in

@@ -22,6 +22,8 @@ open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
+
+module U  = FStar.Syntax.Util
 module BU = FStar.Util
 
 // JP: my understanding of this is: we either bind a type (left injection) or a
@@ -116,16 +118,16 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
         else None)
 
 let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
-    
-let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> = 
+
+let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun (m, tds) ->
         BU.find_map tds (fun (_, n, mangle_opt, _, _) ->
             if m = mname
             then if n=ty_name
-                 then match mangle_opt with 
-                      | None -> 
+                 then match mangle_opt with
+                      | None ->
                         Some (m, n)
                       | Some mangled ->
                         let modul = m in
@@ -210,17 +212,17 @@ let find_uniq gamma mlident =
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
   (mk_unit:bool (*some pattern terms become unit while extracting*)) :
   env * mlident=
-    let ml_ty = match t_x with 
+    let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
     let mlident, nocluewhat = bv_as_mlident x in
     let mlsymbol = find_uniq g.gamma mlident in
     let mlident = mlsymbol, nocluewhat in
     let mlx = MLE_Var mlident in
-    let mlx = if mk_unit 
-              then ml_unit 
-              else if add_unit 
-              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit]) 
+    let mlx = if mk_unit
+              then ml_unit
+              else if add_unit
+              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
     let gamma = Bv(x, Inr(mlsymbol, mlx, t_x, is_rec))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
@@ -245,7 +247,7 @@ let tySchemeIsClosed (tys : mltyscheme) : bool =
 let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
     if tySchemeIsClosed t_x
     then
-        let ml_ty = match t_x with 
+        let ml_ty = match t_x with
             | ([], t) -> t
             | _ -> MLTY_Top in
         let mlpath, mlsymbol =
@@ -288,21 +290,16 @@ let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
-   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst    
-   
+   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
+
 let monad_op_name (ed:Syntax.eff_decl) nm =
-    let module_name, eff_name = ed.mname.ns, ed.mname.ident in
-    let mangled_name = Ident.reserved_prefix ^ eff_name.idText ^ "_" ^ nm in
-    let mangled_lid = Ident.lid_of_ids (module_name@[Ident.id_of_text mangled_name]) in
-    let ml_name = mlpath_of_lident mangled_lid in
-    let lid = Ident.ids_of_lid ed.mname @ [Ident.id_of_text nm] |> Ident.lid_of_ids in
-    ml_name, lid
+    (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
+    (* same as for actions. However, extracted code should not make explicit use of them. *)
+    let lid = U.mk_field_projector_name_from_ident (ed.mname) (id_of_text nm) in
+    (mlpath_of_lident lid), lid
 
-let action_name (ed:Syntax.eff_decl) (a:Syntax.action) = 
-    monad_op_name ed a.action_name.ident.idText
-
-let bind_name (ed:Syntax.eff_decl) =
-    monad_op_name ed "bind"
-
-let return_name (ed:Syntax.eff_decl) =
-    monad_op_name ed "return"
+let action_name (ed:Syntax.eff_decl) (a:Syntax.action) =
+    let nm = a.action_name.ident.idText in
+    let module_name = ed.mname.ns in
+    let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
+    (mlpath_of_lident lid), lid

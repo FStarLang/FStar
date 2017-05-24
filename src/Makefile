@@ -198,9 +198,6 @@ u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
 u_extract_tactics:$(addprefix u_boot_fsts/FStar.Tactics., Basic.fst Embedding.fst Interpreter.fst)
-	# cp tactics/FStar.Tactics.Basic.fs u_boot_fsts/FStar.Tactics.Basic.fst
-	# cp tactics/FStar.Tactics.Embedding.fs u_boot_fsts/FStar.Tactics.Embedding.fst
-	# cp tactics/FStar.Tactics.Interpreter.fs u_boot_fsts/FStar.Tactics.Interpreter.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)

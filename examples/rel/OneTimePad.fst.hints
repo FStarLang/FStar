@@ -77,22 +77,22 @@
     ],
     [ "OneTimePad.bind", 1, 0, 4, [ "@query" ], 0 ],
     [ "OneTimePad.rand", 1, 0, 4, [ "@query" ], 0 ],
-    [ "OneTimePad.RANDOM_bind_wp", 1, 0, 4, [ "@query" ], 0 ],
+    [ "OneTimePad._dm4f_RANDOM_bind_wp", 1, 0, 4, [ "@query" ], 0 ],
     [
-      "OneTimePad.RANDOM___proj__RANDOM__item__rand_elab",
+      "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_elab",
       1,
       0,
       4,
       [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_Prims.tuple2",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2"
+        "@query", "projection_inverse_Prims.Mktuple2__1",
+        "projection_inverse_Prims.Mktuple2__2",
+        "projection_inverse_Prims.Mktuple2__a",
+        "projection_inverse_Prims.Mktuple2__b"
       ],
       0
     ],
     [
-      "OneTimePad.RANDOM___proj__RANDOM__item__rand_complete_type",
+      "OneTimePad._dm4f_RANDOM___proj__RANDOM__item__rand_complete_type",
       1,
       0,
       4,

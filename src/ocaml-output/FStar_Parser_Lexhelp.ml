@@ -8,7 +8,7 @@ let intern_string: Prims.string -> Prims.string =
     | None  -> (FStar_Util.smap_add strings s s; s)
 let default_string_finish endm b s = FStar_Parser_Parse.STRING s
 let call_string_finish fin buf endm b =
-  let _0_25 = FStar_Bytes.close buf in fin endm b _0_25
+  let _0_26 = FStar_Bytes.close buf in fin endm b _0_26
 let add_string: FStar_Bytes.bytebuf -> Prims.string -> Prims.unit =
   fun buf  ->
     fun x  ->
@@ -203,13 +203,15 @@ let unicodegraph_long:
          ((Some
              (FStar_Util.uint16_of_int
                 ((Prims.parse_int "0xD800") +
-                   (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
-                       (low - (Prims.parse_int "0x10000")))
+                   ((((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
+                        low)
+                       - (Prims.parse_int "0x10000"))
                       / (Prims.parse_int "0x400"))))),
            (FStar_Util.uint16_of_int
               ((Prims.parse_int "0xDF30") +
-                 (((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
-                     (low - (Prims.parse_int "0x10000")))
+                 ((((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
+                      low)
+                     - (Prims.parse_int "0x10000"))
                     mod (Prims.parse_int "0x400"))))))
 let escape: FStar_Char.char -> FStar_Char.char =
   fun c  ->

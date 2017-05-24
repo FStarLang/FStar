@@ -28,6 +28,7 @@ open FStar.Syntax.Syntax
 open FStar.Const
 module U = FStar.Util
 module List = FStar.List
+module SC = FStar.Syntax.Const
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -1024,14 +1025,15 @@ let rec delta_qualifier t =
         | Tm_abs(_, t, _)
         | Tm_let(_, t) -> delta_qualifier t
 
+let rec incr_delta_depth d =
+    match d with
+    | Delta_equational -> d
+    | Delta_constant -> Delta_defined_at_level 1
+    | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
+    | Delta_abstract d -> incr_delta_depth d
+
 let incr_delta_qualifier t =
-    let d = delta_qualifier t in
-    let rec aux d = match d with
-        | Delta_equational -> d
-        | Delta_constant -> Delta_defined_at_level 1
-        | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
-        | Delta_abstract d -> aux d in
-    aux d
+    incr_delta_depth (delta_qualifier t)
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
 
@@ -1044,3 +1046,91 @@ let rec list_elements (e:term) : option<list<term>> =
       Some (hd::must (list_elements tl))
   | _ ->
       None
+
+
+let rec apply_last f l = match l with
+   | [] -> failwith "apply_last: got empty list"
+   | [a] -> [f a]
+   | (x::xs) -> x :: (apply_last f xs)
+
+let dm4f_lid ed name : lident =
+    let p = path_of_lid ed.mname in
+    let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
+    lid_of_path p' Range.dummyRange
+
+let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
+    let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
+    let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero]) args None pos in
+    let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid)  [U_zero]) args None pos in
+    List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
+
+// Some generic equalities
+let rec eqlist (eq : 'a -> 'a -> bool) (xs : list<'a>) (ys : list<'a>) : bool =
+    match xs, ys with
+    | [], [] -> true
+    | x::xs, y::ys -> eq x y && eqlist eq xs ys
+    | _ -> false
+
+let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either<'a,'b>) (y : either<'a,'b>) : bool =
+    match x, y with
+    | Inl x, Inl y -> e1 x y
+    | Inr x, Inr y -> e2 x y
+    | _ -> false
+
+let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a * 'b) : bool =
+    match x, y with
+    | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
+
+let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
+    match x, y with
+    | Some x, Some y -> e x y
+    | _ -> false
+
+// Checks for syntactic equality. A returned false doesn't guarantee anything.
+// We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
+// indices.
+// TODO: canonize applications?
+// TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
+// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
+// that's ok.
+let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
+  | Tm_bvar x, Tm_bvar y -> x.index = y.index
+  | Tm_name x, Tm_name y -> bv_eq x y
+  | Tm_fvar x, Tm_fvar y -> fv_eq x y
+  | Tm_constant x, Tm_constant y -> x = y
+  | Tm_type x, Tm_type y -> x = y
+  | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
+  | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2
+  | Tm_arrow (b1,c1), Tm_arrow (b2,c2) -> eqlist binder_eq b1 b2 && comp_eq c1 c2
+  | Tm_refine (b1,t1), Tm_refine (b2,t2) -> bv_eq b1 b2 && term_eq t1 t2
+  | Tm_match (t1,bs1), Tm_match (t2,bs2) -> term_eq t1 t2 && eqlist branch_eq bs1 bs2
+  | _, _ -> false // TODO missing cases
+and arg_eq a1 a2 = eqprod term_eq (fun q1 q2 -> q1 = q2) a1 a2
+and binder_eq b1 b2 = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2) b1 b2
+and lcomp_eq c1 c2 = false// TODO
+and residual_eq r1 r2 = false// TODO
+and comp_eq c1 c2 = match c1.n, c2.n with
+  | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO what are the u's for? isn't the universe on t?
+  | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2
+  | Comp c1, Comp c2 -> c1.comp_univs = c2.comp_univs &&
+                        c1.effect_name = c2.effect_name &&
+                        term_eq c1.result_typ c2.result_typ &&
+                        eqlist arg_eq c1.effect_args c2.effect_args &&
+                        eq_flags c1.flags c2.flags
+  | _, _ -> false
+and eq_flags f1 f2 = false // TODO
+and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
+
+let rec bottom_fold (f : term -> term) (t : term) : term =
+    let ff = bottom_fold f in
+    let tn = (un_uinst t).n in
+    let tn = match tn with
+             | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
+             // TODO: We ignore the types. Bug or feature?
+             | Tm_abs (bs, t, k) -> let bs, t' = open_term bs t in
+                                    let t'' = ff t' in
+                                    Tm_abs (bs, close bs t'', k)
+             | Tm_arrow (bs, k) -> tn //TODO
+             | _ -> tn in
+    f ({ t with n = tn })
+

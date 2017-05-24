@@ -15,6 +15,6 @@ let rec reverse = function
   | hd::tl -> append (reverse tl) [hd]
 let snoc l h = append l [h]
 
-val fold_left_cons_is_reverse: #t:eqtype -> l:list t -> l':list t ->
-                             Lemma (fold_left Cons l l' = append (reverse l) l')
-let rec fold_left_cons_is_reverse #t l l' = admit() //and replace admit() by a proof
+val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
+                             Lemma (fold_left Cons l l' == append (reverse l) l')
+let rec fold_left_cons_is_reverse l l' = admit() //and replace admit() by a proof

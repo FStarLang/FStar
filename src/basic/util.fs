@@ -379,6 +379,7 @@ let hex_string_of_byte  (i:byte) =
     else hs
 let string_of_char  (i:char) = spr "%c" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
+let bytes_of_string (s:string) = unicode_of_string s
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let trim_string (s:string) = s.Trim()
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
@@ -804,7 +805,7 @@ let digest_of_string (s:string) =
 
 let ensure_decimal (s: string) =
   if s.StartsWith "0x" then
-    sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
+    sprintf "%A" (System.Numerics.BigInteger.Parse ("0"+s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
   else
     s
 

@@ -823,7 +823,7 @@ and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | Bind(x, e1, e2) ->
-      group (p_lident x ^^ long_left_arrow ^^ p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
+      group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
@@ -982,11 +982,13 @@ and p_tmEq' curr e = match (unparen e).tm with
       paren_if curr mine (infix0 (str <| op) (p_tmEq' left e1) (p_tmEq' right e2))
   | Op ({idText = ":="}, [ e1; e2 ]) ->
       group (p_tmEq e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEq e2)
+  | Op({idText = "-"}, [e]) ->
+      let left, mine, right = levels "-" in
+      minus ^/^ p_tmEq' mine e
   | _ -> p_tmNoEq e
 
 and p_tmNoEq e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
-  (* minus is not a level *)
   let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in
   p_tmNoEq' n e
 
@@ -1000,14 +1002,10 @@ and p_tmNoEq' curr e = match (unparen e).tm with
       let left, mine, right = levels op in
       let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
       paren_if curr mine (concat_map p_dsumfst binders ^^ p_tmNoEq' right res)
-  (* also takes care of infix '-' *)
   | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
       paren_if curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
-  | Op({idText = "-"}, [e]) ->
-      let left, mine, right = levels "-" in
-      minus ^/^ p_tmNoEq' mine e
   | NamedTyp(lid, e) ->
       group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
   | Refine(b, phi) ->
@@ -1098,7 +1096,12 @@ and p_atomicTermNotQUident e = match (unparen e).tm with
   | Var lid when lid_equals lid C.assert_lid ->
     str "assert"
   | Tvar tv -> p_tvar tv
-  | Const c -> p_constant c
+  | Const c ->
+    begin match c with
+    | Const.Const_char x  when x = '\n' ->
+       str "0x0Az"
+    | _ -> p_constant c
+    end
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
   | Name lid when lid_equals lid C.false_lid ->

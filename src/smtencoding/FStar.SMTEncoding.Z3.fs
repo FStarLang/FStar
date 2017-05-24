@@ -222,12 +222,6 @@ let at_log_file () =
 let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let print_stats statistics =
-        BU.print_string (BU.format1 "BEGIN-STATS %s\n" (query_logging.get_module_name()) ^ at_log_file ());
-        BU.print_string "(";
-        BU.smap_fold statistics (fun k v a -> BU.print_string (BU.format2 ":%s %s\n" k v)) ();
-        BU.print_string ")\n";
-        BU.print_string "END-STATS\n" in
     let get_data lines =
         let parse_core s : unsat_core =
             let s = BU.trim_string s in
@@ -289,7 +283,6 @@ let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
     let core, statistics, reason_unknown = get_data lines in
-    if Options.print_z3_statistics() then print_stats statistics ;
     result lines core, statistics in
 
   let cond pid (s:string) =
@@ -335,7 +328,7 @@ let with_monitor m f =
     BU.monitor_exit(m);
     res
 
-let z3_job fresh label_messages input () : either<unsat_core, (error_labels * error_kind)> * int * z3statistics =
+let z3_job fresh (label_messages:error_labels) input () : either<unsat_core, (error_labels * error_kind)> * int * z3statistics =
   let ekind = function
     | TIMEOUT _ -> Timeout
     | SAT _
@@ -425,6 +418,7 @@ type scope_t = list<list<decl>>
 // declarations immediately, then call pop so that subsequent queries will not
 // reverify or use these declarations
 let fresh_scope : ref<scope_t> = BU.mk_ref [[]]
+let mk_fresh_scope () = !fresh_scope
 
 // bg_scope: Is the flat sequence of declarations already given to Z3
 //           When refreshing the solver, the bg_scope is set to
@@ -477,46 +471,11 @@ let reset_mark msg =
     // followed by refresh
     pop msg;
     refresh ()
-let commit_mark msg =
+let commit_mark (msg:string) =
     begin match !fresh_scope with
         | hd::s::tl -> fresh_scope := (hd@s)::tl
         | _ -> failwith "Impossible"
     end
-
-let filter_assertions core theory = match core with
-| None -> theory, false
-| Some core ->
-    let theory', n_retained, n_pruned =
-        List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
-        | Assume(_, _, name) ->
-            if List.contains name core
-            then d::theory, n_retained+1, n_pruned
-            else if BU.starts_with name "@"
-            then d::theory, n_retained, n_pruned
-            else theory, n_retained, n_pruned+1
-        | _ -> d::theory, n_retained, n_pruned)
-        theory ([], 0, 0) in
-    let missed_assertions th core =
-    let missed =
-        core |> List.filter (fun nm ->
-            th |> BU.for_some (function Assume(_, _, nm') -> nm=nm' | _ -> false) |> not)
-        |> String.concat ", " in
-    let included = th |> List.collect (function Assume(_, _, nm) -> [nm] | _ -> []) |> String.concat ", " in
-    BU.format2 "missed={%s}; included={%s}" missed included in
-    if Options.hint_info ()
-    && Options.debug_any()
-    then begin
-        let n = List.length core in
-        let missed = if n <> n_retained then missed_assertions theory' core else "" in
-        BU.print3 "\tHint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                        (BU.string_of_int n_retained)
-                        (if n <> n_retained
-                        then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                            (BU.string_of_int n) missed
-                        else "")
-                        (BU.string_of_int n_pruned)
-    end ;
-    theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
 
 let mk_cb used_unsat_core cb (uc_errs, time, statistics) =
     if used_unsat_core
@@ -530,27 +489,47 @@ let mk_input theory =
     if Options.log_queries() then query_logging.write_to_log r ;
     r
 
-let ask_1_core (core:unsat_core) label_messages qry (cb: (either<unsat_core, (error_labels*error_kind)> * int * z3statistics) -> unit) =
-    let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
-    let theory, used_unsat_core = filter_assertions core theory in
+type z3result =
+    either<unsat_core, (error_labels*error_kind)>
+    * int
+    * z3statistics
+type cb = z3result -> unit
+
+let ask_1_core
+    (filter_theory:decls_t -> decls_t * bool)
+    (label_messages:error_labels)
+    (qry:decls_t)
+    (cb: cb)
+  = let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
+    let theory, used_unsat_core = filter_theory theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
     bg_scope := [] ; // Now consumed.
     run_job ({job=z3_job false label_messages input; callback=cb})
 
-let ask_n_cores (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int * z3statistics) -> unit) =
-    let theory = List.flatten (match scope with
+let ask_n_cores
+    (filter_theory:decls_t -> decls_t * bool)
+    (label_messages:error_labels)
+    (qry:decls_t)
+    (scope:option<scope_t>)
+    (cb:cb)
+  = let theory = List.flatten (match scope with
         | Some s -> (List.rev s)
         | None   -> bg_scope := [] ; // Not needed; discard.
                     (List.rev !fresh_scope)) in
     let theory = theory@[Term.Push]@qry@[Term.Pop] in
-    let theory, used_unsat_core = filter_assertions core theory in
+    let theory, used_unsat_core = filter_theory theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
     enqueue ({job=z3_job true label_messages input; callback=cb})
 
-let ask (core:unsat_core) label_messages qry (scope:option<scope_t>) (cb: (either<unsat_core, (error_labels*error_kind)> * int * z3statistics) -> unit) =
-    if Options.n_cores() = 1 then
-        ask_1_core core label_messages qry cb
+let ask
+    (filter:decls_t -> decls_t * bool)
+    (label_messages:error_labels)
+    (qry:decls_t)
+    (scope:option<scope_t>)
+    (cb:cb)
+  = if Options.n_cores() = 1 then
+        ask_1_core filter label_messages qry cb
     else
-        ask_n_cores core label_messages qry scope cb
+        ask_n_cores filter label_messages qry scope cb

@@ -5,9 +5,11 @@
 *.ml* eol=lf
 Makefile eol=lf
 *.sh eol=lf
+*.mdk eol=lf
 
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf
 
 # Don't show diffs for generated ocaml-output files
 /src/ocaml-output/*.ml -diff
+*.hints -diff
