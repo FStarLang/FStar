@@ -141,7 +141,7 @@ type term' =
   | BoundV of Prims.int
   | FreeV of (Prims.string* sort)
   | App of (op* term Prims.list)
-  | Quant of (qop* term Prims.list Prims.list* Prims.int Prims.option* sort
+  | Quant of (qop* term Prims.list Prims.list* Prims.int option* sort
   Prims.list* term)
   | Let of (term Prims.list* term)
   | Labeled of (term* Prims.string* FStar_Range.range)
@@ -176,8 +176,8 @@ let uu___is_Quant: term' -> Prims.bool =
     match projectee with | Quant _0 -> true | uu____342 -> false
 let __proj__Quant__item___0:
   term' ->
-    (qop* term Prims.list Prims.list* Prims.int Prims.option* sort
-      Prims.list* term)
+    (qop* term Prims.list Prims.list* Prims.int option* sort Prims.list*
+      term)
   = fun projectee  -> match projectee with | Quant _0 -> _0
 let uu___is_Let: term' -> Prims.bool =
   fun projectee  ->
@@ -198,7 +198,7 @@ let __proj__LblPos__item___0: term' -> (term* Prims.string) =
 type pat = term
 type fv = (Prims.string* sort)
 type fvs = (Prims.string* sort) Prims.list
-type caption = Prims.string Prims.option
+type caption = Prims.string option
 type binders = (Prims.string* sort) Prims.list
 type constructor_field = (Prims.string* sort* Prims.bool)
 type constructor_t =
@@ -371,7 +371,7 @@ let op_to_string: op -> Prims.string =
     | Mod  -> "mod"
     | ITE  -> "ite"
     | Var s -> s
-let weightToSmt: Prims.int Prims.option -> Prims.string =
+let weightToSmt: Prims.int option -> Prims.string =
   fun uu___89_935  ->
     match uu___89_935 with
     | None  -> ""
@@ -581,8 +581,8 @@ let mkCases: term Prims.list -> FStar_Range.range -> term =
           FStar_List.fold_left (fun out  -> fun t1  -> mkAnd (out, t1) r) hd1
             tl1
 let mkQuant:
-  (qop* term Prims.list Prims.list* Prims.int Prims.option* sort Prims.list*
-    term) -> FStar_Range.range -> term
+  (qop* term Prims.list Prims.list* Prims.int option* sort Prims.list* term)
+    -> FStar_Range.range -> term
   =
   fun uu____1419  ->
     fun r  ->
@@ -728,8 +728,8 @@ let subst: term -> fv -> term -> term =
   fun t  ->
     fun fv  -> fun s  -> let uu____1781 = abstr [fv] t in inst [s] uu____1781
 let mkQuant':
-  (qop* term Prims.list Prims.list* Prims.int Prims.option* fv Prims.list*
-    term) -> FStar_Range.range -> term
+  (qop* term Prims.list Prims.list* Prims.int option* fv Prims.list* term) ->
+    FStar_Range.range -> term
   =
   fun uu____1795  ->
     match uu____1795 with
@@ -743,15 +743,15 @@ let mkQuant':
           (qop, uu____1830, wopt, uu____1839, uu____1843) in
         mkQuant uu____1820
 let mkForall'':
-  (pat Prims.list Prims.list* Prims.int Prims.option* sort Prims.list* term)
-    -> FStar_Range.range -> term
+  (pat Prims.list Prims.list* Prims.int option* sort Prims.list* term) ->
+    FStar_Range.range -> term
   =
   fun uu____1860  ->
     fun r  ->
       match uu____1860 with
       | (pats,wopt,sorts,body) -> mkQuant (Forall, pats, wopt, sorts, body) r
 let mkForall':
-  (pat Prims.list Prims.list* Prims.int Prims.option* fvs* term) ->
+  (pat Prims.list Prims.list* Prims.int option* fvs* term) ->
     FStar_Range.range -> term
   =
   fun uu____1897  ->
@@ -1018,7 +1018,7 @@ let constructor_to_decl: constructor_t -> decl Prims.list =
           FStar_List.append [disc] uu____2464 in
         FStar_List.append uu____2458 uu____2462
 let name_binders_inner:
-  Prims.string Prims.option ->
+  Prims.string option ->
     (Prims.string* sort) Prims.list ->
       Prims.int ->
         sort Prims.list ->
@@ -1183,7 +1183,7 @@ let termToSmt: Prims.string -> term -> Prims.string =
             uu____2894 s
         else s in
       aux (Prims.parse_int "0") (Prims.parse_int "0") [] t
-let caption_to_string: Prims.string Prims.option -> Prims.string =
+let caption_to_string: Prims.string option -> Prims.string =
   fun uu___90_2899  ->
     match uu___90_2899 with
     | None  -> ""
@@ -1462,7 +1462,7 @@ let mk_HasTypeFuel: term -> term -> term -> term =
         if uu____3464
         then mk_HasType v1 t
         else mkApp ("HasTypeFuel", [f; v1; t]) t.rng
-let mk_HasTypeWithFuel: term Prims.option -> term -> term -> term =
+let mk_HasTypeWithFuel: term option -> term -> term -> term =
   fun f  ->
     fun v1  ->
       fun t  ->
@@ -1510,9 +1510,7 @@ let rec n_fuel: Prims.int -> term =
 let fuel_2: term = n_fuel (Prims.parse_int "2")
 let fuel_100: term = n_fuel (Prims.parse_int "100")
 let mk_and_opt:
-  term Prims.option ->
-    term Prims.option -> FStar_Range.range -> term Prims.option
-  =
+  term option -> term option -> FStar_Range.range -> term option =
   fun p1  ->
     fun p2  ->
       fun r  ->
@@ -1521,8 +1519,8 @@ let mk_and_opt:
             let uu____3591 = mkAnd (p11, p21) r in Some uu____3591
         | (Some p,None )|(None ,Some p) -> Some p
         | (None ,None ) -> None
-let mk_and_opt_l:
-  term Prims.option Prims.list -> FStar_Range.range -> term Prims.option =
+let mk_and_opt_l: term option Prims.list -> FStar_Range.range -> term option
+  =
   fun pl  ->
     fun r  ->
       FStar_List.fold_right (fun p  -> fun out  -> mk_and_opt p out r) pl

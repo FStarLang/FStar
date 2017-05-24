@@ -77,7 +77,7 @@ type primitive_step =
   strong_reduction_ok: Prims.bool;
   interpretation:
     FStar_Range.range ->
-      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option;}
+      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option;}
 type closure =
   | Clos of (closure Prims.list* FStar_Syntax_Syntax.term* (closure
   Prims.list* FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo*
@@ -115,7 +115,7 @@ type cfg =
   delta_level: FStar_TypeChecker_Env.delta_level Prims.list;
   primitive_steps: primitive_step Prims.list;}
 type branches =
-  (FStar_Syntax_Syntax.pat* FStar_Syntax_Syntax.term Prims.option*
+  (FStar_Syntax_Syntax.pat* FStar_Syntax_Syntax.term option*
     FStar_Syntax_Syntax.term) Prims.list
 type subst_t = FStar_Syntax_Syntax.subst_elt Prims.list
 type stack_elt =
@@ -125,7 +125,7 @@ type stack_elt =
   | Match of (env* branches* FStar_Range.range)
   | Abs of (env* FStar_Syntax_Syntax.binders* env*
   (FStar_Syntax_Syntax.lcomp,FStar_Syntax_Syntax.residual_comp)
-  FStar_Util.either Prims.option* FStar_Range.range)
+  FStar_Util.either option* FStar_Range.range)
   | App of (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.aqual*
   FStar_Range.range)
   | Meta of (FStar_Syntax_Syntax.metadata* FStar_Range.range)
@@ -164,7 +164,7 @@ let __proj__Abs__item___0:
   stack_elt ->
     (env* FStar_Syntax_Syntax.binders* env*
       (FStar_Syntax_Syntax.lcomp,FStar_Syntax_Syntax.residual_comp)
-      FStar_Util.either Prims.option* FStar_Range.range)
+      FStar_Util.either option* FStar_Range.range)
   = fun projectee  -> match projectee with | Abs _0 -> _0
 let uu___is_App: stack_elt -> Prims.bool =
   fun projectee  ->
@@ -254,7 +254,7 @@ let lookup_bvar env x =
         FStar_Util.format1 "Failed to find %s\n" uu____761 in
       failwith uu____760
 let downgrade_ghost_effect_name:
-  FStar_Ident.lident -> FStar_Ident.lident Prims.option =
+  FStar_Ident.lident -> FStar_Ident.lident option =
   fun l  ->
     if FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Ghost_lid
     then Some FStar_Syntax_Const.effect_Pure_lid
@@ -868,10 +868,10 @@ and close_lcomp_opt:
     closure Prims.list ->
       (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
                                    FStar_Syntax_Syntax.cflags Prims.list))
-        FStar_Util.either Prims.option ->
+        FStar_Util.either option ->
         (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
                                      FStar_Syntax_Syntax.cflags Prims.list))
-          FStar_Util.either Prims.option
+          FStar_Util.either option
   =
   fun cfg  ->
     fun env  ->
@@ -3062,9 +3062,9 @@ and norm_lcomp_opt:
   cfg ->
     env ->
       (FStar_Syntax_Syntax.lcomp,FStar_Syntax_Syntax.residual_comp)
-        FStar_Util.either Prims.option ->
+        FStar_Util.either option ->
         (FStar_Syntax_Syntax.lcomp,FStar_Syntax_Syntax.residual_comp)
-          FStar_Util.either Prims.option
+          FStar_Util.either option
   =
   fun cfg  ->
     fun env  ->

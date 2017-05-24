@@ -15,10 +15,10 @@ let type_leq:
           (FStar_Extraction_ML_Util.udelta_unfold g) t1 t2
 let type_leq_c:
   FStar_Extraction_ML_UEnv.env ->
-    FStar_Extraction_ML_Syntax.mlexpr Prims.option ->
+    FStar_Extraction_ML_Syntax.mlexpr option ->
       FStar_Extraction_ML_Syntax.mlty ->
         FStar_Extraction_ML_Syntax.mlty ->
-          (Prims.bool* FStar_Extraction_ML_Syntax.mlexpr Prims.option)
+          (Prims.bool* FStar_Extraction_ML_Syntax.mlexpr option)
   =
   fun g  ->
     fun t1  ->
@@ -324,10 +324,10 @@ let unit_binder: FStar_Syntax_Syntax.binder =
     FStar_Syntax_Syntax.new_bv None FStar_TypeChecker_Common.t_unit in
   FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder uu____900
 let check_pats_for_ite:
-  (FStar_Syntax_Syntax.pat* FStar_Syntax_Syntax.term Prims.option*
+  (FStar_Syntax_Syntax.pat* FStar_Syntax_Syntax.term option*
     FStar_Syntax_Syntax.term) Prims.list ->
-    (Prims.bool* FStar_Syntax_Syntax.term Prims.option*
-      FStar_Syntax_Syntax.term Prims.option)
+    (Prims.bool* FStar_Syntax_Syntax.term option* FStar_Syntax_Syntax.term
+      option)
   =
   fun l  ->
     let def = (false, None, None) in
@@ -731,7 +731,7 @@ let mk_MLE_Let:
              | uu____1701 -> FStar_Extraction_ML_Syntax.MLE_Let (lbs, body))
         | uu____1703 -> FStar_Extraction_ML_Syntax.MLE_Let (lbs, body)
 let resugar_pat:
-  FStar_Syntax_Syntax.fv_qual Prims.option ->
+  FStar_Syntax_Syntax.fv_qual option ->
     FStar_Extraction_ML_Syntax.mlpattern ->
       FStar_Extraction_ML_Syntax.mlpattern
   =
@@ -755,10 +755,10 @@ let rec extract_one_pat:
     Prims.bool ->
       FStar_Extraction_ML_UEnv.env ->
         FStar_Syntax_Syntax.pat ->
-          FStar_Extraction_ML_Syntax.mlty Prims.option ->
+          FStar_Extraction_ML_Syntax.mlty option ->
             (FStar_Extraction_ML_UEnv.env*
               (FStar_Extraction_ML_Syntax.mlpattern*
-              FStar_Extraction_ML_Syntax.mlexpr Prims.list) Prims.option*
+              FStar_Extraction_ML_Syntax.mlexpr Prims.list) option*
               Prims.bool)
   =
   fun disjunctive_pat  ->
@@ -988,8 +988,7 @@ let extract_pat:
       FStar_Syntax_Syntax.withinfo_t ->
       FStar_Extraction_ML_Syntax.mlty ->
         (FStar_Extraction_ML_UEnv.env* (FStar_Extraction_ML_Syntax.mlpattern*
-          FStar_Extraction_ML_Syntax.mlexpr Prims.option) Prims.list*
-          Prims.bool)
+          FStar_Extraction_ML_Syntax.mlexpr option) Prims.list* Prims.bool)
   =
   fun g  ->
     fun p  ->
@@ -1067,7 +1066,7 @@ let extract_pat:
                  (g1, [(p1, when_clause)], b))
 let maybe_eta_data_and_project_record:
   FStar_Extraction_ML_UEnv.env ->
-    FStar_Syntax_Syntax.fv_qual Prims.option ->
+    FStar_Syntax_Syntax.fv_qual option ->
       FStar_Extraction_ML_Syntax.mlty ->
         FStar_Extraction_ML_Syntax.mlexpr ->
           FStar_Extraction_ML_Syntax.mlexpr

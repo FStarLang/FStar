@@ -234,8 +234,7 @@ let unmangle: FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv =
 type binding =
   | Binding_var of (FStar_Syntax_Syntax.bv* FStar_SMTEncoding_Term.term)
   | Binding_fvar of (FStar_Ident.lident* Prims.string*
-  FStar_SMTEncoding_Term.term Prims.option* FStar_SMTEncoding_Term.term
-  Prims.option)
+  FStar_SMTEncoding_Term.term option* FStar_SMTEncoding_Term.term option)
 let uu___is_Binding_var: binding -> Prims.bool =
   fun projectee  ->
     match projectee with | Binding_var _0 -> true | uu____802 -> false
@@ -247,8 +246,8 @@ let uu___is_Binding_fvar: binding -> Prims.bool =
     match projectee with | Binding_fvar _0 -> true | uu____826 -> false
 let __proj__Binding_fvar__item___0:
   binding ->
-    (FStar_Ident.lident* Prims.string* FStar_SMTEncoding_Term.term
-      Prims.option* FStar_SMTEncoding_Term.term Prims.option)
+    (FStar_Ident.lident* Prims.string* FStar_SMTEncoding_Term.term option*
+      FStar_SMTEncoding_Term.term option)
   = fun projectee  -> match projectee with | Binding_fvar _0 -> _0
 let binder_of_eithervar v1 = (v1, None)
 type cache_entry =
@@ -300,8 +299,7 @@ let print_env: env_t -> Prims.string =
                   FStar_Syntax_Print.lid_to_string l)) in
     FStar_All.pipe_right uu____1012 (FStar_String.concat ", ")
 let lookup_binding env f = FStar_Util.find_map env.bindings f
-let caption_t: env_t -> FStar_Syntax_Syntax.term -> Prims.string Prims.option
-  =
+let caption_t: env_t -> FStar_Syntax_Syntax.term -> Prims.string option =
   fun env  ->
     fun t  ->
       let uu____1055 =
@@ -473,8 +471,8 @@ let new_term_constant_and_tok_from_lid:
 let try_lookup_lid:
   env_t ->
     FStar_Ident.lident ->
-      (Prims.string* FStar_SMTEncoding_Term.term Prims.option*
-        FStar_SMTEncoding_Term.term Prims.option) Prims.option
+      (Prims.string* FStar_SMTEncoding_Term.term option*
+        FStar_SMTEncoding_Term.term option) option
   =
   fun env  ->
     fun a  ->
@@ -498,8 +496,8 @@ let contains_name: env_t -> Prims.string -> Prims.bool =
 let lookup_lid:
   env_t ->
     FStar_Ident.lident ->
-      (Prims.string* FStar_SMTEncoding_Term.term Prims.option*
-        FStar_SMTEncoding_Term.term Prims.option)
+      (Prims.string* FStar_SMTEncoding_Term.term option*
+        FStar_SMTEncoding_Term.term option)
   =
   fun env  ->
     fun a  ->
@@ -514,7 +512,7 @@ let lookup_lid:
 let push_free_var:
   env_t ->
     FStar_Ident.lident ->
-      Prims.string -> FStar_SMTEncoding_Term.term Prims.option -> env_t
+      Prims.string -> FStar_SMTEncoding_Term.term option -> env_t
   =
   fun env  ->
     fun x  ->
@@ -563,7 +561,7 @@ let push_zfuel_name: env_t -> FStar_Ident.lident -> Prims.string -> env_t =
               current_module_name = (uu___134_1360.current_module_name)
             }
 let try_lookup_free_var:
-  env_t -> FStar_Ident.lident -> FStar_SMTEncoding_Term.term Prims.option =
+  env_t -> FStar_Ident.lident -> FStar_SMTEncoding_Term.term option =
   fun env  ->
     fun l  ->
       let uu____1370 = try_lookup_lid env l in
@@ -627,8 +625,8 @@ let lookup_free_var_sym env a =
                 (match sym1.FStar_SMTEncoding_Term.tm with
                  | FStar_SMTEncoding_Term.App (g,fuel::[]) -> (g, [fuel])
                  | uu____1529 -> ((FStar_SMTEncoding_Term.Var name), []))))
-let tok_of_name:
-  env_t -> Prims.string -> FStar_SMTEncoding_Term.term Prims.option =
+let tok_of_name: env_t -> Prims.string -> FStar_SMTEncoding_Term.term option
+  =
   fun env  ->
     fun nm  ->
       FStar_Util.find_map env.bindings
@@ -796,7 +794,7 @@ let is_app: FStar_SMTEncoding_Term.op -> Prims.bool =
 let is_an_eta_expansion:
   env_t ->
     FStar_SMTEncoding_Term.fv Prims.list ->
-      FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term Prims.option
+      FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term option
   =
   fun env  ->
     fun vars  ->
@@ -938,7 +936,7 @@ let is_arithmetic_primitive head1 args =
       FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.op_Minus
   | uu____2115 -> false
 let rec encode_binders:
-  FStar_SMTEncoding_Term.term Prims.option ->
+  FStar_SMTEncoding_Term.term option ->
     FStar_Syntax_Syntax.binders ->
       env_t ->
         (FStar_SMTEncoding_Term.fv Prims.list* FStar_SMTEncoding_Term.term
@@ -986,7 +984,7 @@ let rec encode_binders:
              ((FStar_List.rev vars), (FStar_List.rev guards), env1, decls,
                (FStar_List.rev names1)))
 and encode_term_pred:
-  FStar_SMTEncoding_Term.term Prims.option ->
+  FStar_SMTEncoding_Term.term option ->
     FStar_Syntax_Syntax.typ ->
       env_t ->
         FStar_SMTEncoding_Term.term ->
@@ -1003,7 +1001,7 @@ and encode_term_pred:
                 FStar_SMTEncoding_Term.mk_HasTypeWithFuel fuel_opt e t1 in
               (uu____2463, decls)
 and encode_term_pred':
-  FStar_SMTEncoding_Term.term Prims.option ->
+  FStar_SMTEncoding_Term.term option ->
     FStar_Syntax_Syntax.typ ->
       env_t ->
         FStar_SMTEncoding_Term.term ->
@@ -4664,7 +4662,7 @@ let declare_top_level_let:
     FStar_Syntax_Syntax.fv ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
-          ((Prims.string* FStar_SMTEncoding_Term.term Prims.option)*
+          ((Prims.string* FStar_SMTEncoding_Term.term option)*
             FStar_SMTEncoding_Term.decl Prims.list* env_t)
   =
   fun env  ->
@@ -7594,7 +7592,7 @@ let encode_modul:
              else ());
             (let decls1 = caption decls in FStar_SMTEncoding_Z3.giveZ3 decls1)))
 let encode_query:
-  (Prims.unit -> Prims.string) Prims.option ->
+  (Prims.unit -> Prims.string) option ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         (FStar_SMTEncoding_Term.decl Prims.list*

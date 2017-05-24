@@ -5,7 +5,7 @@ let module_or_interface_name:
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
 let parse:
   FStar_ToSyntax_Env.env ->
-    Prims.string Prims.option ->
+    Prims.string option ->
       Prims.string ->
         (FStar_ToSyntax_Env.env* FStar_Syntax_Syntax.modul Prims.list)
   =
@@ -103,12 +103,12 @@ let tc_prims:
           | ((prims_mod1,env1),elapsed_time) ->
               ((prims_mod1, elapsed_time), dsenv, env1)))
 let tc_one_fragment:
-  FStar_Syntax_Syntax.modul Prims.option ->
+  FStar_Syntax_Syntax.modul option ->
     FStar_ToSyntax_Env.env ->
       FStar_TypeChecker_Env.env ->
         (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-          (FStar_Syntax_Syntax.modul Prims.option* FStar_ToSyntax_Env.env*
-            FStar_TypeChecker_Env.env) Prims.option
+          (FStar_Syntax_Syntax.modul option* FStar_ToSyntax_Env.env*
+            FStar_TypeChecker_Env.env) option
   =
   fun curmod  ->
     fun dsenv  ->
@@ -263,7 +263,7 @@ let load_interface_decls:
 let tc_one_file:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->
-      Prims.string Prims.option ->
+      Prims.string option ->
         Prims.string ->
           ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list*
             FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)

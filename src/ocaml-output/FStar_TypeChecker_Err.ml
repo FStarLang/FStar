@@ -184,7 +184,7 @@ let expected_pattern_of_type:
                 s1 uu____257 s2
 let basic_type_error:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term Prims.option ->
+    FStar_Syntax_Syntax.term option ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.string
   =
   fun env  ->

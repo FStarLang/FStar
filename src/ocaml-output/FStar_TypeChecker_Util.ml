@@ -1,6 +1,6 @@
 open Prims
 type lcomp_with_binder =
-  (FStar_Syntax_Syntax.bv Prims.option* FStar_Syntax_Syntax.lcomp)
+  (FStar_Syntax_Syntax.bv option* FStar_Syntax_Syntax.lcomp)
 let report:
   FStar_TypeChecker_Env.env -> Prims.string Prims.list -> Prims.unit =
   fun env  ->
@@ -1263,7 +1263,7 @@ let return_value:
 let bind:
   FStar_Range.range ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.term Prims.option ->
+      FStar_Syntax_Syntax.term option ->
         FStar_Syntax_Syntax.lcomp ->
           lcomp_with_binder -> FStar_Syntax_Syntax.lcomp
   =
@@ -1574,7 +1574,7 @@ let label:
           None f.FStar_Syntax_Syntax.pos
 let label_opt:
   FStar_TypeChecker_Env.env ->
-    (Prims.unit -> Prims.string) Prims.option ->
+    (Prims.unit -> Prims.string) option ->
       FStar_Range.range -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ
   =
   fun env  ->
@@ -1690,7 +1690,7 @@ let weaken_precondition:
           FStar_Syntax_Syntax.comp = weaken
         }
 let strengthen_precondition:
-  (Prims.unit -> Prims.string) Prims.option ->
+  (Prims.unit -> Prims.string) option ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.lcomp ->
@@ -2685,7 +2685,7 @@ let weaken_result_typ:
 let pure_or_ghost_pre_and_post:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
-      (FStar_Syntax_Syntax.typ Prims.option* FStar_Syntax_Syntax.typ)
+      (FStar_Syntax_Syntax.typ option* FStar_Syntax_Syntax.typ)
   =
   fun env  ->
     fun comp  ->
@@ -3174,7 +3174,7 @@ let gen:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.comp) Prims.list ->
       (FStar_Syntax_Syntax.univ_name Prims.list* FStar_Syntax_Syntax.term*
-        FStar_Syntax_Syntax.comp) Prims.list Prims.option
+        FStar_Syntax_Syntax.comp) Prims.list option
   =
   fun env  ->
     fun ecs  ->

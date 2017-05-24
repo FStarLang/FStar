@@ -105,7 +105,7 @@ let tyscheme_of_td uu____264 =
 let lookup_ty_const:
   env ->
     FStar_Extraction_ML_Syntax.mlpath ->
-      FStar_Extraction_ML_Syntax.mltyscheme Prims.option
+      FStar_Extraction_ML_Syntax.mltyscheme option
   =
   fun env  ->
     fun uu____291  ->
@@ -135,7 +135,7 @@ let maybe_mangle_type_projector:
   env ->
     FStar_Syntax_Syntax.fv ->
       (FStar_Extraction_ML_Syntax.mlsymbol Prims.list*
-        FStar_Extraction_ML_Syntax.mlsymbol) Prims.option
+        FStar_Extraction_ML_Syntax.mlsymbol) option
   =
   fun env  ->
     fun fv  ->
@@ -225,7 +225,7 @@ let lookup_bv: env -> FStar_Syntax_Syntax.bv -> ty_or_exp_b =
 let lookup:
   env ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
-      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual Prims.option)
+      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual option)
   =
   fun g  ->
     fun x  ->
@@ -238,7 +238,7 @@ let lookup:
 let lookup_term:
   env ->
     FStar_Syntax_Syntax.term ->
-      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual Prims.option)
+      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual option)
   =
   fun g  ->
     fun t  ->
@@ -248,8 +248,7 @@ let lookup_term:
       | uu____523 -> failwith "Impossible: lookup_term for a non-name"
 let extend_ty:
   env ->
-    FStar_Syntax_Syntax.bv ->
-      FStar_Extraction_ML_Syntax.mlty Prims.option -> env
+    FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty option -> env
   =
   fun g  ->
     fun a  ->

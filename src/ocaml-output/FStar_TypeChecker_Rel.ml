@@ -28,8 +28,8 @@ let trivial_guard: FStar_TypeChecker_Env.guard_t =
   }
 let abstract_guard:
   FStar_Syntax_Syntax.bv ->
-    FStar_TypeChecker_Env.guard_t Prims.option ->
-      FStar_TypeChecker_Env.guard_t Prims.option
+    FStar_TypeChecker_Env.guard_t option ->
+      FStar_TypeChecker_Env.guard_t option
   =
   fun x  ->
     fun g  ->
@@ -828,8 +828,7 @@ let commit: uvi Prims.list -> Prims.unit =
 let find_term_uvar:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax FStar_Syntax_Syntax.uvar_basis
-    FStar_Unionfind.uvar ->
-    uvi Prims.list -> FStar_Syntax_Syntax.term Prims.option
+    FStar_Unionfind.uvar -> uvi Prims.list -> FStar_Syntax_Syntax.term option
   =
   fun uv  ->
     fun s  ->
@@ -841,8 +840,8 @@ let find_term_uvar:
                let uu____1266 = FStar_Unionfind.equivalent uv u in
                if uu____1266 then Some t else None)
 let find_univ_uvar:
-  FStar_Syntax_Syntax.universe Prims.option FStar_Unionfind.uvar ->
-    uvi Prims.list -> FStar_Syntax_Syntax.universe Prims.option
+  FStar_Syntax_Syntax.universe option FStar_Unionfind.uvar ->
+    uvi Prims.list -> FStar_Syntax_Syntax.universe option
   =
   fun u  ->
     fun s  ->
@@ -1099,7 +1098,7 @@ let u_abs:
 let solve_prob':
   Prims.bool ->
     FStar_TypeChecker_Common.prob ->
-      FStar_Syntax_Syntax.term Prims.option ->
+      FStar_Syntax_Syntax.term option ->
         uvi Prims.list -> worklist -> worklist
   =
   fun resolve_ok  ->
@@ -1181,8 +1180,7 @@ let extend_solution: Prims.int -> uvi Prims.list -> worklist -> worklist =
          })
 let solve_prob:
   FStar_TypeChecker_Common.prob ->
-    FStar_Syntax_Syntax.term Prims.option ->
-      uvi Prims.list -> worklist -> worklist
+    FStar_Syntax_Syntax.term option -> uvi Prims.list -> worklist -> worklist
   =
   fun prob  ->
     fun logical_guard  ->
@@ -1293,7 +1291,7 @@ let rec pat_vars:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual) Prims.list ->
       (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.aqual) Prims.list ->
-        FStar_Syntax_Syntax.binders Prims.option
+        FStar_Syntax_Syntax.binders option
   =
   fun env  ->
     fun seen  ->
@@ -1347,8 +1345,8 @@ let destruct_flex_pattern env t =
        | Some vars -> ((t1, uv, k, args), (Some vars))
        | uu____3022 -> ((t1, uv, k, args), None))
 type match_result =
-  | MisMatch of (FStar_Syntax_Syntax.delta_depth Prims.option*
-  FStar_Syntax_Syntax.delta_depth Prims.option)
+  | MisMatch of (FStar_Syntax_Syntax.delta_depth option*
+  FStar_Syntax_Syntax.delta_depth option)
   | HeadMatch
   | FullMatch
 let uu___is_MisMatch: match_result -> Prims.bool =
@@ -1356,8 +1354,8 @@ let uu___is_MisMatch: match_result -> Prims.bool =
     match projectee with | MisMatch _0 -> true | uu____3070 -> false
 let __proj__MisMatch__item___0:
   match_result ->
-    (FStar_Syntax_Syntax.delta_depth Prims.option*
-      FStar_Syntax_Syntax.delta_depth Prims.option)
+    (FStar_Syntax_Syntax.delta_depth option* FStar_Syntax_Syntax.delta_depth
+      option)
   = fun projectee  -> match projectee with | MisMatch _0 -> _0
 let uu___is_HeadMatch: match_result -> Prims.bool =
   fun projectee  ->
@@ -1395,7 +1393,7 @@ let fv_delta_depth:
       | d -> d
 let rec delta_depth_of_term:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.delta_depth Prims.option
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.delta_depth option
   =
   fun env  ->
     fun t  ->
@@ -1615,7 +1613,7 @@ let rec decompose:
     FStar_Syntax_Syntax.term ->
       ((tc Prims.list -> FStar_Syntax_Syntax.term)*
         (FStar_Syntax_Syntax.term -> Prims.bool)* (FStar_Syntax_Syntax.binder
-        Prims.option* variance* tc) Prims.list)
+        option* variance* tc) Prims.list)
   =
   fun env  ->
     fun t  ->
@@ -1700,8 +1698,7 @@ let imitation_sub_probs:
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.binders ->
         FStar_Syntax_Syntax.args ->
-          (FStar_Syntax_Syntax.binder Prims.option* variance* tc) Prims.list
-            ->
+          (FStar_Syntax_Syntax.binder option* variance* tc) Prims.list ->
             (FStar_TypeChecker_Common.prob Prims.list* tc Prims.list*
               FStar_Syntax_Syntax.formula)
   =
@@ -1894,7 +1891,7 @@ type im_or_proj_t =
     FStar_Syntax_Syntax.arg Prims.list*
     ((tc Prims.list -> FStar_Syntax_Syntax.typ)*
     (FStar_Syntax_Syntax.typ -> Prims.bool)* (FStar_Syntax_Syntax.binder
-    Prims.option* variance* tc) Prims.list))
+    option* variance* tc) Prims.list))
 let rigid_rigid: Prims.int = Prims.parse_int "0"
 let flex_rigid_eq: Prims.int = Prims.parse_int "1"
 let flex_refine_inner: Prims.int = Prims.parse_int "2"
@@ -2111,8 +2108,8 @@ let rank:
           (rigid_rigid, uu____5180)
 let next_prob:
   worklist ->
-    (FStar_TypeChecker_Common.prob Prims.option*
-      FStar_TypeChecker_Common.prob Prims.list* Prims.int)
+    (FStar_TypeChecker_Common.prob option* FStar_TypeChecker_Common.prob
+      Prims.list* Prims.int)
   =
   fun wl  ->
     let rec aux uu____5215 probs =
@@ -2508,7 +2505,7 @@ and giveup_or_defer:
              solve env (defer msg orig wl))
           else giveup env msg orig
 and solve_rigid_flex_meet:
-  FStar_TypeChecker_Env.env -> tprob -> worklist -> worklist Prims.option =
+  FStar_TypeChecker_Env.env -> tprob -> worklist -> worklist option =
   fun env  ->
     fun tp  ->
       fun wl  ->
@@ -2781,7 +2778,7 @@ and solve_rigid_flex_meet:
                               | uu____6567 -> None))))
               | uu____6568 -> failwith "Impossible: Not a rigid-flex"))
 and solve_flex_rigid_join:
-  FStar_TypeChecker_Env.env -> tprob -> worklist -> worklist Prims.option =
+  FStar_TypeChecker_Env.env -> tprob -> worklist -> worklist option =
   fun env  ->
     fun tp  ->
       fun wl  ->
@@ -5704,8 +5701,8 @@ let solve_and_commit:
   FStar_TypeChecker_Env.env ->
     worklist ->
       ((FStar_TypeChecker_Common.prob* Prims.string) ->
-         FStar_TypeChecker_Common.deferred Prims.option)
-        -> FStar_TypeChecker_Common.deferred Prims.option
+         FStar_TypeChecker_Common.deferred option)
+        -> FStar_TypeChecker_Common.deferred option
   =
   fun env  ->
     fun probs  ->
@@ -5792,8 +5789,8 @@ let simplify_guard:
 let with_guard:
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.prob ->
-      FStar_TypeChecker_Common.deferred Prims.option ->
-        FStar_TypeChecker_Env.guard_t Prims.option
+      FStar_TypeChecker_Common.deferred option ->
+        FStar_TypeChecker_Env.guard_t option
   =
   fun env  ->
     fun prob  ->
@@ -5837,7 +5834,7 @@ let try_teq:
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.typ ->
-        FStar_Syntax_Syntax.typ -> FStar_TypeChecker_Env.guard_t Prims.option
+        FStar_Syntax_Syntax.typ -> FStar_TypeChecker_Env.guard_t option
   =
   fun smt_ok  ->
     fun env  ->
@@ -5904,7 +5901,7 @@ let try_subtype':
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.typ ->
-        Prims.bool -> FStar_TypeChecker_Env.guard_t Prims.option
+        Prims.bool -> FStar_TypeChecker_Env.guard_t option
   =
   fun env  ->
     fun t1  ->
@@ -5953,7 +5950,7 @@ let try_subtype':
 let try_subtype:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ -> FStar_TypeChecker_Env.guard_t Prims.option
+      FStar_Syntax_Syntax.typ -> FStar_TypeChecker_Env.guard_t option
   = fun env  -> fun t1  -> fun t2  -> try_subtype' env t1 t2 true
 let subtype_fail:
   FStar_TypeChecker_Env.env ->
@@ -5971,7 +5968,7 @@ let subtype_fail:
 let sub_comp:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
-      FStar_Syntax_Syntax.comp -> FStar_TypeChecker_Env.guard_t Prims.option
+      FStar_Syntax_Syntax.comp -> FStar_TypeChecker_Env.guard_t option
   =
   fun env  ->
     fun c1  ->
@@ -6225,10 +6222,10 @@ let rec solve_deferred_constraints:
             (uu___182_12710.FStar_TypeChecker_Env.implicits)
         }))
 let discharge_guard':
-  (Prims.unit -> Prims.string) Prims.option ->
+  (Prims.unit -> Prims.string) option ->
     FStar_TypeChecker_Env.env ->
       FStar_TypeChecker_Env.guard_t ->
-        Prims.bool -> FStar_TypeChecker_Env.guard_t Prims.option
+        Prims.bool -> FStar_TypeChecker_Env.guard_t option
   =
   fun use_env_range_msg  ->
     fun env  ->

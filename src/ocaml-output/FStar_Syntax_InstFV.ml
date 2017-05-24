@@ -229,10 +229,10 @@ and inst_lcomp_opt:
     ->
     (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
                                  FStar_Syntax_Syntax.cflags Prims.list))
-      FStar_Util.either Prims.option ->
+      FStar_Util.either option ->
       (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
                                    FStar_Syntax_Syntax.cflags Prims.list))
-        FStar_Util.either Prims.option
+        FStar_Util.either option
   =
   fun s  ->
     fun l  ->

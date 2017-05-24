@@ -28,7 +28,7 @@ let tc_prims:
     let uu____166 = FStar_Universal.tc_prims () in
     match uu____166 with | (uu____174,dsenv,env) -> (dsenv, env)
 type env_t = (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
-type modul_t = FStar_Syntax_Syntax.modul Prims.option
+type modul_t = FStar_Syntax_Syntax.modul option
 type stack_t = (env_t* modul_t) Prims.list
 let pop uu____199 msg =
   match uu____199 with
@@ -151,10 +151,10 @@ let commit_mark:
         let env1 = FStar_TypeChecker_Env.commit_mark env in (dsenv1, env1)
 let check_frag:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
-    FStar_Syntax_Syntax.modul Prims.option ->
+    FStar_Syntax_Syntax.modul option ->
       (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-        (FStar_Syntax_Syntax.modul Prims.option* (FStar_ToSyntax_Env.env*
-          FStar_TypeChecker_Env.env)* Prims.int) Prims.option
+        (FStar_Syntax_Syntax.modul option* (FStar_ToSyntax_Env.env*
+          FStar_TypeChecker_Env.env)* Prims.int) option
   =
   fun uu____330  ->
     fun curmod  ->
@@ -187,7 +187,7 @@ let check_frag:
                    FStar_TypeChecker_Err.add_errors env uu____438);
                   None))
 let deps_of_our_file:
-  Prims.string -> (Prims.string Prims.list* Prims.string Prims.option) =
+  Prims.string -> (Prims.string Prims.list* Prims.string option) =
   fun filename  ->
     let deps =
       FStar_Dependencies.find_deps_if_needed
@@ -226,7 +226,7 @@ let deps_of_our_file:
                None) in
         (deps1, maybe_intf)
 type m_timestamps =
-  (Prims.string Prims.option* Prims.string* FStar_Util.time Prims.option*
+  (Prims.string option* Prims.string* FStar_Util.time option*
     FStar_Util.time) Prims.list
 let rec tc_deps:
   modul_t ->
@@ -419,10 +419,10 @@ type query' =
   | Pop
   | Push of (push_kind* Prims.string* Prims.int* Prims.int* Prims.bool)
   | AutoComplete of Prims.string
-  | Lookup of (Prims.string* (Prims.string* Prims.int* Prims.int)
-  Prims.option* Prims.string Prims.list)
+  | Lookup of (Prims.string* (Prims.string* Prims.int* Prims.int) option*
+  Prims.string Prims.list)
   | Compute of (Prims.string* FStar_TypeChecker_Normalize.step Prims.list
-  Prims.option)
+  option)
   | Search of Prims.string
   | ProtocolViolation of Prims.string
 and query = {
@@ -455,15 +455,15 @@ let uu___is_Lookup: query' -> Prims.bool =
     match projectee with | Lookup _0 -> true | uu____1218 -> false
 let __proj__Lookup__item___0:
   query' ->
-    (Prims.string* (Prims.string* Prims.int* Prims.int) Prims.option*
-      Prims.string Prims.list)
+    (Prims.string* (Prims.string* Prims.int* Prims.int) option* Prims.string
+      Prims.list)
   = fun projectee  -> match projectee with | Lookup _0 -> _0
 let uu___is_Compute: query' -> Prims.bool =
   fun projectee  ->
     match projectee with | Compute _0 -> true | uu____1258 -> false
 let __proj__Compute__item___0:
   query' ->
-    (Prims.string* FStar_TypeChecker_Normalize.step Prims.list Prims.option)
+    (Prims.string* FStar_TypeChecker_Normalize.step Prims.list option)
   = fun projectee  -> match projectee with | Compute _0 -> _0
 let uu___is_Search: query' -> Prims.bool =
   fun projectee  ->
@@ -763,10 +763,10 @@ let json_of_issue: FStar_Errors.issue -> FStar_Util.json =
 type lookup_result =
   {
   lr_name: Prims.string;
-  lr_def_range: FStar_Range.range Prims.option;
-  lr_typ: Prims.string Prims.option;
-  lr_doc: Prims.string Prims.option;
-  lr_def: Prims.string Prims.option;}
+  lr_def_range: FStar_Range.range option;
+  lr_typ: Prims.string option;
+  lr_doc: Prims.string option;
+  lr_def: Prims.string option;}
 let json_of_lookup_result: lookup_result -> FStar_Util.json =
   fun lr  ->
     let uu____1764 =
@@ -1403,8 +1403,8 @@ let st_cost: search_term' -> Prims.int =
 type search_candidate =
   {
   sc_lid: FStar_Ident.lid;
-  sc_typ: FStar_Syntax_Syntax.typ Prims.option FStar_ST.ref;
-  sc_fvars: FStar_Ident.lid FStar_Util.set Prims.option FStar_ST.ref;}
+  sc_typ: FStar_Syntax_Syntax.typ option FStar_ST.ref;
+  sc_fvars: FStar_Ident.lid FStar_Util.set option FStar_ST.ref;}
 let sc_of_lid: FStar_Ident.lid -> search_candidate =
   fun lid  ->
     let uu____3682 = FStar_Util.mk_ref None in

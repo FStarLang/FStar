@@ -116,7 +116,7 @@ let mk_lex_list:
                uu____35 in
            uu____34 (Some (FStar_Syntax_Util.lex_t.FStar_Syntax_Syntax.n)) r)
       vs FStar_Syntax_Util.lex_top
-let is_eq: FStar_Syntax_Syntax.arg_qualifier Prims.option -> Prims.bool =
+let is_eq: FStar_Syntax_Syntax.arg_qualifier option -> Prims.bool =
   fun uu___82_47  ->
     match uu___82_47 with
     | Some (FStar_Syntax_Syntax.Equality ) -> true
@@ -137,7 +137,7 @@ let norm_c:
   fun env  ->
     fun c  -> FStar_TypeChecker_Normalize.normalize_comp (steps env) env c
 let check_no_escape:
-  FStar_Syntax_Syntax.term Prims.option ->
+  FStar_Syntax_Syntax.term option ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.bv Prims.list ->
         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
@@ -387,7 +387,7 @@ let comp_check_expected_typ:
                  FStar_TypeChecker_Util.weaken_result_typ env e1 lc1 t)
 let check_expected_effect:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.comp Prims.option ->
+    FStar_Syntax_Syntax.comp option ->
       (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.comp) ->
         (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.comp*
           FStar_TypeChecker_Env.guard_t)
@@ -1735,8 +1735,7 @@ and tc_maybe_toplevel_term:
 and tc_tactic_opt:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax Prims.option ->
-      FStar_Syntax_Syntax.term Prims.option
+      FStar_Syntax_Syntax.syntax option -> FStar_Syntax_Syntax.term option
   =
   fun env  ->
     fun topt  ->
@@ -2973,7 +2972,7 @@ and check_application_args:
           ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
             FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.aqual) Prims.list
             ->
-            FStar_Syntax_Syntax.typ Prims.option ->
+            FStar_Syntax_Syntax.typ option ->
               ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
                 FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.lcomp*
                 FStar_TypeChecker_Env.guard_t)
@@ -3606,7 +3605,7 @@ and check_short_circuit_args:
           ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
             FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.aqual) Prims.list
             ->
-            FStar_Syntax_Syntax.typ Prims.option ->
+            FStar_Syntax_Syntax.typ option ->
               (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.lcomp*
                 FStar_TypeChecker_Env.guard_t)
   =
@@ -3701,10 +3700,10 @@ and tc_eqn:
       ((FStar_Syntax_Syntax.pat',FStar_Syntax_Syntax.term')
         FStar_Syntax_Syntax.withinfo_t*
         (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax Prims.option*
+        FStar_Syntax_Syntax.syntax option*
         (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
         FStar_Syntax_Syntax.syntax) ->
-        ((FStar_Syntax_Syntax.pat* FStar_Syntax_Syntax.term Prims.option*
+        ((FStar_Syntax_Syntax.pat* FStar_Syntax_Syntax.term option*
           FStar_Syntax_Syntax.term)* FStar_Syntax_Syntax.term*
           FStar_Syntax_Syntax.lcomp* FStar_TypeChecker_Env.guard_t)
   =
@@ -5437,7 +5436,7 @@ and check_lbtyp:
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.letbinding ->
-        (FStar_Syntax_Syntax.typ Prims.option* FStar_TypeChecker_Env.guard_t*
+        (FStar_Syntax_Syntax.typ option* FStar_TypeChecker_Env.guard_t*
           FStar_Syntax_Syntax.univ_names* FStar_Syntax_Syntax.subst_elt
           Prims.list* FStar_TypeChecker_Env.env)
   =

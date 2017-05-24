@@ -97,7 +97,7 @@ let filter_imp a =
 let rec reconstruct_lex:
   exp ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax Prims.list Prims.option
+      FStar_Syntax_Syntax.syntax Prims.list option
   =
   fun e  ->
     let uu____226 =
@@ -209,7 +209,7 @@ let uvar_to_string u =
 let rec int_of_univ:
   Prims.int ->
     FStar_Syntax_Syntax.universe ->
-      (Prims.int* FStar_Syntax_Syntax.universe Prims.option)
+      (Prims.int* FStar_Syntax_Syntax.universe option)
   =
   fun n1  ->
     fun u  ->
@@ -613,9 +613,7 @@ and lcomp_to_string: FStar_Syntax_Syntax.lcomp -> Prims.string =
        let uu____1417 = term_to_string lc.FStar_Syntax_Syntax.res_typ in
        FStar_Util.format2 "%s %s" uu____1416 uu____1417)
 and imp_to_string:
-  Prims.string ->
-    FStar_Syntax_Syntax.arg_qualifier Prims.option -> Prims.string
-  =
+  Prims.string -> FStar_Syntax_Syntax.arg_qualifier option -> Prims.string =
   fun s  ->
     fun uu___211_1419  ->
       match uu___211_1419 with
@@ -677,8 +675,8 @@ and binders_to_string:
            FStar_All.pipe_right bs1 (FStar_List.map binder_to_string) in
          FStar_All.pipe_right uu____1459 (FStar_String.concat sep))
 and arg_to_string:
-  (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.arg_qualifier Prims.option)
-    -> Prims.string
+  (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.arg_qualifier option) ->
+    Prims.string
   =
   fun uu___212_1463  ->
     match uu___212_1463 with
@@ -1108,8 +1106,8 @@ let subst_to_string: FStar_Syntax_Syntax.subst_t -> Prims.string =
       FStar_All.pipe_right s (FStar_List.map subst_elt_to_string) in
     FStar_All.pipe_right uu____1946 (FStar_String.concat "; ")
 let abs_ascription_to_string:
-  (FStar_Syntax_Syntax.lcomp,FStar_Ident.lident) FStar_Util.either
-    Prims.option -> Prims.string
+  (FStar_Syntax_Syntax.lcomp,FStar_Ident.lident) FStar_Util.either option ->
+    Prims.string
   =
   fun ascription  ->
     let strb = FStar_Util.new_string_builder () in

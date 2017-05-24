@@ -651,7 +651,7 @@ let embed_formula: formula -> FStar_Syntax_Syntax.term =
             [uu____1331] in
           FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_Name uu____1330 in
         uu____1329 None FStar_Range.dummyRange
-let term_as_formula: FStar_Syntax_Syntax.term -> formula Prims.option =
+let term_as_formula: FStar_Syntax_Syntax.term -> formula option =
   fun t  ->
     let uu____1343 = FStar_Syntax_Util.destruct_typ_as_formula t in
     match uu____1343 with
@@ -967,7 +967,7 @@ let packfv: Prims.string Prims.list -> FStar_Syntax_Syntax.fv =
       FStar_Syntax_Syntax.Delta_equational None
 let inspectbv: FStar_Syntax_Syntax.binder -> Prims.string =
   fun b  -> FStar_Syntax_Print.bv_to_string (fst b)
-let inspect: FStar_Syntax_Syntax.term -> term_view Prims.option =
+let inspect: FStar_Syntax_Syntax.term -> term_view option =
   fun t  ->
     let uu____2139 =
       let uu____2140 = FStar_Syntax_Subst.compress t in

@@ -43,7 +43,7 @@ type issue =
   {
   issue_message: Prims.string;
   issue_level: issue_level;
-  issue_range: FStar_Range.range Prims.option;}
+  issue_range: FStar_Range.range option;}
 type error_handler =
   {
   eh_add_one: issue -> Prims.unit;
@@ -112,7 +112,7 @@ let default_handler: error_handler =
 let current_handler: error_handler FStar_ST.ref =
   FStar_Util.mk_ref default_handler
 let mk_issue:
-  issue_level -> FStar_Range.range Prims.option -> Prims.string -> issue =
+  issue_level -> FStar_Range.range option -> Prims.string -> issue =
   fun level  ->
     fun range  ->
       fun msg  ->
@@ -187,7 +187,7 @@ let add_errors: (Prims.string* FStar_Range.range) Prims.list -> Prims.unit =
               | (msg,r) ->
                   let uu____441 = message_prefix.append_prefix msg in
                   err r uu____441) errs)
-let issue_of_exn: Prims.exn -> issue Prims.option =
+let issue_of_exn: Prims.exn -> issue option =
   fun uu___59_445  ->
     match uu___59_445 with
     | Error (msg,r) ->

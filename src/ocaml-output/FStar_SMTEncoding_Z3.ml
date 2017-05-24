@@ -21,7 +21,7 @@ let z3version_as_string: z3version -> Prims.string =
         let uu____55 = FStar_Util.string_of_int k in
         FStar_Util.format3 "%s.%s.%s" uu____53 uu____54 uu____55
 let z3v_compare:
-  z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.int Prims.option =
+  z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.int option =
   fun known  ->
     fun uu____65  ->
       match uu____65 with
@@ -39,7 +39,7 @@ let z3v_le: z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.bool =
       match z3v_compare known wanted with
       | None  -> false
       | Some i -> i >= (Prims.parse_int "0")
-let _z3version: z3version Prims.option FStar_ST.ref = FStar_Util.mk_ref None
+let _z3version: z3version option FStar_ST.ref = FStar_Util.mk_ref None
 let get_z3version: Prims.unit -> z3version =
   fun uu____100  ->
     let prefix1 = "Z3 version " in
@@ -104,7 +104,7 @@ let ini_params: Prims.unit -> Prims.string =
        FStar_List.append uu____156 uu____163 in
      FStar_String.concat " " uu____154)
 type label = Prims.string
-type unsat_core = Prims.string Prims.list Prims.option
+type unsat_core = Prims.string Prims.list option
 type z3status =
   | UNSAT of unsat_core
   | SAT of label Prims.list
@@ -723,8 +723,7 @@ let ask_n_cores:
      (FStar_SMTEncoding_Term.decls_t* Prims.bool))
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t ->
-        scope_t Prims.option -> cb -> Prims.unit
+      FStar_SMTEncoding_Term.decls_t -> scope_t option -> cb -> Prims.unit
   =
   fun filter_theory  ->
     fun label_messages  ->
@@ -757,8 +756,7 @@ let ask:
      (FStar_SMTEncoding_Term.decls_t* Prims.bool))
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t ->
-        scope_t Prims.option -> cb -> Prims.unit
+      FStar_SMTEncoding_Term.decls_t -> scope_t option -> cb -> Prims.unit
   =
   fun filter1  ->
     fun label_messages  ->

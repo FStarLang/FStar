@@ -1,7 +1,7 @@
 open Prims
 let trans_aqual:
-  FStar_Parser_AST.arg_qualifier Prims.option ->
-    FStar_Syntax_Syntax.arg_qualifier Prims.option
+  FStar_Parser_AST.arg_qualifier option ->
+    FStar_Syntax_Syntax.arg_qualifier option
   =
   fun uu___196_5  ->
     match uu___196_5 with
@@ -10,7 +10,7 @@ let trans_aqual:
     | uu____8 -> None
 let trans_qual:
   FStar_Range.range ->
-    FStar_Ident.lident Prims.option ->
+    FStar_Ident.lident option ->
       FStar_Parser_AST.qualifier -> FStar_Syntax_Syntax.qualifier
   =
   fun r  ->
@@ -58,8 +58,8 @@ let trans_pragma: FStar_Parser_AST.pragma -> FStar_Syntax_Syntax.pragma =
     | FStar_Parser_AST.ResetOptions sopt ->
         FStar_Syntax_Syntax.ResetOptions sopt
     | FStar_Parser_AST.LightOff  -> FStar_Syntax_Syntax.LightOff
-let as_imp:
-  FStar_Parser_AST.imp -> FStar_Syntax_Syntax.arg_qualifier Prims.option =
+let as_imp: FStar_Parser_AST.imp -> FStar_Syntax_Syntax.arg_qualifier option
+  =
   fun uu___199_32  ->
     match uu___199_32 with
     | FStar_Parser_AST.Hash  -> Some FStar_Syntax_Syntax.imp_tag
@@ -438,8 +438,7 @@ let rec destruct_app_pattern:
     Prims.bool ->
       FStar_Parser_AST.pattern ->
         ((FStar_Ident.ident,FStar_Ident.lident) FStar_Util.either*
-          FStar_Parser_AST.pattern Prims.list* FStar_Parser_AST.term
-          Prims.option)
+          FStar_Parser_AST.pattern Prims.list* FStar_Parser_AST.term option)
   =
   fun env  ->
     fun is_top_level1  ->
@@ -521,8 +520,8 @@ let binder_of_bnd: bnd -> (FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual)
     | uu____775 -> failwith "Impossible"
 let as_binder:
   FStar_ToSyntax_Env.env ->
-    FStar_Parser_AST.arg_qualifier Prims.option ->
-      (FStar_Ident.ident Prims.option* FStar_Syntax_Syntax.term) ->
+    FStar_Parser_AST.arg_qualifier option ->
+      (FStar_Ident.ident option* FStar_Syntax_Syntax.term) ->
         (FStar_Syntax_Syntax.binder* FStar_ToSyntax_Env.env)
   =
   fun env  ->
@@ -1196,7 +1195,7 @@ and desugar_binding_pat_maybe_top:
   Prims.bool ->
     FStar_ToSyntax_Env.env ->
       FStar_Parser_AST.pattern ->
-        Prims.bool -> (env_t* bnd* FStar_Syntax_Syntax.pat Prims.option)
+        Prims.bool -> (env_t* bnd* FStar_Syntax_Syntax.pat option)
   =
   fun top  ->
     fun env  ->
@@ -1252,8 +1251,7 @@ and desugar_binding_pat_maybe_top:
                  (env1, binder, p2))
 and desugar_binding_pat:
   FStar_ToSyntax_Env.env ->
-    FStar_Parser_AST.pattern ->
-      (env_t* bnd* FStar_Syntax_Syntax.pat Prims.option)
+    FStar_Parser_AST.pattern -> (env_t* bnd* FStar_Syntax_Syntax.pat option)
   = fun env  -> fun p  -> desugar_binding_pat_maybe_top false env p false
 and desugar_match_pat_maybe_top:
   Prims.bool ->
@@ -2644,8 +2642,8 @@ and desugar_term_maybe_top:
 and desugar_args:
   FStar_ToSyntax_Env.env ->
     (FStar_Parser_AST.term* FStar_Parser_AST.imp) Prims.list ->
-      (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.arg_qualifier
-        Prims.option) Prims.list
+      (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.arg_qualifier option)
+        Prims.list
   =
   fun env  ->
     fun args  ->
@@ -3140,7 +3138,7 @@ and typars_of_binders:
   FStar_ToSyntax_Env.env ->
     FStar_Parser_AST.binder Prims.list ->
       (FStar_ToSyntax_Env.env* (FStar_Syntax_Syntax.bv*
-        FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list)
+        FStar_Syntax_Syntax.arg_qualifier option) Prims.list)
   =
   fun env  ->
     fun bs  ->
@@ -3188,7 +3186,7 @@ and typars_of_binders:
 and desugar_binder:
   FStar_ToSyntax_Env.env ->
     FStar_Parser_AST.binder ->
-      (FStar_Ident.ident Prims.option* FStar_Syntax_Syntax.term)
+      (FStar_Ident.ident option* FStar_Syntax_Syntax.term)
   =
   fun env  ->
     fun b  ->
@@ -4577,7 +4575,7 @@ let rec desugar_effect:
 and desugar_redefine_effect:
   FStar_ToSyntax_Env.env ->
     FStar_Parser_AST.decl ->
-      (FStar_Ident.lident Prims.option ->
+      (FStar_Ident.lident option ->
          FStar_Parser_AST.qualifier -> FStar_Syntax_Syntax.qualifier)
         ->
         FStar_Parser_AST.qualifier Prims.list ->
@@ -5339,7 +5337,7 @@ let open_prims_all:
   FStar_Parser_AST.mk_decl (FStar_Parser_AST.Open FStar_Syntax_Const.all_lid)
     FStar_Range.dummyRange]
 let desugar_modul_common:
-  FStar_Syntax_Syntax.modul Prims.option ->
+  FStar_Syntax_Syntax.modul option ->
     FStar_ToSyntax_Env.env ->
       FStar_Parser_AST.modul ->
         (env_t* FStar_Syntax_Syntax.modul* Prims.bool)
@@ -5393,7 +5391,7 @@ let as_interface: FStar_Parser_AST.modul -> FStar_Parser_AST.modul =
         FStar_Parser_AST.Interface (mname, decls, true)
     | i -> i
 let desugar_partial_modul:
-  FStar_Syntax_Syntax.modul Prims.option ->
+  FStar_Syntax_Syntax.modul option ->
     env_t -> FStar_Parser_AST.modul -> (env_t* FStar_Syntax_Syntax.modul)
   =
   fun curmod  ->

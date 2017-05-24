@@ -7,7 +7,7 @@ type 't var = (FStar_Ident.lident,'t) withinfo_t
 type sconst = FStar_Const.sconst
 type pragma =
   | SetOptions of Prims.string
-  | ResetOptions of Prims.string Prims.option
+  | ResetOptions of Prims.string option
   | LightOff
 let uu___is_SetOptions: pragma -> Prims.bool =
   fun projectee  ->
@@ -17,12 +17,12 @@ let __proj__SetOptions__item___0: pragma -> Prims.string =
 let uu___is_ResetOptions: pragma -> Prims.bool =
   fun projectee  ->
     match projectee with | ResetOptions _0 -> true | uu____94 -> false
-let __proj__ResetOptions__item___0: pragma -> Prims.string Prims.option =
+let __proj__ResetOptions__item___0: pragma -> Prims.string option =
   fun projectee  -> match projectee with | ResetOptions _0 -> _0
 let uu___is_LightOff: pragma -> Prims.bool =
   fun projectee  ->
     match projectee with | LightOff  -> true | uu____108 -> false
-type 'a memo = 'a Prims.option FStar_ST.ref
+type 'a memo = 'a option FStar_ST.ref
 type arg_qualifier =
   | Implicit of Prims.bool
   | Equality
@@ -34,14 +34,14 @@ let __proj__Implicit__item___0: arg_qualifier -> Prims.bool =
 let uu___is_Equality: arg_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Equality  -> true | uu____132 -> false
-type aqual = arg_qualifier Prims.option
+type aqual = arg_qualifier option
 type universe =
   | U_zero
   | U_succ of universe
   | U_max of universe Prims.list
   | U_bvar of Prims.int
   | U_name of FStar_Ident.ident
-  | U_unif of universe Prims.option FStar_Unionfind.uvar
+  | U_unif of universe option FStar_Unionfind.uvar
   | U_unknown
 let uu___is_U_zero: universe -> Prims.bool =
   fun projectee  ->
@@ -70,13 +70,13 @@ let uu___is_U_unif: universe -> Prims.bool =
   fun projectee  ->
     match projectee with | U_unif _0 -> true | uu____214 -> false
 let __proj__U_unif__item___0:
-  universe -> universe Prims.option FStar_Unionfind.uvar =
+  universe -> universe option FStar_Unionfind.uvar =
   fun projectee  -> match projectee with | U_unif _0 -> _0
 let uu___is_U_unknown: universe -> Prims.bool =
   fun projectee  ->
     match projectee with | U_unknown  -> true | uu____231 -> false
 type univ_name = FStar_Ident.ident
-type universe_uvar = universe Prims.option FStar_Unionfind.uvar
+type universe_uvar = universe option FStar_Unionfind.uvar
 type univ_names = univ_name Prims.list
 type universes = universe Prims.list
 type monad_name = FStar_Ident.lident
@@ -111,23 +111,22 @@ type term' =
   | Tm_constant of sconst
   | Tm_type of universe
   | Tm_abs of ((bv* aqual) Prims.list* (term',term') syntax*
-  (lcomp,(FStar_Ident.lident* cflags Prims.list)) FStar_Util.either
-  Prims.option)
+  (lcomp,(FStar_Ident.lident* cflags Prims.list)) FStar_Util.either option)
   | Tm_arrow of ((bv* aqual) Prims.list* (comp',Prims.unit) syntax)
   | Tm_refine of (bv* (term',term') syntax)
   | Tm_app of ((term',term') syntax* ((term',term') syntax* aqual)
   Prims.list)
   | Tm_match of ((term',term') syntax* ((pat',term') withinfo_t*
-  (term',term') syntax Prims.option* (term',term') syntax) Prims.list)
+  (term',term') syntax option* (term',term') syntax) Prims.list)
   | Tm_ascribed of ((term',term') syntax*
   (((term',term') syntax,(comp',Prims.unit) syntax) FStar_Util.either*
-  (term',term') syntax Prims.option)* FStar_Ident.lident Prims.option)
+  (term',term') syntax option)* FStar_Ident.lident option)
   | Tm_let of ((Prims.bool* letbinding Prims.list)* (term',term') syntax)
   | Tm_uvar of ((term',term') syntax uvar_basis FStar_Unionfind.uvar*
   (term',term') syntax)
   | Tm_delayed of
   ((((term',term') syntax* (subst_elt Prims.list Prims.list*
-      FStar_Range.range Prims.option)),Prims.unit -> (term',term') syntax)
+      FStar_Range.range option)),Prims.unit -> (term',term') syntax)
   FStar_Util.either* (term',term') syntax memo)
   | Tm_meta of ((term',term') syntax* metadata)
   | Tm_unknown
@@ -153,8 +152,8 @@ and comp_typ =
   effect_args: ((term',term') syntax* aqual) Prims.list;
   flags: cflags Prims.list;}
 and comp' =
-  | Total of ((term',term') syntax* universe Prims.option)
-  | GTotal of ((term',term') syntax* universe Prims.option)
+  | Total of ((term',term') syntax* universe option)
+  | GTotal of ((term',term') syntax* universe option)
   | Comp of comp_typ
 and cflags =
   | TOTAL
@@ -208,7 +207,7 @@ and fv =
   {
   fv_name: (term',term') syntax var;
   fv_delta: delta_depth;
-  fv_qual: fv_qual Prims.option;}
+  fv_qual: fv_qual option;}
 and free_vars =
   {
   free_names: bv FStar_Util.set;
@@ -260,7 +259,7 @@ let __proj__Tm_abs__item___0:
   term' ->
     ((bv* aqual) Prims.list* (term',term') syntax*
       (lcomp,(FStar_Ident.lident* cflags Prims.list)) FStar_Util.either
-      Prims.option)
+      option)
   = fun projectee  -> match projectee with | Tm_abs _0 -> _0
 let uu___is_Tm_arrow: term' -> Prims.bool =
   fun projectee  ->
@@ -285,7 +284,7 @@ let uu___is_Tm_match: term' -> Prims.bool =
 let __proj__Tm_match__item___0:
   term' ->
     ((term',term') syntax* ((pat',term') withinfo_t* (term',term') syntax
-      Prims.option* (term',term') syntax) Prims.list)
+      option* (term',term') syntax) Prims.list)
   = fun projectee  -> match projectee with | Tm_match _0 -> _0
 let uu___is_Tm_ascribed: term' -> Prims.bool =
   fun projectee  ->
@@ -293,8 +292,8 @@ let uu___is_Tm_ascribed: term' -> Prims.bool =
 let __proj__Tm_ascribed__item___0:
   term' ->
     ((term',term') syntax* (((term',term') syntax,(comp',Prims.unit) syntax)
-      FStar_Util.either* (term',term') syntax Prims.option)*
-      FStar_Ident.lident Prims.option)
+      FStar_Util.either* (term',term') syntax option)* FStar_Ident.lident
+      option)
   = fun projectee  -> match projectee with | Tm_ascribed _0 -> _0
 let uu___is_Tm_let: term' -> Prims.bool =
   fun projectee  ->
@@ -316,7 +315,7 @@ let uu___is_Tm_delayed: term' -> Prims.bool =
 let __proj__Tm_delayed__item___0:
   term' ->
     ((((term',term') syntax* (subst_elt Prims.list Prims.list*
-        FStar_Range.range Prims.option)),Prims.unit -> (term',term') syntax)
+        FStar_Range.range option)),Prims.unit -> (term',term') syntax)
       FStar_Util.either* (term',term') syntax memo)
   = fun projectee  -> match projectee with | Tm_delayed _0 -> _0
 let uu___is_Tm_meta: term' -> Prims.bool =
@@ -361,14 +360,13 @@ let __proj__Pat_dot_term__item___0: pat' -> (bv* (term',term') syntax) =
 let uu___is_Total: comp' -> Prims.bool =
   fun projectee  ->
     match projectee with | Total _0 -> true | uu____1546 -> false
-let __proj__Total__item___0:
-  comp' -> ((term',term') syntax* universe Prims.option) =
-  fun projectee  -> match projectee with | Total _0 -> _0
+let __proj__Total__item___0: comp' -> ((term',term') syntax* universe option)
+  = fun projectee  -> match projectee with | Total _0 -> _0
 let uu___is_GTotal: comp' -> Prims.bool =
   fun projectee  ->
     match projectee with | GTotal _0 -> true | uu____1578 -> false
 let __proj__GTotal__item___0:
-  comp' -> ((term',term') syntax* universe Prims.option) =
+  comp' -> ((term',term') syntax* universe option) =
   fun projectee  -> match projectee with | GTotal _0 -> _0
 let uu___is_Comp: comp' -> Prims.bool =
   fun projectee  ->
@@ -503,12 +501,12 @@ let __proj__UD__item___0: subst_elt -> (univ_name* Prims.int) =
 type pat = (pat',term') withinfo_t
 type term = (term',term') syntax
 type branch =
-  ((pat',term') withinfo_t* (term',term') syntax Prims.option* (term',
-    term') syntax)
+  ((pat',term') withinfo_t* (term',term') syntax option* (term',term')
+    syntax)
 type comp = (comp',Prims.unit) syntax
 type ascription =
   (((term',term') syntax,(comp',Prims.unit) syntax) FStar_Util.either*
-    (term',term') syntax Prims.option)
+    (term',term') syntax option)
 type typ = (term',term') syntax
 type arg = ((term',term') syntax* aqual)
 type args = ((term',term') syntax* aqual) Prims.list
@@ -517,8 +515,7 @@ type binders = (bv* aqual) Prims.list
 type uvar = (term',term') syntax uvar_basis FStar_Unionfind.uvar
 type lbname = (bv,fv) FStar_Util.either
 type letbindings = (Prims.bool* letbinding Prims.list)
-type subst_ts =
-  (subst_elt Prims.list Prims.list* FStar_Range.range Prims.option)
+type subst_ts = (subst_elt Prims.list Prims.list* FStar_Range.range option)
 type freenames = bv FStar_Util.set
 type uvars =
   ((term',term') syntax uvar_basis FStar_Unionfind.uvar* (term',term')
@@ -657,8 +654,8 @@ type sub_eff =
   {
   source: FStar_Ident.lident;
   target: FStar_Ident.lident;
-  lift_wp: tscheme Prims.option;
-  lift: tscheme Prims.option;}
+  lift_wp: tscheme option;
+  lift: tscheme option;}
 type action =
   {
   action_name: FStar_Ident.lident;
@@ -798,7 +795,7 @@ type modul =
   is_interface: Prims.bool;}
 type path = Prims.string Prims.list
 type subst_t = subst_elt Prims.list
-type ('a,'b) mk_t_a = 'b Prims.option -> FStar_Range.range -> ('a,'b) syntax
+type ('a,'b) mk_t_a = 'b option -> FStar_Range.range -> ('a,'b) syntax
 type mk_t = (term',term') mk_t_a
 let contains_reflectable: qualifier Prims.list -> Prims.bool =
   fun l  ->
@@ -869,7 +866,7 @@ let new_uv_set:
       (fun uu____3430  ->
          match uu____3430 with | (x,uu____3440) -> FStar_Unionfind.uvar_id x)
 let new_universe_uvar_set:
-  Prims.unit -> universe Prims.option FStar_Unionfind.uvar FStar_Util.set =
+  Prims.unit -> universe option FStar_Unionfind.uvar FStar_Util.set =
   fun uu____3459  ->
     FStar_Util.new_set
       (fun x  ->
@@ -900,9 +897,8 @@ let empty_free_vars: free_vars =
     free_univs = no_universe_uvars;
     free_univ_names = no_universe_names
   }
-let memo_no_uvs: uvars Prims.option FStar_ST.ref =
-  FStar_Util.mk_ref (Some no_uvs)
-let memo_no_names: bv FStar_Util.set Prims.option FStar_ST.ref =
+let memo_no_uvs: uvars option FStar_ST.ref = FStar_Util.mk_ref (Some no_uvs)
+let memo_no_names: bv FStar_Util.set option FStar_ST.ref =
   FStar_Util.mk_ref (Some no_names)
 let freenames_of_list: bv Prims.list -> bv FStar_Util.set =
   fun l  -> FStar_List.fold_right FStar_Util.set_add l no_names
@@ -923,7 +919,7 @@ let bv_to_name: bv -> (term',term') syntax =
 let mk_Tm_app:
   typ ->
     arg Prims.list ->
-      term' Prims.option -> FStar_Range.range -> (term',term') syntax
+      term' option -> FStar_Range.range -> (term',term') syntax
   =
   fun t1  ->
     fun args  ->
@@ -942,9 +938,7 @@ let mk_Tm_uinst: term -> universes -> term =
            | Tm_fvar uu____3614 -> (mk (Tm_uinst (t, us))) None t.pos
            | uu____3623 -> failwith "Unexpected universe instantiation")
 let extend_app_n:
-  term ->
-    args -> term' Prims.option -> FStar_Range.range -> (term',term') syntax
-  =
+  term -> args -> term' option -> FStar_Range.range -> (term',term') syntax =
   fun t  ->
     fun args'  ->
       fun kopt  ->
@@ -954,9 +948,7 @@ let extend_app_n:
               (mk_Tm_app head1 (FStar_List.append args args')) kopt r
           | uu____3663 -> (mk_Tm_app t args') kopt r
 let extend_app:
-  term ->
-    arg -> term' Prims.option -> FStar_Range.range -> (term',term') syntax
-  =
+  term -> arg -> term' option -> FStar_Range.range -> (term',term') syntax =
   fun t  -> fun arg  -> fun kopt  -> fun r  -> (extend_app_n t [arg]) kopt r
 let mk_Tm_delayed:
   ((term* subst_ts),Prims.unit -> term) FStar_Util.either ->
@@ -971,9 +963,9 @@ let mk_Tm_delayed:
           Tm_delayed uu____3708 in
         mk uu____3707 in
       uu____3704 None pos
-let mk_Total': typ -> universe Prims.option -> (comp',Prims.unit) syntax =
+let mk_Total': typ -> universe option -> (comp',Prims.unit) syntax =
   fun t  -> fun u  -> (mk (Total (t, u))) None t.pos
-let mk_GTotal': typ -> universe Prims.option -> (comp',Prims.unit) syntax =
+let mk_GTotal': typ -> universe option -> (comp',Prims.unit) syntax =
   fun t  -> fun u  -> (mk (GTotal (t, u))) None t.pos
 let mk_Total: typ -> comp = fun t  -> mk_Total' t None
 let mk_GTotal: typ -> comp = fun t  -> mk_GTotal' t None
@@ -1015,13 +1007,13 @@ let null_id: FStar_Ident.ident =
   FStar_Ident.mk_ident ("_", FStar_Range.dummyRange)
 let null_bv: term -> bv =
   fun k  -> { ppname = null_id; index = (Prims.parse_int "0"); sort = k }
-let mk_binder: bv -> (bv* arg_qualifier Prims.option) = fun a  -> (a, None)
-let null_binder: term -> (bv* arg_qualifier Prims.option) =
+let mk_binder: bv -> (bv* arg_qualifier option) = fun a  -> (a, None)
+let null_binder: term -> (bv* arg_qualifier option) =
   fun t  -> let uu____3891 = null_bv t in (uu____3891, None)
 let imp_tag: arg_qualifier = Implicit false
-let iarg: term -> (term* arg_qualifier Prims.option) =
+let iarg: term -> (term* arg_qualifier option) =
   fun t  -> (t, (Some imp_tag))
-let as_arg: term -> (term* arg_qualifier Prims.option) = fun t  -> (t, None)
+let as_arg: term -> (term* arg_qualifier option) = fun t  -> (t, None)
 let is_null_bv: bv -> Prims.bool =
   fun b  -> (b.ppname).FStar_Ident.idText = null_id.FStar_Ident.idText
 let is_null_binder: binder -> Prims.bool = fun b  -> is_null_bv (fst b)
@@ -1039,8 +1031,7 @@ let freenames_of_binders: binders -> bv FStar_Util.set =
          fun out  ->
            match uu____3932 with | (x,uu____3939) -> FStar_Util.set_add x out)
       bs no_names
-let binders_of_list:
-  bv Prims.list -> (bv* arg_qualifier Prims.option) Prims.list =
+let binders_of_list: bv Prims.list -> (bv* arg_qualifier option) Prims.list =
   fun fvs  -> FStar_All.pipe_right fvs (FStar_List.map (fun t  -> (t, None)))
 let binders_of_freenames: freenames -> binders =
   fun fvs  ->
@@ -1051,7 +1042,7 @@ let is_implicit: aqual -> Prims.bool =
     match uu___91_3963 with
     | Some (Implicit uu____3964) -> true
     | uu____3965 -> false
-let as_implicit: Prims.bool -> arg_qualifier Prims.option =
+let as_implicit: Prims.bool -> arg_qualifier option =
   fun uu___92_3968  -> if uu___92_3968 then Some imp_tag else None
 let pat_bvs: pat -> bv Prims.list =
   fun p  ->
@@ -1075,17 +1066,17 @@ let gen_reset: ((Prims.unit -> Prims.int)* (Prims.unit -> Prims.unit)) =
   (gen1, reset)
 let next_id: Prims.unit -> Prims.int = fst gen_reset
 let reset_gensym: Prims.unit -> Prims.unit = snd gen_reset
-let range_of_ropt: FStar_Range.range Prims.option -> FStar_Range.range =
+let range_of_ropt: FStar_Range.range option -> FStar_Range.range =
   fun uu___93_4084  ->
     match uu___93_4084 with | None  -> FStar_Range.dummyRange | Some r -> r
-let gen_bv: Prims.string -> FStar_Range.range Prims.option -> typ -> bv =
+let gen_bv: Prims.string -> FStar_Range.range option -> typ -> bv =
   fun s  ->
     fun r  ->
       fun t  ->
         let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
         let uu____4099 = next_id () in
         { ppname = id; index = uu____4099; sort = t }
-let new_bv: FStar_Range.range Prims.option -> typ -> bv =
+let new_bv: FStar_Range.range option -> typ -> bv =
   fun ropt  -> fun t  -> gen_bv FStar_Ident.reserved_prefix ropt t
 let freshen_bv: bv -> bv =
   fun bv  ->
@@ -1102,7 +1093,7 @@ let freshen_bv: bv -> bv =
          index = uu____4117;
          sort = (uu___96_4116.sort)
        })
-let new_univ_name: FStar_Range.range Prims.option -> FStar_Ident.ident =
+let new_univ_name: FStar_Range.range option -> FStar_Ident.ident =
   fun ropt  ->
     let id = next_id () in
     let uu____4124 =
@@ -1137,8 +1128,7 @@ let set_bv_range: bv -> FStar_Range.range -> bv =
         index = (uu___97_4209.index);
         sort = (uu___97_4209.sort)
       }
-let lid_as_fv:
-  FStar_Ident.lident -> delta_depth -> fv_qual Prims.option -> fv =
+let lid_as_fv: FStar_Ident.lident -> delta_depth -> fv_qual option -> fv =
   fun l  ->
     fun dd  ->
       fun dq  ->
@@ -1146,7 +1136,7 @@ let lid_as_fv:
         { fv_name = uu____4221; fv_delta = dd; fv_qual = dq }
 let fv_to_tm: fv -> (term',term') syntax =
   fun fv  -> (mk (Tm_fvar fv)) None (FStar_Ident.range_of_lid (fv.fv_name).v)
-let fvar: FStar_Ident.lident -> delta_depth -> fv_qual Prims.option -> term =
+let fvar: FStar_Ident.lident -> delta_depth -> fv_qual option -> term =
   fun l  ->
     fun dd  ->
       fun dq  -> let uu____4256 = lid_as_fv l dd dq in fv_to_tm uu____4256

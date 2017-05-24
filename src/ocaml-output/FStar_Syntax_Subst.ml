@@ -30,7 +30,7 @@ let delay:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax ->
     (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list* FStar_Range.range
-      Prims.option) -> FStar_Syntax_Syntax.term
+      option) -> FStar_Syntax_Syntax.term
   =
   fun t  ->
     fun s  ->
@@ -101,7 +101,7 @@ let rec compress_univ:
 let subst_bv:
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      FStar_Syntax_Syntax.term Prims.option
+      FStar_Syntax_Syntax.term option
   =
   fun a  ->
     fun s  ->
@@ -120,7 +120,7 @@ let subst_bv:
 let subst_nm:
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      FStar_Syntax_Syntax.term Prims.option
+      FStar_Syntax_Syntax.term option
   =
   fun a  ->
     fun s  ->
@@ -146,7 +146,7 @@ let subst_nm:
 let subst_univ_bv:
   Prims.int ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      FStar_Syntax_Syntax.universe Prims.option
+      FStar_Syntax_Syntax.universe option
   =
   fun x  ->
     fun s  ->
@@ -158,7 +158,7 @@ let subst_univ_bv:
 let subst_univ_nm:
   FStar_Syntax_Syntax.univ_name ->
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      FStar_Syntax_Syntax.universe Prims.option
+      FStar_Syntax_Syntax.universe option
   =
   fun x  ->
     fun s  ->
@@ -304,8 +304,7 @@ and subst_flags':
               | f -> f))
 and subst_comp_typ':
   (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list* FStar_Range.range
-    Prims.option) ->
-    FStar_Syntax_Syntax.comp_typ -> FStar_Syntax_Syntax.comp_typ
+    option) -> FStar_Syntax_Syntax.comp_typ -> FStar_Syntax_Syntax.comp_typ
   =
   fun s  ->
     fun t  ->
@@ -336,7 +335,7 @@ and subst_comp_typ':
           }
 and subst_comp':
   (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list* FStar_Range.range
-    Prims.option) ->
+    option) ->
     (FStar_Syntax_Syntax.comp',Prims.unit) FStar_Syntax_Syntax.syntax ->
       (FStar_Syntax_Syntax.comp',Prims.unit) FStar_Syntax_Syntax.syntax
   =
@@ -410,7 +409,7 @@ let subst_arg' s uu____1257 =
   | (t,imp) -> let uu____1268 = subst' s t in (uu____1268, imp)
 let subst_args' s = FStar_List.map (subst_arg' s)
 let subst_pat':
-  (FStar_Syntax_Syntax.subst_t Prims.list* FStar_Range.range Prims.option) ->
+  (FStar_Syntax_Syntax.subst_t Prims.list* FStar_Range.range option) ->
     (FStar_Syntax_Syntax.pat',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.withinfo_t -> (FStar_Syntax_Syntax.pat* Prims.int)
   =

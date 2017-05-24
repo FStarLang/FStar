@@ -1,7 +1,7 @@
 open Prims
 let one_toplevel:
   FStar_Parser_AST.decl Prims.list ->
-    (FStar_Parser_AST.decl* FStar_Parser_AST.decl Prims.list) Prims.option
+    (FStar_Parser_AST.decl* FStar_Parser_AST.decl Prims.list) option
   =
   fun decls  ->
     let uu____10 =
@@ -30,7 +30,7 @@ let htree: mforest FStar_Util.smap =
   FStar_Util.smap_create (Prims.parse_int "50")
 let string_of_optiont f y xo = match xo with | Some x -> f x | None  -> y
 let string_of_fsdoco:
-  (Prims.string* (Prims.string* Prims.string) Prims.list) Prims.option ->
+  (Prims.string* (Prims.string* Prims.string) Prims.list) option ->
     Prims.string
   =
   fun d  ->
@@ -40,7 +40,7 @@ let string_of_fsdoco:
            let uu____142 = FStar_Parser_AST.string_of_fsdoc x in
            Prims.strcat uu____142 "*)" in
          Prims.strcat "(*" uu____141) "" d
-let string_of_termo: FStar_Parser_AST.term Prims.option -> Prims.string =
+let string_of_termo: FStar_Parser_AST.term option -> Prims.string =
   fun t  -> string_of_optiont FStar_Parser_AST.term_to_string "" t
 let code_wrap: Prims.string -> Prims.string =
   fun s  -> Prims.strcat "```fsharp\n" (Prims.strcat s "\n```\n")

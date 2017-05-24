@@ -42,7 +42,7 @@ let uu___is_Implicit: arg_qualifier -> Prims.bool =
 let uu___is_Equality: arg_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Equality  -> true | uu____44 -> false
-type aqual = arg_qualifier Prims.option
+type aqual = arg_qualifier option
 type let_qualifier =
   | NoLetQualifier
   | Rec
@@ -72,10 +72,10 @@ type term' =
   | Seq of (term* term)
   | Bind of (FStar_Ident.ident* term* term)
   | If of (term* term* term)
-  | Match of (term* (pattern* term Prims.option* term) Prims.list)
-  | TryWith of (term* (pattern* term Prims.option* term) Prims.list)
-  | Ascribed of (term* term* term Prims.option)
-  | Record of (term Prims.option* (FStar_Ident.lid* term) Prims.list)
+  | Match of (term* (pattern* term option* term) Prims.list)
+  | TryWith of (term* (pattern* term option* term) Prims.list)
+  | Ascribed of (term* term* term option)
+  | Record of (term option* (FStar_Ident.lid* term) Prims.list)
   | Project of (term* FStar_Ident.lid)
   | Product of (binder Prims.list* term)
   | Sum of (binder Prims.list* term)
@@ -84,8 +84,8 @@ type term' =
   | Refine of (binder* term)
   | NamedTyp of (FStar_Ident.ident* term)
   | Paren of term
-  | Requires of (term* Prims.string Prims.option)
-  | Ensures of (term* Prims.string Prims.option)
+  | Requires of (term* Prims.string option)
+  | Ensures of (term* Prims.string option)
   | Labeled of (term* Prims.string* Prims.bool)
   | Assign of (FStar_Ident.ident* term)
   | Discrim of FStar_Ident.lid
@@ -110,9 +110,9 @@ and pattern' =
   | PatWild
   | PatConst of FStar_Const.sconst
   | PatApp of (pattern* pattern Prims.list)
-  | PatVar of (FStar_Ident.ident* arg_qualifier Prims.option)
+  | PatVar of (FStar_Ident.ident* arg_qualifier option)
   | PatName of FStar_Ident.lid
-  | PatTvar of (FStar_Ident.ident* arg_qualifier Prims.option)
+  | PatTvar of (FStar_Ident.ident* arg_qualifier option)
   | PatList of pattern Prims.list
   | PatTuple of (pattern Prims.list* Prims.bool)
   | PatRecord of (FStar_Ident.lid* pattern) Prims.list
@@ -204,24 +204,24 @@ let uu___is_Match: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Match _0 -> true | uu____670 -> false
 let __proj__Match__item___0:
-  term' -> (term* (pattern* term Prims.option* term) Prims.list) =
+  term' -> (term* (pattern* term option* term) Prims.list) =
   fun projectee  -> match projectee with | Match _0 -> _0
 let uu___is_TryWith: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | TryWith _0 -> true | uu____710 -> false
 let __proj__TryWith__item___0:
-  term' -> (term* (pattern* term Prims.option* term) Prims.list) =
+  term' -> (term* (pattern* term option* term) Prims.list) =
   fun projectee  -> match projectee with | TryWith _0 -> _0
 let uu___is_Ascribed: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Ascribed _0 -> true | uu____747 -> false
-let __proj__Ascribed__item___0: term' -> (term* term* term Prims.option) =
+let __proj__Ascribed__item___0: term' -> (term* term* term option) =
   fun projectee  -> match projectee with | Ascribed _0 -> _0
 let uu___is_Record: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Record _0 -> true | uu____777 -> false
 let __proj__Record__item___0:
-  term' -> (term Prims.option* (FStar_Ident.lid* term) Prims.list) =
+  term' -> (term option* (FStar_Ident.lid* term) Prims.list) =
   fun projectee  -> match projectee with | Record _0 -> _0
 let uu___is_Project: term' -> Prims.bool =
   fun projectee  ->
@@ -268,12 +268,12 @@ let __proj__Paren__item___0: term' -> term =
 let uu___is_Requires: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Requires _0 -> true | uu____1002 -> false
-let __proj__Requires__item___0: term' -> (term* Prims.string Prims.option) =
+let __proj__Requires__item___0: term' -> (term* Prims.string option) =
   fun projectee  -> match projectee with | Requires _0 -> _0
 let uu___is_Ensures: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Ensures _0 -> true | uu____1026 -> false
-let __proj__Ensures__item___0: term' -> (term* Prims.string Prims.option) =
+let __proj__Ensures__item___0: term' -> (term* Prims.string option) =
   fun projectee  -> match projectee with | Ensures _0 -> _0
 let uu___is_Labeled: term' -> Prims.bool =
   fun projectee  ->
@@ -337,7 +337,7 @@ let uu___is_PatVar: pattern' -> Prims.bool =
   fun projectee  ->
     match projectee with | PatVar _0 -> true | uu____1266 -> false
 let __proj__PatVar__item___0:
-  pattern' -> (FStar_Ident.ident* arg_qualifier Prims.option) =
+  pattern' -> (FStar_Ident.ident* arg_qualifier option) =
   fun projectee  -> match projectee with | PatVar _0 -> _0
 let uu___is_PatName: pattern' -> Prims.bool =
   fun projectee  ->
@@ -348,7 +348,7 @@ let uu___is_PatTvar: pattern' -> Prims.bool =
   fun projectee  ->
     match projectee with | PatTvar _0 -> true | uu____1302 -> false
 let __proj__PatTvar__item___0:
-  pattern' -> (FStar_Ident.ident* arg_qualifier Prims.option) =
+  pattern' -> (FStar_Ident.ident* arg_qualifier option) =
   fun projectee  -> match projectee with | PatTvar _0 -> _0
 let uu___is_PatList: pattern' -> Prims.bool =
   fun projectee  ->
@@ -381,49 +381,45 @@ let uu___is_PatOp: pattern' -> Prims.bool =
     match projectee with | PatOp _0 -> true | uu____1423 -> false
 let __proj__PatOp__item___0: pattern' -> FStar_Ident.ident =
   fun projectee  -> match projectee with | PatOp _0 -> _0
-type branch = (pattern* term Prims.option* term)
+type branch = (pattern* term option* term)
 type knd = term
 type typ = term
 type expr = term
 type fsdoc = (Prims.string* (Prims.string* Prims.string) Prims.list)
 type tycon =
-  | TyconAbstract of (FStar_Ident.ident* binder Prims.list* knd
-  Prims.option)
-  | TyconAbbrev of (FStar_Ident.ident* binder Prims.list* knd Prims.option*
-  term)
-  | TyconRecord of (FStar_Ident.ident* binder Prims.list* knd Prims.option*
-  (FStar_Ident.ident* term* fsdoc Prims.option) Prims.list)
-  | TyconVariant of (FStar_Ident.ident* binder Prims.list* knd Prims.option*
-  (FStar_Ident.ident* term Prims.option* fsdoc Prims.option* Prims.bool)
-  Prims.list)
+  | TyconAbstract of (FStar_Ident.ident* binder Prims.list* knd option)
+  | TyconAbbrev of (FStar_Ident.ident* binder Prims.list* knd option* term)
+  | TyconRecord of (FStar_Ident.ident* binder Prims.list* knd option*
+  (FStar_Ident.ident* term* fsdoc option) Prims.list)
+  | TyconVariant of (FStar_Ident.ident* binder Prims.list* knd option*
+  (FStar_Ident.ident* term option* fsdoc option* Prims.bool) Prims.list)
 let uu___is_TyconAbstract: tycon -> Prims.bool =
   fun projectee  ->
     match projectee with | TyconAbstract _0 -> true | uu____1504 -> false
 let __proj__TyconAbstract__item___0:
-  tycon -> (FStar_Ident.ident* binder Prims.list* knd Prims.option) =
+  tycon -> (FStar_Ident.ident* binder Prims.list* knd option) =
   fun projectee  -> match projectee with | TyconAbstract _0 -> _0
 let uu___is_TyconAbbrev: tycon -> Prims.bool =
   fun projectee  ->
     match projectee with | TyconAbbrev _0 -> true | uu____1537 -> false
 let __proj__TyconAbbrev__item___0:
-  tycon -> (FStar_Ident.ident* binder Prims.list* knd Prims.option* term) =
+  tycon -> (FStar_Ident.ident* binder Prims.list* knd option* term) =
   fun projectee  -> match projectee with | TyconAbbrev _0 -> _0
 let uu___is_TyconRecord: tycon -> Prims.bool =
   fun projectee  ->
     match projectee with | TyconRecord _0 -> true | uu____1578 -> false
 let __proj__TyconRecord__item___0:
   tycon ->
-    (FStar_Ident.ident* binder Prims.list* knd Prims.option*
-      (FStar_Ident.ident* term* fsdoc Prims.option) Prims.list)
+    (FStar_Ident.ident* binder Prims.list* knd option* (FStar_Ident.ident*
+      term* fsdoc option) Prims.list)
   = fun projectee  -> match projectee with | TyconRecord _0 -> _0
 let uu___is_TyconVariant: tycon -> Prims.bool =
   fun projectee  ->
     match projectee with | TyconVariant _0 -> true | uu____1636 -> false
 let __proj__TyconVariant__item___0:
   tycon ->
-    (FStar_Ident.ident* binder Prims.list* knd Prims.option*
-      (FStar_Ident.ident* term Prims.option* fsdoc Prims.option* Prims.bool)
-      Prims.list)
+    (FStar_Ident.ident* binder Prims.list* knd option* (FStar_Ident.ident*
+      term option* fsdoc option* Prims.bool) Prims.list)
   = fun projectee  -> match projectee with | TyconVariant _0 -> _0
 type qualifier =
   | Private
@@ -552,7 +548,7 @@ type lift =
   lift_op: lift_op;}
 type pragma =
   | SetOptions of Prims.string
-  | ResetOptions of Prims.string Prims.option
+  | ResetOptions of Prims.string option
   | LightOff
 let uu___is_SetOptions: pragma -> Prims.bool =
   fun projectee  ->
@@ -562,7 +558,7 @@ let __proj__SetOptions__item___0: pragma -> Prims.string =
 let uu___is_ResetOptions: pragma -> Prims.bool =
   fun projectee  ->
     match projectee with | ResetOptions _0 -> true | uu____1911 -> false
-let __proj__ResetOptions__item___0: pragma -> Prims.string Prims.option =
+let __proj__ResetOptions__item___0: pragma -> Prims.string option =
   fun projectee  -> match projectee with | ResetOptions _0 -> _0
 let uu___is_LightOff: pragma -> Prims.bool =
   fun projectee  ->
@@ -574,9 +570,9 @@ type decl' =
   | ModuleAbbrev of (FStar_Ident.ident* FStar_Ident.lid)
   | TopLevelLet of (let_qualifier* (pattern* term) Prims.list)
   | Main of term
-  | Tycon of (Prims.bool* (tycon* fsdoc Prims.option) Prims.list)
+  | Tycon of (Prims.bool* (tycon* fsdoc option) Prims.list)
   | Val of (FStar_Ident.ident* term)
-  | Exception of (FStar_Ident.ident* term Prims.option)
+  | Exception of (FStar_Ident.ident* term option)
   | NewEffect of effect_decl
   | SubEffect of lift
   | Pragma of pragma
@@ -586,7 +582,7 @@ and decl =
   {
   d: decl';
   drange: FStar_Range.range;
-  doc: fsdoc Prims.option;
+  doc: fsdoc option;
   quals: qualifiers;
   attrs: attributes_;}
 and effect_decl =
@@ -629,7 +625,7 @@ let uu___is_Tycon: decl' -> Prims.bool =
   fun projectee  ->
     match projectee with | Tycon _0 -> true | uu____2130 -> false
 let __proj__Tycon__item___0:
-  decl' -> (Prims.bool* (tycon* fsdoc Prims.option) Prims.list) =
+  decl' -> (Prims.bool* (tycon* fsdoc option) Prims.list) =
   fun projectee  -> match projectee with | Tycon _0 -> _0
 let uu___is_Val: decl' -> Prims.bool =
   fun projectee  ->
@@ -639,8 +635,7 @@ let __proj__Val__item___0: decl' -> (FStar_Ident.ident* term) =
 let uu___is_Exception: decl' -> Prims.bool =
   fun projectee  ->
     match projectee with | Exception _0 -> true | uu____2183 -> false
-let __proj__Exception__item___0:
-  decl' -> (FStar_Ident.ident* term Prims.option) =
+let __proj__Exception__item___0: decl' -> (FStar_Ident.ident* term option) =
   fun projectee  -> match projectee with | Exception _0 -> _0
 let uu___is_NewEffect: decl' -> Prims.bool =
   fun projectee  ->
@@ -784,7 +779,7 @@ let un_curry_abs: pattern Prims.list -> term -> term' =
       | Abs (p',body') -> Abs ((FStar_List.append ps p'), body')
       | uu____2573 -> Abs (ps, body)
 let mk_function:
-  (pattern* term Prims.option* term) Prims.list ->
+  (pattern* term option* term) Prims.list ->
     FStar_Range.range -> FStar_Range.range -> term
   =
   fun branches  ->
@@ -807,7 +802,7 @@ let mk_function:
             ([mk_pattern (PatVar (x, None)) r1], uu____2601) in
           Abs uu____2597 in
         mk_term uu____2596 r2 Expr
-let un_function: pattern -> term -> (pattern* term) Prims.option =
+let un_function: pattern -> term -> (pattern* term) option =
   fun p  ->
     fun tm  ->
       match ((p.pat), (tm.tm)) with
@@ -990,8 +985,7 @@ let mkDTuple: term Prims.list -> FStar_Range.range -> term =
       mkApp (mk_term (Name cons1) r Expr) uu____3145 r
 let mkRefinedBinder:
   FStar_Ident.ident ->
-    term ->
-      Prims.bool -> term Prims.option -> FStar_Range.range -> aqual -> binder
+    term -> Prims.bool -> term option -> FStar_Range.range -> aqual -> binder
   =
   fun id  ->
     fun t  ->
@@ -1021,8 +1015,7 @@ let mkRefinedPattern:
   pattern ->
     term ->
       Prims.bool ->
-        term Prims.option ->
-          FStar_Range.range -> FStar_Range.range -> pattern
+        term option -> FStar_Range.range -> FStar_Range.range -> pattern
   =
   fun pat  ->
     fun t  ->
@@ -1076,7 +1069,7 @@ let mkRefinedPattern:
                                 None), phi)) range Type_level) in
               mk_pattern (PatAscribed (pat, t1)) range
 let rec extract_named_refinement:
-  term -> (FStar_Ident.ident* term* term Prims.option) Prims.option =
+  term -> (FStar_Ident.ident* term* term option) option =
   fun t1  ->
     match t1.tm with
     | NamedTyp (x,t) -> Some (x, t, None)

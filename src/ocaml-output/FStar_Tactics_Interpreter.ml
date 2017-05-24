@@ -3,7 +3,7 @@ type name = FStar_Syntax_Syntax.bv
 let remove_unit f x = f x ()
 let quote:
   FStar_Ident.lid ->
-    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option
+    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
   =
   fun nm  ->
     fun args  ->
@@ -15,7 +15,7 @@ let quote:
 let binders_of_env:
   FStar_Tactics_Basic.proofstate ->
     FStar_Ident.lid ->
-      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option
+      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
   =
   fun ps  ->
     fun nm  ->
@@ -32,7 +32,7 @@ let binders_of_env:
         | uu____87 -> None
 let type_of_binder:
   FStar_Ident.lid ->
-    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option
+    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
   =
   fun nm  ->
     fun args  ->
@@ -49,7 +49,7 @@ let type_of_binder:
       | uu____115 -> None
 let term_eq:
   FStar_Ident.lid ->
-    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option
+    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
   =
   fun nm  ->
     fun args  ->
@@ -216,7 +216,7 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
 let grewrite_interpretation:
   FStar_Tactics_Basic.proofstate ->
     FStar_Ident.lid ->
-      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option
+      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
   =
   fun ps  ->
     fun nm  ->

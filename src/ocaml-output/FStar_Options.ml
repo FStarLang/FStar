@@ -237,7 +237,7 @@ let get_admit_smt_queries: Prims.unit -> Prims.bool =
   fun uu____545  -> lookup_opt "admit_smt_queries" as_bool
 let get_check_hints: Prims.unit -> Prims.bool =
   fun uu____548  -> lookup_opt "check_hints" as_bool
-let get_codegen: Prims.unit -> Prims.string Prims.option =
+let get_codegen: Prims.unit -> Prims.string option =
   fun uu____552  -> lookup_opt "codegen" (as_option as_string)
 let get_codegen_lib: Prims.unit -> Prims.string Prims.list =
   fun uu____557  -> lookup_opt "codegen-lib" (as_list as_string)
@@ -245,7 +245,7 @@ let get_debug: Prims.unit -> Prims.string Prims.list =
   fun uu____562  -> lookup_opt "debug" (as_list as_string)
 let get_debug_level: Prims.unit -> Prims.string Prims.list =
   fun uu____567  -> lookup_opt "debug_level" (as_list as_string)
-let get_dep: Prims.unit -> Prims.string Prims.option =
+let get_dep: Prims.unit -> Prims.string option =
   fun uu____572  -> lookup_opt "dep" (as_option as_string)
 let get_detail_errors: Prims.unit -> Prims.bool =
   fun uu____576  -> lookup_opt "detail_errors" as_bool
@@ -265,7 +265,7 @@ let get_extract_namespace: Prims.unit -> Prims.string Prims.list =
   fun uu____602  -> lookup_opt "extract_namespace" (as_list as_string)
 let get_fs_typ_app: Prims.unit -> Prims.bool =
   fun uu____606  -> lookup_opt "fs_typ_app" as_bool
-let get_fstar_home: Prims.unit -> Prims.string Prims.option =
+let get_fstar_home: Prims.unit -> Prims.string option =
   fun uu____610  -> lookup_opt "fstar_home" (as_option as_string)
 let get_hide_genident_nums: Prims.unit -> Prims.bool =
   fun uu____614  -> lookup_opt "hide_genident_nums" as_bool
@@ -307,11 +307,11 @@ let get_no_extract: Prims.unit -> Prims.string Prims.list =
   fun uu____671  -> lookup_opt "no_extract" (as_list as_string)
 let get_no_location_info: Prims.unit -> Prims.bool =
   fun uu____675  -> lookup_opt "no_location_info" as_bool
-let get_odir: Prims.unit -> Prims.string Prims.option =
+let get_odir: Prims.unit -> Prims.string option =
   fun uu____679  -> lookup_opt "odir" (as_option as_string)
 let get_ugly: Prims.unit -> Prims.bool =
   fun uu____683  -> lookup_opt "ugly" as_bool
-let get_prims: Prims.unit -> Prims.string Prims.option =
+let get_prims: Prims.unit -> Prims.string option =
   fun uu____687  -> lookup_opt "prims" (as_option as_string)
 let get_print_before_norm: Prims.unit -> Prims.bool =
   fun uu____691  -> lookup_opt "print_before_norm" as_bool
@@ -333,13 +333,13 @@ let get_prn: Prims.unit -> Prims.bool =
   fun uu____715  -> lookup_opt "prn" as_bool
 let get_record_hints: Prims.unit -> Prims.bool =
   fun uu____718  -> lookup_opt "record_hints" as_bool
-let get_reuse_hint_for: Prims.unit -> Prims.string Prims.option =
+let get_reuse_hint_for: Prims.unit -> Prims.string option =
   fun uu____722  -> lookup_opt "reuse_hint_for" (as_option as_string)
 let get_show_signatures: Prims.unit -> Prims.string Prims.list =
   fun uu____727  -> lookup_opt "show_signatures" (as_list as_string)
 let get_silent: Prims.unit -> Prims.bool =
   fun uu____731  -> lookup_opt "silent" as_bool
-let get_smt: Prims.unit -> Prims.string Prims.option =
+let get_smt: Prims.unit -> Prims.string option =
   fun uu____735  -> lookup_opt "smt" (as_option as_string)
 let get_smtencoding_elim_box: Prims.unit -> Prims.bool =
   fun uu____739  -> lookup_opt "smtencoding.elim_box" as_bool
@@ -363,8 +363,7 @@ let get_use_tactics: Prims.unit -> Prims.bool =
   fun uu____766  ->
     let uu____767 = lookup_opt "no_tactics" as_bool in
     Prims.op_Negation uu____767
-let get_using_facts_from: Prims.unit -> Prims.string Prims.list Prims.option
-  =
+let get_using_facts_from: Prims.unit -> Prims.string Prims.list option =
   fun uu____772  ->
     lookup_opt "using_facts_from" (as_option (as_list as_string))
 let get_verify_all: Prims.unit -> Prims.bool =
@@ -1123,7 +1122,7 @@ let include_path: Prims.unit -> Prims.string Prims.list =
          let uu____2081 = get_include () in
          FStar_List.append uu____2081 ["."] in
        FStar_List.append uu____2070 uu____2079)
-let find_file: Prims.string -> Prims.string Prims.option =
+let find_file: Prims.string -> Prims.string option =
   fun filename  ->
     let uu____2087 = FStar_Util.is_path_absolute filename in
     if uu____2087
@@ -1187,7 +1186,7 @@ let admit_smt_queries: Prims.unit -> Prims.bool =
   fun uu____2143  -> get_admit_smt_queries ()
 let check_hints: Prims.unit -> Prims.bool =
   fun uu____2146  -> get_check_hints ()
-let codegen: Prims.unit -> Prims.string Prims.option =
+let codegen: Prims.unit -> Prims.string option =
   fun uu____2150  -> get_codegen ()
 let codegen_libs: Prims.unit -> Prims.string Prims.list Prims.list =
   fun uu____2155  ->
@@ -1203,8 +1202,7 @@ let debug_at_level: Prims.string -> debug_level_t -> Prims.bool =
          (let uu____2175 = get_debug () in
           FStar_All.pipe_right uu____2175 (FStar_List.contains modul)))
         && (debug_level_geq level)
-let dep: Prims.unit -> Prims.string Prims.option =
-  fun uu____2181  -> get_dep ()
+let dep: Prims.unit -> Prims.string option = fun uu____2181  -> get_dep ()
 let detail_errors: Prims.unit -> Prims.bool =
   fun uu____2184  -> get_detail_errors ()
 let doc: Prims.unit -> Prims.bool = fun uu____2187  -> get_doc ()
@@ -1265,7 +1263,7 @@ let no_location_info: Prims.unit -> Prims.bool =
 let norm_then_print: Prims.unit -> Prims.bool =
   fun uu____2286  ->
     let uu____2287 = get_print_before_norm () in uu____2287 = false
-let output_dir: Prims.unit -> Prims.string Prims.option =
+let output_dir: Prims.unit -> Prims.string option =
   fun uu____2291  -> get_odir ()
 let ugly: Prims.unit -> Prims.bool = fun uu____2294  -> get_ugly ()
 let print_bound_var_types: Prims.unit -> Prims.bool =
@@ -1284,7 +1282,7 @@ let print_z3_statistics: Prims.unit -> Prims.bool =
   fun uu____2315  -> get_print_z3_statistics ()
 let record_hints: Prims.unit -> Prims.bool =
   fun uu____2318  -> get_record_hints ()
-let reuse_hint_for: Prims.unit -> Prims.string Prims.option =
+let reuse_hint_for: Prims.unit -> Prims.string option =
   fun uu____2322  -> get_reuse_hint_for ()
 let silent: Prims.unit -> Prims.bool = fun uu____2325  -> get_silent ()
 let smtencoding_elim_box: Prims.unit -> Prims.bool =
@@ -1320,7 +1318,7 @@ let use_eq_at_higher_order: Prims.unit -> Prims.bool =
 let use_hints: Prims.unit -> Prims.bool = fun uu____2366  -> get_use_hints ()
 let use_tactics: Prims.unit -> Prims.bool =
   fun uu____2369  -> get_use_tactics ()
-let using_facts_from: Prims.unit -> Prims.string Prims.list Prims.option =
+let using_facts_from: Prims.unit -> Prims.string Prims.list option =
   fun uu____2374  -> get_using_facts_from ()
 let verify_all: Prims.unit -> Prims.bool =
   fun uu____2377  -> get_verify_all ()

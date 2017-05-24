@@ -34,7 +34,7 @@ let remove_dups:
            | ((uu____105,m1,r1),(uu____108,m2,r2)) -> (r1 = r2) && (m1 = m2))
       l
 type msg = (Prims.string* FStar_Range.range)
-type ranges = (Prims.string Prims.option* FStar_Range.range) Prims.list
+type ranges = (Prims.string option* FStar_Range.range) Prims.list
 let fresh_label:
   Prims.string ->
     FStar_Range.range ->
@@ -58,7 +58,7 @@ let fresh_label:
         let lt1 = FStar_SMTEncoding_Term.mkOr (lterm, t) range in
         (label, lt1)
 let label_goals:
-  (Prims.unit -> Prims.string) Prims.option ->
+  (Prims.unit -> Prims.string) option ->
     FStar_Range.range ->
       FStar_SMTEncoding_Term.term -> (labels* FStar_SMTEncoding_Term.term)
   =

@@ -65,7 +65,7 @@ type mlift =
     (FStar_Syntax_Syntax.typ ->
        FStar_Syntax_Syntax.typ ->
          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-      Prims.option;}
+      option;}
 type edge =
   {
   msource: FStar_Ident.lident;
@@ -83,7 +83,7 @@ type effects =
 type cached_elt =
   (((FStar_Syntax_Syntax.universes* FStar_Syntax_Syntax.typ),(FStar_Syntax_Syntax.sigelt*
                                                                FStar_Syntax_Syntax.universes
-                                                               Prims.option))
+                                                               option))
     FStar_Util.either* FStar_Range.range)
 type goal = FStar_Syntax_Syntax.term
 type env =
@@ -94,7 +94,7 @@ type env =
   gamma: binding Prims.list;
   gamma_cache: cached_elt FStar_Util.smap;
   modules: FStar_Syntax_Syntax.modul Prims.list;
-  expected_typ: FStar_Syntax_Syntax.typ Prims.option;
+  expected_typ: FStar_Syntax_Syntax.typ option;
   sigtab: FStar_Syntax_Syntax.sigelt FStar_Util.smap;
   is_pattern: Prims.bool;
   instantiate_imp: Prims.bool;
@@ -115,7 +115,7 @@ type env =
   universe_of:
     env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe;
   use_bv_sorts: Prims.bool;
-  qname_and_index: (FStar_Ident.lident* Prims.int) Prims.option;}
+  qname_and_index: (FStar_Ident.lident* Prims.int) option;}
 and solver_t =
   {
   init: env -> Prims.unit;
@@ -128,7 +128,7 @@ and solver_t =
   encode_sig: env -> FStar_Syntax_Syntax.sigelt -> Prims.unit;
   preprocess: env -> goal -> (env* goal) Prims.list;
   solve:
-    (Prims.unit -> Prims.string) Prims.option ->
+    (Prims.unit -> Prims.string) option ->
       env -> FStar_Syntax_Syntax.typ -> Prims.unit;
   is_trivial: env -> FStar_Syntax_Syntax.typ -> Prims.bool;
   finish: Prims.unit -> Prims.unit;
@@ -463,7 +463,7 @@ let has_interface: env -> FStar_Ident.lident -> Prims.bool =
               m.FStar_Syntax_Syntax.is_interface &&
                 (FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name l)))
 let find_in_sigtab:
-  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.sigelt Prims.option =
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.sigelt option =
   fun env  ->
     fun lid  ->
       FStar_Util.smap_try_find (sigtab env) (FStar_Ident.text_of_lid lid)
@@ -604,8 +604,8 @@ let lookup_qname:
     FStar_Ident.lident ->
       (((FStar_Syntax_Syntax.universes* FStar_Syntax_Syntax.typ),(FStar_Syntax_Syntax.sigelt*
                                                                    FStar_Syntax_Syntax.universes
-                                                                   Prims.option))
-        FStar_Util.either* FStar_Range.range) Prims.option
+                                                                   option))
+        FStar_Util.either* FStar_Range.range) option
   =
   fun env  ->
     fun lid  ->
@@ -726,7 +726,7 @@ let try_lookup_bv:
   env ->
     FStar_Syntax_Syntax.bv ->
       ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax* FStar_Range.range) Prims.option
+        FStar_Syntax_Syntax.syntax* FStar_Range.range) option
   =
   fun env  ->
     fun bv  ->
@@ -742,7 +742,7 @@ let lookup_type_of_let:
   FStar_Syntax_Syntax.sigelt ->
     FStar_Ident.lident ->
       ((FStar_Syntax_Syntax.universes* FStar_Syntax_Syntax.term)*
-        FStar_Range.range) Prims.option
+        FStar_Range.range) option
   =
   fun se  ->
     fun lid  ->
@@ -782,7 +782,7 @@ let lookup_type_of_let:
 let effect_signature:
   FStar_Syntax_Syntax.sigelt ->
     ((FStar_Syntax_Syntax.universes* FStar_Syntax_Syntax.term)*
-      FStar_Range.range) Prims.option
+      FStar_Range.range) option
   =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
@@ -819,7 +819,7 @@ let try_lookup_lid_aux:
     FStar_Ident.lident ->
       ((FStar_Syntax_Syntax.universes*
         (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax)* FStar_Range.range) Prims.option
+        FStar_Syntax_Syntax.syntax)* FStar_Range.range) option
   =
   fun env  ->
     fun lid  ->
@@ -986,7 +986,7 @@ let try_lookup_lid:
   env ->
     FStar_Ident.lident ->
       ((FStar_Syntax_Syntax.universes* FStar_Syntax_Syntax.typ)*
-        FStar_Range.range) Prims.option
+        FStar_Range.range) option
   =
   fun env  ->
     fun l  ->
@@ -1033,7 +1033,7 @@ let try_lookup_val_decl:
   env ->
     FStar_Ident.lident ->
       (FStar_Syntax_Syntax.tscheme* FStar_Syntax_Syntax.qualifier Prims.list)
-        Prims.option
+        option
   =
   fun env  ->
     fun lid  ->
@@ -1150,8 +1150,7 @@ let lookup_definition:
   delta_level Prims.list ->
     env ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.univ_names* FStar_Syntax_Syntax.term)
-          Prims.option
+        (FStar_Syntax_Syntax.univ_names* FStar_Syntax_Syntax.term) option
   =
   fun delta_levels  ->
     fun env  ->
@@ -1188,7 +1187,7 @@ let lookup_definition:
              | uu____3267 -> None)
         | uu____3270 -> None
 let try_lookup_effect_lid:
-  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ Prims.option =
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ option =
   fun env  ->
     fun ftv  ->
       let uu____3291 = lookup_qname env ftv in
@@ -1220,7 +1219,7 @@ let lookup_effect_abbrev:
   env ->
     FStar_Syntax_Syntax.universes ->
       FStar_Ident.lident ->
-        (FStar_Syntax_Syntax.binders* FStar_Syntax_Syntax.comp) Prims.option
+        (FStar_Syntax_Syntax.binders* FStar_Syntax_Syntax.comp) option
   =
   fun env  ->
     fun univ_insts  ->
@@ -1535,7 +1534,7 @@ let effect_decl_opt:
   env ->
     FStar_Ident.lident ->
       (FStar_Syntax_Syntax.eff_decl* FStar_Syntax_Syntax.qualifier
-        Prims.list) Prims.option
+        Prims.list) option
   =
   fun env  ->
     fun l  ->
@@ -1609,8 +1608,8 @@ let join:
                    FStar_Errors.Error uu____4285 in
                  raise uu____4284
              | Some (uu____4294,uu____4295,m3,j1,j2) -> (m3, j1, j2))
-let monad_leq:
-  env -> FStar_Ident.lident -> FStar_Ident.lident -> edge Prims.option =
+let monad_leq: env -> FStar_Ident.lident -> FStar_Ident.lident -> edge option
+  =
   fun env  ->
     fun l1  ->
       fun l2  ->
@@ -2162,7 +2161,7 @@ let effect_repr:
     FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.universe ->
         (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-          FStar_Syntax_Syntax.syntax Prims.option
+          FStar_Syntax_Syntax.syntax option
   = fun env  -> fun c  -> fun u_c  -> effect_repr_aux false env c u_c
 let reify_comp:
   env ->
@@ -2304,7 +2303,7 @@ let push_local_binding: env -> binding -> env =
       }
 let push_bv: env -> FStar_Syntax_Syntax.bv -> env =
   fun env  -> fun x  -> push_local_binding env (Binding_var x)
-let pop_bv: env -> (FStar_Syntax_Syntax.bv* env) Prims.option =
+let pop_bv: env -> (FStar_Syntax_Syntax.bv* env) option =
   fun env  ->
     match env.gamma with
     | (Binding_var x)::rest ->
@@ -2456,9 +2455,9 @@ let set_expected_typ: env -> FStar_Syntax_Syntax.typ -> env =
         use_bv_sorts = (uu___127_5638.use_bv_sorts);
         qname_and_index = (uu___127_5638.qname_and_index)
       }
-let expected_typ: env -> FStar_Syntax_Syntax.typ Prims.option =
+let expected_typ: env -> FStar_Syntax_Syntax.typ option =
   fun env  -> match env.expected_typ with | None  -> None | Some t -> Some t
-let clear_expected_typ: env -> (env* FStar_Syntax_Syntax.typ Prims.option) =
+let clear_expected_typ: env -> (env* FStar_Syntax_Syntax.typ option) =
   fun env_  ->
     let uu____5654 = expected_typ env_ in
     ((let uu___128_5657 = env_ in

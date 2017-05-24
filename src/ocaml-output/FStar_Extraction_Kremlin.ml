@@ -2,13 +2,12 @@ open Prims
 type decl =
   | DGlobal of (flag Prims.list* (Prims.string Prims.list* Prims.string)*
   typ* expr)
-  | DFunction of (cc Prims.option* flag Prims.list* Prims.int* typ*
-  (Prims.string Prims.list* Prims.string)* binder Prims.list* expr)
+  | DFunction of (cc option* flag Prims.list* Prims.int* typ* (Prims.string
+  Prims.list* Prims.string)* binder Prims.list* expr)
   | DTypeAlias of ((Prims.string Prims.list* Prims.string)* Prims.int* typ)
   | DTypeFlat of ((Prims.string Prims.list* Prims.string)* Prims.int*
   (Prims.string* (typ* Prims.bool)) Prims.list)
-  | DExternal of (cc Prims.option* (Prims.string Prims.list* Prims.string)*
-  typ)
+  | DExternal of (cc option* (Prims.string Prims.list* Prims.string)* typ)
   | DTypeVariant of ((Prims.string Prims.list* Prims.string)* Prims.int*
   (Prims.string* (Prims.string* (typ* Prims.bool)) Prims.list) Prims.list)
 and cc =
@@ -129,8 +128,8 @@ let uu___is_DFunction: decl -> Prims.bool =
     match projectee with | DFunction _0 -> true | uu____349 -> false
 let __proj__DFunction__item___0:
   decl ->
-    (cc Prims.option* flag Prims.list* Prims.int* typ* (Prims.string
-      Prims.list* Prims.string)* binder Prims.list* expr)
+    (cc option* flag Prims.list* Prims.int* typ* (Prims.string Prims.list*
+      Prims.string)* binder Prims.list* expr)
   = fun projectee  -> match projectee with | DFunction _0 -> _0
 let uu___is_DTypeAlias: decl -> Prims.bool =
   fun projectee  ->
@@ -150,7 +149,7 @@ let uu___is_DExternal: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DExternal _0 -> true | uu____499 -> false
 let __proj__DExternal__item___0:
-  decl -> (cc Prims.option* (Prims.string Prims.list* Prims.string)* typ) =
+  decl -> (cc option* (Prims.string Prims.list* Prims.string)* typ) =
   fun projectee  -> match projectee with | DExternal _0 -> _0
 let uu___is_DTypeVariant: decl -> Prims.bool =
   fun projectee  ->
@@ -523,7 +522,7 @@ type binary_format = (version* file Prims.list)
 let fst3 uu____1674 = match uu____1674 with | (x,uu____1679,uu____1680) -> x
 let snd3 uu____1694 = match uu____1694 with | (uu____1698,x,uu____1700) -> x
 let thd3 uu____1714 = match uu____1714 with | (uu____1718,uu____1719,x) -> x
-let mk_width: Prims.string -> width Prims.option =
+let mk_width: Prims.string -> width option =
   fun uu___119_1724  ->
     match uu___119_1724 with
     | "UInt8" -> Some UInt8
@@ -535,7 +534,7 @@ let mk_width: Prims.string -> width Prims.option =
     | "Int32" -> Some Int32
     | "Int64" -> Some Int64
     | uu____1726 -> None
-let mk_bool_op: Prims.string -> op Prims.option =
+let mk_bool_op: Prims.string -> op option =
   fun uu___120_1730  ->
     match uu___120_1730 with
     | "op_Negation" -> Some Not
@@ -546,7 +545,7 @@ let mk_bool_op: Prims.string -> op Prims.option =
     | uu____1732 -> None
 let is_bool_op: Prims.string -> Prims.bool =
   fun op  -> (mk_bool_op op) <> None
-let mk_op: Prims.string -> op Prims.option =
+let mk_op: Prims.string -> op option =
   fun uu___121_1740  ->
     match uu___121_1740 with
     | "add"|"op_Plus_Hat" -> Some Add
@@ -662,7 +661,7 @@ let rec translate: FStar_Extraction_ML_Syntax.mllib -> file Prims.list =
 and translate_module:
   ((Prims.string Prims.list* Prims.string)*
     (FStar_Extraction_ML_Syntax.mlsig* FStar_Extraction_ML_Syntax.mlmodule)
-    Prims.option* FStar_Extraction_ML_Syntax.mllib) -> file
+    option* FStar_Extraction_ML_Syntax.mllib) -> file
   =
   fun uu____2049  ->
     match uu____2049 with
@@ -694,7 +693,7 @@ and translate_flags:
               None)
          | uu____2097 -> None) flags
 and translate_decl:
-  env -> FStar_Extraction_ML_Syntax.mlmodule1 -> decl Prims.option =
+  env -> FStar_Extraction_ML_Syntax.mlmodule1 -> decl option =
   fun env  ->
     fun d  ->
       match d with
@@ -1586,14 +1585,14 @@ and assert_lid: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
 and translate_branches:
   env ->
     (FStar_Extraction_ML_Syntax.mlpattern* FStar_Extraction_ML_Syntax.mlexpr
-      Prims.option* FStar_Extraction_ML_Syntax.mlexpr) Prims.list ->
+      option* FStar_Extraction_ML_Syntax.mlexpr) Prims.list ->
       (pattern* expr) Prims.list
   =
   fun env  -> fun branches  -> FStar_List.map (translate_branch env) branches
 and translate_branch:
   env ->
     (FStar_Extraction_ML_Syntax.mlpattern* FStar_Extraction_ML_Syntax.mlexpr
-      Prims.option* FStar_Extraction_ML_Syntax.mlexpr) -> (pattern* expr)
+      option* FStar_Extraction_ML_Syntax.mlexpr) -> (pattern* expr)
   =
   fun env  ->
     fun uu____3335  ->

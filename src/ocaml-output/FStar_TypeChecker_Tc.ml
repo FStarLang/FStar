@@ -1521,7 +1521,7 @@ and cps_and_elaborate:
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.eff_decl ->
       (FStar_Syntax_Syntax.sigelt Prims.list* FStar_Syntax_Syntax.eff_decl*
-        FStar_Syntax_Syntax.sigelt Prims.option)
+        FStar_Syntax_Syntax.sigelt option)
   =
   fun env  ->
     fun ed  ->

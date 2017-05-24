@@ -4,7 +4,7 @@ let tacdbg: Prims.bool FStar_ST.ref = FStar_Util.mk_ref false
 type goal =
   {
   context: FStar_TypeChecker_Env.env;
-  witness: FStar_Syntax_Syntax.term Prims.option;
+  witness: FStar_Syntax_Syntax.term option;
   goal_ty: FStar_Syntax_Syntax.term;}
 type proofstate =
   {
@@ -499,7 +499,7 @@ let mk_squash p =
 let un_squash:
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax Prims.option
+      FStar_Syntax_Syntax.syntax option
   =
   fun t  ->
     let uu____965 = FStar_Syntax_Util.head_and_args t in
@@ -927,7 +927,7 @@ let destruct_equality_imp:
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax*
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax) Prims.option
+      FStar_Syntax_Syntax.syntax) option
   =
   fun t  ->
     let uu____1764 = FStar_Syntax_Util.destruct_typ_as_formula t in

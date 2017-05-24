@@ -28,7 +28,7 @@ let tc_prims:
     let uu____166 = FStar_Universal.tc_prims () in
     match uu____166 with | (uu____174,dsenv,env) -> (dsenv, env)
 type env_t = (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
-type modul_t = FStar_Syntax_Syntax.modul Prims.option
+type modul_t = FStar_Syntax_Syntax.modul option
 type stack_t = (env_t* modul_t) Prims.list
 let pop uu____199 msg =
   match uu____199 with
@@ -136,10 +136,10 @@ let commit_mark:
         let env1 = FStar_TypeChecker_Env.commit_mark env in (dsenv1, env1)
 let check_frag:
   (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
-    FStar_Syntax_Syntax.modul Prims.option ->
+    FStar_Syntax_Syntax.modul option ->
       (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-        (FStar_Syntax_Syntax.modul Prims.option* (FStar_ToSyntax_Env.env*
-          FStar_TypeChecker_Env.env)* Prims.int) Prims.option
+        (FStar_Syntax_Syntax.modul option* (FStar_ToSyntax_Env.env*
+          FStar_TypeChecker_Env.env)* Prims.int) option
   =
   fun uu____317  ->
     fun curmod  ->
@@ -181,7 +181,7 @@ type input_chunks =
   | Pop of Prims.string
   | Code of (Prims.string* (Prims.string* Prims.string))
   | Info of (Prims.string* Prims.bool* (Prims.string* Prims.int* Prims.int)
-  Prims.option)
+  option)
   | Completions of Prims.string
 let uu___is_Push: input_chunks -> Prims.bool =
   fun projectee  ->
@@ -205,8 +205,7 @@ let uu___is_Info: input_chunks -> Prims.bool =
     match projectee with | Info _0 -> true | uu____555 -> false
 let __proj__Info__item___0:
   input_chunks ->
-    (Prims.string* Prims.bool* (Prims.string* Prims.int* Prims.int)
-      Prims.option)
+    (Prims.string* Prims.bool* (Prims.string* Prims.int* Prims.int) option)
   = fun projectee  -> match projectee with | Info _0 -> _0
 let uu___is_Completions: input_chunks -> Prims.bool =
   fun projectee  ->
@@ -216,9 +215,9 @@ let __proj__Completions__item___0: input_chunks -> Prims.string =
 type interactive_state =
   {
   chunk: FStar_Util.string_builder;
-  stdin: FStar_Util.stream_reader Prims.option FStar_ST.ref;
+  stdin: FStar_Util.stream_reader option FStar_ST.ref;
   buffer: input_chunks Prims.list FStar_ST.ref;
-  log: FStar_Util.file_handle Prims.option FStar_ST.ref;}
+  log: FStar_Util.file_handle option FStar_ST.ref;}
 let the_interactive_state: interactive_state =
   let uu____651 = FStar_Util.new_string_builder () in
   let uu____652 = FStar_Util.mk_ref None in
@@ -351,7 +350,7 @@ let fill_buffer: Prims.unit -> Prims.unit =
       FStar_List.append uu____836 uu____841 in
     FStar_ST.write s.buffer uu____834
 let deps_of_our_file:
-  Prims.string -> (Prims.string Prims.list* Prims.string Prims.option) =
+  Prims.string -> (Prims.string Prims.list* Prims.string option) =
   fun filename  ->
     let deps =
       FStar_Dependencies.find_deps_if_needed
@@ -390,7 +389,7 @@ let deps_of_our_file:
                None) in
         (deps1, maybe_intf)
 type m_timestamps =
-  (Prims.string Prims.option* Prims.string* FStar_Util.time Prims.option*
+  (Prims.string option* Prims.string* FStar_Util.time option*
     FStar_Util.time) Prims.list
 let rec tc_deps:
   modul_t ->
@@ -517,7 +516,7 @@ let format_info:
   FStar_TypeChecker_Env.env ->
     Prims.string ->
       FStar_Syntax_Syntax.term ->
-        FStar_Range.range -> Prims.string Prims.option -> Prims.string
+        FStar_Range.range -> Prims.string option -> Prims.string
   =
   fun env  ->
     fun name  ->

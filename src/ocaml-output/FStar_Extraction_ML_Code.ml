@@ -192,7 +192,7 @@ let is_prims_ns: FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.bool
 let as_bin_op:
   FStar_Extraction_ML_Syntax.mlpath ->
     (FStar_Extraction_ML_Syntax.mlsymbol* (Prims.int* fixity)* Prims.string)
-      Prims.option
+      option
   =
   fun uu____400  ->
     match uu____400 with
@@ -208,7 +208,7 @@ let is_bin_op: FStar_Extraction_ML_Syntax.mlpath -> Prims.bool =
   fun p  -> let uu____444 = as_bin_op p in uu____444 <> None
 let as_uni_op:
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) Prims.option
+    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) option
   =
   fun uu____467  ->
     match uu____467 with
@@ -225,7 +225,7 @@ let is_standard_type: FStar_Extraction_ML_Syntax.mlpath -> Prims.bool =
   fun p  -> false
 let as_standard_constructor:
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) Prims.option
+    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) option
   =
   fun uu____508  ->
     match uu____508 with

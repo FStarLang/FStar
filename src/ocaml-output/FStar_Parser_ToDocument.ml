@@ -853,7 +853,7 @@ and p_pragma: FStar_Parser_AST.pragma -> FStar_Pprint.document =
 and p_typars: FStar_Parser_AST.binder Prims.list -> FStar_Pprint.document =
   fun bs  -> p_binders true bs
 and p_fsdocTypeDeclPairs:
-  (FStar_Parser_AST.tycon* FStar_Parser_AST.fsdoc Prims.option) ->
+  (FStar_Parser_AST.tycon* FStar_Parser_AST.fsdoc option) ->
     FStar_Pprint.document
   =
   fun uu____2067  ->
@@ -923,7 +923,7 @@ and p_typeDecl: FStar_Parser_AST.tycon -> FStar_Pprint.document =
 and p_typeDeclPrefix:
   FStar_Ident.ident ->
     FStar_Parser_AST.binder Prims.list ->
-      FStar_Parser_AST.knd Prims.option ->
+      FStar_Parser_AST.knd option ->
         (Prims.unit -> FStar_Pprint.document) -> FStar_Pprint.document
   =
   fun lid  ->
@@ -956,8 +956,8 @@ and p_typeDeclPrefix:
              FStar_Pprint.surround (Prims.parse_int "2")
                (Prims.parse_int "1") uu____2267 binders_doc uu____2268)
 and p_recordFieldDecl:
-  (FStar_Ident.ident* FStar_Parser_AST.term* FStar_Parser_AST.fsdoc
-    Prims.option) -> FStar_Pprint.document
+  (FStar_Ident.ident* FStar_Parser_AST.term* FStar_Parser_AST.fsdoc option)
+    -> FStar_Pprint.document
   =
   fun uu____2269  ->
     match uu____2269 with
@@ -973,8 +973,8 @@ and p_recordFieldDecl:
           FStar_Pprint.op_Hat_Hat uu____2280 uu____2281 in
         FStar_Pprint.group uu____2279
 and p_constructorDecl:
-  (FStar_Ident.ident* FStar_Parser_AST.term Prims.option*
-    FStar_Parser_AST.fsdoc Prims.option* Prims.bool) -> FStar_Pprint.document
+  (FStar_Ident.ident* FStar_Parser_AST.term option* FStar_Parser_AST.fsdoc
+    option* Prims.bool) -> FStar_Pprint.document
   =
   fun uu____2285  ->
     match uu____2285 with
@@ -1394,7 +1394,7 @@ and p_binder: Prims.bool -> FStar_Parser_AST.binder -> FStar_Pprint.document
                   FStar_Pprint.group uu____2635)
            | uu____2636 -> if is_atomic then p_atomicTerm t else p_appTerm t)
 and p_refinement:
-  FStar_Parser_AST.arg_qualifier Prims.option ->
+  FStar_Parser_AST.arg_qualifier option ->
     FStar_Pprint.document ->
       FStar_Parser_AST.term -> FStar_Parser_AST.term -> FStar_Pprint.document
   =
@@ -1767,7 +1767,7 @@ and p_simpleTerm: FStar_Parser_AST.term -> FStar_Pprint.document =
 and p_maybeFocusArrow: Prims.bool -> FStar_Pprint.document =
   fun b  -> if b then str "~>" else FStar_Pprint.rarrow
 and p_patternBranch:
-  (FStar_Parser_AST.pattern* FStar_Parser_AST.term Prims.option*
+  (FStar_Parser_AST.pattern* FStar_Parser_AST.term option*
     FStar_Parser_AST.term) -> FStar_Pprint.document
   =
   fun uu____2981  ->
@@ -1811,8 +1811,7 @@ and p_patternBranch:
             let uu____3031 = p_term e in maybe_paren uu____3031 in
           op_Hat_Slash_Plus_Hat uu____3023 uu____3030 in
         FStar_Pprint.group uu____3022
-and p_maybeWhen: FStar_Parser_AST.term Prims.option -> FStar_Pprint.document
-  =
+and p_maybeWhen: FStar_Parser_AST.term option -> FStar_Pprint.document =
   fun uu___105_3032  ->
     match uu___105_3032 with
     | None  -> FStar_Pprint.empty

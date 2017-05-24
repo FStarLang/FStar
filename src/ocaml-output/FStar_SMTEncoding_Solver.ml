@@ -11,14 +11,14 @@ let z3_result_as_replay_result uu___83_23 =
   | FStar_Util.Inr (r,uu____32) -> FStar_Util.Inr r
 type hint_stat =
   {
-  hint: FStar_Util.hint Prims.option;
+  hint: FStar_Util.hint option;
   replay_result: z3_replay_result;
   elapsed_time: Prims.int;
   source_location: FStar_Range.range;}
 type hint_stats_t = hint_stat Prims.list
-let recorded_hints: FStar_Util.hints Prims.option FStar_ST.ref =
+let recorded_hints: FStar_Util.hints option FStar_ST.ref =
   FStar_Util.mk_ref None
-let replaying_hints: FStar_Util.hints Prims.option FStar_ST.ref =
+let replaying_hints: FStar_Util.hints option FStar_ST.ref =
   FStar_Util.mk_ref None
 let hint_stats: hint_stat Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let format_hints_file_name: Prims.string -> Prims.string =
@@ -102,7 +102,7 @@ let finalize_hints_db: Prims.string -> Prims.unit =
 let with_hints_db fname f =
   initialize_hints_db fname false;
   (let result = f () in finalize_hints_db fname; result)
-let next_hint: Prims.string -> Prims.int -> FStar_Util.hint Prims.option =
+let next_hint: Prims.string -> Prims.int -> FStar_Util.hint option =
   fun qname  ->
     fun qindex  ->
       let uu____200 = FStar_ST.read replaying_hints in
@@ -117,7 +117,7 @@ let next_hint: Prims.string -> Prims.int -> FStar_Util.hint Prims.option =
                    -> Some hint
                | uu____212 -> None)
       | uu____214 -> None
-let record_hint: FStar_Util.hint Prims.option -> Prims.unit =
+let record_hint: FStar_Util.hint option -> Prims.unit =
   fun hint  ->
     let hint1 =
       match hint with
@@ -139,7 +139,7 @@ let record_hint: FStar_Util.hint Prims.option -> Prims.unit =
         FStar_ST.write recorded_hints (Some (FStar_List.append l [hint1]))
     | uu____240 -> ()
 let record_hint_stat:
-  FStar_Util.hint Prims.option ->
+  FStar_Util.hint option ->
     z3_result -> Prims.int -> FStar_Range.range -> Prims.unit
   =
   fun h  ->
@@ -1015,7 +1015,7 @@ let ask_and_report_errors:
                  let uu____1738 = FStar_Options.admit_smt_queries () in
                  if uu____1738 then () else process_query query)
 let solve:
-  (Prims.unit -> Prims.string) Prims.option ->
+  (Prims.unit -> Prims.string) option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.unit
   =
   fun use_env_msg  ->

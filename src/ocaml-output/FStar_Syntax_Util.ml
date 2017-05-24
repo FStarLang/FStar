@@ -727,7 +727,7 @@ let destruct:
     FStar_Ident.lident ->
       ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
         FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.aqual) Prims.list
-        Prims.option
+        option
   =
   fun typ  ->
     fun lid  ->
@@ -761,8 +761,7 @@ let lids_of_sigelt:
         [n1.FStar_Syntax_Syntax.mname]
     | FStar_Syntax_Syntax.Sig_sub_effect _
       |FStar_Syntax_Syntax.Sig_pragma _|FStar_Syntax_Syntax.Sig_main _ -> []
-let lid_of_sigelt:
-  FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident Prims.option =
+let lid_of_sigelt: FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident option =
   fun se  ->
     match lids_of_sigelt se with | l::[] -> Some l | uu____1778 -> None
 let quals_of_sigelt:
@@ -928,7 +927,7 @@ let abs:
     FStar_Syntax_Syntax.term ->
       (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
                                    FStar_Syntax_Syntax.cflags Prims.list))
-        FStar_Util.either Prims.option -> FStar_Syntax_Syntax.term
+        FStar_Util.either option -> FStar_Syntax_Syntax.term
   =
   fun bs  ->
     fun t  ->
@@ -1081,7 +1080,7 @@ let abs_formals:
     (FStar_Syntax_Syntax.binders* FStar_Syntax_Syntax.term*
       (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
                                    FStar_Syntax_Syntax.cflags Prims.list))
-      FStar_Util.either Prims.option)
+      FStar_Util.either option)
   =
   fun t  ->
     let subst_lcomp_opt s l =
@@ -1146,7 +1145,7 @@ let mk_letbinding:
               FStar_Syntax_Syntax.lbdef = def
             }
 let close_univs_and_mk_letbinding:
-  FStar_Syntax_Syntax.fv Prims.list Prims.option ->
+  FStar_Syntax_Syntax.fv Prims.list option ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
       FStar_Ident.ident Prims.list ->
         FStar_Syntax_Syntax.term ->
@@ -1320,7 +1319,7 @@ let rec is_constructed_typ:
           is_constructed_typ t1 lid
       | uu____3305 -> false
 let rec get_tycon:
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term Prims.option =
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term option =
   fun t  ->
     let t1 = pre_typ t in
     match t1.FStar_Syntax_Syntax.n with
@@ -1393,10 +1392,10 @@ let t_true: FStar_Syntax_Syntax.term = fvar_const FStar_Syntax_Const.true_lid
 let b2t_v: FStar_Syntax_Syntax.term = fvar_const FStar_Syntax_Const.b2t_lid
 let t_not: FStar_Syntax_Syntax.term = fvar_const FStar_Syntax_Const.not_lid
 let mk_conj_opt:
-  FStar_Syntax_Syntax.term Prims.option ->
+  FStar_Syntax_Syntax.term option ->
     FStar_Syntax_Syntax.term ->
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax Prims.option
+        FStar_Syntax_Syntax.syntax option
   =
   fun phi1  ->
     fun phi2  ->
@@ -1690,8 +1689,7 @@ let uu___is_BaseConn: connective -> Prims.bool =
 let __proj__BaseConn__item___0:
   connective -> (FStar_Ident.lident* FStar_Syntax_Syntax.args) =
   fun projectee  -> match projectee with | BaseConn _0 -> _0
-let destruct_typ_as_formula:
-  FStar_Syntax_Syntax.term -> connective Prims.option =
+let destruct_typ_as_formula: FStar_Syntax_Syntax.term -> connective option =
   fun f  ->
     let rec unmeta_monadic f1 =
       let f2 = FStar_Syntax_Subst.compress f1 in
@@ -1927,9 +1925,7 @@ let is_unknown: FStar_Syntax_Syntax.term -> Prims.bool =
     | FStar_Syntax_Syntax.Tm_unknown  -> true
     | uu____4974 -> false
 let rec list_elements:
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term Prims.list Prims.option
-  =
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term Prims.list option =
   fun e  ->
     let uu____4982 = let uu____4992 = unmeta e in head_and_args uu____4992 in
     match uu____4982 with
@@ -2125,13 +2121,13 @@ and branch_eq:
   ((FStar_Syntax_Syntax.pat',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.withinfo_t*
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-    FStar_Syntax_Syntax.syntax Prims.option*
+    FStar_Syntax_Syntax.syntax option*
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax) ->
     ((FStar_Syntax_Syntax.pat',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.withinfo_t*
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax Prims.option*
+      FStar_Syntax_Syntax.syntax option*
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax) -> Prims.bool
   =
