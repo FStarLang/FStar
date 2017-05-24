@@ -381,7 +381,7 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_dec
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
   let recf = Recursive in
-  let type_declarations = map build_one_tydecl td in
+  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in 
   if type_declarations = [] then None else Some (Pstr_type type_declarations)
 
 let build_exn (sym, tys): extension_constructor =
