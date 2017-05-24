@@ -154,14 +154,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
         "disc_equation_FStar.Pervasives.V", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.list",
-        "kinding_Prims.option@tok", "lemma_FStar.Pervasives.invertOption",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "kinding_FStar.Pervasives.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_9db520b26a7f39c5a01493a3f375290d",
         "typing_FStar.Pervasives.__proj__V__item__v",
-        "typing_Prims.uu___is_None", "typing_Prims.uu___is_Some"
+        "typing_FStar.Pervasives.uu___is_None",
+        "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ],
@@ -172,9 +175,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
         "disc_equation_FStar.Pervasives.V", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.list",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.V_v",
         "projection_inverse_BoxBool_proj_0"
@@ -235,10 +239,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
-        "data_elim_FStar.Pervasives.V", "disc_equation_FStar.Pervasives.V",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "fuel_guarded_inversion_Prims.list",
+        "data_elim_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.V", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.V_v",
         "projection_inverse_BoxBool_proj_0"
