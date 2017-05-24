@@ -2,9 +2,10 @@ module Canon
 
 #reset-options "--eager_inference"
 
+unfold let op_Star = op_Multiply
+
 //
 
-open FStar.Mul
 open FStar.Tactics
 open FStar.Tactics.Arith
 open FStar.Reflection.Arith
