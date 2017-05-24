@@ -890,7 +890,7 @@ exception File_argument of string
 
 let set_options o s =
     let specs = match o with
-        | Set -> resettable_specs
+        | Set -> settable_specs
         | Reset -> resettable_specs
         | Restore -> all_specs in
     try

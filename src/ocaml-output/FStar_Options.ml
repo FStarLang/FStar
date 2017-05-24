@@ -1021,7 +1021,7 @@ let set_options: options -> Prims.string -> FStar_Getopt.parse_cmdline_res =
     fun s  ->
       let specs1 =
         match o with
-        | Set  -> resettable_specs
+        | Set  -> settable_specs
         | Reset  -> resettable_specs
         | Restore  -> all_specs in
       try
