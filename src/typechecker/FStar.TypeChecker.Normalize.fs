@@ -1745,6 +1745,10 @@ let normalize_refinement steps env t0 =
    aux t
 
 let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
+let reduce_uvar_solutions env t =
+    normalize [Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm]
+              env
+              t
 
 let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
   //unfold_whnf env t_e in
