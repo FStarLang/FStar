@@ -156,3 +156,4 @@ noeq
 type norm_step =
     | Simpl
     | WHNF
+    | Primops

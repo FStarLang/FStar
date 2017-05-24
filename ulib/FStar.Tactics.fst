@@ -131,8 +131,8 @@ let trivial : tactic unit = fun () -> TAC?.reflect __trivial
 assume private val __norm  : list norm_step -> __tac unit
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
-let simpl : tactic unit = norm [Simpl]
-let whnf  : tactic unit = norm [WHNF]
+let simpl : tactic unit = norm [Simpl; Primops]
+let whnf  : tactic unit = norm [WHNF; Primops]
 
 assume private val __revert  : __tac unit
 let revert : tactic unit = fun () -> TAC?.reflect __revert

@@ -451,10 +451,11 @@ let norm (s : list<RD.norm_step>) : tac<unit> =
     with_cur_goal (fun goal ->
     // Translate to actual normalizer steps
     let tr s = match s with
-        | RD.Simpl -> [N.Simplify]
-        | RD.WHNF -> [N.WHNF]
+        | RD.Simpl   -> [N.Simplify]
+        | RD.WHNF    -> [N.WHNF]
+        | RD.Primops -> [N.Primops]
     in
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops]@(List.flatten (List.map tr s)) in
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac]@(List.flatten (List.map tr s)) in
     let t = N.normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty=t})
     )

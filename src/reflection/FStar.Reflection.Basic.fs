@@ -422,6 +422,8 @@ let embed_norm_step (n:norm_step) : term =
         ref_Simpl
     | WHNF ->
         ref_WHNF
+    | Primops ->
+        ref_Primops
 
 let unembed_norm_step (t:term) : norm_step =
     let t = U.unascribe t in
@@ -431,5 +433,7 @@ let unembed_norm_step (t:term) : norm_step =
         Simpl
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_WHNF_lid ->
         WHNF
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Primops_lid ->
+        Primops
     | _ ->
         failwith "not an embedded norm_step"
