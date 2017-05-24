@@ -1448,7 +1448,7 @@ let pointwise: Prims.unit tac -> Prims.unit tac =
                                     witness = (uu___111_2689.witness);
                                     goal_ty = gt'
                                   })]))))))
-let refl: Prims.unit tac =
+let trefl: Prims.unit tac =
   with_cur_goal
     (fun g  ->
        let uu____2692 = FStar_Syntax_Util.head_and_args' g.goal_ty in
@@ -1468,7 +1468,7 @@ let refl: Prims.unit tac =
                   FStar_TypeChecker_Rel.teq_nosmt g.context l r in
                 if uu____2770
                 then dismiss
-                else fail "refl: not a trivial equality"
+                else fail "trefl: not a trivial equality"
             | (hd2,uu____2774) ->
                 let uu____2785 =
                   let uu____2786 =
@@ -1483,7 +1483,7 @@ let refl: Prims.unit tac =
                          FStar_Syntax_Syntax.vars =
                            (uu___112_2787.FStar_Syntax_Syntax.vars)
                        }) in
-                  FStar_Util.format1 "refl: not an equality (%s)" uu____2786 in
+                  FStar_Util.format1 "trefl: not an equality (%s)" uu____2786 in
                 fail uu____2785))
 let later: Prims.unit tac =
   bind get

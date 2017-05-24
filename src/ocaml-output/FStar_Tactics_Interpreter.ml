@@ -330,8 +330,8 @@ let rec primitive_steps:
                                                 t_unit1 in
                                             let uu____708 =
                                               let uu____710 =
-                                                mktac0 "__refl"
-                                                  FStar_Tactics_Basic.refl
+                                                mktac0 "__trefl"
+                                                  FStar_Tactics_Basic.trefl
                                                   FStar_Reflection_Basic.embed_unit
                                                   t_unit1 in
                                               let uu____711 =
