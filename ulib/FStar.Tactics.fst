@@ -3,7 +3,7 @@ module FStar.Tactics
 open FStar.Order
 include FStar.Reflection
 
-type goal    = env * term
+type goal    = (env * term) * term
 type goals   = list goal
 type state   = goals  //active goals
              * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program
@@ -213,7 +213,7 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
 let rec visit (callback:tactic unit) () : Tac unit =
     focus (or_else callback
                    (eg <-- cur_goal;
-                    let e, g = eg in
+                    let (e, g), _ = eg in
                     match term_as_formula g with
                     | Forall b phi ->
                         binders <-- forall_intros;
@@ -239,7 +239,7 @@ let rec visit (callback:tactic unit) () : Tac unit =
 // (not doing it would still work, because of issue #1017, but should not)
 let rec simplify_eq_implication (u:unit) : Tac unit = (
     g <-- cur_goal;
-    let context, goal_t = g in // G |- x=e ==> P
+    let (context, goal_t), _ = g in // G |- x=e ==> P
     r <-- destruct_equality_implication goal_t;
     match r with
     | None ->
@@ -278,12 +278,12 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
 
 let rewrite_eqs_from_context : tactic unit =
     g <-- cur_goal;
-    let context, _ = g in
+    let (context, _), _ = g in
     rewrite_all_context_equalities (binders_of_env context)
 
 let rewrite_equality (x:tactic term) : tactic unit =
     g <-- cur_goal;
-    let context, _ = g in
+    let (context, _), _ = g in
     t <-- x;
     try_rewrite_equality t (binders_of_env context)
 
@@ -293,7 +293,7 @@ let rewrite_all_equalities : tactic unit =
 // See comment on `simplify_eq_implication`
 let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
     g <-- cur_goal;
-    let (_, goal_t) = g in
+    let (_, goal_t), _ = g in
     match term_as_formula goal_t with
     | App hd arg ->
         if term_eq hd tm

@@ -46,17 +46,14 @@ let fstar_tac_prefix_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm SC.list_lid) [U
                                        None
                                        Range.dummyRange
 
-let fstar_tac_nselt_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
-                                      [S.as_arg fstar_tac_prefix_typ;
-                                       S.as_arg t_bool]
+let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
+                                      [S.as_arg t;
+                                       S.as_arg s]
                                       None
                                       Range.dummyRange
 
-let fstar_tac_ns_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
-                                   [S.as_arg fstar_tac_nselt_typ;
-                                    S.as_arg t_bool]
-                                   None
-                                   Range.dummyRange
+let fstar_tac_nselt_typ = pair_typ fstar_tac_prefix_typ t_bool
+let fstar_tac_ns_typ = pair_typ fstar_tac_nselt_typ t_bool
 
 // TODO: for now, we just embed the head of the list. Tactics cannot
 // push/pop proof namespaces
@@ -94,17 +91,27 @@ let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
                     | _ -> env) env binders in
     env
 
+let embed_witness (ps:proofstate) w =
+    embed_option embed_term fstar_refl_term w
+
+let unembed_witness (ps:proofstate) t =
+    unembed_option unembed_term t
+
 let embed_goal (ps:proofstate) (g:goal) : term =
-    embed_pair (embed_env ps) fstar_refl_env
-               embed_term fstar_refl_term
-               (g.context, g.goal_ty)
+    embed_pair
+        (embed_pair (embed_env ps) fstar_refl_env
+                     embed_term fstar_refl_term)
+        (pair_typ fstar_refl_env fstar_refl_term)
+        (embed_witness ps)
+        fstar_refl_term
+               ((g.context, g.goal_ty), g.witness)
 
 let unembed_goal (ps:proofstate) (t:term) : goal =
-    let env, goal_ty = unembed_pair (unembed_env ps) unembed_term t in
+    let (env, goal_ty), witness = unembed_pair (unembed_pair (unembed_env ps) unembed_term) (unembed_witness ps) t in
     {
       context = env;
       goal_ty = goal_ty;
-      witness = None //TODO: sort this out for proof-relevant goals
+      witness = witness
     }
 
 let embed_goals (ps:proofstate) (l:list<goal>) : term =

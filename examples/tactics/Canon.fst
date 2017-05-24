@@ -77,12 +77,12 @@ let mkmult (a b : term) : term =
 // This is of course a load of crap
 let dropint : tactic unit =
     eg <-- cur_goal;
-    let e, g = eg in
+    let (e, g), _ = eg in
     match inspect g with
     | Tv_FVar fv ->
         let qn = inspect_fv fv in
         if eq_qn qn int_lid
-        then exact (quote 42)
+        then later
         else fail "not literally int (1)"
     | _ ->
         fail "not literally int (2)"
@@ -90,7 +90,7 @@ let dropint : tactic unit =
 let rec canon : unit -> Tac unit = fun () -> (
     simpl;; // Needed to unfold op_Star into op_Multiply...
     eg <-- cur_goal;
-    let e, g = eg in
+    let (e, g), _ = eg in
     match term_as_formula g with
     | Comp Eq t l r ->
         begin match run_tm (is_arith_expr l) with
