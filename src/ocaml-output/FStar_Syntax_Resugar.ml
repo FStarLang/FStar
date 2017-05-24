@@ -20,8 +20,8 @@ let filter_imp a =
           | (uu____41,Some (FStar_Syntax_Syntax.Implicit uu____42)) -> false
           | uu____44 -> true))
 let resugar_arg_qual:
-  FStar_Syntax_Syntax.arg_qualifier Prims.option ->
-    FStar_Parser_AST.arg_qualifier Prims.option Prims.option
+  FStar_Syntax_Syntax.arg_qualifier option ->
+    FStar_Parser_AST.arg_qualifier option option
   =
   fun q  ->
     match q with
@@ -107,7 +107,7 @@ let rec resugar_universe:
             FStar_Ident.mk_ident uu____156 in
           mk1 (FStar_Parser_AST.Uvar id) r
       | FStar_Syntax_Syntax.U_unknown  -> mk1 FStar_Parser_AST.Wild r
-let string_to_op: Prims.string -> (Prims.string* Prims.int) Prims.option =
+let string_to_op: Prims.string -> (Prims.string* Prims.int) option =
   fun s  ->
     let name_of_op uu___196_173 =
       match uu___196_173 with
@@ -156,7 +156,7 @@ let string_to_op: Prims.string -> (Prims.string* Prims.int) Prims.option =
                Some (op, (Prims.parse_int "0")))
         else None
 let rec resugar_term_as_op:
-  FStar_Syntax_Syntax.term -> (Prims.string* Prims.int) Prims.option =
+  FStar_Syntax_Syntax.term -> (Prims.string* Prims.int) option =
   fun t  ->
     let infix_prim_ops =
       [(FStar_Syntax_Const.op_Addition, "+");
@@ -196,9 +196,9 @@ let rec resugar_term_as_op:
       let uu____356 =
         FStar_All.pipe_right infix_prim_ops
           (FStar_Util.find_opt
-             (fun d  -> FStar_Syntax_Syntax.fv_eq_lid fv (Prims.fst d))) in
+             (fun d  -> FStar_Syntax_Syntax.fv_eq_lid fv (fst d))) in
       match uu____356 with
-      | Some op -> Some ((Prims.snd op), (Prims.parse_int "0"))
+      | Some op -> Some ((snd op), (Prims.parse_int "0"))
       | uu____381 ->
           let length1 =
             FStar_String.length
@@ -957,8 +957,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                                        universe_to_string univs1 in
                                      (uu____2537, uu____2541))))) in
              let r = FStar_List.map resugar_one_binding bnds1 in
-             let bnds2 = FStar_List.map Prims.fst r in
-             let comments = FStar_List.map Prims.snd r in
+             let bnds2 = FStar_List.map FStar_Pervasives.fst r in
+             let comments = FStar_List.map FStar_Pervasives.snd r in
              let body2 = resugar_term body1 in
              mk1
                (FStar_Parser_AST.Let
@@ -1249,7 +1249,7 @@ and resugar_bv_as_binder:
                FStar_Parser_AST.Type_level None)
 and resugar_bv_as_pat:
   FStar_Syntax_Syntax.bv ->
-    FStar_Syntax_Syntax.aqual -> FStar_Parser_AST.pattern Prims.option
+    FStar_Syntax_Syntax.aqual -> FStar_Parser_AST.pattern option
   =
   fun x  ->
     fun qual  ->
@@ -1425,7 +1425,7 @@ and resugar_match_pat: FStar_Syntax_Syntax.pat -> FStar_Parser_AST.pattern =
           else pat in
     aux p
 let resugar_qualifier:
-  FStar_Syntax_Syntax.qualifier -> FStar_Parser_AST.qualifier Prims.option =
+  FStar_Syntax_Syntax.qualifier -> FStar_Parser_AST.qualifier option =
   fun uu___204_3489  ->
     match uu___204_3489 with
     | FStar_Syntax_Syntax.Assumption  -> Some FStar_Parser_AST.Assumption
@@ -1515,7 +1515,7 @@ let decl'_to_decl:
         FStar_Parser_AST.attrs = []
       }
 let resugar_sigelt:
-  FStar_Syntax_Syntax.sigelt -> FStar_Parser_AST.decl Prims.option =
+  FStar_Syntax_Syntax.sigelt -> FStar_Parser_AST.decl option =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_bundle (ses,uu____3604) ->

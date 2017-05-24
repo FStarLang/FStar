@@ -103,12 +103,11 @@ let gen_wps_for_free:
                 FStar_List.map
                   (fun t  ->
                      let uu____239 = FStar_Syntax_Syntax.as_implicit true in
-                     ((Prims.fst t), uu____239)) in
+                     ((fst t), uu____239)) in
               let args_of_binders1 =
                 FStar_List.map
                   (fun bv  ->
-                     let uu____252 =
-                       FStar_Syntax_Syntax.bv_to_name (Prims.fst bv) in
+                     let uu____252 = FStar_Syntax_Syntax.bv_to_name (fst bv) in
                      FStar_Syntax_Syntax.as_arg uu____252) in
               let uu____253 =
                 let uu____265 =
@@ -801,7 +800,7 @@ let gen_wps_for_free:
                                     FStar_Syntax_Syntax.pos = _;
                                     FStar_Syntax_Syntax.vars = _;_})
                         ->
-                        let a2 = (Prims.fst binder).FStar_Syntax_Syntax.sort in
+                        let a2 = (fst binder).FStar_Syntax_Syntax.sort in
                         let uu____1479 =
                           (is_monotonic a2) || (is_monotonic b) in
                         if uu____1479
@@ -999,12 +998,12 @@ let gen_wps_for_free:
                     | (wp_args,post) ->
                         let k =
                           FStar_Syntax_Syntax.gen_bv "k" None
-                            (Prims.fst post).FStar_Syntax_Syntax.sort in
+                            (fst post).FStar_Syntax_Syntax.sort in
                         let equiv =
                           let k_tm = FStar_Syntax_Syntax.bv_to_name k in
                           let eq1 =
                             let uu____1855 =
-                              FStar_Syntax_Syntax.bv_to_name (Prims.fst post) in
+                              FStar_Syntax_Syntax.bv_to_name (fst post) in
                             mk_rel FStar_Syntax_Util.mk_iff
                               k.FStar_Syntax_Syntax.sort k_tm uu____1855 in
                           let uu____1858 =
@@ -1090,8 +1089,7 @@ let gen_wps_for_free:
                           let uu____1965 =
                             let uu____1966 =
                               FStar_All.pipe_left
-                                FStar_Syntax_Syntax.bv_to_name
-                                (Prims.fst post) in
+                                FStar_Syntax_Syntax.bv_to_name (fst post) in
                             let uu____1969 =
                               let uu____1975 =
                                 let uu____1976 =
@@ -1684,7 +1682,7 @@ let rec is_C: FStar_Syntax_Syntax.typ -> Prims.bool =
         FStar_Syntax_Util.is_tuple_constructor head1 ->
         let r =
           let uu____2980 =
-            let uu____2981 = FStar_List.hd args in Prims.fst uu____2981 in
+            let uu____2981 = FStar_List.hd args in fst uu____2981 in
           is_C uu____2980 in
         if r
         then
@@ -2139,7 +2137,7 @@ and infer:
           ->
           let uu____4011 =
             let uu____4014 = FStar_TypeChecker_Env.lookup_lid env.env lid in
-            FStar_All.pipe_left Prims.fst uu____4014 in
+            FStar_All.pipe_left FStar_Pervasives.fst uu____4014 in
           (match uu____4011 with
            | (uu____4030,t) ->
                let uu____4032 = let uu____4033 = normalize1 t in N uu____4033 in
@@ -2358,7 +2356,7 @@ and mk_match:
       ((FStar_Syntax_Syntax.pat',FStar_Syntax_Syntax.term')
         FStar_Syntax_Syntax.withinfo_t*
         (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax Prims.option*
+        FStar_Syntax_Syntax.syntax option*
         (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
         FStar_Syntax_Syntax.syntax) Prims.list ->
         (env ->

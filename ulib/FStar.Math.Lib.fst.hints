@@ -484,7 +484,6 @@
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.Math.Lib.powx.fuel_instrumented",
         "typing_FStar.Math.Lib.powx", "unit_typing",
         "well-founded-ordering-on-nat"
       ],

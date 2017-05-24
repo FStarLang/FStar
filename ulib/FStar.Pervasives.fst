@@ -203,6 +203,10 @@ let allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
   = ()
 
+type option (a:Type) =
+  | None : option a
+  | Some : v:a -> option a
+
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
@@ -213,6 +217,16 @@ let invertOption a = allow_inversion (option a)
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
+
+(* 'a * 'b *)
+type tuple2 'a 'b =
+  | Mktuple2: _1:'a
+           -> _2:'b
+           -> tuple2 'a 'b
+
+let fst (x:'a * 'b) :'a = Mktuple2?._1 x
+
+let snd (x:'a * 'b) :'b = Mktuple2?._2 x
 
 (* 'a * 'b * 'c *)
 type tuple3 'a 'b 'c =
@@ -270,6 +284,12 @@ type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _7:'g
            -> _8:'h
            -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
+
+val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
+let dfst #a #b t = Mkdtuple2?._1 t
+
+val dsnd : #a:Type -> #b:(a -> GTot Type) -> t:dtuple2 a b -> Tot (b (Mkdtuple2?._1 t))
+let dsnd #a #b t = Mkdtuple2?._2 t
 
 (* Concrete syntax (x:a & y:b x & c x y) *)
 unopteq type dtuple3 (a:Type)
