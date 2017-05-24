@@ -144,7 +144,6 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
-val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
