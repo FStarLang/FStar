@@ -28,7 +28,16 @@ let lem3 (a b c d e : int) =
 let lem4 (a b c : int) =
     assert_by_tactic check_canon ((a+c+b)*(b+c+a) == a * a + (((b+c)*(c+b) + a * (b+c)) + c*a) + b*a)
 
-let lemma_mul_5 (a b c d e : int) =
+let lem5 (a b c d e : int) =
+    assert_by_tactic check_canon
+        ((a+b+c+d+e)*(a+b+c+d+e) ==
+                a * a + a * b + a * c + a * d + a * e
+              + b * a + b * b + b * c + b * d + b * e
+              + c * a + c * b + c * c + c * d + c * e
+              + d * a + d * b + d * c + d * d + d * e
+              + e * a + e * b + e * c + e * d + e * e)
+
+let lem6 (a b c d e : int) =
     assert_by_tactic check_canon
         ((a+b+c+d+e)*(e+d+c+b+a) ==
                 a * a + a * b + a * c + a * d + a * e
@@ -36,3 +45,17 @@ let lemma_mul_5 (a b c d e : int) =
               + c * a + c * b + c * c + c * d + c * e
               + d * a + d * b + d * c + d * d + d * e
               + e * a + e * b + e * c + e * d + e * e)
+
+let lem7 (a b c d : int) =
+    assert_by_tactic check_canon
+        ((a+b+c+d)*(b+c+d+a) ==
+                a * a
+              + b * b
+              + c * c
+              + d * d
+              + a * b + a * b
+              + a * c + a * c
+              + a * d + a * d
+              + b * c + b * c
+              + b * d + b * d
+              + c * d + c * d)
