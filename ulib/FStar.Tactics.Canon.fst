@@ -44,11 +44,32 @@ val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 Lemma (w * x == y * z)
 let cong_mult #w #x #y #z p q = ()
 
+val mult1 : (#x:int) -> Lemma (x == 1 * x)
+let mult1 #x = ()
+
 let rec canon_point : unit -> Tac unit = fun () -> (
+    let step (t : tactic unit) : tactic unit =
+        apply_lemma (quote trans);;
+        t
+    in
+    let step_lemma (lem : tactic term) : tactic unit = step (apply_lemma lem) in
+    let comm_r_plus : tactic unit =
+        step_lemma (quote sw_plus);;
+        apply_lemma (quote cong_plus);;
+        canon_point;;
+        trefl
+    in
+    let comm_r_mult : tactic unit =
+        step_lemma (quote sw_mult);;
+        apply_lemma (quote cong_mult);;
+        canon_point;;
+        trefl
+    in
     norm [];; // to unfold
     eg <-- cur_goal;
     let (e, g), _ = eg in
-    match term_as_formula g with
+    let f = term_as_formula g in
+    match f with
     | Comp Eq t l r ->
         begin match run_tm (is_arith_expr l) with
         | Inl s ->
@@ -59,59 +80,46 @@ let rec canon_point : unit -> Tac unit = fun () -> (
             norm [Primops];; // TODO: primops won't reduce if given Simpl too, is that intentional?
             trefl
 
-        | Inr (Plus a (Plus b c)) ->
-            apply_lemma (quote trans);;
-            apply_lemma (quote ass_plus_l);;
-            apply_lemma (quote trans);;
-            apply_lemma (quote cong_plus);;
-            canon_point;;
-            canon_point;;
-            canon_point
-
-        | Inr (Plus (Plus a b) c) ->
-            if O.gt (compare_expr b c) then (
-                apply_lemma (quote trans);;
-                apply_lemma (quote sw_plus);;
-                apply_lemma (quote cong_plus);;
-                canon_point;;
-                trefl
-            ) else trefl
-
-        | Inr (Mult (Mult a b) c) ->
-            if O.gt (compare_expr b c) then (
-                apply_lemma (quote trans);;
-                apply_lemma (quote sw_mult);;
-                apply_lemma (quote cong_mult);;
-                canon_point;;
-                trefl
-            ) else trefl
-
-        | Inr (Mult a (Mult b c)) ->
-            apply_lemma (quote trans);;
-            apply_lemma (quote ass_mult_l);;
-            apply_lemma (quote trans);;
-            apply_lemma (quote cong_mult);;
+        // Distribute
+        | Inr (Mult a (Plus b c)) ->
+            step_lemma (quote distr);;
+            step_lemma (quote cong_plus);;
             canon_point;;
             canon_point;;
             canon_point
 
         | Inr (Mult (Plus a b) c) ->
-            apply_lemma (quote trans);;
-            apply_lemma (quote distl);; // now need to show a*c + b*c = ?u
-            apply_lemma (quote trans);;
-            apply_lemma (quote cong_plus);; // now two goals. |- a*c = ?u1 ; |- b*c = ?u2
+            step_lemma (quote distl);;
+            step_lemma (quote cong_plus);;
             canon_point;;
             canon_point;;
             canon_point
 
-        | Inr (Mult a (Plus b c)) ->
-            apply_lemma (quote trans);;
-            apply_lemma (quote distr);;
-            apply_lemma (quote trans);;
-            apply_lemma (quote cong_plus);;
+        // Associate to the left
+        | Inr (Mult a (Mult b c)) ->
+            step_lemma (quote ass_mult_l);;
+            step_lemma (quote cong_mult);;
             canon_point;;
             canon_point;;
             canon_point
+
+        | Inr (Plus a (Plus b c)) ->
+            step_lemma (quote ass_plus_l);;
+            step_lemma (quote cong_plus);;
+            canon_point;;
+            canon_point;;
+            canon_point
+
+        | Inr (Plus (Plus a b) c) ->
+            let o = compare_expr b c in
+            if O.gt o
+            then comm_r_plus
+            else trefl
+
+        | Inr (Mult (Mult a b) c) ->
+            if O.gt (compare_expr b c)
+            then comm_r_mult
+            else trefl
 
         | Inr (Plus a b) ->
             if O.gt (compare_expr a b)

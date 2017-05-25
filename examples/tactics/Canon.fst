@@ -10,12 +10,15 @@ assume val z : int
 // Testing the canonizer, it should be the only thing needed for this file
 let check_canon =
     canon;;
+    (* eg <-- cur_goal; *)
+    (* let (_, g), _ = eg in *)
+    (* print ("After canonizing: " ^ term_to_string g);; *)
     trefl;;
     tdone
 
 let lem0 = assert_by_tactic check_canon (x * (y * z) == (x * y) * z)
 
-// TODO: canon is not enough as we don't collect factors
+// TODO: for now, canon is not enough as we don't collect factors
 let lem1 =
     assert_by_tactic canon ((x + y) * (z + z) == 2 * z * (y + x))
 
