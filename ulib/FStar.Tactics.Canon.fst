@@ -142,4 +142,6 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         fail ("impossible: " ^ term_to_string g)
     ) ()
 
-let canon = pointwise canon_point
+let canon =
+    seq (pointwise canon_point)
+        (simpl;; trytac trivial;; return ())
