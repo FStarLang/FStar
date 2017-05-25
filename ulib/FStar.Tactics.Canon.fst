@@ -45,8 +45,29 @@ val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 Lemma (w * x == y * z)
 let cong_mult #w #x #y #z p q = ()
 
+val neg_minus_one : (#x:int) -> Lemma (-x == (-1) * x)
+let neg_minus_one #x = ()
+
 val mult1 : (#x:int) -> Lemma (x == 1 * x)
 let mult1 #x = ()
+
+val x_plus_zero : (#x:int) -> Lemma (x + 0 == x)
+let x_plus_zero #x = ()
+
+val zero_plus_x : (#x:int) -> Lemma (0 + x == x)
+let zero_plus_x #x = ()
+
+val x_mult_zero : (#x:int) -> Lemma (x * 0 == 0)
+let x_mult_zero #x = ()
+
+val zero_mult_x : (#x:int) -> Lemma (0 * x == 0)
+let zero_mult_x #x = ()
+
+val x_mult_one : (#x:int) -> Lemma (x * 1 == x)
+let x_mult_one #x = ()
+
+val one_mult_x : (#x:int) -> Lemma (1 * x == x)
+let one_mult_x #x = ()
 
 let rec canon_point : unit -> Tac unit = fun () -> (
     let step (t : tactic unit) : tactic unit =
@@ -83,6 +104,11 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         | Inr (Mult (Lit _) (Lit _)) ->
             norm [Primops];; // TODO: primops won't reduce if given Simpl too, is that intentional?
             trefl
+
+        // Forget about negations
+        | Inr (Neg e) ->
+            step_lemma (quote neg_minus_one);;
+            canon_point
 
         // Distribute
         | Inr (Mult a (Plus b c)) ->
@@ -125,10 +151,28 @@ let rec canon_point : unit -> Tac unit = fun () -> (
             then comm_r_mult
             else trefl
 
+        | Inr (Plus a (Lit 0)) ->
+            apply_lemma (quote x_plus_zero)
+
+        | Inr (Plus (Lit 0) b) ->
+            apply_lemma (quote zero_plus_x)
+
         | Inr (Plus a b) ->
             if O.gt (compare_expr a b)
             then apply_lemma (quote comm_plus)
             else trefl
+
+        | Inr (Mult (Lit 0) _) ->
+            apply_lemma (quote zero_mult_x)
+
+        | Inr (Mult _ (Lit 0)) ->
+            apply_lemma (quote x_mult_zero)
+
+        | Inr (Mult (Lit 1) _) ->
+            apply_lemma (quote one_mult_x)
+
+        | Inr (Mult _ (Lit 1)) ->
+            apply_lemma (quote x_mult_one)
 
         | Inr (Mult a b) ->
             if O.gt (compare_expr a b)
