@@ -819,6 +819,13 @@ let later : tac<unit> =
     | g::gs -> set ({ps with goals=gs@[g]})
     )
 
+let tdone : tac<unit> =
+    bind get (fun ps ->
+    match ps.goals with
+    | [] -> ret ()
+    | _ -> fail "Not done!"
+    )
+
 // Should probably be moved somewhere else
 type order = | Lt | Eq | Gt
 

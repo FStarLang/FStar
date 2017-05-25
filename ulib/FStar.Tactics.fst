@@ -187,6 +187,9 @@ let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__poin
 assume val __later : __tac unit
 let later : tactic unit = fun () -> TAC?.reflect __later
 
+assume val __tdone : __tac unit
+let tdone : tactic unit = fun () -> TAC?.reflect __tdone
+
 let rec revert_all (bs:binders) : tactic unit =
     match bs with
     | [] -> return ()
