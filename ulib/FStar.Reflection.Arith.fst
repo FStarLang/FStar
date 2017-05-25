@@ -13,17 +13,20 @@ open FStar.Tactics
  * feeding to the SMT solver)
  *)
 
+noeq
 type expr =
     | Lit : int -> expr
     | Plus  : expr -> expr -> expr
     | Mult  : expr -> expr -> expr
     | Neg   : expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
-    | Atom : nat -> expr // uninterpreted atom
+    | Atom : nat -> term -> expr // atom, contains both a numerical ID and the actual term encountered
 
+noeq
 type connective =
     | C_Lt | C_Eq | C_Gt | C_Ne
 
+noeq
 type prop =
     | CompProp : expr -> connective -> expr -> prop
     | AndProp  : prop -> prop -> prop
@@ -38,7 +41,8 @@ let gt e1 e2 = CompProp e1 C_Gt e2
 let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 
 (* Define a traversal monad! Makes exception handling and counter-keeping easy *)
-private let tm a = nat -> either string (a * nat)
+private let st = p:(nat * list term){fst p == List.length (snd p)}
+private let tm a = st -> either string (a * st)
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
 private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
@@ -56,9 +60,22 @@ let liftM2 f x y =
     yy <-- y;
     return (f xx yy)
 
+private let rec find_idx (f : 'a -> bool) (l : list 'a) : option ((n:nat{n < List.length l}) * 'a) =
+    match l with
+    | [] -> None
+    | x::xs ->
+        if f x
+        then Some (0, x)
+        else begin match find_idx f xs with
+             | None -> None
+             | Some (i, x) -> Some (i+1, x)
+             end
 
-private let tick : tm nat = fun i -> Inr (i, i + 1)
-private let atom : tm expr = liftM Atom tick
+private let atom (t:term) : tm expr = fun (n, atoms) ->
+    match find_idx (term_eq t) atoms with
+    | None -> Inr (Atom n t, (n + 1, t::atoms))
+    | Some (i, t) -> Inr (Atom (n - 1 - i) t, (n, atoms))
+
 private val fail : (#a:Type) -> string -> tm a
 private let fail #a s = fun i -> Inl s
 
@@ -92,10 +109,9 @@ let rec is_arith_expr (t:term) =
         else fail "unary"
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
-    | Tv_FVar f , [] ->
-        atom
-    | Tv_Var f , [] ->
-        atom
+    | Tv_FVar _ , []
+    | Tv_Var _ , [] ->
+        atom t
     | _, _ ->
         fail ("unk (" ^ term_to_string t ^ ")")
 
@@ -113,16 +129,34 @@ let rec is_arith_prop (t:term) =
 
 // Run the monadic computations, disregard the counter
 let run_tm (m : tm 'a) : either string 'a =
-    match m 0 with
+    match m (0, []) with
     | Inl s -> Inl s
     | Inr (x, _) -> Inr x
 
-private let test =
+let rec expr_to_string (e:expr) : string =
+    match e with
+    | Atom i _ -> "a"^(string_of_int i)
+    | Lit i -> string_of_int i
+    | Plus l r -> "(" ^ (expr_to_string l) ^ " + " ^ (expr_to_string r) ^ ")"
+    | Mult l r -> "(" ^ (expr_to_string l) ^ " * " ^ (expr_to_string r) ^ ")"
+    | Neg l -> "(- " ^ (expr_to_string l) ^ ")"
+
+private let test1 =
     let bind = FStar.Tactics.bind in
     let fail = FStar.Tactics.fail in
     assert_by_tactic (t <-- quote (1 + 2);
-                             match is_arith_expr t 0 with
-                             | Inr (Plus (Lit 1) (Lit 2), _) -> print "alright!"
+                             match run_tm (is_arith_expr t) with
+                             | Inr (Plus (Lit 1) (Lit 2)) -> print "alright!"
+                             | Inr _ -> fail "different thing"
+                             | Inl s -> fail ("oops: " ^ s))
+                            True
+
+private let test2 (x : int) =
+    let bind = FStar.Tactics.bind in
+    let fail = FStar.Tactics.fail in
+    assert_by_tactic (t <-- quote (x + x);
+                             match run_tm (is_arith_expr t) with
+                             | Inr (Plus (Atom 0 _) (Atom 0 _)) -> print "alright!"
                              | Inr _ -> fail "different thing"
                              | Inl s -> fail ("oops: " ^ s))
                             True
