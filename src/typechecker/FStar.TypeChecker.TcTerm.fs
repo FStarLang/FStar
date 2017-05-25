@@ -551,14 +551,23 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    check_top_level_let env top
+    let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
+    if Env.should_verify env then
+        check_top_level_let env lax_top
+    else lax_top, l, g
 
   | Tm_let ((false, _), _) ->
     check_inner_let env top
 
   | Tm_let ((true, {lbname=Inr _}::_), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    check_top_level_let_rec env top
+    let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
+    if Env.should_verify env then
+//        let _ = Options.set_option "debug_level" (Options.List [Options.String "Extreme"]) in
+//        let lb = match lax_top.n with Tm_let ((true, lbs), _) -> List.hd lbs in
+//        printfn "univs are = %s" (List.map (fun x -> Print.univ_to_string (U_name x)) lb.lbunivs |> String.concat ", ");
+        check_top_level_let_rec env lax_top
+    else lax_top, l, g
 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
