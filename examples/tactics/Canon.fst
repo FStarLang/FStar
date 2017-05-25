@@ -11,7 +11,7 @@ let lem0 = assert_by_tactic (dump "BEFORE";; canon;; dump "AFTER") (x * (y * z) 
 
 let lem1 = assert_by_tactic (dump "BEFORE";; canon;; dump "AFTER") ((x + y) * (z + z) == 2 * z * (y + x))
 
-(* let lem2 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") (x == x) *)
+let lem2 = assert_by_tactic (dump "BEFORE";; canon;; dump "AFTER") (2 + 3 * 8 == 26)
 
 let lemma_mul_5 (a b c d e : int) =
     assert_by_tactic

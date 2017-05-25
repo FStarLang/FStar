@@ -32,13 +32,19 @@ val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
 let cong_mult #w #x #y #z p q = ()
 
 let rec canon_point : unit -> Tac unit = fun () -> (
-    simpl;; // Needed to unfold op_Star into op_Multiply...
     eg <-- cur_goal;
     let (e, g), _ = eg in
     match term_as_formula g with
     | Comp Eq t l r ->
         begin match run_tm (is_arith_expr l) with
         | Inl s ->
+            trefl
+
+        | Inr (Plus (Lit _) (Lit _))
+        | Inr (Mult (Lit _) (Lit _)) ->
+            dump "GGG 1";;
+            norm [Primops];; // TODO: primops won't reduce if given Simpl too, is that intentional?
+            dump "GGG 2";;
             trefl
 
         | Inr (Plus a (Plus b c)) ->
