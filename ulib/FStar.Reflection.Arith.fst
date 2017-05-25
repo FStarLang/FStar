@@ -2,6 +2,7 @@ module FStar.Reflection.Arith
 
 open FStar.Reflection.Syntax
 open FStar.Tactics
+module O = FStar.Order
 
 (*
  * Simple decision procedure to decide if a term is an "arithmetic
@@ -16,11 +17,11 @@ open FStar.Tactics
 noeq
 type expr =
     | Lit : int -> expr
+    | Atom : nat -> term -> expr // atom, contains both a numerical ID and the actual term encountered
     | Plus  : expr -> expr -> expr
     | Mult  : expr -> expr -> expr
     | Neg   : expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
-    | Atom : nat -> term -> expr // atom, contains both a numerical ID and the actual term encountered
 
 noeq
 type connective =
@@ -140,6 +141,19 @@ let rec expr_to_string (e:expr) : string =
     | Plus l r -> "(" ^ (expr_to_string l) ^ " + " ^ (expr_to_string r) ^ ")"
     | Mult l r -> "(" ^ (expr_to_string l) ^ " * " ^ (expr_to_string r) ^ ")"
     | Neg l -> "(- " ^ (expr_to_string l) ^ ")"
+
+let rec compare_expr (e1 e2 : expr) : O.order =
+    match e1, e2 with
+    | Lit i, Lit j -> O.compare_int i j
+    | Atom _ t, Atom _ s -> compare_term t s
+    | Plus l1 l2, Plus r1 r2
+    | Mult l1 l2, Mult r1 r2 -> O.lex (compare_expr l1 r1) (fun () -> compare_expr l2 r2)
+    | Neg e1, Neg e2 -> compare_expr e1 e2
+    | Lit _,    _ -> O.Lt    | _, Lit _    -> O.Gt
+    | Atom _ _, _ -> O.Lt    | _, Atom _ _ -> O.Gt
+    | Plus _ _, _ -> O.Lt    | _, Plus _ _ -> O.Gt
+    | Mult _ _, _ -> O.Lt    | _, Mult _ _ -> O.Gt
+    | Neg _,    _ -> O.Lt    | _, Neg _    -> O.Gt
 
 private let test1 =
     let bind = FStar.Tactics.bind in

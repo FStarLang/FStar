@@ -36,6 +36,9 @@ let order_from_int i =
     else if i = 0 then Eq
     else Gt
 
+val compare_int : int -> int -> order
+let compare_int i j = order_from_int (i - j)
+
 val compare_list : ('a -> 'a -> order) -> list 'a -> list 'a -> order
 let rec compare_list f l1 l2 =
     match l1, l2 with
