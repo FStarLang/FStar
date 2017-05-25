@@ -7,6 +7,8 @@ assume val x : int
 assume val y : int
 assume val z : int
 
+let lem0 = assert_by_tactic (dump "BEFORE";; canon;; dump "AFTER") (x * (y * z) == (x * y) * z)
+
 let lem1 = assert_by_tactic (dump "BEFORE";; canon;; dump "AFTER") ((x + y) * (z + z) == 2 * z * (y + x))
 
 (* let lem2 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") (x == x) *)

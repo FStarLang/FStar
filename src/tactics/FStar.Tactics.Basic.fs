@@ -526,10 +526,9 @@ let apply_lemma (tm:term)
                    in
                    let sub_goals =
                         implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
-                                {context=goal.context;
-                                 witness=Some term;
-                                 // Try to get rid of all the unification lambdas, which should all be at the head
-                                 goal_ty = N.normalize [N.WHNF] goal.context typ})
+                                {context = goal.context;
+                                 witness = Some term;
+                                 goal_ty = typ})
                    in
                    // Optimization: if a uvar appears in a later goal, don't ask for it, since
                    // it will be instantiated later. TODO: maybe keep and check later?
