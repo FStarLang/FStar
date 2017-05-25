@@ -1,6 +1,7 @@
 module FStar.Tactics.Arith
 
 open FStar.Tactics
+open FStar.Reflection
 open FStar.Reflection.Arith
 open FStar.List
 

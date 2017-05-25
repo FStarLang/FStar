@@ -88,7 +88,7 @@ let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<
 
 let rec primitive_steps ps : list<N.primitive_step> =
     let mk nm arity interpretation =
-      let nm = E.fstar_tactics_lid nm in {
+      let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;

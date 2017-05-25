@@ -4,6 +4,7 @@ unfold let op_Star = op_Multiply
 
 open FStar.Tactics
 open FStar.Tactics.Arith
+open FStar.Reflection
 open FStar.Reflection.Arith
 module O = FStar.Order
 

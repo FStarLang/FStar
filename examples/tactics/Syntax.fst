@@ -1,6 +1,7 @@
 module Syntax
 
 open FStar.Tactics
+open FStar.Reflection.Arith
 
 let quote_sanity_check =
     assert_by_tactic (t <-- quote (1+1);
@@ -84,3 +85,23 @@ let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
                                  print "But that's a known issue...";;
                                  return ()
                          ) True
+
+let arith_test1 =
+    let bind = FStar.Tactics.bind in
+    let fail = FStar.Tactics.fail in
+    assert_by_tactic (t <-- quote (1 + 2);
+                             match run_tm (is_arith_expr t) with
+                             | Inr (Plus (Lit 1) (Lit 2)) -> print "alright!"
+                             | Inr _ -> fail "different thing"
+                             | Inl s -> fail ("oops: " ^ s))
+                            True
+
+let arith_test2 (x : int) =
+    let bind = FStar.Tactics.bind in
+    let fail = FStar.Tactics.fail in
+    assert_by_tactic (t <-- quote (x + x);
+                             match run_tm (is_arith_expr t) with
+                             | Inr (Plus (Atom 0 _) (Atom 0 _)) -> print "alright!"
+                             | Inr _ -> fail "different thing"
+                             | Inl s -> fail ("oops: " ^ s))
+                            True

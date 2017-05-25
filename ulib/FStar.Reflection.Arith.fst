@@ -154,23 +154,3 @@ let rec compare_expr (e1 e2 : expr) : O.order =
     | Plus _ _, _ -> O.Lt    | _, Plus _ _ -> O.Gt
     | Mult _ _, _ -> O.Lt    | _, Mult _ _ -> O.Gt
     | Neg _,    _ -> O.Lt    | _, Neg _    -> O.Gt
-
-private let test1 =
-    let bind = FStar.Tactics.bind in
-    let fail = FStar.Tactics.fail in
-    assert_by_tactic (t <-- quote (1 + 2);
-                             match run_tm (is_arith_expr t) with
-                             | Inr (Plus (Lit 1) (Lit 2)) -> print "alright!"
-                             | Inr _ -> fail "different thing"
-                             | Inl s -> fail ("oops: " ^ s))
-                            True
-
-private let test2 (x : int) =
-    let bind = FStar.Tactics.bind in
-    let fail = FStar.Tactics.fail in
-    assert_by_tactic (t <-- quote (x + x);
-                             match run_tm (is_arith_expr t) with
-                             | Inr (Plus (Atom 0 _) (Atom 0 _)) -> print "alright!"
-                             | Inr _ -> fail "different thing"
-                             | Inl s -> fail ("oops: " ^ s))
-                            True

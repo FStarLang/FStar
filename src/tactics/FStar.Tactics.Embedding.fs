@@ -24,16 +24,16 @@ open FStar.Reflection.Data
 
 type name = bv
 
-let fstar_tactics_lid s = Ident.lid_of_path (["FStar"; "Tactics"]@[s]) Range.dummyRange
-let by_tactic_lid = fstar_tactics_lid "by_tactic"
+let fstar_tactics_lid' s = SC.fstar_tactics_lid' s
+let fstar_tactics_lid s = SC.fstar_tactics_lid s
+let by_tactic_lid = SC.by_tactic_lid
 let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
-let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid s)
+let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
 let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
-let fstar_tactics_term_view = mk_tactic_lid_as_term "term_view"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))
-let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
+let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid' ["Effect";s])
 
 let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
@@ -151,11 +151,11 @@ let unembed_result (ps:proofstate) (res:term) (unembed_a:term -> 'a) : either<('
     let hd, args = U.head_and_args res in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_t; (a, _); (embedded_state, _)]
-        when S.fv_eq_lid fv (fstar_tactics_lid "Success") ->
+        when S.fv_eq_lid fv (fstar_tactics_lid' ["Effect";"Success"]) ->
       Inl (unembed_a a, unembed_state ps embedded_state)
 
     | Tm_fvar fv, [_t; (embedded_string, _); (embedded_state, _)]
-        when S.fv_eq_lid fv (fstar_tactics_lid "Failed") ->
+        when S.fv_eq_lid fv (fstar_tactics_lid' ["Effect";"Failed"]) ->
       Inr (unembed_string embedded_string, unembed_state ps embedded_state)
 
     | _ -> failwith (BU.format1 "Not an embedded result: %s" (Print.term_to_string res))

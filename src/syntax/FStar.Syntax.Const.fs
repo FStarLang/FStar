@@ -199,10 +199,11 @@ let normalize_term = pconst "normalize_term"
 let lid_as_tm l = lid_as_fv l Delta_constant None |> fv_to_tm
 
 (* tactic constants *)
-let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
-let tactic_lid = fstar_tactics_lid "tactic"
-let by_tactic_lid = fstar_tactics_lid "by_tactic"
-let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
-let quote_lid = lid_of_path (["FStar"; "Tactics"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
-let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
+let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
+let fstar_tactics_lid  s = fstar_tactics_lid' [s]
+let tactic_lid = fstar_tactics_lid' ["Effect"; "by_tactic"]
+let by_tactic_lid = fstar_tactics_lid' ["Effect"; "by_tactic"]
+let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "by_tactic"]
+let quote_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
+let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_refl_embed = lid_as_tm fstar_refl_embed_lid
