@@ -42,9 +42,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
 
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
-            dump "GGG 1";;
             norm [Primops];; // TODO: primops won't reduce if given Simpl too, is that intentional?
-            dump "GGG 2";;
             trefl
 
         | Inr (Plus a (Plus b c)) ->
