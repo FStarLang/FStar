@@ -53,7 +53,9 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         apply_lemma (quote trans);;
         t
     in
-    let step_lemma (lem : tactic term) : tactic unit = step (apply_lemma lem) in
+    let step_lemma (lem : tactic term) : tactic unit =
+        step (apply_lemma lem)
+    in
     let comm_r_plus : tactic unit =
         step_lemma (quote sw_plus);;
         apply_lemma (quote cong_plus);;
@@ -76,6 +78,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         | Inl s ->
             trefl
 
+        // Fold constants
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
             norm [Primops];; // TODO: primops won't reduce if given Simpl too, is that intentional?
