@@ -32,6 +32,7 @@ val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
 let cong_mult #w #x #y #z p q = ()
 
 let rec canon_point : unit -> Tac unit = fun () -> (
+    norm [];; // to unfold
     eg <-- cur_goal;
     let (e, g), _ = eg in
     match term_as_formula g with
