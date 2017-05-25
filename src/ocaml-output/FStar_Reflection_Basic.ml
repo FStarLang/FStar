@@ -696,3 +696,36 @@ let is_free:
     fun t  ->
       let uu____1729 = FStar_Syntax_Free.names t in
       FStar_Util.set_mem (Prims.fst x) uu____1729
+let embed_norm_step:
+  FStar_Reflection_Data.norm_step -> FStar_Syntax_Syntax.term =
+  fun n1  ->
+    match n1 with
+    | FStar_Reflection_Data.Simpl  -> FStar_Reflection_Data.ref_Simpl
+    | FStar_Reflection_Data.WHNF  -> FStar_Reflection_Data.ref_WHNF
+    | FStar_Reflection_Data.Primops  -> FStar_Reflection_Data.ref_Primops
+let unembed_norm_step:
+  FStar_Syntax_Syntax.term -> FStar_Reflection_Data.norm_step =
+  fun t  ->
+    let t1 = FStar_Syntax_Util.unascribe t in
+    let uu____1738 = FStar_Syntax_Util.head_and_args t1 in
+    match uu____1738 with
+    | (hd1,args) ->
+        let uu____1764 =
+          let uu____1772 =
+            let uu____1773 = FStar_Syntax_Util.un_uinst hd1 in
+            uu____1773.FStar_Syntax_Syntax.n in
+          (uu____1772, args) in
+        (match uu____1764 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Reflection_Data.ref_Simpl_lid
+             -> FStar_Reflection_Data.Simpl
+         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Reflection_Data.ref_WHNF_lid
+             -> FStar_Reflection_Data.WHNF
+         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Reflection_Data.ref_Primops_lid
+             -> FStar_Reflection_Data.Primops
+         | uu____1811 -> failwith "not an embedded norm_step")
