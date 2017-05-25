@@ -12,7 +12,7 @@ ULIB_ML=$(FSTAR_HOME)/ulib/ml
 ifeq ($(MEM),HST)
      OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)/extracted -I $(ULIB_ML)/hyperstack -I $(ULIB_ML)
 else
-     OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)
+     OCAML_DEFAULT_FLAGS=$(ULIB_ML)/fstarlib.cmxa -I $(ULIB_ML)/extracted -I $(ULIB_ML)
 endif
 
 OCAMLOPT_=ocamlfind opt -package batteries,stdint,zarith -linkpkg -g

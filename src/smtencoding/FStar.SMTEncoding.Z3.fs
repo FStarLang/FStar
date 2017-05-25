@@ -222,12 +222,6 @@ let at_log_file () =
 let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
-    let print_stats statistics =
-        BU.print_string (BU.format1 "BEGIN-STATS %s\n" (query_logging.get_module_name()) ^ at_log_file ());
-        BU.print_string "(";
-        BU.smap_fold statistics (fun k v a -> BU.print_string (BU.format2 ":%s %s\n" k v)) ();
-        BU.print_string ")\n";
-        BU.print_string "END-STATS\n" in
     let get_data lines =
         let parse_core s : unsat_core =
             let s = BU.trim_string s in
@@ -289,7 +283,6 @@ let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
       | _ -> failwith <| format1 "Unexpected output from Z3: got output lines: %s\n"
                             (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (BU.trim_string l)) lines)) in
     let core, statistics, reason_unknown = get_data lines in
-    if Options.print_z3_statistics() then print_stats statistics ;
     result lines core, statistics in
 
   let cond pid (s:string) =

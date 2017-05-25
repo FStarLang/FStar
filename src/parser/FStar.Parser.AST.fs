@@ -24,29 +24,6 @@ open FStar
 open FStar.Util
 open FStar.Const
 
-let old_mk_tuple_lid n r =
-  let t = Util.format1 "Tuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
-let old_mk_tuple_data_lid n r =
-  let t = Util.format1 "MkTuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
-//let old_is_tuple_data_lid f n =
-//  Syntax.lid_equals f (mk_tuple_data_lid n Syntax.dummyRange)
-//
-//let old_is_dtuple_constructor (t:typ) = match t.n with
-//  | Typ_const l -> Util.starts_with l.v.str "Prims.DTuple"
-//  | _ -> false
-
-let old_mk_dtuple_lid n r =
-  let t = Util.format1 "DTuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
-let old_mk_dtuple_data_lid n r =
-  let t = Util.format1 "MkDTuple%s" (Util.string_of_int n) in
-  set_lid_range (C.pconst t) r
-
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on

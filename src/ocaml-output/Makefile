@@ -9,7 +9,7 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml -I src/ocaml-output/bootlibs -use-ocamlfind
+  -I src/prettyprint/ml  -I ulib/ml -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
@@ -18,6 +18,7 @@ GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX=$(shell pwd)/fstar
+PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -148,7 +149,8 @@ COMMIT = $(shell ../tools/get_commit)
 
 .PHONY: FStar_Version.ml
 FStar_Version.ml:
-	echo 'let dummy () = ();;' > $@
+	echo 'open FStar_Util' > $@
+	echo 'let dummy () = ();;' >> $@
 	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
 	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
 	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
@@ -213,14 +215,16 @@ endif
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
         # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
+	if [ -f "$(PREFIX)/bin/z3.exe" ]; then chmod 755 $(PREFIX)/bin/*z3*.*; fi
+
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
-	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
+#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*.dll $(PREFIX)/bin
+#	cp ../../bin/msvc*.dll $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
 	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
 	zip -r -9 $(NAME).zip fstar
 else

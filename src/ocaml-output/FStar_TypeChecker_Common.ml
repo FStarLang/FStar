@@ -16,12 +16,12 @@ type ('a,'b) problem =
   lhs: 'a;
   relation: rel;
   rhs: 'a;
-  element: 'b Prims.option;
+  element: 'b option;
   logical_guard: (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.term);
   scope: FStar_Syntax_Syntax.binders;
   reason: Prims.string Prims.list;
   loc: FStar_Range.range;
-  rank: Prims.int Prims.option;}
+  rank: Prims.int option;}
 type prob =
   | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem
   | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem
@@ -178,15 +178,13 @@ let rec delta_depth_greater_than:
       | (uu____415,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
 let rec decr_delta_depth:
-  FStar_Syntax_Syntax.delta_depth ->
-    FStar_Syntax_Syntax.delta_depth Prims.option
-  =
-  fun uu___99_420  ->
-    match uu___99_420 with
+  FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth option =
+  fun uu___96_420  ->
+    match uu___96_420 with
     | FStar_Syntax_Syntax.Delta_constant 
       |FStar_Syntax_Syntax.Delta_equational  -> None
-    | FStar_Syntax_Syntax.Delta_defined_at_level _0_27 when
-        _0_27 = (Prims.parse_int "1") ->
+    | FStar_Syntax_Syntax.Delta_defined_at_level _0_28 when
+        _0_28 = (Prims.parse_int "1") ->
         Some FStar_Syntax_Syntax.Delta_constant
     | FStar_Syntax_Syntax.Delta_defined_at_level i ->
         Some
@@ -207,8 +205,8 @@ let rec insert_col_info col info col_infos =
       else
         (let uu____490 = insert_col_info col info rest in (c, i) :: uu____490)
 let find_nearest_preceding_col_info col col_infos =
-  let rec aux out uu___100_526 =
-    match uu___100_526 with
+  let rec aux out uu___97_526 =
+    match uu___97_526 with
     | [] -> out
     | (c,i)::rest -> if c > col then out else aux (Some i) rest in
   aux None col_infos
@@ -230,10 +228,10 @@ let insert_identifier_info:
       fun range  ->
         let info = mk_info id ty in
         let use_range =
-          let uu___101_576 = range in
+          let uu___98_576 = range in
           {
             FStar_Range.def_range = (range.FStar_Range.use_range);
-            FStar_Range.use_range = (uu___101_576.FStar_Range.use_range)
+            FStar_Range.use_range = (uu___98_576.FStar_Range.use_range)
           } in
         let fn = FStar_Range.file_of_range use_range in
         let start = FStar_Range.start_of_range use_range in
@@ -266,7 +264,7 @@ let insert_identifier_info:
                         insert_col_info col info uu____648 in
                       FStar_ST.write col_infos uu____647))
 let info_at_pos:
-  Prims.string -> Prims.int -> Prims.int -> identifier_info Prims.option =
+  Prims.string -> Prims.int -> Prims.int -> identifier_info option =
   fun fn  ->
     fun row  ->
       fun col  ->

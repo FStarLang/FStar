@@ -628,15 +628,39 @@ and desugar_typ env e : S.term =
     desugar_term_maybe_top false env e
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let lid = "FStar." ^
+  let lower, upper = FStar.Const.bounds signedness width in
+  let value = FStar.Util.int_of_string (FStar.Util.ensure_decimal repr) in
+  let tnm = "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
-    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64") ^
+    (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
+  in
+  //we do a static check of integer constants
+  //and coerce them to the appropriate type using the internal coercion
+  // __uint_to_t or __int_to_t
+  //Rather than relying on a verification condition to check this trivial property
+  if not (lower <= value && value <= upper)
+  then raise (Error(BU.format2 "%s is not in the expected range for %s"
+                               repr tnm,
+                    range));
+  let private_intro_nm = tnm ^
+    ".__" ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
+  in
+  let intro_nm = tnm ^
     "." ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
   in
-  let lid = lid_of_path (path_of_text lid) range in
-  let lid = match Env.try_lookup_lid env lid with
-    | Some lid -> fst lid
-    | None -> failwith (BU.format1 "%s not in scope\n" (text_of_lid lid)) in
+  let lid = lid_of_path (path_of_text intro_nm) range in
+  let lid =
+    match Env.try_lookup_lid env lid with
+    | Some (intro_term, _) ->
+      begin match intro_term.n with
+        | Tm_fvar fv ->
+          let private_lid = lid_of_path (path_of_text private_intro_nm) range in
+          let private_fv = S.lid_as_fv private_lid (U.incr_delta_depth fv.fv_delta) fv.fv_qual in
+          {intro_term with n=Tm_fvar private_fv}
+        | _ ->
+          failwith ("Unexpected non-fvar for " ^ intro_nm)
+      end
+    | None -> failwith (BU.format1 "%s not in scope\n" tnm) in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 
@@ -724,7 +748,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       (* we get back the original effect definition instead of an effect abbreviation *)
       begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
-          S.fvar (lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ txt)) Range.dummyRange) (Delta_defined_at_level 1) None
+          let lid = U.dm4f_lid ed txt in
+          S.fvar lid (Delta_defined_at_level 1) None
         | None ->
           failwith (BU.format2 "Member %s of effect %s is not accessible \
                                 (using an effect abbreviation instead of the original effect ?)"
@@ -1740,6 +1765,7 @@ let desugar_binders env binders =
 
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
+    // qualified with effect name
     let monad_env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders monad_env eff_binders in
     let eff_t = desugar_term env eff_typ in

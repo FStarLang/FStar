@@ -805,7 +805,7 @@ let digest_of_string (s:string) =
 
 let ensure_decimal (s: string) =
   if s.StartsWith "0x" then
-    sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
+    sprintf "%A" (System.Numerics.BigInteger.Parse ("0"+s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
   else
     s
 
@@ -970,3 +970,6 @@ let json_of_string str : option<json> =
 let string_of_json json : string =
   let serializer = new System.Web.Script.Serialization.JavaScriptSerializer() in
   serializer.Serialize (json_to_obj json)
+
+let read r = !r
+let write r x = r := x

@@ -123,7 +123,8 @@ let pars s =
 let tc s =
     let tm = pars s in
     let _, tcenv = init() in
-    let tm, _, _ = TcTerm.type_of_tot_term tcenv tm in
+    let tcenv = {tcenv with top_level=false} in
+    let tm, _, _ = TcTerm.tc_tot_or_gtot_term tcenv tm in
     tm
 
 let pars_and_tc_fragment (s:string) =

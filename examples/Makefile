@@ -3,7 +3,6 @@ include Makefile.include
 
 ALL_EXAMPLE_DIRS=\
 bug-reports \
-hello \
 data_structures \
 algorithms \
 crypto \
@@ -11,8 +10,8 @@ termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
-rel \
 maths \
+rel \
 paradoxes \
 printf \
 metatheory \
@@ -24,6 +23,7 @@ struct \
 micro-benchmarks \
 bytes \
 tactics
+
 
 # low-level \  ... NS: removing from CI for this branch
 

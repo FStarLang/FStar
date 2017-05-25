@@ -69,7 +69,7 @@ assume val delete: file:string -> ST unit
    As such, it is defined to have effect `All`, which combines
    both state and exceptions.
 
-   Regardless, the specification proves that `checkedDelete`
+   Regardless, the specification proves that `safe_delete`
    does not change the heap.
  *)
 val safe_delete: file -> All unit 

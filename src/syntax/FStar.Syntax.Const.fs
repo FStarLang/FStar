@@ -24,9 +24,11 @@ open FStar.Const
 
 let mk t : term = mk t None dummyRange
 let p2l l = lid_of_path l dummyRange
-let pconst s     = p2l ["Prims";s]
-let prims_lid    = p2l ["Prims"]
-let fstar_ns_lid = p2l ["FStar"]
+let pconst s       = p2l ["Prims";s]
+let psconst s      = p2l ["FStar"; "Pervasives"; s]
+let prims_lid      = p2l ["Prims"]
+let pervasives_lid = p2l ["FStar"; "Pervasives"]
+let fstar_ns_lid   = p2l ["FStar"]
 
 (* Primitive types *)
 let bool_lid     = pconst "bool"
@@ -37,8 +39,8 @@ let bytes_lid    = pconst "bytes"
 let int_lid      = pconst "int"
 let exn_lid      = pconst "exn"
 let list_lid     = pconst "list"
-let option_lid   = pconst "option"
-let either_lid   = pconst "either"
+let option_lid   = psconst "option"
+let either_lid   = psconst "either"
 let pattern_lid  = pconst "pattern"
 let precedes_lid = pconst "precedes"
 let lex_t_lid    = pconst "lex_t"
@@ -104,8 +106,8 @@ let exp_int s       = mk (Tm_constant (Const_int (s,None))) // Makes an (unbound
 let exp_string s    = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange)))
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
-let some_lid        = pconst  "Some"
-let none_lid        = pconst  "None"
+let some_lid        = psconst  "Some"
+let none_lid        = psconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 (* list_append_lid is needed to desugar @ in the compiler *)

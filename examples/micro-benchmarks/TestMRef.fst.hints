@@ -76,16 +76,16 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_typing",
         "equation_FStar.Heap.fresh", "equation_FStar.Heap.modifies",
-        "equation_FStar.MRef.as_ref", "equation_FStar.MRef.contains",
-        "equation_FStar.MRef.sel", "equation_FStar.ST.ref",
-        "function_token_typing_Prims.int", "int_typing",
-        "lemma_FStar.Heap.lemma_alloc",
+        "equation_FStar.Heap.modifies_t", "equation_FStar.MRef.as_ref",
+        "equation_FStar.MRef.contains", "equation_FStar.MRef.sel",
+        "equation_FStar.ST.ref", "function_token_typing_Prims.int",
+        "int_typing", "lemma_FStar.Heap.lemma_alloc",
         "lemma_FStar.Heap.lemma_contains_implies_used",
         "lemma_FStar.Heap.lemma_distinct_addrs_unused",
         "lemma_FStar.Heap.lemma_sel_upd2",
         "lemma_FStar.Heap.lemma_unused_upd_modifies",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2"
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2"
       ],
       0
     ],

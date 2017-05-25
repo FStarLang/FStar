@@ -1,3 +1,3 @@
 {"features": ["autocomplete", "compute", "describe-protocol", "describe-repl", "exit", "lookup", "lookup/documentation", "lookup/definition", "pop", "peek", "push", "search"], "kind": "protocol-info", "version": 1}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
-{"kind": "response", "query-id": "2", "response": [[14, "", "Prims.Mkdtuple2"], [14, "", "Prims.Mkdtuple3"], [14, "", "Prims.Mkdtuple4"], [14, "", "Prims.Mkdtuple5"], [14, "", "Prims.Mkdtuple6"], [14, "", "Prims.Mkdtuple7"], [14, "", "Prims.Mkdtuple8"]], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [[14, "", "Prims.Mkdtuple2"]], "status": "success"}

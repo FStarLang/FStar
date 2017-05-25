@@ -100,7 +100,7 @@ let reset_gensym: Prims.unit -> Prims.unit = fun uu____85  -> gs.reset ()
 let rec gensyms: Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
-    | _0_28 when _0_28 = (Prims.parse_int "0") -> []
+    | _0_29 when _0_29 = (Prims.parse_int "0") -> []
     | n1 ->
         let uu____92 = gensym () in
         let uu____93 = gensyms (n1 - (Prims.parse_int "1")) in uu____92 ::
@@ -165,7 +165,7 @@ type mlconstant =
   | MLC_Unit
   | MLC_Bool of Prims.bool
   | MLC_Int of (Prims.string* (FStar_Const.signedness* FStar_Const.width)
-  Prims.option)
+  option)
   | MLC_Float of FStar_BaseTypes.float
   | MLC_Char of FStar_BaseTypes.char
   | MLC_String of Prims.string
@@ -183,7 +183,7 @@ let uu___is_MLC_Int: mlconstant -> Prims.bool =
     match projectee with | MLC_Int _0 -> true | uu____272 -> false
 let __proj__MLC_Int__item___0:
   mlconstant ->
-    (Prims.string* (FStar_Const.signedness* FStar_Const.width) Prims.option)
+    (Prims.string* (FStar_Const.signedness* FStar_Const.width) option)
   = fun projectee  -> match projectee with | MLC_Int _0 -> _0
 let uu___is_MLC_Float: mlconstant -> Prims.bool =
   fun projectee  ->
@@ -287,17 +287,16 @@ type mlexpr' =
   | MLE_Let of ((mlletflavor* c_flags* mllb Prims.list)* mlexpr)
   | MLE_App of (mlexpr* mlexpr Prims.list)
   | MLE_Fun of ((mlident* mlty) Prims.list* mlexpr)
-  | MLE_Match of (mlexpr* (mlpattern* mlexpr Prims.option* mlexpr)
-  Prims.list)
+  | MLE_Match of (mlexpr* (mlpattern* mlexpr option* mlexpr) Prims.list)
   | MLE_Coerce of (mlexpr* mlty* mlty)
   | MLE_CTor of (mlpath* mlexpr Prims.list)
   | MLE_Seq of mlexpr Prims.list
   | MLE_Tuple of mlexpr Prims.list
   | MLE_Record of (mlsymbol Prims.list* (mlsymbol* mlexpr) Prims.list)
   | MLE_Proj of (mlexpr* mlpath)
-  | MLE_If of (mlexpr* mlexpr* mlexpr Prims.option)
+  | MLE_If of (mlexpr* mlexpr* mlexpr option)
   | MLE_Raise of (mlpath* mlexpr Prims.list)
-  | MLE_Try of (mlexpr* (mlpattern* mlexpr Prims.option* mlexpr) Prims.list)
+  | MLE_Try of (mlexpr* (mlpattern* mlexpr option* mlexpr) Prims.list)
 and mlexpr = {
   expr: mlexpr';
   mlty: mlty;
@@ -305,7 +304,7 @@ and mlexpr = {
 and mllb =
   {
   mllb_name: mlident;
-  mllb_tysc: mltyscheme Prims.option;
+  mllb_tysc: mltyscheme option;
   mllb_add_unit: Prims.bool;
   mllb_def: mlexpr;
   print_typ: Prims.bool;}
@@ -345,7 +344,7 @@ let uu___is_MLE_Match: mlexpr' -> Prims.bool =
   fun projectee  ->
     match projectee with | MLE_Match _0 -> true | uu____799 -> false
 let __proj__MLE_Match__item___0:
-  mlexpr' -> (mlexpr* (mlpattern* mlexpr Prims.option* mlexpr) Prims.list) =
+  mlexpr' -> (mlexpr* (mlpattern* mlexpr option* mlexpr) Prims.list) =
   fun projectee  -> match projectee with | MLE_Match _0 -> _0
 let uu___is_MLE_Coerce: mlexpr' -> Prims.bool =
   fun projectee  ->
@@ -381,8 +380,7 @@ let __proj__MLE_Proj__item___0: mlexpr' -> (mlexpr* mlpath) =
 let uu___is_MLE_If: mlexpr' -> Prims.bool =
   fun projectee  ->
     match projectee with | MLE_If _0 -> true | uu____972 -> false
-let __proj__MLE_If__item___0:
-  mlexpr' -> (mlexpr* mlexpr* mlexpr Prims.option) =
+let __proj__MLE_If__item___0: mlexpr' -> (mlexpr* mlexpr* mlexpr option) =
   fun projectee  -> match projectee with | MLE_If _0 -> _0
 let uu___is_MLE_Raise: mlexpr' -> Prims.bool =
   fun projectee  ->
@@ -393,9 +391,9 @@ let uu___is_MLE_Try: mlexpr' -> Prims.bool =
   fun projectee  ->
     match projectee with | MLE_Try _0 -> true | uu____1027 -> false
 let __proj__MLE_Try__item___0:
-  mlexpr' -> (mlexpr* (mlpattern* mlexpr Prims.option* mlexpr) Prims.list) =
+  mlexpr' -> (mlexpr* (mlpattern* mlexpr option* mlexpr) Prims.list) =
   fun projectee  -> match projectee with | MLE_Try _0 -> _0
-type mlbranch = (mlpattern* mlexpr Prims.option* mlexpr)
+type mlbranch = (mlpattern* mlexpr option* mlexpr)
 type mlletbinding = (mlletflavor* c_flags* mllb Prims.list)
 type mltybody =
   | MLTD_Abbrev of mlty
@@ -418,8 +416,7 @@ let __proj__MLTD_DType__item___0:
   mltybody -> (mlsymbol* mlty Prims.list) Prims.list =
   fun projectee  -> match projectee with | MLTD_DType _0 -> _0
 type one_mltydecl =
-  (Prims.bool* mlsymbol* mlsymbol Prims.option* mlidents* mltybody
-    Prims.option)
+  (Prims.bool* mlsymbol* mlsymbol option* mlidents* mltybody option)
 type mltydecl = one_mltydecl Prims.list
 type mlmodule1 =
   | MLM_Ty of mltydecl
@@ -484,10 +481,10 @@ let with_ty_loc: mlty -> mlexpr' -> mlloc -> mlexpr =
 let with_ty: mlty -> mlexpr' -> mlexpr =
   fun t  -> fun e  -> with_ty_loc t e dummy_loc
 type mllib =
-  | MLLib of (mlpath* (mlsig* mlmodule) Prims.option* mllib) Prims.list
+  | MLLib of (mlpath* (mlsig* mlmodule) option* mllib) Prims.list
 let uu___is_MLLib: mllib -> Prims.bool = fun projectee  -> true
 let __proj__MLLib__item___0:
-  mllib -> (mlpath* (mlsig* mlmodule) Prims.option* mllib) Prims.list =
+  mllib -> (mlpath* (mlsig* mlmodule) option* mllib) Prims.list =
   fun projectee  -> match projectee with | MLLib _0 -> _0
 let ml_unit_ty: mlty = MLTY_Named ([], (["Prims"], "unit"))
 let ml_bool_ty: mlty = MLTY_Named ([], (["Prims"], "bool"))

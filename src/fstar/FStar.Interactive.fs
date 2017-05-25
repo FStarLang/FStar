@@ -18,6 +18,7 @@
 module FStar.Interactive
 open FStar.All
 open FStar
+open FStar.Range
 open FStar.Util
 open FStar.Getopt
 open FStar.Ident
@@ -37,10 +38,10 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   let (intf, impl), dsenv, env, remaining =
     match remaining with
     | intf :: impl :: remaining when needs_interleaving intf impl ->
-      let _, dsenv, env = tc_one_file_and_intf (Some intf) impl dsenv env in
+      let _, dsenv, env = tc_one_file dsenv env (Some intf) impl in
       (Some intf, impl), dsenv, env, remaining
     | intf_or_impl :: remaining ->
-      let _, dsenv, env = tc_one_file_and_intf None intf_or_impl dsenv env in
+      let _, dsenv, env = tc_one_file dsenv env None intf_or_impl in
       (None, intf_or_impl), dsenv, env, remaining
     | [] -> failwith "Impossible"
   in
@@ -406,10 +407,22 @@ let json_of_opt json_of_a opt_a =
 let json_of_pos pos =
   JsonList [JsonInt (Range.line_of_pos pos); JsonInt (Range.col_of_pos pos)]
 
-let json_of_range r =
-  JsonAssoc [("fname", JsonStr (Range.file_of_range r));
-             ("beg", json_of_pos (Range.start_of_range r));
-             ("end", json_of_pos (Range.end_of_range r))]
+let json_of_range_fields file b e =
+  JsonAssoc [("fname", JsonStr file);
+             ("beg", json_of_pos b);
+             ("end", json_of_pos e)]
+
+let json_of_use_range r =
+    json_of_range_fields
+            (Range.file_of_use_range r)
+            (Range.start_of_use_range r)
+            (Range.end_of_use_range r)
+
+let json_of_def_range r =
+    json_of_range_fields
+            (Range.file_of_range r)
+            (Range.start_of_range r)
+            (Range.end_of_range r)
 
 let json_of_issue_level i =
   JsonStr (match i with
@@ -423,7 +436,12 @@ let json_of_issue issue =
              ("message", JsonStr issue.issue_message);
              ("ranges", JsonList (match issue.issue_range with
                                   | None -> []
-                                  | Some r -> [json_of_range r]))]
+                                  | Some r -> [json_of_use_range r]));
+             ("related_ranges", JsonList (match issue.issue_range with
+                                          | Some r
+                                             when r.def_range <> r.use_range ->
+                                            [json_of_def_range r]
+                                          | _ -> []))]
 
 type lookup_result = { lr_name: string;
                        lr_def_range: option<Range.range>;
@@ -433,7 +451,7 @@ type lookup_result = { lr_name: string;
 
 let json_of_lookup_result lr =
   JsonAssoc [("name", JsonStr lr.lr_name);
-             ("defined-at", json_of_opt json_of_range lr.lr_def_range);
+             ("defined-at", json_of_opt json_of_def_range lr.lr_def_range);
              ("type", json_of_opt JsonStr lr.lr_typ);
              ("documentation", json_of_opt JsonStr lr.lr_doc);
              ("definition", json_of_opt JsonStr lr.lr_def)]

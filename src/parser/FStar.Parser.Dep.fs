@@ -249,11 +249,18 @@ let collect_one
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
+  (*
+   * AR: adding FStar.Pervasives to dependencies
+   * the name auto_open is a bit of misnomer, it only includes the file in the dependencies, and not actually open the namespace
+   * if you want to open a namespace, look in src/tosyntax/FStar.ToSyntax.Env.fs
+   *)
   let auto_open =
     if basename filename = Options.prims_basename () then
       []
     else
-      [ Const.fstar_ns_lid; Const.prims_lid ]
+      let l = [ Const.fstar_ns_lid; Const.prims_lid ] in
+      if basename filename = Options.pervasives_basename () then l
+      else l @ [ Const.pervasives_lid ]
   in
   List.iter (record_open false) auto_open;
 
@@ -659,8 +666,12 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     let is_interleaved = List.length as_list = 2 in
     List.map (fun f ->
       let should_append_fsti = is_implementation f && is_interleaved in
-      let suffix = if should_append_fsti then [ f ^ "i" ] else [] in
       let k = lowercase_module_name f in
+      let suffix =
+        // ADL: we want the absolute path of the fsti in the Makefile
+        match must (smap_try_find m k) with
+        | Some intf, _ when should_append_fsti -> [intf]
+        | _ -> [] in
       let deps = List.rev (discover k) in
       let deps_as_filenames = List.collect must_find deps @ suffix in
       (* List stored in the "right" order. *)

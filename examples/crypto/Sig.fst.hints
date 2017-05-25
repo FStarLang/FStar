@@ -64,8 +64,8 @@
       2,
       2,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Some",
-        "data_elim_Sig.Entry", "disc_equation_Prims.Some",
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pervasives.Some",
+        "data_elim_Sig.Entry", "disc_equation_FStar.Pervasives.Some",
         "equation_Platform.Bytes.bytes", "equation_Sig.pk",
         "equation_Sig.pksize", "equation_Sig.sigsize", "equation_Sig.text",
         "fuel_guarded_inversion_Sig.entry", "primitive_Prims.op_AmpAmp",
