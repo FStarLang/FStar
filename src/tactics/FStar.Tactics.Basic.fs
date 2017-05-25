@@ -763,8 +763,8 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  * If all that is successful, the term is rewritten.
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term) : tac<term> =
-    let env = { env with instantiate_imp = false } in
-    let t, lcomp, g = TcTerm.tc_term env t in
+    let env' = { env with instantiate_imp = false } in
+    let t, lcomp, g = TcTerm.tc_term env' t in
     if not (U.is_total_lcomp lcomp) || not (TcRel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
