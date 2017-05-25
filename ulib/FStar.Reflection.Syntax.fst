@@ -157,3 +157,49 @@ type norm_step =
     | Simpl
     | WHNF
     | Primops
+
+let compare_fv (f1 f2 : fv) : order =
+    compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
+
+let rec compare_const (c1 c2 : const) : order =
+    match c1, c2 with
+    | C_Unit, C_Unit -> Eq
+    | C_Unit, C_Int _ -> Lt
+    | C_Int _, C_Unit -> Gt
+    | C_Int i, C_Int j -> order_from_int (i - j)
+
+let rec compare_term (s t : term) : order =
+    match inspect s, inspect t with
+    | Tv_Var sv, Tv_Var tv ->
+        compare_binder sv tv
+
+    | Tv_FVar sv, Tv_FVar tv ->
+        compare_fv sv tv
+
+    | Tv_App h1 a1, Tv_App h2 a2 ->
+        lex (compare_term h1 h2) (fun () -> compare_term a1 a2)
+
+    | Tv_Abs b1 e1, Tv_Abs b2 e2
+    | Tv_Arrow b1 e1, Tv_Arrow b2 e2
+    | Tv_Refine b1 e1, Tv_Refine b2 e2 ->
+        lex (compare_binder b1 b2) (fun () -> compare_term e1 e2)
+
+    | Tv_Type (), Tv_Type () ->
+        Eq
+
+    | Tv_Const c1, Tv_Const c2 ->
+        compare_const c1 c2
+
+    | Tv_Unknown, Tv_Unknown ->
+        Eq
+
+    // From here onwards, they must have different constructors. Order them arbitrarilly as in the definition.
+    | Tv_Var _, _      -> Lt   | _, Tv_Var _      -> Gt
+    | Tv_FVar _, _     -> Lt   | _, Tv_FVar _     -> Gt
+    | Tv_App _ _, _    -> Lt   | _, Tv_App _ _    -> Gt
+    | Tv_Abs _ _, _    -> Lt   | _, Tv_Abs _ _    -> Gt
+    | Tv_Arrow _ _, _  -> Lt   | _, Tv_Arrow _ _  -> Gt
+    | Tv_Type (), _    -> Lt   | _, Tv_Type ()    -> Gt
+    | Tv_Refine _ _, _ -> Lt   | _, Tv_Refine _ _ -> Gt
+    | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
+    | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
