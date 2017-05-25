@@ -1508,16 +1508,20 @@ let later: Prims.unit tac =
                 smt_goals = (uu___113_2815.smt_goals);
                 transaction = (uu___113_2815.transaction)
               }))
+let tdone: Prims.unit tac =
+  bind get
+    (fun ps  ->
+       match ps.goals with | [] -> ret () | uu____2819 -> fail "Not done!")
 type order =
   | Lt
   | Eq
   | Gt
 let uu___is_Lt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____2819 -> false
+  fun projectee  -> match projectee with | Lt  -> true | uu____2824 -> false
 let uu___is_Eq: order -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____2823 -> false
+  fun projectee  -> match projectee with | Eq  -> true | uu____2828 -> false
 let uu___is_Gt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Gt  -> true | uu____2827 -> false
+  fun projectee  -> match projectee with | Gt  -> true | uu____2832 -> false
 let order_binder:
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder -> order =
   fun x  ->
@@ -1531,16 +1535,16 @@ let proofstate_of_goal_ty:
   fun env  ->
     fun g  ->
       let g1 =
-        let uu____2844 =
+        let uu____2849 =
           FStar_TypeChecker_Normalize.normalize
             [FStar_TypeChecker_Normalize.Beta] env g in
-        { context = env; witness = None; goal_ty = uu____2844 } in
-      let uu____2845 = FStar_Unionfind.new_transaction () in
+        { context = env; witness = None; goal_ty = uu____2849 } in
+      let uu____2850 = FStar_Unionfind.new_transaction () in
       {
         main_context = env;
         main_goal = g1;
         all_implicits = [];
         goals = [g1];
         smt_goals = [];
-        transaction = uu____2845
+        transaction = uu____2850
       }
