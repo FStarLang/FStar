@@ -21,6 +21,8 @@ let liftM2' f ma mb = a <-- ma;
 val liftM2 : ('a -> 'b -> 'c) -> (tactic 'a -> tactic 'b -> tactic 'c)
 let liftM2 f = liftM2' (fun x y -> return (f x y))
 
+let idtac : tactic unit = return ()
+
 (* Fix combinator, so we need not expose the TAC effect (c.f. 1017) *)
 val fix : #a:Type -> (tactic a -> tactic a) -> unit -> Tac a
 let rec fix #a ff (u:unit) = ff (fix #a ff) ()
