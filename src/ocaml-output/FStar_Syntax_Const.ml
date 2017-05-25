@@ -215,18 +215,22 @@ let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
     let uu____112 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None in
     FStar_All.pipe_right uu____112 FStar_Syntax_Syntax.fv_to_tm
-let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
+let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lident =
   fun s  ->
-    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] [s])
+    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] s)
       FStar_Range.dummyRange
-let tactic_lid: FStar_Ident.lident = fstar_tactics_lid "tactic"
-let by_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "by_tactic"
-let reify_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "reify_tactic"
+let fstar_tactics_lid: Prims.string -> FStar_Ident.lid =
+  fun s  -> fstar_tactics_lid' [s]
+let tactic_lid: FStar_Ident.lid = fstar_tactics_lid' ["Effect"; "by_tactic"]
+let by_tactic_lid: FStar_Ident.lid =
+  fstar_tactics_lid' ["Effect"; "by_tactic"]
+let reify_tactic_lid: FStar_Ident.lid =
+  fstar_tactics_lid' ["Effect"; "by_tactic"]
 let quote_lid: FStar_Ident.lident =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "quote"]
+  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "quote"]
     FStar_Range.dummyRange
 let fstar_refl_embed_lid: FStar_Ident.lident =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "__embed"]
+  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "__embed"]
     FStar_Range.dummyRange
 let fstar_refl_embed: FStar_Syntax_Syntax.term =
   lid_as_tm fstar_refl_embed_lid
