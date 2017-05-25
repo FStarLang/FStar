@@ -135,8 +135,8 @@ let ptsym:
   =
   fun currentModule  ->
     fun mlp  ->
-      if FStar_List.isEmpty (Prims.fst mlp)
-      then ptsym_of_symbol (Prims.snd mlp)
+      if FStar_List.isEmpty (fst mlp)
+      then ptsym_of_symbol (snd mlp)
       else
         (let uu____222 = mlpath_of_mlpath currentModule mlp in
          match uu____222 with
@@ -192,7 +192,7 @@ let is_prims_ns: FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.bool
 let as_bin_op:
   FStar_Extraction_ML_Syntax.mlpath ->
     (FStar_Extraction_ML_Syntax.mlsymbol* (Prims.int* fixity)* Prims.string)
-      Prims.option
+      option
   =
   fun uu____400  ->
     match uu____400 with
@@ -208,7 +208,7 @@ let is_bin_op: FStar_Extraction_ML_Syntax.mlpath -> Prims.bool =
   fun p  -> let uu____444 = as_bin_op p in uu____444 <> None
 let as_uni_op:
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) Prims.option
+    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) option
   =
   fun uu____467  ->
     match uu____467 with
@@ -225,7 +225,7 @@ let is_standard_type: FStar_Extraction_ML_Syntax.mlpath -> Prims.bool =
   fun p  -> false
 let as_standard_constructor:
   FStar_Extraction_ML_Syntax.mlpath ->
-    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) Prims.option
+    (FStar_Extraction_ML_Syntax.mlsymbol* Prims.string) option
   =
   fun uu____508  ->
     match uu____508 with
@@ -278,8 +278,8 @@ let escape_char_hex: FStar_BaseTypes.char -> Prims.string =
 let escape_or:
   (FStar_Char.char -> Prims.string) -> FStar_Char.char -> Prims.string =
   fun fallback  ->
-    fun uu___121_614  ->
-      match uu___121_614 with
+    fun uu___119_614  ->
+      match uu___119_614 with
       | c when c = '\\' -> "\\\\"
       | c when c = ' ' -> " "
       | c when c = '\b' -> "\\b"
@@ -464,7 +464,7 @@ let rec doc_of_expr:
                 let uu____845 =
                   let uu____848 = as_standard_constructor ctor in
                   FStar_Option.get uu____848 in
-                Prims.snd uu____845
+                snd uu____845
               else ptctor currentModule ctor in
             FStar_Format.text name
         | FStar_Extraction_ML_Syntax.MLE_CTor (ctor,args) ->
@@ -475,7 +475,7 @@ let rec doc_of_expr:
                 let uu____861 =
                   let uu____864 = as_standard_constructor ctor in
                   FStar_Option.get uu____864 in
-                Prims.snd uu____861
+                snd uu____861
               else ptctor currentModule ctor in
             let args1 =
               FStar_List.map
@@ -623,9 +623,7 @@ let rec doc_of_expr:
               if uu____1047
               then
                 FStar_Format.reduce
-                  [e2;
-                  FStar_Format.text ".";
-                  FStar_Format.text (Prims.snd f)]
+                  [e2; FStar_Format.text "."; FStar_Format.text (snd f)]
               else
                 (let uu____1050 =
                    let uu____1052 =
@@ -827,8 +825,7 @@ and doc_of_pattern:
       | FStar_Extraction_ML_Syntax.MLP_Const c ->
           let uu____1286 = string_of_mlconstant c in
           FStar_Format.text uu____1286
-      | FStar_Extraction_ML_Syntax.MLP_Var x ->
-          FStar_Format.text (Prims.fst x)
+      | FStar_Extraction_ML_Syntax.MLP_Var x -> FStar_Format.text (fst x)
       | FStar_Extraction_ML_Syntax.MLP_Record (path,fields) ->
           let for1 uu____1303 =
             match uu____1303 with
@@ -856,7 +853,7 @@ and doc_of_pattern:
               let uu____1327 =
                 let uu____1330 = as_standard_constructor ctor in
                 FStar_Option.get uu____1330 in
-              Prims.snd uu____1327
+              snd uu____1327
             else ptctor currentModule ctor in
           FStar_Format.text name
       | FStar_Extraction_ML_Syntax.MLP_CTor (ctor,pats) ->
@@ -867,7 +864,7 @@ and doc_of_pattern:
               let uu____1343 =
                 let uu____1346 = as_standard_constructor ctor in
                 FStar_Option.get uu____1346 in
-              Prims.snd uu____1343
+              snd uu____1343
             else ptctor currentModule ctor in
           let doc1 =
             match (name, pats) with

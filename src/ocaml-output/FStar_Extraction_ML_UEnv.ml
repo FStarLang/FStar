@@ -105,7 +105,7 @@ let tyscheme_of_td uu____264 =
 let lookup_ty_const:
   env ->
     FStar_Extraction_ML_Syntax.mlpath ->
-      FStar_Extraction_ML_Syntax.mltyscheme Prims.option
+      FStar_Extraction_ML_Syntax.mltyscheme option
   =
   fun env  ->
     fun uu____291  ->
@@ -135,7 +135,7 @@ let maybe_mangle_type_projector:
   env ->
     FStar_Syntax_Syntax.fv ->
       (FStar_Extraction_ML_Syntax.mlsymbol Prims.list*
-        FStar_Extraction_ML_Syntax.mlsymbol) Prims.option
+        FStar_Extraction_ML_Syntax.mlsymbol) option
   =
   fun env  ->
     fun fv  ->
@@ -225,7 +225,7 @@ let lookup_bv: env -> FStar_Syntax_Syntax.bv -> ty_or_exp_b =
 let lookup:
   env ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
-      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual Prims.option)
+      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual option)
   =
   fun g  ->
     fun x  ->
@@ -238,7 +238,7 @@ let lookup:
 let lookup_term:
   env ->
     FStar_Syntax_Syntax.term ->
-      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual Prims.option)
+      (ty_or_exp_b* FStar_Syntax_Syntax.fv_qual option)
   =
   fun g  ->
     fun t  ->
@@ -248,8 +248,7 @@ let lookup_term:
       | uu____523 -> failwith "Impossible: lookup_term for a non-name"
 let extend_ty:
   env ->
-    FStar_Syntax_Syntax.bv ->
-      FStar_Extraction_ML_Syntax.mlty Prims.option -> env
+    FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty option -> env
   =
   fun g  ->
     fun a  ->
@@ -284,7 +283,7 @@ let find_uniq: binding Prims.list -> Prims.string -> Prims.string =
                match uu___108_586 with
                | Bv (_,FStar_Util.Inl (mlident',_))|Fv
                  (_,FStar_Util.Inl (mlident',_)) ->
-                   target_mlident = (Prims.fst mlident')
+                   target_mlident = (fst mlident')
                | Fv (_,FStar_Util.Inr (mlident',_,_,_))|Bv
                  (_,FStar_Util.Inr (mlident',_,_,_)) ->
                    target_mlident = mlident') gamma in
@@ -369,8 +368,7 @@ let rec subsetMlidents:
       | [] -> true
 let tySchemeIsClosed: FStar_Extraction_ML_Syntax.mltyscheme -> Prims.bool =
   fun tys  ->
-    let uu____755 = mltyFvars (Prims.snd tys) in
-    subsetMlidents uu____755 (Prims.fst tys)
+    let uu____755 = mltyFvars (snd tys) in subsetMlidents uu____755 (fst tys)
 let extend_fv':
   env ->
     FStar_Syntax_Syntax.fv ->
@@ -496,7 +494,7 @@ let mkContext: FStar_TypeChecker_Env.env -> env =
             FStar_Syntax_Syntax.Delta_constant None in
         FStar_Util.Inr uu____957 in
       extend_lb env uu____956 FStar_Syntax_Syntax.tun failwith_ty false false in
-    FStar_All.pipe_right uu____953 Prims.fst
+    FStar_All.pipe_right uu____953 FStar_Pervasives.fst
 let monad_op_name:
   FStar_Syntax_Syntax.eff_decl ->
     Prims.string -> (FStar_Extraction_ML_Syntax.mlpath* FStar_Ident.lident)

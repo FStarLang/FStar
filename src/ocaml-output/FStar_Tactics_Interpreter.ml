@@ -119,7 +119,7 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
 let grewrite_interpretation:
   FStar_Tactics_Basic.proofstate ->
     FStar_Ident.lid ->
-      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term Prims.option
+      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
   =
   fun ps  ->
     fun nm  ->

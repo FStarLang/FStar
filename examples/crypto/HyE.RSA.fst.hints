@@ -20,8 +20,8 @@
       2,
       1,
       [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.option_haseq",
+        "@query", "assumption_FStar.Pervasives.option_haseq",
+        "assumption_Platform.Bytes.HasEq_bytes",
         "equality_tok_CoreCrypto.AES_128_GCM@tok",
         "equation_CoreCrypto.aeadKeySize", "equation_HyE.RSA.plain",
         "equation_HyE.RSA.plainsize", "equation_Platform.Bytes.bytes",

@@ -154,14 +154,14 @@ let unembed_env:
               (fun env2  ->
                  fun b  ->
                    let uu____149 =
-                     FStar_TypeChecker_Env.try_lookup_bv env2 (Prims.fst b) in
+                     FStar_TypeChecker_Env.try_lookup_bv env2 (fst b) in
                    match uu____149 with
                    | None  -> FStar_TypeChecker_Env.push_binders env2 [b]
                    | uu____159 -> env2) env1 binders in
           env2
 let embed_witness:
   FStar_Tactics_Basic.proofstate ->
-    FStar_Syntax_Syntax.term Prims.option -> FStar_Syntax_Syntax.term
+    FStar_Syntax_Syntax.term option -> FStar_Syntax_Syntax.term
   =
   fun ps  ->
     fun w  ->
@@ -169,7 +169,7 @@ let embed_witness:
         FStar_Reflection_Data.fstar_refl_term w
 let unembed_witness:
   FStar_Tactics_Basic.proofstate ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term Prims.option
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term option
   =
   fun ps  ->
     fun t  ->

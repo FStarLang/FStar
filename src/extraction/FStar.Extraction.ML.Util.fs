@@ -214,27 +214,11 @@ let is_xtuple (ns, n) =
             | _ -> None
     else None
 
-let is_raise (e:mlexpr) :option<mlexpr> =
-  match e.expr with
-  | MLE_App (head, args) ->
-    (match head.expr with
-     | MLE_Name (ns, n) ->
-       if ns = ["FStar"; "Pervasives"] && n = "raise" then
-         let head' = { head with expr = (MLE_Name ([], "raise")) } in
-         Some ({ e with expr = (MLE_App (head', args)) })
-       else None
-     | _ -> None)
-  | _ -> failwith "is_raise: expected an MLE_App node"
-
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
         (match is_xtuple mlp with
         | Some n -> with_ty e.mlty <| MLE_Tuple args
         | _ -> e)
-    | MLE_App _ ->
-      (match is_raise e with
-       | Some e -> e
-       | None   -> e)
     | _ -> e
 
 let record_field_path = function
@@ -261,7 +245,7 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs v
 
 
 let is_xtuple_ty (ns, n) =
-    if ns = ["Prims"]  || ns = ["FStar"; "Pervasives"]
+    if ns = ["FStar"; "Pervasives"]
     then match n with
             | "tuple2" -> Some 2
             | "tuple3" -> Some 3

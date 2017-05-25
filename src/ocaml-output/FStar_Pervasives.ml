@@ -57,16 +57,30 @@ type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = Prims.unit
 type ('Aheap,'Aa,'Awp) all_trivial = Prims.unit
 type 'Aa inversion = Prims.unit
 let allow_inversion = ()
-let invertOption uu____1065 = ()
+let uu___is_None projectee =
+  match projectee with | None  -> true | uu____1080 -> false
+let uu___is_Some projectee =
+  match projectee with | Some v -> true | uu____1092 -> false
+let __proj__Some__item__v projectee = match projectee with | Some v -> v
+let invertOption uu____1109 = ()
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
 let uu___is_Inl projectee =
-  match projectee with | Inl v -> true | uu____1097 -> false
+  match projectee with | Inl v -> true | uu____1141 -> false
 let __proj__Inl__item__v projectee = match projectee with | Inl v -> v
 let uu___is_Inr projectee =
-  match projectee with | Inr v -> true | uu____1131 -> false
+  match projectee with | Inr v -> true | uu____1175 -> false
 let __proj__Inr__item__v projectee = match projectee with | Inr v -> v
+type ('a,'b) tuple2 =
+  | Mktuple2 of 'a* 'b
+let uu___is_Mktuple2 projectee = true
+let __proj__Mktuple2__item___1 projectee =
+  match projectee with | (_1,_2) -> _1
+let __proj__Mktuple2__item___2 projectee =
+  match projectee with | (_1,_2) -> _2
+let fst x = __proj__Mktuple2__item___1 x
+let snd x = __proj__Mktuple2__item___2 x
 type ('a,'b,'c) tuple3 =
   | Mktuple3 of 'a* 'b* 'c
 let uu___is_Mktuple3 projectee = true
@@ -151,6 +165,8 @@ let __proj__Mktuple8__item___7 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _7
 let __proj__Mktuple8__item___8 projectee =
   match projectee with | (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
+let dfst t = Prims.__proj__Mkdtuple2__item___1 t
+let dsnd t = Prims.__proj__Mkdtuple2__item___2 t
 type ('Aa,'Ab,'Ac) dtuple3 =
   | Mkdtuple3 of 'Aa* 'Ab* 'Ac
 let uu___is_Mkdtuple3 projectee = true

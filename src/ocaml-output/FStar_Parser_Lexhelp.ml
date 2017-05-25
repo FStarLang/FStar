@@ -142,9 +142,7 @@ let hexgraph_short: Prims.string -> FStar_BaseTypes.uint16 =
          uu____180 + uu____183 in
        FStar_Util.uint16_of_int uu____179)
 let unicodegraph_long:
-  Prims.string ->
-    (FStar_BaseTypes.uint16 Prims.option* FStar_BaseTypes.uint16)
-  =
+  Prims.string -> (FStar_BaseTypes.uint16 option* FStar_BaseTypes.uint16) =
   fun s  ->
     if (FStar_String.length s) <> (Prims.parse_int "8")
     then failwith "unicodegraph_long"
@@ -309,7 +307,7 @@ let kwd_table: FStar_Parser_Parse.token FStar_Util.smap =
        | (mode,keyword,token) -> FStar_Util.smap_add tab keyword token)
     keywords;
   tab
-let kwd: Prims.string -> FStar_Parser_Parse.token Prims.option =
+let kwd: Prims.string -> FStar_Parser_Parse.token option =
   fun s  -> FStar_Util.smap_try_find kwd_table s
 type lexargs =
   {

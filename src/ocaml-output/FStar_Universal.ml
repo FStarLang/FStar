@@ -5,7 +5,7 @@ let module_or_interface_name:
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
 let parse:
   FStar_ToSyntax_Env.env ->
-    Prims.string Prims.option ->
+    Prims.string option ->
       Prims.string ->
         (FStar_ToSyntax_Env.env* FStar_Syntax_Syntax.modul Prims.list)
   =
@@ -53,34 +53,34 @@ let tc_prims:
       if uu____109
       then FStar_SMTEncoding_Solver.dummy
       else
-        (let uu___197_111 = FStar_SMTEncoding_Solver.solver in
+        (let uu___195_111 = FStar_SMTEncoding_Solver.solver in
          {
            FStar_TypeChecker_Env.init =
-             (uu___197_111.FStar_TypeChecker_Env.init);
+             (uu___195_111.FStar_TypeChecker_Env.init);
            FStar_TypeChecker_Env.push =
-             (uu___197_111.FStar_TypeChecker_Env.push);
+             (uu___195_111.FStar_TypeChecker_Env.push);
            FStar_TypeChecker_Env.pop =
-             (uu___197_111.FStar_TypeChecker_Env.pop);
+             (uu___195_111.FStar_TypeChecker_Env.pop);
            FStar_TypeChecker_Env.mark =
-             (uu___197_111.FStar_TypeChecker_Env.mark);
+             (uu___195_111.FStar_TypeChecker_Env.mark);
            FStar_TypeChecker_Env.reset_mark =
-             (uu___197_111.FStar_TypeChecker_Env.reset_mark);
+             (uu___195_111.FStar_TypeChecker_Env.reset_mark);
            FStar_TypeChecker_Env.commit_mark =
-             (uu___197_111.FStar_TypeChecker_Env.commit_mark);
+             (uu___195_111.FStar_TypeChecker_Env.commit_mark);
            FStar_TypeChecker_Env.encode_modul =
-             (uu___197_111.FStar_TypeChecker_Env.encode_modul);
+             (uu___195_111.FStar_TypeChecker_Env.encode_modul);
            FStar_TypeChecker_Env.encode_sig =
-             (uu___197_111.FStar_TypeChecker_Env.encode_sig);
+             (uu___195_111.FStar_TypeChecker_Env.encode_sig);
            FStar_TypeChecker_Env.preprocess =
              FStar_Tactics_Interpreter.preprocess;
            FStar_TypeChecker_Env.solve =
-             (uu___197_111.FStar_TypeChecker_Env.solve);
+             (uu___195_111.FStar_TypeChecker_Env.solve);
            FStar_TypeChecker_Env.is_trivial =
-             (uu___197_111.FStar_TypeChecker_Env.is_trivial);
+             (uu___195_111.FStar_TypeChecker_Env.is_trivial);
            FStar_TypeChecker_Env.finish =
-             (uu___197_111.FStar_TypeChecker_Env.finish);
+             (uu___195_111.FStar_TypeChecker_Env.finish);
            FStar_TypeChecker_Env.refresh =
-             (uu___197_111.FStar_TypeChecker_Env.refresh)
+             (uu___195_111.FStar_TypeChecker_Env.refresh)
          }) in
     let env =
       FStar_TypeChecker_Env.initial_env
@@ -103,12 +103,12 @@ let tc_prims:
           | ((prims_mod1,env1),elapsed_time) ->
               ((prims_mod1, elapsed_time), dsenv, env1)))
 let tc_one_fragment:
-  FStar_Syntax_Syntax.modul Prims.option ->
+  FStar_Syntax_Syntax.modul option ->
     FStar_ToSyntax_Env.env ->
       FStar_TypeChecker_Env.env ->
         (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-          (FStar_Syntax_Syntax.modul Prims.option* FStar_ToSyntax_Env.env*
-            FStar_TypeChecker_Env.env) Prims.option
+          (FStar_Syntax_Syntax.modul option* FStar_ToSyntax_Env.env*
+            FStar_TypeChecker_Env.env) option
   =
   fun curmod  ->
     fun dsenv  ->
@@ -263,7 +263,7 @@ let load_interface_decls:
 let tc_one_file:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->
-      Prims.string Prims.option ->
+      Prims.string option ->
         Prims.string ->
           ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list*
             FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
