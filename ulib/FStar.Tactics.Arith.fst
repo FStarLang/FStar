@@ -17,7 +17,6 @@ let rec split_arith = fun () -> (
     eg <-- cur_goal;
     let (_, g), _ = eg in
     b <-- is_arith_goal;
-    print (term_to_string g ^ ": " ^ (if b then "is" else "is not") ^ " an arith goal");;
     if b then (
         prune "";;
         addns "Prims";;
