@@ -165,9 +165,13 @@ let compare_fv (f1 f2 : fv) : order =
 let rec compare_const (c1 c2 : const) : order =
     match c1, c2 with
     | C_Unit, C_Unit -> Eq
-    | C_Unit, C_Int _ -> Lt
-    | C_Int _, C_Unit -> Gt
     | C_Int i, C_Int j -> order_from_int (i - j)
+    | C_True, C_True -> Eq
+    | C_False, C_False -> Eq
+    | C_Unit,  _ -> Lt   | _, C_Unit  -> Gt
+    | C_Int _, _ -> Lt   | _, C_Int _ -> Gt
+    | C_True,  _ -> Lt   | _, C_True  -> Gt
+    | C_False, _ -> Lt   | _, C_False -> Gt
 
 let rec compare_term (s t : term) : order =
     match inspect s, inspect t with
