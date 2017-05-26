@@ -37,14 +37,19 @@ let test_cases_unsquash (h : squash (p \/ q)) : Lemma r =
 
 assume val pp : Type0
 assume val qq : Type0
-assume val ff :  pp -> qq
-assume val gg : ~pp -> qq
+assume val ff :  pp -> Lemma qq
+assume val gg : ~pp -> Lemma qq
 
 let ll () : Lemma (pp \/ ~pp) = ()
 
 let test_em () : Lemma qq =
     assert_by_tactic (empp <-- quote ll;
                       p_or_not_p <-- get_lemma empp;
-                      return ()
+                      p_or_not_p <-- unsquash p_or_not_p;
+                      h_pp_npp <-- cases p_or_not_p;
+                      let h_pp, h_npp = h_pp_npp in
+                      apply_lemma (quote ff);; exact (return h_pp);;
+                      apply_lemma (quote gg);; exact (return h_npp);;
+                      qed
                      )
                      qq
