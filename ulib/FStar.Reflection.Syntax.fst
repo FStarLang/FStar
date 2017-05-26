@@ -17,6 +17,8 @@ noeq
 type const =
   | C_Unit : const
   | C_Int : int -> const // Not exposing the details, I presume
+  | C_True : const
+  | C_False : const
   (* TODO: complete *)
 
 noeq

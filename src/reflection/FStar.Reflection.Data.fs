@@ -8,6 +8,8 @@ module Range = FStar.Range
 type vconst =
     | C_Unit
     | C_Int of string
+    | C_True
+    | C_False
 
 type term_view =
     | Tv_Var    of binder
@@ -65,11 +67,15 @@ let ref_Tv_Const   = lid_as_data_tm ref_Tv_Const_lid
 let ref_Tv_Unknown = lid_as_data_tm ref_Tv_Unknown_lid
 
 (* const *)
-let ref_C_Unit_lid = fstar_refl_syntax_lid "C_Unit"
-let ref_C_Int_lid  = fstar_refl_syntax_lid "C_Int"
+let ref_C_Unit_lid  = fstar_refl_syntax_lid "C_Unit"
+let ref_C_True_lid  = fstar_refl_syntax_lid "C_True"
+let ref_C_False_lid = fstar_refl_syntax_lid "C_False"
+let ref_C_Int_lid   = fstar_refl_syntax_lid "C_Int"
 
-let ref_C_Unit = lid_as_data_tm ref_C_Unit_lid
-let ref_C_Int  = lid_as_data_tm ref_C_Int_lid
+let ref_C_Unit   = lid_as_data_tm ref_C_Unit_lid
+let ref_C_True   = lid_as_data_tm ref_C_True_lid
+let ref_C_False  = lid_as_data_tm ref_C_False_lid
+let ref_C_Int    = lid_as_data_tm ref_C_Int_lid
 
 (* assumed functions *)
 

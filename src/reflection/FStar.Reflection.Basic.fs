@@ -176,8 +176,9 @@ let unembed_fvar (t:term) : fv =
 
 let embed_const (c:vconst) : term =
     match c with
-    | C_Unit ->
-        ref_C_Unit
+    | C_Unit    -> ref_C_Unit
+    | C_True    -> ref_C_True
+    | C_False   -> ref_C_False
 
     | C_Int s ->
         S.mk_Tm_app ref_C_Int [S.as_arg (SC.exp_int s)]
@@ -226,6 +227,12 @@ let unembed_const (t:term) : vconst =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unit_lid ->
         C_Unit
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_True_lid ->
+        C_True
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_False_lid ->
+        C_False
 
     | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
         begin match (SS.compress i).n with
@@ -351,6 +358,8 @@ let inspect (t:term) : term_view =
         let c = (match c with
         | FStar.Const.Const_unit -> C_Unit
         | FStar.Const.Const_int (s, _) -> C_Int s
+        | FStar.Const.Const_bool true  -> C_True
+        | FStar.Const.Const_bool false -> C_False
         | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c)))
         in
         Tv_Const c
@@ -358,6 +367,13 @@ let inspect (t:term) : term_view =
     | _ ->
         BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
         Tv_Unknown
+
+let pack_const (c:vconst) : term =
+    match c with
+    | C_Unit    -> SC.exp_unit
+    | C_Int s   -> SC.exp_int s
+    | C_True    -> SC.exp_true_bool
+    | C_False   -> SC.exp_false_bool
 
 // TODO: pass in range?
 let pack (tv:term_view) : term =
@@ -383,11 +399,8 @@ let pack (tv:term_view) : term =
     | Tv_Refine ((bv, _), t) ->
         U.refine bv t
 
-    | Tv_Const (C_Unit) ->
-        SC.exp_unit
-
-    | Tv_Const (C_Int s) ->
-        SC.exp_int s
+    | Tv_Const c ->
+        pack_const c
 
     | _ ->
         failwith "pack: unexpected term view"
