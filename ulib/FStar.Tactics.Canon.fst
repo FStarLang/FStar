@@ -185,6 +185,9 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         // Forget about subtraction
         | Inr (Minus a b) ->
             step_lemma (quote minus_is_plus);;
+            step_lemma (quote cong_plus);;
+            trefl;;
+            canon_point;;
             canon_point
 
         | Inr _ ->
