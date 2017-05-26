@@ -824,6 +824,7 @@ let unsquash (t : term) : tac<term> =
         else
             let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
             let hd, args = U.head_and_args typ in
+            // TODO: Use Syntax.Util.un_squash
             match (U.un_uinst hd).n, args with
             | Tm_fvar fv, [(phi, _)] when S.fv_eq_lid fv SC.squash_lid ->
                 let v = S.new_bv None phi in
@@ -832,6 +833,30 @@ let unsquash (t : term) : tac<term> =
                 ret (S.bv_to_name v))
             | _ ->
                 fail (BU.format1 "Not a squash: %s" (Print.term_to_string typ))
+    )
+
+// Given a `e : Lemma pre post`,
+// returns a term of type `squash post`
+// and (should) splits off a `pre` goal
+let get_lemma (t : term) : tac<term> =
+    with_cur_goal (fun g ->
+        let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in //TODO: check that the guard is trivial
+        bind (if (not (U.is_lemma typ))
+                then fail (BU.format1 "get_lemma: not a lemma (%s)" (Print.term_to_string typ))
+                else ret ()) (fun _ ->
+        let bs, comp = U.arrow_formals_comp typ in
+        bind (match bs with
+              | [x] -> ret ()
+              | _ -> fail "get_lemma: can only receive a lemma with a single unit argument") (fun _ ->
+        let pre, post =
+              let c = U.comp_to_comp_typ comp in
+              match c.effect_args with
+              | pre::post::_ -> fst pre, fst post
+              | _ -> failwith "Impossible: not a lemma" in
+        let v = S.new_bv None (U.mk_squash post) in
+        let g' = {g with context = Env.push_bv g.context v } in
+        bind (replace_cur g') (fun _ ->
+        ret (S.bv_to_name v))))
     )
 
 let cases (t : term) : tac<(term * term)> =

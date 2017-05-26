@@ -21,6 +21,7 @@ let test_cases (h : p \/ q) : Lemma r =
          qed)
          r
 
+// Taking a squashed hypothesis, we can un squash it as we're in an irrelevant context
 let test_cases_unsquash (h : squash (p \/ q)) : Lemma r =
     assert_by_tactic
         (t <-- quote h;
@@ -33,3 +34,17 @@ let test_cases_unsquash (h : squash (p \/ q)) : Lemma r =
          exact (return h_q);;
          qed)
          r
+
+assume val pp : Type0
+assume val qq : Type0
+assume val ff :  pp -> qq
+assume val gg : ~pp -> qq
+
+let ll () : Lemma (pp \/ ~pp) = ()
+
+let test_em () : Lemma qq =
+    assert_by_tactic (empp <-- quote ll;
+                      p_or_not_p <-- get_lemma empp;
+                      return ()
+                     )
+                     qq

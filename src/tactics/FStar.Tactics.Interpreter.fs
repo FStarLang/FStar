@@ -151,6 +151,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                                   (E.pair_typ FStar.Reflection.Data.fstar_refl_term FStar.Reflection.Data.fstar_refl_term);
 
       mktac1 "__unsquash"      unsquash unembed_term embed_term FStar.Reflection.Data.fstar_refl_term;
+      mktac1 "__get_lemma"     get_lemma unembed_term embed_term FStar.Reflection.Data.fstar_refl_term;
 
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;

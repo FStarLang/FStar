@@ -104,3 +104,6 @@ let cases t : tactic (term * term) = fun () -> TAC?.reflect (__cases t)
 // Can only be used when the goal is irrelevant
 assume private val __unsquash : term -> __tac term
 let unsquash t : tactic term = fun () -> TAC?.reflect (__unsquash t)
+
+assume private val __get_lemma : term -> __tac term
+let get_lemma t : tactic term = fun () -> TAC?.reflect (__get_lemma t)
