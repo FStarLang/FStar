@@ -77,7 +77,7 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
 
-let check_trivial t = match t.n with
+let check_trivial t = match (U.unmeta t).n with
     | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
     | _ -> NonTrivial t
 
@@ -2620,12 +2620,19 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 else let vc = N.normalize [N.Simplify] env vc in
                      [env,vc] in
             vcs |> List.iter (fun (env, goal) ->
-                    env.solver.refresh ();
-                    if Env.debug env <| Options.Other "Rel"
-                    then Errors.diag (Env.get_range env)
-                                     (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
-                                             (Print.term_to_string goal)
-                                             (Env.string_of_proof_ns env));
+                    match check_trivial goal with
+                    | Trivial ->
+                        if (Env.debug env <| Options.Other "Rel") || (Env.debug env <| Options.Other "Tac")
+                        then BU.print_string "Goal completely solved by tactic\n";
+                        () // do nothing
+
+                    | NonTrivial goal ->
+                        env.solver.refresh ();
+                        if Env.debug env <| Options.Other "Rel"
+                        then Errors.diag (Env.get_range env)
+                                         (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
+                                                 (Print.term_to_string goal)
+                                                 (Env.string_of_proof_ns env));
                     env.solver.solve use_env_range_msg env goal)
           in
           Some ret_g
