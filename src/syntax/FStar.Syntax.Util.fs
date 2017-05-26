@@ -1082,6 +1082,22 @@ let dm4f_lid ed name : lident =
     let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
     lid_of_path p' Range.dummyRange
 
+let mk_squash p =
+    let sq = fvar_const SC.squash_lid in
+    mk_app sq [as_arg p]
+
+let un_squash t =
+    let head, args = head_and_args t in
+    match (un_uinst head).n, args with
+    | Tm_fvar fv, [(p, _)]
+        when fv_eq_lid fv SC.squash_lid ->
+      Some p
+    | Tm_refine({sort={n=Tm_fvar fv}}, p), []
+        when fv_eq_lid fv SC.unit_lid ->
+      Some p
+    | _ ->
+      None
+
 let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
     let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero]) args None pos in

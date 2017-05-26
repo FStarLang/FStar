@@ -404,22 +404,6 @@ let intros : tac<binders>
 
 let intros_no_names = bind intros (fun _ -> ret ())
 
-let mk_squash p =
-    let sq = U.fvar_const FStar.Syntax.Const.squash_lid in
-    U.mk_app sq [S.as_arg p]
-
-let un_squash t =
-    let head, args = U.head_and_args t in
-    match (U.un_uinst head).n, args with
-    | Tm_fvar fv, [(p, _)]
-        when S.fv_eq_lid fv FStar.Syntax.Const.squash_lid ->
-      Some p
-    | Tm_refine({sort={n=Tm_fvar fv}}, p), []
-        when S.fv_eq_lid fv FStar.Syntax.Const.unit_lid ->
-      Some p
-    | _ ->
-      None
-
 (* imp_intro:
         corresponds to
         val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
