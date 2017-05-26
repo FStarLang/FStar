@@ -1370,7 +1370,9 @@ and tc_eqn scrutinee env branch
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
     let env1, _ = Env.clear_expected_typ pat_env in
-    let env1 = {env1 with Env.is_pattern=true} in  //just a flag for a better error message
+    //This is_pattern flag is crucial to check that every variable in the pattern
+    //has exactly its expected type, rather than just a sub-type. see #1062
+    let env1 = {env1 with Env.is_pattern=true} in
     let expected_pat_t = Rel.unrefine env pat_t in
     let should_check_guard = List.length exps > 1 in //disjunctive patterns may have non-trivial guards
     let exps, norm_exps = exps |> List.map (fun e ->
