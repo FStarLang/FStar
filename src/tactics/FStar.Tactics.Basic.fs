@@ -823,6 +823,19 @@ let tdone : tac<unit> =
     | _ -> fail "Not done!"
     )
 
+let cases (t : term) : tac<unit> =
+    with_cur_goal (fun g ->
+        let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
+        let hd, args = U.head_and_args typ in
+        match hd.n, args with
+        | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv SC.or_lid ->
+            let g1 = {g with context = Env.push_bv g.context (S.new_bv None p) } in
+            let g2 = {g with context = Env.push_bv g.context (S.new_bv None q) } in
+            bind dismiss (fun _ -> add_goals [g1; g2])
+        | _ ->
+            fail (BU.format1 "Not a disjunction: %s" (Print.term_to_string typ))
+    )
+
 // Should probably be moved somewhere else
 type order = | Lt | Eq | Gt
 

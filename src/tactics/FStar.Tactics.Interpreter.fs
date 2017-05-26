@@ -143,6 +143,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__trefl"         trefl embed_unit t_unit;
       mktac0 "__later"         later embed_unit t_unit;
       mktac0 "__tdone"         tdone embed_unit t_unit;
+      mktac1 "__cases"         cases unembed_term embed_unit t_unit;
 
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
