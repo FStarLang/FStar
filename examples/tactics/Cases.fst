@@ -1,6 +1,9 @@
 module Cases
 
+(* *)
+
 open FStar.Tactics
+open FStar.Mul
 
 assume val p : Type0
 assume val q : Type0
@@ -53,3 +56,25 @@ let test_em () : Lemma qq =
                       qed
                      )
                      qq
+
+assume val pred : bool -> Type
+assume val pred_true  : pred true
+assume val pred_false : pred false
+
+let test_cases_bool (b:bool) : Lemma (pred b) =
+    assert_by_tactic
+        (dump "GG 1";;
+         cases_bool b;;
+         dump "GG 2";;
+         exact (quote pred_true);;
+         dump "GG 3";;
+         exact (quote pred_false);;
+         dump "GG 4";;
+         qed)
+        (pred b)
+
+let test_cases_bool_2 (x:int) : Lemma (x + x == 2 * x) =
+    assert_by_tactic
+        (dump "BEFORE";;
+         cases_bool (x = 0);;
+         dump "AFTER") (x + x == 2 * x)
