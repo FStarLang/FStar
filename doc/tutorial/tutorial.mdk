@@ -3048,7 +3048,13 @@ is the basic type of a type. For example,
 just as we say that `0 : int` (zero has type `int`), we also say
 `int : Type` (`int` has kind `Type`), `bool : Type`, `nat : Type` etc.
 
-## Arrow kinds
+_Note for experts : Having a unique type of types would be inconsistent
+so there is a countable family `Type u#n` for each natural number `n`. `u#n`
+is a universe level and `Type u#0` can also be written `Type0`. The notation
+`Type` uses typical ambiguity and formally means `Type u"n` some (unspecified)
+universe level `n`._
+
+## Arrow at type level
 
 Beyond the base types, consider types like `list int`, `list bool`
 etc.  These are also types, of course, and in F\* `list int : Type`
@@ -3057,7 +3063,7 @@ constructor `list`---it's not a `Type` on its own; it only produces a
 `Type` when applied to a `Type`. In that sense, `list` is type
 constructor. To describe this, just as we use the `->` type
 constructor to describe functions at the level of programs, we use the
-`->` kind constructor to describe functions at the level of types. As
+`->` constructor to describe functions at the level of types. As
 such, we write `list : Type -> Type`, meaning that it produces a
 `Type` when applied to a `Type`.
 
@@ -3127,21 +3133,21 @@ So the signature below is equivalent to the previous one.
 val reverse_vector' : #n:nat -> vector 'a n -> Tot (vector 'a n)
 ```
 
-## Dependent kind arrows and type function
+## Dependent arrows and type function
 
 Even some of the built-in type constructors can be given
-kinds. Consider the refinement type constructor: `_:_{_}`, whose
+types. Consider the refinement type constructor: `_:_{_}`, whose
 instances include types we've seen before, like `x:int{x >= 0}`, which
 is the type `nat`, of course.  With less syntactic sugar, you can view
 the type `x:int{phi(x)}` as the application of a type constructor
 `refinement` to two arguments `int` and a refinement formula
 `fun x -> phi(x)`. As discussed in Section [#sec-bool-versus-type], the formula
-`phi(x)` is itself a `Type`. Thus, the kind of the `refinement`
+`phi(x)` is itself a `Type`. Thus, the type of the `refinement`
 constructor is `a:Type -> (a -> Type) -> Type`, meaning it takes two
 arguments; first, a type `a`; then a second argument, a predicate on
-`a` (whose kind depends on `a`); and then builds a `Type`.
+`a` (whose type depends on `a`); and then builds a `Type`.
 
-The type `fun x -> phi(x)` is type function, a lambda abstraction at
+The type `fun x -> phi(x)` is a type function, a lambda abstraction at
 the level of types, which when applied to a particular value, say,
 `0`, reduces as usual to `phi(0)`.
 
