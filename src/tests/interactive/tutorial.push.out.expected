@@ -9,4 +9,4 @@
 {"kind": "response", "query-id": "8", "response": [], "status": "success"}
 {"kind": "response", "query-id": "9", "response": [], "status": "success"}
 {"kind": "response", "query-id": "10", "response": [], "status": "success"}
-{"kind": "response", "query-id": "11", "response": [{"level": "warning", "message": "Top-level let-bindings must be total; this term may have effects", "ranges": [{"beg": [60, 0], "end": [60, 48], "fname": "<input>"}], "related_ranges": []}], "status": "success"}
+{"kind": "response", "query-id": "11", "response": [{"level": "warning", "message": "Top-level let-bindings must be total; this term may have effects", "ranges": [{"beg": [60, 0], "end": [60, 48], "fname": "<input>"}]}], "status": "success"}

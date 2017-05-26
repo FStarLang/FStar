@@ -9,9 +9,9 @@
       1,
       [
         "@query",
-        "interpretation_Equivalence_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2", "unit_typing"
+        "interpretation_Equivalence_Tm_abs_802052134089b49aa7b3f75040172f2c",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2", "unit_typing"
       ],
       0
     ],
@@ -23,11 +23,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "interpretation_Equivalence_Tm_abs_e8a79b2af607a45d90694405a59a3d44",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Mktuple2__a",
-        "refinement_interpretation_Equivalence_Tm_refine_a42317b01ab78cecaef883b8c781ecae",
+        "interpretation_Equivalence_Tm_abs_eebae42831fa0553d9c4797c206c76ed",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Mktuple2__a",
+        "refinement_interpretation_Equivalence_Tm_refine_2b5f2d484e596d06d6d46c7ceda588e0",
         "unit_typing"
       ],
       0
@@ -50,11 +50,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_Prims.fst",
-        "interpretation_Equivalence_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
-        "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2",
+        "equation_FStar.Pervasives.fst",
+        "interpretation_Equivalence_Tm_abs_802052134089b49aa7b3f75040172f2c",
+        "proj_equation_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0

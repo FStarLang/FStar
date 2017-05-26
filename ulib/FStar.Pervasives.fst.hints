@@ -1,5 +1,5 @@
 [
-  "È2ErÚRÓ/¬¹²¦\u001dnZ‚",
+  "U\u0014ÞþÌÎÓ}\u001eZ\u000b´ºå\u0003!",
   [
     [ "FStar.Pervasives.uu___is_V", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -55,14 +55,32 @@
       ],
       0
     ],
+    [ "FStar.Pervasives.option", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.uu___is_None", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.uu___is_Some", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.__proj__Some__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Some",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_76a70ef34aa249c978862cb72e6cb59d"
+      ],
+      0
+    ],
     [
       "FStar.Pervasives.invertOption",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "fuel_guarded_inversion_Prims.option",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
+        "fuel_guarded_inversion_FStar.Pervasives.option",
         "projection_inverse_BoxBool_proj_0"
       ],
       0
@@ -94,6 +112,23 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_8f1f5f564dae90240db429de2eb41517"
       ],
+      0
+    ],
+    [ "FStar.Pervasives.tuple2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.__proj__Mktuple2__item___1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.Pervasives.__proj__Mktuple2__item___2",
+      1,
+      2,
+      1,
+      [ "@query" ],
       0
     ],
     [ "FStar.Pervasives.tuple3", 1, 2, 1, [ "@query" ], 0 ],
@@ -830,7 +865,7 @@
       1,
       [
         "@MaxIFuel_assumption",
-        "binder_x_27672a0694ca5377bbd1682fdc19a13b_2",
+        "binder_x_27672a0694ca5377bbd1682fdc19a13b_1",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_16d7dda25a162db0722685f27f707102"
       ],

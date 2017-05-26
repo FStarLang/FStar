@@ -12,8 +12,7 @@ let uu___is_VerifyUserList: verify_mode -> Prims.bool =
 let uu___is_VerifyFigureItOut: verify_mode -> Prims.bool =
   fun projectee  ->
     match projectee with | VerifyFigureItOut  -> true | uu____12 -> false
-type map =
-  (Prims.string Prims.option* Prims.string Prims.option) FStar_Util.smap
+type map = (Prims.string option* Prims.string option) FStar_Util.smap
 type color =
   | White
   | Gray
@@ -24,7 +23,7 @@ let uu___is_Gray: color -> Prims.bool =
   fun projectee  -> match projectee with | Gray  -> true | uu____25 -> false
 let uu___is_Black: color -> Prims.bool =
   fun projectee  -> match projectee with | Black  -> true | uu____29 -> false
-let check_and_strip_suffix: Prims.string -> Prims.string Prims.option =
+let check_and_strip_suffix: Prims.string -> Prims.string option =
   fun f  ->
     let suffixes = [".fsti"; ".fst"; ".fsi"; ".fs"] in
     let matches =
@@ -71,7 +70,7 @@ let lowercase_module_name: Prims.string -> Prims.string =
         raise uu____132
 let build_map:
   Prims.string Prims.list ->
-    (Prims.string Prims.option* Prims.string Prims.option) FStar_Util.smap
+    (Prims.string option* Prims.string option) FStar_Util.smap
   =
   fun filenames  ->
     let include_directories = FStar_Options.include_path () in
@@ -594,7 +593,7 @@ let print_graph graph =
                   let uu____1152 =
                     let uu____1156 = FStar_Util.smap_try_find graph k in
                     FStar_Util.must uu____1156 in
-                  Prims.fst uu____1152 in
+                  fst uu____1152 in
                 let r s = FStar_Util.replace_char s '.' '_' in
                 FStar_List.map
                   (fun dep1  ->

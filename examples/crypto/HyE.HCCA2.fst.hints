@@ -50,14 +50,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "data_elim_FStar.Pervasives.V", "disc_equation_FStar.Pervasives.V",
-        "disc_equation_Prims.Some", "equation_HyE.PlainPKE.t",
+        "data_elim_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.V", "equation_HyE.PlainPKE.t",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_HyE.AE.key",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.V_v",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None",
-        "typing_Prims.uu___is_Some"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_None",
+        "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ]

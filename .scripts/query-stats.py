@@ -151,7 +151,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
     # From CI:
     # 2017-05-10T12:50:45.6397264Z (.\FStar.Int.fst(8,11-8,14))       Query-stats (FStar.Int.pow2_values, 1)  succeeded (with hint) in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280
 
-    rx=re.compile("^([ 0-9-TZ:.]*)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
+    rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
     z3rx=re.compile("([^ =]+)=([^ =]+)")
 
     queries = {}
@@ -257,7 +257,7 @@ def process_global_stats(f, queries):
     f.write("\"# failed\",%d,%s\n" % ((failed_with_hint + failed_without_hint), "\"\""))
     f.write("\"# failed (with hint)\",%d,%s\n" % (failed_with_hint, "\"\""))
     f.write("\"# failed (without hint)\",%d,%s\n" % (failed_without_hint, "\"\""))
-    f.write("\"Sum(num_checks)\",%s,%s\n" % (sum_num_checks, "\"\""))
+    f.write("\"Sum(num-checks)\",%s,%s\n" % (sum_num_checks, "\"\""))
     f.write("\"Sum(time)\",%s,%s\n" % (time, "\"sec\""))
     f.write("\"Sum(fstar_time)\",%s,%s\n" % (fstar_time, "\"msec\""))
     f.write("\"Max(time)\",%s,%s\n" % (max_time, "\"sec\""))

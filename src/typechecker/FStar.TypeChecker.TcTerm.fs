@@ -1604,7 +1604,7 @@ and check_top_level_let env e =
          (* Maybe generalize its type *)
          let g1, e1, univ_vars, c1 =
             if annotated && not env.generalize
-            then g1, e1, univ_vars, c1
+            then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
                  let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
@@ -1716,9 +1716,10 @@ and check_top_level_let_rec env top =
               if not env.generalize
               then lbs |> List.map (fun lb ->
             (* TODO : Should we gather the fre univnames ? e.g. (TcUtil.gather_free_univnames env e1)@lb.lbunivs *)
+                    let lbdef = N.reduce_uvar_solutions env lb.lbdef in
                     if lb.lbunivs = []
                     then lb
-                    else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lb.lbdef)
+                    else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
               else let ecs = TcUtil.generalize env (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
