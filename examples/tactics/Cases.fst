@@ -1,4 +1,4 @@
-module C
+module Cases
 
 open FStar.Tactics
 
@@ -13,7 +13,12 @@ let test_cases (h : p \/ q) : Lemma r =
     assert_by_tactic
         (dump "GG 1";;
          t <-- quote h;
-         cases t;;
+         h_pq <-- cases t;
          dump "GG 2";;
-         fail "")
+         let h_p, h_q = h_pq in
+         apply_lemma (quote f);;
+         exact (return h_p);;
+         apply_lemma (quote g);;
+         exact (return h_q);;
+         tdone)
          r

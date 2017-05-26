@@ -550,9 +550,10 @@ let apply_lemma (tm:term)
 let exact (tm:term)
     : tac<unit>
     = with_cur_goal (fun goal ->
-        try let _, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
+        let env = {goal.context with expected_typ = None} in
+        try let _, t, guard = goal.context.type_of env tm in //TODO: check that the guard is trivial
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
-            if Rel.teq_nosmt goal.context t goal.goal_ty
+            if Rel.teq_nosmt env t goal.goal_ty
             then let _ = solve goal tm in
                  dismiss
             else
@@ -564,7 +565,7 @@ let exact (tm:term)
                  fail msg
        with e ->
 //            printfn "Exception %A" e;
-            fail (BU.format1 "Term is not typeable: %s" (Print.term_to_string tm)))
+            fail (BU.format2 "Term is not typeable: %s (%s)" (Print.term_to_string tm) (Print.tag_of_term tm)))
 
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal (fun goal ->
@@ -823,15 +824,19 @@ let tdone : tac<unit> =
     | _ -> fail "Not done!"
     )
 
-let cases (t : term) : tac<unit> =
+let cases (t : term) : tac<term * term> =
     with_cur_goal (fun g ->
         let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
         let hd, args = U.head_and_args typ in
         match hd.n, args with
         | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv SC.or_lid ->
-            let g1 = {g with context = Env.push_bv g.context (S.new_bv None p) } in
-            let g2 = {g with context = Env.push_bv g.context (S.new_bv None q) } in
-            bind dismiss (fun _ -> add_goals [g1; g2])
+            let v_p = S.new_bv None p in
+            let v_q = S.new_bv None q in
+            let g1 = {g with context = Env.push_bv g.context v_p } in
+            let g2 = {g with context = Env.push_bv g.context v_q } in
+            bind dismiss (fun _ ->
+            bind (add_goals [g1; g2]) (fun _ ->
+            ret (S.bv_to_name v_p, S.bv_to_name v_q)))
         | _ ->
             fail (BU.format1 "Not a disjunction: %s" (Print.term_to_string typ))
     )

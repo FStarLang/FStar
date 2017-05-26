@@ -98,5 +98,5 @@ let prune ns : tactic unit = fun () -> TAC?.reflect (__prune ns)
 assume private val __addns : string -> __tac unit
 let addns ns : tactic unit = fun () -> TAC?.reflect (__addns ns)
 
-assume private val __cases : term -> __tac unit
-let cases t : tactic unit = fun () -> TAC?.reflect (__cases t)
+assume private val __cases : term -> __tac (term * term)
+let cases t : tactic (term * term) = fun () -> TAC?.reflect (__cases t)
