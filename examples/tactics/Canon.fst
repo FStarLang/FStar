@@ -10,7 +10,7 @@ assume val z : int
 // Testing the canonizer, it should be the only thing needed for this file
 let check_canon =
     canon;;
-    tdone
+    qed
 
 let lem0 = assert_by_tactic check_canon (x * (y * z) == (x * y) * z)
 

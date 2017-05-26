@@ -817,7 +817,7 @@ let later : tac<unit> =
     | g::gs -> set ({ps with goals=gs@[g]})
     )
 
-let tdone : tac<unit> =
+let qed : tac<unit> =
     bind get (fun ps ->
     match ps.goals with
     | [] -> ret ()

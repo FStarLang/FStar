@@ -11,14 +11,12 @@ assume val g : q -> Lemma r
 
 let test_cases (h : p \/ q) : Lemma r =
     assert_by_tactic
-        (dump "GG 1";;
-         t <-- quote h;
+        (t <-- quote h;
          h_pq <-- cases t;
-         dump "GG 2";;
          let h_p, h_q = h_pq in
          apply_lemma (quote f);;
          exact (return h_p);;
          apply_lemma (quote g);;
          exact (return h_q);;
-         tdone)
+         qed)
          r
