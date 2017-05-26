@@ -3404,7 +3404,7 @@ type as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> ~(y==x)))
 assume val as_Pure: #a:Type -> #b:(a -> Type)
           -> #wp:(x:a -> pure_wp (b x))
           -> #wlp:(x:a -> pure_wp (b x))
-          -> =f:(x:a -> PURE (b x) (wp x) (wlp x))
+          -> $f:(x:a -> PURE (b x) (wp x) (wlp x))
           -> x:a -> Pure (b x) (as_requires (wp x))
                                (as_ensures (wlp x))
 ```
@@ -3413,7 +3413,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
  The second-to-last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
- with the equality symbol, i.e., `=f`. Given an application
+ with the equality symbol, i.e., `$f`. Given an application
  `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
  instructs F\*'s type inference engine to unify the type of `g` with
  the expected type of `f`. Without this constraint, by default, F\*
@@ -3488,7 +3488,7 @@ let f x = assert (x > 0); x + 1
 
 val h : #req:(int -> Type)
      -> #ens:(int -> int -> Type)
-     -> =f:(x:int -> Pure int (req x) (ens x))
+     -> $f:(x:int -> Pure int (req x) (ens x))
      -> y:int -> Pure int (req y) (ens y)
 let h f x = f x
 
@@ -3601,8 +3601,9 @@ as illustrated (in slightly simplified form) below.
 Let's start with the signature of `read`:
 
 ```
+let wp_read r = fun (post:state_post a) (h0:heap) ->  post (sel h0 r) h0
+
 assume val read: #a:Type -> r:ref a -> STATE a (wp_read r) (wp_read r)
-where wp_read r = fun (post:state_post a) (h0:heap) ->  post (sel h0 r) h0
 ```
 
 This says that `read r` returns a result `v:a` when `r:ref a`;
@@ -3613,8 +3614,9 @@ when `read r` is run in the initial heap `h0`.
 Next, here's the signature of `write`:
 
 ```
+let wp_write r = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
+
 assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write r)
-where wp_write r = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
 ```
 
 This says that `write r v` returns a a `unit`-typed result when
@@ -3669,7 +3671,7 @@ type as_ensures  (#a:Type) (wlp:STWP_h heap a) (h0:heap) (x:a) (h1:heap)
 val as_ST: #a:Type -> #b:(a -> Type)
           -> #wp:(x:a -> STWP_h heap (b x))
           -> #wlp:(x:a -> STWP_h heap (b x))
-          -> =f:(x:a -> STATE (b x) (wp x) (wlp x))
+          -> $f:(x:a -> STATE (b x) (wp x) (wlp x))
           -> x:a -> ST (b x) (as_requires (wp x))
                              (as_ensures (wlp x))
 ```
@@ -3681,7 +3683,7 @@ let f x = !x * !x
 
 val h : #req:(ref int -> heap -> Type)
      -> #ens:(ref int -> heap -> int -> heap -> Type)
-     -> =f:(x:ref int -> ST int (req x) (ens x))
+     -> $f:(x:ref int -> ST int (req x) (ens x))
      -> y:ref int -> ST int (req y) (ens y)
 let h f x = f x
 
@@ -4153,7 +4155,7 @@ shoots the robot into the sky.
     b.left.polar := 0;
     b.right.polar := 0;
     b.z := 100
-  ```
+```
 
 Now, we'd like to prove properties like the following:
 
@@ -4161,7 +4163,7 @@ Now, we'd like to prove properties like the following:
   //initially, in h0: b1 not flying, b2 not flying
       fly b1
   //in h1: b1 flying, b2 not flying
-  ```
+```
 
 To prove this property, and to prove that the bot's invariant is
 maintained, we need many anti-aliasing invariants, including the
@@ -4893,11 +4895,11 @@ Try to state this formally as three lemmas.
 Prove these three lemmas.
 ~
 
-~~ Answer
+~ Answer
 ```
 [INCLUDE=code/solutions/Ex12b.Format.fst:FormatProofs]
 ```
-~~
+~
 
 <!--
 These lemmas rely on more powerful lemmas about the
