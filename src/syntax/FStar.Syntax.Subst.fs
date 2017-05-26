@@ -495,17 +495,17 @@ let open_pat (p:pat) : pat * subst_t =
     p, sub
 
 //TODO: this should go to the library
-let find_map_i (f:int -> 'a -> option<'b>) (l:list<'a>) : option<'b> =
-    let rec aux i l =
-        match l with
-        | [] -> None
-        | hd::tl -> begin
-            match f i hd with
-            | None -> aux (i + 1) tl
-            | found -> found
-            end
-    in
-    aux 0 l
+let find_map_i f l =
+        let rec aux i l =
+            match l with
+            | [] -> None
+            | hd::tl -> begin
+                match f i hd with
+                | None -> aux (i + 1) tl
+                | Some b -> Some b
+                end
+        in
+        aux 0 l
 
 let permute_disjunctive_pattern (first:pat) (case:pat) (l:list<'a>) : list<'a> =
     let p, _ = open_pat (FStar.Syntax.Syntax.withinfo (Pat_disj [first;case]) S.tun.n Range.dummyRange) in
