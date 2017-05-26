@@ -824,7 +824,7 @@ let qed : tac<unit> =
     | _ -> fail "Not done!"
     )
 
-let cases (t : term) : tac<term * term> =
+let cases (t : term) : tac<(term * term)> =
     with_cur_goal (fun g ->
         let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
         let hd, args = U.head_and_args typ in
