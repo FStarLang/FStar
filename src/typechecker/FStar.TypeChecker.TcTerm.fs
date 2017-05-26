@@ -1372,6 +1372,7 @@ and tc_eqn scrutinee env branch
     let env1, _ = Env.clear_expected_typ pat_env in
     let env1 = {env1 with Env.is_pattern=true} in  //just a flag for a better error message
     let expected_pat_t = Rel.unrefine env pat_t in
+    let should_check_guard = List.length exps > 1 in //disjunctive patterns may have non-trivial guards
     let exps, norm_exps = exps |> List.map (fun e ->
         if Env.debug env Options.High
         then BU.print2 "Checking pattern expression %s against expected type %s\n"
@@ -1384,6 +1385,7 @@ and tc_eqn scrutinee env branch
         let g = Rel.conj_guard g g' in
         let _ =
             let env1 = Env.set_range env1 e.pos in
+            let g = if should_check_guard then g else {g with guard_f=Trivial} in
             Rel.discharge_guard_no_smt env1 g |>
             Rel.resolve_implicits in
         let e' = N.normalize [N.Beta] env1 e in
