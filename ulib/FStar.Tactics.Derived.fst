@@ -139,13 +139,15 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
     match bs with
     | [] ->
         return ()
-    | x_t::bs -> begin
-        match term_as_formula (type_of_binder x_t) with
-        | Comp Eq _ _ _ ->
-            rewrite x_t;;
-            rewrite_all_context_equalities bs
-        | _ ->
-            rewrite_all_context_equalities bs
+    | x_t::bs ->
+        begin (match term_as_formula (type_of_binder x_t) with
+        | Comp Eq _ lhs _ ->
+            begin match inspect lhs with
+            | Tv_Var _ -> rewrite x_t
+            | _ -> idtac
+            end
+        | _ -> idtac);;
+        rewrite_all_context_equalities bs
         end
 
 let rewrite_eqs_from_context : tactic unit =
