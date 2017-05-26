@@ -283,14 +283,14 @@ This interface provides two functions, `read` and `write`, which
 in a real setup would implement the corresponding operations on files.
 In our simplified example they just print things on screen.
 
-<!-- By using the `assume val` notation, we *declare* that this module provides -->
-<!-- the `read` and `write` operations (they are *values*), but that we are -->
-<!-- *_not_ defining* those values here---they will be provided by an external -->
-<!-- module. Our use of `assume val` is much like the -->
-<!-- `extern`{language=csharp} keyword in C and other programming languages. -->
+<!-- By using the `assume val` notation, we *declare* that this module provides
+     the `read` and `write` operations (they are *values*), but that we are
+     *_not_ defining* those values here---they will be provided by an external
+     module. Our use of `assume val` is much like the `extern`{language=csharp}
+     keyword in C and other programming languages.
 
-<!-- As with `extern`{language=csharp}, when declaring a value, we also -->
-<!-- provide its type signature. -->
+     As with `extern`{language=csharp}, when declaring a value, we also
+     provide its type signature. -->
 
 * The type of `read` says that it is a function expecting a `filename`
   argument `f` for which `canRead f` evaluates to `true` and returning a
@@ -2166,9 +2166,9 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
 
 # Case study: simply-typed lambda-calculus
 
-<!-- (CH: Any way I could have imported the existing code here without duplicating it? -->
-<!--   Without a way to do this maintaining this document and keeping it consistent -->
-<!--   will be a nightmare.) -->
+<!-- (CH: Any way I could have imported the existing code here without duplicating it?
+      Without a way to do this maintaining this document and keeping it consistent
+      will be a nightmare.) -->
 
 [sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
 [sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
@@ -2187,7 +2187,7 @@ We represent STLC types by the F* inductive datatype `ty`.
 ```
 type ty =
   | TBool  : ty
-  | TArrow : ty -> ty -> ty
+  | TArrow : tin:ty -> tout:ty -> ty
 ```
 We consider Booleans as the only base type (`TBool`).
 Function types are represented by the `TArrow` constructor taking two
@@ -2199,12 +2199,12 @@ $\mathsf{bool} \to \mathsf{bool}$ in paper notation.
 We represent the expressions of STLC by the datatype `exp`.
 ```
 type exp =
-  | EVar   : int -> exp
-  | EApp   : exp -> exp -> exp
-  | EAbs   : int -> ty -> exp -> exp
+  | EVar   : v:var -> exp
+  | EApp   : fn:exp -> arg:exp -> exp
+  | EAbs   : v:var -> vty:ty -> body:exp -> exp
   | ETrue  : exp
   | EFalse : exp
-  | EIf    : exp -> exp -> exp -> exp
+  | EIf    : test:exp -> btrue:exp -> bfalse:exp -> exp
 ```
 Variables are represented as integer "names" decorated by the constructor `EVar`.
 Variables are "bound" by lambda abstractions (`EAbs`).
@@ -2214,7 +2214,7 @@ The type annotation on the argument (`TBool`) allows for very simple type-checki
 We are not considering type inference here, to keep things simple.
 The expression that applies the identity function to the `ETrue` constant is written
 ```
-EApp (EAbs 0 TBool (EVar 0)) ETrue
+let stlc_app_id_to_true = EApp (EAbs 0 TBool (EVar 0)) ETrue
 ```
 (in paper notation $(\lambda x:\mathsf{bool}.~x)~\mathsf{true}$).
 
@@ -2222,7 +2222,7 @@ The language also has a conditional construct (if-then-else).
 For instance, the Boolean "not"
 function can be written as
 ```
-EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
+let stlc_not = EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
 ```
 (in paper notation
 $\lambda x:\mathsf{bool}.~\mathsf{if }~x~\mathsf{ then~false~else~true}$).
@@ -2328,7 +2328,7 @@ and if the guard reduces to something else (e.g. a function) we report a
 dynamic typing error. The `None -> None` cases simply propagate errors to
 the top level.
 ```
-let _ = assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
+let _ = assert (step (EApp (EAbs 0 TBool (EVar 0)) ETrue) = Some ETrue)
 let _ = assert (step (EApp ETrue ETrue) = None)
 ```
 
@@ -2346,12 +2346,12 @@ We start type-checking closed terms in the empty environment,
 i.e. initially no variables are in scope.
 ```
 val empty : env
-let empty _ = None
+let empty = fun _ -> None
 ```
-When we move under a binder we extend the typing environment environment.
+When we move under a binder we extend the typing environment.
 ```
 val extend : env -> int -> ty -> Tot env
-let extend g x t x' = if x = x' then Some t else g x'
+let extend g x t = fun x' -> if x = x' then Some t else g x'
 ```
 For instance we type-check `EAbs x t e` in typing environment `g` by
 first type-checking the body `e` in the environment `extend g x t`.
@@ -2392,9 +2392,9 @@ the two branches have the same type, which is also the type of the conditional.
 
 ## Soundness proof
 
-<!-- (CH: I generally find giving people finished proofs uninformative and unhelpful. -->
-<!-- This seems like something to do from scratch in an emacs buffer. Trying to capture -->
-<!-- that kind of interaction in the current format seems very hard.) -->
+<!-- (CH: I generally find giving people finished proofs uninformative and unhelpful.
+      This seems like something to do from scratch in an emacs buffer. Trying to capture
+      that kind of interaction in the current format seems very hard.) -->
 
 We prove progress and preservation for STLC.
 The **progress** theorem tells us that closed, well-typed terms do not produce
@@ -2504,7 +2504,7 @@ let rec free_in_context x e g =
                     free_in_context x e2 g; free_in_context x e3 g
 ```
 The proof is a straightforward induction.
-As a corollary for `g=empty` we obtain that expressions typable
+As a corollary for `g == empty` we obtain that expressions typable
 in the empty environment have no free variables.
 ```
 val typable_empty_closed : x:int -> e:exp -> Lemma
@@ -2513,21 +2513,21 @@ val typable_empty_closed : x:int -> e:exp -> Lemma
       [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
 ```
-The quantifier pattern `[SMTPat (appears_free_in x e)]` signals F\*
-that it should feed this lemma to the SMT solver using this pattern.
+The quantifier pattern `[SMTPat (appears_free_in x e)]` signals to Z3
+that it should consider applying this lemma when its context contains a
+term of the form `appears_free_in`
 
 Sometimes, we know that `typing g e = Some t`,
 and we will need to replace `g` by an "equivalent" context `g'`.
 We still need to define formally when two environments are equivalent.
 A natural definition is extensional equivalence of functions:
 ```
-opaque logic type Equal (g1:env) (g2:env) =
-                 (forall (x:int). g1 x = g2 x)
+logic type equal (g1:env) (g2:env) = forall (x:int). g1 x = g2 x
 ```
 According to this definition two environments are equivalent if have
 the same domain and they map all variables in the domain to the same type.
-We remark `Equal` in particular and logical formulas in general
-are "types" in F\*, thus the different syntax for this definition.
+We remark `equal` in particular and logical formulas in general
+are *types* in F\*, thus the different syntax for this definition.
 ~CH
 What does opaque do exactly?
 What does logic do?
@@ -2538,15 +2538,14 @@ The context invariance lemma uses in fact a weaker variant of this equivalence
 in which the two environments only need to agree on the variables that appear free
 in an expression `e`:
 ```
-opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
-                 (forall (x:int). appears_free_in x e ==> g1 x = g2 x)
+logic type equalE (e:exp) (g1:env) (g2:env) =
+  forall (x:int). appears_free_in x e ==> g1 x = g2 x
 ```
 The context invariance lemma is then easily proved by induction:
 ```
-val context_invariance : e:exp -> g:env -> g':env
-                     -> Lemma
-                          (requires (EqualE e g g'))
-                          (ensures (typing g e == typing g' e))
+val context_invariance : e:exp -> g:env -> g':env -> Lemma
+  (requires (equalE e g g'))
+  (ensures (typing g e == typing g' e))
 let rec context_invariance e g g' =
   match e with
   | EAbs x t e1 ->
@@ -2563,23 +2562,22 @@ let rec context_invariance e g g' =
 
   | _ -> ()
 ```
-Because `Equal` is a stronger relation than `EqualE` we obtain the same property
-for `Equal`:
+Because `equal` is a stronger relation than `equalE` we obtain the same property
+for `equal`:
 ```
 val typing_extensional : g:env -> g':env -> e:exp -> Lemma
-                           (requires (Equal g g'))
-                           (ensures (typing g e == typing g' e))
+  (requires (equal g g'))
+  (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 ```
 We can use these results to show the following substitution lemma:
 ```
-val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
-      g:env -> Lemma
-        (requires ( Some? (typing empty v) /\
-              Some? (typing (extend g x (Some?.v (typing empty v))) e)))
-        (ensures (Some? (typing empty v) /\
-                  typing g (subst x v e) ==
-                  typing (extend g x (Some?.v (typing empty v))) e))
+val substitution_preserves_typing : x:int -> e:exp -> v:exp -> g:env -> Lemma
+  (requires (Some? (typing empty v) /\
+             Some? (typing (extend g x (Some?.v (typing empty v))) e)))
+  (ensures (Some? (typing empty v) /\
+            typing g (subst x v e) ==
+            typing (extend g x (Some?.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
   let gx = extend g x t_x in
@@ -2618,13 +2616,13 @@ we give the intuition of the two most interesting cases:
     `typing empty v == Some t_x`. However, what we need to show is
     `typing g v == Some t_x` for some arbitrary environment `g`.
     From the `typable_empty_closed` lemma we obtain that `v` contains
-    no free variables, so we have `EqualE v empty g`. This allows us
+    no free variables, so we have `equalE v empty g`. This allows us
     to apply the `context_invariance` lemma to obtain that
     `typing empty v = typing g v` and complete the proof of this case.
   * Case `x <> y`: We have `subst x v e = e` and
     `typing gx e = Some t_e` and need to show that
 ```
-typing g e = Some t_e
+typing g e == Some t_e
 ```
     We have that `EquivE (EVar y) gx g` since `x <> y` so we can apply
     the `context_invariance` lemma to conclude.
@@ -2632,15 +2630,15 @@ typing g e = Some t_e
   We have that `typing gxy e1 = Some t_e1`,
   and need to show that
 ```
-typing gy e1 = Some t_e1
+typing gy e1 == Some t_e1
 ```
   * Case `x = y`: We have `subst x v e = EAbs y t_y e1`.
-    Since `x = y` the `x` binder in `gxy` is spurious (we have `Equal gy gxy`)
+    Since `x = y` the `x` binder in `gxy` is spurious (we have `equal gy gxy`)
     and can apply the `typing_extensional` lemma.
   * Case `x <> y`: We have `subst x v e = EAbs y t_y (subst x v e1)`.
     Since `x <> y` (and since we are in a simply typed calculus, not
     a dependently typed one) we can swap the `x` and `y` binding to show
-    that `Equal gxy xyx`. By the `typing_extensional` lemma we obtain that
+    that `equal gxy xyx`. By the `typing_extensional` lemma we obtain that
     `typing gxy e1 == typing gyx e1`. By the induction hypothesis we thus
     obtain that
 ```
@@ -2655,9 +2653,9 @@ then `e'` is also a closed expression with type `t`.
 In other words, the small-step evaluation relation preserves types.
 ```
 val preservation : e:exp -> Lemma
-        (requires(Some? (typing empty e) /\ Some? (step e) ))
-        (ensures(Some? (step e) /\
-                 typing empty (Some?.v (step e)) == typing empty e))
+  (requires (Some? (typing empty e) /\ Some? (step e) ))
+  (ensures (Some? (step e) /\
+            typing empty (Some?.v (step e)) == typing empty e))
 let rec preservation e =
   match e with
   | EApp e1 e2 ->
@@ -2675,11 +2673,7 @@ We only have two cases to consider, since only applications and conditionals
 can take successful execution steps. The case for `e = EIf e1 e2 e3` is simple:
 either `e1` is a value and thus the conditional reduces to `e2` or `e3` which
 by the typing hypothesis also have type `t`, or `e1` takes a successful step and
-we can apply the induction hypothesis. We use the `Some?.v` projector for options
-with the following type:
-```
-  Some?.v : x:(option 'a){Some? x} -> Tot 'a
-```
+we can apply the induction hypothesis. We use the `Some?.v` projector,
 which requires F\* to prove that indeed `e1` can take a step;
 this is immediate since we know that the whole conditional takes a step
 and we know that `e1` is not a value.
@@ -2812,7 +2806,7 @@ let rec free_in_context x e g =
 
 val context_invariance : e:exp -> g:env -> g':env
                      -> Lemma
-                          (requires (EqualE e g g'))
+                          (requires (equalE e g g'))
                           (ensures (typing g e == typing g' e))
 let rec context_invariance e g g' =
 ...
