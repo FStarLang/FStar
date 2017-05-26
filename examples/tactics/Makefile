@@ -9,4 +9,5 @@ all:	Apply.uver		\
 	Arith.uver		\
 	Canon.uver		\
 	Pruning.uver		\
+	BinaryTreesEnumeration.uver	\
 	Cases.uver
