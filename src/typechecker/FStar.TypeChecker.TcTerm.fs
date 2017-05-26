@@ -1374,7 +1374,9 @@ and tc_eqn scrutinee env branch
     //has exactly its expected type, rather than just a sub-type. see #1062
     let env1 = {env1 with Env.is_pattern=true} in
     let expected_pat_t = Rel.unrefine env pat_t in
-    let should_check_guard = List.length exps > 1 in //disjunctive patterns may have non-trivial guards
+    let should_check_guard =
+        List.length exps > 1 //disjunctive patterns may have non-trivial guards on their variables
+        && List.length pat_bvs > 0 in
     let exps, norm_exps = exps |> List.map (fun e ->
         if Env.debug env Options.High
         then BU.print2 "Checking pattern expression %s against expected type %s\n"

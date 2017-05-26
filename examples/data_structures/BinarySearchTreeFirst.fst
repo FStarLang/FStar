@@ -27,11 +27,10 @@ module BinarySearchTreeFirst
 open FStar.List.Tot
 
 (* The type of a binary tree indexed by its max element *)
-type tree: int -> Type =
+type tree (r:int) =
   | Node : #l   :int
         -> left :option (tree l)
         -> n    :int
-        -> #r   :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
                                  /\ (None? right <==> n=r)
@@ -39,7 +38,7 @@ type tree: int -> Type =
         -> tree r
 
 (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
-let leaf i = Node #i None i #i None
+let leaf i : tree i = Node #i #i None i None
 
 let max i j = if i < j then j else i
 

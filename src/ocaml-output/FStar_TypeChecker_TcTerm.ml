@@ -3794,8 +3794,8 @@ and tc_eqn:
                              let expected_pat_t =
                                FStar_TypeChecker_Rel.unrefine env pat_t in
                              let should_check_guard =
-                               (FStar_List.length exps) >
-                                 (Prims.parse_int "1") in
+                               (FStar_List.length exps > Prims.parse_int "1")
+                               && (FStar_List.length pat_bvs > Prims.parse_int "0") in
                              let uu____7378 =
                                let uu____7383 =
                                  FStar_All.pipe_right exps
