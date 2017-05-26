@@ -14,7 +14,7 @@ let euclidean_div_axiom a b = ()
 
 val lemma_eucl_div_bound: a:nat -> b:nat -> q:pos -> Lemma
   (requires (a < q))
-  (ensures  (a + q * b = q * (b+1)))
+  (ensures  (a + q * b < q * (b+1)))
 let lemma_eucl_div_bound a b q =
     assert_by_tactic canon (a + q * b < q * (b+1))
 
