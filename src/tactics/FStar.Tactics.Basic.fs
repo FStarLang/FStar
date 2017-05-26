@@ -802,6 +802,13 @@ let trefl : tac<unit> =
             fail (BU.format1 "trefl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
     )
 
+let flip : tac<unit> =
+    bind get (fun ps ->
+    match ps.goals with
+    | g1::g2::gs -> set ({ps with goals=g2::g1::gs})
+    | _ -> fail "flip: less than 2 goals"
+    )
+
 let later : tac<unit> =
     bind get (fun ps ->
     match ps.goals with

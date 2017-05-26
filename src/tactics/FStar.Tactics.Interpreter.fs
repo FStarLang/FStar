@@ -144,6 +144,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__pointwise"     pointwise (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac0 "__trefl"         trefl embed_unit t_unit;
       mktac0 "__later"         later embed_unit t_unit;
+      mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
       mktac1 "__cases"         cases unembed_term (embed_pair
                                                       embed_term FStar.Reflection.Data.fstar_refl_term
