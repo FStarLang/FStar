@@ -1374,17 +1374,19 @@ and tc_eqn scrutinee env branch
     let expected_pat_t = Rel.unrefine env pat_t in
     let exps, norm_exps = exps |> List.map (fun e ->
         if Env.debug env Options.High
-        then BU.print2 "Checking pattern expression %s against expected type %s\n" (Print.term_to_string e) (Print.term_to_string pat_t);
+        then BU.print2 "Checking pattern expression %s against expected type %s\n"
+                        (Print.term_to_string e)
+                        (Print.term_to_string pat_t);
 
-        let e, lc, g =  tc_term env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
-                                          //Q: where is it being discarded? A: we only use lc.res_typ below, and forget abouts its WP
-        if Env.debug env Options.High
-        then BU.print2 "Pre-checked pattern expression %s at type %s\n" (N.term_to_string env e) (N.term_to_string env lc.res_typ);
+        let e, lc, g = tc_tot_or_gtot_term env1 e in
 
-        let g' = Rel.teq env lc.res_typ expected_pat_t in
+        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
         let g = Rel.conj_guard g g' in
-        let _ = Rel.discharge_guard env ({g with guard_f=Trivial}) |> Rel.resolve_implicits in
-        let e' = N.normalize [N.Beta] env e in
+        let _ =
+            let env1 = Env.set_range env1 e.pos in
+            Rel.discharge_guard_no_smt env1 g |>
+            Rel.resolve_implicits in
+        let e' = N.normalize [N.Beta] env1 e in
         let uvars_to_string uvs = uvs |> BU.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
         let uvs1 = Free.uvars e' in
         let uvs2 = Free.uvars expected_pat_t in
