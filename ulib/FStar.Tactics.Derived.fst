@@ -53,6 +53,9 @@ let rec repeat (#a:Type) (t : tactic a) () : Tac (list a) =
     | Some x -> (xs <-- repeat t;
                  return (x::xs))) ()
 
+let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
+    (trytac (seq t (repeatseq t));; return ()) ()
+
 let simpl : tactic unit = norm [Simpl; Primops]
 let whnf  : tactic unit = norm [WHNF; Primops]
 
