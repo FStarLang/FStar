@@ -46,13 +46,13 @@ let lemma_mult_lt_sqr (n:nat) (m:nat) (k:nat{n < k && m < k})
 val distributivity_add_left: a:int -> b:int -> c:int -> Lemma
   ((a + b) * c = a * c + b * c)
 let distributivity_add_left a b c =
-    assert_by_tactic canon ((a + b) * c = a * c + b * c)
+    assert_by_tactic (canon;; qed) ((a + b) * c = a * c + b * c)
 
 (* Lemma: multiplication is left distributive over addition *)
 val distributivity_add_right: a:int -> b:int -> c:int -> Lemma
   ((a * (b + c) = a * b + a * c))
 let distributivity_add_right a b c =
-    assert_by_tactic canon ((a * (b + c) = a * b + a * c))
+    assert_by_tactic (canon;; qed) ((a * (b + c) = a * b + a * c))
 
 (* Lemma: multiplication is left distributive over substraction *)
 val distributivity_sub_left:
@@ -60,42 +60,42 @@ val distributivity_sub_left:
   Lemma (requires (True))
  (ensures ( (a - b) * c = a * c - b * c ))
 let distributivity_sub_left a b c =
-    assert_by_tactic canon ( (a - b) * c = a * c - b * c )
+    assert_by_tactic (canon;; qed) ( (a - b) * c = a * c - b * c )
 
 (* Lemma: multiplication is left distributive over substraction *)
 val distributivity_sub_right: a:int -> b:int -> c:int -> Lemma
   ((a * (b - c) = a * b - a * c))
 let distributivity_sub_right a b c =
-    assert_by_tactic canon ((a * (b - c) = a * b - a * c))
+    assert_by_tactic (canon;; qed) ((a * (b - c) = a * b - a * c))
 
 (* Lemma: multiplication is commutative, hence parenthesizing is meaningless *)
 val paren_mul_left: a:int -> b:int -> c:int -> Lemma
   (a * b * c = (a * b) * c)
 let paren_mul_left a b c =
-    assert_by_tactic canon (a * b * c = (a * b) * c)
+    assert_by_tactic (canon;; qed) (a * b * c = (a * b) * c)
 
 (* Lemma: multiplication is commutative, hence parenthesizing is meaningless *)
 val paren_mul_right: a:int -> b:int -> c:int -> Lemma
   (a * b * c = a * (b * c))
 let paren_mul_right a b c =
-    assert_by_tactic canon (a * b * c = a * (b * c))
+    assert_by_tactic (canon;; qed) (a * b * c = a * (b * c))
 
 (* Lemma: addition is commutative, hence parenthesizing is meaningless *)
 val paren_add_left: a:int -> b:int -> c:int -> Lemma
   (a + b + c = (a + b) + c)
 let paren_add_left a b c =
-    assert_by_tactic canon (a + b + c = (a + b) + c)
+    assert_by_tactic (canon;; qed) (a + b + c = (a + b) + c)
 
 (* Lemma: addition is commutative, hence parenthesizing is meaningless *)
 val paren_add_right: a:int -> b:int -> c:int -> Lemma
   (a + b + c = a + (b + c))
 let paren_add_right a b c =
-    assert_by_tactic canon (a + b + c = a + (b + c))
+    assert_by_tactic (canon;; qed) (a + b + c = a + (b + c))
 
 val addition_is_associative: a:int -> b:int -> c:int -> Lemma
   (a + b + c = (a + b) + c /\ a + b + c = a + (b + c))
 let addition_is_associative a b c =
-    assert_by_tactic canon (a + b + c = (a + b) + c /\ a + b + c = a + (b + c))
+    assert_by_tactic (canon;; qed) (a + b + c = (a + b) + c /\ a + b + c = a + (b + c))
 
 val subtraction_is_distributive: a:int -> b:int -> c:int -> Lemma
   (a - b + c = (a - b) + c /\
@@ -104,7 +104,8 @@ val subtraction_is_distributive: a:int -> b:int -> c:int -> Lemma
    a + (-b - c) = a - b - c /\
    a - (b - c) = a - b + c)
 let subtraction_is_distributive a b c =
-    assert_by_tactic canon (a - b + c = (a - b) + c /\
+    assert_by_tactic canon //TODO: can only qed when we fold factors
+                           (a - b + c = (a - b) + c /\
                             a - b - c = a - (b + c) /\
                             a - b - c = (a - b) - c /\
                             a + (-b - c) = a - b - c /\
@@ -113,31 +114,31 @@ let subtraction_is_distributive a b c =
 val swap_add_plus_minus: a:int -> b:int -> c:int -> Lemma
  (a + b - c = (a - c) + b)
 let swap_add_plus_minus a b c =
-    assert_by_tactic canon (a + b - c = (a - c) + b)
+    assert_by_tactic (canon;; qed) (a + b - c = (a - c) + b)
 
 (* Lemma: multiplication on integers is commutative *)
 val swap_mul: a:int -> b:int -> Lemma (a * b = b * a)
 let swap_mul a b =
-    assert_by_tactic canon (a * b = b * a)
+    assert_by_tactic (canon;; qed) (a * b = b * a)
 
 (* Lemma: minus applies to the whole term *)
 val neg_mul_left: a:int -> b:int -> Lemma (-(a * b) = (-a) * b)
 let neg_mul_left a b =
-    assert_by_tactic canon (-(a * b) = (-a) * b)
+    assert_by_tactic (canon;; qed) (-(a * b) = (-a) * b)
 
 (* Lemma: minus applies to the whole term *)
 val neg_mul_right: a:int -> b:int -> Lemma (-(a * b) = a * (-b))
 let neg_mul_right a b =
-    assert_by_tactic canon (-(a * b) = a * (-b))
+    assert_by_tactic (canon;; qed) (-(a * b) = a * (-b))
 
 val swap_neg_mul: a:int -> b:int -> Lemma ((-a) * b = a * (-b))
 let swap_neg_mul a b =
-    assert_by_tactic canon ((-a) * b = a * (-b))
+    assert_by_tactic (canon;; qed) ((-a) * b = a * (-b))
 
 (* Lemma: multiplication precedence on addition *)
 val mul_binds_tighter: a:int -> b:int -> c:int -> Lemma (a + (b * c) = a + b * c)
 let mul_binds_tighter a b c =
-    assert_by_tactic canon (a + (b * c) = a + b * c)
+    assert_by_tactic (canon;; qed) (a + (b * c) = a + b * c)
 
 (* Lemma: multiplication keeps symetric bounds :
     b > 0 && d > 0 && -b < a < b && -d < c < d ==> - b * d < a * c < b * d *)
@@ -294,7 +295,7 @@ let lemma_mod_injective p a b = ()
 val lemma_mul_sub_distr: a:int -> b:int -> c:int -> Lemma
   (a * b - a * c = a * (b - c))
 let lemma_mul_sub_distr a b c =
-    assert_by_tactic canon (a * b - a * c = a * (b - c))
+    assert_by_tactic (canon;; qed) (a * b - a * c = a * (b - c))
 
 val lemma_div_exact: a:nat -> p:pos -> Lemma
   (requires (a % p = 0))
