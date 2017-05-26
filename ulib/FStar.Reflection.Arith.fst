@@ -20,6 +20,7 @@ type expr =
     | Atom : nat -> term -> expr // atom, contains both a numerical ID and the actual term encountered
     | Plus  : expr -> expr -> expr
     | Mult  : expr -> expr -> expr
+    | Minus : expr -> expr -> expr
     | Neg   : expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
 
@@ -85,8 +86,6 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
-let minus x y = Plus x (Neg y)
-
 val is_arith_expr : term -> tm expr
 let rec is_arith_expr (t:term) =
     let hd, tl = collect_app t in
@@ -99,7 +98,7 @@ let rec is_arith_expr (t:term) =
         let ll = is_arith_expr (l <: x:term{x << t}) in
         let rr = is_arith_expr (r <: x:term{x << t}) in
         if      eq_qn qn add_qn   then liftM2 Plus ll rr
-        else if eq_qn qn minus_qn then liftM2 minus ll rr
+        else if eq_qn qn minus_qn then liftM2 Minus ll rr
         else if eq_qn qn mult_qn  then liftM2 Mult ll rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
