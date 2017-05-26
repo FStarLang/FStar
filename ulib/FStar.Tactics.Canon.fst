@@ -69,6 +69,9 @@ let x_mult_one #x = ()
 val one_mult_x : (#x:int) -> Lemma (1 * x == x)
 let one_mult_x #x = ()
 
+val minus_is_plus : (#x : int) -> (#y : int) -> Lemma (x - y == x + (-y))
+let minus_is_plus #x #y = ()
+
 let rec canon_point : unit -> Tac unit = fun () -> (
     let step (t : tactic unit) : tactic unit =
         apply_lemma (quote trans);;
@@ -178,6 +181,11 @@ let rec canon_point : unit -> Tac unit = fun () -> (
             if O.gt (compare_expr a b)
             then apply_lemma (quote comm_mult)
             else trefl
+
+        // Forget about subtraction
+        | Inr (Minus a b) ->
+            step_lemma (quote minus_is_plus);;
+            canon_point
 
         | Inr _ ->
             trefl
