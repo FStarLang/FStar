@@ -138,6 +138,7 @@ let rec expr_to_string (e:expr) : string =
     | Atom i _ -> "a"^(string_of_int i)
     | Lit i -> string_of_int i
     | Plus l r -> "(" ^ (expr_to_string l) ^ " + " ^ (expr_to_string r) ^ ")"
+    | Minus l r -> "(" ^ (expr_to_string l) ^ " - " ^ (expr_to_string r) ^ ")"
     | Mult l r -> "(" ^ (expr_to_string l) ^ " * " ^ (expr_to_string r) ^ ")"
     | Neg l -> "(- " ^ (expr_to_string l) ^ ")"
 
@@ -146,6 +147,7 @@ let rec compare_expr (e1 e2 : expr) : O.order =
     | Lit i, Lit j -> O.compare_int i j
     | Atom _ t, Atom _ s -> compare_term t s
     | Plus l1 l2, Plus r1 r2
+    | Minus l1 l2, Minus r1 r2
     | Mult l1 l2, Mult r1 r2 -> O.lex (compare_expr l1 r1) (fun () -> compare_expr l2 r2)
     | Neg e1, Neg e2 -> compare_expr e1 e2
     | Lit _,    _ -> O.Lt    | _, Lit _    -> O.Gt
