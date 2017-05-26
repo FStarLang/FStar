@@ -27,8 +27,6 @@ module RD = FStar.Reflection.Data
 
 type name = bv
 
-let tacdbg = BU.mk_ref false
-
 (*
    f: x:int -> P
    ==================
@@ -127,8 +125,13 @@ let print_proof_state (msg:string) : tac<unit> =
 let get : tac<proofstate> =
     mk_tac (fun p -> Success (p, p))
 
-let log ps f =
-    if !tacdbg then f () else ()
+let tac_verb_dbg : ref<option<bool>> = BU.mk_ref None
+let rec log ps f : unit =
+    match !tac_verb_dbg with
+    | None -> (tac_verb_dbg := Some (Env.debug ps.main_context (Options.Other "TacVerbose"));
+               log ps f)
+    | Some true -> f ()
+    | Some false -> ()
 
 let mlog f : tac<unit> =
     bind get (fun ps -> log ps f; ret ())
@@ -768,9 +771,9 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
     else
         let typ = lcomp.res_typ in
         let ut, uvs, guard  = TcUtil.new_implicit_var "pointwise tactic" t.pos env typ in
-        if !tacdbg then
+        log ps (fun () ->
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
-                                                                 (Print.term_to_string ut);
+                                                                 (Print.term_to_string ut));
         let g' = { context = env ; witness = None; goal_ty = U.mk_eq2 (TcTerm.universe_of env typ) typ t ut } in
         bind (add_goals [g']) (fun _ ->
         focus_cur_goal (
@@ -789,12 +792,12 @@ let pointwise (tau:tac<unit>) : tac<unit> =
                 | [] -> failwith "Pointwise: no goals"
     in
     let gt = g.goal_ty in
-    if !tacdbg then
-        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt);
+    log ps (fun () ->
+        BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
     bind (tac_bottom_fold_env (pointwise_rec ps tau) g.context gt) (fun gt' ->
-    if !tacdbg then
-        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt');
+    log ps (fun () ->
+        BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
     add_goals [{g with goal_ty = gt'}]))))
 

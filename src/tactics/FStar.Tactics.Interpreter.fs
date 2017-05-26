@@ -22,6 +22,8 @@ module Core = FStar.Tactics.Basic
 open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 
+let tacdbg = BU.mk_ref false
+
 let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (nm:Ident.lid) (args:args) : option<term> =
  (*  We have: t () embedded_state
      The idea is to:
@@ -31,10 +33,10 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
   *)
   match args with
   | [(embedded_state, _)] ->
-    if !tacdbg then
+    log ps (fun () ->
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
-            (Print.args_to_string args);
+            (Print.args_to_string args));
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run t ps in
@@ -48,10 +50,10 @@ let mk_tactic_interpretation_1 (ps:proofstate)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
-    if !tacdbg then
+    log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
-            (Print.term_to_string embedded_state);
+            (Print.term_to_string embedded_state));
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_b b)) ps in
@@ -65,10 +67,10 @@ let mk_tactic_interpretation_2 (ps:proofstate)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
   | [(a, _); (b, _); (embedded_state, _)] ->
-    if !tacdbg then
+    log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
-            (Print.term_to_string embedded_state);
+            (Print.term_to_string embedded_state));
     let goals, smt_goals = E.unembed_state ps embedded_state in
     let ps = {ps with goals=goals; smt_goals=smt_goals} in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
