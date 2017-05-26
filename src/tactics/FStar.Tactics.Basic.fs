@@ -846,7 +846,14 @@ let get_lemma (t : term) : tac<term> =
                 else ret ()) (fun _ ->
         let bs, comp = U.arrow_formals_comp typ in
         bind (match bs with
-              | [x] -> ret ()
+              | [(x, _)] -> begin match (SS.compress x.sort).n with
+                            | Tm_fvar fv when S.fv_eq_lid fv SC.unit_lid ->
+                                if (BU.set_mem x (FStar.Syntax.Free.names t))
+                                then fail "get_lemma: unit arg is free in result type (???)"
+                                else ret ()
+                            | _ ->
+                                fail (BU.format1 "get_lemma: lemma not unit-thunked (%s)" (Print.term_to_string x.sort))
+                            end
               | _ -> fail "get_lemma: can only receive a lemma with a single unit argument") (fun _ ->
         let pre, post =
               let c = U.comp_to_comp_typ comp in
