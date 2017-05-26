@@ -104,6 +104,11 @@ let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
 let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
+let irrelevant (g:goal) : bool =
+    match g.witness with
+    | None -> true
+    | _ -> false
+
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
     ()
@@ -827,11 +832,29 @@ let qed : tac<unit> =
     | _ -> fail "Not done!"
     )
 
+// basically implements our V-Bind rule
+let unsquash (t : term) : tac<term> =
+    with_cur_goal (fun g ->
+        if not (irrelevant g)
+        then fail "Goal is not irrelevant: cannot unsquash"
+        else
+            let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
+            let hd, args = U.head_and_args typ in
+            match (U.un_uinst hd).n, args with
+            | Tm_fvar fv, [(phi, _)] when S.fv_eq_lid fv SC.squash_lid ->
+                let v = S.new_bv None phi in
+                let g = {g with context = Env.push_bv g.context v } in
+                bind (replace_cur g) (fun _ ->
+                ret (S.bv_to_name v))
+            | _ ->
+                fail (BU.format1 "Not a squash: %s" (Print.term_to_string typ))
+    )
+
 let cases (t : term) : tac<(term * term)> =
     with_cur_goal (fun g ->
         let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
         let hd, args = U.head_and_args typ in
-        match hd.n, args with
+        match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv SC.or_lid ->
             let v_p = S.new_bv None p in
             let v_q = S.new_bv None q in

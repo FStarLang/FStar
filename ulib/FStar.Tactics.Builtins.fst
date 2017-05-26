@@ -100,3 +100,7 @@ let addns ns : tactic unit = fun () -> TAC?.reflect (__addns ns)
 
 assume private val __cases : term -> __tac (term * term)
 let cases t : tactic (term * term) = fun () -> TAC?.reflect (__cases t)
+
+// Can only be used when the goal is irrelevant
+assume private val __unsquash : term -> __tac term
+let unsquash t : tactic term = fun () -> TAC?.reflect (__unsquash t)
