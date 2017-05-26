@@ -472,83 +472,86 @@ let trivial : tac<unit> =
         else fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty))
     )
 
+let ifM (b : bool) (t : tac<'a>) : tac<unit> =
+    if b
+    then (bind t (fun _ -> ret ()))
+    else ret ()
+
 let apply_lemma (tm:term)
     : tac<unit>
     = with_cur_goal (fun goal ->
-        try let tm, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
-            if not (U.is_lemma t)
-            then fail "apply_lemma: not a lemma"
-            else let bs, comp = U.arrow_formals_comp t in
-                 let uvs, implicits, subst =
-                    List.fold_left (fun (uvs, guard, subst) (b, aq) ->
-                            let b_t = SS.subst subst b.sort in
-                            let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
-                            (u, aq)::uvs,
-                            FStar.TypeChecker.Rel.conj_guard guard g_u,
-                            S.NT(b, u)::subst)
-                    ([], guard, [])
-                    bs
-                 in
-                 let uvs = List.rev uvs in
-                 let comp = SS.subst_comp subst comp in
-                 let pre, post =
-                      let c = U.comp_to_comp_typ comp in
-                      match c.effect_args with
-                      | pre::post::_ -> fst pre, fst post
-                      | _ -> failwith "Impossible: not a lemma" in
-                 match Rel.try_teq false goal.context post goal.goal_ty with
-                 | None -> fail (BU.format2 "apply_lemma: does not unify with goal: %s vs %s"
-                                              (Print.term_to_string post)
-                                              (Print.term_to_string goal.goal_ty))
-                 | Some g ->
-                   let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
-                   let solution = S.mk_Tm_app tm uvs None goal.context.range in
-                   let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
-                        let hd, _ = U.head_and_args tm in
-                        match (SS.compress hd).n with
-                        | Tm_uvar _ -> true //still unresolved
-                        | _ -> false) in
-                   solve goal solution;
-                   let is_free_uvar uv t =
-                       let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
-                       List.existsML (fun u -> Unionfind.equivalent u uv) free_uvars
-                   in
-                   let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
-                   let checkone t goals =
-                        match t with
-                        | None -> false
-                        | Some t ->
-                            let hd, _ = U.head_and_args t in
-                            begin match hd.n with
-                            | Tm_uvar (uv, _) -> appears uv goals
-                            | _ -> false
-                            end
-                   in
-                   let sub_goals =
-                        implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
-                                {context = goal.context;
-                                 witness = Some term;
-                                 goal_ty = typ})
-                   in
-                   // Optimization: if a uvar appears in a later goal, don't ask for it, since
-                   // it will be instantiated later. TODO: maybe keep and check later?
-                   let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
-                        match xs with
-                        | [] -> []
-                        | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
-                   in
-                   let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
-                   let sub_goals =
-                       if istrivial goal.context pre
-                       then sub_goals
-                       else {goal with witness=None; goal_ty=pre} //pre-condition is proof irrelevant
-                             :: sub_goals
-                   in
-                   bind (add_implicits g.implicits) (fun _ ->
-                   bind dismiss (fun _ ->
-                   add_goals sub_goals))
-         with
-            _ -> fail "apply_lemma: ill-typed term")
+        let tm, t, guard = goal.context.type_of ({goal.context with expected_typ = None}) tm in //TODO: check that the guard is trivial
+        bind (ifM (not (U.is_lemma t))
+                  (fail "apply_lemma: not a lemma")) (fun _ ->
+        let bs, comp = U.arrow_formals_comp t in
+        let uvs, implicits, subst =
+           List.fold_left (fun (uvs, guard, subst) (b, aq) ->
+                   let b_t = SS.subst subst b.sort in
+                   let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
+                   (u, aq)::uvs,
+                   FStar.TypeChecker.Rel.conj_guard guard g_u,
+                   S.NT(b, u)::subst)
+           ([], guard, [])
+           bs
+        in
+        let uvs = List.rev uvs in
+        let comp = SS.subst_comp subst comp in
+        let pre, post =
+              let c = U.comp_to_comp_typ comp in
+              match c.effect_args with
+              | pre::post::_ -> fst pre, fst post
+              | _ -> failwith "Impossible: not a lemma" in
+         match Rel.try_teq false goal.context post goal.goal_ty with
+         | None -> fail (BU.format2 "apply_lemma: does not unify with goal: %s vs %s"
+                                      (Print.term_to_string post)
+                                      (Print.term_to_string goal.goal_ty))
+         | Some g ->
+           let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
+           let solution = S.mk_Tm_app tm uvs None goal.context.range in
+           let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
+                let hd, _ = U.head_and_args tm in
+                match (SS.compress hd).n with
+                | Tm_uvar _ -> true //still unresolved
+                | _ -> false) in
+           solve goal solution;
+           let is_free_uvar uv t =
+               let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
+               List.existsML (fun u -> Unionfind.equivalent u uv) free_uvars
+           in
+           let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
+           let checkone t goals =
+                match t with
+                | None -> false
+                | Some t ->
+                    let hd, _ = U.head_and_args t in
+                    begin match hd.n with
+                    | Tm_uvar (uv, _) -> appears uv goals
+                    | _ -> false
+                    end
+           in
+           let sub_goals =
+                implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
+                        {context = goal.context;
+                         witness = Some term;
+                         goal_ty = typ})
+           in
+           // Optimization: if a uvar appears in a later goal, don't ask for it, since
+           // it will be instantiated later. TODO: maybe keep and check later?
+           let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
+                match xs with
+                | [] -> []
+                | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
+           in
+           let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
+           let sub_goals =
+               if istrivial goal.context pre
+               then sub_goals
+               else {goal with witness=None; goal_ty=pre} //pre-condition is proof irrelevant
+                     :: sub_goals
+           in
+           bind (add_implicits g.implicits) (fun _ ->
+           bind dismiss (fun _ ->
+           add_goals sub_goals))))
 
 let exact (tm:term)
     : tac<unit>
