@@ -162,7 +162,7 @@ the [source code on github] using these [instructions].
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
 You can edit F\* code using your favorite text editor, but for Emacs
-we provide [fstar-mode.el], a sophisticated extension that adds special
+the community maintains [fstar-mode.el], a sophisticated extension that adds special
 support for F\*, including syntax highlighting, completion, type
 hints, navigation, documentation queries, and interactive development
 (in the style of CoqIDE or ProofGeneral).
@@ -241,7 +241,7 @@ sections) proceeds in three easy steps.
 
 ### Defining a policy { #sec-policy }
 
-The syntax of F\* is based closely on the OCaml syntax and the non-light
+The syntax of F\* is based closely on the syntax of OCaml and the non-light
 syntax of F\#. Our F\* program is made up of one module per file, and the
 body of the module contains a number of definitions, and optionally 
 includes a 'main' expression.
@@ -259,7 +259,7 @@ After that, we define two boolean functions:
 `canWrite` and `canRead`:
 The `canWrite` function inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
-when `f="demo/tempfile"` and `false` otherwise. The function
+when `f` equals `"demo/tempfile"` and `false` otherwise. The function
 `canRead` is similar---a file is readable if it is writable, or if it
 is the `"demo/README"` file.
 
@@ -339,7 +339,7 @@ For instance, if we uncomment the `write` we get the following error message:
 ``` {language=""}
 .\Ex01a.fst(40,10-40,16): Subtyping check failed; 
 expected type (f:Ex01a.filename{(Prims.b2t (Ex01a.canWrite f))}); 
-got type Prims.string
+got type Ex01a.filename
 ```
 <!-- CH: It would be nice if at some point such error messages were
      "real", coming directly from the type-checker without being
@@ -360,9 +360,9 @@ allows it, otherwise it raises an exception.
 ~ Fragment {link=code/exercises/Ex01a.fst}
 [INCLUDE=code/exercises/Ex01a.fst:CheckedRead]
 ~
-Please note that the type of `checkRead` imposes no condition on the
-the input file `f`. When the `ACLs.canRead f` check succeeds the
-type-checker knows that the `FileIO.read f` is safe.
+Note that the type of `checkRead` imposes no condition on the
+the input file `f`. When the `canRead f` check succeeds the
+type-checker knows that the `read f` call is safe.
 
 ~Exercise
 Write a function called `checkedWrite` that takes a filename `f` and a
@@ -507,7 +507,7 @@ val read : filename -> ML string
 ```
 
 F\* is a _call-by-value_ functional language (like OCaml and F\#, and
-unlike Haskell and Coq), so function arguments are fully evaluated to
+unlike Haskell), so function arguments are fully evaluated to
 values before being passed to the function. Values have no (immediate) effect,
 thus the types of a function's arguments have no effect annotation. On
 the other hand, the body of a function may perform some non-trivial
@@ -617,7 +617,6 @@ properties of simple functions on integers.
 These example assertions are horrible because
 (1) they are in fact lemmas, while that's usually not the case
     for assertions and
-(2) they don't really work in F\*, which doesn't support top level assertions.
 How can we fix this?
 We could introduce asserts as just a way to check facts in lemmas
 or as a way to check facts within (effectful) code.
@@ -625,7 +624,6 @@ or as a way to check facts within (effectful) code.
 
 ~NS
 I don't see the distinction you're making between lemmas and assertions.
-You can write `let test = assert (max 0 1 = 1)`. Is that so bad as to be horrible?
 ~
 
 ~CH
@@ -635,26 +633,23 @@ code. Here you use assert to prove some lemmas (extensional
 properties) after the fact. Moreover, this doesn't even seem like the
 recommended way to prove lemmas in F\*, given that we have better
 support for this described below.
-(2) How is someone reading this tutorial supposed to find out that
-they need to add a let? Why not make the tutorial match reality
-by allowing top level asserts in F\* or by adding lets in the tutorial?
-Generally we should strive to make all the code in this tutorial be valid F\*
-code that we can directly load in the editor.
+
+(Generally we should strive to make all the code in this tutorial be valid F\*
+code that we can directly load in the editor.)
 ~
 
 One way to prove properties about your code in F\* is to write assertions.
 
-    let a = assert (max 0 1 = 1)
+    let _ = assert (max 0 1 = 1)
 
 Our first assertion is an obvious property about `max`. You may have seen
 a construct called `assert` in other languages---typically, it is used to
 check a property of your code *at runtime*, raising an assertion-failed
 exception if the asserted condition is not `true`.
 
-In F\*, assertions have no runtime significance. Instead, F\* tries to
-prove statically (i.e., before compiling your program) that the asserted
-condition is true, and hence, could never fail even if it were tested at
-runtime.
+In F\*, assertions have no runtime significance. Instead, F\* checks
+statically (i.e. before compiling your program) that the asserted
+condition is always true, and hence could never fail.
 
 In this case, the proof that `max 0 1 = 1` is fairly easy. Under the
 covers, F\* translates the definition of `max` and the asserted property
@@ -663,11 +658,11 @@ automatically.
 
 [Z3]: http://z3.codeplex.com/
 
-We can assert and automatically check a more general property about `max`. For example:
+We can assert and automatically check more general properties about `max`. For example:
 
-    let a = assert (forall x y. max x y >= x
-                     && max x y >= y
-                     && (max x y = x || max x y = y))
+    let _ = assert (forall x y. max x y >= x
+                    && max x y >= y
+                    && (max x y = x || max x y = y))
 
 ## Factorial and Fibonacci functions
 
@@ -835,7 +830,7 @@ Now that we've seen dependent functions, we can elaborate a bit more
 on the general form of function types:
 
 ~ Center
-`:x_1:t_1 -> ... -> x_n:t_n[x_1 ... x\(~n-1~\)] -> E t[x_1 ... x_n]`
+`:x_1:t_1 -> ... -> E_n x_n:t_n[x_1 ... x\(~n-1~\)] -> E t[x_1 ... x_n]`
 ~
 Each of a function's formal parameters are named
 `x\(~i~\)` and each of these names is in scope to the right of the first
@@ -1033,11 +1028,10 @@ coercion
 
     b2t (b:bool) : Type = (b == true)
 
-The type '`==`' is the type
-constructor for the equality predicate; it is different from '`=`', which
-is a boolean function comparing a pair of values. Additionally, '`==`' is
-heterogeneous: you can speak about equality between any pair of values,
-regardless of their type. In contrast, '`=`' is homogeneous.
+The type '`==`' is the type constructor for the homogeneous equality
+predicate; it is different from '`=`', which is a boolean function
+comparing a pair of values (F\* also has a separate constructor for
+heterogeneous equality, '`===`').
 
 The propositional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
 disjunction and negations are type constructors. We also include `:==>`
@@ -1052,7 +1046,7 @@ between the two will become apparent.
 <!--
 q:Type. True in universes too? 
 -->
-Both the universal quantifier `forall`, and the existential quantifier
+Both the universal quantifier `forall` and the existential quantifier
 `exists`, are only available in `:Type`. When you mix refinements that
 include boolean function and the quantifiers, you need to use the
 propositional connectives. For example, the following formula
@@ -1069,9 +1063,9 @@ reject it:
 
     canRead e && forall x. canWrite x ==> canRead x
 
-The reason is that the quantifier is a type, whereas the `:&&` expects a
-boolean. While a boolean can be coerced to a type, there is no coercion
-in the other direction.
+The reason is that the quantifier is a type, whereas the `:&&` operator
+expects a boolean. While a boolean can be coerced to a type, there is no
+coercion in the other direction.
 
 
 # Simple inductive types
@@ -1079,8 +1073,8 @@ in the other direction.
 ~CH
 
 We should explain all our syntactic restrictions on naming things:
-Constructors have to start uppercase, types can be upper or lower
-case, right? (although they are usually lower case), variables
+Constructors have to start uppercase, types must start lower
+case, variables
 have to start lower-case. In particular every lower case thing
 in a pattern is interpreted as a variable, even if it's already
 bound somewhere else. We might want to raise a warning in such
@@ -1098,8 +1092,7 @@ We note some important conventions for the constructors of a data type in F\*.
 + Constructor names must begin with a capital letter.
 
 + When not writing effects in constructor types,
-  the default effect on the result is `Tot`
-  (as opposed to function types in general).
+  the default effect on the result is `Tot`.
   So, when we write `Cons: 'a -> list 'a -> list 'a`,  F\* desugars it to
   `Cons: 'a -> Tot (list 'a -> Tot (list 'a))`.
 
@@ -1117,8 +1110,8 @@ implicitly in all F\* programs. We provide special (but standard) syntax
 for the list constructors:
 
 * `[]` is `Nil`
-* `[v1;...;vn]` is `Cons v1 ... (Cons vn Nil)`
-* `hd::tl` is `Cons hd tl`.
+* `[v1; ...; vn]` is `Cons v1 ... (Cons vn Nil)`
+* `hd :: tl` is `Cons hd tl`.
 
 You can always just write out the constructors like `Nil` and `Cons`
 explicitly, if you find that useful (e.g., to partially apply `Cons`).
@@ -1194,14 +1187,18 @@ and in the definition of append, which takes an extra `a` argument.
 When calling `append` recursively we have a choice, we can either
 pass `a` explicitly by preceding it with the `#` sign, or we can
 leave it out and the F* type-checker will infer it automatically.
-(Implicit argument are further discussed in [#sec-implicit-arguments].)
+(Implicit arguments are further discussed in [#sec-implicit-arguments].)
 
 We would like to define a function `mem: x:'a -> l:list 'a -> Tot bool`
 that decides whether `x` is present in a list `l` or
 not. However, not all types in F\* have decidable equality, so in
 order to write `mem` we cannot quantify over arbitrary types, but only
 over those with decidable equality. Thus the following definition of
-`mem` has to use `:#a:eqtype` instead of `:#a:Type`.
+`mem` has to use `:#a:Type{hasEq a}` instead of `:#a:Type` (`hasEq a`
+holds if `a` has decidable equality---that is, if there exists a
+function `eq_a: a -> a -> Tot bool` such that `eq_a a_1 a_2` iff.
+`a_1 == a_2`).  For convenience, the standard library provides `eqtype`
+as an abbreviation of `a: Type{hasEq a}`.
 ```
 [INCLUDE=code/exercises/Ex04c.fst:Mem]
 ```
@@ -1238,21 +1235,13 @@ to a lemma.
     val reverse: list 'a -> Tot (list 'a)
     let rec reverse = function
       | [] -> []
-      | hd::tl -> append (reverse tl) [hd]
+      | hd :: tl -> append (reverse tl) [hd]
 
 Let's try proving that reversing a list twice is the identity function.
 It's possible to
 *specify* this property in the type of `reverse` using a refinement type.
 
-    val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
-
-~CH
-This signature doesn't work:
-append.fst(21,0-27,0) : Error
-Expected a term of type "f:(_:(list 'a) -> Tot (list 'a)){(forall (l:(list 'a)). ((l = (f (f l))) == true))}";
-got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
-	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Type_refine))
-~
+    val reverse: #a:Type -> f:(list a -> Tot (list a)){forall l. l == f (f l)}
 
 However, F\* refuses to accept this as a valid type for `reverse`:
 proving this property requires two separate inductions, neither of
@@ -1263,25 +1252,28 @@ it is:
 
     let snoc l h = append l [h]
 
-    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) = h::reverse l)
+    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) == h :: reverse l)
     let rec snoc_cons l h = match l with
       | [] -> ()
-      | hd::tl -> snoc_cons tl h
+      | hd :: tl -> snoc_cons tl h
 
-    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) = l)
+    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) == l)
     let rec rev_involutive l = match l with
       | [] -> ()
-      | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
+      | hd :: tl ->
+        // (1) [reverse (reverse tl) == tl]
+        rev_involutive tl;
+        // (2) [reverse (append (reverse tl) [hd]) == h :: reverse (reverse tl)]
+        snoc_cons (reverse tl) hd
+        // These two facts are enough for Z3 to prove the lemma:
+        //   reverse (reverse (hd :: tl))
+        //   =def= reverse (append (reverse tl) [hd])
+        //   =(2)= hd :: reverse (reverse tl)
+        //   =(1)= hd :: tl
+        //   =def= l
 
 In the `Cons` case of `rev_involutive` we are explicitly applying not just
 the induction hypothesis but also the `snoc_cons` lemma we proved above.
-
-~KK
-At this point it would be nice to have an explaination on how these two
-functions actually help F\* (or Z3) prove the property. It took me quite a while
-to figure out how this might work and I'm still not entirely certain. Again,
-this depends on who the audience of this tutorial is.
-~
 
 ~Exercise
 Prove that reverse is injective, i.e.,
@@ -1314,35 +1306,29 @@ We can write higher-order functions on lists,
 i.e., functions taking other functions as arguments.
 Here is the familiar `map`:
 
-      let rec map f l = match l with
-        | [] -> []
-        | hd::tl -> f hd :: map f tl
+    let rec map f l = match l with
+      | [] -> []
+      | hd::tl -> f hd :: map f tl
 
 It takes a function `f` and a list `l` and it applies `f` to each element in `l`
 producing a new list. More precisely `map f [a1; ...; a_n]` produces the list
 `[f a1; ...; f a_n]`. For example:
 
-    map (fun x -> x + 1) [0;1;2] = [1;2;3]
+    map (fun x -> x + 1) [0; 1; 2] = [1; 2; 3]
 
 As usual, without any specification, F\* will infer for `map` type
 `:('a -> 'b) -> list 'a -> list 'b`. Written explicitly, the type of
-`map` is `:('a -> ML 'b) -> Tot (list 'a -> ML (list 'b))`.  Notice
-that the type of `f` also defaults to a function with `:ML` effect.
+`map` is `:('a -> Tot 'b) -> Tot (list 'a -> Tot (list 'b))`.  Notice
+that the type of `f` also defaults to a function with `:Tot` effect.
 
 By adding a type annotation we can give a _different_ type to `map`:
 
-    val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+    val map: ('a -> ML 'b) -> list 'a -> ML (list 'b)
 
-This type is neither a subtype nor a supertype of the type F\*
-inferred on its own.
-
-~KK
-I could not really figure out how the type inferred by F\* and the
-explicitly written type differ functionally. I suspect this is due to my limited
-knowledge of functional programming and has something to do with currying.
-Anyway, a small remark about this might make sense here.
-Also: why can or does F\* not infer the different type? 
-~
+This type is neither a subtype nor a supertype of the type F\* inferred
+on its own (for example, the manual annotation above allows you to write
+`map (fun x -> FStar.IO.print_any x) l`, whereas the automatically inferred
+type does not.
 
 >**No parametric polymorphism on effects**: You might hope to give
 `map` a very general type, one that accepts a function with any effect
@@ -1369,7 +1355,7 @@ below and available in F\*'s standard prelude).
 
     let rec find f l = match l with
       | [] -> None
-      | hd::tl -> if f hd then Some hd else find f tl
+      | hd :: tl -> if f hd then Some hd else find f tl
 ~~
 
 Prove that if `find` returns `Some x` then `f x = true`.
@@ -1385,8 +1371,10 @@ Define the `fold_left` function on lists, so that
 
     fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
 
-Prove that `(fold_left Cons l [] = reverse l)`.
-(The proof is a level harder from what we've done so far)
+Prove that `(fold_left Cons l [] == reverse l)`.
+(The proof is a level harder from what we've done so far.  You will need to
+strengthen the induction hypothesis, and possibly to prove that `append` is
+associative)
 ~~ ExerciseFragment {exname=Ex04f}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
       Lemma (fold_left Cons l l' = append (reverse l) l')
@@ -1407,9 +1395,7 @@ Prove that `(fold_right Cons [] l = l)`.
 ~KK
 This exercise seems to be commented out in the Github version of the tutorial as
 opposed to the version actually available on the tutorial page. I don't mind
-having multiple exercises of a certain type. However, it might be nice to have
-an explaination to go along with it. Even looking at the code I often had a hard
-time figuring out why exactly the solution checks out.
+having multiple exercises of a certain type.
 ~
 
 ## Implicitly defined functions on inductive types
@@ -1431,20 +1417,15 @@ term is the application of a particular constructor. For the `list` type,
 we have two discriminators that are automatically generated.
 
     val Nil?: list 'a -> Tot bool
-    let Nil? xs = match xs with [] -> true | _ -> false
+    let Nil? xs = match xs with | [] -> true | _ -> false
 
     val Cons?: list 'a -> Tot bool
-    let Cons? xs = match xs with _::_-> true | _ -> false
+    let Cons? xs = match xs with | _ :: _ -> true | _ -> false
 
 Identifiers like `Nil?` and `Cons?` cannot be defined by the user
 directly. They are reserved to be automatically generated by the
 compiler. So, the above code will not typecheck as written---it's only
-for illustration purposes. 
-
-~KK
-The notation without a "|" before the first case causes syntax errors. Or am I
-missing something?
-~
+for illustration purposes.
 
 ### Projectors
 
@@ -1476,12 +1457,6 @@ those of `Cons?.hd` and `Cons?.tl`.
 ~~
 ~
 
-~CH
-The Next exercise seems easy, why does it come up so late?
-Anyway, it's too late to switch later now, we can do such things
-when we have an automatic way ;)
-~
-
 ~Exercise
 Write a function that returns the `n`th element of a list. Give a
 type that ensures it is total.
@@ -1492,18 +1467,14 @@ type that ensures it is total.
 val nth : l:list 'a -> n:nat{n < length l} -> 'a
 let rec nth l n =
   match l with
-  | h :: t -> if n = 0 then h else nth t (n-1)
+  | h :: t -> if n = 0 then h else nth t (n - 1)
+
+(* Note how the solution above omits the [] case: that's because whenever you
+   pattern match a term (to analyze it by cases), F\* insists on proving that you
+   have handled all the cases. We call this the 'exhaustiveness check', and unlike
+   in F\# or OCaml, it is implemented semantically. *)
 ~~
 ~
-
-<!--
-## Exhaustiveness of pattern matching
-
-Whenever you pattern match a term (to analyze it by cases), F\* insists
-on proving that you have handled all the cases. We call this the
-`exhaustiveness check`, and unlike in F\# or OCaml, it is implemented
-semantically.
--->
 
 ## Tuples and records
 
@@ -1525,8 +1496,7 @@ F\* also provides syntax for records, although internally records (like
 tuples) boil down to data types with a single constructor. Here's an
 example:
 
-
-    type triple 'a 'b 'c = {fst:'a; snd:'b; third:'c}
+    type triple 'a 'b 'c = { fst:'a; snd:'b; third:'c }
     let f x = x.fst + x.snd + x.third
 
 F\* accepts this program, giving `f` the type `:(triple int int int -> Tot int)`.
@@ -1662,11 +1632,11 @@ Let's see how this works on a couple of examples.
 
 F* can show automatically that the `ackermann` function
 
-    1.  let rec ackermann m n =
-    2.    if m=0 then n + 1
-    3.    else if n = 0 then ackermann (m - 1) 1
-    4.    else ackermann (m - 1)
-    5.                   (ackermann m (n - 1))
+    (* 1 *) let rec ackermann m n =
+    (* 2 *)   if m=0 then n + 1
+    (* 3 *)   else if n = 0 then ackermann (m - 1) 1
+    (* 4 *)   else ackermann (m - 1)
+    (* 5 *)                  (ackermann m (n - 1))
 
 is terminating and has type:
 
@@ -1684,7 +1654,7 @@ restrictive type for the recursive calls in the body of `ackermann`:
             -> n':nat{%[m';n'] << %[m;n]}
             -> Tot nat
 
-At each of three recursive calls to `ackermann`, we need to prove, not
+At each of three recursive calls to `ackermann`, we need to prove not
 only that the arguments are non-negative, but that they precede the
 previous arguments according to the refinement formula above.
 
@@ -1748,7 +1718,7 @@ val rev : l1:list 'a -> l2:list 'a -> Tot (list 'a) (decreases l2)
 let rec rev l1 l2 =
   match l2 with
   | []     -> l1
-  | hd::tl -> rev (hd::l1) tl
+  | hd :: tl -> rev (hd :: l1) tl
 ~~
 Prove the following lemma showing the correctness of this
 efficient implementation with respect to the previous simple
@@ -1762,21 +1732,21 @@ val append_assoc : xs:list 'a -> ys:list 'a -> zs:list 'a -> Lemma
 let rec append_assoc xs ys zs =
   match xs with
   | [] -> ()
-  | x::xs' -> append_assoc xs' ys zs
+  | x :: xs' -> append_assoc xs' ys zs
 
 val rev_is_ok_aux : l1:list 'a -> l2:list 'a -> Lemma
       (ensures (rev l1 l2 = append (reverse l2) l1)) (decreases l2)
 let rec rev_is_ok_aux l1 l2 =
   match l2 with
   | [] -> ()
-  | hd::tl  -> rev_is_ok_aux (hd::l1) tl; append_assoc (reverse tl) [hd] l1
+  | hd :: tl  -> rev_is_ok_aux (hd :: l1) tl; append_assoc (reverse tl) [hd] l1
 
 val append_nil : xs:list 'a -> Lemma
       (ensures (append xs [] = xs))
 let rec append_nil xs =
   match xs with
   | [] -> ()
-  | _::tl  -> append_nil tl
+  | _ :: tl  -> append_nil tl
 
 val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
 let rev_is_ok l = rev_is_ok_aux [] l; append_nil (reverse l)
@@ -1784,7 +1754,7 @@ let rev_is_ok l = rev_is_ok_aux [] l; append_nil (reverse l)
 ~
 
 ~Exercise
-(**Challenge!**) Here is a more efficient (tail-recursive)
+(**Challenge!**) Here is a more efficient (linear-time)
 variant of the Fibonacci function.
 ~~ ExerciseFragment {exname=Ex05b}
 val fib : nat -> nat -> n:nat -> Tot nat (decreases n)
@@ -1800,15 +1770,13 @@ implementation:
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 ~~
 ~~ AnswerFragment {exname=Ex05b}
-val fib_is_ok_aux : i:nat -> n:nat{i<=n} ->
-      Tot (u:unit{fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n})
-      (decreases (n-i))
-let rec fib_is_ok_aux i n =
-  if i=n then ()
-  else fib_is_ok_aux (i+1) n
+val fib_is_ok_aux : (n: nat) -> (k: nat) ->
+  Lemma (fib (fibonacci k) (fibonacci (k + 1)) n == fibonacci (k + n))
+let rec fib_is_ok_aux n k =
+  if n = 0 then () else fib_is_ok_aux (n - 1) (k + 1)
 
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
-let fib_is_ok n = fib_is_ok_aux 0 n
+let fib_is_ok n = fib_is_ok_aux n 0
 ~~
 ~
 
@@ -1826,7 +1794,7 @@ val foo : l:list int -> Tot int
 val bar : l:list int -> Tot int
 let rec foo l = match l with
     | [] -> 0
-    | x::xs -> bar xs
+    | x :: xs -> bar xs
 and bar l = foo l
 ```
 
@@ -1870,7 +1838,7 @@ increasing order.
   let rec sorted l = match l with
       | [] -> true
       | [x] -> true
-      | x::y::xs -> x <= y && sorted (y::xs)
+      | x :: y :: xs -> x <= y && sorted (y :: xs)
 ```
 
 Given a sorting algorithm `sort`, we would like to prove the following
@@ -1891,9 +1859,9 @@ pivot in the middle before returning.
 
     let rec sort l = match l with
       | [] -> []
-      | pivot::tl ->
+      | pivot :: tl ->
         let hi, lo  = partition (fun x -> pivot <= x) tl in
-        append (sort lo) (pivot::sort hi)
+        append (sort lo) (pivot :: sort hi)
 
 
 ~Exercise
@@ -1912,11 +1880,11 @@ The following definition is included in F\*'s list library.
 <!-- val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a) -->
 <!-- let rec partition f = function  -->
 <!--   | [] -> [], [] -->
-<!--   | hd::tl ->  -->
+<!--   | hd :: tl ->  -->
 <!--     let l1, l2 = partition f tl in -->
 <!--     if f hd  -->
-<!--     then hd::l1, l2 -->
-<!--     else l1, hd::l2 -->
+<!--     then hd :: l1, l2 -->
+<!--     else l1, hd :: l2 -->
 <!-- ~~~ -->
 ~~
 ~
@@ -1972,7 +1940,7 @@ And here are a couple of lemmas about `partition` and `sorted`:
                                             || mem x (snd (partition f l)))))))
      let rec partition_lemma f l = match l with
        | [] -> ()
-       | hd::tl -> partition_lemma f tl
+       | hd :: tl -> partition_lemma f tl
 
 ~Remark
 The repeated sub-terms like `fst (partition f l)` in specifications
@@ -1986,13 +1954,12 @@ machinery.
                            -> pivot:int
                            -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
                                             /\ (forall y. mem y l2 ==> pivot <= y)))
-                                    (ensures (sorted (append l1 (pivot::l2))))
+                                    (ensures (sorted (append l1 (pivot :: l2))))
      let rec sorted_concat_lemma l1 l2 pivot = match l1 with
       | [] -> ()
-      | hd::tl -> sorted_concat_lemma tl l2 pivot
+      | hd :: tl -> sorted_concat_lemma tl l2 pivot
 
-Finally, we also need a universally quantified variant of the
-`append_mem` lemma presented in a previous exercise:
+Finally, we also need a lemma about `append` and `mem`:
 
      val append_mem:  l1:list 'a
                    -> l2:list 'a
@@ -2000,7 +1967,7 @@ Finally, we also need a universally quantified variant of the
                             (ensures (forall a. mem a (append l1 l2) = (mem a l1 || mem a l2)))
      let rec append_mem l1 l2 = match l1 with
        | [] -> ()
-       | hd::tl -> append_mem tl l2
+       | hd :: tl -> append_mem tl l2
 
 
 Armed with these lemmas, let's return to our implementation of
@@ -2016,14 +1983,14 @@ calling the lemmas to make the proof go through.
                                         (decreases (length l))
     let rec sort_tweaked l = match l with
       | [] -> []
-      | pivot::tl ->
+      | pivot :: tl ->
         let hi', lo' = partition (cmp pivot) tl in
         partition_lemma (cmp pivot) tl;
         let hi = sort_tweaked hi' in
         let lo = sort_tweaked lo' in
-        append_mem lo (pivot::hi);
+        append_mem lo (pivot :: hi);
         sorted_concat_lemma lo hi pivot;
-        append lo (pivot::hi)
+        append lo (pivot :: hi)
 
 That works, but it's pretty ugly. Not only did we have to pollute our
 implementation with calls to the lemmas, in order to make those calls,
@@ -2053,7 +2020,7 @@ caught in a bind.
 Wouldn't it be nice if there were some way to retroactively associate
 a property proven about a function `f` by a lemma directly with `f`,
 so that every application `f x` immediately carries the lemma
-properties? F\* provides exactly such a mechanism, which provides a
+properties? F\* provides exactly such a mechanism, which gives a
 way to bridge the gap between extrinsic and intrinsic proofs.
 
 Let's say we wrote the type of `partition_lemma` as below---the only
@@ -2077,7 +2044,7 @@ Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
 only with very specific terms: just those that have the shape
 ```
-sorted (append 11 (pivot::l2))
+sorted (append 11 (pivot :: l2))
 ```
 The more specific a pattern you can provide,
 the more discriminating the SMT solver will be in applying lemmas,
@@ -2088,8 +2055,8 @@ keeping your verification times acceptable.
                           -> pivot:int
                           -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
                                            /\ (forall y. mem y l2 ==> pivot <= y)))
-                                   (ensures (sorted (append l1 (pivot::l2))))
-                             [SMTPat (sorted (append l1 (pivot::l2)))]
+                                   (ensures (sorted (append l1 (pivot :: l2))))
+                             [SMTPat (sorted (append l1 (pivot :: l2)))]
 
 Finally, we also revise the type for `append_mem` in the same way:
 
@@ -2100,7 +2067,7 @@ Finally, we also revise the type for `append_mem` in the same way:
                            [SMTPat (append l1 l2)]
     let rec append_mem l1 l2 = match l1 with
       | [] -> ()
-      | hd::tl -> append_mem tl l2
+      | hd :: tl -> append_mem tl l2
 
 
 ~Remark
@@ -2120,9 +2087,9 @@ derives the properties it needs from the lemmas that we have provided.
                                 (decreases (length l))
     let rec sort l = match l with
       | [] -> []
-      | pivot::tl ->
+      | pivot :: tl ->
         let hi, lo = partition (cmp pivot) tl in
-        append (sort lo) (pivot::sort hi)
+        append (sort lo) (pivot :: sort hi)
 
 
 ### Exercises
@@ -3176,8 +3143,8 @@ Let's start by considering a very simple, purely functional
 programming language with only the following forms:
 
 ```
-b ::= x | true | false
-e ::= b | let x = e1 in e2 | assert b | if b then e1 else e2
+b :: = x | true | false
+e :: = b | let x = e1 in e2 | assert b | if b then e1 else e2
 ```
 
 For this tiny language, the post-conditions `P` that you may want to
@@ -3834,7 +3801,7 @@ precise to allow the program to continue to type-check.
 ~~ ExerciseFragment {exname=Ex10a}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
-let grant e = ST.write acls (e::ST.read acls)
+let grant e = ST.write acls (e :: ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
@@ -3846,8 +3813,8 @@ let revoke e =
 ~~Answer
 ~~~ SolutionFragment {exname=Ex10a}
 val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls = e::sel h acls))
-let grant e = ST.write acls (e::ST.read acls)
+                               (ensures (fun h x h' -> sel h' acls = e :: sel h acls))
+let grant e = ST.write acls (e :: ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
@@ -4291,7 +4258,7 @@ let disjoint i j = not (includes i j) && not (includes j i)
 ```
 
 One way to think of `rid` is as a `list int`, where `includes i j` if and
-only if `i` is a prefix of `j`; and `extends i j` is true if `i = _::j`.
+only if `i` is a prefix of `j`; and `extends i j` is true if `i = _ :: j`.
 However, while this may provide you with some intuition, formally, the
 only properties that these functions are known to satisfy are revealed by
 the following lemmas:
@@ -5083,15 +5050,16 @@ then type annotations to derive their authentication property
 ~
 
 ~ Exercise
-(1) Can we similarly construct a MAC scheme for texts
-    with type `text:bytes {length text <= n}`?
-(2) Implement, then verify this construction.
+1. Can we similarly construct a MAC scheme for texts
+   with type `text:bytes {length text <= n}`?
+2. Implement, then verify this construction.
 
 ~~ Answer
-(1) Yes, using two keys: one for `text:bytes {length b = n}`
-and another for `text:bytes {length b}`.
+1. Yes, using two keys: one for `text:bytes {length b = n}`
+   and another for `text:bytes {length b}`.
 
-(2) Code:
+2. Code:
+
 ```
 module MAC2
 open Array
