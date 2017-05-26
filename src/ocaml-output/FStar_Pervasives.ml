@@ -57,9 +57,6 @@ type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = Prims.unit
 type ('Aheap,'Aa,'Awp) all_trivial = Prims.unit
 type 'Aa inversion = Prims.unit
 let allow_inversion = ()
-type 'Aa option =
-  | None
-  | Some of 'Aa
 let uu___is_None projectee =
   match projectee with | None  -> true | uu____1080 -> false
 let uu___is_Some projectee =

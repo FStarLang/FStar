@@ -1795,56 +1795,56 @@ let resugar_sigelt:
         then None
         else
           (let mk1 e =
-             (FStar_Syntax_Syntax.mk e) None se.FStar_Syntax_Syntax.sigrng in
+             FStar_Syntax_Syntax.mk e None se.FStar_Syntax_Syntax.sigrng in
            let dummy = mk1 FStar_Syntax_Syntax.Tm_unknown in
            let desugared_let = mk1 (FStar_Syntax_Syntax.Tm_let (lbs, dummy)) in
            let t = resugar_term desugared_let in
            match t.FStar_Parser_AST.tm with
-           | FStar_Parser_AST.Let (isrec,lets,uu____4170) ->
-               let uu____4177 =
+           | FStar_Parser_AST.Let (isrec,lets,uu____4166) ->
+               let uu____4173 =
                  decl'_to_decl se
                    (FStar_Parser_AST.TopLevelLet (isrec, lets)) in
-               Some uu____4177
-           | uu____4181 -> failwith "Should not happen hopefully")
+               Some uu____4173
+           | uu____4177 -> failwith "Should not happen hopefully")
     | FStar_Syntax_Syntax.Sig_assume (lid,fml) ->
-        let uu____4185 =
-          let uu____4186 =
-            let uu____4187 =
-              let uu____4190 = resugar_term fml in
-              ((lid.FStar_Ident.ident), uu____4190) in
-            FStar_Parser_AST.Assume uu____4187 in
-          decl'_to_decl se uu____4186 in
-        Some uu____4185
+        let uu____4181 =
+          let uu____4182 =
+            let uu____4183 =
+              let uu____4186 = resugar_term fml in
+              ((lid.FStar_Ident.ident), uu____4186) in
+            FStar_Parser_AST.Assume uu____4183 in
+          decl'_to_decl se uu____4182 in
+        Some uu____4181
     | FStar_Syntax_Syntax.Sig_new_effect ed ->
-        let uu____4192 =
+        let uu____4188 =
           resugar_eff_decl false se.FStar_Syntax_Syntax.sigrng
             se.FStar_Syntax_Syntax.sigquals ed in
-        Some uu____4192
+        Some uu____4188
     | FStar_Syntax_Syntax.Sig_new_effect_for_free ed ->
-        let uu____4194 =
+        let uu____4190 =
           resugar_eff_decl true se.FStar_Syntax_Syntax.sigrng
             se.FStar_Syntax_Syntax.sigquals ed in
-        Some uu____4194
+        Some uu____4190
     | FStar_Syntax_Syntax.Sig_sub_effect e ->
         let src = e.FStar_Syntax_Syntax.source in
         let dst = e.FStar_Syntax_Syntax.target in
         let lift_wp =
           match e.FStar_Syntax_Syntax.lift_wp with
-          | Some (uu____4201,t) ->
-              let uu____4208 = resugar_term t in Some uu____4208
-          | uu____4209 -> None in
+          | Some (uu____4197,t) ->
+              let uu____4204 = resugar_term t in Some uu____4204
+          | uu____4205 -> None in
         let lift =
           match e.FStar_Syntax_Syntax.lift with
-          | Some (uu____4214,t) ->
-              let uu____4221 = resugar_term t in Some uu____4221
-          | uu____4222 -> None in
+          | Some (uu____4210,t) ->
+              let uu____4217 = resugar_term t in Some uu____4217
+          | uu____4218 -> None in
         let op =
           match (lift_wp, lift) with
           | (Some t,None ) -> FStar_Parser_AST.NonReifiableLift t
           | (Some wp,Some t) -> FStar_Parser_AST.ReifiableLift (wp, t)
           | (None ,Some t) -> FStar_Parser_AST.LiftForFree t
-          | uu____4237 -> failwith "Should not happen hopefully" in
-        let uu____4242 =
+          | uu____4233 -> failwith "Should not happen hopefully" in
+        let uu____4238 =
           decl'_to_decl se
             (FStar_Parser_AST.SubEffect
                {
@@ -1852,58 +1852,58 @@ let resugar_sigelt:
                  FStar_Parser_AST.mdest = dst;
                  FStar_Parser_AST.lift_op = op
                }) in
-        Some uu____4242
+        Some uu____4238
     | FStar_Syntax_Syntax.Sig_effect_abbrev (lid,vs,bs,c,flags) ->
-        let uu____4250 = FStar_Syntax_Subst.open_comp bs c in
-        (match uu____4250 with
+        let uu____4246 = FStar_Syntax_Subst.open_comp bs c in
+        (match uu____4246 with
          | (bs1,c1) ->
              let bs2 =
-               let uu____4257 = FStar_Options.print_implicits () in
-               if uu____4257 then bs1 else filter_imp bs1 in
+               let uu____4253 = FStar_Options.print_implicits () in
+               if uu____4253 then bs1 else filter_imp bs1 in
              let bs3 =
                FStar_All.pipe_right bs2
                  (FStar_List.map
                     (fun b  -> resugar_binder b se.FStar_Syntax_Syntax.sigrng)) in
-             let uu____4263 =
-               let uu____4264 =
-                 let uu____4265 =
-                   let uu____4272 =
-                     let uu____4277 =
-                       let uu____4281 =
-                         let uu____4282 =
-                           let uu____4289 = resugar_comp c1 in
-                           ((lid.FStar_Ident.ident), bs3, None, uu____4289) in
-                         FStar_Parser_AST.TyconAbbrev uu____4282 in
-                       (uu____4281, None) in
-                     [uu____4277] in
-                   (false, uu____4272) in
-                 FStar_Parser_AST.Tycon uu____4265 in
-               decl'_to_decl se uu____4264 in
-             Some uu____4263)
+             let uu____4259 =
+               let uu____4260 =
+                 let uu____4261 =
+                   let uu____4268 =
+                     let uu____4273 =
+                       let uu____4277 =
+                         let uu____4278 =
+                           let uu____4285 = resugar_comp c1 in
+                           ((lid.FStar_Ident.ident), bs3, None, uu____4285) in
+                         FStar_Parser_AST.TyconAbbrev uu____4278 in
+                       (uu____4277, None) in
+                     [uu____4273] in
+                   (false, uu____4268) in
+                 FStar_Parser_AST.Tycon uu____4261 in
+               decl'_to_decl se uu____4260 in
+             Some uu____4259)
     | FStar_Syntax_Syntax.Sig_pragma p ->
-        let uu____4304 =
+        let uu____4300 =
           decl'_to_decl se (FStar_Parser_AST.Pragma (resugar_pragma p)) in
-        Some uu____4304
+        Some uu____4300
     | FStar_Syntax_Syntax.Sig_declare_typ (lid,uvs,t) ->
-        let uu____4308 =
+        let uu____4304 =
           FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
             (FStar_Util.for_some
-               (fun uu___208_4310  ->
-                  match uu___208_4310 with
+               (fun uu___208_4306  ->
+                  match uu___208_4306 with
                   | FStar_Syntax_Syntax.Projector (_,_)
                     |FStar_Syntax_Syntax.Discriminator _ -> true
-                  | uu____4314 -> false)) in
-        if uu____4308
+                  | uu____4310 -> false)) in
+        if uu____4304
         then None
         else
-          (let uu____4317 =
-             let uu____4318 =
-               let uu____4319 =
-                 let uu____4322 = resugar_term t in
-                 ((lid.FStar_Ident.ident), uu____4322) in
-               FStar_Parser_AST.Val uu____4319 in
-             decl'_to_decl se uu____4318 in
-           Some uu____4317)
+          (let uu____4313 =
+             let uu____4314 =
+               let uu____4315 =
+                 let uu____4318 = resugar_term t in
+                 ((lid.FStar_Ident.ident), uu____4318) in
+               FStar_Parser_AST.Val uu____4315 in
+             decl'_to_decl se uu____4314 in
+           Some uu____4313)
     | FStar_Syntax_Syntax.Sig_inductive_typ _
       |FStar_Syntax_Syntax.Sig_datacon _|FStar_Syntax_Syntax.Sig_main _ ->
         None
