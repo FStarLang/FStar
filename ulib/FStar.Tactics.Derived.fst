@@ -187,3 +187,11 @@ let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
 let unfold_definition_and_simplify_eq (tm:tactic term) : tactic unit =
     tm' <-- tm;
     unfold_definition_and_simplify_eq' tm'
+
+private let bool_ext (b:bool) : unit -> Lemma (b == true \/ b == false) = fun () -> ()
+
+let cases_bool (b:bool) : tactic unit =
+    lemt <-- quote (bool_ext b);
+    p <-- get_lemma lemt;
+    p <-- unsquash p;
+    seq (cases p;; return ()) rewrite_eqs_from_context // TODO: overkill, we want to only rewrite each case
