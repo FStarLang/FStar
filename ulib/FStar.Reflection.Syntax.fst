@@ -36,7 +36,6 @@ assume private val __type_of_binder: binder -> term
 let type_of_binder (b:binder) : term = __type_of_binder b
 
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
-// TODO: might need to say something about the types of binders, in the future.
 val smaller : term_view -> term -> Type0
 let smaller tv t =
     match tv with

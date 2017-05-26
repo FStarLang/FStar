@@ -219,7 +219,7 @@ let conj_goals g1 g2 =
 let with_cur_goal (f:goal -> tac<'a>) : tac<'a> =
     bind get (fun p ->
     match p.goals with
-    | [] -> fail "No more goals"
+    | [] -> fail "No more goals (1)"
     | hd::tl -> f hd)
 
 let cur_goal : tac<goal> =
@@ -270,7 +270,7 @@ let smt : tac<unit> =
 let focus_cur_goal (f:tac<'a>) : tac<'a>
     = bind get (fun p ->
           match p.goals with
-          | [] -> fail "No more goals"
+          | [] -> fail "No more goals (2)"
           | hd::tl ->
             let q = {p with goals=[hd]} in
             bind (set q) (fun _ ->

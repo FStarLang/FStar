@@ -188,4 +188,4 @@ let rec canon_point : unit -> Tac unit = fun () -> (
 
 let canon =
     seq (pointwise canon_point)
-        (simpl;; trytac trivial;; return ())
+        (simpl;; trytac trivial;; idtac)
