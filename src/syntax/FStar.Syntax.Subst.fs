@@ -25,7 +25,7 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
 module U = FStar.Util
-
+module S = FStar.Syntax.Syntax
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -429,69 +429,100 @@ let open_comp (bs:binders) t =
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
 
-
 let open_pat (p:pat) : pat * subst_t =
-    let rec aux_disj sub renaming p =
+    let rec aux_open_pat_disj sub renaming p =
         match p.v with
-           | Pat_disj _ -> failwith "impossible"
+            | Pat_disj _ -> failwith "impossible"
 
-           | Pat_constant _ -> p
+            | Pat_constant _ -> p
 
-           | Pat_cons(fv, pats) ->
-             {p with v=Pat_cons(fv, pats |> List.map (fun (p, b) ->
-                       aux_disj sub renaming p, b))}
+            | Pat_cons(fv, pats) ->
+                {p with v=Pat_cons(fv, pats |> List.map (fun (p, b) ->
+                        aux_open_pat_disj sub renaming p, b))}
 
-           | Pat_var x ->
-             let yopt = U.find_map renaming (function
+            | Pat_var x ->
+                let yopt = U.find_map renaming (function
                     | (x', y) when (x.ppname.idText=x'.ppname.idText) -> Some y
                     | _ -> None) in
-             let y = match yopt with
+                let y = match yopt with
                 | None -> {freshen_bv x with sort=subst sub x.sort}
                 | Some y -> y in
-             {p with v=Pat_var y}
+                {p with v=Pat_var y}
 
-           | Pat_wild x ->
-             let x' = {freshen_bv x with sort=subst sub x.sort} in
-             {p with v=Pat_wild x'}
+            | Pat_wild x ->
+                let x' = {freshen_bv x with sort=subst sub x.sort} in
+                {p with v=Pat_wild x'}
 
-           | Pat_dot_term(x, t0) ->
-             let x = {x with sort=subst sub x.sort} in
-             let t0 = subst sub t0 in
-             {p with v=Pat_dot_term(x, t0)} in
+            | Pat_dot_term(x, t0) ->
+                let x = {x with sort=subst sub x.sort} in
+                let t0 = subst sub t0 in
+                {p with v=Pat_dot_term(x, t0)}
+    in
 
-    let rec aux sub renaming p = match p.v with
-       | Pat_disj [] -> failwith "Impossible: empty disjunction"
+    let rec open_pat_aux sub renaming p = match p.v with
+        | Pat_disj [] -> failwith "Impossible: empty disjunction"
 
-       | Pat_constant _ -> p, sub, renaming
+        | Pat_constant _ -> p, sub, renaming
 
-       | Pat_disj(p::ps) ->
-         let p, sub, renaming = aux sub renaming p in
-         let ps = List.map (aux_disj sub renaming) ps in
-         {p with v=Pat_disj(p::ps)}, sub, renaming
+        | Pat_disj(p::ps) ->
+            let p, sub, renaming = open_pat_aux sub renaming p in
+            let ps = List.map (aux_open_pat_disj sub renaming) ps in
+            {p with v=Pat_disj(p::ps)}, sub, renaming
 
-       | Pat_cons(fv, pats) ->
-         let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
-             let p, sub, renaming = aux sub renaming p in
-             ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
-         {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
+        | Pat_cons(fv, pats) ->
+            let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
+                let p, sub, renaming = open_pat_aux sub renaming p in
+                ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
+            {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
 
-       | Pat_var x ->
-         let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, x')::shift_subst 1 sub in
-         {p with v=Pat_var x'}, sub, (x,x')::renaming
+        | Pat_var x ->
+            let x' = {freshen_bv x with sort=subst sub x.sort} in
+            let sub = DB(0, x')::shift_subst 1 sub in
+            {p with v=Pat_var x'}, sub, (x,x')::renaming
 
-       | Pat_wild x ->
-         let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, x')::shift_subst 1 sub in
-         {p with v=Pat_wild x'}, sub, (x,x')::renaming
+        | Pat_wild x ->
+            let x' = {freshen_bv x with sort=subst sub x.sort} in
+            let sub = DB(0, x')::shift_subst 1 sub in
+            {p with v=Pat_wild x'}, sub, (x,x')::renaming
 
-       | Pat_dot_term(x, t0) ->
-         let x = {x with sort=subst sub x.sort} in
-         let t0 = subst sub t0 in
-         {p with v=Pat_dot_term(x, t0)}, sub, renaming in //these are not in scope, so don't shift the index
+        | Pat_dot_term(x, t0) ->
+            let x = {x with sort=subst sub x.sort} in
+            let t0 = subst sub t0 in
+            {p with v=Pat_dot_term(x, t0)}, sub, renaming //these are not in scope, so don't shift the index
+    in
 
-    let p, sub, _ = aux [] [] p in
+    let p, sub, _ = open_pat_aux [] [] p in
     p, sub
+
+//TODO: this should go to the library
+let find_map_i (f:int -> 'a -> option<'b>) (l:list<'a>) : option<'b> =
+    let rec aux i l =
+        match l with
+        | [] -> None
+        | hd::tl -> begin
+            match f i hd with
+            | None -> aux (i + 1) tl
+            | found -> found
+            end
+    in
+    aux 0 l
+
+let permute_disjunctive_pattern (first:pat) (case:pat) (l:list<'a>) : list<'a> =
+    let p, _ = open_pat (FStar.Syntax.Syntax.withinfo (Pat_disj [first;case]) S.tun.n Range.dummyRange) in
+    let first_vars, case_vars =
+        match p.v with
+        | Pat_disj [first;case] ->
+          S.pat_bvs first, S.pat_bvs case
+        | _ -> failwith "Impossible"
+    in
+    if List.length l <> List.length first_vars
+    then failwith "Unexpected length of matched pattern variables";
+    first_vars |> List.map (fun v ->
+    let found = find_map_i (fun i (u:bv) -> if S.bv_eq u v then Some i else None) case_vars in
+    match found with
+    | None -> failwith "Impossible: unequal variables in disjunctive pattern"
+    | Some i ->
+      FStar.List.nth l i)
 
 let open_branch (p, wopt, e) =
     let p, opening = open_pat p in

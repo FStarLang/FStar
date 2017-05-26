@@ -1625,13 +1625,20 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           let mopt = BU.find_map ps (fun p ->
             let m = matches_pat scrutinee p in
             match m with
-              | Inl _ -> Some m //definite match
-              | Inr true -> Some m //maybe match; stop considering other cases
+              | Inl tms -> Some (Inl (tms, List.hd ps, p)) //definite match
+              | Inr true -> Some (Inr true) //maybe match; stop considering other cases
               | Inr false -> None (*definite mismatch*))
           in
           begin match mopt with
             | None -> Inr false //all cases definitely do not match
-            | Some m -> m
+            | Some (Inr b) -> Inr b
+            | Some (Inl (tms, first_case, matched_pattern)) ->
+              let maybe_permute tms =
+                if FStar.Util.physical_equality first_case matched_pattern
+                then tms
+                else Subst.permute_disjunctive_pattern first_case matched_pattern tms
+              in
+              Inl (maybe_permute tms)
           end
         | Pat_var _
         | Pat_wild _ -> Inl [scrutinee]
