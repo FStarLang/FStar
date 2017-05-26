@@ -472,17 +472,11 @@ let trivial : tac<unit> =
         else fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty))
     )
 
-let ifM (b : bool) (t : tac<'a>) : tac<unit> =
-    if b
-    then (bind t (fun _ -> ret ()))
-    else ret ()
-
 let apply_lemma (tm:term)
     : tac<unit>
     = with_cur_goal (fun goal ->
         let tm, t, guard = goal.context.type_of ({goal.context with expected_typ = None}) tm in //TODO: check that the guard is trivial
-        bind (ifM (not (U.is_lemma t))
-                  (fail "apply_lemma: not a lemma")) (fun _ ->
+        bind (if (not (U.is_lemma t)) then fail "apply_lemma: not a lemma" else ret ()) (fun _ ->
         let bs, comp = U.arrow_formals_comp t in
         let uvs, implicits, subst =
            List.fold_left (fun (uvs, guard, subst) (b, aq) ->
