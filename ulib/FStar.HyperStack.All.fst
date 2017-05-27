@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.All
-open FStar.ST
+module FStar.HyperStack.All
+open FStar.HyperStack.ST
 
 let all_pre = all_pre_h HyperStack.mem
 let all_post (a:Type) = all_post_h HyperStack.mem a
