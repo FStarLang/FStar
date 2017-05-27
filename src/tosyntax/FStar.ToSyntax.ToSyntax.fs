@@ -33,6 +33,13 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 
+let desugar_disjunctive_pattern pat when_opt branch =
+    match pat.v with
+    | Pat_disj pats ->
+      pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
+    | _ -> [U.branch (pat, when_opt, branch)]
+
+
 let trans_aqual = function
   | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality
@@ -1064,7 +1071,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 | None
                 | Some ({v=Pat_wild _}) -> body
                 | Some pat ->
-                  S.mk (Tm_match(S.bv_to_name x, [U.branch (pat, None, body)])) None body.pos in
+                  S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None body.pos in
               mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
           end in
         if is_mutable
@@ -1099,8 +1106,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           | None -> None
           | Some e -> Some (desugar_term env e) in
         let b = desugar_term env b in
-        U.branch (pat, wopt, b) in
-      mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
+        desugar_disjunctive_pattern pat wopt b
+      in
+      mk <| Tm_match(desugar_term env e, List.collect desugar_branch branches)
 
     | Ascribed(e, t, tac_opt) ->
       let annot = if is_comp_type env t
