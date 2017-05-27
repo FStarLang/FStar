@@ -92,17 +92,18 @@ let eq_const: sconst -> sconst -> Prims.bool =
           (let uu____234 = FStar_Util.ensure_decimal s1 in
            let uu____235 = FStar_Util.ensure_decimal s2 in
            uu____234 = uu____235) && (o1 = o2)
-      | (Const_bytearray (a,_),Const_bytearray (b,_))
-        |(Const_string (a,_),Const_string (b,_)) -> a = b
+      | (Const_bytearray (a,uu____240),Const_bytearray (b,uu____242)) ->
+          a = b
+      | (Const_string (a,uu____249),Const_string (b,uu____251)) -> a = b
       | (Const_reflect l1,Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
-      | uu____256 -> c1 = c2
+      | uu____259 -> c1 = c2
 let rec pow2: Prims.int -> Prims.int =
   fun x  ->
     match x with
     | _0_25 when _0_25 = (Prims.parse_int "0") -> Prims.parse_int "1"
-    | uu____262 ->
-        let uu____263 = pow2 (x - (Prims.parse_int "1")) in
-        (Prims.parse_int "2") * uu____263
+    | uu____265 ->
+        let uu____266 = pow2 (x - (Prims.parse_int "1")) in
+        (Prims.parse_int "2") * uu____266
 let bounds: signedness -> width -> (Prims.int* Prims.int) =
   fun signedness  ->
     fun width  ->
@@ -112,13 +113,13 @@ let bounds: signedness -> width -> (Prims.int* Prims.int) =
         | Int16  -> Prims.parse_int "16"
         | Int32  -> Prims.parse_int "32"
         | Int64  -> Prims.parse_int "64" in
-      let uu____273 =
+      let uu____276 =
         match signedness with
         | Unsigned  ->
-            let uu____278 =
-              let uu____279 = pow2 n1 in uu____279 - (Prims.parse_int "1") in
-            ((Prims.parse_int "0"), uu____278)
+            let uu____281 =
+              let uu____282 = pow2 n1 in uu____282 - (Prims.parse_int "1") in
+            ((Prims.parse_int "0"), uu____281)
         | Signed  ->
             let upper = pow2 (n1 - (Prims.parse_int "1")) in
             ((- upper), (upper - (Prims.parse_int "1"))) in
-      match uu____273 with | (lower,upper) -> (lower, upper)
+      match uu____276 with | (lower,upper) -> (lower, upper)

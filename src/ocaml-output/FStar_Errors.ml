@@ -213,5 +213,7 @@ let err_exn: Prims.exn -> Prims.unit =
 let handleable: Prims.exn -> Prims.bool =
   fun uu___60_466  ->
     match uu___60_466 with
-    | Error _|FStar_Util.NYI _|Err _ -> true
-    | uu____470 -> false
+    | Error uu____467 -> true
+    | FStar_Util.NYI uu____470 -> true
+    | Err uu____471 -> true
+    | uu____472 -> false

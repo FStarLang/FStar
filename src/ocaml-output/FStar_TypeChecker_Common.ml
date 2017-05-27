@@ -181,8 +181,8 @@ let rec decr_delta_depth:
   FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth option =
   fun uu___97_420  ->
     match uu___97_420 with
-    | FStar_Syntax_Syntax.Delta_constant 
-      |FStar_Syntax_Syntax.Delta_equational  -> None
+    | FStar_Syntax_Syntax.Delta_constant  -> None
+    | FStar_Syntax_Syntax.Delta_equational  -> None
     | FStar_Syntax_Syntax.Delta_defined_at_level _0_28 when
         _0_28 = (Prims.parse_int "1") ->
         Some FStar_Syntax_Syntax.Delta_constant

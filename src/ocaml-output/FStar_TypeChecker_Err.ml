@@ -41,11 +41,11 @@ let add_errors:
                       (msg, uu____122)
                     else
                       (let r' =
-                         let uu___208_125 = r in
+                         let uu___206_125 = r in
                          {
                            FStar_Range.def_range = (r.FStar_Range.use_range);
                            FStar_Range.use_range =
-                             (uu___208_125.FStar_Range.use_range)
+                             (uu___206_125.FStar_Range.use_range)
                          } in
                        let uu____126 =
                          let uu____127 = FStar_Range.file_of_range r' in
