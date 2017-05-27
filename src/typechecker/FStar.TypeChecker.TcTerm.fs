@@ -2016,7 +2016,7 @@ and tc_trivial_guard env t =
 let type_of_tot_term env e =
     if Env.debug env <| Options.Other "RelCheck" then BU.print1 "Checking term %s\n" (Print.term_to_string e);
     //let env, _ = Env.clear_expected_typ env in
-    let env = {env with top_level=false; use_bv_sorts=true; letrecs=[]} in
+    let env = {env with top_level=false; letrecs=[]} in
     let t, c, g =
         try tc_tot_or_gtot_term env e
         with Error(msg, _) -> raise (Error("Implicit argument: " ^ msg, Env.get_range env)) in
