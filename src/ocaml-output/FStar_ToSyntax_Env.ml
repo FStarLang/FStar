@@ -806,21 +806,22 @@ let try_lookup_name:
                                    (FStar_Util.for_some
                                       (fun uu___158_1949  ->
                                          match uu___158_1949 with
-                                         | FStar_Syntax_Syntax.Projector _
-                                           |FStar_Syntax_Syntax.Discriminator
-                                           _ -> true
-                                         | uu____1952 -> false)))) in
+                                         | FStar_Syntax_Syntax.Projector
+                                             uu____1950 -> true
+                                         | FStar_Syntax_Syntax.Discriminator
+                                             uu____1953 -> true
+                                         | uu____1954 -> false)))) in
                          if uu____1947
                          then FStar_Syntax_Syntax.Delta_equational
                          else FStar_Syntax_Syntax.Delta_constant in
-                       let uu____1954 =
+                       let uu____1956 =
                          FStar_Util.find_map quals
-                           (fun uu___159_1956  ->
-                              match uu___159_1956 with
+                           (fun uu___159_1958  ->
+                              match uu___159_1958 with
                               | FStar_Syntax_Syntax.Reflectable refl_monad ->
                                   Some refl_monad
-                              | uu____1959 -> None) in
-                       (match uu____1954 with
+                              | uu____1961 -> None) in
+                       (match uu____1956 with
                         | Some refl_monad ->
                             let refl_const =
                               FStar_Syntax_Syntax.mk
@@ -828,53 +829,59 @@ let try_lookup_name:
                                    (FStar_Const.Const_reflect refl_monad))
                                 None occurrence_range in
                             Some (Term_name (refl_const, false))
-                        | uu____1971 ->
-                            let uu____1973 =
-                              let uu____1974 =
-                                let uu____1977 =
-                                  let uu____1978 = fv_qual_of_se se in
-                                  FStar_Syntax_Syntax.fvar lid2 dd uu____1978 in
-                                (uu____1977, false) in
-                              Term_name uu____1974 in
-                            Some uu____1973)
+                        | uu____1973 ->
+                            let uu____1975 =
+                              let uu____1976 =
+                                let uu____1979 =
+                                  let uu____1980 = fv_qual_of_se se in
+                                  FStar_Syntax_Syntax.fvar lid2 dd uu____1980 in
+                                (uu____1979, false) in
+                              Term_name uu____1976 in
+                            Some uu____1975)
                      else None
-                 | FStar_Syntax_Syntax.Sig_new_effect_for_free ne
-                   |FStar_Syntax_Syntax.Sig_new_effect ne ->
+                 | FStar_Syntax_Syntax.Sig_new_effect_for_free ne ->
                      Some
                        (Eff_name
                           (se,
                             (FStar_Ident.set_lid_range
                                ne.FStar_Syntax_Syntax.mname
                                (FStar_Ident.range_of_lid source_lid))))
-                 | FStar_Syntax_Syntax.Sig_effect_abbrev uu____1982 ->
+                 | FStar_Syntax_Syntax.Sig_new_effect ne ->
+                     Some
+                       (Eff_name
+                          (se,
+                            (FStar_Ident.set_lid_range
+                               ne.FStar_Syntax_Syntax.mname
+                               (FStar_Ident.range_of_lid source_lid))))
+                 | FStar_Syntax_Syntax.Sig_effect_abbrev uu____1985 ->
                      Some (Eff_name (se, source_lid))
-                 | uu____1989 -> None) in
+                 | uu____1992 -> None) in
           let k_local_binding r =
-            let uu____2001 =
-              let uu____2002 =
+            let uu____2004 =
+              let uu____2005 =
                 found_local_binding (FStar_Ident.range_of_lid lid) r in
-              Term_name uu____2002 in
-            Some uu____2001 in
-          let k_rec_binding uu____2012 =
-            match uu____2012 with
+              Term_name uu____2005 in
+            Some uu____2004 in
+          let k_rec_binding uu____2015 =
+            match uu____2015 with
             | (id,l,dd) ->
-                let uu____2020 =
-                  let uu____2021 =
-                    let uu____2024 =
+                let uu____2023 =
+                  let uu____2024 =
+                    let uu____2027 =
                       FStar_Syntax_Syntax.fvar
                         (FStar_Ident.set_lid_range l
                            (FStar_Ident.range_of_lid lid)) dd None in
-                    (uu____2024, false) in
-                  Term_name uu____2021 in
-                Some uu____2020 in
+                    (uu____2027, false) in
+                  Term_name uu____2024 in
+                Some uu____2023 in
           let found_unmangled =
             match lid.FStar_Ident.ns with
             | [] ->
-                let uu____2028 = unmangleOpName lid.FStar_Ident.ident in
-                (match uu____2028 with
+                let uu____2031 = unmangleOpName lid.FStar_Ident.ident in
+                (match uu____2031 with
                  | Some f -> Some (Term_name f)
-                 | uu____2038 -> None)
-            | uu____2042 -> None in
+                 | uu____2041 -> None)
+            | uu____2045 -> None in
           match found_unmangled with
           | None  ->
               resolve_in_open_namespaces' env lid k_local_binding
@@ -889,17 +896,17 @@ let try_lookup_effect_name':
   fun exclude_interf  ->
     fun env  ->
       fun lid  ->
-        let uu____2062 = try_lookup_name true exclude_interf env lid in
-        match uu____2062 with
+        let uu____2065 = try_lookup_name true exclude_interf env lid in
+        match uu____2065 with
         | Some (Eff_name (o,l)) -> Some (o, l)
-        | uu____2071 -> None
+        | uu____2074 -> None
 let try_lookup_effect_name:
   env -> FStar_Ident.lident -> FStar_Ident.lident option =
   fun env  ->
     fun l  ->
-      let uu____2082 =
+      let uu____2085 =
         try_lookup_effect_name' (Prims.op_Negation env.iface) env l in
-      match uu____2082 with | Some (o,l1) -> Some l1 | uu____2091 -> None
+      match uu____2085 with | Some (o,l1) -> Some l1 | uu____2094 -> None
 let try_lookup_effect_name_and_attributes:
   env ->
     FStar_Ident.lident ->
@@ -907,154 +914,158 @@ let try_lookup_effect_name_and_attributes:
   =
   fun env  ->
     fun l  ->
-      let uu____2105 =
+      let uu____2108 =
         try_lookup_effect_name' (Prims.op_Negation env.iface) env l in
-      match uu____2105 with
+      match uu____2108 with
       | Some
           ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_new_effect
                ne;
-             FStar_Syntax_Syntax.sigrng = uu____2114;
-             FStar_Syntax_Syntax.sigquals = uu____2115;
-             FStar_Syntax_Syntax.sigmeta = uu____2116;_},l1)
+             FStar_Syntax_Syntax.sigrng = uu____2117;
+             FStar_Syntax_Syntax.sigquals = uu____2118;
+             FStar_Syntax_Syntax.sigmeta = uu____2119;_},l1)
           -> Some (l1, (ne.FStar_Syntax_Syntax.cattributes))
       | Some
           ({
              FStar_Syntax_Syntax.sigel =
                FStar_Syntax_Syntax.Sig_new_effect_for_free ne;
-             FStar_Syntax_Syntax.sigrng = uu____2126;
-             FStar_Syntax_Syntax.sigquals = uu____2127;
-             FStar_Syntax_Syntax.sigmeta = uu____2128;_},l1)
+             FStar_Syntax_Syntax.sigrng = uu____2129;
+             FStar_Syntax_Syntax.sigquals = uu____2130;
+             FStar_Syntax_Syntax.sigmeta = uu____2131;_},l1)
           -> Some (l1, (ne.FStar_Syntax_Syntax.cattributes))
       | Some
           ({
              FStar_Syntax_Syntax.sigel =
                FStar_Syntax_Syntax.Sig_effect_abbrev
-               (uu____2137,uu____2138,uu____2139,uu____2140,cattributes);
-             FStar_Syntax_Syntax.sigrng = uu____2142;
-             FStar_Syntax_Syntax.sigquals = uu____2143;
-             FStar_Syntax_Syntax.sigmeta = uu____2144;_},l1)
+               (uu____2140,uu____2141,uu____2142,uu____2143,cattributes);
+             FStar_Syntax_Syntax.sigrng = uu____2145;
+             FStar_Syntax_Syntax.sigquals = uu____2146;
+             FStar_Syntax_Syntax.sigmeta = uu____2147;_},l1)
           -> Some (l1, cattributes)
-      | uu____2155 -> None
+      | uu____2158 -> None
 let try_lookup_effect_defn:
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.eff_decl option =
   fun env  ->
     fun l  ->
-      let uu____2169 =
+      let uu____2172 =
         try_lookup_effect_name' (Prims.op_Negation env.iface) env l in
-      match uu____2169 with
+      match uu____2172 with
       | Some
           ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_new_effect
                ne;
-             FStar_Syntax_Syntax.sigrng = uu____2175;
-             FStar_Syntax_Syntax.sigquals = uu____2176;
-             FStar_Syntax_Syntax.sigmeta = uu____2177;_},uu____2178)
+             FStar_Syntax_Syntax.sigrng = uu____2178;
+             FStar_Syntax_Syntax.sigquals = uu____2179;
+             FStar_Syntax_Syntax.sigmeta = uu____2180;_},uu____2181)
           -> Some ne
       | Some
           ({
              FStar_Syntax_Syntax.sigel =
                FStar_Syntax_Syntax.Sig_new_effect_for_free ne;
-             FStar_Syntax_Syntax.sigrng = uu____2183;
-             FStar_Syntax_Syntax.sigquals = uu____2184;
-             FStar_Syntax_Syntax.sigmeta = uu____2185;_},uu____2186)
+             FStar_Syntax_Syntax.sigrng = uu____2186;
+             FStar_Syntax_Syntax.sigquals = uu____2187;
+             FStar_Syntax_Syntax.sigmeta = uu____2188;_},uu____2189)
           -> Some ne
-      | uu____2190 -> None
+      | uu____2193 -> None
 let is_effect_name: env -> FStar_Ident.lident -> Prims.bool =
   fun env  ->
     fun lid  ->
-      let uu____2200 = try_lookup_effect_name env lid in
-      match uu____2200 with | None  -> false | Some uu____2202 -> true
+      let uu____2203 = try_lookup_effect_name env lid in
+      match uu____2203 with | None  -> false | Some uu____2205 -> true
 let try_lookup_root_effect_name:
   env -> FStar_Ident.lident -> FStar_Ident.lident option =
   fun env  ->
     fun l  ->
-      let uu____2210 =
+      let uu____2213 =
         try_lookup_effect_name' (Prims.op_Negation env.iface) env l in
-      match uu____2210 with
+      match uu____2213 with
       | Some
           ({
              FStar_Syntax_Syntax.sigel =
                FStar_Syntax_Syntax.Sig_effect_abbrev
-               (l',uu____2216,uu____2217,uu____2218,uu____2219);
-             FStar_Syntax_Syntax.sigrng = uu____2220;
-             FStar_Syntax_Syntax.sigquals = uu____2221;
-             FStar_Syntax_Syntax.sigmeta = uu____2222;_},uu____2223)
+               (l',uu____2219,uu____2220,uu____2221,uu____2222);
+             FStar_Syntax_Syntax.sigrng = uu____2223;
+             FStar_Syntax_Syntax.sigquals = uu____2224;
+             FStar_Syntax_Syntax.sigmeta = uu____2225;_},uu____2226)
           ->
           let rec aux new_name =
-            let uu____2234 =
+            let uu____2237 =
               FStar_Util.smap_try_find (sigmap env) new_name.FStar_Ident.str in
-            match uu____2234 with
+            match uu____2237 with
             | None  -> None
-            | Some (s,uu____2244) ->
+            | Some (s,uu____2247) ->
                 (match s.FStar_Syntax_Syntax.sigel with
-                 | FStar_Syntax_Syntax.Sig_new_effect_for_free ne
-                   |FStar_Syntax_Syntax.Sig_new_effect ne ->
+                 | FStar_Syntax_Syntax.Sig_new_effect_for_free ne ->
+                     Some
+                       (FStar_Ident.set_lid_range
+                          ne.FStar_Syntax_Syntax.mname
+                          (FStar_Ident.range_of_lid l))
+                 | FStar_Syntax_Syntax.Sig_new_effect ne ->
                      Some
                        (FStar_Ident.set_lid_range
                           ne.FStar_Syntax_Syntax.mname
                           (FStar_Ident.range_of_lid l))
                  | FStar_Syntax_Syntax.Sig_effect_abbrev
-                     (uu____2249,uu____2250,uu____2251,cmp,uu____2253) ->
+                     (uu____2253,uu____2254,uu____2255,cmp,uu____2257) ->
                      let l'' = FStar_Syntax_Util.comp_effect_name cmp in
                      aux l''
-                 | uu____2257 -> None) in
+                 | uu____2261 -> None) in
           aux l'
-      | Some (uu____2258,l') -> Some l'
-      | uu____2262 -> None
+      | Some (uu____2262,l') -> Some l'
+      | uu____2266 -> None
 let lookup_letbinding_quals:
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.qualifier Prims.list =
   fun env  ->
     fun lid  ->
-      let k_global_def lid1 uu___161_2283 =
-        match uu___161_2283 with
+      let k_global_def lid1 uu___161_2287 =
+        match uu___161_2287 with
         | ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-               (uu____2288,uu____2289,uu____2290);
-             FStar_Syntax_Syntax.sigrng = uu____2291;
+               (uu____2292,uu____2293,uu____2294);
+             FStar_Syntax_Syntax.sigrng = uu____2295;
              FStar_Syntax_Syntax.sigquals = quals;
-             FStar_Syntax_Syntax.sigmeta = uu____2293;_},uu____2294)
+             FStar_Syntax_Syntax.sigmeta = uu____2297;_},uu____2298)
             -> Some quals
-        | uu____2297 -> None in
-      let uu____2301 =
-        resolve_in_open_namespaces' env lid (fun uu____2305  -> None)
-          (fun uu____2307  -> None) k_global_def in
-      match uu____2301 with | Some quals -> quals | uu____2313 -> []
+        | uu____2301 -> None in
+      let uu____2305 =
+        resolve_in_open_namespaces' env lid (fun uu____2309  -> None)
+          (fun uu____2311  -> None) k_global_def in
+      match uu____2305 with | Some quals -> quals | uu____2317 -> []
 let try_lookup_module:
   env -> Prims.string Prims.list -> FStar_Syntax_Syntax.modul option =
   fun env  ->
     fun path  ->
-      let uu____2325 =
+      let uu____2329 =
         FStar_List.tryFind
-          (fun uu____2331  ->
-             match uu____2331 with
+          (fun uu____2335  ->
+             match uu____2335 with
              | (mlid,modul) ->
-                 let uu____2336 = FStar_Ident.path_of_lid mlid in
-                 uu____2336 = path) env.modules in
-      match uu____2325 with
-      | Some (uu____2340,modul) -> Some modul
+                 let uu____2340 = FStar_Ident.path_of_lid mlid in
+                 uu____2340 = path) env.modules in
+      match uu____2329 with
+      | Some (uu____2344,modul) -> Some modul
       | None  -> None
 let try_lookup_let:
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term option =
   fun env  ->
     fun lid  ->
-      let k_global_def lid1 uu___162_2362 =
-        match uu___162_2362 with
+      let k_global_def lid1 uu___162_2366 =
+        match uu___162_2366 with
         | ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-               ((uu____2366,lbs),uu____2368,uu____2369);
-             FStar_Syntax_Syntax.sigrng = uu____2370;
-             FStar_Syntax_Syntax.sigquals = uu____2371;
-             FStar_Syntax_Syntax.sigmeta = uu____2372;_},uu____2373)
+               ((uu____2370,lbs),uu____2372,uu____2373);
+             FStar_Syntax_Syntax.sigrng = uu____2374;
+             FStar_Syntax_Syntax.sigquals = uu____2375;
+             FStar_Syntax_Syntax.sigmeta = uu____2376;_},uu____2377)
             ->
             let fv = lb_fv lbs lid1 in
-            let uu____2385 =
+            let uu____2389 =
               FStar_Syntax_Syntax.fvar lid1 fv.FStar_Syntax_Syntax.fv_delta
                 fv.FStar_Syntax_Syntax.fv_qual in
-            Some uu____2385
-        | uu____2386 -> None in
-      resolve_in_open_namespaces' env lid (fun uu____2389  -> None)
-        (fun uu____2390  -> None) k_global_def
+            Some uu____2389
+        | uu____2390 -> None in
+      resolve_in_open_namespaces' env lid (fun uu____2393  -> None)
+        (fun uu____2394  -> None) k_global_def
 let try_lookup_definition:
   env ->
     FStar_Ident.lident ->
@@ -1063,14 +1074,14 @@ let try_lookup_definition:
   =
   fun env  ->
     fun lid  ->
-      let k_global_def lid1 uu___163_2409 =
-        match uu___163_2409 with
+      let k_global_def lid1 uu___163_2413 =
+        match uu___163_2413 with
         | ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_let
-               (lbs,uu____2416,uu____2417);
-             FStar_Syntax_Syntax.sigrng = uu____2418;
-             FStar_Syntax_Syntax.sigquals = uu____2419;
-             FStar_Syntax_Syntax.sigmeta = uu____2420;_},uu____2421)
+               (lbs,uu____2420,uu____2421);
+             FStar_Syntax_Syntax.sigrng = uu____2422;
+             FStar_Syntax_Syntax.sigquals = uu____2423;
+             FStar_Syntax_Syntax.sigmeta = uu____2424;_},uu____2425)
             ->
             FStar_Util.find_map (snd lbs)
               (fun lb  ->
@@ -1078,10 +1089,10 @@ let try_lookup_definition:
                  | FStar_Util.Inr fv when
                      FStar_Syntax_Syntax.fv_eq_lid fv lid1 ->
                      Some (lb.FStar_Syntax_Syntax.lbdef)
-                 | uu____2437 -> None)
-        | uu____2442 -> None in
-      resolve_in_open_namespaces' env lid (fun uu____2449  -> None)
-        (fun uu____2452  -> None) k_global_def
+                 | uu____2441 -> None)
+        | uu____2446 -> None in
+      resolve_in_open_namespaces' env lid (fun uu____2453  -> None)
+        (fun uu____2456  -> None) k_global_def
 let empty_include_smap:
   FStar_Ident.lident Prims.list FStar_ST.ref FStar_Util.smap = new_sigmap ()
 let empty_exported_id_smap: exported_id_set FStar_Util.smap = new_sigmap ()
@@ -1095,10 +1106,10 @@ let try_lookup_lid':
     fun exclude_interf  ->
       fun env  ->
         fun lid  ->
-          let uu____2479 = try_lookup_name any_val exclude_interf env lid in
-          match uu____2479 with
+          let uu____2483 = try_lookup_name any_val exclude_interf env lid in
+          match uu____2483 with
           | Some (Term_name (e,mut)) -> Some (e, mut)
-          | uu____2488 -> None
+          | uu____2492 -> None
 let try_lookup_lid:
   env -> FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) option
   = fun env  -> fun l  -> try_lookup_lid' env.iface false env l
@@ -1106,40 +1117,40 @@ let resolve_to_fully_qualified_name:
   env -> FStar_Ident.lident -> FStar_Ident.lident option =
   fun env  ->
     fun l  ->
-      let uu____2508 = try_lookup_lid env l in
-      match uu____2508 with
+      let uu____2512 = try_lookup_lid env l in
+      match uu____2512 with
       | None  -> None
-      | Some (e,uu____2516) ->
-          let uu____2519 =
-            let uu____2520 = FStar_Syntax_Subst.compress e in
-            uu____2520.FStar_Syntax_Syntax.n in
-          (match uu____2519 with
+      | Some (e,uu____2520) ->
+          let uu____2523 =
+            let uu____2524 = FStar_Syntax_Subst.compress e in
+            uu____2524.FStar_Syntax_Syntax.n in
+          (match uu____2523 with
            | FStar_Syntax_Syntax.Tm_fvar fv ->
                Some ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
-           | uu____2529 -> None)
+           | uu____2533 -> None)
 let try_lookup_lid_no_resolve:
   env -> FStar_Ident.lident -> (FStar_Syntax_Syntax.term* Prims.bool) option
   =
   fun env  ->
     fun l  ->
       let env' =
-        let uu___180_2540 = env in
+        let uu___180_2544 = env in
         {
-          curmodule = (uu___180_2540.curmodule);
-          curmonad = (uu___180_2540.curmonad);
-          modules = (uu___180_2540.modules);
+          curmodule = (uu___180_2544.curmodule);
+          curmonad = (uu___180_2544.curmonad);
+          modules = (uu___180_2544.modules);
           scope_mods = [];
           exported_ids = empty_exported_id_smap;
-          trans_exported_ids = (uu___180_2540.trans_exported_ids);
+          trans_exported_ids = (uu___180_2544.trans_exported_ids);
           includes = empty_include_smap;
-          sigaccum = (uu___180_2540.sigaccum);
-          sigmap = (uu___180_2540.sigmap);
-          iface = (uu___180_2540.iface);
-          admitted_iface = (uu___180_2540.admitted_iface);
-          expect_typ = (uu___180_2540.expect_typ);
-          docs = (uu___180_2540.docs);
-          remaining_iface_decls = (uu___180_2540.remaining_iface_decls);
-          syntax_only = (uu___180_2540.syntax_only)
+          sigaccum = (uu___180_2544.sigaccum);
+          sigmap = (uu___180_2544.sigmap);
+          iface = (uu___180_2544.iface);
+          admitted_iface = (uu___180_2544.admitted_iface);
+          expect_typ = (uu___180_2544.expect_typ);
+          docs = (uu___180_2544.docs);
+          remaining_iface_decls = (uu___180_2544.remaining_iface_decls);
+          syntax_only = (uu___180_2544.syntax_only)
         } in
       try_lookup_lid env' l
 let try_lookup_doc: env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc option =
@@ -1148,94 +1159,94 @@ let try_lookup_datacon:
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.fv option =
   fun env  ->
     fun lid  ->
-      let k_global_def lid1 uu___165_2564 =
-        match uu___165_2564 with
+      let k_global_def lid1 uu___165_2568 =
+        match uu___165_2568 with
         | ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_declare_typ
-               (uu____2568,uu____2569,uu____2570);
-             FStar_Syntax_Syntax.sigrng = uu____2571;
+               (uu____2572,uu____2573,uu____2574);
+             FStar_Syntax_Syntax.sigrng = uu____2575;
              FStar_Syntax_Syntax.sigquals = quals;
-             FStar_Syntax_Syntax.sigmeta = uu____2573;_},uu____2574)
+             FStar_Syntax_Syntax.sigmeta = uu____2577;_},uu____2578)
             ->
-            let uu____2576 =
+            let uu____2580 =
               FStar_All.pipe_right quals
                 (FStar_Util.for_some
-                   (fun uu___164_2578  ->
-                      match uu___164_2578 with
+                   (fun uu___164_2582  ->
+                      match uu___164_2582 with
                       | FStar_Syntax_Syntax.Assumption  -> true
-                      | uu____2579 -> false)) in
-            if uu____2576
+                      | uu____2583 -> false)) in
+            if uu____2580
             then
-              let uu____2581 =
+              let uu____2585 =
                 FStar_Syntax_Syntax.lid_as_fv lid1
                   FStar_Syntax_Syntax.Delta_constant None in
-              Some uu____2581
+              Some uu____2585
             else None
         | ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-               uu____2583;
-             FStar_Syntax_Syntax.sigrng = uu____2584;
-             FStar_Syntax_Syntax.sigquals = uu____2585;
-             FStar_Syntax_Syntax.sigmeta = uu____2586;_},uu____2587)
+               uu____2587;
+             FStar_Syntax_Syntax.sigrng = uu____2588;
+             FStar_Syntax_Syntax.sigquals = uu____2589;
+             FStar_Syntax_Syntax.sigmeta = uu____2590;_},uu____2591)
             ->
-            let uu____2596 =
+            let uu____2600 =
               FStar_Syntax_Syntax.lid_as_fv lid1
                 FStar_Syntax_Syntax.Delta_constant
                 (Some FStar_Syntax_Syntax.Data_ctor) in
-            Some uu____2596
-        | uu____2597 -> None in
-      resolve_in_open_namespaces' env lid (fun uu____2600  -> None)
-        (fun uu____2601  -> None) k_global_def
+            Some uu____2600
+        | uu____2601 -> None in
+      resolve_in_open_namespaces' env lid (fun uu____2604  -> None)
+        (fun uu____2605  -> None) k_global_def
 let find_all_datacons:
   env -> FStar_Ident.lident -> FStar_Ident.lident Prims.list option =
   fun env  ->
     fun lid  ->
-      let k_global_def lid1 uu___166_2620 =
-        match uu___166_2620 with
+      let k_global_def lid1 uu___166_2624 =
+        match uu___166_2624 with
         | ({
              FStar_Syntax_Syntax.sigel =
                FStar_Syntax_Syntax.Sig_inductive_typ
-               (uu____2625,uu____2626,uu____2627,uu____2628,datas,uu____2630);
-             FStar_Syntax_Syntax.sigrng = uu____2631;
-             FStar_Syntax_Syntax.sigquals = uu____2632;
-             FStar_Syntax_Syntax.sigmeta = uu____2633;_},uu____2634)
+               (uu____2629,uu____2630,uu____2631,uu____2632,datas,uu____2634);
+             FStar_Syntax_Syntax.sigrng = uu____2635;
+             FStar_Syntax_Syntax.sigquals = uu____2636;
+             FStar_Syntax_Syntax.sigmeta = uu____2637;_},uu____2638)
             -> Some datas
-        | uu____2641 -> None in
-      resolve_in_open_namespaces' env lid (fun uu____2646  -> None)
-        (fun uu____2648  -> None) k_global_def
+        | uu____2645 -> None in
+      resolve_in_open_namespaces' env lid (fun uu____2650  -> None)
+        (fun uu____2652  -> None) k_global_def
 let record_cache_aux_with_filter:
   (((Prims.unit -> Prims.unit)* (Prims.unit -> Prims.unit)*
     (Prims.unit -> record_or_dc Prims.list)* (record_or_dc -> Prims.unit)*
     (Prims.unit -> Prims.unit))* (Prims.unit -> Prims.unit))
   =
   let record_cache = FStar_Util.mk_ref [[]] in
-  let push1 uu____2682 =
-    let uu____2683 =
-      let uu____2686 =
-        let uu____2688 = FStar_ST.read record_cache in
-        FStar_List.hd uu____2688 in
-      let uu____2696 = FStar_ST.read record_cache in uu____2686 :: uu____2696 in
-    FStar_ST.write record_cache uu____2683 in
-  let pop1 uu____2711 =
-    let uu____2712 =
-      let uu____2715 = FStar_ST.read record_cache in FStar_List.tl uu____2715 in
-    FStar_ST.write record_cache uu____2712 in
-  let peek uu____2731 =
-    let uu____2732 = FStar_ST.read record_cache in FStar_List.hd uu____2732 in
+  let push1 uu____2686 =
+    let uu____2687 =
+      let uu____2690 =
+        let uu____2692 = FStar_ST.read record_cache in
+        FStar_List.hd uu____2692 in
+      let uu____2700 = FStar_ST.read record_cache in uu____2690 :: uu____2700 in
+    FStar_ST.write record_cache uu____2687 in
+  let pop1 uu____2715 =
+    let uu____2716 =
+      let uu____2719 = FStar_ST.read record_cache in FStar_List.tl uu____2719 in
+    FStar_ST.write record_cache uu____2716 in
+  let peek uu____2735 =
+    let uu____2736 = FStar_ST.read record_cache in FStar_List.hd uu____2736 in
   let insert r =
-    let uu____2744 =
-      let uu____2747 = let uu____2749 = peek () in r :: uu____2749 in
-      let uu____2751 =
-        let uu____2754 = FStar_ST.read record_cache in
-        FStar_List.tl uu____2754 in
-      uu____2747 :: uu____2751 in
-    FStar_ST.write record_cache uu____2744 in
-  let commit1 uu____2770 =
-    let uu____2771 = FStar_ST.read record_cache in
-    match uu____2771 with
-    | hd1::uu____2779::tl1 -> FStar_ST.write record_cache (hd1 :: tl1)
-    | uu____2792 -> failwith "Impossible" in
-  let filter1 uu____2798 =
+    let uu____2748 =
+      let uu____2751 = let uu____2753 = peek () in r :: uu____2753 in
+      let uu____2755 =
+        let uu____2758 = FStar_ST.read record_cache in
+        FStar_List.tl uu____2758 in
+      uu____2751 :: uu____2755 in
+    FStar_ST.write record_cache uu____2748 in
+  let commit1 uu____2774 =
+    let uu____2775 = FStar_ST.read record_cache in
+    match uu____2775 with
+    | hd1::uu____2783::tl1 -> FStar_ST.write record_cache (hd1 :: tl1)
+    | uu____2796 -> failwith "Impossible" in
+  let filter1 uu____2802 =
     let rc = peek () in
     pop1 ();
     (match () with
@@ -1243,41 +1254,41 @@ let record_cache_aux_with_filter:
          let filtered =
            FStar_List.filter
              (fun r  -> Prims.op_Negation r.is_private_or_abstract) rc in
-         let uu____2805 =
-           let uu____2808 = FStar_ST.read record_cache in filtered ::
-             uu____2808 in
-         FStar_ST.write record_cache uu____2805) in
+         let uu____2809 =
+           let uu____2812 = FStar_ST.read record_cache in filtered ::
+             uu____2812 in
+         FStar_ST.write record_cache uu____2809) in
   let aux = (push1, pop1, peek, insert, commit1) in (aux, filter1)
 let record_cache_aux:
   ((Prims.unit -> Prims.unit)* (Prims.unit -> Prims.unit)*
     (Prims.unit -> record_or_dc Prims.list)* (record_or_dc -> Prims.unit)*
     (Prims.unit -> Prims.unit))
   =
-  let uu____2882 = record_cache_aux_with_filter in
-  match uu____2882 with | (aux,uu____2920) -> aux
+  let uu____2886 = record_cache_aux_with_filter in
+  match uu____2886 with | (aux,uu____2924) -> aux
 let filter_record_cache: Prims.unit -> Prims.unit =
-  let uu____2959 = record_cache_aux_with_filter in
-  match uu____2959 with | (uu____2982,filter1) -> filter1
+  let uu____2963 = record_cache_aux_with_filter in
+  match uu____2963 with | (uu____2986,filter1) -> filter1
 let push_record_cache: Prims.unit -> Prims.unit =
-  let uu____3022 = record_cache_aux in
-  match uu____3022 with
-  | (push1,uu____3042,uu____3043,uu____3044,uu____3045) -> push1
+  let uu____3026 = record_cache_aux in
+  match uu____3026 with
+  | (push1,uu____3046,uu____3047,uu____3048,uu____3049) -> push1
 let pop_record_cache: Prims.unit -> Prims.unit =
-  let uu____3070 = record_cache_aux in
-  match uu____3070 with
-  | (uu____3089,pop1,uu____3091,uu____3092,uu____3093) -> pop1
+  let uu____3074 = record_cache_aux in
+  match uu____3074 with
+  | (uu____3093,pop1,uu____3095,uu____3096,uu____3097) -> pop1
 let peek_record_cache: Prims.unit -> record_or_dc Prims.list =
-  let uu____3119 = record_cache_aux in
-  match uu____3119 with
-  | (uu____3139,uu____3140,peek,uu____3142,uu____3143) -> peek
+  let uu____3123 = record_cache_aux in
+  match uu____3123 with
+  | (uu____3143,uu____3144,peek,uu____3146,uu____3147) -> peek
 let insert_record_cache: record_or_dc -> Prims.unit =
-  let uu____3168 = record_cache_aux in
-  match uu____3168 with
-  | (uu____3187,uu____3188,uu____3189,insert,uu____3191) -> insert
+  let uu____3172 = record_cache_aux in
+  match uu____3172 with
+  | (uu____3191,uu____3192,uu____3193,insert,uu____3195) -> insert
 let commit_record_cache: Prims.unit -> Prims.unit =
-  let uu____3216 = record_cache_aux in
-  match uu____3216 with
-  | (uu____3235,uu____3236,uu____3237,uu____3238,commit1) -> commit1
+  let uu____3220 = record_cache_aux in
+  match uu____3220 with
+  | (uu____3239,uu____3240,uu____3241,uu____3242,commit1) -> commit1
 let extract_record:
   env ->
     scope_mod Prims.list FStar_ST.ref ->
@@ -1287,85 +1298,85 @@ let extract_record:
     fun new_globs  ->
       fun se  ->
         match se.FStar_Syntax_Syntax.sigel with
-        | FStar_Syntax_Syntax.Sig_bundle (sigs,uu____3278) ->
+        | FStar_Syntax_Syntax.Sig_bundle (sigs,uu____3282) ->
             let is_record =
               FStar_Util.for_some
-                (fun uu___167_3287  ->
-                   match uu___167_3287 with
-                   | FStar_Syntax_Syntax.RecordType _
-                     |FStar_Syntax_Syntax.RecordConstructor _ -> true
-                   | uu____3290 -> false) in
+                (fun uu___167_3291  ->
+                   match uu___167_3291 with
+                   | FStar_Syntax_Syntax.RecordType uu____3292 -> true
+                   | FStar_Syntax_Syntax.RecordConstructor uu____3297 -> true
+                   | uu____3302 -> false) in
             let find_dc dc =
               FStar_All.pipe_right sigs
                 (FStar_Util.find_opt
-                   (fun uu___168_3298  ->
-                      match uu___168_3298 with
+                   (fun uu___168_3310  ->
+                      match uu___168_3310 with
                       | {
                           FStar_Syntax_Syntax.sigel =
                             FStar_Syntax_Syntax.Sig_datacon
-                            (lid,uu____3300,uu____3301,uu____3302,uu____3303,uu____3304);
-                          FStar_Syntax_Syntax.sigrng = uu____3305;
-                          FStar_Syntax_Syntax.sigquals = uu____3306;
-                          FStar_Syntax_Syntax.sigmeta = uu____3307;_} ->
+                            (lid,uu____3312,uu____3313,uu____3314,uu____3315,uu____3316);
+                          FStar_Syntax_Syntax.sigrng = uu____3317;
+                          FStar_Syntax_Syntax.sigquals = uu____3318;
+                          FStar_Syntax_Syntax.sigmeta = uu____3319;_} ->
                           FStar_Ident.lid_equals dc lid
-                      | uu____3311 -> false)) in
+                      | uu____3323 -> false)) in
             FStar_All.pipe_right sigs
               (FStar_List.iter
-                 (fun uu___169_3313  ->
-                    match uu___169_3313 with
+                 (fun uu___169_3325  ->
+                    match uu___169_3325 with
                     | {
                         FStar_Syntax_Syntax.sigel =
                           FStar_Syntax_Syntax.Sig_inductive_typ
-                          (typename,univs,parms,uu____3317,uu____3318,dc::[]);
-                        FStar_Syntax_Syntax.sigrng = uu____3320;
+                          (typename,univs,parms,uu____3329,uu____3330,dc::[]);
+                        FStar_Syntax_Syntax.sigrng = uu____3332;
                         FStar_Syntax_Syntax.sigquals = typename_quals;
-                        FStar_Syntax_Syntax.sigmeta = uu____3322;_} ->
-                        let uu____3327 =
-                          let uu____3328 = find_dc dc in
-                          FStar_All.pipe_left FStar_Util.must uu____3328 in
-                        (match uu____3327 with
+                        FStar_Syntax_Syntax.sigmeta = uu____3334;_} ->
+                        let uu____3339 =
+                          let uu____3340 = find_dc dc in
+                          FStar_All.pipe_left FStar_Util.must uu____3340 in
+                        (match uu____3339 with
                          | {
                              FStar_Syntax_Syntax.sigel =
                                FStar_Syntax_Syntax.Sig_datacon
-                               (constrname,uu____3332,t,uu____3334,uu____3335,uu____3336);
-                             FStar_Syntax_Syntax.sigrng = uu____3337;
-                             FStar_Syntax_Syntax.sigquals = uu____3338;
-                             FStar_Syntax_Syntax.sigmeta = uu____3339;_} ->
-                             let uu____3343 =
+                               (constrname,uu____3344,t,uu____3346,uu____3347,uu____3348);
+                             FStar_Syntax_Syntax.sigrng = uu____3349;
+                             FStar_Syntax_Syntax.sigquals = uu____3350;
+                             FStar_Syntax_Syntax.sigmeta = uu____3351;_} ->
+                             let uu____3355 =
                                FStar_Syntax_Util.arrow_formals t in
-                             (match uu____3343 with
-                              | (formals,uu____3352) ->
+                             (match uu____3355 with
+                              | (formals,uu____3364) ->
                                   let is_rec = is_record typename_quals in
                                   let formals' =
                                     FStar_All.pipe_right formals
                                       (FStar_List.collect
-                                         (fun uu____3378  ->
-                                            match uu____3378 with
+                                         (fun uu____3390  ->
+                                            match uu____3390 with
                                             | (x,q) ->
-                                                let uu____3386 =
+                                                let uu____3398 =
                                                   (FStar_Syntax_Syntax.is_null_bv
                                                      x)
                                                     ||
                                                     (is_rec &&
                                                        (FStar_Syntax_Syntax.is_implicit
                                                           q)) in
-                                                if uu____3386
+                                                if uu____3398
                                                 then []
                                                 else [(x, q)])) in
                                   let fields' =
                                     FStar_All.pipe_right formals'
                                       (FStar_List.map
-                                         (fun uu____3417  ->
-                                            match uu____3417 with
+                                         (fun uu____3429  ->
+                                            match uu____3429 with
                                             | (x,q) ->
-                                                let uu____3426 =
+                                                let uu____3438 =
                                                   if is_rec
                                                   then
                                                     FStar_Syntax_Util.unmangle_field_name
                                                       x.FStar_Syntax_Syntax.ppname
                                                   else
                                                     x.FStar_Syntax_Syntax.ppname in
-                                                (uu____3426,
+                                                (uu____3438,
                                                   (x.FStar_Syntax_Syntax.sort)))) in
                                   let fields = fields' in
                                   let record =
@@ -1385,152 +1396,152 @@ let extract_record:
                                               typename_quals));
                                       is_record = is_rec
                                     } in
-                                  ((let uu____3438 =
-                                      let uu____3440 =
+                                  ((let uu____3450 =
+                                      let uu____3452 =
                                         FStar_ST.read new_globs in
-                                      (Record_or_dc record) :: uu____3440 in
-                                    FStar_ST.write new_globs uu____3438);
+                                      (Record_or_dc record) :: uu____3452 in
+                                    FStar_ST.write new_globs uu____3450);
                                    (match () with
                                     | () ->
-                                        ((let add_field uu____3456 =
-                                            match uu____3456 with
-                                            | (id,uu____3462) ->
+                                        ((let add_field uu____3468 =
+                                            match uu____3468 with
+                                            | (id,uu____3474) ->
                                                 let modul =
-                                                  let uu____3468 =
+                                                  let uu____3480 =
                                                     FStar_Ident.lid_of_ids
                                                       constrname.FStar_Ident.ns in
-                                                  uu____3468.FStar_Ident.str in
-                                                let uu____3469 =
+                                                  uu____3480.FStar_Ident.str in
+                                                let uu____3481 =
                                                   get_exported_id_set e modul in
-                                                (match uu____3469 with
+                                                (match uu____3481 with
                                                  | Some my_ex ->
                                                      let my_exported_ids =
                                                        my_ex
                                                          Exported_id_field in
-                                                     ((let uu____3485 =
-                                                         let uu____3486 =
+                                                     ((let uu____3497 =
+                                                         let uu____3498 =
                                                            FStar_ST.read
                                                              my_exported_ids in
                                                          FStar_Util.set_add
                                                            id.FStar_Ident.idText
-                                                           uu____3486 in
+                                                           uu____3498 in
                                                        FStar_ST.write
                                                          my_exported_ids
-                                                         uu____3485);
+                                                         uu____3497);
                                                       (match () with
                                                        | () ->
                                                            let projname =
-                                                             let uu____3493 =
-                                                               let uu____3494
+                                                             let uu____3505 =
+                                                               let uu____3506
                                                                  =
                                                                  FStar_Syntax_Util.mk_field_projector_name_from_ident
                                                                    constrname
                                                                    id in
-                                                               uu____3494.FStar_Ident.ident in
-                                                             uu____3493.FStar_Ident.idText in
-                                                           let uu____3496 =
-                                                             let uu____3497 =
+                                                               uu____3506.FStar_Ident.ident in
+                                                             uu____3505.FStar_Ident.idText in
+                                                           let uu____3508 =
+                                                             let uu____3509 =
                                                                FStar_ST.read
                                                                  my_exported_ids in
                                                              FStar_Util.set_add
                                                                projname
-                                                               uu____3497 in
+                                                               uu____3509 in
                                                            FStar_ST.write
                                                              my_exported_ids
-                                                             uu____3496))
+                                                             uu____3508))
                                                  | None  -> ()) in
                                           FStar_List.iter add_field fields');
                                          (match () with
                                           | () -> insert_record_cache record)))))
-                         | uu____3510 -> ())
-                    | uu____3511 -> ()))
-        | uu____3512 -> ()
+                         | uu____3522 -> ())
+                    | uu____3523 -> ()))
+        | uu____3524 -> ()
 let try_lookup_record_or_dc_by_field_name:
   env -> FStar_Ident.lident -> record_or_dc option =
   fun env  ->
     fun fieldname  ->
       let find_in_cache fieldname1 =
-        let uu____3525 =
+        let uu____3537 =
           ((fieldname1.FStar_Ident.ns), (fieldname1.FStar_Ident.ident)) in
-        match uu____3525 with
+        match uu____3537 with
         | (ns,id) ->
-            let uu____3535 = peek_record_cache () in
-            FStar_Util.find_map uu____3535
+            let uu____3547 = peek_record_cache () in
+            FStar_Util.find_map uu____3547
               (fun record  ->
-                 let uu____3538 =
+                 let uu____3550 =
                    find_in_record ns id record (fun r  -> Cont_ok r) in
-                 option_of_cont (fun uu____3541  -> None) uu____3538) in
+                 option_of_cont (fun uu____3553  -> None) uu____3550) in
       resolve_in_open_namespaces'' env fieldname Exported_id_field
-        (fun uu____3542  -> Cont_ignore) (fun uu____3543  -> Cont_ignore)
+        (fun uu____3554  -> Cont_ignore) (fun uu____3555  -> Cont_ignore)
         (fun r  -> Cont_ok r)
         (fun fn  ->
-           let uu____3546 = find_in_cache fn in
-           cont_of_option Cont_ignore uu____3546)
-        (fun k  -> fun uu____3549  -> k)
+           let uu____3558 = find_in_cache fn in
+           cont_of_option Cont_ignore uu____3558)
+        (fun k  -> fun uu____3561  -> k)
 let try_lookup_record_by_field_name:
   env -> FStar_Ident.lident -> record_or_dc option =
   fun env  ->
     fun fieldname  ->
-      let uu____3558 = try_lookup_record_or_dc_by_field_name env fieldname in
-      match uu____3558 with
+      let uu____3570 = try_lookup_record_or_dc_by_field_name env fieldname in
+      match uu____3570 with
       | Some r when r.is_record -> Some r
-      | uu____3562 -> None
+      | uu____3574 -> None
 let belongs_to_record:
   env -> FStar_Ident.lident -> record_or_dc -> Prims.bool =
   fun env  ->
     fun lid  ->
       fun record  ->
-        let uu____3573 = try_lookup_record_by_field_name env lid in
-        match uu____3573 with
+        let uu____3585 = try_lookup_record_by_field_name env lid in
+        match uu____3585 with
         | Some record' when
-            let uu____3576 =
-              let uu____3577 =
+            let uu____3588 =
+              let uu____3589 =
                 FStar_Ident.path_of_ns (record.typename).FStar_Ident.ns in
-              FStar_Ident.text_of_path uu____3577 in
-            let uu____3579 =
-              let uu____3580 =
+              FStar_Ident.text_of_path uu____3589 in
+            let uu____3591 =
+              let uu____3592 =
                 FStar_Ident.path_of_ns (record'.typename).FStar_Ident.ns in
-              FStar_Ident.text_of_path uu____3580 in
-            uu____3576 = uu____3579 ->
-            let uu____3582 =
+              FStar_Ident.text_of_path uu____3592 in
+            uu____3588 = uu____3591 ->
+            let uu____3594 =
               find_in_record (record.typename).FStar_Ident.ns
-                lid.FStar_Ident.ident record (fun uu____3584  -> Cont_ok ()) in
-            (match uu____3582 with
-             | Cont_ok uu____3585 -> true
-             | uu____3586 -> false)
-        | uu____3588 -> false
+                lid.FStar_Ident.ident record (fun uu____3596  -> Cont_ok ()) in
+            (match uu____3594 with
+             | Cont_ok uu____3597 -> true
+             | uu____3598 -> false)
+        | uu____3600 -> false
 let try_lookup_dc_by_field_name:
   env -> FStar_Ident.lident -> (FStar_Ident.lident* Prims.bool) option =
   fun env  ->
     fun fieldname  ->
-      let uu____3599 = try_lookup_record_or_dc_by_field_name env fieldname in
-      match uu____3599 with
+      let uu____3611 = try_lookup_record_or_dc_by_field_name env fieldname in
+      match uu____3611 with
       | Some r ->
-          let uu____3605 =
-            let uu____3608 =
-              let uu____3609 =
+          let uu____3617 =
+            let uu____3620 =
+              let uu____3621 =
                 FStar_Ident.lid_of_ids
                   (FStar_List.append (r.typename).FStar_Ident.ns
                      [r.constrname]) in
-              FStar_Ident.set_lid_range uu____3609
+              FStar_Ident.set_lid_range uu____3621
                 (FStar_Ident.range_of_lid fieldname) in
-            (uu____3608, (r.is_record)) in
-          Some uu____3605
-      | uu____3612 -> None
+            (uu____3620, (r.is_record)) in
+          Some uu____3617
+      | uu____3624 -> None
 let string_set_ref_new:
   Prims.unit -> Prims.string FStar_Util.set FStar_ST.ref =
-  fun uu____3621  ->
-    let uu____3622 =
+  fun uu____3633  ->
+    let uu____3634 =
       FStar_Util.new_set FStar_Util.compare FStar_Util.hashcode in
-    FStar_Util.mk_ref uu____3622
+    FStar_Util.mk_ref uu____3634
 let exported_id_set_new:
   Prims.unit -> exported_id_kind -> Prims.string FStar_Util.set FStar_ST.ref
   =
-  fun uu____3633  ->
+  fun uu____3645  ->
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
-    fun uu___170_3642  ->
-      match uu___170_3642 with
+    fun uu___170_3654  ->
+      match uu___170_3654 with
       | Exported_id_term_type  -> term_type_set
       | Exported_id_field  -> field_set
 let unique:
@@ -1539,53 +1550,53 @@ let unique:
     fun exclude_if  ->
       fun env  ->
         fun lid  ->
-          let filter_scope_mods uu___171_3662 =
-            match uu___171_3662 with
-            | Rec_binding uu____3663 -> true
-            | uu____3664 -> false in
+          let filter_scope_mods uu___171_3674 =
+            match uu___171_3674 with
+            | Rec_binding uu____3675 -> true
+            | uu____3676 -> false in
           let this_env =
-            let uu___181_3666 = env in
-            let uu____3667 =
+            let uu___181_3678 = env in
+            let uu____3679 =
               FStar_List.filter filter_scope_mods env.scope_mods in
             {
-              curmodule = (uu___181_3666.curmodule);
-              curmonad = (uu___181_3666.curmonad);
-              modules = (uu___181_3666.modules);
-              scope_mods = uu____3667;
+              curmodule = (uu___181_3678.curmodule);
+              curmonad = (uu___181_3678.curmonad);
+              modules = (uu___181_3678.modules);
+              scope_mods = uu____3679;
               exported_ids = empty_exported_id_smap;
-              trans_exported_ids = (uu___181_3666.trans_exported_ids);
+              trans_exported_ids = (uu___181_3678.trans_exported_ids);
               includes = empty_include_smap;
-              sigaccum = (uu___181_3666.sigaccum);
-              sigmap = (uu___181_3666.sigmap);
-              iface = (uu___181_3666.iface);
-              admitted_iface = (uu___181_3666.admitted_iface);
-              expect_typ = (uu___181_3666.expect_typ);
-              docs = (uu___181_3666.docs);
-              remaining_iface_decls = (uu___181_3666.remaining_iface_decls);
-              syntax_only = (uu___181_3666.syntax_only)
+              sigaccum = (uu___181_3678.sigaccum);
+              sigmap = (uu___181_3678.sigmap);
+              iface = (uu___181_3678.iface);
+              admitted_iface = (uu___181_3678.admitted_iface);
+              expect_typ = (uu___181_3678.expect_typ);
+              docs = (uu___181_3678.docs);
+              remaining_iface_decls = (uu___181_3678.remaining_iface_decls);
+              syntax_only = (uu___181_3678.syntax_only)
             } in
-          let uu____3669 = try_lookup_lid' any_val exclude_if this_env lid in
-          match uu____3669 with | None  -> true | Some uu____3675 -> false
+          let uu____3681 = try_lookup_lid' any_val exclude_if this_env lid in
+          match uu____3681 with | None  -> true | Some uu____3687 -> false
 let push_scope_mod: env -> scope_mod -> env =
   fun env  ->
     fun scope_mod  ->
-      let uu___182_3686 = env in
+      let uu___182_3698 = env in
       {
-        curmodule = (uu___182_3686.curmodule);
-        curmonad = (uu___182_3686.curmonad);
-        modules = (uu___182_3686.modules);
+        curmodule = (uu___182_3698.curmodule);
+        curmonad = (uu___182_3698.curmonad);
+        modules = (uu___182_3698.modules);
         scope_mods = (scope_mod :: (env.scope_mods));
-        exported_ids = (uu___182_3686.exported_ids);
-        trans_exported_ids = (uu___182_3686.trans_exported_ids);
-        includes = (uu___182_3686.includes);
-        sigaccum = (uu___182_3686.sigaccum);
-        sigmap = (uu___182_3686.sigmap);
-        iface = (uu___182_3686.iface);
-        admitted_iface = (uu___182_3686.admitted_iface);
-        expect_typ = (uu___182_3686.expect_typ);
-        docs = (uu___182_3686.docs);
-        remaining_iface_decls = (uu___182_3686.remaining_iface_decls);
-        syntax_only = (uu___182_3686.syntax_only)
+        exported_ids = (uu___182_3698.exported_ids);
+        trans_exported_ids = (uu___182_3698.trans_exported_ids);
+        includes = (uu___182_3698.includes);
+        sigaccum = (uu___182_3698.sigaccum);
+        sigmap = (uu___182_3698.sigmap);
+        iface = (uu___182_3698.iface);
+        admitted_iface = (uu___182_3698.admitted_iface);
+        expect_typ = (uu___182_3698.expect_typ);
+        docs = (uu___182_3698.docs);
+        remaining_iface_decls = (uu___182_3698.remaining_iface_decls);
+        syntax_only = (uu___182_3698.syntax_only)
       }
 let push_bv':
   env -> FStar_Ident.ident -> Prims.bool -> (env* FStar_Syntax_Syntax.bv) =
@@ -1607,9 +1618,9 @@ let push_top_level_rec_binding:
     fun x  ->
       fun dd  ->
         let l = qualify env x in
-        let uu____3725 =
+        let uu____3737 =
           (unique false true env l) || (FStar_Options.interactive ()) in
-        if uu____3725
+        if uu____3737
         then push_scope_mod env (Rec_binding (x, l, dd))
         else
           raise
@@ -1623,131 +1634,131 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
         let sopt = FStar_Util.smap_try_find (sigmap env) l.FStar_Ident.str in
         let r =
           match sopt with
-          | Some (se,uu____3745) ->
-              let uu____3748 =
+          | Some (se,uu____3757) ->
+              let uu____3760 =
                 FStar_Util.find_opt (FStar_Ident.lid_equals l)
                   (FStar_Syntax_Util.lids_of_sigelt se) in
-              (match uu____3748 with
+              (match uu____3760 with
                | Some l1 ->
                    FStar_All.pipe_left FStar_Range.string_of_range
                      (FStar_Ident.range_of_lid l1)
                | None  -> "<unknown>")
           | None  -> "<unknown>" in
-        let uu____3753 =
-          let uu____3754 =
-            let uu____3757 =
+        let uu____3765 =
+          let uu____3766 =
+            let uu____3769 =
               FStar_Util.format2
                 "Duplicate top-level names [%s]; previously declared at %s"
                 (FStar_Ident.text_of_lid l) r in
-            (uu____3757, (FStar_Ident.range_of_lid l)) in
-          FStar_Errors.Error uu____3754 in
-        raise uu____3753 in
+            (uu____3769, (FStar_Ident.range_of_lid l)) in
+          FStar_Errors.Error uu____3766 in
+        raise uu____3765 in
       let globals = FStar_Util.mk_ref env.scope_mods in
       let env1 =
-        let uu____3764 =
+        let uu____3776 =
           match s.FStar_Syntax_Syntax.sigel with
-          | FStar_Syntax_Syntax.Sig_let uu____3769 -> (false, true)
-          | FStar_Syntax_Syntax.Sig_bundle uu____3775 -> (true, true)
-          | uu____3780 -> (false, false) in
-        match uu____3764 with
+          | FStar_Syntax_Syntax.Sig_let uu____3781 -> (false, true)
+          | FStar_Syntax_Syntax.Sig_bundle uu____3787 -> (true, true)
+          | uu____3792 -> (false, false) in
+        match uu____3776 with
         | (any_val,exclude_if) ->
             let lids = FStar_Syntax_Util.lids_of_sigelt s in
-            let uu____3785 =
+            let uu____3797 =
               FStar_Util.find_map lids
                 (fun l  ->
-                   let uu____3788 =
-                     let uu____3789 = unique any_val exclude_if env l in
-                     Prims.op_Negation uu____3789 in
-                   if uu____3788 then Some l else None) in
-            (match uu____3785 with
+                   let uu____3800 =
+                     let uu____3801 = unique any_val exclude_if env l in
+                     Prims.op_Negation uu____3801 in
+                   if uu____3800 then Some l else None) in
+            (match uu____3797 with
              | Some l when
-                 let uu____3793 = FStar_Options.interactive () in
-                 Prims.op_Negation uu____3793 -> err1 l
-             | uu____3794 ->
+                 let uu____3805 = FStar_Options.interactive () in
+                 Prims.op_Negation uu____3805 -> err1 l
+             | uu____3806 ->
                  (extract_record env globals s;
-                  (let uu___183_3799 = env in
+                  (let uu___183_3811 = env in
                    {
-                     curmodule = (uu___183_3799.curmodule);
-                     curmonad = (uu___183_3799.curmonad);
-                     modules = (uu___183_3799.modules);
-                     scope_mods = (uu___183_3799.scope_mods);
-                     exported_ids = (uu___183_3799.exported_ids);
-                     trans_exported_ids = (uu___183_3799.trans_exported_ids);
-                     includes = (uu___183_3799.includes);
+                     curmodule = (uu___183_3811.curmodule);
+                     curmonad = (uu___183_3811.curmonad);
+                     modules = (uu___183_3811.modules);
+                     scope_mods = (uu___183_3811.scope_mods);
+                     exported_ids = (uu___183_3811.exported_ids);
+                     trans_exported_ids = (uu___183_3811.trans_exported_ids);
+                     includes = (uu___183_3811.includes);
                      sigaccum = (s :: (env.sigaccum));
-                     sigmap = (uu___183_3799.sigmap);
-                     iface = (uu___183_3799.iface);
-                     admitted_iface = (uu___183_3799.admitted_iface);
-                     expect_typ = (uu___183_3799.expect_typ);
-                     docs = (uu___183_3799.docs);
+                     sigmap = (uu___183_3811.sigmap);
+                     iface = (uu___183_3811.iface);
+                     admitted_iface = (uu___183_3811.admitted_iface);
+                     expect_typ = (uu___183_3811.expect_typ);
+                     docs = (uu___183_3811.docs);
                      remaining_iface_decls =
-                       (uu___183_3799.remaining_iface_decls);
-                     syntax_only = (uu___183_3799.syntax_only)
+                       (uu___183_3811.remaining_iface_decls);
+                     syntax_only = (uu___183_3811.syntax_only)
                    }))) in
       let env2 =
-        let uu___184_3801 = env1 in
-        let uu____3802 = FStar_ST.read globals in
+        let uu___184_3813 = env1 in
+        let uu____3814 = FStar_ST.read globals in
         {
-          curmodule = (uu___184_3801.curmodule);
-          curmonad = (uu___184_3801.curmonad);
-          modules = (uu___184_3801.modules);
-          scope_mods = uu____3802;
-          exported_ids = (uu___184_3801.exported_ids);
-          trans_exported_ids = (uu___184_3801.trans_exported_ids);
-          includes = (uu___184_3801.includes);
-          sigaccum = (uu___184_3801.sigaccum);
-          sigmap = (uu___184_3801.sigmap);
-          iface = (uu___184_3801.iface);
-          admitted_iface = (uu___184_3801.admitted_iface);
-          expect_typ = (uu___184_3801.expect_typ);
-          docs = (uu___184_3801.docs);
-          remaining_iface_decls = (uu___184_3801.remaining_iface_decls);
-          syntax_only = (uu___184_3801.syntax_only)
+          curmodule = (uu___184_3813.curmodule);
+          curmonad = (uu___184_3813.curmonad);
+          modules = (uu___184_3813.modules);
+          scope_mods = uu____3814;
+          exported_ids = (uu___184_3813.exported_ids);
+          trans_exported_ids = (uu___184_3813.trans_exported_ids);
+          includes = (uu___184_3813.includes);
+          sigaccum = (uu___184_3813.sigaccum);
+          sigmap = (uu___184_3813.sigmap);
+          iface = (uu___184_3813.iface);
+          admitted_iface = (uu___184_3813.admitted_iface);
+          expect_typ = (uu___184_3813.expect_typ);
+          docs = (uu___184_3813.docs);
+          remaining_iface_decls = (uu___184_3813.remaining_iface_decls);
+          syntax_only = (uu___184_3813.syntax_only)
         } in
-      let uu____3807 =
+      let uu____3819 =
         match s.FStar_Syntax_Syntax.sigel with
-        | FStar_Syntax_Syntax.Sig_bundle (ses,uu____3821) ->
-            let uu____3826 =
+        | FStar_Syntax_Syntax.Sig_bundle (ses,uu____3833) ->
+            let uu____3838 =
               FStar_List.map
                 (fun se  -> ((FStar_Syntax_Util.lids_of_sigelt se), se)) ses in
-            (env2, uu____3826)
-        | uu____3840 -> (env2, [((FStar_Syntax_Util.lids_of_sigelt s), s)]) in
-      match uu____3807 with
+            (env2, uu____3838)
+        | uu____3852 -> (env2, [((FStar_Syntax_Util.lids_of_sigelt s), s)]) in
+      match uu____3819 with
       | (env3,lss) ->
           (FStar_All.pipe_right lss
              (FStar_List.iter
-                (fun uu____3870  ->
-                   match uu____3870 with
+                (fun uu____3882  ->
+                   match uu____3882 with
                    | (lids,se) ->
                        FStar_All.pipe_right lids
                          (FStar_List.iter
                             (fun lid  ->
-                               (let uu____3881 =
-                                  let uu____3883 = FStar_ST.read globals in
+                               (let uu____3893 =
+                                  let uu____3895 = FStar_ST.read globals in
                                   (Top_level_def (lid.FStar_Ident.ident)) ::
-                                    uu____3883 in
-                                FStar_ST.write globals uu____3881);
+                                    uu____3895 in
+                                FStar_ST.write globals uu____3893);
                                (match () with
                                 | () ->
                                     let modul =
-                                      let uu____3892 =
+                                      let uu____3904 =
                                         FStar_Ident.lid_of_ids
                                           lid.FStar_Ident.ns in
-                                      uu____3892.FStar_Ident.str in
-                                    ((let uu____3894 =
+                                      uu____3904.FStar_Ident.str in
+                                    ((let uu____3906 =
                                         get_exported_id_set env3 modul in
-                                      match uu____3894 with
+                                      match uu____3906 with
                                       | Some f ->
                                           let my_exported_ids =
                                             f Exported_id_term_type in
-                                          let uu____3909 =
-                                            let uu____3910 =
+                                          let uu____3921 =
+                                            let uu____3922 =
                                               FStar_ST.read my_exported_ids in
                                             FStar_Util.set_add
                                               (lid.FStar_Ident.ident).FStar_Ident.idText
-                                              uu____3910 in
+                                              uu____3922 in
                                           FStar_ST.write my_exported_ids
-                                            uu____3909
+                                            uu____3921
                                       | None  -> ());
                                      (match () with
                                       | () ->
@@ -1758,149 +1769,149 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                                                  (Prims.op_Negation
                                                     env3.admitted_iface))))))))));
            (let env4 =
-              let uu___185_3922 = env3 in
-              let uu____3923 = FStar_ST.read globals in
+              let uu___185_3934 = env3 in
+              let uu____3935 = FStar_ST.read globals in
               {
-                curmodule = (uu___185_3922.curmodule);
-                curmonad = (uu___185_3922.curmonad);
-                modules = (uu___185_3922.modules);
-                scope_mods = uu____3923;
-                exported_ids = (uu___185_3922.exported_ids);
-                trans_exported_ids = (uu___185_3922.trans_exported_ids);
-                includes = (uu___185_3922.includes);
-                sigaccum = (uu___185_3922.sigaccum);
-                sigmap = (uu___185_3922.sigmap);
-                iface = (uu___185_3922.iface);
-                admitted_iface = (uu___185_3922.admitted_iface);
-                expect_typ = (uu___185_3922.expect_typ);
-                docs = (uu___185_3922.docs);
-                remaining_iface_decls = (uu___185_3922.remaining_iface_decls);
-                syntax_only = (uu___185_3922.syntax_only)
+                curmodule = (uu___185_3934.curmodule);
+                curmonad = (uu___185_3934.curmonad);
+                modules = (uu___185_3934.modules);
+                scope_mods = uu____3935;
+                exported_ids = (uu___185_3934.exported_ids);
+                trans_exported_ids = (uu___185_3934.trans_exported_ids);
+                includes = (uu___185_3934.includes);
+                sigaccum = (uu___185_3934.sigaccum);
+                sigmap = (uu___185_3934.sigmap);
+                iface = (uu___185_3934.iface);
+                admitted_iface = (uu___185_3934.admitted_iface);
+                expect_typ = (uu___185_3934.expect_typ);
+                docs = (uu___185_3934.docs);
+                remaining_iface_decls = (uu___185_3934.remaining_iface_decls);
+                syntax_only = (uu___185_3934.syntax_only)
               } in
             env4))
 let push_namespace: env -> FStar_Ident.lident -> env =
   fun env  ->
     fun ns  ->
-      let uu____3934 =
-        let uu____3937 = resolve_module_name env ns false in
-        match uu____3937 with
+      let uu____3946 =
+        let uu____3949 = resolve_module_name env ns false in
+        match uu____3949 with
         | None  ->
             let modules = env.modules in
-            let uu____3945 =
+            let uu____3957 =
               FStar_All.pipe_right modules
                 (FStar_Util.for_some
-                   (fun uu____3951  ->
-                      match uu____3951 with
-                      | (m,uu____3955) ->
+                   (fun uu____3963  ->
+                      match uu____3963 with
+                      | (m,uu____3967) ->
                           FStar_Util.starts_with
                             (Prims.strcat (FStar_Ident.text_of_lid m) ".")
                             (Prims.strcat (FStar_Ident.text_of_lid ns) "."))) in
-            if uu____3945
+            if uu____3957
             then (ns, Open_namespace)
             else
-              (let uu____3959 =
-                 let uu____3960 =
-                   let uu____3963 =
+              (let uu____3971 =
+                 let uu____3972 =
+                   let uu____3975 =
                      FStar_Util.format1 "Namespace %s cannot be found"
                        (FStar_Ident.text_of_lid ns) in
-                   (uu____3963, (FStar_Ident.range_of_lid ns)) in
-                 FStar_Errors.Error uu____3960 in
-               raise uu____3959)
+                   (uu____3975, (FStar_Ident.range_of_lid ns)) in
+                 FStar_Errors.Error uu____3972 in
+               raise uu____3971)
         | Some ns' -> (fail_if_curmodule env ns ns'; (ns', Open_module)) in
-      match uu____3934 with
+      match uu____3946 with
       | (ns',kd) -> push_scope_mod env (Open_module_or_namespace (ns', kd))
 let push_include: env -> FStar_Ident.lident -> env =
   fun env  ->
     fun ns  ->
       let ns0 = ns in
-      let uu____3977 = resolve_module_name env ns false in
-      match uu____3977 with
+      let uu____3989 = resolve_module_name env ns false in
+      match uu____3989 with
       | Some ns1 ->
           (fail_if_curmodule env ns0 ns1;
            (let env1 =
               push_scope_mod env
                 (Open_module_or_namespace (ns1, Open_module)) in
             let curmod =
-              let uu____3983 = current_module env1 in
-              uu____3983.FStar_Ident.str in
-            (let uu____3985 = FStar_Util.smap_try_find env1.includes curmod in
-             match uu____3985 with
+              let uu____3995 = current_module env1 in
+              uu____3995.FStar_Ident.str in
+            (let uu____3997 = FStar_Util.smap_try_find env1.includes curmod in
+             match uu____3997 with
              | None  -> ()
              | Some incl ->
-                 let uu____3998 =
-                   let uu____4000 = FStar_ST.read incl in ns1 :: uu____4000 in
-                 FStar_ST.write incl uu____3998);
+                 let uu____4010 =
+                   let uu____4012 = FStar_ST.read incl in ns1 :: uu____4012 in
+                 FStar_ST.write incl uu____4010);
             (match () with
              | () ->
-                 let uu____4008 =
+                 let uu____4020 =
                    get_trans_exported_id_set env1 ns1.FStar_Ident.str in
-                 (match uu____4008 with
+                 (match uu____4020 with
                   | Some ns_trans_exports ->
-                      ((let uu____4021 =
-                          let uu____4032 = get_exported_id_set env1 curmod in
-                          let uu____4037 =
+                      ((let uu____4033 =
+                          let uu____4044 = get_exported_id_set env1 curmod in
+                          let uu____4049 =
                             get_trans_exported_id_set env1 curmod in
-                          (uu____4032, uu____4037) in
-                        match uu____4021 with
+                          (uu____4044, uu____4049) in
+                        match uu____4033 with
                         | (Some cur_exports,Some cur_trans_exports) ->
                             let update_exports k =
                               let ns_ex =
-                                let uu____4077 = ns_trans_exports k in
-                                FStar_ST.read uu____4077 in
+                                let uu____4089 = ns_trans_exports k in
+                                FStar_ST.read uu____4089 in
                               let ex = cur_exports k in
-                              (let uu____4086 =
-                                 let uu____4087 = FStar_ST.read ex in
-                                 FStar_Util.set_difference uu____4087 ns_ex in
-                               FStar_ST.write ex uu____4086);
+                              (let uu____4098 =
+                                 let uu____4099 = FStar_ST.read ex in
+                                 FStar_Util.set_difference uu____4099 ns_ex in
+                               FStar_ST.write ex uu____4098);
                               (match () with
                                | () ->
                                    let trans_ex = cur_trans_exports k in
-                                   let uu____4097 =
-                                     let uu____4098 = FStar_ST.read trans_ex in
-                                     FStar_Util.set_union uu____4098 ns_ex in
-                                   FStar_ST.write trans_ex uu____4097) in
+                                   let uu____4109 =
+                                     let uu____4110 = FStar_ST.read trans_ex in
+                                     FStar_Util.set_union uu____4110 ns_ex in
+                                   FStar_ST.write trans_ex uu____4109) in
                             FStar_List.iter update_exports
                               all_exported_id_kinds
-                        | uu____4104 -> ());
+                        | uu____4116 -> ());
                        (match () with | () -> env1))
                   | None  ->
-                      let uu____4118 =
-                        let uu____4119 =
-                          let uu____4122 =
+                      let uu____4130 =
+                        let uu____4131 =
+                          let uu____4134 =
                             FStar_Util.format1
                               "include: Module %s was not prepared"
                               ns1.FStar_Ident.str in
-                          (uu____4122, (FStar_Ident.range_of_lid ns1)) in
-                        FStar_Errors.Error uu____4119 in
-                      raise uu____4118))))
-      | uu____4123 ->
-          let uu____4125 =
-            let uu____4126 =
-              let uu____4129 =
+                          (uu____4134, (FStar_Ident.range_of_lid ns1)) in
+                        FStar_Errors.Error uu____4131 in
+                      raise uu____4130))))
+      | uu____4135 ->
+          let uu____4137 =
+            let uu____4138 =
+              let uu____4141 =
                 FStar_Util.format1 "include: Module %s cannot be found"
                   ns.FStar_Ident.str in
-              (uu____4129, (FStar_Ident.range_of_lid ns)) in
-            FStar_Errors.Error uu____4126 in
-          raise uu____4125
+              (uu____4141, (FStar_Ident.range_of_lid ns)) in
+            FStar_Errors.Error uu____4138 in
+          raise uu____4137
 let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
   =
   fun env  ->
     fun x  ->
       fun l  ->
-        let uu____4139 = module_is_defined env l in
-        if uu____4139
+        let uu____4151 = module_is_defined env l in
+        if uu____4151
         then
           (fail_if_curmodule env l l;
            push_scope_mod env (Module_abbrev (x, l)))
         else
-          (let uu____4142 =
-             let uu____4143 =
-               let uu____4146 =
+          (let uu____4154 =
+             let uu____4155 =
+               let uu____4158 =
                  FStar_Util.format1 "Module %s cannot be found"
                    (FStar_Ident.text_of_lid l) in
-               (uu____4146, (FStar_Ident.range_of_lid l)) in
-             FStar_Errors.Error uu____4143 in
-           raise uu____4142)
+               (uu____4158, (FStar_Ident.range_of_lid l)) in
+             FStar_Errors.Error uu____4155 in
+           raise uu____4154)
 let push_doc: env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc option -> env
   =
   fun env  ->
@@ -1909,19 +1920,19 @@ let push_doc: env -> FStar_Ident.lid -> FStar_Parser_AST.fsdoc option -> env
         match doc_opt with
         | None  -> env
         | Some doc1 ->
-            ((let uu____4160 =
+            ((let uu____4172 =
                 FStar_Util.smap_try_find env.docs l.FStar_Ident.str in
-              match uu____4160 with
+              match uu____4172 with
               | None  -> ()
               | Some old_doc ->
-                  let uu____4163 =
-                    let uu____4164 = FStar_Ident.string_of_lid l in
-                    let uu____4165 = FStar_Parser_AST.string_of_fsdoc old_doc in
-                    let uu____4166 = FStar_Parser_AST.string_of_fsdoc doc1 in
+                  let uu____4175 =
+                    let uu____4176 = FStar_Ident.string_of_lid l in
+                    let uu____4177 = FStar_Parser_AST.string_of_fsdoc old_doc in
+                    let uu____4178 = FStar_Parser_AST.string_of_fsdoc doc1 in
                     FStar_Util.format3
                       "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
-                      uu____4164 uu____4165 uu____4166 in
-                  FStar_Errors.warn (FStar_Ident.range_of_lid l) uu____4163);
+                      uu____4176 uu____4177 uu____4178 in
+                  FStar_Errors.warn (FStar_Ident.range_of_lid l) uu____4175);
              FStar_Util.smap_add env.docs l.FStar_Ident.str doc1;
              env)
 let check_admits: env -> Prims.unit =
@@ -1931,40 +1942,40 @@ let check_admits: env -> Prims.unit =
          (fun se  ->
             match se.FStar_Syntax_Syntax.sigel with
             | FStar_Syntax_Syntax.Sig_declare_typ (l,u,t) ->
-                let uu____4175 = try_lookup_lid env l in
-                (match uu____4175 with
+                let uu____4187 = try_lookup_lid env l in
+                (match uu____4187 with
                  | None  ->
-                     ((let uu____4182 =
-                         let uu____4183 = FStar_Options.interactive () in
-                         Prims.op_Negation uu____4183 in
-                       if uu____4182
+                     ((let uu____4194 =
+                         let uu____4195 = FStar_Options.interactive () in
+                         Prims.op_Negation uu____4195 in
+                       if uu____4194
                        then
-                         let uu____4184 =
-                           let uu____4185 =
+                         let uu____4196 =
+                           let uu____4197 =
                              FStar_Range.string_of_range
                                (FStar_Ident.range_of_lid l) in
-                           let uu____4186 =
+                           let uu____4198 =
                              FStar_Syntax_Print.lid_to_string l in
                            FStar_Util.format2
                              "%s: Warning: Admitting %s without a definition\n"
-                             uu____4185 uu____4186 in
-                         FStar_Util.print_string uu____4184
+                             uu____4197 uu____4198 in
+                         FStar_Util.print_string uu____4196
                        else ());
                       (let quals = FStar_Syntax_Syntax.Assumption ::
                          (se.FStar_Syntax_Syntax.sigquals) in
                        FStar_Util.smap_add (sigmap env) l.FStar_Ident.str
-                         ((let uu___186_4192 = se in
+                         ((let uu___186_4204 = se in
                            {
                              FStar_Syntax_Syntax.sigel =
-                               (uu___186_4192.FStar_Syntax_Syntax.sigel);
+                               (uu___186_4204.FStar_Syntax_Syntax.sigel);
                              FStar_Syntax_Syntax.sigrng =
-                               (uu___186_4192.FStar_Syntax_Syntax.sigrng);
+                               (uu___186_4204.FStar_Syntax_Syntax.sigrng);
                              FStar_Syntax_Syntax.sigquals = quals;
                              FStar_Syntax_Syntax.sigmeta =
-                               (uu___186_4192.FStar_Syntax_Syntax.sigmeta)
+                               (uu___186_4204.FStar_Syntax_Syntax.sigmeta)
                            }), false)))
-                 | Some uu____4193 -> ())
-            | uu____4198 -> ()))
+                 | Some uu____4205 -> ())
+            | uu____4210 -> ()))
 let finish: env -> FStar_Syntax_Syntax.modul -> env =
   fun env  ->
     fun modul  ->
@@ -1973,7 +1984,7 @@ let finish: env -> FStar_Syntax_Syntax.modul -> env =
            (fun se  ->
               let quals = se.FStar_Syntax_Syntax.sigquals in
               match se.FStar_Syntax_Syntax.sigel with
-              | FStar_Syntax_Syntax.Sig_bundle (ses,uu____4210) ->
+              | FStar_Syntax_Syntax.Sig_bundle (ses,uu____4222) ->
                   if
                     (FStar_List.contains FStar_Syntax_Syntax.Private quals)
                       ||
@@ -1984,20 +1995,20 @@ let finish: env -> FStar_Syntax_Syntax.modul -> env =
                          (fun se1  ->
                             match se1.FStar_Syntax_Syntax.sigel with
                             | FStar_Syntax_Syntax.Sig_datacon
-                                (lid,uu____4218,uu____4219,uu____4220,uu____4221,uu____4222)
+                                (lid,uu____4230,uu____4231,uu____4232,uu____4233,uu____4234)
                                 ->
                                 FStar_Util.smap_remove (sigmap env)
                                   lid.FStar_Ident.str
-                            | uu____4227 -> ()))
+                            | uu____4239 -> ()))
                   else ()
               | FStar_Syntax_Syntax.Sig_declare_typ
-                  (lid,uu____4230,uu____4231) ->
+                  (lid,uu____4242,uu____4243) ->
                   if FStar_List.contains FStar_Syntax_Syntax.Private quals
                   then
                     FStar_Util.smap_remove (sigmap env) lid.FStar_Ident.str
                   else ()
               | FStar_Syntax_Syntax.Sig_let
-                  ((uu____4235,lbs),uu____4237,uu____4238) ->
+                  ((uu____4247,lbs),uu____4249,uu____4250) ->
                   (if
                      (FStar_List.contains FStar_Syntax_Syntax.Private quals)
                        ||
@@ -2007,16 +2018,16 @@ let finish: env -> FStar_Syntax_Syntax.modul -> env =
                      FStar_All.pipe_right lbs
                        (FStar_List.iter
                           (fun lb  ->
-                             let uu____4251 =
-                               let uu____4252 =
-                                 let uu____4253 =
-                                   let uu____4258 =
+                             let uu____4263 =
+                               let uu____4264 =
+                                 let uu____4265 =
+                                   let uu____4270 =
                                      FStar_Util.right
                                        lb.FStar_Syntax_Syntax.lbname in
-                                   uu____4258.FStar_Syntax_Syntax.fv_name in
-                                 uu____4253.FStar_Syntax_Syntax.v in
-                               uu____4252.FStar_Ident.str in
-                             FStar_Util.smap_remove (sigmap env) uu____4251))
+                                   uu____4270.FStar_Syntax_Syntax.fv_name in
+                                 uu____4265.FStar_Syntax_Syntax.v in
+                               uu____4264.FStar_Ident.str in
+                             FStar_Util.smap_remove (sigmap env) uu____4263))
                    else ();
                    if
                      (FStar_List.contains FStar_Syntax_Syntax.Abstract quals)
@@ -2029,123 +2040,123 @@ let finish: env -> FStar_Syntax_Syntax.modul -> env =
                        (FStar_List.iter
                           (fun lb  ->
                              let lid =
-                               let uu____4268 =
-                                 let uu____4273 =
+                               let uu____4280 =
+                                 let uu____4285 =
                                    FStar_Util.right
                                      lb.FStar_Syntax_Syntax.lbname in
-                                 uu____4273.FStar_Syntax_Syntax.fv_name in
-                               uu____4268.FStar_Syntax_Syntax.v in
+                                 uu____4285.FStar_Syntax_Syntax.fv_name in
+                               uu____4280.FStar_Syntax_Syntax.v in
                              let quals1 = FStar_Syntax_Syntax.Assumption ::
                                quals in
                              let decl =
-                               let uu___187_4280 = se in
+                               let uu___187_4292 = se in
                                {
                                  FStar_Syntax_Syntax.sigel =
                                    (FStar_Syntax_Syntax.Sig_declare_typ
                                       (lid, (lb.FStar_Syntax_Syntax.lbunivs),
                                         (lb.FStar_Syntax_Syntax.lbtyp)));
                                  FStar_Syntax_Syntax.sigrng =
-                                   (uu___187_4280.FStar_Syntax_Syntax.sigrng);
+                                   (uu___187_4292.FStar_Syntax_Syntax.sigrng);
                                  FStar_Syntax_Syntax.sigquals = quals1;
                                  FStar_Syntax_Syntax.sigmeta =
-                                   (uu___187_4280.FStar_Syntax_Syntax.sigmeta)
+                                   (uu___187_4292.FStar_Syntax_Syntax.sigmeta)
                                } in
                              FStar_Util.smap_add (sigmap env)
                                lid.FStar_Ident.str (decl, false)))
                    else ())
-              | uu____4287 -> ()));
+              | uu____4299 -> ()));
       (let curmod =
-         let uu____4289 = current_module env in uu____4289.FStar_Ident.str in
-       (let uu____4291 =
-          let uu____4302 = get_exported_id_set env curmod in
-          let uu____4307 = get_trans_exported_id_set env curmod in
-          (uu____4302, uu____4307) in
-        match uu____4291 with
+         let uu____4301 = current_module env in uu____4301.FStar_Ident.str in
+       (let uu____4303 =
+          let uu____4314 = get_exported_id_set env curmod in
+          let uu____4319 = get_trans_exported_id_set env curmod in
+          (uu____4314, uu____4319) in
+        match uu____4303 with
         | (Some cur_ex,Some cur_trans_ex) ->
             let update_exports eikind =
               let cur_ex_set =
-                let uu____4347 = cur_ex eikind in FStar_ST.read uu____4347 in
+                let uu____4359 = cur_ex eikind in FStar_ST.read uu____4359 in
               let cur_trans_ex_set_ref = cur_trans_ex eikind in
-              let uu____4355 =
-                let uu____4356 = FStar_ST.read cur_trans_ex_set_ref in
-                FStar_Util.set_union cur_ex_set uu____4356 in
-              FStar_ST.write cur_trans_ex_set_ref uu____4355 in
+              let uu____4367 =
+                let uu____4368 = FStar_ST.read cur_trans_ex_set_ref in
+                FStar_Util.set_union cur_ex_set uu____4368 in
+              FStar_ST.write cur_trans_ex_set_ref uu____4367 in
             FStar_List.iter update_exports all_exported_id_kinds
-        | uu____4362 -> ());
+        | uu____4374 -> ());
        (match () with
         | () ->
             (filter_record_cache ();
              (match () with
               | () ->
-                  let uu___188_4374 = env in
+                  let uu___188_4386 = env in
                   {
                     curmodule = None;
-                    curmonad = (uu___188_4374.curmonad);
+                    curmonad = (uu___188_4386.curmonad);
                     modules = (((modul.FStar_Syntax_Syntax.name), modul) ::
                       (env.modules));
                     scope_mods = [];
-                    exported_ids = (uu___188_4374.exported_ids);
-                    trans_exported_ids = (uu___188_4374.trans_exported_ids);
-                    includes = (uu___188_4374.includes);
+                    exported_ids = (uu___188_4386.exported_ids);
+                    trans_exported_ids = (uu___188_4386.trans_exported_ids);
+                    includes = (uu___188_4386.includes);
                     sigaccum = [];
-                    sigmap = (uu___188_4374.sigmap);
-                    iface = (uu___188_4374.iface);
-                    admitted_iface = (uu___188_4374.admitted_iface);
-                    expect_typ = (uu___188_4374.expect_typ);
-                    docs = (uu___188_4374.docs);
+                    sigmap = (uu___188_4386.sigmap);
+                    iface = (uu___188_4386.iface);
+                    admitted_iface = (uu___188_4386.admitted_iface);
+                    expect_typ = (uu___188_4386.expect_typ);
+                    docs = (uu___188_4386.docs);
                     remaining_iface_decls =
-                      (uu___188_4374.remaining_iface_decls);
-                    syntax_only = (uu___188_4374.syntax_only)
+                      (uu___188_4386.remaining_iface_decls);
+                    syntax_only = (uu___188_4386.syntax_only)
                   }))))
 let stack: env Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let push: env -> env =
   fun env  ->
     push_record_cache ();
-    (let uu____4387 =
-       let uu____4389 = FStar_ST.read stack in env :: uu____4389 in
-     FStar_ST.write stack uu____4387);
-    (let uu___189_4397 = env in
-     let uu____4398 = FStar_Util.smap_copy (sigmap env) in
-     let uu____4404 = FStar_Util.smap_copy env.docs in
+    (let uu____4399 =
+       let uu____4401 = FStar_ST.read stack in env :: uu____4401 in
+     FStar_ST.write stack uu____4399);
+    (let uu___189_4409 = env in
+     let uu____4410 = FStar_Util.smap_copy (sigmap env) in
+     let uu____4416 = FStar_Util.smap_copy env.docs in
      {
-       curmodule = (uu___189_4397.curmodule);
-       curmonad = (uu___189_4397.curmonad);
-       modules = (uu___189_4397.modules);
-       scope_mods = (uu___189_4397.scope_mods);
-       exported_ids = (uu___189_4397.exported_ids);
-       trans_exported_ids = (uu___189_4397.trans_exported_ids);
-       includes = (uu___189_4397.includes);
-       sigaccum = (uu___189_4397.sigaccum);
-       sigmap = uu____4398;
-       iface = (uu___189_4397.iface);
-       admitted_iface = (uu___189_4397.admitted_iface);
-       expect_typ = (uu___189_4397.expect_typ);
-       docs = uu____4404;
-       remaining_iface_decls = (uu___189_4397.remaining_iface_decls);
-       syntax_only = (uu___189_4397.syntax_only)
+       curmodule = (uu___189_4409.curmodule);
+       curmonad = (uu___189_4409.curmonad);
+       modules = (uu___189_4409.modules);
+       scope_mods = (uu___189_4409.scope_mods);
+       exported_ids = (uu___189_4409.exported_ids);
+       trans_exported_ids = (uu___189_4409.trans_exported_ids);
+       includes = (uu___189_4409.includes);
+       sigaccum = (uu___189_4409.sigaccum);
+       sigmap = uu____4410;
+       iface = (uu___189_4409.iface);
+       admitted_iface = (uu___189_4409.admitted_iface);
+       expect_typ = (uu___189_4409.expect_typ);
+       docs = uu____4416;
+       remaining_iface_decls = (uu___189_4409.remaining_iface_decls);
+       syntax_only = (uu___189_4409.syntax_only)
      })
 let pop: Prims.unit -> env =
-  fun uu____4408  ->
-    let uu____4409 = FStar_ST.read stack in
-    match uu____4409 with
+  fun uu____4420  ->
+    let uu____4421 = FStar_ST.read stack in
+    match uu____4421 with
     | env::tl1 -> (pop_record_cache (); FStar_ST.write stack tl1; env)
-    | uu____4422 -> failwith "Impossible: Too many pops"
+    | uu____4434 -> failwith "Impossible: Too many pops"
 let commit_mark: env -> env =
   fun env  ->
     commit_record_cache ();
-    (let uu____4428 = FStar_ST.read stack in
-     match uu____4428 with
-     | uu____4433::tl1 -> (FStar_ST.write stack tl1; env)
-     | uu____4440 -> failwith "Impossible: Too many pops")
+    (let uu____4440 = FStar_ST.read stack in
+     match uu____4440 with
+     | uu____4445::tl1 -> (FStar_ST.write stack tl1; env)
+     | uu____4452 -> failwith "Impossible: Too many pops")
 let mark: env -> env = fun x  -> push x
-let reset_mark: Prims.unit -> env = fun uu____4447  -> pop ()
+let reset_mark: Prims.unit -> env = fun uu____4459  -> pop ()
 let export_interface: FStar_Ident.lident -> env -> env =
   fun m  ->
     fun env  ->
       let sigelt_in_m se =
         match FStar_Syntax_Util.lids_of_sigelt se with
-        | l::uu____4459 -> l.FStar_Ident.nsstr = m.FStar_Ident.str
-        | uu____4461 -> false in
+        | l::uu____4471 -> l.FStar_Ident.nsstr = m.FStar_Ident.str
+        | uu____4473 -> false in
       let sm = sigmap env in
       let env1 = pop () in
       let keys = FStar_Util.smap_keys sm in
@@ -2153,28 +2164,28 @@ let export_interface: FStar_Ident.lident -> env -> env =
       FStar_All.pipe_right keys
         (FStar_List.iter
            (fun k  ->
-              let uu____4479 = FStar_Util.smap_try_find sm' k in
-              match uu____4479 with
+              let uu____4491 = FStar_Util.smap_try_find sm' k in
+              match uu____4491 with
               | Some (se,true ) when sigelt_in_m se ->
                   (FStar_Util.smap_remove sm' k;
                    (let se1 =
                       match se.FStar_Syntax_Syntax.sigel with
                       | FStar_Syntax_Syntax.Sig_declare_typ (l,u,t) ->
-                          let uu___190_4495 = se in
+                          let uu___190_4507 = se in
                           {
                             FStar_Syntax_Syntax.sigel =
-                              (uu___190_4495.FStar_Syntax_Syntax.sigel);
+                              (uu___190_4507.FStar_Syntax_Syntax.sigel);
                             FStar_Syntax_Syntax.sigrng =
-                              (uu___190_4495.FStar_Syntax_Syntax.sigrng);
+                              (uu___190_4507.FStar_Syntax_Syntax.sigrng);
                             FStar_Syntax_Syntax.sigquals =
                               (FStar_Syntax_Syntax.Assumption ::
                               (se.FStar_Syntax_Syntax.sigquals));
                             FStar_Syntax_Syntax.sigmeta =
-                              (uu___190_4495.FStar_Syntax_Syntax.sigmeta)
+                              (uu___190_4507.FStar_Syntax_Syntax.sigmeta)
                           }
-                      | uu____4496 -> se in
+                      | uu____4508 -> se in
                     FStar_Util.smap_add sm' k (se1, false)))
-              | uu____4499 -> ()));
+              | uu____4511 -> ()));
       env1
 let finish_module_or_interface: env -> FStar_Syntax_Syntax.modul -> env =
   fun env  ->
@@ -2216,74 +2227,74 @@ let prepare_module_or_interface:
                 let ns = FStar_Ident.lid_of_ids mname.FStar_Ident.ns in ns ::
                   open_ns
               else open_ns in
-            (let uu____4543 = exported_id_set_new () in
+            (let uu____4555 = exported_id_set_new () in
              FStar_Util.smap_add env1.exported_ids mname.FStar_Ident.str
-               uu____4543);
+               uu____4555);
             (match () with
              | () ->
-                 ((let uu____4548 = exported_id_set_new () in
+                 ((let uu____4560 = exported_id_set_new () in
                    FStar_Util.smap_add env1.trans_exported_ids
-                     mname.FStar_Ident.str uu____4548);
+                     mname.FStar_Ident.str uu____4560);
                   (match () with
                    | () ->
-                       ((let uu____4553 = FStar_Util.mk_ref [] in
+                       ((let uu____4565 = FStar_Util.mk_ref [] in
                          FStar_Util.smap_add env1.includes
-                           mname.FStar_Ident.str uu____4553);
+                           mname.FStar_Ident.str uu____4565);
                         (match () with
                          | () ->
-                             let uu___191_4562 = env1 in
-                             let uu____4563 =
+                             let uu___191_4574 = env1 in
+                             let uu____4575 =
                                FStar_List.map
                                  (fun lid  ->
                                     Open_module_or_namespace
                                       (lid, Open_namespace)) open_ns1 in
                              {
                                curmodule = (Some mname);
-                               curmonad = (uu___191_4562.curmonad);
-                               modules = (uu___191_4562.modules);
-                               scope_mods = uu____4563;
-                               exported_ids = (uu___191_4562.exported_ids);
+                               curmonad = (uu___191_4574.curmonad);
+                               modules = (uu___191_4574.modules);
+                               scope_mods = uu____4575;
+                               exported_ids = (uu___191_4574.exported_ids);
                                trans_exported_ids =
-                                 (uu___191_4562.trans_exported_ids);
-                               includes = (uu___191_4562.includes);
-                               sigaccum = (uu___191_4562.sigaccum);
+                                 (uu___191_4574.trans_exported_ids);
+                               includes = (uu___191_4574.includes);
+                               sigaccum = (uu___191_4574.sigaccum);
                                sigmap = (env1.sigmap);
                                iface = intf;
                                admitted_iface = admitted;
-                               expect_typ = (uu___191_4562.expect_typ);
-                               docs = (uu___191_4562.docs);
+                               expect_typ = (uu___191_4574.expect_typ);
+                               docs = (uu___191_4574.docs);
                                remaining_iface_decls =
-                                 (uu___191_4562.remaining_iface_decls);
-                               syntax_only = (uu___191_4562.syntax_only)
+                                 (uu___191_4574.remaining_iface_decls);
+                               syntax_only = (uu___191_4574.syntax_only)
                              }))))) in
-          let uu____4566 =
+          let uu____4578 =
             FStar_All.pipe_right env.modules
               (FStar_Util.find_opt
-                 (fun uu____4578  ->
-                    match uu____4578 with
-                    | (l,uu____4582) -> FStar_Ident.lid_equals l mname)) in
-          match uu____4566 with
-          | None  -> let uu____4587 = prep env in (uu____4587, false)
-          | Some (uu____4588,m) ->
-              ((let uu____4593 =
-                  (let uu____4594 = FStar_Options.interactive () in
-                   Prims.op_Negation uu____4594) &&
+                 (fun uu____4590  ->
+                    match uu____4590 with
+                    | (l,uu____4594) -> FStar_Ident.lid_equals l mname)) in
+          match uu____4578 with
+          | None  -> let uu____4599 = prep env in (uu____4599, false)
+          | Some (uu____4600,m) ->
+              ((let uu____4605 =
+                  (let uu____4606 = FStar_Options.interactive () in
+                   Prims.op_Negation uu____4606) &&
                     ((Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)
                        || intf) in
-                if uu____4593
+                if uu____4605
                 then
-                  let uu____4595 =
-                    let uu____4596 =
-                      let uu____4599 =
+                  let uu____4607 =
+                    let uu____4608 =
+                      let uu____4611 =
                         FStar_Util.format1
                           "Duplicate module or interface name: %s"
                           mname.FStar_Ident.str in
-                      (uu____4599, (FStar_Ident.range_of_lid mname)) in
-                    FStar_Errors.Error uu____4596 in
-                  raise uu____4595
+                      (uu____4611, (FStar_Ident.range_of_lid mname)) in
+                    FStar_Errors.Error uu____4608 in
+                  raise uu____4607
                 else ());
-               (let uu____4601 = let uu____4602 = push env in prep uu____4602 in
-                (uu____4601, true)))
+               (let uu____4613 = let uu____4614 = push env in prep uu____4614 in
+                (uu____4613, true)))
 let enter_monad_scope: env -> FStar_Ident.ident -> env =
   fun env  ->
     fun mname  ->
@@ -2297,33 +2308,33 @@ let enter_monad_scope: env -> FStar_Ident.ident -> env =
                          mname'.FStar_Ident.idText))),
                  (mname.FStar_Ident.idRange)))
       | None  ->
-          let uu___192_4610 = env in
+          let uu___192_4622 = env in
           {
-            curmodule = (uu___192_4610.curmodule);
+            curmodule = (uu___192_4622.curmodule);
             curmonad = (Some mname);
-            modules = (uu___192_4610.modules);
-            scope_mods = (uu___192_4610.scope_mods);
-            exported_ids = (uu___192_4610.exported_ids);
-            trans_exported_ids = (uu___192_4610.trans_exported_ids);
-            includes = (uu___192_4610.includes);
-            sigaccum = (uu___192_4610.sigaccum);
-            sigmap = (uu___192_4610.sigmap);
-            iface = (uu___192_4610.iface);
-            admitted_iface = (uu___192_4610.admitted_iface);
-            expect_typ = (uu___192_4610.expect_typ);
-            docs = (uu___192_4610.docs);
-            remaining_iface_decls = (uu___192_4610.remaining_iface_decls);
-            syntax_only = (uu___192_4610.syntax_only)
+            modules = (uu___192_4622.modules);
+            scope_mods = (uu___192_4622.scope_mods);
+            exported_ids = (uu___192_4622.exported_ids);
+            trans_exported_ids = (uu___192_4622.trans_exported_ids);
+            includes = (uu___192_4622.includes);
+            sigaccum = (uu___192_4622.sigaccum);
+            sigmap = (uu___192_4622.sigmap);
+            iface = (uu___192_4622.iface);
+            admitted_iface = (uu___192_4622.admitted_iface);
+            expect_typ = (uu___192_4622.expect_typ);
+            docs = (uu___192_4622.docs);
+            remaining_iface_decls = (uu___192_4622.remaining_iface_decls);
+            syntax_only = (uu___192_4622.syntax_only)
           }
 let fail_or env lookup lid =
-  let uu____4635 = lookup lid in
-  match uu____4635 with
+  let uu____4647 = lookup lid in
+  match uu____4647 with
   | None  ->
       let opened_modules =
         FStar_List.map
-          (fun uu____4641  ->
-             match uu____4641 with
-             | (lid1,uu____4645) -> FStar_Ident.text_of_lid lid1) env.modules in
+          (fun uu____4653  ->
+             match uu____4653 with
+             | (lid1,uu____4657) -> FStar_Ident.text_of_lid lid1) env.modules in
       let msg =
         FStar_Util.format1 "Identifier not found: [%s]"
           (FStar_Ident.text_of_lid lid) in
@@ -2332,11 +2343,11 @@ let fail_or env lookup lid =
         then msg
         else
           (let modul =
-             let uu____4652 = FStar_Ident.lid_of_ids lid.FStar_Ident.ns in
-             FStar_Ident.set_lid_range uu____4652
+             let uu____4664 = FStar_Ident.lid_of_ids lid.FStar_Ident.ns in
+             FStar_Ident.set_lid_range uu____4664
                (FStar_Ident.range_of_lid lid) in
-           let uu____4653 = resolve_module_name env modul true in
-           match uu____4653 with
+           let uu____4665 = resolve_module_name env modul true in
+           match uu____4665 with
            | None  ->
                let opened_modules1 = FStar_String.concat ", " opened_modules in
                FStar_Util.format3
@@ -2360,8 +2371,8 @@ let fail_or env lookup lid =
       raise (FStar_Errors.Error (msg1, (FStar_Ident.range_of_lid lid)))
   | Some r -> r
 let fail_or2 lookup id =
-  let uu____4680 = lookup id in
-  match uu____4680 with
+  let uu____4692 = lookup id in
+  match uu____4692 with
   | None  ->
       raise
         (FStar_Errors.Error

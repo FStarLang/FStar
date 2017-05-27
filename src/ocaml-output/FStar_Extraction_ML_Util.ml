@@ -7,8 +7,8 @@ let mlconst_of_const:
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant =
   fun sctt  ->
     match sctt with
-    | FStar_Const.Const_range _|FStar_Const.Const_effect  ->
-        failwith "Unsupported constant"
+    | FStar_Const.Const_range uu____24 -> failwith "Unsupported constant"
+    | FStar_Const.Const_effect  -> failwith "Unsupported constant"
     | FStar_Const.Const_unit  -> FStar_Extraction_ML_Syntax.MLC_Unit
     | FStar_Const.Const_char c -> FStar_Extraction_ML_Syntax.MLC_Char c
     | FStar_Const.Const_int (s,i) ->
@@ -20,7 +20,9 @@ let mlconst_of_const:
     | FStar_Const.Const_string (bytes,uu____44) ->
         FStar_Extraction_ML_Syntax.MLC_String
           (FStar_Util.string_of_unicode bytes)
-    | FStar_Const.Const_reify |FStar_Const.Const_reflect _ ->
+    | FStar_Const.Const_reify  ->
+        failwith "Unhandled constant: reify/reflect"
+    | FStar_Const.Const_reflect uu____47 ->
         failwith "Unhandled constant: reify/reflect"
 let mlconst_of_const':
   FStar_Range.range ->
@@ -124,12 +126,14 @@ let join:
       fun f'  ->
         match (f, f') with
         | (FStar_Extraction_ML_Syntax.E_IMPURE
-           ,FStar_Extraction_ML_Syntax.E_PURE )
-          |(FStar_Extraction_ML_Syntax.E_PURE
-            ,FStar_Extraction_ML_Syntax.E_IMPURE )
-           |(FStar_Extraction_ML_Syntax.E_IMPURE
-             ,FStar_Extraction_ML_Syntax.E_IMPURE )
-            -> FStar_Extraction_ML_Syntax.E_IMPURE
+           ,FStar_Extraction_ML_Syntax.E_PURE ) ->
+            FStar_Extraction_ML_Syntax.E_IMPURE
+        | (FStar_Extraction_ML_Syntax.E_PURE
+           ,FStar_Extraction_ML_Syntax.E_IMPURE ) ->
+            FStar_Extraction_ML_Syntax.E_IMPURE
+        | (FStar_Extraction_ML_Syntax.E_IMPURE
+           ,FStar_Extraction_ML_Syntax.E_IMPURE ) ->
+            FStar_Extraction_ML_Syntax.E_IMPURE
         | (FStar_Extraction_ML_Syntax.E_GHOST
            ,FStar_Extraction_ML_Syntax.E_GHOST ) ->
             FStar_Extraction_ML_Syntax.E_GHOST
@@ -483,22 +487,23 @@ let conjoin_opt:
     fun e2  ->
       match (e1, e2) with
       | (None ,None ) -> None
-      | (Some x,None )|(None ,Some x) -> Some x
-      | (Some x,Some y) -> let uu____838 = conjoin x y in Some uu____838
+      | (Some x,None ) -> Some x
+      | (None ,Some x) -> Some x
+      | (Some x,Some y) -> let uu____839 = conjoin x y in Some uu____839
 let mlloc_of_range: FStar_Range.range -> (Prims.int* Prims.string) =
   fun r  ->
     let pos = FStar_Range.start_of_range r in
     let line = FStar_Range.line_of_pos pos in
-    let uu____846 = FStar_Range.file_of_range r in (line, uu____846)
+    let uu____847 = FStar_Range.file_of_range r in (line, uu____847)
 let rec argTypes:
   FStar_Extraction_ML_Syntax.mlty ->
     FStar_Extraction_ML_Syntax.mlty Prims.list
   =
   fun t  ->
     match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____854,b) ->
-        let uu____856 = argTypes b in a :: uu____856
-    | uu____858 -> []
+    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____855,b) ->
+        let uu____857 = argTypes b in a :: uu____857
+    | uu____859 -> []
 let rec uncurry_mlty_fun:
   FStar_Extraction_ML_Syntax.mlty ->
     (FStar_Extraction_ML_Syntax.mlty Prims.list*
@@ -506,7 +511,7 @@ let rec uncurry_mlty_fun:
   =
   fun t  ->
     match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____869,b) ->
-        let uu____871 = uncurry_mlty_fun b in
-        (match uu____871 with | (args,res) -> ((a :: args), res))
-    | uu____883 -> ([], t)
+    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____870,b) ->
+        let uu____872 = uncurry_mlty_fun b in
+        (match uu____872 with | (args,res) -> ((a :: args), res))
+    | uu____884 -> ([], t)
