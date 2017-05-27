@@ -230,6 +230,8 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     // Check if we should print debug output
+    let env, _ = Env.clear_expected_typ env in
+    let env = { env with Env.instantiate_imp = false } in
     tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
         BU.print1 "About to preprocess %s\n" (Print.term_to_string goal);

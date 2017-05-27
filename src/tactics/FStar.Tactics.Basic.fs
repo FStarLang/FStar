@@ -467,7 +467,7 @@ let trivial : tac<unit> =
 let apply_lemma (tm:term)
     : tac<unit>
     = with_cur_goal (fun goal ->
-        let tm, t, guard = goal.context.type_of ({goal.context with expected_typ = None}) tm in //TODO: check that the guard is trivial
+        let tm, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
         bind (if (not (U.is_lemma t)) then fail "apply_lemma: not a lemma" else ret ()) (fun _ ->
         let bs, comp = U.arrow_formals_comp t in
         let uvs, implicits, subst =
@@ -753,8 +753,7 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  * If all that is successful, the term is rewritten.
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term) : tac<term> =
-    let env' = { env with instantiate_imp = false; expected_typ = None } in
-    let t, lcomp, g = TcTerm.tc_term env' t in
+    let t, lcomp, g = TcTerm.tc_term env t in
     if not (U.is_total_lcomp lcomp) || not (TcRel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
@@ -875,7 +874,7 @@ let get_lemma (t : term) : tac<term> =
 
 let cases (t : term) : tac<(term * term)> =
     with_cur_goal (fun g ->
-        let t, typ, guard = g.context.type_of ({g.context with expected_typ = None}) t in
+        let t, typ, guard = g.context.type_of g.context t in
         let hd, args = U.head_and_args typ in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv SC.or_lid ->
