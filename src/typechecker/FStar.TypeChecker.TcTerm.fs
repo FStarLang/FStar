@@ -1362,10 +1362,10 @@ and tc_eqn scrutinee env branch
         pat                                (* the type-checked, fully decorated pattern                             *)
       * list<bv>                           (* all its bound variables, used for closing the type of the branch term *)
       * Env.env                            (* the environment extended with all the binders                         *)
-      * list<term>                         (* terms corresponding to each clause in the disjunctive pat             *)
-      * list<term>                         (* the same terms in normal form                                         *)
+      * term                               (* terms corresponding to the pattern                                    *)
+      * term                               (* the same term in normal form                                          *)
       =
-    let pat_bvs, exps, p = TcUtil.pat_as_exps allow_implicits env p0 in //an expression for each clause in a disjunctive pattern
+    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 in //an expression for each clause in a disjunctive pattern
     if Env.debug env Options.High
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
@@ -1374,43 +1374,36 @@ and tc_eqn scrutinee env branch
     //has exactly its expected type, rather than just a sub-type. see #1062
     let env1 = {env1 with Env.is_pattern=true} in
     let expected_pat_t = Rel.unrefine env pat_t in
-    let should_check_guard =
-        List.length exps > 1 //disjunctive patterns may have non-trivial guards on their variables
-        && List.length pat_bvs > 0 in
-    let exps, norm_exps = exps |> List.map (fun e ->
-        if Env.debug env Options.High
-        then BU.print2 "Checking pattern expression %s against expected type %s\n"
-                        (Print.term_to_string e)
-                        (Print.term_to_string pat_t);
+    if Env.debug env Options.High
+    then BU.print2 "Checking pattern expression %s against expected type %s\n"
+                    (Print.term_to_string exp)
+                    (Print.term_to_string pat_t);
 
-        let e, lc, g = tc_tot_or_gtot_term env1 e in
+    let exp, lc, g = tc_tot_or_gtot_term env1 exp in
 
-        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-        let g = Rel.conj_guard g g' in
-        let _ =
-            let env1 = Env.set_range env1 e.pos in
-            let g = if should_check_guard then g else {g with guard_f=Trivial} in
-            Rel.discharge_guard_no_smt env1 g |>
-            Rel.resolve_implicits in
-        let e' = N.normalize [N.Beta] env1 e in
-        let uvars_to_string uvs = uvs |> BU.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
-        let uvs1 = Free.uvars e' in
-        let uvs2 = Free.uvars expected_pat_t in
-        if not <| BU.set_is_subset_of uvs1 uvs2
-        then (let unresolved = BU.set_difference uvs1 uvs2 |> BU.set_elements in
-              raise (Error(BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
-                                         Variables {%s} were unresolved; please bind them explicitly"
-                                    (N.term_to_string env e')
-                                    (N.term_to_string env expected_pat_t)
-                                    (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", "), p.p)));
+    let g' = Rel.teq env1 lc.res_typ expected_pat_t in
+    let g = Rel.conj_guard g g' in
+    let _ =
+        let env1 = Env.set_range env1 exp.pos in
+        let g = {g with guard_f=Trivial} in
+        Rel.discharge_guard_no_smt env1 g |>
+        Rel.resolve_implicits in
+    let norm_exp = N.normalize [N.Beta] env1 exp in
+    let uvars_to_string uvs = uvs |> BU.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
+    let uvs1 = Free.uvars norm_exp in
+    let uvs2 = Free.uvars expected_pat_t in
+    if not <| BU.set_is_subset_of uvs1 uvs2
+    then (let unresolved = BU.set_difference uvs1 uvs2 |> BU.set_elements in
+            raise (Error(BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
+                                        Variables {%s} were unresolved; please bind them explicitly"
+                                (N.term_to_string env norm_exp)
+                                (N.term_to_string env expected_pat_t)
+                                (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", "), p.p)));
 
-        if Env.debug env Options.High
-        then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env e);
-
-        //explicitly return e here, not its normal form, since pattern decoration relies on it
-        e,e') |> List.unzip in
-    let p = TcUtil.decorate_pattern env p exps in
-    p, pat_bvs, pat_env, exps, norm_exps
+    if Env.debug env Options.High
+    then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
+    let p = TcUtil.decorate_pattern env p exp in
+    p, pat_bvs, pat_env, exp, norm_exp
   in
   (*</tc_pat>*)
 
@@ -1419,7 +1412,9 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, disj_exps, norm_disj_exps = tc_pat true pat_t pattern in //disj_exps, an exp for each arm of a disjunctive pattern
+  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp =
+    tc_pat true pat_t pattern
+  in
 
   (* 2. Check the when clause *)
   let when_clause, g_when = match when_clause with
@@ -1450,17 +1445,14 @@ and tc_eqn scrutinee env branch
     let eqs =
         if not (Env.should_verify env)
         then None
-        else disj_exps |> List.fold_left (fun fopt e ->
-                let e = SS.compress e in
-                match e.n with
-                    | Tm_uvar _
-                    | Tm_constant _
-                    | Tm_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
-                    | _ ->
-                      let clause = U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e in
-                      match fopt with
-                        | None -> Some clause
-                        | Some f -> Some <| U.mk_disj clause f) None in
+        else let e = SS.compress pat_exp in
+             match e.n with
+             | Tm_uvar _
+             | Tm_constant _
+             | Tm_fvar _ -> None (* Equation for non-binding forms are handled with the discriminators below *)
+             | _ ->
+               Some (U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e)
+    in
 
     let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
     //g_branch is trivial, its logical content is now incorporated within c
@@ -1579,10 +1571,11 @@ and tc_eqn scrutinee env branch
                   t in
 
           (* 6 (c) *)
-         let branch_guard = norm_disj_exps |> List.map (build_and_check_branch_guard scrutinee_tm) |> U.mk_disj_l  in
+         let branch_guard = build_and_check_branch_guard scrutinee_tm norm_pat_exp in
 
           (* 6 (d) *)
-         let branch_guard = match when_condition with
+         let branch_guard =
+            match when_condition with
             | None -> branch_guard
             | Some w -> U.mk_conj branch_guard w in
 

@@ -181,7 +181,7 @@ let rec int_of_univ n u = match Subst.compress_univ u with
     | U_succ u -> int_of_univ (n+1) u
     | _ -> n, Some u
 
-let rec univ_to_string u = 
+let rec univ_to_string u =
   if not (Options.ugly()) then
     let e = Resugar.resugar_universe u Range.dummyRange in
     let d = ToDocument.term_to_document e in
@@ -308,7 +308,7 @@ let rec term_to_string x =
       | _ -> tag_of_term x
   end
 
-and pat_to_string x = 
+and pat_to_string x =
   if not (Options.ugly()) then
     let e = Resugar.resugar_pat x in
     let d = ToDocument.pat_to_document e in
@@ -325,7 +325,6 @@ and pat_to_string x =
       else bv_to_string x
     | Pat_constant c -> const_to_string c
     | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
-    | Pat_disj ps ->  U.concat_l " | " (List.map pat_to_string ps)
 
 
 and lbs_to_string quals lbs =
@@ -374,7 +373,7 @@ and binder_to_string' is_arrow b =
     let e = Resugar.resugar_binder b Range.dummyRange in
     let d = ToDocument.binder_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
-  else 
+  else
     let (a, imp) = b in
     if is_null_binder b
     then ("_:" ^ term_to_string a.sort)
@@ -403,7 +402,7 @@ and comp_to_string c =
     let e = Resugar.resugar_comp c in
     let d = ToDocument.term_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
-  else 
+  else
     match c.n with
     | Total (t, _) ->
       begin match (compress t).n with
@@ -469,12 +468,12 @@ let enclose_universes s =
     then "<" ^ s ^ ">"
     else ""
 
-let tscheme_to_string s = 
+let tscheme_to_string s =
   if not (Options.ugly()) then
     let d = Resugar.resugar_tscheme s in
     let d = ToDocument.decl_to_document d in
     Pp.pretty_string (float_of_string "1.0") 100 d
-  else 
+  else
     let (us, t) = s in
     U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
@@ -529,13 +528,13 @@ let eff_decl_to_string' for_free r q ed =
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]
 
-let eff_decl_to_string for_free ed = 
+let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
 
-let rec sigelt_to_string (x: sigelt) = 
+let rec sigelt_to_string (x: sigelt) =
  if not (Options.ugly()) then
     let e = Resugar.resugar_sigelt x in
-    begin match e with 
+    begin match e with
     | Some d ->
       let d = ToDocument.decl_to_document d in
       Pp.pretty_string (float_of_string "1.0") 100 d

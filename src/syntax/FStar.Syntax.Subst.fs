@@ -270,14 +270,7 @@ let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) =
     let rec aux n p : (pat * int) = match p.v with
-      | Pat_disj [] -> failwith "Impossible: empty disjunction"
-
       | Pat_constant _ -> p, n
-
-      | Pat_disj(p::ps) ->
-        let p, m = aux n p in
-        let ps = List.map (fun p -> fst (aux n p)) ps in
-        {p with v=Pat_disj(p::ps)}, m
 
       | Pat_cons(fv, pats) ->
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) ->
@@ -430,44 +423,9 @@ let open_comp (bs:binders) t =
    bs', subst_comp opening t
 
 let open_pat (p:pat) : pat * subst_t =
-    let rec aux_open_pat_disj sub renaming p =
+    let rec open_pat_aux sub renaming p =
         match p.v with
-            | Pat_disj _ -> failwith "impossible"
-
-            | Pat_constant _ -> p
-
-            | Pat_cons(fv, pats) ->
-                {p with v=Pat_cons(fv, pats |> List.map (fun (p, b) ->
-                        aux_open_pat_disj sub renaming p, b))}
-
-            | Pat_var x ->
-                let yopt = U.find_map renaming (function
-                    | (x', y) when (x.ppname.idText=x'.ppname.idText) -> Some y
-                    | _ -> None) in
-                let y = match yopt with
-                | None -> {freshen_bv x with sort=subst sub x.sort}
-                | Some y -> y in
-                {p with v=Pat_var y}
-
-            | Pat_wild x ->
-                let x' = {freshen_bv x with sort=subst sub x.sort} in
-                {p with v=Pat_wild x'}
-
-            | Pat_dot_term(x, t0) ->
-                let x = {x with sort=subst sub x.sort} in
-                let t0 = subst sub t0 in
-                {p with v=Pat_dot_term(x, t0)}
-    in
-
-    let rec open_pat_aux sub renaming p = match p.v with
-        | Pat_disj [] -> failwith "Impossible: empty disjunction"
-
         | Pat_constant _ -> p, sub, renaming
-
-        | Pat_disj(p::ps) ->
-            let p, sub, renaming = open_pat_aux sub renaming p in
-            let ps = List.map (aux_open_pat_disj sub renaming) ps in
-            {p with v=Pat_disj(p::ps)}, sub, renaming
 
         | Pat_cons(fv, pats) ->
             let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
@@ -507,23 +465,6 @@ let find_map_i f l =
         in
         aux 0 l
 
-let permute_disjunctive_pattern (first:pat) (case:pat) (l:list<'a>) : list<'a> =
-    let p, _ = open_pat (FStar.Syntax.Syntax.withinfo (Pat_disj [first;case]) S.tun.n Range.dummyRange) in
-    let first_vars, case_vars =
-        match p.v with
-        | Pat_disj [first;case] ->
-          S.pat_bvs first, S.pat_bvs case
-        | _ -> failwith "Impossible"
-    in
-    if List.length l <> List.length first_vars
-    then failwith "Unexpected length of matched pattern variables";
-    first_vars |> List.map (fun v ->
-    let found = find_map_i (fun i (u:bv) -> if S.bv_eq u v then Some i else None) case_vars in
-    match found with
-    | None -> failwith "Impossible: unequal variables in disjunctive pattern"
-    | Some i ->
-      FStar.List.nth l i)
-
 let open_branch (p, wopt, e) =
     let p, opening = open_pat p in
     let wopt = match wopt with
@@ -550,14 +491,7 @@ let close_lcomp (bs:binders) lc =
 
 let close_pat p =
     let rec aux sub p = match p.v with
-       | Pat_disj [] -> failwith "Impossible: empty disjunction"
-
        | Pat_constant _ -> p, sub
-
-       | Pat_disj(p::ps) ->
-         let p, sub = aux sub p in
-         let ps = List.map (fun p -> fst (aux sub p)) ps in
-         {p with v=Pat_disj(p::ps)}, sub
 
        | Pat_cons(fv, pats) ->
          let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->

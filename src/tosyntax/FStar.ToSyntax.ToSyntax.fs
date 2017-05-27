@@ -33,12 +33,8 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 
-let desugar_disjunctive_pattern pat when_opt branch =
-    match pat.v with
-    | Pat_disj pats ->
-      pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
-    | _ -> [U.branch (pat, when_opt, branch)]
-
+let desugar_disjunctive_pattern pats when_opt branch =
+    pats |> List.map (fun pat -> U.branch(pat, when_opt, branch))
 
 let trans_aqual = function
   | Some AST.Implicit -> Some S.imp_tag
@@ -457,7 +453,7 @@ let check_fields env fields rg =
 
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
-let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
+let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
   let check_linear_pattern_variables (p:Syntax.pat) =
     let rec pat_vars (p:Syntax.pat) = match p.v with
       | Pat_dot_term _
@@ -466,14 +462,6 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
       | Pat_var x -> BU.set_add x S.no_names
       | Pat_cons(_, pats) ->
         pats |> List.fold_left (fun out (p, _) -> BU.set_union out (pat_vars p)) S.no_names
-      | Pat_disj [] -> failwith "Impossible"
-      | Pat_disj (hd::tl) ->
-        let xs = pat_vars hd in
-        if not (BU.for_all (fun p -> let ys = pat_vars p in
-                              BU.set_is_subset_of xs ys
-                              && BU.set_is_subset_of ys xs) tl)
-        then raise (Error ("Disjunctive pattern binds different variables in each case", p.p))
-        else xs
     in
     pat_vars p
   in
@@ -498,16 +486,10 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
     let pos q = Syntax.withinfo q tun.n p.prange in
     let pos_r r q = Syntax.withinfo q tun.n r in
     match p.pat with
+      | PatOr _ -> failwith "impossible"
+
       | PatOp op ->
-          aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
-      | PatOr [] -> failwith "impossible"
-      | PatOr (p::ps) ->
-        let loc, env, var, p, _ = aux loc env p in
-        let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, _ = aux loc env p in
-          loc, env, p::ps) (loc, env, []) ps in
-        let pat = pos <| Pat_disj (p::List.rev ps) in
-        loc, env, var, pat, false
+        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
@@ -595,27 +577,44 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * Syntax.pat) =
         let p = match p.v with
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
-        env, e, b, p, false in
+        env, e, b, p, false
+  in
+  let aux_maybe_or env (p:pattern) =
+    let loc = [] in
+    let pos q = Syntax.withinfo q tun.n p.prange in
+    let pos_r r q = Syntax.withinfo q tun.n r in
+    match p.pat with
+      | PatOr [] -> failwith "impossible"
+      | PatOr (p::ps) ->
+        let loc, env, var, p, _ = aux loc env p in
+        let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
+          let loc, env, _, p, _ = aux loc env p in
+          loc, env, p::ps) (loc, env, []) ps in
+        let pats = (p::List.rev ps) in
+        env, var, pats
+      | _ ->
+        let loc, env, vars, pat, b = aux loc env p in
+        env, vars, [pat]
+  in
+  let env, b, pats = aux_maybe_or env p in
+  ignore <| (List.map check_linear_pattern_variables pats);
+  env, b, pats
 
-  let _, env, b, p, _ = aux [] env p in
-  ignore <| check_linear_pattern_variables p;
-  env, b, p
-
-and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * option<pat>) =
-  let mklet x = env, LetBinder(qualify env x, tun), None in
+and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
+  let mklet x = env, LetBinder(qualify env x, tun), [] in
   if top
   then match p.pat with
     | PatOp x -> mklet (mk_ident (compile_op 0 x.idText, x.idRange))
     | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
-      (env, LetBinder(qualify env x, desugar_term env t), None)
+      (env, LetBinder(qualify env x, desugar_term env t), [])
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange))
   else
     let (env, binder, p) = desugar_data_pat env p is_mut in
-    let p = match p.v with
-      | Pat_var _
-      | Pat_wild _ -> None
-      | _ -> Some p in
+    let p = match p with
+      | [{v=Pat_var _}]
+      | [{v=Pat_wild _}] -> []
+      | _ -> p in
     (env, binder, p)
 
 and desugar_binding_pat env p = desugar_binding_pat_maybe_top false env p false
@@ -885,39 +884,52 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
          fun y1 y2 y3 -> match (y1, y2, y3) with
                 | (P1 x1, P2 x2, P3 x3) -> [[e]]
       *)
-      let rec aux env bs sc_pat_opt = function
-            | [] ->
-              let body = desugar_term env body in
-              let body = match sc_pat_opt with
-                | Some (sc, pat) ->
-                  let body = Subst.close (S.pat_bvs pat |> List.map S.mk_binder) body in
-                  S.mk (Tm_match(sc, [(pat, None, body)])) None body.pos
-                | None -> body in
-              setpos (no_annot_abs (List.rev bs) body)
+      let rec aux env bs sc_pat_opt =
+        function
+        | [] ->
+            let body = desugar_term env body in
+            let body = match sc_pat_opt with
+            | Some (sc, pat) ->
+                let body = Subst.close (S.pat_bvs pat |> List.map S.mk_binder) body in
+                S.mk (Tm_match(sc, [(pat, None, body)])) None body.pos
+            | None -> body in
+            setpos (no_annot_abs (List.rev bs) body)
 
-            | p::rest ->
-              let env, b, pat = desugar_binding_pat env p in
-              let b, sc_pat_opt = match b with
+        | p::rest ->
+            let env, b, pat = desugar_binding_pat env p in
+            let pat =
+                match pat with
+                | [] -> None
+                | [p] -> Some p
+                | _ ->
+                  raise (Error("Disjunctive patterns are not supported in abstractions",
+                               p.prange))
+            in
+            let b, sc_pat_opt =
+                match b with
                 | LetBinder _ -> failwith "Impossible"
                 | LocalBinder (x, aq) ->
-                    let sc_pat_opt = match pat, sc_pat_opt with
+                    let sc_pat_opt =
+                        match pat, sc_pat_opt with
                         | None, _ -> sc_pat_opt
                         | Some p, None -> Some (S.bv_to_name x, p)
-                        | Some p, Some (sc, p') ->
-                             begin match sc.n, p'.v with
-                                | Tm_name _, _ ->
-                                  let tup2 = S.lid_as_fv (U.mk_tuple_data_lid 2 top.range) Delta_constant (Some Data_ctor) in
-                                  let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
-                                  let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
-                                  Some(sc, p)
-                                | Tm_app(_, args), Pat_cons(_, pats) ->
-                                  let tupn = S.lid_as_fv (U.mk_tuple_data_lid (1 + List.length args) top.range) Delta_constant (Some Data_ctor) in
-                                  let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
-                                  let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
-                                  Some(sc, p)
-                                | _ -> failwith "Impossible"
-                              end in
-                    (x, aq), sc_pat_opt in
+                        | Some p, Some (sc, p') -> begin
+                          match sc.n, p'.v with
+                          | Tm_name _, _ ->
+                            let tup2 = S.lid_as_fv (U.mk_tuple_data_lid 2 top.range) Delta_constant (Some Data_ctor) in
+                            let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
+                            let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
+                            Some(sc, p)
+                          | Tm_app(_, args), Pat_cons(_, pats) ->
+                            let tupn = S.lid_as_fv (U.mk_tuple_data_lid (1 + List.length args) top.range) Delta_constant (Some Data_ctor) in
+                            let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
+                            let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
+                            Some(sc, p)
+                          | _ -> failwith "Impossible"
+                          end
+                    in
+                    (x, aq), sc_pat_opt
+            in
                 aux env (b::bs) sc_pat_opt rest
        in
        aux env [] None binders
@@ -1059,7 +1071,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                  else t1
         in
         let env, binder, pat = desugar_binding_pat_maybe_top top_level env pat is_mutable in
-        let tm = begin match binder with
+        let tm =
+            match binder with
             | LetBinder(l, t) ->
               let body = desugar_term env t2 in
               let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
@@ -1068,12 +1081,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
             | LocalBinder (x,_) ->
               let body = desugar_term env t2 in
               let body = match pat with
-                | None
-                | Some ({v=Pat_wild _}) -> body
-                | Some pat ->
+                | []
+                | [{v=Pat_wild _}] -> body
+                | _ ->
                   S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None body.pos in
               mk <| Tm_let((false, [mk_lb (Inl x, x.sort, t1)]), Subst.close [S.mk_binder x] body)
-          end in
+        in
         if is_mutable
         then mk <| Tm_meta (tm, Meta_desugared Mutable_alloc)
         else tm
