@@ -452,19 +452,6 @@ let open_pat (p:pat) : pat * subst_t =
     let p, sub, _ = open_pat_aux [] [] p in
     p, sub
 
-//TODO: this should go to the library
-let find_map_i f l =
-        let rec aux i l =
-            match l with
-            | [] -> None
-            | hd::tl -> begin
-                match f i hd with
-                | None -> aux (i + 1) tl
-                | Some b -> Some b
-                end
-        in
-        aux 0 l
-
 let open_branch (p, wopt, e) =
     let p, opening = open_pat p in
     let wopt = match wopt with

@@ -55,4 +55,3 @@ val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
 val univ_var_opening: univ_names -> list<subst_elt> * list<univ_name>
 
 val set_use_range: Range.range -> term -> term
-val find_map_i: (int -> 'a -> option<'b>) -> list<'a> -> option<'b>
