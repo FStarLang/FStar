@@ -539,25 +539,24 @@ let apply_lemma (tm:term)
            bind dismiss (fun _ ->
            add_goals sub_goals))))
 
-let exact (tm:term)
+let exact (t:term)
     : tac<unit>
     = with_cur_goal (fun goal ->
-        let env = {goal.context with expected_typ = None} in
-        try let _, t, guard = goal.context.type_of env tm in //TODO: check that the guard is trivial
+        try let t, typ, guard = goal.context.type_of goal.context t in //TODO: check that the guard is trivial
 //            printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
-            if Rel.teq_nosmt env t goal.goal_ty
-            then let _ = solve goal tm in
+            if Rel.teq_nosmt goal.context typ goal.goal_ty
+            then let _ = solve goal t in
                  dismiss
             else
                  let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
-                            (Print.term_to_string tm)
                             (Print.term_to_string t)
+                            (Print.term_to_string typ)
                             (Print.term_to_string goal.goal_ty) in
 //                 printfn "%s" msg;
                  fail msg
        with e ->
 //            printfn "Exception %A" e;
-            fail (BU.format2 "Term is not typeable: %s (%s)" (Print.term_to_string tm) (Print.tag_of_term tm)))
+            fail (BU.format2 "Term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
 
 let rewrite (h:binder) : tac<unit>
     = with_cur_goal (fun goal ->
