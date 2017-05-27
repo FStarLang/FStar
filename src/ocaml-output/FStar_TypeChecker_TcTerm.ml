@@ -5796,7 +5796,8 @@ let type_of_tot_term:
              (uu___129_9653.FStar_TypeChecker_Env.type_of);
            FStar_TypeChecker_Env.universe_of =
              (uu___129_9653.FStar_TypeChecker_Env.universe_of);
-           FStar_TypeChecker_Env.use_bv_sorts = true;
+           FStar_TypeChecker_Env.use_bv_sorts =
+             (uu___129_9653.FStar_TypeChecker_Env.use_bv_sorts);
            FStar_TypeChecker_Env.qname_and_index =
              (uu___129_9653.FStar_TypeChecker_Env.qname_and_index);
            FStar_TypeChecker_Env.proof_ns =
