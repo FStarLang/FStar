@@ -112,8 +112,11 @@ let true_qn      = ["Prims"; "l_True"]
 let false_qn     = ["Prims"; "l_False"]
 let b2t_qn       = ["Prims"; "b2t"]
 let forall_qn    = ["Prims"; "l_Forall"]
+let squash_qn    = ["Prims"; "squash"]
 
 let int_lid      = ["Prims"; "int"]
+let bool_lid     = ["Prims"; "bool"]
+let unit_lid     = ["Prims"; "unit"]
 
 let add_qn       = ["Prims"; "op_Addition"]
 let neg_qn       = ["Prims"; "op_Minus"]

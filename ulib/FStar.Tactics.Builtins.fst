@@ -18,34 +18,20 @@ assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
 
-(* Many of these could be derived from apply_lemma,
-   rather than being assumed as primitives.
-   E.g., forall_intros could be an application of
-         FStar.Classical.forall_intro
- *)
-assume private val __forall_intros: __tac binders
-let forall_intros : tactic binders = fun () -> TAC?.reflect __forall_intros
-
-assume private val __implies_intro: __tac binder
-let implies_intro : tactic binder = fun () -> TAC?.reflect __implies_intro
-
 assume private val __trivial  : __tac unit
 let trivial : tactic unit = fun () -> TAC?.reflect __trivial
 
 assume private val __norm  : list norm_step -> __tac unit
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
+assume private val __intro  : __tac binder
+let intro : tactic binder = fun () -> TAC?.reflect __intro
+
 assume private val __revert  : __tac unit
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
 assume private val __clear   : __tac unit
 let clear : tactic unit = fun () -> TAC?.reflect __clear
-
-assume private val __split   : __tac unit
-let split : tactic unit = fun () -> TAC?.reflect __split
-
-assume private val __merge   : __tac unit
-let merge : tactic unit = fun () -> TAC?.reflect __merge
 
 // TODO: isn't this is unsound if b is not the environment?
 // I think so but couldn't quickly come up with a contradiction
@@ -66,6 +52,9 @@ let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
 assume private val __exact : term -> __tac unit
 let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
 
+assume private val __apply : term -> __tac unit
+let apply (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply tt)
+
 assume private val __apply_lemma : term -> __tac unit
 let apply_lemma (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply_lemma tt)
 
@@ -74,10 +63,6 @@ let print (msg:string) : tactic unit = fun () -> TAC?.reflect (__print msg)
 
 assume private val __dump : string -> __tac unit
 let dump (msg:string) : tactic unit = fun () -> TAC?.reflect (__dump msg)
-
-assume private val __grewrite : term -> term -> __tac unit
-let grewrite (t1:term) (t2:term) : tactic unit =
-    fun () -> TAC?.reflect (__grewrite t1 t2)
 
 assume private val __trefl : __tac unit
 let trefl : tactic unit = fun () -> TAC?.reflect __trefl
@@ -103,10 +88,3 @@ let addns ns : tactic unit = fun () -> TAC?.reflect (__addns ns)
 
 assume private val __cases : term -> __tac (term * term)
 let cases t : tactic (term * term) = fun () -> TAC?.reflect (__cases t)
-
-// Can only be used when the goal is irrelevant
-assume private val __unsquash : term -> __tac term
-let unsquash t : tactic term = fun () -> TAC?.reflect (__unsquash t)
-
-assume private val __get_lemma : term -> __tac term
-let get_lemma t : tactic term = fun () -> TAC?.reflect (__get_lemma t)

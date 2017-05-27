@@ -78,16 +78,6 @@ let mk_tactic_interpretation_2 (ps:proofstate)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let grewrite_interpretation (ps:proofstate) (nm:Ident.lid) (args:args) : option<term> =
-  match args with
-  | [(et1, _); (et2, _); (embedded_state, _)] ->
-    let goals, smt_goals = E.unembed_state ps embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
-    let res = run (grewrite_impl (type_of_embedded et1) (type_of_embedded et2) (unembed_term et1) (unembed_term et2)) ps in
-    Some (E.embed_result ps res embed_unit FStar.TypeChecker.Common.t_unit)
-  | _ ->
-    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-
 let rec primitive_steps ps : list<N.primitive_step> =
     let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
@@ -119,17 +109,15 @@ let rec primitive_steps ps : list<N.primitive_step> =
         | _ -> failwith (Util.format2 "Unexpected application %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
     in
     [
-      mktac0 "__forall_intros" intros embed_binders   FStar.Reflection.Data.fstar_refl_binders;
-      mktac0 "__implies_intro" imp_intro embed_binder FStar.Reflection.Data.fstar_refl_binder;
       mktac0 "__trivial"       trivial embed_unit t_unit;
+      mktac0 "__intro"         intro embed_binder FStar.Reflection.Data.fstar_refl_binder;
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
-      mktac0 "__split"         split embed_unit t_unit;
-      mktac0 "__merge"         merge_sub_goals embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac1 "__exact"         exact unembed_term embed_unit t_unit;
+      mktac1 "__apply"         apply unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
       mktac1 "__focus"         focus_cur_goal (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
@@ -139,7 +127,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
       mktac1 "__dump"          print_proof_state unembed_string embed_unit t_unit;
-      mk "__grewrite"        3 (grewrite_interpretation ps); // custom impl since it looks at the types
 
       mktac1 "__pointwise"     pointwise (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac0 "__trefl"         trefl embed_unit t_unit;
@@ -151,9 +138,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                                       embed_term FStar.Reflection.Data.fstar_refl_term)
                                                   (E.pair_typ FStar.Reflection.Data.fstar_refl_term FStar.Reflection.Data.fstar_refl_term);
 
-      mktac1 "__unsquash"      unsquash unembed_term embed_term FStar.Reflection.Data.fstar_refl_term;
-      mktac1 "__get_lemma"     get_lemma unembed_term embed_term FStar.Reflection.Data.fstar_refl_term;
-
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
       mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
@@ -163,7 +147,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
     bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_tac_b
-                         [S.as_arg (E.embed_state proof_state (proof_state.goals, []))]
+                         [S.as_arg (E.embed_state proof_state (proof_state.goals, proof_state.smt_goals))]
                           None
                           Range.dummyRange in
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops] in
@@ -229,12 +213,11 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
     (t', gs@gs')
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
-    // Check if we should print debug output
-    let env, _ = Env.clear_expected_typ env in
-    let env = { env with Env.instantiate_imp = false } in
     tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
         BU.print1 "About to preprocess %s\n" (Print.term_to_string goal);
+    let env, _ = Env.clear_expected_typ env in
+    let env = { env with Env.instantiate_imp = false } in
     let initial = (1, []) in
     let (t', gs) = traverse by_tactic_interp env goal in
     if !tacdbg then
@@ -243,9 +226,16 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                 (Print.term_to_string t');
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
+                 let typ = N.normalize [] g.context g.goal_ty in
+                 let phi =
+                     match U.un_squash typ with
+                     | Some t -> t
+                     | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s"
+                                                    (Print.term_to_string typ))
+                 in
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
-                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange g.goal_ty in
+                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange phi in
                  (n+1, (g.context, gt')::gs)) s gs in
     let (_, gs) = s in
     (env, t') :: gs

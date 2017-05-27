@@ -92,10 +92,10 @@ let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
     env
 
 let embed_witness (ps:proofstate) w =
-    embed_option embed_term fstar_refl_term w
+    embed_term w
 
 let unembed_witness (ps:proofstate) t =
-    unembed_option unembed_term t
+    unembed_term t
 
 let embed_goal (ps:proofstate) (g:goal) : term =
     embed_pair

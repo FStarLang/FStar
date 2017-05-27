@@ -1083,8 +1083,8 @@ let dm4f_lid ed name : lident =
     lid_of_path p' Range.dummyRange
 
 let mk_squash p =
-    let sq = fvar_const SC.squash_lid in
-    mk_app sq [as_arg p]
+    let sq = fvar SC.squash_lid (Delta_defined_at_level 1) None in
+    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
 
 let un_squash t =
     let head, args = head_and_args t in

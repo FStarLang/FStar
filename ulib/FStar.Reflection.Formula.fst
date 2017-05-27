@@ -56,7 +56,7 @@ let smaller f t =
         True
 
 #reset-options "--z3rlimit 10"
-let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
     | Tv_Var n ->
         Name n
@@ -115,6 +115,28 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     | Tv_Const (C_Unit)
     | _ -> 
         F_Unknown
+
+// Kind of hacky unsquashing
+let rec term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+    match inspect t with
+    | Tv_Refine b t ->
+        begin match inspect (type_of_binder b) with
+        | Tv_FVar fv ->
+            if eq_qn (inspect_fv fv) unit_lid
+            then term_as_formula t
+            else term_as_formula' t
+        | _ -> term_as_formula' t
+        end
+    | Tv_App l r ->
+        begin match inspect l with
+        | Tv_FVar fv ->
+            if eq_qn (inspect_fv fv) squash_qn
+            then term_as_formula r
+            else term_as_formula' t
+        | _ ->
+            term_as_formula' t
+        end
+    | _ -> term_as_formula' t
 
 #reset-options
 

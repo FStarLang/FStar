@@ -2,7 +2,7 @@ module FStar.Tactics.Effect
 
 open FStar.Reflection
 
-type goal    = (env * term) * option term
+type goal    = (env * term) * term
 type goals   = list goal
 type state   = goals  //active goals
              * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program

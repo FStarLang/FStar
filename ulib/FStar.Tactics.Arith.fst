@@ -28,8 +28,8 @@ let rec split_arith = fun () -> (
         match term_as_formula g with
         | True_ -> trivial
         | And l r -> seq FStar.Tactics.split split_arith
-        | Implies p q -> (implies_intro;; seq split_arith revert)
-        | Forall x p -> (bs <-- forall_intros; seq split_arith (revert_all bs))
+        | Implies p q -> (implies_intro;; seq split_arith l_revert)
+        | Forall x p -> (bs <-- forall_intros; seq split_arith (l_revert_all bs))
         | _ ->
                 return ()
     )) ()

@@ -65,6 +65,21 @@ let rec revert_all (bs:binders) : tactic unit =
     | _::tl -> revert;;
                revert_all tl
 
+private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
+                            (squash (forall (x:a). b x)) ->
+                            PURE (x:a -> squash (b x)) (fun p -> forall x. p x)
+let revert_squash #a #b s = admit()
+
+let l_revert : tactic unit =
+    revert;;
+    apply (quote revert_squash)
+
+let rec l_revert_all (bs:binders) : tactic unit =
+    match bs with
+    | [] -> return ()
+    | _::tl -> l_revert;;
+               l_revert_all tl
+
 let cur_goal : tactic goal =
   ps <-- get;
   let goals, _ = ps in
@@ -82,26 +97,75 @@ let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
         end
     | _ -> return None
 
+private val fa_intro_lem : (#a:Type) -> (#b : (a -> Type)) ->
+                           (x:a -> squash (b x)) ->
+                           squash (forall (x:a). b x)
+let fa_intro_lem #a #b f = admit()
+
+let forall_intro : tactic binder =
+    egw <-- cur_goal;
+    let (_, g), _ = egw in
+    match term_as_formula g with
+    | Forall _ _ -> (
+        apply (quote fa_intro_lem);;
+        intro)
+    | _ ->
+        fail "not a forall"
+
+let forall_intros : tactic binders = repeat forall_intro
+
+private val split_lem : (#a:Type) -> (#b:Type) ->
+                        squash a -> squash b -> squash (a /\ b)
+let split_lem #a #b sa sb = ()
+
+let split : tactic unit =
+    egw <-- cur_goal;
+    let (_, g), _ = egw in
+    match term_as_formula g with
+    | And _ _ ->
+        apply (quote split_lem)
+    | _ ->
+        fail "not a conjunction"
+
+private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
+                            (a -> squash b) ->
+                            squash (a ==> b)
+let imp_intro_lem #a #b f = admit()
+
+let implies_intro : tactic binder =
+    egw <-- cur_goal;
+    let (_, g), _ = egw in
+    match term_as_formula g with
+    | Implies _ _ -> (
+        apply (quote imp_intro_lem);;
+        b <-- intro;
+        return b
+        )
+    | _ ->
+        fail "not an implication"
+
+let implies_intros : tactic binders = repeat implies_intro
+
 let rec visit (callback:tactic unit) () : Tac unit =
     focus (or_else callback
-                   (eg <-- cur_goal;
+                   (dump "IN VISIT";;
+                    eg <-- cur_goal;
                     let (e, g), _ = eg in
                     match term_as_formula g with
                     | Forall b phi ->
                         binders <-- forall_intros;
                         seq (visit callback) (
-                            revert_all binders
+                            l_revert_all binders
                         )
                     | And p q ->
                         seq split (
                             visit callback;;
-                            trytac merge;;
                             return ()
                         )
                     | Implies p q ->
                         implies_intro;;
                         seq (visit callback)
-                            revert
+                            l_revert
                     | _ ->
                         or_else trivial (smt ())
                    )
@@ -190,8 +254,8 @@ let unfold_definition_and_simplify_eq (tm:tactic term) : tactic unit =
 
 private let bool_ext (b:bool) : unit -> Lemma (b == true \/ b == false) = fun () -> ()
 
-let cases_bool (b:bool) : tactic unit =
-    lemt <-- quote (bool_ext b);
-    p <-- get_lemma lemt;
-    p <-- unsquash p;
-    seq (cases p;; return ()) rewrite_eqs_from_context // TODO: overkill, we want to only rewrite each case
+(* let cases_bool (b:bool) : tactic unit = *)
+(*     lemt <-- quote (bool_ext b); *)
+(*     p <-- get_lemma lemt; *)
+(*     p <-- unsquash p; *)
+(*     seq (cases p;; return ()) rewrite_eqs_from_context // TODO: overkill, we want to only rewrite each case *)
