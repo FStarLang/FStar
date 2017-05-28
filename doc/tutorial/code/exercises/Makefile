@@ -21,13 +21,12 @@ Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
 Ex10b.fst \
+Ex11a.fst \
 Ex12a.Cap.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
 Ex12g.TMAC2.fst 
-
-VERFILES_HS=Ex11a.fst
 
 FSTAR_HOME=../../../../
 HINTS_ENABLED?=--use_hints
@@ -38,16 +37,12 @@ HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
-verify_hs-%: __force__
-	$(FSTAR) --include $(HYPERSTACK) $*
-
 
 all: uall sall
 
 sall:
 
-uall: $(VERFILES:%=verify-%) $(VERFILES_HS:%=verify_hs-%)
-
+uall: $(VERFILES:%=verify-%)
 
 # Importing targets for simplified extraction to Ocaml
 
