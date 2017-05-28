@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Heap.ST
+module FStar.ST
 open FStar.TSet
 open FStar.Heap
 type ref (a:Type) = Heap.ref a

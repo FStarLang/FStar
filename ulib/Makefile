@@ -13,6 +13,7 @@ indent: $(addsuffix -indent, $(ALL))
 
 %-ver: %
 	$(FSTAR) $^
+	touch $@
 
 %.fst-indent: %.fst
 	$(FSTAR) --indent $^ > $^.indent.fst

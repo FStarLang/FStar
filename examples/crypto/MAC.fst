@@ -19,7 +19,7 @@
    computational assumption *)
 
 module MAC
-//open Array
+open FStar.ST
 open SHA1
 open FStar.IO
 

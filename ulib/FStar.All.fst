@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Heap.All
+module FStar.All
 open FStar.Heap
-open FStar.Heap.ST
+open FStar.ST
 
 let all_pre = all_pre_h heap
 let all_post (a : Type) = all_post_h heap a

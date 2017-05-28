@@ -1,5 +1,5 @@
 module HyE.AE
-open FStar.ST
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
@@ -8,8 +8,8 @@ open FStar.Monotonic.RRef
 open HyE.Ideal
 
 open Platform.Bytes
-open CoreCrypto
-
+open HyperStack.CoreCrypto
+module CC = HyperStack.CoreCrypto
 module B = Platform.Bytes
 
 open HyE.Plain
@@ -65,7 +65,7 @@ let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cca && int_ctxt then createBytes (length m) 0z else repr m in
-  let c = CoreCrypto.aead_encrypt AES_128_GCM k.raw iv empty_bytes text in
+  let c = CC.aead_encrypt AES_128_GCM k.raw iv empty_bytes text in
   let c = iv@|c in
   write_at_end k.log (m,c);
   c
@@ -95,7 +95,7 @@ let decrypt k c =
   else
     let iv,c' = split c ivsize in
     assume( B.length c' >= aeadTagSize AES_128_GCM);
-    let poption = (CoreCrypto.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
+    let poption = (CC.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
     if Some? poption then
       Some (coerce (Some?.v poption))
     else
