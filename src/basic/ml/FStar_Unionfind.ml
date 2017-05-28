@@ -111,6 +111,20 @@ let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
             | Inr r -> r, i
             | Inl _ -> failwith "Impossible"
 
+let puf_equivalent (h:'a puf) (x:'a p_uvar) (y:'a p_uvar) =
+    let _, i = puf_find_i h x in
+    let _, j = puf_find_i h y in
+    i=j
+
+let puf_change (h:'a puf) (x:'a p_uvar) (v:'a) : 'a puf =
+    let _, i = puf_find_i h x in
+    let hp = pa_set h.parent i (Inr v) in
+    { h with parent = hp}
+
+let puf_id (h:'a puf) (x:'a p_uvar) : int =
+    let _, i = puf_find_i h x in
+    i
+    
 (* only return the rep *)
 let puf_find (h: 'a puf) (x: 'a p_uvar) =
     let v, _ = puf_find_i h x in

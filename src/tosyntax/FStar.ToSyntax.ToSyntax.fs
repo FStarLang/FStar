@@ -382,7 +382,7 @@ let rec desugar_maybe_non_constant_universe t
   match (unparen t).tm with
       (* TODO : Check how this unification works *)
       (* The unification might introduce universe variables *)
-  | Wild -> Inr (U_unif (Unionfind.fresh None))
+  | Wild -> Inr (U_unif (Unionfind.univ_fresh ()))
   | Uvar u -> Inr (U_name u)
 
   | Const (Const_int (repr, _)) ->

@@ -40,6 +40,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module UF = FStar.Syntax.Unionfind
 
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
@@ -337,7 +338,7 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
   //lookup_datacon instantiates the universes of dlid with unification variables
   //we should unify the universe variables with us, us are the universes that the ilid fvar was instantiated with
   (List.iter2 (fun u' u -> match u' with
-     | U_unif u'' -> Unionfind.change u'' (Some u)
+     | U_unif u'' -> UF.univ_change u'' u
      | _          -> failwith "Impossible! Expected universe unification variables") univ_unif_vars us);
 
   //normalize it, TODO: as before steps?
@@ -399,7 +400,7 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
   //lookup_datacon instantiates the universes of dlid with unification variables
   //we should unify the universe variables with us, us are the universes that the ilid fvar was instantiated with
   (List.iter2 (fun u' u -> match u' with
-     | U_unif u'' -> Unionfind.change u'' (Some u)
+     | U_unif u'' -> UF.univ_change u'' u
      | _          -> failwith "Impossible! Expected universe unification variables") univ_unif_vars us);
 
   debug_log env ("Checking data constructor type: " ^ (PP.term_to_string dt));

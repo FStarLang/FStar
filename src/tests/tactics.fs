@@ -10,6 +10,8 @@ module SS = FStar.Syntax.Subst
 module I  = FStar.Ident
 module P  = FStar.Syntax.Print
 module N  = FStar.TypeChecker.Normalize
+module UF = FStar.Syntax.Unionfind
+
 open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
@@ -35,7 +37,7 @@ let proofstate_of_goal g = {
     all_implicits=[];
     goals=[g];
     smt_goals=[];
-    transaction=Unionfind.new_transaction()
+    transaction=UF.new_transaction()
 }
 
 

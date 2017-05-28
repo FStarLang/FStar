@@ -34,6 +34,7 @@ module C = FStar.Syntax.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module D = FStar.Parser.ToDocument
+module UF = FStar.Syntax.Unionfind
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
@@ -579,7 +580,7 @@ let rec resugar_term (t : S.term) : A.term =
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "uu___unification_ " ^ (FStar.Unionfind.uvar_id u |> string_of_int) in
+      let s = "uu___unification_ " ^ (UF.uvar_id u |> string_of_int) in
       mk (var s t.pos)
 
     | Tm_meta(e, m) ->

@@ -58,7 +58,7 @@ let pa_get t i = match !t with
             | PDiff _ -> failwith "Impossible"
         end
 
-let pa_set t i v =
+let pa_set (t:pa_t<'a>) (i:int) (v:'a) : pa_t<'a> =
     pa_reroot t;
     match !t with
         | PArray a ->
@@ -104,14 +104,13 @@ let pa_new_double t x l empty =
 
 
 (* Union-find implementation based on persistent arrays *)
-type puf_t<'a when 'a : not struct> = {
+type puf<'a> = { //when 'a : not struct> = {
     (* array of parents of each node
        contains either path or root element *)
     mutable parent: pa_t<(either<int, 'a>)>;
     ranks: pa_t<int>;
     (* keep track of how many elements are allocated in the array *)
     count: ref<int> }
-type puf<'a when 'a : not struct> = puf_t<'a>
 type p_uvar<'a> = P of int
 
 let puf_empty () =
@@ -144,6 +143,20 @@ let puf_find_i (h: puf<'a>) (x: p_uvar<'a>) =
             | Inr r -> r, i
             | Inl _ -> failwith "Impossible"
 
+let puf_equivalent (h:puf<'a>) (x:p_uvar<'a>) (y:p_uvar<'a>) =
+    let _, i = puf_find_i h x in
+    let _, j = puf_find_i h y in
+    i=j
+
+let puf_change (h:puf<'a>) (x:p_uvar<'a>) (v:'a) : puf<'a> =
+    let _, i = puf_find_i h x in
+    let hp = pa_set h.parent i (Inr v) in
+    { h with parent = hp}
+
+let puf_id (h:puf<'a>) (x:p_uvar<'a>) : int =
+    let _, i = puf_find_i h x in
+    i
+
 (* only return the rep *)
 let puf_find (h: puf<'a>) (x: p_uvar<'a>) =
     let v, _ = puf_find_i h x in
@@ -152,7 +165,7 @@ let puf_find (h: puf<'a>) (x: p_uvar<'a>) =
 let puf_union (h: puf<'a>) (x: p_uvar<'a>) (y: p_uvar<'a>) =
     let rx, ix = puf_find_i h x in
     let ry, iy = puf_find_i h y in
-    if not (LanguagePrimitives.PhysicalEquality rx ry) then begin
+    if not (FStar.Util.physical_equality rx ry) then begin
         let rxc = pa_get h.ranks ix in
         let ryc = pa_get h.ranks iy in
         if rxc > ryc then
@@ -167,8 +180,8 @@ let puf_union (h: puf<'a>) (x: p_uvar<'a>) (y: p_uvar<'a>) =
             { parent = pa_set h.parent iy (Inl ix);
               ranks = pa_set h.ranks ix (rxc+1);
               count = h.count }
-        end else
-            h
+    end
+    else h
 
 
 (* Stateful interface to persistent unionfind *)
@@ -335,7 +348,7 @@ let equivalent x y =
 //     p_uf.uf := puf_union (!p_uf.uf) x.id y.id
 
 let puf_test () =
-    let (u: puf_t<string>) = puf_empty () in
+    let (u: puf<string>) = puf_empty () in
     let u_a = puf_fresh u "a" in
     let u_b = puf_fresh u "b" in
     let u_c = puf_fresh u "c" in

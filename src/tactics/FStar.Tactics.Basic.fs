@@ -19,6 +19,7 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcErr  = FStar.TypeChecker.Err
 module N = FStar.TypeChecker.Normalize
+module UF = FStar.Syntax.Unionfind
 
 type name = bv
 
@@ -46,7 +47,7 @@ type proofstate = {
     all_implicits: Env.implicits ;  //all the implicits currently open, partially resolved (unclear why we really need this)
     goals        : list<goal>;      //all the goals remaining to be solved
     smt_goals    : list<goal>;      //goals that have been deferred to SMT
-    transaction  : Unionfind.tx     //the unionfind transaction which we're currently working; to be rolled back if the tactic fails
+    transaction  : UF.tx     //the unionfind transaction which we're currently working; to be rolled back if the tactic fails
 }
 
 type result<'a> =
@@ -80,12 +81,12 @@ let ret (x:'a) : tac<'a> =
 (* monadic bind *)
 let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
     mk_tac (fun p ->
-//            let tx = Unionfind.new_transaction () in //snapshot the state of the unionfind graph
+//            let tx = UF.new_transaction () in //snapshot the state of the unionfind graph
             match run t1 p with
             | Success (a, q) ->
                   run (t2 a) q
             | Failed(msg, q) ->
-//              Unionfind.rollback tx; //and restore the snapshot in case the tactic fails
+//              UF.rollback tx; //and restore the snapshot in case the tactic fails
               Failed(msg, q))
 
 let goal_to_string (g:goal) =
@@ -222,7 +223,7 @@ let treplace env (e1:term) (e2:term) (t:term) =
 
 // eq hardcoded to univ #0
 let grewrite_impl (t1:typ) (t2:typ) (e1:term) (e2:term) : tac<unit> =
-    bind cur_goal (fun g -> 
+    bind cur_goal (fun g ->
         let env = g.context in
         let ok = match Rel.try_teq true env t1 t2 with
                  | None -> false
@@ -284,10 +285,10 @@ let cur_goal_and_rest (f:tac<'a>) (g:tac<'b>) : tac<('a*option<'b>)>
 (* or_else: try t1; if it fails, try t2 *)
 let or_else (t1:tac<'a>) (t2:tac<'a>) : tac<'a> =
     mk_tac (fun p ->
-//          let tx = Unionfind.new_transaction () in
+//          let tx = UF.new_transaction () in
             match t1.tac_f p with
             | Failed _ ->
-//              Unionfind.rollback tx;
+//              UF.rollback tx;
                 t2.tac_f p
             | q -> q)
 
@@ -698,5 +699,5 @@ let proofstate_of_goal_ty env g =
         all_implicits=[];
         goals=[g];
         smt_goals=[];
-        transaction=Unionfind.new_transaction()
+        transaction=UF.new_transaction()
     }

@@ -139,7 +139,7 @@ let rec compare_univs u1 u2 = match u1, u2 with
     | U_name _, U_unif _ -> -1
     | U_unif _, U_name _ -> 1
 
-    | U_unif u1, U_unif u2 -> Unionfind.uvar_id u1 - Unionfind.uvar_id u2
+    | U_unif u1, U_unif u2 -> Unionfind.univ_uvar_id u1 - Unionfind.univ_uvar_id u2
 
     | U_max us1, U_max us2 ->
       let n1 = List.length us1 in
@@ -402,7 +402,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       equal_iff (FStar.Const.eq_const c d)
 
     | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
-      equal_if (Unionfind.equivalent u1 u2)
+      equal_if (Unionfind.equiv u1 u2)
 
     | Tm_app (h1, args1), Tm_app(h2, args2) ->
       eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
@@ -593,8 +593,8 @@ let mk_field_projector_name lid (x:bv) i =
 
 let set_uvar uv t =
   match Unionfind.find uv with
-    | Fixed _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
-    | _ -> Unionfind.change uv (Fixed t)
+    | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
+    | _ -> Unionfind.change uv t
 
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
@@ -832,7 +832,7 @@ let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
-    let u = U_unif <| Unionfind.fresh None in
+    let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None Range.dummyRange, u
 
 let kt_kt = Const.kunary ktype0 ktype0

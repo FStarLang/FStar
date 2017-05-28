@@ -1079,7 +1079,7 @@ let maybe_instantiate (env:Env.env) e t =
 (**************************************************************************************)
 let string_of_univs univs =
   BU.set_elements univs
-  |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", "
+  |> List.map (fun u -> Unionfind.univ_uvar_id u |> string_of_int) |> String.concat ", "
 
 let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
     if BU.set_is_empty x then []
@@ -1090,8 +1090,11 @@ let gen_univs env (x:BU.set<universe_uvar>) : list<univ_name> =
          let u_names = s |> List.map (fun u ->
             let u_name = Syntax.new_univ_name r in
             if Env.debug env <| Options.Other "Gen"
-            then BU.print3 "Setting ?%s (%s) to %s\n" (string_of_int <| Unionfind.uvar_id u) (Print.univ_to_string (U_unif u)) (Print.univ_to_string (U_name u_name));
-            Unionfind.change u (Some (U_name u_name));
+            then BU.print3 "Setting ?%s (%s) to %s\n"
+                            (string_of_int <| Unionfind.univ_uvar_id u)
+                            (Print.univ_to_string (U_unif u))
+                            (Print.univ_to_string (U_name u_name));
+            Unionfind.univ_change u (U_name u_name);
             u_name) in
          u_names
 
@@ -1164,16 +1167,16 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let uvs = gen_uvars uvt in
          univs, (uvs, e, c)) |> List.unzip in
 
-     let univs = List.fold_left BU.set_union S.no_universe_uvars univs in
+     let univs = List.fold_left BU.set_union (Free.new_universe_uvar_set()) univs in
      let gen_univs = gen_univs env univs in
      if debug env Options.Medium then gen_univs |> List.iter (fun x -> BU.print1 "Generalizing uvar %s\n" x.idText);
 
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
-              | Fixed ({n=Tm_name a})
-              | Fixed ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some S.imp_tag
-              | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
+              | Some ({n=Tm_name a})
+              | Some ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some S.imp_tag
+              | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
                   let k = N.normalize [N.Beta] env k in
                   let bs, kres = U.arrow_formals k in

@@ -28,7 +28,7 @@ val fv_to_string      : fv -> string
 val nm_to_string      : bv -> string
 val lid_to_string     : lid -> string
 val term_to_string    : term -> string
-val uvar_to_string    : FStar.Unionfind.uvar<'a> -> string
+val uvar_to_string    : uvar -> string
 val comp_to_string    : comp -> string
 val tag_of_term       : term -> string
 val lbname_to_string  : lbname -> string

@@ -92,7 +92,7 @@ let rec force_uvar' t =
   | Tm_uvar (uv,_) ->
       begin
         match Unionfind.find uv with
-          | Fixed t' -> force_uvar' t'
+          | Some t' -> force_uvar' t'
           | _ -> t
       end
   | _ -> t
@@ -121,7 +121,7 @@ let rec force_delayed_thunk t = match t.n with
 
 let rec compress_univ u = match u with
     | U_unif u' ->
-      begin match Unionfind.find u' with
+      begin match Unionfind.univ_find u' with
         | Some u -> compress_univ u
         | _ -> u
       end
