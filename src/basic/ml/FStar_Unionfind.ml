@@ -58,7 +58,7 @@ let impure f t =
 let pa_length t = impure Array.length t
 
 (* double the array whenever its bounds are reached *)
-let pa_new_double t x l empty =
+let pa_new t x l empty =
   pa_reroot t;
   match !t with
     | PArray a ->
@@ -88,8 +88,8 @@ let puf_empty () =
 
 let puf_fresh (h: 'a puf) (x: 'a) =
     let count = !(h.count) in
-    pa_new_double h.parent (Inr x) count (Inl (-1));
-    pa_new_double h.ranks 0 count 0;
+    pa_new h.parent (Inr x) count (Inl (-1));
+    pa_new h.ranks 0 count 0;
     h.count := count + 1;
     P count
 
@@ -98,7 +98,7 @@ let rec puf_find_aux f i =
     match (pa_get f i) with
         | Inl fi ->
             let f, r, id = puf_find_aux f fi in
-            let f = pa_set f i r in
+            let f = pa_set f i (Inl id) in
             f, r, id
         | Inr x -> f, Inr x, i
 
@@ -111,29 +111,31 @@ let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
             | Inr r -> r, i
             | Inl _ -> failwith "Impossible"
 
-let puf_equivalent (h:'a puf) (x:'a p_uvar) (y:'a p_uvar) =
-    let _, i = puf_find_i h x in
-    let _, j = puf_find_i h y in
-    i=j
-
-let puf_change (h:'a puf) (x:'a p_uvar) (v:'a) : 'a puf =
-    let _, i = puf_find_i h x in
-    let hp = pa_set h.parent i (Inr v) in
-    { h with parent = hp}
-
-let puf_id (h:'a puf) (x:'a p_uvar) : int =
+(* only return the equivalence class *)
+let puf_id' (h:'a puf) (x:'a p_uvar) : int =
     let _, i = puf_find_i h x in
     i
-    
+
+let puf_id (h: 'a puf) (x: 'a p_uvar): Prims.int =
+    Z.of_int (puf_id' h x)
+
 (* only return the rep *)
 let puf_find (h: 'a puf) (x: 'a p_uvar) =
     let v, _ = puf_find_i h x in
     v
 
+let puf_equivalent (h:'a puf) (x:'a p_uvar) (y:'a p_uvar) =
+    (puf_id' h x) = (puf_id' h x)
+
+let puf_change (h:'a puf) (x:'a p_uvar) (v:'a) : 'a puf =
+    let i = puf_id' h x in
+    let hp = pa_set h.parent i (Inr v) in
+    { h with parent = hp}
+
 let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
-    let rx, ix = puf_find_i h x in
-    let ry, iy = puf_find_i h y in
-    if rx != ry then begin
+    let ix = puf_id' h x in
+    let iy = puf_id' h y in
+    if ix!=iy then begin
         let rxc = pa_get h.ranks ix in
         let ryc = pa_get h.ranks iy in
         if rxc > ryc then

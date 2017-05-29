@@ -13,7 +13,7 @@ type proofstate =
   all_implicits: FStar_TypeChecker_Env.implicits;
   goals: goal Prims.list;
   smt_goals: goal Prims.list;
-  transaction: FStar_Unionfind.tx;}
+  transaction: FStar_Syntax_Unionfind.tx;}
 type 'a result =
   | Success of ('a* proofstate)
   | Failed of (Prims.string* proofstate)
@@ -1120,7 +1120,7 @@ let proofstate_of_goal_ty:
           FStar_TypeChecker_Normalize.normalize
             [FStar_TypeChecker_Normalize.Beta] env g in
         { context = env; witness = None; goal_ty = uu____2103 } in
-      let uu____2104 = FStar_Unionfind.new_transaction () in
+      let uu____2104 = FStar_Syntax_Unionfind.new_transaction () in
       {
         main_context = env;
         main_goal = g1;

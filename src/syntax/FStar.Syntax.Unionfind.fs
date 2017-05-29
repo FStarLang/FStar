@@ -19,7 +19,7 @@ type uf = {
 
 (* Transaction idetifiers
       -- add a wrapper to allow making it abstract in F# *)
-type tx = TX of int
+type tx = | TX of int
 
 (* private *)
 type transactional_state = {
@@ -48,9 +48,9 @@ let set (u:uf) = state := {!state with current = u}
 //Transacational interface, used in FStar.TypeChecker.Rel
 ////////////////////////////////////////////////////////////////////////////////
 let new_transaction =
-    let tx_ctr = ref 0 in
+    let tx_ctr = BU.mk_ref 0 in
     fun () ->
-        let tx = incr tx_ctr; TX !tx_ctr in
+        let tx = BU.incr tx_ctr; TX !tx_ctr in
         state := {!state with rest = (tx, get())::(!state).rest};
         tx
 let commit_or_rollback (rb:bool) tx =
@@ -75,7 +75,7 @@ let update_in_tx (r:ref<'a>) (x:'a) = ()
 //Interface for term unification
 ////////////////////////////////////////////////////////////////////////////////
 (* private *)
-let get_term_graph () = get().term_graph
+let get_term_graph () = (get()).term_graph
 
 (* private *)
 let set_term_graph (tg:tgraph) =
@@ -94,7 +94,7 @@ let union  u v = set_term_graph (PU.puf_union (get_term_graph()) u v)
 ////////////////////////////////////////////////////////////////////////////////
 
 (*private*)
-let get_univ_graph () = get().univ_graph
+let get_univ_graph () = (get()).univ_graph
 
 (*private*)
 let set_univ_graph (ug:ugraph) =

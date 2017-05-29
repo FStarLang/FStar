@@ -1,3 +1,4 @@
+#light "off"
 module FStar.Syntax.Unionfind
 open FStar.All
 module S = FStar.Syntax.Syntax
