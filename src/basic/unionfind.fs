@@ -63,13 +63,10 @@ let pa_set (t:pa_t<'a>) (i:int) (v:'a) : pa_t<'a> =
     match !t with
         | PArray a ->
             let old = a.[i] in
-            // if old = v then t else
-                begin
-                    a.[i] <- v;
-                    let res = ref (PArray a) in
-                    t := PDiff (i, old, res);
-                    res
-                end
+            a.[i] <- v;
+            let res = ref (PArray a) in
+            t := PDiff (i, old, res);
+            res
         | PDiff _ -> failwith "Impossible"
 
 (* apply impure function from Array to a persistent array *)
@@ -94,10 +91,10 @@ let pa_new t x l empty =
 
 
 (* Union-find implementation based on persistent arrays *)
-type puf<'a> = { //when 'a : not struct> = {
+type puf<'a> = {
     (* array of parents of each node
        contains either path or root element *)
-    mutable parent: pa_t<(either<int, 'a>)>;
+    mutable parent: pa_t<(either<int, 'a>)>; (* mutable to allow path compression *)
     ranks: pa_t<int>;
     (* keep track of how many elements are allocated in the array *)
     count: ref<int> }
