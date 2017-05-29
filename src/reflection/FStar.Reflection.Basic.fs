@@ -379,7 +379,7 @@ let pack_const (c:vconst) : term =
 let pack (tv:term_view) : term =
     match tv with
     | Tv_Var (bv, _) ->
-        S.bv_to_tm bv
+        S.bv_to_name bv
 
     | Tv_FVar fv ->
         S.fv_to_tm fv
