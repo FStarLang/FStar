@@ -989,86 +989,77 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
         let p, w, br = SS.open_branch b in
-        let patterns = encode_pat env p in
-        (* KM : Why are we using a fold_right here ? does the order of patterns in a disjunction really matter ? *)
-        List.fold_right (fun (env0, pattern) (else_case, decls) ->
-          let guard = pattern.guard scr' in
-          let projections = pattern.projections scr' in
-          let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
-          let guard, decls2 = match w with
+        let env0, pattern = encode_pat env p in
+        let guard = pattern.guard scr' in
+        let projections = pattern.projections scr' in
+        let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
+        let guard, decls2 =
+            match w with
             | None -> guard, []
             | Some w ->
               let w, decls2 = encode_term w env in
               mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
-          in
-          let br, decls3 = encode_br br env in
-          mkITE(guard, br, else_case), decls@decls2@decls3)
-          patterns (else_case, decls)
+       in
+       let br, decls3 = encode_br br env in
+       mkITE(guard, br, else_case), decls@decls2@decls3
       in
       List.fold_right encode_branch pats (default_case (* default; should be unreachable *), decls)
     in
     mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
+and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
+    if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+    let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
-and encode_pat (env:env_t) (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each disjunct *) =
-    match pat.v with
-        | Pat_disj ps -> List.map (encode_one_pat env) ps
-        | _ -> [encode_one_pat env pat]
+    let env, vars = vars |> List.fold_left (fun (env, vars) v ->
+            let xx, _, env = gen_term_var env v in
+            env, (v, (xx, Term_sort))::vars) (env, []) in
 
-and encode_one_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
-        if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
-        let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
+    let rec mk_guard pat (scrutinee:term) : term =
+        match pat.v with
+        | Pat_var _
+        | Pat_wild _
+        | Pat_dot_term _ -> mkTrue
+        | Pat_constant c ->
+            mkEq(scrutinee, encode_const c)
+        | Pat_cons(f, args) ->
+            let is_f =
+                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
+                match Env.datacons_of_typ env.tcenv tc_name with
+                | _, [_] -> mkTrue //single constructor type; no need for a test
+                | _ -> mk_data_tester env f.fv_name.v scrutinee
+            in
+            let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                mk_guard arg (mkApp(proj, [scrutinee]))) in
+            mk_and_l (is_f::sub_term_guards)
+    in
 
-        let env, vars = vars |> List.fold_left (fun (env, vars) v ->
-              let xx, _, env = gen_term_var env v in
-              env, (v, (xx, Term_sort))::vars) (env, []) in
+        let rec mk_projections pat (scrutinee:term) =
+        match pat.v with
+        | Pat_dot_term (x, _)
+        | Pat_var x
+        | Pat_wild x -> [x, scrutinee]
 
-        let rec mk_guard pat (scrutinee:term) : term = match pat.v with
-            | Pat_disj _ -> failwith "Impossible"
-            | Pat_var _
-            | Pat_wild _
-            | Pat_dot_term _ -> mkTrue
-            | Pat_constant c ->
-               mkEq(scrutinee, encode_const c)
-            | Pat_cons(f, args) ->
-                let is_f =
-                    let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
-                    match Env.datacons_of_typ env.tcenv tc_name with
-                    | _, [_] -> mkTrue //single constructor type; no need for a test
-                    | _ -> mk_data_tester env f.fv_name.v scrutinee
-                in
-                let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                    mk_guard arg (mkApp(proj, [scrutinee]))) in
-                mk_and_l (is_f::sub_term_guards)
-        in
+        | Pat_constant _ -> []
 
-         let rec mk_projections pat (scrutinee:term) =  match pat.v with
-            | Pat_disj _ -> failwith "Impossible"
+        | Pat_cons(f, args) ->
+            args
+            |> List.mapi (fun i (arg, _) ->
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                mk_projections arg (mkApp(proj, [scrutinee])))
+            |> List.flatten in
 
-            | Pat_dot_term (x, _)
-            | Pat_var x
-            | Pat_wild x -> [x, scrutinee]
+    let pat_term () = encode_term pat_term env in
 
-            | Pat_constant _ -> []
+    let pattern = {
+            pat_vars=vars;
+            pat_term=pat_term;
+            guard=mk_guard pat;
+            projections=mk_projections pat;
+        }  in
 
-            | Pat_cons(f, args) ->
-                args
-                |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                    mk_projections arg (mkApp(proj, [scrutinee])))
-                |> List.flatten in
-
-        let pat_term () = encode_term pat_term env in
-
-        let pattern = {
-                pat_vars=vars;
-                pat_term=pat_term;
-                guard=mk_guard pat;
-                projections=mk_projections pat;
-            }  in
-
-        env, pattern
+    env, pattern
 
 and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
     let l, decls = l |> List.fold_left

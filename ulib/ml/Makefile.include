@@ -4,9 +4,10 @@
 # This Makefile assumes that $(FSTAR_HOME) is properly defined.
 
 FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Heap \
-	Int16 Int32 Int63 Int64 Int8 Int_Cast IO \
+	HyperStack.All HyperStack.ST Int16 Int32 Int63 Int64 Int8 Int_Cast IO \
 	List List.Tot.Base Mul Option Set ST String UInt128 UInt16 UInt32 \
-	UInt63 UInt64 UInt8
+	UInt63 UInt64 UInt8 \
+	StructNG Struct
 	# prims is realized by default hence not included in this list
 
 NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
@@ -15,9 +16,10 @@ FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(NOEXTRACT_MODULES))
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
 FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
 
-ifeq ($(MEM),HST)
-	OCAML_DEFAULT_FLAGS=-predicates hyperstack
-endif
+# Left as an example if we were to add multiple versions of fstarlib
+# ifeq ($(MEM),HST)
+# 	OCAML_DEFAULT_FLAGS=-predicates hyperstack
+# endif
 
 OCAMLOPT_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt -package fstarlib -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)

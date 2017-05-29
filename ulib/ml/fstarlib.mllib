@@ -5,6 +5,7 @@ FStar_Axiomatic_Array
 FStar_BaseTypes
 FStar_BitVector
 FStar_Buffer
+FStar_Buffer_Quantifiers
 FStar_Bytes
 FStar_Char
 FStar_Classical
@@ -19,7 +20,11 @@ FStar_FunctionalExtensionality
 FStar_Ghost
 FStar_Heap
 FStar_HyperHeap
+FStar_HyperHeap_All
+FStar_HyperHeap_ST
 FStar_HyperStack
+FStar_HyperStack_All
+FStar_HyperStack_ST
 FStar_IndefiniteDescription
 FStar_Int
 FStar_Int128
@@ -40,6 +45,8 @@ FStar_Map
 FStar_MarkovsPrinciple
 FStar_Math_Lemmas
 FStar_Math_Lib
+FStar_Monotonic_RRef
+FStar_Monotonic_Seq
 FStar_MRef
 FStar_Mul
 FStar_Option

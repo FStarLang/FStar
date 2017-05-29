@@ -7,8 +7,8 @@ let mlconst_of_const:
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant =
   fun sctt  ->
     match sctt with
-    | FStar_Const.Const_range _|FStar_Const.Const_effect  ->
-        failwith "Unsupported constant"
+    | FStar_Const.Const_range uu____24 -> failwith "Unsupported constant"
+    | FStar_Const.Const_effect  -> failwith "Unsupported constant"
     | FStar_Const.Const_unit  -> FStar_Extraction_ML_Syntax.MLC_Unit
     | FStar_Const.Const_char c -> FStar_Extraction_ML_Syntax.MLC_Char c
     | FStar_Const.Const_int (s,i) ->
@@ -20,7 +20,9 @@ let mlconst_of_const:
     | FStar_Const.Const_string (bytes,uu____44) ->
         FStar_Extraction_ML_Syntax.MLC_String
           (FStar_Util.string_of_unicode bytes)
-    | FStar_Const.Const_reify |FStar_Const.Const_reflect _ ->
+    | FStar_Const.Const_reify  ->
+        failwith "Unhandled constant: reify/reflect"
+    | FStar_Const.Const_reflect uu____47 ->
         failwith "Unhandled constant: reify/reflect"
 let mlconst_of_const':
   FStar_Range.range ->
@@ -87,8 +89,8 @@ let udelta_unfold:
     FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty option
   =
   fun g  ->
-    fun uu___112_140  ->
-      match uu___112_140 with
+    fun uu___111_140  ->
+      match uu___111_140 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____146 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1 in
           (match uu____146 with
@@ -109,8 +111,8 @@ let eff_leq:
          ,FStar_Extraction_ML_Syntax.E_IMPURE ) -> true
       | uu____161 -> false
 let eff_to_string: FStar_Extraction_ML_Syntax.e_tag -> Prims.string =
-  fun uu___113_166  ->
-    match uu___113_166 with
+  fun uu___112_166  ->
+    match uu___112_166 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -124,12 +126,14 @@ let join:
       fun f'  ->
         match (f, f') with
         | (FStar_Extraction_ML_Syntax.E_IMPURE
-           ,FStar_Extraction_ML_Syntax.E_PURE )
-          |(FStar_Extraction_ML_Syntax.E_PURE
-            ,FStar_Extraction_ML_Syntax.E_IMPURE )
-           |(FStar_Extraction_ML_Syntax.E_IMPURE
-             ,FStar_Extraction_ML_Syntax.E_IMPURE )
-            -> FStar_Extraction_ML_Syntax.E_IMPURE
+           ,FStar_Extraction_ML_Syntax.E_PURE ) ->
+            FStar_Extraction_ML_Syntax.E_IMPURE
+        | (FStar_Extraction_ML_Syntax.E_PURE
+           ,FStar_Extraction_ML_Syntax.E_IMPURE ) ->
+            FStar_Extraction_ML_Syntax.E_IMPURE
+        | (FStar_Extraction_ML_Syntax.E_IMPURE
+           ,FStar_Extraction_ML_Syntax.E_IMPURE ) ->
+            FStar_Extraction_ML_Syntax.E_IMPURE
         | (FStar_Extraction_ML_Syntax.E_GHOST
            ,FStar_Extraction_ML_Syntax.E_GHOST ) ->
             FStar_Extraction_ML_Syntax.E_GHOST
@@ -309,8 +313,8 @@ and type_leq:
       fun t2  ->
         let uu____510 = type_leq_c g None t1 t2 in
         FStar_All.pipe_right uu____510 FStar_Pervasives.fst
-let is_type_abstraction uu___114_536 =
-  match uu___114_536 with
+let is_type_abstraction uu___113_536 =
+  match uu___113_536 with
   | (FStar_Util.Inl uu____542,uu____543)::uu____544 -> true
   | uu____556 -> false
 let is_xtuple: (Prims.string Prims.list* Prims.string) -> Prims.int option =
@@ -344,8 +348,8 @@ let resugar_exp:
     | uu____593 -> e
 let record_field_path:
   FStar_Ident.lident Prims.list -> Prims.string Prims.list =
-  fun uu___115_598  ->
-    match uu___115_598 with
+  fun uu___114_598  ->
+    match uu___114_598 with
     | f::uu____602 ->
         let uu____604 = FStar_Util.prefix f.FStar_Ident.ns in
         (match uu____604 with
@@ -483,22 +487,23 @@ let conjoin_opt:
     fun e2  ->
       match (e1, e2) with
       | (None ,None ) -> None
-      | (Some x,None )|(None ,Some x) -> Some x
-      | (Some x,Some y) -> let uu____838 = conjoin x y in Some uu____838
+      | (Some x,None ) -> Some x
+      | (None ,Some x) -> Some x
+      | (Some x,Some y) -> let uu____839 = conjoin x y in Some uu____839
 let mlloc_of_range: FStar_Range.range -> (Prims.int* Prims.string) =
   fun r  ->
     let pos = FStar_Range.start_of_range r in
     let line = FStar_Range.line_of_pos pos in
-    let uu____846 = FStar_Range.file_of_range r in (line, uu____846)
+    let uu____847 = FStar_Range.file_of_range r in (line, uu____847)
 let rec argTypes:
   FStar_Extraction_ML_Syntax.mlty ->
     FStar_Extraction_ML_Syntax.mlty Prims.list
   =
   fun t  ->
     match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____854,b) ->
-        let uu____856 = argTypes b in a :: uu____856
-    | uu____858 -> []
+    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____855,b) ->
+        let uu____857 = argTypes b in a :: uu____857
+    | uu____859 -> []
 let rec uncurry_mlty_fun:
   FStar_Extraction_ML_Syntax.mlty ->
     (FStar_Extraction_ML_Syntax.mlty Prims.list*
@@ -506,7 +511,7 @@ let rec uncurry_mlty_fun:
   =
   fun t  ->
     match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____869,b) ->
-        let uu____871 = uncurry_mlty_fun b in
-        (match uu____871 with | (args,res) -> ((a :: args), res))
-    | uu____883 -> ([], t)
+    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____870,b) ->
+        let uu____872 = uncurry_mlty_fun b in
+        (match uu____872 with | (args,res) -> ((a :: args), res))
+    | uu____884 -> ([], t)

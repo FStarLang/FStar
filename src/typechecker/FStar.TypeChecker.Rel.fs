@@ -2622,10 +2622,15 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
           in
           Some ret_g
 
+let discharge_guard_no_smt env g =
+  match discharge_guard' None env g false with
+  | Some g -> g
+  | None  -> raise (Error("Expected a trivial pre-condition", Env.get_range env))
+
 let discharge_guard env g =
   match discharge_guard' None env g true with
   | Some g -> g
-  | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+  | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits g =
   let unresolved u = match Unionfind.find u with

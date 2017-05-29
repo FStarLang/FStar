@@ -343,11 +343,6 @@ let rec closure_as_term cfg env t =
              let norm_one_branch env (pat, w_opt, tm) =
                 let rec norm_pat env p = match p.v with
                     | Pat_constant _ -> p, env
-                    | Pat_disj [] -> failwith "Impossible"
-                    | Pat_disj (hd::tl) ->
-                      let hd, env' = norm_pat env hd in
-                      let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-                      {p with v=Pat_disj(hd::tl)}, env'
                     | Pat_cons(fv, pats) ->
                       let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                             let p, env = norm_pat env p in
@@ -872,6 +867,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Some (us, t) ->
                       log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
+                      let t =
+                        if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+                        //we're really trying to compute here; no point propagating range information
+                        //which can be expensive
+                        then t
+                        else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+                      in
                       let n = List.length us in
                       if n > 0
                       then match stack with //universe beta reduction
@@ -1552,11 +1554,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       in
       let rec norm_pat env p = match p.v with
         | Pat_constant _ -> p, env
-        | Pat_disj [] -> failwith "Impossible"
-        | Pat_disj (hd::tl) ->
-          let hd, env' = norm_pat env hd in
-          let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-          {p with v=Pat_disj(hd::tl)}, env'
         | Pat_cons(fv, pats) ->
           let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                 let p, env = norm_pat env p in
@@ -1614,28 +1611,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       = let scrutinee = U.unmeta scrutinee in
         let head, args = U.head_and_args scrutinee in
         match p.v with
-        | Pat_disj ps ->
-          let mopt = BU.find_map ps (fun p ->
-            let m = matches_pat scrutinee p in
-            match m with
-              | Inl _ -> Some m //definite match
-              | Inr true -> Some m //maybe match; stop considering other cases
-              | Inr false -> None (*definite mismatch*))
-          in
-          begin match mopt with
-            | None -> Inr false //all cases definitely do not match
-            | Some m -> m
-          end
         | Pat_var _
         | Pat_wild _ -> Inl [scrutinee]
         | Pat_dot_term _ -> Inl []
-        | Pat_constant s ->
-          begin match scrutinee.n with
+        | Pat_constant s -> begin
+          match scrutinee.n with
             | Tm_constant s' when (s=s') -> Inl []
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
           end
-        | Pat_cons(fv, arg_pats) ->
-          begin match (U.un_uinst head).n with
+        | Pat_cons(fv, arg_pats) -> begin
+          match (U.un_uinst head).n with
             | Tm_fvar fv' when fv_eq fv fv' ->
               matches_args [] args arg_pats
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
@@ -1738,6 +1723,10 @@ let normalize_refinement steps env t0 =
    aux t
 
 let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
+let reduce_uvar_solutions env t =
+    normalize [Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm]
+              env
+              t
 
 let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
   //unfold_whnf env t_e in

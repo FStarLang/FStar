@@ -36,7 +36,7 @@ module BU = FStar.Util
 module D = FStar.Parser.ToDocument
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
-  let unique_name =  
+  let unique_name =
     if starts_with reserved_prefix x.ppname.idText then
       x.ppname.idText ^ (string_of_int x.index)
     else
@@ -210,10 +210,6 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | Pat_wild _ -> true
     | _ -> false
 
-let is_disj_pat (p:S.pat) : bool = match p.v with
-  | Pat_disj _ -> true
-  | _ -> false
-
 let rec resugar_term (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -277,7 +273,7 @@ let rec resugar_term (t : S.term) : A.term =
       if (Options.print_universes()) then
         let e = resugar_term e in
         List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x t.pos, A.UnivApp))) e universes
-      else 
+      else
         resugar_term e
 
     | Tm_constant c ->
@@ -290,11 +286,11 @@ let rec resugar_term (t : S.term) : A.term =
         | U_zero ->  mk (name "Type0" t.pos)
         | U_unknown -> mk (name "Type" t.pos)
         | _ ->
-          if (Options.print_universes()) then 
+          if (Options.print_universes()) then
             let u = resugar_universe u t.pos in
             let l = lid_of_path ["Type"] t.pos in
             mk (A.Construct (l, [(u, UnivApp)]))
-          else 
+          else
             mk (name "Type" t.pos)
         end
 
@@ -309,7 +305,7 @@ let rec resugar_term (t : S.term) : A.term =
         //but, if the user wrote the annotation, then we should record that and print it back
         //additionally, if we're in verbose mode, e.g., if --print_bound_var_types is set
         //    then we should print the annotation too
-        resugar_bv_as_pat x qual) 
+        resugar_bv_as_pat x qual)
       in
       let body = resugar_term body in
       mk (A.Abs(patterns, body))
@@ -487,7 +483,7 @@ let rec resugar_term (t : S.term) : A.term =
               | [(b, _)] -> resugar b
               | _ -> failwith "wrong args format to QForall"
             end
-          else 
+          else
             resugar_as_app e args
 
         | Some ("alloc", _) ->
@@ -502,7 +498,7 @@ let rec resugar_term (t : S.term) : A.term =
           (* ignore the arguments added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           //NS: this seems to produce the wrong output on things like
-          begin match arity with 
+          begin match arity with
           | 0 -> begin match D.handleable_args_length op with
                  | 1 when List.length args > 0 -> mk (A.Op(op, resugar (last args)))
                  | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
@@ -511,11 +507,11 @@ let rec resugar_term (t : S.term) : A.term =
                  end
           | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
           | _ -> resugar_as_app e args
-          end 
+          end
     end
 
-    | Tm_match(e, [(pat, _, t)]) when not (is_disj_pat pat) -> 
-    (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1` 
+    | Tm_match(e, [(pat, _, t)]) ->
+    (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
        it would be better to print it as `let P = e in e1`. *)
     (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
     let bnds = [(resugar_pat pat, resugar_term e)] in
@@ -560,11 +556,11 @@ let rec resugar_term (t : S.term) : A.term =
             b, t, true
           | _ -> [], def, false
         in
-        let universe_to_string univs = 
+        let universe_to_string univs =
           if (Options.print_universes()) then
             List.map (fun x -> x.idText) univs |> String.concat  ", "
           else ""
-        in   
+        in
         let pat, term = match bnd.lbname with
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
           | Inl bv ->
@@ -609,7 +605,7 @@ let rec resugar_term (t : S.term) : A.term =
                     else
                       if (Options.print_universes()) then
                         mk (A.Construct(head, args@universes))
-                      else 
+                      else
                         mk (A.Construct(head, args))
                 | Tm_meta(_, m) ->
                   // the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker
@@ -785,10 +781,6 @@ and resugar_pat (p:S.pat) : A.pattern =
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
-    | Pat_disj args ->
-      let args = List.map(fun p -> aux p) args in
-      mk (A.PatOr args)
-
     | Pat_cons (fv, []) ->
       mk (A.PatName fv.fv_name.v)
 
@@ -893,11 +885,11 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
         if se.sigquals |> BU.for_some (function | RecordType _ -> true | _ -> false)
         then
           (* Resugar as a record *)
-          let resugar_datacon_as_fields fields se = match se.sigel with 
+          let resugar_datacon_as_fields fields se = match se.sigel with
             | Sig_datacon (_, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
-                | Tm_arrow(bs, _) -> 
+                | Tm_arrow(bs, _) ->
                   let mfields = bs |> List.map (fun (b, qual) -> (U.unmangle_field_name (bv_as_unique_ident b), resugar_term b.sort, None)) in
                   mfields@fields
                 | _ -> failwith "unexpected"
@@ -908,11 +900,11 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
           A.TyconRecord(tylid.ident, bs, None, fields)
         else
           (* Resugar as a variant *)
-          let resugar_datacon constructors se = match se.sigel with 
+          let resugar_datacon constructors se = match se.sigel with
             | Sig_datacon (l, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
               let c = (l.ident, Some (resugar_term term), None, false)  in
-              c::constructors       
+              c::constructors
             | _ -> failwith "unexpected"
           in
           let constructors =  List.fold_left resugar_datacon [] current_datacons in
@@ -921,7 +913,7 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
       other_datacons, tyc
   | _ -> failwith "Impossible : only Sig_inductive_typ can be resugared as types"
 
-let mk_decl r q d' = 
+let mk_decl r q d' =
   {
     d = d' ;
     drange = r ;
@@ -935,16 +927,16 @@ let mk_decl r q d' =
 let decl'_to_decl se d' =
   mk_decl se.sigrng se.sigquals d'
 
-let resugar_tscheme' name (ts:S.tscheme) = 
+let resugar_tscheme' name (ts:S.tscheme) =
   let (univs, typ) = ts in
   let name = I.mk_ident (name, typ.pos) in
   mk_decl typ.pos [] (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
 
-let resugar_tscheme (ts:S.tscheme) = 
+let resugar_tscheme (ts:S.tscheme) =
   resugar_tscheme' "tsheme" ts
 
 let resugar_eff_decl for_free r q ed =
-  let resugar_action d for_free = 
+  let resugar_action d for_free =
     let action_params = SS.open_binders d.action_params in
     let bs, action_defn = SS.open_term action_params d.action_defn in
     let bs, action_typ = SS.open_term action_params d.action_typ in
@@ -956,7 +948,7 @@ let resugar_eff_decl for_free r q ed =
       let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
       let t = A.mk_term a r A.Un in
       mk_decl r q (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
-    else 
+    else
       mk_decl r q (A.Tycon(false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
   in
   let eff_name = ed.mname.ident in
@@ -977,14 +969,14 @@ let resugar_eff_decl for_free r q ed =
   let repr = resugar_tscheme' "repr" ([], ed.repr) in
   let return_repr = resugar_tscheme' "return_repr" ed.return_repr in
   let bind_repr = resugar_tscheme' "bind_repr" ed.bind_repr in
-  let mandatory_members_decls = 
+  let mandatory_members_decls =
     if for_free then
-      [repr; return_repr; bind_repr] 
-    else 
-      [repr; return_repr; bind_repr; ret_wp; bind_wp; 
-       if_then_else; ite_wp; stronger; close_wp; assert_p; 
+      [repr; return_repr; bind_repr]
+    else
+      [repr; return_repr; bind_repr; ret_wp; bind_wp;
+       if_then_else; ite_wp; stronger; close_wp; assert_p;
         assume_p; null_wp; trivial] in
-  let actions = ed.actions |> List.map (fun a -> resugar_action a false) in    
+  let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
 
@@ -1044,8 +1036,8 @@ let resugar_sigelt se : option<A.decl> =
 
   | Sig_sub_effect e ->
     let src = e.source in
-    let dst = e.target in 
-    let lift_wp = match e.lift_wp with 
+    let dst = e.target in
+    let lift_wp = match e.lift_wp with
       | Some (_, t) ->
           Some (resugar_term t)
       | _ -> None
@@ -1054,7 +1046,7 @@ let resugar_sigelt se : option<A.decl> =
       | Some (_, t) ->
           Some (resugar_term t)
       | _ -> None
-    in  
+    in
     let op = match (lift_wp, lift) with
       | Some t, None -> A.NonReifiableLift t
       | Some wp, Some t -> A.ReifiableLift (wp, t)
@@ -1076,7 +1068,7 @@ let resugar_sigelt se : option<A.decl> =
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
-      Some (decl'_to_decl se (A.Val(lid.ident, resugar_term t))) 
+      Some (decl'_to_decl se (A.Val(lid.ident, resugar_term t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

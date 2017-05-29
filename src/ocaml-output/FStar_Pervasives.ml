@@ -57,9 +57,6 @@ type ('Aheap,'Aa,'Ap,'Ah0) all_null_wp = Prims.unit
 type ('Aheap,'Aa,'Awp) all_trivial = Prims.unit
 type 'Aa inversion = Prims.unit
 let allow_inversion = ()
-type 'Aa option =
-  | None
-  | Some of 'Aa
 let uu___is_None projectee =
   match projectee with | None  -> true | uu____1080 -> false
 let uu___is_Some projectee =
@@ -190,69 +187,5 @@ let __proj__Mkdtuple4__item___3 projectee =
   match projectee with | Mkdtuple4 (_1,_2,_3,_4) -> _3
 let __proj__Mkdtuple4__item___4 projectee =
   match projectee with | Mkdtuple4 (_1,_2,_3,_4) -> _4
-type ('Aa,'Ab,'Ac,'Ad,'Ae) dtuple5 =
-  | Mkdtuple5 of 'Aa* 'Ab* 'Ac* 'Ad* 'Ae
-let uu___is_Mkdtuple5 projectee = true
-let __proj__Mkdtuple5__item___1 projectee =
-  match projectee with | Mkdtuple5 (_1,_2,_3,_4,_5) -> _1
-let __proj__Mkdtuple5__item___2 projectee =
-  match projectee with | Mkdtuple5 (_1,_2,_3,_4,_5) -> _2
-let __proj__Mkdtuple5__item___3 projectee =
-  match projectee with | Mkdtuple5 (_1,_2,_3,_4,_5) -> _3
-let __proj__Mkdtuple5__item___4 projectee =
-  match projectee with | Mkdtuple5 (_1,_2,_3,_4,_5) -> _4
-let __proj__Mkdtuple5__item___5 projectee =
-  match projectee with | Mkdtuple5 (_1,_2,_3,_4,_5) -> _5
-type ('Aa,'Ab,'Ac,'Ad,'Ae,'Af) dtuple6 =
-  | Mkdtuple6 of 'Aa* 'Ab* 'Ac* 'Ad* 'Ae* 'Af
-let uu___is_Mkdtuple6 projectee = true
-let __proj__Mkdtuple6__item___1 projectee =
-  match projectee with | Mkdtuple6 (_1,_2,_3,_4,_5,_6) -> _1
-let __proj__Mkdtuple6__item___2 projectee =
-  match projectee with | Mkdtuple6 (_1,_2,_3,_4,_5,_6) -> _2
-let __proj__Mkdtuple6__item___3 projectee =
-  match projectee with | Mkdtuple6 (_1,_2,_3,_4,_5,_6) -> _3
-let __proj__Mkdtuple6__item___4 projectee =
-  match projectee with | Mkdtuple6 (_1,_2,_3,_4,_5,_6) -> _4
-let __proj__Mkdtuple6__item___5 projectee =
-  match projectee with | Mkdtuple6 (_1,_2,_3,_4,_5,_6) -> _5
-let __proj__Mkdtuple6__item___6 projectee =
-  match projectee with | Mkdtuple6 (_1,_2,_3,_4,_5,_6) -> _6
-type ('Aa,'Ab,'Ac,'Ad,'Ae,'Af,'Ag) dtuple7 =
-  | Mkdtuple7 of 'Aa* 'Ab* 'Ac* 'Ad* 'Ae* 'Af* 'Ag
-let uu___is_Mkdtuple7 projectee = true
-let __proj__Mkdtuple7__item___1 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _1
-let __proj__Mkdtuple7__item___2 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _2
-let __proj__Mkdtuple7__item___3 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _3
-let __proj__Mkdtuple7__item___4 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _4
-let __proj__Mkdtuple7__item___5 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _5
-let __proj__Mkdtuple7__item___6 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _6
-let __proj__Mkdtuple7__item___7 projectee =
-  match projectee with | Mkdtuple7 (_1,_2,_3,_4,_5,_6,_7) -> _7
-type ('Aa,'Ab,'Ac,'Ad,'Ae,'Af,'Ag,'Ah) dtuple8 =
-  | Mkdtuple8 of 'Aa* 'Ab* 'Ac* 'Ad* 'Ae* 'Af* 'Ag* 'Ah
-let uu___is_Mkdtuple8 projectee = true
-let __proj__Mkdtuple8__item___1 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _1
-let __proj__Mkdtuple8__item___2 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _2
-let __proj__Mkdtuple8__item___3 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _3
-let __proj__Mkdtuple8__item___4 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _4
-let __proj__Mkdtuple8__item___5 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _5
-let __proj__Mkdtuple8__item___6 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _6
-let __proj__Mkdtuple8__item___7 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _7
-let __proj__Mkdtuple8__item___8 projectee =
-  match projectee with | Mkdtuple8 (_1,_2,_3,_4,_5,_6,_7,_8) -> _8
 let ignore x = ()
 let rec false_elim u = false_elim ()
