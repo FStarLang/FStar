@@ -144,3 +144,23 @@ let unfold_point (t:term) : tactic unit =
 
 let unfold_def (t:term) : tactic unit =
     pointwise (unfold_point t)
+
+let grewrite' (t1 t2 eq : term) : tactic unit =
+    egw <-- cur_goal;
+    let (e, g), w = egw in
+    match term_as_formula g with
+    | Comp Eq _ l _ ->
+        if term_eq l t1
+        then exact (return eq)
+        else trefl
+    | _ ->
+        fail "impossible"
+
+let mk_sq_eq (t1 t2 : term) : term =
+    let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
+    let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
+    mk_app sq [mk_app eq [t1; t2]]
+
+let grewrite (t1 t2 : term) : tactic unit =
+    e <-- tcut (mk_sq_eq t1 t2);
+    pointwise (grewrite' t1 t2 (pack (Tv_Var e)))
