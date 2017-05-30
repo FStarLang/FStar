@@ -119,24 +119,15 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
 // Kind of hacky unsquashing
 let rec term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
-    | Tv_Refine b t ->
-        begin match inspect (type_of_binder b) with
-        | Tv_FVar fv ->
-            if eq_qn (inspect_fv fv) unit_lid
-            then term_as_formula t
-            else term_as_formula' t
-        | _ -> term_as_formula' t
-        end
     | Tv_App l r ->
         begin match inspect l with
         | Tv_FVar fv ->
             if eq_qn (inspect_fv fv) squash_qn
-            then term_as_formula r
-            else term_as_formula' t
-        | _ ->
-            term_as_formula' t
+            then term_as_formula' r
+            else F_Unknown
+        | _ -> F_Unknown
         end
-    | _ -> term_as_formula' t
+    | _ -> F_Unknown
 
 #reset-options
 
