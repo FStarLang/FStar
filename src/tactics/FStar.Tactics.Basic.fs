@@ -333,9 +333,9 @@ let intro : tac<binder> =
              let typ' = comp_to_typ c in
              let u, _, g = TcUtil.new_implicit_var "intro" typ'.pos env' typ' in
              if TcRel.teq_nosmt goal.context goal.witness (U.abs [b] u None)
-             then bind (replace_cur ({ goal with context = env' ;
-                                                 goal_ty = N.unfold_whnf env' typ' ;
-                                                 witness = u})) (fun _ ->
+             then bind (replace_cur ({ goal with context = env';
+                                                 goal_ty = bnorm env' typ';
+                                                 witness = bnorm env' u})) (fun _ ->
                   ret b)
              else fail "intro: unification failed"
     | None ->
