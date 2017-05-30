@@ -360,7 +360,9 @@ let istrivial (e:env) (t:term) : bool =
 let trivial : tac<unit> =
     bind cur_goal (fun goal ->
     if istrivial goal.context goal.goal_ty
-    then dismiss
+    then let t_unit = FStar.TypeChecker.Common.t_unit in
+         solve goal t_unit;
+         dismiss
     else fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty))
     )
 
@@ -685,9 +687,14 @@ let trefl : tac<unit> =
         let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv SC.eq2_lid ->
-            if TcRel.teq_nosmt g.context l r
-            then dismiss // TODO: apply Refl at right universe, or just
-            else fail "trefl: not a trivial equality"
+            if not (TcRel.teq_nosmt g.context l r)
+            then fail "trefl: not a trivial equality"
+            else
+            begin
+                let t_unit = FStar.TypeChecker.Common.t_unit in
+                solve g t_unit;
+                dismiss
+            end
         | hd, _ ->
             fail (BU.format1 "trefl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
         end
