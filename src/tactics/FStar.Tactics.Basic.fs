@@ -689,7 +689,7 @@ let trefl : tac<unit> =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv SC.eq2_lid ->
             if not (TcRel.teq_nosmt g.context l r)
-            then fail "trefl: not a trivial equality"
+            then fail (BU.format2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r))
             else
             begin
                 let t_unit = FStar.TypeChecker.Common.t_unit in
@@ -697,7 +697,7 @@ let trefl : tac<unit> =
                 dismiss
             end
         | hd, _ ->
-            fail (BU.format1 "trefl: not an equality (%s)" (Print.term_to_string ({g.goal_ty with n = hd})))
+            fail (BU.format1 "trefl: not an equality (%s)" (Print.term_to_string t))
         end
      | None ->
         fail "not an irrelevant goal")
