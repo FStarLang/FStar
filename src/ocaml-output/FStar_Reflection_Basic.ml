@@ -719,6 +719,7 @@ let embed_norm_step:
     | FStar_Reflection_Data.Simpl  -> FStar_Reflection_Data.ref_Simpl
     | FStar_Reflection_Data.WHNF  -> FStar_Reflection_Data.ref_WHNF
     | FStar_Reflection_Data.Primops  -> FStar_Reflection_Data.ref_Primops
+    | FStar_Reflection_Data.Delta  -> FStar_Reflection_Data.ref_Delta
 let unembed_norm_step:
   FStar_Syntax_Syntax.term -> FStar_Reflection_Data.norm_step =
   fun t  ->
@@ -744,4 +745,8 @@ let unembed_norm_step:
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_Primops_lid
              -> FStar_Reflection_Data.Primops
-         | uu____1831 -> failwith "not an embedded norm_step")
+         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Reflection_Data.ref_Delta_lid
+             -> FStar_Reflection_Data.Delta
+         | uu____1841 -> failwith "not an embedded norm_step")

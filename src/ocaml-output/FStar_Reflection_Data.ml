@@ -77,6 +77,7 @@ type norm_step =
   | Simpl
   | WHNF
   | Primops
+  | Delta
 let uu___is_Simpl: norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Simpl  -> true | uu____195 -> false
@@ -85,27 +86,30 @@ let uu___is_WHNF: norm_step -> Prims.bool =
 let uu___is_Primops: norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Primops  -> true | uu____203 -> false
+let uu___is_Delta: norm_step -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Delta  -> true | uu____207 -> false
 let fstar_refl_lid: Prims.string Prims.list -> FStar_Ident.lident =
   fun s  ->
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Reflection"] s)
       FStar_Range.dummyRange
 let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
   fun l  ->
-    let uu____212 =
+    let uu____216 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None in
-    FStar_All.pipe_right uu____212 FStar_Syntax_Syntax.fv_to_tm
+    FStar_All.pipe_right uu____216 FStar_Syntax_Syntax.fv_to_tm
 let lid_as_data_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
   fun l  ->
-    let uu____216 =
+    let uu____220 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
         (Some FStar_Syntax_Syntax.Data_ctor) in
-    FStar_Syntax_Syntax.fv_to_tm uu____216
+    FStar_Syntax_Syntax.fv_to_tm uu____220
 let mk_refl_syntax_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____220 = fstar_refl_lid ["Syntax"; s] in lid_as_tm uu____220
+    let uu____224 = fstar_refl_lid ["Syntax"; s] in lid_as_tm uu____224
 let fstar_refl_lid_as_data_tm:
   Prims.string Prims.list -> FStar_Syntax_Syntax.term =
-  fun s  -> let uu____226 = fstar_refl_lid s in lid_as_data_tm uu____226
+  fun s  -> let uu____230 = fstar_refl_lid s in lid_as_data_tm uu____230
 let fstar_refl_term: FStar_Syntax_Syntax.term =
   mk_refl_syntax_lid_as_term "term"
 let fstar_refl_env: FStar_Syntax_Syntax.term =
@@ -154,11 +158,11 @@ type order =
   | Eq
   | Gt
 let uu___is_Lt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____233 -> false
+  fun projectee  -> match projectee with | Lt  -> true | uu____237 -> false
 let uu___is_Eq: order -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____237 -> false
+  fun projectee  -> match projectee with | Eq  -> true | uu____241 -> false
 let uu___is_Gt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Gt  -> true | uu____241 -> false
+  fun projectee  -> match projectee with | Gt  -> true | uu____245 -> false
 let ord_Lt_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange
 let ord_Eq_lid: FStar_Ident.lident =
@@ -173,6 +177,8 @@ let fstar_refl_norm_step: FStar_Syntax_Syntax.term =
 let ref_Simpl_lid: FStar_Ident.lident = fstar_refl_syntax_lid "Simpl"
 let ref_WHNF_lid: FStar_Ident.lident = fstar_refl_syntax_lid "WHNF"
 let ref_Primops_lid: FStar_Ident.lident = fstar_refl_syntax_lid "Primops"
+let ref_Delta_lid: FStar_Ident.lident = fstar_refl_syntax_lid "Delta"
 let ref_Simpl: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Simpl_lid
 let ref_WHNF: FStar_Syntax_Syntax.term = lid_as_data_tm ref_WHNF_lid
 let ref_Primops: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Primops_lid
+let ref_Delta: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Delta_lid
