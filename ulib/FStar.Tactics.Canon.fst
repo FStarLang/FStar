@@ -94,7 +94,9 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         trefl
     in
     norm [Delta];;
-    (* s <-- quote op_Star; unfold_def s;; // ugh! again, needed to unfold op_Star into op_Multiply *)
+    (* What we really want is this:  *)
+    (* s <-- quote op_Star; unfold_def s;; *)
+    (* But nested `pointwise` calls break (c.f. #1065) *)
     eg <-- cur_goal;
     let (e, g), _ = eg in
     let f = term_as_formula g in
