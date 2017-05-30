@@ -543,9 +543,12 @@ let clear : tac<unit> =
     match Env.pop_bv goal.context with
     | None -> fail "Cannot clear; empty context"
     | Some (x, env') ->
-        let fns = FStar.Syntax.Free.names goal.goal_ty in
-        if Util.set_mem x fns
+        let fns_ty = FStar.Syntax.Free.names goal.goal_ty in
+        let fns_tm = FStar.Syntax.Free.names goal.witness in
+        if Util.set_mem x fns_ty
         then fail "Cannot clear; variable appears in goal"
+        else if Util.set_mem x fns_tm
+        then fail "Cannot clear; variable appears in witness"
         else let new_goal = {goal with context=env'} in
              bind dismiss (fun _ ->
              add_goals [new_goal]))
