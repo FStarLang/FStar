@@ -259,3 +259,18 @@ private let bool_ext (b:bool) : unit -> Lemma (b == true \/ b == false) = fun ()
 (*     p <-- get_lemma lemt; *)
 (*     p <-- unsquash p; *)
 (*     seq (cases p;; return ()) rewrite_eqs_from_context // TODO: overkill, we want to only rewrite each case *)
+
+let unfold_point (t:term) : tactic unit =
+    eg <-- cur_goal;
+    let (e, g), _ = eg in
+    let f = term_as_formula g in
+    match f with
+    | Comp Eq _ l r ->
+        if term_eq l t
+        then (norm [Delta];; trefl)
+        else trefl
+    | _ ->
+        fail "impossible"
+
+let unfold_def (t:term) : tactic unit =
+    pointwise (unfold_point t)
