@@ -10,4 +10,5 @@ all:	Apply.uver		\
 	Canon.uver		\
 	Pruning.uver		\
 	BinaryTreesEnumeration.uver	\
-	Cases.uver
+	Cases.uver		\
+	Cut.uver

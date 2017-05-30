@@ -55,7 +55,7 @@ let _ = assert_by_tactic (t <-- quote blah;
                               fail "Free variable did not return an FV")) True
 
 let _ = assert_by_tactic (t <-- quote (5 == 2 + 3);
-                          match term_as_formula t with
+                          match term_as_formula' t with
                           | Comp Eq _ _ _ -> return ()
                           | _ -> fail "term_as_formula did not recognize an equality"
                           )
@@ -69,7 +69,7 @@ let _ = assert_by_tactic (t <-- quote ((fun (x:int) -> x) 5);
                           ) True
 
 let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
-                          match term_as_formula t with
+                          match term_as_formula' t with
                           | Forall _ _ -> return ()
                           | _ -> fail ("This should be a forall: " ^ term_to_string t)) True
 
@@ -79,7 +79,7 @@ let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
 //
 // Tweaking inference to do some normalization could get rid of this, I think..
 let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
-                          match term_as_formula t with
+                          match term_as_formula; t with
                           | Implies _ _ -> fail "" // make it fail for now, but this is the wanted result, I think
                           | f -> print ("This should be an implication: " ^ formula_to_string f);;
                                  print "But that's a known issue...";;

@@ -59,6 +59,15 @@ let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
 let simpl : tactic unit = norm [Simpl; Primops]
 let whnf  : tactic unit = norm [WHNF; Primops]
 
+private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
+let __cut #b a f x = f x
+
+let tcut (t:term) : tactic binder =
+    qq <-- quote __cut;
+    let tt = pack (Tv_App qq t) in
+    apply (return tt);;
+    intro
+
 let rec revert_all (bs:binders) : tactic unit =
     match bs with
     | [] -> return ()

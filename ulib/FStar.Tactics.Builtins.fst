@@ -33,8 +33,6 @@ let revert : tactic unit = fun () -> TAC?.reflect __revert
 assume private val __clear   : __tac unit
 let clear : tactic unit = fun () -> TAC?.reflect __clear
 
-// TODO: isn't this is unsound if b is not the environment?
-// I think so but couldn't quickly come up with a contradiction
 assume private val __rewrite : binder -> __tac unit
 let rewrite (b:binder) : tactic unit = fun () -> TAC?.reflect (__rewrite b)
 
