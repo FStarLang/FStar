@@ -322,7 +322,11 @@ let intro : tac<binder> =
     bind cur_goal (fun goal ->
     match arrow_one goal.goal_ty with
     | Some (b, c) ->
-        let [b], c = SS.open_comp [b] c in
+        let bs, c = SS.open_comp [b] c in
+        let b = match bs with
+                | [b] -> b
+                | _ -> failwith "impossible: open_comp returned different amount of binders"
+        in
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
         else let env' = Env.push_binders goal.context [b] in
