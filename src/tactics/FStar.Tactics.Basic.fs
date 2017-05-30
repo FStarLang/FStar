@@ -256,16 +256,16 @@ let smt : tac<unit> =
 
 let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
-    bind (try ret (List.splitAt n p.goals) with | _ -> fail "diivde: not enough goals") (fun (lgs, rgs) ->
-    let lp = {p with goals=lgs} in
-    let rp = {p with goals=rgs} in
+    bind (try ret (List.splitAt n p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
+    let lp = {p with goals=lgs; smt_goals=[]} in
+    let rp = {p with goals=rgs; smt_goals=[]} in
     bind (set lp) (fun _ ->
     bind l        (fun a ->
     bind get      (fun lp' ->
     bind (set rp) (fun _ ->
     bind r        (fun b ->
     bind get      (fun rp' ->
-    let p' = {p with goals=lp'.goals@rp'.goals} in
+    let p' = {p with goals=lp'.goals@rp'.goals; smt_goals=lp'.smt_goals@rp'.smt_goals@p.smt_goals} in
     bind (set p') (fun _ ->
     ret (a, b))))))))))
     
