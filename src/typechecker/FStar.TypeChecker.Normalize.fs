@@ -878,6 +878,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f SC.or_lid
                    || S.fv_eq_lid f SC.imp_lid
                    || S.fv_eq_lid f SC.forall_lid
+                   || S.fv_eq_lid f SC.squash_lid
                    || S.fv_eq_lid f SC.exists_lid
                    || S.fv_eq_lid f SC.true_lid
                    || S.fv_eq_lid f SC.false_lid)
