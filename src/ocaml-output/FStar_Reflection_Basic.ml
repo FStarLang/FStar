@@ -647,7 +647,7 @@ let pack: FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term =
   fun tv  ->
     match tv with
     | FStar_Reflection_Data.Tv_Var (bv,uu____1616) ->
-        FStar_Syntax_Syntax.bv_to_tm bv
+        FStar_Syntax_Syntax.bv_to_name bv
     | FStar_Reflection_Data.Tv_FVar fv -> FStar_Syntax_Syntax.fv_to_tm fv
     | FStar_Reflection_Data.Tv_App (l,r) ->
         let uu____1620 =

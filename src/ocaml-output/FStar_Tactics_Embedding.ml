@@ -162,34 +162,26 @@ let unembed_env:
           env2
 let embed_witness:
   FStar_Tactics_Basic.proofstate ->
-    FStar_Syntax_Syntax.term option -> FStar_Syntax_Syntax.term
-  =
-  fun ps  ->
-    fun w  ->
-      FStar_Reflection_Basic.embed_option FStar_Reflection_Basic.embed_term
-        FStar_Reflection_Data.fstar_refl_term w
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  = fun ps  -> fun w  -> FStar_Reflection_Basic.embed_term w
 let unembed_witness:
   FStar_Tactics_Basic.proofstate ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term option
-  =
-  fun ps  ->
-    fun t  ->
-      FStar_Reflection_Basic.unembed_option
-        FStar_Reflection_Basic.unembed_term t
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  = fun ps  -> fun t  -> FStar_Reflection_Basic.unembed_term t
 let embed_goal:
   FStar_Tactics_Basic.proofstate ->
     FStar_Tactics_Basic.goal -> FStar_Syntax_Syntax.term
   =
   fun ps  ->
     fun g  ->
-      let uu____189 =
+      let uu____186 =
         pair_typ FStar_Reflection_Data.fstar_refl_env
           FStar_Reflection_Data.fstar_refl_term in
       FStar_Reflection_Basic.embed_pair
         (FStar_Reflection_Basic.embed_pair (embed_env ps)
            FStar_Reflection_Data.fstar_refl_env
            FStar_Reflection_Basic.embed_term
-           FStar_Reflection_Data.fstar_refl_term) uu____189
+           FStar_Reflection_Data.fstar_refl_term) uu____186
         (embed_witness ps) FStar_Reflection_Data.fstar_refl_term
         (((g.FStar_Tactics_Basic.context), (g.FStar_Tactics_Basic.goal_ty)),
           (g.FStar_Tactics_Basic.witness))
@@ -199,11 +191,11 @@ let unembed_goal:
   =
   fun ps  ->
     fun t  ->
-      let uu____202 =
+      let uu____197 =
         FStar_Reflection_Basic.unembed_pair
           (FStar_Reflection_Basic.unembed_pair (unembed_env ps)
              FStar_Reflection_Basic.unembed_term) (unembed_witness ps) t in
-      match uu____202 with
+      match uu____197 with
       | ((env,goal_ty),witness) ->
           {
             FStar_Tactics_Basic.context = env;
@@ -245,84 +237,84 @@ let unembed_state:
 let embed_result ps res embed_a t_a =
   match res with
   | FStar_Tactics_Basic.Failed (msg,ps1) ->
-      let uu____286 =
-        let uu____287 =
+      let uu____277 =
+        let uu____278 =
           FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Failed
             [FStar_Syntax_Syntax.U_zero] in
-        let uu____288 =
-          let uu____289 = FStar_Syntax_Syntax.iarg t_a in
-          let uu____290 =
-            let uu____292 =
-              let uu____293 = FStar_Reflection_Basic.embed_string msg in
-              FStar_Syntax_Syntax.as_arg uu____293 in
-            let uu____294 =
-              let uu____296 =
-                let uu____297 =
+        let uu____279 =
+          let uu____280 = FStar_Syntax_Syntax.iarg t_a in
+          let uu____281 =
+            let uu____283 =
+              let uu____284 = FStar_Reflection_Basic.embed_string msg in
+              FStar_Syntax_Syntax.as_arg uu____284 in
+            let uu____285 =
+              let uu____287 =
+                let uu____288 =
                   embed_state ps1
                     ((ps1.FStar_Tactics_Basic.goals),
                       (ps1.FStar_Tactics_Basic.smt_goals)) in
-                FStar_Syntax_Syntax.as_arg uu____297 in
-              [uu____296] in
-            uu____292 :: uu____294 in
-          uu____289 :: uu____290 in
-        FStar_Syntax_Syntax.mk_Tm_app uu____287 uu____288 in
-      uu____286 None FStar_Range.dummyRange
+                FStar_Syntax_Syntax.as_arg uu____288 in
+              [uu____287] in
+            uu____283 :: uu____285 in
+          uu____280 :: uu____281 in
+        FStar_Syntax_Syntax.mk_Tm_app uu____278 uu____279 in
+      uu____277 None FStar_Range.dummyRange
   | FStar_Tactics_Basic.Success (a,ps1) ->
-      let uu____306 =
-        let uu____307 =
+      let uu____297 =
+        let uu____298 =
           FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success
             [FStar_Syntax_Syntax.U_zero] in
-        let uu____308 =
-          let uu____309 = FStar_Syntax_Syntax.iarg t_a in
-          let uu____310 =
-            let uu____312 =
-              let uu____313 = embed_a a in
-              FStar_Syntax_Syntax.as_arg uu____313 in
-            let uu____314 =
-              let uu____316 =
-                let uu____317 =
+        let uu____299 =
+          let uu____300 = FStar_Syntax_Syntax.iarg t_a in
+          let uu____301 =
+            let uu____303 =
+              let uu____304 = embed_a a in
+              FStar_Syntax_Syntax.as_arg uu____304 in
+            let uu____305 =
+              let uu____307 =
+                let uu____308 =
                   embed_state ps1
                     ((ps1.FStar_Tactics_Basic.goals),
                       (ps1.FStar_Tactics_Basic.smt_goals)) in
-                FStar_Syntax_Syntax.as_arg uu____317 in
-              [uu____316] in
-            uu____312 :: uu____314 in
-          uu____309 :: uu____310 in
-        FStar_Syntax_Syntax.mk_Tm_app uu____307 uu____308 in
-      uu____306 None FStar_Range.dummyRange
+                FStar_Syntax_Syntax.as_arg uu____308 in
+              [uu____307] in
+            uu____303 :: uu____305 in
+          uu____300 :: uu____301 in
+        FStar_Syntax_Syntax.mk_Tm_app uu____298 uu____299 in
+      uu____297 None FStar_Range.dummyRange
 let unembed_result ps res unembed_a =
   let res1 = FStar_Syntax_Util.unascribe res in
-  let uu____353 = FStar_Syntax_Util.head_and_args res1 in
-  match uu____353 with
+  let uu____344 = FStar_Syntax_Util.head_and_args res1 in
+  match uu____344 with
   | (hd1,args) ->
-      let uu____385 =
-        let uu____393 =
-          let uu____394 = FStar_Syntax_Util.un_uinst hd1 in
-          uu____394.FStar_Syntax_Syntax.n in
-        (uu____393, args) in
-      (match uu____385 with
+      let uu____376 =
+        let uu____384 =
+          let uu____385 = FStar_Syntax_Util.un_uinst hd1 in
+          uu____385.FStar_Syntax_Syntax.n in
+        (uu____384, args) in
+      (match uu____376 with
        | (FStar_Syntax_Syntax.Tm_fvar
-          fv,_t::(a,uu____411)::(embedded_state,uu____413)::[]) when
-           let uu____447 = fstar_tactics_lid' ["Effect"; "Success"] in
-           FStar_Syntax_Syntax.fv_eq_lid fv uu____447 ->
-           let uu____448 =
-             let uu____451 = unembed_a a in
-             let uu____452 = unembed_state ps embedded_state in
-             (uu____451, uu____452) in
-           FStar_Util.Inl uu____448
+          fv,_t::(a,uu____402)::(embedded_state,uu____404)::[]) when
+           let uu____438 = fstar_tactics_lid' ["Effect"; "Success"] in
+           FStar_Syntax_Syntax.fv_eq_lid fv uu____438 ->
+           let uu____439 =
+             let uu____442 = unembed_a a in
+             let uu____443 = unembed_state ps embedded_state in
+             (uu____442, uu____443) in
+           FStar_Util.Inl uu____439
        | (FStar_Syntax_Syntax.Tm_fvar
-          fv,_t::(embedded_string,uu____460)::(embedded_state,uu____462)::[])
+          fv,_t::(embedded_string,uu____451)::(embedded_state,uu____453)::[])
            when
-           let uu____496 = fstar_tactics_lid' ["Effect"; "Failed"] in
-           FStar_Syntax_Syntax.fv_eq_lid fv uu____496 ->
-           let uu____497 =
-             let uu____500 =
+           let uu____487 = fstar_tactics_lid' ["Effect"; "Failed"] in
+           FStar_Syntax_Syntax.fv_eq_lid fv uu____487 ->
+           let uu____488 =
+             let uu____491 =
                FStar_Reflection_Basic.unembed_string embedded_string in
-             let uu____501 = unembed_state ps embedded_state in
-             (uu____500, uu____501) in
-           FStar_Util.Inr uu____497
-       | uu____506 ->
-           let uu____514 =
-             let uu____515 = FStar_Syntax_Print.term_to_string res1 in
-             FStar_Util.format1 "Not an embedded result: %s" uu____515 in
-           failwith uu____514)
+             let uu____492 = unembed_state ps embedded_state in
+             (uu____491, uu____492) in
+           FStar_Util.Inr uu____488
+       | uu____497 ->
+           let uu____505 =
+             let uu____506 = FStar_Syntax_Print.term_to_string res1 in
+             FStar_Util.format1 "Not an embedded result: %s" uu____506 in
+           failwith uu____505)

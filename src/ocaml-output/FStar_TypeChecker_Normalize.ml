@@ -1946,17 +1946,20 @@ let rec norm:
                    (FStar_List.mem FStar_TypeChecker_Env.UnfoldTac
                       cfg.delta_level)
                      &&
-                     (((((((FStar_Syntax_Syntax.fv_eq_lid f
-                              FStar_Syntax_Const.and_lid)
+                     ((((((((FStar_Syntax_Syntax.fv_eq_lid f
+                               FStar_Syntax_Const.and_lid)
+                              ||
+                              (FStar_Syntax_Syntax.fv_eq_lid f
+                                 FStar_Syntax_Const.or_lid))
                              ||
                              (FStar_Syntax_Syntax.fv_eq_lid f
-                                FStar_Syntax_Const.or_lid))
+                                FStar_Syntax_Const.imp_lid))
                             ||
                             (FStar_Syntax_Syntax.fv_eq_lid f
-                               FStar_Syntax_Const.imp_lid))
+                               FStar_Syntax_Const.forall_lid))
                            ||
                            (FStar_Syntax_Syntax.fv_eq_lid f
-                              FStar_Syntax_Const.forall_lid))
+                              FStar_Syntax_Const.squash_lid))
                           ||
                           (FStar_Syntax_Syntax.fv_eq_lid f
                              FStar_Syntax_Const.exists_lid))
