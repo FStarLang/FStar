@@ -26,6 +26,7 @@ type norm_step =
     | Simpl
     | WHNF
     | Primops
+    | Delta
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
@@ -94,7 +95,9 @@ let fstar_refl_norm_step = mk_refl_syntax_lid_as_term "norm_step"
 let ref_Simpl_lid      = fstar_refl_syntax_lid "Simpl"
 let ref_WHNF_lid       = fstar_refl_syntax_lid "WHNF"
 let ref_Primops_lid    = fstar_refl_syntax_lid "Primops"
+let ref_Delta_lid      = fstar_refl_syntax_lid "Delta"
 
 let ref_Simpl          = lid_as_data_tm ref_Simpl_lid
 let ref_WHNF           = lid_as_data_tm ref_WHNF_lid
 let ref_Primops        = lid_as_data_tm ref_Primops_lid
+let ref_Delta          = lid_as_data_tm ref_Delta_lid

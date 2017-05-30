@@ -345,8 +345,9 @@ let norm (s : list<RD.norm_step>) : tac<unit> =
         | RD.Simpl   -> [N.Simplify]
         | RD.WHNF    -> [N.WHNF]
         | RD.Primops -> [N.Primops]
+        | RD.Delta   -> [N.UnfoldUntil Delta_constant]
     in
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac]@(List.flatten (List.map tr s)) in
+    let steps = [N.Reify; N.UnfoldTac]@(List.flatten (List.map tr s)) in
     let w = N.normalize steps goal.context goal.witness in
     let t = N.normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty = t; witness = w})

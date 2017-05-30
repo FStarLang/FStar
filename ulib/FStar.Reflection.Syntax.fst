@@ -160,6 +160,7 @@ type norm_step =
     | Simpl
     | WHNF
     | Primops
+    | Delta
 
 let compare_fv (f1 f2 : fv) : order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
