@@ -22,6 +22,7 @@ let sub_mod a b = sub a b
 let mul (a:uint64) (b:uint64) : uint64 = Stdint.Uint64.mul a b
 let mul_underspec a b = mul a b
 let mul_mod a b = mul a b
+let mul_div a b = failwith "todo for nswamy: implement the function added in the .fst"
 
 let div (a:uint64) (b:uint64) : uint64 = Stdint.Uint64.div a b
 
