@@ -621,6 +621,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
 
             | MLTD_DType ctors ->
                 let forctor (name, tys) =
+                  let _names, tys = List.split tys in
                     match tys with
                     | [] -> text name
                     | _  ->
@@ -687,6 +688,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
         reduce1 [text "exception"; text x]
 
     | MLM_Exn (x, args) ->
+        let args = List.map snd args in
         let args = List.map (doc_of_mltype currentModule  (min_op_prec, NonAssoc)) args in
         let args = parens (combine (text " * ") args) in
         reduce1 [text "exception"; text x; text "of"; args]
