@@ -274,14 +274,6 @@ let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
 let focus_cur_goal (f:tac<'a>) : tac<'a> =
     bind (divide 1 f idtac) (fun (a, ()) -> ret a)
 
-(* or_else: try t1; if it fails, try t2 *)
-let or_else (t1:tac<'a>) (t2:tac<'a>) : tac<'a> =
-    mk_tac (fun p ->
-            match t1.tac_f p with
-            | Failed _ ->
-                t2.tac_f p
-            | q -> q)
-
 (* Applies t to each of the current goals
       fails if t fails on any of the goals
       collects each result in the output list *)

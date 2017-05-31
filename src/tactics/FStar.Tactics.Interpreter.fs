@@ -173,11 +173,17 @@ let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
     | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid ->
         begin
         // kinda unclean
+        try
         match run (unembed_tactic_0 unembed_unit tactic) (proofstate_of_goal_ty e assertion) with
         | Success (_, ps) ->
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
         | Failed (s,ps) ->
             raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", tactic.pos))
+        with
+        | Failure s ->
+            raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", tactic.pos))
+        | _ ->
+            raise (FStar.Errors.Error ("user tactic failed: unexpected exception", tactic.pos))
         end
     | _ ->
         (t, [])
