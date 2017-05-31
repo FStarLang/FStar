@@ -6,10 +6,12 @@ open FStar.Tactics.Derived
 open FStar.Reflection
 
 
+// Ugly
+unfold let thunk #a #b (x:a) = fun (y:b)-> x
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
                             PURE (x:a -> squash (b x)) (fun p -> forall x. p x)
-let revert_squash #a #b s = admit()
+let revert_squash #a #b s = thunk ()
 
 let l_revert : tactic unit =
     revert;;
@@ -136,9 +138,6 @@ let unfold_definition_and_simplify_eq (tm:tactic term) : tactic unit =
     tm' <-- tm;
     unfold_definition_and_simplify_eq' tm'
 
-
-
-
 private val vbind : (#p:Type) -> (#q:Type) -> squash p -> (p -> squash q) -> squash q
 let vbind #p #q sq f = admit()
 
@@ -169,3 +168,25 @@ let cases_bool (b:term) : tactic unit =
     bi <-- quote bool_ind;
     seq (apply (return (mk_app bi [b])))
         (trytac (b <-- implies_intro; rewrite b;; clear);; idtac)
+
+private val or_intro_1 : (#p:Type) -> (#q:Type) -> squash p -> squash (p \/ q)
+let or_intro_1 #p #q _ = ()
+
+private val or_intro_2 : (#p:Type) -> (#q:Type) -> squash q -> squash (p \/ q)
+let or_intro_2 #p #q _ = ()
+
+let left : tactic unit =
+    apply (quote or_intro_1)
+
+let right : tactic unit =
+    apply (quote or_intro_2)
+
+private val __and_elim : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
+                              (p /\ q) ->
+                              squash (p ==> q ==> phi) ->
+                              squash phi
+let __and_elim #p #q #phi p_and_q f = ()
+
+let and_elim (t : term) : tactic unit =
+    ae <-- quote __and_elim;
+    apply (return (mk_app ae [t]))

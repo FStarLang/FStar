@@ -183,7 +183,8 @@ let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
         with
         | Failure s ->
             raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", tactic.pos))
-        | _ ->
+        | e ->
+            //printfn "Exception: %A\n" e;
             raise (FStar.Errors.Error ("user tactic failed: unexpected exception", tactic.pos))
         end
     | _ ->
