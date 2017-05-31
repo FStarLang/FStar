@@ -24,6 +24,9 @@ let trivial : tactic unit = fun () -> TAC?.reflect __trivial
 assume private val __norm  : list norm_step -> __tac unit
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
+assume private val __intro_irrel  : __tac binder
+let intro_irrel : tactic binder = fun () -> TAC?.reflect __intro_irrel
+
 assume private val __intro  : __tac binder
 let intro : tactic binder = fun () -> TAC?.reflect __intro
 
