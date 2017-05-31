@@ -79,7 +79,7 @@ let _ = assert_by_tactic (t <-- quote ((x:int) -> x == 2 /\ False);
 //
 // Tweaking inference to do some normalization could get rid of this, I think..
 let _ = assert_by_tactic (t <-- quote ((y:int) -> (x:int) -> x + 2 == 5);
-                          match term_as_formula; t with
+                          match term_as_formula t with
                           | Implies _ _ -> fail "" // make it fail for now, but this is the wanted result, I think
                           | f -> print ("This should be an implication: " ^ formula_to_string f);;
                                  print "But that's a known issue...";;
