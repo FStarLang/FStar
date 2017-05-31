@@ -53,6 +53,11 @@ let rec repeat (#a:Type) (t : tactic a) () : Tac (list a) =
     | Some x -> (xs <-- repeat t;
                  return (x::xs))) ()
 
+let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
+    x <-- t;
+    xs <-- repeat t;
+    return (x::xs)
+
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 

@@ -36,7 +36,7 @@ let forall_intro : tactic binder =
     | _ ->
         fail "not a forall"
 
-let forall_intros : tactic binders = repeat forall_intro
+let forall_intros : tactic binders = repeat1 forall_intro
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> squash (a /\ b)
@@ -68,7 +68,7 @@ let implies_intro : tactic binder =
     | _ ->
         fail "not an implication"
 
-let implies_intros : tactic binders = repeat implies_intro
+let implies_intros : tactic binders = repeat1 implies_intro
 
 let rec visit (callback:tactic unit) () : Tac unit =
     focus (or_else callback
