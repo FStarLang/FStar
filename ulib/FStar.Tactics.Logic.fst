@@ -62,7 +62,7 @@ let implies_intro : tactic binder =
     match term_as_formula g with
     | Implies _ _ -> (
         apply (quote imp_intro_lem);;
-        b <-- intro_irrel;
+        b <-- intro;
         return b
         )
     | _ ->

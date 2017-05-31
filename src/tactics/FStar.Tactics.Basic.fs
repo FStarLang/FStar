@@ -318,7 +318,7 @@ let arrow_one (t:typ) : option<(binder * comp)> =
     | _ ->
         None
 
-let __intro (irrel:bool) : tac<binder> =
+let intro : tac<binder> =
     bind cur_goal (fun goal ->
     match arrow_one goal.goal_ty with
     | Some (b, c) ->
@@ -329,10 +329,9 @@ let __intro (irrel:bool) : tac<binder> =
         in
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
-        else let env = goal.context in
-             let env' = Env.push_binders env [b] in
+        else let env' = Env.push_binders goal.context [b] in
              let typ' = comp_to_typ c in
-             let u, _, g = TcUtil.new_implicit_var "intro" typ'.pos (if irrel then env else env') typ' in
+             let u, _, g = TcUtil.new_implicit_var "intro" typ'.pos env' typ' in
              if TcRel.teq_nosmt goal.context goal.witness (U.abs [b] u None)
              then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' typ';
@@ -342,9 +341,6 @@ let __intro (irrel:bool) : tac<binder> =
     | None ->
         fail "intro: goal is not an arrow"
     )
-
-let intro       : tac<binder> = __intro false
-let intro_irrel : tac<binder> = __intro true
 
 let norm (s : list<RD.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -554,7 +550,7 @@ let clear : tac<unit> =
         else let u, _, g = TcUtil.new_implicit_var "clear" goal.goal_ty.pos env' goal.goal_ty in
              if not (TcRel.teq_nosmt goal.context goal.witness u)
              then fail "clear: unification failed"
-             else let new_goal = {goal with context=env'; witness = u} in
+             else let new_goal = {goal with context=env'; witness = bnorm env' u} in
                   bind dismiss (fun _ ->
                   add_goals [new_goal]))
 

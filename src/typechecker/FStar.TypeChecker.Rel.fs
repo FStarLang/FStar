@@ -1559,7 +1559,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              then has_type_guard t1 t2
                              else has_type_guard t2 t1 in
                     solve env (solve_prob orig (Some guard) [] wl)
-                else giveup env "head mismatch" orig
+                else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps
                 solve_t env ({problem with lhs=t1; rhs=t2}) wl

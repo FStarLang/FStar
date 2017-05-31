@@ -2,13 +2,15 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 all:	Apply.uver		\
-	UserTactics.uver	\
-	Syntax.uver		\
-	GRewrite.uver		\
 	MetaCoq.uver		\
 	Arith.uver		\
-	Canon.uver		\
 	Pruning.uver		\
-	BinaryTreesEnumeration.uver	\
+	Cut.uver		\
+	Clear.uver		\
 	Cases.uver		\
-	Cut.uver
+	Syntax.uver		\
+	GRewrite.uver		\
+	UserTactics.uver	\
+	Canon.uver		\
+	BinaryTreesEnumeration.uver	\
+	
