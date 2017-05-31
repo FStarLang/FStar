@@ -74,7 +74,7 @@ openssl/Configure:
 	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
-	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
+	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
 
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
