@@ -149,7 +149,7 @@ let extract_bundle env se =
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
           | _ ->
-              failwith "impossible"
+              []
         in
         let tys = (ml_tyvars, mlt) in
         let fvv = mkFvvar ctor.dname ctor.dtyp in
