@@ -551,11 +551,12 @@ let clear : tac<unit> =
         let fns_tm = FStar.Syntax.Free.names goal.witness in
         if Util.set_mem x fns_ty
         then fail "Cannot clear; variable appears in goal"
-        else if Util.set_mem x fns_tm
-        then fail "Cannot clear; variable appears in witness"
-        else let new_goal = {goal with context=env'} in
-             bind dismiss (fun _ ->
-             add_goals [new_goal]))
+        else let u, _, g = TcUtil.new_implicit_var "clear" goal.goal_ty.pos env' goal.goal_ty in
+             if not (TcRel.teq_nosmt goal.context goal.witness u)
+             then fail "clear: unification failed"
+             else let new_goal = {goal with context=env'; witness = u} in
+                  bind dismiss (fun _ ->
+                  add_goals [new_goal]))
 
 let clear_hd (x:name) : tac<unit> =
     bind cur_goal (fun goal ->
