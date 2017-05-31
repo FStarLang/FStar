@@ -13,4 +13,4 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Canon.uver		\
 	BinaryTreesEnumeration.uver	\
-	
+	Logic.uver
