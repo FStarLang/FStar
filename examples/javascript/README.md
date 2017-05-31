@@ -2,7 +2,7 @@ JavaScript backend
 ===================================================================
 #### Extraction F\* code to JavaScript ####
 
-As an intermediate step, we translate F\* code to Flow to check type-correctness 
+As an intermediate step, we translate F\* code to Flow for type checking 
 of the extracted code:
 
 .fst -[step 1]-> .flow -[step 2]-> .js -[step 3]-> .js
@@ -25,30 +25,30 @@ that is a version of the standard F\* library written in Flow.
 To compile the verified code, one needs to erasure types from `.flow` files and translate
 ES modules (export/import) to CommandJS modules.
 
-###  Getting start ###
+###  Getting started ###
 
-1. install Node v6.6.0
+1. install Node v8.0.0
   
 2. install Flow package (https://github.com/facebook/flow)
 
    - to create `.flowconfig` file, one can use the following command:
    
    ```
-   $ flow init
+   flow init
    ```
    
    - to verify Flow code:
    
    ```
-   $ flow check
+   flow check
    ```
 
-3. how to run Flow code, see https://flowtype.org/docs/running.html#_
+3. how to run Flow code, see https://flow.org/en/docs/install/
 
    - to erasure Flow types, one can install the following plugin:
    
    ```
-   npm install babel-plugin-transform-flow-strip-types
+   npm install --save-dev babel-cli babel-preset-flow
    ```
 
    - to translate ES modules (export/import) to CommandJS modules:
@@ -93,6 +93,5 @@ ES modules (export/import) to CommandJS modules.
  with `--out-dir` for babel:
  
    ```
-   babel --watch=./src --out-dir=./build
+   babel --watch=./js --out-dir=./build
    ```
- 
