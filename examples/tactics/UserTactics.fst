@@ -50,9 +50,7 @@ assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x ==
 
 let scanning_environment =
   let x = return_ten () in
-  assert_by_tactic (dump "GGG 1";;
-                    rewrite_equality (quote x);;
-                    dump "GGG 2";;
+  assert_by_tactic (rewrite_equality (quote x);;
                     rewrite_eqs_from_context;;
                     trivial)
                    (x + 0 == 10)
