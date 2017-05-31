@@ -127,6 +127,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
       mktac1 "__dump"          print_proof_state unembed_string embed_unit t_unit;
+      mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac1 "__pointwise"     pointwise (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac0 "__trefl"         trefl embed_unit t_unit;

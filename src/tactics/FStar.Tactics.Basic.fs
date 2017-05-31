@@ -130,6 +130,11 @@ let dump_goal ps goal =
     tacprint (goal_to_string goal);
     ()
 
+let dump_cur ps msg =
+    tacprint1 "Current goal (%s):" msg;
+    dump_goal ps (List.hd ps.goals);
+    ()
+
 let dump_proofstate ps msg =
     tacprint "";
     tacprint1 "State dump (%s):" msg;
@@ -138,6 +143,10 @@ let dump_proofstate ps msg =
     tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
     List.iter (dump_goal ps) ps.smt_goals;
     ()
+
+let print_proof_state1 (msg:string) : tac<unit> =
+    mk_tac (fun p -> dump_cur p msg;
+                     Success ((), p))
 
 let print_proof_state (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_proofstate p msg;

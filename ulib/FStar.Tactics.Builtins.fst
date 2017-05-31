@@ -62,6 +62,9 @@ let print (msg:string) : tactic unit = fun () -> TAC?.reflect (__print msg)
 assume private val __dump : string -> __tac unit
 let dump (msg:string) : tactic unit = fun () -> TAC?.reflect (__dump msg)
 
+assume private val __dump1 : string -> __tac unit
+let dump1 (msg:string) : tactic unit = fun () -> TAC?.reflect (__dump1 msg)
+
 assume private val __trefl : __tac unit
 let trefl : tactic unit = fun () -> TAC?.reflect __trefl
 
