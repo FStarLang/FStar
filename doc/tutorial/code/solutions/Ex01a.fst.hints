@@ -17,12 +17,14 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.V", "disc_equation_Prims.V",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_Prims.V", "disc_equation_Prims.V",
         "equation_Ex01a.canRead", "equation_Ex01a.canWrite",
         "equation_Ex01a.readme", "equation_Ex01a.tmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0", "projection_inverse_Prims.V_a",
-        "projection_inverse_Prims.V_v"
+        "function_token_typing_Prims.string", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.V_a", "projection_inverse_Prims.V_v",
+        "typing_Prims.uu___is_V"
       ],
       0
     ],

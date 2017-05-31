@@ -44,10 +44,30 @@ type entry =
 
 let log = ST.alloc #(list entry) []
 
-val keygen: p:(text -> Type) -> ML (pkey p)
-val mac:    k:key -> t:text{key_prop k t} -> ST tag (requires (fun h -> True)) (ensures (fun h x h' -> modifies !{ log } h h'))
-val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) (requires (fun h -> True)) (ensures (fun h x h' -> modifies !{} h h'))
-
+val keygen: p:(text -> Type) -> St (pkey p)
+val mac:    k:key -> t:text{key_prop k t} -> ST tag 
+  (requires (fun h -> True)) 
+  (ensures (fun h x h' -> 
+     x == hmac_sha1 k t /\
+     Heap.modifies (Heap.only log) h h' /\
+     Some?
+      (List.Tot.find
+        (fun (Entry k' text' _) -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes t text')
+        (Heap.sel h' log))))
+        
+val verify: k:key -> t:text -> tag:tag -> ST (b:bool{b ==> key_prop k t}) 
+  (requires (fun h -> True)) 
+  (ensures (fun h b h' -> 
+    h == h' /\
+    (let verified = Platform.Bytes.equalBytes (hmac_sha1 k t) tag in
+     let found =
+       Some?
+         (List.Tot.find 
+           (fun (Entry k' text' _) ->
+             Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes t text')
+           (Heap.sel h log)) in
+     b == (verified && found))))
+    
 (* ---- implementation *)
 
 let keygen (p: (text -> Type)) =
@@ -57,17 +77,18 @@ let keygen (p: (text -> Type)) =
 
 let mac k t =
   let m = hmac_sha1 k t in
+  ST.recall log;  //upd guarantees modifies singleton, only if the modified reference is contained in the heap
   log := Entry k t m :: !log;
   m
 
 let verify k text tag =
   (* to verify, we simply recompute & compare *)
-  let m= hmac_sha1 k text in
+  let m = hmac_sha1 k text in
   let verified = (Platform.Bytes.equalBytes m tag) in
   let found =
     Some?
       (List.Tot.find
-        (fun (Entry k' text' tag') -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
+        (fun (Entry k' text' _) -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
         !log) in
 
   (* plain, concrete implementation (ignoring the log) *)

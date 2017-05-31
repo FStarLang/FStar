@@ -76,6 +76,19 @@ val smap_remove: smap<'value> -> string -> unit
 (* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
+val smap_size: smap<'value> -> int
+
+type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
+val imap_create: int -> imap<'value>
+val imap_clear:imap<'value> -> unit
+val imap_add: imap<'value> -> int -> 'value -> unit
+val imap_of_list: list<(int*'value)> -> imap<'value>
+val imap_try_find: imap<'value> -> int -> option<'value>
+val imap_fold: imap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
+val imap_remove: imap<'value> -> int -> unit
+(* The list may contain duplicates. *)
+val imap_keys: imap<'value> -> list<int>
+val imap_copy: imap<'value> -> imap<'value>
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -117,6 +130,16 @@ val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
 
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+val default_printer : printer
+val set_printer : printer -> unit
+
+val print_raw : string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -129,6 +152,8 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
 val file_get_contents: string -> string
+val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
+val concat_dir_filename: string -> string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader
@@ -184,16 +209,18 @@ val string_of_float: float -> Tot<string>
 val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
+val bytes_of_string: string -> Tot<array<byte>>
 val starts_with: string -> string -> Tot<bool>
 val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
+val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
 (* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> Tot<string>
-val replace_string: string -> string -> string -> Tot<string>
+val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
@@ -213,6 +240,7 @@ val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
+val try_find: ('a -> bool) -> list<'a> -> option<'a>
 val try_find_i: (int -> 'a -> bool) -> list<'a> -> option<(int * 'a)>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val try_find_index: ('a -> bool) -> list<'a> -> option<int>
@@ -223,6 +251,10 @@ val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
+
+(* Variation on fold_left which pushes the list returned by the functional *)
+(* on top of the leftover input list *)
+val fold_flatten:('a -> 'b -> 'a * list<'b>) -> 'a -> list<'b> -> 'a
 
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
@@ -340,3 +372,19 @@ type hints_db = {
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> option<hints_db>
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
+
+val json_of_string : string -> option<json>
+val string_of_json : json -> string
+
+(* Common interface between F#, Ocaml and F* to read and write references *)
+(* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)
+val read : ref<'a> -> 'a
+val write : ref<'a> -> 'a -> unit

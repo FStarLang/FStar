@@ -21,7 +21,8 @@ open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
-open FStar.Version
+
+module FC = FStar.Common
 
 type debug_level_t =
   | Low
@@ -33,6 +34,7 @@ type debug_level_t =
 type option_val =
   | Bool of bool
   | String of string
+  | Path of string
   | Int of int
   | List of list<option_val>
   | Unset
@@ -58,6 +60,7 @@ let as_int = function
   | _ -> failwith "Impos: expected Int"
 let as_string = function
   | String b -> b
+  | Path b -> FStar.Common.try_convert_file_name_to_mixed b
   | _ -> failwith "Impos: expected String"
 let as_list as_t = function
   | List ts -> ts |> List.map as_t
@@ -77,92 +80,101 @@ let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
+let with_saved_options f =
+  push (); let retv = f () in pop (); retv
+
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
 
+let defaults =
+     [
+      ("__temp_no_proj"               , List []);
+      ("_fstar_home"                  , String "");
+      ("_include_path"                , List []);
+      ("admit_smt_queries"            , Bool false);
+      ("check_hints"                  , Bool false);
+      ("codegen"                      , Unset);
+      ("codegen-lib"                  , List []);
+      ("debug"                        , List []);
+      ("debug_level"                  , List []);
+      ("dep"                          , Unset);
+      ("detail_errors"                , Bool false);
+      ("doc"                          , Bool false);
+      ("dump_module"                  , List []);
+      ("eager_inference"              , Bool false);
+      ("explicit_deps"                , Bool false);
+      ("extract_all"                  , Bool false);
+      ("extract_module"               , List []);
+      ("extract_namespace"            , List []);
+      ("fs_typ_app"                   , Bool false);
+      ("fstar_home"                   , Unset);
+      ("full_context_dependency"      , Bool true);
+      ("hide_genident_nums"           , Bool false);
+      ("hide_uvar_nums"               , Bool false);
+      ("hint_info"                    , Bool false);
+      ("in"                           , Bool false);
+      ("ide"                          , Bool false);
+      ("include"                      , List []);
+      ("indent"                       , Bool false);
+      ("initial_fuel"                 , Int 2);
+      ("initial_ifuel"                , Int 1);
+      ("lax"                          , Bool false);
+      ("log_queries"                  , Bool false);
+      ("log_types"                    , Bool false);
+      ("max_fuel"                     , Int 8);
+      ("max_ifuel"                    , Int 2);
+      ("min_fuel"                     , Int 1);
+      ("MLish"                        , Bool false);
+      ("n_cores"                      , Int 1);
+      ("no_default_includes"          , Bool false);
+      ("no_extract"                   , List []);
+      ("no_location_info"             , Bool false);
+      ("odir"                         , Unset);
+      ("prims"                        , Unset);
+      ("pretype"                      , Bool true);
+      ("prims_ref"                    , Unset);
+      ("print_before_norm"            , Bool false);
+      ("print_bound_var_types"        , Bool false);
+      ("print_effect_args"            , Bool false);
+      ("print_fuels"                  , Bool false);
+      ("print_full_names"             , Bool false);
+      ("print_implicits"              , Bool false);
+      ("print_universes"              , Bool false);
+      ("print_z3_statistics"          , Bool false);
+      ("prn"                          , Bool false);
+      ("record_hints"                 , Bool false);
+      ("reuse_hint_for"               , Unset);
+      ("show_signatures"              , List []);
+      ("silent"                       , Bool false);
+      ("smt"                          , Unset);
+      ("smtencoding.elim_box"         , Bool false);
+      ("smtencoding.nl_arith_repr"    , String "boxwrap");
+      ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("split_cases"                  , Int 0);
+      ("timing"                       , Bool false);
+      ("trace_error"                  , Bool false);
+      ("ugly"                         , Bool false);
+      ("unthrottle_inductives"        , Bool false);
+      ("use_eq_at_higher_order"       , Bool false);
+      ("use_hints"                    , Bool false);
+      ("no_tactics"                   , Bool false);
+      ("using_facts_from"             , Unset);
+      ("verify"                       , Bool true);
+      ("verify_all"                   , Bool false);
+      ("verify_module"                , List []);
+      ("warn_default_effects"         , Bool false);
+      ("z3refresh"                    , Bool false);
+      ("z3rlimit"                     , Int 5);
+      ("z3rlimit_factor"              , Int 1);
+      ("z3seed"                       , Int 0);
+      ("z3timeout"                    , Int 5);
+      ("z3cliopt"                     , List []);
+      ("__no_positivity"              , Bool false)]
 
 let init () =
-  let vals =
-       [
-        ("__temp_no_proj"               , List []);
-        ("_fstar_home"                  , String "");
-        ("_include_path"                , List []);
-        ("admit_smt_queries"            , Bool false);
-        ("cardinality"                  , String "off");
-        ("codegen"                      , Unset);
-        ("codegen-lib"                  , List []);
-        ("debug"                        , List []);
-        ("debug_level"                  , List []);
-        ("dep"                          , Unset);
-        ("detail_errors"                , Bool false);
-        ("doc"                          , Bool false);
-        ("dump_module"                  , List []);
-        ("eager_inference"              , Bool false);
-        ("explicit_deps"                , Bool false);
-        ("extract_all"                  , Bool false);
-        ("extract_module"               , List []);
-        ("extract_namespace"            , List []);
-        ("fs_typ_app"                   , Bool false);
-        ("fsi"                          , Bool false);
-        ("fstar_home"                   , Unset);
-        ("full_context_dependency"      , Bool true);
-        ("hide_genident_nums"           , Bool false);
-        ("hide_uvar_nums"               , Bool false);
-        ("hint_info"                    , Bool false);
-        ("in"                           , Bool false);
-        ("include"                      , List []);
-        ("indent"                       , Bool false);
-        ("initial_fuel"                 , Int 2);
-        ("initial_ifuel"                , Int 1);
-        ("inline_arith"                 , Bool false);
-        ("lax"                          , Bool false);
-        ("log_queries"                  , Bool false);
-        ("log_types"                    , Bool false);
-        ("max_fuel"                     , Int 8);
-        ("max_ifuel"                    , Int 2);
-        ("min_fuel"                     , Int 1);
-        ("MLish"                        , Bool false);
-        ("n_cores"                      , Int 1);
-        ("no_default_includes"          , Bool false);
-        ("no_extract"                   , List []);
-        ("no_location_info"             , Bool false);
-        ("no_warn_top_level_effects"    , Bool true);
-        ("odir"                         , Unset);
-        ("prims"                        , Unset);
-        ("pretype"                      , Bool true);
-        ("prims_ref"                    , Unset);
-        ("print_before_norm"            , Bool false);
-        ("print_bound_var_types"        , Bool false);
-        ("print_effect_args"            , Bool false);
-        ("print_fuels"                  , Bool false);
-        ("print_implicits"              , Bool false);
-        ("print_universes"              , Bool false);
-        ("print_z3_statistics"          , Bool false);
-        ("prn"                          , Bool false);
-        ("record_hints"                 , Bool false);
-        ("reuse_hint_for"               , Unset);
-        ("show_signatures"              , List []);
-        ("silent"                       , Bool false);
-        ("smt"                          , Unset);
-        ("split_cases"                  , Int 0);
-        ("timing"                       , Bool false);
-        ("trace_error"                  , Bool false);
-        ("unthrottle_inductives"        , Bool false);
-        ("use_eq_at_higher_order"       , Bool false);
-        ("use_hints"                    , Bool false);
-        ("verify"                       , Bool true);
-        ("verify_all"                   , Bool false);
-        ("verify_module"                , List []);
-        ("warn_default_effects"         , Bool false);
-        ("z3refresh"                    , Bool false);
-        ("z3rlimit"                     , Int 5);
-        ("z3seed"                       , Int 0);
-        ("z3timeout"                    , Int 5);
-        ("z3cliopt"                     , List []);
-        ("__no_positivity"              , Bool false)] in
    let o = peek () in
    Util.smap_clear o;
-   vals |> List.iter set_option'                          //initialize it with the default values
+   defaults |> List.iter set_option'                          //initialize it with the default values
 
 let clear () =
    let o = Util.smap_create 50 in
@@ -172,13 +184,16 @@ let clear () =
 
 let _run = clear()
 
-let lookup_opt s c =
+let get_option s =
   match Util.smap_try_find (peek()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
-  | Some s -> c s
+  | Some s -> s
+
+let lookup_opt s c =
+  c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
-let get_cardinality             ()      = lookup_opt "cardinality"              as_string
+let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -198,11 +213,11 @@ let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_in                      ()      = lookup_opt "in"                       as_bool
+let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
 let get_indent                  ()      = lookup_opt "indent"                   as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
-let get_inline_arith            ()      = lookup_opt "inline_arith"             as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
@@ -214,13 +229,14 @@ let get_n_cores                 ()      = lookup_opt "n_cores"                  
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
-let get_warn_top_level_effects  ()      = lookup_opt "no_warn_top_level_effects" as_bool
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
+let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
+let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
@@ -230,12 +246,17 @@ let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
+let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
+let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
+let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
+let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
@@ -244,6 +265,7 @@ let get_warn_default_effects    ()      = lookup_opt "warn_default_effects"     
 let get_z3cliopt                ()      = lookup_opt "z3cliopt"                 (as_list as_string)
 let get_z3refresh               ()      = lookup_opt "z3refresh"                as_bool
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
+let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
@@ -262,17 +284,21 @@ let one_debug_level_geq l1 l2 = match l1 with
    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
 let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
 
-// Note: the "lib/fstar" is for the case where package is installed in the
+// Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
-let include_path_base_dirs =
-  ["/lib"; "/lib/fstar"]
-
 let universe_include_path_base_dirs =
   ["/ulib"; "/lib/fstar"]
 
+// See comment in the interface file
+let _version = FStar.Util.mk_ref ""
+let _platform = FStar.Util.mk_ref ""
+let _compiler = FStar.Util.mk_ref ""
+let _date = FStar.Util.mk_ref ""
+let _commit = FStar.Util.mk_ref ""
+
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
-                                  version platform compiler date commit)
+                                  !_version !_platform !_compiler !_date !_commit)
 
 let display_usage_aux specs =
   Util.print_string "fstar.exe [options] file[s]\n";
@@ -315,8 +341,15 @@ let add_extract_namespace s =
 let cons_verify_module s  =
     List (String.lowercase s::get_verify_module() |> List.map String)
 
+let cons_using_facts_from s =
+    set_option "z3refresh" (Bool true);
+    match get_using_facts_from() with
+    | None -> List [String s]
+    | Some l -> List (List.map String (s :: l))
+
 let add_verify_module s =
     set_option "verify_module" (cons_verify_module s)
+
 
 let rec specs () : list<Getopt.opt> =
   let specs =
@@ -328,25 +361,19 @@ let rec specs () : list<Getopt.opt> =
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
 
-       ( noshort,
-       "cardinality",
-       OneArg ((fun x -> String (validate_cardinality x)),
-               "[off|warn|check]"),
-       "Check cardinality constraints on inductive data types (default 'off')");
-
-     ( noshort,
+      ( noshort,
        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin|JavaScript]"),
         "Generate code for execution");
 
-     ( noshort,
+      ( noshort,
         "codegen-lib",
         OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
                  "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
-     ( noshort,
+      ( noshort,
         "debug",
         OneArg ((fun x -> List (x::get_debug() |> List.map String)),
                  "[module name]"),
@@ -410,7 +437,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "fstar_home",
-        OneArg (String,
+        OneArg (Path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
 
@@ -432,11 +459,16 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "in",
         ZeroArgs (fun () -> Bool true),
-        "Interactive mode; reads input from stdin");
+        "Legacy interactive mode; reads input from stdin");
+
+       ( noshort,
+        "ide",
+        ZeroArgs (fun () -> Bool true),
+        "JSON-based interactive mode for IDEs");
 
        ( noshort,
         "include",
-        OneArg ((fun s -> List (get_include() @ [s] |> List.map String)),
+        OneArg ((fun s -> List (List.map String (get_include()) @ [Path s])),
                 "[path]"),
         "A directory in which to search for files included on the command line");
 
@@ -524,7 +556,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "odir",
-        OneArg (String,
+        OneArg ((fun p -> Path (validate_dir p)),
                 "[dir]"),
         "Place output in directory [dir]");
 
@@ -555,6 +587,11 @@ let rec specs () : list<Getopt.opt> =
         "Print the fuel amounts used for each successful query");
 
        ( noshort,
+        "print_full_names",
+        ZeroArgs (fun () -> Bool true),
+        "Print full names of variables");
+
+       ( noshort,
         "print_implicits",
         ZeroArgs(fun () -> Bool true),
         "Print implicit arguments");
@@ -572,12 +609,17 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "prn",
         ZeroArgs (fun () -> Bool true),
-        "Print real names (you may want to use this in conjunction with log_queries)");
+        "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "record_hints",
         ZeroArgs (fun () -> Bool true),
         "Record a database of hints for efficient proof replay");
+
+       ( noshort,
+        "check_hints",
+        ZeroArgs (fun () -> Bool true),
+        "Check new hints for replayability");
 
        ( noshort,
         "reuse_hint_for",
@@ -597,9 +639,34 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "smt",
-        OneArg (String,
+        OneArg (Path,
                  "[path]"),
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
+
+       (noshort,
+        "smtencoding.elim_box",
+        OneArg (string_as_bool "smtencoding.elim_box",
+                "true|false"),
+        "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
+
+       (noshort,
+        "smtencoding.nl_arith_repr",
+        OneArg (String,
+                "native|wrapped|boxwrap"),
+        "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\t\
+         i.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\t\
+               if 'native' use '*, div, mod';\n\t\t\
+               if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'; \n\t\t\
+               (default 'boxwrap')");
+
+       (noshort,
+        "smtencoding.l_arith_repr",
+        OneArg (String,
+                "native|boxwrap"),
+        "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\t\
+         i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
+               if 'native', use '+, -, -'; \n\t\t\
+               (default 'boxwrap')");
 
        ( noshort,
         "split_cases",
@@ -617,6 +684,11 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Don't print an error message; show an exception trace instead");
 
+      ( noshort,
+        "ugly",
+        ZeroArgs (fun () -> Bool true),
+        "Emit output formatted for debugging");
+
        ( noshort,
         "unthrottle_inductives",
         ZeroArgs (fun () -> Bool true),
@@ -631,6 +703,18 @@ let rec specs () : list<Getopt.opt> =
         "use_hints",
         ZeroArgs (fun () -> Bool true),
         "Use a previously recorded hints database for proof replay");
+
+       ( noshort,
+        "no_tactics",
+        ZeroArgs (fun () -> Bool true),
+        "Do not run the tactic engine before discharging a VC");
+
+       ( noshort,
+        "using_facts_from",
+        OneArg (cons_using_facts_from, "[namespace | fact id]"),
+        "Implies --z3refresh; prunes the context to include facts from the given namespace of fact id \
+         (multiple uses of this option will prune the context to include those \
+         facts that match any of the provided namespaces / fact ids");
 
        ( noshort,
         "verify_all",
@@ -666,7 +750,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> Bool false),
+        ZeroArgs (fun () -> Bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
@@ -674,6 +758,12 @@ let rec specs () : list<Getopt.opt> =
          OneArg ((fun s -> Int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
+
+       ( noshort,
+        "z3rlimit_factor",
+         OneArg ((fun s -> Int (int_of_string s)),
+                  "[positive integer]"),
+        "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
 
        ( noshort,
         "z3seed",
@@ -709,18 +799,24 @@ and parse_codegen s =
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage_aux (specs ()); exit 1)
 
-and validate_cardinality x = match x with
-    | "warn"
-    | "check"
-    | "off" -> x
-    | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
-              display_usage_aux (specs ()); exit 1)
+and string_as_bool option_name = function
+    | "true" -> Bool true
+    | "false" -> Bool false
+    | _ ->
+      Util.print1 "Wrong argument to %s\n" option_name;
+      display_usage_aux (specs ()); exit 1
+
+and validate_dir p =
+  mkdir false p;
+  p
+
+let docs () =
+  List.map (fun (_, name, _, doc) -> (name, doc)) (specs ())
 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
 let settable = function
     | "admit_smt_queries"
-    | "cardinality"
     | "debug"
     | "debug_level"
     | "detail_errors"
@@ -737,28 +833,39 @@ let settable = function
     | "max_fuel"
     | "max_ifuel"
     | "min_fuel"
+    | "ugly"
     | "print_before_norm"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
+    | "print_full_names"
     | "print_implicits"
     | "print_universes"
     | "print_z3_statistics"
     | "prn"
     | "show_signatures"
     | "silent"
+    | "smtencoding.elim_box"
+    | "smtencoding.nl_arith_repr"
+    | "smtencoding.l_arith_repr"
     | "split_cases"
     | "timing"
     | "trace_error"
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
+    | "no_tactics"
+    | "using_facts_from"
     | "__temp_no_proj"
-    | "no_warn_top_level_effects"
     | "reuse_hint_for"
+    | "z3rlimit_factor"
+    | "z3rlimit"
     | "z3refresh" -> true
     | _ -> false
 
-let resettable s = settable s || s="z3timeout" || s="z3rlimit" || s="z3seed"
+// JP: the two options below are options that are passed to z3 using
+// command-line arguments; only #reset_options re-starts the z3 process, meaning
+// these two options are resettable, but not settable
+let resettable s = settable s || s="z3timeout" || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -774,22 +881,31 @@ let fstar_home () =
     | None ->
       let x = Util.get_exec_dir () in
       let x = x ^ "/.." in
+      // Memoizes to avoid repeatedly forking an external process
       set_option' ("fstar_home", String x);
       x
-    | Some x -> x
+    | Some x ->
+      x
+
+exception File_argument of string
 
 let set_options o s =
     let specs = match o with
-        | Set -> resettable_specs
+        | Set -> settable_specs
         | Reset -> resettable_specs
         | Restore -> all_specs in
-    Getopt.parse_string specs (fun _ -> ()) s
+    try
+        if s = ""
+        then Success
+        else Getopt.parse_string specs (fun s -> raise (File_argument s); ()) s
+    with
+      | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
-  res, !file_list_
+  res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
   !file_list_
@@ -830,14 +946,12 @@ let should_print_message m =
     else false
 
 let include_path () =
-  (* Allows running fstar either from the source repository, or after
-   * installation (into /usr/local for instance) *)
   if get_no_default_includes() then
     get_include()
   else
-  let h = fstar_home () in
-  let defs = universe_include_path_base_dirs in
-  (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
+    let h = fstar_home () in
+    let defs = universe_include_path_base_dirs in
+    (defs |> List.map (fun x -> h ^ x) |> List.filter file_exists) @ get_include() @ [ "." ]
 
 let find_file filename =
   if Util.is_path_absolute filename then
@@ -866,6 +980,16 @@ let prims () =
     end
   | Some x -> x
 
+let prims_basename () = basename (prims ())
+
+let pervasives () =
+  let filename = "FStar.Pervasives.fst" in
+  match find_file filename with
+  | Some result -> result
+  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+
+let pervasives_basename () = basename (pervasives ())
+
 let prepend_output_dir fname =
   match get_odir() with
   | None -> fname
@@ -874,7 +998,7 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
-let check_cardinality            () = get_cardinality () = "check"
+let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
@@ -891,12 +1015,13 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
-let initial_fuel                 () = get_initial_fuel                ()
-let initial_ifuel                () = get_initial_ifuel               ()
-let inline_arith                 () = get_inline_arith                ()
-let interactive                  () = get_in                          ()
+let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
+let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
+let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
+let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
@@ -910,33 +1035,41 @@ let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
 let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
+let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
-let print_real_names             () = get_prn                         ()
+let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
+let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
+let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
+let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrapped"
+let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
+let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
+let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_tactics                  () = get_use_tactics                 ()
+let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
-let warn_cardinality             () = get_cardinality() = "warn"
 let warn_default_effects         () = get_warn_default_effects        ()
-let warn_top_level_effects       () = get_warn_top_level_effects      ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
+let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
 let z3_timeout                   () = get_z3timeout                   ()
 let no_positivity                () = get_no_positivity               ()

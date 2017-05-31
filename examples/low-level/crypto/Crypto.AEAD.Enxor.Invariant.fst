@@ -60,7 +60,7 @@ private val frame_mac_region_enxor
   (ct:ctagbuf plainlen)
   (h0 h1:mem) : Lemma
   (requires (enxor_h0_h1 aead_st nonce aad plain ct h0 h1))
-  (ensures  (HS.modifies_ref aead_st.prf.mac_rgn TSet.empty h0 h1))
+  (ensures  (HS.modifies_ref aead_st.prf.mac_rgn Set.empty h0 h1))
 let frame_mac_region_enxor #i #rw #aadlen #plainlen aead_st nonce aad plain ct h0 h1 = ()
 
 (*

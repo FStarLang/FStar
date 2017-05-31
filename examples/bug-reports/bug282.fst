@@ -5,6 +5,8 @@ assume new type p:unit -> Type
 assume val lem1: u:unit -> Lemma (requires True) (ensures (p u))
 assume val lem2: u:unit -> Lemma (requires True) (ensures (p u)) [SMTPatT (p u)]
 
+assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+
 val lem1': unit -> Lemma (requires True) (ensures (forall u. p u))
 let lem1' _ = qintro #unit #(fun u -> p u) lem1 // Works
 

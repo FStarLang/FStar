@@ -42,13 +42,12 @@ let write (l:label) (b:bool) : ifc unit =
   (*           | high, low -> None *)
   (*           | _, _ -> Some ((), l0) *)
 
-reifiable new_effect_for_free {
+reifiable new_effect {
   IFC : a:Type -> Effect
   with
        repr         = ifc
      ; bind         = bind_ifc
      ; return       = return_ifc
-  and effect_actions
-      read = read
-    ; write = write
+     ; read = read
+     ; write = write
 }

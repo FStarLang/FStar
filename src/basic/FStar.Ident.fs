@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Ident
+open Prims
 open FStar.All
 open FStar.Range
 
@@ -25,13 +26,17 @@ let path_of_text text = String.split ['.'] text
 let path_of_ns ns = List.map text_of_id ns
 let path_of_lid lid = List.map text_of_id (lid.ns@[lid.ident])
 let ids_of_lid lid = lid.ns@[lid.ident]
-let lid_of_ids ids =
-    let ns, id = Util.prefix ids in
+let lid_of_ns_and_id ns id =
     let nsstr = List.map text_of_id ns |> text_of_path in
     {ns=ns;
      ident=id;
      nsstr=nsstr;
      str=(if nsstr="" then id.idText else nsstr ^ "." ^ id.idText)}
+let lid_of_ids ids =
+    let ns, id = Util.prefix ids in
+    lid_of_ns_and_id ns id
+let lid_of_str str =
+    lid_of_ids (List.map id_of_text (Util.split str "."))
 let lid_of_path path pos =
     let ids = List.map (fun s -> mk_ident(s, pos)) path in
     lid_of_ids ids

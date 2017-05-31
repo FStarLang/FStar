@@ -1,0 +1,105 @@
+[
+  "î?Šä\\©*\"ÅÄå¤Ö¡ÞÆ",
+  [
+    [
+      "TestHeap.test0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x", "int_typing",
+        "lemma_FStar.Heap.lemma_sel_upd1",
+        "refinement_interpretation_TestHeap_Tm_refine_908e6c157c79fd6fc33182e15825a300"
+      ],
+      0
+    ],
+    [
+      "TestHeap.test0",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "TestHeap.test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_TestHeap.DistinctXY",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Heap.lemma_sel_upd1", "lemma_FStar.Heap.lemma_sel_upd2",
+        "refinement_interpretation_TestHeap_Tm_refine_908e6c157c79fd6fc33182e15825a300"
+      ],
+      0
+    ],
+    [
+      "TestHeap.test1",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "TestHeap.test3",
+      1,
+      2,
+      1,
+      [
+        "@query", "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Heap.lemma_sel_upd1"
+      ],
+      0
+    ],
+    [
+      "TestHeap.test3",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "TestHeap.test7",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_TestHeap.DistinctXY",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Heap.lemma_upd_contains",
+        "lemma_FStar.Heap.lemma_upd_contains_different_addr",
+        "ref_inversion",
+        "refinement_interpretation_TestHeap_Tm_refine_908e6c157c79fd6fc33182e15825a300"
+      ],
+      0
+    ],
+    [
+      "TestHeap.test8",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_TestHeap.DistinctXY",
+        "function_token_typing_Prims.int",
+        "function_token_typing_TestHeap.h",
+        "function_token_typing_TestHeap.x",
+        "function_token_typing_TestHeap.y", "int_typing",
+        "lemma_FStar.Heap.lemma_upd_contains_different_addr",
+        "refinement_interpretation_TestHeap_Tm_refine_908e6c157c79fd6fc33182e15825a300"
+      ],
+      0
+    ]
+  ]
+]

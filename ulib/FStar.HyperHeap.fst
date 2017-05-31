@@ -16,22 +16,23 @@
 module FStar.HyperHeap
 open FStar.Map
 open FStar.Heap
+open FStar
 
 abstract let rid = list (int * int)
 
 let reveal (r:rid) : GTot (list (int * int)) = r
 
-abstract let color (x:rid): GTot int = 
-  match x with 
+abstract let color (x:rid): GTot int =
+  match x with
   | [] -> 0
   | (c, _)::_ -> c
 
 type t = Map.t rid heap
 
-let has_eq_rid (u:unit) : 
+let has_eq_rid (u:unit) :
   Lemma (requires True)
         (ensures hasEq rid)
-  = ()	
+  = ()
 
 assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to expose it as an argument-free SMT lemma, which isn't supported yet
 
@@ -46,16 +47,22 @@ let lemma_root_has_color_zero r = ()
 //expose this so that no-one should assume otheriwse
 let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
 
-abstract let rref (id:rid) (a:Type) = Heap.ref a
+abstract type rref (id:rid) (a:Type) = Heap.ref a
 
-let has_eq_rref (id:rid) (a:Type) :
-  Lemma (requires True)
-        (ensures hasEq (rref id a))
-	[SMTPat (hasEq (rref id a))]
-  = ()	
+(* let has_eq_rref (id:rid) (a:Type) : *)
+(*   Lemma (requires True) *)
+(*         (ensures hasEq (rref id a)) *)
+(*      [SMTPat (hasEq (rref id a))] *)
+(*   = ()        *)
 
 abstract val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref #a #id r = r
+
+val addr_of: #a:Type -> #id:rid -> r:rref id a -> GTot nat
+let addr_of #a #id r = Heap.addr_of (as_ref r)
+
+let is_mm (#a:Type) (#id:rid) (r:rref id a) :GTot bool
+  = Heap.is_mm (as_ref r)
 
 abstract val ref_as_rref : i:rid -> r:ref 'a -> GTot (rref i 'a)
 let ref_as_rref i r = r
@@ -123,27 +130,27 @@ let lemma_extends_includes i j = ()
 let lemma_includes_anti_symmetric (i:rid) (j:rid) :
   Lemma (requires (includes i j /\ i <> j))
         (ensures (not (includes j i)))
-	[SMTPat (includes i j)]
+        [SMTPat (includes i j)]
   = ()
-  
+
 abstract val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
     Lemma (requires (extends j i /\ extends k i /\ j<>k))
           (ensures (disjoint j k))
 let lemma_extends_disjoint i j k = ()
 
-abstract val lemma_extends_parent: i:rid{i<>root} -> 
+abstract val lemma_extends_parent: i:rid{i<>root} ->
   Lemma (requires True)
         (ensures (extends i (parent i)))
         [SMTPat (parent i)]
 let lemma_extends_parent i = ()
 
-abstract val lemma_extends_not_root: i:rid -> j:rid{extends j i} -> 
+abstract val lemma_extends_not_root: i:rid -> j:rid{extends j i} ->
   Lemma (requires True)
         (ensures (j<>root))
         [SMTPat (extends j i)]
 let lemma_extends_not_root i j = ()
 
-abstract val lemma_extends_only_parent: i:rid -> j:rid{extends j i} -> 
+abstract val lemma_extends_only_parent: i:rid -> j:rid{extends j i} ->
   Lemma (requires True)
         (ensures (i = parent j))
         [SMTPat (extends j i)]
@@ -162,37 +169,36 @@ unfold let op_String_Access (#a:Type) (#i:rid) (m:t) (r:rref i a) = sel m r
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) : GTot t = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
 unfold let op_String_Assignment (#a:Type) (#i:rid) (m:t) (r:rref i a) v = upd m r v
 
-open FStar.Set
 
-assume val mod_set : set rid -> Tot (set rid)
-assume Mod_set_def: forall (x:rid) (s:set rid). {:pattern mem x (mod_set s)}
-                    mem x (mod_set s) <==> (exists (y:rid). mem y s /\ includes y x)
+assume val mod_set : Set.set rid -> Tot (Set.set rid)
+assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
+                    Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
 
-let modifies (s:set rid) (m0:t) (m1:t) =
-  Map.equal m1 (Map.concat m1 (Map.restrict (complement (mod_set s)) m0))
-  /\ subset (Map.domain m0) (Map.domain m1)
+let modifies (s:Set.set rid) (m0:t) (m1:t) =
+  Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
+  /\ Set.subset (Map.domain m0) (Map.domain m1)
 
-let modifies_just (s:set rid) (m0:t) (m1:t) =
-  Map.equal m1 (Map.concat m1 (Map.restrict (complement s) m0))
-  /\ subset (Map.domain m0) (Map.domain m1)  
+let modifies_just (s:Set.set rid) (m0:t) (m1:t) =
+  Map.equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
+  /\ Set.subset (Map.domain m0) (Map.domain m1)
 
 let modifies_one (r:rid) (m0:t) (m1:t) =
-  modifies_just (singleton r) m0 m1
+  modifies_just (Set.singleton r) m0 m1
 
-let equal_on (s:set rid) (m0:t) (m1:t) =
- (forall (r:rid). {:pattern (Map.contains m0 r)} (mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
+let equal_on (s:Set.set rid) (m0:t) (m1:t) =
+ (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
  /\ Map.equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
 abstract val lemma_modifies_just_trans: m1:t -> m2:t -> m3:t
-                       -> s1:set rid -> s2:set rid
+                       -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies_just s1 m1 m2 /\ modifies_just s2 m2 m3))
-                               (ensures (modifies_just (union s1 s2) m1 m3))
+                               (ensures (modifies_just (Set.union s1 s2) m1 m3))
 let lemma_modifies_just_trans m1 m2 m3 s1 s2 = ()
 
 abstract val lemma_modifies_trans: m1:t -> m2:t -> m3:t
-                       -> s1:set rid -> s2:set rid
+                       -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
-                               (ensures (modifies (union s1 s2) m1 m3))
+                               (ensures (modifies (Set.union s1 s2) m1 m3))
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
 abstract val lemma_includes_trans: i:rid -> j:rid -> k:rid
@@ -200,66 +206,75 @@ abstract val lemma_includes_trans: i:rid -> j:rid -> k:rid
                                  (ensures (includes i k))
                                  [SMTPat (includes i j);
                                   SMTPat (includes j k)]
-let rec lemma_includes_trans i j k = 
+let rec lemma_includes_trans i j k =
   if j=k then ()
-  else match k with 
+  else match k with
         | hd::tl -> lemma_includes_trans i j tl
-        
+
 abstract val lemma_modset: i:rid -> j:rid
                   -> Lemma (requires (includes j i))
-                           (ensures (subset (mod_set (singleton i)) (mod_set (singleton j))))
+                           (ensures (Set.subset (mod_set (Set.singleton i)) (mod_set (Set.singleton j))))
 let lemma_modset i j = ()
 
 abstract val lemma_modifies_includes: m1:t -> m2:t
                        -> i:rid -> j:rid
-                       -> Lemma (requires (modifies (singleton i) m1 m2 /\ includes j i))
-                                (ensures (modifies (singleton j) m1 m2))
+                       -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
+                                (ensures (modifies (Set.singleton j) m1 m2))
 let lemma_modifies_includes m1 m2 s1 s2 = ()
 
 abstract val lemma_modifies_includes2: m1:t -> m2:t
-                       -> s1:set rid -> s2:set rid
-                       -> Lemma (requires (modifies s1 m1 m2 /\ (forall x. mem x s1 ==> (exists y. mem y s2 /\ includes y x))))
+                       -> s1:Set.set rid -> s2:Set.set rid
+                       -> Lemma (requires (modifies s1 m1 m2 /\ (forall x.  Set.mem x s1 ==> (exists y. Set.mem y s2 /\ includes y x))))
                                 (ensures (modifies s2 m1 m2))
 let lemma_modifies_includes2 m1 m2 s1 s2 = ()
 
 abstract val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
-  (requires (extends r pr /\ extends s ps /\ disjoint pr ps))
+  (requires (r `extends` pr /\ s `extends` ps /\ disjoint pr ps))
   (ensures (disjoint r s))
   [SMTPat (extends r pr); SMTPat (extends s ps); SMTPat (disjoint pr ps)]
-let lemma_disjoint_parents pr r ps s = ()
+let lemma_disjoint_parents pr r ps s =
+    assert (pr `includes` r);
+    assert (ps `includes` s)
 
-let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
-  Map.contains m i && Heap.contains (Map.sel m i) (as_ref r)
+(* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
+let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool  =
+  Map.contains m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
+  (* AR: in master this is the code *)
+  (* Map.contains m i && Heap.contains (Map.sel m i) (as_ref r) *)
+
+let unused_in (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool =
+  not (Map.contains m i) ||
+  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
 
 (*
  * AR: using this from HyperStack:weak_contains,
  * Map.contains covered by weak_live_region in HyperStack
  *)
 let weak_contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) : GTot bool =
-  Heap.contains (Map.sel m i) (as_ref r)
+  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
 
 let fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
-  not (Heap.contains (Map.sel m0 i) (as_ref r))
-  /\  (Heap.contains (Map.sel m1 i) (as_ref r))
+  Heap.unused_in (as_ref r) (Map.sel m0 i) /\
+  Heap.contains (Map.sel m1 i) (as_ref r)
 
-let modifies_rref (r:rid) (s:TSet.set aref) h0 h1 = 
+let modifies_rref (r:rid) (s:Set.set nat) h0 h1 =
   Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
 abstract val lemma_include_cons: i:rid -> j:rid -> Lemma
   (requires (i<>j /\ includes i j))
   (ensures (j<>root))
 let lemma_include_cons i j = ()
-   
+
 let map_invariant (m:t) =
-  forall r. Map.contains m r ==> 
+  forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 
-abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid 
-                               -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} -> 
-  Lemma (requires (fresh_region i m0 m1 
+abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
+                               -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} ->
+  Lemma (requires (fresh_region i m0 m1
                   /\ fresh_region j m0 m1
-                  /\ Map.contains m0 ipar 
-                  /\ Map.contains m0 jpar 
+                  /\ Map.contains m0 ipar
+                  /\ Map.contains m0 jpar
                   /\ extends i ipar
                   /\ extends j jpar
                   /\ i<>j))
@@ -267,27 +282,26 @@ abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:ri
         [SMTPatT (fresh_region i m0 m1);
          SMTPatT (fresh_region j m0 m1);
          SMTPat (extends i ipar);
-         SMTPat (extends j jpar)]         
-let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()      
+         SMTPat (extends j jpar)]
+let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 
-open FStar.Set
-let disjoint_regions (s1:set rid) (s2:set rid) = 
+let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
 
 let extends_parent (tip:rid{tip<>root}) (r:rid)
   : Lemma (requires True)
-	  (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip)
-	  [SMTPat (extends r (parent tip))]
+          (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip)
+          [SMTPat (extends r (parent tip))]
   = ()
 
 let includes_child (tip:rid{tip<>root}) (r:rid)
   : Lemma (requires True)
-	  (includes r tip ==> r=tip \/ includes r (parent tip))
-	  [SMTPat (includes r (parent tip))]
+          (includes r tip ==> r=tip \/ includes r (parent tip))
+          [SMTPat (includes r (parent tip))]
   = ()
 
 let root_is_root (s:rid)
   : Lemma (requires (includes s root))
-	  (ensures (s = root))
-	  [SMTPat (includes s root)]
-  = ()	  
+          (ensures (s = root))
+          [SMTPat (includes s root)]
+  = ()

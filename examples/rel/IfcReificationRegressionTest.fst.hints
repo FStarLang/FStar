@@ -1,0 +1,185 @@
+[
+  ".\u0014Ý:fµ±\u000eŒ†¤æ\u001b\u0005“Ø",
+  [
+    [ "IfcReificationRegressionTest.x1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "IfcReificationRegressionTest.x2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "IfcReificationRegressionTest.x3", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcReificationRegressionTest.bidule0",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule0",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_token_correspondence",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.DM4F.IntST.decr", "equation_FStar.DM4F.IntST.ifc",
+        "equation_FStar.DM4F.IntST.incr", "equation_Prims._assert",
+        "function_token_typing_IfcReificationRegressionTest.s0",
+        "int_inversion",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_3d729fbd3b4308b8371965593fde7356",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_9e0ee3bf9567b10ae70172d4e3781a2e",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_dd581c3cb734eae8abd95d7cf9303e04",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_df7298b36608fdf181b39f4023c2399e",
+        "interpretation_FStar.DM4F.ST_Tm_abs_17bda751c37c2d8620569dad2db64c44",
+        "interpretation_FStar.DM4F.ST_Tm_abs_34465e3028859993090b50b145226381",
+        "interpretation_FStar.DM4F.ST_Tm_abs_7e89cff5cc64a39f6c57cdbcfe3dbb15",
+        "interpretation_FStar.DM4F.ST_Tm_abs_8564f21ca3f210262629349ec32e712d",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule1",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule1",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_token_correspondence",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.DM4F.IntST.decr", "equation_FStar.DM4F.IntST.incr",
+        "equation_IfcReificationRegressionTest.x1", "equation_Prims._assert",
+        "function_token_typing_IfcReificationRegressionTest.s0",
+        "int_inversion",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_dd581c3cb734eae8abd95d7cf9303e04",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_df7298b36608fdf181b39f4023c2399e",
+        "interpretation_FStar.DM4F.ST_Tm_abs_17bda751c37c2d8620569dad2db64c44",
+        "interpretation_FStar.DM4F.ST_Tm_abs_34465e3028859993090b50b145226381",
+        "interpretation_FStar.DM4F.ST_Tm_abs_7e89cff5cc64a39f6c57cdbcfe3dbb15",
+        "interpretation_FStar.DM4F.ST_Tm_abs_8564f21ca3f210262629349ec32e712d",
+        "interpretation_IfcReificationRegressionTest_Tm_abs_822cd42d57c1a18e860be611c256f36c",
+        "interpretation_IfcReificationRegressionTest_Tm_abs_bba56a8a4b9388833c3fec0e6e185971",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "token_correspondence_IfcReificationRegressionTest.x1", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule2",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_token_correspondence",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.DM4F.IntST.decr", "equation_FStar.DM4F.IntST.incr",
+        "equation_IfcReificationRegressionTest.x2", "equation_Prims._assert",
+        "function_token_typing_IfcReificationRegressionTest.s0",
+        "int_inversion",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_9e0ee3bf9567b10ae70172d4e3781a2e",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_dd581c3cb734eae8abd95d7cf9303e04",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_df7298b36608fdf181b39f4023c2399e",
+        "interpretation_FStar.DM4F.ST_Tm_abs_17bda751c37c2d8620569dad2db64c44",
+        "interpretation_FStar.DM4F.ST_Tm_abs_34465e3028859993090b50b145226381",
+        "interpretation_FStar.DM4F.ST_Tm_abs_7e89cff5cc64a39f6c57cdbcfe3dbb15",
+        "interpretation_FStar.DM4F.ST_Tm_abs_8564f21ca3f210262629349ec32e712d",
+        "interpretation_IfcReificationRegressionTest_Tm_abs_0430a6d744d117d25fd22c083fe3deaa",
+        "interpretation_IfcReificationRegressionTest_Tm_abs_bba56a8a4b9388833c3fec0e6e185971",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "token_correspondence_IfcReificationRegressionTest.x2", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule3",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
+      ],
+      0
+    ],
+    [
+      "IfcReificationRegressionTest.bidule3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__get_token_correspondence",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_equality",
+        "FStar.DM4F.IntST.__proj__STINT__item__put_token_correspondence",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
+        "data_elim_FStar.Pervasives.Mktuple2",
+        "equation_FStar.DM4F.IntST.decr", "equation_FStar.DM4F.IntST.incr",
+        "equation_IfcReificationRegressionTest.x3", "equation_Prims._assert",
+        "int_inversion",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_9e0ee3bf9567b10ae70172d4e3781a2e",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_dd581c3cb734eae8abd95d7cf9303e04",
+        "interpretation_FStar.DM4F.IntST_Tm_abs_df7298b36608fdf181b39f4023c2399e",
+        "interpretation_FStar.DM4F.ST_Tm_abs_17bda751c37c2d8620569dad2db64c44",
+        "interpretation_FStar.DM4F.ST_Tm_abs_34465e3028859993090b50b145226381",
+        "interpretation_FStar.DM4F.ST_Tm_abs_7e89cff5cc64a39f6c57cdbcfe3dbb15",
+        "interpretation_FStar.DM4F.ST_Tm_abs_8564f21ca3f210262629349ec32e712d",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "typing_IfcReificationRegressionTest.x3", "unit_typing"
+      ],
+      0
+    ]
+  ]
+]

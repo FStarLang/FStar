@@ -1,5 +1,5 @@
-ALLFILES=wf CPS.Simple CPS.Double CPS.DoubleLambdaLifting2 CPS.DoubleDefun CPS.Expr \
-	 CPS.SimpleDefun CPS.SimpleLambdaLifting Eval.DB termination
+ALLFILES=CPS.Simple CPS.Double CPS.DoubleLambdaLifting2 CPS.DoubleDefun CPS.Expr \
+	 CPS.SimpleDefun CPS.SimpleLambdaLifting Eval.DB mcCarthy91 termination
 
 FSTAR_HOME=../..
 include ../Makefile.include

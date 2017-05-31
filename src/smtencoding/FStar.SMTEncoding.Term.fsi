@@ -66,6 +66,7 @@ type term' =
   | FreeV      of fv
   | App        of op  * list<term>
   | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
+  | Let        of list<term> * term
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
 and pat  = term
@@ -75,23 +76,37 @@ and fvs = list<fv>
 
 type caption = option<string>
 type binders = list<(string * sort)>
-type projector = (string * sort)
-type constructor_t = (string * list<projector> * sort * int * bool)
+type constructor_field = string  //name of the field
+                       * sort    //sort of the field
+                       * bool    //true if the field is projectible
+type constructor_t = (string * list<constructor_field> * sort * int * bool)
 type constructors  = list<constructor_t>
+type fact_db_id =
+    | Name of Ident.lid
+    | Namespace of Ident.lid
+    | Tag of string
+type assumption = {
+    assumption_term: term;
+    assumption_caption: caption;
+    assumption_name: string;
+    assumption_fact_ids:list<fact_db_id>
+}
 type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
   | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of term   * caption * option<string>
+  | Assume     of assumption
   | Caption    of string
   | Eval       of term
   | Echo       of string
+  | RetainAssumptions of list<string>
   | Push
   | Pop
   | CheckSat
   | GetUnsatCore
   | SetOption  of string * string
-  | PrintStats
+  | GetStatistics
+  | GetReasonUnknown
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)
@@ -99,6 +114,7 @@ type error_labels = list<error_label>
 
 val abstr: list<fv> -> term -> term
 val inst: list<term> -> term -> term
+val subst: term -> fv -> term -> term
 val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
 val fv_eq : fv -> fv -> bool
@@ -134,13 +150,14 @@ val mkForall: (list<list<pat>> * fvs * term) -> Range.range -> term
 val mkForall': (list<list<pat>> * option<int> * fvs * term) -> Range.range -> term
 val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> Range.range -> term
 val mkExists: (list<list<pat>> * fvs * term) -> Range.range -> term
+val mkLet: (list<term> * term) -> Range.range -> term
+val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 
 val fresh_token: (string * sort) -> int -> decl
-val injective_constructor : (string * list<(string * sort)> * sort) -> decls_t
+val injective_constructor : (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
-val termToSmt: term -> string
 val declToSmt: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
@@ -167,6 +184,7 @@ val mk_HasTypeZ:     term -> term -> term
 val mk_IsTyped:      term -> term
 val mk_HasTypeFuel:  term -> term -> term -> term
 val mk_HasTypeWithFuel: option<term> -> term -> term -> term
+val mk_NoHoist:      term -> term -> term
 val mk_tester:       string -> term -> term
 val mk_Term_type:    term
 val mk_ApplyTF:      term -> term -> term

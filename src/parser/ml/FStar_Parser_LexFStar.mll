@@ -55,9 +55,9 @@
     Hashtbl.add keywords "assert"        ASSERT      ;
     Hashtbl.add keywords "assume"        ASSUME      ;
     Hashtbl.add keywords "begin"         BEGIN       ;
+    Hashtbl.add keywords "by"            BY          ;
     Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "effect"        EFFECT      ;
-    Hashtbl.add keywords "effect_actions" ACTIONS    ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
     Hashtbl.add keywords "ensures"       ENSURES     ;
@@ -81,7 +81,6 @@
     Hashtbl.add keywords "mutable"       MUTABLE     ;
     Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
-    Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
     Hashtbl.add keywords "noextract"     NOEXTRACT   ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
@@ -109,7 +108,7 @@
   type delimiters = { angle:int ref; paren:int ref; }
 
   let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
-  let n_typ_apps = FStar_Util.mk_ref 0
+  let n_typ_apps = ref 0
   let is_typ_app lexbuf =
     if not (FStar_Options.fs_typ_app lexbuf.lex_start_p.pos_fname) then false
     else try
@@ -134,7 +133,7 @@
       let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
       let rec aux i =
         if !(d.angle)=0 && !(d.paren)=0 then true
-        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || (FStar_Util.starts_with (FStar_Util.substring_from contents (Z.of_int i)) "then") then false
+        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || FStar_Util.(starts_with (substring_from contents (Z.of_int i)) "then") then false
         else (upd i; aux (i + 1))
       in
       aux (pos + 1)
@@ -281,7 +280,6 @@ let tvar_char              = letter | digit | '\'' | '_'
 let constructor = constructor_start_char ident_char*
 let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
-let univar      = '\'' 'u' tvar_char+
 
 rule token = parse
  | "\xef\xbb\xbf"   (* UTF-8 byte order mark, some compiler files have them *)
@@ -313,8 +311,6 @@ rule token = parse
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
      { NAME id }
- | univar as id
-     { UNIVAR id }
  | tvar as id
      { TVAR id }
  | (integer | xinteger) as x
@@ -396,6 +392,7 @@ rule token = parse
  | ','         { COMMA }
  | "~>"        { SQUIGGLY_RARROW }
  | "->"        { RARROW }
+ | "<--"       { LONG_LEFT_ARROW }
  | "<-"        { LARROW }
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }

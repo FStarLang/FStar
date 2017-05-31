@@ -16,164 +16,163 @@
 #light "off"
 
 module FStar.Pprint
-
+open Prims
+open FSharp.Compatibility.OCaml
 open FSharp.PPrint
 open FStar.BaseTypes
+module P = FSharp.PPrint.Engine
+module C = FSharp.PPrint.Combinators
 
-type document = Doc of unit
-//
-//  | Empty
-//  | Char of char
-//  | String of string * int * int
-//  | FancyString of string * int * int * int
-//  | Blank of int
-//  | IfFlat of document * document
-//  | HardLine
-//  | Cat of document * document
-//  | Nest of int * document
-//  | Group of document
-//  //| Probe of (indentation:int -> bol:int -> line:int -> column:int -> document)
+type document = P.document
 
-let not_impl_msg = "F# prettyprinter not yet implemented."
+let empty : document = P.empty
 
-let empty : document = failwith not_impl_msg
+let doc_of_char (c:char) : document = P.char c
+let doc_of_string (s:string) : document = P.string s
+let doc_of_bool (b:bool) : document = P.string (string_of_bool b)
 
-let doc_of_char (c:char) : document = failwith not_impl_msg
-let doc_of_string (s:string) : document = failwith not_impl_msg
-let doc_of_bool (b:bool) : document = failwith not_impl_msg
+let substring (s:string) (sofs:int) (len:int) : document = P.substring s sofs len
 
-let substring (s:string) (sofs:int) (len:int) : document = failwith not_impl_msg
+let fancystring (s:string) (ofs:int) : document = P.fancystring s ofs
 
-let fancystring (s:string) (ofs:int) : document = failwith not_impl_msg
+let fancysubstring (s:string) (ofs:int) (len:int) (app_len:int) : document = P.fancysubstring s ofs len app_len
 
-let fancysubstring (s:string) (ofs:int) (len:int) (app_len:int) : document = failwith not_impl_msg
+let utf8string (s:string) : document = P.utf8string s
 
-let utf8string (s:string) : document = failwith not_impl_msg
+let hardline : document = P.hardline
 
-let hardline : document = failwith not_impl_msg
+let blank (n:int) : document = P.blank n
 
-let blank (n:int) : document = failwith not_impl_msg
+let break_ (n:int) : document = P.break_ n
 
-let break_ (n:int) : document = failwith not_impl_msg
+let (^^) (doc1:document) (doc2:document) : document = C.concat [doc1; doc2]
+let (^/^) (doc1:document) (doc2:document) : document = C.concat [doc1; P.break_ 1; doc2]
 
-let op_Hat_Hat (doc1:document) (doc2:document) : document = failwith not_impl_msg
-let op_Hat_Slash_Hat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+let nest (j:int) (doc:document) : document = P.nest j doc
 
-let nest (j:int) (doc:document) : document = failwith not_impl_msg
+let group (doc:document) : document = P.group doc
 
-let group (doc:document) : document = failwith not_impl_msg
+//let column (_: int -> document): document = failwith not_impl_msg
+//let nesting (_: int -> document): document = failwith not_impl_msg
+//let position (_: int -> int -> int -> document): document = failwith not_impl_msg
 
-let column (_: int -> document): document = failwith not_impl_msg
-let nesting (_: int -> document): document = failwith not_impl_msg
-let position (_: int -> int -> int -> document): document = failwith not_impl_msg
+let ifflat (doc1:document) (doc2:document) : document = P.ifflat doc1 doc2
 
-let ifflat (doc1:document) (doc2:document) : document = failwith not_impl_msg
+let align (doc:document) : document = P.align doc
 
-let align (doc:document) : document = failwith not_impl_msg
+let lparen: document = C.lparen
+let rparen : document = C.rparen
+let langle : document = C.langle
+let rangle : document = C.rangle
+let lbrace : document = C.lbrace
+let rbrace : document = C.rbrace
+let lbracket : document = C.lbracket
+let rbracket : document = C.rbracket
+let squote : document = C.squote
+let dquote : document = C.dquote
+let bquote : document = C.bquote
+let semi : document = C.semi
+let colon : document = C.colon
+let comma : document = C.comma
+let space : document = C.space
+let dot : document = C.dot
+let sharp : document = C.sharp
+let slash : document = C.slash
+let backslash : document = C.backslash
+let equals : document = C.equals
+let qmark : document = C.qmark
+let tilde : document = C.tilde
+let at : document = C.at
+let percent : document = C.percent
+let dollar : document = C.dollar
+let caret : document = C.caret
+let ampersand : document = C.ampersand
+let star : document = C.star
+let plus : document = C.plus
+let minus : document = C.minus
+let underscore : document = C.underscore
+let bang : document = C.bang
+let bar : document = C.bar
+let long_left_arrow : document = P.string "<--"
+let larrow : document = P.string "<-"
+let rarrow : document = P.string "->"
 
-let lparen: document = Doc ()
-let rparen: document = Doc ()
-let langle: document = Doc ()
-let rangle: document = Doc ()
-let lbrace: document = Doc ()
-let rbrace: document = Doc ()
-let lbracket: document = Doc ()
-let rbracket: document = Doc ()
-let squote: document = Doc ()
-let dquote: document = Doc ()
-let bquote: document = Doc ()
-let semi: document = Doc ()
-let colon: document = Doc ()
-let comma: document = Doc ()
-let space: document = Doc ()
-let dot: document = Doc ()
-let sharp: document = Doc ()
-let slash: document = Doc ()
-let backslash: document = Doc ()
-let equals: document = Doc ()
-let qmark: document = Doc ()
-let tilde: document = Doc ()
-let at: document = Doc ()
-let percent: document = Doc ()
-let dollar: document = Doc ()
-let caret: document = Doc ()
-let ampersand: document = Doc ()
-let star: document = Doc ()
-let plus: document = Doc ()
-let minus: document = Doc ()
-let underscore: document = Doc ()
-let bang: document = Doc ()
-let bar: document = Doc ()
-let larrow: document = Doc ()
-let rarrow: document = Doc ()
+let precede (l:document) (x:document) : document = C.precede l x
 
-let precede (l:document) (x:document) : document = failwith not_impl_msg
+let terminate (r:document) (x:document) : document = C.terminate r x
 
-let terminate (r:document) (x:document) : document = failwith not_impl_msg
+let enclose (l:document) (r:document) (x:document) : document = C.enclose l r x
 
-let enclose (l:document) (r:document) (x:document) : document = failwith not_impl_msg
+let squotes (d)  = C.squotes d
+let dquotes (d)  = C.dquotes (d)
+let bquotes (d)  = C.bquotes (d)
+let braces  (d)  = C.braces  (d)
+let parens  (d)  = C.parens  (d)
+let angles  (d)  = C.angles  (d)
+let brackets(d)  = C.brackets(d)
 
-let squotes (d:document) : document = failwith not_impl_msg
-let dquotes (d:document) : document = failwith not_impl_msg
-let bquotes (d:document) : document = failwith not_impl_msg
-let braces  (d:document) : document = failwith not_impl_msg
-let parens  (d:document) : document = failwith not_impl_msg
-let angles  (d:document) : document = failwith not_impl_msg
-let brackets(d:document) : document = failwith not_impl_msg
+let twice (doc)  = C.twice (doc)
 
-let twice (doc:document) : document = failwith not_impl_msg
+let repeat (n:int) (doc)  = C.repeat (n:int) (doc)
 
-let repeat (n:int) (doc:document) : document = failwith not_impl_msg
+let concat docs  = C.concat docs
 
-let concat (docs:document list) : document = failwith not_impl_msg
+let separate (sep) (docs)  = C.separate (sep) (docs)
 
-let separate (sep:document) (docs:document list) : document = failwith not_impl_msg
+let concat_map (f:('a -> document)) (xs:'a list)  = C.concat_map (f:('a -> document)) (xs:'a list)
 
-let concat_map (f:('a -> document)) (xs:'a list) : document = failwith not_impl_msg
+let separate_map (sep) (f:('a -> document)) (xs:'a list)  = C.separate_map (sep) (f:('a -> document)) (xs:'a list)
 
-let separate_map (sep:document) (f:('a -> document)) (xs:'a list) : document = failwith not_impl_msg
+let separate2 (sep) (last_sep) (docs)  = C.separate2 (sep) (last_sep) (docs)
 
-let separate2 (sep:document) (last_sep:document) (docs:document list) : document = failwith not_impl_msg
+let optional (f:('a -> document)) (opt:'a option)  = C.optional (f:('a -> document)) (opt:'a option)
 
-let optional (f:('a -> document)) (opt:'a option) : document = failwith not_impl_msg
+let lines (s:string) = C.lines s
 
-let lines (s:string) : document list = failwith not_impl_msg
+let arbitrary_string (s:string)  = C.arbitrary_string (s:string)
 
-let arbitrary_string (s:string) : document = failwith not_impl_msg
+let words (s:string) = C.words s
 
-let words (s:string) : document list = failwith not_impl_msg
+let split (ok:(char -> bool)) (s:string) = C.split ok s
 
-let split (ok:(char -> bool)) (s:string) : document list = failwith not_impl_msg
+let flow (sep) (docs)  = C.flow (sep) (docs)
 
-let flow (sep:document) (docs:document list) : document = failwith not_impl_msg
+let flow_map (sep) (f:('a -> document)) (docs:'a list)  = C.flow_map (sep) (f:('a -> document)) (docs:'a list)
 
-let flow_map (sep:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
+let url (s:string)  = C.url (s:string)
 
-let url (s:string) : document = failwith not_impl_msg
+let hang (n:int) (doc)  = C.hang (n:int) (doc)
 
-let hang (n:int) (doc:document) : document = failwith not_impl_msg
+let prefix (n:int) (b:int) (left) (right)  = C.prefix (n:int) (b:int) (left) (right)
 
-let prefix (n:int) (b:int) (left: document) (right:document) : document = failwith not_impl_msg
+let jump (n:int) (b:int) (right)  = C.jump (n:int) (b:int) (right)
 
-let jump (n:int) (b:int) (right:document) : document = failwith not_impl_msg
+let infix (n:int) (b:int) (middle) (left) (right)  = C.infix (n:int) (b:int) (middle) (left) (right)
 
-let infix (n:int) (b:int) (middle:document) (left: document) (right:document) : document = failwith not_impl_msg
+let surround (n:int) (b:int) (opening) (contents) (closing)  = C.surround (n:int) (b:int) (opening) (contents) (closing)
 
-let surround (n:int) (b:int) (opening:document) (contents:document) (closing:document) : document = failwith not_impl_msg
+let soft_surround (n:int) (b:int) (opening) (contents) (closing)  = C.soft_surround (n:int) (b:int) (opening) (contents) (closing)
 
-let soft_surround (n:int) (b:int) (opening:document) (contents:document) (closing:document) : document = failwith not_impl_msg
+let surround_separate (n:int) (b:int) (v) (opening) (sep) (closing) (docs) =
+    C.surround_separate (n:int) (b:int) (v) (opening) (sep) (closing) (docs)
 
-let surround_separate (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (docs:document list) : document = failwith not_impl_msg
+let surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)  = C.surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)
 
-let surround_separate_map (n:int) (b:int) (v:document) (opening:document) (sep:document) (closing:document) (f:('a -> document)) (docs:'a list) : document = failwith not_impl_msg
+//let ( ^^ ) (x) (y)  = failwith not_impl_msg
 
-let ( ^^ ) (x:document) (y:document) : document = failwith not_impl_msg
+// let ( !^ ) (s:string)  = failwith not_impl_msg
 
-// let ( !^ ) (s:string) : document = failwith not_impl_msg
+//let ( ^/^ ) (x) (y)  = failwith not_impl_msg
 
-let ( ^/^ ) (x:document) (y:document) : document = failwith not_impl_msg
+// let ( ^//^ ) (x) (y)  = failwith not_impl_msg
 
-// let ( ^//^ ) (x:document) (y:document) : document = failwith not_impl_msg
+(* Wrap up ToChannel.pretty *)
+let pretty_out_channel rfrac width doc ch =
+    P.ToChannel.pretty rfrac width ch doc;
+    flush ch
 
-let pretty_string (rfrac:float) (width:int) (doc:document) : string = failwith not_impl_msg
-let pretty_out_channel (rfrac:float) (width:int) (doc:document) (channel:FStar.Util.out_channel) : unit = failwith not_impl_msg
+(* Wrap up ToBuffer.pretty *)
+let pretty_string rfrac width doc =
+    let ch = new System.IO.StringWriter() in
+    pretty_out_channel rfrac width doc ch;
+    ch.ToString()

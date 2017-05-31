@@ -20,6 +20,8 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 
+let () = FStar.Version.dummy ()
+
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
 let process_args () : parse_cmdline_res * list<string> =
@@ -48,9 +50,10 @@ let finished_message fmods errs =
 
 (* printing total error count *)
 let report_errors fmods =
-  let errs = FStar.Errors.get_err_count() in
-  if errs > 0 then begin
-    finished_message fmods errs;
+  FStar.Errors.report_all () |> ignore;
+  let nerrs = FStar.Errors.get_err_count() in
+  if nerrs > 0 then begin
+    finished_message fmods nerrs;
     exit 1
   end
 
@@ -69,10 +72,12 @@ let codegen (umods, env) =
     in
     match opt with
     | Some "FSharp" | Some "OCaml" ->
-        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
-        List.iter (fun (n,d) ->
-          Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 d)
-        ) newDocs
+        (* When bootstrapped in F#, this will use the old printer in
+           FStar.Extraction.ML.Code for both OCaml and F# extraction.
+           When bootstarpped in OCaml, this will use the old printer
+           for F# extraction and the new printer for OCaml extraction. *)
+        let outdir = Options.output_dir() in
+        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
     | Some "JavaScript" ->
         //printf "%A" mllibs;
         //printf "%A" (List.nth mllibs (List.length mllibs - 1));
@@ -81,7 +86,7 @@ let codegen (umods, env) =
            let res = Extraction.JavaScript.PrintAst.pretty_print d  in
            //printf "%A" d;           
            Util.write_file (Options.prepend_output_dir (n^ext)) (FStar.Format.pretty 120 res)
-        ) newDocs
+           ) newDocs
     | Some "Kremlin" ->
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
@@ -105,7 +110,7 @@ let go _ =
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
         else if Options.interactive () then begin //--in
           if Options.explicit_deps () then begin
-            Util.print_error "--explicit_deps incompatible with --in|n";
+            Util.print_error "--explicit_deps incompatible with --in\n";
             exit 1
           end;
           if List.length filenames <> 1 then begin
@@ -114,31 +119,21 @@ let go _ =
           end;
           let filename = List.hd filenames in
 
-          //try to convert filename passed from the editor to windows path
-          //on cygwin emacs this is required
-          let try_convert_file_name_to_windows (s:string) :string =
-            try
-              let _, t_out, _ = run_proc "which" "cygpath" "" in
-              if not (trim_string t_out = "/usr/bin/cygpath") then s
-              else
-                let _, t_out, _ = run_proc "cygpath" ("-m " ^ s) "" in
-                trim_string t_out
-            with
-              | _ -> s
-          in
-
-          let filename = try_convert_file_name_to_windows filename in
-
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
+
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          FStar.Interactive.interactive_mode filename
+          if Options.legacy_interactive () then FStar.Legacy.Interactive.interactive_mode filename
+          else FStar.Interactive.interactive_mode filename
 	  //and then start checking chunks from the current buffer
         end //end interactive mode
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
-          FStar.Indent.generate filenames
+          if FStar.Platform.is_fstar_compiler_using_ocaml
+          then FStar.Indent.generate filenames
+          else failwith "You seem to be using the F#-generated version ofthe compiler ; \
+                         reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin
@@ -169,14 +164,14 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
+    let trace = Util.trace_of_exn e in
     (begin
-        if FStar.Errors.handleable e then FStar.Errors.handle_err false e;
+        if FStar.Errors.handleable e then FStar.Errors.err_exn e;
         if (Options.trace_error()) then
-          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
         else if not (FStar.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
      end;
      cleanup();
-     FStar.Errors.report_all () |> ignore;
      report_errors [];
      exit 1)

@@ -2,15 +2,14 @@
 
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
-include $(FSTAR_HOME)/src/gmake/nubuild.mk
 
 FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
-HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst
+HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst FStar.Struct.fst FStar.StructNG.fst
 
 ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
 
-all: $(addsuffix -ver, $(ALL)) st m_rref bufferq
+all: $(addsuffix -ver, $(ALL)) st m_rref bufferq struct
 
 indent: $(addsuffix -indent, $(ALL))
 
@@ -28,7 +27,7 @@ verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
 %-ver: %
 	$(FSTAR) $^
 list:
-	$(FSTAR) FStar.List.Tot.Base FStar.List.Tot.Properties.fst FStar.List.Tot.fst FStar.List.fst
+	$(FSTAR) FStar.List.Tot.Base.fst FStar.List.Tot.Properties.fst FStar.List.Tot.fst FStar.List.fst
 
 array:
 	$(FSTAR) FStar.Seq.Base.fst FStar.Classical.fst FStar.Seq.Properties.fst FStar.Seq.fst FStar.Array.fst
@@ -60,6 +59,9 @@ m_rref:
 buffer:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst
 
+struct:
+	$(FSTAR) hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Struct.fst
+
 bufferq:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst
 
@@ -82,4 +84,4 @@ wc:
 
 mgen:
 	mkdir -p ml/extracted
-	$(FSTAR) --lax --codegen OCaml --odir ml/extracted FStar.Set.fst FStar.TSet.fst FStar.Map.fst FStar.HyperHeap.fst FStar.HyperStack.fst
+	$(FSTAR) --lax --codegen OCaml --odir ml/extracted --no_extract FStar.List.Tot --no_extract FStar.List.Tot.Base --no_extract FStar.Heap --no_extract FStar.List.Tot.Properties --no_extract FStar.Set FStar.TSet.fst FStar.Map.fst FStar.HyperHeap.fst FStar.HyperStack.fst
