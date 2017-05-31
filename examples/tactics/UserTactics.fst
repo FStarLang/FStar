@@ -9,13 +9,13 @@ let test_or_else =
     assert_by_tactic (or_else (fail "failed")
                               (return ())) True
 
-let simple_equality_assertions =
-  assert_by_tactic rewrite_all_equalities
-                   (forall (y:int). y==0 ==> 0==y);
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y));
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z))
+(* let simple_equality_assertions = *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (y:int). y==0 ==> 0==y); *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)); *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)) *)
 
 let visible_boolean (x:int) = true
 let explicitly_trigger_normalizer =
@@ -27,24 +27,24 @@ let implicitly_unfolfed_before_preprocessing =
                    (unfoldable_predicate 0 /\ visible_boolean 2) //only "b2t (visible_boolean 2)" goes to SMT
 
 let visible_predicate (x:int) = True
-let simple_equality_assertions_within_a_function () =
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)); //identical to one of the queries above, but now inside a function, which produces a slightly different VC
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized
-  assert_by_tactic (visit (unfold_definition_and_simplify_eq (quote visible_predicate)))
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away
+(* let simple_equality_assertions_within_a_function () = *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)); //identical to one of the queries above, but now inside a function, which produces a slightly different VC *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized *)
+(*   assert_by_tactic (visit (unfold_definition_and_simplify_eq (quote visible_predicate))) *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away *)
 
 let local_let_bindings =
   assert_by_tactic trivial (let x = 10 in x + 0 == 10)
 
 assume type pred_1 : int -> Type0
 assume Pred1_saturated: forall x. pred_1 x
-let partially_solved_using_smt =
-  assert_by_tactic rewrite_all_equalities
-                   ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic
-                     pred_1 0 /\ //by 1 smt sub-goal
-                     pred_1 1)  //by another smt sub-goal
+(* let partially_solved_using_smt = *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic *)
+(*                      pred_1 0 /\ //by 1 smt sub-goal *)
+(*                      pred_1 1)  //by another smt sub-goal *)
 
 assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x == 10))
 
