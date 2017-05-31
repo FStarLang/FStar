@@ -532,7 +532,7 @@ let rewrite (h:binder) : tac<unit> =
               when Ident.lid_equals l SC.eq2_lid ->
       (match (SS.compress x).n with
        | Tm_name x ->
-         let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
+         let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty; witness = SS.subst [NT(x, e)] goal.witness} in
          replace_cur goal
        | _ ->
          fail "Not an equality hypothesis with a variable on the LHS")
