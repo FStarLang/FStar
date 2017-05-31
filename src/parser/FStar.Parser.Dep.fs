@@ -184,6 +184,15 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
+let hard_coded_dependencies filename =
+  let filename = basename filename in
+  let corelibs =
+    [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
+  in
+  (* The core libraries do not have any implicit dependencies *)
+  if if List.exists filename corelibs then []
+  else [ Const.fstar_ns_lid; Const.prims_lid ; Const.pervasives_lid ]
+
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
 let collect_one
@@ -247,21 +256,7 @@ let collect_one
   in
 
 
-  (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
-   * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
-  (*
-   * AR: adding FStar.Pervasives to dependencies
-   * the name auto_open is a bit of misnomer, it only includes the file in the dependencies, and not actually open the namespace
-   * if you want to open a namespace, look in src/tosyntax/FStar.ToSyntax.Env.fs
-   *)
-  let auto_open =
-    if basename filename = Options.prims_basename () then
-      []
-    else
-      let l = [ Const.fstar_ns_lid; Const.prims_lid ] in
-      if basename filename = Options.pervasives_basename () then l
-      else l @ [ Const.pervasives_lid ]
-  in
+  let auto_open = hard_coded_dependencies in
   List.iter (record_open false) auto_open;
 
   let num_of_toplevelmods = BU.mk_ref 0 in

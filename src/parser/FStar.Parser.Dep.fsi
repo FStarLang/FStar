@@ -33,6 +33,7 @@ val lowercase_module_name : string -> string
 
 val build_map : list<string> -> map
 
+val hard_coded_dependencies : string -> list<lident>
 val collect : verify_mode -> list<string> -> list<(string * list<string>)> * list<string> * BU.smap<(list<string> * color)>
 
 val print : list<(string * list<string>)> * 'a * smap<(list<string> * 'b)> -> unit
