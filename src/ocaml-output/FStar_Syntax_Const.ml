@@ -221,11 +221,11 @@ let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lident =
       FStar_Range.dummyRange
 let fstar_tactics_lid: Prims.string -> FStar_Ident.lid =
   fun s  -> fstar_tactics_lid' [s]
-let tactic_lid: FStar_Ident.lid = fstar_tactics_lid' ["Effect"; "by_tactic"]
+let tactic_lid: FStar_Ident.lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let by_tactic_lid: FStar_Ident.lid =
   fstar_tactics_lid' ["Effect"; "by_tactic"]
 let reify_tactic_lid: FStar_Ident.lid =
-  fstar_tactics_lid' ["Effect"; "by_tactic"]
+  fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let quote_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "quote"]
     FStar_Range.dummyRange
