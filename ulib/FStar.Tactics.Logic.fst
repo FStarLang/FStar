@@ -5,9 +5,8 @@ open FStar.Tactics.Builtins
 open FStar.Tactics.Derived
 open FStar.Reflection
 
-
-// Ugly
-unfold let thunk #a #b (x:a) = fun (y:b)-> x
+(* This is ugly *)
+let thunk #a #b (x:a) = fun (y:b)-> x
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
                             PURE (x:a -> squash (b x)) (fun p -> forall x. p x)
@@ -26,7 +25,7 @@ let rec l_revert_all (bs:binders) : tactic unit =
 private val fa_intro_lem : (#a:Type) -> (#b : (a -> Type)) ->
                            (x:a -> squash (b x)) ->
                            squash (forall (x:a). b x)
-let fa_intro_lem #a #b f = admit()
+let fa_intro_lem #a #b f = FStar.Squash.(return_squash (squash_double_arrow (return_squash f)))
 
 let forall_intro : tactic binder =
     egw <-- cur_goal;
@@ -56,7 +55,7 @@ let split : tactic unit =
 private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
                             (a -> squash b) ->
                             squash (a ==> b)
-let imp_intro_lem #a #b f = admit()
+let imp_intro_lem #a #b f = FStar.Squash.(return_squash (squash_double_arrow (return_squash f)))
 
 let implies_intro : tactic binder =
     egw <-- cur_goal;
@@ -139,7 +138,7 @@ let unfold_definition_and_simplify_eq (tm:tactic term) : tactic unit =
     unfold_definition_and_simplify_eq' tm'
 
 private val vbind : (#p:Type) -> (#q:Type) -> squash p -> (p -> squash q) -> squash q
-let vbind #p #q sq f = admit()
+let vbind #p #q sq f = FStar.Squash.bind_squash sq f
 
 let unsquash (t:term) : tactic term =
     v <-- quote vbind;
