@@ -1320,7 +1320,7 @@ let lookup_effect_abbrev:
                  else
                    if
                      (FStar_Ident.lid_equals lid1
-                        FStar_Syntax_Const.effect_Lemma_lid)
+                        FStar_Parser_Const.effect_Lemma_lid)
                        &&
                        ((FStar_List.length univ_insts) =
                           (Prims.parse_int "1"))
@@ -1345,7 +1345,7 @@ let lookup_effect_abbrev:
                | (uu____3475,uu____3476::uu____3477::uu____3478) when
                    Prims.op_Negation
                      (FStar_Ident.lid_equals lid1
-                        FStar_Syntax_Const.effect_Lemma_lid)
+                        FStar_Parser_Const.effect_Lemma_lid)
                    ->
                    let uu____3481 =
                      let uu____3482 = FStar_Syntax_Print.lid_to_string lid1 in
@@ -1532,21 +1532,21 @@ let is_action: env -> FStar_Ident.lident -> Prims.bool =
       | uu____3971 -> false
 let is_interpreted: env -> FStar_Syntax_Syntax.term -> Prims.bool =
   let interpreted_symbols =
-    [FStar_Syntax_Const.op_Eq;
-    FStar_Syntax_Const.op_notEq;
-    FStar_Syntax_Const.op_LT;
-    FStar_Syntax_Const.op_LTE;
-    FStar_Syntax_Const.op_GT;
-    FStar_Syntax_Const.op_GTE;
-    FStar_Syntax_Const.op_Subtraction;
-    FStar_Syntax_Const.op_Minus;
-    FStar_Syntax_Const.op_Addition;
-    FStar_Syntax_Const.op_Multiply;
-    FStar_Syntax_Const.op_Division;
-    FStar_Syntax_Const.op_Modulus;
-    FStar_Syntax_Const.op_And;
-    FStar_Syntax_Const.op_Or;
-    FStar_Syntax_Const.op_Negation] in
+    [FStar_Parser_Const.op_Eq;
+    FStar_Parser_Const.op_notEq;
+    FStar_Parser_Const.op_LT;
+    FStar_Parser_Const.op_LTE;
+    FStar_Parser_Const.op_GT;
+    FStar_Parser_Const.op_GTE;
+    FStar_Parser_Const.op_Subtraction;
+    FStar_Parser_Const.op_Minus;
+    FStar_Parser_Const.op_Addition;
+    FStar_Parser_Const.op_Multiply;
+    FStar_Parser_Const.op_Division;
+    FStar_Parser_Const.op_Modulus;
+    FStar_Parser_Const.op_And;
+    FStar_Parser_Const.op_Or;
+    FStar_Parser_Const.op_Negation] in
   fun env  ->
     fun head1  ->
       let uu____3990 =
@@ -1647,15 +1647,15 @@ let join:
         then (l1, identity_mlift, identity_mlift)
         else
           if
-            ((FStar_Ident.lid_equals l1 FStar_Syntax_Const.effect_GTot_lid)
+            ((FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_GTot_lid)
                &&
-               (FStar_Ident.lid_equals l2 FStar_Syntax_Const.effect_Tot_lid))
+               (FStar_Ident.lid_equals l2 FStar_Parser_Const.effect_Tot_lid))
               ||
-              ((FStar_Ident.lid_equals l2 FStar_Syntax_Const.effect_GTot_lid)
+              ((FStar_Ident.lid_equals l2 FStar_Parser_Const.effect_GTot_lid)
                  &&
-                 (FStar_Ident.lid_equals l1 FStar_Syntax_Const.effect_Tot_lid))
+                 (FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_Tot_lid))
           then
-            (FStar_Syntax_Const.effect_GTot_lid, identity_mlift,
+            (FStar_Parser_Const.effect_GTot_lid, identity_mlift,
               identity_mlift)
           else
             (let uu____4253 =
@@ -1691,8 +1691,8 @@ let monad_leq:
       fun l2  ->
         if
           (FStar_Ident.lid_equals l1 l2) ||
-            ((FStar_Ident.lid_equals l1 FStar_Syntax_Const.effect_Tot_lid) &&
-               (FStar_Ident.lid_equals l2 FStar_Syntax_Const.effect_GTot_lid))
+            ((FStar_Ident.lid_equals l1 FStar_Parser_Const.effect_Tot_lid) &&
+               (FStar_Ident.lid_equals l2 FStar_Parser_Const.effect_GTot_lid))
         then
           FStar_Pervasives_Native.Some
             { msource = l1; mtarget = l2; mlift = identity_mlift }
@@ -1750,14 +1750,14 @@ let null_wp_for_eff:
       fun res_u  ->
         fun res_t  ->
           if
-            FStar_Ident.lid_equals eff_name FStar_Syntax_Const.effect_Tot_lid
+            FStar_Ident.lid_equals eff_name FStar_Parser_Const.effect_Tot_lid
           then
             FStar_Syntax_Syntax.mk_Total' res_t
               (FStar_Pervasives_Native.Some res_u)
           else
             if
               FStar_Ident.lid_equals eff_name
-                FStar_Syntax_Const.effect_GTot_lid
+                FStar_Parser_Const.effect_GTot_lid
             then
               FStar_Syntax_Syntax.mk_GTotal' res_t
                 (FStar_Pervasives_Native.Some res_u)
@@ -2000,7 +2000,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                 (fun edge1  ->
                    let uu____4906 =
                      (FStar_Ident.lid_equals edge1.msource
-                        FStar_Syntax_Const.effect_DIV_lid)
+                        FStar_Parser_Const.effect_DIV_lid)
                        &&
                        (let uu____4907 =
                           lookup_effect_quals env edge1.mtarget in
@@ -2609,7 +2609,7 @@ let finish_module: env -> FStar_Syntax_Syntax.modul -> env =
       let sigs =
         if
           FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name
-            FStar_Syntax_Const.prims_lid
+            FStar_Parser_Const.prims_lid
         then
           let uu____5689 =
             FStar_All.pipe_right env.gamma

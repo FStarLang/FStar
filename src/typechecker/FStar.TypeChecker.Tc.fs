@@ -41,7 +41,7 @@ module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module TcInductive = FStar.TypeChecker.TcInductive
-
+module Const = FStar.Parser.Const
 
 
 //set the name of the query so that we can correlate hints to source program fragments

@@ -220,7 +220,7 @@ let mk_tuple_lid n r =
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (Ident.text_of_id lid)
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -260,7 +260,7 @@ let is_dtuple_datacon_string (s:string) :bool =
 let is_dtuple_data_lid f n =
   lid_equals f (mk_dtuple_data_lid n dummyRange)
 
-let is_dtuple_data_lid' f = is_dtuple_datacon_string (Ident.text_of_lid f)
+let is_dtuple_data_lid' f = is_dtuple_datacon_string (text_of_lid f)
 
 let is_name (lid:lident) =
   let c = U.char_at lid.ident.idText 0 in
@@ -268,7 +268,7 @@ let is_name (lid:lident) =
 
 
 (* tactic constants *)
-let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
+let fstar_tactics_lid s = lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
 let tactic_lid = fstar_tactics_lid "tactic"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid = fstar_tactics_lid "reify_tactic"

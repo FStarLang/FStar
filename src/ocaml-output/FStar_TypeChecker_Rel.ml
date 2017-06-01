@@ -164,7 +164,7 @@ let check_trivial:
   fun t  ->
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_fvar tc when
-        FStar_Syntax_Syntax.fv_eq_lid tc FStar_Syntax_Const.true_lid ->
+        FStar_Syntax_Syntax.fv_eq_lid tc FStar_Parser_Const.true_lid ->
         FStar_TypeChecker_Common.Trivial
     | uu____182 -> FStar_TypeChecker_Common.NonTrivial t
 let imp_guard_f:
@@ -1180,7 +1180,7 @@ let u_abs:
             then
               FStar_Syntax_Util.abs ys1 t1
                 (FStar_Pervasives_Native.Some
-                   (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid, [])))
+                   (FStar_Util.Inr (FStar_Parser_Const.effect_Tot_lid, [])))
             else
               (let c1 =
                  let uu____2349 = FStar_Syntax_Util.rename_binders xs ys1 in
@@ -7150,7 +7150,7 @@ let simplify_guard:
                match uu____14652 with
                | FStar_Syntax_Syntax.Tm_fvar fv when
                    FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Syntax_Const.true_lid
+                     FStar_Parser_Const.true_lid
                    -> FStar_TypeChecker_Common.Trivial
                | uu____14657 -> FStar_TypeChecker_Common.NonTrivial f1 in
              let uu___179_14658 = g in

@@ -536,7 +536,7 @@ let mkContext: FStar_TypeChecker_Env.env -> env =
     let uu____955 =
       let uu____958 =
         let uu____959 =
-          FStar_Syntax_Syntax.lid_as_fv FStar_Syntax_Const.failwith_lid
+          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
             FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None in
         FStar_Util.Inr uu____959 in
       extend_lb env uu____958 FStar_Syntax_Syntax.tun failwith_ty false false in

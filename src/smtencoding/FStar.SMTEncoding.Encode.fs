@@ -36,6 +36,7 @@ module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
+module Const = FStar.Parser.Const
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)

@@ -26,6 +26,7 @@ open FStar.Syntax.Syntax
 
 module U  = FStar.Syntax.Util
 module BU = FStar.Util
+module Const = FStar.Parser.Const
 
 // JP: my understanding of this is: we either bind a type (left injection) or a
 // term variable (right injection). In the latter case, the variable may need to

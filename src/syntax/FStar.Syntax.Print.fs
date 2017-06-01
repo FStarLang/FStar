@@ -32,6 +32,7 @@ module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
+module C = FStar.Parser.Const
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -57,33 +58,33 @@ let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
-    (Const.op_Addition    , "+" );
-    (Const.op_Subtraction , "-" );
-    (Const.op_Multiply    , "*" );
-    (Const.op_Division    , "/" );
-    (Const.op_Eq          , "=" );
-    (Const.op_ColonEq     , ":=");
-    (Const.op_notEq       , "<>");
-    (Const.op_And         , "&&");
-    (Const.op_Or          , "||");
-    (Const.op_LTE         , "<=");
-    (Const.op_GTE         , ">=");
-    (Const.op_LT          , "<" );
-    (Const.op_GT          , ">" );
-    (Const.op_Modulus     , "mod");
-    (Const.and_lid     , "/\\");
-    (Const.or_lid      , "\\/");
-    (Const.imp_lid     , "==>");
-    (Const.iff_lid     , "<==>");
-    (Const.precedes_lid, "<<");
-    (Const.eq2_lid     , "==");
-    (Const.eq3_lid     , "===");
+    (C.op_Addition    , "+" );
+    (C.op_Subtraction , "-" );
+    (C.op_Multiply    , "*" );
+    (C.op_Division    , "/" );
+    (C.op_Eq          , "=" );
+    (C.op_ColonEq     , ":=");
+    (C.op_notEq       , "<>");
+    (C.op_And         , "&&");
+    (C.op_Or          , "||");
+    (C.op_LTE         , "<=");
+    (C.op_GTE         , ">=");
+    (C.op_LT          , "<" );
+    (C.op_GT          , ">" );
+    (C.op_Modulus     , "mod");
+    (C.and_lid     , "/\\");
+    (C.or_lid      , "\\/");
+    (C.imp_lid     , "==>");
+    (C.iff_lid     , "<==>");
+    (C.precedes_lid, "<<");
+    (C.eq2_lid     , "==");
+    (C.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [
-    (Const.op_Negation, "not");
-    (Const.op_Minus, "-");
-    (Const.not_lid, "~")
+    (C.op_Negation, "not");
+    (C.op_Minus, "-");
+    (C.not_lid, "~")
 ]
 
 let is_prim_op ps f = match f.n with
@@ -98,17 +99,17 @@ let is_infix_prim_op (e:term) = is_prim_op (fst (List.split infix_prim_ops)) e
 let is_unary_prim_op (e:term) = is_prim_op (fst (List.split unary_prim_ops)) e
 
 let quants = [
-  (Const.forall_lid, "forall");
-  (Const.exists_lid, "exists")
+  (C.forall_lid, "forall");
+  (C.exists_lid, "exists")
 ]
 type exp = term
 
-let is_b2t (t:typ)   = is_prim_op [Const.b2t_lid] t
+let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
 let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
-let is_ite (t:typ)   = is_prim_op [Const.ite_lid] t
+let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 
-let is_lex_cons (f:exp) = is_prim_op [Const.lexcons_lid] f
-let is_lex_top (f:exp) = is_prim_op [Const.lextop_lid] f
+let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
+let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
 let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
 let rec reconstruct_lex (e:exp) =
@@ -428,7 +429,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name Const.effect_ML_lid
+                  && lid_equals c.effect_name C.effect_ML_lid
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)

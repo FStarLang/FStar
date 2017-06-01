@@ -144,7 +144,7 @@ let tc_data:
               match tps_u_opt with
               | FStar_Pervasives_Native.Some x -> x
               | FStar_Pervasives_Native.None  ->
-                  if FStar_Ident.lid_equals tc_lid FStar_Syntax_Const.exn_lid
+                  if FStar_Ident.lid_equals tc_lid FStar_Parser_Const.exn_lid
                   then (env, [], FStar_Syntax_Syntax.U_zero)
                   else
                     raise

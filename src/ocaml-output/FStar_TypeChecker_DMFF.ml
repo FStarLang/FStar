@@ -566,7 +566,7 @@ let gen_wps_for_free:
                       FStar_List.append binders uu____983 in
                     let uu____989 =
                       let l_ite =
-                        FStar_Syntax_Syntax.fvar FStar_Syntax_Const.ite_lid
+                        FStar_Syntax_Syntax.fvar FStar_Parser_Const.ite_lid
                           (FStar_Syntax_Syntax.Delta_defined_at_level
                              (Prims.parse_int "2"))
                           FStar_Pervasives_Native.None in
@@ -604,7 +604,7 @@ let gen_wps_for_free:
                       FStar_Syntax_Syntax.gen_bv "wp"
                         FStar_Pervasives_Native.None wp_a1 in
                     let l_and =
-                      FStar_Syntax_Syntax.fvar FStar_Syntax_Const.and_lid
+                      FStar_Syntax_Syntax.fvar FStar_Parser_Const.and_lid
                         (FStar_Syntax_Syntax.Delta_defined_at_level
                            (Prims.parse_int "1"))
                         FStar_Pervasives_Native.None in
@@ -650,7 +650,7 @@ let gen_wps_for_free:
                       FStar_Syntax_Syntax.gen_bv "wp"
                         FStar_Pervasives_Native.None wp_a1 in
                     let l_imp =
-                      FStar_Syntax_Syntax.fvar FStar_Syntax_Const.imp_lid
+                      FStar_Syntax_Syntax.fvar FStar_Parser_Const.imp_lid
                         (FStar_Syntax_Syntax.Delta_defined_at_level
                            (Prims.parse_int "1"))
                         FStar_Pervasives_Native.None in
@@ -1160,7 +1160,7 @@ let gen_wps_for_free:
                               let guard_free1 =
                                 let uu____1977 =
                                   FStar_Syntax_Syntax.lid_as_fv
-                                    FStar_Syntax_Const.guard_free
+                                    FStar_Parser_Const.guard_free
                                     FStar_Syntax_Syntax.Delta_constant
                                     FStar_Pervasives_Native.None in
                                 FStar_Syntax_Syntax.fv_to_tm uu____1977 in
@@ -1626,13 +1626,13 @@ and star_type':
             match uu____2652 with
             | FStar_Syntax_Syntax.Tm_fvar fv when
                 (((FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Syntax_Const.option_lid)
+                     FStar_Parser_Const.option_lid)
                     ||
                     (FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Syntax_Const.either_lid))
+                       FStar_Parser_Const.either_lid))
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
-                      FStar_Syntax_Const.eq2_lid))
+                      FStar_Parser_Const.eq2_lid))
                   ||
                   (let uu____2657 = FStar_Syntax_Subst.compress head2 in
                    FStar_Syntax_Util.is_tuple_constructor uu____2657)
@@ -2273,7 +2273,7 @@ and infer:
                                        match uu___98_4077 with
                                        | FStar_Syntax_Syntax.CPS  -> false
                                        | uu____4078 -> true) flags in
-                                (FStar_Syntax_Const.effect_Tot_lid,
+                                (FStar_Parser_Const.effect_Tot_lid,
                                   uu____4075)
                               else (lid, flags) in
                             FStar_Util.Inr uu____4064 in
@@ -2884,7 +2884,7 @@ and mk_let:
                            (uu___122_5978.FStar_Syntax_Syntax.lbunivs);
                          FStar_Syntax_Syntax.lbtyp = t1;
                          FStar_Syntax_Syntax.lbeff =
-                           FStar_Syntax_Const.effect_PURE_lid;
+                           FStar_Parser_Const.effect_PURE_lid;
                          FStar_Syntax_Syntax.lbdef =
                            (uu___122_5978.FStar_Syntax_Syntax.lbdef)
                        } in
@@ -3027,7 +3027,7 @@ and mk_M: FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.comp =
     FStar_Syntax_Syntax.mk_Comp
       {
         FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_unknown];
-        FStar_Syntax_Syntax.effect_name = FStar_Syntax_Const.monadic_lid;
+        FStar_Syntax_Syntax.effect_name = FStar_Parser_Const.monadic_lid;
         FStar_Syntax_Syntax.result_typ = t;
         FStar_Syntax_Syntax.effect_args = [];
         FStar_Syntax_Syntax.flags =
@@ -3206,7 +3206,7 @@ and trans_G:
                 FStar_Syntax_Syntax.comp_univs =
                   [FStar_Syntax_Syntax.U_unknown];
                 FStar_Syntax_Syntax.effect_name =
-                  FStar_Syntax_Const.effect_PURE_lid;
+                  FStar_Parser_Const.effect_PURE_lid;
                 FStar_Syntax_Syntax.result_typ = uu____6539;
                 FStar_Syntax_Syntax.effect_args = uu____6542;
                 FStar_Syntax_Syntax.flags = []

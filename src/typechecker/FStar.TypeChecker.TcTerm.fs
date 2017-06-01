@@ -38,6 +38,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module Const = FStar.Parser.Const
 
 
 

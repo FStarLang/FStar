@@ -759,8 +759,8 @@ let head_redex: env_t -> FStar_Syntax_Syntax.term -> Prims.bool =
           (uu____1747,uu____1748,FStar_Pervasives_Native.Some (FStar_Util.Inr
            (l,flags)))
           ->
-          ((FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Tot_lid) ||
-             (FStar_Ident.lid_equals l FStar_Syntax_Const.effect_GTot_lid))
+          ((FStar_Ident.lid_equals l FStar_Parser_Const.effect_Tot_lid) ||
+             (FStar_Ident.lid_equals l FStar_Parser_Const.effect_GTot_lid))
             ||
             (FStar_List.existsb
                (fun uu___108_1777  ->
@@ -805,7 +805,7 @@ let trivial_post: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
     let uu____1838 =
       let uu____1839 = FStar_Syntax_Syntax.null_binder t in [uu____1839] in
     let uu____1840 =
-      FStar_Syntax_Syntax.fvar FStar_Syntax_Const.true_lid
+      FStar_Syntax_Syntax.fvar FStar_Parser_Const.true_lid
         FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None in
     FStar_Syntax_Util.abs uu____1838 uu____1840 FStar_Pervasives_Native.None
 let mk_Apply:
@@ -986,15 +986,15 @@ let curried_arrow_formals_comp:
 let is_arithmetic_primitive head1 args =
   match ((head1.FStar_Syntax_Syntax.n), args) with
   | (FStar_Syntax_Syntax.Tm_fvar fv,uu____2163::uu____2164::[]) ->
-      ((((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.op_Addition) ||
+      ((((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.op_Addition) ||
            (FStar_Syntax_Syntax.fv_eq_lid fv
-              FStar_Syntax_Const.op_Subtraction))
+              FStar_Parser_Const.op_Subtraction))
           ||
-          (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.op_Multiply))
-         || (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.op_Division))
-        || (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.op_Modulus)
+          (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.op_Multiply))
+         || (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.op_Division))
+        || (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.op_Modulus)
   | (FStar_Syntax_Syntax.Tm_fvar fv,uu____2167::[]) ->
-      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.op_Minus
+      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.op_Minus
   | uu____2169 -> false
 let rec encode_binders:
   FStar_SMTEncoding_Term.term FStar_Pervasives_Native.option ->
@@ -1157,12 +1157,12 @@ and encode_arith_term:
             let div1 = mk_nl "_div" FStar_SMTEncoding_Util.mkDiv in
             let modulus = mk_nl "_mod" FStar_SMTEncoding_Util.mkMod in
             let ops =
-              [(FStar_Syntax_Const.op_Addition, add1);
-              (FStar_Syntax_Const.op_Subtraction, sub1);
-              (FStar_Syntax_Const.op_Multiply, mul1);
-              (FStar_Syntax_Const.op_Division, div1);
-              (FStar_Syntax_Const.op_Modulus, modulus);
-              (FStar_Syntax_Const.op_Minus, minus)] in
+              [(FStar_Parser_Const.op_Addition, add1);
+              (FStar_Parser_Const.op_Subtraction, sub1);
+              (FStar_Parser_Const.op_Multiply, mul1);
+              (FStar_Parser_Const.op_Division, div1);
+              (FStar_Parser_Const.op_Modulus, modulus);
+              (FStar_Parser_Const.op_Minus, minus)] in
             let uu____2743 =
               let uu____2749 =
                 FStar_List.tryFind
@@ -1806,7 +1806,7 @@ and encode_term:
                        FStar_Syntax_Syntax.vars = uu____3582;_},uu____3583),uu____3584::
                     (v1,uu____3586)::(v2,uu____3588)::[]) when
                      FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Syntax_Const.lexcons_lid
+                       FStar_Parser_Const.lexcons_lid
                      ->
                      let uu____3626 = encode_term v1 env in
                      (match uu____3626 with
@@ -1821,7 +1821,7 @@ and encode_term:
                  | (FStar_Syntax_Syntax.Tm_fvar
                     fv,uu____3643::(v1,uu____3645)::(v2,uu____3647)::[]) when
                      FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Syntax_Const.lexcons_lid
+                       FStar_Parser_Const.lexcons_lid
                      ->
                      let uu____3681 = encode_term v1 env in
                      (match uu____3681 with
@@ -2165,7 +2165,7 @@ and encode_term:
                           FStar_Pervasives_Native.fst in
                       if
                         FStar_Ident.lid_equals eff
-                          FStar_Syntax_Const.effect_Tot_lid
+                          FStar_Parser_Const.effect_Tot_lid
                       then
                         let uu____4373 =
                           let uu____4374 = new_uvar1 () in
@@ -2175,7 +2175,7 @@ and encode_term:
                       else
                         if
                           FStar_Ident.lid_equals eff
-                            FStar_Syntax_Const.effect_GTot_lid
+                            FStar_Parser_Const.effect_GTot_lid
                         then
                           (let uu____4378 =
                              let uu____4379 = new_uvar1 () in
@@ -2760,11 +2760,11 @@ and encode_function_type_as_formula:
              | (FStar_Syntax_Syntax.Tm_fvar
                 fv,(uu____5438,uu____5439)::(e,uu____5441)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Syntax_Const.smtpat_lid
+                   FStar_Parser_Const.smtpat_lid
                  -> (e, FStar_Pervasives_Native.None)
              | (FStar_Syntax_Syntax.Tm_fvar fv,(e,uu____5472)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Syntax_Const.smtpatT_lid
+                   FStar_Parser_Const.smtpatT_lid
                  -> (e, FStar_Pervasives_Native.None)
              | uu____5493 -> failwith "Unexpected pattern term") in
       let lemma_pats p =
@@ -2783,7 +2783,7 @@ and encode_function_type_as_formula:
               (match uu____5565 with
                | (FStar_Syntax_Syntax.Tm_fvar fv,(e,uu____5587)::[]) when
                    FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Syntax_Const.smtpatOr_lid
+                     FStar_Parser_Const.smtpatOr_lid
                    -> FStar_Pervasives_Native.Some e
                | uu____5607 -> FStar_Pervasives_Native.None) in
         match elts with
@@ -3031,33 +3031,33 @@ and encode_formula:
       let connectives =
         let uu____6610 =
           let uu____6619 = enc_prop_c (bin_op FStar_SMTEncoding_Util.mkAnd) in
-          (FStar_Syntax_Const.and_lid, uu____6619) in
+          (FStar_Parser_Const.and_lid, uu____6619) in
         let uu____6632 =
           let uu____6642 =
             let uu____6651 = enc_prop_c (bin_op FStar_SMTEncoding_Util.mkOr) in
-            (FStar_Syntax_Const.or_lid, uu____6651) in
+            (FStar_Parser_Const.or_lid, uu____6651) in
           let uu____6664 =
             let uu____6674 =
               let uu____6684 =
                 let uu____6693 =
                   enc_prop_c (bin_op FStar_SMTEncoding_Util.mkIff) in
-                (FStar_Syntax_Const.iff_lid, uu____6693) in
+                (FStar_Parser_Const.iff_lid, uu____6693) in
               let uu____6706 =
                 let uu____6716 =
                   let uu____6726 =
                     let uu____6735 =
                       enc_prop_c (un_op FStar_SMTEncoding_Util.mkNot) in
-                    (FStar_Syntax_Const.not_lid, uu____6735) in
+                    (FStar_Parser_Const.not_lid, uu____6735) in
                   [uu____6726;
-                  (FStar_Syntax_Const.eq2_lid, eq_op);
-                  (FStar_Syntax_Const.eq3_lid, eq_op);
-                  (FStar_Syntax_Const.true_lid,
+                  (FStar_Parser_Const.eq2_lid, eq_op);
+                  (FStar_Parser_Const.eq3_lid, eq_op);
+                  (FStar_Parser_Const.true_lid,
                     (const_op FStar_SMTEncoding_Term.mkTrue));
-                  (FStar_Syntax_Const.false_lid,
+                  (FStar_Parser_Const.false_lid,
                     (const_op FStar_SMTEncoding_Term.mkFalse))] in
-                (FStar_Syntax_Const.ite_lid, mk_ite) :: uu____6716 in
+                (FStar_Parser_Const.ite_lid, mk_ite) :: uu____6716 in
               uu____6684 :: uu____6706 in
-            (FStar_Syntax_Const.imp_lid, mk_imp1) :: uu____6674 in
+            (FStar_Parser_Const.imp_lid, mk_imp1) :: uu____6674 in
           uu____6642 :: uu____6664 in
         uu____6610 :: uu____6632 in
       let rec fallback phi1 =
@@ -3095,7 +3095,7 @@ and encode_formula:
              | (FStar_Syntax_Syntax.Tm_fvar
                 fv,uu____6997::(x,uu____6999)::(t,uu____7001)::[]) when
                  FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Syntax_Const.has_type_lid
+                   FStar_Parser_Const.has_type_lid
                  ->
                  let uu____7035 = encode_term x env in
                  (match uu____7035 with
@@ -3110,7 +3110,7 @@ and encode_formula:
                 fv,(r,uu____7053)::(msg,uu____7055)::(phi2,uu____7057)::[])
                  when
                  FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Syntax_Const.labeled_lid
+                   FStar_Parser_Const.labeled_lid
                  ->
                  let uu____7091 =
                    let uu____7094 =
@@ -3221,7 +3221,7 @@ and encode_formula:
                              FStar_SMTEncoding_Term.rng = uu____7346;_}::[])::[]
                             when
                             (FStar_Ident.text_of_lid
-                               FStar_Syntax_Const.guard_free)
+                               FStar_Parser_Const.guard_free)
                               = gf
                             -> []
                         | uu____7354 -> guards in
@@ -3414,7 +3414,7 @@ let prims: prims_t =
                         FStar_All.pipe_left FStar_SMTEncoding_Term.boxBool
                           uu____7849 in
                       quant axy uu____7848 in
-                    (FStar_Syntax_Const.op_Eq, uu____7842) in
+                    (FStar_Parser_Const.op_Eq, uu____7842) in
                   let uu____7855 =
                     let uu____7864 =
                       let uu____7872 =
@@ -3426,7 +3426,7 @@ let prims: prims_t =
                           FStar_All.pipe_left FStar_SMTEncoding_Term.boxBool
                             uu____7879 in
                         quant axy uu____7878 in
-                      (FStar_Syntax_Const.op_notEq, uu____7872) in
+                      (FStar_Parser_Const.op_notEq, uu____7872) in
                     let uu____7886 =
                       let uu____7895 =
                         let uu____7903 =
@@ -3442,7 +3442,7 @@ let prims: prims_t =
                             FStar_All.pipe_left
                               FStar_SMTEncoding_Term.boxBool uu____7910 in
                           quant xy uu____7909 in
-                        (FStar_Syntax_Const.op_LT, uu____7903) in
+                        (FStar_Parser_Const.op_LT, uu____7903) in
                       let uu____7921 =
                         let uu____7930 =
                           let uu____7938 =
@@ -3458,7 +3458,7 @@ let prims: prims_t =
                               FStar_All.pipe_left
                                 FStar_SMTEncoding_Term.boxBool uu____7945 in
                             quant xy uu____7944 in
-                          (FStar_Syntax_Const.op_LTE, uu____7938) in
+                          (FStar_Parser_Const.op_LTE, uu____7938) in
                         let uu____7956 =
                           let uu____7965 =
                             let uu____7973 =
@@ -3474,7 +3474,7 @@ let prims: prims_t =
                                 FStar_All.pipe_left
                                   FStar_SMTEncoding_Term.boxBool uu____7980 in
                               quant xy uu____7979 in
-                            (FStar_Syntax_Const.op_GT, uu____7973) in
+                            (FStar_Parser_Const.op_GT, uu____7973) in
                           let uu____7991 =
                             let uu____8000 =
                               let uu____8008 =
@@ -3490,7 +3490,7 @@ let prims: prims_t =
                                   FStar_All.pipe_left
                                     FStar_SMTEncoding_Term.boxBool uu____8015 in
                                 quant xy uu____8014 in
-                              (FStar_Syntax_Const.op_GTE, uu____8008) in
+                              (FStar_Parser_Const.op_GTE, uu____8008) in
                             let uu____8026 =
                               let uu____8035 =
                                 let uu____8043 =
@@ -3507,7 +3507,7 @@ let prims: prims_t =
                                       FStar_SMTEncoding_Term.boxInt
                                       uu____8050 in
                                   quant xy uu____8049 in
-                                (FStar_Syntax_Const.op_Subtraction,
+                                (FStar_Parser_Const.op_Subtraction,
                                   uu____8043) in
                               let uu____8061 =
                                 let uu____8070 =
@@ -3522,7 +3522,7 @@ let prims: prims_t =
                                         FStar_SMTEncoding_Term.boxInt
                                         uu____8085 in
                                     quant qx uu____8084 in
-                                  (FStar_Syntax_Const.op_Minus, uu____8078) in
+                                  (FStar_Parser_Const.op_Minus, uu____8078) in
                                 let uu____8092 =
                                   let uu____8101 =
                                     let uu____8109 =
@@ -3542,7 +3542,7 @@ let prims: prims_t =
                                           FStar_SMTEncoding_Term.boxInt
                                           uu____8116 in
                                       quant xy uu____8115 in
-                                    (FStar_Syntax_Const.op_Addition,
+                                    (FStar_Parser_Const.op_Addition,
                                       uu____8109) in
                                   let uu____8127 =
                                     let uu____8136 =
@@ -3563,7 +3563,7 @@ let prims: prims_t =
                                             FStar_SMTEncoding_Term.boxInt
                                             uu____8151 in
                                         quant xy uu____8150 in
-                                      (FStar_Syntax_Const.op_Multiply,
+                                      (FStar_Parser_Const.op_Multiply,
                                         uu____8144) in
                                     let uu____8162 =
                                       let uu____8171 =
@@ -3584,7 +3584,7 @@ let prims: prims_t =
                                               FStar_SMTEncoding_Term.boxInt
                                               uu____8186 in
                                           quant xy uu____8185 in
-                                        (FStar_Syntax_Const.op_Division,
+                                        (FStar_Parser_Const.op_Division,
                                           uu____8179) in
                                       let uu____8197 =
                                         let uu____8206 =
@@ -3605,7 +3605,7 @@ let prims: prims_t =
                                                 FStar_SMTEncoding_Term.boxInt
                                                 uu____8221 in
                                             quant xy uu____8220 in
-                                          (FStar_Syntax_Const.op_Modulus,
+                                          (FStar_Parser_Const.op_Modulus,
                                             uu____8214) in
                                         let uu____8232 =
                                           let uu____8241 =
@@ -3626,7 +3626,7 @@ let prims: prims_t =
                                                   FStar_SMTEncoding_Term.boxBool
                                                   uu____8256 in
                                               quant xy uu____8255 in
-                                            (FStar_Syntax_Const.op_And,
+                                            (FStar_Parser_Const.op_And,
                                               uu____8249) in
                                           let uu____8267 =
                                             let uu____8276 =
@@ -3648,7 +3648,7 @@ let prims: prims_t =
                                                     FStar_SMTEncoding_Term.boxBool
                                                     uu____8291 in
                                                 quant xy uu____8290 in
-                                              (FStar_Syntax_Const.op_Or,
+                                              (FStar_Parser_Const.op_Or,
                                                 uu____8284) in
                                             let uu____8302 =
                                               let uu____8311 =
@@ -3664,7 +3664,7 @@ let prims: prims_t =
                                                       FStar_SMTEncoding_Term.boxBool
                                                       uu____8326 in
                                                   quant qx uu____8325 in
-                                                (FStar_Syntax_Const.op_Negation,
+                                                (FStar_Parser_Const.op_Negation,
                                                   uu____8319) in
                                               [uu____8311] in
                                             uu____8276 :: uu____8302 in
@@ -4310,23 +4310,23 @@ let primitive_type_axioms:
       FStar_SMTEncoding_Util.mkAssume uu____9758 in
     [uu____9757] in
   let prims1 =
-    [(FStar_Syntax_Const.unit_lid, mk_unit);
-    (FStar_Syntax_Const.bool_lid, mk_bool);
-    (FStar_Syntax_Const.int_lid, mk_int);
-    (FStar_Syntax_Const.string_lid, mk_str);
-    (FStar_Syntax_Const.ref_lid, mk_ref1);
-    (FStar_Syntax_Const.true_lid, mk_true_interp);
-    (FStar_Syntax_Const.false_lid, mk_false_interp);
-    (FStar_Syntax_Const.and_lid, mk_and_interp);
-    (FStar_Syntax_Const.or_lid, mk_or_interp);
-    (FStar_Syntax_Const.eq2_lid, mk_eq2_interp);
-    (FStar_Syntax_Const.eq3_lid, mk_eq3_interp);
-    (FStar_Syntax_Const.imp_lid, mk_imp_interp);
-    (FStar_Syntax_Const.iff_lid, mk_iff_interp);
-    (FStar_Syntax_Const.not_lid, mk_not_interp);
-    (FStar_Syntax_Const.forall_lid, mk_forall_interp);
-    (FStar_Syntax_Const.exists_lid, mk_exists_interp);
-    (FStar_Syntax_Const.range_lid, mk_range_interp)] in
+    [(FStar_Parser_Const.unit_lid, mk_unit);
+    (FStar_Parser_Const.bool_lid, mk_bool);
+    (FStar_Parser_Const.int_lid, mk_int);
+    (FStar_Parser_Const.string_lid, mk_str);
+    (FStar_Parser_Const.ref_lid, mk_ref1);
+    (FStar_Parser_Const.true_lid, mk_true_interp);
+    (FStar_Parser_Const.false_lid, mk_false_interp);
+    (FStar_Parser_Const.and_lid, mk_and_interp);
+    (FStar_Parser_Const.or_lid, mk_or_interp);
+    (FStar_Parser_Const.eq2_lid, mk_eq2_interp);
+    (FStar_Parser_Const.eq3_lid, mk_eq3_interp);
+    (FStar_Parser_Const.imp_lid, mk_imp_interp);
+    (FStar_Parser_Const.iff_lid, mk_iff_interp);
+    (FStar_Parser_Const.not_lid, mk_not_interp);
+    (FStar_Parser_Const.forall_lid, mk_forall_interp);
+    (FStar_Parser_Const.exists_lid, mk_exists_interp);
+    (FStar_Parser_Const.range_lid, mk_range_interp)] in
   fun env  ->
     fun t  ->
       fun s  ->
@@ -6069,7 +6069,7 @@ and encode_sigelt':
                              (fun _0_37  ->
                                 FStar_Pervasives_Native.Some _0_37)
                              (FStar_Util.Inr
-                                (FStar_Syntax_Const.effect_Tot_lid,
+                                (FStar_Parser_Const.effect_Tot_lid,
                                   [FStar_Syntax_Syntax.TOTAL])) in
                          ((ed.FStar_Syntax_Syntax.binders), tm, uu____13147) in
                        FStar_Syntax_Syntax.Tm_abs uu____13132 in
@@ -6181,7 +6181,7 @@ and encode_sigelt':
              match uu____13438 with
              | (env1,decls2) -> ((FStar_List.flatten decls2), env1))
       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____13454,uu____13455)
-          when FStar_Ident.lid_equals lid FStar_Syntax_Const.precedes_lid ->
+          when FStar_Ident.lid_equals lid FStar_Parser_Const.precedes_lid ->
           let uu____13456 = new_term_constant_and_tok_from_lid env lid in
           (match uu____13456 with | (tname,ttok,env1) -> ([], env1))
       | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____13467,t) ->
@@ -6282,7 +6282,7 @@ and encode_sigelt':
                           FStar_Syntax_Syntax.lbtyp = uu____13589;
                           FStar_Syntax_Syntax.lbeff = uu____13590;
                           FStar_Syntax_Syntax.lbdef = uu____13591;_}::[]),uu____13592,uu____13593)
-          when FStar_Syntax_Syntax.fv_eq_lid b2t1 FStar_Syntax_Const.b2t_lid
+          when FStar_Syntax_Syntax.fv_eq_lid b2t1 FStar_Parser_Const.b2t_lid
           ->
           let uu____13607 =
             new_term_constant_and_tok_from_lid env
@@ -6826,7 +6826,7 @@ and encode_sigelt':
                                    (g, env2))))))
       | FStar_Syntax_Syntax.Sig_datacon
           (d,uu____14407,uu____14408,uu____14409,uu____14410,uu____14411)
-          when FStar_Ident.lid_equals d FStar_Syntax_Const.lexcons_lid ->
+          when FStar_Ident.lid_equals d FStar_Parser_Const.lexcons_lid ->
           ([], env)
       | FStar_Syntax_Syntax.Sig_datacon
           (d,uu____14416,t,uu____14418,n_tps,uu____14420) ->
@@ -7157,7 +7157,7 @@ and encode_sigelt':
                                                                     if
                                                                     FStar_Ident.lid_equals
                                                                     d
-                                                                    FStar_Syntax_Const.lextop_lid
+                                                                    FStar_Parser_Const.lextop_lid
                                                                     then
                                                                     let x =
                                                                     let uu____14863
@@ -7482,7 +7482,7 @@ and encode_sigelt':
                                                                     if
                                                                     FStar_Ident.lid_equals
                                                                     d
-                                                                    FStar_Syntax_Const.lextop_lid
+                                                                    FStar_Parser_Const.lextop_lid
                                                                     then
                                                                     let x =
                                                                     let uu____15123

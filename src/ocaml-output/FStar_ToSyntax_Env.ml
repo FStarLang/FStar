@@ -635,7 +635,7 @@ let fail_if_curmodule:
           FStar_Ident.lid_equals ns_resolved uu____1390 in
         if uu____1389
         then
-          (if FStar_Ident.lid_equals ns_resolved FStar_Syntax_Const.prims_lid
+          (if FStar_Ident.lid_equals ns_resolved FStar_Parser_Const.prims_lid
            then ()
            else
              (let uu____1392 =
@@ -871,7 +871,7 @@ let try_lookup_name:
                          let uu____1947 =
                            (FStar_Syntax_Util.is_primop_lid lid2) ||
                              ((ns_of_lid_equals lid2
-                                 FStar_Syntax_Const.prims_lid)
+                                 FStar_Parser_Const.prims_lid)
                                 &&
                                 (FStar_All.pipe_right quals
                                    (FStar_Util.for_some

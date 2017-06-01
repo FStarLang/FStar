@@ -30,33 +30,33 @@ let db_to_string: FStar_Syntax_Syntax.bv -> Prims.string =
 let infix_prim_ops:
   (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list
   =
-  [(FStar_Syntax_Const.op_Addition, "+");
-  (FStar_Syntax_Const.op_Subtraction, "-");
-  (FStar_Syntax_Const.op_Multiply, "*");
-  (FStar_Syntax_Const.op_Division, "/");
-  (FStar_Syntax_Const.op_Eq, "=");
-  (FStar_Syntax_Const.op_ColonEq, ":=");
-  (FStar_Syntax_Const.op_notEq, "<>");
-  (FStar_Syntax_Const.op_And, "&&");
-  (FStar_Syntax_Const.op_Or, "||");
-  (FStar_Syntax_Const.op_LTE, "<=");
-  (FStar_Syntax_Const.op_GTE, ">=");
-  (FStar_Syntax_Const.op_LT, "<");
-  (FStar_Syntax_Const.op_GT, ">");
-  (FStar_Syntax_Const.op_Modulus, "mod");
-  (FStar_Syntax_Const.and_lid, "/\\");
-  (FStar_Syntax_Const.or_lid, "\\/");
-  (FStar_Syntax_Const.imp_lid, "==>");
-  (FStar_Syntax_Const.iff_lid, "<==>");
-  (FStar_Syntax_Const.precedes_lid, "<<");
-  (FStar_Syntax_Const.eq2_lid, "==");
-  (FStar_Syntax_Const.eq3_lid, "===")]
+  [(FStar_Parser_Const.op_Addition, "+");
+  (FStar_Parser_Const.op_Subtraction, "-");
+  (FStar_Parser_Const.op_Multiply, "*");
+  (FStar_Parser_Const.op_Division, "/");
+  (FStar_Parser_Const.op_Eq, "=");
+  (FStar_Parser_Const.op_ColonEq, ":=");
+  (FStar_Parser_Const.op_notEq, "<>");
+  (FStar_Parser_Const.op_And, "&&");
+  (FStar_Parser_Const.op_Or, "||");
+  (FStar_Parser_Const.op_LTE, "<=");
+  (FStar_Parser_Const.op_GTE, ">=");
+  (FStar_Parser_Const.op_LT, "<");
+  (FStar_Parser_Const.op_GT, ">");
+  (FStar_Parser_Const.op_Modulus, "mod");
+  (FStar_Parser_Const.and_lid, "/\\");
+  (FStar_Parser_Const.or_lid, "\\/");
+  (FStar_Parser_Const.imp_lid, "==>");
+  (FStar_Parser_Const.iff_lid, "<==>");
+  (FStar_Parser_Const.precedes_lid, "<<");
+  (FStar_Parser_Const.eq2_lid, "==");
+  (FStar_Parser_Const.eq3_lid, "===")]
 let unary_prim_ops:
   (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list
   =
-  [(FStar_Syntax_Const.op_Negation, "not");
-  (FStar_Syntax_Const.op_Minus, "-");
-  (FStar_Syntax_Const.not_lid, "~")]
+  [(FStar_Parser_Const.op_Negation, "not");
+  (FStar_Parser_Const.op_Minus, "-");
+  (FStar_Parser_Const.not_lid, "~")]
 let is_prim_op ps f =
   match f.FStar_Syntax_Syntax.n with
   | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -79,20 +79,20 @@ let is_unary_prim_op: FStar_Syntax_Syntax.term -> Prims.bool =
 let quants:
   (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2 Prims.list
   =
-  [(FStar_Syntax_Const.forall_lid, "forall");
-  (FStar_Syntax_Const.exists_lid, "exists")]
+  [(FStar_Parser_Const.forall_lid, "forall");
+  (FStar_Parser_Const.exists_lid, "exists")]
 type exp = FStar_Syntax_Syntax.term
 let is_b2t: FStar_Syntax_Syntax.typ -> Prims.bool =
-  fun t  -> is_prim_op [FStar_Syntax_Const.b2t_lid] t
+  fun t  -> is_prim_op [FStar_Parser_Const.b2t_lid] t
 let is_quant: FStar_Syntax_Syntax.typ -> Prims.bool =
   fun t  ->
     is_prim_op (FStar_Pervasives_Native.fst (FStar_List.split quants)) t
 let is_ite: FStar_Syntax_Syntax.typ -> Prims.bool =
-  fun t  -> is_prim_op [FStar_Syntax_Const.ite_lid] t
+  fun t  -> is_prim_op [FStar_Parser_Const.ite_lid] t
 let is_lex_cons: exp -> Prims.bool =
-  fun f  -> is_prim_op [FStar_Syntax_Const.lexcons_lid] f
+  fun f  -> is_prim_op [FStar_Parser_Const.lexcons_lid] f
 let is_lex_top: exp -> Prims.bool =
-  fun f  -> is_prim_op [FStar_Syntax_Const.lextop_lid] f
+  fun f  -> is_prim_op [FStar_Parser_Const.lextop_lid] f
 let is_inr uu___197_173 =
   match uu___197_173 with
   | FStar_Util.Inl uu____176 -> false
@@ -819,7 +819,7 @@ and comp_to_string: FStar_Syntax_Syntax.comp -> Prims.string =
                        &&
                        (FStar_Ident.lid_equals
                           c1.FStar_Syntax_Syntax.effect_name
-                          FStar_Syntax_Const.effect_ML_lid) in
+                          FStar_Parser_Const.effect_ML_lid) in
                    if uu____1552
                    then term_to_string c1.FStar_Syntax_Syntax.result_typ
                    else

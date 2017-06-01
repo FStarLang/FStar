@@ -288,14 +288,14 @@ let lookup_bvar env x =
 let downgrade_ghost_effect_name:
   FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option =
   fun l  ->
-    if FStar_Ident.lid_equals l FStar_Syntax_Const.effect_Ghost_lid
-    then FStar_Pervasives_Native.Some FStar_Syntax_Const.effect_Pure_lid
+    if FStar_Ident.lid_equals l FStar_Parser_Const.effect_Ghost_lid
+    then FStar_Pervasives_Native.Some FStar_Parser_Const.effect_Pure_lid
     else
-      if FStar_Ident.lid_equals l FStar_Syntax_Const.effect_GTot_lid
-      then FStar_Pervasives_Native.Some FStar_Syntax_Const.effect_Tot_lid
+      if FStar_Ident.lid_equals l FStar_Parser_Const.effect_GTot_lid
+      then FStar_Pervasives_Native.Some FStar_Parser_Const.effect_Tot_lid
       else
-        if FStar_Ident.lid_equals l FStar_Syntax_Const.effect_GHOST_lid
-        then FStar_Pervasives_Native.Some FStar_Syntax_Const.effect_PURE_lid
+        if FStar_Ident.lid_equals l FStar_Parser_Const.effect_GHOST_lid
+        then FStar_Pervasives_Native.Some FStar_Parser_Const.effect_PURE_lid
         else FStar_Pervasives_Native.None
 let norm_universe:
   cfg ->
@@ -899,14 +899,14 @@ and close_lcomp_opt:
             if uu____2316
             then
               FStar_Pervasives_Native.Some
-                (FStar_Util.Inr (FStar_Syntax_Const.effect_Tot_lid, flags))
+                (FStar_Util.Inr (FStar_Parser_Const.effect_Tot_lid, flags))
             else
               (let uu____2333 = FStar_Syntax_Util.is_tot_or_gtot_lcomp lc in
                if uu____2333
                then
                  FStar_Pervasives_Native.Some
                    (FStar_Util.Inr
-                      (FStar_Syntax_Const.effect_GTot_lid, flags))
+                      (FStar_Parser_Const.effect_GTot_lid, flags))
                else
                  FStar_Pervasives_Native.Some
                    (FStar_Util.Inr ((lc.FStar_Syntax_Syntax.eff_name), flags)))
@@ -1113,7 +1113,7 @@ let built_in_primitive_steps: primitive_step Prims.list =
                                   let uu____3198 =
                                     let uu____3208 =
                                       let uu____3217 =
-                                        FStar_Syntax_Const.p2l
+                                        FStar_Parser_Const.p2l
                                           ["FStar";
                                           "String";
                                           "list_of_string"] in
@@ -1123,7 +1123,7 @@ let built_in_primitive_steps: primitive_step Prims.list =
                                     let uu____3223 =
                                       let uu____3233 =
                                         let uu____3242 =
-                                          FStar_Syntax_Const.p2l
+                                          FStar_Parser_Const.p2l
                                             ["FStar";
                                             "String";
                                             "string_of_list"] in
@@ -1132,58 +1132,58 @@ let built_in_primitive_steps: primitive_step Prims.list =
                                              string_of_list')) in
                                       [uu____3233] in
                                     uu____3208 :: uu____3223 in
-                                  (FStar_Syntax_Const.string_of_bool_lid,
+                                  (FStar_Parser_Const.string_of_bool_lid,
                                     (Prims.parse_int "1"),
                                     (unary_op arg_as_bool string_of_bool2))
                                     :: uu____3198 in
-                                (FStar_Syntax_Const.string_of_int_lid,
+                                (FStar_Parser_Const.string_of_int_lid,
                                   (Prims.parse_int "1"),
                                   (unary_op arg_as_int string_of_int2)) ::
                                   uu____3188 in
-                              (FStar_Syntax_Const.strcat_lid,
+                              (FStar_Parser_Const.strcat_lid,
                                 (Prims.parse_int "2"),
                                 (binary_string_op
                                    (fun x  -> fun y  -> Prims.strcat x y)))
                                 :: uu____3178 in
-                            (FStar_Syntax_Const.op_Or, (Prims.parse_int "2"),
+                            (FStar_Parser_Const.op_Or, (Prims.parse_int "2"),
                               (binary_bool_op (fun x  -> fun y  -> x || y)))
                               :: uu____3168 in
-                          (FStar_Syntax_Const.op_And, (Prims.parse_int "2"),
+                          (FStar_Parser_Const.op_And, (Prims.parse_int "2"),
                             (binary_bool_op (fun x  -> fun y  -> x && y))) ::
                             uu____3158 in
-                        (FStar_Syntax_Const.op_Negation,
+                        (FStar_Parser_Const.op_Negation,
                           (Prims.parse_int "1"),
                           (unary_bool_op (fun x  -> Prims.op_Negation x))) ::
                           uu____3148 in
-                      (FStar_Syntax_Const.op_Modulus, (Prims.parse_int "2"),
+                      (FStar_Parser_Const.op_Modulus, (Prims.parse_int "2"),
                         (binary_int_op (fun x  -> fun y  -> x mod y))) ::
                         uu____3138 in
-                    (FStar_Syntax_Const.op_GTE, (Prims.parse_int "2"),
+                    (FStar_Parser_Const.op_GTE, (Prims.parse_int "2"),
                       (binary_op arg_as_int
                          (fun r  ->
                             fun x  -> fun y  -> bool_as_const r (x >= y))))
                       :: uu____3128 in
-                  (FStar_Syntax_Const.op_GT, (Prims.parse_int "2"),
+                  (FStar_Parser_Const.op_GT, (Prims.parse_int "2"),
                     (binary_op arg_as_int
                        (fun r  -> fun x  -> fun y  -> bool_as_const r (x > y))))
                     :: uu____3118 in
-                (FStar_Syntax_Const.op_LTE, (Prims.parse_int "2"),
+                (FStar_Parser_Const.op_LTE, (Prims.parse_int "2"),
                   (binary_op arg_as_int
                      (fun r  -> fun x  -> fun y  -> bool_as_const r (x <= y))))
                   :: uu____3108 in
-              (FStar_Syntax_Const.op_LT, (Prims.parse_int "2"),
+              (FStar_Parser_Const.op_LT, (Prims.parse_int "2"),
                 (binary_op arg_as_int
                    (fun r  -> fun x  -> fun y  -> bool_as_const r (x < y))))
                 :: uu____3098 in
-            (FStar_Syntax_Const.op_Division, (Prims.parse_int "2"),
+            (FStar_Parser_Const.op_Division, (Prims.parse_int "2"),
               (binary_int_op (fun x  -> fun y  -> x / y))) :: uu____3088 in
-          (FStar_Syntax_Const.op_Multiply, (Prims.parse_int "2"),
+          (FStar_Parser_Const.op_Multiply, (Prims.parse_int "2"),
             (binary_int_op (fun x  -> fun y  -> x * y))) :: uu____3078 in
-        (FStar_Syntax_Const.op_Subtraction, (Prims.parse_int "2"),
+        (FStar_Parser_Const.op_Subtraction, (Prims.parse_int "2"),
           (binary_int_op (fun x  -> fun y  -> x - y))) :: uu____3068 in
-      (FStar_Syntax_Const.op_Addition, (Prims.parse_int "2"),
+      (FStar_Parser_Const.op_Addition, (Prims.parse_int "2"),
         (binary_int_op (fun x  -> fun y  -> x + y))) :: uu____3058 in
-    (FStar_Syntax_Const.op_Minus, (Prims.parse_int "1"),
+    (FStar_Parser_Const.op_Minus, (Prims.parse_int "1"),
       (unary_int_op (fun x  -> - x))) :: uu____3048 in
   let bounded_arith_ops =
     let bounded_int_types =
@@ -1208,7 +1208,7 @@ let built_in_primitive_steps: primitive_step Prims.list =
       (FStar_List.collect
          (fun m  ->
             let uu____3563 =
-              let uu____3572 = FStar_Syntax_Const.p2l ["FStar"; m; "add"] in
+              let uu____3572 = FStar_Parser_Const.p2l ["FStar"; m; "add"] in
               (uu____3572, (Prims.parse_int "2"),
                 (binary_op arg_as_bounded_int
                    (fun r  ->
@@ -1219,7 +1219,7 @@ let built_in_primitive_steps: primitive_step Prims.list =
                               int_as_bounded r int_to_t1 (x + y)))) in
             let uu____3599 =
               let uu____3609 =
-                let uu____3618 = FStar_Syntax_Const.p2l ["FStar"; m; "sub"] in
+                let uu____3618 = FStar_Parser_Const.p2l ["FStar"; m; "sub"] in
                 (uu____3618, (Prims.parse_int "2"),
                   (binary_op arg_as_bounded_int
                      (fun r  ->
@@ -1230,7 +1230,7 @@ let built_in_primitive_steps: primitive_step Prims.list =
                                 int_as_bounded r int_to_t1 (x - y)))) in
               let uu____3645 =
                 let uu____3655 =
-                  let uu____3664 = FStar_Syntax_Const.p2l ["FStar"; m; "mul"] in
+                  let uu____3664 = FStar_Parser_Const.p2l ["FStar"; m; "mul"] in
                   (uu____3664, (Prims.parse_int "2"),
                     (binary_op arg_as_bounded_int
                        (fun r  ->
@@ -1325,21 +1325,21 @@ let equality_ops: primitive_step Prims.list =
     | uu____3920 -> failwith "Unexpected number of arguments" in
   let decidable_equality =
     {
-      name = FStar_Syntax_Const.op_Eq;
+      name = FStar_Parser_Const.op_Eq;
       arity = (Prims.parse_int "3");
       strong_reduction_ok = true;
       interpretation = interp_bool
     } in
   let propositional_equality =
     {
-      name = FStar_Syntax_Const.eq2_lid;
+      name = FStar_Parser_Const.eq2_lid;
       arity = (Prims.parse_int "3");
       strong_reduction_ok = true;
       interpretation = interp_prop
     } in
   let hetero_propositional_equality =
     {
-      name = FStar_Syntax_Const.eq3_lid;
+      name = FStar_Parser_Const.eq3_lid;
       arity = (Prims.parse_int "4");
       strong_reduction_ok = true;
       interpretation = interp_prop
@@ -1411,10 +1411,10 @@ let maybe_simplify:
       let simp_t t =
         match t.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_fvar fv when
-            FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.true_lid ->
+            FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.true_lid ->
             FStar_Pervasives_Native.Some true
         | FStar_Syntax_Syntax.Tm_fvar fv when
-            FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.false_lid ->
+            FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.false_lid ->
             FStar_Pervasives_Native.Some false
         | uu____4027 -> FStar_Pervasives_Native.None in
       let simplify arg = ((simp_t (FStar_Pervasives_Native.fst arg)), arg) in
@@ -1437,7 +1437,7 @@ let maybe_simplify:
                 FStar_Syntax_Syntax.vars = uu____4063;_},args)
              ->
              let uu____4083 =
-               FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.and_lid in
+               FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.and_lid in
              if uu____4083
              then
                let uu____4084 =
@@ -1456,7 +1456,7 @@ let maybe_simplify:
                 | uu____4283 -> tm)
              else
                (let uu____4293 =
-                  FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.or_lid in
+                  FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.or_lid in
                 if uu____4293
                 then
                   let uu____4294 =
@@ -1476,7 +1476,7 @@ let maybe_simplify:
                 else
                   (let uu____4503 =
                      FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Syntax_Const.imp_lid in
+                       FStar_Parser_Const.imp_lid in
                    if uu____4503
                    then
                      let uu____4504 =
@@ -1493,7 +1493,7 @@ let maybe_simplify:
                    else
                      (let uu____4669 =
                         FStar_Syntax_Syntax.fv_eq_lid fv
-                          FStar_Syntax_Const.not_lid in
+                          FStar_Parser_Const.not_lid in
                       if uu____4669
                       then
                         let uu____4670 =
@@ -1507,7 +1507,7 @@ let maybe_simplify:
                       else
                         (let uu____4761 =
                            FStar_Syntax_Syntax.fv_eq_lid fv
-                             FStar_Syntax_Const.forall_lid in
+                             FStar_Parser_Const.forall_lid in
                          if uu____4761
                          then
                            match args with
@@ -1543,7 +1543,7 @@ let maybe_simplify:
                          else
                            (let uu____4883 =
                               FStar_Syntax_Syntax.fv_eq_lid fv
-                                FStar_Syntax_Const.exists_lid in
+                                FStar_Parser_Const.exists_lid in
                             if uu____4883
                             then
                               match args with
@@ -1584,7 +1584,7 @@ let maybe_simplify:
                 FStar_Syntax_Syntax.vars = uu____5008;_},args)
              ->
              let uu____5024 =
-               FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.and_lid in
+               FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.and_lid in
              if uu____5024
              then
                let uu____5025 =
@@ -1603,7 +1603,7 @@ let maybe_simplify:
                 | uu____5224 -> tm)
              else
                (let uu____5234 =
-                  FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.or_lid in
+                  FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.or_lid in
                 if uu____5234
                 then
                   let uu____5235 =
@@ -1623,7 +1623,7 @@ let maybe_simplify:
                 else
                   (let uu____5444 =
                      FStar_Syntax_Syntax.fv_eq_lid fv
-                       FStar_Syntax_Const.imp_lid in
+                       FStar_Parser_Const.imp_lid in
                    if uu____5444
                    then
                      let uu____5445 =
@@ -1640,7 +1640,7 @@ let maybe_simplify:
                    else
                      (let uu____5610 =
                         FStar_Syntax_Syntax.fv_eq_lid fv
-                          FStar_Syntax_Const.not_lid in
+                          FStar_Parser_Const.not_lid in
                       if uu____5610
                       then
                         let uu____5611 =
@@ -1654,7 +1654,7 @@ let maybe_simplify:
                       else
                         (let uu____5702 =
                            FStar_Syntax_Syntax.fv_eq_lid fv
-                             FStar_Syntax_Const.forall_lid in
+                             FStar_Parser_Const.forall_lid in
                          if uu____5702
                          then
                            match args with
@@ -1690,7 +1690,7 @@ let maybe_simplify:
                          else
                            (let uu____5824 =
                               FStar_Syntax_Syntax.fv_eq_lid fv
-                                FStar_Syntax_Const.exists_lid in
+                                FStar_Parser_Const.exists_lid in
                             if uu____5824
                             then
                               match args with
@@ -1733,9 +1733,9 @@ let is_norm_request hd1 args =
     (uu____5965, args) in
   match uu____5961 with
   | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5971::uu____5972::[]) ->
-      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.normalize_term
+      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize_term
   | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5975::[]) ->
-      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.normalize
+      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize
   | uu____5977 -> false
 let get_norm_request args =
   match args with
@@ -1850,7 +1850,7 @@ let rec norm:
                  (Prims.op_Negation
                     (FStar_Ident.lid_equals
                        (cfg.tcenv).FStar_TypeChecker_Env.curmodule
-                       FStar_Syntax_Const.prims_lid))
+                       FStar_Parser_Const.prims_lid))
                ->
                let tm = get_norm_request args in
                let s =
@@ -2102,10 +2102,10 @@ let rec norm:
                                | FStar_Pervasives_Native.Some (FStar_Util.Inr
                                    (l,cflags)) when
                                    ((FStar_Ident.lid_equals l
-                                       FStar_Syntax_Const.effect_Tot_lid)
+                                       FStar_Parser_Const.effect_Tot_lid)
                                       ||
                                       (FStar_Ident.lid_equals l
-                                         FStar_Syntax_Const.effect_GTot_lid))
+                                         FStar_Parser_Const.effect_GTot_lid))
                                      ||
                                      (FStar_All.pipe_right cflags
                                         (FStar_Util.for_some
@@ -2956,7 +2956,7 @@ let rec norm:
                                               FStar_Syntax_Syntax.lbtyp =
                                                 (uu___171_8273.FStar_Syntax_Syntax.lbtyp);
                                               FStar_Syntax_Syntax.lbeff =
-                                                FStar_Syntax_Const.effect_PURE_lid;
+                                                FStar_Parser_Const.effect_PURE_lid;
                                               FStar_Syntax_Syntax.lbdef = e
                                             } in
                                           let uu____8274 =
@@ -3616,7 +3616,7 @@ and ghost_to_pure_aux:
                       FStar_Syntax_Syntax.comp_univs =
                         (uu___180_9207.FStar_Syntax_Syntax.comp_univs);
                       FStar_Syntax_Syntax.effect_name =
-                        FStar_Syntax_Const.effect_PURE_lid;
+                        FStar_Parser_Const.effect_PURE_lid;
                       FStar_Syntax_Syntax.result_typ =
                         (uu___180_9207.FStar_Syntax_Syntax.result_typ);
                       FStar_Syntax_Syntax.effect_args =

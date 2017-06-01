@@ -26,13 +26,13 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
-open FStar.Syntax.Const
 open FStar.Parser
 open FStar.Ident
 open FStar.Errors
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
+module Const = FStar.Parser.Const
 
 type local_binding = (ident * bv * bool)                  (* local name binding for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
 type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
@@ -388,7 +388,7 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
 let fail_if_curmodule env ns_original ns_resolved =
   if lid_equals ns_resolved (current_module env)
   then
-    if lid_equals ns_resolved FStar.Syntax.Const.prims_lid
+    if lid_equals ns_resolved Const.prims_lid
     then () // disable this check for Prims, because of Prims.unit, etc.
     else raise (Error (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str, range_of_lid ns_original))
   else ()
@@ -511,7 +511,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if U.is_primop_lid lid
-                          || (ns_of_lid_equals lid FStar.Syntax.Const.prims_lid && quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+                          || (ns_of_lid_equals lid Const.prims_lid && quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
@@ -1097,13 +1097,6 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
   let prep env =
     let filename = BU.strcat (text_of_lid mname) ".fst" in
     let open_ns = FStar.Parser.Dep.hard_coded_dependencies filename in
-
-    (* let open_ns = *)
-    (*   // JP: auto-deps is not aware of that. Fix it once [universes] is the default. *)
-    (*   if List.length mname.ns <> 0 *)
-    (*   then let ns = Ident.lid_of_ids mname.ns in *)
-    (*        ns::open_ns //the namespace of the current module, if any, is implicitly in scope *)
-    (*   else open_ns in *)
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in

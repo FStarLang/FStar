@@ -129,7 +129,7 @@ let log: FStar_TypeChecker_Env.env -> Prims.bool =
     (FStar_Options.log_types ()) &&
       (let uu____30 =
          let uu____31 = FStar_TypeChecker_Env.current_module env in
-         FStar_Ident.lid_equals FStar_Syntax_Const.prims_lid uu____31 in
+         FStar_Ident.lid_equals FStar_Parser_Const.prims_lid uu____31 in
        Prims.op_Negation uu____30)
 let tc_check_trivial_guard:
   FStar_TypeChecker_Env.env ->
@@ -1926,7 +1926,7 @@ and cps_and_elaborate:
                                                              uu____1944
                                                              (FStar_Pervasives_Native.Some
                                                                 (FStar_Util.Inr
-                                                                   (FStar_Syntax_Const.effect_GTot_lid,
+                                                                   (FStar_Parser_Const.effect_GTot_lid,
                                                                     [])))))))
                                            | uu____1954 ->
                                                failwith
@@ -1947,7 +1947,7 @@ and cps_and_elaborate:
                                                  [b1; b2] uu____1995
                                                  (FStar_Pervasives_Native.Some
                                                     (FStar_Util.Inr
-                                                       (FStar_Syntax_Const.effect_GTot_lid,
+                                                       (FStar_Parser_Const.effect_GTot_lid,
                                                          [])))
                                            | uu____2011 ->
                                                failwith
@@ -1963,7 +1963,7 @@ and cps_and_elaborate:
                                                (binders,body,what) ->
                                                let r =
                                                  FStar_Syntax_Syntax.lid_as_fv
-                                                   FStar_Syntax_Const.range_lid
+                                                   FStar_Parser_Const.range_lid
                                                    (FStar_Syntax_Syntax.Delta_defined_at_level
                                                       (Prims.parse_int "1"))
                                                    FStar_Pervasives_Native.None in
@@ -2682,7 +2682,7 @@ and cps_and_elaborate:
                                                                     {
                                                                     FStar_Syntax_Syntax.source
                                                                     =
-                                                                    FStar_Syntax_Const.effect_PURE_lid;
+                                                                    FStar_Parser_Const.effect_PURE_lid;
                                                                     FStar_Syntax_Syntax.target
                                                                     =
                                                                     (ed2.FStar_Syntax_Syntax.mname);
@@ -2756,13 +2756,13 @@ and tc_lex_t:
               ((_0_29 = (Prims.parse_int "0")) &&
                  (_0_30 = (Prims.parse_int "0")))
                 &&
-                (((FStar_Ident.lid_equals lex_t1 FStar_Syntax_Const.lex_t_lid)
+                (((FStar_Ident.lid_equals lex_t1 FStar_Parser_Const.lex_t_lid)
                     &&
                     (FStar_Ident.lid_equals lex_top1
-                       FStar_Syntax_Const.lextop_lid))
+                       FStar_Parser_Const.lextop_lid))
                    &&
                    (FStar_Ident.lid_equals lex_cons
-                      FStar_Syntax_Const.lexcons_lid))
+                      FStar_Parser_Const.lexcons_lid))
               ->
               let u =
                 FStar_Syntax_Syntax.new_univ_name
@@ -2777,8 +2777,8 @@ and tc_lex_t:
                   FStar_Syntax_Syntax.sigel =
                     (FStar_Syntax_Syntax.Sig_inductive_typ
                        (lex_t1, [u], [], t2, [],
-                         [FStar_Syntax_Const.lextop_lid;
-                         FStar_Syntax_Const.lexcons_lid]));
+                         [FStar_Parser_Const.lextop_lid;
+                         FStar_Parser_Const.lexcons_lid]));
                   FStar_Syntax_Syntax.sigrng = r;
                   FStar_Syntax_Syntax.sigquals = [];
                   FStar_Syntax_Syntax.sigmeta =
@@ -2794,7 +2794,7 @@ and tc_lex_t:
                       let uu____2787 =
                         FStar_Syntax_Syntax.fvar
                           (FStar_Ident.set_lid_range
-                             FStar_Syntax_Const.lex_t_lid r1)
+                             FStar_Parser_Const.lex_t_lid r1)
                           FStar_Syntax_Syntax.Delta_constant
                           FStar_Pervasives_Native.None in
                       (uu____2787, [FStar_Syntax_Syntax.U_name utop]) in
@@ -2808,7 +2808,7 @@ and tc_lex_t:
                   FStar_Syntax_Syntax.sigel =
                     (FStar_Syntax_Syntax.Sig_datacon
                        (lex_top1, [utop], lex_top_t1,
-                         FStar_Syntax_Const.lex_t_lid, (Prims.parse_int "0"),
+                         FStar_Parser_Const.lex_t_lid, (Prims.parse_int "0"),
                          []));
                   FStar_Syntax_Syntax.sigrng = r1;
                   FStar_Syntax_Syntax.sigquals = [];
@@ -2842,7 +2842,7 @@ and tc_lex_t:
                           let uu____2825 =
                             FStar_Syntax_Syntax.fvar
                               (FStar_Ident.set_lid_range
-                                 FStar_Syntax_Const.lex_t_lid r2)
+                                 FStar_Parser_Const.lex_t_lid r2)
                               FStar_Syntax_Syntax.Delta_constant
                               FStar_Pervasives_Native.None in
                           (uu____2825, [FStar_Syntax_Syntax.U_name ucons2]) in
@@ -2858,7 +2858,7 @@ and tc_lex_t:
                         let uu____2847 =
                           FStar_Syntax_Syntax.fvar
                             (FStar_Ident.set_lid_range
-                               FStar_Syntax_Const.lex_t_lid r2)
+                               FStar_Parser_Const.lex_t_lid r2)
                             FStar_Syntax_Syntax.Delta_constant
                             FStar_Pervasives_Native.None in
                         (uu____2847,
@@ -2883,7 +2883,7 @@ and tc_lex_t:
                   FStar_Syntax_Syntax.sigel =
                     (FStar_Syntax_Syntax.Sig_datacon
                        (lex_cons, [ucons1; ucons2], lex_cons_t1,
-                         FStar_Syntax_Const.lex_t_lid, (Prims.parse_int "0"),
+                         FStar_Parser_Const.lex_t_lid, (Prims.parse_int "0"),
                          []));
                   FStar_Syntax_Syntax.sigrng = r2;
                   FStar_Syntax_Syntax.sigquals = [];
@@ -3017,7 +3017,7 @@ and tc_inductive:
                   (((FStar_List.length tcs) = (Prims.parse_int "0")) ||
                      ((FStar_Ident.lid_equals
                          env.FStar_TypeChecker_Env.curmodule
-                         FStar_Syntax_Const.prims_lid)
+                         FStar_Parser_Const.prims_lid)
                         && (skip_prims_type ())))
                     || is_noeq in
                 if uu____2988
@@ -3068,7 +3068,7 @@ and tc_decl:
        | FStar_Syntax_Syntax.Sig_bundle (ses,lids) when
            FStar_All.pipe_right lids
              (FStar_Util.for_some
-                (FStar_Ident.lid_equals FStar_Syntax_Const.lex_t_lid))
+                (FStar_Ident.lid_equals FStar_Parser_Const.lex_t_lid))
            ->
            let env2 = FStar_TypeChecker_Env.set_range env1 r in
            let se1 = tc_lex_t env2 ses se.FStar_Syntax_Syntax.sigquals lids in
@@ -3509,7 +3509,7 @@ and tc_decl:
                                           &&
                                           (Prims.op_Negation
                                              (FStar_Ident.lid_equals lid
-                                                FStar_Syntax_Const.effect_Lemma_lid))
+                                                FStar_Parser_Const.effect_Lemma_lid))
                                       then
                                         (let uu____3629 =
                                            FStar_Syntax_Subst.open_univ_vars
@@ -3721,7 +3721,7 @@ and tc_decl:
                                   (let uu____3921 =
                                      FStar_Syntax_Syntax.mk_lb
                                        ((FStar_Util.Inr lbname), uvs,
-                                         FStar_Syntax_Const.effect_ALL_lid,
+                                         FStar_Parser_Const.effect_ALL_lid,
                                          tval,
                                          (lb.FStar_Syntax_Syntax.lbdef)) in
                                    (false, uu____3921, quals_opt1))) in
@@ -4523,7 +4523,7 @@ let check_exports:
           | FStar_Syntax_Syntax.Sig_pragma uu____4995 -> () in
         if
           FStar_Ident.lid_equals modul.FStar_Syntax_Syntax.name
-            FStar_Syntax_Const.prims_lid
+            FStar_Parser_Const.prims_lid
         then ()
         else FStar_List.iter check_sigelt exports
 let finish_partial_modul:

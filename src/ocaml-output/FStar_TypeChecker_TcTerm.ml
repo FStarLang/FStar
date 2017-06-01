@@ -281,7 +281,7 @@ let value_check_expected_typ:
                   (match uu____234 with
                    | FStar_Syntax_Syntax.Tm_fvar fv when
                        FStar_Syntax_Syntax.fv_eq_lid fv
-                         FStar_Syntax_Const.unit_lid
+                         FStar_Parser_Const.unit_lid
                        -> false
                    | FStar_Syntax_Syntax.Tm_constant uu____239 -> false
                    | uu____240 -> true)
@@ -430,7 +430,7 @@ let check_expected_effect:
                   let uu____414 =
                     ((FStar_Options.ml_ish ()) &&
                        (FStar_Ident.lid_equals
-                          FStar_Syntax_Const.effect_ALL_lid
+                          FStar_Parser_Const.effect_ALL_lid
                           (FStar_Syntax_Util.comp_effect_name c)))
                       ||
                       (((FStar_Options.ml_ish ()) &&
@@ -634,7 +634,7 @@ let guard_letrecs:
                  } in
                let precedes =
                  FStar_TypeChecker_Util.fvar_const env1
-                   FStar_Syntax_Const.precedes_lid in
+                   FStar_Parser_Const.precedes_lid in
                let decreases_clause bs c =
                  let filter_types_and_functions bs1 =
                    FStar_All.pipe_right bs1
@@ -663,7 +663,7 @@ let guard_letrecs:
                        (match head1.FStar_Syntax_Syntax.n with
                         | FStar_Syntax_Syntax.Tm_fvar fv when
                             FStar_Syntax_Syntax.fv_eq_lid fv
-                              FStar_Syntax_Const.lexcons_lid
+                              FStar_Parser_Const.lexcons_lid
                             -> dec
                         | uu____735 -> mk_lex_list [dec]) in
                  let cflags = FStar_Syntax_Util.comp_flags c in
@@ -4619,7 +4619,7 @@ and tc_eqn:
                                                  then
                                                    FStar_TypeChecker_Util.fvar_const
                                                      env
-                                                     FStar_Syntax_Const.true_lid
+                                                     FStar_Parser_Const.true_lid
                                                  else
                                                    (let t =
                                                       let uu____8522 =
@@ -5547,7 +5547,7 @@ and check_let_recs:
                              lb.FStar_Syntax_Syntax.lbname
                              lb.FStar_Syntax_Syntax.lbunivs
                              lb.FStar_Syntax_Syntax.lbtyp
-                             FStar_Syntax_Const.effect_Tot_lid e in
+                             FStar_Parser_Const.effect_Tot_lid e in
                          (lb1, g)))))) in
         FStar_All.pipe_right uu____9452 FStar_List.unzip in
       match uu____9447 with

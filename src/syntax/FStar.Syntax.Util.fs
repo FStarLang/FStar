@@ -728,16 +728,16 @@ let is_dtuple_constructor (t:typ) = match t.n with
   | Tm_fvar fv -> C.is_dtuple_constructor_lid fv.fv_name.v
   | _ -> false
 
-let is_lid_equality x = lid_equals x Const.eq2_lid
+let is_lid_equality x = lid_equals x C.eq2_lid
 
-let is_forall lid = lid_equals lid Const.forall_lid
-let is_exists lid = lid_equals lid Const.exists_lid
+let is_forall lid = lid_equals lid C.forall_lid
+let is_exists lid = lid_equals lid C.exists_lid
 let is_qlid lid   = is_forall lid || is_exists lid
 let is_equality x = is_lid_equality x.v
 
 let lid_is_connective =
-  let lst = [Const.and_lid; Const.or_lid; Const.not_lid;
-             Const.iff_lid; Const.imp_lid] in
+  let lst = [C.and_lid; C.or_lid; C.not_lid;
+             C.iff_lid; C.imp_lid] in
   fun lid -> U.for_some (lid_equals lid) lst
 
 let is_constructor t lid =
@@ -761,21 +761,21 @@ let rec get_tycon t =
 
 let is_interpreted l =
   let theory_syms =
-    [Const.op_Eq          ;
-     Const.op_notEq       ;
-     Const.op_LT          ;
-     Const.op_LTE         ;
-     Const.op_GT          ;
-     Const.op_GTE         ;
-     Const.op_Subtraction ;
-     Const.op_Minus       ;
-     Const.op_Addition    ;
-     Const.op_Multiply    ;
-     Const.op_Division    ;
-     Const.op_Modulus     ;
-     Const.op_And         ;
-     Const.op_Or          ;
-     Const.op_Negation] in
+    [C.op_Eq          ;
+     C.op_notEq       ;
+     C.op_LT          ;
+     C.op_LTE         ;
+     C.op_GT          ;
+     C.op_GTE         ;
+     C.op_Subtraction ;
+     C.op_Minus       ;
+     C.op_Addition    ;
+     C.op_Multiply    ;
+     C.op_Division    ;
+     C.op_Modulus     ;
+     C.op_And         ;
+     C.op_Or          ;
+     C.op_Negation] in
   U.for_some (lid_equals l) theory_syms
 
 (********************************************************************************)
@@ -798,15 +798,15 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
-let tand    = fvar_const Const.and_lid
-let tor     = fvar_const Const.or_lid
-let timp    = fvar_const Const.imp_lid
-let tiff    = fvar_const Const.iff_lid
-let t_bool  = fvar_const Const.bool_lid
-let t_false = fvar_const Const.false_lid
-let t_true  = fvar_const Const.true_lid
-let b2t_v   = fvar_const Const.b2t_lid
-let t_not   = fvar_const Const.not_lid
+let tand    = fvar_const C.and_lid
+let tor     = fvar_const C.or_lid
+let timp    = fvar_const C.imp_lid
+let tiff    = fvar_const C.iff_lid
+let t_bool  = fvar_const C.bool_lid
+let t_false = fvar_const C.false_lid
+let t_true  = fvar_const C.true_lid
+let b2t_v   = fvar_const C.b2t_lid
+let t_not   = fvar_const C.not_lid
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -815,7 +815,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None
 let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar Const.true_lid Delta_constant None
+    | [] -> fvar C.true_lid Delta_constant None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -825,28 +825,28 @@ let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
-let teq = fvar_const Const.eq2_lid
+let teq = fvar_const C.eq2_lid
 let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
     let eq_inst = mk_Tm_uinst teq [u] in
     mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
 let mk_has_type t x t' =
-    let t_has_type = fvar_const Const.has_type_lid in //TODO: Fix the U_zeroes below!
+    let t_has_type = fvar_const C.has_type_lid in //TODO: Fix the U_zeroes below!
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
     mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
 
-let lex_t    = fvar_const Const.lex_t_lid
-let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor)
-let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor)
-let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
-let t_haseq   = fvar Const.haseq_lid Delta_constant None
+let lex_t    = fvar_const C.lex_t_lid
+let lex_top  = fvar C.lextop_lid Delta_constant (Some Data_ctor)
+let lex_pair = fvar C.lexcons_lid Delta_constant (Some Data_ctor)
+let tforall  = fvar C.forall_lid (Delta_defined_at_level 1) None
+let t_haseq   = fvar C.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
     let eff_name, flags =
         match c0.n with
-        | Total _ -> Const.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> Const.effect_GTot_lid, [SOMETRIVIAL]
+        | Total _ -> C.effect_Tot_lid, [TOTAL]
+        | GTotal _ -> C.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
     {eff_name = eff_name;
      res_typ = comp_result c0;
@@ -894,18 +894,18 @@ let destruct_typ_as_formula f : option<connective> =
       | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
       | _ -> f in
     let destruct_base_conn f =
-        let connectives = [ (Const.true_lid,  0);
-                            (Const.false_lid, 0);
-                            (Const.and_lid,   2);
-                            (Const.or_lid,    2);
-                            (Const.imp_lid, 2);
-                            (Const.iff_lid, 2);
-                            (Const.ite_lid, 3);
-                            (Const.not_lid, 1);
-                            (Const.eq2_lid, 3);
-                            (Const.eq2_lid, 2);
-                            (Const.eq3_lid, 4);
-                            (Const.eq3_lid, 2)
+        let connectives = [ (C.true_lid,  0);
+                            (C.false_lid, 0);
+                            (C.and_lid,   2);
+                            (C.or_lid,    2);
+                            (C.imp_lid, 2);
+                            (C.iff_lid, 2);
+                            (C.ite_lid, 3);
+                            (C.not_lid, 1);
+                            (C.eq2_lid, 3);
+                            (C.eq2_lid, 2);
+                            (C.eq3_lid, 4);
+                            (C.eq3_lid, 2)
                         ] in
         let rec aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
@@ -963,7 +963,7 @@ let destruct_typ_as_formula f : option<connective> =
         (Inr (lid_as_fv a.action_name Delta_equational None))
         a.action_univs
         (arrow a.action_params (mk_Total a.action_typ))
-        Const.effect_Tot_lid
+        C.effect_Tot_lid
         (abs a.action_params a.action_defn None)
     in
     { sigel = Sig_let((false, [lb]), [a.action_name], []);
@@ -1015,9 +1015,9 @@ let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> f
 let rec list_elements (e:term) : option<list<term>> =
   let head, args = head_and_args (unmeta e) in
   match (un_uinst head).n, args with
-  | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
+  | Tm_fvar fv, _ when fv_eq_lid fv C.nil_lid ->
       Some []
-  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv Const.cons_lid ->
+  | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv C.cons_lid ->
       Some (hd::must (list_elements tl))
   | _ ->
       None

@@ -33,6 +33,7 @@ open FStar.TypeChecker.Common
 module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
+module Const = FStar.Parser.Const
 
 type binding =
   | Binding_var      of bv
