@@ -172,7 +172,7 @@ and mlletbinding = mlletflavor * c_flags * list<mllb>
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)>
+| MLTD_DType  of list<(mlsymbol * list<(mlsymbol * mlty)>)>
     (*list of constructors? list<mlty> is the list of arguments of the constructors?
         One could have instead used a mlty and tupled the argument types?
      *)
@@ -184,7 +184,7 @@ type mltydecl = list<one_mltydecl> // each element of this list is one among a c
 type mlmodule1 =
 | MLM_Ty  of mltydecl
 | MLM_Let of mlletbinding
-| MLM_Exn of mlsymbol * list<mlty>
+| MLM_Exn of mlsymbol * list<(mlsymbol * mlty)>
 | MLM_Top of mlexpr // this seems outdated
 | MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
 
