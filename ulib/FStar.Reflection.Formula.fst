@@ -55,7 +55,7 @@ let smaller f t =
     | False_ ->
         True
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 15"
 let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
     | Tv_Var n ->
@@ -116,7 +116,7 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     | _ -> 
         F_Unknown
 
-// Kind of hacky unsquashing
+// Unsquashing
 let rec term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
     | Tv_App l r ->
