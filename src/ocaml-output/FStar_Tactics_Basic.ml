@@ -1425,14 +1425,23 @@ let order_binder:
       if n1 < (Prims.parse_int "0")
       then Lt
       else if n1 = (Prims.parse_int "0") then Eq else Gt
-let proofstate_of_goal_ty: env -> FStar_Syntax_Syntax.term -> proofstate =
+let proofstate_of_goal_ty:
+  FStar_TypeChecker_Env.env ->
+    (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+      FStar_Syntax_Syntax.syntax -> proofstate
+  =
   fun env  ->
-    fun g  ->
-      let g1 = let uu____3054 = bnorm env g in mk_irrelevant env uu____3054 in
-      {
-        main_context = env;
-        main_goal = g1;
-        all_implicits = [];
-        goals = [g1];
-        smt_goals = []
-      }
+    fun typ  ->
+      let uu____3057 =
+        FStar_TypeChecker_Util.new_implicit_var "proofstate_of_goal_ty"
+          typ.FStar_Syntax_Syntax.pos env typ in
+      match uu____3057 with
+      | (u,uu____3065,g_u) ->
+          let g = { context = env; witness = u; goal_ty = typ } in
+          {
+            main_context = env;
+            main_goal = g;
+            all_implicits = [];
+            goals = [g];
+            smt_goals = []
+          }

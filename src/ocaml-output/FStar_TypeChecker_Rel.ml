@@ -7364,18 +7364,17 @@ let discharge_guard':
                              then
                                (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.preprocess
                                  env vc2
-                             else
-                               (let vc3 =
-                                  FStar_TypeChecker_Normalize.normalize
-                                    [FStar_TypeChecker_Normalize.Simplify]
-                                    env vc2 in
-                                [(env, vc3)]) in
+                             else [(env, vc2)] in
                            FStar_All.pipe_right vcs
                              (FStar_List.iter
-                                (fun uu____15238  ->
-                                   match uu____15238 with
+                                (fun uu____15237  ->
+                                   match uu____15237 with
                                    | (env1,goal) ->
-                                       let uu____15243 = check_trivial goal in
+                                       let goal1 =
+                                         FStar_TypeChecker_Normalize.normalize
+                                           [FStar_TypeChecker_Normalize.Simplify]
+                                           env1 goal in
+                                       let uu____15243 = check_trivial goal1 in
                                        (match uu____15243 with
                                         | FStar_TypeChecker_Common.Trivial 
                                             ->
@@ -7395,7 +7394,7 @@ let discharge_guard':
                                                 "Goal completely solved by tactic\n"
                                             else ()
                                         | FStar_TypeChecker_Common.NonTrivial
-                                            goal1 ->
+                                            goal2 ->
                                             ((env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
                                                ();
                                              (let uu____15250 =
@@ -7411,7 +7410,7 @@ let discharge_guard':
                                                 let uu____15252 =
                                                   let uu____15253 =
                                                     FStar_Syntax_Print.term_to_string
-                                                      goal1 in
+                                                      goal2 in
                                                   let uu____15254 =
                                                     FStar_TypeChecker_Env.string_of_proof_ns
                                                       env1 in
@@ -7422,7 +7421,7 @@ let discharge_guard':
                                                   uu____15252
                                               else ());
                                              (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.solve
-                                               use_env_range_msg env1 goal1)))));
+                                               use_env_range_msg env1 goal2)))));
                           Some ret_g))))
 let discharge_guard_no_smt:
   FStar_TypeChecker_Env.env ->
