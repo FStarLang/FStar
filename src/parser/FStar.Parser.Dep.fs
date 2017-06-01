@@ -21,6 +21,7 @@
     (not module names).
 *)
 module FStar.Parser.Dep
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -80,14 +81,6 @@ let list_of_option = function Some x -> [x] | None -> []
 
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
-
-(* let print_map (m: map): unit = *)
-(*   List.iter (fun k -> *)
-(*     List.iter (fun f -> *)
-(*       Util.print2 "%s: %s\n" k f *)
-(*     ) (must_find m k) *)
-(*   ) (List.unique (smap_keys m)) *)
-
 
 let lowercase_module_name f =
   match check_and_strip_suffix (basename f) with
@@ -185,12 +178,12 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 exception Exit
 
 let hard_coded_dependencies filename =
-  let filename = basename filename in
+  let filename : string = basename filename in
   let corelibs =
     [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
-  if if List.exists filename corelibs then []
+  if List.mem filename corelibs then []
   else [ Const.fstar_ns_lid; Const.prims_lid ; Const.pervasives_lid ]
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
@@ -256,7 +249,7 @@ let collect_one
   in
 
 
-  let auto_open = hard_coded_dependencies in
+  let auto_open = hard_coded_dependencies filename in
   List.iter (record_open false) auto_open;
 
   let num_of_toplevelmods = BU.mk_ref 0 in

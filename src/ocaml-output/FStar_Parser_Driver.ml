@@ -32,7 +32,9 @@ let parse_fragment: FStar_Parser_ParseIt.input_frag -> fragment =
     | FStar_Util.Inr (msg,r) -> raise (FStar_Errors.Error (msg, r))
 let parse_file:
   FStar_Parser_ParseIt.filename ->
-    (FStar_Parser_AST.file* (Prims.string* FStar_Range.range) Prims.list)
+    (FStar_Parser_AST.file,(Prims.string,FStar_Range.range)
+                             FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple2
   =
   fun fn  ->
     let uu____168 = FStar_Parser_ParseIt.parse (FStar_Util.Inl fn) in

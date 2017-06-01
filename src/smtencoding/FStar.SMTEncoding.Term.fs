@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Term
+open FStar.ST
 open FStar.All
 
 open FStar

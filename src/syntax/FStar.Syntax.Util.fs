@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Util
+open FStar.ST
 open FStar.All
 
 open Prims
@@ -28,7 +29,7 @@ open FStar.Syntax.Syntax
 open FStar.Const
 module U = FStar.Util
 module List = FStar.List
-module SC = FStar.Syntax.Const
+module C = FStar.Parser.Const
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -175,15 +176,15 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
 let ml_comp t r =
   mk_Comp ({comp_univs=[U_unknown];
-            effect_name=set_lid_range Const.effect_ML_lid r;
+            effect_name=set_lid_range C.effect_ML_lid r;
             result_typ=t;
             effect_args=[];
             flags=[MLEFFECT]})
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
-    | Total _ -> Const.effect_Tot_lid
-    | GTotal _ -> Const.effect_GTot_lid
+    | Total _ -> C.effect_Tot_lid
+    | GTotal _ -> C.effect_GTot_lid
 
 let comp_flags c = match c.n with
     | Total _ -> [TOTAL]
@@ -219,17 +220,17 @@ let comp_to_comp_typ (c:comp) : comp_typ =
 
 let is_named_tot c =
     match c.n with
-        | Comp c -> lid_equals c.effect_name Const.effect_Tot_lid
+        | Comp c -> lid_equals c.effect_name C.effect_Tot_lid
         | Total _ -> true
         | GTotal _ -> false
 
 let is_total_comp c =
     comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_total_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c = lid_equals c.eff_name C.effect_Tot_lid || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tot_or_gtot_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid
-                             || lid_equals c.eff_name Const.effect_GTot_lid
+let is_tot_or_gtot_lcomp c = lid_equals c.eff_name C.effect_Tot_lid
+                             || lid_equals c.eff_name C.effect_GTot_lid
                              || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
@@ -238,12 +239,12 @@ let is_lcomp_partial_return c = c.cflags |> U.for_some (function RETURN | PARTIA
 
 let is_tot_or_gtot_comp c =
     is_total_comp c
-    || lid_equals Const.effect_GTot_lid (comp_effect_name c)
+    || lid_equals C.effect_GTot_lid (comp_effect_name c)
 
 let is_pure_effect l =
-     lid_equals l Const.effect_Tot_lid
-     || lid_equals l Const.effect_PURE_lid
-     || lid_equals l Const.effect_Pure_lid
+     lid_equals l C.effect_Tot_lid
+     || lid_equals l C.effect_PURE_lid
+     || lid_equals l C.effect_Pure_lid
 
 let is_pure_comp c = match c.n with
     | Total _ -> true
@@ -253,9 +254,9 @@ let is_pure_comp c = match c.n with
                  || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
-       lid_equals Const.effect_GTot_lid l
-    || lid_equals Const.effect_GHOST_lid l
-    || lid_equals Const.effect_Ghost_lid l
+       lid_equals C.effect_GTot_lid l
+    || lid_equals C.effect_GHOST_lid l
+    || lid_equals C.effect_Ghost_lid l
 
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
@@ -274,7 +275,7 @@ let is_pure_or_ghost_function t = match (compress t).n with
 let is_lemma t =  match (compress t).n with
     | Tm_arrow(_, c) ->
       begin match c.n with
-        | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
+        | Comp ct -> lid_equals ct.effect_name C.effect_Lemma_lid
         | _ -> false
       end
     | _ -> false
@@ -295,13 +296,13 @@ let head_and_args t =
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) ->
       begin match c.n with
-        | Comp ct when lid_equals ct.effect_name Const.effect_Lemma_lid ->
+        | Comp ct when lid_equals ct.effect_name C.effect_Lemma_lid ->
             begin match ct.effect_args with
                 | _req::_ens::(pats, _)::_ ->
                   let pats' = unmeta pats in
                   let head, _ = head_and_args pats' in
                   begin match (un_uinst head).n with
-                    | Tm_fvar fv -> fv_eq_lid fv Const.cons_lid
+                    | Tm_fvar fv -> fv_eq_lid fv C.cons_lid
                     | _ -> false
                   end
                 | _ -> false
@@ -311,7 +312,7 @@ let is_smt_lemma t = match (compress t).n with
     | _ -> false
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name Const.effect_ML_lid
+  | Comp c -> lid_equals c.effect_name C.effect_ML_lid
               || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false
@@ -333,21 +334,21 @@ let is_trivial_wp c =
 (*               Simple utils on the structure of a term                        *)
 (********************************************************************************)
 let primops =
-  [Const.op_Eq;
-   Const.op_notEq;
-   Const.op_LT;
-   Const.op_LTE;
-   Const.op_GT;
-   Const.op_GTE;
-   Const.op_Subtraction;
-   Const.op_Minus;
-   Const.op_Addition;
-   Const.op_Multiply;
-   Const.op_Division;
-   Const.op_Modulus;
-   Const.op_And;
-   Const.op_Or;
-   Const.op_Negation;]
+  [C.op_Eq;
+   C.op_notEq;
+   C.op_LT;
+   C.op_LTE;
+   C.op_GT;
+   C.op_GTE;
+   C.op_Subtraction;
+   C.op_Minus;
+   C.op_Addition;
+   C.op_Multiply;
+   C.op_Division;
+   C.op_Modulus;
+   C.op_And;
+   C.op_Or;
+   C.op_Negation;]
 let is_primop_lid l = primops |> U.for_some (lid_equals l)
 
 let is_primop f = match f.n with
@@ -399,7 +400,7 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
 
     | Tm_constant c, Tm_constant d ->
-      equal_iff (FStar.Const.eq_const c d)
+      equal_iff (eq_const c d)
 
     | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
       equal_if (Unionfind.equivalent u1 u2)
@@ -442,8 +443,8 @@ let rec is_unit t =
     match (unrefine t).n with
     | Tm_type _ -> true
     | Tm_fvar fv ->
-      fv_eq_lid fv Const.unit_lid
-      || fv_eq_lid fv Const.squash_lid
+      fv_eq_lid fv C.unit_lid
+      || fv_eq_lid fv C.squash_lid
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
 
@@ -451,9 +452,9 @@ let rec non_informative t =
     match (unrefine t).n with
     | Tm_type _ -> true
     | Tm_fvar fv ->
-      fv_eq_lid fv Const.unit_lid
-      || fv_eq_lid fv Const.squash_lid
-      || fv_eq_lid fv Const.erased_lid
+      fv_eq_lid fv C.unit_lid
+      || fv_eq_lid fv C.squash_lid
+      || fv_eq_lid fv C.erased_lid
     | Tm_app(head, _) -> non_informative head
     | Tm_uinst (t, _) -> non_informative t
     | Tm_arrow(_, c) ->
@@ -718,60 +719,14 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
-let is_tuple_constructor_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.tuple"
-
-let is_dtuple_constructor_string (s:string) :bool =
-  s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
-
-let is_tuple_datacon_string (s:string) :bool =
-  U.starts_with s "FStar.Pervasives.Mktuple"
-
-let is_dtuple_datacon_string (s:string) :bool =
-  s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
-
-(* dtuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_dtuple (n:int) :(string -> lident) =
-  if n = 2 then Const.pconst else Const.psconst
 
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> is_tuple_constructor_string fv.fv_name.v.str
+  | Tm_fvar fv -> C.is_tuple_constructor_string fv.fv_name.v.str
   | _ -> false
-
-let mk_tuple_lid n r =
-  let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range (Const.psconst t) r
-
-let mk_tuple_data_lid n r =
-  let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (Const.psconst t) r
-
-let is_tuple_data_lid f n =
-  lid_equals f (mk_tuple_data_lid n dummyRange)
-
-let is_tuple_data_lid' f = is_tuple_datacon_string f.str
-    //f.nsstr = "Prims" && U.starts_with f.ident.idText "Mktuple"
-
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (Ident.text_of_id lid)
-    //U.starts_with (Ident.text_of_lid lid) "Prims.tuple"
-
-let is_dtuple_constructor_lid lid = is_dtuple_constructor_string lid.str
-  //lid.nsstr = "Prims" && U.starts_with lid.ident.idText "Prims.dtuple"
 
 let is_dtuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> is_dtuple_constructor_lid fv.fv_name.v
+  | Tm_fvar fv -> C.is_dtuple_constructor_lid fv.fv_name.v
   | _ -> false
-
-let mk_dtuple_lid n r =
-  let t = U.format1 "dtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_dtuple n) t) r
-
-let mk_dtuple_data_lid n r =
-  let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_dtuple n) t) r
-
-let is_dtuple_data_lid' f = is_dtuple_datacon_string (Ident.text_of_lid f)
-    //U.starts_with (Ident.text_of_lid f) "Mkdtuple"
 
 let is_lid_equality x = lid_equals x Const.eq2_lid
 
@@ -833,10 +788,14 @@ let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
     let u = U_unif <| Unionfind.fresh None in
-    mk (Tm_type u) None Range.dummyRange, u
+    mk (Tm_type u) None dummyRange, u
 
-let kt_kt = Const.kunary ktype0 ktype0
-let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0
+let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
+let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
+let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
+(* Makes an (unbounded) integer from its string repr. *)
+let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
+let exp_string s : term = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
 let tand    = fvar_const Const.and_lid
@@ -1076,8 +1035,8 @@ let dm4f_lid ed name : lident =
 
 let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in
-    let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.cons_lid) [U_zero]) args None pos in
-    let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor SC.nil_lid)  [U_zero]) args None pos in
+    let cons args pos = mk_Tm_app (mk_Tm_uinst (ctor C.cons_lid) [U_zero]) args None pos in
+    let nil  args pos = mk_Tm_app (mk_Tm_uinst (ctor C.nil_lid)  [U_zero]) args None pos in
     List.fold_right (fun t a -> cons [iarg typ; as_arg t; as_arg a] t.pos) l (nil [iarg typ] rng)
 
 // Some generic equalities

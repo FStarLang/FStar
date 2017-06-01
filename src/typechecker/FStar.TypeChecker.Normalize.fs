@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Normalize
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -35,7 +36,7 @@ module SS = FStar.Syntax.Subst
 //basic util
 module BU = FStar.Util
 module FC = FStar.Const
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
@@ -535,13 +536,13 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
-        let char_t = name SC.char_lid in
+        let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
     let string_of_list' rng (l:list<char>) : term =
         let s = string_of_list l in
-        SC.exp_string s
+        U.exp_string s
     in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
@@ -754,7 +755,7 @@ let is_reify_head = function
 
 let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv PC.fstar_tactics_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -780,7 +781,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app({n=Tm_fvar fv}, _)
-            when S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid ->
+            when S.fv_eq_lid fv PC.fstar_tactics_embed_lid ->
             rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)

@@ -9,7 +9,8 @@ type lident =
   nsstr: Prims.string;
   str: Prims.string;}
 type lid = lident
-let mk_ident: (Prims.string* FStar_Range.range) -> ident =
+let mk_ident:
+  (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 -> ident =
   fun uu____50  ->
     match uu____50 with | (text,range) -> { idText = text; idRange = range }
 let reserved_prefix: Prims.string = "uu___"

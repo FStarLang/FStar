@@ -113,7 +113,7 @@ FStar_Parser_Parse.ml: parse.mly
 	echo "open FStar_Range" >> $@
 	echo "open FStar_Options" >> $@
 	echo "open FStar_Syntax_Syntax" >> $@
-	echo "open FStar_Syntax_Const" >> $@
+	echo "open FStar_Parser_Const" >> $@
 	echo "open FStar_Syntax_Util" >> $@
 	echo "open FStar_Parser_AST" >> $@
 	echo "open FStar_Parser_Util" >> $@

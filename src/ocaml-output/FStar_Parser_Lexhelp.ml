@@ -4,8 +4,8 @@ let intern_string: Prims.string -> Prims.string =
   fun s  ->
     let uu____6 = FStar_Util.smap_try_find strings s in
     match uu____6 with
-    | Some res -> res
-    | None  -> (FStar_Util.smap_add strings s s; s)
+    | FStar_Pervasives_Native.Some res -> res
+    | FStar_Pervasives_Native.None  -> (FStar_Util.smap_add strings s s; s)
 let default_string_finish endm b s = FStar_Parser_Parse.STRING s
 let call_string_finish fin buf endm b =
   let _0_26 = FStar_Bytes.close buf in fin endm b _0_26
@@ -142,7 +142,10 @@ let hexgraph_short: Prims.string -> FStar_BaseTypes.uint16 =
          uu____180 + uu____183 in
        FStar_Util.uint16_of_int uu____179)
 let unicodegraph_long:
-  Prims.string -> (FStar_BaseTypes.uint16 option* FStar_BaseTypes.uint16) =
+  Prims.string ->
+    (FStar_BaseTypes.uint16 FStar_Pervasives_Native.option,FStar_BaseTypes.uint16)
+      FStar_Pervasives_Native.tuple2
+  =
   fun s  ->
     if (FStar_String.length s) <> (Prims.parse_int "8")
     then failwith "unicodegraph_long"
@@ -196,9 +199,9 @@ let unicodegraph_long:
            hexdigit uu____227 in
          uu____215 + uu____226 in
        if high = (Prims.parse_int "0")
-       then (None, (FStar_Util.uint16_of_int low))
+       then (FStar_Pervasives_Native.None, (FStar_Util.uint16_of_int low))
        else
-         ((Some
+         ((FStar_Pervasives_Native.Some
              (FStar_Util.uint16_of_int
                 ((Prims.parse_int "0xD800") +
                    ((((FStar_Mul.op_Star high (Prims.parse_int "0x10000")) +
@@ -231,7 +234,9 @@ let uu___is_FSHARP: compatibilityMode -> Prims.bool =
   fun projectee  ->
     match projectee with | FSHARP  -> true | uu____245 -> false
 let keywords:
-  (compatibilityMode* Prims.string* FStar_Parser_Parse.token) Prims.list =
+  (compatibilityMode,Prims.string,FStar_Parser_Parse.token)
+    FStar_Pervasives_Native.tuple3 Prims.list
+  =
   [(ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT);
   (ALWAYS, "attributes", FStar_Parser_Parse.ATTRIBUTES);
   (ALWAYS, "noeq", FStar_Parser_Parse.NOEQUALITY);
@@ -298,7 +303,9 @@ let unreserve_words: Prims.string Prims.list =
     (fun uu____439  ->
        match uu____439 with
        | (mode,keyword,uu____446) ->
-           if mode = FSHARP then Some keyword else None) keywords
+           if mode = FSHARP
+           then FStar_Pervasives_Native.Some keyword
+           else FStar_Pervasives_Native.None) keywords
 let kwd_table: FStar_Parser_Parse.token FStar_Util.smap =
   let tab = FStar_Util.smap_create (Prims.parse_int "1000") in
   FStar_List.iter
@@ -307,7 +314,8 @@ let kwd_table: FStar_Parser_Parse.token FStar_Util.smap =
        | (mode,keyword,token) -> FStar_Util.smap_add tab keyword token)
     keywords;
   tab
-let kwd: Prims.string -> FStar_Parser_Parse.token option =
+let kwd:
+  Prims.string -> FStar_Parser_Parse.token FStar_Pervasives_Native.option =
   fun s  -> FStar_Util.smap_try_find kwd_table s
 type lexargs =
   {
@@ -315,7 +323,9 @@ type lexargs =
   filename: Prims.string;
   contents: Prims.string;}
 let mkLexargs:
-  ((Prims.unit -> Prims.string)* Prims.string* Prims.string) -> lexargs =
+  (Prims.unit -> Prims.string,Prims.string,Prims.string)
+    FStar_Pervasives_Native.tuple3 -> lexargs
+  =
   fun uu____503  ->
     match uu____503 with
     | (srcdir,filename,contents) ->
@@ -327,8 +337,8 @@ let kwd_or_id:
       fun s  ->
         let uu____525 = kwd s in
         match uu____525 with
-        | Some v1 -> v1
-        | None  ->
+        | FStar_Pervasives_Native.Some v1 -> v1
+        | FStar_Pervasives_Native.None  ->
             (match s with
              | "__SOURCE_DIRECTORY__" ->
                  let uu____528 =

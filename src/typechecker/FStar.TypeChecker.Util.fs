@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -40,7 +41,7 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 module P = FStar.Syntax.Print
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 
 //Reporting errors
 let report env errs =
@@ -1621,7 +1622,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 (* Term of the discriminator *)
                 let body =
                     if not refine_domain
-                    then C.exp_true_bool   // If we have at most one constructor
+                    then U.exp_true_bool   // If we have at most one constructor
                     else
                         let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                             let b = S.is_implicit imp in
@@ -1629,8 +1630,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
                             else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
                         in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
-                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
+                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
+                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
                         mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
                 in

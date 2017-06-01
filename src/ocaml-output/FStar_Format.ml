@@ -42,7 +42,11 @@ let combine: doc -> doc Prims.list -> doc =
       match uu____72 with
       | Doc sep ->
           let select uu____80 =
-            match uu____80 with | Doc d -> if d = "" then None else Some d in
+            match uu____80 with
+            | Doc d ->
+                if d = ""
+                then FStar_Pervasives_Native.None
+                else FStar_Pervasives_Native.Some d in
           let docs2 = FStar_List.choose select docs1 in
           Doc (FStar_String.concat sep docs2)
 let cat1: doc -> doc -> doc = fun d1  -> fun d2  -> reduce [d1; break1; d2]

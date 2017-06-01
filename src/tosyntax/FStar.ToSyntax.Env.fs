@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.ToSyntax.Env
+open FStar.ST
 open FStar.All
 
 

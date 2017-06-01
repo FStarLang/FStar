@@ -15,11 +15,13 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
 open FStar.Syntax.Syntax
 open FStar.Const
+open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
@@ -34,7 +36,7 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
-module C  = FStar.Syntax.Const
+module C  = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 
@@ -226,7 +228,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
-            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
+            let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
               BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
@@ -282,7 +284,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_let (lbs, _, attrs) ->
           let quals = se.sigquals in
-          let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
+          let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
             | MLE_Let((flavor, _, bindings), _) ->
@@ -330,7 +332,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
                                                       lbunivs=[];
                                                       lbtyp=t;
-                                                      lbeff=FStar.Syntax.Const.effect_ML_lid;
+                                                      lbeff=C.effect_ML_lid;
                                                       lbdef=imp}]), [], []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with

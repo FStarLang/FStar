@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Const
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -73,11 +74,6 @@ let char_lid  = p2l ["FStar"; "Char"; "char"]
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
 (* Logical connectives and operators *)
-let kunary k k'              = mk (Tm_arrow([null_binder k], mk_Total k'))
-let kbin k1 k2 k'            = mk (Tm_arrow([null_binder k1; null_binder k2], mk_Total k'))
-let ktern k1 k2 k3 k'        = mk (Tm_arrow([null_binder k1;
-                                             null_binder k2;
-                                             null_binder k3], mk_Total k'))
 let true_lid   = pconst "l_True"
 let false_lid  = pconst "l_False"
 let and_lid    = pconst "l_and"

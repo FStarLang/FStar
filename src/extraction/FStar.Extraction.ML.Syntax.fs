@@ -18,6 +18,7 @@
 #light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Ident
@@ -72,7 +73,7 @@ let rec gensyms x = match x with
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
-    if Ident.lid_equals x FStar.Syntax.Const.failwith_lid
+    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
     then ([], x.ident.idText)
     else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 

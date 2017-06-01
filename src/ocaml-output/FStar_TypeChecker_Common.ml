@@ -16,12 +16,14 @@ type ('a,'b) problem =
   lhs: 'a;
   relation: rel;
   rhs: 'a;
-  element: 'b option;
-  logical_guard: (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.term);
+  element: 'b FStar_Pervasives_Native.option;
+  logical_guard:
+    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.tuple2;
   scope: FStar_Syntax_Syntax.binders;
   reason: Prims.string Prims.list;
   loc: FStar_Range.range;
-  rank: Prims.int option;}
+  rank: Prims.int FStar_Pervasives_Native.option;}
 type prob =
   | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem
   | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem
@@ -50,8 +52,10 @@ let uu___is_NonTrivial: guard_formula -> Prims.bool =
 let __proj__NonTrivial__item___0:
   guard_formula -> FStar_Syntax_Syntax.formula =
   fun projectee  -> match projectee with | NonTrivial _0 -> _0
-type deferred = (Prims.string* prob) Prims.list
-type univ_ineq = (FStar_Syntax_Syntax.universe* FStar_Syntax_Syntax.universe)
+type deferred = (Prims.string,prob) FStar_Pervasives_Native.tuple2 Prims.list
+type univ_ineq =
+  (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.universe)
+    FStar_Pervasives_Native.tuple2
 let tconst:
   FStar_Ident.lident ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
@@ -62,10 +66,12 @@ let tconst:
       let uu____307 =
         let uu____308 =
           FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
-            None in
+            FStar_Pervasives_Native.None in
         FStar_Syntax_Syntax.Tm_fvar uu____308 in
       FStar_Syntax_Syntax.mk uu____307 in
-    uu____304 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
+    uu____304
+      (FStar_Pervasives_Native.Some
+         (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
       FStar_Range.dummyRange
 let tabbrev:
   FStar_Ident.lident ->
@@ -78,51 +84,55 @@ let tabbrev:
         let uu____326 =
           FStar_Syntax_Syntax.lid_as_fv l
             (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1"))
-            None in
+            FStar_Pervasives_Native.None in
         FStar_Syntax_Syntax.Tm_fvar uu____326 in
       FStar_Syntax_Syntax.mk uu____325 in
-    uu____322 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
+    uu____322
+      (FStar_Pervasives_Native.Some
+         (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
       FStar_Range.dummyRange
 let t_unit:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tconst FStar_Syntax_Const.unit_lid
+  = tconst FStar_Parser_Const.unit_lid
 let t_bool:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tconst FStar_Syntax_Const.bool_lid
+  = tconst FStar_Parser_Const.bool_lid
 let t_int:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tconst FStar_Syntax_Const.int_lid
+  = tconst FStar_Parser_Const.int_lid
 let t_string:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tconst FStar_Syntax_Const.string_lid
+  = tconst FStar_Parser_Const.string_lid
 let t_float:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tconst FStar_Syntax_Const.float_lid
+  = tconst FStar_Parser_Const.float_lid
 let t_char:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tabbrev FStar_Syntax_Const.char_lid
+  = tabbrev FStar_Parser_Const.char_lid
 let t_range:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
-  = tconst FStar_Syntax_Const.range_lid
+  = tconst FStar_Parser_Const.range_lid
 let t_tactic_unit:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax
   =
   let uu____351 =
     let uu____352 =
-      let uu____353 = tabbrev FStar_Syntax_Const.tactic_lid in
+      let uu____353 = tabbrev FStar_Parser_Const.tactic_lid in
       FStar_Syntax_Syntax.mk_Tm_uinst uu____353 [FStar_Syntax_Syntax.U_zero] in
     let uu____354 =
       let uu____355 = FStar_Syntax_Syntax.as_arg t_unit in [uu____355] in
     FStar_Syntax_Syntax.mk_Tm_app uu____352 uu____354 in
-  uu____351 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
+  uu____351
+    (FStar_Pervasives_Native.Some
+       (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
     FStar_Range.dummyRange
 let unit_const:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
@@ -130,7 +140,8 @@ let unit_const:
   =
   (FStar_Syntax_Syntax.mk
      (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_unit))
-    (Some (t_unit.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange
+    (FStar_Pervasives_Native.Some (t_unit.FStar_Syntax_Syntax.n))
+    FStar_Range.dummyRange
 let mk_by_tactic:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -140,16 +151,16 @@ let mk_by_tactic:
   fun tac  ->
     fun f  ->
       let t_by_tactic =
-        let uu____379 = tabbrev FStar_Syntax_Const.by_tactic_lid in
+        let uu____379 = tabbrev FStar_Parser_Const.by_tactic_lid in
         FStar_Syntax_Syntax.mk_Tm_uinst uu____379
           [FStar_Syntax_Syntax.U_zero] in
       let tac1 =
         let uu____383 =
-          let uu____384 = tabbrev FStar_Syntax_Const.reify_tactic_lid in
+          let uu____384 = tabbrev FStar_Parser_Const.reify_tactic_lid in
           let uu____385 =
             let uu____386 = FStar_Syntax_Syntax.as_arg tac in [uu____386] in
           FStar_Syntax_Syntax.mk_Tm_app uu____384 uu____385 in
-        uu____383 None FStar_Range.dummyRange in
+        uu____383 FStar_Pervasives_Native.None FStar_Range.dummyRange in
       let uu____391 =
         let uu____392 =
           let uu____393 = FStar_Syntax_Syntax.as_arg tac1 in
@@ -157,7 +168,9 @@ let mk_by_tactic:
             let uu____396 = FStar_Syntax_Syntax.as_arg f in [uu____396] in
           uu____393 :: uu____394 in
         FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____392 in
-      uu____391 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
+      uu____391
+        (FStar_Pervasives_Native.Some
+           (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n))
         FStar_Range.dummyRange
 let rec delta_depth_greater_than:
   FStar_Syntax_Syntax.delta_depth ->
@@ -178,16 +191,18 @@ let rec delta_depth_greater_than:
       | (uu____415,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
 let rec decr_delta_depth:
-  FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth option =
+  FStar_Syntax_Syntax.delta_depth ->
+    FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option
+  =
   fun uu___96_420  ->
     match uu___96_420 with
-    | FStar_Syntax_Syntax.Delta_constant  -> None
-    | FStar_Syntax_Syntax.Delta_equational  -> None
+    | FStar_Syntax_Syntax.Delta_constant  -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_equational  -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_defined_at_level _0_28 when
         _0_28 = (Prims.parse_int "1") ->
-        Some FStar_Syntax_Syntax.Delta_constant
+        FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Delta_constant
     | FStar_Syntax_Syntax.Delta_defined_at_level i ->
-        Some
+        FStar_Pervasives_Native.Some
           (FStar_Syntax_Syntax.Delta_defined_at_level
              (i - (Prims.parse_int "1")))
     | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
@@ -208,9 +223,11 @@ let find_nearest_preceding_col_info col col_infos =
   let rec aux out uu___97_526 =
     match uu___97_526 with
     | [] -> out
-    | (c,i)::rest -> if c > col then out else aux (Some i) rest in
-  aux None col_infos
-type col_info = (Prims.int* identifier_info) Prims.list
+    | (c,i)::rest ->
+        if c > col then out else aux (FStar_Pervasives_Native.Some i) rest in
+  aux FStar_Pervasives_Native.None col_infos
+type col_info =
+  (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
 type row_info = col_info FStar_ST.ref FStar_Util.imap
 type file_info = row_info FStar_Util.smap
 let mk_info:
@@ -243,43 +260,49 @@ let insert_identifier_info:
         | (row,col) ->
             let uu____586 = FStar_Util.smap_try_find file_info_table fn in
             (match uu____586 with
-             | None  ->
+             | FStar_Pervasives_Native.None  ->
                  let col_info =
                    let uu____593 = insert_col_info col info [] in
                    FStar_Util.mk_ref uu____593 in
                  let rows = FStar_Util.imap_create (Prims.parse_int "1000") in
                  (FStar_Util.imap_add rows row col_info;
                   FStar_Util.smap_add file_info_table fn rows)
-             | Some file_rows ->
+             | FStar_Pervasives_Native.Some file_rows ->
                  let uu____621 = FStar_Util.imap_try_find file_rows row in
                  (match uu____621 with
-                  | None  ->
+                  | FStar_Pervasives_Native.None  ->
                       let col_info =
                         let uu____631 = insert_col_info col info [] in
                         FStar_Util.mk_ref uu____631 in
                       FStar_Util.imap_add file_rows row col_info
-                  | Some col_infos ->
+                  | FStar_Pervasives_Native.Some col_infos ->
                       let uu____647 =
                         let uu____648 = FStar_ST.read col_infos in
                         insert_col_info col info uu____648 in
                       FStar_ST.write col_infos uu____647))
 let info_at_pos:
-  Prims.string -> Prims.int -> Prims.int -> identifier_info option =
+  Prims.string ->
+    Prims.int -> Prims.int -> identifier_info FStar_Pervasives_Native.option
+  =
   fun fn  ->
     fun row  ->
       fun col  ->
         let uu____667 = FStar_Util.smap_try_find file_info_table fn in
         match uu____667 with
-        | None  -> None
-        | Some rows ->
+        | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+        | FStar_Pervasives_Native.Some rows ->
             let uu____671 = FStar_Util.imap_try_find rows row in
             (match uu____671 with
-             | None  -> None
-             | Some cols ->
+             | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+             | FStar_Pervasives_Native.Some cols ->
                  let uu____680 =
                    let uu____682 = FStar_ST.read cols in
                    find_nearest_preceding_col_info col uu____682 in
-                 (match uu____680 with | None  -> None | Some ci -> Some ci))
+                 (match uu____680 with
+                  | FStar_Pervasives_Native.None  ->
+                      FStar_Pervasives_Native.None
+                  | FStar_Pervasives_Native.Some ci ->
+                      FStar_Pervasives_Native.Some ci))
 let insert_bv:
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> Prims.unit =
   fun bv  ->

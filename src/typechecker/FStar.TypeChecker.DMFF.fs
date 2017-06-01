@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -36,6 +37,7 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
+module C = FStar.Parser.Const
 
 
 type env = {
@@ -415,7 +417,7 @@ let gen_wps_for_free
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (U.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            let projector = S.fvar (Env.lookup_projector env (C.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -1227,7 +1229,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       // It's a product, the only form of [Tm_app] allowed.
       let wp_head, wp_args = head_and_args wp in
       if not (List.length wp_args = List.length args) ||
-         not (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
+         not (is_constructor wp_head (C.mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in

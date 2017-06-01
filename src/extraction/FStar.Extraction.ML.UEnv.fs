@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.UEnv
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util

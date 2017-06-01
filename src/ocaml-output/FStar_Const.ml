@@ -24,11 +24,16 @@ type sconst =
   | Const_effect
   | Const_unit
   | Const_bool of Prims.bool
-  | Const_int of (Prims.string* (signedness* width) option)
+  | Const_int of
+  (Prims.string,(signedness,width) FStar_Pervasives_Native.tuple2
+                  FStar_Pervasives_Native.option)
+  FStar_Pervasives_Native.tuple2
   | Const_char of FStar_BaseTypes.char
   | Const_float of FStar_BaseTypes.double
-  | Const_bytearray of (FStar_BaseTypes.byte Prims.array* FStar_Range.range)
-  | Const_string of (FStar_BaseTypes.byte Prims.array* FStar_Range.range)
+  | Const_bytearray of (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
+  FStar_Pervasives_Native.tuple2
+  | Const_string of (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
+  FStar_Pervasives_Native.tuple2
   | Const_range of FStar_Range.range
   | Const_reify
   | Const_reflect of FStar_Ident.lid
@@ -47,8 +52,11 @@ let uu___is_Const_int: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_int _0 -> true | uu____89 -> false
 let __proj__Const_int__item___0:
-  sconst -> (Prims.string* (signedness* width) option) =
-  fun projectee  -> match projectee with | Const_int _0 -> _0
+  sconst ->
+    (Prims.string,(signedness,width) FStar_Pervasives_Native.tuple2
+                    FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Const_int _0 -> _0
 let uu___is_Const_char: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_char _0 -> true | uu____116 -> false
@@ -63,14 +71,18 @@ let uu___is_Const_bytearray: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_bytearray _0 -> true | uu____143 -> false
 let __proj__Const_bytearray__item___0:
-  sconst -> (FStar_BaseTypes.byte Prims.array* FStar_Range.range) =
-  fun projectee  -> match projectee with | Const_bytearray _0 -> _0
+  sconst ->
+    (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Const_bytearray _0 -> _0
 let uu___is_Const_string: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_string _0 -> true | uu____167 -> false
 let __proj__Const_string__item___0:
-  sconst -> (FStar_BaseTypes.byte Prims.array* FStar_Range.range) =
-  fun projectee  -> match projectee with | Const_string _0 -> _0
+  sconst ->
+    (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Const_string _0 -> _0
 let uu___is_Const_range: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_range _0 -> true | uu____188 -> false
@@ -104,7 +116,9 @@ let rec pow2: Prims.int -> Prims.int =
     | uu____265 ->
         let uu____266 = pow2 (x - (Prims.parse_int "1")) in
         (Prims.parse_int "2") * uu____266
-let bounds: signedness -> width -> (Prims.int* Prims.int) =
+let bounds:
+  signedness -> width -> (Prims.int,Prims.int) FStar_Pervasives_Native.tuple2
+  =
   fun signedness  ->
     fun width  ->
       let n1 =
