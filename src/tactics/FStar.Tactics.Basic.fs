@@ -24,6 +24,7 @@ module TcRel  = FStar.TypeChecker.Rel
 module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
+module UF = FStar.Unionfind
 
 type name = bv
 type env = Env.env
@@ -180,6 +181,18 @@ let fail msg =
         Failed (msg, ps)
     )
 
+let trytac (t : tac<'a>) : tac<option<'a>> =
+    mk_tac (fun ps ->
+            let tx = UF.new_transaction () in
+            match run t ps with
+            | Success (a, q) ->
+                UF.commit tx;
+                Success (Some a, q)
+            | Failed (_, _) ->
+                UF.rollback tx;
+                Success (None, ps)
+           )
+
 ////////////////////////////////////////////////////////////////////
 (* Some TRUSTED internal utilities *)
 
@@ -291,16 +304,13 @@ let focus_cur_goal (f:tac<'a>) : tac<'a> =
 (* Applies t to each of the current goals
       fails if t fails on any of the goals
       collects each result in the output list *)
-(* Needs to be thunked! Otherwise it will diverge on application to t *)
 let rec map (tau:tac<'a>): tac<(list<'a>)> =
-    (* mk_tac (fun ps -> run ( *)
         bind get (fun p ->
         match p.goals with
         | [] -> ret []
         | _::_ ->
             bind (divide 1 tau (map tau)) (fun (h,t) -> ret (h :: t))
         )
-      (* ) ps) *)
 
 (* Applies t1 to the current head goal
    And t2 to all the the sub-goals produced by t1
@@ -410,7 +420,7 @@ let apply (tm:term) : tac<unit> =
         solve goal solution;
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
-            List.existsML (fun u -> Unionfind.equivalent u uv) free_uvars
+            List.existsML (fun u -> UF.equivalent u uv) free_uvars
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
         let checkone t goals =
@@ -478,7 +488,7 @@ let apply_lemma (tm:term) : tac<unit> =
         solve goal solution;
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
-            List.existsML (fun u -> Unionfind.equivalent u uv) free_uvars
+            List.existsML (fun u -> UF.equivalent u uv) free_uvars
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
         let checkone t goals =

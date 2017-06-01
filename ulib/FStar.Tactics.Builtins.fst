@@ -17,6 +17,8 @@ open FStar.Reflection
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
+assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
+let trytac (t : tactic 'a) = fun () -> TAC?.reflect (__trytac (reify_tactic t))
 
 assume private val __trivial  : __tac unit
 let trivial : tactic unit = fun () -> TAC?.reflect __trivial

@@ -34,12 +34,6 @@ let rec fix1 #a #b ff x (u:unit) = ff (fix1 #a #b ff) x ()
 let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
-// Never fails
-let trytac (#a:Type) (t : tactic a) : tactic (option a) = fun () ->
-    TAC?.reflect (fun ps -> match reify_tactic t ps with
-                            | Success a ps' -> Success (Some a) ps'
-                            | Failed _ _ -> Success None ps)
-
 let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
     r <-- trytac t1;
     (match r with
