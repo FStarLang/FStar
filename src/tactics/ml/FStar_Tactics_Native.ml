@@ -16,6 +16,9 @@ let compiled_tactics: native_primitive_step list ref = ref []
 
 let list_all () = !compiled_tactics
 
+let is_native_tactic lid =
+    BU.is_some (BU.try_find (fun x -> FStar_Ident.lid_equals lid x.name) !compiled_tactics)
+
 let register_tactic (s: string) (arity: int) (t: itac)=
     let step =
         { name=FStar_Ident.lid_of_str s;

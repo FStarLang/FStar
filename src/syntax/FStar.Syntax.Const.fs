@@ -201,6 +201,8 @@ let lid_as_tm l = lid_as_fv l Delta_constant None |> fv_to_tm
 (* tactic constants *)
 let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
 let tactic_lid = fstar_tactics_lid "tactic"
+let u_tac_lid = fstar_tactics_lid "__tac"
+let tac_effect_lid = fstar_tactics_lid "TAC"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
 let quote_lid = lid_of_path (["FStar"; "Tactics"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here

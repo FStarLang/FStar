@@ -1195,7 +1195,102 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
           then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
-    [se], []
+    (* 5. If top-level let is a user-defined tactic, check if it has been dynamically loaded as a native tactic.
+          If so, don't add its definition to the environment, instead add the reified tactic as an assumption and
+          replace its definition by the reflection of this assumed tactic. *)
+    let is_native_tactic (tac_lid: lident) (h: term) =
+      match h.n with
+      | Tm_uinst (h', _) ->
+        (match (SS.compress h').n with
+          | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
+              (* check if tactic has been dynamically loaded and has not already been typechecked *)
+              FStar.Tactics.Native.is_native_tactic tac_lid && not (is_some <| Env.try_lookup_val_decl env tac_lid)
+          | _ -> false)
+      | _ -> false in
+
+    let reified_tactic_type (l: lident) (t: typ): typ =
+      (* transform computations of type tactic to type __tac *)
+      let t = Subst.compress t in
+      match t.n with
+        | Tm_arrow(bs, c) ->
+            let bs, c = Subst.open_comp bs c in
+            // List.iter (fun x -> BU.print1 "Binder %s\n" (Print.term_to_string (fst x).sort)) bs;
+            if is_total_comp c
+            then begin
+              let c' =
+              (match c.n with
+                | Total (t', u) ->
+                  (match (Subst.compress t').n with
+                  | Tm_app (h, args) ->
+                      (match (Subst.compress h).n with
+                       | Tm_uinst (h', u') ->
+                          let h'' = fv_to_tm <| lid_as_fv FStar.Syntax.Const.u_tac_lid Delta_constant None in
+                          mk_Total' (mk_Tm_app (mk_Tm_uinst h'' u') args None t'.pos) u
+                       | _ -> c)
+                  | _ -> c)
+                | _ -> c) in
+              {t with n=Tm_arrow(bs, Subst.close_comp bs c')}
+            end else t
+        | Tm_app(h, args) ->
+          (* tactics which take no arguments *)
+            (match (Subst.compress h).n with
+              | Tm_uinst (h', u') ->
+                let h'' = fv_to_tm <| lid_as_fv FStar.Syntax.Const.u_tac_lid Delta_constant None in
+                mk_Tm_app (mk_Tm_uinst h'' u') args None t.pos
+              | _ -> t)
+        | _ -> t in
+
+    (* makes `assume val __native_tac: 'a -> __tac 'b` *)
+    let reified_tactic_decl (assm_lid: lident) (lb: letbinding): sigelt =
+      let t = reified_tactic_type assm_lid lb.lbtyp in
+      { sigel = Sig_declare_typ(assm_lid, lb.lbunivs, t);
+        sigquals =[Assumption];
+        sigrng = Ident.range_of_lid assm_lid;
+        sigmeta = default_sigmeta } in
+
+    (* makes `let native_tac (x: 'a): tactic 'b = fun () -> TAC?.reflect (__native_tac x)` *)
+    let reflected_tactic_decl (b: bool) (lb: letbinding) (bs: binders) (assm_lid: lident) comp: sigelt =
+      (* __native_tac x *)
+      let reified_tac = fv_to_tm <| lid_as_fv assm_lid Delta_constant None in
+      let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
+
+      let reflect_head = mk (Tm_constant (Const_reflect FStar.Syntax.Const.tac_effect_lid)) None Range.dummyRange in
+      let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
+      let app = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
+      (* TAC?. reflect (__native_tac x) *)
+
+      let unit_binder = mk_binder <| new_bv None t_unit in
+      let body = abs [unit_binder] app <| Some (Inl (lcomp_of_comp comp)) in
+      let func = abs bs body <| Some (Inl (lcomp_of_comp comp)) in
+      {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids, attrs)} in
+
+    let tactic_decls =
+      (match (snd lbs) with
+        | [hd] ->
+          let bs, comp = U.arrow_formals_comp hd.lbtyp in
+          let t = comp_result comp in
+          (match (SS.compress t).n with
+            | Tm_app(h, args) ->
+                let h = SS.compress h in
+                let tac_lid = (right hd.lbname).fv_name.v in
+                let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+                if is_native_tactic assm_lid h then begin
+                  let se_assm = reified_tactic_decl assm_lid hd in
+                  let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
+                  Some (se_assm, se_refl)
+                end else None
+            | _ -> None)
+        | _ -> None
+      ) in
+
+    match tactic_decls with
+    | Some (se_assm, se_refl) ->
+        if Env.debug env (Options.Other "NativeTactics") then
+          BU.print2 "Native tactic declarations: \n%s\n%s\n"
+            (Print.sigelt_to_string se_assm) (Print.sigelt_to_string se_refl)
+        else ();
+        [se_assm; se_refl], []
+    | None -> [se], []
 
 
 let for_export hidden se : list<sigelt> * list<lident> =

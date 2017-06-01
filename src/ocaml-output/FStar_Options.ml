@@ -994,7 +994,7 @@ let set_options: options -> Prims.string -> FStar_Getopt.parse_cmdline_res =
         then FStar_Getopt.Success
         else
           FStar_Getopt.parse_string specs1
-            (fun s1  -> FStar_Pervasives.raise (File_argument s1)) s
+            (fun s1  -> raise (File_argument s1)) s
       with
       | File_argument s1 ->
           let uu____1921 =
@@ -1116,7 +1116,7 @@ let prims: Prims.unit -> Prims.string =
                    "unable to find required file \"%s\" in the module search path.\n"
                    filename in
                FStar_Util.Failure uu____2064 in
-             FStar_Pervasives.raise uu____2063)
+             raise uu____2063)
     | Some x -> x
 let prims_basename: Prims.unit -> Prims.string =
   fun uu____2068  ->
@@ -1134,7 +1134,7 @@ let pervasives: Prims.unit -> Prims.string =
               "unable to find required file \"%s\" in the module search path.\n"
               filename in
           FStar_Util.Failure uu____2078 in
-        FStar_Pervasives.raise uu____2077
+        raise uu____2077
 let pervasives_basename: Prims.unit -> Prims.string =
   fun uu____2081  ->
     let uu____2082 = pervasives () in FStar_Util.basename uu____2082

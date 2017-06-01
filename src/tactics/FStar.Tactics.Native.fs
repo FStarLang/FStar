@@ -13,3 +13,5 @@ type native_primitive_step =
       tactic: itac}
 
 let list_all () = []
+
+let is_native_tactic t = false
