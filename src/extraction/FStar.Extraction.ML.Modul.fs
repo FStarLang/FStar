@@ -283,6 +283,52 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let (lbs, _, attrs) ->
           let quals = se.sigquals in
           let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
+
+          (* If the top-level let is a user-defined tactic, automatically add the matching invocation to
+             FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked. *)
+          let tactic_registration_decl =
+            let is_tactic_decl (tac_lid: lident) (h: term) =
+              match h.n with
+              | Tm_uinst (h', _) ->
+                (match (SS.compress h').n with
+                  | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
+                      (* TODO change this test *)
+                      not (string_of_mlpath g.currentModule = "FStar.Tactics")
+                  | _ -> false)
+              | _ -> false in
+
+            let mk_interpretation_fun () =
+              (* wip *)
+              MLE_Const MLC_Unit in
+
+            let mk_registration lid t bs =
+              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (FStar.Syntax.Const.fstar_tactics_lid "Native.register_tactic")) in
+              let lid_arg = MLE_Const (MLC_String (string_of_lid lid)) in
+              let arity = MLE_Const (MLC_Int (BU.string_of_int (List.length bs), None)) in
+              let interp = mk_interpretation_fun () in
+              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; interp]) in
+              MLM_Top app in
+
+            (match (snd lbs) with
+             | [hd] ->
+                let bs, comp = U.arrow_formals_comp hd.lbtyp in
+                let t = U.comp_result comp in
+                (match (SS.compress t).n with
+                 | Tm_app(h, args) ->
+                      let h = SS.compress h in
+                      let tac_lid = (right hd.lbname).fv_name.v in
+                      let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+                      if is_tactic_decl assm_lid h then begin
+                        BU.print1 "Head %s \n" (Print.term_to_string h);
+                        BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
+                        BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
+                        List.iter (fun x -> BU.print1 "Binder %s\n" (Print.term_to_string (fst x).sort)) bs;
+                        [mk_registration assm_lid hd.lbtyp bs]
+                      end else []
+                 | _ -> [])
+             | _ -> []
+            ) in
+
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
             | MLE_Let((flavor, _, bindings), _) ->
@@ -310,7 +356,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None
               ) attrs in
-              g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
+
+              g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
 
             | _ ->
               failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))

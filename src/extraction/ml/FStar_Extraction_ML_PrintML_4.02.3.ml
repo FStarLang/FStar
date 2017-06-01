@@ -89,6 +89,12 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
              | "" -> Ldot(q, sym) |> mk_sym_lident
              | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
 
+let mk_top_mllb (e: mlexpr): mllb =
+  {mllb_name=("_", Prims.parse_int "0");
+   mllb_tysc=None;
+   mllb_add_unit=false;
+   mllb_def=e;
+   print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
 let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
@@ -399,7 +405,10 @@ let build_module1 path (m1: mlmodule1): structure_item option =
      let bindings = map (build_binding true) mllbs in
      Some (Str.value recf bindings)
   | MLM_Exn exn -> Some (Str.exception_ (build_exn exn))
-  | MLM_Top expr -> None
+  | MLM_Top expr ->
+      let lb = mk_top_mllb expr in
+      let binding = build_binding true lb in
+      Some (Str.value Nonrecursive [binding])
   | MLM_Loc (p, f) -> None
 
 let build_m path (md: (mlsig * mlmodule) option) : structure = 

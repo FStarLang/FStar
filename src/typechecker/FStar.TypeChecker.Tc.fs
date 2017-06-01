@@ -60,6 +60,15 @@ let set_hint_correlator env se =
 
 let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.current_module env))
 
+let is_native_tactic (tac_lid: lident) (h: term) =
+  match h.n with
+  | Tm_uinst (h', _) ->
+    (match (SS.compress h').n with
+      | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
+          FStar.Tactics.Native.is_native_tactic tac_lid
+      | _ -> false)
+  | _ -> false
+
 (*****************Type-checking the signature of a module*****************************)
 
 let tc_check_trivial_guard env t k =
@@ -1198,23 +1207,12 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     (* 5. If top-level let is a user-defined tactic, check if it has been dynamically loaded as a native tactic.
           If so, don't add its definition to the environment, instead add the reified tactic as an assumption and
           replace its definition by the reflection of this assumed tactic. *)
-    let is_native_tactic (tac_lid: lident) (h: term) =
-      match h.n with
-      | Tm_uinst (h', _) ->
-        (match (SS.compress h').n with
-          | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
-              (* check if tactic has been dynamically loaded and has not already been typechecked *)
-              FStar.Tactics.Native.is_native_tactic tac_lid && not (is_some <| Env.try_lookup_val_decl env tac_lid)
-          | _ -> false)
-      | _ -> false in
-
     let reified_tactic_type (l: lident) (t: typ): typ =
       (* transform computations of type tactic to type __tac *)
       let t = Subst.compress t in
       match t.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
-            // List.iter (fun x -> BU.print1 "Binder %s\n" (Print.term_to_string (fst x).sort)) bs;
             if is_total_comp c
             then begin
               let c' =
@@ -1250,9 +1248,9 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 
     (* makes `let native_tac (x: 'a): tactic 'b = fun () -> TAC?.reflect (__native_tac x)` *)
     let reflected_tactic_decl (b: bool) (lb: letbinding) (bs: binders) (assm_lid: lident) comp: sigelt =
-      (* __native_tac x *)
       let reified_tac = fv_to_tm <| lid_as_fv assm_lid Delta_constant None in
       let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
+      (* __native_tac x *)
 
       let reflect_head = mk (Tm_constant (Const_reflect FStar.Syntax.Const.tac_effect_lid)) None Range.dummyRange in
       let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
@@ -1274,7 +1272,8 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
                 let h = SS.compress h in
                 let tac_lid = (right hd.lbname).fv_name.v in
                 let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                if is_native_tactic assm_lid h then begin
+                (* check if tactic has been dynamically loaded and has not already been typechecked *)
+                if is_native_tactic assm_lid h && not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
                   let se_assm = reified_tactic_decl assm_lid hd in
                   let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
                   Some (se_assm, se_refl)
