@@ -168,6 +168,8 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (add_smt_goals smt_goals) (fun _ ->
         fail msg))))))
 
+let idterm (t:term) : term = t
+
 let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
@@ -175,10 +177,15 @@ let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
         begin
         // kinda unclean
         try
-        match run (unembed_tactic_0 unembed_unit tactic) (proofstate_of_goal_ty e assertion) with
+        let ps = proofstate_of_goal_ty e assertion in
+        let w = (List.hd ps.goals).witness in
+        match run (unembed_tactic_0 unembed_unit tactic) ps with
         | Success (_, ps) ->
+            if !tacdbg then
+                BU.print1 "Tactic generated proofterm %s\n"
+                                (Print.term_to_string w);
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
-        | Failed (s,ps) ->
+        | Failed (s, ps) ->
             raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", tactic.pos))
         with
         | Failure s ->
