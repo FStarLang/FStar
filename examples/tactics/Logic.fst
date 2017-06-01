@@ -17,7 +17,7 @@ let tau : tactic unit =
     dump1 "GG 3";;
     apply (quote (FStar.Squash.return_squash));;
     exact (return (pack (Tv_Var h1)));;
-    dump "GG 4";;
+    dump1 "GG 4";;
     qed
 
 let _ =

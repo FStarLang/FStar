@@ -131,9 +131,14 @@ let dump_goal ps goal =
     ()
 
 let dump_cur ps msg =
-    tacprint1 "Current goal (%s):" msg;
-    dump_goal ps (List.hd ps.goals);
-    ()
+    match ps.goals with
+    | [] ->
+        tacprint1 "No more goals (%s)" msg
+    | h::_ ->
+        begin
+        tacprint1 "Current goal (%s):" msg;
+        dump_goal ps (List.hd ps.goals)
+        end
 
 let dump_proofstate ps msg =
     tacprint "";
