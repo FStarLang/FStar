@@ -145,7 +145,8 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
-        let names = match ctor.dtyp.n with
+        let steps = [ N.Inlining; N.UnfoldUntil S.Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
+        let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
           | _ ->
