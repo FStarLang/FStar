@@ -26,8 +26,11 @@ val proof_irrelevance : p:Type -> x:squash p ->
 val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
   $f:(squash (x:a -> GTot (squash (p x)))) -> GTot (squash (x:a -> GTot (p x)))
 
-val squash_double_sum:  #a:Type -> #p:(a -> Type) ->
-  $f:(squash (dtuple2 a (fun (x:a) -> squash (p x)))) -> Tot (squash (dtuple2 a (fun (x:a) -> p x)))
+val push_sum : #a:Type -> #b:(a -> Type) ->
+  $p:(dtuple2 a (fun (x:a) -> squash (b x))) -> Tot (squash (dtuple2 a b))
+
+val squash_double_sum:  #a:Type -> #b:(a -> Type) ->
+  $p:(squash (dtuple2 a (fun (x:a) -> squash (b x)))) -> Tot (squash (dtuple2 a b))
 
 val map_squash : #a:Type -> #b:Type -> squash a -> (a -> GTot b) ->
   Tot (squash b)
