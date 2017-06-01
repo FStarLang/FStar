@@ -149,8 +149,8 @@ rename_as_fst:
 prep: $(U_ALL_INTERFACES)
 	make rename_as_fst
 	#fix up a use of polymorphic recursion in F#, which has a different syntax than F*
-	$(SED) -i 's/^and unembed_tactic_0.*//g' u_boot_fsts/FStar.Tactics.Interpreter.fst
-	$(SED) -i 's/^\/\/F\* version: and unembed_tactic_0/and unembed_tactic_0/g' u_boot_fsts/FStar.Tactics.Interpreter.fst
+	$(SED) -i '/\/\/ *JUST *FSHARP */d' u_boot_fsts/FStar.Tactics.Interpreter.fst
+	$(SED) -i 's,^ *// *IN *F\* *:,,g' u_boot_fsts/FStar.Tactics.Interpreter.fst
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output

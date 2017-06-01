@@ -144,8 +144,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
     ]@reflection_primops
 
-//F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
-and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> =
+//IN F*: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
+and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (E.embed_state proof_state (proof_state.goals, proof_state.smt_goals))]
