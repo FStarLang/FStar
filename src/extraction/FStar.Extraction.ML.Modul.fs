@@ -165,8 +165,13 @@ let extract_bundle env se =
        let tbody =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
-             let _, names = List.hd ctors in
-             MLTD_Record names
+             // JP: why are the names in c_ty prefixed with ^fname^? Why do we
+             // have to do this voodoo dance to recover field names? Why don't
+             // we just drop the special ^fname^ prefix?
+             let _, c_ty = List.hd ctors in
+             assert (List.length ids = List.length c_ty);
+             let fields = List.map2 (fun id (_, ty) -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
+             MLTD_Record fields
          | _ ->
              MLTD_DType ctors in
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
