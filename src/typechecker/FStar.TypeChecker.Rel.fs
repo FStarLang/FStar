@@ -2617,9 +2617,9 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
-                else let vc = N.normalize [N.Simplify] env vc in
-                     [env,vc] in
+                else [env,vc] in
             vcs |> List.iter (fun (env, goal) ->
+                    let goal = N.normalize [N.Simplify] env goal in
                     match check_trivial goal with
                     | Trivial ->
                         if (Env.debug env <| Options.Other "Rel") || (Env.debug env <| Options.Other "Tac")
@@ -2633,7 +2633,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                                          (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
                                                  (Print.term_to_string goal)
                                                  (Env.string_of_proof_ns env));
-                    env.solver.solve use_env_range_msg env goal)
+                        env.solver.solve use_env_range_msg env goal)
           in
           Some ret_g
 
