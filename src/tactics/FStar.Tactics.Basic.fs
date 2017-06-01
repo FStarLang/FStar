@@ -762,8 +762,10 @@ let order_binder (x:binder) (y:binder) : order =
     else if n = 0 then Eq
     else Gt
 
-let proofstate_of_goal_ty env g =
-    let g = mk_irrelevant env (bnorm env g) in
+let proofstate_of_goal_ty env typ =
+    // TODO: DONT IGNORE g_u
+    let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
+    let g = { context = env; witness = u; goal_ty = typ } in
     {
         main_context=env;
         main_goal=g;

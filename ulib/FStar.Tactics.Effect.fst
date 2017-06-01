@@ -79,7 +79,7 @@ let by_tactic (t:__tac 'a) (p:Type) : Type = p
 #reset-options "--no_tactics"
 let assert_by_tactic (t:tactic 'a) (p:Type)
   : Pure unit
-         (requires (by_tactic (reify_tactic t) p))
+         (requires (by_tactic (reify_tactic t) (squash p)))
          (ensures (fun _ -> p))
   = ()
 #reset-options
