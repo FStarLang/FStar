@@ -563,9 +563,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
     let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
     if Env.should_verify env then
-        let _ = Options.set_option "debug_level" (Options.List [Options.String "Extreme"]) in
-        let lb = match lax_top.n with Tm_let ((true, lbs), _) -> List.hd lbs in
-        printfn "univs are = %s" (List.map (fun x -> Print.univ_to_string (U_name x)) lb.lbunivs |> String.concat ", ");
+//        let _ = Options.set_option "debug_level" (Options.List [Options.String "Extreme"]) in
+//        let lb = match lax_top.n with Tm_let ((true, lbs), _) -> List.hd lbs in
+//        printfn "univs are = %s" (List.map (fun x -> Print.univ_to_string (U_name x)) lb.lbunivs |> String.concat ", ");
         check_top_level_let_rec env lax_top
     else lax_top, l, g
 
