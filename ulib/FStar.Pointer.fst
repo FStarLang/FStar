@@ -626,8 +626,8 @@ noeq private type _pointer : Type -> Tot Type =
 abstract let pointer (t: Type): Tot Type =
   _pointer t
 
-abstract let as_aref (#t: Type) (p: pointer t): GTot Heap.aref =
-  HS.as_aref (Pointer?.content p)
+abstract let as_addr (#t: Type) (p: pointer t): GTot nat =
+  HS.as_addr (Pointer?.content p)
 
 private let _field
   (#key: eqtype)
@@ -651,12 +651,12 @@ private let _cell
   let p'' : path from value = PathStep _ _ p' (StepCell _ _ i) in
   Pointer content p''
 
-abstract let contains
+abstract let unused_in
   (#value: Type)
-  (h: HS.mem)
   (p: pointer value)
+  (h: HS.mem)
 : GTot Type0
-= HS.contains h (Pointer?.content p)
+= HS.unused_in (Pointer?.content p) h
 
 abstract let live
   (#value: Type)
@@ -665,14 +665,13 @@ abstract let live
 : GTot Type0
 = HS.contains h (Pointer?.content p)
 
-abstract let live_contains
+abstract let live_not_unused_in
   (#value: Type)
   (h: HS.mem)
   (p: pointer value)
 : Lemma
-  (requires (live h p))
-  (ensures (contains h p))
-  [SMTPatT (live h p)]
+  (ensures (live h p /\ p `unused_in` h ==> False))
+  [SMTPatT (live h p); SMTPatT (p `unused_in` h)]
 = () 
 
 abstract let gread
@@ -695,8 +694,8 @@ abstract let disjoint_roots_intro_pointer_vs_pointer
   (p1: pointer value1)
   (p2: pointer value2)
 : Lemma
-  (requires (contains h p1 /\ (~ (contains h p2))))
-  (ensures (frameOf p1 <> frameOf p2 \/ as_aref p1 =!= as_aref p2))
+  (requires (live h p1 /\ unused_in p2 h))
+  (ensures (frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2))
 = HyperStack.lemma_live_1 h (Pointer?.content p1) (Pointer?.content p2)
 
 abstract let disjoint_roots_intro_pointer_vs_reference
@@ -705,8 +704,8 @@ abstract let disjoint_roots_intro_pointer_vs_reference
   (p1: pointer value1)
   (p2: HS.reference value2)
 : Lemma
-  (requires (contains h p1 /\ (~ (HS.contains h p2))))
-  (ensures (frameOf p1 <> p2.HS.id \/ as_aref p1 =!= HS.as_aref p2))
+  (requires (live h p1 /\ p2 `HS.unused_in` h))
+  (ensures (frameOf p1 <> HS.frameOf p2 \/ as_addr p1 =!= HS.as_addr p2))
 = HyperStack.lemma_live_1 h (Pointer?.content p1) p2
 
 abstract let disjoint_roots_intro_reference_vs_pointer
@@ -715,15 +714,15 @@ abstract let disjoint_roots_intro_reference_vs_pointer
   (p1: HS.reference value1)
   (p2: pointer value2)
 : Lemma
-  (requires (HS.contains h p1 /\ (~ (contains h p2))))
-  (ensures (p1.HS.id <> frameOf p2 \/ HS.as_aref p1 =!= as_aref p2))
+  (requires (HS.contains h p1 /\ p2 `unused_in` h))
+  (ensures (HS.frameOf p1 <> frameOf p2 \/ HS.as_addr p1 =!= as_addr p2))
 = HyperStack.lemma_live_1 h p1 (Pointer?.content p2)
 
 let memory_managed
   (#value: Type)
   (p: pointer value)
 : GTot bool
-= (Pointer?.content p).HS.mm
+= HS.is_mm (Pointer?.content p)
 
 abstract let recall
   (#value: Type)
@@ -755,18 +754,18 @@ abstract let gfield
 : GTot (p' : pointer (value fd) { includes p p' } )
 = _field p fd
 
-abstract let as_aref_gfield
+abstract let as_addr_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (p: (pointer (DM.t key value)))
   (fd: key)
 : Lemma
   (requires True)
-  (ensures (as_aref (gfield p fd) == as_aref p))
-  [SMTPat (as_aref (gfield p fd))]
+  (ensures (as_addr (gfield p fd) == as_addr p))
+  [SMTPat (as_addr (gfield p fd))]
 = ()
 
-abstract let contains_gfield
+abstract let unused_in_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (h: HS.mem)
@@ -774,8 +773,8 @@ abstract let contains_gfield
   (fd: key)
 : Lemma
   (requires True)
-  (ensures (contains h (gfield p fd) <==> contains h p))
-  [SMTPat (contains h (gfield p fd))]
+  (ensures (unused_in (gfield p fd) h <==> unused_in p h))
+  [SMTPat (unused_in (gfield p fd) h)]
 = ()
 
 abstract let live_gfield
@@ -843,18 +842,18 @@ abstract let gcell
 : Tot (pointer value)
 = _cell p i
 
-abstract let as_aref_gcell
+abstract let as_addr_gcell
   (#length: UInt32.t)
   (#value: Type)
   (p: pointer (array length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
 : Lemma
   (requires True)
-  (ensures (as_aref (gcell p i) == as_aref p))
-  [SMTPat (as_aref (gcell p i))]
+  (ensures (as_addr (gcell p i) == as_addr p))
+  [SMTPat (as_addr (gcell p i))]
 = ()
 
-abstract let contains_gcell
+abstract let unused_in_gcell
   (#length: UInt32.t)
   (#value: Type)
   (h: HS.mem)
@@ -862,8 +861,8 @@ abstract let contains_gcell
   (i: UInt32.t {UInt32.v i < UInt32.v length})
 : Lemma
   (requires True)
-  (ensures (contains h (gcell p i) <==> contains h p))
-  [SMTPat (contains h (gcell p i))]
+  (ensures (unused_in (gcell p i) h <==> unused_in p h))
+  [SMTPat (unused_in (gcell p i) h)]
 = ()
 
 abstract let live_gcell
@@ -992,7 +991,7 @@ abstract let includes_ind
     (Pointer?.p p1)
     (Pointer?.p p2)
 
-let contains_includes
+let unused_in_includes
   (#value1: Type)
   (#value2: Type)
   (h: HS.mem)
@@ -1000,12 +999,12 @@ let contains_includes
   (p2: pointer value2)
 : Lemma
   (requires (includes p1 p2))
-  (contains h p1 <==> contains h p2)
-  [SMTPatT (contains h p2); SMTPatT (includes p1 p2)]
+  (unused_in p1 h <==> unused_in p2 h)
+  [SMTPatT (unused_in p2 h); SMTPatT (includes p1 p2)]
 = includes_ind
-  (fun #v1 #v2 p1 p2 -> contains h p1 <==> contains h p2)
-  (fun #k #v p fd -> contains_gfield h p fd)
-  (fun #length #value p i -> contains_gcell h p i)
+  (fun #v1 #v2 p1 p2 -> unused_in p1 h <==> unused_in p2 h)
+  (fun #k #v p fd -> unused_in_gfield h p fd)
+  (fun #length #value p i -> unused_in_gcell h p i)
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
   p1 p2
@@ -1034,7 +1033,7 @@ abstract let disjoint
   (p1: pointer value1)
   (p2: pointer value2)
 : GTot Type0
-= (frameOf p1 <> frameOf p2 \/ as_aref p1 =!= as_aref p2) \/ // disjoint references; see HyperStack.lemma_live_1
+= (frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2) \/ // disjoint references; see HyperStack.lemma_live_1
   (Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_disjoint (Pointer?.p p1) (Pointer?.p p2))
 
 abstract let disjoint_root
@@ -1043,7 +1042,7 @@ abstract let disjoint_root
   (p1: pointer value1)
   (p2: pointer value2)
 : Lemma
-  (requires (frameOf p1 <> frameOf p2 \/ as_aref p1 =!= as_aref p2))
+  (requires (frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2))
   (ensures (disjoint p1 p2))
 = ()
 
@@ -1084,7 +1083,7 @@ abstract let disjoint_includes
   (requires (includes p1 p1' /\ includes p2 p2' /\ disjoint p1 p2))
   (ensures (disjoint p1' p2'))
 = FStar.Classical.or_elim
-    #(frameOf p1 <> frameOf p2 \/ as_aref p1 =!= as_aref p2)
+    #(frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2)
     #(Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_disjoint (Pointer?.p p1) (Pointer?.p p2))
     #(fun _ -> disjoint p1' p2')
     (fun h -> ())
@@ -1101,7 +1100,7 @@ abstract let disjoint_ind
     (#value1: Type) ->
     (#value2: Type) ->
     (p1: pointer value1) ->
-    (p2: pointer value2 { frameOf p1 <> frameOf p2 \/ as_aref p1 =!= as_aref p2 } ) ->
+    (p2: pointer value2 { frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2 } ) ->
     Lemma (x p1 p2))
   (h_field:
     (#key: eqtype) ->
@@ -1134,7 +1133,7 @@ abstract let disjoint_ind
   (p2: pointer value2 { disjoint p1 p2 } )
 : Lemma (x p1 p2)
 = FStar.Classical.or_elim
-    #(frameOf p1 <> frameOf p2 \/ as_aref p1 =!= as_aref p2)
+    #(frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2)
     #(Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_disjoint (Pointer?.p p1) (Pointer?.p p2))
     #(fun _ -> x p1 p2)
     (fun _ ->
@@ -1208,20 +1207,19 @@ let live_disjoint
   (p1: pointer value1)
   (p2: pointer value2)
 : Lemma
-  (requires (live h p1 /\ ~ (contains h p2)))
+  (requires (live h p1 /\ unused_in p2 h))
   (ensures (disjoint p1 p2))
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
-= live_contains h p1;
-  disjoint_root p1 p2
+= disjoint_root p1 p2
 
 
 (* Specialized clauses for small numbers of pointers *)
 let modifies_ptr_0 rid h h' =
-  HS.modifies_ref rid !{} h h'
+  HS.modifies_ref rid Set.empty h h'
   /\ (forall (#tt:Type) (bb:pointer tt). (frameOf bb = rid /\ live h bb) ==> equal_values h bb h' bb)
 
 let modifies_ptr_1 (#t:Type) rid (b:pointer t) h h' = //would be good to drop the rid argument on these, since they can be computed from the pointers
-  HS.modifies_ref rid (TSet.singleton (as_aref b)) h h'
+  HS.modifies_ref rid (Set.singleton (as_addr b)) h h'
   /\ (forall (#tt:Type) (bb:pointer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal_values h bb h' bb)
 
 let modifies_ptr_0_0 rid h0 h1 h2 :
@@ -1300,7 +1298,7 @@ val modifies_0_0: h0:HS.mem -> h1:HS.mem -> h2:HS.mem -> Lemma
 let modifies_0_0 h0 h1 h2 = ()
 
 let modifies_0_1 (#a:Type) (b:pointer a) h0 h1 h2 : Lemma
-  (requires (~(contains h0 b) /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+  (requires (unused_in b h0 /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
   (ensures  (modifies_0 h0 h2))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = ()
@@ -1313,7 +1311,7 @@ abstract let screate
 : StackInline (pointer value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
-       ~(contains h0 b)
+       unused_in b h0
      /\ live h1 b
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
@@ -1338,12 +1336,12 @@ abstract let ecreate
   (s: t)
 : ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r))
-  (ensures (fun (h0:HS.mem) b h1 -> ~(contains h0 b)
+  (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
     /\ Map.domain h1.HS.h == Map.domain h0.HS.h
     /\ h1.HS.tip = h0.HS.tip
     /\ HS.modifies (Set.singleton r) h0 h1
-    /\ HS.modifies_ref r TSet.empty h0 h1
+    /\ HS.modifies_ref r Set.empty h0 h1
     /\ gread h1 b == s
     /\ ~(memory_managed b)))
 = let h0 = HST.get() in
