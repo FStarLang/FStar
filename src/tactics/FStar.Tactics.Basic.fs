@@ -66,7 +66,7 @@ type result<'a> =
                  although, when not handled, it signifies a fatal error
                            in the tactic engine
 *)
-exception Failure of string
+exception TacFailure of string
 
 (* The main monad for tactics.
  * A record, so we can keep it somewhat encapsulated and
@@ -203,7 +203,7 @@ let set (p:proofstate) : tac<unit> =
 let solve goal solution =
     if Rel.teq_nosmt goal.context goal.witness solution
     then ()
-    else raise (Failure(BU.format3 "%s does not solve %s : %s"
+    else raise (TacFailure(BU.format3 "%s does not solve %s : %s"
                           (Print.term_to_string solution)
                           (Print.term_to_string goal.witness)
                           (Print.term_to_string goal.goal_ty)))

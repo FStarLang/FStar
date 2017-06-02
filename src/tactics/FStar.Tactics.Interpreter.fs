@@ -182,12 +182,13 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
         (assertion, []) // Peel away tactics in negative positions, they're assumptions!
 
     | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid && pol = Pos ->
-        begin
         // kinda unclean
-        try
         let ps = proofstate_of_goal_ty e assertion in
         let w = (List.hd ps.goals).witness in
-        match run (unembed_tactic_0 unembed_unit tactic) ps with
+        let r = try run (unembed_tactic_0 unembed_unit tactic) ps
+                with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
+        in
+        begin match r with
         | Success (_, ps) ->
             if !tacdbg then
                 BU.print1 "Tactic generated proofterm %s\n"
@@ -195,12 +196,6 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
         | Failed (s, ps) ->
             raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", tactic.pos))
-        with
-        | Failure s ->
-            raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", tactic.pos))
-        | e ->
-            //printfn "Exception: %A\n" e;
-            raise (FStar.Errors.Error ("user tactic failed: unexpected exception", tactic.pos))
         end
     | _ ->
         (t, [])
