@@ -9,6 +9,12 @@ let test_or_else =
     assert_by_tactic (or_else (fail "failed")
                               (return ())) True
 
+type t = | A | B | C | D
+let f x = match x with | A -> 0 | B -> 1 | C -> 2 | D -> 3
+
+let test_trivial =
+    assert_by_tactic trivial ((f A == 0) /\ (f B == 1) /\ (f C == 2) /\ (f D == 3))
+
 (* let simple_equality_assertions = *)
 (*   assert_by_tactic rewrite_all_equalities *)
 (*                    (forall (y:int). y==0 ==> 0==y); *)
