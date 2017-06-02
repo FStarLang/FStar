@@ -8323,9 +8323,9 @@ let force_trivial_guard :
           let uu____15495 =
             let uu____15496 = FStar_Syntax_Print.term_to_string t  in
             let uu____15497 = FStar_Syntax_Print.term_to_string e  in
-            FStar_Util.format3
-              "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
-              uu____15496 uu____15497 reason
+            FStar_Util.format2
+              "Failed to resolve implicit argument of type '%s' introduced in %s"
+              uu____15496 uu____15497
              in
           FStar_Errors.err r uu____15495
   

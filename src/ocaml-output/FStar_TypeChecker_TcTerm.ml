@@ -5579,10 +5579,10 @@ and check_top_level_let_rec :
                                         top.FStar_Syntax_Syntax.pos
                                        in
                                     let uu____9096 =
-                                      FStar_TypeChecker_Rel.discharge_guard
-                                        env1 g_lbs1
+                                      FStar_TypeChecker_Rel.force_trivial_guard env1 (FStar_TypeChecker_Rel.discharge_guard
+                                        env1 g_lbs1)
                                        in
-                                    (uu____9081, cres, uu____9096)))))))
+                                    (uu____9081, cres, FStar_TypeChecker_Rel.trivial_guard)))))))
       | uu____9099 -> failwith "Impossible"
 
 and check_inner_let_rec :
