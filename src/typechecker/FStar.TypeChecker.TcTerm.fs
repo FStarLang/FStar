@@ -38,8 +38,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
-
-
+module UF = FStar.Syntax.Unionfind
 
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -640,7 +639,7 @@ and tc_value env (e:term) : term
     if List.length us <> List.length us'
     then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
-            | U_unif u'' -> Unionfind.change u'' (Some u)
+            | U_unif u'' -> UF.univ_change u'' u
             | _ -> failwith "Impossible") us' us;
     let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
     let fv' = S.set_range_of_fv fv' range in
@@ -2097,7 +2096,7 @@ let rec universe_of_aux env e =
      if List.length us <> List.length us'
      then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
      else List.iter2 (fun u' u -> match u' with
-        | U_unif u'' -> Unionfind.change u'' (Some u)
+        | U_unif u'' -> UF.univ_change u'' u
         | _ -> failwith "Impossible") us' us;
      t
    | Tm_uinst _ ->

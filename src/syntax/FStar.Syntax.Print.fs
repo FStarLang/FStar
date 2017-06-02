@@ -31,6 +31,7 @@ module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
+module Unionfind = FStar.Syntax.Unionfind
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -175,6 +176,7 @@ let tag_of_term (t:term) = match t.n with
   | Tm_unknown -> "Tm_unknown"
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
+let univ_uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
 
 let rec int_of_univ n u = match Subst.compress_univ u with
     | U_zero -> n, None
@@ -187,7 +189,7 @@ let rec univ_to_string u =
     let d = ToDocument.term_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else match Subst.compress_univ u with
-    | U_unif u -> uvar_to_string u
+    | U_unif u -> univ_uvar_to_string u
     | U_name x -> x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"

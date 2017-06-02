@@ -24,7 +24,7 @@ module TcRel  = FStar.TypeChecker.Rel
 module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
-module UF = FStar.Unionfind
+module UF = FStar.Syntax.Unionfind
 
 type name = bv
 type env = Env.env
@@ -420,7 +420,7 @@ let apply (tm:term) : tac<unit> =
         solve goal solution;
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
-            List.existsML (fun u -> UF.equivalent u uv) free_uvars
+            List.existsML (fun u -> UF.equiv u uv) free_uvars
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
         let checkone t goals =
@@ -488,7 +488,7 @@ let apply_lemma (tm:term) : tac<unit> =
         solve goal solution;
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
-            List.existsML (fun u -> UF.equivalent u uv) free_uvars
+            List.existsML (fun u -> UF.equiv u uv) free_uvars
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv g'.goal_ty) goals in
         let checkone t goals =

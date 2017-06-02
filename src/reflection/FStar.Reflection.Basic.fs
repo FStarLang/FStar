@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Reflection.Basic
 
+open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax // TODO: remove, it's open

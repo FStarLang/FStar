@@ -37,6 +37,7 @@ module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
+module UF = FStar.Syntax.Unionfind
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -127,7 +128,7 @@ let close_guard env binders g =
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_uvar r binders k =
-  let uv = Unionfind.fresh Uvar in
+  let uv = UF.fresh () in
   match binders with
     | [] ->
       let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
@@ -217,11 +218,11 @@ let prob_to_string env = function
 
 let uvi_to_string env = function
     | UNIV (u, t) ->
-      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else UF.univ_uvar_id u |> string_of_int in
       BU.format2 "UNIV %s %s" x (Print.univ_to_string t)
 
     | TERM ((u,_), t) ->
-      let x = if (Options.hide_uvar_nums()) then "?" else Unionfind.uvar_id u |> string_of_int in
+      let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u |> string_of_int in
       BU.format2 "TERM %s %s" x (N.term_to_string env t)
 let uvis_to_string env uvis = List.map (uvi_to_string env) uvis |> String.concat  ", "
 let names_to_string nms = BU.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
@@ -373,17 +374,17 @@ let explain env d s =
 let commit uvis = uvis |> List.iter (function
     | UNIV(u, t)      ->
       begin match t with
-        | U_unif u' -> Unionfind.union u u'
-        | _ -> Unionfind.change u (Some t)
+        | U_unif u' -> UF.univ_union u u'
+        | _ -> UF.univ_change u t
       end
     | TERM((u, _), t) -> U.set_uvar u t)
 
 let find_term_uvar uv s = BU.find_map s (function
     | UNIV _ -> None
-    | TERM((u,_), t) -> if Unionfind.equivalent uv u then Some t else None)
+    | TERM((u,_), t) -> if UF.equiv uv u then Some t else None)
 
 let find_univ_uvar u s = BU.find_map s (function
-    | UNIV(u', t) -> if Unionfind.equivalent u u' then Some t else None
+    | UNIV(u', t) -> if UF.univ_equiv u u' then Some t else None
     | _ -> None)
 
 (* ------------------------------------------------*)
@@ -567,7 +568,7 @@ let rec occurs (wl:worklist) (uk:(uvar * 'b)) (t:typ) =
     Free.uvars t
     |> BU.set_elements
     |> BU.for_some (fun (uv, _) ->
-       Unionfind.equivalent uv (fst uk))
+       UF.equiv uv (fst uk))
 
 let occurs_check env wl uk t =
     let occurs_ok = not (occurs wl uk t) in
@@ -759,7 +760,7 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
     | Tm_constant c, Tm_constant d -> if c=d then FullMatch else MisMatch(None, None)
-    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch(None, None)
+    | Tm_uvar (uv, _),  Tm_uvar (uv', _) -> if UF.equiv uv uv' then FullMatch else MisMatch(None, None)
 
     | Tm_refine(x, _), Tm_refine(y, _) -> head_matches env x.sort y.sort |> head_match
 
@@ -1064,7 +1065,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
           us |> BU.for_some (fun u ->
             let k, _ = U.univ_kernel u in
             match k with
-                | U_unif v2 -> Unionfind.equivalent v1 v2
+                | U_unif v2 -> UF.univ_equiv v1 v2
                 | _ -> false)
         | _ -> occurs_univ v1 (U_max [u]) in
 
@@ -1117,7 +1118,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
           really_solve_universe_eq pid_orig wl u1 u2
 
         | U_unif v1, U_unif v2 ->
-          if Unionfind.equivalent v1 v2
+          if UF.univ_equiv v1 v2
           then USolved wl
           else let wl = extend_solution pid_orig [UNIV(v1, u2)] wl in
                USolved wl
@@ -1327,7 +1328,7 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
                     | Some rank when is_rigid_flex rank ->
                       let u', _ = U.head_and_args tp.rhs in
                       begin match (whnf env u').n with
-                        | Tm_uvar(uv', _) -> Unionfind.equivalent uv uv'
+                        | Tm_uvar(uv', _) -> UF.equiv uv uv'
                         | _ -> false
                       end
                     | _ -> false
@@ -1439,7 +1440,7 @@ and solve_flex_rigid_join  (env:env) (tp:tprob) (wl:worklist) : option<worklist>
                     | Some rank when is_flex_rigid rank ->
                       let u', _ = U.head_and_args tp.lhs in
                       begin match (whnf env u').n with
-                        | Tm_uvar(uv', _) -> Unionfind.equivalent uv uv'
+                        | Tm_uvar(uv', _) -> UF.equiv uv uv'
                         | _ -> false
                       end
                     | _ -> false
@@ -1703,7 +1704,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
                              let k' = U.arrow xs c in
                              let uv_sol = U.abs scope k' (Some (Inl (U.lcomp_of_comp <| S.mk_Total (U.type_u () |> fst)))) in
-                             Unionfind.change uvar (Fixed uv_sol);
+                             UF.change uvar uv_sol;
                              Some (xs, c))
                         | _ -> None
                        end
@@ -1734,18 +1735,18 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             if i >= n || Option.isNone stopt
             then giveup env "flex-rigid case failed all backtracking attempts" orig
             else let st = Option.get stopt in
-                 let tx = Unionfind.new_transaction () in
+                 let tx = UF.new_transaction () in
                  if i = -1
                  then match imitate orig env wl st with
                         | Failed _ ->
-                          Unionfind.rollback tx;
+                          UF.rollback tx;
                           imitate_or_project n stopt (i + 1) //backtracking point
                         | sol -> //no need to commit; we'll commit the enclosing transaction at the top-level
                           sol
                  else match project orig env wl i st with
                         | None
                         | Some (Failed _) ->
-                          Unionfind.rollback tx;
+                          UF.rollback tx;
                           imitate_or_project n stopt (i + 1) //backtracking point
                         | Some sol -> sol in
 
@@ -1894,7 +1895,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
 
         let solve_both_pats wl (u1, k1, xs, args1) (u2, k2, ys, args2) r =
-            if Unionfind.equivalent u1 u2
+            if UF.equiv u1 u2
             && binders_eq xs ys
             then solve env (solve_prob orig None [] wl)
             else //(U1:k1) xs =?= (U2:k2) ys
@@ -1952,7 +1953,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check"
                 else let sol1 = TERM((u1, k1), sub1) in
-                     if Unionfind.equivalent u1 u2
+                     if UF.equiv u1 u2
                      then let wl = solve_prob orig None [sol1] wl in
                           solve env wl
                      else let sub2 = u_abs knew2 ys u_zs in
@@ -1968,7 +1969,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             begin
                 if Env.debug env <| Options.Other "Rel"
                 then BU.print2 "Trying flex-flex one pattern (%s) with %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
-                if Unionfind.equivalent u1 u2
+                if UF.equiv u1 u2
                 then let sub_probs = List.map2
                          (fun (a, _) (t2, _) -> mk_problem (p_scope orig) orig (S.bv_to_name a) EQ t2 None "flex-flex index" |> TProb)
                          xs args2 in
@@ -2419,14 +2420,14 @@ let new_t_prob env t1 rel t2 =
 
 let solve_and_commit env probs err =
   let probs = if (Options.eager_inference()) then {probs with defer_ok=false} else probs in
-  let tx = Unionfind.new_transaction () in
+  let tx = UF.new_transaction () in
   let sol = solve env probs in
   match sol with
     | Success (deferred) ->
-      Unionfind.commit tx;
+      UF.commit tx;
       Some deferred
     | Failed (d,s) ->
-      Unionfind.rollback tx;
+      UF.rollback tx;
       if Env.debug env <| Options.Other "ExplainRel"
       then BU.print_string <| explain env d s;
       err (d,s)
@@ -2505,7 +2506,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
    //Then, we make a pass over all the inequalities again and check that they are all satisfied
    //This ensures, e.g., that we don't needlessly generalize types, avoid issues lik #806
    let fail u1 u2 =
-        Unionfind.rollback tx;
+        UF.rollback tx;
         raise (Error (BU.format2 "Universe %s and %s are incompatible"
                                 (Print.univ_to_string u1)
                                 (Print.univ_to_string u2),
@@ -2513,7 +2514,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
    in
    let equiv v v' =
        match SS.compress_univ v, SS.compress_univ v' with
-       | U_unif v0, U_unif v0' -> Unionfind.equivalent v0 v0'
+       | U_unif v0, U_unif v0' -> UF.univ_equiv v0 v0'
        | _ -> false
    in
    let sols = variables |> List.collect (fun v ->
@@ -2550,7 +2551,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
      | U_zero, _ -> true
      | U_succ u0, U_succ v0 -> check_ineq (u0, v0)
      | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
-     | U_unif u0, U_unif v0 -> Unionfind.equivalent u0 v0
+     | U_unif u0, U_unif v0 -> UF.univ_equiv u0 v0
      | U_name _,  U_succ v0
      | U_unif _,  U_succ v0 -> check_ineq (u, v0)
      | U_max us,  _         -> us |> BU.for_all (fun u -> check_ineq (u, v))
@@ -2566,15 +2567,15 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
    then ()
    else (if Env.debug env <| Options.Other "GenUniverses"
          then (BU.print1 "Partially solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs));
-               Unionfind.rollback tx;
+               UF.rollback tx;
                BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs)));
          raise (Error ("Failed to solve universe inequalities for inductives",
                       Env.get_range env)))
 
 let solve_universe_inequalities env ineqs =
-    let tx = Unionfind.new_transaction () in
+    let tx = UF.new_transaction () in
     solve_universe_inequalities' tx env ineqs;
-    Unionfind.commit tx
+    UF.commit tx
 
 let rec solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
@@ -2648,8 +2649,8 @@ let discharge_guard env g =
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits g =
-  let unresolved u = match Unionfind.find u with
-    | Uvar -> true
+  let unresolved u = match UF.find u with
+    | None -> true
     | _ -> false in
   let rec until_fixpoint (acc: Env.implicits * bool) (implicits:Env.implicits) : Env.implicits =
     let out, changed = acc in

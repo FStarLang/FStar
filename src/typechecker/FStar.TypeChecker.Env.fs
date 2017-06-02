@@ -32,6 +32,7 @@ open FStar.TypeChecker.Common
 module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
+module UF = FStar.Syntax.Unionfind
 
 type binding =
   | Binding_var      of bv
@@ -280,7 +281,7 @@ let variable_not_found v =
   format1 "Variable \"%s\" not found" (Print.bv_to_string v)
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.fresh None)
+let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
 //Instantiate the universe variables in a type scheme with provided universes
 let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
@@ -1094,7 +1095,7 @@ let finish_module =
 // Collections from the environment                       //
 ////////////////////////////////////////////////////////////
 let uvars_in_env env =
-  let no_uvs = new_uv_set () in
+  let no_uvs = Free.new_uv_set () in
   let ext out uvs = BU.set_union out uvs in
   let rec aux out g = match g with
     | [] -> out
@@ -1106,7 +1107,7 @@ let uvars_in_env env =
   aux no_uvs env.gamma
 
 let univ_vars env =
-    let no_univs = Syntax.no_universe_uvars in
+    let no_univs = Free.new_universe_uvar_set () in
     let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
       | [] -> out

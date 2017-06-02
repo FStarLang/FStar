@@ -10,6 +10,8 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module I = FStar.Ident
+module UF = FStar.Syntax.Unionfind
+
 open FStar.Ident
 open FStar.Range
 
@@ -78,7 +80,7 @@ let rec term_eq' t1 t2 =
         List.length lbs = List.length lbs'
         && List.forall2 (fun lb1 lb2 -> term_eq lb1.lbtyp lb2.lbtyp && term_eq lb1.lbdef lb2.lbdef) lbs lbs'
         && term_eq t s
-      | Tm_uvar(u, _), Tm_uvar(u', _) -> Unionfind.equivalent u u'
+      | Tm_uvar(u, _), Tm_uvar(u', _) -> UF.equiv u u'
       | Tm_meta(t1, _), _ -> term_eq' t1 t2
       | _, Tm_meta(t2, _) -> term_eq' t1 t2
 

@@ -55,17 +55,17 @@ type universe =
   | U_max   of list<universe>
   | U_bvar  of int
   | U_name  of univ_name
-  | U_unif  of Unionfind.uvar<option<universe>>
+  | U_unif  of Unionfind.p_uvar<option<universe>>
   | U_unknown
 and univ_name = ident
 
-type universe_uvar = Unionfind.uvar<option<universe>>
+type universe_uvar = Unionfind.p_uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 type term' =
@@ -78,10 +78,10 @@ type term' =
   | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
-  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right; with monadic application in monad_name *)
+  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
-  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e; monadic bind in monad_name *)
+  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
@@ -130,7 +130,7 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.uvar<uvar_basis<term>>
+and uvar = Unionfind.p_uvar<option<term>>
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -140,9 +140,6 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-and uvar_basis<'a> =
-  | Uvar
-  | Fixed of 'a
 and meta_source_info =
   | Data_app
   | Sequence
@@ -153,8 +150,8 @@ and meta_source_info =
   | Mutable_rval
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
-  | Record_ctor of lident * list<ident>       (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -166,7 +163,7 @@ and subst_elt =
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
-and uvars    = set<(uvar * typ)>
+and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
@@ -196,7 +193,9 @@ and lcomp = {
     comp: unit -> comp //a lazy computation
 }
 
-and residual_comp = lident * list<cflags>
+and residual_comp = lident * list<cflags> (* Residual of a computation type after typechecking *)
+                                          (* first component is the effect name *)
+                                          (* second component contains (an approximation of) the cflags *)
 
 type tscheme = list<univ_name> * typ
 
@@ -379,28 +378,15 @@ let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
 let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
-let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)
-                                           (fun (x, _) -> Unionfind.uvar_id x)
-let new_universe_uvar_set () : set<universe_uvar> =
-    Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)
-                 (fun x -> Unionfind.uvar_id x)
 let new_universe_names_fifo_set () : fifo_set<univ_name> =
     Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
                  (fun x -> Util.hashcode (Ident.text_of_id x))
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_uvs : uvars = new_uv_set()
-let no_universe_uvars = new_universe_uvar_set()
 let no_universe_names = new_universe_names_fifo_set ()
-let empty_free_vars = {
-        free_names=no_names;
-        free_uvars=no_uvs;
-        free_univs=no_universe_uvars;
-        free_univ_names=no_universe_names;
-    }
-let memo_no_uvs = Util.mk_ref (Some no_uvs)
-let memo_no_names = Util.mk_ref (Some no_names)
+//let memo_no_uvs = Util.mk_ref (Some no_uvs)
+//let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
 let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 

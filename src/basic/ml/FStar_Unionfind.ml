@@ -1,8 +1,8 @@
 (* Persistent union-find implementation adapted from
    https://www.lri.fr/~filliatr/puf/ *)
 
-module U = FStar_Util
-open U
+open FStar_All
+open FStar_Util
 
 (* Persistent arrays *)
 type 'a pa_t = 'a data ref
@@ -18,10 +18,10 @@ let rec pa_rerootk t k = match !t with
   | PArray _ -> k ()
   | PDiff (i, v, t') ->
       pa_rerootk t' (fun () -> begin match !t' with
-        | PArray a as n ->
+        | PArray a ->
             let v' = a.(i) in
             a.(i) <- v;
-            t := n;
+            t := PArray a;
             t' := PDiff (i, v', t)
         | PDiff _ -> failwith "Impossible" end; k())
 
@@ -35,19 +35,15 @@ let pa_get t i = match !t with
         | PArray a -> a.(i)
         | PDiff _ -> failwith "Impossible" end
 
-let pa_set t i v =
+let pa_set (t: 'a pa_t) (i: int) (v: 'a): 'a pa_t =
   pa_reroot t;
   match !t with
-  | PArray a as n ->
+  | PArray a ->
       let old = a.(i) in
-      if old == v then
-        t
-      else begin
-        a.(i) <- v;
-        let res = mk_ref n in
-        t := PDiff (i, old, res);
-        res
-      end
+      a.(i) <- v;
+      let res = mk_ref (PArray a) in
+      t := PDiff (i, old, res);
+      res
   | PDiff _ -> failwith "Impossible"
 
 (* apply impure function from Array to a persistent array *)
@@ -58,7 +54,7 @@ let impure f t =
 let pa_length t = impure Array.length t
 
 (* double the array whenever its bounds are reached *)
-let pa_new_double t x l empty =
+let pa_new t x l empty =
   pa_reroot t;
   match !t with
     | PArray a ->
@@ -72,13 +68,14 @@ let pa_new_double t x l empty =
 
 
 (* Union-find implementation based on persistent arrays *)
-type 'a puf_t = {
+type 'a puf = {
+  (* array of parents of each node
+      contains either path or root element *)
   mutable parent: (int, 'a) either pa_t; (* mutable to allow path compression *)
   ranks: int pa_t;
   (* keep track of how many elements are allocated in the array *)
   count: int ref
 }
-type 'a puf = 'a puf_t
 type 'a p_uvar = P of int
 
 let puf_empty () =
@@ -86,10 +83,10 @@ let puf_empty () =
       ranks = pa_create 2 0;
       count = mk_ref 0 }
 
-let puf_fresh (h: 'a puf) (x: 'a) =
+let puf_fresh (h: 'a puf) (x: 'a): 'a p_uvar =
     let count = !(h.count) in
-    pa_new_double h.parent (Inr x) count (Inl (-1));
-    pa_new_double h.ranks 0 count 0;
+    pa_new h.parent (Inr x) count (Inl (-1));
+    pa_new h.ranks 0 count 0;
     h.count := count + 1;
     P count
 
@@ -98,7 +95,7 @@ let rec puf_find_aux f i =
     match (pa_get f i) with
         | Inl fi ->
             let f, r, id = puf_find_aux f fi in
-            let f = pa_set f i r in
+            let f = pa_set f i (Inl id) in
             f, r, id
         | Inr x -> f, Inr x, i
 
@@ -111,15 +108,31 @@ let puf_find_i (h: 'a puf) (x: 'a p_uvar) =
             | Inr r -> r, i
             | Inl _ -> failwith "Impossible"
 
+(* only return the equivalence class *)
+let puf_id' (h:'a puf) (x:'a p_uvar) : int =
+    let _, i = puf_find_i h x in
+    i
+
+let puf_id (h: 'a puf) (x: 'a p_uvar): Prims.int =
+    Z.of_int (puf_id' h x)
+
 (* only return the rep *)
 let puf_find (h: 'a puf) (x: 'a p_uvar) =
     let v, _ = puf_find_i h x in
     v
 
+let puf_equivalent (h:'a puf) (x:'a p_uvar) (y:'a p_uvar) =
+    (puf_id' h x) = (puf_id' h y)
+
+let puf_change (h:'a puf) (x:'a p_uvar) (v:'a) : 'a puf =
+    let i = puf_id' h x in
+    let hp = pa_set h.parent i (Inr v) in
+    { h with parent = hp}
+
 let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
-    let rx, ix = puf_find_i h x in
-    let ry, iy = puf_find_i h y in
-    if rx != ry then begin
+    let ix = puf_id' h x in
+    let iy = puf_id' h y in
+    if ix!=iy then begin
         let rxc = pa_get h.ranks ix in
         let ryc = pa_get h.ranks iy in
         if rxc > ryc then
@@ -140,7 +153,7 @@ let puf_union (h: 'a puf) (x: 'a p_uvar) (y: 'a p_uvar) =
 (* Unionfind with path compression but without ranks *)
 (* Provides transacational updates, based on a suggeestion from Francois Pottier *)
 
-type 'a cell = {mutable contents : 'a contents }
+(*type 'a cell = {mutable contents : 'a contents }
 and 'a contents =
   | Data of 'a list * int (* data * id *)
   | Fwd of 'a cell
@@ -240,7 +253,7 @@ let change x a =
         update cellX (Data ([a],ctrX))
       | _ -> failwith "impossible"
 
-let equivalent x y = (rep x)==(rep y)
+let equivalent x y = (rep x)==(rep y)*)
 
 
 let puf_test () =
@@ -254,20 +267,86 @@ let puf_test () =
     let u_f = puf_fresh u "f" in
     let u_g = puf_fresh u "g" in
     let u_h = puf_fresh u "h" in
-    let le= puf_find u u_e in
+    let le, i_e= puf_find_i u u_e in
     let u = puf_union u u_a u_b in
     let u = puf_union u u_b u_c in
-    let la = puf_find u u_a in
-    let lc = puf_find u u_c in
-    (print1 "Rep of e is %s\n" le);
-    (print1 "Rep of a is %s\n" la);
-    (print1 "Rep of c is %s\n" lc);
+    let la, i_a = puf_find_i u u_a in
+    let lb, i_b = puf_find_i u u_b in
+    let lc, i_c = puf_find_i u u_c in
+    (print2 "Rep of e is %s, i=%s\n" le (Printf.sprintf "%i" i_e));
+    (print2 "Rep of a is %s, i=%s\n" la (Printf.sprintf "%i" i_a));
+    (print2 "Rep of b is %s, i=%s\n" lb (Printf.sprintf "%i" i_b));
+    (print2 "Rep of c is %s, i=%s\n" lc (Printf.sprintf "%i" i_c));
     let u_i = (puf_fresh u "i") in
     let u_i2 = match u_i with | P a -> a in
     (print2 "Id of i and count are %s %s\n" (Printf.sprintf "%i" u_i2) (Printf.sprintf "%i" !(u.count)));
-    let li = puf_find u u_i in
-    (print1 "Rep of i is %s\n" li);
+    let li, i_i = puf_find_i u u_i in
+    (print2 "Rep of i is %s, i=%s\n" li (Printf.sprintf "%i" i_i));
+    let lb, i_b = puf_find_i u u_b in
+    (print2 "Rep of b is %s, i=%s\n" lb (Printf.sprintf "%i" i_b));
     let u = puf_union u u_b u_i in
-    let li = puf_find u u_i in
-    (print1 "Rep of i is %s\n" li);
+    let li, i_i = puf_find_i u u_i in
+    (print2 "Rep of i is %s, i=%s\n" li (Printf.sprintf "%i" i_i));
+    let la, i_a = puf_find_i u u_a in
+    (print2 "Rep of a is %s, i=%s\n" la (Printf.sprintf "%i" i_a));
+    let lb, i_b = puf_find_i u u_b in
+    (print2 "Rep of b is %s, i=%s\n" lb (Printf.sprintf "%i" i_b));
+    let lc, i_c = puf_find_i u u_c in
+    (print2 "Rep of c is %s, i=%s\n" lc (Printf.sprintf "%i" i_c));
+    (print1 "%s" "\n");
+
+    let lg, i_g = puf_find_i u u_g in
+    (print2 "Rep of g is %s, i=%s\n" lg (Printf.sprintf "%i" i_g));
+    let lh, i_h = puf_find_i u u_h in
+    (print2 "Rep of h is %s, i=%s\n" lh (Printf.sprintf "%i" i_h));
+    (print1 "%s" "\n");
+
+    let u = puf_union u u_g u_h in
+    let lg, i_g = puf_find_i u u_g in
+    (print2 "Rep of g is %s, i=%s\n" lg (Printf.sprintf "%i" i_g));
+    let lh, i_h = puf_find_i u u_h in
+    (print2 "Rep of h is %s, i=%s\n" lh (Printf.sprintf "%i" i_h));
+    (print1 "%s" "\n");
+
+    let u = puf_union u u_h u_e in
+    let lg, i_g = puf_find_i u u_g in
+    (print2 "Rep of g is %s, i=%s\n" lg (Printf.sprintf "%i" i_g));
+    let lh, i_h = puf_find_i u u_h in
+    (print2 "Rep of h is %s, i=%s\n" lh (Printf.sprintf "%i" i_h));
+    let le, i_e = puf_find_i u u_e in
+    (print2 "Rep of e is %s, i=%s\n" le (Printf.sprintf "%i" i_e));
+    (print1 "%s" "\n");
+
+    let u = puf_union u u_h u_b in
+    let lg, i_g = puf_find_i u u_g in
+    (print2 "Rep of g is %s, i=%s\n" lg (Printf.sprintf "%i" i_g));
+    let lh, i_h = puf_find_i u u_h in
+    (print2 "Rep of h is %s, i=%s\n" lh (Printf.sprintf "%i" i_h));
+    let le, i_e = puf_find_i u u_e in
+    (print2 "Rep of e is %s, i=%s\n" le (Printf.sprintf "%i" i_e));
+    let la, i_a = puf_find_i u u_a in
+    (print2 "Rep of a is %s, i=%s\n" la (Printf.sprintf "%i" i_a));
+    let lb, i_b = puf_find_i u u_b in
+    (print2 "Rep of b is %s, i=%s\n" lb (Printf.sprintf "%i" i_b));
+    let lc, i_c = puf_find_i u u_c in
+    (print2 "Rep of c is %s, i=%s\n" lc (Printf.sprintf "%i" i_c));
+    (print1 "%s" "\n");
+
+    let u = puf_change u u_c "new" in
+    let lg, i_g = puf_find_i u u_g in
+    (print2 "Rep of g is %s, i=%s\n" lg (Printf.sprintf "%i" i_g));
+    let lh, i_h = puf_find_i u u_h in
+    (print2 "Rep of h is %s, i=%s\n" lh (Printf.sprintf "%i" i_h));
+    let le, i_e = puf_find_i u u_e in
+    (print2 "Rep of e is %s, i=%s\n" le (Printf.sprintf "%i" i_e));
+    let la, i_a = puf_find_i u u_a in
+    (print2 "Rep of a is %s, i=%s\n" la (Printf.sprintf "%i" i_a));
+    let lb, i_b = puf_find_i u u_b in
+    (print2 "Rep of b is %s, i=%s\n" lb (Printf.sprintf "%i" i_b));
+    let lc, i_c = puf_find_i u u_c in
+    (print2 "Rep of c is %s, i=%s\n" lc (Printf.sprintf "%i" i_c));
+    (print1 "%s" "\n");
+
+    let ld, i_d = puf_find_i u u_d in
+    (print2 "Rep of d is %s, i=%s\n" ld (Printf.sprintf "%i" i_d));
     (print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)))

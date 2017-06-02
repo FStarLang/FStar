@@ -1,5 +1,6 @@
 module Encrypt_SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using AES above; and (2) parsing is complete *)
 open FStar.All
+open FStar.ST
 type bytes = Platform.Bytes.bytes
 
 (* TODO: we get the index from a counter; 

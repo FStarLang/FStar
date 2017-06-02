@@ -382,7 +382,7 @@ let rec desugar_maybe_non_constant_universe t
   match (unparen t).tm with
       (* TODO : Check how this unification works *)
       (* The unification might introduce universe variables *)
-  | Wild -> Inr (U_unif (Unionfind.fresh None))
+  | Wild -> Inr (U_unif (Unionfind.univ_fresh ()))
   | Uvar u -> Inr (U_name u)
 
   | Const (Const_int (repr, _)) ->
@@ -644,7 +644,8 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (lower <= value && value <= upper)
+  if not (Options.lax())
+  && not (lower <= value && value <= upper)
   then raise (Error(BU.format2 "%s is not in the expected range for %s"
                                repr tnm,
                     range));
