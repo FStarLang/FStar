@@ -1087,7 +1087,7 @@ let gen_wps_for_free:
                         let k =
                           FStar_Syntax_Syntax.gen_bv "k" None
                             (fst post).FStar_Syntax_Syntax.sort in
-                        let equiv =
+                        let equiv1 =
                           let k_tm = FStar_Syntax_Syntax.bv_to_name k in
                           let eq1 =
                             let uu____1959 =
@@ -1152,7 +1152,7 @@ let gen_wps_for_free:
                                   FStar_List.append uu____2025 uu____2027 in
                                 FStar_Syntax_Util.mk_app uu____2016
                                   uu____2019 in
-                              FStar_Syntax_Util.mk_imp equiv uu____2015 in
+                              FStar_Syntax_Util.mk_imp equiv1 uu____2015 in
                             FStar_Syntax_Util.mk_forall_no_univ k uu____2014 in
                           FStar_Syntax_Util.abs gamma uu____2013
                             ret_gtot_type in
