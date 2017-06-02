@@ -374,7 +374,10 @@ let norm (s : list<RD.norm_step>) : tac<unit> =
     )
 
 let istrivial (e:env) (t:term) : bool =
+    // The normalizer will not do both Primops and Simplify, so call it twice... TODO: Fix
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.UnfoldTac] in
+    let t = N.normalize steps e t in
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Simplify; N.UnfoldTac] in
     let t = N.normalize steps e t in
     is_true t
 
