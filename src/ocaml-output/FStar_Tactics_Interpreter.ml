@@ -376,7 +376,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
                      unembed_b in
                  match uu____689 with
                  | FStar_Util.Inl (b,(goals,smt_goals)) ->
-                     FStar_Tactics_Basic.bind FStar_Tactics_Basic.dismiss
+                     FStar_Tactics_Basic.bind FStar_Tactics_Basic.dismiss_all
                        (fun uu____716  ->
                           let uu____717 = FStar_Tactics_Basic.add_goals goals in
                           FStar_Tactics_Basic.bind uu____717
@@ -386,7 +386,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
                                FStar_Tactics_Basic.bind uu____720
                                  (fun uu____722  -> FStar_Tactics_Basic.ret b)))
                  | FStar_Util.Inr (msg,(goals,smt_goals)) ->
-                     FStar_Tactics_Basic.bind FStar_Tactics_Basic.dismiss
+                     FStar_Tactics_Basic.bind FStar_Tactics_Basic.dismiss_all
                        (fun uu____742  ->
                           let uu____743 = FStar_Tactics_Basic.add_goals goals in
                           FStar_Tactics_Basic.bind uu____743
