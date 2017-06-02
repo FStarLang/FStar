@@ -856,7 +856,6 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             rebuild, matches, tcs
 
         | Tm_arrow(bs, c) ->
-            let fail () = failwith "Bad reconstruction" in
             let bs, c = Subst.open_comp bs c in
 
             let rebuild tcs =

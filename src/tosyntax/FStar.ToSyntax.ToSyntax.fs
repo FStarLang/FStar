@@ -1364,7 +1364,6 @@ and desugar_formula env (f:term) : S.term =
     | "~"    -> Some C.not_lid
     | _ -> None in
   let mk t = S.mk t None f.range in
-  let pos t = t None f.range in
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
@@ -1437,7 +1436,7 @@ and desugar_binder env b : option<ident> * S.term = match b.b with
   | Variable x      -> Some x, tun
 
 // FIXME: Would be nice to add auto-generated docs to these
-let mk_data_discriminators quals env t tps k datas =
+let mk_data_discriminators quals env datas =
     let quals = quals |> List.filter (function
         | S.Abstract
         | S.Private -> true
@@ -1765,7 +1764,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
           let quals = if List.contains S.Abstract quals
                       then S.Private::quals
                       else quals in
-          mk_data_discriminators quals env tname tps k constrs
+          mk_data_discriminators quals env constrs
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
@@ -2209,7 +2208,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env se' in
     let env = push_doc env l d.doc in
     let data_ops = mk_data_projector_names [] env ([], se) in
-    let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
+    let discs = mk_data_discriminators [] env [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 
@@ -2229,7 +2228,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let env = push_sigelt env se' in
     let env = push_doc env l d.doc in
     let data_ops = mk_data_projector_names [] env ([], se) in
-    let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
+    let discs = mk_data_discriminators [] env [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 

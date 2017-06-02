@@ -1258,7 +1258,6 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       failwith "impossible trans_F_"
 
 and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
-  let mk x = mk x None h.pos in
   if is_monadic then
     mk_Comp ({
       comp_univs = [U_unknown];
