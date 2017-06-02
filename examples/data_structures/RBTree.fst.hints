@@ -440,6 +440,7 @@
         "constructor_distinct_RBTree.R", "constructor_distinct_RBTree.T",
         "constructor_distinct_Tm_unit", "data_elim_FStar.Pervasives.Some",
         "data_elim_RBTree.T", "data_typing_intro_RBTree.B@tok",
+        "data_typing_intro_RBTree.T@tok",
         "disc_equation_FStar.Pervasives.None",
         "disc_equation_FStar.Pervasives.Some", "disc_equation_RBTree.B",
         "disc_equation_RBTree.E", "disc_equation_RBTree.R",
@@ -475,7 +476,6 @@
         "projection_inverse_FStar.Pervasives.Mktuple4__2",
         "projection_inverse_FStar.Pervasives.Mktuple4__3",
         "projection_inverse_FStar.Pervasives.Mktuple4__4",
-        "projection_inverse_FStar.Pervasives.None_a",
         "projection_inverse_FStar.Pervasives.Some_a",
         "projection_inverse_FStar.Pervasives.Some_v",
         "projection_inverse_RBTree.T_col", "projection_inverse_RBTree.T_key",
@@ -493,8 +493,8 @@
         "typing_RBTree.__proj__T__item__right", "typing_RBTree.black_height",
         "typing_RBTree.c_inv", "typing_RBTree.color_of",
         "typing_RBTree.h_inv", "typing_RBTree.in_tree",
-        "typing_RBTree.k_inv", "typing_RBTree.uu___is_E",
-        "typing_RBTree.uu___is_T", "typing_tok_RBTree.E@tok"
+        "typing_RBTree.k_inv", "typing_RBTree.uu___is_T",
+        "typing_tok_RBTree.B@tok", "typing_tok_RBTree.E@tok"
       ],
       0
     ],
