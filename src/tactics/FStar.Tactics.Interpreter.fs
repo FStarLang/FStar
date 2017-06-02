@@ -169,12 +169,19 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (add_smt_goals smt_goals) (fun _ ->
         fail msg))))))
 
-let idterm (t:term) : term = t
+// Polarity
+type pol = | Pos | Neg
 
-let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
+let flip p = match p with | Pos -> Neg | Neg -> Pos
+
+let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid ->
+
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid && pol = Neg ->
+        (assertion, []) // Peel away tactics in negative positions, they're assumptions!
+
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid && pol = Pos ->
         begin
         // kinda unclean
         try
@@ -198,22 +205,22 @@ let by_tactic_interp (e:Env.env) (t:term) : term * list<goal> =
     | _ ->
         (t, [])
 
-let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
-        : term * list<goal> =
+let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let (tn', gs) =
         match (SS.compress t).n with
-        | Tm_uinst (t,us) -> let (t',gs) = traverse f e t in
+        | Tm_uinst (t,us) -> let (t',gs) = traverse f pol e t in
                              (Tm_uinst (t', us), gs)
-        | Tm_meta (t, m) -> let (t', gs) = traverse f e t in
+        | Tm_meta (t, m) -> let (t', gs) = traverse f pol e t in
                             (Tm_meta (t', m), gs)
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv FStar.Syntax.Const.imp_lid ->
                let x = S.new_bv None p in
-               let (q',gs) = traverse f (Env.push_bv e x) q in
-               ((U.mk_imp p q').n, gs)
+               let (p', gs) = traverse f (flip pol) (Env.push_bv e x) p in
+               let (q', gs) = traverse f       pol  (Env.push_bv e x) q in
+               ((U.mk_imp p' q').n, gs)
         | Tm_app (hd, args) ->
-                let (hd', gs1) = traverse f e hd in
+                let (hd', gs1) = traverse f pol e hd in
                 let (as', gs2) = List.fold_right (fun (a,q) (as',gs) ->
-                                                      let (a', gs') = traverse f e a in
+                                                      let (a', gs') = traverse f pol e a in
                                                       ((a',q)::as', gs@gs'))
                                                  args ([], []) in
                 (Tm_app (hd', as'), gs1@gs2)
@@ -221,11 +228,11 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
                 // TODO: traverse types in bs and k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
-                let (topen', gs) = traverse f e' topen in
+                let (topen', gs) = traverse f pol e' topen in
                 ((U.abs bs topen' k).n, gs)
         | x -> (x, []) in
     let t' = { t with n = tn' } in
-    let t', gs' = f e t' in
+    let t', gs' = f pol e t' in
     (t', gs@gs')
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
@@ -235,7 +242,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let initial = (1, []) in
-    let (t', gs) = traverse by_tactic_interp env goal in
+    let (t', gs) = traverse by_tactic_interp Pos env goal in
     if !tacdbg then
         BU.print2 "Main goal simplified to: %s |- %s\n"
                 (Env.all_binders env |> Print.binders_to_string ", ")
