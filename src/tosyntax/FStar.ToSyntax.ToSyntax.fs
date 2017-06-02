@@ -156,7 +156,7 @@ let op_as_term env arity rng op : option<S.term> =
     | "~"   ->
       r C.not_lid (Delta_defined_at_level 2)
     | "=="  ->
-      r C.eq2_lid Delta_constant
+      r C.eq2_lid (Delta_defined_at_level 2)
     | "<<" ->
       r C.precedes_lid Delta_constant
     | "/\\" ->
