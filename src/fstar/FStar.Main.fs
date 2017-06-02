@@ -66,6 +66,7 @@ let codegen (umods, env) =
     let ext = match opt with
       | Some "FSharp" -> ".fs"
       | Some "OCaml" -> ".ml"
+      | Some "SMTLib" -> ".smt2"
       | Some "Kremlin" -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
@@ -81,6 +82,9 @@ let codegen (umods, env) =
         let programs = List.flatten (List.map Extraction.Kremlin.translate mllibs) in
         let bin: Extraction.Kremlin.binary_format = Extraction.Kremlin.current_version, programs in
         save_value_to_file (Options.prepend_output_dir "out.krml") bin
+    | Some "SMTLib" ->
+        let outdir = Options.output_dir() in
+        List.iter (FStar.Extraction.SMT.PrintML.print outdir ext) mllibs
    | _ -> failwith "Unrecognized option"
 
 

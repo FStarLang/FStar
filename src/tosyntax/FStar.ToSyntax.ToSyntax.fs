@@ -644,10 +644,11 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (lower <= value && value <= upper)
-  then raise (Error(BU.format2 "%s is not in the expected range for %s"
-                               repr tnm,
-                    range));
+  // JK: FIXME removed check to experiment with SMT encoding
+  // if not (lower <= value && value <= upper)
+  // then raise (Error(BU.format2 "%s is not in the expected range for %s"
+  //                              repr tnm,
+  //                   range));
   let private_intro_nm = tnm ^
     ".__" ^ (match signedness with | Unsigned -> "u" | Signed -> "") ^ "int_to_t"
   in

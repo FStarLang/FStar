@@ -63,6 +63,10 @@
     <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />
     <Compile Include="FStar.Extraction.Kremlin.fs" />
+    <Compile Include="FStar.Extraction.SMT.Code.fsi" />
+    <Compile Include="FStar.Extraction.SMT.Code.fs" />
+    <Compile Include="FStar.Extraction.SMT.PrintML.fsi" />
+    <Compile Include="FStar.Extraction.SMT.PrintML.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
