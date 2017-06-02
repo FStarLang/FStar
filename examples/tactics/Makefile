@@ -14,4 +14,6 @@ all:	Apply.uver		\
 	Canon.uver		\
 	BinaryTreesEnumeration.uver	\
 	Logic.uver		\
-	Synthesis.uver
+	Synthesis.uver		\
+	Neg.uver		\
+	Caller.uver
