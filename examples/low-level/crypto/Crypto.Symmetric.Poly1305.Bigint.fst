@@ -96,7 +96,7 @@ let rec maxValue_increases h b n m =
   | 0 -> ()
   | _ -> maxValue_increases h b n (m - 1)
 
-#reset-options "z3rlimit 20"
+#reset-options "--z3rlimit 20"
 
 (*  All elements in cells < l are smaller or equal to the max *)
 val maxValue_lemma_aux: h:heap -> b:bigint{live h b} -> l:pos{l <= length b} -> Lemma

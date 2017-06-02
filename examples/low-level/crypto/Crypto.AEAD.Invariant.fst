@@ -487,7 +487,7 @@ let frame_refines_one_entry (#i:id) (#mac_rgn:region)
 			    (e:aead_entry i{safeId i}) //NB: moving the refinement earlier causes typing problems in frame_refines below
    : Lemma (requires (let open HS in
 		      refines_one_entry blocks e h /\			    
-		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
+		      HH.modifies_rref mac_rgn Set.empty h.h h'.h /\
 		      live_region h' mac_rgn))
 	   (ensures  refines_one_entry blocks e h')
    = ()
@@ -497,7 +497,7 @@ let frame_unused_aead_iv_for_prf_h (#mac_rgn:region) (#i:id) (h0:mem{safeMac i})
 				 (iv:Cipher.iv (alg i))
   : Lemma (requires (let open HS in
 		     unused_aead_iv_for_prf prf_table iv h0        /\
-                     HH.modifies_rref mac_rgn TSet.empty h0.h h1.h /\
+                     HH.modifies_rref mac_rgn Set.empty h0.h h1.h /\
 		     live_region h1 mac_rgn))
 	  (ensures  unused_aead_iv_for_prf prf_table iv h1)
   = ()
@@ -508,7 +508,7 @@ let frame_refines (i:id{safeMac i}) (mac_rgn:region)
 		  (h:mem) (h':mem)
    : Lemma (requires (let open HS in 
 		      refines blocks entries h                     /\
-   		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
+   		      HH.modifies_rref mac_rgn Set.empty h.h h'.h /\
 		      HS.live_region h' mac_rgn))
 	   (ensures  refines blocks entries h')
    = let open FStar.Classical in
@@ -662,7 +662,7 @@ let frame_refines_entries_h (i:id{safeMac i}) (mac_rgn:region)
 		                 (h:mem) (h':mem)
    : Lemma (requires (let open HS in 
 		      aead_entries_are_refined blocks entries h    /\
-   		      HH.modifies_rref mac_rgn TSet.empty h.h h'.h /\
+   		      HH.modifies_rref mac_rgn Set.empty h.h h'.h /\
 		      HS.live_region h' mac_rgn))
 	   (ensures  aead_entries_are_refined blocks entries h')
    = let open FStar.Classical in
@@ -1041,7 +1041,7 @@ let frame_unused_mac_exists_h
   (h0 h1:mem) : Lemma
   (requires (let open HS in
              unused_mac_exists table x h0                  /\
-	     HH.modifies_rref mac_rgn TSet.empty h0.h h1.h /\
+	     HH.modifies_rref mac_rgn Set.empty h0.h h1.h /\
 	     live_region h1 mac_rgn))
   (ensures  (unused_mac_exists table x h1))
  = ()
@@ -1099,7 +1099,7 @@ let frame_mac_is_set_h
   (tag:MAC.tag)
   (h0 h1:mem) : Lemma
   (requires (mac_is_set table nonce ad l cipher tag h0 /\
-             HS.modifies_ref mac_rgn TSet.empty h0 h1  /\
+             HS.modifies_ref mac_rgn Set.empty h0 h1  /\
 	     HS.live_region h1 mac_rgn))
   (ensures  (mac_is_set table nonce ad l cipher tag h1))
   = ()
@@ -1112,7 +1112,7 @@ val frame_cma_mac_is_unset_h
   (h0 h1:mem) : Lemma
   (requires (CMA.mac_is_unset i r mac_st h0 /\
              HS.modifies_transitively (Set.singleton r') h0 h1 /\
-             HS.modifies_ref r TSet.empty h0 h1))
+             HS.modifies_ref r Set.empty h0 h1))
   (ensures  (CMA.mac_is_unset i r mac_st h1))
 let frame_cma_mac_is_unset_h i r r' mac_st h0 h1 = ()
 
@@ -1126,7 +1126,7 @@ val lemma_mac_log_framing
   (requires (nonce_1 <> nonce_2                                        /\
              m_contains (CMA.(ilog mac_st_2.log)) h0                 /\
 	     HS.(h1.h `Map.contains` CMA.(mac_st_2.region))          /\
-             HS.modifies_ref (CMA.(mac_st_1.region)) !{HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))} h0 h1))
+             HS.modifies_ref (CMA.(mac_st_1.region)) (Set.singleton (Heap.addr_of (HS.as_ref (as_hsref (CMA.(ilog mac_st_1.log)))))) h0 h1))
   (ensures  (m_sel h0 (CMA.(ilog mac_st_2.log)) = m_sel h1 (CMA.(ilog mac_st_2.log))))
 #set-options "--initial_ifuel 1 --max_ifuel 1"
 let lemma_mac_log_framing #i #nonce_1 #nonce_2 mac_st_1 h0 h1 mac_st_2 = ()

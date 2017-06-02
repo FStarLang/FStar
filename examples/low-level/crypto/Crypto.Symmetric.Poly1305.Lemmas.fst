@@ -369,7 +369,7 @@ val lemma_little_endian_from_top_def: s:Seq.seq U8.t -> len:nat{Seq.length s >= 
 let lemma_little_endian_from_top_def s len = ()
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 -z3rlimit 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_little_endian_of_u64: u:U64.t -> w:Seq.seq U8.t{Seq.length w = 4} ->
   Lemma (requires  (U64.v u == U8.v (Seq.index w 0) + pow2 8 * U8.v (Seq.index w 1) + pow2 16 * U8.v (Seq.index w 2) + pow2 24 * U8.v (Seq.index w 3)))
@@ -384,7 +384,7 @@ let lemma_little_endian_of_u64 u w =
   lemma_little_endian_from_top_def w 0
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 -z3rlimit 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 private let lemma_get_word #a (b:Buffer.buffer a) (h:HyperStack.mem{live h b}) (i:nat{i < Buffer.length b}) :
   Lemma (Seq.index (as_seq h b) i == get h b i)

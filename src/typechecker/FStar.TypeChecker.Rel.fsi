@@ -27,8 +27,10 @@ open FStar.TypeChecker.Common
 
 val new_uvar: Range.range -> binders -> typ -> typ * typ
 
-val close_guard               : binders -> guard_t -> guard_t
+val close_guard_univs         : universes -> binders -> guard_t -> guard_t
+val close_guard               : env -> binders -> guard_t -> guard_t
 val apply_guard               : guard_t -> term -> guard_t
+val map_guard                 : guard_t -> (term -> term) -> guard_t
 val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
@@ -38,12 +40,13 @@ val guard_form                : guard_t -> guard_formula
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
+val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : guard_t -> guard_t
 
 val unrefine   : env -> typ -> typ
-val try_teq    : env -> typ -> typ -> option<guard_t>
+val try_teq    : bool -> env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
 val teq_nosmt  : env -> typ -> typ -> bool
 val try_subtype: env -> typ -> typ -> option<guard_t>

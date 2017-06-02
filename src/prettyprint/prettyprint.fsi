@@ -189,6 +189,7 @@ val underscore: document
 val bang: document
 val bar: document
 val rarrow: document
+val long_left_arrow: document
 val larrow: document
 
 (** {1 Delimiters} *)

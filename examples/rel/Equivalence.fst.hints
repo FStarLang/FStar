@@ -1,0 +1,63 @@
+[
+  "µ³Sq5t\u001a!Cµ5:·¾{1",
+  [
+    [ "Equivalence.if_left", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Equivalence.if_left",
+      2,
+      2,
+      1,
+      [
+        "@query",
+        "interpretation_Equivalence_Tm_abs_802052134089b49aa7b3f75040172f2c",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Equivalence.if_left_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "interpretation_Equivalence_Tm_abs_eebae42831fa0553d9c4797c206c76ed",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Mktuple2__a",
+        "refinement_interpretation_Equivalence_Tm_refine_2b5f2d484e596d06d6d46c7ceda588e0",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Equivalence.if_left_wp",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Equivalence_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac"
+      ],
+      0
+    ],
+    [
+      "Equivalence.if_left_wp'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Pervasives.fst",
+        "interpretation_Equivalence_Tm_abs_802052134089b49aa7b3f75040172f2c",
+        "proj_equation_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
+      ],
+      0
+    ]
+  ]
+]

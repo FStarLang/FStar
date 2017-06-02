@@ -4,25 +4,25 @@ let ex_pre = Type0
 let ex_post (a:Type) = option a -> Type0
 let ex_wp (a:Type) = unit -> ex_post a -> Type0
 
-unfold let ex_return_wp (a:Type) (x:a) (_:unit) (post:ex_post a) = 
+unfold let ex_return_wp (a:Type) (x:a) (_:unit) (post:ex_post a) =
   post (Some x)
 
 //working around #517 by adding an explicit 'val'
 unfold val ex_bind_wp : r:range -> (a:Type) -> (b:Type) -> (f:ex_wp a) -> (g:(a -> Tot (ex_wp b))) -> Tot (ex_wp b)
 let ex_bind_wp r a b wp1 wp2 =
-  fun (_:unit) (p:ex_post b) -> 
-   wp1 () (fun aopt -> match aopt with 
+  fun (_:unit) (p:ex_post b) ->
+   wp1 () (fun aopt -> match aopt with
 		    | None -> p None
 		    | Some x -> wp2 x () p)
-		    
+		
 unfold let ex_ite_wp (a:Type) (wp:ex_wp a) (_:unit) (post:ex_post a) =
   wp () post
-  
+
 unfold let ex_if_then_else (a:Type) (p:Type) (wp_then:ex_wp a) (wp_else:ex_wp a) (_:unit) (post:ex_post a) =
    l_ITE p
        (wp_then () post)
        (wp_else () post)
-       
+
 unfold let ex_stronger (a:Type) (wp1:ex_wp a) (wp2:ex_wp a) =
         (forall (p:ex_post a). wp1 () p ==> wp2 () p)
 
@@ -36,13 +36,13 @@ unfold let ex_trivial (a:Type) (wp:ex_wp a) = wp () (fun r -> True)
 let ex_repr (a:Type) (wp:ex_wp a) =
     unit -> PURE (option a) (wp ())
 
-unfold val ex_bind: (a:Type) -> (b:Type) -> (wp0:ex_wp a) 
+unfold val ex_bind: (a:Type) -> (b:Type) -> (wp0:ex_wp a)
 		 -> (f:ex_repr a wp0)
-		 -> (wp1:(a -> Tot (ex_wp b))) 
-		 -> (g:(x:a -> Tot (ex_repr b (wp1 x)))) 
+		 -> (wp1:(a -> Tot (ex_wp b)))
+		 -> (g:(x:a -> Tot (ex_repr b (wp1 x))))
 		 -> Tot (ex_repr b (ex_bind_wp range_0 a b wp0 wp1))
-let ex_bind a b wp0 f wp1 g  
-  = fun _ -> admit(); match f () with 
+let ex_bind a b wp0 f wp1 g
+  = fun _ -> admit(); match f () with
 		   | None -> None
 		   | Some x -> g x ()
 let ex_return (a:Type) (x:a)
@@ -66,8 +66,8 @@ reifiable reflectable new_effect {
   ; repr         = ex_repr
   ; bind         = ex_bind
   ; return       = ex_return
-  (* and effect_actions *) //defining it here fails because of some type inference issue, but see raise below
-  (*   raise        = raise *)
+  //defining it here fails because of some type inference issue, but see raise below
+  (*; raise        = raise *)
 }
 
 unfold let lift_pure_ex (a:Type) (wp:pure_wp a) (_:unit) (p:ex_post a) = wp (fun a -> p (Some a))
@@ -90,16 +90,16 @@ reifiable let raise (a:Type) : Exn a True (fun r -> r==None)
 val div_intrinsic : i:nat -> j:int -> Exn int
   (requires True)
   (ensures (function None -> j=0 | Some z -> j<>0 /\ z = i / j))
-let div_intrinsic i j = 
+let div_intrinsic i j =
   if j=0 then raise int
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : Ex int = 
+reifiable let div_extrinsic (i:nat) (j:int) : Ex int =
   if j=0 then raise int
   else i / j
 
-let lemma_div_extrinsic (i:nat) (j:int) : 
-  Lemma (match reify (div_extrinsic i j) () with 
+let lemma_div_extrinsic (i:nat) (j:int) :
+  Lemma (match reify (div_extrinsic i j) () with
          | None -> j = 0
 	 | Some z -> j <> 0 /\ z = i / j) = ()
 

@@ -7,9 +7,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.Cons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0
     ],
@@ -19,9 +19,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Prims.Cons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0
     ]

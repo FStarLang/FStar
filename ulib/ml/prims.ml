@@ -1,5 +1,6 @@
 (** The [int] type and the various default operators. *)
 type int      = Big_int_Z.big_int
+type nonzero  = int
 let ( + )     = Big_int_Z.add_big_int
 let ( - )     = Big_int_Z.sub_big_int
 let ( * )     = Big_int_Z.mult_big_int
@@ -10,6 +11,7 @@ let ( < )     = Big_int_Z.lt_big_int
 let ( > )     = Big_int_Z.gt_big_int
 let ( mod )   = Big_int_Z.mod_big_int
 let ( ~- )    = Big_int_Z.minus_big_int
+let abs       = Big_int_Z.abs_big_int
 let parse_int = Big_int_Z.big_int_of_string
 let to_string = Big_int_Z.string_of_big_int
 
@@ -69,10 +71,7 @@ type (' p, ' q, 'dummyP, 'dummyQ) eq3 =  unit
 
 type prop     = Obj.t
 
-let ignore _ = ()
 let cut = ()
-let fst = fst
-let snd = snd
 let admit () = failwith "no admits"
 let _assume () = ()
 let _assert x = ()
@@ -96,33 +95,6 @@ let op_BarBar x y  = x || y
 let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
 let uu___is_Cons l = not (uu___is_Nil l)
 let strcat x y = x ^ y
-let uu___is_Some = function (*consider redefining Option.isSome as this function*)
-    | Some _ -> true
-    | None -> false
-let uu___is_None o = not (uu___is_Some o)
-let raise e = raise e
-
-let __proj__Some__item__v x = match x with
-  | Some v -> v
-  | None   -> failwith "impossible"
-
-type ('a, 'b) either =
-  | Inl of 'a
-  | Inr of 'b
-
-let uu___is_Inl = function
-  | Inl _ -> true
-  | _     -> false
-
-let uu___is_Inr x = not (uu___is_Inl x)
-
-let __proj__Inl__item__v x = match x with
-  | Inl v -> v
-  | _     -> failwith "impossible"
-
-let __proj__Inr__item__v x = match x with
-  | Inr v -> v
-  | _     -> failwith "impossible"
 
 let string_of_bool = string_of_bool
 let string_of_int = to_string
@@ -130,11 +102,10 @@ let string_of_int = to_string
 type ('a, 'b) dtuple2 =
   | Mkdtuple2 of 'a * 'b
 
-type ('a, 'b, 'c) dtuple3 =
-  | Mkdtuple3 of 'a * 'b * 'c
-
-type ('a, 'b, 'c, 'd) dtuple4 =
-  | Mkdtuple4 of 'a * 'b * 'c * 'd
+let __proj__Mkdtuple2__item___1 x = match x with
+  | Mkdtuple2 (x, _) -> x
+let __proj__Mkdtuple2__item___2 x = match x with
+  | Mkdtuple2 (_, x) -> x
 
 let rec pow2 n =
   let open Z in
@@ -146,8 +117,5 @@ let rec pow2 n =
 let __proj__Cons__item__tl = function
   | _::tl -> tl
   | _     -> failwith "Impossible"
-
-
-let rec false_elim () = false_elim ()
 
 let min = min

@@ -10,7 +10,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-module Const = FStar.Syntax.Const
+module Const = FStar.Parser.Const
 module BU = FStar.Util
 
 (* In case the user passed [--verify_all], we record every single module name we
@@ -39,5 +39,3 @@ val print : list<(string * list<string>)> * 'a * smap<(list<string> * 'b)> -> un
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-
-val try_convert_file_name_to_windows: string -> string

@@ -42,7 +42,8 @@ else
         EXTRA_OPTS = -thread -ccopt -fPIC
         EXTRA_LIBS = -L.
         ARCH = x86_64
-        OPENSSL_CONF = ./config
+	# The HACL* test engine directly links with the .o files
+        OPENSSL_CONF = ./config -fPIC
     endif
 endif
 
@@ -69,22 +70,22 @@ $(DB)/DB.cmx: $(DB)/DB.ml
 	$(MAKE) -C $(DB)
 
 openssl/Configure:
-	echo "openssl folder is empty, running git submodule update..."
-	git submodule update --init --recursive
+	echo "openssl folder is empty, running git submodule update... no recursion"
+	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
-	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
+	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
 
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
 
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
 CoreCrypto.cmxa: #explicitly sequentialize
-	make $(PLATFORM)/platform.cmx
-	make CoreCrypto.cmx
-	make openssl_stub.o
-	make $(DB)/DB.cmx
-	make DHDB.cmx
+	$(MAKE) $(PLATFORM)/platform.cmx
+	$(MAKE) CoreCrypto.cmx
+	$(MAKE) openssl_stub.o
+	$(MAKE) $(DB)/DB.cmx
+	$(MAKE) DHDB.cmx
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o CoreCrypto $(DLL_OBJ)
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
@@ -102,7 +103,7 @@ test: Tests.exe
 clean:
 	$(MAKE) -C $(DB) clean
 	$(MAKE) -C $(PLATFORM) clean
-	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
+	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
 depend:
 	$(OCAMLDEP) *.ml *.mli > .depend

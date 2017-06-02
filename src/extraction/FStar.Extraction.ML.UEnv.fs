@@ -22,8 +22,18 @@ open FStar.Ident
 open FStar.Extraction.ML.Syntax
 open FStar.Syntax
 open FStar.Syntax.Syntax
+
+module U  = FStar.Syntax.Util
 module BU = FStar.Util
-type ty_or_exp_b = either<(mlident * mlty), (mlexpr * mltyscheme * bool)>
+
+// JP: my understanding of this is: we either bind a type (left injection) or a
+// term variable (right injection). In the latter case, the variable may need to
+// be coerced, hence the [mlexpr] (instead of the [mlident]). In order to avoid
+// shadowing (which may occur, as the F* normalization potentially breaks the
+// original lexical structure of the F* term), we ALSO keep the [mlsymbol], but
+// only for the purpose of resolving name collisions.
+// The boolean tells whether this is a recursive binding or not.
+type ty_or_exp_b = either<(mlident * mlty), (mlsymbol * mlexpr * mltyscheme * bool)>
 
 type binding =
     | Bv  of bv * ty_or_exp_b
@@ -72,9 +82,12 @@ let convIdent (id:ident) : mlident = id.idText, 0
 
    Perhaps this function also needs to look at env.Gamma*)
 
-(* TODO : if there is a single quote in the name of the type variable, the additional tick in the beginning causes issues with the lexer/parser of OCaml (syntax error).
-  Perhaps the type variable is interpreted as a string literal.
-  For an example, see https://github.com/FStarLang/FStar/blob/f53844512c76bd67b21b4cf68d774393391eac75/lib/FStar.Heap.fst#L49
+(* TODO : if there is a single quote in the name of the type variable, the
+ * additional tick in the beginning causes issues with the lexer/parser of OCaml
+ * (syntax error).
+  Perhaps the type variable is interpreted as a string literal.  For an example,
+  see
+  https://github.com/FStarLang/FStar/blob/f53844512c76bd67b21b4cf68d774393391eac75/lib/FStar.Heap.fst#L49
 
    Coq seems to add a space after the tick in such cases. Always adding a space for now
   *)
@@ -105,16 +118,16 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
         else None)
 
 let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
-    
-let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> = 
+
+let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun (m, tds) ->
         BU.find_map tds (fun (_, n, mangle_opt, _, _) ->
             if m = mname
             then if n=ty_name
-                 then match mangle_opt with 
-                      | None -> 
+                 then match mangle_opt with
+                      | None ->
                         Some (m, n)
                       | Some mangled ->
                         let modul = m in
@@ -178,19 +191,42 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
     let tcenv = TypeChecker.Env.push_bv g.tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
 
-let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) (mk_unit:bool (*some pattern terms become unit while extracting*)) : env =
-    let ml_ty = match t_x with 
+// Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
+let find_uniq gamma mlident =
+  let rec find_uniq mlident i =
+    let suffix = if i = 0 then "" else string_of_int i in
+    let target_mlident = mlident ^ suffix in
+    let has_collision = List.existsb (function
+        | Bv (_, Inl (mlident', _))
+        | Fv (_, Inl (mlident', _)) -> target_mlident = fst mlident'
+        | Fv (_, Inr (mlident', _, _, _))
+        | Bv (_, Inr (mlident', _, _, _)) -> target_mlident = mlident'
+      ) gamma in
+    if has_collision then
+      find_uniq mlident (i + 1)
+    else
+      target_mlident
+  in
+  find_uniq mlident 0
+
+let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+  (mk_unit:bool (*some pattern terms become unit while extracting*)) :
+  env * mlident=
+    let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlx = MLE_Var (bv_as_mlident x) in
-    let mlx = if mk_unit 
-              then ml_unit 
-              else if add_unit 
-              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit]) 
+    let mlident, nocluewhat = bv_as_mlident x in
+    let mlsymbol = find_uniq g.gamma mlident in
+    let mlident = mlsymbol, nocluewhat in
+    let mlx = MLE_Var mlident in
+    let mlx = if mk_unit
+              then ml_unit
+              else if add_unit
+              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
-    let gamma = Bv(x, Inr(mlx, t_x, is_rec))::g.gamma in
+    let gamma = Bv(x, Inr(mlsymbol, mlx, t_x, is_rec))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
-    {g with gamma=gamma; tcenv=tcenv}
+    {g with gamma=gamma; tcenv=tcenv}, mlident
 
 let rec mltyFvars (t: mlty) : list<mlident>  =
     match t with
@@ -208,22 +244,25 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
 let tySchemeIsClosed (tys : mltyscheme) : bool =
     subsetMlidents  (mltyFvars (snd tys)) (fst tys)
 
-let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env =
+let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
     if tySchemeIsClosed t_x
     then
-        let ml_ty = match t_x with 
+        let ml_ty = match t_x with
             | ([], t) -> t
             | _ -> MLTY_Top in
-        let mly = MLE_Name (
+        let mlpath, mlsymbol =
           let ns, i = y in
-          ns, avoid_keyword i
-        ) in
+          (* let mlsymbol = find_uniq g.gamma (avoid_keyword i) in *)
+          let mlsymbol = avoid_keyword i in
+          (ns, mlsymbol), mlsymbol
+        in
+        let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
-        let gamma = Fv(x, Inr(mly, t_x, is_rec))::g.gamma in
-        {g with gamma=gamma}
+        let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
+        {g with gamma=gamma}, (mlsymbol, 0)
     else failwith "freevars found"
 
-let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env =
+let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
     let mlp = mlpath_of_lident x.fv_name.v in
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
@@ -233,11 +272,12 @@ let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : en
 
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : (env * mlident) =
     match l with
-        | Inl x ->
-          extend_bv g x t_x add_unit is_rec false, bv_as_ml_termvar x // FIXME missing in lib; NS: what does ths mean??
-        | Inr f ->
-          let p, y = mlpath_of_lident f.fv_name.v in
-          extend_fv' g f (p, y) t_x add_unit is_rec, (avoid_keyword y,0)
+    | Inl x ->
+        // FIXME missing in lib; NS: what does ths mean??
+        extend_bv g x t_x add_unit is_rec false
+    | Inr f ->
+        let p, y = mlpath_of_lident f.fv_name.v in
+        extend_fv' g f (p, y) t_x add_unit is_rec
 
 let extend_tydef (g:env) (fv:fv) (td:mltydecl) : env =
     let m = module_name_of_fv fv in
@@ -250,21 +290,16 @@ let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
-   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst    
-   
+   extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
+
 let monad_op_name (ed:Syntax.eff_decl) nm =
-    let module_name, eff_name = ed.mname.ns, ed.mname.ident in
-    let mangled_name = Ident.reserved_prefix ^ eff_name.idText ^ "_" ^ nm in
-    let mangled_lid = Ident.lid_of_ids (module_name@[Ident.id_of_text mangled_name]) in
-    let ml_name = mlpath_of_lident mangled_lid in
-    let lid = Ident.ids_of_lid ed.mname @ [Ident.id_of_text nm] |> Ident.lid_of_ids in
-    ml_name, lid
+    (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
+    (* same as for actions. However, extracted code should not make explicit use of them. *)
+    let lid = U.mk_field_projector_name_from_ident (ed.mname) (id_of_text nm) in
+    (mlpath_of_lident lid), lid
 
-let action_name (ed:Syntax.eff_decl) (a:Syntax.action) = 
-    monad_op_name ed a.action_name.ident.idText
-
-let bind_name (ed:Syntax.eff_decl) =
-    monad_op_name ed "bind"
-
-let return_name (ed:Syntax.eff_decl) =
-    monad_op_name ed "return"
+let action_name (ed:Syntax.eff_decl) (a:Syntax.action) =
+    let nm = a.action_name.ident.idText in
+    let module_name = ed.mname.ns in
+    let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
+    (mlpath_of_lident lid), lid
