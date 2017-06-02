@@ -35,7 +35,7 @@ let array
   (len: UInt32.t) 
   (t: netype)
 : Tot netype
-= NEType (BufferNG.array len (netype_carrier t)) (Seq.create (UInt32.v len) (netype_dummy t))
+= NEType (Pointer.array len (netype_carrier t)) (Seq.create (UInt32.v len) (netype_dummy t))
 
 unfold
 let ty: netype =
@@ -50,17 +50,17 @@ let ty: netype =
 unfold
 let screate
   (ty: netype)
-= BufferNG.screate (netype_dummy ty)
+= Pointer.screate (netype_dummy ty)
 
 let f () =
-  let s : BufferNG.pointer (netype_carrier ty) = screate ty in
+  let s : Pointer.pointer (netype_carrier ty) = screate ty in
   let h = ST.get () in
-  let p = BufferNG.field (BufferNG.field s "A") "Y" in
-  let _ = BufferNG.write (BufferNG.cell p 1ul) 19ul in
+  let p = Pointer.field (Pointer.field s "A") "Y" in
+  let _ = Pointer.write (Pointer.cell p 1ul) 19ul in
   let b = BufferNG.buffer_of_array_pointer p in
-  let c = BufferNG.buffer_sub b 1ul 3ul in
-  let _ = BufferNG.bwrite c 2ul 21ul in
-  let u = BufferNG.read (BufferNG.cell p 1ul) in
-  let v = BufferNG.read (BufferNG.cell p 3ul) in
+  let c = BufferNG.sub b 1ul 3ul in
+  let _ = BufferNG.write c 2ul 21ul in
+  let u = Pointer.read (Pointer.cell p 1ul) in
+  let v = Pointer.read (Pointer.cell p 3ul) in
   assert (u == 19ul /\ v == 21ul);
   ()
