@@ -1505,7 +1505,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 // FIXME: Would be nice to add auto-generated docs to these
-let mk_data_projector_names iquals env (inductive_tps, se) =
+let mk_data_projector_names iquals env se =
   match se.sigel with
   | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
@@ -1757,7 +1757,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
-      let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env (tps, se)) in
+      let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env se) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
           let quals = se.sigquals in
@@ -2207,7 +2207,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
                 sigmeta = default_sigmeta  } in
     let env = push_sigelt env se' in
     let env = push_doc env l d.doc in
-    let data_ops = mk_data_projector_names [] env ([], se) in
+    let data_ops = mk_data_projector_names [] env se in
     let discs = mk_data_discriminators [] env [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
@@ -2227,7 +2227,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
                 sigmeta = default_sigmeta  } in
     let env = push_sigelt env se' in
     let env = push_doc env l d.doc in
-    let data_ops = mk_data_projector_names [] env ([], se) in
+    let data_ops = mk_data_projector_names [] env se in
     let discs = mk_data_discriminators [] env [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops

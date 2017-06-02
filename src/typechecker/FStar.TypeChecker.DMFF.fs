@@ -803,7 +803,6 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // - the second is [_e_], the elaborated version of [e]
 let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
-  let mk x = mk x None e.pos in
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
