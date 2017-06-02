@@ -157,13 +157,13 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
     bind (mlog <| (fun _ -> BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result))) (fun _ ->
     match E.unembed_result proof_state result unembed_b with
     | Inl (b, (goals, smt_goals)) ->
-        bind dismiss (fun _ ->
+        bind dismiss_all (fun _ ->
         bind (add_goals goals) (fun _ ->
         bind (add_smt_goals smt_goals) (fun _ ->
         ret b)))
 
     | Inr (msg, (goals, smt_goals)) ->
-        bind dismiss (fun _ ->
+        bind dismiss_all (fun _ ->
         bind (add_goals goals) (fun _ ->
         bind (add_smt_goals smt_goals) (fun _ ->
         fail msg))))))
