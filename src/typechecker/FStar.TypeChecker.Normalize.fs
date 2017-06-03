@@ -880,6 +880,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f SC.forall_lid
                    || S.fv_eq_lid f SC.squash_lid
                    || S.fv_eq_lid f SC.exists_lid
+                   || S.fv_eq_lid f SC.eq2_lid
                    || S.fv_eq_lid f SC.true_lid
                    || S.fv_eq_lid f SC.false_lid)
                 then false
