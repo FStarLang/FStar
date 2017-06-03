@@ -6,6 +6,7 @@ module S = FStar.Syntax.Syntax
 type uf
 val get : unit -> uf
 val set : uf -> unit
+val reset : unit -> unit
 
 type tx
 val new_transaction: (unit -> tx)

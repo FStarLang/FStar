@@ -44,6 +44,9 @@ let state : ref<transactional_state> =
 let get () = (!state).current
 let set (u:uf) = state := {!state with current = u}
 
+let reset () =
+    state := { !state with current = { (!state).current with term_graph = PU.puf_empty (); univ_graph = PU.puf_empty () } }
+
 ////////////////////////////////////////////////////////////////////////////////
 //Transacational interface, used in FStar.TypeChecker.Rel
 ////////////////////////////////////////////////////////////////////////////////
