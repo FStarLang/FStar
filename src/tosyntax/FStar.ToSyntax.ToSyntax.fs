@@ -581,8 +581,6 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
   in
   let aux_maybe_or env (p:pattern) =
     let loc = [] in
-    let pos q = Syntax.withinfo q tun.n p.prange in
-    let pos_r r q = Syntax.withinfo q tun.n r in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
