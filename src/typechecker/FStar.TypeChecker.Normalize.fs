@@ -695,8 +695,9 @@ let maybe_simplify cfg tm =
         | Tm_fvar fv when S.fv_eq_lid fv Const.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
+    let tm = reduce_primops cfg tm in
     if not <| List.contains Simplify steps
-    then reduce_primops cfg tm
+    then tm
     else match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
