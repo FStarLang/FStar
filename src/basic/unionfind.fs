@@ -223,10 +223,6 @@ let update_in_tx r v =
     log_undo undo;
     r := v
 
-let counter = ref 0
-
-let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }
-
 let rec rep cell = match cell.contents with
   | Data _ -> cell
   | Fwd cell' ->
