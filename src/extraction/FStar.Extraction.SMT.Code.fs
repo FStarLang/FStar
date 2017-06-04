@@ -106,18 +106,103 @@ let ptsym_of_symbol (s : mlsymbol) : mlsymbol =
     then "l__" ^ s
     else s
 
+let is_lib_module ns =
+    match ns with
+    | ["FStar"; "UInt8"]
+    | ["FStar"; "UInt16"]
+    | ["FStar"; "UInt32"]
+    | ["FStar"; "UInt64"]
+    | ["FStar"; "Seq"; "Base"]
+    | ["FStar"; "Seq"]
+    | ["FStar"; "Endianness"]
+    | ["Spec"; "StdLib"] -> true
+    | _ -> false
+
+// let is_lib_op op =
+//     match op with
+//     | "add" | "add_mod" | "add_underspec" | "sub" | "sub_mod" | "sub_underspec"
+//     | "mul" | "mul_mod" | "mul_div" | "div" | "rem" | "logand" | "logxor" | "logor" | "lognot"
+//     | "uint_to_t" | shift_right
+
+let print_lib_symbol p op =
+    match p with
+    | ["FStar"; "UInt8"]
+    | ["FStar"; "UInt16"]
+    | ["FStar"; "UInt32"]
+    | ["FStar"; "UInt64"] ->
+        begin
+        match op with
+        | "add" | "add_underspec" | "add_mod" | "op_Plus_Hat"  | "op_Plus_Percent_Hat"
+        | "op_Plus_Question_Hat"  -> "bvadd"
+        | "sub" | "sub_underspec" | "sub_mod" | "op_Subtraction_Hat" | "op_Subtraction_Question_Hat"
+        | "op_Subtraction_Percent_Hat" -> "bvsub"
+        | "mul" | "mul_mod" | "op_Star_Hat" | "op_Star_Percent_Hat" -> "bvmul"
+        | "div" | "op_Slash_Hat" -> failwith "Division is not available"
+        | "rem" | "op_Percent_Hat" -> "bvurem"
+        | "shift_right" | "op_Greater_Greater_Hat" -> "bvlshr"
+        | "shift_left" | "op_Less_Less_Hat" -> "bvshl"
+        | "logand" | "op_Amp_Hat" -> "bvand"
+        | "logor" | "op_Bar_Hat" -> "bvor"
+        | "logxor" | "op_Hat_Hat" -> "bvxor"
+        | "lognot" -> "bvnot"
+        | "eq" | "op_Equals_Hat" -> "="
+        | "lt" | "op_Less_Hat" -> "bvult"
+        | "lte" | "op_Less_Equals_Hat" -> "bvule"
+        | "gt" | "op_Greater_Hat" -> "bvugt"
+        | "gte" | "op_Greater_Equals_Hat" -> "bvuge"
+        | "uint_to_t" -> ""
+        | _ -> failwith ("Unknown operator for FStar.UInt<N>: " ^ op)
+        end
+    | ["FStar"; "Seq"]
+    | ["FStar"; "Seq"; "Base"] ->
+        begin
+        match op with
+        | "seq" -> "Array"
+        | "index" -> "select"
+        | "upd" -> "store"
+        | "slice" -> "_ extract"
+        | "append" -> "concat"
+        | _ -> failwith ("Unsupported operator for FStar.Seq: " ^ op)
+        end
+    | ["Spec"; "StdLib"] ->
+        begin
+        match op with
+        | "uint2" -> "uint2"
+        | "uint4" -> "uint4"
+        | "uint8" -> "uint8"
+        | "uint16" -> "uint16"
+        | "uint32" -> "uint32"
+        | "uint64" -> "uint64"
+        | "op_String_Access" -> "select"
+        | "op_String_Assignment" -> "store"
+        | _ -> failwith ("Unknown operator for Spec.StdLib: " ^ op)
+       end
+   | ["FStar"; "Endianness"] ->
+       begin
+       failwith "Not implemented yet: FStar.Endianness"
+       end
+   | _ -> failwith "Impossible"
+
 let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
     if (List.isEmpty (fst mlp))
     then ptsym_of_symbol (snd  mlp)
     else
-        let (p, s) = mlpath_of_mlpath currentModule mlp in
-        String.concat "." (p @ [ptsym_of_symbol s])
-
+        let sym = match mlp with
+        | ["FStar"; "UInt8"], "t" -> "uint8"
+        | ["FStar"; "UInt16"], "t" -> "uint16"
+        | ["FStar"; "UInt32"], "t" -> "uint32"
+        | ["FStar"; "UInt64"], "t" -> "uint64"
+        | p, op when is_lib_module p  -> print_lib_symbol p op
+        | _ ->
+            let (p, s) = mlpath_of_mlpath currentModule mlp in
+            String.concat "." (p @ [ptsym_of_symbol s]) in
+        sym
 
 let ptctor (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
-    let (p, s) = mlpath_of_mlpath currentModule mlp in
-    let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
-    String.concat "." (p @ [s])
+    failwith "Constructors are not handled yet"
+    // let (p, s) = mlpath_of_mlpath currentModule mlp in
+    // let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
+    // String.concat "." (p @ [s])
 
 (* -------------------------------------------------------------------- *)
 let infix_prim_ops = [
@@ -244,12 +329,17 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Bool true  -> "true"
   | MLC_Bool false -> "false"
   | MLC_Char c -> "'"^ escape_or escape_char_hex c ^"'"
-  | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
-  | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
+  | MLC_Int (s, Some (Signed, Int32)) //-> s ^"l"
+  | MLC_Int (s, Some (Signed, Int64)) //-> s ^"L"
   | MLC_Int (s, Some (_, Int8))
-  | MLC_Int (s, Some (_, Int16)) -> s
-  | MLC_Int (s, None) -> "#" ^s
-  | MLC_Float d -> string_of_float d
+  | MLC_Int (s, Some (_, Int16)) ->
+      failwith "Only unsigned integers are supported"
+  | MLC_Int (s, None) ->
+      let s = if BU.starts_with s "0x" then "x" ^ BU.substring_from s 1 else s in
+      "#" ^s
+  | MLC_Float d ->
+      failwith "Floats are not part of our SMTLib theory"
+      // string_of_float d
 
   | MLC_Bytes bytes ->
       (* A byte buffer. Not meant to be readable. *)
@@ -265,7 +355,7 @@ let string_of_mlconstant (sctt : mlconstant) =
          utf8_length). *)
       "\"" ^ String.collect (escape_or string_of_char) chars ^ "\""
 
-  | _ -> failwith "TODO: extract integer constants properly into OCaml"
+  | _ -> failwith "TODO: extract integer constants properly into SMTLib"
 
 
 (* -------------------------------------------------------------------- *)
@@ -279,7 +369,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
         text (escape_tyvar <| idsym x)
 
     | MLTY_Tuple tys ->
-        failwith "Tuple are not handled yet"
+        failwith "TODO: handle tuples"
         // let doc = List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys in
         // let doc = parens (hbox (combine (text " * ") doc)) in
         // doc
@@ -290,9 +380,8 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
             | []    -> empty
             | [arg] -> doc_of_mltype currentModule (t_prio_name, Left) arg
             | _     ->
-                failwith "There should not be more that one type argument"
-                // let args = List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args in
-                // parens (hbox (combine (text ", ") args))
+                let args = List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args in
+                hbox (combine (text " ") args)
 
         in
 
@@ -300,7 +389,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
             match ptsym currentModule name with
             | "FStar_UInt32.t" -> "uint32"
             | x -> x in
-        let t = reduce1 [args; text name] in
+        let t = parens (reduce1 [text name; args]) in
         hbox t
     end
 
