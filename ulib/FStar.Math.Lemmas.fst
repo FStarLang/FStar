@@ -183,6 +183,15 @@ let pow2_minus n m =
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
+private
+val lemma_mod_inj: a:nat -> b:nat -> c:nat -> d:nat -> p:pos ->
+    Lemma (requires (0 <= b /\ b < p /\ 0 <= d /\ d < p /\ p * a + b == p * c + d))
+          (ensures (a == c /\ b == d))
+let rec lemma_mod_inj a b c d p =
+    if a > 0
+    then lemma_mod_inj (a-1) b (c-1) d p
+    else ()
+
 (* Lemma: loss of precision in euclidean division *)
 val multiply_fractions: a:nat -> n:pos -> Lemma (n * ( a / n ) <= a)
 let multiply_fractions a n = euclidean_div_axiom a n
@@ -210,36 +219,25 @@ val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (ensures  (x = z))
 let lemma_eq_trans_2 w x y z = ()
 
-#reset-options "--z3rlimit 80 --max_fuel 0 --max_ifuel 0"
+private
+val lemma_div_1 : a:nat -> p:pos -> Lemma ((a+p)/p == a/p + 1)
+let lemma_div_1 a p =
+    lemma_div_mod (a+p) p;
+    lemma_div_mod a p;
+    lemma_mod_inj ((a+p)/p) ((a+p)%p) (a/p + 1) (a%p) p
 
-private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
-  ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
-  = lemma_div_mod a p;
-    lemma_div_mod (a + b * p) p
-
-#reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
-
-private let lemma_mod_plus_1 (a:nat) (b:nat) (p:pos) : Lemma
-  ((a + b * p) % p = a + b * p - p * ((a + b * p) / p))
-  = lemma_div_mod (a+b*p) p;
-    lemma_mod_lt a p;
-    lemma_mod_lt (a + b * p) p
+private
+val lemma_div_n : a:nat -> b:nat -> p:pos -> Lemma ((a+b*p)/p == a/p + b)
+let rec lemma_div_n a b p =
+    if b > 0 then (
+            lemma_div_1 (a + (b-1)*p) p;
+            lemma_div_n a (b-1) p)
+    else ()
 
 val lemma_mod_plus: a:nat -> b:nat -> p:pos -> Lemma
   ((a + b * p) % p = a % p)
 let lemma_mod_plus a b p =
-  lemma_div_mod a p;
-  lemma_div_mod (a + b * p) p;
-  lemma_mod_lt a p;
-  lemma_mod_lt (a + b * p) p;
-  lemma_mod_plus_0 a b p;
-  lemma_mod_plus_1 a b p;
-  cut (a + b * p - p * ((a + b * p) / p) = a - p * (a / p));
-  let w = (a + b * p) % p in
-  let x = a + b * p - p * ((a + b * p) / p) in
-  let z = a % p in
-  let y = a - p * (a / p) in
-  lemma_eq_trans_2 w x y z
+    lemma_div_n a b p
 
 val lemma_mod_sub_0: a:pos -> Lemma ((-1) % a = a - 1)
 let lemma_mod_sub_0 a = ()
@@ -332,7 +330,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 1"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
@@ -554,18 +552,13 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "--z3rlimit 40 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 0"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
 let modulo_modulo_lemma a b c =
-  modulo_addition_lemma (a - (a / (b * c)) * (b * c)) b ((a / (b * c)) * c);
-  let n = (a / (b * c)) * c in
-  let x = (a - (a / (b * c)) * (b * c)) in
-  assert( (x + n * b) % b = x % b);
   lemma_div_mod a (b*c);
-  cut( a % b = (a - (a / (b * c)) * (b * c)) % b );
-  euclidean_division_definition a (b * c)
+  lemma_mod_sub a b (c * (a / (b*c)))
 
 #reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
