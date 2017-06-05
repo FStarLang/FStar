@@ -143,6 +143,7 @@ let rec gprint (j: json_schema) (data: as_gtype j) : GTot string =
   match j with
   | String -> gprint_string data
   | Object l ->
+    as_gtype_object_eq l;
     Seq.cons
       left_brace
       (Seq.snoc
@@ -154,19 +155,21 @@ let gprint_object_eq
   (data: as_gtype (Object l))
 : Lemma
   (requires True)
-  (ensures (gprint (Object l) data ==
+  (ensures (gprint (Object l) data == (
+    as_gtype_object_eq l;
+    Seq.cons
+      left_brace
+      (Seq.snoc
+	(gprint_object (Object l) gprint l data l)
+	right_brace))))
+  [SMTPat (gprint (Object l) data)]
+= assert_norm (gprint (Object l) data == (
+    as_gtype_object_eq l;
     Seq.cons
       left_brace
       (Seq.snoc
 	(gprint_object (Object l) gprint l data l)
 	right_brace)))
-  [SMTPat (gprint (Object l) data)]
-= assert_norm (gprint (Object l) data ==
-    Seq.cons
-      left_brace
-      (Seq.snoc
-	(gprint_object (Object l) gprint l data l)
-	right_brace))
 
 let is_whitespace (c: char): Tot bool =
   match Char.int_of_char c with
@@ -607,6 +610,7 @@ let rec gparse
     | Some s1 ->
       let _ = length_gparse_exact_char left_brace s s1 in
       let gparse_rec (j': json_schema {j' << j}) (data: as_gtype j') (s: string) : GTot (option (as_gtype j' * (s': string {Seq.length s' < Seq.length s}))) = gparse j' data s in
+      as_gtype_object_eq l;
       begin match gparse_object j gparse_rec l data l s1 with
       | None -> None
       | Some (new_data, s2) ->
@@ -629,6 +633,8 @@ let gparse_object_eq
     | None -> None
     | Some s1 ->
       let _ = length_gparse_exact_char left_brace s s1 in
+      as_gtype_object_eq l;
+      let data : DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type (Object l) as_gtype l) = data in      
       begin match gparse_object (Object l) gparse l data l s1 with
       | None -> None
       | Some (new_data, s2) ->
@@ -646,6 +652,8 @@ let gparse_object_eq
     | None -> None
     | Some s1 ->
       let _ = length_gparse_exact_char left_brace s s1 in
+      as_gtype_object_eq l;
+      let data : DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type (Object l) as_gtype l) = data in      
       begin match gparse_object (Object l) gparse l data l s1 with
       | None -> None
       | Some (new_data, s2) ->
@@ -658,6 +666,24 @@ let gparse_object_eq
       end
   ))
 
+let gparse_object_eq_some
+  (l: list (key * json_schema) {List.Tot.noRepeats (List.Tot.map fst l)})
+  (data: as_gtype (Object l))
+  (s: string)
+  (s1: string {gparse_exact_char left_brace s == Some s1})
+  (new_data: as_gtype (Object l))
+  (s2: string { (
+    as_gtype_object_eq l; (
+    Seq.length s2 <= Seq.length s1 /\ (
+    let (s2: string { Seq.length s2 <= Seq.length s1 } ) = s2 in
+    gparse_object (Object l) gparse l data l s1 == Some (new_data, s2)
+  ))) })
+  (s3: string { gparse_exact_char right_brace s2 == Some s3 } )
+: Lemma
+  (requires True)
+  (ensures (Seq.length s3 < Seq.length s /\ (let (s3 : string { Seq.length s3 < Seq.length s } ) = s3 in ( gparse (Object l) data s == Some (new_data, s3)))))
+= gparse_object_eq l data s
+
 let length_gprint
   (j: json_schema)
   (data: as_gtype j)
@@ -665,7 +691,10 @@ let length_gprint
   (requires True)
   (ensures (Seq.length (gprint j data) > 0))
   [SMTPat (Seq.length (gprint j data))]
-= ()
+= match j with
+  | Object l ->
+    as_gtype_object_eq l
+  | _ -> ()
 
 let gparse_object_gprint_object_aux_nil
   (j: json_schema)
@@ -1060,6 +1089,8 @@ let gparse_gprint_aux
     assert (gparse j data0 (Seq.append (gprint j data) tail) == Some (data, tail))
   | Object l ->
     let s = Seq.append (gprint j data) tail in
+    as_gtype_object_eq l;
+    let data : DependentMap.t (s: key {List.Tot.mem s (List.Tot.map fst l)}) (object_as_type j as_gtype l) = data in      
     let s0 = gprint_object j gprint l data l in
     let s1 = Seq.snoc s0 right_brace in
     let s2 = Seq.cons left_brace s1 in
@@ -1089,7 +1120,8 @@ let gparse_gprint_aux
       Seq.append_empty_l s5;
       gparse_exact_char_append_cons Seq.createEmpty right_brace tail
     in
-    assert (gparse j data0 (Seq.append (gprint j data) tail) == gparse j data0 s)
+    assert (gparse j data0 (Seq.append (gprint j data) tail) == gparse j data0 s);
+    gparse_object_eq_some l data0 s s3 data s5 tail
 
 let rec gparse_gprint
   (j: json_schema)

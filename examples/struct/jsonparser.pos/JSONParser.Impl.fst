@@ -16,7 +16,7 @@ type string_ptr_struct = DependentMap.t _ (function
   | StringPtr -> bstring
 )
 
-type string_ptr = BufferNG.pointer string_ptr_struct
+type string_ptr = Pointer.pointer string_ptr_struct
 
 let string_ptr_struct_valid (h: HyperStack.mem) (s: string_ptr_struct) : GTot Type0 =
   let b: Buffer.buffer char = DependentMap.sel s StringPtr in
@@ -27,11 +27,13 @@ let string_ptr_struct_value (h: HyperStack.mem) (s: string_ptr_struct {string_pt
   Seq.slice (Buffer.as_seq h (DependentMap.sel s StringPtr)) 0 (UInt32.v (DependentMap.sel s StringLength))
 
 let string_ptr_valid (h: HyperStack.mem) (s: string_ptr) : GTot Type0 =
-  BufferNG.live h s /\
-  string_ptr_struct_valid h (BufferNG.gread h s)
+  Pointer.live h s /\
+  string_ptr_struct_valid h (Pointer.gread h s)
 
 let string_ptr_value (h: HyperStack.mem) (s: string_ptr {string_ptr_valid h s}): GTot string =
-  string_ptr_struct_value h (BufferNG.gread h s)
+  string_ptr_struct_value h (Pointer.gread h s)
+
+(* NOTE: an out-of-date version of the code is in KreMLin branch taramana_json_parser *)
 
 (*
 inline_for_extraction
