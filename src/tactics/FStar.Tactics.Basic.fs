@@ -403,6 +403,9 @@ let apply (tm:term) : tac<unit> =
     in
     let uvs = List.rev uvs in
     let comp = SS.subst_comp subst comp in
+    bind (if not (U.is_total_comp comp)
+          then fail "apply: not a total function"
+          else ret ()) (fun _ ->
     let ret_typ = comp_to_typ comp in
     match Rel.try_teq false goal.context ret_typ goal.goal_ty with
     | None -> fail (BU.format3 "apply: does not unify with goal: %s : %s vs %s"
@@ -451,7 +454,7 @@ let apply (tm:term) : tac<unit> =
         (* in *)
         bind (add_implicits g.implicits) (fun _ ->
         bind dismiss (fun _ ->
-        add_goals sub_goals)))
+        add_goals sub_goals))))
 
 let apply_lemma (tm:term) : tac<unit> =
     bind cur_goal (fun goal ->
