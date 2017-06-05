@@ -93,10 +93,12 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         canon_point;;
         trefl
     in
-    norm [Delta];;
+
     (* What we really want is this:  *)
     (* s <-- quote op_Star; unfold_def s;; *)
     (* But nested `pointwise` calls break (c.f. #1065) *)
+    norm [Delta];;
+
     eg <-- cur_goal;
     let (e, g), _ = eg in
     let f = term_as_formula g in
@@ -109,7 +111,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         // Fold constants
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
-            norm [Primops];; // TODO: primops won't reduce if given Simpl too, is that intentional?
+            norm [Primops];;
             trefl
 
         // Forget about negations
