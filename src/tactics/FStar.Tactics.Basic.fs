@@ -390,6 +390,39 @@ let trivial : tac<unit> =
     else fail1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty)
     )
 
+let exact (t:term) : tac<unit> =
+    bind cur_goal (fun goal ->
+    bind (try ret (goal.context.type_of goal.context t)
+          with e -> // printfn "Exception %A" e;
+                    fail2 "exact: term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)) (fun (t, typ, guard) ->
+    if not (Rel.is_trivial guard) then fail "exact: got non-trivial guard" else
+    if Rel.teq_nosmt goal.context typ goal.goal_ty
+    then let _ = solve goal t in dismiss
+    else fail3 "%s : %s does not exactly solve the goal %s"
+                    (Print.term_to_string t)
+                    (Print.term_to_string (bnorm goal.context typ))
+                    (Print.term_to_string goal.goal_ty)))
+
+let exact_lemma (t:term) : tac<unit> =
+    bind cur_goal (fun goal ->
+    bind (try ret (TcTerm.tc_term goal.context t)
+          with e -> // printfn "Exception %A" e;
+                    fail2 "exact_lemma: term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)) (fun (t, lcomp, guard) ->
+    let comp = lcomp.comp () in
+    if not (U.is_lemma_comp comp) then fail "exact_lemma: not a lemma" else
+    if not (Rel.is_trivial guard) then fail "exact: got non-trivial guard" else
+    let pre, post = match (U.comp_to_comp_typ comp).effect_args with
+                    | pre::post::_ -> fst pre, fst post
+                    | _ -> failwith "exact_lemma: impossible: not a lemma"
+    in
+    if Rel.teq_nosmt goal.context post goal.goal_ty
+    then let _ = solve goal t in bind dismiss (fun _ -> add_goals [mk_irrelevant goal.context pre])
+    else fail3 "%s : %s does not exactly solve the goal %s"
+                    (Print.term_to_string t)
+                    (Print.term_to_string post)
+                    (Print.term_to_string goal.goal_ty)))
+
+
 let apply (tm:term) : tac<unit> =
     bind cur_goal (fun goal ->
     let tm, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
@@ -527,24 +560,6 @@ let apply_lemma (tm:term) : tac<unit> =
         bind (add_implicits g.implicits) (fun _ ->
         bind dismiss (fun _ ->
         add_goals sub_goals)))
-
-let exact (t:term) : tac<unit> =
-    bind cur_goal (fun goal ->
-    try let t, typ, guard = goal.context.type_of goal.context t in //TODO: check that the guard is trivial
-//        printfn ">>>At exact, env binders are %s" (Print.binders_to_string ", " (Env.all_binders goal.context));
-        if Rel.teq_nosmt goal.context typ goal.goal_ty
-        then let _ = solve goal t in
-             dismiss
-        else
-             let msg = BU.format3 "%s : %s does not exactly solve the goal %s"
-                        (Print.term_to_string t)
-                        (Print.term_to_string (bnorm goal.context typ))
-                        (Print.term_to_string goal.goal_ty) in
-//             printfn "%s" msg;
-             fail msg
-    with e ->
-//            printfn "Exception %A" e;
-        fail (BU.format2 "Term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
 
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
