@@ -181,6 +181,10 @@ let fail msg =
         Failed (msg, ps)
     )
 
+let fail1 msg x     = fail (BU.format1 msg x)
+let fail2 msg x y   = fail (BU.format2 msg x y)
+let fail3 msg x y z = fail (BU.format3 msg x y z)
+
 let trytac (t : tac<'a>) : tac<option<'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
@@ -277,8 +281,7 @@ let smt : tac<unit> =
     if is_irrelevant g then
         bind dismiss (fun _ -> add_smt_goals [g])
     else
-        fail (BU.format1 "goal is not irrelevant: cannot dispatch to smt (%s)"
-                         (Print.term_to_string g.goal_ty))
+        fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (Print.term_to_string g.goal_ty)
     )
 
 let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
@@ -384,7 +387,7 @@ let trivial : tac<unit> =
     then let t_unit = FStar.TypeChecker.Common.t_unit in
          solve goal t_unit;
          dismiss
-    else fail (BU.format1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty))
+    else fail1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty)
     )
 
 let apply (tm:term) : tac<unit> =
@@ -408,10 +411,10 @@ let apply (tm:term) : tac<unit> =
           else ret ()) (fun _ ->
     let ret_typ = comp_to_typ comp in
     match Rel.try_teq false goal.context ret_typ goal.goal_ty with
-    | None -> fail (BU.format3 "apply: does not unify with goal: %s : %s vs %s"
+    | None -> fail3 "apply: does not unify with goal: %s : %s vs %s"
                                  (Print.term_to_string tm)
                                  (Print.term_to_string ret_typ)
-                                 (Print.term_to_string goal.goal_ty))
+                                 (Print.term_to_string goal.goal_ty)
     | Some g ->
         let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
@@ -477,9 +480,9 @@ let apply_lemma (tm:term) : tac<unit> =
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
     match Rel.try_teq false goal.context (U.mk_squash post) goal.goal_ty with
-    | None -> fail (BU.format2 "apply_lemma: does not unify with goal: %s vs %s"
+    | None -> fail2 "apply_lemma: does not unify with goal: %s vs %s"
                                  (Print.term_to_string (U.mk_squash post))
-                                 (Print.term_to_string goal.goal_ty))
+                                 (Print.term_to_string goal.goal_ty)
     | Some g ->
         let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
@@ -598,9 +601,9 @@ let revert_hd (x:name) : tac<unit> =
     | None -> fail "Cannot revert_hd; empty context"
     | Some (y, env') ->
         if not (S.bv_eq x y)
-        then fail (Util.format2 "Cannot revert_hd %s; head variable mismatch ... egot %s"
+        then fail2 "Cannot revert_hd %s; head variable mismatch ... egot %s"
                               (Print.bv_to_string x)
-                              (Print.bv_to_string y))
+                              (Print.bv_to_string y)
         else revert)
 
 let rec revert_all_hd (xs:list<name>) : tac<unit> =
@@ -716,7 +719,7 @@ let trefl : tac<unit> =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv SC.eq2_lid ->
             if not (TcRel.teq_nosmt g.context l r)
-            then fail (BU.format2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r))
+            then fail2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r)
             else
             begin
                 let t_unit = FStar.TypeChecker.Common.t_unit in
@@ -724,7 +727,7 @@ let trefl : tac<unit> =
                 dismiss
             end
         | hd, _ ->
-            fail (BU.format1 "trefl: not an equality (%s)" (Print.term_to_string t))
+            fail1 "trefl: not an equality (%s)" (Print.term_to_string t)
         end
      | None ->
         fail "not an irrelevant goal")
@@ -764,7 +767,7 @@ let cases (t : term) : tac<(term * term)> =
         bind (add_goals [g1; g2]) (fun _ ->
         ret (S.bv_to_name v_p, S.bv_to_name v_q)))
     | _ ->
-        fail (BU.format1 "Not a disjunction: %s" (Print.term_to_string typ)))
+        fail1 "Not a disjunction: %s" (Print.term_to_string typ))
 
 // Should probably be moved somewhere else
 type order = | Lt | Eq | Gt
