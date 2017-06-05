@@ -9,7 +9,7 @@ open FStar.Reflection
 let thunk #a #b (x:a) = fun (y:b)-> x
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
-                            PURE (x:a -> squash (b x)) (fun p -> forall x. p x)
+                            (x:a -> squash (b x))
 let revert_squash #a #b s = thunk ()
 
 let l_revert : tactic unit =
