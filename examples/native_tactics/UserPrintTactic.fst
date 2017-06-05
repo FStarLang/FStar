@@ -2,6 +2,5 @@ module UserPrintTactic
 
 open FStar.Tactics
 
-let user_print (s: string): tactic unit =
-    ps <-- get;
-    return ()
+assume val __user_print: string -> __tac unit
+let user_print (s:string) : tactic unit = fun () -> TAC?.reflect (__user_print s)
