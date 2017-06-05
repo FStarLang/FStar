@@ -16,4 +16,5 @@ all:	Apply.uver		\
 	Logic.uver		\
 	Synthesis.uver		\
 	Neg.uver		\
-	Caller.uver
+	Caller.uver		\
+	UnitTests.uver
