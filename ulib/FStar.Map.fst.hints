@@ -167,6 +167,7 @@
         "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Map.Mkt_domain",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Map.Mkt_domain",
         "typing_FStar.Map.__proj__Mkt__item__domain",
         "typing_FStar.Map.contains", "typing_FStar.Set.singleton",
@@ -181,17 +182,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_FStar.Map.contains", "equation_FStar.Map.upd",
-        "equation_FStar.Set.eqtype", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Map.t",
-        "lemma_FStar.Set.mem_singleton", "lemma_FStar.Set.mem_union",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "proj_equation_FStar.Map.Mkt_domain",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Map.Mkt_domain",
-        "typing_FStar.Map.__proj__Mkt__item__domain",
-        "typing_FStar.Map.contains", "typing_FStar.Map.upd",
-        "typing_FStar.Set.singleton", "unit_typing"
+        "equation_FStar.Map.contains", "fuel_guarded_inversion_FStar.Map.t",
+        "lemma_FStar.Map.lemma_InDomUpd1", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Map.contains", "unit_typing"
       ],
       0
     ],

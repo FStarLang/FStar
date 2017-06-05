@@ -18,13 +18,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "constructor_distinct_Prims.V", "disc_equation_Prims.V",
-        "equation_Ex01a.canRead", "equation_Ex01a.canWrite",
-        "equation_Ex01a.readme", "equation_Ex01a.tmp",
-        "function_token_typing_Prims.string", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.V_a", "projection_inverse_Prims.V_v",
-        "typing_Prims.uu___is_V"
+        "constructor_distinct_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.V", "equation_Ex01a.canRead",
+        "equation_Ex01a.canWrite", "equation_Ex01a.readme",
+        "equation_Ex01a.tmp", "function_token_typing_Prims.string",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
+        "typing_FStar.Pervasives.uu___is_V"
       ],
       0
     ],

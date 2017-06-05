@@ -4,6 +4,8 @@ open FStar.List.Tot
 open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 
+#set-options "--lax"
+
 private let contains_well_typed_refs (h:heap) (s:list (ref nat)) =
   forall (r:ref nat). memP r s ==> h `contains_a_well_typed` r
 
@@ -122,7 +124,7 @@ private let equal_heaps_except_fp (h0:heap) (h1:heap) (s:fp) =
  * we prove that if c_0 and c_1 have equal values,
  * then calling them m times gives the same counter value, and the output heaps are equivalent except at footprints
  *)
-#set-options "--z3rlimit 50"
+#reset-options "--z3rlimit 50"
 let rec observational_equivalence'
   (c_0:counter_0) (c_1:counter_1)
   (h0:heap{live c_0 h0})
@@ -140,6 +142,7 @@ let rec observational_equivalence'
      let _, h1' = reify (increment c_1) h1 in
      observational_equivalence' c_0 c_1 h0' h1' (m - 1)
 
+(*
 (* Proving that m invocations of counter_0 returns the m'th even number
       This is a relation between n invocations of incr 
                         and a single invocation of get

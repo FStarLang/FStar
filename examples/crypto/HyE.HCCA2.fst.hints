@@ -1,5 +1,5 @@
 [
-  "0\u0007Á£\n\u0005Y¸¥˘\fÃ EÖ∏",
+  "Õ÷\\,ÅÁ=(π∫+\u0011wf\u001d2",
   [
     [ "HyE.HCCA2.__proj__PKey__item__region", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.HCCA2.__proj__PKey__item__rawpk", 1, 2, 1, [ "@query" ], 0 ],
@@ -13,15 +13,19 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.V",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "disc_equation_FStar.Pervasives.V",
         "equation_FStar.HyperStack.is_eternal_region",
         "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HCCA2.rid",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_HyE.CCA2.pkey",
-        "function_token_typing_HyE.CCA2.skey", "kinding_Prims.tuple2@tok",
+        "function_token_typing_HyE.CCA2.skey",
+        "kinding_FStar.Pervasives.tuple2@tok", "kinding_HyE.HCCA2.pkey@tok",
+        "kinding_HyE.HCCA2.skey@tok",
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
-        "typing_FStar.HyperStack.is_eternal_region", "typing_Prims.uu___is_V"
+        "typing_FStar.HyperStack.is_eternal_region",
+        "typing_FStar.Pervasives.uu___is_V"
       ],
       0
     ],
@@ -32,10 +36,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_HyE.HCCA2.PKey",
+        "data_typing_intro_FStar.Pervasives.V@tok",
         "equation_FStar.HyperStack.is_eternal_region",
         "equation_FStar.Monotonic.RRef.rid",
-        "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HCCA2.rid",
-        "fuel_guarded_inversion_HyE.HCCA2.pkey",
+        "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HCCA2.c",
+        "equation_HyE.HCCA2.rid", "fuel_guarded_inversion_HyE.HCCA2.pkey",
+        "function_token_typing_HyE.HCCA2.c",
         "proj_equation_FStar.Pervasives.V_v",
         "proj_equation_HyE.HCCA2.PKey_region",
         "projection_inverse_FStar.Pervasives.V_v",
@@ -50,16 +56,20 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "data_elim_FStar.Pervasives.V",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "disc_equation_FStar.Pervasives.None",
         "disc_equation_FStar.Pervasives.Some",
-        "disc_equation_FStar.Pervasives.V", "equation_HyE.PlainPKE.t",
+        "disc_equation_FStar.Pervasives.V", "equation_HyE.AE.msg",
+        "equation_HyE.HCCA2.p", "equation_HyE.PlainPKE.t",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_HyE.AE.key",
+        "function_token_typing_HyE.Plain.t",
+        "kinding_FStar.Pervasives.option@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "proj_equation_FStar.Pervasives.V_v",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_9db520b26a7f39c5a01493a3f375290d",
+        "typing_FStar.Pervasives.__proj__V__item__v",
+        "typing_FStar.Pervasives.uu___is_None"
       ],
       0
     ]

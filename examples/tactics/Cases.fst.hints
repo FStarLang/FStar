@@ -1,0 +1,46 @@
+[
+  "y7—Å90Îä\u001cºñ±\u000f-π§",
+  [
+    [ "Cases.test_cases", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Cases.test_cases_unsquash", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Cases.test_cases_bool", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Cases.test_cases_bool_2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Cases.test_cases_bool_2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Cases_Tm_refine_0823a8a423defacf66af9f3c19a84b37",
+        "refinement_interpretation_Cases_Tm_refine_a4b5aef1fe53c1c1d7db1e9e42b9d491"
+      ],
+      0
+    ],
+    [
+      "Cases.test_cases_bool_2",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Cases_Tm_refine_0823a8a423defacf66af9f3c19a84b37"
+      ],
+      0
+    ],
+    [
+      "Cases.test_cases_bool_2",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
+  ]
+]

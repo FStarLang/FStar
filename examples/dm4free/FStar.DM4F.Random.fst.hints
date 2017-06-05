@@ -123,6 +123,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.None",
+        "constructor_distinct_FStar.Pervasives.Some",
+        "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.incr",
         "equation_FStar.DM4F.Heap.Random.incrementable",
         "equation_FStar.DM4F.Heap.Random.sel",
@@ -130,6 +133,7 @@
         "equation_FStar.DM4F.Heap.Random.to_id",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
         "refinement_interpretation_FStar.DM4F.Random_Tm_refine_307a96a635cff6d2da620168267e2279"
       ],
       0
@@ -171,7 +175,7 @@
         "proj_equation_FStar.DM4F.Random.Bijection_f",
         "projection_inverse_FStar.DM4F.Random.Bijection_f",
         "projection_inverse_FStar.DM4F.Random.Bijection_finv",
-        "refinement_interpretation_FStar.DM4F.Random_Tm_refine_1dc65025393692fae7f376b70737c62a",
+        "refinement_interpretation_FStar.DM4F.Random_Tm_refine_d7b8b1f09ba6d136ef025fb9ed4aacac",
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f"
       ],
       0
@@ -283,6 +287,7 @@
       1,
       [
         "@query", "equation_FStar.DM4F.Heap.Random.size",
+        "equation_Prims.eq2", "equation_Prims.nat",
         "projection_inverse_BoxInt_proj_0"
       ],
       0

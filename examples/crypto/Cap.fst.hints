@@ -1,5 +1,5 @@
 [
-  "CÎ&Ë \u0000\u000f•a…6ÅïÞ·¾",
+  "\u0002‹rŒ\u001aÒ+\u0010Ê_Ô(\u0013Ïæû",
   [
     [
       "Cap.capRead",
@@ -26,8 +26,8 @@
         "equation_Cap.f", "equation_Cert.ACLs.canRead",
         "equation_Cert.ACLs.publicFile", "equation_Cert.ACLs.readme",
         "equation_MAC.pkey", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
-        "equation_SHA1.keysize", "equation_SHA1.tag",
+        "equation_Platform.Bytes.lbytes", "equation_SHA1.hmac_sha1",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.tag",
         "function_token_typing_Cert.ACLs.readme",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality",

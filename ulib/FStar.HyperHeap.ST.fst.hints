@@ -1,8 +1,8 @@
 [
-  "Ü\u0011Õ\u0010º—Æ¡{&ª©Lô3(",
+  "\u001cÇU\u0004pµ: ‘°æUjž›s",
   [
     [
-      "FStar.ST.modifies",
+      "FStar.HyperHeap.ST.modifies",
       1,
       2,
       1,
@@ -10,7 +10,7 @@
       0
     ],
     [
-      "FStar.ST.modifies_none",
+      "FStar.HyperHeap.ST.modifies_none",
       1,
       2,
       1,
@@ -18,7 +18,7 @@
       0
     ],
     [
-      "FStar.ST.new_region",
+      "FStar.HyperHeap.ST.new_region",
       1,
       2,
       1,
@@ -26,7 +26,7 @@
       0
     ],
     [
-      "FStar.ST.new_region",
+      "FStar.HyperHeap.ST.new_region",
       2,
       2,
       1,
@@ -34,7 +34,7 @@
       0
     ],
     [
-      "FStar.ST.new_colored_region",
+      "FStar.HyperHeap.ST.new_colored_region",
       1,
       2,
       1,
@@ -42,7 +42,7 @@
       0
     ],
     [
-      "FStar.ST.new_colored_region",
+      "FStar.HyperHeap.ST.new_colored_region",
       2,
       2,
       1,
@@ -50,7 +50,7 @@
       0
     ],
     [
-      "FStar.ST.ralloc_post",
+      "FStar.HyperHeap.ST.ralloc_post",
       1,
       2,
       1,
@@ -58,16 +58,16 @@
       0
     ],
     [
-      "FStar.ST.alloc_post",
+      "FStar.HyperHeap.ST.alloc_post",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.ST.assign_post", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.HyperHeap.ST.assign_post", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.ST.recall",
+      "FStar.HyperHeap.ST.recall",
       1,
       2,
       1,
@@ -75,7 +75,7 @@
       0
     ],
     [
-      "FStar.ST.recall",
+      "FStar.HyperHeap.ST.recall",
       2,
       2,
       1,
@@ -83,7 +83,7 @@
       0
     ],
     [
-      "FStar.ST.recall_region",
+      "FStar.HyperHeap.ST.recall_region",
       1,
       2,
       1,

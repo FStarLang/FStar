@@ -1,5 +1,5 @@
 [
-  "’\u0014Ñ#Ä1G\u0010´K“º{ý'^",
+  ":\u007fP@_›¡}œsÂ\u0007KqWE",
   [
     [ "HyE.CCA2.__proj__Entry__item__c", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.CCA2.__proj__Entry__item__p", 1, 2, 1, [ "@query" ], 0 ],
@@ -25,10 +25,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
         "equation_FStar.HyperStack.is_eternal_region",
         "equation_FStar.HyperStack.upd", "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Monotonic.Seq.rid",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "kinding_FStar.Pervasives.tuple2@tok", "kinding_HyE.CCA2.pkey@tok",
+        "kinding_HyE.CCA2.skey@tok",
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4"
       ],
       0
@@ -40,11 +43,28 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_HyE.Ideal.conf", "function_token_typing_HyE.Ideal.ind_cca"
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "equation_HyE.Ideal.conf", "equation_HyE.RSA.cipher",
+        "equation_HyE.RSA.plain", "fuel_guarded_inversion_HyE.CCA2.pkey",
+        "function_token_typing_HyE.Ideal.ind_cca",
+        "function_token_typing_HyE.RSA.cipher",
+        "refinement_interpretation_HyE.CCA2_Tm_refine_e77ea4d6689d4a71e6656a98f06752ab"
       ],
       0
     ],
-    [ "HyE.CCA2.decrypt", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.CCA2.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "equation_HyE.PlainPKE.t", "function_token_typing_HyE.AE.key",
+        "kinding_FStar.Pervasives.option@tok"
+      ],
+      0
+    ],
     [
       "HyE.CCA2.decrypt",
       2,

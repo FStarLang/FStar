@@ -83,6 +83,7 @@
         "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.uu___is_None",
         "typing_FStar.Pervasives.uu___is_Some"
       ],
@@ -189,7 +190,6 @@
         "constructor_distinct_FStar.Pervasives.Some",
         "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "data_typing_intro_FStar.Pervasives.None@tok",
-        "equality_tok_FStar.DM4F.IFC.High@tok",
         "function_token_typing_Prims.unit",
         "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.tuple2@tok", "primitive_Prims.op_AmpAmp",

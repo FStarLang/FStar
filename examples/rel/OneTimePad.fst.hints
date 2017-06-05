@@ -158,8 +158,13 @@
         "projection_inverse_FStar.Pervasives.Mktuple4__2",
         "projection_inverse_FStar.Pervasives.Mktuple4__3",
         "projection_inverse_FStar.Pervasives.Mktuple4__4",
+        "projection_inverse_FStar.Pervasives.Mktuple4__a",
+        "projection_inverse_FStar.Pervasives.Mktuple4__b",
+        "projection_inverse_FStar.Pervasives.Mktuple4__c",
+        "projection_inverse_FStar.Pervasives.Mktuple4__d",
         "token_correspondence_OneTimePad.id_nib",
-        "token_correspondence_OneTimePad.xor", "typing_OneTimePad.xor_b"
+        "token_correspondence_OneTimePad.xor",
+        "token_correspondence_OneTimePad.xor_b", "typing_OneTimePad.xor"
       ],
       0
     ],

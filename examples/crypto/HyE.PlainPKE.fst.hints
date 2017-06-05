@@ -6,7 +6,15 @@
       1,
       2,
       1,
-      [ "@query", "equation_HyE.AE.keysize", "equation_HyE.RSA.plainsize" ],
+      [
+        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
+        "constructor_distinct_HyperStack.CoreCrypto.AES_128_GCM",
+        "equality_tok_CoreCrypto.AES_128_GCM@tok",
+        "equality_tok_HyperStack.CoreCrypto.AES_128_GCM@tok",
+        "equation_CoreCrypto.aeadKeySize", "equation_HyE.AE.keysize",
+        "equation_HyE.RSA.plainsize",
+        "equation_HyperStack.CoreCrypto.aeadKeySize"
+      ],
       0
     ]
   ]

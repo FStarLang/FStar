@@ -154,7 +154,8 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_CntFormat.message",
         "equation_CntFormat.op_At_Bar", "equation_CntFormat.signal_size",
-        "equation_CntFormat.uint16", "equation_CntFormat.uint32",
+        "equation_CntFormat.uint16", "equation_CntFormat.uint16_to_bytes",
+        "equation_CntFormat.uint32", "equation_CntFormat.uint32_to_bytes",
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_Platform.Bytes.length",
