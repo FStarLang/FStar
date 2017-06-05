@@ -271,14 +271,15 @@ let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
     | _ -> true
 
-let is_lemma t =  match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
-        | _ -> false
-      end
+let is_lemma_comp c =
+    match c.n with
+    | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
     | _ -> false
 
+let is_lemma t =
+    match (compress t).n with
+    | Tm_arrow(_, c) -> is_lemma_comp c
+    | _ -> false
 
 let head_and_args t =
     let t = compress t in
