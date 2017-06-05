@@ -13,3 +13,6 @@ endif
 
 %.uver: %.fst
 	$(FSTAR) --verify_module $* $^
+
+%.fail-uver: %.fst
+	(! $(FSTAR) --verify_module $* $^) || (echo "NEGATIVE TEST FAILED!" ; false)

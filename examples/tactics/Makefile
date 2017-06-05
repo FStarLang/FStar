@@ -17,4 +17,8 @@ all:	Apply.uver		\
 	Synthesis.uver		\
 	Neg.uver		\
 	Caller.uver		\
-	UnitTests.uver
+	UnitTests.uver		\
+	neg
+
+neg:
+	$(MAKE) -C neg
