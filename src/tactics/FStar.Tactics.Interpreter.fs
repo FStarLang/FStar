@@ -208,11 +208,13 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
                              (Tm_uinst (t', us), gs)
         | Tm_meta (t, m) -> let (t', gs) = traverse f pol e t in
                             (Tm_meta (t', m), gs)
+
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv FStar.Syntax.Const.imp_lid ->
                let x = S.new_bv None p in
                let (p', gs1) = traverse f (flip pol) (Env.push_bv e x) p in
                let (q', gs2) = traverse f       pol  (Env.push_bv e x) q in
                ((U.mk_imp p' q').n, gs1@gs2)
+
         | Tm_app (hd, args) ->
                 let (hd', gs1) = traverse f pol e hd in
                 let (as', gs2) = List.fold_right (fun (a,q) (as',gs) ->
@@ -221,11 +223,17 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
                                                  args ([], []) in
                 (Tm_app (hd', as'), gs1@gs2)
         | Tm_abs (bs, t, k) ->
-                // TODO: traverse types in bs and k?
+                // TODO: traverse k?
                 let bs, topen = SS.open_term bs t in
                 let e' = Env.push_binders e bs in
-                let (topen', gs) = traverse f pol e' topen in
-                ((U.abs bs topen' k).n, gs)
+                let bs, gs1 = List.unzip <| List.map (fun (bv, aq) ->
+                                                   let (s', gs) = traverse f (flip pol) e bv.sort
+                                                   in (({bv with sort = s'}, aq), gs)
+                                                ) bs
+                in
+                let gs1 = List.flatten gs1 in
+                let (topen', gs2) = traverse f pol e' topen in
+                ((U.abs bs topen' k).n, gs1@gs2)
         | x -> (x, []) in
     let t' = { t with n = tn' } in
     let t', gs' = f pol e t' in
