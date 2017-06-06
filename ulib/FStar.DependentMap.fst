@@ -1,6 +1,6 @@
 module FStar.DependentMap
 
-noeq abstract type t (key: eqtype) (value: (key -> Tot Type)) = {
+noeq abstract type t (key: eqtype) (value: (key -> Tot Type)) : Type = {
   mappings: (k: key) -> Tot (value k)
 }
 
@@ -209,3 +209,37 @@ abstract let sel_rename
 : Lemma
   (ensures (sel (rename m ren) k2 == sel m (ren k2)))
 = ()
+
+abstract let map
+  (#key: eqtype)
+  (#value1 #value2: (key -> Tot Type))
+  (f: (k: key) -> value1 k -> Tot (value2 k))
+  (m: t key value1)
+: Tot (t key value2)
+= {
+  mappings = fun k -> f k (sel m k)
+}
+
+abstract let sel_map
+  (#key: eqtype)
+  (#value1 #value2: (key -> Tot Type))
+  (f: (k: key) -> value1 k -> Tot (value2 k))
+  (m: t key value1)
+  (k: key)
+: Lemma
+  (requires True)
+  (ensures (sel (map f m) k == f k (sel m k)))
+  [SMTPat (sel (map f m) k)]
+= ()
+
+abstract let map_upd
+  (#key: eqtype)
+  (#value1 #value2: (key -> Tot Type))
+  (f: (k: key) -> value1 k -> Tot (value2 k))
+  (m: t key value1)
+  (k: key)
+  (v: value1 k)
+: Lemma
+  (requires True)
+  (ensures (map f (upd m k v) == upd (map f m) k (f k v)))
+= equal_elim #key #value2 (map f (upd m k v)) (upd (map f m) k (f k v))
