@@ -31,9 +31,9 @@ BIN=../../bin
 FSTAR=../../bin/fstar.exe
 
 ifeq ($(OS),Windows_NT)
-FSC     = fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+FSC     = fsc --mlcompatibility
 else
-FSC     = fsharpc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+FSC     = fsharpc --mlcompatibility
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -42,12 +42,8 @@ else
 FSRUNTIME = mono
 endif
 
-FS_LIBS=$(BIN)/FSharp.PowerPack.dll
-
 fs: out hello.fst
 	$(FSTAR)   --odir out --codegen FSharp hello.fst
-	#cp $(FS_LIBS) out  #No longer needed and breaking Make 5/1/17
-	#$(FSC) --nowarn:0086 -o out/hello.exe $(LIB)/fs/prims.fs $(LIB)/fs/io.fs out/Hello.fs
 	$(FSRUNTIME) ./out/hello.exe
 
 # CH: this target is dead, there is no ml/native_int anywhere
