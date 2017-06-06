@@ -85,3 +85,7 @@ let assert_by_tactic (t:tactic 'a) (p:Type)
          (ensures (fun _ -> p))
   = ()
 #reset-options
+
+val by_tactic_seman : a:Type -> tau:(tactic a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi)
+                        [SMTPat (by_tactic tau phi)]
+let by_tactic_seman a tau phi = ()
