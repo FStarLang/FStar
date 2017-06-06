@@ -1,5 +1,6 @@
 module HyE.HCCA2
-open FStar.All
+open FStar.HyperStack.All
+open FStar.HyperStack.ST
 open HyE.Plain
 open HyE.PlainPKE
 open Platform.Bytes

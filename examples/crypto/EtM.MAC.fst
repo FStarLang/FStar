@@ -1,5 +1,5 @@
 module EtM.MAC
-
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
@@ -7,7 +7,7 @@ open FStar.HyperStack
 open FStar.Monotonic.RRef
 
 open Platform.Bytes
-open CoreCrypto
+open HyperStack.CoreCrypto
 
 type msg = EtM.CPA.cipher
 
