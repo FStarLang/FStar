@@ -1093,9 +1093,20 @@ let un_squash t =
     | Tm_fvar fv, [(p, _)]
         when fv_eq_lid fv SC.squash_lid ->
       Some p
-    | Tm_refine({sort={n=Tm_fvar fv}}, p), []
-        when fv_eq_lid fv SC.unit_lid ->
-      Some p
+    | Tm_refine (b, p), [] ->
+        begin match b.sort.n with
+        | Tm_fvar fv when fv_eq_lid fv SC.unit_lid ->
+            let bs, p = Subst.open_term [mk_binder b] p in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible"
+            in
+            // A bit paranoid, but need this check
+            if set_mem (fst b) (Free.names p)
+            then None
+            else Some p
+        | _ -> None
+        end
     | _ ->
       None
 
