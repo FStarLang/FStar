@@ -3,9 +3,13 @@ module Neg
 open FStar.ST
 open FStar.Tactics
 
-assume val phi: Type
-assume val psi: Type
-assume val  xi: Type
+assume val __phi: Type
+assume val __psi: Type
+assume val  __xi: Type
+
+let phi = squash __phi
+let psi = squash __psi
+let  xi = squash __xi
 
 assume val c1 : unit -> ST unit (requires (fun h0 -> phi)) (ensures (fun h0 () h1 -> psi))
 assume val c2 : unit -> ST unit (requires (fun h0 -> psi)) (ensures (fun h0 () h1 ->  xi))
