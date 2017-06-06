@@ -268,6 +268,10 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                            | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))
                            | Some phi -> phi
                  in
+                 if not (Rel.teq_nosmt g.context g.witness SC.exp_unit)
+                 then failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
+                         (Print.term_to_string g.witness))
+                 else
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                  let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange phi in

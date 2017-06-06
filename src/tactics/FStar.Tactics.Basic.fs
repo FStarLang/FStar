@@ -119,14 +119,6 @@ let is_irrelevant (g:goal) : bool =
     | Some t -> true
     | _ -> false
 
-let mk_irrelevant (env:env) (phi:typ) : goal =
-    let typ = U.mk_squash phi in
-    // TODO: DONT IGNORE g_u
-    let u, _, g_u = TcUtil.new_implicit_var "mk_irrelevant" phi.pos env typ in
-    { context = env;
-      witness = u;
-      goal_ty = typ }
-
 let dump_goal ps goal =
     tacprint (goal_to_string goal);
     ()
@@ -244,6 +236,14 @@ let add_implicits (i:implicits) : tac<unit> =
     bind get (fun p ->
     set ({p with all_implicits=i@p.all_implicits}))
 
+let add_irrelevant_goal (env:env) (phi:typ) : tac<unit> =
+    let typ = U.mk_squash phi in
+    let u, _, g_u = TcUtil.new_implicit_var "add_irrelevant_goal" phi.pos env typ in
+    let goal = { context = env; witness = u; goal_ty = typ } in
+    bind (add_implicits g_u.implicits) (fun _ ->
+    add_goals [goal])
+
+
 //Any function that directly calls these utilities is also trusted
 //End: Trusted utilities
 ////////////////////////////////////////////////////////////////////
@@ -352,10 +352,12 @@ let intro : tac<binder> =
              let typ' = comp_to_typ c in
              let u, _, g = TcUtil.new_implicit_var "intro" typ'.pos env' typ' in
              if TcRel.teq_nosmt goal.context goal.witness (U.abs [b] u None)
-             then bind (replace_cur ({ goal with context = env';
+             then let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
+                  bind (add_implicits g.implicits) (fun _ ->
+                  bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' typ';
                                                  witness = bnorm env' u})) (fun _ ->
-                  ret b)
+                  ret b))
              else fail "intro: unification failed"
     | None ->
         fail1 "intro: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
@@ -384,9 +386,7 @@ let istrivial (e:env) (t:term) : bool =
 let trivial : tac<unit> =
     bind cur_goal (fun goal ->
     if istrivial goal.context goal.goal_ty
-    then let t_unit = FStar.TypeChecker.Common.t_unit in
-         solve goal t_unit;
-         dismiss
+    then (solve goal SC.exp_unit; dismiss)
     else fail1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty)
     )
 
@@ -416,7 +416,7 @@ let exact_lemma (t:term) : tac<unit> =
                     | _ -> failwith "exact_lemma: impossible: not a lemma"
     in
     if Rel.teq_nosmt goal.context post goal.goal_ty
-    then let _ = solve goal t in bind dismiss (fun _ -> add_goals [mk_irrelevant goal.context pre])
+    then let _ = solve goal t in bind dismiss (fun _ -> add_irrelevant_goal goal.context pre)
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (Print.term_to_string t)
                     (Print.term_to_string post)
@@ -456,6 +456,7 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
             let u, _, g_u = TcUtil.new_implicit_var "apply" goal.goal_ty.pos goal.context bv.sort in
             let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
             bind (__apply uopt tm') (fun _ ->
+            let g_u = Rel.solve_deferred_constraints goal.context g_u |> Rel.resolve_implicits in
             match (SS.compress (fst (U.head_and_args u))).n with
             | Tm_uvar (uvar, _) ->
                 bind (add_implicits g_u.implicits) (fun _ ->
@@ -473,7 +474,8 @@ let apply (tm:term) : tac<unit> =
 
 let apply_lemma (tm:term) : tac<unit> =
     bind cur_goal (fun goal ->
-    let tm, t, guard = goal.context.type_of goal.context tm in //TODO: check that the guard is trivial
+    let tm, t, guard = goal.context.type_of goal.context tm in
+    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply_lemma: got non-trivial guard" else
     let bs, comp = U.arrow_formals_comp t in
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
@@ -530,15 +532,12 @@ let apply_lemma (tm:term) : tac<unit> =
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
-        let pregoal = mk_irrelevant goal.context pre in
-        let sub_goals =
-            if istrivial goal.context pregoal.goal_ty
-            then sub_goals
-            else pregoal::sub_goals
-        in
+        bind (add_irrelevant_goal goal.context pre) (fun _ ->
+        // Try to discharge the precondition, which is often trivial
+        bind (trytac trivial) (fun _ ->
         bind (add_implicits g.implicits) (fun _ ->
         bind dismiss (fun _ ->
-        add_goals sub_goals)))
+        add_goals sub_goals)))))
 
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -566,9 +565,11 @@ let clear : tac<unit> =
         else let u, _, g = TcUtil.new_implicit_var "clear" goal.goal_ty.pos env' goal.goal_ty in
              if not (TcRel.teq_nosmt goal.context goal.witness u)
              then fail "clear: unification failed"
-             else let new_goal = {goal with context=env'; witness = bnorm env' u} in
+             else let new_goal = {goal with context = env'; witness = bnorm env' u} in
+                  let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
                   bind dismiss (fun _ ->
-                  add_goals [new_goal]))
+                  bind (add_implicits g.implicits) (fun _ ->
+                  add_goals [new_goal])))
 
 let clear_hd (x:name) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -677,11 +678,9 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         log ps (fun () ->
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
                                                                  (Print.term_to_string ut));
-        let g' = mk_irrelevant env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) in
-        bind (add_goals [g']) (fun _ ->
+        bind (add_irrelevant_goal env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)) (fun _ ->
         focus_cur_goal (
             bind tau (fun _ ->
-            let guard = Rel.solve_deferred_constraints env guard |> Rel.resolve_implicits in
             TcRel.force_trivial_guard env guard;
             // Try to get rid of all the unification lambdas, which should all be at the head
             let ut = N.normalize [N.WHNF] env ut in
@@ -773,13 +772,12 @@ let order_binder (x:binder) (y:binder) : order =
     else Gt
 
 let proofstate_of_goal_ty env typ =
-    // TODO: DONT IGNORE g_u
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
     let g = { context = env; witness = u; goal_ty = typ } in
     {
-        main_context=env;
-        main_goal=g;
-        all_implicits=[];
-        goals=[g];
-        smt_goals=[];
+        main_context = env;
+        main_goal = g;
+        all_implicits = g_u.implicits;
+        goals = [g];
+        smt_goals = [];
     }
