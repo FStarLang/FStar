@@ -184,13 +184,18 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
             elif line.find("Query-stats") != -1:
                 print("Warning: unmatched query-stats line: %s" % line)    
 
-    oq = sorted(queries.items(), key=lambda row: row[1][stat] if stat in row[1] else 0, reverse=not reverse)
+    if stat == "ALPHA":
+        oq = sorted(queries.items(), key=lambda row: row[0], reverse=reverse)
+    else:
+        oq = sorted(queries.items(), key=lambda row: row[1][stat] if stat in row[1] else 0, reverse=not reverse)
+
     result = []
+    if n < 0: n = len(oq)
     for i in range(0, min(len(oq), n)):
         result.append(oq.pop(0))
 
     with (open(outfile, "w" if append == False else "a") if outfile != "" else sys.stdout) as f:
-        write_header(f, stat, fstar_output_columns, columns)
+        if len(result) > 0: write_header(f, stat, fstar_output_columns, columns)
         for item in result:
             write_query_row(f, item, stat, fstar_output_columns, columns)
         write_footer(f)
@@ -286,7 +291,7 @@ def main(argv):
     infile = ""
     outfile = ""
     stat = "time"
-    n = "10"
+    n = 10
     collate = False
     append = False
     reverse = False
@@ -295,10 +300,10 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, SHORTOPTS, LONGOPTS)
     except getopt.error as err:
-        print("Error: " + str(err))
-        print("")
+        print("Error: %s\n" % str(err))
         show_help()
         return 1
+
     for o, a in opts:
         if o in ("-h", "--help"):
             show_help()
@@ -311,8 +316,14 @@ def main(argv):
             append = True
         elif o in ("-s", "--stat"):
             stat = a
-        elif o in ("-t", "-n","--top"):
-            n = a
+        elif o in ("-t", "-n", "--top"):
+            if a == "all":
+                n = sys.maxint
+            else:
+                n = int(a)
+                if n < 0:
+                    print("Error: -n/-t/--top must be >= 0.")
+                    return 1
         elif o in ("-r", "--reverse"):
             reverse = True
         elif o in ("-c", "--collate"):
