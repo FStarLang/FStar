@@ -230,6 +230,17 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
     let t', gs' = f pol e t' in
     (t', gs@gs')
 
+let getprop (e:env) (t:term) : option<term> =
+    let tn = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant] e t in
+    match U.un_squash tn with
+    | Some t' -> Some t'
+    | None ->
+        // Check for an equality, since the delta depth is wrong... (TODO: fix that)
+        let hd, _ = U.head_and_args tn in
+        match (U.un_uinst hd).n with
+        | Tm_fvar fv when S.fv_eq_lid fv SC.eq2_lid -> Some t
+        | _ -> None
+
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
@@ -244,12 +255,9 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                 (Print.term_to_string t');
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
-                 let typ = N.normalize [] g.context g.goal_ty in
-                 let phi =
-                     match U.un_squash typ with
-                     | Some t -> t
-                     | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s"
-                                                    (Print.term_to_string typ))
+                 let phi = match getprop g.context g.goal_ty with
+                           | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))
+                           | Some phi -> phi
                  in
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
