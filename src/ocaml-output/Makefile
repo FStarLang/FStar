@@ -76,7 +76,6 @@ endif
 	echo "%{" > $@
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
-	echo "open Prims" >> $@
 	echo "open FStar" >> $@
 	echo "open FStar.Errors" >> $@
 	echo "open FStar.List" >> $@
