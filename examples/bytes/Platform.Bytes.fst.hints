@@ -1493,8 +1493,7 @@
         "typing_Platform.Bytes.__proj__Mkproto_bytes__item__length",
         "typing_Platform.Bytes.__proj__Mkproto_bytes__item__max",
         "typing_Platform.Bytes.get_cbytes",
-        "typing_Platform.Bytes.get_cbytes_",
-        "typing_Platform.Bytes.sum_length"
+        "typing_Platform.Bytes.get_cbytes_"
       ],
       0
     ],

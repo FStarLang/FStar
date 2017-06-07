@@ -1,47 +1,33 @@
-// with: --include ulib --include ulib/hyperstack
-
-module FStar.StructNG
+module FStar.Pointer
 
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.ST
 
-(** Paths within nested dependent maps *)
+type array (length: UInt32.t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
-(* TODO: generalize to:
-noeq private type step : (before: Type) -> (after: Type) -> Tot Type =
+noeq private type step: (from: Type) -> (to: Type) -> Tot Type =
   | StepField:
-    (#key: eqtype) ->
-    (#value: (key -> Tot Type)) ->
+    (key: eqtype) ->
+    (value: ((k: key) -> Tot Type)) ->
     (fd: key) ->
     step (DM.t key value) (value fd)
-  | StepIndex:
+  | StepCell:
+    (length: UInt32.t) ->
     (value: Type) ->
-    (length: nat) ->
-    (i: nat {i < length}) ->
-    step (s: Seq.seq value {Seq.length s == length}) value
+    (index: UInt32.t { UInt32.v index < UInt32.v length } ) ->
+    step (array length value) value
 
 noeq private type path (from: Type) : (to: Type) -> Tot Type =
   | PathBase:
     path from from
   | PathStep:
-    (#through: Type) ->
-    (#to: Type) ->
+    (through: Type) ->
+    (to: Type) ->
     (p: path from through) ->
     (s: step through to) ->
     path from to
-*)
-
-noeq private type path (from: Type) : (to: Type) -> Tot Type =
-  | PathBase:
-    path from from
-  | PathField:
-    (#key: eqtype) ->
-    (#value: ((k: key) -> Tot Type)) ->
-    (p: path from (DM.t key value)) ->
-    (fd: key) ->
-    path from (value fd)
 
 private let rec path_sel
   (#from: Type)
@@ -51,7 +37,14 @@ private let rec path_sel
 : Tot to
 = match p with
   | PathBase -> m
-  | PathField p' fd -> DM.sel (path_sel m p') fd
+  | PathStep through' to' p' s ->
+    let (m': through') = path_sel m p' in
+    begin match s with
+    | StepField key value fd ->
+      let (m': DM.t key value) = m' in
+      DM.sel m' fd
+    | StepCell length value i -> Seq.index m' (UInt32.v i) 
+    end
 
 private let rec path_upd
   (#from: Type)
@@ -62,9 +55,15 @@ private let rec path_upd
 : Tot from
 = match p with
   | PathBase -> v
-  | PathField p' fd ->
-    let s = path_sel m p' in
-    let s' = DM.upd s fd v in
+  | PathStep through' to' p' st ->
+    let (s: through') = path_sel m p' in
+    let (s': through') = match st with
+    | StepField key value fd ->
+      let (s: DM.t key value) = s in
+      DM.upd s fd v
+    | StepCell length value i ->
+      Seq.upd s (UInt32.v i) v
+    in
     path_upd m p' s'
 
 private let rec path_sel_upd_same
@@ -79,10 +78,18 @@ private let rec path_sel_upd_same
   [SMTPat (path_sel (path_upd m p v) p)]
 = match p with
   | PathBase -> ()
-  | PathField p' fd ->
-    let s = path_sel m p' in
-    let s' = DM.upd s fd v in
-    DM.sel_upd_same s fd v;
+  | PathStep through' to' p' st ->
+    let (s: through') = path_sel m p' in
+    let (s': through') = match st with
+    | StepField key value fd ->
+      let (s: DM.t key value) = s in
+      let _ = DM.sel_upd_same s fd v in
+      DM.upd s fd v
+    | StepCell length value i ->
+      let s' = Seq.upd s (UInt32.v i) v in
+      Seq.lemma_index_upd1 s (UInt32.v i) v;
+      s'
+    in
     path_sel_upd_same m p' s'
 
 private let rec path_concat
@@ -97,7 +104,7 @@ private let rec path_concat
   (decreases q)
 = match q with
   | PathBase -> p
-  | PathField q' fd -> PathField (path_concat p q') fd
+  | PathStep through' to' q' st -> PathStep through' to' (path_concat p q') st
 
 private let path_concat_base_r
   (#from: Type)
@@ -117,7 +124,7 @@ private let rec path_concat_base_l
   [SMTPat (path_concat PathBase p)]
 = match p with
   | PathBase -> ()
-  | PathField p' fd -> path_concat_base_l p'
+  | PathStep _ _ p' _ -> path_concat_base_l p'
 
 private let rec path_concat_assoc
   (#t0 #t1 #t2 #t3: Type)
@@ -130,7 +137,7 @@ private let rec path_concat_assoc
   (decreases p23)
 = match p23 with
   | PathBase -> ()
-  | PathField p23' fd -> path_concat_assoc p01 p12 p23'
+  | PathStep _ _ p23' _ -> path_concat_assoc p01 p12 p23'
 
 private let rec path_sel_concat
   (#from: Type)
@@ -146,7 +153,7 @@ private let rec path_sel_concat
   [SMTPat (path_sel m (path_concat p q))]
 = match q with
   | PathBase -> ()
-  | PathField q' fd -> path_sel_concat m p q'
+  | PathStep _ _ q' _ -> path_sel_concat m p q'
 
 private let rec path_upd_concat
   (#from: Type)
@@ -163,9 +170,15 @@ private let rec path_upd_concat
   [SMTPat (path_upd m (path_concat p q) v)]
 = match q with
   | PathBase -> ()
-  | PathField q' fd ->
-    let s = path_sel m (path_concat p q') in
-    let s' = DM.upd s fd v in
+  | PathStep through' to' q' st ->
+    let (s: through') = path_sel m (path_concat p q') in
+    let (s': through') = match st with
+    | StepField key value fd ->
+      let (s:DM.t key value) = s in
+      DM.upd s fd v
+    | StepCell length value i ->
+      Seq.upd s (UInt32.v i) v
+    in
     path_upd_concat m p q' s'
 
 // TODO: rename as: prefix_of; use infix notation (p1 `prefix_of` p2)
@@ -180,9 +193,21 @@ private let rec path_includes
   (decreases p2)
 = (to1 == to2 /\ p1 == p2) \/ (match p2 with
   | PathBase -> False
-  | PathField p2' _ ->
+  | PathStep _ _ p2' _ ->
     path_includes p1 p2'
   )
+
+private let rec path_includes_base
+  (#from: Type)
+  (#to: Type)
+  (p: path from to)
+: Lemma
+  (requires True)
+  (ensures (path_includes (PathBase #from) p))
+  [SMTPat (path_includes PathBase p)]
+= match p with
+  | PathBase -> ()
+  | PathStep _ _ p2' _ -> path_includes_base p2'
 
 private let path_includes_refl
   (#from #to: Type)
@@ -193,16 +218,14 @@ private let path_includes_refl
   [SMTPat (path_includes p p)]
 = ()
 
-private let path_includes_field_r
-  (#from: Type)
-  (#key: eqtype)
-  (#value: ((k: key) -> Tot Type))
-  (p: path from (DM.t key value))
-  (fd: key)
+private let path_includes_step_r
+  (#from #through #to: Type)
+  (p: path from through)
+  (s: step through to)
 : Lemma
   (requires True)
-  (ensures (path_includes p (PathField p fd)))
-  [SMTPat (path_includes p (PathField p fd))]
+  (ensures (path_includes p (PathStep through to p s)))
+  [SMTPat (path_includes p (PathStep through to p s))]
 = ()
 
 private let rec path_includes_trans
@@ -218,13 +241,13 @@ private let rec path_includes_trans
     #(to2 == to3 /\ p2 == p3)
     #(match p3 with
       | PathBase -> False
-      | PathField p3' _ ->
+      | PathStep _ _ p3' _ ->
 	path_includes p2 p3')
     #(fun _ -> path_includes p1 p3)
     (fun _ -> ())
     (fun _ -> match p3 with
       | PathBase -> assert False
-      | PathField p3' _ ->
+      | PathStep _ _ p3' _ ->
 	path_includes_trans p1 p2 p3'
     )
 
@@ -235,12 +258,12 @@ private let rec path_includes_ind
       (p1: path from to1) ->
       (p2: path from to2 {path_includes p1 p2} ) ->
       GTot Type0)
-  (h_field:
-    (#key: eqtype) ->
-    (#value: (key -> Tot Type)) ->
-    (p: path from (DM.t key value)) ->
-    (fd: key {path_includes p (PathField p fd)}) ->
-    Lemma (x p (PathField p fd)))
+  (h_step:
+    (#through: Type) ->
+    (#to: Type) ->
+    (p: path from through) ->
+    (s: step through to { path_includes p (PathStep through to p s) } ) ->
+    Lemma (x p (PathStep through to p s)))
   (h_refl:
     (#to: Type) ->
     (p: path from to {path_includes p p}) ->
@@ -265,15 +288,15 @@ private let rec path_includes_ind
     #(to1 == to2 /\ p1 == p2)
     #(match p2 with
       | PathBase -> False
-      | PathField p' fd -> path_includes p1 p')
+      | PathStep _ _  p' _ -> path_includes p1 p')
     #(fun _ -> x p1 p2)
     (fun _ -> h_refl p1)
     (fun _ -> match p2 with
      | PathBase -> assert False
-     | PathField p2' fd ->
-       let _ = path_includes_ind x h_field h_refl h_trans p1 p2' in
-       let _ = path_includes_field_r p2' fd in
-       let _ = h_field p2' fd in
+     | PathStep _ _  p2' st ->
+       let _ = path_includes_ind x h_step h_refl h_trans p1 p2' in
+       let _ = path_includes_step_r p2' st in
+       let _ = h_step p2' st in
        h_trans p1 p2' p2
     )
 
@@ -283,7 +306,7 @@ private let rec path_length
 : Tot nat
 = match p with
   | PathBase -> 0
-  | PathField p' _ -> 1 + path_length p'
+  | PathStep _ _ p' _ -> 1 + path_length p'
 
 private let path_includes_length
   (#from: Type)
@@ -294,23 +317,23 @@ private let path_includes_length
   (ensures (path_length p1 <= path_length p2))
 = path_includes_ind
     (fun #to1_ #to2_ p1_ p2_ -> path_length p1_ <= path_length p2_)
-    (fun #k #v p fd -> ())
+    (fun #through #to p st -> ())
     (fun #to p -> ())
     (fun #to1_ #to2_ #to3_ p1_ p2_ p3_ -> ())
     p1 p2
 
-private let path_includes_field_l
+private let path_includes_step_l
   (#from: Type)
-  (#key: eqtype)
-  (#value: ((k: key) -> Tot Type))
-  (p: path from (DM.t key value))
-  (fd: key)
+  (#through: Type)
+  (#to: Type)
+  (p: path from through)
+  (s: step through to)
 : Lemma
   (requires True)
-  (ensures (~ (path_includes (PathField p fd) p)))
-  [SMTPat (path_includes (PathField p fd) p)]
-= assert (path_length (PathField p fd) > path_length p);
-  FStar.Classical.forall_intro (path_includes_length #from #(value fd) #(DM.t key value) (PathField p fd))
+  (ensures (~ (path_includes (PathStep through to p s) p)))
+  [SMTPat (path_includes (PathStep through to p s) p)]
+= assert (path_length (PathStep through to p s) > path_length p);
+  FStar.Classical.forall_intro (path_includes_length #from #to #through (PathStep through to p s))
 
 private let rec path_includes_concat
   (#from: Type)
@@ -325,7 +348,7 @@ private let rec path_includes_concat
   [SMTPat (path_includes p (path_concat p q))]
 = match q with
   | PathBase -> ()
-  | PathField q' fd -> path_includes_concat p q'
+  | PathStep _ _ q' _ -> path_includes_concat p q'
 
 private let path_includes_exists_concat
   (#from #through: Type)
@@ -336,7 +359,7 @@ private let path_includes_exists_concat
   (ensures (exists (r: path through to) . q == path_concat p r))
 = path_includes_ind
     (fun #to1_ #to2_ p1_ p2_ -> exists r . p2_ == path_concat p1_ r)
-    (fun #k #v p fd -> FStar.Classical.exists_intro (fun r -> PathField p fd == path_concat p r) (PathField PathBase fd))
+    (fun #through #to_ p s -> FStar.Classical.exists_intro (fun r -> PathStep through to_ p s == path_concat p r) (PathStep through to_ PathBase s))
     (fun #to p -> FStar.Classical.exists_intro (fun r -> p == path_concat p r) PathBase)
     (fun #to1_ #to2_ #to3_ p1_ p2_ p3_ ->
       FStar.Classical.exists_elim  (exists r . p3_ == path_concat p1_ r) #_ #(fun r12 -> p2_ == path_concat p1_ r12) () (fun r12 ->
@@ -348,19 +371,49 @@ private let path_includes_exists_concat
     )
     p q
   
+let step_disjoint
+  (#from: Type)
+  (#to1 #to2: Type)
+  (s1: step from to1)
+  (s2: step from to2)
+: GTot Type0
+= match s1 with
+  | StepField key1 value1 fd1 ->
+    begin match s2 with
+    | StepField key2 value2 fd2 ->
+      key1 == key2 /\ value1 == value2 /\ fd1 <> fd2
+    | _ -> False
+    end
+  | StepCell length1 value1 i1 ->
+    begin match s2 with
+    | StepCell length2 value2 i2 -> length1 == length2 /\ value1 == value2 /\ UInt32.v i1 <> UInt32.v i2
+    | _ -> False
+    end
+
+let step_disjoint_sym
+  (#from: Type)
+  (#to1 #to2: Type)
+  (s1: step from to1)
+  (s2: step from to2)
+: Lemma
+  (requires (step_disjoint s1 s2))
+  (ensures (step_disjoint s2 s1))
+= ()
+
 noeq private type path_disjoint_t (#from: Type):
   (#to1: Type) ->
   (#to2: Type) ->
   (p1: path from to1) ->
   (p2: path from to2) ->
   Type
-= | PathDisjointField:
-    (#key: eqtype) ->
-    (#value: (key -> Tot Type)) ->
-    (p: path from (DM.t key value)) ->
-    (fd1: key) ->
-    (fd2: key { fd1 <> fd2 } ) ->
-    path_disjoint_t (PathField p fd1) (PathField p fd2)
+= | PathDisjointStep:
+    (#through: Type) ->
+    (#to1: Type) ->
+    (#to2: Type) ->
+    (p: path from through) ->
+    (s1: step through to1) ->
+    (s2: step through to2 { step_disjoint s1 s2 } ) ->
+    path_disjoint_t (PathStep through to1 p s1) (PathStep through to2 p s2)
   | PathDisjointIncludes:
     (#to1: Type) ->
     (#to2: Type) ->
@@ -382,14 +435,15 @@ private let rec path_disjoint_t_rect
     (p2: path from value2) ->
     (h: path_disjoint_t p1 p2) ->
     GTot Type)
-  (h_field:
-    (#key: eqtype) ->
-    (#value: (key -> Tot Type)) ->
-    (p: path from (DM.t key value)) ->
-    (fd1: key) ->
-    (fd2: key { fd1 <> fd2 } ) ->
-    (h: path_disjoint_t (PathField p fd1) (PathField p fd2)) ->
-    GTot (x (PathField p fd1) (PathField p fd2) h))
+  (h_step:
+    (#through: Type) ->
+    (#to1: Type) ->
+    (#to2: Type) ->
+    (p: path from through) ->
+    (s1: step through to1) ->
+    (s2: step through to2 { step_disjoint s1 s2 } ) ->
+    (h: path_disjoint_t (PathStep through to1 p s1) (PathStep through to2 p s2)) ->
+    GTot (x (PathStep through to1 p s1) (PathStep through to2 p s2) h))
   (h_includes:
     (#value1: Type) ->
     (#value2: Type) ->
@@ -413,8 +467,8 @@ private let rec path_disjoint_t_rect
   (ensures (fun _ -> True))
   (decreases h)
 = match h with
-  | PathDisjointField p fd1 fd2 -> h_field p fd1 fd2 h
-  | PathDisjointIncludes p1_ p2_ p1' p2' h_ -> h_includes p1_ p2_ p1' p2' h_ h (path_disjoint_t_rect x h_field h_includes p1_ p2_ h_)
+  | PathDisjointStep p s1 s2 -> h_step p s1 s2 h
+  | PathDisjointIncludes p1_ p2_ p1' p2' h_ -> h_includes p1_ p2_ p1' p2' h_ h (path_disjoint_t_rect x h_step h_includes p1_ p2_ h_)
   
 private let path_disjoint
   (#from: Type)
@@ -433,13 +487,14 @@ abstract let path_disjoint_ind
     (p1: path from value1) ->
     (p2: path from value2 {path_disjoint p1 p2} ) ->
     GTot Type0)
-  (h_field:
-    (#key: eqtype) ->
-    (#value: (key -> Tot Type)) ->
-    (p: path from (DM.t key value)) ->
-    (fd1: key) ->
-    (fd2: key { fd1 <> fd2 /\ path_disjoint (PathField p fd1) (PathField p fd2) } ) ->
-    Lemma (x (PathField p fd1) (PathField p fd2)))
+  (h_step:
+    (#through: Type) ->
+    (#to1: Type) ->
+    (#to2: Type) ->
+    (p: path from through) ->
+    (s1: step through to1) ->
+    (s2: step through to2 { step_disjoint s1 s2 /\ path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2) } ) ->
+    Lemma (x (PathStep through to1 p s1) (PathStep through to2 p s2) ))
   (h_includes:
     (#value1: Type) ->
     (#value2: Type) ->
@@ -459,7 +514,7 @@ abstract let path_disjoint_ind
   FStar.Squash.bind_squash h (fun (h: path_disjoint_t p1 p2) ->
    path_disjoint_t_rect
      (fun #v1 #v2 p1 p2 h -> let _ = FStar.Squash.return_squash h in squash (x p1 p2))
-     (fun #k #v p fd1 fd2 h -> let _ = FStar.Squash.return_squash h in h_field p fd1 fd2)
+     (fun #through #to1 #to2 p s1 s2 h -> let _ = FStar.Squash.return_squash h in h_step p s1 s2)
      (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' h h' hx ->
        let _ = FStar.Squash.return_squash h in
        let _ = FStar.Squash.return_squash h' in
@@ -467,18 +522,19 @@ abstract let path_disjoint_ind
        h_includes p1 p2 p1' p2')
      p1 p2 h)
 
-private let path_disjoint_field
+private let path_disjoint_step
   (#from: Type)
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (p: path from (DM.t key value))
-  (fd1: key)
-  (fd2: key {fd1 <> fd2})
+  (#through: Type)
+  (#to1: Type)
+  (#to2: Type)
+  (p: path from through)
+  (s1: step through to1)
+  (s2: step through to2 { step_disjoint s1 s2 } ) 
 : Lemma
   (requires True)
-  (ensures (path_disjoint (PathField p fd1) (PathField p fd2)))
-  [SMTPat (path_disjoint (PathField p fd1) (PathField p fd2))]
-= FStar.Squash.return_squash (PathDisjointField p fd1 fd2)
+  (ensures (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2)))
+  [SMTPat (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2))]
+= FStar.Squash.return_squash (PathDisjointStep p s1 s2)
 
 private let path_disjoint_includes
   (#from: Type)
@@ -506,7 +562,7 @@ let rec path_disjoint_sym
   (ensures (path_disjoint p2 p1))
 = path_disjoint_ind
   (fun #v1 #v2 p1 p2 -> path_disjoint p2 p1)
-  (fun #k #v p fd1 fd2 -> path_disjoint_field p fd2 fd1)
+  (fun #through #to1 #to2 p s1 s2 -> path_disjoint_step p s2 s1)
   (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' -> path_disjoint_includes p2 p1 p2' p1')
   p1 p2
 
@@ -519,12 +575,20 @@ private let path_sel_upd_other
   (ensures (forall (m: from) (v: to1) . path_sel (path_upd m p1 v) p2 == path_sel m p2))
 = path_disjoint_ind
   (fun #v1 #v2 p1_ p2_ -> forall (m: from) (v: v1) . path_sel (path_upd m p1_ v) p2_ == path_sel m p2_)
-  (fun #ke #va p fd1 fd2 -> 
-      FStar.Classical.forall_intro' #_ #(fun m -> forall  (v: va fd1) . path_sel (path_upd m (PathField p fd1) v) (PathField p fd2) == path_sel m (PathField p fd2)) (fun m ->
-	  FStar.Classical.forall_intro' #_ #(fun v -> path_sel (path_upd m (PathField p fd1) v) (PathField p fd2) == path_sel m (PathField p fd2)) (fun v ->
-	  path_sel_upd_same m p (DM.upd (path_sel m p) fd1 v);
-	  DM.sel_upd_other (path_sel m p) fd1 v fd2)
-      ))
+  (fun #through #to1_ #to2_ p s1 s2 -> 
+      FStar.Classical.forall_intro' #_ #(fun m -> forall  (v: to1_) . path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun m ->
+	  FStar.Classical.forall_intro' #_ #(fun v -> path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun v ->
+	  match s1 with
+	  | StepField key1 value1 fd1 ->
+	    let (StepField _ _ fd2) = s2 in
+	    let (s: DM.t key1 value1) = path_sel m p in
+	    path_sel_upd_same m p (DM.upd s fd1 v);
+	    DM.sel_upd_other s fd1 v fd2
+	  | StepCell length1 value1 i1 ->
+	    let (StepCell _ _ i2) = s2 in
+	    path_sel_upd_same m p (Seq.upd (path_sel m p) (UInt32.v i1) v);
+	    Seq.lemma_index_upd2 (path_sel m p) (UInt32.v i1) v (UInt32.v i2)
+      )))
   (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' ->
     let h1: squash (exists r1 . p1' == path_concat p1 r1) = path_includes_exists_concat p1 p1' in
     let h2: squash (exists r2 . p2' == path_concat p2 r2) = path_includes_exists_concat p2 p2' in
@@ -550,143 +614,174 @@ private let path_sel_upd_other'
   [SMTPat (path_sel (path_upd m p1 v) p2)]
 = path_sel_upd_other p1 p2
 
-(** Pointers into nested structures *)
+(** Pointers to data of type t *)
 
-noeq private type _struct_ptr : Type -> Tot Type =
-  | StructPtr:
+noeq private type _pointer : Type -> Tot Type =
+  | Pointer:
     (#from: Type) ->
-    (content: HS.reference from) ->
+    (content: HS.reference from ) ->
     (#to: Type) ->
     (p: path from to) ->
-    _struct_ptr to
-abstract let struct_ptr (t: Type): Tot Type =
-  _struct_ptr t
+    _pointer to
+abstract let pointer (t: Type): Tot Type =
+  _pointer t
+
+abstract let as_addr (#t: Type) (p: pointer t): GTot nat =
+  HS.as_addr (Pointer?.content p)
 
 private let _field
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
-: Tot (struct_ptr (value fd))
-= let (StructPtr #from content p') = p in
+: Tot (pointer (value fd))
+= let (Pointer #from content p') = p in
   let p' : path from (DM.t key value) = p' in
-  let p'' : path from (value fd) = PathField p' fd in
-  StructPtr content p''
+  let p'' : path from (value fd) = PathStep _ _ p' (StepField _ _ fd) in
+  Pointer content p''
 
-abstract let as_aref 
+private let _cell
+  (#length: UInt32.t)
   (#value: Type)
-  (p: struct_ptr value)
-: GTot Heap.aref
-= HS.as_aref (StructPtr?.content p)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Tot (pointer value)
+= let (Pointer #from content p') = p in
+  let p' : path from (array length value) = p' in
+  let p'' : path from value = PathStep _ _ p' (StepCell _ _ i) in
+  Pointer content p''
 
-abstract let contains
+abstract let unused_in
   (#value: Type)
+  (p: pointer value)
   (h: HS.mem)
-  (p: struct_ptr value)
 : GTot Type0
-= HS.contains h (StructPtr?.content p)
+= HS.unused_in (Pointer?.content p) h
 
 abstract let live
   (#value: Type)
   (h: HS.mem)
-  (p: struct_ptr value)
+  (p: pointer value)
 : GTot Type0
-= contains h p
+= HS.contains h (Pointer?.content p)
 
-abstract let live_contains
+abstract let live_not_unused_in
   (#value: Type)
   (h: HS.mem)
-  (p: struct_ptr value)
+  (p: pointer value)
 : Lemma
-  (requires (live h p))
-  (ensures (contains h p))
-  [SMTPatT (live h p)]
-= ()
+  (ensures (live h p /\ p `unused_in` h ==> False))
+  [SMTPatT (live h p); SMTPatT (p `unused_in` h)]
+= () 
 
-abstract let as_value
+abstract let gread
   (#value: Type)
   (h: HS.mem)
-  (p: struct_ptr value {live h p (* required by HS.sel, really? *) }) 
+  (p: pointer value) 
 : GTot value
-= let (StructPtr content p') = p in
+= let (Pointer content p') = p in
   path_sel (HS.sel h content) p'
 
-abstract let rec frameOf 
+abstract let frameOf 
   (#value: Type)
-  (p: struct_ptr value)
+  (p: pointer value)
 : GTot HH.rid
-= HS.frameOf (StructPtr?.content p)
+= HS.frameOf (Pointer?.content p)
 
-abstract let rec memory_managed
+abstract let disjoint_roots_intro_pointer_vs_pointer
+  (#value1 value2: Type)
+  (h: HS.mem)
+  (p1: pointer value1)
+  (p2: pointer value2)
+: Lemma
+  (requires (live h p1 /\ unused_in p2 h))
+  (ensures (frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2))
+= HyperStack.lemma_live_1 h (Pointer?.content p1) (Pointer?.content p2)
+
+abstract let disjoint_roots_intro_pointer_vs_reference
+  (#value1 value2: Type)
+  (h: HS.mem)
+  (p1: pointer value1)
+  (p2: HS.reference value2)
+: Lemma
+  (requires (live h p1 /\ p2 `HS.unused_in` h))
+  (ensures (frameOf p1 <> HS.frameOf p2 \/ as_addr p1 =!= HS.as_addr p2))
+= HyperStack.lemma_live_1 h (Pointer?.content p1) p2
+
+abstract let disjoint_roots_intro_reference_vs_pointer
+  (#value1 value2: Type)
+  (h: HS.mem)
+  (p1: HS.reference value1)
+  (p2: pointer value2)
+: Lemma
+  (requires (HS.contains h p1 /\ p2 `unused_in` h))
+  (ensures (HS.frameOf p1 <> frameOf p2 \/ HS.as_addr p1 =!= as_addr p2))
+= HyperStack.lemma_live_1 h p1 (Pointer?.content p2)
+
+let memory_managed
   (#value: Type)
-  (p: struct_ptr value)
+  (p: pointer value)
 : GTot bool
-= (StructPtr?.content p).HS.mm
+= HS.is_mm (Pointer?.content p)
 
 abstract let recall
   (#value: Type)
-  (p: struct_ptr value {HS.is_eternal_region (frameOf p) && not (memory_managed p)})
+  (p: pointer value {HS.is_eternal_region (frameOf p) && not (memory_managed p)})
 : HST.Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0 == m1 /\ live m1 p))
-= HST.recall (StructPtr?.content p)
-
-let get
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (h: HS.mem)
-  (p: struct_ptr (DM.t key value) {live h p})
-  (field: key)
-: GTot (value field)
-= DM.sel (as_value h p) field
+= HST.recall (Pointer?.content p)
 
 (* Equality predicate on struct contents, without quantifiers *)
-let equal_values #a h (b:struct_ptr a) h' (b':struct_ptr a) : GTot Type0 =
-  live h b /\ live h' b' /\ as_value h b == as_value h' b'
+let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
+  live h b /\ live h' b' /\ gread h b == gread h' b'
 
 abstract let includes
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : GTot Type0
-= StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2 /\ path_includes (StructPtr?.p p1) (StructPtr?.p p2)
+= Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_includes (Pointer?.p p1) (Pointer?.p p2)
+
+#reset-options "--z3rlimit 16"
 
 abstract let gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
-: GTot (p' : struct_ptr (value fd) { includes p p' } )
+: GTot (p' : pointer (value fd) { includes p p' } )
 = _field p fd
 
-abstract let as_aref_gfield
+abstract let as_addr_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: (pointer (DM.t key value)))
   (fd: key)
 : Lemma
   (requires True)
-  (ensures (as_aref (gfield p fd) == as_aref p))
+  (ensures (as_addr (gfield p fd) == as_addr p))
+  [SMTPat (as_addr (gfield p fd))]
 = ()
 
-abstract let contains_gfield
+abstract let unused_in_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (h: HS.mem)
-  (p: (struct_ptr (DM.t key value)))
+  (p: (pointer (DM.t key value)))
   (fd: key)
 : Lemma
   (requires True)
-  (ensures (contains h (gfield p fd) <==> contains h p))
-  [SMTPat (contains h (gfield p fd))]
+  (ensures (unused_in (gfield p fd) h <==> unused_in p h))
+  [SMTPat (unused_in (gfield p fd) h)]
 = ()
 
 abstract let live_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (h: HS.mem)
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
 : Lemma
   (requires True)
@@ -694,34 +789,22 @@ abstract let live_gfield
   [SMTPat (live h (gfield p fd))]
 = ()
 
-abstract let as_value_gfield
+abstract let gread_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
   (h: HS.mem)
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
 : Lemma
-  (requires (contains h p))
-  (ensures (contains h p /\ as_value h (gfield p fd) == DM.sel (as_value h p) fd))
-  [SMTPat (as_value h (gfield p fd)); SMTPatT (contains h p)]
-= ()
-
-abstract let as_value_gfield_live
-  (#key: eqtype)
-  (#value: (key -> Tot Type))
-  (h: HS.mem)
-  (p: struct_ptr (DM.t key value))
-  (fd: key)
-: Lemma
-  (requires (live h p))
-  (ensures (live h p /\ as_value h (gfield p fd) == DM.sel (as_value h p) fd))
-  [SMTPat (as_value h (gfield p fd)); SMTPatT (live h p)]
+  (requires True)
+  (ensures (gread h (gfield p fd) == DM.sel (gread h p) fd))
+  [SMTPat (gread h (gfield p fd))]
 = ()
 
 abstract let frameOf_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
 : Lemma
   (requires True)
@@ -732,7 +815,7 @@ abstract let frameOf_gfield
 abstract let memory_managed_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
 : Lemma
   (requires True)
@@ -743,7 +826,7 @@ abstract let memory_managed_gfield
 abstract let includes_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd: key)
 : Lemma
   (requires True)
@@ -751,9 +834,97 @@ abstract let includes_gfield
   [SMTPat (includes p (gfield p fd))]
 = ()
 
+abstract let gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Tot (pointer value)
+= _cell p i
+
+abstract let as_addr_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (as_addr (gcell p i) == as_addr p))
+  [SMTPat (as_addr (gcell p i))]
+= ()
+
+abstract let unused_in_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (h: HS.mem)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (unused_in (gcell p i) h <==> unused_in p h))
+  [SMTPat (unused_in (gcell p i) h)]
+= ()
+
+abstract let live_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (h: HS.mem)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (live h (gcell p i) <==> live h p))
+  [SMTPat (live h (gcell p i))]
+= ()
+
+abstract let gread_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (h: HS.mem)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (gread h (gcell p i) == Seq.index (gread h p) (UInt32.v i)))
+  [SMTPat (gread h (gcell p i))]
+= ()
+
+abstract let frameOf_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (frameOf (gcell p i) == frameOf p))
+  [SMTPat (frameOf (gcell p i))]
+= ()
+
+abstract let memory_managed_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (memory_managed (gcell p i) == memory_managed p))
+  [SMTPat (memory_managed (gcell p i))]
+= ()
+
+abstract let includes_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (p: pointer (array length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires True)
+  (ensures (includes p (gcell p i)))
+  [SMTPat (includes p (gcell p i))]
+= ()
+
 abstract let includes_refl
   (#value: Type)
-  (p: struct_ptr value)
+  (p: pointer value)
 : Lemma
   (requires True)
   (ensures (includes p p))
@@ -762,64 +933,78 @@ abstract let includes_refl
 
 abstract let includes_trans
   (#value1 #value2 #value3: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
-  (p3: struct_ptr value3)
+  (p1: pointer value1)
+  (p2: pointer value2)
+  (p3: pointer value3)
 : Lemma
   (requires (includes p1 p2 /\ includes p2 p3))
   (ensures (includes p1 p3))
   [SMTPatT (includes p1 p2); SMTPatT (includes p2 p3)]
-= path_includes_trans (StructPtr?.p p1) (StructPtr?.p p2) (StructPtr?.p p3)
+= path_includes_trans (Pointer?.p p1) (Pointer?.p p2) (Pointer?.p p3)
 
 abstract let includes_ind
   (x: (#value1: Type) ->
       (#value2: Type) ->
-      (p1: struct_ptr value1) ->
-      (p2: struct_ptr value2 {includes p1 p2} ) ->
+      (p1: pointer value1) ->
+      (p2: pointer value2 {includes p1 p2} ) ->
       GTot Type0)
   (h_field:
     (#key: eqtype) ->
     (#value: (key -> Tot Type)) ->
-    (p: struct_ptr (DM.t key value)) ->
+    (p: pointer (DM.t key value)) ->
     (fd: key {includes p (gfield p fd)}) ->
     Lemma (x p (gfield p fd)))
+  (h_cell:
+    (#length: UInt32.t) ->
+    (#value: Type) ->
+    (p: pointer (array length value)) ->
+    (i: UInt32.t {UInt32.v i < UInt32.v length /\ includes p (gcell p i)}) ->
+    Lemma (x p (gcell p i)))
   (h_refl:
     (#value: Type) ->
-    (p: struct_ptr value {includes p p}) ->
+    (p: pointer value {includes p p}) ->
     Lemma (x p p))
   (h_trans:
     (#value1: Type) ->
     (#value2: Type) ->
     (#value3: Type) ->
-    (p1: struct_ptr value1) ->
-    (p2: struct_ptr value2) ->
-    (p3: struct_ptr value3 {includes p1 p2 /\ includes p2 p3 /\ includes p1 p3 /\ x p1 p2 /\ x p2 p3}) ->
+    (p1: pointer value1) ->
+    (p2: pointer value2) ->
+    (p3: pointer value3 {includes p1 p2 /\ includes p2 p3 /\ includes p1 p3 /\ x p1 p2 /\ x p2 p3}) ->
     Lemma (x p1 p3))
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2 {includes p1 p2})
+  (p1: pointer value1)
+  (p2: pointer value2 {includes p1 p2})
 : Lemma (x p1 p2)
-= let from : Type = StructPtr?.from p1 in
-  let content : HS.reference from = StructPtr?.content p1 in
+= let from : Type = Pointer?.from p1 in
+  let content : HS.reference from = Pointer?.content p1 in
   path_includes_ind
-    (fun #to1 #to2 p1_ p2_ -> x (StructPtr content p1_) (StructPtr content p2_))
-    (fun #ke #va p fd -> h_field (StructPtr content p) fd)
-    (fun #to p -> h_refl (StructPtr content p))
-    (fun #to1 #to2 #to3 p1_ p2_ p3_ -> h_trans (StructPtr content p1_) (StructPtr content p2_) (StructPtr content p3_))
-    (StructPtr?.p p1)
-    (StructPtr?.p p2)
+    (fun #to1 #to2 p1_ p2_ -> x (Pointer content p1_) (Pointer content p2_))
+    (fun #through #to p s ->
+      match s with
+      | StepField key value fd -> let (pt: pointer (DM.t key value)) = (Pointer content p) in h_field pt fd
+      | StepCell length value i -> let (pt: pointer (array length value)) = (Pointer content p) in h_cell pt i
+    )
+    (fun #to p -> h_refl (Pointer content p))
+    (fun #to1 #to2 #to3 p1_ p2_ p3_ -> h_trans (Pointer content p1_) (Pointer content p2_) (Pointer content p3_))
+    (Pointer?.p p1)
+    (Pointer?.p p2)
 
-let contains_includes
+let unused_in_includes
   (#value1: Type)
   (#value2: Type)
   (h: HS.mem)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2 {includes p1 p2})
-: Lemma (contains h p1 <==> contains h p2)
+  (p1: pointer value1)
+  (p2: pointer value2)
+: Lemma
+  (requires (includes p1 p2))
+  (unused_in p1 h <==> unused_in p2 h)
+  [SMTPatT (unused_in p2 h); SMTPatT (includes p1 p2)]
 = includes_ind
-  (fun #v1 #v2 p1 p2 -> contains h p1 <==> contains h p2)
-  (fun #k #v p fd -> contains_gfield h p fd)
+  (fun #v1 #v2 p1 p2 -> unused_in p1 h <==> unused_in p2 h)
+  (fun #k #v p fd -> unused_in_gfield h p fd)
+  (fun #length #value p i -> unused_in_gcell h p i)
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
   p1 p2
@@ -828,8 +1013,8 @@ let live_includes
   (#value1: Type)
   (#value2: Type)
   (h: HS.mem)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : Lemma
   (requires (includes p1 p2))
   (ensures (live h p1 <==> live h p2))
@@ -837,6 +1022,7 @@ let live_includes
 = includes_ind
   (fun #v1 #v2 p1 p2 -> live h p1 <==> live h p2)
   (fun #k #v p fd -> live_gfield h p fd)
+  (fun #length #value p i -> live_gcell h p i)  
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
   p1 p2
@@ -844,26 +1030,26 @@ let live_includes
 abstract let disjoint
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : GTot Type0
-= ((exists h . ~ (contains h p1 <==> contains h p2)) \/
-  (StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2 /\ path_disjoint (StructPtr?.p p1) (StructPtr?.p p2)))
+= (frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2) \/ // disjoint references; see HyperStack.lemma_live_1
+  (Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_disjoint (Pointer?.p p1) (Pointer?.p p2))
 
 abstract let disjoint_root
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : Lemma
-  (requires (exists h . ~ (contains h p1 <==> contains h p2)))
+  (requires (frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2))
   (ensures (disjoint p1 p2))
 = ()
 
 abstract let disjoint_gfield
   (#key: eqtype)
   (#value: (key -> Tot Type))
-  (p: struct_ptr (DM.t key value))
+  (p: pointer (DM.t key value))
   (fd1: key)
   (fd2: key)
 : Lemma
@@ -872,91 +1058,113 @@ abstract let disjoint_gfield
   [SMTPat (disjoint (gfield p fd1) (gfield p fd2))]
 = ()
 
+abstract let disjoint_gcell
+  (#length: UInt32.t)
+  (#value: Type)
+  (p: pointer (array length value))
+  (i1: UInt32.t {UInt32.v i1 < UInt32.v length})
+  (i2: UInt32.t {UInt32.v i2 < UInt32.v length})  
+: Lemma
+  (requires (UInt32.v i1 <> UInt32.v i2))
+  (ensures (disjoint (gcell p i1) (gcell p i2)))
+  [SMTPat (disjoint (gcell p i1) (gcell p i2))]
+= ()
+
 abstract let disjoint_includes
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
   (#value1': Type)
   (#value2': Type)
-  (p1': struct_ptr value1')
-  (p2': struct_ptr value2')
+  (p1': pointer value1')
+  (p2': pointer value2')
 : Lemma
   (requires (includes p1 p1' /\ includes p2 p2' /\ disjoint p1 p2))
   (ensures (disjoint p1' p2'))
 = FStar.Classical.or_elim
-    #(exists h . ~ (contains h p1 <==> contains h p2))
-    #(StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2 /\ path_disjoint (StructPtr?.p p1) (StructPtr?.p p2))
+    #(frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2)
+    #(Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_disjoint (Pointer?.p p1) (Pointer?.p p2))
     #(fun _ -> disjoint p1' p2')
-    (fun h -> 
-	FStar.Classical.exists_elim
-	  (~ (StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2))
-	  #_
-	  #(fun h -> ~ (contains h p1 <==> contains h p2))
-	  h
-	  (fun _ -> ())
-    )
-    (fun _ -> path_disjoint_includes (StructPtr?.p p1) (StructPtr?.p p2) (StructPtr?.p p1') (StructPtr?.p p2'))
+    (fun h -> ())
+    (fun _ -> path_disjoint_includes (Pointer?.p p1) (Pointer?.p p2) (Pointer?.p p1') (Pointer?.p p2'))
 
 abstract let disjoint_ind
   (x:
     (#value1: Type) ->
     (#value2: Type) ->
-    (p1: struct_ptr value1) ->
-    (p2: struct_ptr value2 {disjoint p1 p2} ) ->
+    (p1: pointer value1) ->
+    (p2: pointer value2 {disjoint p1 p2} ) ->
     GTot Type0)
   (h_root:
     (#value1: Type) ->
     (#value2: Type) ->
-    (p1: struct_ptr value1) ->
-    (p2: struct_ptr value2 { (exists h . ~ (contains h p1 <==> contains h p2)) /\ disjoint p1 p2 } ) ->
+    (p1: pointer value1) ->
+    (p2: pointer value2 { frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2 } ) ->
     Lemma (x p1 p2))
   (h_field:
     (#key: eqtype) ->
     (#value: (key -> Tot Type)) ->
-    (p: struct_ptr (DM.t key value)) ->
+    (p: pointer (DM.t key value)) ->
     (fd1: key) ->
     (fd2: key { fd1 <> fd2 /\ disjoint (gfield p fd1) (gfield p fd2) } ) ->
     Lemma (x (gfield p fd1) (gfield p fd2)))
+  (h_cell:
+    (#length: UInt32.t) ->
+    (#value: Type) ->
+    (p: pointer (array length value)) ->
+    (i1: UInt32.t {UInt32.v i1 < UInt32.v length}) ->
+    (i2: UInt32.t {UInt32.v i2 < UInt32.v length /\ UInt32.v i1 <> UInt32.v i2 /\ disjoint (gcell p i1) (gcell p i2) }) ->
+    Lemma (x (gcell p i1) (gcell p i2))
+  )
   (h_includes:
     (#value1: Type) ->
     (#value2: Type) ->
-    (p1: struct_ptr value1) ->
-    (p2: struct_ptr value2) ->
+    (p1: pointer value1) ->
+    (p2: pointer value2) ->
     (#value1': Type) ->
     (#value2': Type) ->
-    (p1': struct_ptr value1' {includes p1 p1'}) ->
-    (p2': struct_ptr value2' {includes p2 p2' /\ disjoint p1 p2 /\ disjoint p1' p2' /\ x p1 p2}) ->
+    (p1': pointer value1' {includes p1 p1'}) ->
+    (p2': pointer value2' {includes p2 p2' /\ disjoint p1 p2 /\ disjoint p1' p2' /\ x p1 p2}) ->
     Lemma (x p1' p2'))
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2 { disjoint p1 p2 } )
+  (p1: pointer value1)
+  (p2: pointer value2 { disjoint p1 p2 } )
 : Lemma (x p1 p2)
-= let diff_root : Type0 = exists h . ~ (contains h p1 <==> contains h p2) in
-  FStar.Classical.or_elim
-    #diff_root
-    #(StructPtr?.from p1 == StructPtr?.from p2 /\ StructPtr?.content p1 == StructPtr?.content p2 /\ path_disjoint (StructPtr?.p p1) (StructPtr?.p p2))
+= FStar.Classical.or_elim
+    #(frameOf p1 <> frameOf p2 \/ as_addr p1 =!= as_addr p2)
+    #(Pointer?.from p1 == Pointer?.from p2 /\ Pointer?.content p1 == Pointer?.content p2 /\ path_disjoint (Pointer?.p p1) (Pointer?.p p2))
     #(fun _ -> x p1 p2)
-    (fun (k: squash diff_root) ->
-      assume diff_root; // TODO: why not automatic???
+    (fun _ ->
       h_root p1 p2)
     (fun _ ->
-      let from: Type = StructPtr?.from p1 in
-      let content: HS.reference from = StructPtr?.content p1 in
+      let from: Type = Pointer?.from p1 in
+      let (content1: HS.reference from ) = Pointer?.content p1 in
+      let (content2: HS.reference from ) = Pointer?.content p2 in
+      assert (content1 == content2);
       path_disjoint_ind
-	(fun #v1 #v2 p1_ p2_ -> x (StructPtr content p1_) (StructPtr content p2_))
-	(fun #ke #va p fd1 fd2 -> h_field (StructPtr content p) fd1 fd2)
-	(fun #v1 #v2 p1_ p2_ #v1' #v2' p1' p2' -> h_includes (StructPtr content p1_) (StructPtr content p2_) (StructPtr content p1') (StructPtr content p2'))
-	(StructPtr?.p p1)
-	(StructPtr?.p p2)
+	(fun #v1 #v2 p1_ p2_ -> x (Pointer content1 p1_) (Pointer content1 p2_))
+	(fun #through #to1 #to2 p s1 s2 ->
+	   match s1 with
+	   | StepField ke va fd1 ->
+	     let (StepField _ _ fd2) = s2 in
+	     h_field #ke #va (Pointer content1 p) fd1 fd2
+	   | StepCell le va i1 ->
+	     let (StepCell _ _ i2) = s2 in
+	     h_cell #le #va (Pointer content1 p) i1 i2
+	)
+	(fun #v1 #v2 p1_ p2_ #v1' #v2' p1' p2' -> h_includes (Pointer content1 p1_) (Pointer content1 p2_) (Pointer content1 p1') (Pointer content1 p2'))
+	(Pointer?.p p1)
+	(Pointer?.p p2);
+       assert (x p1 p2)
      )
 
 let disjoint_sym
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : Lemma
   (requires (disjoint p1 p2))
   (ensures (disjoint p2 p1))
@@ -964,14 +1172,15 @@ let disjoint_sym
   (fun #v1 #v2 p1 p2 -> disjoint p2 p1)
   (fun #v1 #v2 p1 p2 -> disjoint_root p2 p1)
   (fun #k #v p fd1 fd2 -> disjoint_gfield p fd2 fd1)
+  (fun #le #va p i1 i2 -> disjoint_gcell p i2 i1)
   (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' -> disjoint_includes p2 p1 p2' p1')
   p1 p2
 
 let disjoint_sym'
   (#value1: Type)
   (#value2: Type)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : Lemma
   (requires True)
   (ensures (disjoint p1 p2 <==> disjoint p2 p1))
@@ -979,13 +1188,13 @@ let disjoint_sym'
 = FStar.Classical.move_requires (disjoint_sym #value1 #value2 p1) p2;
   FStar.Classical.move_requires (disjoint_sym #value2 #value1 p2) p1
 
-let disjoint_includes_l #a #as #a' (x: struct_ptr a) (subx:struct_ptr as) (y:struct_ptr a') : Lemma
+let disjoint_includes_l #a #as #a' (x: pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
   [SMTPatT (disjoint subx y); SMTPatT (includes x subx)]
   = disjoint_includes x y subx y
 
-let disjoint_includes_l_swap #a #as #a' (x:struct_ptr a) (subx:struct_ptr as) (y:struct_ptr a') : Lemma
+let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
@@ -995,126 +1204,23 @@ let live_disjoint
   (#value1: Type)
   (#value2: Type)
   (h: HS.mem)
-  (p1: struct_ptr value1)
-  (p2: struct_ptr value2)
+  (p1: pointer value1)
+  (p2: pointer value2)
 : Lemma
-  (requires (live h p1 /\ ~ (contains h p2)))
+  (requires (live h p1 /\ unused_in p2 h))
   (ensures (disjoint p1 p2))
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
-= live_contains h p1;
-  disjoint_root p1 p2
+= disjoint_root p1 p2
 
 
-(* Heterogeneous struct pointer type *)
-noeq type astruct_ptr = | AStructPtr: (#t: Type) -> (p: struct_ptr t) -> astruct_ptr
-
-let only #t (p: struct_ptr t) : Tot (TSet.set astruct_ptr) = TSet.singleton (AStructPtr p)
-
-let op_Bang_Bang = TSet.singleton
-let op_Plus_Plus = TSet.union
-
-(* Maps a set of buffer to the set of their references *)
-assume val arefs: TSet.set astruct_ptr -> Tot (TSet.set Heap.aref)
-
-assume Arefs_def: forall (x:Heap.aref) (s:TSet.set astruct_ptr). {:pattern (TSet.mem x (arefs s))}
-  TSet.mem x (arefs s) <==> (exists (y:astruct_ptr). TSet.mem y s /\ as_aref y.p == x)
-
-val arefs_empty: s:TSet.set astruct_ptr -> Lemma
-  (requires (s == TSet.empty #astruct_ptr))
-  (ensures  (arefs s == TSet.empty #Heap.aref))
-  [SMTPat (arefs s)]
-let arefs_empty s =
-  TSet.lemma_equal_intro (arefs s) (TSet.empty)
-
-val arefs_union: s1:TSet.set astruct_ptr -> s2:TSet.set astruct_ptr -> Lemma
-  (requires True)
-  (ensures  (arefs (s1 ++ s2) == arefs s1 ++ arefs s2))
-  [SMTPatOr [
-    [SMTPat (arefs (s2 ++ s1))];
-    [SMTPat (arefs (s1 ++ s2))]
-  ]]
-let arefs_union s1 s2 =
-  TSet.lemma_equal_intro (arefs (s1 ++ s2)) (arefs s1 ++ arefs s2)
-
-val arefs_subset: s1:TSet.set astruct_ptr -> s2:TSet.set astruct_ptr -> Lemma
-  (requires (TSet.subset s1 s2))
-  (ensures  (TSet.subset (arefs s1) (arefs s2)))
-let arefs_subset s1 s2 = ()
-
-(* General disjointness predicate between a buffer and a set of heterogeneous buffers *)
-let disjoint_from_struct_ptrs #t (p:struct_ptr t) (ptrs:TSet.set astruct_ptr) =
-  forall p'. TSet.mem p' ptrs ==> disjoint p p'.p
-
-(* General disjointness predicate between a buffer and a set of heterogeneous references *)
-let disjoint_from_refs #t (p:struct_ptr t) (set:TSet.set Heap.aref) =
-  ~(TSet.mem (as_aref p) set)
-
-val disjoint_from_struct_ptrs_only: #a:Type -> #a':Type -> p:struct_ptr a -> p':struct_ptr a' -> Lemma
-  (requires (disjoint p p'))
-  (ensures (disjoint_from_struct_ptrs p (only p')))
-let disjoint_from_struct_ptrs_only #t #t' p p' = ()
-
-(* Fully general modifies clause *)
-let modifies_struct_ptrs_and_refs (ptrs:TSet.set astruct_ptr) (refs:TSet.set Heap.aref) h h' : GTot Type0 =
-  (forall rid. Set.mem rid (Map.domain h.HS.h) ==>
-    (HH.modifies_rref rid (arefs ptrs ++ refs) h.HS.h h'.HS.h
-    /\ (forall (#a:Type) (b:struct_ptr a). (frameOf b = rid /\ live h b /\ disjoint_from_struct_ptrs b ptrs
-      /\ disjoint_from_refs b refs) ==> equal_values h b h' b)))
-
-(* Fully general modifies clause for struct pointer sets *)
-let modifies_buffers (bufs:TSet.set astruct_ptr) h h' : GTot Type0 =
-  (forall rid. Set.mem rid (Map.domain h.HS.h) ==>
-    (HH.modifies_rref rid (arefs bufs) h.HS.h h'.HS.h /\
-      (forall (#a:Type) (b:struct_ptr a). {:pattern (live h b /\ frameOf b = rid /\ disjoint_from_struct_ptrs b bufs)}
-	(frameOf b = rid /\ live h b /\ disjoint_from_struct_ptrs b bufs ==> equal_values h b h' b))))
-
-(* General modifies clause for struct pointers only *)
-let modifies_struct_ptrs rid buffs h h' =
-  HS.modifies_ref rid (arefs buffs) h h'
-  /\ (forall (#a:Type) (b:struct_ptr a). (frameOf b = rid /\ live h b /\ disjoint_from_struct_ptrs b buffs) ==> equal_values h b h' b)
-
-let modifies_none h h' =
-  h'.HS.tip = h.HS.tip /\ HH.modifies Set.empty h.HS.h h'.HS.h
-
-(* Specialized clauses for small numbers of struct_ptrs *)
+(* Specialized clauses for small numbers of pointers *)
 let modifies_ptr_0 rid h h' =
-  HS.modifies_ref rid !{} h h'
-  /\ (forall (#tt:Type) (bb:struct_ptr tt). (frameOf bb = rid /\ live h bb) ==> equal_values h bb h' bb)
+  HS.modifies_ref rid Set.empty h h'
+  /\ (forall (#tt:Type) (bb:pointer tt). (frameOf bb = rid /\ live h bb) ==> equal_values h bb h' bb)
 
-let modifies_ptr_1 (#t:Type) rid (b:struct_ptr t) h h' = //would be good to drop the rid argument on these, since they can be computed from the struct_ptrs
-  HS.modifies_ref rid (TSet.singleton (as_aref b)) h h'
-  /\ (forall (#tt:Type) (bb:struct_ptr tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal_values h bb h' bb)
-
-let modifies_ptr_2 (#t:Type) (#t':Type) rid (b:struct_ptr t) (b':struct_ptr t') h h' =
-  HS.modifies_ref rid (TSet.singleton (as_aref b) ++ TSet.singleton (as_aref b')) h h'
-  /\ (forall (#tt:Type) (bb:struct_ptr tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb /\ disjoint b' bb)
-       ==> equal_values h bb h' bb)
-
-(* General lemmas for the modifies_bufs clause *)
-let modifies_struct_ptrs_trans rid bufs h0 h1 h2 :
-  Lemma (requires (modifies_struct_ptrs rid bufs h0 h1 /\ modifies_struct_ptrs rid bufs h1 h2))
-	(ensures (modifies_struct_ptrs rid bufs h0 h2))
-	[SMTPatT (modifies_struct_ptrs rid bufs h0 h1); SMTPatT (modifies_struct_ptrs rid bufs h1 h2)]
- = ()
-
-let modifies_struct_ptrs_sub rid bufs subbufs h0 h1 :
-  Lemma
-    (requires (TSet.subset subbufs bufs /\ modifies_struct_ptrs rid subbufs h0 h1))
-    (ensures (modifies_struct_ptrs rid bufs h0 h1))
-    [SMTPatT (modifies_struct_ptrs rid subbufs h0 h1); SMTPatT (TSet.subset subbufs bufs)]
- = ()
-
-val modifies_struct_ptrs_subset: #a:Type -> #a':Type -> h0:HS.mem -> h1:HS.mem -> bufs:TSet.set astruct_ptr -> b:struct_ptr a -> b':struct_ptr a' -> Lemma
-  (requires (~(live h0 b') /\ live h0 b /\ disjoint_from_struct_ptrs b (bufs ++ (only b')) ))
-  (ensures (disjoint_from_struct_ptrs b bufs))
-  [SMTPatT (modifies_struct_ptrs h0.HS.tip (bufs ++ (only b')) h0 h1); SMTPatT (live h0 b)]
-let modifies_struct_ptrs_subset #a #a' h0 h1 bufs b b' = ()
-
-val modifies_struct_ptrs_superset: #a:Type -> #a':Type -> h0:HS.mem -> h1:HS.mem -> ptrs:TSet.set astruct_ptr -> b:struct_ptr a -> b':struct_ptr a' -> Lemma
-  (requires (~(contains h0 b') /\ live h0 b /\ disjoint_from_struct_ptrs b ptrs))
-  (ensures (disjoint_from_struct_ptrs b (ptrs ++ (only b'))))
-  [SMTPatT (modifies_struct_ptrs h0.HS.tip ptrs h0 h1); SMTPatT (~(live h0 b')); SMTPatT (live h0 b)]
-let modifies_struct_ptrs_superset #a #a' h0 h1 ptrs b b' = ()
+let modifies_ptr_1 (#t:Type) rid (b:pointer t) h h' = //would be good to drop the rid argument on these, since they can be computed from the pointers
+  HS.modifies_ref rid (Set.singleton (as_addr b)) h h'
+  /\ (forall (#tt:Type) (bb:pointer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal_values h bb h' bb)
 
 let modifies_ptr_0_0 rid h0 h1 h2 :
   Lemma (requires (modifies_ptr_0 rid h0 h1 /\ modifies_ptr_0 rid h1 h2))
@@ -1133,8 +1239,8 @@ abstract let modifies_0 h0 h1 =
 
 (* This one is very generic: it says
  * - some references have changed in the frame of b, but
- * - among all struct_ptrs in this frame, b is the only one that changed. *)
-abstract let modifies_1 (#a:Type) (b:struct_ptr a) h0 h1 =
+ * - among all pointers in this frame, b is the only one that changed. *)
+abstract let modifies_1 (#a:Type) (b:pointer a) h0 h1 =
   let rid = frameOf b in
   HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1
 
@@ -1146,7 +1252,7 @@ let modifies_0_intro h0 h1 : Lemma
   (ensures  (modifies_0 h0 h1))
   = ()
 
-let modifies_1_intro (#a:Type) (b:struct_ptr a) h0 h1 : Lemma
+let modifies_1_intro (#a:Type) (b:pointer a) h0 h1 : Lemma
   (requires (let rid = frameOf b in
   HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1))
   (ensures  (modifies_1 b h0 h1))
@@ -1159,13 +1265,13 @@ let  modifies_0_reveal h0 h1 : Lemma
   (ensures  (HS.modifies_one h0.HS.tip h0 h1 /\ modifies_ptr_0 h0.HS.tip h0 h1 /\ h0.HS.tip=h1.HS.tip))
   = ()
 
-let modifies_1_reveal (#a:Type) (b:struct_ptr a) h0 h1 : Lemma
+let modifies_1_reveal (#a:Type) (b:pointer a) h0 h1 : Lemma
   (requires (modifies_1 b h0 h1))
   (ensures  (let rid = frameOf b in HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1))
   = ()
 
 (* STStack effect specific lemmas *)
-let lemma_ststack_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 h3 : Lemma
+let lemma_ststack_1 (#a:Type) (b:pointer a) h0 h1 h2 h3 : Lemma
   (requires (live h0 b /\ HS.fresh_frame h0 h1 /\ modifies_1 b h1 h2 /\ HS.popped h2 h3))
   (ensures  (modifies_1 b h0 h3))
   [SMTPatT (modifies_1 b h1 h2); SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3)]
@@ -1178,7 +1284,7 @@ let modifies_0_trans h0 h1 h2 : Lemma
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_0 h1 h2)]
   = ()
 
-let modifies_1_trans (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
+let modifies_1_trans (#a:Type) (b:pointer a) h0 h1 h2 : Lemma
   (requires (modifies_1 b h0 h1 /\ modifies_1 b h1 h2))
   (ensures (modifies_1 b h0 h2))
   [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_1 b h1 h2)]
@@ -1191,32 +1297,30 @@ val modifies_0_0: h0:HS.mem -> h1:HS.mem -> h2:HS.mem -> Lemma
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_0 h1 h2)]
 let modifies_0_0 h0 h1 h2 = ()
 
-let modifies_0_1 (#a:Type) (b:struct_ptr a) h0 h1 h2 : Lemma
-  (requires (~(contains h0 b) /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
+let modifies_0_1 (#a:Type) (b:pointer a) h0 h1 h2 : Lemma
+  (requires (unused_in b h0 /\ modifies_0 h0 h1 /\ live h1 b /\ modifies_1 b h1 h2))
   (ensures  (modifies_0 h0 h2))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
   = ()
 
 (** Concrete allocators, getters and setters *)
 
-// We create a struct_ptr for any type t (not necessarily a DM.t) and provide the initial value of type t
-
 abstract let screate
   (#value:Type)
   (s: value)
-: StackInline (struct_ptr value)
+: StackInline (pointer value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
-       ~(contains h0 b)
+       unused_in b h0
      /\ live h1 b
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
      /\ Map.domain h1.HS.h == Map.domain h0.HS.h
-     /\ as_value h1 b == s))
+     /\ gread h1 b == s))
 = let content: HS.reference value =
      HST.salloc s
   in
-  StructPtr content PathBase
+  Pointer content PathBase
 
 // TODO: move to HyperStack?
 private let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h x.HS.id}) (v:a) : Lemma
@@ -1230,19 +1334,19 @@ abstract let ecreate
   (#t:Type)
   (r:HH.rid)
   (s: t)
-: ST (struct_ptr t)
+: ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r))
-  (ensures (fun (h0:HS.mem) b h1 -> ~(contains h0 b)
+  (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
     /\ Map.domain h1.HS.h == Map.domain h0.HS.h
     /\ h1.HS.tip = h0.HS.tip
     /\ HS.modifies (Set.singleton r) h0 h1
-    /\ HS.modifies_ref r TSet.empty h0 h1
-    /\ as_value h1 b == s
+    /\ HS.modifies_ref r Set.empty h0 h1
+    /\ gread h1 b == s
     /\ ~(memory_managed b)))
 = let h0 = HST.get() in
   let content: HS.reference t = ralloc r s in
-  let b = StructPtr content PathBase in
+  let b = Pointer content PathBase in
   let h1 = HST.get() in
   domain_upd h0 content s;
   b
@@ -1250,105 +1354,114 @@ abstract let ecreate
 abstract let field
  (#key: eqtype)
  (#value: (key -> Tot Type))
- (p: struct_ptr (DM.t key value))
+ (p: pointer (DM.t key value))
  (fd: key)
-: ST (struct_ptr (value fd))
+: ST (pointer (value fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
 = _field p fd
 
+abstract let cell
+ (#length: UInt32.t)
+ (#value: Type)
+ (p: pointer (array length value))
+ (i: UInt32.t {UInt32.v i < UInt32.v length})
+: ST (pointer value)
+  (requires (fun h -> live h p))
+  (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gcell p i))
+= _cell p i
+
 abstract let read
  (#value: Type)
- (p: struct_ptr value)
+ (p: pointer value)
 : ST value
   (requires (fun h -> live h p))
-  (ensures (fun h0 v h1 -> live h0 p /\ h0 == h1 /\ v == as_value h0 p))
-= let (StructPtr content p') = p in
+  (ensures (fun h0 v h1 -> live h0 p /\ h0 == h1 /\ v == gread h0 p))
+= let (Pointer content p') = p in
   path_sel (!content) p'
 
-private val hs_upd_path_upd: #a:Type -> b:struct_ptr a -> z:a
+private val hs_upd_path_upd: #a:Type -> b:pointer a -> z:a
   -> h0:HS.mem -> Lemma
   (requires (live h0 b))
   (ensures (live h0 b /\
-    modifies_1 b h0  (HS.upd h0 (StructPtr?.content b) (path_upd (HS.sel h0 (StructPtr?.content b)) (StructPtr?.p b) z))))
-  [SMTPat (HS.upd h0 (StructPtr?.content b) (path_upd (HS.sel h0 (StructPtr?.content b)) (StructPtr?.p b) z))]
+    modifies_1 b h0  (HS.upd h0 (Pointer?.content b) (path_upd (HS.sel h0 (Pointer?.content b)) (Pointer?.p b) z))))
+  [SMTPat (HS.upd h0 (Pointer?.content b) (path_upd (HS.sel h0 (Pointer?.content b)) (Pointer?.p b) z))]
 let hs_upd_path_upd #a b z h0 = ()
 
-abstract val write: #a:Type -> b:struct_ptr a -> z:a -> Stack unit
+abstract val write: #a:Type -> b:pointer a -> z:a -> Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b
     /\ modifies_1 b h0 h1
-    /\ as_value h1 b == z ))
+    /\ gread h1 b == z ))
 let write #a b z =
   let s0 = !b.content in
-  let s = path_upd s0 (StructPtr?.p b) z in
+  let s = path_upd s0 (Pointer?.p b) z in
   b.content := s
 
 (** Lemmas and patterns *)
 
-let modifies_one_trans_1 (#a:Type) (b:struct_ptr a) (h0:HS.mem) (h1:HS.mem) (h2:HS.mem): Lemma
+let modifies_one_trans_1 (#a:Type) (b:pointer a) (h0:HS.mem) (h1:HS.mem) (h2:HS.mem): Lemma
   (requires (HS.modifies_one (frameOf b) h0 h1 /\ HS.modifies_one (frameOf b) h1 h2))
   (ensures (HS.modifies_one (frameOf b) h0 h2))
   [SMTPatT (HS.modifies_one (frameOf b) h0 h1); SMTPatT (HS.modifies_one (frameOf b) h1 h2)]
   = ()
 
-val no_upd_lemma_0: #t:Type -> h0:HS.mem -> h1:HS.mem -> b:struct_ptr t -> Lemma
+val no_upd_lemma_0: #t:Type -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
   (requires (live h0 b /\ modifies_0 h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (live h0 b)]
 let no_upd_lemma_0 #t h0 h1 b = ()
 
-val no_upd_lemma_1: #t:Type -> #t':Type -> h0:HS.mem -> h1:HS.mem -> a:struct_ptr t -> b:struct_ptr t' -> Lemma
+val no_upd_lemma_1: #t:Type -> #t':Type -> h0:HS.mem -> h1:HS.mem -> a:pointer t -> b:pointer t' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ modifies_1 a h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatOr [ [ SMTPatT (modifies_1 a h0 h1); SMTPatT (as_value h1 b) ] ; [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ] ] ]
+  [SMTPatOr [ [ SMTPatT (modifies_1 a h0 h1); SMTPatT (gread h1 b) ] ; [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ] ] ]
 let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 
-val no_upd_fresh: #t:Type -> h0:HS.mem -> h1:HS.mem -> a:struct_ptr t -> Lemma
+val no_upd_fresh: #t:Type -> h0:HS.mem -> h1:HS.mem -> a:pointer t -> Lemma
   (requires (live h0 a /\ HS.fresh_frame h0 h1))
   (ensures  (live h0 a /\ live h1 a /\ equal_values h0 a h1 a))
   [SMTPatT (live h0 a); SMTPatT (HS.fresh_frame h0 h1)]
 let no_upd_fresh #t h0 h1 a = ()
 
-val no_upd_popped: #t:Type -> h0:HS.mem -> h1:HS.mem -> b:struct_ptr t -> Lemma
+val no_upd_popped: #t:Type -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
   (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
   [SMTPatT (live h0 b); SMTPatT (HS.popped h0 h1)]
 let no_upd_popped #t h0 h1 b = ()
 
-let lemma_modifies_sub_1 #t h0 h1 (b:struct_ptr t) : Lemma
+let lemma_modifies_sub_1 #t h0 h1 (b:pointer t) : Lemma
   (requires (h1 == h0))
   (ensures  (modifies_1 b h0 h1))
   [SMTPatT (live h0 b); SMTPatT (modifies_1 b h0 h1)]
   = ()
 
-let modifies_substruct_1 (#tsub #ta:Type) h0 h1 (sub:struct_ptr tsub) (a:struct_ptr ta) : Lemma
+let modifies_substruct_1 (#tsub #ta:Type) h0 h1 (sub:pointer tsub) (a:pointer ta) : Lemma
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
   (ensures  (modifies_1 a h0 h1 /\ live h1 a))
   [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
   = ()
 
-let modifies_popped_1' (#t:Type) (a:struct_ptr t) h0 h1 h2 h3 : Lemma
+let modifies_popped_1' (#t:Type) (a:pointer t) h0 h1 h2 h3 : Lemma
   (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))
   (ensures  (modifies_1 a h0 h3))
   [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3); SMTPatT (modifies_1 a h1 h2)]
   = ()
 
-let live_popped (#t:Type) (b:struct_ptr t) h0 h1 : Lemma
+let live_popped (#t:Type) (b:pointer t) h0 h1 : Lemma
   (requires (HS.popped h0 h1 /\ live h0 b /\ frameOf b <> h0.HS.tip))
   (ensures  (live h1 b))
   [SMTPatT (HS.popped h0 h1); SMTPatT (live h0 b)]
   = ()
 
-let live_fresh (#t:Type) (b:struct_ptr t) h0 h1 : Lemma
+let live_fresh (#t:Type) (b:pointer t) h0 h1 : Lemma
   (requires (HS.fresh_frame h0 h1 /\ live h0 b))
   (ensures  (live h1 b))
   [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (live h0 b)]
   = ()
 
-let modifies_poppable_1 #t h0 h1 (b:struct_ptr t) : Lemma
+let modifies_poppable_1 #t h0 h1 (b:pointer t) : Lemma
   (requires (modifies_1 b h0 h1 /\ HS.poppable h0))
   (ensures  (HS.poppable h1))
   [SMTPatT (modifies_1 b h0 h1)]
   = ()
-
