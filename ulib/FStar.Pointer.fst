@@ -1212,15 +1212,337 @@ let live_disjoint
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
 = disjoint_root p1 p2
 
+(*** The modifies clause *)
+
+// private // in fact, we have to expose this type, otherwise unification problems will appear everywhere
+noeq type apointer = 
+| APointer:
+  (a: Type) ->
+  (p: pointer a) ->
+  apointer
+
+(** Sets of pointers. The set tracks not only the set of pointers, but
+also the corresponding set of addresses (which cannot be constructed
+by set comprehension, since it must be computational.)
+
+In practice, we assume that all pointers in a set should be of the
+same region, because that is how the modifies clause will be
+defined. However, we do not need to enforce this constraint.
+
+We could also completely remove this "assumption" and explicitly track
+the regions and addresses within those regions. But this way would
+actually defeat the practical purpose of regions.
+*)
+
+abstract
+noeq type set =
+| Set:
+  (pointers: TSet.set apointer) ->
+  (addrs: Ghost.erased (addrs: Set.set nat {
+    forall (n: nat) .
+    Set.mem n addrs <==> (
+    exists (x: apointer) .
+    TSet.mem x pointers /\
+    as_addr (APointer?.p x) == n
+  ) } ) ) ->
+  set
+
+abstract
+let set_amem
+  (a: apointer)
+  (s: set)
+: GTot Type0
+= TSet.mem a (Set?.pointers s)
+
+let set_mem
+  (#a: Type)
+  (p: pointer a)
+  (s: set)
+: GTot Type0
+= set_amem (APointer a p) s
+
+abstract let set_empty: set =
+  Set TSet.empty (Ghost.hide Set.empty)
+
+abstract let set_amem_empty
+  (x: apointer)
+: Lemma
+  (~ (set_amem x set_empty))
+  [SMTPat (set_amem x set_empty)]
+= ()
+
+abstract let set_singleton
+  (#a: Type)
+  (x: pointer a)
+: Tot set
+= Set (TSet.singleton (APointer a x)) (Ghost.hide (Set.singleton (as_addr x)))
+
+abstract let set_amem_singleton
+  (#a: Type)
+  (x: pointer a)
+  (x': apointer)
+: Lemma
+  (set_amem x' (set_singleton x) <==> (x' == APointer a x))
+  [SMTPat (set_amem x' (set_singleton x))]
+= ()
+
+abstract let set_union
+  (s1 s2: set)
+: Tot set
+= Set (TSet.union (Set?.pointers s1) (Set?.pointers s2)) (Ghost.hide (Set.union (Ghost.reveal (Set?.addrs s1)) (Ghost.reveal (Set?.addrs s2))))
+
+abstract let set_amem_union
+  (x: apointer)
+  (s1 s2: set)
+: Lemma
+  (set_amem x (set_union s1 s2) <==> set_amem x s1 \/ set_amem x s2)
+  [SMTPat (set_amem x (set_union s1 s2))]
+= ()
+
+let set_subset
+  (s1 s2: set)
+: Tot Type0
+= forall (x: apointer) . set_amem x s1 ==> set_amem x s2
+
+let set_equal
+  (s1 s2: set)
+: Tot Type0
+= set_subset s1 s2 /\ set_subset s2 s1
+
+abstract
+let set_equal_elim
+  (s1 s2: set)
+: Lemma
+  (requires (set_equal s1 s2))
+  (ensures (s1 == s2))
+= TSet.lemma_equal_intro (Set?.pointers s1) (Set?.pointers s2);
+  TSet.lemma_equal_elim (Set?.pointers s1) (Set?.pointers s2);
+  let k6 : squash (Set?.addrs s1 == Set?.addrs s2) =
+    (* FIXME: WHY WHY WHY do I need to define this trans with explicit squash? Without it, verification fails, even with higher rlimits. With requires instead of squash, verification also fails. *)
+    let trans
+      (#a: Type)
+      (e1 e2 e3: a)
+      (k1: squash (e1 == e2))
+      (k2: squash (e2 == e3))
+    : Lemma
+      (ensures (e1 == e3))
+    = ()
+    in
+    let k4 : squash (Set?.addrs s1 == Ghost.hide (Ghost.reveal (Set?.addrs s2))) =
+      Set.lemma_equal_elim (Ghost.reveal (Set?.addrs s1)) (Ghost.reveal (Set?.addrs s2));
+      Ghost.hide_reveal (Set?.addrs s1)
+    in
+    let k5: squash (Ghost.hide (Ghost.reveal (Set?.addrs s2)) == Set?.addrs s2) =
+      Ghost.hide_reveal (Set?.addrs s2)
+    in
+    trans (Set?.addrs s1) (Ghost.hide (Ghost.reveal (Set?.addrs s2))) (Set?.addrs s2) k4 k5
+  in
+  ()
+
+(** NOTE: intersection cannot be easily defined, indeed consider two
+different (not necessarily disjoint) pointers p1, p2 coming from the
+same root address, intersect (singleton p1) (singleton p2) will be
+empty whereas intersect (singleton (as_addr p1)) (singleton (as_addr
+p2)) will not.
+
+However, if the pointer type had decidable equality, then it should work, by
+recording, for each address, the computational set of pointers in the
+global set of pointers, that have that address; and so the set of
+addresses will be computed as: every address whose corresponding set of
+pointers is nonempty.
+
+Anyway, it seems that we will not need intersection for use with the
+modifies clauses.
+
+*)
+
+(** Pointer inclusion lifted to sets of pointers *)
+
+let set_includes
+  (s1 s2: set)
+: GTot Type0
+= forall (ap2: apointer { set_amem ap2 s2 } ) .
+  exists (ap1: apointer { set_amem ap1 s1 } ) .
+  (APointer?.p ap1) `includes` (APointer?.p ap2)
+
+let set_includes_refl
+  (s: set)
+: Lemma
+  (set_includes s s)
+= ()
+
+let set_includes_trans
+  (s1 s2 s3: set)
+: Lemma
+  (requires (set_includes s1 s2 /\ set_includes s2 s3))
+  (ensures (set_includes s1 s3))
+= ()
+
+let set_subset_includes
+  (s1 s2: set)
+: Lemma
+  (requires (s2 `set_subset` s1))
+  (ensures (s1 `set_includes` s2))
+= assert (
+    forall (ap2: apointer { set_amem ap2 s2 } ) .
+    let (ap1: apointer { set_amem ap1 s1 } ) = ap2 in
+    (APointer?.p ap1) `includes` (APointer?.p ap2)
+  )
+
+let set_includes_singleton
+  (#a1: Type)
+  (p1: pointer a1)
+  (#a2: Type)
+  (p2: pointer a2)
+: Lemma
+  (requires (p1 `includes` p2))
+  (ensures (set_singleton p1 `set_includes` set_singleton p2))
+= let s1 = set_singleton p1 in
+  let (ap1 : apointer { set_amem ap1 s1 } ) = APointer a1 p1 in
+  ()
+
+(** The modifies clause proper *)
+
+abstract
+let modifies
+  (r: HH.rid)
+  (s: set)
+  (h1 h2: HS.mem)
+: GTot Type0
+= HS.modifies_ref r (Ghost.reveal (Set?.addrs s)) h1 h2 /\ (
+    forall (a': apointer { frameOf (APointer?.p a') == r /\ live h1 (APointer?.p a') } ) . (
+      forall (a: apointer { frameOf (APointer?.p a) == r /\ TSet.mem a (Set?.pointers s) } ) .
+      disjoint (APointer?.p a) (APointer?.p a')
+    ) ==> (
+    live h2 (APointer?.p a') /\ gread h1 (APointer?.p a') == gread h2 (APointer?.p a')
+  ))
+
+abstract
+let modifies_modifies_ref
+  (r: HH.rid)
+  (s: set)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (modifies r s h1 h2))
+  (ensures (
+    exists (rs: Set.set nat) .
+    HS.modifies_ref r rs h1 h2 /\ (
+    forall (x: nat) . Set.mem x rs <==> (
+    exists (a: Type) (p: pointer a) .
+    set_mem p s /\
+    as_addr p == x
+  ))))
+= ()
+
+abstract
+let modifies_elim
+  (r: HH.rid)
+  (s: set)
+  (h1 h2: HS.mem)
+  (#a': Type)
+  (p': pointer a')
+: Lemma
+  (requires (
+    modifies r s h1 h2 /\
+    frameOf p' == r /\
+    live h1 p' /\ (
+    forall (ap: apointer { frameOf (APointer?.p ap) == r /\ set_amem ap s } ) .
+    disjoint (APointer?.p ap) p'
+  )))
+  (ensures (
+    live h2 p' /\
+    gread h1 p' == gread h2 p'
+  ))
+= let ap' = APointer a' p' in
+  assert (p' == APointer?.p ap')
+
+abstract
+let modifies_intro
+  (r: HH.rid)
+  (s: set)
+  (h1 h2: HS.mem)
+  (rs: Set.set nat)
+: Lemma
+  (requires (
+    HS.modifies_ref r rs h1 h2 /\ (
+      forall (n: nat) . Set.mem n rs <==> (
+      exists (a: Type) (p: pointer a) .
+      set_mem p s /\
+      as_addr p == n
+    )) /\ (
+      forall (a': Type) (p': pointer a' { frameOf p' == r /\ live h1 p' } ) . (
+        forall (ap: apointer { frameOf (APointer?.p ap) == r /\ set_amem ap s } ) .
+        disjoint (APointer?.p ap) p'
+      ) ==> (
+        live h2 p' /\
+        gread h1 p' == gread h2 p'
+  ))))
+  (ensures (modifies r s h1 h2))
+= Set.lemma_equal_elim rs (Ghost.reveal (Set?.addrs s))
+
+abstract
+let modifies_refl
+  (r: HH.rid)
+  (s: set)
+  (h: HS.mem)
+: Lemma
+  (modifies r s h h)
+  [SMTPat (modifies r s h h)]
+= ()
+
+abstract
+let modifies_subset
+  (r: HH.rid)
+  (s1: set)
+  (h h': HS.mem)
+  (s2: set)
+: Lemma
+  (requires (modifies r s1 h h' /\ set_subset s1 s2))
+  (ensures (modifies r s2 h h'))
+= ()
+
+abstract
+let modifies_trans'
+  (r: HH.rid)
+  (s12: set)
+  (h1 h2: HS.mem)
+  (s23: set)
+  (h3: HS.mem)
+: Lemma
+  (requires (modifies r s12 h1 h2 /\ modifies r s23 h2 h3))
+  (ensures (modifies r (set_union s12 s23) h1 h3))
+= ()
+
+abstract
+let modifies_trans
+  (r: HH.rid)
+  (s12: set)
+  (h1 h2: HS.mem)
+  (s23: set)
+  (h3: HS.mem)
+  (s13: set)
+: Lemma
+  (requires (modifies r s12 h1 h2 /\ modifies r s23 h2 h3 /\ set_subset (set_union s12 s23) s13))
+  (ensures (modifies r s13 h1 h3))
+= modifies_trans' r s12 h1 h2 s23 h3;
+  modifies_subset r (set_union s12 s23) h1 h3 s13
+
+abstract
+let modifies_set_includes
+  (r: HH.rid)
+  (s1 s2: set)
+  (h h': HS.mem)
+: Lemma
+  (requires (modifies r s2 h h' /\ s1 `set_includes` s2))
+  (ensures (modifies r s1 h h'))
+= ()
 
 (* Specialized clauses for small numbers of pointers *)
 let modifies_ptr_0 rid h h' =
-  HS.modifies_ref rid Set.empty h h'
-  /\ (forall (#tt:Type) (bb:pointer tt). (frameOf bb = rid /\ live h bb) ==> equal_values h bb h' bb)
+  modifies rid set_empty h h'
 
 let modifies_ptr_1 (#t:Type) rid (b:pointer t) h h' = //would be good to drop the rid argument on these, since they can be computed from the pointers
-  HS.modifies_ref rid (Set.singleton (as_addr b)) h h'
-  /\ (forall (#tt:Type) (bb:pointer tt). (frameOf bb = rid /\ live h bb /\ disjoint b bb) ==> equal_values h bb h' bb)
+  modifies rid (set_singleton b) h h'
 
 let modifies_ptr_0_0 rid h0 h1 h2 :
   Lemma (requires (modifies_ptr_0 rid h0 h1 /\ modifies_ptr_0 rid h1 h2))
@@ -1386,7 +1708,10 @@ private val hs_upd_path_upd: #a:Type -> b:pointer a -> z:a
   (ensures (live h0 b /\
     modifies_1 b h0  (HS.upd h0 (Pointer?.content b) (path_upd (HS.sel h0 (Pointer?.content b)) (Pointer?.p b) z))))
   [SMTPat (HS.upd h0 (Pointer?.content b) (path_upd (HS.sel h0 (Pointer?.content b)) (Pointer?.p b) z))]
-let hs_upd_path_upd #a b z h0 = ()
+let hs_upd_path_upd #a b z h0 =
+  let s = set_singleton b in
+  let (ap: apointer { set_amem ap s } ) = APointer a b in
+  ()
 
 abstract val write: #a:Type -> b:pointer a -> z:a -> Stack unit
   (requires (fun h -> live h b))
@@ -1416,7 +1741,10 @@ val no_upd_lemma_1: #t:Type -> #t':Type -> h0:HS.mem -> h1:HS.mem -> a:pointer t
   (requires (live h0 b /\ disjoint a b /\ modifies_1 a h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
   [SMTPatOr [ [ SMTPatT (modifies_1 a h0 h1); SMTPatT (gread h1 b) ] ; [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ] ] ]
-let no_upd_lemma_1 #t #t' h0 h1 a b = ()
+let no_upd_lemma_1 #t #t' h0 h1 a b =
+  if frameOf a = frameOf b
+  then modifies_elim (frameOf a) (set_singleton a) h0 h1 b
+  else ()
 
 val no_upd_fresh: #t:Type -> h0:HS.mem -> h1:HS.mem -> a:pointer t -> Lemma
   (requires (live h0 a /\ HS.fresh_frame h0 h1))
@@ -1440,7 +1768,10 @@ let modifies_substruct_1 (#tsub #ta:Type) h0 h1 (sub:pointer tsub) (a:pointer ta
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
   (ensures  (modifies_1 a h0 h1 /\ live h1 a))
   [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
-  = ()
+= let s1 = set_singleton a in
+  let s2 = set_singleton sub in
+  set_includes_singleton a sub;
+  modifies_set_includes (frameOf a) s1 s2 h0 h1
 
 let modifies_popped_1' (#t:Type) (a:pointer t) h0 h1 h2 h3 : Lemma
   (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))
@@ -1465,3 +1796,27 @@ let modifies_poppable_1 #t h0 h1 (b:pointer t) : Lemma
   (ensures  (HS.poppable h1))
   [SMTPatT (modifies_1 b h0 h1)]
   = ()
+
+(* What about other regions? *)
+
+abstract
+let modifies_other_regions
+  (rs: Set.set HH.rid)
+  (h0 h1: HS.mem)
+  (#a: Type)
+  (p: pointer a)
+: Lemma
+  (requires (HS.modifies rs h0 h1 /\ (~ (Set.mem (frameOf p) rs)) /\ live h0 p))
+  (ensures (live h1 p /\ gread h0 p == gread h1 p))
+= ()
+
+abstract
+let modifies_one_other_region
+  (r: HH.rid)
+  (h0 h1: HS.mem)
+  (#a: Type)
+  (p: pointer a)
+: Lemma
+  (requires (HS.modifies_one r h0 h1 /\ frameOf p <> r /\ live h0 p))
+  (ensures (live h1 p /\ gread h0 p == gread h1 p))
+= ()
