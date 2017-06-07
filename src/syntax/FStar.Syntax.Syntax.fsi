@@ -48,6 +48,12 @@ type pragma =
 
 type memo<'a> = ref<option<'a>>
 
+//versioning for unification variables
+type version = {
+    major:int;
+    minor:int
+}
+
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
@@ -58,11 +64,11 @@ type universe =
   | U_max   of list<universe>
   | U_bvar  of int
   | U_name  of univ_name
-  | U_unif  of Unionfind.p_uvar<option<universe>>
+  | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
-type universe_uvar = Unionfind.p_uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
@@ -133,7 +139,7 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.p_uvar<option<term>>
+and uvar = Unionfind.p_uvar<option<term>> * version
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
