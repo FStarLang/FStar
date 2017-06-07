@@ -49,3 +49,13 @@ let _ = assert_by_tactic trivial (f B == B)
 let _ = assert_by_tactic trivial (A? A == true)
 let _ = assert_by_tactic trivial (D? (D 5) == true)
 let _ = assert_by_tactic trivial (D?.x (D 5) == 5)
+
+assume val p1 : Type
+assume val p2 : Type
+assume val proof_1 : squash p1
+assume val l : u:unit -> Lemma (requires p1) (ensures p2)
+
+let _ =
+    assert_by_tactic (apply_lemma (quote l);;
+                      exact (quote ());;
+                      exact (quote proof_1)) p2
