@@ -53,9 +53,20 @@ let _ = assert_by_tactic trivial (D?.x (D 5) == 5)
 assume val p1 : Type
 assume val p2 : Type
 assume val proof_1 : squash p1
-assume val l : u:unit -> Lemma (requires p1) (ensures p2)
+assume val l : unit -> unit -> Lemma (requires p1) (ensures p2)
 
 let _ =
     assert_by_tactic (apply_lemma (quote l);;
                       exact (quote ());;
+                      exact (quote ());;
                       exact (quote proof_1)) p2
+
+let _ =
+    assert_by_tactic (apply_lemma (quote (l ()));;
+                      exact (quote ());;
+                      exact (quote proof_1)) p2
+
+(* This fails, since when we fully apply `l` we get a Pure *)
+(* let _ = *)
+(*     assert_by_tactic (apply_lemma (quote (l () ()));; *)
+(*                       exact (quote proof_1)) p2 *)
