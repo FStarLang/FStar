@@ -506,6 +506,7 @@ let apply_lemma (tm:term) : tac<unit> =
              | Tm_uvar _ -> true //still unresolved
              | _ -> false) in
         solve goal solution;
+        bind dismiss (fun _ ->
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
             List.existsML (fun u -> UF.equiv u uv) free_uvars
@@ -536,7 +537,6 @@ let apply_lemma (tm:term) : tac<unit> =
         // Try to discharge the precondition, which is often trivial
         bind (trytac trivial) (fun _ ->
         bind (add_implicits g.implicits) (fun _ ->
-        bind dismiss (fun _ ->
         add_goals sub_goals)))))
 
 let rewrite (h:binder) : tac<unit> =
