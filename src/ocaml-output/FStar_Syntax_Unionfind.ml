@@ -23,20 +23,20 @@ let get: Prims.unit -> uf =
 let set: uf -> Prims.unit =
   fun u  ->
     let uu____77 =
-      let uu___100_78 = FStar_ST.read state in
-      { current = u; rest = (uu___100_78.rest) } in
+      let uu___101_78 = FStar_ST.read state in
+      { current = u; rest = (uu___101_78.rest) } in
     FStar_ST.write state uu____77
 let reset: Prims.unit -> Prims.unit =
   fun uu____85  ->
     let uu____86 =
-      let uu___101_87 = FStar_ST.read state in
+      let uu___102_87 = FStar_ST.read state in
       let uu____90 =
-        let uu___102_91 =
+        let uu___103_91 =
           let uu____92 = FStar_ST.read state in uu____92.current in
         let uu____95 = FStar_Unionfind.puf_empty () in
         let uu____97 = FStar_Unionfind.puf_empty () in
         { term_graph = uu____95; univ_graph = uu____97 } in
-      { current = uu____90; rest = (uu___101_87.rest) } in
+      { current = uu____90; rest = (uu___102_87.rest) } in
     FStar_ST.write state uu____86
 let new_transaction: Prims.unit -> tx =
   let tx_ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
@@ -45,28 +45,28 @@ let new_transaction: Prims.unit -> tx =
       FStar_Util.incr tx_ctr;
       (let uu____112 = FStar_ST.read tx_ctr in TX uu____112) in
     (let uu____116 =
-       let uu___103_117 = FStar_ST.read state in
+       let uu___104_117 = FStar_ST.read state in
        let uu____120 =
          let uu____124 = let uu____127 = get () in (tx, uu____127) in
          let uu____128 =
            let uu____132 = FStar_ST.read state in uu____132.rest in
          uu____124 :: uu____128 in
-       { current = (uu___103_117.current); rest = uu____120 } in
+       { current = (uu___104_117.current); rest = uu____120 } in
      FStar_ST.write state uu____116);
     tx
 let commit_or_rollback: Prims.bool -> tx -> Prims.unit =
   fun rb  ->
     fun tx  ->
-      let rec aux uu___99_151 =
-        match uu___99_151 with
+      let rec aux uu___100_151 =
+        match uu___100_151 with
         | [] -> failwith "Transaction identifier is invalid"
         | (tx',uf)::rest ->
             if tx = tx'
             then
               (if rb then set uf else ();
                (let uu____167 =
-                  let uu___104_168 = FStar_ST.read state in
-                  { current = (uu___104_168.current); rest } in
+                  let uu___105_168 = FStar_ST.read state in
+                  { current = (uu___105_168.current); rest } in
                 FStar_ST.write state uu____167))
             else aux rest in
       let uu____174 = let uu____178 = FStar_ST.read state in uu____178.rest in
@@ -79,11 +79,11 @@ let get_term_graph: Prims.unit -> tgraph =
 let set_term_graph: tgraph -> Prims.unit =
   fun tg  ->
     let next =
-      let uu___105_212 = get () in
-      { term_graph = tg; univ_graph = (uu___105_212.univ_graph) } in
+      let uu___106_212 = get () in
+      { term_graph = tg; univ_graph = (uu___106_212.univ_graph) } in
     let uu____213 =
-      let uu___106_214 = FStar_ST.read state in
-      { current = next; rest = (uu___106_214.rest) } in
+      let uu___107_214 = FStar_ST.read state in
+      { current = next; rest = (uu___107_214.rest) } in
     FStar_ST.write state uu____213
 let uvar_id: FStar_Syntax_Syntax.uvar -> Prims.int =
   fun u  ->
@@ -123,11 +123,11 @@ let get_univ_graph: Prims.unit -> ugraph =
 let set_univ_graph: ugraph -> Prims.unit =
   fun ug  ->
     let next =
-      let uu___107_281 = get () in
-      { term_graph = (uu___107_281.term_graph); univ_graph = ug } in
+      let uu___108_281 = get () in
+      { term_graph = (uu___108_281.term_graph); univ_graph = ug } in
     let uu____282 =
-      let uu___108_283 = FStar_ST.read state in
-      { current = next; rest = (uu___108_283.rest) } in
+      let uu___109_283 = FStar_ST.read state in
+      { current = next; rest = (uu___109_283.rest) } in
     FStar_ST.write state uu____282
 let univ_uvar_id: FStar_Syntax_Syntax.universe_uvar -> Prims.int =
   fun u  ->

@@ -801,18 +801,15 @@ let try_lookup_name:
                        let dd =
                          let uu____1979 =
                            (FStar_Syntax_Util.is_primop_lid lid2) ||
-                             ((ns_of_lid_equals lid2
-                                 FStar_Syntax_Const.prims_lid)
-                                &&
-                                (FStar_All.pipe_right quals
-                                   (FStar_Util.for_some
-                                      (fun uu___159_1981  ->
-                                         match uu___159_1981 with
-                                         | FStar_Syntax_Syntax.Projector
-                                             uu____1982 -> true
-                                         | FStar_Syntax_Syntax.Discriminator
-                                             uu____1985 -> true
-                                         | uu____1986 -> false)))) in
+                             (FStar_All.pipe_right quals
+                                (FStar_Util.for_some
+                                   (fun uu___159_1981  ->
+                                      match uu___159_1981 with
+                                      | FStar_Syntax_Syntax.Projector
+                                          uu____1982 -> true
+                                      | FStar_Syntax_Syntax.Discriminator
+                                          uu____1985 -> true
+                                      | uu____1986 -> false))) in
                          if uu____1979
                          then FStar_Syntax_Syntax.Delta_equational
                          else FStar_Syntax_Syntax.Delta_constant in

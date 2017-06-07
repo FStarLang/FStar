@@ -488,7 +488,7 @@ let by_tactic_interp:
                         (FStar_Errors.Error
                            ((Prims.strcat "user tactic failed: \""
                                (Prims.strcat s "\"")),
-                             (tactic.FStar_Syntax_Syntax.pos))))
+                             (assertion.FStar_Syntax_Syntax.pos))))
              | uu____949 -> (t, []))
 let rec traverse:
   (pol ->
@@ -751,27 +751,45 @@ let preprocess:
                                          uu____1564 in
                                      failwith uu____1563
                                  | Some phi -> phi in
-                               ((let uu____1567 = FStar_ST.read tacdbg in
+                               ((let uu____1567 =
+                                   let uu____1568 =
+                                     FStar_TypeChecker_Rel.teq_nosmt
+                                       g.FStar_Tactics_Basic.context
+                                       g.FStar_Tactics_Basic.witness
+                                       FStar_Syntax_Const.exp_unit in
+                                   Prims.op_Negation uu____1568 in
                                  if uu____1567
                                  then
-                                   let uu____1570 =
-                                     FStar_Util.string_of_int n1 in
-                                   let uu____1571 =
-                                     FStar_Tactics_Basic.goal_to_string g in
-                                   FStar_Util.print2 "Got goal #%s: %s\n"
-                                     uu____1570 uu____1571
-                                 else ());
+                                   let uu____1569 =
+                                     let uu____1570 =
+                                       FStar_Syntax_Print.term_to_string
+                                         g.FStar_Tactics_Basic.witness in
+                                     FStar_Util.format1
+                                       "Irrelevant tactic witness does not unify with (): %s"
+                                       uu____1570 in
+                                   failwith uu____1569
+                                 else
+                                   (let uu____1572 = FStar_ST.read tacdbg in
+                                    if uu____1572
+                                    then
+                                      let uu____1575 =
+                                        FStar_Util.string_of_int n1 in
+                                      let uu____1576 =
+                                        FStar_Tactics_Basic.goal_to_string g in
+                                      FStar_Util.print2 "Got goal #%s: %s\n"
+                                        uu____1575 uu____1576
+                                    else ()));
                                 (let gt' =
-                                   let uu____1574 =
-                                     let uu____1575 =
+                                   let uu____1579 =
+                                     let uu____1580 =
                                        FStar_Util.string_of_int n1 in
                                      Prims.strcat "Could not prove goal #"
-                                       uu____1575 in
-                                   FStar_TypeChecker_Util.label uu____1574
+                                       uu____1580 in
+                                   FStar_TypeChecker_Util.label uu____1579
                                      FStar_Range.dummyRange phi in
                                  ((n1 + (Prims.parse_int "1")),
                                    (((g.FStar_Tactics_Basic.context), gt') ::
                                    gs1))))) s gs in
-                  let uu____1581 = s1 in
-                  match uu____1581 with
-                  | (uu____1590,gs1) -> (env2, t') :: gs1))))
+                  let uu____1586 = s1 in
+                  match uu____1586 with
+                  | (uu____1595,gs1) -> (env2, t') :: gs1))))
