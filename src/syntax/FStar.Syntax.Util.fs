@@ -1101,7 +1101,7 @@ let un_squash t =
                     | [b] -> b
                     | _ -> failwith "impossible"
             in
-            // A bit paranoid, but need this check
+            // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
             if set_mem (fst b) (Free.names p)
             then None
             else Some p

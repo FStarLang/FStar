@@ -20,8 +20,6 @@ let rec fib n =
 let _ = assert_by_tactic trivial (fib 5 = 5)
 let _ = assert_by_tactic trivial (fib 5 == 5)
 
-let f : int -> int = fun x -> x + 2
-
 let _ =
     let x = 1 in
     assert_by_tactic trefl (1 == x)
