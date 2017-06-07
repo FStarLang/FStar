@@ -213,7 +213,7 @@ type uvar<'a when 'a : not struct> = cell<'a>
 
 exception Impos
 
-type tx = int
+type tx = Prims.int
 
 let log : ref<list<(tx * list<(unit -> unit)>)>> = Util.mk_ref []
 
@@ -222,7 +222,7 @@ let log_undo x = match !log with
     | _ -> ()//no current transaction; nothing to log
 
 let new_transaction =
-    let tx_ctr = ref 0 in
+    let tx_ctr = ref (Prims.parse_int "0") in
     fun () ->
         let tx = incr tx_ctr; !tx_ctr in
         log := (tx, [])::!log ;
@@ -280,7 +280,7 @@ let find x =
         | _ -> failwith "impossible"
 
 let uvar_id uv = match (rep uv).contents with
-  | Data (_, id) -> id
+  | Data (_, id) -> Prims.of_int id
   | _ -> failwith "impossible"
 
 let union x y =

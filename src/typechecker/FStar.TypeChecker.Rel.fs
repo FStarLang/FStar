@@ -293,9 +293,9 @@ let p_scope = function
 let p_invert = function
    | TProb p -> TProb <| invert p
    | CProb p -> CProb <| invert p
-let is_top_level_prob p = p_reason p |> List.length = 1
+let is_top_level_prob p = p_reason p |> List.length = (Prims.parse_int "1")
 let next_pid =
-    let ctr = BU.mk_ref 0 in
+    let ctr = BU.mk_ref (Prims.parse_int "0") in
     fun () -> incr ctr; !ctr
 
 let mk_problem scope orig lhs rel rhs elt reason = {
@@ -971,14 +971,14 @@ type im_or_proj_t = ((uvar * typ) * binders * comp)
                     * list<arg>  //invariant: length args = length binders
                     * ((list<tc> -> typ) * (typ -> bool) * list<(option<binder> * variance * tc)>)
 
-let rigid_rigid       = 0
-let flex_rigid_eq     = 1
-let flex_refine_inner = 2
-let flex_refine       = 3
-let flex_rigid        = 4
-let rigid_flex        = 5
-let refine_flex       = 6
-let flex_flex         = 7
+let rigid_rigid       = Prims.parse_int "0"
+let flex_rigid_eq     = Prims.parse_int "1"
+let flex_refine_inner = Prims.parse_int "2"
+let flex_refine       = Prims.parse_int "3"
+let flex_rigid        = Prims.parse_int "4"
+let rigid_flex        = Prims.parse_int "5"
+let refine_flex       = Prims.parse_int "6"
+let flex_flex         = Prims.parse_int "7"
 let compress_tprob wl p = {p with lhs=whnf wl.tcenv p.lhs; rhs=whnf wl.tcenv p.rhs}
 
 let compress_prob wl p = match p with
@@ -986,7 +986,7 @@ let compress_prob wl p = match p with
     | CProb _ -> p
 
 
-let rank wl pr : int    //the rank
+let rank wl pr : Prims.int    //the rank
                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
                  =
    let prob = compress_prob wl pr |> maybe_invert_p in
@@ -1027,7 +1027,7 @@ let rank wl pr : int    //the rank
 
 let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
                  * list<prob>    //all the other problems in wl
-                 * int           //the rank of the first problem, or the minimum rank in the wl
+                 * Prims.int           //the rank of the first problem, or the minimum rank in the wl
                  =
     let rec aux (min_rank, min, out) probs = match probs with
         | [] -> min, out, min_rank
@@ -1043,7 +1043,7 @@ let next_prob wl : option<prob>  //a problem with the lowest rank, or a problem 
                 | Some m -> aux (rank, Some hd, m::out) tl
           else aux (min_rank, min, hd::out) tl in
 
-   aux (flex_flex + 1, None, []) wl.attempting
+   aux (flex_flex + (Prims.parse_int "1"), None, []) wl.attempting
 
 let is_flex_rigid rank = flex_refine_inner <= rank && rank <= flex_rigid
 let is_rigid_flex rank = rigid_flex <= rank && rank <= refine_flex
@@ -1306,8 +1306,8 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
                   let head1, _ = U.head_and_args t1 in
                   begin match (U.un_uinst head1).n with
                     | Tm_fvar {fv_delta=Delta_defined_at_level i} ->
-                      let prev = if i > 1
-                                 then Delta_defined_at_level (i - 1)
+                      let prev = if i > (Prims.parse_int "1")
+                                 then Delta_defined_at_level (i - (Prims.parse_int "1"))
                                  else Delta_constant in
                       let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
                       let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
@@ -1381,14 +1381,14 @@ and solve_flex_rigid_join  (env:env) (tp:tprob) (wl:worklist) : option<worklist>
         match h1.n, h2.n with
         | Tm_fvar tc1, Tm_fvar tc2 ->
           if S.fv_eq tc1 tc2
-          then if List.length args1 = 0
+          then if List.length args1 = (Prims.parse_int "0")
                then Some []
                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
 
         | Tm_name a, Tm_name b ->
           if S.bv_eq a b
-          then if List.length args1 = 0
+          then if List.length args1 = (Prims.parse_int "0")
                then Some []
                else Some [TProb <| new_problem env t1 EQ t2 None t1.pos "joining refinements"]
           else None
@@ -1402,7 +1402,7 @@ and solve_flex_rigid_join  (env:env) (tp:tprob) (wl:worklist) : option<worklist>
             | None -> None
             | Some m ->
               let x = freshen_bv x in
-              let subst = [DB(0, x)] in
+              let subst = [DB((Prims.parse_int "0"), x)] in
               let phi1 = SS.subst subst phi1 in
               let phi2 = SS.subst subst phi2 in
               Some (U.refine x (U.mk_conj phi1 phi2), m)
@@ -1502,7 +1502,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in
                let prob = TProb <| mk_problem scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
                let hd1 = freshen_bv hd1 in
-               let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
+               let subst = DB((Prims.parse_int "0"), hd1)::SS.shift_subst (Prims.parse_int "1") subst in  //extend the substitution
                let env = Env.push_bv env hd1 in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
@@ -1579,7 +1579,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (Print.term_to_string head2)
                             (args_to_string args2))
                             orig
-                else if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+                else if nargs=(Prims.parse_int "0") || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
                 then match solve_maybe_uinsts env orig head1 head2 wl with
                         | USolved wl -> solve env (solve_prob orig None [] wl)
                         | UFailed msg -> giveup env msg orig
@@ -1641,7 +1641,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         | Some p ->imitate orig env wl p in
 
     (* <project> used in flex_rigid *)
-    let project orig (env:Env.env) (wl:worklist) (i:int) (p:im_or_proj_t) : option<solution> =
+    let project orig (env:Env.env) (wl:worklist) (i:Prims.int) (p:im_or_proj_t) : option<solution> =
         let (u, xs, c), ps, (h, matches, qs) = p in
         //U p1..pn REL h q1..qm
         //extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
@@ -1730,23 +1730,23 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     (elim k_uv ps)
                     (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
 
-        let rec imitate_or_project (n:int) (stopt:option<im_or_proj_t>) (i:int) : solution =
+        let rec imitate_or_project (n:Prims.int) (stopt:option<im_or_proj_t>) (i:Prims.int) : solution =
             if i >= n || Option.isNone stopt
             then giveup env "flex-rigid case failed all backtracking attempts" orig
             else let st = Option.get stopt in
                  let tx = Unionfind.new_transaction () in
-                 if i = -1
+                 if i = Prims.parse_int "-1"
                  then match imitate orig env wl st with
                         | Failed _ ->
                           Unionfind.rollback tx;
-                          imitate_or_project n stopt (i + 1) //backtracking point
+                          imitate_or_project n stopt (i + (Prims.parse_int "1")) //backtracking point
                         | sol -> //no need to commit; we'll commit the enclosing transaction at the top-level
                           sol
                  else match project orig env wl i st with
                         | None
                         | Some (Failed _) ->
                           Unionfind.rollback tx;
-                          imitate_or_project n stopt (i + 1) //backtracking point
+                          imitate_or_project n stopt (i + (Prims.parse_int "1")) //backtracking point
                         | Some sol -> sol in
 
         let check_head fvs1 t2 =
@@ -1765,8 +1765,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let imitate_ok t2 = (* -1 means begin by imitating *)
             let fvs_hd = U.head_and_args t2 |> fst |> Free.names in
             if BU.set_is_empty fvs_hd
-            then -1 (* yes, start by imitating *)
-            else 0 (* no, start by projecting *) in
+            then (Prims.parse_int "-1") (* yes, start by imitating *)
+            else (Prims.parse_int "0") (* no, start by projecting *) in
 
         match maybe_pat_vars with
           | Some vars ->
@@ -1804,7 +1804,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                             (Print.term_to_string t1)
                                             (names_to_string fvs1)
                                             (names_to_string fvs2) in
-                    imitate_or_project (List.length args_lhs) (subterms args_lhs) (-1)
+                    imitate_or_project (List.length args_lhs) (subterms args_lhs) ((Prims.parse_int "-1"))
             else giveup env "free-variable check failed on a non-redex" orig
 
           | None when patterns_only ->
@@ -1817,7 +1817,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 then let im_ok = imitate_ok t2 in
                      let _ = if debug env <| Options.Other "Rel"
                              then BU.print2 "Not a pattern (%s) ... %s\n"
-                                                (Print.term_to_string t1) (if im_ok < 0 then "imitating" else "projecting") in
+                                                (Print.term_to_string t1) (if im_ok < (Prims.parse_int "0") then "imitating" else "projecting") in
                      imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok
                 else giveup env "head-symbol is free" orig in
    (* </flex-rigid> *)
@@ -2092,7 +2092,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let x2, phi2 = as_refinement env wl t2 in
         let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
-        let subst = [DB(0, x1)] in
+        let subst = [DB((Prims.parse_int "0"), x1)] in
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
         let env = Env.push_bv env x1 in
@@ -2538,7 +2538,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
      let wl = {empty_worklist env with defer_ok=false} in
      sols |> List.map (fun (lb, v) ->
          //     printfn "Setting %s to its lower bound %s" (Print.univ_to_string v) (Print.univ_to_string lb);
-         match solve_universe_eq (-1) wl lb v with
+         match solve_universe_eq (Prims.parse_int "-1") wl lb v with
          | USolved wl -> ()
          | _ -> fail lb v)
    in

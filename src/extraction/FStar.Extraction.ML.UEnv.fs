@@ -71,10 +71,10 @@ let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if BU.starts_with x "'" then (x,n) else ("'A"^x,n) ///the addition of the space is intentional; it's apparently valid syntax of tvars
-let removeTick (x,n) = if BU.starts_with x "'" then (BU.substring_from x 1,n) else (x,n)
+let removeTick (x,n) = if BU.starts_with x "'" then (BU.substring_from x (Prims.parse_int "1"),n) else (x,n)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = id.idText, 0
+let convIdent (id:ident) : mlident = id.idText, (Prims.parse_int "0")
 
 (* TODO : need to make sure that the result of this name change does not collide with a variable already in the context. That might cause a change in semantics.
    E.g. , consider the following in F*
@@ -194,7 +194,7 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
 let find_uniq gamma mlident =
   let rec find_uniq mlident i =
-    let suffix = if i = 0 then "" else string_of_int i in
+    let suffix = if i = (Prims.parse_int "0") then "" else string_of_int i in
     let target_mlident = mlident ^ suffix in
     let has_collision = List.existsb (function
         | Bv (_, Inl (mlident', _))
@@ -203,11 +203,11 @@ let find_uniq gamma mlident =
         | Bv (_, Inr (mlident', _, _, _)) -> target_mlident = mlident'
       ) gamma in
     if has_collision then
-      find_uniq mlident (i + 1)
+      find_uniq mlident (i + (Prims.parse_int "1"))
     else
       target_mlident
   in
-  find_uniq mlident 0
+  find_uniq mlident (Prims.parse_int "0")
 
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
   (mk_unit:bool (*some pattern terms become unit while extracting*)) :
@@ -259,7 +259,7 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
-        {g with gamma=gamma}, (mlsymbol, 0)
+        {g with gamma=gamma}, (mlsymbol, (Prims.parse_int "0"))
     else failwith "freevars found"
 
 let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
@@ -288,7 +288,7 @@ let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
-   let a = "'a", -1 in
+   let a = "'a", (Prims.parse_int "-1") in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
 

@@ -52,14 +52,14 @@ and contents<'a when 'a : not struct> =
   | Fwd of cell<'a>
 type uvar<'a when 'a : not struct> = 'a cell
 
-val uvar_id: uvar<'a> -> int
+val uvar_id: uvar<'a> -> Prims.int
 val fresh : 'a -> uvar<'a>
 val find : uvar<'a> -> 'a
 val change : uvar<'a> -> 'a -> unit
 val equivalent : uvar<'a> -> uvar<'a> -> bool
 val union : uvar<'a> -> uvar<'a> -> unit
 
-type tx = int //don't rely on representation
+type tx = Prims.int //don't rely on representation
 val new_transaction: (unit -> tx)
 val rollback: tx -> unit
 val commit: tx -> unit

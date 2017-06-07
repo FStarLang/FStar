@@ -94,7 +94,7 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
      (path_of_ns currentModule ns, x)
 
 let ptsym_of_symbol (s : mlsymbol) : mlsymbol =
-    if Char.lowercase (String.get s 0) <> String.get s 0
+    if Char.lowercase (String.get s (Prims.parse_int "0")) <> String.get s (Prims.parse_int "0")
     then "l__" ^ s
     else s
 
@@ -108,7 +108,7 @@ let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
 
 let ptctor (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
     let (p, s) = mlpath_of_mlpath currentModule mlp in
-    let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
+    let s = if Char.uppercase (String.get s (Prims.parse_int "0")) <> String.get s (Prims.parse_int "0") then "U__" ^ s else s in
     String.concat "." (p @ [s])
 
 (* -------------------------------------------------------------------- *)
@@ -578,7 +578,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 
     let lets = List.map for1 lets in
     let lets = List.mapi (fun i doc ->
-        reduce1 [(if i = 0 then letdoc else text "and"); doc])
+        reduce1 [(if i = (Prims.parse_int "0") then letdoc else text "and"); doc])
         lets in
 
     combine hardline lets
@@ -589,7 +589,7 @@ and doc_of_loc (lineno, file) =
         empty
     else
         let file = BU.basename file in
-        reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
+        reduce1 [ text "#"; num (Prims.to_int lineno); text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
@@ -646,7 +646,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     in
 
     let doc = List.map for1 decls in
-    let doc = if (List.length doc >0) then reduce1 [text "type"; combine (text " \n and ") doc] else text "" in
+    let doc = if (List.length doc >(Prims.parse_int "0")) then reduce1 [text "type"; combine (text " \n and ") doc] else text "" in
     doc
 
 (* -------------------------------------------------------------------- *)

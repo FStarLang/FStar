@@ -27,7 +27,7 @@ type issue = {
 
 type error_handler = {
     eh_add_one: issue -> unit;
-    eh_count_errors: unit -> int;
+    eh_count_errors: unit -> Prims.int;
     eh_report: unit -> list<issue>;
     eh_clear: unit -> unit
 }
@@ -53,9 +53,9 @@ let print_issue issue =
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
-    | None, None -> 0
-    | None, Some _ -> -1
-    | Some _, None -> 1
+    | None, None -> Prims.parse_int "0"
+    | None, Some _ -> Prims.parse_int "-1"
+    | Some _, None -> Prims.parse_int "1"
     | Some r1, Some r2 -> Range.compare_use_range r1 r2
 
 let default_handler =

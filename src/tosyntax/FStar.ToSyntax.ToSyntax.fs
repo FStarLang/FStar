@@ -131,7 +131,7 @@ let op_as_term env arity rng op : option<S.term> =
       r C.op_Or Delta_equational
     | "+" ->
       r C.op_Addition Delta_equational
-    | "-" when (arity=1) ->
+    | "-" when (arity=(Prims.parse_int "1")) ->
       r C.op_Minus Delta_equational
     | "-" ->
       r C.op_Subtraction Delta_equational
@@ -154,19 +154,19 @@ let op_as_term env arity rng op : option<S.term> =
     | "<>" ->
       r C.op_notEq Delta_equational
     | "~"   ->
-      r C.not_lid (Delta_defined_at_level 2)
+      r C.not_lid (Delta_defined_at_level (Prims.parse_int "2"))
     | "=="  ->
       r C.eq2_lid Delta_constant
     | "<<" ->
       r C.precedes_lid Delta_constant
     | "/\\" ->
-      r C.and_lid (Delta_defined_at_level 1)
+      r C.and_lid (Delta_defined_at_level (Prims.parse_int "1"))
     | "\\/" ->
-      r C.or_lid (Delta_defined_at_level 1)
+      r C.or_lid (Delta_defined_at_level (Prims.parse_int "1"))
     | "==>" ->
-      r C.imp_lid (Delta_defined_at_level 1)
+      r C.imp_lid (Delta_defined_at_level (Prims.parse_int "1"))
     | "<==>" ->
-      r C.iff_lid (Delta_defined_at_level 2)
+      r C.iff_lid (Delta_defined_at_level (Prims.parse_int "2"))
     | _ -> None
   in
   match Env.try_lookup_lid env (compile_op_lid arity op.idText op.idRange) with
@@ -258,7 +258,7 @@ let head_and_args t =
 
 let close env t =
   let ftv = sort_ftv <| free_type_vars env t in
-  if List.length ftv = 0
+  if List.length ftv = (Prims.parse_int "0")
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type_level (Some Implicit)) in
        let result = mk_term (Product(binders, t)) t.range t.level in
@@ -266,7 +266,7 @@ let close env t =
 
 let close_fun env t =
   let ftv = sort_ftv <| free_type_vars env t in
-  if List.length ftv = 0
+  if List.length ftv = (Prims.parse_int "0")
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type_level (Some Implicit)) in
        let t = match (unparen t).tm with
@@ -327,7 +327,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
 let gather_pattern_bound_vars =
-  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) (fun _ -> 0) in
+  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then (Prims.parse_int "0") else (Prims.parse_int "1")) (fun _ -> (Prims.parse_int "0")) in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
@@ -372,12 +372,12 @@ let is_special_effect_combinator = function
   | _ -> false
 
 let rec sum_to_universe u n =
-    if n = 0 then u else U_succ (sum_to_universe u (n-1))
+    if n = (Prims.parse_int "0") then u else U_succ (sum_to_universe u (n-(Prims.parse_int "1")))
 
 let int_to_universe n = sum_to_universe U_zero n
 
 let rec desugar_maybe_non_constant_universe t
-  : either<int, Syntax.universe>  (* level of universe or desugared universe *)
+  : either<Prims.int, Syntax.universe>  (* level of universe or desugared universe *)
 =
   match (unparen t).tm with
       (* TODO : Check how this unification works *)
@@ -388,7 +388,7 @@ let rec desugar_maybe_non_constant_universe t
   | Const (Const_int (repr, _)) ->
       (* TODO : That might be a little dangerous... *)
       let n = int_of_string repr in
-      if n < 0
+      if n < (Prims.parse_int "0")
       then raise (Error("Negative universe constant  are not supported : "
                         ^ repr, t.range)) ;
       Inl n
@@ -417,7 +417,7 @@ let rec desugar_maybe_non_constant_universe t
             then Inr (U_max (List.map (function Inl n -> int_to_universe n | Inr u -> u) univargs))
             else
               let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
-              Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
+              Inl (List.fold_left (fun m n -> if m > n then m else n) (Prims.parse_int "0") nargs)
         (* TODO : Might not be the best place to raise the error... *)
         | _ -> raise(Error("Unexpected term " ^ term_to_string t ^ " in universe context", t.range))
       in aux t []
@@ -489,7 +489,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatOr _ -> failwith "impossible"
 
       | PatOp op ->
-        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
+        aux loc env ({ pat = PatVar (mk_ident (compile_op (Prims.parse_int "0") op.idText, op.idRange), None); prange = p.prange })
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
@@ -604,7 +604,7 @@ and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
   let mklet x = env, LetBinder(qualify env x, tun), [] in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText, x.idRange))
+    | PatOp x -> mklet (mk_ident (compile_op (Prims.parse_int "0") x.idText, x.idRange))
     | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), [])
@@ -714,7 +714,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     (* if op_Star has not been rebound, then it's reserved for tuples *)
     | Op(op_star, [_;_]) when
       Ident.text_of_id op_star = "*" &&
-      (op_as_term env 2 top.range op_star |> Option.isNone) ->
+      (op_as_term env (Prims.parse_int "2") top.range op_star |> Option.isNone) ->
       let rec flatten t = match t.tm with
         // * is left-associative
         | Op({idText = "*"}, [t1;t2]) -> flatten t1 @ [ t2 ]
@@ -734,7 +734,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       begin match op_as_term env (List.length args) top.range s with
         | None -> raise (Error("Unexpected or unbound operator: " ^ Ident.text_of_id s, top.range))
         | Some op ->
-            if List.length args > 0 then
+            if List.length args > (Prims.parse_int "0") then
               let args = args |> List.map (fun t -> desugar_term env t, None) in
               mk (Tm_app(op, args))
             else
@@ -755,7 +755,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       begin match try_lookup_effect_defn env eff_name with
         | Some ed ->
           let lid = U.dm4f_lid ed txt in
-          S.fvar lid (Delta_defined_at_level 1) None
+          S.fvar lid (Delta_defined_at_level (Prims.parse_int "1")) None
         | None ->
           failwith (BU.format2 "Member %s of effect %s is not accessible \
                                 (using an effect abbreviation instead of the original effect ?)"
@@ -916,12 +916,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                         | Some p, Some (sc, p') -> begin
                           match sc.n, p'.v with
                           | Tm_name _, _ ->
-                            let tup2 = S.lid_as_fv (U.mk_tuple_data_lid 2 top.range) Delta_constant (Some Data_ctor) in
+                            let tup2 = S.lid_as_fv (U.mk_tuple_data_lid (Prims.parse_int "2") top.range) Delta_constant (Some Data_ctor) in
                             let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
                             let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | Tm_app(_, args), Pat_cons(_, pats) ->
-                            let tupn = S.lid_as_fv (U.mk_tuple_data_lid (1 + List.length args) top.range) Delta_constant (Some Data_ctor) in
+                            let tupn = S.lid_as_fv (U.mk_tuple_data_lid ((Prims.parse_int "1") + List.length args) top.range) Delta_constant (Some Data_ctor) in
                             let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
                             let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
@@ -1041,7 +1041,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                          t
                     else if Options.ml_ish () //we're type-checking the compiler itself, e.g.
                     && Option.isSome (Env.try_lookup_effect_name env C.effect_ML_lid) //ML is in scope (not still in prims, e.g)
-                    && (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
+                    && (not is_rec || List.length args <> (Prims.parse_int "0")) //and we don't have something like `let rec f : t -> t' = fun x -> e`
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
@@ -1285,7 +1285,7 @@ and desugar_comp r env t =
         (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
-    if List.length args = 0
+    if List.length args = (Prims.parse_int "0")
     then fail (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
     let is_universe (_, imp) = imp = UnivApp in
     let universes, args = BU.take is_universe args in
@@ -1379,7 +1379,7 @@ and desugar_formula env (f:term) : S.term =
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_defined_at_level 1) None, [as_arg body])
+        mk <| Tm_app (S.fvar (set_lid_range q b.brange) (Delta_defined_at_level (Prims.parse_int "1")) None, [as_arg body])
 
       | _ -> failwith "impossible" in
 
@@ -1760,7 +1760,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       (* NOTE: derived operators such as projectors and discriminators are using the type names before unfolding. *)
       let data_ops = docs_tps_sigelts |> List.collect (fun (_, tps, se) -> mk_data_projector_names quals env (tps, se)) in
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > 1)->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs) when (List.length constrs > (Prims.parse_int "1"))->
           let quals = se.sigquals in
           let quals = if List.contains S.Abstract quals
                       then S.Private::quals
@@ -1792,7 +1792,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
     let eff_t = desugar_term env eff_typ in
 
     (* An effect for free has a type of the shape "a:Type -> Effect" *)
-    let for_free = List.length (fst (U.arrow_formals eff_t)) = 1 in
+    let for_free = List.length (fst (U.arrow_formals eff_t)) = (Prims.parse_int "1") in
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
@@ -2013,7 +2013,7 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     } in
     let se =
       (* An effect for free has a type of the shape "a:Type -> Effect" *)
-      let for_free = List.length (fst (U.arrow_formals ed.signature)) = 1 in
+      let for_free = List.length (fst (U.arrow_formals ed.signature)) = (Prims.parse_int "1") in
       { sigel = if for_free then Sig_new_effect_for_free (ed) else Sig_new_effect (ed);
         sigquals = List.map (trans_qual (Some mname)) quals;
         sigrng = d.drange;
@@ -2198,7 +2198,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let t, _ = fail_or env (try_lookup_lid env) C.exn_lid in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
-    let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);
+    let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, (Prims.parse_int "0"), [C.exn_lid]);
                sigquals = qual;
                sigrng = d.drange;
                sigmeta = default_sigmeta  } in
@@ -2218,7 +2218,7 @@ and desugar_decl env (d:decl) : (env_t * sigelts) =
     let t = U.arrow ([null_binder t]) (mk_Total <| fst (fail_or env (try_lookup_lid env) C.exn_lid)) in
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
-    let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, 0, [C.exn_lid]);
+    let se = { sigel = Sig_datacon(l, [], t, C.exn_lid, (Prims.parse_int "0"), [C.exn_lid]);
                sigquals = qual;
                sigrng = d.drange;
                sigmeta = default_sigmeta  } in

@@ -48,7 +48,7 @@ let z3_result_as_replay_result = function
 type hint_stat = {
     hint:option<hint>;
     replay_result:z3_replay_result;
-    elapsed_time:int;
+    elapsed_time:Prims.int;
     source_location:Range.range
 }
 type hint_stats_t = list<hint_stat>
@@ -128,12 +128,12 @@ let next_hint qname qindex =
 let record_hint hint =
     let hint = match hint with
         | None -> None //recording the elapsed time prevents us from reaching a fixpoint in the hints db
-        | Some h -> Some ({h with query_elapsed_time=0}) in
+        | Some h -> Some ({h with query_elapsed_time=(Prims.parse_int "0")}) in
     match !recorded_hints with
     | Some l -> recorded_hints := Some (l@[hint])
     | _ -> ()
 
-let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range) =
+let record_hint_stat (h:option<hint>) (res:z3_result) (time:Prims.int) (r:Range.range) =
     let s = {
         hint=h;
         replay_result=z3_result_as_replay_result res;
@@ -187,12 +187,12 @@ let filter_assertions (core:Z3.unsat_core) (theory:decls_t) =
             List.fold_right (fun d (theory, n_retained, n_pruned) -> match d with
             | Assume a ->
                 if List.contains a.assumption_name core
-                then d::theory, n_retained+1, n_pruned
+                then d::theory, n_retained+(Prims.parse_int "1"), n_pruned
                 else if BU.starts_with a.assumption_name "@"
                 then d::theory, n_retained, n_pruned
-                else theory, n_retained, n_pruned+1
+                else theory, n_retained, n_pruned+(Prims.parse_int "1")
             | _ -> d::theory, n_retained, n_pruned)
-            theory ([], 0, 0) in
+            theory ([], (Prims.parse_int "0"), (Prims.parse_int "0")) in
         let missed_assertions th core =
         let missed =
             core |> List.filter (fun nm ->
@@ -227,7 +227,7 @@ let filter_facts_without_core x = filter_using_facts_from x, false
 (***********************************************************************************)
 let ask_and_report_errors env all_labels prefix query suffix =
     Z3.giveZ3 prefix;
-    let query_name, query_index = match env.qname_and_index with
+    let query_name, (query_index:Prims.int) = match env.qname_and_index with
         | None -> failwith "No query name set!"
         | Some (q, n) -> Ident.text_of_lid q, n in
     let minimum_workable_fuel = BU.mk_ref None in
@@ -251,7 +251,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @suffix in
 
     let check (p:decl) =
-        let rlimit = Prims.op_Multiply (Options.z3_rlimit_factor ()) (Prims.op_Multiply (Options.z3_rlimit ()) 544656) in
+        let rlimit = Prims.op_Multiply (Options.z3_rlimit_factor ()) (Prims.op_Multiply (Options.z3_rlimit ()) (Prims.parse_int "544656")) in
         let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), rlimit in
         let hint_opt = next_hint query_name query_index in
         let unsat_core, initial_config =
@@ -261,23 +261,23 @@ let ask_and_report_errors env all_labels prefix query suffix =
               let core, timeout =
                 if Option.isSome hint.unsat_core
                 then hint.unsat_core, rlimit
-                else None, Prims.op_Multiply 60 544656 in
+                else None, Prims.op_Multiply (Prims.parse_int "60") (Prims.parse_int "544656") in
               core,
               (hint.fuel, hint.ifuel, timeout) in
         let alt_configs = List.flatten
            [(if default_initial_config <> initial_config
              || Option.isSome unsat_core                          then [default_initial_config]                                       else []);
             (if Options.max_ifuel()    >  Options.initial_ifuel() then [Options.initial_fuel(), Options.max_ifuel(), rlimit] else []);
-            (if Options.max_fuel() / 2 >  Options.initial_fuel()  then [Options.max_fuel() / 2, Options.max_ifuel(), rlimit] else []);
+            (if Options.max_fuel() / (Prims.parse_int "2") >  Options.initial_fuel()  then [Options.max_fuel() / (Prims.parse_int "2"), Options.max_ifuel(), rlimit] else []);
             (if Options.max_fuel()     >  Options.initial_fuel() &&
                 Options.max_ifuel()   >=  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), rlimit] else []);
-            (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), 1, rlimit]                       else [])] in
+            (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), (Prims.parse_int "1"), rlimit]                       else [])] in
         let report p (errs:z3_err) : unit =
             let errs : z3_err =
-                if Options.detail_errors() && Options.n_cores() = 1
+                if Options.detail_errors() && Options.n_cores() = (Prims.parse_int "1")
                 then let min_fuel, potential_errors = match !minimum_workable_fuel with
                         | Some (f, errs) -> f, errs
-                        | None -> (Options.min_fuel(), 1, rlimit), errs in
+                        | None -> (Options.min_fuel(), (Prims.parse_int "1"), rlimit), errs in
                      let ask_z3 label_assumptions =
                         let res = BU.mk_ref None in
                         Z3.ask filter_facts_without_core all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
@@ -332,7 +332,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                          [(if Options.print_z3_statistics() then
                             let f k v a = a ^ k ^ "=" ^ v ^ " " in
                             let str = smap_fold statistics f "statistics={" in
-                             (substring str 0 ((String.length str) - 1)) ^ "}"
+                             (substring str (Prims.parse_int "0") ((String.length str) - (Prims.parse_int "1"))) ^ "}"
                            else
                             (match smap_try_find statistics "reason-unknown" with
                              | Some v -> "(reason-unknown=" ^ v ^ ")" | _ -> ""))])
@@ -340,7 +340,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
             let refine_hint unsat_core scope =
                 let current_core = BU.mk_ref unsat_core in
                 let hint_worked = BU.mk_ref false in
-                let rec refine_hint (core_ext_max_dist:int) =
+                let rec refine_hint (core_ext_max_dist:Prims.int) =
                     if not !hint_worked then
                         let hint_check_cb (result, elapsed_time, statistics) =
                             let tag = (match result with
@@ -374,17 +374,17 @@ let ask_and_report_errors env all_labels prefix query suffix =
                                 (Some scope)
                                 (hint_refinement_cb) ;
                             if (!refinement_ok) then
-                                let cutoff = 10 in
+                                let cutoff = (Prims.parse_int "10") in
                                 if (core_ext_max_dist) >= cutoff then (
                                     BU.print "\tHint-fallback smt.core.extend_patterns.max_distance=%s reached, aborting refinement." [ (BU.string_of_int cutoff) ];
                                     current_core := None
                                 ) else
-                                    refine_hint (core_ext_max_dist + 1)
+                                    refine_hint (core_ext_max_dist + (Prims.parse_int "1"))
                         ) in
                 (let z3cliopts_before = Options.z3_cliopt() in
                 let log_queries_before = Options.log_queries() in
                 Options.set_option "log_queries" (Options.Bool false) ;
-                refine_hint (1) ;
+                refine_hint ((Prims.parse_int "1")) ;
                 Options.set_option "z3cliopt" (Options.List (List.map (fun x -> (Options.String x)) z3cliopts_before)) ;
                 Options.set_option "log_queries" (Options.Bool log_queries_before)) ;
                 { hint_name=query_name;

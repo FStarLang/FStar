@@ -88,7 +88,7 @@ type env = {
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
+  qname_and_index:option<(lident*Prims.int)>;           (* the top-level term we're currently processing and the nth query for it *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -154,14 +154,14 @@ val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> universes -> lident -> option<(binders * comp)>
 val norm_eff_name          : (env -> lident -> lident)
 val lookup_effect_quals    : env -> lident -> list<qualifier>
-val lookup_projector       : env -> lident -> int -> lident
+val lookup_projector       : env -> lident -> Prims.int -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
 val is_action              : env -> lident -> bool
 val is_interpreted         : (env -> term -> bool)
 val is_type_constructor    : env -> lident -> bool
-val num_inductive_ty_params: env -> lident -> int
+val num_inductive_ty_params: env -> lident -> Prims.int
 
 (* Universe instantiation *)
 

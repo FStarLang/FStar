@@ -28,7 +28,7 @@ module BU = FStar.Util
 (****************************************************************************)
 type z3version =
 | Z3V_Unknown of string
-| Z3V of int * int * int
+| Z3V of Prims.int * Prims.int * Prims.int
 
 let z3version_as_string = function
     | Z3V_Unknown s -> BU.format1 "unknown version: %s" s
@@ -46,7 +46,7 @@ let z3v_compare known (w1, w2, w3) =
 let z3v_le known wanted =
     match z3v_compare known wanted with
     | None   -> false
-    | Some i -> i >= 0
+    | Some i -> i >= (Prims.parse_int "0")
 
 let _z3version : ref<option<z3version>> = BU.mk_ref None
 
@@ -72,7 +72,7 @@ let get_z3version () =
 
 let ini_params () =
   let z3_v = get_z3version () in
-  begin if z3v_le (get_z3version ()) (4, 4, 0)
+  begin if z3v_le (get_z3version ()) ((Prims.parse_int "4"), (Prims.parse_int "4"),(Prims.parse_int "0"))
   then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
@@ -124,9 +124,9 @@ type query_log = {
 
 
 let query_logging =
-    let query_number = BU.mk_ref 0 in
+    let query_number = BU.mk_ref (Prims.parse_int "0") in
     let log_file_opt : ref<option<file_handle>> = BU.mk_ref None in
-    let used_file_names : ref<list<(string * int)>> = BU.mk_ref [] in
+    let used_file_names : ref<list<(string * Prims.int)>> = BU.mk_ref [] in
     let current_module_name : ref<option<string>> = BU.mk_ref None in
     let current_file_name : ref<option<string>> = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
@@ -140,11 +140,11 @@ let query_logging =
           let file_name =
               match List.tryFind (fun (m, _) -> n=m) !used_file_names with
               | None ->
-                used_file_names := (n, 0)::!used_file_names;
+                used_file_names := (n, Prims.parse_int "0")::!used_file_names;
                 n
               | Some (_, k) ->
-                used_file_names := (n, k+1)::!used_file_names;
-                BU.format2 "%s-%s" n (BU.string_of_int (k+1)) in
+                used_file_names := (n, k+(Prims.parse_int "1"))::!used_file_names;
+                BU.format2 "%s-%s" n (BU.string_of_int (k+(Prims.parse_int "1"))) in
           let file_name = BU.format1 "queries-%s.smt2" file_name in
           current_file_name := Some file_name;
           let fh = BU.open_file_for_writing file_name in
@@ -165,12 +165,12 @@ let query_logging =
           dir_name
         | Some n -> n in
       let qnum = !query_number in
-      query_number := !query_number + 1;
+      query_number := !query_number + (Prims.parse_int "1");
       let file_name = BU.format1 "query-%s.smt2" (BU.string_of_int qnum) in
       let file_name = BU.concat_dir_filename dir_name file_name in
       write_file file_name str in
     let write_to_log str =
-      if (Options.n_cores() > 1) then write_to_new_log str
+      if (Options.n_cores() > (Prims.parse_int "1")) then write_to_new_log str
       else append_to_log str
       in
     let close_log () = match !log_file_opt with
@@ -188,7 +188,7 @@ let query_logging =
 let bg_z3_proc =
     let the_z3proc = BU.mk_ref None in
     let new_proc =
-        let ctr = BU.mk_ref (-1) in
+        let ctr = BU.mk_ref (Prims.parse_int "-1") in
         fun () -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
     let z3proc () =
       if !the_z3proc = None then
@@ -225,12 +225,12 @@ let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
     let get_data lines =
         let parse_core s : unsat_core =
             let s = BU.trim_string s in
-            let s = BU.substring s 1 (String.length s - 2) in
+            let s = BU.substring s (Prims.parse_int "1") (String.length s - (Prims.parse_int "2")) in
             if BU.starts_with s "error"
             then None
             else BU.split s " " |> BU.sort_with String.compare |> Some in
         let core = BU.mk_ref None in
-        let statistics : z3statistics = BU.smap_create 0 in
+        let statistics : z3statistics = BU.smap_create (Prims.parse_int "0") in
         let reason_unknown = BU.mk_ref "" in
         let in_core = BU.mk_ref false in
         let in_statistics = BU.mk_ref false in
@@ -253,8 +253,8 @@ let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
                     |  "" :: entry :: [] ->
                         let tokens = BU.split entry " " in
                         let key = List.hd tokens in
-                        let ltok = List.nth tokens ((List.length tokens) - 1) in
-                        let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
+                        let ltok = List.nth tokens ((List.length tokens) - (Prims.parse_int "1")) in
+                        let value = if BU.ends_with ltok ")" then (BU.substring ltok (Prims.parse_int "0") ((String.length ltok) - (Prims.parse_int "1"))) else ltok in
                         BU.smap_add statistics key value
                     | _ -> ()
                 else if !in_reason_unknown then
@@ -317,18 +317,18 @@ type error_kind =
     | Timeout
     | Kill
     | Default
-type z3job = job<(either<unsat_core, (error_labels * error_kind)> * int * z3statistics)>
+type z3job = job<(either<unsat_core, (error_labels * error_kind)> * Prims.int * z3statistics)>
 
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
-let pending_jobs = BU.mk_ref 0
+let pending_jobs = BU.mk_ref (Prims.parse_int "0")
 let with_monitor m f =
     BU.monitor_enter(m);
     let res = f () in
     BU.monitor_exit(m);
     res
 
-let z3_job fresh (label_messages:error_labels) input () : either<unsat_core, (error_labels * error_kind)> * int * z3statistics =
+let z3_job fresh (label_messages:error_labels) input () : either<unsat_core, (error_labels * error_kind)> * Prims.int * z3statistics =
   let ekind = function
     | TIMEOUT _ -> Timeout
     | SAT _
@@ -373,7 +373,7 @@ and dequeue () = match !running with
       match !job_queue with
         | [] ->
           BU.monitor_exit job_queue;
-          BU.sleep(50);
+          BU.sleep((Prims.parse_int "50"));
           aux ()
         | _ -> dequeue'() in
     aux()
@@ -386,10 +386,10 @@ and run_job j = j.callback <| j.job ()
 let init () =
     running := true;
     let n_cores = (Options.n_cores()) in
-    if (n_cores > 1) then
+    if (n_cores > (Prims.parse_int "1")) then
       let rec aux n =
-          if n = 0 then ()
-          else (spawn dequeue; aux (n - 1)) in
+          if n = (Prims.parse_int "0") then ()
+          else (spawn dequeue; aux (n - (Prims.parse_int "1"))) in
       aux n_cores
     else ()
 
@@ -403,9 +403,9 @@ let finish () =
     let rec aux () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
-        if n+m=0
+        if n+m=(Prims.parse_int "0")
         then running := false
-        else let _ = BU.sleep(500) in
+        else let _ = BU.sleep((Prims.parse_int "500")) in
              aux() in
     aux()
 
@@ -451,7 +451,7 @@ let giveZ3 decls =
 
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
-    if (Options.n_cores() < 2) then
+    if (Options.n_cores() < (Prims.parse_int "2")) then
         bg_z3_proc.refresh();
         bg_scope := List.flatten (List.rev !fresh_scope)
 
@@ -491,7 +491,7 @@ let mk_input theory =
 
 type z3result =
     either<unsat_core, (error_labels*error_kind)>
-    * int
+    * Prims.int
     * z3statistics
 type cb = z3result -> unit
 
@@ -529,7 +529,7 @@ let ask
     (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
-  = if Options.n_cores() = 1 then
+  = if Options.n_cores() = (Prims.parse_int "1") then
         ask_1_core filter label_messages qry cb
     else
         ask_n_cores filter label_messages qry scope cb

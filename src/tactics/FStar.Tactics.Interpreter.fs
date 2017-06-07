@@ -142,50 +142,50 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
-    [ mk "__forall_intros" 1 (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
-      mk "__implies_intro" 1 (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
-      mk "__trivial"  1 (mk_tactic_interpretation_0 ps trivial E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__revert"  1 (mk_tactic_interpretation_0 ps revert E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__clear"   1 (mk_tactic_interpretation_0 ps clear E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__split"   1 (mk_tactic_interpretation_0 ps split E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__merge"   1 (mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__rewrite" 2 (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__smt"     1 (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__exact"   2 (mk_tactic_interpretation_1 ps exact E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__apply_lemma" 2 (mk_tactic_interpretation_1 ps apply_lemma E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__visit"   2 (mk_tactic_interpretation_1 ps visit
+    [ mk "__forall_intros" (Prims.parse_int "1") (mk_tactic_interpretation_0 ps intros E.embed_binders E.fstar_tactics_binders);
+      mk "__implies_intro" (Prims.parse_int "1") (mk_tactic_interpretation_0 ps imp_intro E.embed_binder E.fstar_tactics_binder);
+      mk "__trivial"  (Prims.parse_int "1") (mk_tactic_interpretation_0 ps trivial E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__revert"  (Prims.parse_int "1") (mk_tactic_interpretation_0 ps revert E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__clear"   (Prims.parse_int "1") (mk_tactic_interpretation_0 ps clear E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__split"   (Prims.parse_int "1") (mk_tactic_interpretation_0 ps split E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__merge"   (Prims.parse_int "1") (mk_tactic_interpretation_0 ps merge_sub_goals E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__rewrite" (Prims.parse_int "2") (mk_tactic_interpretation_1 ps rewrite E.unembed_binder E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__smt"     (Prims.parse_int "1") (mk_tactic_interpretation_0 ps smt E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__exact"   (Prims.parse_int "2") (mk_tactic_interpretation_1 ps exact E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__apply_lemma" (Prims.parse_int "2") (mk_tactic_interpretation_1 ps apply_lemma E.unembed_term E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__visit"   (Prims.parse_int "2") (mk_tactic_interpretation_1 ps visit
                                                 (unembed_tactic_0 E.unembed_unit)
                                                 E.embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
-      mk "__focus"   2  (mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
+      mk "__focus"   (Prims.parse_int "2")  (mk_tactic_interpretation_1 ps (focus_cur_goal "user_tactic")
                                                 (unembed_tactic_0 E.unembed_unit)
                                                 E.embed_unit
                                                 FStar.TypeChecker.Common.t_unit);
-      mk "__seq"     3 (mk_tactic_interpretation_2 ps seq
+      mk "__seq"     (Prims.parse_int "3") (mk_tactic_interpretation_2 ps seq
                                             (unembed_tactic_0 E.unembed_unit)
                                             (unembed_tactic_0 E.unembed_unit)
                                             E.embed_unit
                                             FStar.TypeChecker.Common.t_unit);
-      mk "__term_as_formula" 1 (mk_pure_interpretation_1 E.term_as_formula
+      mk "__term_as_formula" (Prims.parse_int "1") (mk_pure_interpretation_1 E.term_as_formula
                                              E.unembed_term
                                              (E.embed_option E.embed_formula E.fstar_tactics_formula));
-      mk "__inspect" 1 (mk_pure_interpretation_1 E.inspect E.unembed_term (E.embed_option E.embed_term_view E.fstar_tactics_term_view));
-      mk "__pack" 1 (mk_pure_interpretation_1 E.pack E.unembed_term_view E.embed_term);
+      mk "__inspect" (Prims.parse_int "1") (mk_pure_interpretation_1 E.inspect E.unembed_term (E.embed_option E.embed_term_view E.fstar_tactics_term_view));
+      mk "__pack" (Prims.parse_int "1") (mk_pure_interpretation_1 E.pack E.unembed_term_view E.embed_term);
 
-      mk "__inspect_fv" 1 (mk_pure_interpretation_1 E.inspectfv E.unembed_fvar (E.embed_list E.embed_string FStar.TypeChecker.Common.t_string));
-      mk "__pack_fv"    1 (mk_pure_interpretation_1 E.packfv (E.unembed_list E.unembed_string) E.embed_fvar);
+      mk "__inspect_fv" (Prims.parse_int "1") (mk_pure_interpretation_1 E.inspectfv E.unembed_fvar (E.embed_list E.embed_string FStar.TypeChecker.Common.t_string));
+      mk "__pack_fv"    (Prims.parse_int "1") (mk_pure_interpretation_1 E.packfv (E.unembed_list E.unembed_string) E.embed_fvar);
 
-      mk "__inspect_bv" 1 (mk_pure_interpretation_1 E.inspectbv E.unembed_binder E.embed_string);
-      mk "__compare_binder" 2 (mk_pure_interpretation_2 order_binder E.unembed_binder E.unembed_binder E.embed_order);
+      mk "__inspect_bv" (Prims.parse_int "1") (mk_pure_interpretation_1 E.inspectbv E.unembed_binder E.embed_string);
+      mk "__compare_binder" (Prims.parse_int "2") (mk_pure_interpretation_2 order_binder E.unembed_binder E.unembed_binder E.embed_order);
 
-      mk "__binders_of_env"  1 (binders_of_env ps);
-      mk "__type_of_binder"  1 type_of_binder;
-      mk "__term_eq"         2 term_eq;
-      mk "__print"           2 (mk_tactic_interpretation_1 ps (fun x -> ret (tacprint x)) E.unembed_string E.embed_unit
+      mk "__binders_of_env"  (Prims.parse_int "1") (binders_of_env ps);
+      mk "__type_of_binder"  (Prims.parse_int "1") type_of_binder;
+      mk "__term_eq"         (Prims.parse_int "2") term_eq;
+      mk "__print"           (Prims.parse_int "2") (mk_tactic_interpretation_1 ps (fun x -> ret (tacprint x)) E.unembed_string E.embed_unit
                                                               FStar.TypeChecker.Common.t_unit);
-      mk "__dump"            2 (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
-      mk "__term_to_string"  1 (mk_pure_interpretation_1 Print.term_to_string E.unembed_term E.embed_string);
-      mk "__grewrite"        3 (grewrite_interpretation ps)
+      mk "__dump"            (Prims.parse_int "2") (mk_tactic_interpretation_1 ps print_proof_state E.unembed_string E.embed_unit FStar.TypeChecker.Common.t_unit);
+      mk "__term_to_string"  (Prims.parse_int "1") (mk_pure_interpretation_1 Print.term_to_string E.unembed_term E.embed_string);
+      mk "__grewrite"        (Prims.parse_int "3") (grewrite_interpretation ps)
     ]
 
 //F* version: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
@@ -275,7 +275,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
         BU.print1 "About to preprocess %s\n" (Print.term_to_string goal);
-    let initial = (1, []) in
+    let initial = ((Prims.parse_int "1"), []) in
     let (t', gs) = traverse by_tactic_interp env goal in
     if !tacdbg then
         BU.print2 "Main goal simplified to: %s |- %s\n"
@@ -286,6 +286,6 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                  let gt' = TcUtil.label ("Goal #" ^ string_of_int n) dummyRange g.goal_ty in
-                 (n+1, (g.context, gt')::gs)) s gs in
+                 (n+(Prims.parse_int "1"), (g.context, gt')::gs)) s gs in
     let (_, gs) = s in
     (env, t') :: gs

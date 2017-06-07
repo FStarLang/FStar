@@ -35,7 +35,7 @@ type option_val =
   | Bool of bool
   | String of string
   | Path of string
-  | Int of int
+  | Int of Prims.int
   | List of list<option_val>
   | Unset
 
@@ -116,16 +116,16 @@ let defaults =
       ("ide"                          , Bool false);
       ("include"                      , List []);
       ("indent"                       , Bool false);
-      ("initial_fuel"                 , Int 2);
-      ("initial_ifuel"                , Int 1);
+      ("initial_fuel"                 , Int (Prims.parse_int "2"));
+      ("initial_ifuel"                , Int (Prims.parse_int "1"));
       ("lax"                          , Bool false);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
-      ("max_fuel"                     , Int 8);
-      ("max_ifuel"                    , Int 2);
-      ("min_fuel"                     , Int 1);
+      ("max_fuel"                     , Int (Prims.parse_int "8"));
+      ("max_ifuel"                    , Int (Prims.parse_int "2"));
+      ("min_fuel"                     , Int (Prims.parse_int "1"));
       ("MLish"                        , Bool false);
-      ("n_cores"                      , Int 1);
+      ("n_cores"                      , Int (Prims.parse_int "1"));
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
@@ -150,7 +150,7 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
-      ("split_cases"                  , Int 0);
+      ("split_cases"                  , Int (Prims.parse_int "0"));
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -164,10 +164,10 @@ let defaults =
       ("verify_module"                , List []);
       ("warn_default_effects"         , Bool false);
       ("z3refresh"                    , Bool false);
-      ("z3rlimit"                     , Int 5);
-      ("z3rlimit_factor"              , Int 1);
-      ("z3seed"                       , Int 0);
-      ("z3timeout"                    , Int 5);
+      ("z3rlimit"                     , Int (Prims.parse_int "5"));
+      ("z3rlimit_factor"              , Int (Prims.parse_int "1"));
+      ("z3seed"                       , Int (Prims.parse_int "0"));
+      ("z3timeout"                    , Int (Prims.parse_int "5"));
       ("z3cliopt"                     , List []);
       ("__no_positivity"              , Bool false)]
 
@@ -177,7 +177,7 @@ let init () =
    defaults |> List.iter set_option'                          //initialize it with the default values
 
 let clear () =
-   let o = Util.smap_create 50 in
+   let o = Util.smap_create (Prims.parse_int "50") in
    fstar_options := [o];                                 //clear and reset the options stack
    light_off_files := [];
    init()
@@ -931,7 +931,7 @@ let should_verify m =
          * here. *)
         List.existsML (fun f ->
           let f = basename f in
-          let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+          let f = String.substring f (Prims.parse_int "0") (String.length f - String.length (get_file_extension f) - (Prims.parse_int "1")) in
           String.lowercase f = m
         ) (file_list ())
     | l ->

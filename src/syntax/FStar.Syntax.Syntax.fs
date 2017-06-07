@@ -357,7 +357,7 @@ let withsort v s = withinfo v s dummyRange
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
 let order_bv x y =
   let i = String.compare x.ppname.idText y.ppname.idText in
-  if i = 0
+  if i = (Prims.parse_int "0")
   then x.index - y.index
   else i
 
@@ -450,7 +450,7 @@ let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
 let null_id  = mk_ident("_", dummyRange)
-let null_bv k = {ppname=null_id; index=0; sort=k}
+let null_bv k = {ppname=null_id; index=(Prims.parse_int "0"); sort=k}
 let mk_binder (a:bv) : binder = a, None
 let null_binder t : binder = null_bv t, None
 let imp_tag = Implicit false
@@ -483,9 +483,9 @@ let pat_bvs (p:pat) : list<bv> =
 
 (* Gen sym *)
 let gen_reset =
-    let x = Util.mk_ref 0 in
+    let x = Util.mk_ref (Prims.parse_int "0") in
     let gen () = incr x; !x in
-    let reset () = x := 0 in
+    let reset () = x := (Prims.parse_int "0") in
     gen, reset
 let next_id = fst gen_reset
 let reset_gensym = snd gen_reset

@@ -45,26 +45,26 @@ let eq_const c1 c2 =
     | _ -> c1=c2
 
 open FStar.Mul
-let rec pow2 (x:int) : int =
+let rec pow2 (x:Prims.int) : Prims.int =
   match x with
-  | 0  -> 1
-  | _  -> Prims.op_Multiply 2 (pow2 (x-1))
+  | x when x = Prims.parse_int "0" -> Prims.parse_int "1"
+  | _  -> Prims.op_Multiply (Prims.parse_int "2") (pow2 (x-(Prims.parse_int "1")))
 
 
-let bounds signedness width =
+let bounds signedness width : (Prims.int * Prims.int)=
     let n =
         match width with
-        | Int8 -> 8
-        | Int16 -> 16
-        | Int32 -> 32
-        | Int64 -> 64
+        | Int8 -> Prims.parse_int "8"
+        | Int16 -> Prims.parse_int "16"
+        | Int32 -> Prims.parse_int "32"
+        | Int64 -> Prims.parse_int "64"
     in
     let lower, upper =
       match signedness with
       | Unsigned ->
-        0, pow2 n - 1
+        Prims.parse_int "0", pow2 n - Prims.parse_int "1"
       | Signed ->
-        let upper = pow2 (n - 1) in
-        - upper, upper - 1
+        let upper = pow2 (n - Prims.parse_int "1") in
+        - upper, upper - Prims.parse_int "1"
     in
     lower, upper

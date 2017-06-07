@@ -34,7 +34,7 @@ let has_cygpath =
 //on cygwin emacs this is required
 
 let try_convert_file_name_to_mixed =
-  let cache = BU.smap_create 20 in
+  let cache = BU.smap_create (Prims.parse_int "20") in
   fun (s:string) ->
     if has_cygpath then
       match BU.smap_try_find cache s with

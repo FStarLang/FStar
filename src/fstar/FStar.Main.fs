@@ -32,17 +32,17 @@ let cleanup () = Util.kill_all ()
 
 (* printing a finished message *)
 let finished_message fmods errs =
-  let print_to = if errs > 0 then Util.print_error else Util.print_string in
+  let print_to = if errs > (Prims.parse_int "0") then Util.print_error else Util.print_string in
   if not (Options.silent()) then begin
     fmods |> List.iter (fun ((iface, name), time) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
                 if Options.should_print_message name.str
-                then if time >= 0
+                then if time >= (Prims.parse_int "0")
                 then print_to (Util.format3 "Verified %s: %s (%s milliseconds)\n"
                                                         tag (Ident.text_of_lid name) (Util.string_of_int time))
                 else print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
-    if errs > 0
-    then if errs = 1
+    if errs > (Prims.parse_int "0")
+    then if errs = (Prims.parse_int "1")
          then Util.print_error "1 error was reported (see above)\n"
          else Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs)
     else print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
@@ -52,7 +52,7 @@ let finished_message fmods errs =
 let report_errors fmods =
   FStar.Errors.report_all () |> ignore;
   let nerrs = FStar.Errors.get_err_count() in
-  if nerrs > 0 then begin
+  if nerrs > (Prims.parse_int "0") then begin
     finished_message fmods nerrs;
     exit 1
   end
@@ -103,7 +103,7 @@ let go _ =
             Util.print_error "--explicit_deps incompatible with --in\n";
             exit 1
           end;
-          if List.length filenames <> 1 then begin
+          if List.length filenames <> (Prims.parse_int "1") then begin
             Util.print_error "fstar-mode.el should pass the current filename to F*\n";
             exit 1
           end;
@@ -124,7 +124,7 @@ let go _ =
           then FStar.Indent.generate filenames
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
-        else if List.length filenames >= 1 then begin //normal batch mode
+        else if List.length filenames >= (Prims.parse_int "1") then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin
               if Options.verify_module () <> [] then begin
@@ -142,7 +142,7 @@ let go _ =
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
-          finished_message module_names_and_times 0
+          finished_message module_names_and_times (Prims.parse_int "1")
         end //end normal batch mode
         else
           Util.print_error "no file provided\n"

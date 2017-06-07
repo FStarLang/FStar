@@ -180,9 +180,9 @@ let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
 
 let gen_reset =
-    let x = U.mk_ref 0 in
+    let x = U.mk_ref (Prims.parse_int "0") in
     let gen () = U.incr x; U.read x in
-    let reset () = U.write x 0 in
+    let reset () = U.write x (Prims.parse_int "0") in
     gen, reset
 let next_id = fst gen_reset
 
@@ -205,8 +205,8 @@ let const_to_string x = match x with
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
 (* tuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_dtuple (n:int) :(string -> lident) =
-  if n = 2 then pconst else psconst
+let mod_prefix_dtuple (n:Prims.int) :(string -> lident) =
+  if n = (Prims.parse_int "2") then pconst else psconst
 
  let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -223,5 +223,5 @@ let is_tuple_data_lid' f =
     f.nsstr = "FStar.Pervasives" && U.starts_with f.ident.idText "Mktuple"
 
 let is_name (lid:lident) =
-  let c = U.char_at lid.ident.idText 0 in
+  let c = U.char_at lid.ident.idText (Prims.parse_int "0") in
   U.is_upper c

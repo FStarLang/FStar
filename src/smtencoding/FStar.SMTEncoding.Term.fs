@@ -82,12 +82,12 @@ type qop =
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
-  | BoundV     of int
+  | BoundV     of Prims.int
   | FreeV      of fv
   | App        of op  * list<term> //ops are always fully applied; we're in a first-order theory
   | Quant      of qop
                   * list<list<pat>>  //disjunction of conjunctive patterns
-                  * option<int>      //an optional weight; seldom used
+                  * option<Prims.int>      //an optional weight; seldom used
                   * list<sort>       //sorts of each bound variable
                   * term             //body
   | Let        of list<term> // bound terms
@@ -104,7 +104,7 @@ type binders = list<(string * sort)>
 type constructor_field = string  //name of the field
                        * sort    //sort of the field
                        * bool    //true if the field is projectible
-type constructor_t = (string * list<constructor_field> * sort * int * bool)
+type constructor_t = (string * list<constructor_field> * sort * Prims.int * bool)
 type constructors  = list<constructor_t>
 type fact_db_id =
     | Name of Ident.lid
@@ -291,14 +291,14 @@ let mkCases t r = match t with
   | hd::tl -> List.fold_left (fun out t -> mkAnd (out, t) r) hd tl
 
 let mkQuant (qop, pats, wopt, vars, body) r =
-  if List.length vars = 0 then body
+  if List.length vars = (Prims.parse_int "0") then body
   else
     match body.tm with
     | App(TrueOp, _) -> body
     | _ -> mk (Quant(qop,pats,wopt,vars,body)) r
 
 let mkLet (es, body) r =
-  if List.length es = 0 then body
+  if List.length es = (Prims.parse_int "0") then body
   else mk (Let (es,body)) r
 
 (*****************************************************)
@@ -308,7 +308,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
   let nvars = List.length fvs in
   let index_of fv = match BU.try_find_index (fv_eq fv) fvs with
     | None -> None
-    | Some i -> Some (nvars - (i + 1))
+    | Some i -> Some (nvars - (i + (Prims.parse_int "1")))
   in
   let rec aux ix t =
     match !t.freevars with
@@ -329,11 +329,11 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
           let n = List.length vars in
           mkQuant(qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body) t.rng
         | Let (es, body) ->
-          let ix, es_rev = List.fold_left (fun (ix, l) e -> ix+1, aux ix e::l) (ix, []) es in
+          let ix, es_rev = List.fold_left (fun (ix, l) e -> ix+(Prims.parse_int "1"), aux ix e::l) (ix, []) es in
           mkLet (List.rev es_rev, aux ix body) t.rng
       end
   in
-  aux 0 t
+  aux (Prims.parse_int "0") t
 
 let inst tms t =
   let tms = List.rev tms in //forall x y . t   ... y is an index 0 in t
@@ -342,7 +342,7 @@ let inst tms t =
     | Integer _
     | FreeV _ -> t
     | BoundV i ->
-      if 0 <= i - shift && i - shift < n
+      if Prims.parse_int "0" <= i - shift && i - shift < n
       then List.nth tms (i - shift)
       else t
     | App(op, tms) -> mkApp'(op, List.map (aux shift) tms) t.rng
@@ -353,10 +353,10 @@ let inst tms t =
       let shift = shift + m in
       mkQuant(qop, pats |> List.map (List.map (aux shift)), wopt, vars, aux shift body) t.rng
     | Let (es, body) ->
-      let shift, es_rev = List.fold_left (fun (ix, es) e -> shift+1, aux shift e::es) (shift, []) es in
+      let shift, es_rev = List.fold_left (fun (ix, es) e -> shift+(Prims.parse_int "1"), aux shift e::es) (shift, []) es in
       mkLet (List.rev es_rev, aux shift body) t.rng
   in
-  aux 0 t
+  aux (Prims.parse_int "0") t
 
 let subst (t:term) (fv:fv) (s:term) = inst [s] (abstr [fv] t)
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
@@ -402,7 +402,7 @@ let fresh_constructor (name, arg_sorts, sort, id) =
 let injective_constructor (name, fields, sort) =
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ string_of_int i in
-    let bvar_index i = n_bvars - (i + 1) in
+    let bvar_index i = n_bvars - (i + (Prims.parse_int "1")) in
     let bvar i s = mkFreeV(bvar_name i, s) in
     let bvars = fields |> List.mapi (fun i (_, s, _) -> bvar i s norng) in
     let bvar_names = List.map fv_of_term bvars in
@@ -471,12 +471,12 @@ let name_binders_inner prefix_opt outer_names start sorts =
         let nm = prefix ^ string_of_int n in
         let names = (nm,s)::names in
         let b = BU.format2 "(%s %s)" nm (strSort s) in
-        names, b::binders, n+1)
+        names, b::binders, n+(Prims.parse_int "1"))
         (outer_names, [], start)  in
     names, List.rev binders, n
 
 let name_macro_binders sorts =
-    let names, binders, n = name_binders_inner (Some "__") [] 0 sorts in
+    let names, binders, n = name_binders_inner (Some "__") [] (Prims.parse_int "0") sorts in
     List.rev names, binders
 
 let termToSmt
@@ -484,11 +484,11 @@ let termToSmt
   =
   fun enclosing_name t ->
       let next_qid =
-          let ctr = BU.mk_ref 0 in
+          let ctr = BU.mk_ref (Prims.parse_int "0") in
           fun depth ->
             let n = !ctr in
             BU.incr ctr;
-            if n = 0 then enclosing_name
+            if n = (Prims.parse_int "0") then enclosing_name
             else BU.format2 "%s.%s" enclosing_name (BU.string_of_int n)
       in
       let remove_guard_free pats =
@@ -542,7 +542,7 @@ let termToSmt
               let nm = "@lb" ^ string_of_int n0 in
               let names0 = (nm, Term_sort)::names0 in
               let b = BU.format2 "(%s %s)" nm (aux n names e) in
-              names0, b::binders, n0+1)
+              names0, b::binders, n0+(Prims.parse_int "1"))
             (names, [], n)
             es
           in
@@ -556,7 +556,7 @@ let termToSmt
         then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
         else s
       in
-      aux 0 0 [] t
+      aux 0 (Prims.parse_int "0") [] t
 
 
 let caption_to_string = function
@@ -674,16 +674,16 @@ and mkPrelude z3options =
                 (assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n\
                 (assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))"
    in
-   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
-                                 ("Tm_type",  [], Term_sort, 2, true);
-                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
-                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort, true)],  Term_sort, 5, true);
-                                 ("Tm_unit",  [], Term_sort, 6, true);
-                                 ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
-                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);
-                                 ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, 9, true);
-                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, 10, true);
-                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
+   let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, Prims.parse_int "0", true);
+                                 ("Tm_type",  [], Term_sort, (Prims.parse_int "2"), true);
+                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, (Prims.parse_int "3"), false);
+                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort, true)],  Term_sort, (Prims.parse_int "5"), true);
+                                 ("Tm_unit",  [], Term_sort, (Prims.parse_int "6"), true);
+                                 ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, (Prims.parse_int "7"), true);
+                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, (Prims.parse_int "8"), true);
+                                 ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, (Prims.parse_int "9"), true);
+                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, (Prims.parse_int "10"), true);
+                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, (Prims.parse_int "11"), true)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
@@ -758,10 +758,10 @@ let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
 let mk_Precedes x1 x2 r = mkApp("Precedes", [x1;x2])  r|> mk_Valid
 let mk_LexCons x1 x2 r  = mkApp("LexCons", [x1;x2]) r
 let rec n_fuel n =
-    if n = 0 then mkApp("ZFuel", []) norng
-    else mkApp("SFuel", [n_fuel (n - 1)]) norng
-let fuel_2 = n_fuel 2
-let fuel_100 = n_fuel 100
+    if n = (Prims.parse_int "0") then mkApp("ZFuel", []) norng
+    else mkApp("SFuel", [n_fuel (n - (Prims.parse_int "1"))]) norng
+let fuel_2 = n_fuel (Prims.parse_int "2")
+let fuel_100 = n_fuel (Prims.parse_int "100")
 
 let mk_and_opt p1 p2 r = match p1, p2  with
   | Some p1, Some p2 -> Some (mkAnd(p1, p2) r)

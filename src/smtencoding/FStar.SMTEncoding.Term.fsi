@@ -62,10 +62,10 @@ type qop =
 
 type term' =
   | Integer    of string
-  | BoundV     of int
+  | BoundV     of Prims.int
   | FreeV      of fv
   | App        of op  * list<term>
-  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
+  | Quant      of qop * list<list<pat>> * option<Prims.int> * list<sort> * term
   | Let        of list<term> * term
   | Labeled    of term * string * Range.range
   | LblPos     of term * string
@@ -79,7 +79,7 @@ type binders = list<(string * sort)>
 type constructor_field = string  //name of the field
                        * sort    //sort of the field
                        * bool    //true if the field is projectible
-type constructor_t = (string * list<constructor_field> * sort * int * bool)
+type constructor_t = (string * list<constructor_field> * sort * Prims.int * bool)
 type constructors  = list<constructor_t>
 type fact_db_id =
     | Name of Ident.lid
@@ -123,8 +123,8 @@ val free_variables: term -> fvs
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
 val mkInteger : string -> Range.range -> term
-val mkInteger': int -> Range.range -> term
-val mkBoundV : int -> Range.range -> term
+val mkInteger': Prims.int -> Range.range -> term
+val mkBoundV : Prims.int -> Range.range -> term
 val mkFreeV  : (string * sort) -> Range.range -> term
 val mkApp' : (op * list<term>) -> Range.range -> term
 val mkApp  : (string * list<term>) -> Range.range -> term

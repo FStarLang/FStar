@@ -87,7 +87,7 @@ let ord_Lt = lid_as_data_tm ord_Lt_lid
 let ord_Eq = lid_as_data_tm ord_Eq_lid
 let ord_Gt = lid_as_data_tm ord_Gt_lid
 
-let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
+let lid_Mktuple2 = U.mk_tuple_data_lid (Prims.parse_int "2") Range.dummyRange
 
 let protect_embedded_term (t:typ) (x:term) =
     S.mk_Tm_app fstar_tactics_embed [S.iarg t; S.as_arg x] None x.pos

@@ -115,9 +115,9 @@ let rec reconstruct_lex (e:exp) =
   | Tm_app (f, args) ->
       let args = filter_imp args in
       let exps = List.map fst args in
-      if is_lex_cons f && List.length exps = 2 then
-        match reconstruct_lex (List.nth exps 1) with
-        | Some xs -> Some (List.nth exps 0 :: xs)
+      if is_lex_cons f && List.length exps = (Prims.parse_int "2") then
+        match reconstruct_lex (List.nth exps (Prims.parse_int "1")) with
+        | Some xs -> Some (List.nth exps (Prims.parse_int "0") :: xs)
         | None    -> None
       else None
   | _ -> if is_lex_top e then Some [] else None
@@ -178,7 +178,7 @@ let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionf
 
 let rec int_of_univ n u = match Subst.compress_univ u with
     | U_zero -> n, None
-    | U_succ u -> int_of_univ (n+1) u
+    | U_succ u -> int_of_univ (n+(Prims.parse_int "1")) u
     | _ -> n, Some u
 
 let rec univ_to_string u =
@@ -192,7 +192,7 @@ let rec univ_to_string u =
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u ->
-        begin match int_of_univ 1 u with
+        begin match int_of_univ (Prims.parse_int "1") u with
             | n, None -> string_of_int n
             | n, Some u -> U.format2 "(%s + %s)" (univ_to_string u) (string_of_int n)
         end

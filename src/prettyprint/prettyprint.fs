@@ -31,24 +31,24 @@ let doc_of_char (c:char) : document = P.char c
 let doc_of_string (s:string) : document = P.string s
 let doc_of_bool (b:bool) : document = P.string (string_of_bool b)
 
-let substring (s:string) (sofs:int) (len:int) : document = P.substring s sofs len
+let substring (s:string) (sofs:int) (len:int) : document = P.substring s (to_int sofs) (to_int len)
 
-let fancystring (s:string) (ofs:int) : document = P.fancystring s ofs
+let fancystring (s:string) (ofs:int) : document = P.fancystring s (to_int ofs)
 
-let fancysubstring (s:string) (ofs:int) (len:int) (app_len:int) : document = P.fancysubstring s ofs len app_len
+let fancysubstring (s:string) (ofs:int) (len:int) (app_len:int) : document = P.fancysubstring s (to_int ofs) (to_int len) (to_int app_len)
 
 let utf8string (s:string) : document = P.utf8string s
 
 let hardline : document = P.hardline
 
-let blank (n:int) : document = P.blank n
+let blank (n:int) : document = P.blank (to_int n)
 
-let break_ (n:int) : document = P.break_ n
+let break_ (n:int) : document = P.break_ (to_int n)
 
 let (^^) (doc1:document) (doc2:document) : document = C.concat [doc1; doc2]
 let (^/^) (doc1:document) (doc2:document) : document = C.concat [doc1; P.break_ 1; doc2]
 
-let nest (j:int) (doc:document) : document = P.nest j doc
+let nest (j:int) (doc:document) : document = P.nest (to_int j) doc
 
 let group (doc:document) : document = P.group doc
 
@@ -113,7 +113,7 @@ let brackets(d)  = C.brackets(d)
 
 let twice (doc)  = C.twice (doc)
 
-let repeat (n:int) (doc)  = C.repeat (n:int) (doc)
+let repeat (n:int) (doc)  = C.repeat (to_int n) (doc)
 
 let concat docs  = C.concat docs
 
@@ -141,22 +141,22 @@ let flow_map (sep) (f:('a -> document)) (docs:'a list)  = C.flow_map (sep) (f:('
 
 let url (s:string)  = C.url (s:string)
 
-let hang (n:int) (doc)  = C.hang (n:int) (doc)
+let hang (n:int) (doc)  = C.hang (to_int n) (doc)
 
-let prefix (n:int) (b:int) (left) (right)  = C.prefix (n:int) (b:int) (left) (right)
+let prefix (n:int) (b:int) (left) (right)  = C.prefix (to_int n) (to_int b) (left) (right)
 
-let jump (n:int) (b:int) (right)  = C.jump (n:int) (b:int) (right)
+let jump (n:int) (b:int) (right)  = C.jump (to_int n) (to_int b) (right)
 
-let infix (n:int) (b:int) (middle) (left) (right)  = C.infix (n:int) (b:int) (middle) (left) (right)
+let infix (n:int) (b:int) (middle) (left) (right)  = C.infix (to_int n) (to_int b) (middle) (left) (right)
 
-let surround (n:int) (b:int) (opening) (contents) (closing)  = C.surround (n:int) (b:int) (opening) (contents) (closing)
+let surround (n:int) (b:int) (opening) (contents) (closing)  = C.surround (to_int n) (to_int b) (opening) (contents) (closing)
 
-let soft_surround (n:int) (b:int) (opening) (contents) (closing)  = C.soft_surround (n:int) (b:int) (opening) (contents) (closing)
+let soft_surround (n:int) (b:int) (opening) (contents) (closing)  = C.soft_surround (to_int n) (to_int b) (opening) (contents) (closing)
 
 let surround_separate (n:int) (b:int) (v) (opening) (sep) (closing) (docs) =
-    C.surround_separate (n:int) (b:int) (v) (opening) (sep) (closing) (docs)
+    C.surround_separate (to_int n) (to_int b) (v) (opening) (sep) (closing) (docs)
 
-let surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)  = C.surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)
+let surround_separate_map (n:int) (b:int) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)  = C.surround_separate_map (to_int n) (to_int b) (v) (opening) (sep) (closing) (f:('a -> document)) (docs:'a list)
 
 //let ( ^^ ) (x) (y)  = failwith not_impl_msg
 

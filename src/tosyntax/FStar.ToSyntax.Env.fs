@@ -134,7 +134,7 @@ let qualify env id =
     | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
 let syntax_only env = env.syntax_only
 let set_syntax_only env b = { env with syntax_only = b }
-let new_sigmap () = BU.smap_create 100
+let new_sigmap () = BU.smap_create (Prims.parse_int "100")
 let empty_env () = {curmodule=None;
                     curmonad=None;
                     modules=[];
@@ -373,7 +373,7 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
           else aux q
 
         | Module_abbrev (name, modul) :: _
-          when nslen = 0 && name.idText = lid.ident.idText ->
+          when nslen = (Prims.parse_int "0") && name.idText = lid.ident.idText ->
           Some modul
 
         | _ :: q ->
@@ -1105,7 +1105,7 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
     in
     let open_ns =
       // JP: auto-deps is not aware of that. Fix it once [universes] is the default.
-      if List.length mname.ns <> 0
+      if List.length mname.ns <> (Prims.parse_int "0")
       then let ns = Ident.lid_of_ids mname.ns in
            ns::open_ns //the namespace of the current module, if any, is implicitly in scope
       else open_ns in
@@ -1142,7 +1142,7 @@ let fail_or env lookup lid = match lookup lid with
     let opened_modules = List.map (fun (lid, _) -> text_of_lid lid) env.modules in
     let msg = BU.format1 "Identifier not found: [%s]" (text_of_lid lid) in
     let msg =
-      if List.length lid.ns = 0
+      if List.length lid.ns = (Prims.parse_int "0")
       then
        msg
       else

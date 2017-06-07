@@ -44,9 +44,9 @@ let dWw0 n = int32 (n          &&& 0xFFFFFFFFL)
 
 type bytes = byte[]
 
-let length (b:byte[]) = Array.length b
+let length (b:byte[]) : Prims.int = Prims.of_int (Array.length b)
 let get (b:byte[]) n = int32 (Array.get b n)
-let make (f : _ -> int) n = Array.init n (fun i -> byte (f i))
+let make (f : _ -> int) (n: Prims.int) = Array.init (Prims.to_int n) (fun i -> byte (f i))
 let zero_create n : byte[] = Array.create n (byte 0)
 
 let really_input (is:TextReader) n =
@@ -62,7 +62,7 @@ let maybe_input (is:TextReader) n =
 let output (os:TextWriter) b =
   Pervasives.output os b 0 (Array.length b)
 
-let sub ( b:byte[]) s l = Array.sub b s l
+let sub ( b:byte[]) s l = Array.sub b (Prims.to_int s) (Prims.to_int l)
 let set bb n (b:int32) = Array.set bb n (byte b)
 let blit (a:byte[]) b c d e = Array.blit a b c d e
 let string_as_unicode_bytes (s:string) = System.Text.Encoding.Unicode.GetBytes s
@@ -70,8 +70,8 @@ let utf8_bytes_as_string (b:bytes) = System.Text.Encoding.UTF8.GetString b
 let unicode_bytes_as_string (b:bytes) = System.Text.Encoding.Unicode.GetString b
 let compare (b1:bytes) (b2:bytes) = compare b1 b2
 
-let to_intarray (b:bytes) =  Array.init (length b) (get b)
-let of_intarray (arr:int[]) = make (fun i -> arr.[i]) (Array.length arr)
+let to_intarray (b:bytes) =  Array.init (Prims.to_int (length b)) (get b)
+let of_intarray (arr:int[]) = make (fun i -> arr.[i]) (Prims.of_int (Array.length arr))
 
 let string_as_utf8_bytes (s:string) = System.Text.Encoding.UTF8.GetBytes s
 
@@ -85,16 +85,16 @@ let string_as_unicode_bytes_null_terminated (s:string) =
 
 
 module Bytestream =
-    type t = { bytes: bytes; mutable pos: int; max: int }
+    type t = { bytes: bytes; mutable pos: Prims.int; max: Prims.int }
 
     let of_bytes b n len =
-        if n < 0 || (n+len) > length b then failwith "Bytestream.of_bytes";
+        if n < (Prims.parse_int "0") || (n+len) > length b then failwith "Bytestream.of_bytes";
         { bytes = b; pos = n; max = n+len }
 
     let read_byte b  =
         if b.pos >= b.max then failwith "Bytestream.of_bytes.read_byte: end of stream";
-        let res = get b.bytes b.pos in
-        b.pos <- b.pos + 1;
+        let res = get b.bytes (Prims.to_int b.pos) in
+        b.pos <- b.pos + (Prims.parse_int "1");
         res
 
     let read_bytes b n  =
@@ -108,11 +108,11 @@ module Bytestream =
     let skip b n = b.pos <- b.pos + n
 
     let read_unicode_bytes_as_string (b:t) n =
-        let res = System.Text.Encoding.Unicode.GetString(b.bytes,b.pos,n) in
+        let res = System.Text.Encoding.Unicode.GetString(b.bytes,(Prims.to_int b.pos),(Prims.to_int n)) in
         b.pos <- b.pos + n; res
 
     let read_utf8_bytes_as_string (b:t) n =
-        let res = System.Text.Encoding.UTF8.GetString(b.bytes,b.pos,n) in
+        let res = System.Text.Encoding.UTF8.GetString(b.bytes,(Prims.to_int b.pos),(Prims.to_int n)) in
         b.pos <- b.pos + n; res
 
 type bytebuf =
@@ -144,7 +144,7 @@ module Bytebuf =
     let emit_bool_as_byte buf (b:bool) = emit_int_as_byte buf (if b then 1 else 0)
 
     let emit_bytes buf i =
-        let n = length i in
+        let n = Prims.to_int (length i) in
         let new_size = buf.bbCurrent + n in
         ensure_bytebuf buf new_size;
         blit i 0 buf.bbArray buf.bbCurrent n;
@@ -189,7 +189,7 @@ module Bytebuf =
 
 let create i = Bytebuf.create i
 let close t = Bytebuf.close t
-let emit_int_as_byte t i = Bytebuf.emit_int_as_byte t i
+let emit_int_as_byte t (i:Prims.int) = Bytebuf.emit_int_as_byte t (Prims.to_int i)
 let emit_bytes t b = Bytebuf.emit_bytes t b
 
 let f_encode f (b:bytes) : string =

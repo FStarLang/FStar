@@ -41,11 +41,11 @@ val end_of_range: range -> pos
 val file_of_use_range: range -> string
 val start_of_use_range: range -> pos
 val end_of_use_range: range -> pos
-val line_of_pos: pos -> int
-val col_of_pos: pos -> int
+val line_of_pos: pos -> Prims.int
+val col_of_pos: pos -> Prims.int
 val end_range: range -> range
-val compare: range -> range -> int
-val compare_use_range: range -> range -> int
+val compare: range -> range -> Prims.int
+val compare_use_range: range -> range -> Prims.int
 val set_file_of_range: range -> string -> unit
 val range_before_pos : range -> pos -> bool
 val end_of_line : pos -> pos

@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Normalize
+open Prims
 open FStar.All
 open FStar
 open FStar.Util
@@ -70,7 +71,7 @@ and steps = list<step>
 
 type primitive_step = {
     name:Ident.lid;
-    arity:int;
+    arity:Prims.int;
     strong_reduction_ok:bool;
     interpretation:(Range.range -> args -> option<term>)
 }
@@ -424,7 +425,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
-    let int_as_const  : Range.range -> int  -> term =
+    let int_as_const  : Range.range -> Prims.int  -> term =
         fun p i -> const_as_tm (FC.Const_int (BU.string_of_int i, None)) p
     in
     let bool_as_const : Range.range -> bool -> term =
@@ -521,7 +522,7 @@ let built_in_primitive_steps : list<primitive_step> =
     let unary_int_op (f:int -> int) =
         unary_op arg_as_int (fun r x -> int_as_const r (f x))
     in
-    let binary_int_op (f:int -> int -> int) =
+    let binary_int_op (f:Prims.int -> Prims.int -> Prims.int) =
         binary_op arg_as_int (fun r x y -> int_as_const r (f x y))
     in
     let unary_bool_op (f:bool -> bool) =
@@ -556,26 +557,26 @@ let built_in_primitive_steps : list<primitive_step> =
         string_as_const rng (if b then "true" else "false")
     in
     let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
-            [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
-             (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
-             (Const.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
-             (Const.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
-             (Const.op_Division,    2, binary_int_op (fun x y -> (x / y)));
-             (Const.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
-             (Const.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
-             (Const.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
-             (Const.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
-             (Const.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
-             (Const.op_Negation,    1, unary_bool_op (fun x -> not x));
-             (Const.op_And,         2, binary_bool_op (fun x y -> x && y));
-             (Const.op_Or,          2, binary_bool_op (fun x y -> x || y));
-             (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
-             (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
-             (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
+            [(Const.op_Minus,       (Prims.parse_int "1"), unary_int_op (fun x -> - x));
+             (Const.op_Addition,    (Prims.parse_int "2"), binary_int_op (fun x y -> (x + y)));
+             (Const.op_Subtraction, (Prims.parse_int "2"), binary_int_op (fun x y -> (x - y)));
+             (Const.op_Multiply,    (Prims.parse_int "2"), binary_int_op (fun x y -> (Prims.op_Multiply x y)));
+             (Const.op_Division,    (Prims.parse_int "2"), binary_int_op (fun x y -> (x / y)));
+             (Const.op_LT,          (Prims.parse_int "2"), binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
+             (Const.op_LTE,         (Prims.parse_int "2"), binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
+             (Const.op_GT,          (Prims.parse_int "2"), binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
+             (Const.op_GTE,         (Prims.parse_int "2"), binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
+             (Const.op_Modulus,     (Prims.parse_int "2"), binary_int_op (fun x y -> (x % y)));
+             (Const.op_Negation,    (Prims.parse_int "1"), unary_bool_op (fun x -> not x));
+             (Const.op_And,         (Prims.parse_int "2"), binary_bool_op (fun x y -> x && y));
+             (Const.op_Or,          (Prims.parse_int "2"), binary_bool_op (fun x y -> x || y));
+             (Const.strcat_lid,     (Prims.parse_int "2"), binary_string_op (fun x y -> x ^ y));
+             (Const.string_of_int_lid, (Prims.parse_int "1"), unary_op arg_as_int string_of_int);
+             (Const.string_of_bool_lid, (Prims.parse_int "1"), unary_op arg_as_bool string_of_bool);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
-                                    1, unary_op arg_as_string list_of_string');
+                                    (Prims.parse_int "1"), unary_op arg_as_string list_of_string');
              (Const.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list arg_as_char) string_of_list')]
+                                    (Prims.parse_int "1"), unary_op (arg_as_list arg_as_char) string_of_list')]
     in
     let bounded_arith_ops =
         let bounded_int_types =
@@ -587,9 +588,9 @@ let built_in_primitive_steps : list<primitive_step> =
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
         bounded_int_types |> List.collect (fun m ->
-        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
-         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
-         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
+        [(Const.p2l ["FStar"; m; "add"], (Prims.parse_int "2"), binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
+         (Const.p2l ["FStar"; m; "sub"], (Prims.parse_int "2"), binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
+         (Const.p2l ["FStar"; m; "mul"], (Prims.parse_int "2"), binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)))])
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
@@ -617,19 +618,19 @@ let equality_ops : list<primitive_step> =
     in
     let decidable_equality =
         {name = Const.op_Eq;
-         arity = 3;
+         arity = (Prims.parse_int "3");
          strong_reduction_ok=true;
          interpretation=interp_bool}
     in
     let propositional_equality =
         {name = Const.eq2_lid;
-         arity = 3;
+         arity = (Prims.parse_int "3");
          strong_reduction_ok=true;
          interpretation = interp_prop}
     in
     let hetero_propositional_equality =
         {name = Const.eq3_lid;
-         arity = 4;
+         arity = (Prims.parse_int "4");
          strong_reduction_ok=true;
          interpretation = interp_prop}
     in
@@ -764,7 +765,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
         log cfg  (fun () -> BU.print3 ">>> %s\nNorm %s with top of the stack %s \n"
                                         (Print.tag_of_term t)
                                         (Print.term_to_string t)
-                                        (stack_to_string (fst <| firstn 4 stack)));
+                                        (stack_to_string (fst <| firstn (Prims.parse_int "4") stack)));
         match t.n with
           | Tm_delayed _ ->
             failwith "Impossible"
@@ -875,7 +876,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
                       in
                       let n = List.length us in
-                      if n > 0
+                      if n > (Prims.parse_int "0")
                       then match stack with //universe beta reduction
                              | UnivArgs(us', _)::stack ->
                                let env = us' |> List.fold_left (fun env u -> Univ u::env) env in
@@ -1071,7 +1072,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let fix_f_i = mk (Tm_let(lbs, f_i)) t.pos in
                     let memo = BU.mk_ref None in
                     let rec_env = Clos(env, fix_f_i, memo, true)::rec_env in
-                    rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
+                    rec_env, memo::memos, i + (Prims.parse_int "1")) (snd lbs) (env, [], (Prims.parse_int "0")) in
             let _ = List.map2 (fun lb memo -> memo := Some (rec_env, lb.lbdef)) (snd lbs) memos in //tying the knot
             let body_env = List.fold_right (fun lb env -> Clos(rec_env, lb.lbdef, BU.mk_ref None, false)::env)
                                (snd lbs) env in

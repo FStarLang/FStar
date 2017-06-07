@@ -302,15 +302,15 @@ type query' =
 | DescribeProtocol
 | DescribeRepl
 | Pop
-| Push of push_kind * string * int * int * bool
+| Push of push_kind * string * Prims.int * Prims.int * bool
 | AutoComplete of string
-| Lookup of string * option<(string * int * int)> * list<string>
+| Lookup of string * option<(string * Prims.int * Prims.int)> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
-let interactive_protocol_vernum = 1
+let interactive_protocol_vernum = Prims.parse_int "1"
 
 let interactive_protocol_features =
   ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
@@ -491,7 +491,7 @@ let write_hello () =
 (******************************************************************************************)
 open FStar.Parser.ParseIt
 
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
+type repl_state = { repl_line: Prims.int; repl_column: Prims.int; repl_fname: string;
                     repl_stack: stack_t; repl_curmod: modul_t;
                     repl_env: env_t; repl_ts: m_timestamps;
                     repl_stdin: stream_reader }
@@ -512,7 +512,7 @@ let json_of_repl_state st =
                        opts_and_defaults))]
 
 let run_exit st =
-  ((QueryOK, JsonNull), Inr 0)
+  ((QueryOK, JsonNull), Inr (Prims.parse_int "0"))
 
 let run_describe_protocol st =
   ((QueryOK, JsonAssoc json_of_protocol_info), Inl st)
@@ -566,7 +566,7 @@ let run_push st kind text line column peek_only =
                       repl_line = line; repl_column = column } in
 
   match res with
-  | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
+  | Some (curmod, env, nerrs) when nerrs = (Prims.parse_int "0") && peek_only = false ->
     // At this stage, the internal stack has grown with size 1.
     let env = commit_mark env in
     ((QueryOK, JsonList errors),
@@ -637,7 +637,7 @@ let run_completions st search_term =
   //search_term is the partially written identifer by the user
   // FIXME a regular expression might be faster than this explicit matching
   let rec measure_anchored_match
-    : list<string> -> list<ident> -> option<(list<ident> * int)>
+    : list<string> -> list<ident> -> option<(list<ident> * Prims.int)>
     //determines it the candidate may match the search term
     //and, if so, provides an integer measure of the degree of the match
     //Q: isn't the output list<ident> always the same as the candidate?
@@ -651,7 +651,7 @@ let run_completions st search_term =
       //      as FStar.List.append.
     = fun search_term candidate ->
         match search_term, candidate with
-        | [], _ -> Some ([], 0)
+        | [], _ -> Some ([], (Prims.parse_int "0"))
         | _, [] -> None
         | hs :: ts, hc :: tc ->
           let hc_text = FStar.Ident.text_of_id hc in
@@ -659,10 +659,10 @@ let run_completions st search_term =
              match ts with
              | [] -> Some (candidate, String.length hs)
              | _ -> measure_anchored_match ts tc |>
-                      Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
+                      Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + (Prims.parse_int "1") + len))
           else None in
   let rec locate_match
-    : list<string> -> list<ident> -> option<(list<ident> * list<ident> * int)>
+    : list<string> -> list<ident> -> option<(list<ident> * list<ident> * Prims.int)>
     = fun needle candidate ->
     match measure_anchored_match needle candidate with
     | Some (matched, n) -> Some ([], matched, n)
@@ -684,7 +684,7 @@ let run_completions st search_term =
     if prefix = "" then
       (matched, stripped_ns, match_len)
     else
-      (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
+      (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + (Prims.parse_int "1")) in
   let needle = Util.split search_term "." in
   let all_lidents_in_env = FStar.TypeChecker.Env.lidents tcenv in
   let matches =
@@ -697,12 +697,12 @@ let run_completions st search_term =
       //In case (b), we find all lidents in the type-checking environment
       //   and rank them by potential matches to the needle
       let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
-          : list<(list<ident> * list<ident> * int)>
+          : list<(list<ident> * list<ident> * Prims.int)>
           =
           let exported_names = DsEnv.transitive_exported_ids dsenv m in
           let matched_length =
             List.fold_left
-              (fun out s -> String.length s + out + 1)
+              (fun out s -> String.length s + out + (Prims.parse_int "1"))
               (String.length id)
               orig_ns
           in
@@ -715,7 +715,7 @@ let run_completions st search_term =
           else None)
       in
       let case_b_find_matches_in_env ()
-        : list<(list<ident> * list<ident> * int)>
+        : list<(list<ident> * list<ident> * Prims.int)>
         = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
           //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
           matches |> List.filter (fun (ns, id, _) ->
@@ -743,7 +743,7 @@ let run_completions st search_term =
               JsonList [JsonInt match_len; JsonStr ns; JsonStr candidate])
              (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                               match String.compare cd1 cd2 with
-                              | 0 -> String.compare ns1 ns2
+                              | x when x = (Prims.parse_int "0") -> String.compare ns1 ns2
                               | n -> n)
                              matches) in
   ((QueryOK, JsonList json_candidates), Inl st)
@@ -758,7 +758,7 @@ let run_compute st term rules =
 
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
-    { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
+    { frag_text = dummy_decl; frag_line = (Prims.parse_int "0"); frag_col = (Prims.parse_int "0") } in
 
   let normalize_term tcenv rules t =
     FStar.TypeChecker.Normalize.normalize rules tcenv t in
@@ -819,7 +819,7 @@ and search_term = { st_negate: bool;
 
 let st_cost = function
 | NameContainsStr str -> - (String.length str)
-| TypeContainsLid lid -> 1
+| TypeContainsLid lid -> (Prims.parse_int "1")
 
 type search_candidate = { sc_lid: lid; sc_typ:
                           ref<option<Syntax.Syntax.typ>>;
@@ -864,14 +864,14 @@ let run_search st search_str =
   let parse search_str =
     let parse_one term =
       let negate = Util.starts_with term "-" in
-      let term = if negate then Util.substring_from term 1 else term in
+      let term = if negate then Util.substring_from term (Prims.parse_int "1") else term in
       let beg_quote = Util.starts_with term "\"" in
       let end_quote = Util.ends_with term "\"" in
       let strip_quotes str =
-        if String.length str < 2 then
+        if String.length str < (Prims.parse_int "2") then
           raise (InvalidSearch "Empty search term")
         else
-          Util.substring str 1 (String.length term - 2) in
+          Util.substring str (Prims.parse_int "1") (String.length term - (Prims.parse_int "2")) in
       let parsed =
         if beg_quote <> end_quote then
           raise (InvalidSearch (Util.format1 "Improperly quoted search term: %s" term))
@@ -913,7 +913,7 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
-let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
+let run_query st : query' -> (query_status * json) * either<repl_state,Prims.int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
@@ -931,7 +931,7 @@ let rec go st : unit =
   write_response query.qid status response;
   match state_opt with
   | Inl st' -> go st'
-  | Inr exitcode -> exit exitcode
+  | Inr exitcode -> exit (Prims.to_int exitcode)
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
@@ -968,7 +968,7 @@ let interactive_mode' (filename:string): unit =
         env
   in
 
-  let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
+  let init_st = { repl_line = (Prims.parse_int "1"); repl_column = (Prims.parse_int "0"); repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
 

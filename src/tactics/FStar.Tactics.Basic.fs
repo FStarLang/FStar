@@ -680,8 +680,8 @@ type order = | Lt | Eq | Gt
 
 let order_binder (x:binder) (y:binder) : order =
     let n = S.order_bv (fst x) (fst y) in
-    if n < 0 then Lt
-    else if n = 0 then Eq
+    if n < (Prims.parse_int "0") then Lt
+    else if n = (Prims.parse_int "0") then Eq
     else Gt
 
 

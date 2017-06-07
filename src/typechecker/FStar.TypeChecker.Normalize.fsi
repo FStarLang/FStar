@@ -43,7 +43,7 @@ type step =
 and steps = list<step>
 type primitive_step = {
     name:FStar.Ident.lid;
-    arity:int;
+    arity:Prims.int;
     strong_reduction_ok:bool;
     interpretation:(FStar.Range.range -> args -> option<term>)
 }

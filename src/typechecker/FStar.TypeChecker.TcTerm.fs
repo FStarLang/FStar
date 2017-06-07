@@ -1510,7 +1510,7 @@ and tc_eqn scrutinee env branch
       else (* 6 (a) *)
           let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
-                if List.length (snd (Env.datacons_of_typ env (Env.typ_of_datacon env f.v))) > 1
+                if List.length (snd (Env.datacons_of_typ env (Env.typ_of_datacon env f.v))) > (Prims.parse_int "1")
                 then
                     let discriminator = U.mk_discriminator f.v in
                     match Env.try_lookup_lid env discriminator with
@@ -1798,13 +1798,13 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
        then begin
             let actuals_msg =
                 let n = List.length actuals in
-                if n = 1
+                if n = (Prims.parse_int "1")
                 then "1 argument was found"
                 else BU.format1 "%s arguments were found" (string_of_int n)
             in
             let formals_msg =
                 let n = List.length formals in
-                if n = 1
+                if n = (Prims.parse_int "1")
                 then "1 argument"
                 else BU.format1 "%s arguments" (string_of_int n)
             in
@@ -1887,7 +1887,7 @@ and check_let_bound_def top_level env lb
 
     (* 2. type-check e1 *)
     (* Only toplevel terms should have universe openings *)
-    assert ( top_level || List.length univ_opening = 0 );
+    assert ( top_level || List.length univ_opening = (Prims.parse_int "0") );
     let e1 = subst univ_opening e1 in
     let e1, c1, g1 = tc_maybe_toplevel_term ({env1 with top_level=top_level}) e1 in
 

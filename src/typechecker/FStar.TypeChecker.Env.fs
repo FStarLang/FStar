@@ -88,7 +88,7 @@ type env = {
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
-  qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
+  qname_and_index:option<(lident*Prims.int)>;              (* the top-level term we're currently processing and the nth query for it *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -131,9 +131,9 @@ let visible_at d q = match d, q with
   | Inlining, Inline_for_extraction -> true
   | _ -> false
 
-let default_table_size = 200
+let default_table_size = (Prims.parse_int "200")
 let new_sigtab () = BU.smap_create default_table_size
-let new_gamma_cache () = BU.smap_create 100
+let new_gamma_cache () = BU.smap_create (Prims.parse_int "100")
 
 let initial_env type_of universe_of solver module_lid =
   { solver=solver;
@@ -166,7 +166,7 @@ let initial_env type_of universe_of solver module_lid =
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
 
-let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
+let query_indices: ref<(list<(list<(lident * Prims.int)>)>)> = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with
     | [] -> failwith "Empty query indices!"
     | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -232,11 +232,11 @@ let incr_query_index env =
     | Some (l, n) ->
     match qix |> List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
     | None ->
-        let next = n + 1 in
+        let next = n + (Prims.parse_int "1") in
         add_query_index (l, next);
         {env with qname_and_index=Some (l, next)}
     | Some (_, m) ->
-        let next = m + 1 in
+        let next = m + (Prims.parse_int "1") in
         add_query_index (l, next);
         {env with qname_and_index=Some (l, next)}
 
@@ -272,7 +272,7 @@ let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
     | ([], t), [] -> [], t
     | (formals, t), _ ->
       assert (List.length us = List.length formals);
-      let n = List.length formals - 1 in
+      let n = List.length formals - (Prims.parse_int "1") in
       let vs = us |> List.mapi (fun i u -> UN (n - i, u)) in
       us, Subst.subst vs t
 
@@ -576,7 +576,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
       else let insts = if List.length univ_insts = List.length univs
                        then univ_insts
                        else if Ident.lid_equals lid Const.effect_Lemma_lid
-                            && List.length univ_insts = 1 //TODO: Lemma is a hack! It is more universe polymorphic than expected,
+                            && List.length univ_insts = (Prims.parse_int "1") //TODO: Lemma is a hack! It is more universe polymorphic than expected,
                                                           //because of the SMTPats ... which should be irrelevant, but unfortunately are not
                        then univ_insts@[U_zero]
                        else failwith (BU.format2 "Unexpected instantiation of effect %s with %s universes"
@@ -598,7 +598,7 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
     | _ -> None
 
 let norm_eff_name =
-   let cache = BU.smap_create 20 in
+   let cache = BU.smap_create (Prims.parse_int "20") in
    fun env (l:lident) ->
        let rec find l =
            match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
@@ -630,7 +630,7 @@ let lookup_projector env lid i =
     let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow(binders, _) ->
-          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
+          if ((i < (Prims.parse_int "0")) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
                U.mk_field_projector_name lid (fst b) i |> fst
@@ -922,10 +922,10 @@ let rec unfold_effect_abbrev env comp =
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
-      if List.length binders <> List.length c.effect_args + 1
+      if List.length binders <> List.length c.effect_args + (Prims.parse_int "1")
       then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
-                                (BU.string_of_int (List.length c.effect_args + 1))
+                                (BU.string_of_int (List.length c.effect_args + (Prims.parse_int "1")))
                                 (Print.comp_to_string (S.mk_Comp c))
                             , comp.pos));
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in

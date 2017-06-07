@@ -49,17 +49,17 @@ let mk_term_projector_name lid (a:bv) =
     let a = {a with ppname=U.unmangle_field_name a.ppname} in
     escape <| BU.format2 "%s_%s" lid.str a.ppname.idText
 let primitive_projector_by_pos env lid i =
-    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (lid.str)) in
+    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (to_string i) (lid.str)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
         | Tm_arrow(bs, c) ->
           let binders, _ = SS.open_comp bs c in
-          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
+          if ((i < (Prims.parse_int "0")) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
                 mk_term_projector_name lid (fst b)
         | _ -> fail ()
-let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" lid.str (string_of_int i)
+let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" lid.str (to_string i)
 let mk_term_projector (lid:lident) (a:bv) : term =
     mkFreeV(mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
@@ -81,21 +81,21 @@ type varops_t = {
     mk_unique:string -> string;
 }
 let varops =
-    let initial_ctr = 100 in
+    let initial_ctr = (Prims.parse_int "100") in
     let ctr = BU.mk_ref initial_ctr in
-    let new_scope () = (BU.smap_create 100, BU.smap_create 100) in (* a scope records all the names and string constants used in that scope *)
+    let new_scope () = (BU.smap_create (Prims.parse_int "100"), BU.smap_create (Prims.parse_int "100")) in (* a scope records all the names and string constants used in that scope *)
     let scopes = BU.mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
         let y = match BU.find_map (!scopes) (fun (names, _) -> BU.smap_try_find names y) with
                   | None -> y
-                  | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
+                  | Some _ -> BU.incr ctr; y ^ "__" ^ (to_string !ctr) in
         let top_scope = fst <| List.hd !scopes in
         BU.smap_add top_scope y true; y in
-    let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
+    let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (to_string rn) in
     let new_fvar lid = mk_unique lid.str in
     let next_id () = BU.incr ctr; !ctr in
-    let fresh pfx = BU.format2 "%s_%s" pfx (string_of_int <| next_id()) in
+    let fresh pfx = BU.format2 "%s_%s" pfx (to_string <| next_id()) in
     let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
         | Some f -> f
         | None ->
@@ -186,9 +186,9 @@ let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 
 (* Bound term variables *)
 let gen_term_var (env:env_t) (x:bv) =
-    let ysym = "@x"^(string_of_int env.depth) in
+    let ysym = "@x"^(to_string env.depth) in
     let y = mkFreeV(ysym, Term_sort) in
-    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + 1}
+    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + (Prims.parse_int "1")}
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
     let y = mkApp(ysym, []) in
@@ -1388,8 +1388,8 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                    [xx;yy],
                                    mkImp(mk_and_l [typing_pred;
                                                    typing_pred_y;
-                                                   mkGT (Term.unboxInt x, mkInteger' 0);
-                                                   mkGTE (Term.unboxInt y, mkInteger' 0);
+                                                   mkGT (Term.unboxInt x, mkInteger' (Prims.parse_int "0"));
+                                                   mkGTE (Term.unboxInt y, mkInteger' (Prims.parse_int "0"));
                                                    mkLT (Term.unboxInt y, Term.unboxInt x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
@@ -1589,7 +1589,7 @@ let encode_free_var env fv tt t_norm quals =
                 | Projector(d, f) ->
                     let _, (xxsym, _) = BU.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
-                    let f = {ppname=f; index=0; sort=tun} in
+                    let f = {ppname=f; index=(Prims.parse_int "0"); sort=tun} in
                     let tp_name = mk_term_projector_name d f in
                     let prim_app = mkApp(tp_name, [xx]) in
                     [Util.mkAssume(mkForall([[vapp]], vars,
@@ -1920,13 +1920,13 @@ let encode_top_level_let :
             //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
             //But, the pattern ensures that this only applies to well-typed terms
             //NS 08/10: Setting the weight of this quantifier to 0, since its instantiations are controlled by F* fuel
-            let eqn_g = Util.mkAssume(mkForall'([[gsapp]], Some 0, fuel::vars, mkEq(gsapp, body_tm)),
+            let eqn_g = Util.mkAssume(mkForall'([[gsapp]], Some (Prims.parse_int "0"), fuel::vars, mkEq(gsapp, body_tm)),
                                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" flid.str),
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Util.mkAssume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
                                     ("@fuel_correspondence_"^g)) in
-            let eqn_g' = Util.mkAssume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
+            let eqn_g' = Util.mkAssume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel (Prims.parse_int "0")::vars_tm))),
                                     Some "Fuel irrelevance",
                                     ("@fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
@@ -2161,7 +2161,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 let ffsym, ff = fresh_fvar "f" Fuel_sort in
                 let fuel_guarded_inversion =
                     let xx_has_type_sfuel =
-                        if List.length datas > 1
+                        if List.length datas > (Prims.parse_int "1")
                         then mk_HasTypeFuel (mkApp("SFuel", [ff])) xx tapp
                         else mk_HasTypeFuel ff xx tapp in //no point requiring non-zero fuel if there are no disjunctions
                     Util.mkAssume(mkForall([[xx_has_type_sfuel]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
@@ -2170,7 +2170,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 (varops.mk_unique ("fuel_guarded_inversion_"^t.str))) in
                 let pattern_guarded_inversion =
                     if contains_name env "Prims.inversion"
-                    && List.length datas > 1 //no point emitting this if there's only 1 constructor; it's already covered by the previous inversion
+                    && List.length datas > (Prims.parse_int "1") //no point emitting this if there's only 1 constructor; it's already covered by the previous inversion
                     then let xx_has_type_fuel = mk_HasTypeFuel ff xx tapp in
                          let pattern_guard = mkApp("Prims.inversion", [tapp]) in
                          [Util.mkAssume(mkForall([[xx_has_type_fuel; pattern_guard]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
@@ -2220,7 +2220,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let kindingAx =
             let k, decls = encode_term_pred None res env' tapp in
             let karr =
-                if List.length formals > 0
+                if List.length formals > (Prims.parse_int "0")
                 then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
                 else [] in
             decls@karr@[Util.mkAssume(mkForall([[tapp]], vars, mkImp(guard, k)), None, ("kinding_"^ttok))] in
@@ -2317,8 +2317,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         then guards_for_parameter arg xv::eqns_or_guards
                         else mkEq(arg, xv)::eqns_or_guards
                       in
-                      (env, xv::arg_vars, eqns, i + 1))
-                      (env', [], [], 0) encoded_args
+                      (env, xv::arg_vars, eqns, i + (Prims.parse_int "1")))
+                      (env', [], [], (Prims.parse_int "0")) encoded_args
                   in
                   let arg_vars = List.rev arg_vars in
                   let ty = mkApp(encoded_head, arg_vars) in
@@ -2456,8 +2456,8 @@ let encode_labels labs =
 
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref<list<env_t>> = BU.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0;
-                                   cache=BU.smap_create 100; nolabels=false; use_zfuel_name=false;
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=(Prims.parse_int "0");
+                                   cache=BU.smap_create (Prims.parse_int "100"); nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid}]
 let get_env cmn tcenv = match !last_env with
@@ -2548,7 +2548,7 @@ let encode_sig tcenv se =
 let encode_modul tcenv modul =
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Env.debug tcenv Options.Low
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
+    then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> to_string);
     let env = get_env modul.name tcenv in
     let encode_signature (env:env_t) (ses:sigelts) =
         ses |> List.fold_left (fun (g, env) se ->

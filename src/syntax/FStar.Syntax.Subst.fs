@@ -263,13 +263,13 @@ let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
 
 let subst_binders' s bs =
     bs |> List.mapi (fun i b ->
-        if i=0 then subst_binder' s b
+        if i=(Prims.parse_int "0") then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
 let subst_binders s (bs:binders) = subst_binders' ([s], None) bs
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
-let subst_pat' s p : (pat * int) =
-    let rec aux n p : (pat * int) = match p.v with
+let subst_pat' s p : (pat * Prims.int) =
+    let rec aux n p : (pat * Prims.int) = match p.v with
       | Pat_constant _ -> p, n
 
       | Pat_cons(fv, pats) ->
@@ -281,19 +281,19 @@ let subst_pat' s p : (pat * int) =
       | Pat_var x ->
         let s = shift_subst' n s in
         let x = {x with sort=subst' s x.sort} in
-        {p with v=Pat_var x}, n + 1
+        {p with v=Pat_var x}, n + (Prims.parse_int "1")
 
       | Pat_wild x ->
         let s = shift_subst' n s in
         let x = {x with sort=subst' s x.sort} in
-        {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
+        {p with v=Pat_wild x}, n + (Prims.parse_int "1") //these may be in scope in the inferred types of other terms, so shift the index
 
       | Pat_dot_term(x, t0) ->
         let s = shift_subst' n s in
         let x = {x with sort=subst' s x.sort} in
         let t0 = subst' s t0 in
         {p with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
-  in aux 0 p
+  in aux (Prims.parse_int "0") p
 
 let push_subst_lcomp s lopt = match lopt with
     | None
@@ -342,7 +342,7 @@ let push_subst s t =
 
     | Tm_refine(x, phi) ->
         let x = {x with sort=subst' s x.sort} in
-        let phi = subst' (shift_subst' 1 s) phi in
+        let phi = subst' (shift_subst' (Prims.parse_int "1") s) phi in
         mk (Tm_refine(x, phi))
 
     | Tm_match(t0, pats) ->
@@ -401,13 +401,13 @@ let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
 let subst_comp s t = subst_comp' ([s], None) t
 let closing_subst bs =
-    List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
+    List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+(Prims.parse_int "1"))) bs ([], (Prims.parse_int "0")) |> fst
 let open_binders' bs =
    let rec aux bs o = match bs with
         | [] -> [], o
         | (x, imp)::bs' ->
           let x' = {freshen_bv x with sort=subst o x.sort} in
-          let o = DB(0, x')::shift_subst 1 o in
+          let o = DB((Prims.parse_int "0"), x')::shift_subst (Prims.parse_int "1") o in
           let bs', o = aux bs' o in
           (x',imp)::bs', o in
    aux bs []
@@ -435,12 +435,12 @@ let open_pat (p:pat) : pat * subst_t =
 
         | Pat_var x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
-            let sub = DB(0, x')::shift_subst 1 sub in
+            let sub = DB((Prims.parse_int "0"), x')::shift_subst (Prims.parse_int "1") sub in
             {p with v=Pat_var x'}, sub, (x,x')::renaming
 
         | Pat_wild x ->
             let x' = {freshen_bv x with sort=subst sub x.sort} in
-            let sub = DB(0, x')::shift_subst 1 sub in
+            let sub = DB((Prims.parse_int "0"), x')::shift_subst (Prims.parse_int "1") sub in
             {p with v=Pat_wild x'}, sub, (x,x')::renaming
 
         | Pat_dot_term(x, t0) ->
@@ -467,7 +467,7 @@ let close_binders (bs:binders) : binders =
         | [] -> []
         | (x, imp)::tl ->
           let x = {x with sort=subst s x.sort} in
-          let s' = NM(x, 0)::shift_subst 1 s in
+          let s' = NM(x, (Prims.parse_int "0"))::shift_subst (Prims.parse_int "1") s in
           (x, imp)::aux s' tl in
     aux [] bs
 
@@ -488,12 +488,12 @@ let close_pat p =
 
        | Pat_var x ->
          let x = {x with sort=subst sub x.sort} in
-         let sub = NM(x, 0)::shift_subst 1 sub in
+         let sub = NM(x, (Prims.parse_int "0"))::shift_subst (Prims.parse_int "1")sub in
          {p with v=Pat_var x}, sub
 
        | Pat_wild x ->
          let x = {x with sort=subst sub x.sort} in
-         let sub = NM(x, 0)::shift_subst 1 sub in
+         let sub = NM(x, (Prims.parse_int "0"))::shift_subst (Prims.parse_int "1") sub in
          {p with v=Pat_wild x}, sub
 
        | Pat_dot_term(x, t0) ->
@@ -511,7 +511,7 @@ let close_branch (p, wopt, e) =
     (p, wopt, e)
 
 let univ_var_opening (us:univ_names) =
-    let n = List.length us - 1 in
+    let n = List.length us - (Prims.parse_int "1") in
     let s, us' = us |> List.mapi (fun i u ->
         let u' = Syntax.new_univ_name (Some u.idRange) in
         UN(n - i, U_name u'), u') |> List.unzip in
@@ -527,12 +527,12 @@ let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names * comp =
     us', subst_comp s c
 
 let close_univ_vars (us:univ_names) (t:term) : term =
-    let n = List.length us - 1 in
+    let n = List.length us - (Prims.parse_int "1") in
     let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
     subst s t
 
 let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
-    let n = List.length us - 1 in
+    let n = List.length us - (Prims.parse_int "1") in
     let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
     subst_comp s c
 
@@ -556,13 +556,13 @@ let open_let_rec lbs (t:term) =
          let n_let_recs, lbs, let_rec_opening =
              List.fold_right (fun lb (i, lbs, out) ->
                 let x = Syntax.freshen_bv (left lb.lbname) in
-                i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs (0, [], []) in
+                i+(Prims.parse_int "1"), {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs ((Prims.parse_int "0"), [], []) in
 
          let lbs = lbs |> List.map (fun lb ->
               let _, us, u_let_rec_opening =
                   List.fold_right (fun u (i, us, out) ->
                     let u = Syntax.new_univ_name None in
-                    i+1, u::us, UN(i, U_name u)::out)
+                    i+(Prims.parse_int "1"), u::us, UN(i, U_name u)::out)
                   lb.lbunivs (n_let_recs, [], let_rec_opening) in
              {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in
 
@@ -572,26 +572,26 @@ let open_let_rec lbs (t:term) =
 let close_let_rec lbs (t:term) =
     if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
     else let n_let_recs, let_rec_closing =
-            List.fold_right (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out) lbs (0, []) in
+            List.fold_right (fun lb (i, out) -> i+(Prims.parse_int "1"), NM(left lb.lbname, i)::out) lbs ((Prims.parse_int "0"), []) in
          let lbs = lbs |> List.map (fun lb ->
-                let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
+                let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+(Prims.parse_int "1"), UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
                 {lb with lbdef=subst u_let_rec_closing lb.lbdef}) in
          let t = subst let_rec_closing t in
          lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
-    let n = List.length binders - 1 in
+    let n = List.length binders - (Prims.parse_int "1") in
     let k = List.length us in
     let s = List.mapi (fun i (x, _) -> NM(x, k + (n - i))) binders in
     let t = subst s t in
     (us, t)
 
 let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
-   let n  = List.length us - 1 in
+   let n  = List.length us - (Prims.parse_int "1") in
    let k = List.length us' in
    let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
    (us', subst s t)
 
 let opening_of_binders (bs:binders) =
-  let n = List.length bs - 1 in
+  let n = List.length bs - (Prims.parse_int "1") in
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
