@@ -720,6 +720,10 @@ let maybe_simplify cfg tm =
                      | [_; (Some true, _)]
                      | [(Some false, _); _] -> w U.t_true
                      | [(Some true, _); (_, (arg, _))] -> arg
+                     | [(_, (p, _)); (_, (q, _))] ->
+                        if U.term_eq p q
+                        then w U.t_true
+                        else tm
                      | _ -> tm
               else if S.fv_eq_lid fv Const.not_lid
               then match args |> List.map simplify with
