@@ -81,23 +81,56 @@ let rec concatMap_flatten_map #a #b (f:a -> list b) l :
     * Does F* do induction automatically? I expected I'd have to supply
       [memP_append x t] explicitly to [exist_elim].  If I wanted to do that,
       would I have to use [get_proof] + [bind_squash]? *)
-let rec memP_append #a (x: a) (l: list a) :
+
+(* NS: June 07, 2017
+   The previous "proof" here was relying on a bug revealed by issue #1071
+   It had unresolved unification variables in a recursive function,
+   so the proof wasn't actually complete. 
+   So, this is a revised proof ... still in an overly explicit, 
+   rather unsatisfactory style.
+
+   This version may answer some of the questions above. *)
+
+(* These utilities are better moved to the squash library *)
+let bind = FStar.Squash.bind_squash
+let return = FStar.Squash.return_squash
+let pure_as_squash (#a:Type) 
+                   (#p:_)
+                   (#q:_)
+                   ($f:(x:a -> Lemma (requires (p x)) (ensures (q x))))
+                   (x:a{p x})
+                   : squash (q x)
+                   = f x
+let rec memP_append_aux #a (x: a) (l: list a) :
+  Lemma
+    (requires (List.memP x l))
+    (ensures (exists (l12: (list a * list a)). l == fst l12 @ x :: snd l12))
+    =  let goal = exists l12. l == fst l12 @ x :: snd l12 in
+       let x : squash goal =
+         match l with
+         | [] -> ()
+         | h :: t ->
+           let pf : squash (x == h \/ List.memP x t) = () in
+           p <-- FStar.Squash.join_squash pf ;
+           match p with 
+           | Left x_eq_h -> 
+             let l12 = [], t in
+             assert (l == (fst l12) @ (x :: snd l12)) //trigger
+           | Right mem_x_t -> 
+             FStar.Classical.exists_elim 
+                 goal
+                 (pure_as_squash (memP_append_aux x) t)
+                 (fun l12' -> 
+                   let l12 = h::fst l12', snd l12' in
+                   assert (l == (fst l12) @ (x :: snd l12))) //trigger
+       in
+       FStar.Squash.give_proof x
+
+let memP_append #a (x: a) (l: list a) :
   Lemma
     (ensures (List.memP x l ==>
               (exists (l12: (list a * list a)). l == (fst l12) @ (x :: (snd l12))))) =
-    match l with
-    | [] -> ()
-    | h :: t ->
-      FStar.Classical.or_elim
-        #(x == h)
-        #(memP x t) (*> Why is this argument implicit? *)
-        #(fun _ -> exists (l12: (list a * list a)). l == (fst l12) @ (x :: (snd l12)))
-        (fun _ -> assert (let l12 = ([], t) in l == (fst l12) @ (x :: (snd l12))))
-        (fun _ ->
-          FStar.Classical.exists_elim
-            (exists (l12: (list a * list a)). l == (fst l12) @ (x :: (snd l12)))
-            _
-            _)
+  FStar.Classical.move_requires (memP_append_aux x) l
 
 (*> * Should this be in the stdlib? *)
 let rec flatten_app #a (l1 l2: list (list a)) :
