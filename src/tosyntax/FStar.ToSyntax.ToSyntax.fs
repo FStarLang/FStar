@@ -945,6 +945,21 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 mk (Tm_uinst(head, universes))
        in aux [] top
 
+    | App ({tm=Var lid}, tau, Nothing)
+            when lid_equals lid C.assert_by_tactic_lid ->
+        // Get the left part of the app by re-matching, since there's no `as'
+        let l = match (unparen top).tm with
+                | App (l, _, _) -> l
+                | _ -> failwith "impossible"
+        in
+        let tactic_unit_type =
+            mk_term (App (mk_term (Var (lid_of_path ["FStar";"Tactics";"Effect";"tactic"] tau.range)) tau.range tau.level,
+                          mk_term (Var (lid_of_path ["Prims";"unit"] tau.range)) tau.range tau.level,
+                          Nothing)) tau.range tau.level
+        in
+        let t' = mk_term (App (l, mk_term (Ascribed (tau, tactic_unit_type, None)) tau.range tau.level, Nothing)) top.range top.level in
+        desugar_term env t'
+
     | App _ ->
       let rec aux args e = match (unparen e).tm with
         | App(e, t, imp) when imp <> UnivApp ->

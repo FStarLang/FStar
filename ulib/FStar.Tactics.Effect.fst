@@ -79,13 +79,9 @@ unfold let by_tactic (t : tactic 'a) (p:Type) : Type = __by_tactic (reify_tactic
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
 #reset-options "--no_tactics"
-let assert_by_tactic (t:tactic 'a) (p:Type)
+let assert_by_tactic (t:tactic unit) (p:Type)
   : Pure unit
          (requires (by_tactic t (squash p)))
          (ensures (fun _ -> p))
   = ()
 #reset-options
-
-val by_tactic_seman : a:Type -> tau:(tactic a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi)
-                        [SMTPat (by_tactic tau phi)]
-let by_tactic_seman a tau phi = ()
