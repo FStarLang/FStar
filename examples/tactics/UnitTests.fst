@@ -20,14 +20,33 @@ let rec fib n =
 let _ = assert_by_tactic trivial (fib 5 = 5)
 let _ = assert_by_tactic trivial (fib 5 == 5)
 
-type t = | A | B | C | D
-let f x = match x with
-| A -> A
-| B -> B
-| C -> C
-| D -> D
+let f : int -> int = fun x -> x + 2
+
+let _ =
+    let x = 1 in
+    assert_by_tactic trefl (1 == x)
+
+let va1    = assert_by_tactic trefl (1 == 1)
+let va2 () = assert_by_tactic trefl (1 == 1)
+
+type t =
+    | A : t
+    | B : t
+    | C : t
+    | D : x:int -> t
+
+let f x =
+    match x with
+    | A -> A
+    | B -> B
+    | C -> C
+    | D x -> D x
 
 let g (x : t) = f (f (f (f (f (f x)))))
 
-let a = assert_by_tactic trivial (g A == (f (g A)))
-let b = assert_by_tactic trivial (f B == B)
+let _ = assert_by_tactic trivial (g A == (f (g A)))
+let _ = assert_by_tactic trivial (f B == B)
+
+let _ = assert_by_tactic trivial (A? A == true)
+let _ = assert_by_tactic trivial (D? (D 5) == true)
+let _ = assert_by_tactic trivial (D?.x (D 5) == 5)
