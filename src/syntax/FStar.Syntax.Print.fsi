@@ -49,3 +49,5 @@ val tscheme_to_string : tscheme -> string
 val cflags_to_string  : cflags -> string
 val set_to_string     : ('a -> string) -> set<'a> -> string
 val list_to_string    : ('a -> string) -> list<'a> -> string
+
+val delta_depth_to_string : delta_depth -> string

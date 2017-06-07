@@ -33,6 +33,12 @@ module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
 module Unionfind = FStar.Syntax.Unionfind
 
+let rec delta_depth_to_string = function
+    | Delta_constant -> "Delta_constant"
+    | Delta_defined_at_level i -> "Delta_defined_at_level " ^ string_of_int i
+    | Delta_equational -> "Delta_equational"
+    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
+
 let sli (l:lident) : string =
     if Options.print_real_names()
     then l.str
