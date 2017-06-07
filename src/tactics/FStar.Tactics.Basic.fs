@@ -477,6 +477,7 @@ let apply_lemma (tm:term) : tac<unit> =
     let tm, t, guard = goal.context.type_of goal.context tm in
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply_lemma: got non-trivial guard" else
     let bs, comp = U.arrow_formals_comp t in
+    if not (U.is_lemma_comp comp) then fail "apply_lemma: not a lemma" else
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
