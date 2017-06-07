@@ -1157,6 +1157,8 @@ let rec term_eq t1 t2 =
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
+  | Tm_uinst (t1, us1), Tm_uinst (t2, us2) ->
+        eqlist eq_univs us1 us2 && term_eq t1 t2
   | Tm_constant x, Tm_constant y -> x = y
   | Tm_type x, Tm_type y -> x = y
   | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
