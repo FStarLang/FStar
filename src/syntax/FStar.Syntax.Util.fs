@@ -382,14 +382,8 @@ type eq_result =
     | Unknown
 
 let rec eq_tm (t1:term) (t2:term) : eq_result =
-    let canon_app t =
-      match t.n with
-      | Tm_app _ -> let (hd, args) = head_and_args' t in
-                    { t with n = Tm_app (hd, args) }
-      | _ -> t
-    in
-    let t1 = unascribe (canon_app t1) in
-    let t2 = unascribe (canon_app t2) in
+    let t1 = unascribe t1 in
+    let t2 = unascribe t2 in
     let equal_if = function
         | true -> Equal
         | _ -> Unknown
@@ -419,10 +413,8 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
       equal_if (Unionfind.equiv u1 u2)
 
-    | Tm_app (h1, args1), Tm_app (h2, args2) ->
-      begin match un_uinst h1, un_uinst h2 with
-      | _ -> eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
-      end
+    | Tm_app (h1, args1), Tm_app(h2, args2) ->
+      eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
 
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
