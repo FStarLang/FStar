@@ -13,6 +13,7 @@ module CC = HyperStack.CoreCrypto
 module B = Platform.Bytes
 
 open HyE.Plain
+module Plain = HyE.Plain
 
 let ivsize = aeadRealIVSize AES_128_GCM
 type keysize = aeadKeySize AES_128_GCM

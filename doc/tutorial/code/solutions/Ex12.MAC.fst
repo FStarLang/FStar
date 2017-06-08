@@ -8,6 +8,8 @@ open FStar.All
 open Ex12.SHA1
 open FStar.IO
 
+module SHA1 = Ex12.SHA1
+
 (* ---- specification *)
 
 (* we attach an authenticated properties to each key,
