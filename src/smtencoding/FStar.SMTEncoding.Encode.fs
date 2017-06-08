@@ -1079,8 +1079,8 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let one_pat p =
         let head, args = U.unmeta p |> U.head_and_args in
         match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(_, _); (e, _)] when S.fv_eq_lid fv Const.smtpat_lid -> (e, None)
-        | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatT_lid -> (e, None)
+        | Tm_fvar fv, [(_, _); (e, _)] when S.fv_eq_lid fv Const.smtpat_lid -> e
+        | Tm_fvar fv, [(e, _)] when S.fv_eq_lid fv Const.smtpatT_lid -> e
         | _ -> failwith "Unexpected pattern term"  in
 
     let lemma_pats p =
@@ -1116,7 +1116,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let vars, guards, env, decls, _ = encode_binders None binders env in
 
     let pats, decls' = patterns |> List.map (fun branch ->
-        let pats, decls = branch |> List.map (fun (t, _) ->  encode_term t env) |> List.unzip in
+        let pats, decls = branch |> List.map (fun t ->  encode_term t env) |> List.unzip in
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in

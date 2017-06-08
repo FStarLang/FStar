@@ -31,7 +31,7 @@ module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
-let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
+let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * string list) =
   let dsenv, env = uenv in
   let (intf, impl), dsenv, env, remaining =
     match remaining with
@@ -43,7 +43,7 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
           (None, intf_or_impl), dsenv, env, remaining
         | [] -> failwith "Impossible"
   in
-  (intf, impl), (dsenv, env), None, remaining
+  (intf, impl), (dsenv, env), remaining
 
 // Ibid.
 let tc_prims () = //:uenv =
@@ -291,7 +291,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
       let env = push env (Options.lax ()) true "typecheck_modul" in
-      let (intf, impl), env, modl, remaining = tc_one_file remaining env in
+      let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
           match intf with

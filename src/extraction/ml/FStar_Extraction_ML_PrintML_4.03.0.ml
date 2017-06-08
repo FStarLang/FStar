@@ -329,6 +329,7 @@ let build_label_decl (sym, ty): label_declaration =
   Type.field (mk_sym sym) (build_core_type ty)
 
 let build_constructor_decl (sym, tys): constructor_declaration =
+  let tys = List.map snd tys in
   let args = if BatList.is_empty tys then None else
     Some (Pcstr_tuple (map build_core_type tys)) in
   Type.constructor ?args:args (mk_sym sym)
@@ -361,6 +362,7 @@ let build_tydecl (td: mltydecl): structure_item_desc option =
   if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
 
 let build_exn (sym, tys): extension_constructor =
+  let tys = List.map snd tys in
   let name = mk_sym sym in
   let args = Some (Pcstr_tuple (map build_core_type tys)) in
   Te.decl ?args:args name

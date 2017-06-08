@@ -573,21 +573,21 @@ Sometimes it is useful to return a function after performing some
 computation. For example, here is a function that makes a new counter,
 initializing it to `init`.
 
+    val new_counter: int -> St (unit -> St int)
     let new_counter init =
       let c = ST.alloc init in
       fun () -> c := !c + 1; !c
 
-F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
+F\* can show that `new_counter` has type `:int -> St (unit -> St int)`,
 the type of a function that given an integer, may read, write or
-allocate references, and then returns a `:unit -> ST unit`
-function. You can write down this type and have F\* check it; or,
-using sub-effecting, you can write the type below and F\* will check
-that `new_counter` has that type as well.
+allocate references, and then returns a `:unit -> St unit`
+function. Using sub-effecting, we can also write the type below
+and F\* will check that `new_counter` has that type as well.
 
     val new_counter: int -> ML (unit -> ML int)
 
-Note, the type above, is *not* the same as `:int -> unit -> int`. The
-latter is a shorthand for `:int -> Tot (unit -> Tot int)`.
+Note, the type above, is *not* the same as `:int -> unit -> ML int`.
+The latter is a shorthand for `:int -> Tot (unit -> ML int)`.
 
 # First proofs about functions on integers { #sec-firstproofs }
 

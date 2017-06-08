@@ -858,7 +858,6 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             rebuild, matches, tcs
 
         | Tm_arrow(bs, c) ->
-            let fail () = failwith "Bad reconstruction" in
             let bs, c = Subst.open_comp bs c in
 
             let rebuild tcs =
@@ -2668,10 +2667,9 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           Errors.err r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
+           Errors.err r (BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
                                     (Print.term_to_string t)
-                                    (Print.term_to_string e)
-                                    reason)
+                                    (Print.term_to_string e))
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
