@@ -38,6 +38,8 @@ module C  = FStar.Syntax.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 
+let is_kremlin () = match Options.codegen () with | Some "Kremlin" -> true | _ -> false
+
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
     mk (Tm_app(S.fvar C.failwith_lid Delta_constant None,
@@ -309,10 +311,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in
+              let has_noextract = ref false in
               let flags = List.choose (function
                 | Assumption -> Some Assumed
                 | S.Private -> Some Private
-                | S.NoExtract -> Some NoExtract
+                | S.NoExtract -> has_noextract := true; Some NoExtract
                 | _ -> None
               ) quals in
               let flags' = List.choose (function
@@ -322,7 +325,13 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None
               ) attrs in
-              g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
+              g,
+              (* Note that Kremlin wants to keep these definitions to re-check
+               * the whole program in Low*. *)
+              if !has_noextract && not (is_kremlin ()) then
+                []
+              else
+                [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
 
             | _ ->
               failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
@@ -386,9 +395,8 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   let g = {g with currentModule = name}  in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
-  let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
   if m.name.str <> "Prims"
-  && (is_kremlin || not m.is_interface)
+  && (is_kremlin () || not m.is_interface)
   && Options.should_extract m.name.str then begin
     BU.print1 "Extracted module %s\n" (Print.lid_to_string m.name);
     g, [MLLib ([name, Some ([], mlm), (MLLib [])])]
