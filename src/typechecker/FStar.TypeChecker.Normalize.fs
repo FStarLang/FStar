@@ -619,12 +619,14 @@ let built_in_primitive_steps : list<primitive_step> =
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
 let equality_ops : list<primitive_step> =
-    let interp_bool rng (args:args) : option<term> =
+    let interp_bool (neg:bool) (rng:Range.range) (args:args) : option<term> =
+        let tru = mk (Tm_constant (FC.Const_bool true)) rng in
+        let fal = mk (Tm_constant (FC.Const_bool false)) rng in
         match args with
         | [(_typ, _); (a1, _); (a2, _)] ->
             (match U.eq_tm a1 a2 with
-            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) rng)
-            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) rng)
+            | U.Equal -> Some (if neg then fal else tru)
+            | U.NotEqual -> Some (if neg then tru else fal)
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
@@ -641,10 +643,14 @@ let equality_ops : list<primitive_step> =
             failwith "Unexpected number of arguments"
     in
     let decidable_equality =
-        {name = Const.op_Eq;
+        [{name = Const.op_Eq;
          arity = 3;
          strong_reduction_ok=true;
-         interpretation=interp_bool}
+         interpretation=interp_bool false};
+         {name = Const.op_notEq;
+         arity = 3;
+         strong_reduction_ok=true;
+         interpretation=interp_bool true}]
     in
     let propositional_equality =
         {name = Const.eq2_lid;
@@ -659,7 +665,7 @@ let equality_ops : list<primitive_step> =
          interpretation = interp_prop}
     in
 
-    [decidable_equality;propositional_equality; hetero_propositional_equality]
+    decidable_equality @ [propositional_equality; hetero_propositional_equality]
 
 let reduce_primops cfg tm =
     if not <| List.contains Primops cfg.steps
