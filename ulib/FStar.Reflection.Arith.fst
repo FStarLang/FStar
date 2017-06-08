@@ -97,15 +97,15 @@ let rec is_arith_expr (t:term) =
         // Maybe the do notation is twisting the terms somehow unexpected?
         let ll = is_arith_expr (l <: x:term{x << t}) in
         let rr = is_arith_expr (r <: x:term{x << t}) in
-        if      eq_qn qn add_qn   then liftM2 Plus ll rr
-        else if eq_qn qn minus_qn then liftM2 Minus ll rr
-        else if eq_qn qn mult_qn  then liftM2 Mult ll rr
+        if      qn = add_qn   then liftM2 Plus ll rr
+        else if qn = minus_qn then liftM2 Minus ll rr
+        else if qn = mult_qn  then liftM2 Mult ll rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in
         collect_app_order t;
         let aa = is_arith_expr (a <: x:term{x << t}) in
-        if   eq_qn qn neg_qn then liftM Neg aa
+        if qn = neg_qn then liftM Neg aa
         else fail "unary"
     | Tv_Const (C_Int i), _ ->
         return (Lit i)

@@ -100,7 +100,7 @@ let rec flatten_name ns =
     | n::ns -> n ^ "." ^ flatten_name ns
 
 
-// TODO: these are awful names, especially when `eq_qn` is around
+// TODO: these are awful names
 let imp_qn       = ["Prims"; "l_imp"]
 let and_qn       = ["Prims"; "l_and"]
 let or_qn        = ["Prims"; "l_or"]
@@ -150,8 +150,6 @@ let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
     | [], [] -> true
     | x::xs, y::ys -> f x y && eqlist f xs ys
     | _ -> false
-
-let eq_qn = eqlist (fun s1 s2 -> String.compare s1 s2 = 0)
 
 let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
 
