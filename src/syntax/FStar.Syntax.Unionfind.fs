@@ -45,6 +45,9 @@ let empty (v:version) = {
     version = v
   }
 
+(*private*)
+let version_to_string v = BU.format2 "%s.%s" (BU.string_of_int v.major) (BU.string_of_int v.minor)
+
 (* private *)
 let state : ref<uf> =
   BU.mk_ref (empty (vops.next_major()))
@@ -55,7 +58,10 @@ type tx = TX of uf
      -- used during backtracking in the tactics engine *)
 let get () = !state
 let set (u:uf) = state := u
-let reset () = set (empty (vops.next_major()))
+let reset () =
+    let v = vops.next_major () in
+    printfn "UF version = %s" (version_to_string v);
+    set (empty v)
 
 ////////////////////////////////////////////////////////////////////////////////
 //Transacational interface, used in FStar.TypeChecker.Rel
@@ -79,12 +85,16 @@ let get_version () = (get()).version
 let set_term_graph tg =
   set ({get() with term_graph = tg})
 
+(*private*)
 let chk_v (u, v) =
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
     then u
-    else failwith "Incompatible version for unification variable"
+    else failwith (BU.format2
+                        "Incompatible version for unification variable: current version is %s; got version %s"
+                        (version_to_string expected)
+                        (version_to_string v))
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v u)
 let fresh ()   = PU.puf_fresh (get_term_graph()) None, get_version()

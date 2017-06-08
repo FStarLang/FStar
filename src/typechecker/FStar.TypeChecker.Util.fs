@@ -1140,6 +1140,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     if Env.debug env <| Options.Other "Gen"
     then BU.print1 "After generalization: %s\n"  (Print.term_to_string t);
     let univs = check_universe_generalization univnames gen t0 in
+    let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in
     maybe_set_tk (univs, ts) (!t0.tk)
 
@@ -1184,16 +1185,14 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
                   let t = U.abs bs (S.bv_to_name a) (Some (Inl (U.lcomp_of_comp (S.mk_Total kres)))) in
                   U.set_uvar u t;//t clearly has a free variable; this is the one place we break the
                                  //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
-                  a, Some S.imp_tag) in
+                  a, Some S.imp_tag)
+          in
 
           let e, c = match tvars, gen_univs with
-            | [], [] -> //nothing generalized
-              N.reduce_uvar_solutions env e, c
-
-            | [], _ ->
-              //nothing generalized, or
-              //only universes generalized, still need to compress out invariant-broken uvars
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm] env c in
+            | [], [] ->
+              //nothing generalized, or only universes generalized
+              //still need to GC all uvars
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm; N.CompressUvars] env c in
               let e = N.reduce_uvar_solutions env e in
               e, c
 

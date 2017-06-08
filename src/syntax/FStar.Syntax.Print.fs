@@ -176,7 +176,11 @@ let tag_of_term (t:term) = match t.n with
   | Tm_unknown -> "Tm_unknown"
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
-let univ_uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
+let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_of_int v.minor)
+let univ_uvar_to_string u =
+    if (Options.hide_uvar_nums())
+    then "?"
+    else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int) ^ ":" ^ (version_to_string (snd u))
 
 let rec int_of_univ n u = match Subst.compress_univ u with
     | U_zero -> n, None

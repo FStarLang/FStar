@@ -195,113 +195,113 @@ sub_effect
 
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
-(* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
+//#set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme --debug_level Norm"
 effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
        GHOST a
            (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
 
-assume new type int : Type0
+// assume new type int : Type0
 
-assume HasEq_int: hasEq int
+// assume HasEq_int: hasEq int
 
-assume val op_AmpAmp             : bool -> bool -> Tot bool
-assume val op_BarBar             : bool -> bool -> Tot bool
-assume val op_Negation           : bool -> Tot bool
-assume val op_Multiply           : int -> int -> Tot int
-assume val op_Subtraction        : int -> int -> Tot int
-assume val op_Addition           : int -> int -> Tot int
-assume val op_Minus              : int -> Tot int
-assume val op_LessThanOrEqual    : int -> int -> Tot bool
-assume val op_GreaterThan        : int -> int -> Tot bool
-assume val op_GreaterThanOrEqual : int -> int -> Tot bool
-assume val op_LessThan           : int -> int -> Tot bool
-assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
-assume new type exn : Type0
-assume new type array : Type -> Type0
-assume val strcat : string -> string -> Tot string
+// assume val op_AmpAmp             : bool -> bool -> Tot bool
+// assume val op_BarBar             : bool -> bool -> Tot bool
+// assume val op_Negation           : bool -> Tot bool
+// assume val op_Multiply           : int -> int -> Tot int
+// assume val op_Subtraction        : int -> int -> Tot int
+// assume val op_Addition           : int -> int -> Tot int
+// assume val op_Minus              : int -> Tot int
+// assume val op_LessThanOrEqual    : int -> int -> Tot bool
+// assume val op_GreaterThan        : int -> int -> Tot bool
+// assume val op_GreaterThanOrEqual : int -> int -> Tot bool
+// assume val op_LessThan           : int -> int -> Tot bool
+// assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
+// assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
+// assume new type exn : Type0
+// assume new type array : Type -> Type0
+// assume val strcat : string -> string -> Tot string
 
-type list (a:Type) =
-  | Nil  : list a
-  | Cons : hd:a -> tl:list a -> list a
+// type list (a:Type) =
+//   | Nil  : list a
+//   | Cons : hd:a -> tl:list a -> list a
 
-noeq type pattern =
-  | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type0 -> pattern 
-  | SMTPatOr : list (list pattern) -> pattern 
+// noeq type pattern =
+//   | SMTPat   : #a:Type -> a -> pattern
+//   | SMTPatT  : a:Type0 -> pattern 
+//   | SMTPatOr : list (list pattern) -> pattern 
 
-assume type decreases : #a:Type -> a -> Type0
+// assume type decreases : #a:Type -> a -> Type0
 
-(*
-   Lemma is desugared specially. You can write:
+// (*
+//    Lemma is desugared specially. You can write:
 
-     Lemma phi                 for   Lemma (requires True) phi []
-     Lemma t1..tn              for   Lemma unit t1..tn
-*)
-effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
-       Pure a pre (fun r -> post)
+//      Lemma phi                 for   Lemma (requires True) phi []
+//      Lemma t1..tn              for   Lemma unit t1..tn
+// *)
+// effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
+//        Pure a pre (fun r -> post)
 
-(* This new bit for Dijkstra Monads for Free; it has a "double meaning",
- * either as an alias for reasoning about the direct definitions, or as a marker
- * for places where a CPS transformation should happen. *)
-effect M (a:Type) = Tot a (attributes cps)
+// (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
+//  * either as an alias for reasoning about the direct definitions, or as a marker
+//  * for places where a CPS transformation should happen. *)
+// effect M (a:Type) = Tot a (attributes cps)
 
-let returnM (a:Type) (x:a) : M a = x
+// let returnM (a:Type) (x:a) : M a = x
 
-type lex_t =
-  | LexTop  : lex_t
-  | LexCons : #a:Type -> a -> lex_t -> lex_t
+// type lex_t =
+//   | LexTop  : lex_t
+//   | LexCons : #a:Type -> a -> lex_t -> lex_t
 
-let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
-let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
+// let as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
+// let as_ensures  (#a:Type) (wp:pure_wp a) (x:a) = ~ (wp (fun y -> (y=!=x)))
 
-assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
-assume val admit   : #a:Type -> unit -> Admit a
-assume val magic   : #a:Type -> unit -> Tot a
-irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
-let unsafe_coerce #a #b x = admit(); x
-assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
-let _assert p = ()
-val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
-let cut p = ()
+// assume val _assume : p:Type -> Pure unit (requires (True)) (ensures (fun x -> p))
+// assume val admit   : #a:Type -> unit -> Admit a
+// assume val magic   : #a:Type -> unit -> Tot a
+// irreducible val unsafe_coerce  : #a:Type -> #b: Type -> a -> Tot b
+// let unsafe_coerce #a #b x = admit(); x
+// assume val admitP  : p:Type -> Pure unit True (fun x -> p)
+// val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
+// let _assert p = ()
+// val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
+// let cut p = ()
 
-type nat = i:int{i >= 0}
-type pos = i:int{i > 0}
-type nonzero = i:int{i<>0}
+// type nat = i:int{i >= 0}
+// type pos = i:int{i > 0}
+// type nonzero = i:int{i<>0}
 
-(*    For the moment we require not just that the divisor is non-zero, *)
-(*    but also that the dividend is natural. This works around a *)
-(*    mismatch between the semantics of integer division in SMT-LIB and *)
-(*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
-(*    math Euclidian division), while for F#/OCaml ints the modulus has *)
-(*    the same sign as the dividend.                                    *)
+// (*    For the moment we require not just that the divisor is non-zero, *)
+// (*    but also that the dividend is natural. This works around a *)
+// (*    mismatch between the semantics of integer division in SMT-LIB and *)
+// (*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
+// (*    math Euclidian division), while for F#/OCaml ints the modulus has *)
+// (*    the same sign as the dividend.                                    *)
 
-(*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
-(*    in OCaml. Although in F# they are still compiled to platform-specific *)
-(*    finite integers---this should eventually change to .NET BigInteger *)
-assume val op_Modulus            : int -> nonzero -> Tot int
-assume val op_Division           : nat -> nonzero -> Tot int
+// (*    Our arbitrary precision ints are compiled to zarith (big_ints)  *)
+// (*    in OCaml. Although in F# they are still compiled to platform-specific *)
+// (*    finite integers---this should eventually change to .NET BigInteger *)
+// assume val op_Modulus            : int -> nonzero -> Tot int
+// assume val op_Division           : nat -> nonzero -> Tot int
 
-let rec pow2 (x:nat) : Tot pos =
-  match x with
-  | 0  -> 1
-  | _  -> 2 `op_Multiply` (pow2 (x-1))
+// let rec pow2 (x:nat) : Tot pos =
+//   match x with
+//   | 0  -> 1
+//   | _  -> 2 `op_Multiply` (pow2 (x-1))
 
-let min x y = if x <= y then x else y
+// let min x y = if x <= y then x else y
 
-let abs (x:int) : Tot int = if x >= 0 then x else -x
+// let abs (x:int) : Tot int = if x >= 0 then x else -x
 
-assume val string_of_bool: bool -> Tot string
-assume val string_of_int: int -> Tot string
+// assume val string_of_bool: bool -> Tot string
+// assume val string_of_int: int -> Tot string
 
 
 
-(*********************************************************************************)
-(* Marking terms for normalization *)
-(*********************************************************************************)
-abstract let normalize_term (#a:Type) (x:a) : a = x
-abstract let normalize (a:Type0) = a
+// (*********************************************************************************)
+// (* Marking terms for normalization *)
+// (*********************************************************************************)
+// abstract let normalize_term (#a:Type) (x:a) : a = x
+// abstract let normalize (a:Type0) = a
 
-val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
-let assert_norm p = ()
+// val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+// let assert_norm p = ()

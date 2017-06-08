@@ -111,25 +111,25 @@ type identifier_info = {
     identifier_ty:typ;
 }
 let rec insert_col_info col info col_infos =
-    match col_infos with 
+    match col_infos with
     | [] -> [col, info]
-    | (c,i)::rest -> 
-      if col < c 
+    | (c,i)::rest ->
+      if col < c
       then (col, info)::col_infos
       else (c, i)::insert_col_info col info rest
-let find_nearest_preceding_col_info col col_infos = 
+let find_nearest_preceding_col_info col col_infos =
     let rec aux out = function
         | [] -> out
-        | (c, i)::rest -> 
+        | (c, i)::rest ->
           if c > col then out
           else aux (Some i) rest
     in
-    aux None col_infos    
+    aux None col_infos
 type col_info = //sorted in ascending order of columns
     list<(int * identifier_info)>
-type row_info = 
+type row_info =
     BU.imap<ref<col_info>>
-type file_info = 
+type file_info =
     BU.smap<row_info>
 let mk_info id ty = {
     identifier=id;
@@ -141,17 +141,17 @@ let insert_identifier_info id ty range =
     let info = mk_info id ty in
     let use_range = {range with def_range=range.use_range} in //key the lookup table from the use range
     let fn = Range.file_of_range use_range in
-    let start = Range.start_of_range use_range in 
+    let start = Range.start_of_range use_range in
     let row, col = Range.line_of_pos start, Range.col_of_pos start in
     match BU.smap_try_find file_info_table fn with
-    | None -> 
+    | None ->
       let col_info = BU.mk_ref (insert_col_info col info []) in
       let rows = BU.imap_create 1000 in //1000 rows per file
       BU.imap_add rows row col_info;
       BU.smap_add file_info_table fn rows
     | Some file_rows -> begin
       match BU.imap_try_find file_rows row with
-      | None -> 
+      | None ->
         let col_info = BU.mk_ref (insert_col_info col info []) in
         BU.imap_add file_rows row col_info
       | Some col_infos ->
@@ -160,10 +160,10 @@ let insert_identifier_info id ty range =
 let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
     match BU.smap_try_find file_info_table fn with
     | None -> None
-    | Some rows -> 
-      match BU.imap_try_find rows row with 
+    | Some rows ->
+      match BU.imap_try_find rows row with
       | None -> None
-      | Some cols -> 
+      | Some cols ->
         match find_nearest_preceding_col_info col !cols with
         | None -> None
         | Some ci -> Some ci//(info_as_string ci)

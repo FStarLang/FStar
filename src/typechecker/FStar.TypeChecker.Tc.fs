@@ -1323,8 +1323,9 @@ let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
+    FStar.Syntax.Unionfind.reset();
 
-    let ses', ses_elaborated = tc_decl env se  in
+    let ses', ses_elaborated = tc_decl env se in
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"

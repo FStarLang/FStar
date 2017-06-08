@@ -761,9 +761,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
         let firstn k l = if List.length l < k then l,[] else first_N k l in
-        log cfg  (fun () -> BU.print3 ">>> %s\nNorm %s with top of the stack %s \n"
+        log cfg  (fun () -> printfn ">>> %s\nNorm %A with top of the stack %s \n"
                                         (Print.tag_of_term t)
-                                        (Print.term_to_string t)
+                                        t//(Print.term_to_string t)
                                         (stack_to_string (fst <| firstn 4 stack)));
         match t.n with
           | Tm_delayed _ ->

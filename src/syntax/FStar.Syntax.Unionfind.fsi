@@ -12,6 +12,7 @@ val new_transaction: (unit -> tx)
 val rollback       : tx -> unit
 val commit         : tx -> unit
 val update_in_tx   : ref<'a> -> 'a -> unit
+val reset          : unit -> unit
 
 val fresh  : unit -> S.uvar
 val uvar_id: S.uvar -> int
