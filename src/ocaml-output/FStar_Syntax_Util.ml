@@ -644,53 +644,98 @@ let rec eq_tm:
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> eq_result =
   fun t1  ->
     fun t2  ->
-      let t11 = unascribe t1 in
-      let t21 = unascribe t2 in
-      let equal_if uu___171_1397 = if uu___171_1397 then Equal else Unknown in
-      let equal_iff uu___172_1402 = if uu___172_1402 then Equal else NotEqual in
-      let eq_and f g = match f with | Equal  -> g () | uu____1416 -> Unknown in
+      let canon_app t =
+        let uu____1398 =
+          let uu____1406 = unascribe t in head_and_args' uu____1406 in
+        match uu____1398 with
+        | (hd1,args) ->
+            FStar_Syntax_Syntax.mk_Tm_app hd1 args None
+              t.FStar_Syntax_Syntax.pos in
+      let t11 = canon_app t1 in
+      let t21 = canon_app t2 in
+      let equal_if uu___171_1432 = if uu___171_1432 then Equal else Unknown in
+      let equal_iff uu___172_1437 = if uu___172_1437 then Equal else NotEqual in
+      let eq_and f g = match f with | Equal  -> g () | uu____1451 -> Unknown in
+      let eq_inj f g =
+        match (f, g) with
+        | (Equal ,Equal ) -> Equal
+        | (NotEqual ,uu____1459) -> NotEqual
+        | (uu____1460,NotEqual ) -> NotEqual
+        | (Unknown ,uu____1461) -> Unknown
+        | (uu____1462,Unknown ) -> Unknown in
       match ((t11.FStar_Syntax_Syntax.n), (t21.FStar_Syntax_Syntax.n)) with
       | (FStar_Syntax_Syntax.Tm_name a,FStar_Syntax_Syntax.Tm_name b) ->
           equal_if (FStar_Syntax_Syntax.bv_eq a b)
       | (FStar_Syntax_Syntax.Tm_fvar f,FStar_Syntax_Syntax.Tm_fvar g) ->
-          let uu____1421 = FStar_Syntax_Syntax.fv_eq f g in
-          equal_if uu____1421
+          let uu____1467 = FStar_Syntax_Syntax.fv_eq f g in
+          equal_if uu____1467
       | (FStar_Syntax_Syntax.Tm_uinst (f,us),FStar_Syntax_Syntax.Tm_uinst
          (g,vs)) ->
-          let uu____1434 = eq_tm f g in
-          eq_and uu____1434
-            (fun uu____1435  ->
-               let uu____1436 = eq_univs_list us vs in equal_if uu____1436)
+          let uu____1480 = eq_tm f g in
+          eq_and uu____1480
+            (fun uu____1481  ->
+               let uu____1482 = eq_univs_list us vs in equal_if uu____1482)
       | (FStar_Syntax_Syntax.Tm_constant c,FStar_Syntax_Syntax.Tm_constant d)
           ->
-          let uu____1439 = FStar_Const.eq_const c d in equal_iff uu____1439
+          let uu____1485 = FStar_Const.eq_const c d in equal_iff uu____1485
       | (FStar_Syntax_Syntax.Tm_uvar
-         (u1,uu____1441),FStar_Syntax_Syntax.Tm_uvar (u2,uu____1443)) ->
-          let uu____1468 = FStar_Syntax_Unionfind.equiv u1 u2 in
-          equal_if uu____1468
+         (u1,uu____1487),FStar_Syntax_Syntax.Tm_uvar (u2,uu____1489)) ->
+          let uu____1514 = FStar_Syntax_Unionfind.equiv u1 u2 in
+          equal_if uu____1514
       | (FStar_Syntax_Syntax.Tm_app (h1,args1),FStar_Syntax_Syntax.Tm_app
          (h2,args2)) ->
-          let uu____1501 = eq_tm h1 h2 in
-          eq_and uu____1501 (fun uu____1502  -> eq_args args1 args2)
+          let uu____1547 =
+            let uu____1550 =
+              let uu____1551 = un_uinst h1 in
+              uu____1551.FStar_Syntax_Syntax.n in
+            let uu____1554 =
+              let uu____1555 = un_uinst h2 in
+              uu____1555.FStar_Syntax_Syntax.n in
+            (uu____1550, uu____1554) in
+          (match uu____1547 with
+           | (FStar_Syntax_Syntax.Tm_fvar f1,FStar_Syntax_Syntax.Tm_fvar f2)
+               when
+               (f1.FStar_Syntax_Syntax.fv_qual =
+                  (Some FStar_Syntax_Syntax.Data_ctor))
+                 &&
+                 (f2.FStar_Syntax_Syntax.fv_qual =
+                    (Some FStar_Syntax_Syntax.Data_ctor))
+               ->
+               let uu____1562 = FStar_Syntax_Syntax.fv_eq f1 f2 in
+               if uu____1562
+               then
+                 let uu____1564 = FStar_List.zip args1 args2 in
+                 FStar_All.pipe_left
+                   (FStar_List.fold_left
+                      (fun acc  ->
+                         fun uu____1594  ->
+                           match uu____1594 with
+                           | ((a1,q1),(a2,q2)) ->
+                               let uu____1610 = eq_tm a1 a2 in
+                               eq_inj acc uu____1610) Equal) uu____1564
+               else NotEqual
+           | uu____1612 ->
+               let uu____1615 = eq_tm h1 h2 in
+               eq_and uu____1615 (fun uu____1616  -> eq_args args1 args2))
       | (FStar_Syntax_Syntax.Tm_type u,FStar_Syntax_Syntax.Tm_type v1) ->
-          let uu____1505 = eq_univs u v1 in equal_if uu____1505
-      | (FStar_Syntax_Syntax.Tm_meta (t12,uu____1507),uu____1508) ->
+          let uu____1619 = eq_univs u v1 in equal_if uu____1619
+      | (FStar_Syntax_Syntax.Tm_meta (t12,uu____1621),uu____1622) ->
           eq_tm t12 t21
-      | (uu____1513,FStar_Syntax_Syntax.Tm_meta (t22,uu____1515)) ->
+      | (uu____1627,FStar_Syntax_Syntax.Tm_meta (t22,uu____1629)) ->
           eq_tm t11 t22
-      | uu____1520 -> Unknown
+      | uu____1634 -> Unknown
 and eq_args:
   FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.args -> eq_result =
   fun a1  ->
     fun a2  ->
       match (a1, a2) with
       | ([],[]) -> Equal
-      | ((a,uu____1544)::a11,(b,uu____1547)::b1) ->
-          let uu____1585 = eq_tm a b in
-          (match uu____1585 with
+      | ((a,uu____1658)::a11,(b,uu____1661)::b1) ->
+          let uu____1699 = eq_tm a b in
+          (match uu____1699 with
            | Equal  -> eq_args a11 b1
-           | uu____1586 -> Unknown)
-      | uu____1587 -> Unknown
+           | uu____1700 -> Unknown)
+      | uu____1701 -> Unknown
 and eq_univs_list:
   FStar_Syntax_Syntax.universes ->
     FStar_Syntax_Syntax.universes -> Prims.bool
@@ -703,62 +748,62 @@ let rec unrefine: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  ->
     let t1 = FStar_Syntax_Subst.compress t in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_refine (x,uu____1601) ->
+    | FStar_Syntax_Syntax.Tm_refine (x,uu____1715) ->
         unrefine x.FStar_Syntax_Syntax.sort
-    | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____1607,uu____1608) ->
+    | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____1721,uu____1722) ->
         unrefine t2
-    | uu____1637 -> t1
+    | uu____1751 -> t1
 let rec is_unit: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
-    let uu____1641 =
-      let uu____1642 = unrefine t in uu____1642.FStar_Syntax_Syntax.n in
-    match uu____1641 with
-    | FStar_Syntax_Syntax.Tm_type uu____1645 -> true
+    let uu____1755 =
+      let uu____1756 = unrefine t in uu____1756.FStar_Syntax_Syntax.n in
+    match uu____1755 with
+    | FStar_Syntax_Syntax.Tm_type uu____1759 -> true
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.unit_lid) ||
           (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.squash_lid)
-    | FStar_Syntax_Syntax.Tm_uinst (t1,uu____1648) -> is_unit t1
-    | uu____1653 -> false
+    | FStar_Syntax_Syntax.Tm_uinst (t1,uu____1762) -> is_unit t1
+    | uu____1767 -> false
 let rec non_informative: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
-    let uu____1657 =
-      let uu____1658 = unrefine t in uu____1658.FStar_Syntax_Syntax.n in
-    match uu____1657 with
-    | FStar_Syntax_Syntax.Tm_type uu____1661 -> true
+    let uu____1771 =
+      let uu____1772 = unrefine t in uu____1772.FStar_Syntax_Syntax.n in
+    match uu____1771 with
+    | FStar_Syntax_Syntax.Tm_type uu____1775 -> true
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         ((FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.unit_lid) ||
            (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.squash_lid))
           || (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.erased_lid)
-    | FStar_Syntax_Syntax.Tm_app (head1,uu____1664) -> non_informative head1
-    | FStar_Syntax_Syntax.Tm_uinst (t1,uu____1680) -> non_informative t1
-    | FStar_Syntax_Syntax.Tm_arrow (uu____1685,c) ->
+    | FStar_Syntax_Syntax.Tm_app (head1,uu____1778) -> non_informative head1
+    | FStar_Syntax_Syntax.Tm_uinst (t1,uu____1794) -> non_informative t1
+    | FStar_Syntax_Syntax.Tm_arrow (uu____1799,c) ->
         (is_tot_or_gtot_comp c) && (non_informative (comp_result c))
-    | uu____1697 -> false
+    | uu____1811 -> false
 let is_fun: FStar_Syntax_Syntax.term -> Prims.bool =
   fun e  ->
-    let uu____1701 =
-      let uu____1702 = FStar_Syntax_Subst.compress e in
-      uu____1702.FStar_Syntax_Syntax.n in
-    match uu____1701 with
-    | FStar_Syntax_Syntax.Tm_abs uu____1705 -> true
-    | uu____1720 -> false
+    let uu____1815 =
+      let uu____1816 = FStar_Syntax_Subst.compress e in
+      uu____1816.FStar_Syntax_Syntax.n in
+    match uu____1815 with
+    | FStar_Syntax_Syntax.Tm_abs uu____1819 -> true
+    | uu____1834 -> false
 let is_function_typ: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
-    let uu____1724 =
-      let uu____1725 = FStar_Syntax_Subst.compress t in
-      uu____1725.FStar_Syntax_Syntax.n in
-    match uu____1724 with
-    | FStar_Syntax_Syntax.Tm_arrow uu____1728 -> true
-    | uu____1736 -> false
+    let uu____1838 =
+      let uu____1839 = FStar_Syntax_Subst.compress t in
+      uu____1839.FStar_Syntax_Syntax.n in
+    match uu____1838 with
+    | FStar_Syntax_Syntax.Tm_arrow uu____1842 -> true
+    | uu____1850 -> false
 let rec pre_typ: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  ->
     let t1 = FStar_Syntax_Subst.compress t in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_refine (x,uu____1742) ->
+    | FStar_Syntax_Syntax.Tm_refine (x,uu____1856) ->
         pre_typ x.FStar_Syntax_Syntax.sort
-    | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____1748,uu____1749) ->
+    | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____1862,uu____1863) ->
         pre_typ t2
-    | uu____1778 -> t1
+    | uu____1892 -> t1
 let destruct:
   FStar_Syntax_Syntax.term ->
     FStar_Ident.lident ->
@@ -769,56 +814,56 @@ let destruct:
   fun typ  ->
     fun lid  ->
       let typ1 = FStar_Syntax_Subst.compress typ in
-      let uu____1792 =
-        let uu____1793 = un_uinst typ1 in uu____1793.FStar_Syntax_Syntax.n in
-      match uu____1792 with
+      let uu____1906 =
+        let uu____1907 = un_uinst typ1 in uu____1907.FStar_Syntax_Syntax.n in
+      match uu____1906 with
       | FStar_Syntax_Syntax.Tm_app (head1,args) ->
           let head2 = un_uinst head1 in
           (match head2.FStar_Syntax_Syntax.n with
            | FStar_Syntax_Syntax.Tm_fvar tc when
                FStar_Syntax_Syntax.fv_eq_lid tc lid -> Some args
-           | uu____1831 -> None)
+           | uu____1945 -> None)
       | FStar_Syntax_Syntax.Tm_fvar tc when
           FStar_Syntax_Syntax.fv_eq_lid tc lid -> Some []
-      | uu____1847 -> None
+      | uu____1961 -> None
 let lids_of_sigelt:
   FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident Prims.list =
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
-    | FStar_Syntax_Syntax.Sig_let (uu____1858,lids,uu____1860) -> lids
-    | FStar_Syntax_Syntax.Sig_bundle (uu____1865,lids) -> lids
+    | FStar_Syntax_Syntax.Sig_let (uu____1972,lids,uu____1974) -> lids
+    | FStar_Syntax_Syntax.Sig_bundle (uu____1979,lids) -> lids
     | FStar_Syntax_Syntax.Sig_inductive_typ
-        (lid,uu____1872,uu____1873,uu____1874,uu____1875,uu____1876) -> 
+        (lid,uu____1986,uu____1987,uu____1988,uu____1989,uu____1990) -> 
         [lid]
     | FStar_Syntax_Syntax.Sig_effect_abbrev
-        (lid,uu____1882,uu____1883,uu____1884,uu____1885) -> [lid]
+        (lid,uu____1996,uu____1997,uu____1998,uu____1999) -> [lid]
     | FStar_Syntax_Syntax.Sig_datacon
-        (lid,uu____1889,uu____1890,uu____1891,uu____1892,uu____1893) -> 
+        (lid,uu____2003,uu____2004,uu____2005,uu____2006,uu____2007) -> 
         [lid]
-    | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____1897,uu____1898) ->
+    | FStar_Syntax_Syntax.Sig_declare_typ (lid,uu____2011,uu____2012) ->
         [lid]
-    | FStar_Syntax_Syntax.Sig_assume (lid,uu____1900) -> [lid]
+    | FStar_Syntax_Syntax.Sig_assume (lid,uu____2014) -> [lid]
     | FStar_Syntax_Syntax.Sig_new_effect_for_free n1 ->
         [n1.FStar_Syntax_Syntax.mname]
     | FStar_Syntax_Syntax.Sig_new_effect n1 -> [n1.FStar_Syntax_Syntax.mname]
-    | FStar_Syntax_Syntax.Sig_sub_effect uu____1903 -> []
-    | FStar_Syntax_Syntax.Sig_pragma uu____1904 -> []
-    | FStar_Syntax_Syntax.Sig_main uu____1905 -> []
+    | FStar_Syntax_Syntax.Sig_sub_effect uu____2017 -> []
+    | FStar_Syntax_Syntax.Sig_pragma uu____2018 -> []
+    | FStar_Syntax_Syntax.Sig_main uu____2019 -> []
 let lid_of_sigelt: FStar_Syntax_Syntax.sigelt -> FStar_Ident.lident option =
   fun se  ->
-    match lids_of_sigelt se with | l::[] -> Some l | uu____1913 -> None
+    match lids_of_sigelt se with | l::[] -> Some l | uu____2027 -> None
 let quals_of_sigelt:
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.qualifier Prims.list =
   fun x  -> x.FStar_Syntax_Syntax.sigquals
 let range_of_sigelt: FStar_Syntax_Syntax.sigelt -> FStar_Range.range =
   fun x  -> x.FStar_Syntax_Syntax.sigrng
-let range_of_lb uu___173_1935 =
-  match uu___173_1935 with
-  | (FStar_Util.Inl x,uu____1942,uu____1943) ->
+let range_of_lb uu___173_2049 =
+  match uu___173_2049 with
+  | (FStar_Util.Inl x,uu____2056,uu____2057) ->
       FStar_Syntax_Syntax.range_of_bv x
-  | (FStar_Util.Inr l,uu____1947,uu____1948) -> FStar_Ident.range_of_lid l
-let range_of_arg uu____1965 =
-  match uu____1965 with | (hd1,uu____1971) -> hd1.FStar_Syntax_Syntax.pos
+  | (FStar_Util.Inr l,uu____2061,uu____2062) -> FStar_Ident.range_of_lid l
+let range_of_arg uu____2079 =
+  match uu____2079 with | (hd1,uu____2085) -> hd1.FStar_Syntax_Syntax.pos
 let range_of_args args r =
   FStar_All.pipe_right args
     (FStar_List.fold_left
@@ -829,24 +874,24 @@ let mk_app f args =
 let mk_data l args =
   match args with
   | [] ->
-      let uu____2085 =
-        let uu____2088 =
-          let uu____2089 =
-            let uu____2094 =
+      let uu____2199 =
+        let uu____2202 =
+          let uu____2203 =
+            let uu____2208 =
               FStar_Syntax_Syntax.fvar l FStar_Syntax_Syntax.Delta_constant
                 (Some FStar_Syntax_Syntax.Data_ctor) in
-            (uu____2094,
+            (uu____2208,
               (FStar_Syntax_Syntax.Meta_desugared
                  FStar_Syntax_Syntax.Data_app)) in
-          FStar_Syntax_Syntax.Tm_meta uu____2089 in
-        FStar_Syntax_Syntax.mk uu____2088 in
-      uu____2085 None (FStar_Ident.range_of_lid l)
-  | uu____2103 ->
+          FStar_Syntax_Syntax.Tm_meta uu____2203 in
+        FStar_Syntax_Syntax.mk uu____2202 in
+      uu____2199 None (FStar_Ident.range_of_lid l)
+  | uu____2217 ->
       let e =
-        let uu____2112 =
+        let uu____2226 =
           FStar_Syntax_Syntax.fvar l FStar_Syntax_Syntax.Delta_constant
             (Some FStar_Syntax_Syntax.Data_ctor) in
-        mk_app uu____2112 args in
+        mk_app uu____2226 args in
       FStar_Syntax_Syntax.mk
         (FStar_Syntax_Syntax.Tm_meta
            (e,
@@ -861,12 +906,12 @@ let unmangle_field_name: FStar_Ident.ident -> FStar_Ident.ident =
   fun x  ->
     if FStar_Util.starts_with x.FStar_Ident.idText "^fname^"
     then
-      let uu____2127 =
-        let uu____2130 =
+      let uu____2241 =
+        let uu____2244 =
           FStar_Util.substring_from x.FStar_Ident.idText
             (Prims.parse_int "7") in
-        (uu____2130, (x.FStar_Ident.idRange)) in
-      FStar_Ident.mk_ident uu____2127
+        (uu____2244, (x.FStar_Ident.idRange)) in
+      FStar_Ident.mk_ident uu____2241
     else x
 let field_projector_prefix: Prims.string = "__proj__"
 let field_projector_sep: Prims.string = "__item__"
@@ -902,42 +947,42 @@ let mk_field_projector_name:
     fun x  ->
       fun i  ->
         let nm =
-          let uu____2163 = FStar_Syntax_Syntax.is_null_bv x in
-          if uu____2163
+          let uu____2277 = FStar_Syntax_Syntax.is_null_bv x in
+          if uu____2277
           then
-            let uu____2164 =
-              let uu____2167 =
-                let uu____2168 = FStar_Util.string_of_int i in
-                Prims.strcat "_" uu____2168 in
-              let uu____2169 = FStar_Syntax_Syntax.range_of_bv x in
-              (uu____2167, uu____2169) in
-            FStar_Ident.mk_ident uu____2164
+            let uu____2278 =
+              let uu____2281 =
+                let uu____2282 = FStar_Util.string_of_int i in
+                Prims.strcat "_" uu____2282 in
+              let uu____2283 = FStar_Syntax_Syntax.range_of_bv x in
+              (uu____2281, uu____2283) in
+            FStar_Ident.mk_ident uu____2278
           else x.FStar_Syntax_Syntax.ppname in
         let y =
-          let uu___177_2172 = x in
+          let uu___177_2286 = x in
           {
             FStar_Syntax_Syntax.ppname = nm;
             FStar_Syntax_Syntax.index =
-              (uu___177_2172.FStar_Syntax_Syntax.index);
+              (uu___177_2286.FStar_Syntax_Syntax.index);
             FStar_Syntax_Syntax.sort =
-              (uu___177_2172.FStar_Syntax_Syntax.sort)
+              (uu___177_2286.FStar_Syntax_Syntax.sort)
           } in
-        let uu____2173 = mk_field_projector_name_from_ident lid nm in
-        (uu____2173, y)
+        let uu____2287 = mk_field_projector_name_from_ident lid nm in
+        (uu____2287, y)
 let set_uvar:
   FStar_Syntax_Syntax.uvar -> FStar_Syntax_Syntax.term -> Prims.unit =
   fun uv  ->
     fun t  ->
-      let uu____2180 = FStar_Syntax_Unionfind.find uv in
-      match uu____2180 with
-      | Some uu____2182 ->
-          let uu____2183 =
-            let uu____2184 =
-              let uu____2185 = FStar_Syntax_Unionfind.uvar_id uv in
-              FStar_All.pipe_left FStar_Util.string_of_int uu____2185 in
-            FStar_Util.format1 "Changing a fixed uvar! ?%s\n" uu____2184 in
-          failwith uu____2183
-      | uu____2186 -> FStar_Syntax_Unionfind.change uv t
+      let uu____2294 = FStar_Syntax_Unionfind.find uv in
+      match uu____2294 with
+      | Some uu____2296 ->
+          let uu____2297 =
+            let uu____2298 =
+              let uu____2299 = FStar_Syntax_Unionfind.uvar_id uv in
+              FStar_All.pipe_left FStar_Util.string_of_int uu____2299 in
+            FStar_Util.format1 "Changing a fixed uvar! ?%s\n" uu____2298 in
+          failwith uu____2297
+      | uu____2300 -> FStar_Syntax_Unionfind.change uv t
 let qualifier_equal:
   FStar_Syntax_Syntax.qualifier ->
     FStar_Syntax_Syntax.qualifier -> Prims.bool
@@ -978,7 +1023,7 @@ let qualifier_equal:
                (fun x1  ->
                   fun x2  -> x1.FStar_Ident.idText = x2.FStar_Ident.idText)
                f1 f2)
-      | uu____2248 -> q1 = q2
+      | uu____2362 -> q1 = q2
 let abs:
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.term ->
@@ -992,41 +1037,41 @@ let abs:
         let close_lopt lopt1 =
           match lopt1 with
           | None  -> lopt1
-          | Some (FStar_Util.Inr uu____2305) -> lopt1
+          | Some (FStar_Util.Inr uu____2419) -> lopt1
           | Some (FStar_Util.Inl lc) ->
-              let uu____2326 =
-                let uu____2332 = FStar_Syntax_Subst.close_lcomp bs lc in
-                FStar_Util.Inl uu____2332 in
-              Some uu____2326 in
+              let uu____2440 =
+                let uu____2446 = FStar_Syntax_Subst.close_lcomp bs lc in
+                FStar_Util.Inl uu____2446 in
+              Some uu____2440 in
         match bs with
         | [] -> t
-        | uu____2343 ->
+        | uu____2457 ->
             let body =
-              let uu____2345 = FStar_Syntax_Subst.close bs t in
-              FStar_Syntax_Subst.compress uu____2345 in
+              let uu____2459 = FStar_Syntax_Subst.close bs t in
+              FStar_Syntax_Subst.compress uu____2459 in
             (match ((body.FStar_Syntax_Syntax.n), lopt) with
              | (FStar_Syntax_Syntax.Tm_abs (bs',t1,lopt'),None ) ->
-                 let uu____2388 =
-                   let uu____2391 =
-                     let uu____2392 =
-                       let uu____2407 =
-                         let uu____2411 = FStar_Syntax_Subst.close_binders bs in
-                         FStar_List.append uu____2411 bs' in
-                       let uu____2417 = close_lopt lopt' in
-                       (uu____2407, t1, uu____2417) in
-                     FStar_Syntax_Syntax.Tm_abs uu____2392 in
-                   FStar_Syntax_Syntax.mk uu____2391 in
-                 uu____2388 None t1.FStar_Syntax_Syntax.pos
-             | uu____2443 ->
-                 let uu____2452 =
-                   let uu____2455 =
-                     let uu____2456 =
-                       let uu____2471 = FStar_Syntax_Subst.close_binders bs in
-                       let uu____2472 = close_lopt lopt in
-                       (uu____2471, body, uu____2472) in
-                     FStar_Syntax_Syntax.Tm_abs uu____2456 in
-                   FStar_Syntax_Syntax.mk uu____2455 in
-                 uu____2452 None t.FStar_Syntax_Syntax.pos)
+                 let uu____2502 =
+                   let uu____2505 =
+                     let uu____2506 =
+                       let uu____2521 =
+                         let uu____2525 = FStar_Syntax_Subst.close_binders bs in
+                         FStar_List.append uu____2525 bs' in
+                       let uu____2531 = close_lopt lopt' in
+                       (uu____2521, t1, uu____2531) in
+                     FStar_Syntax_Syntax.Tm_abs uu____2506 in
+                   FStar_Syntax_Syntax.mk uu____2505 in
+                 uu____2502 None t1.FStar_Syntax_Syntax.pos
+             | uu____2557 ->
+                 let uu____2566 =
+                   let uu____2569 =
+                     let uu____2570 =
+                       let uu____2585 = FStar_Syntax_Subst.close_binders bs in
+                       let uu____2586 = close_lopt lopt in
+                       (uu____2585, body, uu____2586) in
+                     FStar_Syntax_Syntax.Tm_abs uu____2570 in
+                   FStar_Syntax_Syntax.mk uu____2569 in
+                 uu____2566 None t.FStar_Syntax_Syntax.pos)
 let arrow:
   (FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual) Prims.list ->
     (FStar_Syntax_Syntax.comp',Prims.unit) FStar_Syntax_Syntax.syntax ->
@@ -1037,16 +1082,16 @@ let arrow:
     fun c  ->
       match bs with
       | [] -> comp_result c
-      | uu____2515 ->
-          let uu____2519 =
-            let uu____2522 =
-              let uu____2523 =
-                let uu____2531 = FStar_Syntax_Subst.close_binders bs in
-                let uu____2532 = FStar_Syntax_Subst.close_comp bs c in
-                (uu____2531, uu____2532) in
-              FStar_Syntax_Syntax.Tm_arrow uu____2523 in
-            FStar_Syntax_Syntax.mk uu____2522 in
-          uu____2519 None c.FStar_Syntax_Syntax.pos
+      | uu____2629 ->
+          let uu____2633 =
+            let uu____2636 =
+              let uu____2637 =
+                let uu____2645 = FStar_Syntax_Subst.close_binders bs in
+                let uu____2646 = FStar_Syntax_Subst.close_comp bs c in
+                (uu____2645, uu____2646) in
+              FStar_Syntax_Syntax.Tm_arrow uu____2637 in
+            FStar_Syntax_Syntax.mk uu____2636 in
+          uu____2633 None c.FStar_Syntax_Syntax.pos
 let flat_arrow:
   (FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual) Prims.list ->
     (FStar_Syntax_Syntax.comp',Prims.unit) FStar_Syntax_Syntax.syntax ->
@@ -1056,26 +1101,26 @@ let flat_arrow:
   fun bs  ->
     fun c  ->
       let t = arrow bs c in
-      let uu____2562 =
-        let uu____2563 = FStar_Syntax_Subst.compress t in
-        uu____2563.FStar_Syntax_Syntax.n in
-      match uu____2562 with
+      let uu____2676 =
+        let uu____2677 = FStar_Syntax_Subst.compress t in
+        uu____2677.FStar_Syntax_Syntax.n in
+      match uu____2676 with
       | FStar_Syntax_Syntax.Tm_arrow (bs1,c1) ->
           (match c1.FStar_Syntax_Syntax.n with
-           | FStar_Syntax_Syntax.Total (tres,uu____2583) ->
-               let uu____2590 =
-                 let uu____2591 = FStar_Syntax_Subst.compress tres in
-                 uu____2591.FStar_Syntax_Syntax.n in
-               (match uu____2590 with
+           | FStar_Syntax_Syntax.Total (tres,uu____2697) ->
+               let uu____2704 =
+                 let uu____2705 = FStar_Syntax_Subst.compress tres in
+                 uu____2705.FStar_Syntax_Syntax.n in
+               (match uu____2704 with
                 | FStar_Syntax_Syntax.Tm_arrow (bs',c') ->
-                    let uu____2608 = FStar_ST.read t.FStar_Syntax_Syntax.tk in
+                    let uu____2722 = FStar_ST.read t.FStar_Syntax_Syntax.tk in
                     FStar_Syntax_Syntax.mk
                       (FStar_Syntax_Syntax.Tm_arrow
-                         ((FStar_List.append bs1 bs'), c')) uu____2608
+                         ((FStar_List.append bs1 bs'), c')) uu____2722
                       t.FStar_Syntax_Syntax.pos
-                | uu____2624 -> t)
-           | uu____2625 -> t)
-      | uu____2626 -> t
+                | uu____2738 -> t)
+           | uu____2739 -> t)
+      | uu____2740 -> t
 let refine:
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.term ->
@@ -1084,23 +1129,23 @@ let refine:
   =
   fun b  ->
     fun t  ->
-      let uu____2635 =
+      let uu____2749 =
         FStar_ST.read (b.FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.tk in
-      let uu____2640 =
-        let uu____2641 = FStar_Syntax_Syntax.range_of_bv b in
-        FStar_Range.union_ranges uu____2641 t.FStar_Syntax_Syntax.pos in
-      let uu____2642 =
-        let uu____2645 =
-          let uu____2646 =
-            let uu____2651 =
-              let uu____2652 =
-                let uu____2653 = FStar_Syntax_Syntax.mk_binder b in
-                [uu____2653] in
-              FStar_Syntax_Subst.close uu____2652 t in
-            (b, uu____2651) in
-          FStar_Syntax_Syntax.Tm_refine uu____2646 in
-        FStar_Syntax_Syntax.mk uu____2645 in
-      uu____2642 uu____2635 uu____2640
+      let uu____2754 =
+        let uu____2755 = FStar_Syntax_Syntax.range_of_bv b in
+        FStar_Range.union_ranges uu____2755 t.FStar_Syntax_Syntax.pos in
+      let uu____2756 =
+        let uu____2759 =
+          let uu____2760 =
+            let uu____2765 =
+              let uu____2766 =
+                let uu____2767 = FStar_Syntax_Syntax.mk_binder b in
+                [uu____2767] in
+              FStar_Syntax_Subst.close uu____2766 t in
+            (b, uu____2765) in
+          FStar_Syntax_Syntax.Tm_refine uu____2760 in
+        FStar_Syntax_Syntax.mk uu____2759 in
+      uu____2756 uu____2749 uu____2754
 let branch: FStar_Syntax_Syntax.branch -> FStar_Syntax_Syntax.branch =
   fun b  -> FStar_Syntax_Subst.close_branch b
 let rec arrow_formals_comp:
@@ -1112,18 +1157,18 @@ let rec arrow_formals_comp:
     let k1 = FStar_Syntax_Subst.compress k in
     match k1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_arrow (bs,c) ->
-        let uu____2691 = FStar_Syntax_Subst.open_comp bs c in
-        (match uu____2691 with
+        let uu____2805 = FStar_Syntax_Subst.open_comp bs c in
+        (match uu____2805 with
          | (bs1,c1) ->
-             let uu____2701 = is_tot_or_gtot_comp c1 in
-             if uu____2701
+             let uu____2815 = is_tot_or_gtot_comp c1 in
+             if uu____2815
              then
-               let uu____2707 = arrow_formals_comp (comp_result c1) in
-               (match uu____2707 with
+               let uu____2821 = arrow_formals_comp (comp_result c1) in
+               (match uu____2821 with
                 | (bs',k2) -> ((FStar_List.append bs1 bs'), k2))
              else (bs1, c1))
-    | uu____2732 ->
-        let uu____2733 = FStar_Syntax_Syntax.mk_Total k1 in ([], uu____2733)
+    | uu____2846 ->
+        let uu____2847 = FStar_Syntax_Syntax.mk_Total k1 in ([], uu____2847)
 let rec arrow_formals:
   FStar_Syntax_Syntax.term ->
     ((FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual) Prims.list*
@@ -1131,8 +1176,8 @@ let rec arrow_formals:
       FStar_Syntax_Syntax.syntax)
   =
   fun k  ->
-    let uu____2749 = arrow_formals_comp k in
-    match uu____2749 with | (bs,c) -> (bs, (comp_result c))
+    let uu____2863 = arrow_formals_comp k in
+    match uu____2863 with | (bs,c) -> (bs, (comp_result c))
 let abs_formals:
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.binders* FStar_Syntax_Syntax.term*
@@ -1145,39 +1190,39 @@ let abs_formals:
       match l with
       | Some (FStar_Util.Inl l1) ->
           let l2 =
-            let uu___178_2830 = l1 in
-            let uu____2831 =
+            let uu___178_2944 = l1 in
+            let uu____2945 =
               FStar_Syntax_Subst.subst s l1.FStar_Syntax_Syntax.res_typ in
             {
               FStar_Syntax_Syntax.eff_name =
-                (uu___178_2830.FStar_Syntax_Syntax.eff_name);
-              FStar_Syntax_Syntax.res_typ = uu____2831;
+                (uu___178_2944.FStar_Syntax_Syntax.eff_name);
+              FStar_Syntax_Syntax.res_typ = uu____2945;
               FStar_Syntax_Syntax.cflags =
-                (uu___178_2830.FStar_Syntax_Syntax.cflags);
+                (uu___178_2944.FStar_Syntax_Syntax.cflags);
               FStar_Syntax_Syntax.comp =
-                (fun uu____2834  ->
-                   let uu____2835 = l1.FStar_Syntax_Syntax.comp () in
-                   FStar_Syntax_Subst.subst_comp s uu____2835)
+                (fun uu____2948  ->
+                   let uu____2949 = l1.FStar_Syntax_Syntax.comp () in
+                   FStar_Syntax_Subst.subst_comp s uu____2949)
             } in
           Some (FStar_Util.Inl l2)
-      | uu____2844 -> l in
+      | uu____2958 -> l in
     let rec aux t1 abs_body_lcomp =
-      let uu____2882 =
-        let uu____2883 =
-          let uu____2886 = FStar_Syntax_Subst.compress t1 in
-          FStar_All.pipe_left unascribe uu____2886 in
-        uu____2883.FStar_Syntax_Syntax.n in
-      match uu____2882 with
+      let uu____2996 =
+        let uu____2997 =
+          let uu____3000 = FStar_Syntax_Subst.compress t1 in
+          FStar_All.pipe_left unascribe uu____3000 in
+        uu____2997.FStar_Syntax_Syntax.n in
+      match uu____2996 with
       | FStar_Syntax_Syntax.Tm_abs (bs,t2,what) ->
-          let uu____2924 = aux t2 what in
-          (match uu____2924 with
+          let uu____3038 = aux t2 what in
+          (match uu____3038 with
            | (bs',t3,what1) -> ((FStar_List.append bs bs'), t3, what1))
-      | uu____2981 -> ([], t1, abs_body_lcomp) in
-    let uu____2993 = aux t None in
-    match uu____2993 with
+      | uu____3095 -> ([], t1, abs_body_lcomp) in
+    let uu____3107 = aux t None in
+    match uu____3107 with
     | (bs,t1,abs_body_lcomp) ->
-        let uu____3041 = FStar_Syntax_Subst.open_term' bs t1 in
-        (match uu____3041 with
+        let uu____3155 = FStar_Syntax_Subst.open_term' bs t1 in
+        (match uu____3155 with
          | (bs1,t2,opening) ->
              let abs_body_lcomp1 = subst_lcomp_opt opening abs_body_lcomp in
              (bs1, t2, abs_body_lcomp1))
@@ -1218,9 +1263,9 @@ let close_univs_and_mk_letbinding:
             fun def  ->
               let def1 =
                 match (recs, univ_vars) with
-                | (None ,uu____3131) -> def
-                | (uu____3137,[]) -> def
-                | (Some fvs,uu____3144) ->
+                | (None ,uu____3245) -> def
+                | (uu____3251,[]) -> def
+                | (Some fvs,uu____3258) ->
                     let universes =
                       FStar_All.pipe_right univ_vars
                         (FStar_List.map
@@ -1247,20 +1292,20 @@ let open_univ_vars_binders_and_comp:
       fun c  ->
         match binders with
         | [] ->
-            let uu____3205 = FStar_Syntax_Subst.open_univ_vars_comp uvs c in
-            (match uu____3205 with | (uvs1,c1) -> (uvs1, [], c1))
-        | uu____3221 ->
+            let uu____3319 = FStar_Syntax_Subst.open_univ_vars_comp uvs c in
+            (match uu____3319 with | (uvs1,c1) -> (uvs1, [], c1))
+        | uu____3335 ->
             let t' = arrow binders c in
-            let uu____3228 = FStar_Syntax_Subst.open_univ_vars uvs t' in
-            (match uu____3228 with
+            let uu____3342 = FStar_Syntax_Subst.open_univ_vars uvs t' in
+            (match uu____3342 with
              | (uvs1,t'1) ->
-                 let uu____3239 =
-                   let uu____3240 = FStar_Syntax_Subst.compress t'1 in
-                   uu____3240.FStar_Syntax_Syntax.n in
-                 (match uu____3239 with
+                 let uu____3353 =
+                   let uu____3354 = FStar_Syntax_Subst.compress t'1 in
+                   uu____3354.FStar_Syntax_Syntax.n in
+                 (match uu____3353 with
                   | FStar_Syntax_Syntax.Tm_arrow (binders1,c1) ->
                       (uvs1, binders1, c1)
-                  | uu____3266 -> failwith "Impossible"))
+                  | uu____3380 -> failwith "Impossible"))
 let is_tuple_constructor_string: Prims.string -> Prims.bool =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.tuple"
 let is_dtuple_constructor_string: Prims.string -> Prims.bool =
@@ -1284,28 +1329,28 @@ let is_tuple_constructor: FStar_Syntax_Syntax.typ -> Prims.bool =
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         is_tuple_constructor_string
           ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str
-    | uu____3303 -> false
+    | uu____3417 -> false
 let mk_tuple_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____3311 = FStar_Util.string_of_int n1 in
-        FStar_Util.format1 "tuple%s" uu____3311 in
-      let uu____3312 = FStar_Syntax_Const.psconst t in
-      FStar_Ident.set_lid_range uu____3312 r
+        let uu____3425 = FStar_Util.string_of_int n1 in
+        FStar_Util.format1 "tuple%s" uu____3425 in
+      let uu____3426 = FStar_Syntax_Const.psconst t in
+      FStar_Ident.set_lid_range uu____3426 r
 let mk_tuple_data_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____3320 = FStar_Util.string_of_int n1 in
-        FStar_Util.format1 "Mktuple%s" uu____3320 in
-      let uu____3321 = FStar_Syntax_Const.psconst t in
-      FStar_Ident.set_lid_range uu____3321 r
+        let uu____3434 = FStar_Util.string_of_int n1 in
+        FStar_Util.format1 "Mktuple%s" uu____3434 in
+      let uu____3435 = FStar_Syntax_Const.psconst t in
+      FStar_Ident.set_lid_range uu____3435 r
 let is_tuple_data_lid: FStar_Ident.lident -> Prims.int -> Prims.bool =
   fun f  ->
     fun n1  ->
-      let uu____3328 = mk_tuple_data_lid n1 FStar_Range.dummyRange in
-      FStar_Ident.lid_equals f uu____3328
+      let uu____3442 = mk_tuple_data_lid n1 FStar_Range.dummyRange in
+      FStar_Ident.lid_equals f uu____3442
 let is_tuple_data_lid': FStar_Ident.lident -> Prims.bool =
   fun f  -> is_tuple_datacon_string f.FStar_Ident.str
 let is_tuple_constructor_lid: FStar_Ident.ident -> Prims.bool =
@@ -1318,24 +1363,24 @@ let is_dtuple_constructor: FStar_Syntax_Syntax.typ -> Prims.bool =
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         is_dtuple_constructor_lid
           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-    | uu____3346 -> false
+    | uu____3460 -> false
 let mk_dtuple_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____3354 = FStar_Util.string_of_int n1 in
-        FStar_Util.format1 "dtuple%s" uu____3354 in
-      let uu____3355 = let uu____3356 = mod_prefix_dtuple n1 in uu____3356 t in
-      FStar_Ident.set_lid_range uu____3355 r
+        let uu____3468 = FStar_Util.string_of_int n1 in
+        FStar_Util.format1 "dtuple%s" uu____3468 in
+      let uu____3469 = let uu____3470 = mod_prefix_dtuple n1 in uu____3470 t in
+      FStar_Ident.set_lid_range uu____3469 r
 let mk_dtuple_data_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident
   =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____3366 = FStar_Util.string_of_int n1 in
-        FStar_Util.format1 "Mkdtuple%s" uu____3366 in
-      let uu____3367 = let uu____3368 = mod_prefix_dtuple n1 in uu____3368 t in
-      FStar_Ident.set_lid_range uu____3367 r
+        let uu____3480 = FStar_Util.string_of_int n1 in
+        FStar_Util.format1 "Mkdtuple%s" uu____3480 in
+      let uu____3481 = let uu____3482 = mod_prefix_dtuple n1 in uu____3482 t in
+      FStar_Ident.set_lid_range uu____3481 r
 let is_dtuple_data_lid': FStar_Ident.lident -> Prims.bool =
   fun f  -> is_dtuple_datacon_string (FStar_Ident.text_of_lid f)
 let is_lid_equality: FStar_Ident.lident -> Prims.bool =
@@ -1359,34 +1404,34 @@ let is_constructor:
   FStar_Syntax_Syntax.term -> FStar_Ident.lident -> Prims.bool =
   fun t  ->
     fun lid  ->
-      let uu____3408 =
-        let uu____3409 = pre_typ t in uu____3409.FStar_Syntax_Syntax.n in
-      match uu____3408 with
+      let uu____3522 =
+        let uu____3523 = pre_typ t in uu____3523.FStar_Syntax_Syntax.n in
+      match uu____3522 with
       | FStar_Syntax_Syntax.Tm_fvar tc ->
           FStar_Ident.lid_equals
             (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v lid
-      | uu____3417 -> false
+      | uu____3531 -> false
 let rec is_constructed_typ:
   FStar_Syntax_Syntax.term -> FStar_Ident.lident -> Prims.bool =
   fun t  ->
     fun lid  ->
-      let uu____3424 =
-        let uu____3425 = pre_typ t in uu____3425.FStar_Syntax_Syntax.n in
-      match uu____3424 with
-      | FStar_Syntax_Syntax.Tm_fvar uu____3428 -> is_constructor t lid
-      | FStar_Syntax_Syntax.Tm_app (t1,uu____3430) ->
+      let uu____3538 =
+        let uu____3539 = pre_typ t in uu____3539.FStar_Syntax_Syntax.n in
+      match uu____3538 with
+      | FStar_Syntax_Syntax.Tm_fvar uu____3542 -> is_constructor t lid
+      | FStar_Syntax_Syntax.Tm_app (t1,uu____3544) ->
           is_constructed_typ t1 lid
-      | uu____3445 -> false
+      | uu____3559 -> false
 let rec get_tycon:
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term option =
   fun t  ->
     let t1 = pre_typ t in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_bvar uu____3452 -> Some t1
-    | FStar_Syntax_Syntax.Tm_name uu____3453 -> Some t1
-    | FStar_Syntax_Syntax.Tm_fvar uu____3454 -> Some t1
-    | FStar_Syntax_Syntax.Tm_app (t2,uu____3456) -> get_tycon t2
-    | uu____3471 -> None
+    | FStar_Syntax_Syntax.Tm_bvar uu____3566 -> Some t1
+    | FStar_Syntax_Syntax.Tm_name uu____3567 -> Some t1
+    | FStar_Syntax_Syntax.Tm_fvar uu____3568 -> Some t1
+    | FStar_Syntax_Syntax.Tm_app (t2,uu____3570) -> get_tycon t2
+    | uu____3585 -> None
 let is_interpreted: FStar_Ident.lident -> Prims.bool =
   fun l  ->
     let theory_syms =
@@ -1425,15 +1470,15 @@ let type_u:
     ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.universe)
   =
-  fun uu____3501  ->
+  fun uu____3615  ->
     let u =
-      let uu____3505 = FStar_Syntax_Unionfind.univ_fresh () in
+      let uu____3619 = FStar_Syntax_Unionfind.univ_fresh () in
       FStar_All.pipe_left (fun _0_27  -> FStar_Syntax_Syntax.U_unif _0_27)
-        uu____3505 in
-    let uu____3510 =
+        uu____3619 in
+    let uu____3624 =
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u) None
         FStar_Range.dummyRange in
-    (uu____3510, u)
+    (uu____3624, u)
 let kt_kt: FStar_Syntax_Syntax.term = FStar_Syntax_Const.kunary ktype0 ktype0
 let kt_kt_kt: FStar_Syntax_Syntax.term =
   FStar_Syntax_Const.kbin ktype0 ktype0 ktype0
@@ -1465,50 +1510,50 @@ let mk_conj_opt:
       match phi1 with
       | None  -> Some phi2
       | Some phi11 ->
-          let uu____3533 =
-            let uu____3536 =
+          let uu____3647 =
+            let uu____3650 =
               FStar_Range.union_ranges phi11.FStar_Syntax_Syntax.pos
                 phi2.FStar_Syntax_Syntax.pos in
-            let uu____3537 =
-              let uu____3540 =
-                let uu____3541 =
-                  let uu____3551 =
-                    let uu____3553 = FStar_Syntax_Syntax.as_arg phi11 in
-                    let uu____3554 =
-                      let uu____3556 = FStar_Syntax_Syntax.as_arg phi2 in
-                      [uu____3556] in
-                    uu____3553 :: uu____3554 in
-                  (tand, uu____3551) in
-                FStar_Syntax_Syntax.Tm_app uu____3541 in
-              FStar_Syntax_Syntax.mk uu____3540 in
-            uu____3537 None uu____3536 in
-          Some uu____3533
+            let uu____3651 =
+              let uu____3654 =
+                let uu____3655 =
+                  let uu____3665 =
+                    let uu____3667 = FStar_Syntax_Syntax.as_arg phi11 in
+                    let uu____3668 =
+                      let uu____3670 = FStar_Syntax_Syntax.as_arg phi2 in
+                      [uu____3670] in
+                    uu____3667 :: uu____3668 in
+                  (tand, uu____3665) in
+                FStar_Syntax_Syntax.Tm_app uu____3655 in
+              FStar_Syntax_Syntax.mk uu____3654 in
+            uu____3651 None uu____3650 in
+          Some uu____3647
 let mk_binop op_t phi1 phi2 =
-  let uu____3591 =
+  let uu____3705 =
     FStar_Range.union_ranges phi1.FStar_Syntax_Syntax.pos
       phi2.FStar_Syntax_Syntax.pos in
-  let uu____3592 =
-    let uu____3595 =
-      let uu____3596 =
-        let uu____3606 =
-          let uu____3608 = FStar_Syntax_Syntax.as_arg phi1 in
-          let uu____3609 =
-            let uu____3611 = FStar_Syntax_Syntax.as_arg phi2 in [uu____3611] in
-          uu____3608 :: uu____3609 in
-        (op_t, uu____3606) in
-      FStar_Syntax_Syntax.Tm_app uu____3596 in
-    FStar_Syntax_Syntax.mk uu____3595 in
-  uu____3592 None uu____3591
+  let uu____3706 =
+    let uu____3709 =
+      let uu____3710 =
+        let uu____3720 =
+          let uu____3722 = FStar_Syntax_Syntax.as_arg phi1 in
+          let uu____3723 =
+            let uu____3725 = FStar_Syntax_Syntax.as_arg phi2 in [uu____3725] in
+          uu____3722 :: uu____3723 in
+        (op_t, uu____3720) in
+      FStar_Syntax_Syntax.Tm_app uu____3710 in
+    FStar_Syntax_Syntax.mk uu____3709 in
+  uu____3706 None uu____3705
 let mk_neg phi =
-  let uu____3632 =
-    let uu____3635 =
-      let uu____3636 =
-        let uu____3646 =
-          let uu____3648 = FStar_Syntax_Syntax.as_arg phi in [uu____3648] in
-        (t_not, uu____3646) in
-      FStar_Syntax_Syntax.Tm_app uu____3636 in
-    FStar_Syntax_Syntax.mk uu____3635 in
-  uu____3632 None phi.FStar_Syntax_Syntax.pos
+  let uu____3746 =
+    let uu____3749 =
+      let uu____3750 =
+        let uu____3760 =
+          let uu____3762 = FStar_Syntax_Syntax.as_arg phi in [uu____3762] in
+        (t_not, uu____3760) in
+      FStar_Syntax_Syntax.Tm_app uu____3750 in
+    FStar_Syntax_Syntax.mk uu____3749 in
+  uu____3746 None phi.FStar_Syntax_Syntax.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l:
   FStar_Syntax_Syntax.term Prims.list -> FStar_Syntax_Syntax.term =
@@ -1528,32 +1573,32 @@ let mk_disj_l:
 let mk_imp phi1 phi2 = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 = mk_binop tiff phi1 phi2
 let b2t e =
-  let uu____3739 =
-    let uu____3742 =
-      let uu____3743 =
-        let uu____3753 =
-          let uu____3755 = FStar_Syntax_Syntax.as_arg e in [uu____3755] in
-        (b2t_v, uu____3753) in
-      FStar_Syntax_Syntax.Tm_app uu____3743 in
-    FStar_Syntax_Syntax.mk uu____3742 in
-  uu____3739 None e.FStar_Syntax_Syntax.pos
+  let uu____3853 =
+    let uu____3856 =
+      let uu____3857 =
+        let uu____3867 =
+          let uu____3869 = FStar_Syntax_Syntax.as_arg e in [uu____3869] in
+        (b2t_v, uu____3867) in
+      FStar_Syntax_Syntax.Tm_app uu____3857 in
+    FStar_Syntax_Syntax.mk uu____3856 in
+  uu____3853 None e.FStar_Syntax_Syntax.pos
 let teq: FStar_Syntax_Syntax.term = fvar_const FStar_Syntax_Const.eq2_lid
 let mk_untyped_eq2 e1 e2 =
-  let uu____3779 =
+  let uu____3893 =
     FStar_Range.union_ranges e1.FStar_Syntax_Syntax.pos
       e2.FStar_Syntax_Syntax.pos in
-  let uu____3780 =
-    let uu____3783 =
-      let uu____3784 =
-        let uu____3794 =
-          let uu____3796 = FStar_Syntax_Syntax.as_arg e1 in
-          let uu____3797 =
-            let uu____3799 = FStar_Syntax_Syntax.as_arg e2 in [uu____3799] in
-          uu____3796 :: uu____3797 in
-        (teq, uu____3794) in
-      FStar_Syntax_Syntax.Tm_app uu____3784 in
-    FStar_Syntax_Syntax.mk uu____3783 in
-  uu____3780 None uu____3779
+  let uu____3894 =
+    let uu____3897 =
+      let uu____3898 =
+        let uu____3908 =
+          let uu____3910 = FStar_Syntax_Syntax.as_arg e1 in
+          let uu____3911 =
+            let uu____3913 = FStar_Syntax_Syntax.as_arg e2 in [uu____3913] in
+          uu____3910 :: uu____3911 in
+        (teq, uu____3908) in
+      FStar_Syntax_Syntax.Tm_app uu____3898 in
+    FStar_Syntax_Syntax.mk uu____3897 in
+  uu____3894 None uu____3893
 let mk_eq2:
   FStar_Syntax_Syntax.universe ->
     FStar_Syntax_Syntax.typ ->
@@ -1567,25 +1612,25 @@ let mk_eq2:
       fun e1  ->
         fun e2  ->
           let eq_inst = FStar_Syntax_Syntax.mk_Tm_uinst teq [u] in
-          let uu____3822 =
+          let uu____3936 =
             FStar_Range.union_ranges e1.FStar_Syntax_Syntax.pos
               e2.FStar_Syntax_Syntax.pos in
-          let uu____3823 =
-            let uu____3826 =
-              let uu____3827 =
-                let uu____3837 =
-                  let uu____3839 = FStar_Syntax_Syntax.iarg t in
-                  let uu____3840 =
-                    let uu____3842 = FStar_Syntax_Syntax.as_arg e1 in
-                    let uu____3843 =
-                      let uu____3845 = FStar_Syntax_Syntax.as_arg e2 in
-                      [uu____3845] in
-                    uu____3842 :: uu____3843 in
-                  uu____3839 :: uu____3840 in
-                (eq_inst, uu____3837) in
-              FStar_Syntax_Syntax.Tm_app uu____3827 in
-            FStar_Syntax_Syntax.mk uu____3826 in
-          uu____3823 None uu____3822
+          let uu____3937 =
+            let uu____3940 =
+              let uu____3941 =
+                let uu____3951 =
+                  let uu____3953 = FStar_Syntax_Syntax.iarg t in
+                  let uu____3954 =
+                    let uu____3956 = FStar_Syntax_Syntax.as_arg e1 in
+                    let uu____3957 =
+                      let uu____3959 = FStar_Syntax_Syntax.as_arg e2 in
+                      [uu____3959] in
+                    uu____3956 :: uu____3957 in
+                  uu____3953 :: uu____3954 in
+                (eq_inst, uu____3951) in
+              FStar_Syntax_Syntax.Tm_app uu____3941 in
+            FStar_Syntax_Syntax.mk uu____3940 in
+          uu____3937 None uu____3936
 let mk_has_type t x t' =
   let t_has_type = fvar_const FStar_Syntax_Const.has_type_lid in
   let t_has_type1 =
@@ -1594,21 +1639,21 @@ let mk_has_type t x t' =
          (t_has_type,
            [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero])) None
       FStar_Range.dummyRange in
-  let uu____3883 =
-    let uu____3886 =
-      let uu____3887 =
-        let uu____3897 =
-          let uu____3899 = FStar_Syntax_Syntax.iarg t in
-          let uu____3900 =
-            let uu____3902 = FStar_Syntax_Syntax.as_arg x in
-            let uu____3903 =
-              let uu____3905 = FStar_Syntax_Syntax.as_arg t' in [uu____3905] in
-            uu____3902 :: uu____3903 in
-          uu____3899 :: uu____3900 in
-        (t_has_type1, uu____3897) in
-      FStar_Syntax_Syntax.Tm_app uu____3887 in
-    FStar_Syntax_Syntax.mk uu____3886 in
-  uu____3883 None FStar_Range.dummyRange
+  let uu____3997 =
+    let uu____4000 =
+      let uu____4001 =
+        let uu____4011 =
+          let uu____4013 = FStar_Syntax_Syntax.iarg t in
+          let uu____4014 =
+            let uu____4016 = FStar_Syntax_Syntax.as_arg x in
+            let uu____4017 =
+              let uu____4019 = FStar_Syntax_Syntax.as_arg t' in [uu____4019] in
+            uu____4016 :: uu____4017 in
+          uu____4013 :: uu____4014 in
+        (t_has_type1, uu____4011) in
+      FStar_Syntax_Syntax.Tm_app uu____4001 in
+    FStar_Syntax_Syntax.mk uu____4000 in
+  uu____3997 None FStar_Range.dummyRange
 let lex_t: FStar_Syntax_Syntax.term = fvar_const FStar_Syntax_Const.lex_t_lid
 let lex_top: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.fvar FStar_Syntax_Const.lextop_lid
@@ -1627,52 +1672,52 @@ let lcomp_of_comp:
     FStar_Syntax_Syntax.lcomp
   =
   fun c0  ->
-    let uu____3924 =
+    let uu____4038 =
       match c0.FStar_Syntax_Syntax.n with
-      | FStar_Syntax_Syntax.Total uu____3931 ->
+      | FStar_Syntax_Syntax.Total uu____4045 ->
           (FStar_Syntax_Const.effect_Tot_lid, [FStar_Syntax_Syntax.TOTAL])
-      | FStar_Syntax_Syntax.GTotal uu____3938 ->
+      | FStar_Syntax_Syntax.GTotal uu____4052 ->
           (FStar_Syntax_Const.effect_GTot_lid,
             [FStar_Syntax_Syntax.SOMETRIVIAL])
       | FStar_Syntax_Syntax.Comp c ->
           ((c.FStar_Syntax_Syntax.effect_name),
             (c.FStar_Syntax_Syntax.flags)) in
-    match uu____3924 with
+    match uu____4038 with
     | (eff_name,flags) ->
         {
           FStar_Syntax_Syntax.eff_name = eff_name;
           FStar_Syntax_Syntax.res_typ = (comp_result c0);
           FStar_Syntax_Syntax.cflags = flags;
-          FStar_Syntax_Syntax.comp = ((fun uu____3951  -> c0))
+          FStar_Syntax_Syntax.comp = ((fun uu____4065  -> c0))
         }
 let mk_forall_aux fa x body =
-  let uu____3975 =
-    let uu____3978 =
-      let uu____3979 =
-        let uu____3989 =
-          let uu____3991 =
+  let uu____4089 =
+    let uu____4092 =
+      let uu____4093 =
+        let uu____4103 =
+          let uu____4105 =
             FStar_Syntax_Syntax.iarg x.FStar_Syntax_Syntax.sort in
-          let uu____3992 =
-            let uu____3994 =
-              let uu____3995 =
-                let uu____3996 =
-                  let uu____3997 = FStar_Syntax_Syntax.mk_binder x in
-                  [uu____3997] in
-                let uu____3998 =
-                  let uu____4005 =
-                    let uu____4011 =
-                      let uu____4012 = FStar_Syntax_Syntax.mk_Total ktype0 in
-                      FStar_All.pipe_left lcomp_of_comp uu____4012 in
-                    FStar_Util.Inl uu____4011 in
-                  Some uu____4005 in
-                abs uu____3996 body uu____3998 in
-              FStar_Syntax_Syntax.as_arg uu____3995 in
-            [uu____3994] in
-          uu____3991 :: uu____3992 in
-        (fa, uu____3989) in
-      FStar_Syntax_Syntax.Tm_app uu____3979 in
-    FStar_Syntax_Syntax.mk uu____3978 in
-  uu____3975 None FStar_Range.dummyRange
+          let uu____4106 =
+            let uu____4108 =
+              let uu____4109 =
+                let uu____4110 =
+                  let uu____4111 = FStar_Syntax_Syntax.mk_binder x in
+                  [uu____4111] in
+                let uu____4112 =
+                  let uu____4119 =
+                    let uu____4125 =
+                      let uu____4126 = FStar_Syntax_Syntax.mk_Total ktype0 in
+                      FStar_All.pipe_left lcomp_of_comp uu____4126 in
+                    FStar_Util.Inl uu____4125 in
+                  Some uu____4119 in
+                abs uu____4110 body uu____4112 in
+              FStar_Syntax_Syntax.as_arg uu____4109 in
+            [uu____4108] in
+          uu____4105 :: uu____4106 in
+        (fa, uu____4103) in
+      FStar_Syntax_Syntax.Tm_app uu____4093 in
+    FStar_Syntax_Syntax.mk uu____4092 in
+  uu____4089 None FStar_Range.dummyRange
 let mk_forall_no_univ:
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.typ ->
@@ -1700,35 +1745,35 @@ let close_forall_no_univs:
       FStar_List.fold_right
         (fun b  ->
            fun f1  ->
-             let uu____4062 = FStar_Syntax_Syntax.is_null_binder b in
-             if uu____4062 then f1 else mk_forall_no_univ (fst b) f1) bs f
+             let uu____4176 = FStar_Syntax_Syntax.is_null_binder b in
+             if uu____4176 then f1 else mk_forall_no_univ (fst b) f1) bs f
 let rec is_wild_pat p =
   match p.FStar_Syntax_Syntax.v with
-  | FStar_Syntax_Syntax.Pat_wild uu____4075 -> true
-  | uu____4076 -> false
+  | FStar_Syntax_Syntax.Pat_wild uu____4189 -> true
+  | uu____4190 -> false
 let if_then_else b t1 t2 =
   let then_branch =
-    let uu____4119 =
+    let uu____4233 =
       FStar_Syntax_Syntax.withinfo
         (FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_bool true))
         FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n
         t1.FStar_Syntax_Syntax.pos in
-    (uu____4119, None, t1) in
+    (uu____4233, None, t1) in
   let else_branch =
-    let uu____4142 =
+    let uu____4256 =
       FStar_Syntax_Syntax.withinfo
         (FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_bool false))
         FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n
         t2.FStar_Syntax_Syntax.pos in
-    (uu____4142, None, t2) in
-  let uu____4154 =
-    let uu____4155 =
+    (uu____4256, None, t2) in
+  let uu____4268 =
+    let uu____4269 =
       FStar_Range.union_ranges t1.FStar_Syntax_Syntax.pos
         t2.FStar_Syntax_Syntax.pos in
-    FStar_Range.union_ranges b.FStar_Syntax_Syntax.pos uu____4155 in
+    FStar_Range.union_ranges b.FStar_Syntax_Syntax.pos uu____4269 in
   FStar_Syntax_Syntax.mk
     (FStar_Syntax_Syntax.Tm_match (b, [then_branch; else_branch])) None
-    uu____4154
+    uu____4268
 type qpats = FStar_Syntax_Syntax.args Prims.list
 type connective =
   | QAll of (FStar_Syntax_Syntax.binders* qpats* FStar_Syntax_Syntax.typ)
@@ -1736,19 +1781,19 @@ type connective =
   | BaseConn of (FStar_Ident.lident* FStar_Syntax_Syntax.args)
 let uu___is_QAll: connective -> Prims.bool =
   fun projectee  ->
-    match projectee with | QAll _0 -> true | uu____4231 -> false
+    match projectee with | QAll _0 -> true | uu____4345 -> false
 let __proj__QAll__item___0:
   connective -> (FStar_Syntax_Syntax.binders* qpats* FStar_Syntax_Syntax.typ)
   = fun projectee  -> match projectee with | QAll _0 -> _0
 let uu___is_QEx: connective -> Prims.bool =
   fun projectee  ->
-    match projectee with | QEx _0 -> true | uu____4255 -> false
+    match projectee with | QEx _0 -> true | uu____4369 -> false
 let __proj__QEx__item___0:
   connective -> (FStar_Syntax_Syntax.binders* qpats* FStar_Syntax_Syntax.typ)
   = fun projectee  -> match projectee with | QEx _0 -> _0
 let uu___is_BaseConn: connective -> Prims.bool =
   fun projectee  ->
-    match projectee with | BaseConn _0 -> true | uu____4278 -> false
+    match projectee with | BaseConn _0 -> true | uu____4392 -> false
 let __proj__BaseConn__item___0:
   connective -> (FStar_Ident.lident* FStar_Syntax_Syntax.args) =
   fun projectee  -> match projectee with | BaseConn _0 -> _0
@@ -1758,11 +1803,11 @@ let destruct_typ_as_formula: FStar_Syntax_Syntax.term -> connective option =
       let f2 = FStar_Syntax_Subst.compress f1 in
       match f2.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Tm_meta
-          (t,FStar_Syntax_Syntax.Meta_monadic uu____4303) -> unmeta_monadic t
+          (t,FStar_Syntax_Syntax.Meta_monadic uu____4417) -> unmeta_monadic t
       | FStar_Syntax_Syntax.Tm_meta
-          (t,FStar_Syntax_Syntax.Meta_monadic_lift uu____4313) ->
+          (t,FStar_Syntax_Syntax.Meta_monadic_lift uu____4427) ->
           unmeta_monadic t
-      | uu____4323 -> f2 in
+      | uu____4437 -> f2 in
     let destruct_base_conn f1 =
       let connectives =
         [(FStar_Syntax_Const.true_lid, (Prims.parse_int "0"));
@@ -1777,92 +1822,92 @@ let destruct_typ_as_formula: FStar_Syntax_Syntax.term -> connective option =
         (FStar_Syntax_Const.eq2_lid, (Prims.parse_int "2"));
         (FStar_Syntax_Const.eq3_lid, (Prims.parse_int "4"));
         (FStar_Syntax_Const.eq3_lid, (Prims.parse_int "2"))] in
-      let aux f2 uu____4368 =
-        match uu____4368 with
+      let aux f2 uu____4482 =
+        match uu____4482 with
         | (lid,arity) ->
-            let uu____4374 =
-              let uu____4384 = unmeta_monadic f2 in head_and_args uu____4384 in
-            (match uu____4374 with
+            let uu____4488 =
+              let uu____4498 = unmeta_monadic f2 in head_and_args uu____4498 in
+            (match uu____4488 with
              | (t,args) ->
                  let t1 = un_uinst t in
-                 let uu____4403 =
+                 let uu____4517 =
                    (is_constructor t1 lid) &&
                      ((FStar_List.length args) = arity) in
-                 if uu____4403 then Some (BaseConn (lid, args)) else None) in
+                 if uu____4517 then Some (BaseConn (lid, args)) else None) in
       FStar_Util.find_map connectives (aux f1) in
     let patterns t =
       let t1 = FStar_Syntax_Subst.compress t in
       match t1.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Tm_meta
           (t2,FStar_Syntax_Syntax.Meta_pattern pats) ->
-          let uu____4454 = FStar_Syntax_Subst.compress t2 in
-          (pats, uu____4454)
-      | uu____4461 ->
-          let uu____4462 = FStar_Syntax_Subst.compress t1 in ([], uu____4462) in
+          let uu____4568 = FStar_Syntax_Subst.compress t2 in
+          (pats, uu____4568)
+      | uu____4575 ->
+          let uu____4576 = FStar_Syntax_Subst.compress t1 in ([], uu____4576) in
     let destruct_q_conn t =
       let is_q fa fv =
         if fa
         then is_forall (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
         else is_exists (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
       let flat t1 =
-        let uu____4504 = head_and_args t1 in
-        match uu____4504 with
+        let uu____4618 = head_and_args t1 in
+        match uu____4618 with
         | (t2,args) ->
-            let uu____4535 = un_uinst t2 in
-            let uu____4536 =
+            let uu____4649 = un_uinst t2 in
+            let uu____4650 =
               FStar_All.pipe_right args
                 (FStar_List.map
-                   (fun uu____4552  ->
-                      match uu____4552 with
+                   (fun uu____4666  ->
+                      match uu____4666 with
                       | (t3,imp) ->
-                          let uu____4559 = unascribe t3 in (uu____4559, imp))) in
-            (uu____4535, uu____4536) in
+                          let uu____4673 = unascribe t3 in (uu____4673, imp))) in
+            (uu____4649, uu____4650) in
       let rec aux qopt out t1 =
-        let uu____4582 = let uu____4591 = flat t1 in (qopt, uu____4591) in
-        match uu____4582 with
+        let uu____4696 = let uu____4705 = flat t1 in (qopt, uu____4705) in
+        match uu____4696 with
         | (Some
            fa,({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
-                 FStar_Syntax_Syntax.tk = uu____4606;
-                 FStar_Syntax_Syntax.pos = uu____4607;
-                 FStar_Syntax_Syntax.vars = uu____4608;_},({
+                 FStar_Syntax_Syntax.tk = uu____4720;
+                 FStar_Syntax_Syntax.pos = uu____4721;
+                 FStar_Syntax_Syntax.vars = uu____4722;_},({
                                                              FStar_Syntax_Syntax.n
                                                                =
                                                                FStar_Syntax_Syntax.Tm_abs
-                                                               (b::[],t2,uu____4611);
+                                                               (b::[],t2,uu____4725);
                                                              FStar_Syntax_Syntax.tk
-                                                               = uu____4612;
+                                                               = uu____4726;
                                                              FStar_Syntax_Syntax.pos
-                                                               = uu____4613;
+                                                               = uu____4727;
                                                              FStar_Syntax_Syntax.vars
-                                                               = uu____4614;_},uu____4615)::[]))
+                                                               = uu____4728;_},uu____4729)::[]))
             when is_q fa tc -> aux qopt (b :: out) t2
         | (Some
            fa,({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
-                 FStar_Syntax_Syntax.tk = uu____4676;
-                 FStar_Syntax_Syntax.pos = uu____4677;
-                 FStar_Syntax_Syntax.vars = uu____4678;_},uu____4679::
+                 FStar_Syntax_Syntax.tk = uu____4790;
+                 FStar_Syntax_Syntax.pos = uu____4791;
+                 FStar_Syntax_Syntax.vars = uu____4792;_},uu____4793::
                ({
                   FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_abs
-                    (b::[],t2,uu____4682);
-                  FStar_Syntax_Syntax.tk = uu____4683;
-                  FStar_Syntax_Syntax.pos = uu____4684;
-                  FStar_Syntax_Syntax.vars = uu____4685;_},uu____4686)::[]))
+                    (b::[],t2,uu____4796);
+                  FStar_Syntax_Syntax.tk = uu____4797;
+                  FStar_Syntax_Syntax.pos = uu____4798;
+                  FStar_Syntax_Syntax.vars = uu____4799;_},uu____4800)::[]))
             when is_q fa tc -> aux qopt (b :: out) t2
         | (None
            ,({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
-               FStar_Syntax_Syntax.tk = uu____4754;
-               FStar_Syntax_Syntax.pos = uu____4755;
-               FStar_Syntax_Syntax.vars = uu____4756;_},({
+               FStar_Syntax_Syntax.tk = uu____4868;
+               FStar_Syntax_Syntax.pos = uu____4869;
+               FStar_Syntax_Syntax.vars = uu____4870;_},({
                                                            FStar_Syntax_Syntax.n
                                                              =
                                                              FStar_Syntax_Syntax.Tm_abs
-                                                             (b::[],t2,uu____4759);
+                                                             (b::[],t2,uu____4873);
                                                            FStar_Syntax_Syntax.tk
-                                                             = uu____4760;
+                                                             = uu____4874;
                                                            FStar_Syntax_Syntax.pos
-                                                             = uu____4761;
+                                                             = uu____4875;
                                                            FStar_Syntax_Syntax.vars
-                                                             = uu____4762;_},uu____4763)::[]))
+                                                             = uu____4876;_},uu____4877)::[]))
             when
             is_qlid (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v ->
             aux
@@ -1872,22 +1917,22 @@ let destruct_typ_as_formula: FStar_Syntax_Syntax.term -> connective option =
               (b :: out) t2
         | (None
            ,({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar tc;
-               FStar_Syntax_Syntax.tk = uu____4831;
-               FStar_Syntax_Syntax.pos = uu____4832;
-               FStar_Syntax_Syntax.vars = uu____4833;_},uu____4834::({
+               FStar_Syntax_Syntax.tk = uu____4945;
+               FStar_Syntax_Syntax.pos = uu____4946;
+               FStar_Syntax_Syntax.vars = uu____4947;_},uu____4948::({
                                                                     FStar_Syntax_Syntax.n
                                                                     =
                                                                     FStar_Syntax_Syntax.Tm_abs
-                                                                    (b::[],t2,uu____4837);
+                                                                    (b::[],t2,uu____4951);
                                                                     FStar_Syntax_Syntax.tk
                                                                     =
-                                                                    uu____4838;
+                                                                    uu____4952;
                                                                     FStar_Syntax_Syntax.pos
                                                                     =
-                                                                    uu____4839;
+                                                                    uu____4953;
                                                                     FStar_Syntax_Syntax.vars
                                                                     =
-                                                                    uu____4840;_},uu____4841)::[]))
+                                                                    uu____4954;_},uu____4955)::[]))
             when
             is_qlid (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v ->
             aux
@@ -1895,22 +1940,22 @@ let destruct_typ_as_formula: FStar_Syntax_Syntax.term -> connective option =
                  (is_forall
                     (tc.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v))
               (b :: out) t2
-        | (Some b,uu____4917) ->
+        | (Some b,uu____5031) ->
             let bs = FStar_List.rev out in
-            let uu____4935 = FStar_Syntax_Subst.open_term bs t1 in
-            (match uu____4935 with
+            let uu____5049 = FStar_Syntax_Subst.open_term bs t1 in
+            (match uu____5049 with
              | (bs1,t2) ->
-                 let uu____4941 = patterns t2 in
-                 (match uu____4941 with
+                 let uu____5055 = patterns t2 in
+                 (match uu____5055 with
                   | (pats,body) ->
                       if b
                       then Some (QAll (bs1, pats, body))
                       else Some (QEx (bs1, pats, body))))
-        | uu____4979 -> None in
+        | uu____5093 -> None in
       aux None [] t in
     let phi = unmeta_monadic f in
-    let uu____4991 = destruct_base_conn phi in
-    match uu____4991 with | Some b -> Some b | None  -> destruct_q_conn phi
+    let uu____5105 = destruct_base_conn phi in
+    match uu____5105 with | Some b -> Some b | None  -> destruct_q_conn phi
 let action_as_lb:
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.action -> FStar_Syntax_Syntax.sigelt
@@ -1918,21 +1963,21 @@ let action_as_lb:
   fun eff_lid  ->
     fun a  ->
       let lb =
-        let uu____5002 =
-          let uu____5005 =
+        let uu____5116 =
+          let uu____5119 =
             FStar_Syntax_Syntax.lid_as_fv a.FStar_Syntax_Syntax.action_name
               FStar_Syntax_Syntax.Delta_equational None in
-          FStar_Util.Inr uu____5005 in
-        let uu____5006 =
-          let uu____5007 =
+          FStar_Util.Inr uu____5119 in
+        let uu____5120 =
+          let uu____5121 =
             FStar_Syntax_Syntax.mk_Total a.FStar_Syntax_Syntax.action_typ in
-          arrow a.FStar_Syntax_Syntax.action_params uu____5007 in
-        let uu____5010 =
+          arrow a.FStar_Syntax_Syntax.action_params uu____5121 in
+        let uu____5124 =
           abs a.FStar_Syntax_Syntax.action_params
             a.FStar_Syntax_Syntax.action_defn None in
-        close_univs_and_mk_letbinding None uu____5002
-          a.FStar_Syntax_Syntax.action_univs uu____5006
-          FStar_Syntax_Const.effect_Tot_lid uu____5010 in
+        close_univs_and_mk_letbinding None uu____5116
+          a.FStar_Syntax_Syntax.action_univs uu____5120
+          FStar_Syntax_Const.effect_Tot_lid uu____5124 in
       {
         FStar_Syntax_Syntax.sigel =
           (FStar_Syntax_Syntax.Sig_let
@@ -1949,50 +1994,50 @@ let mk_reify t =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant FStar_Const.Const_reify) None
       t.FStar_Syntax_Syntax.pos in
-  let uu____5043 =
-    let uu____5046 =
-      let uu____5047 =
-        let uu____5057 =
-          let uu____5059 = FStar_Syntax_Syntax.as_arg t in [uu____5059] in
-        (reify_, uu____5057) in
-      FStar_Syntax_Syntax.Tm_app uu____5047 in
-    FStar_Syntax_Syntax.mk uu____5046 in
-  uu____5043 None t.FStar_Syntax_Syntax.pos
+  let uu____5157 =
+    let uu____5160 =
+      let uu____5161 =
+        let uu____5171 =
+          let uu____5173 = FStar_Syntax_Syntax.as_arg t in [uu____5173] in
+        (reify_, uu____5171) in
+      FStar_Syntax_Syntax.Tm_app uu____5161 in
+    FStar_Syntax_Syntax.mk uu____5160 in
+  uu____5157 None t.FStar_Syntax_Syntax.pos
 let rec delta_qualifier:
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.delta_depth =
   fun t  ->
     let t1 = FStar_Syntax_Subst.compress t in
     match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu____5075 -> failwith "Impossible"
+    | FStar_Syntax_Syntax.Tm_delayed uu____5189 -> failwith "Impossible"
     | FStar_Syntax_Syntax.Tm_fvar fv -> fv.FStar_Syntax_Syntax.fv_delta
-    | FStar_Syntax_Syntax.Tm_bvar uu____5097 ->
+    | FStar_Syntax_Syntax.Tm_bvar uu____5211 ->
         FStar_Syntax_Syntax.Delta_equational
-    | FStar_Syntax_Syntax.Tm_name uu____5098 ->
+    | FStar_Syntax_Syntax.Tm_name uu____5212 ->
         FStar_Syntax_Syntax.Delta_equational
-    | FStar_Syntax_Syntax.Tm_match uu____5099 ->
+    | FStar_Syntax_Syntax.Tm_match uu____5213 ->
         FStar_Syntax_Syntax.Delta_equational
-    | FStar_Syntax_Syntax.Tm_uvar uu____5115 ->
+    | FStar_Syntax_Syntax.Tm_uvar uu____5229 ->
         FStar_Syntax_Syntax.Delta_equational
     | FStar_Syntax_Syntax.Tm_unknown  -> FStar_Syntax_Syntax.Delta_equational
-    | FStar_Syntax_Syntax.Tm_type uu____5124 ->
+    | FStar_Syntax_Syntax.Tm_type uu____5238 ->
         FStar_Syntax_Syntax.Delta_constant
-    | FStar_Syntax_Syntax.Tm_constant uu____5125 ->
+    | FStar_Syntax_Syntax.Tm_constant uu____5239 ->
         FStar_Syntax_Syntax.Delta_constant
-    | FStar_Syntax_Syntax.Tm_arrow uu____5126 ->
+    | FStar_Syntax_Syntax.Tm_arrow uu____5240 ->
         FStar_Syntax_Syntax.Delta_constant
-    | FStar_Syntax_Syntax.Tm_uinst (t2,uu____5135) -> delta_qualifier t2
+    | FStar_Syntax_Syntax.Tm_uinst (t2,uu____5249) -> delta_qualifier t2
     | FStar_Syntax_Syntax.Tm_refine
-        ({ FStar_Syntax_Syntax.ppname = uu____5140;
-           FStar_Syntax_Syntax.index = uu____5141;
-           FStar_Syntax_Syntax.sort = t2;_},uu____5143)
+        ({ FStar_Syntax_Syntax.ppname = uu____5254;
+           FStar_Syntax_Syntax.index = uu____5255;
+           FStar_Syntax_Syntax.sort = t2;_},uu____5257)
         -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_meta (t2,uu____5151) -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____5157,uu____5158) ->
+    | FStar_Syntax_Syntax.Tm_meta (t2,uu____5265) -> delta_qualifier t2
+    | FStar_Syntax_Syntax.Tm_ascribed (t2,uu____5271,uu____5272) ->
         delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_app (t2,uu____5188) -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_abs (uu____5203,t2,uu____5205) ->
+    | FStar_Syntax_Syntax.Tm_app (t2,uu____5302) -> delta_qualifier t2
+    | FStar_Syntax_Syntax.Tm_abs (uu____5317,t2,uu____5319) ->
         delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_let (uu____5228,t2) -> delta_qualifier t2
+    | FStar_Syntax_Syntax.Tm_let (uu____5342,t2) -> delta_qualifier t2
 let rec incr_delta_depth:
   FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth =
   fun d  ->
@@ -2006,45 +2051,45 @@ let rec incr_delta_depth:
     | FStar_Syntax_Syntax.Delta_abstract d1 -> incr_delta_depth d1
 let incr_delta_qualifier:
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.delta_depth =
-  fun t  -> let uu____5248 = delta_qualifier t in incr_delta_depth uu____5248
+  fun t  -> let uu____5362 = delta_qualifier t in incr_delta_depth uu____5362
 let is_unknown: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
-    let uu____5252 =
-      let uu____5253 = FStar_Syntax_Subst.compress t in
-      uu____5253.FStar_Syntax_Syntax.n in
-    match uu____5252 with
+    let uu____5366 =
+      let uu____5367 = FStar_Syntax_Subst.compress t in
+      uu____5367.FStar_Syntax_Syntax.n in
+    match uu____5366 with
     | FStar_Syntax_Syntax.Tm_unknown  -> true
-    | uu____5256 -> false
+    | uu____5370 -> false
 let rec list_elements:
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term Prims.list option =
   fun e  ->
-    let uu____5264 = let uu____5274 = unmeta e in head_and_args uu____5274 in
-    match uu____5264 with
+    let uu____5378 = let uu____5388 = unmeta e in head_and_args uu____5388 in
+    match uu____5378 with
     | (head1,args) ->
-        let uu____5293 =
-          let uu____5301 =
-            let uu____5302 = un_uinst head1 in
-            uu____5302.FStar_Syntax_Syntax.n in
-          (uu____5301, args) in
-        (match uu____5293 with
-         | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5313) when
+        let uu____5407 =
+          let uu____5415 =
+            let uu____5416 = un_uinst head1 in
+            uu____5416.FStar_Syntax_Syntax.n in
+          (uu____5415, args) in
+        (match uu____5407 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5427) when
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.nil_lid ->
              Some []
          | (FStar_Syntax_Syntax.Tm_fvar
-            fv,uu____5326::(hd1,uu____5328)::(tl1,uu____5330)::[]) when
+            fv,uu____5440::(hd1,uu____5442)::(tl1,uu____5444)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.cons_lid ->
-             let uu____5364 =
-               let uu____5368 =
-                 let uu____5372 = list_elements tl1 in
-                 FStar_Util.must uu____5372 in
-               hd1 :: uu____5368 in
-             Some uu____5364
-         | uu____5381 -> None)
+             let uu____5478 =
+               let uu____5482 =
+                 let uu____5486 = list_elements tl1 in
+                 FStar_Util.must uu____5486 in
+               hd1 :: uu____5482 in
+             Some uu____5478
+         | uu____5495 -> None)
 let rec apply_last f l =
   match l with
   | [] -> failwith "apply_last: got empty list"
-  | a::[] -> let uu____5412 = f a in [uu____5412]
-  | x::xs -> let uu____5416 = apply_last f xs in x :: uu____5416
+  | a::[] -> let uu____5526 = f a in [uu____5526]
+  | x::xs -> let uu____5530 = apply_last f xs in x :: uu____5530
 let dm4f_lid:
   FStar_Syntax_Syntax.eff_decl -> Prims.string -> FStar_Ident.lident =
   fun ed  ->
@@ -2060,27 +2105,27 @@ let mk_squash p =
   let sq =
     FStar_Syntax_Syntax.fvar FStar_Syntax_Const.squash_lid
       (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "1")) None in
-  let uu____5439 =
+  let uu____5553 =
     FStar_Syntax_Syntax.mk_Tm_uinst sq [FStar_Syntax_Syntax.U_zero] in
-  let uu____5442 =
-    let uu____5448 = FStar_Syntax_Syntax.as_arg p in [uu____5448] in
-  mk_app uu____5439 uu____5442
+  let uu____5556 =
+    let uu____5562 = FStar_Syntax_Syntax.as_arg p in [uu____5562] in
+  mk_app uu____5553 uu____5556
 let un_squash:
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax option
   =
   fun t  ->
-    let uu____5455 = head_and_args t in
-    match uu____5455 with
+    let uu____5569 = head_and_args t in
+    match uu____5569 with
     | (head1,args) ->
-        let uu____5484 =
-          let uu____5492 =
-            let uu____5493 = un_uinst head1 in
-            uu____5493.FStar_Syntax_Syntax.n in
-          (uu____5492, args) in
-        (match uu____5484 with
-         | (FStar_Syntax_Syntax.Tm_fvar fv,(p,uu____5506)::[]) when
+        let uu____5598 =
+          let uu____5606 =
+            let uu____5607 = un_uinst head1 in
+            uu____5607.FStar_Syntax_Syntax.n in
+          (uu____5606, args) in
+        (match uu____5598 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,(p,uu____5620)::[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.squash_lid
              -> Some p
          | (FStar_Syntax_Syntax.Tm_refine (b,p),[]) ->
@@ -2089,23 +2134,23 @@ let un_squash:
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Syntax_Const.unit_lid
                   ->
-                  let uu____5545 =
-                    let uu____5548 =
-                      let uu____5549 = FStar_Syntax_Syntax.mk_binder b in
-                      [uu____5549] in
-                    FStar_Syntax_Subst.open_term uu____5548 p in
-                  (match uu____5545 with
+                  let uu____5659 =
+                    let uu____5662 =
+                      let uu____5663 = FStar_Syntax_Syntax.mk_binder b in
+                      [uu____5663] in
+                    FStar_Syntax_Subst.open_term uu____5662 p in
+                  (match uu____5659 with
                    | (bs,p1) ->
                        let b1 =
                          match bs with
                          | b1::[] -> b1
-                         | uu____5567 -> failwith "impossible" in
-                       let uu____5570 =
-                         let uu____5571 = FStar_Syntax_Free.names p1 in
-                         FStar_Util.set_mem (fst b1) uu____5571 in
-                       if uu____5570 then None else Some p1)
-              | uu____5579 -> None)
-         | uu____5582 -> None)
+                         | uu____5681 -> failwith "impossible" in
+                       let uu____5684 =
+                         let uu____5685 = FStar_Syntax_Free.names p1 in
+                         FStar_Util.set_mem (fst b1) uu____5685 in
+                       if uu____5684 then None else Some p1)
+              | uu____5693 -> None)
+         | uu____5696 -> None)
 let rec mk_list:
   FStar_Syntax_Syntax.term ->
     FStar_Range.range ->
@@ -2115,62 +2160,62 @@ let rec mk_list:
     fun rng  ->
       fun l  ->
         let ctor l1 =
-          let uu____5609 =
-            let uu____5612 =
-              let uu____5613 =
+          let uu____5723 =
+            let uu____5726 =
+              let uu____5727 =
                 FStar_Syntax_Syntax.lid_as_fv l1
                   FStar_Syntax_Syntax.Delta_constant
                   (Some FStar_Syntax_Syntax.Data_ctor) in
-              FStar_Syntax_Syntax.Tm_fvar uu____5613 in
-            FStar_Syntax_Syntax.mk uu____5612 in
-          uu____5609 None rng in
+              FStar_Syntax_Syntax.Tm_fvar uu____5727 in
+            FStar_Syntax_Syntax.mk uu____5726 in
+          uu____5723 None rng in
         let cons1 args pos =
-          let uu____5631 =
-            let uu____5632 =
-              let uu____5633 = ctor FStar_Syntax_Const.cons_lid in
-              FStar_Syntax_Syntax.mk_Tm_uinst uu____5633
+          let uu____5745 =
+            let uu____5746 =
+              let uu____5747 = ctor FStar_Syntax_Const.cons_lid in
+              FStar_Syntax_Syntax.mk_Tm_uinst uu____5747
                 [FStar_Syntax_Syntax.U_zero] in
-            FStar_Syntax_Syntax.mk_Tm_app uu____5632 args in
-          uu____5631 None pos in
+            FStar_Syntax_Syntax.mk_Tm_app uu____5746 args in
+          uu____5745 None pos in
         let nil args pos =
-          let uu____5647 =
-            let uu____5648 =
-              let uu____5649 = ctor FStar_Syntax_Const.nil_lid in
-              FStar_Syntax_Syntax.mk_Tm_uinst uu____5649
+          let uu____5761 =
+            let uu____5762 =
+              let uu____5763 = ctor FStar_Syntax_Const.nil_lid in
+              FStar_Syntax_Syntax.mk_Tm_uinst uu____5763
                 [FStar_Syntax_Syntax.U_zero] in
-            FStar_Syntax_Syntax.mk_Tm_app uu____5648 args in
-          uu____5647 None pos in
-        let uu____5654 =
-          let uu____5655 =
-            let uu____5656 = FStar_Syntax_Syntax.iarg typ in [uu____5656] in
-          nil uu____5655 rng in
+            FStar_Syntax_Syntax.mk_Tm_app uu____5762 args in
+          uu____5761 None pos in
+        let uu____5768 =
+          let uu____5769 =
+            let uu____5770 = FStar_Syntax_Syntax.iarg typ in [uu____5770] in
+          nil uu____5769 rng in
         FStar_List.fold_right
           (fun t  ->
              fun a  ->
-               let uu____5659 =
-                 let uu____5660 = FStar_Syntax_Syntax.iarg typ in
-                 let uu____5661 =
-                   let uu____5663 = FStar_Syntax_Syntax.as_arg t in
-                   let uu____5664 =
-                     let uu____5666 = FStar_Syntax_Syntax.as_arg a in
-                     [uu____5666] in
-                   uu____5663 :: uu____5664 in
-                 uu____5660 :: uu____5661 in
-               cons1 uu____5659 t.FStar_Syntax_Syntax.pos) l uu____5654
+               let uu____5773 =
+                 let uu____5774 = FStar_Syntax_Syntax.iarg typ in
+                 let uu____5775 =
+                   let uu____5777 = FStar_Syntax_Syntax.as_arg t in
+                   let uu____5778 =
+                     let uu____5780 = FStar_Syntax_Syntax.as_arg a in
+                     [uu____5780] in
+                   uu____5777 :: uu____5778 in
+                 uu____5774 :: uu____5775 in
+               cons1 uu____5773 t.FStar_Syntax_Syntax.pos) l uu____5768
 let rec eqlist eq1 xs ys =
   match (xs, ys) with
   | ([],[]) -> true
   | (x::xs1,y::ys1) -> (eq1 x y) && (eqlist eq1 xs1 ys1)
-  | uu____5710 -> false
+  | uu____5824 -> false
 let eqsum e1 e2 x y =
   match (x, y) with
   | (FStar_Util.Inl x1,FStar_Util.Inl y1) -> e1 x1 y1
   | (FStar_Util.Inr x1,FStar_Util.Inr y1) -> e2 x1 y1
-  | uu____5783 -> false
+  | uu____5897 -> false
 let eqprod e1 e2 x y =
   match (x, y) with | ((x1,x2),(y1,y2)) -> (e1 x1 y1) && (e2 x2 y2)
 let eqopt e x y =
-  match (x, y) with | (Some x1,Some y1) -> e x1 y1 | uu____5891 -> false
+  match (x, y) with | (Some x1,Some y1) -> e x1 y1 | uu____6005 -> false
 let rec term_eq:
   (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax ->
@@ -2181,22 +2226,22 @@ let rec term_eq:
     fun t2  ->
       let canon_app t =
         match t.FStar_Syntax_Syntax.n with
-        | FStar_Syntax_Syntax.Tm_app uu____6004 ->
-            let uu____6014 = head_and_args' t in
-            (match uu____6014 with
+        | FStar_Syntax_Syntax.Tm_app uu____6118 ->
+            let uu____6128 = head_and_args' t in
+            (match uu____6128 with
              | (hd1,args) ->
-                 let uu___179_6036 = t in
+                 let uu___179_6150 = t in
                  {
                    FStar_Syntax_Syntax.n =
                      (FStar_Syntax_Syntax.Tm_app (hd1, args));
                    FStar_Syntax_Syntax.tk =
-                     (uu___179_6036.FStar_Syntax_Syntax.tk);
+                     (uu___179_6150.FStar_Syntax_Syntax.tk);
                    FStar_Syntax_Syntax.pos =
-                     (uu___179_6036.FStar_Syntax_Syntax.pos);
+                     (uu___179_6150.FStar_Syntax_Syntax.pos);
                    FStar_Syntax_Syntax.vars =
-                     (uu___179_6036.FStar_Syntax_Syntax.vars)
+                     (uu___179_6150.FStar_Syntax_Syntax.vars)
                  })
-        | uu____6048 -> t in
+        | uu____6162 -> t in
       let t11 = canon_app t1 in
       let t21 = canon_app t2 in
       match ((t11.FStar_Syntax_Syntax.n), (t21.FStar_Syntax_Syntax.n)) with
@@ -2222,7 +2267,7 @@ let rec term_eq:
          (b2,t22)) -> (FStar_Syntax_Syntax.bv_eq b1 b2) && (term_eq t12 t22)
       | (FStar_Syntax_Syntax.Tm_match (t12,bs1),FStar_Syntax_Syntax.Tm_match
          (t22,bs2)) -> (term_eq t12 t22) && (eqlist branch_eq bs1 bs2)
-      | (uu____6269,uu____6270) -> false
+      | (uu____6383,uu____6384) -> false
 and arg_eq:
   ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
     FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.aqual) ->
@@ -2271,7 +2316,7 @@ and comp_eq:
             &&
             (eq_flags c11.FStar_Syntax_Syntax.flags
                c21.FStar_Syntax_Syntax.flags)
-      | (uu____6343,uu____6344) -> false
+      | (uu____6457,uu____6458) -> false
 and eq_flags:
   FStar_Syntax_Syntax.cflags Prims.list ->
     FStar_Syntax_Syntax.cflags Prims.list -> Prims.bool
@@ -2290,9 +2335,9 @@ and branch_eq:
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax) -> Prims.bool
   =
-  fun uu____6349  ->
-    fun uu____6350  ->
-      match (uu____6349, uu____6350) with | ((p1,w1,t1),(p2,w2,t2)) -> false
+  fun uu____6463  ->
+    fun uu____6464  ->
+      match (uu____6463, uu____6464) with | ((p1,w1,t1),(p2,w2,t2)) -> false
 let rec bottom_fold:
   (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
@@ -2301,79 +2346,79 @@ let rec bottom_fold:
     fun t  ->
       let ff = bottom_fold f in
       let tn =
-        let uu____6460 = FStar_Syntax_Subst.compress t in
-        uu____6460.FStar_Syntax_Syntax.n in
+        let uu____6574 = FStar_Syntax_Subst.compress t in
+        uu____6574.FStar_Syntax_Syntax.n in
       let tn1 =
         match tn with
         | FStar_Syntax_Syntax.Tm_app (f1,args) ->
-            let uu____6480 =
-              let uu____6490 = ff f1 in
-              let uu____6491 =
+            let uu____6594 =
+              let uu____6604 = ff f1 in
+              let uu____6605 =
                 FStar_List.map
-                  (fun uu____6499  ->
-                     match uu____6499 with
-                     | (a,q) -> let uu____6506 = ff a in (uu____6506, q))
+                  (fun uu____6613  ->
+                     match uu____6613 with
+                     | (a,q) -> let uu____6620 = ff a in (uu____6620, q))
                   args in
-              (uu____6490, uu____6491) in
-            FStar_Syntax_Syntax.Tm_app uu____6480
+              (uu____6604, uu____6605) in
+            FStar_Syntax_Syntax.Tm_app uu____6594
         | FStar_Syntax_Syntax.Tm_abs (bs,t1,k) ->
-            let uu____6535 = FStar_Syntax_Subst.open_term bs t1 in
-            (match uu____6535 with
+            let uu____6649 = FStar_Syntax_Subst.open_term bs t1 in
+            (match uu____6649 with
              | (bs1,t') ->
                  let t'' = ff t' in
-                 let uu____6541 =
-                   let uu____6556 = FStar_Syntax_Subst.close bs1 t'' in
-                   (bs1, uu____6556, k) in
-                 FStar_Syntax_Syntax.Tm_abs uu____6541)
+                 let uu____6655 =
+                   let uu____6670 = FStar_Syntax_Subst.close bs1 t'' in
+                   (bs1, uu____6670, k) in
+                 FStar_Syntax_Syntax.Tm_abs uu____6655)
         | FStar_Syntax_Syntax.Tm_arrow (bs,k) -> tn
         | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
-            let uu____6581 = let uu____6586 = ff t1 in (uu____6586, us) in
-            FStar_Syntax_Syntax.Tm_uinst uu____6581
-        | uu____6587 -> tn in
+            let uu____6695 = let uu____6700 = ff t1 in (uu____6700, us) in
+            FStar_Syntax_Syntax.Tm_uinst uu____6695
+        | uu____6701 -> tn in
       f
-        (let uu___180_6588 = t in
+        (let uu___180_6702 = t in
          {
            FStar_Syntax_Syntax.n = tn1;
-           FStar_Syntax_Syntax.tk = (uu___180_6588.FStar_Syntax_Syntax.tk);
-           FStar_Syntax_Syntax.pos = (uu___180_6588.FStar_Syntax_Syntax.pos);
+           FStar_Syntax_Syntax.tk = (uu___180_6702.FStar_Syntax_Syntax.tk);
+           FStar_Syntax_Syntax.pos = (uu___180_6702.FStar_Syntax_Syntax.pos);
            FStar_Syntax_Syntax.vars =
-             (uu___180_6588.FStar_Syntax_Syntax.vars)
+             (uu___180_6702.FStar_Syntax_Syntax.vars)
          })
 let rec sizeof: FStar_Syntax_Syntax.term -> Prims.int =
   fun t  ->
     match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu____6596 ->
-        let uu____6617 =
-          let uu____6618 = FStar_Syntax_Subst.compress t in sizeof uu____6618 in
-        (Prims.parse_int "1") + uu____6617
+    | FStar_Syntax_Syntax.Tm_delayed uu____6710 ->
+        let uu____6731 =
+          let uu____6732 = FStar_Syntax_Subst.compress t in sizeof uu____6732 in
+        (Prims.parse_int "1") + uu____6731
     | FStar_Syntax_Syntax.Tm_bvar bv ->
-        let uu____6620 = sizeof bv.FStar_Syntax_Syntax.sort in
-        (Prims.parse_int "1") + uu____6620
+        let uu____6734 = sizeof bv.FStar_Syntax_Syntax.sort in
+        (Prims.parse_int "1") + uu____6734
     | FStar_Syntax_Syntax.Tm_name bv ->
-        let uu____6622 = sizeof bv.FStar_Syntax_Syntax.sort in
-        (Prims.parse_int "1") + uu____6622
+        let uu____6736 = sizeof bv.FStar_Syntax_Syntax.sort in
+        (Prims.parse_int "1") + uu____6736
     | FStar_Syntax_Syntax.Tm_uinst (t1,us) ->
-        let uu____6629 = sizeof t1 in (FStar_List.length us) + uu____6629
-    | FStar_Syntax_Syntax.Tm_abs (bs,t1,uu____6635) ->
-        let uu____6658 = sizeof t1 in
-        let uu____6659 =
+        let uu____6743 = sizeof t1 in (FStar_List.length us) + uu____6743
+    | FStar_Syntax_Syntax.Tm_abs (bs,t1,uu____6749) ->
+        let uu____6772 = sizeof t1 in
+        let uu____6773 =
           FStar_List.fold_left
             (fun acc  ->
-               fun uu____6663  ->
-                 match uu____6663 with
-                 | (bv,uu____6667) ->
-                     let uu____6668 = sizeof bv.FStar_Syntax_Syntax.sort in
-                     acc + uu____6668) (Prims.parse_int "0") bs in
-        uu____6658 + uu____6659
+               fun uu____6777  ->
+                 match uu____6777 with
+                 | (bv,uu____6781) ->
+                     let uu____6782 = sizeof bv.FStar_Syntax_Syntax.sort in
+                     acc + uu____6782) (Prims.parse_int "0") bs in
+        uu____6772 + uu____6773
     | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
-        let uu____6685 = sizeof hd1 in
-        let uu____6686 =
+        let uu____6799 = sizeof hd1 in
+        let uu____6800 =
           FStar_List.fold_left
             (fun acc  ->
-               fun uu____6690  ->
-                 match uu____6690 with
-                 | (arg,uu____6694) ->
-                     let uu____6695 = sizeof arg in acc + uu____6695)
+               fun uu____6804  ->
+                 match uu____6804 with
+                 | (arg,uu____6808) ->
+                     let uu____6809 = sizeof arg in acc + uu____6809)
             (Prims.parse_int "0") args in
-        uu____6685 + uu____6686
-    | uu____6696 -> Prims.parse_int "1"
+        uu____6799 + uu____6800
+    | uu____6810 -> Prims.parse_int "1"
