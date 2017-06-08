@@ -319,7 +319,7 @@ let doZ3Exe': Prims.bool -> Prims.string -> (z3status* z3statistics) =
               (let uu____779 =
                  FStar_All.pipe_right (FStar_Util.split s2 " ")
                    (FStar_Util.sort_with FStar_String.compare) in
-               FStar_All.pipe_right uu____779 (fun _0_28  -> Some _0_28)) in
+               FStar_All.pipe_right uu____779 (fun _0_38  -> Some _0_38)) in
           let core = FStar_Util.mk_ref None in
           let statistics = FStar_Util.smap_create (Prims.parse_int "0") in
           let reason_unknown = FStar_Util.mk_ref "" in

@@ -120,8 +120,15 @@ let b2t_lid: FStar_Ident.lident = pconst "b2t"
 let admit_lid: FStar_Ident.lident = pconst "admit"
 let magic_lid: FStar_Ident.lident = pconst "magic"
 let has_type_lid: FStar_Ident.lident = pconst "has_type"
+let c_true_lid: FStar_Ident.lident = pconst "c_True"
+let c_false_lid: FStar_Ident.lident = pconst "c_False"
+let c_and_lid: FStar_Ident.lident = pconst "c_and"
+let c_or_lid: FStar_Ident.lident = pconst "c_or"
+let dtuple2_lid: FStar_Ident.lident = pconst "dtuple2"
 let eq2_lid: FStar_Ident.lident = pconst "eq2"
 let eq3_lid: FStar_Ident.lident = pconst "eq3"
+let c_eq2_lid: FStar_Ident.lident = pconst "equals"
+let c_eq3_lid: FStar_Ident.lident = pconst "h_equals"
 let exp_true_bool: FStar_Syntax_Syntax.term =
   mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool true))
 let exp_false_bool: FStar_Syntax_Syntax.term =

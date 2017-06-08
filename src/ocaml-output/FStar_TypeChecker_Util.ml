@@ -2563,7 +2563,7 @@ let weaken_result_typ:
                                        let uu____4396 =
                                          let uu____4399 =
                                            FStar_All.pipe_left
-                                             (fun _0_29  -> Some _0_29)
+                                             (fun _0_39  -> Some _0_39)
                                              (FStar_TypeChecker_Err.subtyping_failed
                                                 env
                                                 lc.FStar_Syntax_Syntax.res_typ
@@ -2942,8 +2942,8 @@ let maybe_instantiate:
                 | (bs1,c1) ->
                     let rec aux subst1 inst_n bs2 =
                       match (inst_n, bs2) with
-                      | (Some _0_30,uu____5081) when
-                          _0_30 = (Prims.parse_int "0") ->
+                      | (Some _0_40,uu____5081) when
+                          _0_40 = (Prims.parse_int "0") ->
                           ([], bs2, subst1,
                             FStar_TypeChecker_Rel.trivial_guard)
                       | (uu____5103,(x,Some (FStar_Syntax_Syntax.Implicit
@@ -3308,8 +3308,8 @@ let gen:
                                                            FStar_TypeChecker_Env.get_range
                                                              env in
                                                          FStar_All.pipe_left
-                                                           (fun _0_31  ->
-                                                              Some _0_31)
+                                                           (fun _0_41  ->
+                                                              Some _0_41)
                                                            uu____6097 in
                                                        FStar_Syntax_Syntax.new_bv
                                                          uu____6095 kres in
@@ -3500,7 +3500,7 @@ let check_and_ascribe:
                | None  -> None
                | Some f ->
                    let uu____6537 = FStar_TypeChecker_Rel.apply_guard f e in
-                   FStar_All.pipe_left (fun _0_32  -> Some _0_32) uu____6537) in
+                   FStar_All.pipe_left (fun _0_42  -> Some _0_42) uu____6537) in
           let is_var e1 =
             let uu____6543 =
               let uu____6544 = FStar_Syntax_Subst.compress e1 in
@@ -3700,23 +3700,23 @@ let short_circuit:
       let op_and_e e =
         let uu____6720 = FStar_Syntax_Util.b2t e in
         FStar_All.pipe_right uu____6720
-          (fun _0_33  -> FStar_TypeChecker_Common.NonTrivial _0_33) in
+          (fun _0_43  -> FStar_TypeChecker_Common.NonTrivial _0_43) in
       let op_or_e e =
         let uu____6729 =
           let uu____6732 = FStar_Syntax_Util.b2t e in
           FStar_Syntax_Util.mk_neg uu____6732 in
         FStar_All.pipe_right uu____6729
-          (fun _0_34  -> FStar_TypeChecker_Common.NonTrivial _0_34) in
+          (fun _0_44  -> FStar_TypeChecker_Common.NonTrivial _0_44) in
       let op_and_t t =
         FStar_All.pipe_right t
-          (fun _0_35  -> FStar_TypeChecker_Common.NonTrivial _0_35) in
+          (fun _0_45  -> FStar_TypeChecker_Common.NonTrivial _0_45) in
       let op_or_t t =
         let uu____6743 = FStar_All.pipe_right t FStar_Syntax_Util.mk_neg in
         FStar_All.pipe_right uu____6743
-          (fun _0_36  -> FStar_TypeChecker_Common.NonTrivial _0_36) in
+          (fun _0_46  -> FStar_TypeChecker_Common.NonTrivial _0_46) in
       let op_imp_t t =
         FStar_All.pipe_right t
-          (fun _0_37  -> FStar_TypeChecker_Common.NonTrivial _0_37) in
+          (fun _0_47  -> FStar_TypeChecker_Common.NonTrivial _0_47) in
       let short_op_ite uu___104_6757 =
         match uu___104_6757 with
         | [] -> FStar_TypeChecker_Common.Trivial
@@ -3724,7 +3724,7 @@ let short_circuit:
         | _then::(guard,uu____6778)::[] ->
             let uu____6799 = FStar_Syntax_Util.mk_neg guard in
             FStar_All.pipe_right uu____6799
-              (fun _0_38  -> FStar_TypeChecker_Common.NonTrivial _0_38)
+              (fun _0_48  -> FStar_TypeChecker_Common.NonTrivial _0_48)
         | uu____6804 -> failwith "Unexpected args to ITE" in
       let table =
         let uu____6811 =

@@ -251,7 +251,7 @@ let rec type_leq_c:
                         (let uu____361 =
                            let uu____365 =
                              let uu____367 = mk_fun xs body in
-                             FStar_All.pipe_left (fun _0_30  -> Some _0_30)
+                             FStar_All.pipe_left (fun _0_40  -> Some _0_40)
                                uu____367 in
                            type_leq_c unfold_ty uu____365 t2 t2' in
                          match uu____361 with

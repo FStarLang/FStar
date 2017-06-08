@@ -708,10 +708,7 @@ let order_binder:
         else FStar_Reflection_Data.Gt
 let is_free:
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term -> Prims.bool =
-  fun x  ->
-    fun t  ->
-      let uu____1749 = FStar_Syntax_Free.names t in
-      FStar_Util.set_mem (fst x) uu____1749
+  fun x  -> fun t  -> FStar_Syntax_Util.is_free_in (fst x) t
 let embed_norm_step:
   FStar_Reflection_Data.norm_step -> FStar_Syntax_Syntax.term =
   fun n1  ->
@@ -724,15 +721,15 @@ let unembed_norm_step:
   FStar_Syntax_Syntax.term -> FStar_Reflection_Data.norm_step =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t in
-    let uu____1758 = FStar_Syntax_Util.head_and_args t1 in
-    match uu____1758 with
+    let uu____1756 = FStar_Syntax_Util.head_and_args t1 in
+    match uu____1756 with
     | (hd1,args) ->
-        let uu____1784 =
-          let uu____1792 =
-            let uu____1793 = FStar_Syntax_Util.un_uinst hd1 in
-            uu____1793.FStar_Syntax_Syntax.n in
-          (uu____1792, args) in
-        (match uu____1784 with
+        let uu____1782 =
+          let uu____1790 =
+            let uu____1791 = FStar_Syntax_Util.un_uinst hd1 in
+            uu____1791.FStar_Syntax_Syntax.n in
+          (uu____1790, args) in
+        (match uu____1782 with
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_Simpl_lid
@@ -749,4 +746,4 @@ let unembed_norm_step:
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ref_Delta_lid
              -> FStar_Reflection_Data.Delta
-         | uu____1841 -> failwith "not an embedded norm_step")
+         | uu____1839 -> failwith "not an embedded norm_step")

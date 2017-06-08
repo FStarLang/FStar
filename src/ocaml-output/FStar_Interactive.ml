@@ -793,18 +793,18 @@ let json_of_lookup_result: lookup_result -> FStar_Util.json =
         let uu____1798 =
           let uu____1802 =
             let uu____1805 =
-              json_of_opt (fun _0_33  -> FStar_Util.JsonStr _0_33) lr.lr_typ in
+              json_of_opt (fun _0_43  -> FStar_Util.JsonStr _0_43) lr.lr_typ in
             ("type", uu____1805) in
           let uu____1806 =
             let uu____1810 =
               let uu____1813 =
-                json_of_opt (fun _0_34  -> FStar_Util.JsonStr _0_34)
+                json_of_opt (fun _0_44  -> FStar_Util.JsonStr _0_44)
                   lr.lr_doc in
               ("documentation", uu____1813) in
             let uu____1814 =
               let uu____1818 =
                 let uu____1821 =
-                  json_of_opt (fun _0_35  -> FStar_Util.JsonStr _0_35)
+                  json_of_opt (fun _0_45  -> FStar_Util.JsonStr _0_45)
                     lr.lr_def in
                 ("definition", uu____1821) in
               [uu____1818] in
@@ -817,9 +817,9 @@ let json_of_protocol_info: (Prims.string* FStar_Util.json) Prims.list =
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
   let js_features =
     let uu____1839 =
-      FStar_List.map (fun _0_36  -> FStar_Util.JsonStr _0_36)
+      FStar_List.map (fun _0_46  -> FStar_Util.JsonStr _0_46)
         interactive_protocol_features in
-    FStar_All.pipe_left (fun _0_37  -> FStar_Util.JsonList _0_37) uu____1839 in
+    FStar_All.pipe_left (fun _0_47  -> FStar_Util.JsonList _0_47) uu____1839 in
   [("version", js_version); ("features", js_features)]
 let write_json: FStar_Util.json -> Prims.unit =
   fun json  ->
@@ -856,7 +856,7 @@ let write_hello: Prims.unit -> Prims.unit =
     let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
     let js_features =
       let uu____1893 =
-        FStar_List.map (fun _0_38  -> FStar_Util.JsonStr _0_38)
+        FStar_List.map (fun _0_48  -> FStar_Util.JsonStr _0_48)
           interactive_protocol_features in
       FStar_Util.JsonList uu____1893 in
     write_json
@@ -918,7 +918,7 @@ let json_of_repl_state:
                              let uu____2084 =
                                let uu____2087 =
                                  json_of_opt
-                                   (fun _0_39  -> FStar_Util.JsonStr _0_39)
+                                   (fun _0_49  -> FStar_Util.JsonStr _0_49)
                                    doc1 in
                                ("documentation", uu____2087) in
                              [uu____2084] in
@@ -1277,7 +1277,7 @@ let run_completions st search_term =
                  match (uu____3306, uu____3307) with
                  | ((cd1,ns1,uu____3322),(cd2,ns2,uu____3325)) ->
                      (match FStar_String.compare cd1 cd2 with
-                      | _0_40 when _0_40 = (Prims.parse_int "0") ->
+                      | _0_50 when _0_50 = (Prims.parse_int "0") ->
                           FStar_String.compare ns1 ns2
                       | n1 -> n1)) matches in
         FStar_List.map

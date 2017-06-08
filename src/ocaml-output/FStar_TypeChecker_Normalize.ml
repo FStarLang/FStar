@@ -354,7 +354,7 @@ let norm_universe:
                | uu____937 -> us1)
           | FStar_Syntax_Syntax.U_succ u3 ->
               let uu____940 = aux u3 in
-              FStar_List.map (fun _0_30  -> FStar_Syntax_Syntax.U_succ _0_30)
+              FStar_List.map (fun _0_40  -> FStar_Syntax_Syntax.U_succ _0_40)
                 uu____940 in
         let uu____942 =
           FStar_All.pipe_right cfg.steps (FStar_List.contains EraseUniverses) in
@@ -2208,9 +2208,9 @@ let rec norm:
                                      FStar_All.pipe_right uu____7136
                                        FStar_Syntax_Util.lcomp_of_comp in
                                    FStar_All.pipe_right uu____7135
-                                     (fun _0_31  -> FStar_Util.Inl _0_31) in
+                                     (fun _0_41  -> FStar_Util.Inl _0_41) in
                                  FStar_All.pipe_right uu____7129
-                                   (fun _0_32  -> Some _0_32)
+                                   (fun _0_42  -> Some _0_42)
                              | uu____7162 -> lopt in
                            let env' =
                              FStar_All.pipe_right bs1
@@ -2269,9 +2269,9 @@ let rec norm:
                                      FStar_All.pipe_right uu____7246
                                        FStar_Syntax_Util.lcomp_of_comp in
                                    FStar_All.pipe_right uu____7245
-                                     (fun _0_33  -> FStar_Util.Inl _0_33) in
+                                     (fun _0_43  -> FStar_Util.Inl _0_43) in
                                  FStar_All.pipe_right uu____7239
-                                   (fun _0_34  -> Some _0_34)
+                                   (fun _0_44  -> Some _0_44)
                              | uu____7272 -> lopt in
                            let env' =
                              FStar_All.pipe_right bs1
@@ -2330,9 +2330,9 @@ let rec norm:
                                      FStar_All.pipe_right uu____7358
                                        FStar_Syntax_Util.lcomp_of_comp in
                                    FStar_All.pipe_right uu____7357
-                                     (fun _0_35  -> FStar_Util.Inl _0_35) in
+                                     (fun _0_45  -> FStar_Util.Inl _0_45) in
                                  FStar_All.pipe_right uu____7351
-                                   (fun _0_36  -> Some _0_36)
+                                   (fun _0_46  -> Some _0_46)
                              | uu____7384 -> lopt in
                            let env' =
                              FStar_All.pipe_right bs1
@@ -2391,9 +2391,9 @@ let rec norm:
                                      FStar_All.pipe_right uu____7469
                                        FStar_Syntax_Util.lcomp_of_comp in
                                    FStar_All.pipe_right uu____7468
-                                     (fun _0_37  -> FStar_Util.Inl _0_37) in
+                                     (fun _0_47  -> FStar_Util.Inl _0_47) in
                                  FStar_All.pipe_right uu____7462
-                                   (fun _0_38  -> Some _0_38)
+                                   (fun _0_48  -> Some _0_48)
                              | uu____7495 -> lopt in
                            let env' =
                              FStar_All.pipe_right bs1
@@ -2452,9 +2452,9 @@ let rec norm:
                                      FStar_All.pipe_right uu____7585
                                        FStar_Syntax_Util.lcomp_of_comp in
                                    FStar_All.pipe_right uu____7584
-                                     (fun _0_39  -> FStar_Util.Inl _0_39) in
+                                     (fun _0_49  -> FStar_Util.Inl _0_49) in
                                  FStar_All.pipe_right uu____7578
-                                   (fun _0_40  -> Some _0_40)
+                                   (fun _0_50  -> Some _0_50)
                              | uu____7611 -> lopt in
                            let env' =
                              FStar_All.pipe_right bs1
@@ -2513,9 +2513,9 @@ let rec norm:
                                      FStar_All.pipe_right uu____7690
                                        FStar_Syntax_Util.lcomp_of_comp in
                                    FStar_All.pipe_right uu____7689
-                                     (fun _0_41  -> FStar_Util.Inl _0_41) in
+                                     (fun _0_51  -> FStar_Util.Inl _0_51) in
                                  FStar_All.pipe_right uu____7683
-                                   (fun _0_42  -> Some _0_42)
+                                   (fun _0_52  -> Some _0_52)
                              | uu____7716 -> lopt in
                            let env' =
                              FStar_All.pipe_right bs1
@@ -2741,7 +2741,7 @@ let rec norm:
                             FStar_All.pipe_right uu____8152
                               FStar_Pervasives.fst in
                           FStar_All.pipe_right uu____8151
-                            (fun _0_43  -> FStar_Util.Inl _0_43) in
+                            (fun _0_53  -> FStar_Util.Inl _0_53) in
                         let uu____8161 =
                           norm cfg env [] lb.FStar_Syntax_Syntax.lbtyp in
                         let uu____8164 =
@@ -4296,9 +4296,9 @@ let eta_expand_with_type:
                                let uu____10783 =
                                  FStar_All.pipe_right
                                    (FStar_Syntax_Util.lcomp_of_comp c)
-                                   (fun _0_44  -> FStar_Util.Inl _0_44) in
+                                   (fun _0_54  -> FStar_Util.Inl _0_54) in
                                FStar_All.pipe_right uu____10783
-                                 (fun _0_45  -> Some _0_45) in
+                                 (fun _0_55  -> Some _0_55) in
                              FStar_Syntax_Util.abs binders uu____10773
                                uu____10776)))
 let eta_expand:
