@@ -254,7 +254,9 @@ let getprop (e:env) (t:term) : option<term> =
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
     tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
-        BU.print1 "About to preprocess %s\n" (Print.term_to_string goal);
+        BU.print2 "About to preprocess %s |= %s\n"
+                        (Env.all_binders env |> Print.binders_to_string ",")
+                        (Print.term_to_string goal);
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let initial = (1, []) in

@@ -169,7 +169,7 @@ let mlog f : tac<unit> =
 let fail msg =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps "TACTING FAILING";
+        then dump_proofstate ps ("TACTING FAILING: " ^ msg);
         Failed (msg, ps)
     )
 
