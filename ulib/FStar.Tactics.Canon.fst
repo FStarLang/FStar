@@ -8,88 +8,88 @@ open FStar.Reflection
 open FStar.Reflection.Arith
 module O = FStar.Order
 
-val distr : (#x : int) -> (#y : int) -> (#z : int) -> squash (x * (y + z) == x * y + x * z)
+val distr : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y + z) == x * y + x * z)
 let distr #x #y #z = ()
 
-val distl : (#x : int) -> (#y : int) -> (#z : int) -> squash ((x + y) * z == x * z + y * z)
+val distl : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) * z == x * z + y * z)
 let distl #x #y #z = ()
 
-val ass_plus_l : (#x : int) -> (#y : int) -> (#z : int) -> squash (x + (y + z) == (x + y) + z)
+val ass_plus_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x + (y + z) == (x + y) + z)
 let ass_plus_l #x #y #z = ()
 
-val ass_mult_l : (#x : int) -> (#y : int) -> (#z : int) -> squash (x * (y * z) == (x * y) * z)
+val ass_mult_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y * z) == (x * y) * z)
 let ass_mult_l #x #y #z = ()
 
-val comm_plus : (#x : int) -> (#y : int) -> squash (x + y == y + x)
+val comm_plus : (#x : int) -> (#y : int) -> Lemma (x + y == y + x)
 let comm_plus #x #y = ()
 
-val sw_plus : (#x : int) -> (#y : int) -> (#z : int) -> squash ((x + y) + z == (x + z) + y)
+val sw_plus : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) + z == (x + z) + y)
 let sw_plus #x #y #z = ()
 
-val sw_mult : (#x : int) -> (#y : int) -> (#z : int) -> squash ((x * y) * z == (x * z) * y)
+val sw_mult : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x * y) * z == (x * z) * y)
 let sw_mult #x #y #z = ()
 
-val comm_mult : (#x : int) -> (#y : int) -> squash (x * y == y * x)
+val comm_mult : (#x : int) -> (#y : int) -> Lemma (x * y == y * x)
 let comm_mult #x #y = ()
 
 val trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->
-                    squash (x == y) -> squash (y == z) -> squash (x == z)
+                    squash (x == y) -> squash (y == z) -> Lemma (x == z)
 let trans #a #x #z #y e1 e2 = ()
 
 val cong_plus : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 squash (w == y) -> squash (x == z) ->
-                squash (w + x == y + z)
+                Lemma (w + x == y + z)
 let cong_plus #w #x #y #z p q = ()
 
 val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
                 squash (w == y) -> squash (x == z) ->
-                squash (w * x == y * z)
+                Lemma (w * x == y * z)
 let cong_mult #w #x #y #z p q = ()
 
-val neg_minus_one : (#x:int) -> squash (-x == (-1) * x)
+val neg_minus_one : (#x:int) -> Lemma (-x == (-1) * x)
 let neg_minus_one #x = ()
 
-val mult1 : (#x:int) -> squash (x == 1 * x)
+val mult1 : (#x:int) -> Lemma (x == 1 * x)
 let mult1 #x = ()
 
-val x_plus_zero : (#x:int) -> squash (x + 0 == x)
+val x_plus_zero : (#x:int) -> Lemma (x + 0 == x)
 let x_plus_zero #x = ()
 
-val zero_plus_x : (#x:int) -> squash (0 + x == x)
+val zero_plus_x : (#x:int) -> Lemma (0 + x == x)
 let zero_plus_x #x = ()
 
-val x_mult_zero : (#x:int) -> squash (x * 0 == 0)
+val x_mult_zero : (#x:int) -> Lemma (x * 0 == 0)
 let x_mult_zero #x = ()
 
-val zero_mult_x : (#x:int) -> squash (0 * x == 0)
+val zero_mult_x : (#x:int) -> Lemma (0 * x == 0)
 let zero_mult_x #x = ()
 
-val x_mult_one : (#x:int) -> squash (x * 1 == x)
+val x_mult_one : (#x:int) -> Lemma (x * 1 == x)
 let x_mult_one #x = ()
 
-val one_mult_x : (#x:int) -> squash (1 * x == x)
+val one_mult_x : (#x:int) -> Lemma (1 * x == x)
 let one_mult_x #x = ()
 
-val minus_is_plus : (#x : int) -> (#y : int) -> squash (x - y == x + (-y))
+val minus_is_plus : (#x : int) -> (#y : int) -> Lemma (x - y == x + (-y))
 let minus_is_plus #x #y = ()
 
 let rec canon_point : unit -> Tac unit = fun () -> (
     let step (t : tactic unit) : tactic unit =
-        apply (quote trans);;
+        apply_lemma (quote trans);;
         t
     in
     let step_lemma (lem : tactic term) : tactic unit =
-        step (apply lem)
+        step (apply_lemma lem)
     in
     let comm_r_plus : tactic unit =
         step_lemma (quote sw_plus);;
-        apply (quote cong_plus);;
+        apply_lemma (quote cong_plus);;
         canon_point;;
         trefl
     in
     let comm_r_mult : tactic unit =
         step_lemma (quote sw_mult);;
-        apply (quote cong_mult);;
+        apply_lemma (quote cong_mult);;
         canon_point;;
         trefl
     in
@@ -161,31 +161,31 @@ let rec canon_point : unit -> Tac unit = fun () -> (
             else trefl
 
         | Inr (Plus a (Lit 0)) ->
-            apply (quote x_plus_zero)
+            apply_lemma (quote x_plus_zero)
 
         | Inr (Plus (Lit 0) b) ->
-            apply (quote zero_plus_x)
+            apply_lemma (quote zero_plus_x)
 
         | Inr (Plus a b) ->
             if O.gt (compare_expr a b)
-            then apply (quote comm_plus)
+            then apply_lemma (quote comm_plus)
             else trefl
 
         | Inr (Mult (Lit 0) _) ->
-            apply (quote zero_mult_x)
+            apply_lemma (quote zero_mult_x)
 
         | Inr (Mult _ (Lit 0)) ->
-            apply (quote x_mult_zero)
+            apply_lemma (quote x_mult_zero)
 
         | Inr (Mult (Lit 1) _) ->
-            apply (quote one_mult_x)
+            apply_lemma (quote one_mult_x)
 
         | Inr (Mult _ (Lit 1)) ->
-            apply (quote x_mult_one)
+            apply_lemma (quote x_mult_one)
 
         | Inr (Mult a b) ->
             if O.gt (compare_expr a b)
-            then apply (quote comm_mult)
+            then apply_lemma (quote comm_mult)
             else trefl
 
         // Forget about subtraction
