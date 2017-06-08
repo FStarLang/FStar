@@ -311,11 +311,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in
-              let has_noextract = ref false in
+              let has_noextract = List.existsb (function S.NoExtract -> true | _ -> false) quals in
               let flags = List.choose (function
                 | Assumption -> Some Assumed
                 | S.Private -> Some Private
-                | S.NoExtract -> has_noextract := true; Some NoExtract
+                | S.NoExtract -> Some NoExtract
                 | _ -> None
               ) quals in
               let flags' = List.choose (function
@@ -328,10 +328,10 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               g,
               (* Note that Kremlin wants to keep these definitions to re-check
                * the whole program in Low*. *)
-              if !has_noextract && not (is_kremlin ()) then
+              (if has_noextract && not (is_kremlin ()) then
                 []
               else
-                [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
+                [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')])
 
             | _ ->
               failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
