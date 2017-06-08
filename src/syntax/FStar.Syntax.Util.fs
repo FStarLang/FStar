@@ -1023,7 +1023,9 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, 2);
                             (Const.eq3_lid, 4);
                             (Const.eq3_lid, 2)
-                        ] in
+                        ]
+        in
+
         let aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
             let t = un_uinst t in
@@ -1040,10 +1042,15 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> [], compress t in
 
     let destruct_q_conn t =
-        let is_q : bool -> fv -> Tot<bool> = fun fa fv -> if fa then is_forall fv.fv_name.v else is_exists fv.fv_name.v in
+        let is_q (fa:bool) (fv:fv) : bool =
+            if fa
+            then is_forall fv.fv_name.v else
+            is_exists fv.fv_name.v
+        in
         let flat t =
             let t, args = head_and_args t in
-            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
+            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp)
+        in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs([b], t2, _)}, _)])
             | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs([b], t2, _)}, _)])
@@ -1066,10 +1073,115 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
+    // Unfolded connectives
+    let u_connectives =
+        [ (Const.true_lid,  Const.c_true_lid, 0);
+          (Const.false_lid, Const.c_false_lid, 0);
+          (Const.and_lid,   Const.c_and_lid, 2);
+          (Const.or_lid,    Const.c_or_lid, 2);
+        ]
+    in
+    let destruct_sq_base_conn t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n, List.length args with
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_and_lid ->
+                Some (BaseConn (Const.and_lid, args))
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_or_lid ->
+                Some (BaseConn (Const.or_lid, args))
+
+        // eq2 can have 2 args or 3
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_eq2_lid ->
+                Some (BaseConn (Const.eq2_lid, args))
+        | Tm_fvar fv, 3
+            when fv_eq_lid fv Const.c_eq2_lid ->
+                Some (BaseConn (Const.eq2_lid, args))
+
+        // eq3 can have 2 args or 4
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_eq3_lid ->
+                Some (BaseConn (Const.eq3_lid, args))
+        | Tm_fvar fv, 4
+            when fv_eq_lid fv Const.c_eq3_lid ->
+                Some (BaseConn (Const.eq3_lid, args))
+
+        | Tm_fvar fv, 0
+            when fv_eq_lid fv Const.c_true_lid ->
+                Some (BaseConn (Const.true_lid, args))
+        | Tm_fvar fv, 0
+            when fv_eq_lid fv Const.c_false_lid ->
+                Some (BaseConn (Const.false_lid, args))
+
+        | _ ->
+            None
+        )
+    in
+    let rec destruct_sq_forall t =
+        bind_opt (un_squash t) (fun t ->
+        match arrow_one t with
+        | Some (b, c) ->
+            if not (is_tot_or_gtot_comp c)
+            then None
+            else
+                let q = (comp_to_comp_typ c).result_typ in
+                let bs, q = open_term [b] q in
+                let b = match bs with // coverage...
+                        | [b] -> b
+                        | _ -> failwith "impossible"
+                in
+                if is_free_in (fst b) q
+                then (
+                    let pats, q = patterns q in
+                    maybe_collect <| Some (QAll([b], pats, q))
+                ) else (
+                    // Since we know it's not free, we can just open and discard the binder
+                    Some (BaseConn (Const.imp_lid, [as_arg (fst b).sort; as_arg q]))
+                )
+        | _ -> None)
+    and destruct_sq_exists t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n, args with
+        | Tm_fvar fv, [(a1, _); (a2, _)]
+            when fv_eq_lid fv Const.dtuple2_lid ->
+                begin match (compress a2).n with
+                | Tm_abs ([b], q, _) ->
+                    let bs, q = open_term [b] q in
+                    let b = match bs with // coverage...
+                            | [b] -> b
+                            | _ -> failwith "impossible"
+                    in
+                    let pats, q = patterns q in
+                    maybe_collect <| Some (QEx ([b], pats, q))
+                | _ -> None
+                end
+        | _ -> None)
+    and maybe_collect f =
+        match f with
+        | Some (QAll (bs, pats, phi)) ->
+            begin match destruct_sq_forall phi with
+            | Some (QAll (bs', pats', psi)) -> Some <| QAll(bs@bs', pats@pats', psi)
+            | _ -> f
+            end
+        | Some (QEx (bs, pats, phi)) ->
+            begin match destruct_sq_exists phi with
+            | Some (QEx (bs', pats', psi)) -> Some <| QEx(bs@bs', pats@pats', psi)
+            | _ -> f
+            end
+        | _ -> f
+    in
+
     let phi = unmeta_monadic f in
-        match destruct_base_conn phi with
-        | Some b -> Some b
-        | None -> destruct_q_conn phi
+        // Try all possibilities, stopping at the first
+        catch_opt (destruct_base_conn phi) (fun () ->
+        catch_opt (destruct_q_conn phi) (fun () ->
+        catch_opt (destruct_sq_base_conn phi) (fun () ->
+        catch_opt (destruct_sq_forall phi) (fun () ->
+        catch_opt (destruct_sq_exists phi) (fun () ->
+                   None)))))
 
 
 let action_as_lb eff_lid a =

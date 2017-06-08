@@ -1159,10 +1159,18 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             [] l in
         ({f phis with rng=r}, decls) in
 
-    let eq_op r : Tot<(args -> (term * decls_t))> = function
-        | [_; e1; e2]
-        | [_;_;e1;e2] -> enc  (bin_op mkEq) r [e1;e2]
-        | l -> enc (bin_op mkEq) r l in
+    // This gets called for eq2, eq3, equals and h_equals. They have types:
+    // eq2 : #a:Type -> a -> a -> Type
+    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
+    // equals : #a:Type -> a -> a -> Type
+    // h_equals : #a:Type -> a -> #b:Type -> b -> Type
+    // So, to properly cover all cases, extract the two non-implicit arguments and state their equality
+    let eq_op r args : (term * decls_t) =
+        let rf = List.filter (fun (a,q) -> match q with | Some (Implicit _) -> false | _ -> true) args in
+        if List.length rf <> 2
+        then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
+        else enc (bin_op mkEq) r rf
+    in
 
     let mk_imp r : Tot<(args -> (term * decls_t))> = function
         | [(lhs, _); (rhs, _)] ->

@@ -94,9 +94,18 @@ let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
+(* Constructive variants *)
+let c_true_lid   = pconst "c_True"
+let c_false_lid  = pconst "c_False"
+let c_and_lid    = pconst "c_and"
+let c_or_lid     = pconst "c_or"
+let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
 let eq3_lid    = pconst  "eq3"
+let c_eq2_lid  = pconst "equals"
+let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
