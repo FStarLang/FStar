@@ -516,15 +516,15 @@ type constant = (width* Prims.string)
 type var = Prims.int
 type lident = (Prims.string Prims.list* Prims.string)
 type version = Prims.int
-let current_version: Prims.int = Prims.parse_int "20"
-type file = (Prims.string* program)
-type binary_format = (version* file Prims.list)
-let fst3 uu____1722 = match uu____1722 with | (x,uu____1727,uu____1728) -> x
-let snd3 uu____1742 = match uu____1742 with | (uu____1746,x,uu____1748) -> x
-let thd3 uu____1762 = match uu____1762 with | (uu____1766,uu____1767,x) -> x
-let mk_width: Prims.string -> width option =
-  fun uu___118_1772  ->
-    match uu___118_1772 with
+let current_version : Prims.int = (Prims.parse_int "20") 
+type file = (Prims.string * program)
+type binary_format = (version * file Prims.list)
+let fst3 uu____1722 = match uu____1722 with | (x,uu____1727,uu____1728) -> x 
+let snd3 uu____1742 = match uu____1742 with | (uu____1746,x,uu____1748) -> x 
+let thd3 uu____1762 = match uu____1762 with | (uu____1766,uu____1767,x) -> x 
+let mk_width : Prims.string -> width option =
+  fun uu___119_1772  ->
+    match uu___119_1772 with
     | "UInt8" -> Some UInt8
     | "UInt16" -> Some UInt16
     | "UInt32" -> Some UInt32
@@ -534,20 +534,22 @@ let mk_width: Prims.string -> width option =
     | "Int32" -> Some Int32
     | "Int64" -> Some Int64
     | uu____1774 -> None
-let mk_bool_op: Prims.string -> op option =
-  fun uu___119_1778  ->
-    match uu___119_1778 with
+  
+let mk_bool_op : Prims.string -> op option =
+  fun uu___120_1778  ->
+    match uu___120_1778 with
     | "op_Negation" -> Some Not
     | "op_AmpAmp" -> Some And
     | "op_BarBar" -> Some Or
     | "op_Equality" -> Some Eq
     | "op_disEquality" -> Some Neq
     | uu____1780 -> None
-let is_bool_op: Prims.string -> Prims.bool =
-  fun op  -> (mk_bool_op op) <> None
-let mk_op: Prims.string -> op option =
-  fun uu___120_1788  ->
-    match uu___120_1788 with
+  
+let is_bool_op : Prims.string -> Prims.bool =
+  fun op  -> (mk_bool_op op) <> None 
+let mk_op : Prims.string -> op option =
+  fun uu___121_1788  ->
+    match uu___121_1788 with
     | "add" -> Some Add
     | "op_Plus_Hat" -> Some Add
     | "add_mod" -> Some AddW
@@ -605,20 +607,20 @@ let extend: env -> Prims.string -> Prims.bool -> env =
   fun env  ->
     fun x  ->
       fun is_mut  ->
-        let uu___125_1862 = env in
+        let uu___126_1862 = env  in
         {
           names = ({ pretty = x; mut = is_mut } :: (env.names));
-          names_t = (uu___125_1862.names_t);
-          module_name = (uu___125_1862.module_name)
+          names_t = (uu___126_1862.names_t);
+          module_name = (uu___126_1862.module_name)
         }
 let extend_t: env -> Prims.string -> env =
   fun env  ->
     fun x  ->
-      let uu___126_1869 = env in
+      let uu___127_1869 = env  in
       {
-        names = (uu___126_1869.names);
+        names = (uu___127_1869.names);
         names_t = (x :: (env.names_t));
-        module_name = (uu___126_1869.module_name)
+        module_name = (uu___127_1869.module_name)
       }
 let find_name: env -> Prims.string -> name =
   fun env  ->
@@ -699,8 +701,8 @@ and translate_flags:
   FStar_Extraction_ML_Syntax.c_flag Prims.list -> flag Prims.list =
   fun flags  ->
     FStar_List.choose
-      (fun uu___121_2146  ->
-         match uu___121_2146 with
+      (fun uu___122_2146  ->
+         match uu___122_2146 with
          | FStar_Extraction_ML_Syntax.Private  -> Some Private
          | FStar_Extraction_ML_Syntax.NoExtract  -> Some NoExtract
          | FStar_Extraction_ML_Syntax.Attribute "c_inline" -> Some CInline
@@ -735,8 +737,8 @@ and translate_decl:
           ->
           let assumed =
             FStar_Util.for_some
-              (fun uu___122_2177  ->
-                 match uu___122_2177 with
+              (fun uu___123_2177  ->
+                 match uu___123_2177 with
                  | FStar_Extraction_ML_Syntax.Assumed  -> true
                  | uu____2178 -> false) flags in
           let env1 =
@@ -748,9 +750,10 @@ and translate_decl:
               (fun env2  ->
                  fun uu____2185  ->
                    match uu____2185 with
-                   | (name1,uu____2189) -> extend_t env2 name1) env1 tvars in
-          let rec find_return_type uu___123_2193 =
-            match uu___123_2193 with
+                   | (name1,uu____2189) -> extend_t env2 name1) env1 tvars
+             in
+          let rec find_return_type uu___124_2193 =
+            match uu___124_2193 with
             | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____2194,uu____2195,t)
                 -> find_return_type t
             | t -> t in
@@ -814,8 +817,8 @@ and translate_decl:
           ->
           let assumed =
             FStar_Util.for_some
-              (fun uu___122_2282  ->
-                 match uu___122_2282 with
+              (fun uu___123_2282  ->
+                 match uu___123_2282 with
                  | FStar_Extraction_ML_Syntax.Assumed  -> true
                  | uu____2283 -> false) flags in
           let env1 =
@@ -827,9 +830,10 @@ and translate_decl:
               (fun env2  ->
                  fun uu____2290  ->
                    match uu____2290 with
-                   | (name1,uu____2294) -> extend_t env2 name1) env1 tvars in
-          let rec find_return_type uu___123_2298 =
-            match uu___123_2298 with
+                   | (name1,uu____2294) -> extend_t env2 name1) env1 tvars
+             in
+          let rec find_return_type uu___124_2298 =
+            match uu___124_2298 with
             | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____2299,uu____2300,t)
                 -> find_return_type t
             | t -> t in
@@ -1113,8 +1117,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
           ->
           let is_mut =
             FStar_Util.for_some
-              (fun uu___124_2894  ->
-                 match uu___124_2894 with
+              (fun uu___125_2894  ->
+                 match uu___125_2894 with
                  | FStar_Extraction_ML_Syntax.Mutable  -> true
                  | uu____2895 -> false) flags in
           let uu____2896 =
