@@ -613,7 +613,22 @@ match instr with
        let addr = eval env ea in
        let v = eval env ev in 
        if (gte addr base) && (gte ustackstart addr) then
-	       let status' = store n  addr v env base wbmapstart wbmapsize ucodestart ucodesize uheapstart uheapsize ustackstart ustacksize buf in
+ (*
+
+  | C: base:address
+       -> ucodestart:address
+       -> wbmapstart:address
+       -> uheapstart:address{UInt.fits (UInt64.v uheapstart) UInt32.n}
+       -> ustackstart:address{UInt.fits (UInt64.v ustackstart) UInt32.n}
+       -> ucodesize:u64
+       -> wbmapsize:u32{UInt.fits (UInt32.v wbmapsize) UInt16.n}
+       -> uheapsize:u64{UInt.fits (UInt64.v uheapsize) UInt32.n}
+       -> ustacksize:u64{UInt.fits (UInt64.v ustacksize) UInt32.n}
+       -> buf:buffer dword{ucodestart >=^ base        /\
+
+*)
+		let sm = C (base, wbmapstart, wbmapsize, ucodestart, ucodesize, uheapstart, uheapsize, ustackstart, ustacksize, buf) in
+	       let status' = store n  addr v env sm  in
 	       let _ = if debugflag then
 				let _ = debug_print_string (to_string iaddr) in
 				let _ = debug_print_string ":" in
