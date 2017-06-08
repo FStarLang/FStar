@@ -3,7 +3,7 @@ module FStar.Pointer
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 type array (length: UInt32.t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
