@@ -428,7 +428,7 @@ let order_binder (x:binder) (y:binder) : order =
     else Gt
 
 let is_free (x:binder) (t:term) : bool =
-    BU.set_mem (fst x) (FStar.Syntax.Free.names t)
+    U.is_free_in (fst x) t
 
 let embed_norm_step (n:norm_step) : term =
     match n with

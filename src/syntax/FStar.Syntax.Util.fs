@@ -952,6 +952,48 @@ let if_then_else b t1 t2 =
     let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
+
+let mk_squash p =
+    let sq = fvar SC.squash_lid (Delta_defined_at_level 1) None in
+    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
+
+let un_squash t =
+    let head, args = head_and_args t in
+    match (un_uinst head).n, args with
+    | Tm_fvar fv, [(p, _)]
+        when fv_eq_lid fv SC.squash_lid ->
+      Some p
+    | Tm_refine (b, p), [] ->
+        begin match b.sort.n with
+        | Tm_fvar fv when fv_eq_lid fv SC.unit_lid ->
+            let bs, p = Subst.open_term [mk_binder b] p in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible"
+            in
+            // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
+            if set_mem (fst b) (Free.names p)
+            then None
+            else Some p
+        | _ -> None
+        end
+    | _ ->
+      None
+
+let arrow_one (t:typ) : option<(binder * comp)> =
+    match (compress t).n with
+    | Tm_arrow ([], c) ->
+        failwith "fatal: empty binders on arrow?"
+    | Tm_arrow ([b], c) ->
+        Some (b, c)
+    | Tm_arrow (b::bs, c) ->
+        Some (b, mk_Total (arrow bs c))
+    | _ ->
+        None
+
+let is_free_in (bv:bv) (t:term) : bool =
+    U.set_mem bv (FStar.Syntax.Free.names t)
+
 (**************************************************************************************)
 (* Destructing a type as a formula *)
 (**************************************************************************************)
@@ -1107,33 +1149,6 @@ let dm4f_lid ed name : lident =
     let p = path_of_lid ed.mname in
     let p' = apply_last (fun s -> "_dm4f_" ^ s ^ "_" ^ name) p in
     lid_of_path p' Range.dummyRange
-
-let mk_squash p =
-    let sq = fvar SC.squash_lid (Delta_defined_at_level 1) None in
-    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
-
-let un_squash t =
-    let head, args = head_and_args t in
-    match (un_uinst head).n, args with
-    | Tm_fvar fv, [(p, _)]
-        when fv_eq_lid fv SC.squash_lid ->
-      Some p
-    | Tm_refine (b, p), [] ->
-        begin match b.sort.n with
-        | Tm_fvar fv when fv_eq_lid fv SC.unit_lid ->
-            let bs, p = Subst.open_term [mk_binder b] p in
-            let b = match bs with
-                    | [b] -> b
-                    | _ -> failwith "impossible"
-            in
-            // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
-            if set_mem (fst b) (Free.names p)
-            then None
-            else Some p
-        | _ -> None
-        end
-    | _ ->
-      None
 
 let rec mk_list (typ:term) (rng:range) (l:list<term>) : term =
     let ctor l = mk (Tm_fvar (lid_as_fv l Delta_constant (Some Data_ctor))) None rng in

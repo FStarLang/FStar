@@ -326,20 +326,9 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
         bind (map t2) (fun _ -> ret ()))
     )
 
-let arrow_one (t:typ) : option<(binder * comp)> =
-    match (SS.compress t).n with
-    | Tm_arrow ([], c) ->
-        failwith "fatal: empty binders on arrow?"
-    | Tm_arrow ([b], c) ->
-        Some (b, c)
-    | Tm_arrow (b::bs, c) ->
-        Some (b, mk_Total (U.arrow bs c))
-    | _ ->
-        None
-
 let intro : tac<binder> =
     bind cur_goal (fun goal ->
-    match arrow_one goal.goal_ty with
+    match U.arrow_one goal.goal_ty with
     | Some (b, c) ->
         let bs, c = SS.open_comp [b] c in
         let b = match bs with
@@ -450,7 +439,7 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
         // exact failed, try to instantiate more arguments
         let tm, typ, guard = goal.context.type_of goal.context tm in
         if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply: got non-trivial guard" else
-        match arrow_one typ with
+        match U.arrow_one typ with
         | None -> fail1 "apply: cannot unify (%s)" (Print.term_to_string typ)
         | Some ((bv, aq), _) ->
             let u, _, g_u = TcUtil.new_implicit_var "apply" goal.goal_ty.pos goal.context bv.sort in
