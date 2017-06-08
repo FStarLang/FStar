@@ -263,6 +263,7 @@ val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 (* FIXME: these functions have the wrong argument order when compared to
  List.map, List.iter, etc. *)
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
+val catch_opt: option<'a> -> (unit -> option<'a>) -> option<'a>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 val iter_opt: option<'a> -> ('a -> unit) -> unit
 

@@ -499,6 +499,11 @@ let bind_opt opt f =
     | None -> None
     | Some x -> f x
 
+let catch_opt opt f =
+    match opt with
+    | Some _ -> opt
+    | None -> f ()
+
 let map_opt opt f =
     match opt with
       | None -> None
