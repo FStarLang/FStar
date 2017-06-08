@@ -80,6 +80,18 @@ let cur_goal : tactic goal =
   | [] -> fail "No more goals"
   | hd::_ -> return hd
 
+let assumption : tactic unit =
+    egw <-- cur_goal;
+    let (e, g), w = egw in
+    let rec aux (bs : binders) =
+        match bs with
+        | [] -> fail "no assumption matches goal"
+        | b::bs ->
+            let t = pack (Tv_Var b) in
+            or_else (exact (return t)) (aux bs)
+    in
+    aux (binders_of_env e)
+
 let destruct_equality_implication (t:term) : tactic (option (formula * term)) =
     match term_as_formula t with
     | Implies lhs rhs ->

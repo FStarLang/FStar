@@ -70,3 +70,9 @@ let _ =
 (* let _ = *)
 (*     assert_by_tactic (apply_lemma (quote (l () ()));; *)
 (*                       exact (quote proof_1)) p2 *)
+
+assume val p1 : Type0
+
+val l : x:(squash p1) -> Lemma p1
+let l x =
+    assert_by_tactic  assumption p1
