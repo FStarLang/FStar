@@ -85,3 +85,7 @@ let assert_by_tactic (t:tactic unit) (p:Type)
          (ensures (fun _ -> p))
   = ()
 #reset-options
+
+(* We don't peel off all `by_tactic`s in negative positions, so give the SMT a way to reason about them *)
+val by_tactic_seman : a:Type -> tau:(tactic a) -> phi:Type -> Lemma (by_tactic tau phi ==> phi) [SMTPat (by_tactic tau phi)]
+let by_tactic_seman a tau phi = ()
