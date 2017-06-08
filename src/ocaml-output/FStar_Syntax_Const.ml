@@ -224,6 +224,8 @@ let fstar_tactics_lid: Prims.string -> FStar_Ident.lid =
 let tactic_lid: FStar_Ident.lid = fstar_tactics_lid' ["Effect"; "tactic"]
 let by_tactic_lid: FStar_Ident.lid =
   fstar_tactics_lid' ["Effect"; "__by_tactic"]
+let assert_by_tactic_lid: FStar_Ident.lid =
+  fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
 let reify_tactic_lid: FStar_Ident.lid =
   fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let quote_lid: FStar_Ident.lident =
