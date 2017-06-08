@@ -196,7 +196,8 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
                                 (Print.term_to_string w);
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
         | Failed (s, ps) ->
-            raise (FStar.Errors.Error ("user tactic failed: \"" ^ s ^ "\"", assertion.pos))
+            FStar.Errors.err assertion.pos (BU.format1 "user tactic failed: %s" s);
+            (t, [])
         end
     | _ ->
         (t, [])
