@@ -25,8 +25,8 @@ let _ =
     assert_by_tactic trefl (1 == x)
 
 let va1    = assert_by_tactic trefl (1 == 1)
-let va2 () = assert_by_tactic trefl (1 == 1)
-let va3    = fun () -> assert_by_tactic trefl (1 == 1)
+(* let va2 () = assert_by_tactic trefl (1 == 1) *)
+(* let va3    = fun () -> assert_by_tactic trefl (1 == 1) *)
 
 type t =
     | A : t
@@ -71,8 +71,8 @@ let _ =
 (*     assert_by_tactic (apply_lemma (quote (l () ()));; *)
 (*                       exact (quote proof_1)) p2 *)
 
-assume val p1 : Type0
+assume val pp1 : Type0
 
-val l : x:(squash p1) -> Lemma p1
-let l x =
-    assert_by_tactic  assumption p1
+val l2 : x:(squash pp1) -> Lemma pp1
+let l2 x =
+    assert_by_tactic  assumption pp1
