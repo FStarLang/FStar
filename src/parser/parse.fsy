@@ -1,7 +1,6 @@
 %{
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-open Prims
 open FStar
 open FStar.Errors
 open FStar.List
