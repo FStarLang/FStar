@@ -15,6 +15,7 @@
 *)
 module FStar.Getopt
 open FSharp.Compatibility.OCaml
+open System
 (* A simplified re-implementation of Getopt, a command line parsing tool *)
 let noshort='\000'
 let nolong=""
@@ -65,7 +66,7 @@ let parse_cmdline specs others =
     else go_on ()
 
 let parse_string specs others (str:string) =
-    let args = str.Split([|' '|]) in
+    let args = str.Split([|' '|], StringSplitOptions.RemoveEmptyEntries) in
     parse specs others args 0 (args.Length - 1) 0
 
 

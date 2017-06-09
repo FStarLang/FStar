@@ -142,7 +142,7 @@ let go _ =
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
-          finished_message module_names_and_times (Prims.parse_int "1")
+          finished_message module_names_and_times (Prims.parse_int "0")
         end //end normal batch mode
         else
           Util.print_error "no file provided\n"

@@ -368,7 +368,7 @@ let float_of_int64 (n:int64) = (float)n
 let int_of_int32 (i:int32) = Prims.of_int i
 let int32_of_int (i:Prims.int) = int32 i
 
-let string_of_int (i: Prims.int) = string_of_int (Prims.to_int i)
+let string_of_int (i: Prims.int) = i.ToString()
 let string_of_bool b = if b then "true" else "false"
 let string_of_int64  (i:int64) = i.ToString()
 let string_of_int32 (i:int32) = i.ToString()
@@ -871,11 +871,11 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
                 if (Array.length ha) <> 6 then failwith "malformed hint" else
                 Some {
                     hint_name=ha.[0] :?> System.String;
-                    hint_index=ha.[1] :?> Prims.int;
-                    fuel=ha.[2] :?> Prims.int;
-                    ifuel=ha.[3] :?> Prims.int;
+                    hint_index=Prims.of_int (ha.[1] :?> int);
+                    fuel=Prims.of_int (ha.[2] :?> int);
+                    ifuel=Prims.of_int (ha.[3] :?> int);
                     unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                    query_elapsed_time=ha.[5] :?> Prims.int
+                    query_elapsed_time=Prims.of_int (ha.[5] :?> int)
                 } in
     let hints_from_json_hints (hs : System.Object) =
         let hint_list =
