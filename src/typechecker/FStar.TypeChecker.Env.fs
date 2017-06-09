@@ -575,16 +575,12 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
       then None
       else let insts = if List.length univ_insts = List.length univs
                        then univ_insts
-                       else if Ident.lid_equals lid Const.effect_Lemma_lid
-                            && List.length univ_insts = 1 //TODO: Lemma is a hack! It is more universe polymorphic than expected,
-                                                          //because of the SMTPats ... which should be irrelevant, but unfortunately are not
-                       then univ_insts@[U_zero]
                        else failwith (BU.format2 "Unexpected instantiation of effect %s with %s universes"
                                             (Print.lid_to_string lid)
                                             (List.length univ_insts |> BU.string_of_int)) in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
-             | _, _::_::_ when not (Ident.lid_equals lid Const.effect_Lemma_lid) ->
+             | _, _::_::_ ->
                 failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
                            (Print.lid_to_string lid) (string_of_int <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in

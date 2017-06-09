@@ -739,6 +739,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               op
       end
 
+    | Construct (n, [(a, _)]) when n.str = "SMTPat" ->
+        desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
+
+    | Construct (n, [(a, _)]) when n.str = "SMTPatT" ->
+        desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
+
+    | Construct (n, [(a, _)]) when n.str = "SMTPatOr" ->
+        desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat_or"] top.range)}, a, Nothing)})
+
     | Name {str="Type0"}  -> mk (Tm_type U_zero)
     | Name {str="Type"}   -> mk (Tm_type U_unknown)
     | Construct ({str="Type"}, [t, UnivApp]) -> mk (Tm_type (desugar_universe t))
@@ -1211,11 +1220,19 @@ and desugar_comp r env t =
     in
     let is_smt_pat (t,_) =
       match (unparen t).tm with
+      // TODO: remove this first match once we fully migrate
       | Construct (cons, [{tm=Construct (smtpat, _)}, _; _]) ->
         Ident.lid_equals cons C.cons_lid &&
         BU.for_some (fun s -> smtpat.str = s)
           (* the smt pattern does not seem to be disambiguated yet at this point *)
-          ["SMTPat" ; "SMTPatT" ; "SMTPatOr"]
+          ["SMTPat"; "SMTPatT"; "SMTPatOr"]
+          (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
+
+      | Construct (cons, [{tm=Var smtpat}, _; _]) ->
+        Ident.lid_equals cons C.cons_lid &&
+        BU.for_some (fun s -> smtpat.str = s)
+          (* the smt pattern does not seem to be disambiguated yet at this point *)
+          ["smt_pat" ; "smt_pat_or"]
           (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
       | _ -> false
     in
@@ -1224,7 +1241,7 @@ and desugar_comp r env t =
       let head, args = head_and_args t in
       match head.tm with
       | Name lemma when (lemma.ident.idText = "Lemma") ->
-        (* need to add the unit result type and the empty SMTPat list, if n *)
+        (* need to add the unit result type and the empty smt_pat list, if n *)
         let unit_tm = mk_term (Name C.unit_lid) t.range Type_level, Nothing in
         let nil_pat = mk_term (Name C.nil_lid) t.range Expr, Nothing in
         let req_true =
@@ -1334,11 +1351,11 @@ and desugar_comp r env t =
           match rest with
           | [req;ens;(pat, aq)] ->
             let pat = match pat.n with
-              (* we really want the empty pattern to be in universe S 0 rather than generalizing it *)
+              (* we really want the empty pattern to be in universe 0 rather than generalizing it *)
               | Tm_fvar fv when S.fv_eq_lid fv Const.nil_lid ->
-                let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
+                let nil = S.mk_Tm_uinst pat [U_zero] in
                 let pattern =
-                  S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None) [U_zero]
+                  S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) Delta_constant None
                 in
                 S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
               | _ -> pat
