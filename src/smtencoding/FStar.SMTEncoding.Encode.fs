@@ -2079,17 +2079,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_let(lbs, _, attrs)
         when se.sigquals |> List.contains S.Irreducible
-          || attrs |> Util.for_some is_opaque_to_smt ->
+          || attrs |> BU.for_some is_opaque_to_smt ->
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
-        then let _ = printfn "Encoding opaque_to_smt %s" (Ident.string_of_lid lid) in
-             let val_decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
+        then let val_decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
                                       sigquals = S.Irreducible :: se.sigquals } in
              let decls, env = encode_sigelt' env val_decl in
              env, decls
-        else let _ = printfn "Skipping encoding opaque_to_smt %s" (Ident.string_of_lid lid) in
-             env, []) env (snd lbs) in
+        else env, []) env (snd lbs) in
        List.flatten decls, env
 
      | Sig_let((_, [{lbname=BU.Inr b2t}]), _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
