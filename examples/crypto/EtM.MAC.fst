@@ -9,6 +9,9 @@ open FStar.Monotonic.RRef
 open Platform.Bytes
 open HyperStack.CoreCrypto
 
+module Ideal = EtM.Ideal
+module CPA = EtM.CPA
+
 type msg = EtM.CPA.cipher
 
 let keysize   = 64

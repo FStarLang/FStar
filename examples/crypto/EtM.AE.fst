@@ -10,6 +10,10 @@ module MAC = EtM.MAC
 
 open Platform.Bytes
 open HyperStack.CoreCrypto
+module CPA = EtM.CPA
+module MAC = EtM.MAC
+module Ideal = EtM.Ideal
+module Plain = EtM.Plain
 
 abstract type cipher = (CPA.cipher * MAC.tag)
 
