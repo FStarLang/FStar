@@ -202,7 +202,9 @@ let op_as_term env arity rng op =
     | "~" ->
         r FStar_Syntax_Const.not_lid
           (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "2"))
-    | "==" -> r FStar_Syntax_Const.eq2_lid FStar_Syntax_Syntax.Delta_constant
+    | "==" ->
+        r FStar_Syntax_Const.eq2_lid
+          (FStar_Syntax_Syntax.Delta_defined_at_level (Prims.parse_int "2"))
     | "<<" ->
         r FStar_Syntax_Const.precedes_lid FStar_Syntax_Syntax.Delta_constant
     | "/\\" ->
