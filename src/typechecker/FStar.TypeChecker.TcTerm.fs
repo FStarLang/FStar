@@ -630,7 +630,10 @@ and tc_value env (e:term) : term
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
-    then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
+    then raise (Error(BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+                                    (Print.fv_to_string fv)
+                                    (string_of_int (List.length us))
+                                    (string_of_int (List.length us')), Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
