@@ -2,15 +2,9 @@ module Synthesis
 
 open FStar.Tactics
 
-(* Use a tactic to build an actual computing term! *)
-(* we don't have a hook yet, so we do the following horrible thing
- * to get an `int` goal and run the `fib` tactic.
- *
- * Run with --debug Synthesis --debug_level Tac, you should see the witness
- * is `lem 34` (after normalization)
- *)
+let a : unit = synth_by_tactic (exact (quote ()))
 
-abstract let lem (x:int) : Lemma True = ()
+let _ = assert (a == ())
 
 let rec fib (n : int) : tactic unit =
     if n < 2
@@ -22,8 +16,6 @@ let rec fib (n : int) : tactic unit =
         fib (n - 2)
     )
 
-let tau : tactic unit =
-    apply_lemma (quote lem);;
-    fib 8
+let f8 : int = synth_by_tactic (fib 8)
 
-let _ = assert_by_tactic tau True
+let _ = assert (f8 == 34)
