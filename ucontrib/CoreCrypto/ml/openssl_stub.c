@@ -41,47 +41,10 @@ static value Val_some(value mlvalue) {
 #define Val_none Val_int(0)
 #define Some_val(v) Field(v,0)
 
-// This function takes an ML value of type [Platform.Bytes.bytes]; if the value
-// is well-formed, then the function allocates and returns a C-style buffer
-// containing the sequence of bytes described by [mlbytes], whose length is
-// written into [out_length]. If [mlbytes] is ill-formed, the function returns
-// [NULL] and [out_length] is unspecified.
 static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
-  value mllist = Field(mlbytes, 0);
-
-  size_t i, j, start, length;
-  // The index at which [Field(mllist, 0)] starts in the complete sequence.
-  i = 0;
-  // Number of bytes copied into [buf] so far.
-  j = 0;
-  start = Int_val(Field(mlbytes, 3));
-  length = Int_val(Field(mlbytes, 2));
-
-  uint8_t* buf = malloc(length+1);
-
-  while (mllist != Val_emptylist) {
-    value head = Field(mllist, 0);
-    size_t head_len = caml_string_length(head);
-
-    if (i <= start && start < i + head_len) {
-      size_t length_to_copy = i + head_len - start;
-      assert(j + length_to_copy <= length);
-      memcpy(buf + j, String_val(head) + start - i, length_to_copy);
-      j += length_to_copy;
-      start = i + head_len;
-    }
-
-    i += head_len;
-    mllist = Field(mllist, 1);
-  }
-  buf[length] = '\0';
-
-  if (j != length) {
-    free(buf);
-    return NULL;
-  }
-
-  *out_length = length;
+  *out_length = caml_string_length(mlbytes);
+  uint8_t *buf = (uint8_t*)malloc(*out_length);
+  memcpy(buf, String_val(mlbytes), *out_length);
   return buf;
 }
 
@@ -715,10 +678,12 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     uint8_t* modbuf = buffer_of_platform_bytes(mlmod, &modbuf_length);
     uint8_t* pubbuf = buffer_of_platform_bytes(mlpub, &pubbuf_length);
     uint8_t* prvbuf = NULL;
-    if (modbuf == NULL || pubbuf == NULL) {
+
+    if (modbuf == NULL || pubbuf == NULL || !modbuf_length || !pubbuf_length) {
       failure = "ocaml_rsa_set_key: invalid bytes for key parameters";
       goto bailout;
     }
+
     mod = BN_bin2bn(modbuf, modbuf_length, NULL);
     pub = BN_bin2bn(pubbuf, pubbuf_length, NULL);
 #   ifdef DEBUG
@@ -732,10 +697,11 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
         prvdata = Field(mlprv, 0);
         size_t prvbuf_length;
         prvbuf = buffer_of_platform_bytes(prvdata, &prvbuf_length);
-        if (prvbuf == NULL) {
+        if (prvbuf == NULL || !prvbuf_length) {
           failure = "ocaml_rsa_set_key: invalid bytes for private key";
           goto bailout;
         }
+
         prv = BN_bin2bn(prvbuf, prvbuf_length, NULL);
 #       ifdef DEBUG
           printf("ocaml_rsa_set_key: prvbuf_length=%zu\n", prvbuf_length);
