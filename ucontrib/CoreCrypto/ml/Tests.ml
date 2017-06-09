@@ -815,7 +815,7 @@ module TestHashUpdate = struct
     let input = bytes_of_string t.input in
     let ctx = digest_create t.hash_alg in
     (* Add input incrementally *)
-    for i = input.Bytes.index to (input.Bytes.length - 1) do
+    for i = 0 to Z.to_int (Bytes.length input) - 1 do
        digest_update ctx (Bytes.abyte (Bytes.index input (Z.of_int i)))
     done; 
     let output = digest_final ctx in  
