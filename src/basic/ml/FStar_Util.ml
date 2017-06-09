@@ -587,8 +587,11 @@ let first_N n l =
   in
   f [] 0 l
 
-let rec nth_tail n l =
-  if n=0 then l else nth_tail (n - 1) (BatList.tl l)
+let nth_tail n l =
+  let rec aux n l = 
+    if n=0 then l else aux (n - 1) (BatList.tl l)
+  in
+  aux (Z.to_int n) l
 
 let prefix l =
   match BatList.rev l with

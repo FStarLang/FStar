@@ -7,7 +7,7 @@ module PU = FStar.Unionfind
 module BU = FStar.Util
 module L = FStar.List
 
-type vops = {
+type vops_t = {
     next_major : unit -> S.version;
     next_minor : unit -> S.version
 }
@@ -17,12 +17,12 @@ let vops =
     let minor = BU.mk_ref 0 in
     let next_major () =
         minor := 0;
-        {major=(incr major; !major);
+        {major=(BU.incr major; !major);
          minor=0}
     in
     let next_minor () =
         {major=(!major);
-         minor=(incr minor; !minor)}
+         minor=(BU.incr minor; !minor)}
     in
     {next_major=next_major;
      next_minor=next_minor}
@@ -52,7 +52,8 @@ let version_to_string v = BU.format2 "%s.%s" (BU.string_of_int v.major) (BU.stri
 let state : ref<uf> =
   BU.mk_ref (empty (vops.next_major()))
 
-type tx = TX of uf
+type tx =
+    | TX of uf
 
 (* getting and setting the current unionfind graph
      -- used during backtracking in the tactics engine *)

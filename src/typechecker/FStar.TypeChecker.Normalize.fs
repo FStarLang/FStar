@@ -761,9 +761,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
         let firstn k l = if List.length l < k then l,[] else first_N k l in
-        log cfg  (fun () -> printfn ">>> %s\nNorm %A with top of the stack %s \n"
+        log cfg  (fun () -> BU.print3 ">>> %s\nNorm %s with top of the stack %s \n"
                                         (Print.tag_of_term t)
-                                        t//(Print.term_to_string t)
+                                        (Print.term_to_string t)
                                         (stack_to_string (fst <| firstn 4 stack)));
         match t.n with
           | Tm_delayed _ ->
@@ -1784,7 +1784,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
         | _ -> begin
           match (SS.compress t).n, tc with
           | Tm_arrow(binders, c), Inr _ -> binders, Inr c
-          | Tm_arrow(binders, c), Inl _ -> binders, Inl (Util.comp_result c)
+          | Tm_arrow(binders, c), Inl _ -> binders, Inl (U.comp_result c)
           | _,                    Inl _ -> [], Inl t
           | _ -> failwith "Impossible"
           end

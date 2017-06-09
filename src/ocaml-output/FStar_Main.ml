@@ -227,27 +227,24 @@ let go uu____153 =
                                 (Prims.parse_int "0")))
                       else FStar_Util.print_error "no file provided\n"))))
 let main uu____297 =
-  try
-    go ();
-    cleanup ();
-    FStar_All.exit (Prims.parse_int "0")
+  try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
   with
   | e ->
       let trace = FStar_Util.trace_of_exn e in
       (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-       (let uu____308 = FStar_Options.trace_error () in
-        if uu____308
+       (let uu____307 = FStar_Options.trace_error () in
+        if uu____307
         then
-          let uu____309 = FStar_Util.message_of_exn e in
-          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____309
+          let uu____308 = FStar_Util.message_of_exn e in
+          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____308
             trace
         else
           if Prims.op_Negation (FStar_Errors.handleable e)
           then
-            (let uu____311 = FStar_Util.message_of_exn e in
+            (let uu____310 = FStar_Util.message_of_exn e in
              FStar_Util.print1_error
                "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-               uu____311)
+               uu____310)
           else ());
        cleanup ();
        report_errors [];
