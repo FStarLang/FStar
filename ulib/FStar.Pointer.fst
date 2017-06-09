@@ -1233,18 +1233,18 @@ We could also completely remove this "assumption" and explicitly track
 the regions and addresses within those regions. But this way would
 actually defeat the practical purpose of regions.
 *)
+private
+let set_addrs_t (pointers : TSet.set apointer) =
+  addrs:Set.set nat {
+    forall (n: nat) .
+      Set.mem n addrs <==>
+      (exists (x: apointer) . TSet.mem x pointers /\ as_addr (APointer?.p x) == n) }
 
 abstract
 noeq type set =
 | Set:
   (pointers: TSet.set apointer) ->
-  (addrs: Ghost.erased (addrs: Set.set nat {
-    forall (n: nat) .
-    Set.mem n addrs <==> (
-    exists (x: apointer) .
-    TSet.mem x pointers /\
-    as_addr (APointer?.p x) == n
-  ) } ) ) ->
+  (addrs: Ghost.erased (set_addrs_t pointers) ) ->
   set
 
 abstract
@@ -1275,7 +1275,10 @@ abstract let set_singleton
   (#a: Type)
   (x: pointer a)
 : Tot set
-= Set (TSet.singleton (APointer a x)) (Ghost.elift1 (Ghost.hide ()) (fun () -> Set.singleton (as_addr x)))
+=
+  let pointers = TSet.singleton (APointer a x) in
+  let f () : GTot (set_addrs_t pointers) = Set.singleton (as_addr x) in
+  Set pointers (Ghost.elift1 f (Ghost.hide ()))
 
 abstract let set_amem_singleton
   (#a: Type)
@@ -1289,7 +1292,12 @@ abstract let set_amem_singleton
 abstract let set_union
   (s1 s2: set)
 : Tot set
-= Set (TSet.union (Set?.pointers s1) (Set?.pointers s2)) (Ghost.elift2 Set.union (Set?.addrs s1) (Set?.addrs s2))
+= let pointers = TSet.union (Set?.pointers s1) (Set?.pointers s2) in
+  let union (addrs1:set_addrs_t (Set?.pointers s1)) (addrs2:set_addrs_t (Set?.pointers s2))
+    : set_addrs_t pointers
+    = Set.union addrs1 addrs2
+  in
+  Set pointers (Ghost.elift2 union (Set?.addrs s1) (Set?.addrs s2))
 
 abstract let set_amem_union
   (x: apointer)
