@@ -60,3 +60,4 @@ val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 val normalize_with_primitive_steps : list<primitive_step> -> list<step> -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string
+val elim_uvars: Env.env -> sigelt -> sigelt

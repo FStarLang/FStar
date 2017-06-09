@@ -1326,6 +1326,7 @@ let tc_decls env ses =
     FStar.Syntax.Unionfind.reset();
 
     let ses', ses_elaborated = tc_decl env se in
+    let ses' = ses' |> List.map (N.elim_uvars env) in
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"

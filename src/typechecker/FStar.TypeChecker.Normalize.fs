@@ -1763,3 +1763,143 @@ let eta_expand (env:Env.env) (t:term) : term =
         let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
         eta_expand_with_type env t ty
       end
+
+//////////////////////////////////////////////////////////////////
+//Eliminating all unification variables in a sigelt
+//////////////////////////////////////////////////////////////////
+let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
+    let t =
+      match binders, tc with
+      | [], Inl t -> t
+      | [], Inr c -> failwith "Impossible: empty bindes with a comp"
+      | _ , Inr c -> S.mk (Tm_arrow(binders, c)) None c.pos
+      | _ , Inl t -> S.mk (Tm_arrow(binders, S.mk_Total t)) None t.pos
+    in
+    let univ_names, t = Subst.open_univ_vars univ_names t in
+    let t = reduce_uvar_solutions env t in
+    let t = Subst.close_univ_vars univ_names t in
+    let binders, tc =
+        match binders with
+        | [] -> [], Inl t
+        | _ -> begin
+          match (SS.compress t).n, tc with
+          | Tm_arrow(binders, c), Inr _ -> binders, Inr c
+          | Tm_arrow(binders, c), Inl _ -> binders, Inl (Util.comp_result c)
+          | _,                    Inl _ -> [], Inl t
+          | _ -> failwith "Impossible"
+          end
+    in
+    univ_names, binders, tc
+
+let elim_uvars_aux_t env univ_names binders t =
+   let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inl t) in
+   univ_names, binders, BU.left tc
+
+let elim_uvars_aux_c env univ_names binders c =
+   let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
+   univ_names, binders, BU.right tc
+
+let rec elim_uvars (env:Env.env) (s:sigelt) =
+    match s.sigel with
+    | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
+      let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
+      {s with sigel = Sig_inductive_typ(lid, univ_names, binders, typ, lids, lids')}
+
+    | Sig_bundle (sigs, lids) ->
+      {s with sigel = Sig_bundle(List.map (elim_uvars env) sigs, lids)}
+
+    | Sig_datacon (lid, univ_names, typ, lident, i, lids) ->
+      let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
+      {s with sigel = Sig_datacon(lid, univ_names, typ, lident, i, lids)}
+
+    | Sig_declare_typ (lid, univ_names, typ) ->
+      let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
+      {s with sigel = Sig_declare_typ(lid, univ_names, typ)}
+
+    | Sig_let((b, lbs), lids, attrs) ->
+      let lbs = lbs |> List.map (fun lb ->
+        let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
+        let elim t = Subst.close_univ_vars lbunivs (reduce_uvar_solutions env (Subst.subst opening t)) in
+        let lbtyp = elim lb.lbtyp in
+        let lbdef = elim lb.lbdef in
+        {lb with lbunivs = lbunivs;
+                 lbtyp   = lbtyp;
+                 lbdef   = lbdef})
+      in
+      {s with sigel = Sig_let((b, lbs), lids, attrs)}
+
+    | Sig_main t ->
+      {s with sigel = Sig_main (reduce_uvar_solutions env t)}
+
+    | Sig_assume (l, t) ->
+      {s with sigel = Sig_assume (l, reduce_uvar_solutions env t)}
+
+    | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
+
+    | Sig_new_effect ed ->
+      let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      let n = List.length univs in
+      let elim_tscheme (us, t) =
+        printfn "Elim_tscheme with binders=%s, tscheme=%s"
+            (Print.binders_to_string ", " binders)
+            (Print.tscheme_to_string (us, t));
+        let us', _, t = elim_uvars_aux_t env (univs@us) binders t in
+        let us = BU.nth_tail n us' in
+        us, t
+      in
+      let elim_term t =
+        let _, _, t = elim_uvars_aux_t env univs binders t in
+        t
+      in
+      let elim_action a =
+        let action_typ_templ = S.mk (Tm_ascribed(a.action_defn, (Inl a.action_typ, None), None)) None a.action_defn.pos in
+        let destruct_action_typ_templ t =
+            match (SS.compress t).n with
+            | Tm_ascribed(defn, (Inl typ, None), None) -> defn, typ
+            | _ -> failwith "Impossible"
+        in
+        let u_action_univs, b_action_params, res =
+            elim_uvars_aux_t env (univs@a.action_univs) (binders@a.action_params) action_typ_templ in
+        let action_univs = BU.nth_tail n u_action_univs in
+        let action_params = BU.nth_tail (List.length binders) b_action_params in
+        let action_defn, action_typ = destruct_action_typ_templ res in
+        {a with action_univs = action_univs;
+                action_params = action_params;
+                action_defn = action_defn;
+                action_typ = action_typ}
+      in
+      let ed = { ed with
+               univs        = univs;
+               binders      = binders;
+               signature    = signature;
+               ret_wp       = elim_tscheme ed.ret_wp;
+               if_then_else = elim_tscheme ed.if_then_else;
+               ite_wp       = elim_tscheme ed.ite_wp;
+               stronger     = elim_tscheme ed.stronger;
+               close_wp     = elim_tscheme ed.close_wp;
+               assert_p     = elim_tscheme ed.assert_p;
+               bind_wp      = elim_tscheme ed.bind_wp;
+               assume_p     = elim_tscheme ed.assume_p;
+               null_wp      = elim_tscheme ed.null_wp;
+               trivial      = elim_tscheme ed.trivial;
+               repr         = elim_term    ed.repr;
+               return_repr  = elim_tscheme ed.return_repr;
+               bind_repr    = elim_tscheme ed.bind_repr;
+               actions       = List.map elim_action ed.actions } in
+      {s with sigel=Sig_new_effect ed}
+
+    | Sig_sub_effect sub_eff ->
+      let elim_tscheme_opt = function
+        | None -> None
+        | Some (us, t) -> let us, _, t = elim_uvars_aux_t env us [] t in Some (us, t)
+      in
+      let sub_eff = {sub_eff with lift    = elim_tscheme_opt sub_eff.lift;
+                                  lift_wp = elim_tscheme_opt sub_eff.lift_wp} in
+      {s with sigel=Sig_sub_effect sub_eff}
+
+    | Sig_effect_abbrev(lid, univ_names, binders, comp, flags) ->
+      let univ_names, binders, comp = elim_uvars_aux_c env univ_names binders comp in
+      {s with sigel = Sig_effect_abbrev (lid, univ_names, binders, comp, flags)}
+
+    | Sig_pragma _ ->
+      s
