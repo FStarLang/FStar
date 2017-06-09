@@ -4394,7 +4394,9 @@ let eta_expand:
                                    FStar_TypeChecker_Env.qname_and_index =
                                      (uu___204_10963.FStar_TypeChecker_Env.qname_and_index);
                                    FStar_TypeChecker_Env.proof_ns =
-                                     (uu___204_10963.FStar_TypeChecker_Env.proof_ns)
+                                     (uu___204_10963.FStar_TypeChecker_Env.proof_ns);
+                                   FStar_TypeChecker_Env.synth =
+                                     (uu___204_10963.FStar_TypeChecker_Env.synth)
                                  }) t in
                             match uu____10959 with
                             | (uu____10964,ty,uu____10966) ->
@@ -4450,7 +4452,9 @@ let eta_expand:
                            FStar_TypeChecker_Env.qname_and_index =
                              (uu___205_10972.FStar_TypeChecker_Env.qname_and_index);
                            FStar_TypeChecker_Env.proof_ns =
-                             (uu___205_10972.FStar_TypeChecker_Env.proof_ns)
+                             (uu___205_10972.FStar_TypeChecker_Env.proof_ns);
+                           FStar_TypeChecker_Env.synth =
+                             (uu___205_10972.FStar_TypeChecker_Env.synth)
                          }) t in
                     (match uu____10968 with
                      | (uu____10973,ty,uu____10975) ->

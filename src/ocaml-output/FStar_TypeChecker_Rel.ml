@@ -7548,7 +7548,9 @@ let resolve_implicits:
                                FStar_TypeChecker_Env.qname_and_index =
                                  (uu___185_15237.FStar_TypeChecker_Env.qname_and_index);
                                FStar_TypeChecker_Env.proof_ns =
-                                 (uu___185_15237.FStar_TypeChecker_Env.proof_ns)
+                                 (uu___185_15237.FStar_TypeChecker_Env.proof_ns);
+                               FStar_TypeChecker_Env.synth =
+                                 (uu___185_15237.FStar_TypeChecker_Env.synth)
                              }) tm1 in
                         match uu____15233 with
                         | (uu____15238,uu____15239,g1) ->

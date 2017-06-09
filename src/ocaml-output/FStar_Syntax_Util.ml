@@ -2629,3 +2629,11 @@ let rec sizeof: FStar_Syntax_Syntax.term -> Prims.int =
             (Prims.parse_int "0") args in
         uu____7417 + uu____7418
     | uu____7428 -> Prims.parse_int "1"
+let is_synth_by_tactic: FStar_Syntax_Syntax.term -> Prims.bool =
+  fun t  ->
+    let uu____7432 =
+      let uu____7433 = un_uinst t in uu____7433.FStar_Syntax_Syntax.n in
+    match uu____7432 with
+    | FStar_Syntax_Syntax.Tm_fvar fv ->
+        FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.synth_lid
+    | uu____7437 -> false

@@ -62,7 +62,9 @@ let set_hint_correlator:
             FStar_TypeChecker_Env.qname_and_index =
               (Some (lid, (Prims.parse_int "0")));
             FStar_TypeChecker_Env.proof_ns =
-              (uu___90_12.FStar_TypeChecker_Env.proof_ns)
+              (uu___90_12.FStar_TypeChecker_Env.proof_ns);
+            FStar_TypeChecker_Env.synth =
+              (uu___90_12.FStar_TypeChecker_Env.synth)
           }
       | None  ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se in
@@ -126,7 +128,9 @@ let set_hint_correlator:
             FStar_TypeChecker_Env.qname_and_index =
               (Some (lid, (Prims.parse_int "0")));
             FStar_TypeChecker_Env.proof_ns =
-              (uu___91_24.FStar_TypeChecker_Env.proof_ns)
+              (uu___91_24.FStar_TypeChecker_Env.proof_ns);
+            FStar_TypeChecker_Env.synth =
+              (uu___91_24.FStar_TypeChecker_Env.synth)
           }
 let log: FStar_TypeChecker_Env.env -> Prims.bool =
   fun env  ->
@@ -997,7 +1001,9 @@ let rec tc_eff_decl:
                                                   (uu___95_965.FStar_TypeChecker_Env.qname_and_index);
                                                 FStar_TypeChecker_Env.proof_ns
                                                   =
-                                                  (uu___95_965.FStar_TypeChecker_Env.proof_ns)
+                                                  (uu___95_965.FStar_TypeChecker_Env.proof_ns);
+                                                FStar_TypeChecker_Env.synth =
+                                                  (uu___95_965.FStar_TypeChecker_Env.synth)
                                               } in
                                             let br =
                                               check_and_gen' env3
@@ -1145,7 +1151,9 @@ let rec tc_eff_decl:
                                                =
                                                (uu___96_1057.FStar_TypeChecker_Env.qname_and_index);
                                              FStar_TypeChecker_Env.proof_ns =
-                                               (uu___96_1057.FStar_TypeChecker_Env.proof_ns)
+                                               (uu___96_1057.FStar_TypeChecker_Env.proof_ns);
+                                             FStar_TypeChecker_Env.synth =
+                                               (uu___96_1057.FStar_TypeChecker_Env.synth)
                                            } in
                                          ((let uu____1059 =
                                              FStar_TypeChecker_Env.debug env1
@@ -3303,7 +3311,9 @@ and tc_decl:
                               FStar_TypeChecker_Env.qname_and_index =
                                 (uu___107_3392.FStar_TypeChecker_Env.qname_and_index);
                               FStar_TypeChecker_Env.proof_ns =
-                                (uu___107_3392.FStar_TypeChecker_Env.proof_ns)
+                                (uu___107_3392.FStar_TypeChecker_Env.proof_ns);
+                              FStar_TypeChecker_Env.synth =
+                                (uu___107_3392.FStar_TypeChecker_Env.synth)
                             } in
                           let lift1 =
                             match lift with
@@ -3766,7 +3776,9 @@ and tc_decl:
                          FStar_TypeChecker_Env.qname_and_index =
                            (uu___113_4055.FStar_TypeChecker_Env.qname_and_index);
                          FStar_TypeChecker_Env.proof_ns =
-                           (uu___113_4055.FStar_TypeChecker_Env.proof_ns)
+                           (uu___113_4055.FStar_TypeChecker_Env.proof_ns);
+                         FStar_TypeChecker_Env.synth =
+                           (uu___113_4055.FStar_TypeChecker_Env.synth)
                        }) e in
                   match uu____4051 with
                   | ({
@@ -4123,7 +4135,9 @@ let add_sigelt_to_env:
                          (uu___119_4557.FStar_TypeChecker_Env.use_bv_sorts);
                        FStar_TypeChecker_Env.qname_and_index =
                          (uu___119_4557.FStar_TypeChecker_Env.qname_and_index);
-                       FStar_TypeChecker_Env.proof_ns = proof_ns
+                       FStar_TypeChecker_Env.proof_ns = proof_ns;
+                       FStar_TypeChecker_Env.synth =
+                         (uu___119_4557.FStar_TypeChecker_Env.synth)
                      }
                  | None  -> env))
            | uu____4559 -> env)
@@ -4305,7 +4319,9 @@ let tc_partial_modul:
            FStar_TypeChecker_Env.qname_and_index =
              (uu___120_4828.FStar_TypeChecker_Env.qname_and_index);
            FStar_TypeChecker_Env.proof_ns =
-             (uu___120_4828.FStar_TypeChecker_Env.proof_ns)
+             (uu___120_4828.FStar_TypeChecker_Env.proof_ns);
+           FStar_TypeChecker_Env.synth =
+             (uu___120_4828.FStar_TypeChecker_Env.synth)
          } in
        (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.push msg;
        (let env2 =
@@ -4408,7 +4424,9 @@ let check_exports:
             FStar_TypeChecker_Env.qname_and_index =
               (uu___123_4897.FStar_TypeChecker_Env.qname_and_index);
             FStar_TypeChecker_Env.proof_ns =
-              (uu___123_4897.FStar_TypeChecker_Env.proof_ns)
+              (uu___123_4897.FStar_TypeChecker_Env.proof_ns);
+            FStar_TypeChecker_Env.synth =
+              (uu___123_4897.FStar_TypeChecker_Env.synth)
           } in
         let check_term lid univs1 t =
           let uu____4908 = FStar_Syntax_Subst.open_univ_vars univs1 t in
@@ -4655,7 +4673,9 @@ let check_module:
            FStar_TypeChecker_Env.qname_and_index =
              (uu___125_5130.FStar_TypeChecker_Env.qname_and_index);
            FStar_TypeChecker_Env.proof_ns =
-             (uu___125_5130.FStar_TypeChecker_Env.proof_ns)
+             (uu___125_5130.FStar_TypeChecker_Env.proof_ns);
+           FStar_TypeChecker_Env.synth =
+             (uu___125_5130.FStar_TypeChecker_Env.synth)
          } in
        let uu____5133 = tc_modul env1 m in
        match uu____5133 with
