@@ -76,6 +76,13 @@ let __by_tactic (t:__tac 'a) (p:Type) : Type = p
 
 unfold let by_tactic (t : tactic 'a) (p:Type) : Type = __by_tactic (reify_tactic t) p
 
+// This will run the tactic in order to (try to) produce a term of type t
+// It should not lead to any inconsistency, as any time this term appears
+// during typechecking, it is forced to be fully applied and the tactic
+// is run. A failure of the tactic is a typechecking failure.
+// TODO: `a` is really fixed to unit for now. Make it consistent
+assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> tactic a -> Tot t
+
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
 #reset-options "--no_tactics"

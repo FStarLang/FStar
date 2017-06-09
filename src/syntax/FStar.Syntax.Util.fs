@@ -1361,3 +1361,8 @@ let rec sizeof (t:term) : int =
     | Tm_app (hd, args) -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
     // TODO: obviously want much more
     | _ -> 1
+
+let is_synth_by_tactic t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv SC.synth_lid
+    | _ -> false

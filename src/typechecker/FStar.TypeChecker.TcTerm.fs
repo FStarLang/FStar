@@ -455,6 +455,17 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         e, c, Rel.conj_guard g' g
     end
 
+  | Tm_app(head, [(tau, _)]) when U.is_synth_by_tactic head ->
+    begin match env.expected_typ with
+    | Some typ -> tc_synth env typ tau
+    | None ->
+        raise (Error("synth_by_tactic: need a type annotation when no expected type is present", Env.get_range env))
+    end
+
+  | Tm_app(head, [(a, _); (tau, _)])
+  | Tm_app(head, [(a, _); _; (tau, _)]) when U.is_synth_by_tactic head ->
+    tc_synth env a tau
+
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
@@ -569,6 +580,27 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
+
+and tc_synth env typ tau =
+    let env', _ = Env.clear_expected_typ env in
+
+    // Check the result type
+    let typ, _, g1 = tc_term env' typ in
+    Rel.force_trivial_guard env' g1;
+
+    // Check the tactic (TODO: actually check against `tactic unit`, this is just asserting it has a type)
+    let tau, c, g2 = tc_term env' tau in
+    Rel.force_trivial_guard env' g2;
+
+    if Env.debug env <| Options.Other "Tac" then
+        BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
+    let t = env.synth env' typ tau in
+    if Env.debug env <| Options.Other "Tac" then
+        BU.print1 "Got %s\n" (Print.term_to_string t);
+
+    // TODO: fix, this gives a crappy error
+    TcUtil.check_uvars tau.pos t;
+    tc_term env t
 
 and tc_tactic_opt env topt =
     match topt with

@@ -24,6 +24,8 @@ open FStar.Reflection.Interpreter
 
 let tacdbg = BU.mk_ref false
 
+let t_unit = FStar.TypeChecker.Common.t_unit
+
 let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (nm:Ident.lid) (args:args) : option<term> =
  (*  We have: t () embedded_state
      The idea is to:
@@ -93,7 +95,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
-    let t_unit = FStar.TypeChecker.Common.t_unit in
     let mktac0 (name : string) (f : tac<'a>) (e_a : 'a -> term) (ta : typ) : N.primitive_step =
         mk name 1 (mk_tactic_interpretation_0 ps f e_a ta)
     in
@@ -284,3 +285,24 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                  (n+1, (g.context, gt')::gs)) s gs in
     let (_, gs) = s in
     (env, t') :: gs
+
+let reify_tactic (a : term) : term =
+    let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv SC.reify_tactic_lid Delta_equational None)) [U_zero] in
+    mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
+
+let synth (env:Env.env) (typ:typ) (tau:term) : term =
+    let ps = proofstate_of_goal_ty env typ in
+    let w = (List.hd ps.goals).witness in
+    let r = try run (unembed_tactic_0 unembed_unit (reify_tactic tau)) ps
+            with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
+    in
+    begin match r with
+    | Success (_, ps) ->
+        if !tacdbg then
+            BU.print1 "Tactic generated proofterm %s\n"
+                            (Print.term_to_string w);
+        w
+    | Failed (s, ps) ->
+        FStar.Errors.err typ.pos (BU.format1 "user tactic failed: %s" s);
+        failwith "aborting"
+    end
