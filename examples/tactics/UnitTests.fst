@@ -25,8 +25,8 @@ let _ =
     assert_by_tactic trefl (1 == x)
 
 let va1    = assert_by_tactic trefl (1 == 1)
-(* let va2 () = assert_by_tactic trefl (1 == 1) *)
-(* let va3    = fun () -> assert_by_tactic trefl (1 == 1) *)
+let va2 () = assert_by_tactic trefl (1 == 1)
+let va3    = fun () -> assert_by_tactic trefl (1 == 1)
 
 type t =
     | A : t
