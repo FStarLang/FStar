@@ -832,7 +832,8 @@ and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
     TcUtil.check_uvars r phi;
-    { sigel = Sig_assume(lid, phi);
+    let us, phi = TcUtil.generalize_universes env phi in
+    { sigel = Sig_assume(lid, us, phi);
       sigquals = quals;
       sigrng = r;
       sigmeta = default_sigmeta  }
@@ -1079,7 +1080,8 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     let se = { se with sigel = Sig_declare_typ(lid, uvs, t) } in
     [se], []
 
-  | Sig_assume(lid, phi) ->
+  | Sig_assume(lid, us, phi) ->
+    let _, phi = SS.open_univ_vars us phi in
     let se = tc_assume env lid phi se.sigquals r in
     [se], []
 
@@ -1254,7 +1256,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
       List.fold_right for_export_bundle ses ([], hidden)
     else [se], hidden
 
-  | Sig_assume(_, _) ->
+  | Sig_assume(_, _, _) ->
     if is_abstract se.sigquals
     then [], hidden
     else [se], hidden
@@ -1323,11 +1325,11 @@ let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
     if Env.debug env Options.Low
     then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
-    FStar.Syntax.Unionfind.reset();
 
     let ses', ses_elaborated = tc_decl env se in
     let ses' = ses' |> List.map (N.elim_uvars env) in
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
+    FStar.Syntax.Unionfind.reset();
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
     then BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses');

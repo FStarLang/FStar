@@ -341,6 +341,7 @@ type sigelt' =
                        * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
+                       * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
   | Sig_new_effect_for_free of eff_decl

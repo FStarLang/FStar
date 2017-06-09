@@ -1026,7 +1026,7 @@ let resugar_sigelt se : option<A.decl> =
         | _ -> failwith "Should not happen hopefully"
       end
 
-  | Sig_assume (lid, fml) ->
+  | Sig_assume (lid, _, fml) ->
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term fml)))
 
   | Sig_new_effect ed ->

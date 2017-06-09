@@ -2066,7 +2066,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              @ primitive_type_axioms env.tcenv lid tname tsym,
              env
 
-     | Sig_assume(l, f) ->
+     | Sig_assume(l, us, f) ->
+        let _, f = SS.open_univ_vars us f in
         let f, decls = encode_formula f env in
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env

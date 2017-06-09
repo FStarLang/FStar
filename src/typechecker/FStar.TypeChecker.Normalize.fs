@@ -1831,20 +1831,42 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_main t ->
       {s with sigel = Sig_main (reduce_uvar_solutions env t)}
 
-    | Sig_assume (l, t) ->
-      {s with sigel = Sig_assume (l, reduce_uvar_solutions env t)}
+    | Sig_assume (l, us, t) ->
+      let us, _, t = elim_uvars_aux_t env us [] t in
+      {s with sigel = Sig_assume (l, us, t)}
 
     | Sig_new_effect_for_free _ -> failwith "Impossible: should have been desugared already"
 
     | Sig_new_effect ed ->
       let univs, binders, signature = elim_uvars_aux_t env ed.univs ed.binders ed.signature in
+      let univs_opening, univs_closing =
+        let univs_opening, univs = SS.univ_var_opening univs in
+        univs_opening, SS.univ_var_closing univs
+      in
+      let b_opening, b_closing =
+        let binders = SS.open_binders binders in
+        SS.opening_of_binders binders,
+        SS.closing_of_binders binders
+      in
       let n = List.length univs in
+      let n_binders = List.length binders in
       let elim_tscheme (us, t) =
-        printfn "Elim_tscheme with binders=%s, tscheme=%s"
-            (Print.binders_to_string ", " binders)
-            (Print.tscheme_to_string (us, t));
-        let us', _, t = elim_uvars_aux_t env (univs@us) binders t in
-        let us = BU.nth_tail n us' in
+//        printfn "0. elim_tscheme %s" (Print.tscheme_to_string (us, t));
+        let n_us = List.length us in
+        let us, t = SS.open_univ_vars us t in
+//        printfn "1. elim_tscheme %s" (Print.tscheme_to_string (us, t));
+        let b_opening, b_closing =
+            b_opening |> SS.shift_subst n_us,
+            b_closing |> SS.shift_subst n_us in
+        let univs_opening, univs_closing =
+            univs_opening |> SS.shift_subst n_us,
+            univs_closing |> SS.shift_subst n_us in
+//        let opening = univs_opening @ b_opening in
+//        printfn "univs_opening = %A" univs_opening;
+        let t = SS.subst univs_opening (SS.subst b_opening t) in
+//        printfn "2. elim_tscheme opened to %s" (Print.term_to_string t);
+        let _, _, t = elim_uvars_aux_t env [] [] t in
+        let t = SS.subst univs_closing (SS.subst b_closing (SS.close_univ_vars us t)) in
         us, t
       in
       let elim_term t =
@@ -1873,12 +1895,12 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                binders      = binders;
                signature    = signature;
                ret_wp       = elim_tscheme ed.ret_wp;
+               bind_wp      = elim_tscheme ed.bind_wp;
                if_then_else = elim_tscheme ed.if_then_else;
                ite_wp       = elim_tscheme ed.ite_wp;
                stronger     = elim_tscheme ed.stronger;
                close_wp     = elim_tscheme ed.close_wp;
                assert_p     = elim_tscheme ed.assert_p;
-               bind_wp      = elim_tscheme ed.bind_wp;
                assume_p     = elim_tscheme ed.assume_p;
                null_wp      = elim_tscheme ed.null_wp;
                trivial      = elim_tscheme ed.trivial;

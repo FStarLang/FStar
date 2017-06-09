@@ -495,7 +495,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _)
-  | Sig_assume (lid, _) -> [lid]
+  | Sig_assume (lid, _, _) -> [lid]
   | Sig_new_effect_for_free(n)
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
