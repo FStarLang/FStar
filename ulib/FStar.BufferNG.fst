@@ -430,7 +430,7 @@ let write
 = P.write (pointer_of_buffer_cell b i) v
 
 let modifies_1_disjoint_buffer_vs_pointer_live
-  (#t1 t2: Type)
+  (#t1 #t2: Type)
   (b: buffer t1)
   (p: P.pointer t2)
   (h h': HS.mem)
