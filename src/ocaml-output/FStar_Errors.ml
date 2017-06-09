@@ -97,12 +97,12 @@ let default_handler: error_handler =
     | uu____240 -> print_issue e in
   let count_errors uu____244 =
     let uu____245 = FStar_ST.read errs in FStar_List.length uu____245 in
-  let report uu____255 =
+  let report uu____256 =
     let sorted1 =
-      let uu____258 = FStar_ST.read errs in
-      FStar_List.sortWith compare_issues uu____258 in
+      let uu____259 = FStar_ST.read errs in
+      FStar_List.sortWith compare_issues uu____259 in
     FStar_List.iter print_issue sorted1; sorted1 in
-  let clear1 uu____267 = FStar_ST.write errs [] in
+  let clear1 uu____268 = FStar_ST.write errs [] in
   {
     eh_add_one = add_one;
     eh_count_errors = count_errors;
@@ -118,37 +118,37 @@ let mk_issue:
       fun msg  ->
         { issue_message = msg; issue_level = level; issue_range = range }
 let get_err_count: Prims.unit -> Prims.int =
-  fun uu____289  ->
-    let uu____290 =
-      let uu____293 = FStar_ST.read current_handler in
-      uu____293.eh_count_errors in
-    uu____290 ()
+  fun uu____292  ->
+    let uu____293 =
+      let uu____296 = FStar_ST.read current_handler in
+      uu____296.eh_count_errors in
+    uu____293 ()
 let add_one: issue -> Prims.unit =
   fun issue  ->
     FStar_Util.atomically
-      (fun uu____299  ->
-         let uu____300 =
-           let uu____303 = FStar_ST.read current_handler in
-           uu____303.eh_add_one in
-         uu____300 issue)
+      (fun uu____302  ->
+         let uu____303 =
+           let uu____306 = FStar_ST.read current_handler in
+           uu____306.eh_add_one in
+         uu____303 issue)
 let add_many: issue Prims.list -> Prims.unit =
   fun issues  ->
     FStar_Util.atomically
-      (fun uu____311  ->
-         let uu____312 =
-           let uu____315 = FStar_ST.read current_handler in
-           uu____315.eh_add_one in
-         FStar_List.iter uu____312 issues)
+      (fun uu____314  ->
+         let uu____315 =
+           let uu____318 = FStar_ST.read current_handler in
+           uu____318.eh_add_one in
+         FStar_List.iter uu____315 issues)
 let report_all: Prims.unit -> issue Prims.list =
-  fun uu____321  ->
-    let uu____322 =
-      let uu____326 = FStar_ST.read current_handler in uu____326.eh_report in
-    uu____322 ()
+  fun uu____324  ->
+    let uu____325 =
+      let uu____329 = FStar_ST.read current_handler in uu____329.eh_report in
+    uu____325 ()
 let clear: Prims.unit -> Prims.unit =
-  fun uu____331  ->
-    let uu____332 =
-      let uu____335 = FStar_ST.read current_handler in uu____335.eh_clear in
-    uu____332 ()
+  fun uu____334  ->
+    let uu____335 =
+      let uu____338 = FStar_ST.read current_handler in uu____338.eh_clear in
+    uu____335 ()
 let set_handler: error_handler -> Prims.unit =
   fun handler  ->
     let issues = report_all () in
@@ -156,8 +156,8 @@ let set_handler: error_handler -> Prims.unit =
 let diag: FStar_Range.range -> Prims.string -> Prims.unit =
   fun r  ->
     fun msg  ->
-      let uu____353 = FStar_Options.debug_any () in
-      if uu____353 then add_one (mk_issue EInfo (Some r) msg) else ()
+      let uu____356 = FStar_Options.debug_any () in
+      if uu____356 then add_one (mk_issue EInfo (Some r) msg) else ()
 let warn: FStar_Range.range -> Prims.string -> Prims.unit =
   fun r  -> fun msg  -> add_one (mk_issue EWarning (Some r) msg)
 let err: FStar_Range.range -> Prims.string -> Prims.unit =
@@ -170,50 +170,50 @@ type error_message_prefix =
 let message_prefix: error_message_prefix =
   let pfx = FStar_Util.mk_ref None in
   let set_prefix s = FStar_ST.write pfx (Some s) in
-  let clear_prefix uu____430 = FStar_ST.write pfx None in
+  let clear_prefix uu____433 = FStar_ST.write pfx None in
   let append_prefix s =
-    let uu____438 = FStar_ST.read pfx in
-    match uu____438 with
+    let uu____441 = FStar_ST.read pfx in
+    match uu____441 with
     | None  -> s
     | Some p -> Prims.strcat p (Prims.strcat ": " s) in
   { set_prefix; append_prefix; clear_prefix }
 let add_errors: (Prims.string* FStar_Range.range) Prims.list -> Prims.unit =
   fun errs  ->
     FStar_Util.atomically
-      (fun uu____453  ->
+      (fun uu____456  ->
          FStar_List.iter
-           (fun uu____456  ->
-              match uu____456 with
+           (fun uu____459  ->
+              match uu____459 with
               | (msg,r) ->
-                  let uu____461 = message_prefix.append_prefix msg in
-                  err r uu____461) errs)
+                  let uu____464 = message_prefix.append_prefix msg in
+                  err r uu____464) errs)
 let issue_of_exn: Prims.exn -> issue option =
-  fun uu___59_465  ->
-    match uu___59_465 with
+  fun uu___59_468  ->
+    match uu___59_468 with
     | Error (msg,r) ->
-        let uu____469 =
-          let uu____470 = message_prefix.append_prefix msg in
-          mk_issue EError (Some r) uu____470 in
-        Some uu____469
-    | FStar_Util.NYI msg ->
         let uu____472 =
           let uu____473 = message_prefix.append_prefix msg in
-          mk_issue ENotImplemented None uu____473 in
+          mk_issue EError (Some r) uu____473 in
         Some uu____472
-    | Err msg ->
+    | FStar_Util.NYI msg ->
         let uu____475 =
           let uu____476 = message_prefix.append_prefix msg in
-          mk_issue EError None uu____476 in
+          mk_issue ENotImplemented None uu____476 in
         Some uu____475
-    | uu____477 -> None
+    | Err msg ->
+        let uu____478 =
+          let uu____479 = message_prefix.append_prefix msg in
+          mk_issue EError None uu____479 in
+        Some uu____478
+    | uu____480 -> None
 let err_exn: Prims.exn -> Prims.unit =
   fun exn  ->
-    let uu____481 = issue_of_exn exn in
-    match uu____481 with | Some issue -> add_one issue | None  -> raise exn
+    let uu____484 = issue_of_exn exn in
+    match uu____484 with | Some issue -> add_one issue | None  -> raise exn
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___60_486  ->
-    match uu___60_486 with
-    | Error uu____487 -> true
-    | FStar_Util.NYI uu____490 -> true
-    | Err uu____491 -> true
-    | uu____492 -> false
+  fun uu___60_489  ->
+    match uu___60_489 with
+    | Error uu____490 -> true
+    | FStar_Util.NYI uu____493 -> true
+    | Err uu____494 -> true
+    | uu____495 -> false

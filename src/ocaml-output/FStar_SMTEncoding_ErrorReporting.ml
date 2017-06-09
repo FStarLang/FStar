@@ -595,29 +595,29 @@ let detail_errors:
           FStar_Util.print3_error
             "Detailed error report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
             uu____1077 uu____1079 uu____1080 in
-        let print_result uu____1092 =
-          match uu____1092 with
-          | ((uu____1098,msg,r),success) ->
+        let print_result uu____1095 =
+          match uu____1095 with
+          | ((uu____1101,msg,r),success) ->
               if success
               then
-                let uu____1105 = FStar_Range.string_of_range r in
+                let uu____1108 = FStar_Range.string_of_range r in
                 FStar_Util.print1_error
-                  "OK: proof obligation at %s was proven\n" uu____1105
+                  "OK: proof obligation at %s was proven\n" uu____1108
               else FStar_Errors.err r msg in
         let elim labs =
           FStar_All.pipe_right labs
             (FStar_List.map
-               (fun uu____1136  ->
-                  match uu____1136 with
-                  | (l,uu____1143,uu____1144) ->
+               (fun uu____1139  ->
+                  match uu____1139 with
+                  | (l,uu____1146,uu____1147) ->
                       let a =
-                        let uu____1150 =
-                          let uu____1151 =
-                            let uu____1154 = FStar_SMTEncoding_Util.mkFreeV l in
-                            (uu____1154, FStar_SMTEncoding_Util.mkTrue) in
-                          FStar_SMTEncoding_Util.mkEq uu____1151 in
+                        let uu____1153 =
+                          let uu____1154 =
+                            let uu____1157 = FStar_SMTEncoding_Util.mkFreeV l in
+                            (uu____1157, FStar_SMTEncoding_Util.mkTrue) in
+                          FStar_SMTEncoding_Util.mkEq uu____1154 in
                         {
-                          FStar_SMTEncoding_Term.assumption_term = uu____1150;
+                          FStar_SMTEncoding_Term.assumption_term = uu____1153;
                           FStar_SMTEncoding_Term.assumption_caption =
                             (Some "Disabling label");
                           FStar_SMTEncoding_Term.assumption_name =
@@ -629,26 +629,26 @@ let detail_errors:
           match active with
           | [] ->
               let results =
-                let uu____1187 =
+                let uu____1190 =
                   FStar_List.map (fun x  -> (x, true)) eliminated in
-                let uu____1194 = FStar_List.map (fun x  -> (x, false)) errors in
-                FStar_List.append uu____1187 uu____1194 in
+                let uu____1197 = FStar_List.map (fun x  -> (x, false)) errors in
+                FStar_List.append uu____1190 uu____1197 in
               sort_labels results
           | hd1::tl1 ->
-              ((let uu____1207 =
+              ((let uu____1210 =
                   FStar_Util.string_of_int (FStar_List.length active) in
-                FStar_Util.print1 "%s, " uu____1207);
+                FStar_Util.print1 "%s, " uu____1210);
                FStar_SMTEncoding_Z3.refresh ();
-               (let uu____1212 =
-                  let uu____1220 =
+               (let uu____1218 =
+                  let uu____1226 =
                     FStar_All.pipe_left elim
                       (FStar_List.append eliminated
                          (FStar_List.append errors tl1)) in
-                  askZ3 uu____1220 in
-                match uu____1212 with
-                | (result,uu____1235,uu____1236) ->
-                    let uu____1245 = FStar_Util.is_left result in
-                    if uu____1245
+                  askZ3 uu____1226 in
+                match uu____1218 with
+                | (result,uu____1241,uu____1242) ->
+                    let uu____1251 = FStar_Util.is_left result in
+                    if uu____1251
                     then linear_check (hd1 :: eliminated) errors tl1
                     else linear_check eliminated (hd1 :: errors) tl1)) in
         print_banner ();
