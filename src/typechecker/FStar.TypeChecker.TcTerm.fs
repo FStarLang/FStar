@@ -665,6 +665,10 @@ and tc_value env (e:term) : term
     let tc = if Env.should_verify env then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
+  | Tm_uinst({n=Tm_fvar fv}, _)
+  | Tm_fvar fv when S.fv_eq_lid fv SC.synth_lid ->
+    raise (Error ("Badly instantiated synth_by_tactic", Env.get_range env))
+
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
