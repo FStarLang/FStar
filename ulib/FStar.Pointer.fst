@@ -1275,7 +1275,7 @@ abstract let set_singleton
   (#a: Type)
   (x: pointer a)
 : Tot set
-= Set (TSet.singleton (APointer a x)) (Ghost.hide (Set.singleton (as_addr x)))
+= Set (TSet.singleton (APointer a x)) (Ghost.elift1 (Ghost.hide ()) (fun () -> Set.singleton (as_addr x)))
 
 abstract let set_amem_singleton
   (#a: Type)
@@ -1289,7 +1289,7 @@ abstract let set_amem_singleton
 abstract let set_union
   (s1 s2: set)
 : Tot set
-= Set (TSet.union (Set?.pointers s1) (Set?.pointers s2)) (Ghost.hide (Set.union (Ghost.reveal (Set?.addrs s1)) (Ghost.reveal (Set?.addrs s2))))
+= Set (TSet.union (Set?.pointers s1) (Set?.pointers s2)) (Ghost.elift2 Set.union (Set?.addrs s1) (Set?.addrs s2))
 
 abstract let set_amem_union
   (x: apointer)
