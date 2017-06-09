@@ -35,3 +35,4 @@ val get: string -> int -> char
 val collect: (char -> string) -> string -> string
 
 val list_of_string : string -> list<char>
+val string_of_list: list<char> -> string

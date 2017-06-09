@@ -1,5 +1,5 @@
 [
-  "ƒÍ\u0015ûg¦Î›Š°Ï‹ Þ\u0003{",
+  "Žˆj‘¿]ªOÃ­\u001es¡Ê'3",
   [
     [
       "FStar.MRef.alloc",
@@ -7,10 +7,15 @@
       2,
       1,
       [
-        "@query", "equation_FStar.MRef.as_ref",
+        "@MaxIFuel_assumption", "@query", "bool_typing",
+        "equation_FStar.Heap.fresh", "equation_FStar.MRef.as_ref",
         "equation_FStar.MRef.contains", "equation_FStar.MRef.fresh",
         "equation_FStar.MRef.mref", "equation_FStar.MRef.upd",
-        "equation_FStar.ST.ref"
+        "equation_FStar.ST.ref", "lemma_FStar.Heap.lemma_alloc",
+        "lemma_FStar.Heap.lemma_contains_implies_used",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "refinement_interpretation_FStar.MRef_Tm_refine_28803da2dc9d0e5b35a3c9fc92bfae51"
       ],
       0
     ],

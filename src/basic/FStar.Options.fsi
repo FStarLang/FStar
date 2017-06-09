@@ -42,6 +42,9 @@ type options =
     | Reset
     | Restore
 
+val defaults                    : list<(string * option_val)>
+val docs                        : unit -> list<(string * string)>
+
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
@@ -56,7 +59,6 @@ val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
-val check_cardinality           : unit    -> bool
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
@@ -74,17 +76,19 @@ val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
 val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
+val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
+val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool
 val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
-val inline_arith                : unit    -> bool
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
+val legacy_interactive          : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
@@ -102,6 +106,8 @@ val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string
+val pervasives                  : unit    -> string
+val pervasives_basename         : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_fuels                 : unit    -> bool
@@ -111,6 +117,7 @@ val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
 val push                        : unit    -> unit
 val record_hints                : unit    -> bool
+val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
@@ -118,18 +125,25 @@ val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
 val silent                      : unit    -> bool
+val smtencoding_elim_box        : unit -> bool
+val smtencoding_nl_arith_default: unit -> bool
+val smtencoding_nl_arith_wrapped: unit -> bool
+val smtencoding_nl_arith_native : unit -> bool
+val smtencoding_l_arith_default : unit -> bool
+val smtencoding_l_arith_native  : unit -> bool
 val split_cases                 : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
+val ugly                        : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
 val use_tactics                 : unit    -> bool
+val using_facts_from            : unit    -> option<list<string>>
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
-val warn_cardinality            : unit    -> bool
 val warn_default_effects        : unit    -> bool
-val warn_top_level_effects      : unit    -> bool
+val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool

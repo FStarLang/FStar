@@ -40,6 +40,7 @@ let op_Hat_Slash_Hat = PPrint.(^/^)
 
 let nest j doc = PPrint.nest (Z.to_int j) doc
 
+let long_left_arrow = PPrint.string "<--"
 let larrow = PPrint.string "<-"
 let rarrow = PPrint.string "->"
 

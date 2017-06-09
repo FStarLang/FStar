@@ -39,9 +39,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.option_haseq",
-        "haseqNegativeTests.BST_Tm_refine_8b06c75bf6335b4a8412e4f057ce63ff",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.option_haseq",
+        "assumption_Prims.HasEq_int",
+        "haseqNegativeTests.BST_Tm_refine_9f48321d21f76681b2293999125b5267",
         "int_inversion", "kinding_NegativeTests.BST.tree@tok"
       ],
       0
@@ -160,9 +161,10 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.None",
-        "disc_equation_Prims.None", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.None_a"
+        "@query", "constructor_distinct_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.None",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.None_a"
       ],
       0
     ],
@@ -172,11 +174,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "disc_equation_Prims.None",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "projection_inverse_Prims.None_a"
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.None",
+        "constructor_distinct_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.None", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.None_a"
       ],
       0
     ],
@@ -186,8 +190,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.Some",
-        "disc_equation_Prims.None", "int_inversion",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.None", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],

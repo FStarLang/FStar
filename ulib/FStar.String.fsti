@@ -40,5 +40,6 @@ val get: string -> int -> char
 val collect: (char -> string) -> string -> string
 
 val list_of_string : string -> Tot (list char)
+val string_of_list : list char -> Tot string
 
 let string_of_char (c:char) : Tot string = make 1 c

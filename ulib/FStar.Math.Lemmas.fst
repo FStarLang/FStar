@@ -35,6 +35,10 @@ val lemma_mult_lt_right: a:nat -> b:int -> c:int -> Lemma
   (ensures  (b * a <= c * a))
 let lemma_mult_lt_right a b c = ()
 
+let lemma_mult_lt_sqr (n:nat) (m:nat) (k:nat{n < k && m < k})
+  : Lemma (FStar.Mul.(n * m < k * k))
+  = ()
+
 (* Lemma: multiplication is right distributive over addition *)
 val distributivity_add_left: a:int -> b:int -> c:int -> Lemma
   ((a + b) * c = a * c + b * c)
@@ -206,7 +210,7 @@ val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (ensures  (x = z))
 let lemma_eq_trans_2 w x y z = ()
 
-#reset-options "--z3rlimit 40 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 80 --max_fuel 0 --max_ifuel 0"
 
 private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
@@ -452,7 +456,7 @@ let division_sub_lemma a b n =
   multiple_division_lemma n b;
   division_definition (a - n * b) b (a / b - n)
 
-#reset-options "-z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 20 --max_fuel 0 --max_ifuel 0"
 
 (* Lemma: Modulo distributivity *)
 val modulo_distributivity: a:nat -> b:nat -> c:pos ->
@@ -466,7 +470,7 @@ let modulo_distributivity a b c =
   division_addition_lemma (a - (a / c) * c + b - (b / c) * c) c (a / c + b / c)
 
 
-#reset-options "-z3rlimit 20 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
 (* Lemma: Modulo distributivity under special condition *)
 val modulo_addition_lemma: a:nat -> b:pos -> n:nat ->
@@ -550,7 +554,7 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "-z3rlimit 20" //--initial_fuel 1 --max_fuel 1"
+#reset-options "--z3rlimit 40 --max_fuel 0 --max_ifuel 0"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
@@ -563,7 +567,7 @@ let modulo_modulo_lemma a b c =
   cut( a % b = (a - (a / (b * c)) * (b * c)) % b );
   euclidean_division_definition a (b * c)
 
-#reset-options "-z3rlimit 10 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
 val pow2_multiplication_division_lemma_1: a:nat -> b:nat -> c:nat{c >= b} ->
     Lemma ( (a * pow2 c) / pow2 b = a * pow2 (c - b))

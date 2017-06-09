@@ -32,7 +32,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-module Const = FStar.Syntax.Const
+module Const = FStar.Parser.Const
 module BU = FStar.Util
 
 (* In case the user passed [--verify_all], we record every single module name we
@@ -178,9 +178,9 @@ let lowercase_join_longident (l: lident) (last: bool) =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    Util.fprint stderr "Warning: the module declaration \"module %s\" \
+    Util.print2_warning "Warning: the module declaration \"module %s\" \
       found in file %s does not match its filename. Dependencies will be \
-      incorrect.\n" [string_of_lid lid true; filename]
+      incorrect.\n" (string_of_lid lid true) filename
 
 exception Exit
 
@@ -211,8 +211,8 @@ let collect_one
           if let_open then
             raise (Err ("let-open only supported for modules, not namespaces"))
           else
-            Util.fprint stderr "Warning: no modules in namespace %s and no file with \
-              that name either\n" [string_of_lid lid true]
+            Util.print1_warning "Warning: no modules in namespace %s and no file with \
+              that name either\n" (string_of_lid lid true)
         end
     end
   in
@@ -236,7 +236,9 @@ let collect_one
             List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
         | None ->
             if List.length lid.ns > 0 && Options.debug_any() then
-              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
+              Util.print2_warning "%s (Warning): unbound module reference %s\n"
+                                  (Range.string_of_range (range_of_lid lid))
+                                  (string_of_lid lid false)
         end
       in
       // Option.Some x
@@ -247,11 +249,18 @@ let collect_one
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. With universes, there's some copy/pasta in [env.fs] too. *)
+  (*
+   * AR: adding FStar.Pervasives to dependencies
+   * the name auto_open is a bit of misnomer, it only includes the file in the dependencies, and not actually open the namespace
+   * if you want to open a namespace, look in src/tosyntax/FStar.ToSyntax.Env.fs
+   *)
   let auto_open =
     if basename filename = Options.prims_basename () then
       []
     else
-      [ Const.fstar_ns_lid; Const.prims_lid ]
+      let l = [ Const.fstar_ns_lid; Const.prims_lid ] in
+      if basename filename = Options.pervasives_basename () then l
+      else l @ [ Const.pervasives_lid ]
   in
   List.iter (record_open false) auto_open;
 
@@ -267,7 +276,7 @@ let collect_one
     | [ modul ] ->
         collect_module modul
     | modules ->
-        Util.fprint stderr "Warning: file %s does not respect the one module per file convention\n" [ filename ];
+        Util.print1_warning "Warning: file %s does not respect the one module per file convention\n" filename;
         List.iter collect_module modules
 
   and collect_module = function
@@ -388,7 +397,7 @@ let collect_one
     | Const c ->
         collect_constant c
     | Op (s, ts) ->
-        if s = "@" then
+        if Ident.text_of_id s = "@" then
           (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
           collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
         List.iter collect_term ts
@@ -416,6 +425,7 @@ let collect_one
     | LetOpen (lid, t) ->
         record_open true lid;
         collect_term t
+    | Bind(_, t1, t2)
     | Seq (t1, t2) ->
         collect_term t1;
         collect_term t2
@@ -530,19 +540,25 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    * in our dependency graph. *)
   let verify_flags = List.map (fun f -> f, BU.mk_ref false) (Options.verify_module ()) in
 
+  let partial_discovery =
+    not (Options.verify_all () || Options.extract_all ())
+  in
+
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
    * immutable from there on. *)
   let m = build_map filenames in
-  (* Debug. *)
-  (* List.map (fun k ->
-    let p = function
-      | Some x -> Util.format1 "Some %s" x
-      | None -> "None"
-    in
+  let file_names_of_key k =
     let intf, impl = must (smap_try_find m k) in
-    Util.print3 "%s: %s, %s\n" k (p intf) (p impl)
-  ) (smap_keys m); *)
+    match intf, impl with
+    | None, None -> failwith "Impossible"
+    | None, Some i
+    | Some i, None -> i
+    | Some i, _ when partial_discovery -> i
+    | Some i, Some j -> i ^ " && " ^ j
+  in
+  (* Debug. *)
+  //  List.iter (fun k -> BU.print_string (file_names_of_key k)) (smap_keys m);
 
   let collect_one = collect_one verify_flags verify_mode in
 
@@ -557,9 +573,6 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
    *   - M.fsti when **only** M.fsti is given as argument
    *   - both M.fsti and M.fst otherwise (including when both M.fsti and M.fst are passed)
    *)
-  let partial_discovery =
-    not (Options.verify_all () || Options.extract_all ())
-  in
   let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
@@ -601,7 +614,8 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     match color with
     | Gray ->
         Util.print1 "Warning: recursive dependency on module %s\n" key;
-        Util.print1 "The cycle is: %s \n" (String.concat " -> " cycle);
+        let cycle = cycle |> List.map file_names_of_key in
+        Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
         print_graph immediate_graph;
         print_string "\n";
         exit 1
@@ -652,8 +666,12 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     let is_interleaved = List.length as_list = 2 in
     List.map (fun f ->
       let should_append_fsti = is_implementation f && is_interleaved in
-      let suffix = if should_append_fsti then [ f ^ "i" ] else [] in
       let k = lowercase_module_name f in
+      let suffix =
+        // ADL: we want the absolute path of the fsti in the Makefile
+        match must (smap_try_find m k) with
+        | Some intf, _ when should_append_fsti -> [intf]
+        | _ -> [] in
       let deps = List.rev (discover k) in
       let deps_as_filenames = List.collect must_find deps @ suffix in
       (* List stored in the "right" order. *)

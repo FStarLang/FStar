@@ -48,11 +48,11 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
        * universe       (* universe of the constructed type *)
        * guard_t        (* constraints on implicit variables *)
  = match s.sigel with
-   | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data, quals) -> //the only valid qual is Private
+   | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data) -> //the only valid qual is Private
          assert (uvs = []);
  (*open*)let tps, k = SS.open_term tps k in
          let tps, env_tps, guard_params, us = tc_binders env tps in
-         let k = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env k in
+         let k = N.unfold_whnf env k in
          let indices, t = U.arrow_formals k in
          let indices, env', guard_indices, us' = tc_binders env_tps indices in
          let t, guard =
@@ -67,7 +67,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let k = SS.close tps k in
          let fv_tc = S.lid_as_fv tc Delta_constant None in
          Env.push_let_binding env (Inr fv_tc) ([], t_tc),
-         { s with sigel = Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals) },
+         { s with sigel = Sig_inductive_typ(tc, [], tps, k, mutuals, data) },
          u,
          guard
 
@@ -78,14 +78,14 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
 let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
   : sigelt -> sigelt * guard_t =
     fun se -> match se.sigel with
-    | Sig_datacon(c, _uvs, t, tc_lid, ntps, quals, _mutual_tcs) ->
+    | Sig_datacon(c, _uvs, t, tc_lid, ntps, _mutual_tcs) ->
          assert (_uvs = []);
 
          let (env, tps, u_tc) = //u_tc is the universe of the inductive that c constructs
             let tps_u_opt = BU.find_map tcs (fun (se, u_tc) ->
                 if lid_equals tc_lid (must (U.lid_of_sigelt se))
                 then match se.sigel with
-                     | Sig_inductive_typ(_, _, tps, _, _, _, _) ->
+                     | Sig_inductive_typ(_, _, tps, _, _, _) ->
                         let tps = tps |> List.map (fun (x, _) -> (x, Some S.imp_tag)) in
                         let tps = Subst.open_binders tps in
                         Some (Env.push_binders env tps, tps, u_tc)
@@ -98,10 +98,9 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
               then env, [], U_zero
               else raise (Error("Unexpected data constructor", se.sigrng)) in
 
-         let norm_whnf = N.normalize [N.Beta; N.WHNF; N.UnfoldUntil Delta_constant] env in
 
          let arguments, result =
-            let t = norm_whnf t in
+            let t = N.unfold_whnf env t in
             match (SS.compress t).n with
                 | Tm_arrow(bs, res) ->
                   //the type of each datacon is already a function with the type params as arguments
@@ -140,7 +139,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 
 (*close*)let t = U.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
                         //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
-         { se with sigel = Sig_datacon(c, [], t, tc_lid, ntps, quals, []) },
+         { se with sigel = Sig_datacon(c, [], t, tc_lid, ntps, []) },
          g
 
    | _ -> failwith "impossible"
@@ -163,10 +162,10 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
         //and generalize their universes together
         let binders = tcs |> List.map (fun (se, _) ->
             match se.sigel with
-            | Sig_inductive_typ(_, _, tps, k, _, _, _) -> S.null_binder (U.arrow tps <| mk_Total k)
+            | Sig_inductive_typ(_, _, tps, k, _, _) -> S.null_binder (U.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in
         let binders' = datas |> List.map (fun se -> match se.sigel with
-            | Sig_datacon(_, _, t, _, _, _, _) -> S.null_binder t
+            | Sig_datacon(_, _, t, _, _, _) -> S.null_binder t
             | _ -> failwith "Impossible") in
         let t = U.arrow (binders@binders') (S.mk_Total Common.t_unit) in
         if Env.debug env <| Options.Other "GenUniverses"
@@ -184,7 +183,7 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
         let args, _ = U.arrow_formals t in
         let tc_types, data_types = BU.first_N (List.length binders) args in
         let tcs = List.map2 (fun (x, _) (se, _) -> match se.sigel with
-            | Sig_inductive_typ(tc, _, tps, _, mutuals, datas, quals) ->
+            | Sig_inductive_typ(tc, _, tps, _, mutuals, datas) ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
                 | Tm_arrow(binders, c) ->
@@ -196,7 +195,7 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
                   tps, t
                 | _ -> [], ty
               in
-              { se with sigel = Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas, quals) }
+              { se with sigel = Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas) }
             | _ -> failwith "Impossible")
             tc_types tcs
         in
@@ -206,12 +205,12 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
             | [] -> datas
             | _ ->
              let uvs_universes = uvs |> List.map U_name in
-             let tc_insts = tcs |> List.map (function { sigel = Sig_inductive_typ(tc, _, _, _, _, _, _) } -> (tc, uvs_universes) | _ -> failwith "Impossible") in
+             let tc_insts = tcs |> List.map (function { sigel = Sig_inductive_typ(tc, _, _, _, _, _) } -> (tc, uvs_universes) | _ -> failwith "Impossible") in
              List.map2 (fun (t, _) d ->
                 match d.sigel with
-                    | Sig_datacon(l, _, _, tc, ntps, quals, mutuals) ->
+                    | Sig_datacon(l, _, _, tc, ntps, mutuals) ->
                         let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
-                        { d with sigel = Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals) }
+                        { d with sigel = Sig_datacon(l, uvs, ty, tc, ntps, mutuals) }
                     | _ -> failwith "Impossible")
              data_types datas
         in
@@ -432,14 +431,14 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
 let check_positivity (ty:sigelt) (env:env_t) :bool =
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded
   let unfolded_inductives = BU.mk_ref [] in
-  
+
   //ty_bs are the parameters of ty, it does not include the indexes (also indexes are not parameters of data constructor types, inductive type parameters are)
   let ty_lid, ty_us, ty_bs =
     match ty.sigel with
-    | Sig_inductive_typ (lid, us, bs, _, _, _, _) -> lid, us, bs
-    | _                                           -> failwith "Impossible!"
+    | Sig_inductive_typ (lid, us, bs, _, _, _) -> lid, us, bs
+    | _                                        -> failwith "Impossible!"
   in
-  
+
   //open the universe variables, we will use these universe names for data constructors also later on
   let ty_usubst, ty_us = SS.univ_var_opening ty_us in
   //push the universe names in the env
@@ -455,8 +454,8 @@ let check_positivity (ty:sigelt) (env:env_t) :bool =
 
 let datacon_typ (data:sigelt) :term =
   match data.sigel with
-  | Sig_datacon (_, _, t, _, _, _, _) -> t
-  | _                                 -> failwith "Impossible!"
+  | Sig_datacon (_, _, t, _, _, _) -> t
+  | _                              -> failwith "Impossible!"
 
 //soundness condition for this data constructor
 //usubst is the universe substitution, and bs are the opened inductive type parameters
@@ -499,8 +498,8 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
 let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>) (us:list<univ_name>) acc ty =
   let lid, bs, t, d_lids =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _) -> lid, bs, t, d_lids
-    | _                                               -> failwith "Impossible!"
+    | Sig_inductive_typ (lid, _, bs, t, _, d_lids) -> lid, bs, t, d_lids
+    | _                                            -> failwith "Impossible!"
   in
 
   //apply usubt to bs
@@ -565,8 +564,8 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   //get the data constructors for this type
   let t_datas = List.filter (fun s ->
     match s.sigel with
-    | Sig_datacon (_, _, _, t_lid, _, _, _) -> t_lid = lid
-    | _                                     -> failwith "Impossible"
+    | Sig_datacon (_, _, _, t_lid, _, _) -> t_lid = lid
+    | _                                  -> failwith "Impossible"
   ) all_datas_in_the_bundle in
 
 
@@ -582,8 +581,8 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<sig
   let us =
     let ty = List.hd tcs in
     match ty.sigel with
-    | Sig_inductive_typ (_, us, _, _, _, _, _) -> us
-    | _                                        -> failwith "Impossible!"
+    | Sig_inductive_typ (_, us, _, _, _, _) -> us
+    | _                                     -> failwith "Impossible!"
   in
   let usubst, us = SS.univ_var_opening us in
 
@@ -671,8 +670,8 @@ let unoptimized_haseq_data (usubst:list<subst_elt>) (bs:binders) (haseq_ind:term
 let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<lident>) (usubst:list<subst_elt>) (us:list<univ_name>) (acc:term) (ty:sigelt) =
   let lid, bs, t, d_lids =
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, bs, t, _, d_lids, _) -> lid, bs, t, d_lids
-    | _                                               -> failwith "Impossible!"
+    | Sig_inductive_typ (lid, _, bs, t, _, d_lids) -> lid, bs, t, d_lids
+    | _                                            -> failwith "Impossible!"
   in
 
   //apply usubt to bs
@@ -702,8 +701,8 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //filter out data constructors for this type constructor
   let t_datas = List.filter (fun s ->
     match s.sigel with
-    | Sig_datacon (_, _, _, t_lid, _, _, _) -> t_lid = lid
-    | _                                     -> failwith "Impossible"
+    | Sig_datacon (_, _, _, t_lid, _, _) -> t_lid = lid
+    | _                                  -> failwith "Impossible"
   ) all_datas_in_the_bundle in
 
   //fold over t_datas
@@ -729,16 +728,16 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list<sigelt>) (datas:list<s
   //TODO: perhaps make it a map ?
   let mutuals = List.map (fun ty ->
     match ty.sigel with
-    | Sig_inductive_typ (lid, _, _, _, _, _, _) -> lid
-    | _                                         -> failwith "Impossible!") tcs
+    | Sig_inductive_typ (lid, _, _, _, _, _) -> lid
+    | _                                      -> failwith "Impossible!") tcs
   in
 
 
   let lid, us =
     let ty = List.hd tcs in
     match ty.sigel with
-    | Sig_inductive_typ (lid, us, _, _, _, _, _) -> lid, us
-    | _                                        -> failwith "Impossible!"
+    | Sig_inductive_typ (lid, us, _, _, _, _) -> lid, us
+    | _                                       -> failwith "Impossible!"
   in
   let usubst, us = SS.univ_var_opening us in
 
@@ -843,5 +842,8 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   (* Generalize their universes *)
   let tcs, datas = generalize_and_inst_within env0 g tcs datas in
 
-  let sig_bndle = { sigel = Sig_bundle(tcs@datas, quals, lids); sigrng = Env.get_range env0 } in
+  let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
+                    sigquals = quals;
+                    sigrng = Env.get_range env0;
+                    sigmeta = default_sigmeta  } in
   sig_bndle, tcs, datas

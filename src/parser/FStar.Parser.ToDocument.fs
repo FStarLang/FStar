@@ -1,17 +1,17 @@
 ﻿(*
-   Copyright 2016 Microsoft Research
+  Copyright 2016 Microsoft Research
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 *)
 #light "off"
 
@@ -31,7 +31,7 @@ open FStar.Const
 open FStar.Pprint
 open FStar.Range
 
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 module BU = FStar.Util
 
 
@@ -99,20 +99,20 @@ let break1 =
   [(f l[0]) sep (f l[1]) ... sep (f l[n])]
   and the following non flat layout
   [(f l[0]) sep
-   (f l[1]) sep
-   ...
-   (f l[n])]
+  (f l[1]) sep
+  ...
+  (f l[n])]
 *)
 let separate_break_map sep f l =
     group (separate_map (space ^^ sep ^^ break1) f l)
 
 (* [precede_break_separate_map prec sep f l] has the flat layout
 
-   [prec (f l[0]) sep (f l[1]) ... sep (f l[n])]
+  [prec (f l[0]) sep (f l[1]) ... sep (f l[n])]
 
-   and the following non flat layout
+  and the following non flat layout
 
-   [prec (f l[0])
+  [prec (f l[0])
     sep (f l[1])
     ...
     sep (f l[n])]
@@ -172,8 +172,8 @@ let matches_var t x =
         | Var y -> x.idText = text_of_lid y
         | _ -> false
 
-let is_tuple_constructor = FStar.Syntax.Util.is_tuple_data_lid'
-let is_dtuple_constructor = FStar.Syntax.Util.is_dtuple_data_lid'
+let is_tuple_constructor = C.is_tuple_data_lid'
+let is_dtuple_constructor = C.is_dtuple_data_lid'
 
 let is_list_structure cons_lid nil_lid =
   let rec aux e = match (unparen e).tm with
@@ -220,7 +220,9 @@ let is_general_construction e =
   not (is_list e || is_lex_list e)
 
 let is_general_prefix_op op =
-    op <> "~"
+  let op_starting_char =  char_at (Ident.text_of_id op) 0 in
+  op_starting_char = '!' || op_starting_char = '?' ||
+  (op_starting_char = '~' && Ident.text_of_id op <> "~")
 
 (* might already exist somewhere *)
 let head_and_args e =
@@ -310,7 +312,7 @@ let max_level l =
     match List.tryFind (fun (_, tokens) -> tokens = snd level) level_table with
       | Some ((_,l,_), _) -> max n l
       | None -> failwith (Util.format1 "Undefined associativity level %s"
-                                       (String.concat "," (List.map token_to_string (snd level))))
+                                      (String.concat "," (List.map token_to_string (snd level))))
   in List.fold_left find_level_and_max 0 l
 
 let levels = assign_levels level_associativity_spec
@@ -318,22 +320,31 @@ let levels = assign_levels level_associativity_spec
 let operatorInfix0ad12 = [opinfix0a ; opinfix0b ; opinfix0c ; opinfix0d ; opinfix1 ; opinfix2 ]
 
 let is_operatorInfix0ad12 =
-    fun op -> List.tryFind (matches_level op) operatorInfix0ad12 <> None
+    fun op -> List.tryFind (matches_level <| Ident.text_of_id op) operatorInfix0ad12 <> None
 
 let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
-    fun op -> List.tryFind (matches_level op) opinfix34 <> None
+    fun op -> List.tryFind (matches_level <| Ident.text_of_id op) opinfix34 <> None
 
+let handleable_args_length (op:ident) =
+  let op_s = Ident.text_of_id op in
+  if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
+  else if (is_operatorInfix0ad12 op ||
+    is_operatorInfix34 op ||
+    List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"])
+  then 2
+  else if (List.mem op_s [".()<-" ; ".[]<-"]) then 3
+  else 0
 
 let handleable_op op args =
   match List.length args with
   | 0 -> true
-  | 1 -> is_general_prefix_op op || List.mem op [ "-" ; "~" ]
+  | 1 -> is_general_prefix_op op || List.mem (Ident.text_of_id op) [ "-" ; "~" ]
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem op ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
-  | 3 -> List.mem op [".()<-" ; ".[]<-"]
+    List.mem (Ident.text_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
+  | 3 -> List.mem (Ident.text_of_id op) [".()<-" ; ".[]<-"]
   | _ -> false
 
 (* ****************************************************************************)
@@ -389,8 +400,8 @@ let with_comment printer tm tmrange =
         let pos = end_of_range tmrange in
         fst (comments_before_pos comments pos pos)
       else comments
-   in
-   group (comments ^^ printed_e)
+  in
+  group (comments ^^ printed_e)
 
 (* [place_comments_until_pos k lbegin pos doc] appends to doc all the comments present in *)
 (* [comment_stack] whose range is before pos and separate each comments by as much lines *)
@@ -717,7 +728,7 @@ and p_atomicPattern p = match p.pat with
     assert (arg_qualifier_opt = None) ;
     p_tvar tv
   | PatOp op ->
-    lparen ^^ space ^^ str op ^^ space ^^ rparen
+    lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
   | PatWild ->
     underscore
   | PatConst c ->
@@ -811,6 +822,8 @@ and p_lidentOrUnderscore id =
 and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
+  | Bind(x, e1, e2) ->
+      group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
@@ -821,11 +834,11 @@ and p_noSeqTerm' e = match (unparen e).tm with
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
   | Ascribed (e, t, Some tac) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t ^/^ str "by" ^/^ p_typ tac)
-  | Op (op, [ e1; e2; e3 ]) when op = ".()<-" ->
+  | Op ({idText = ".()<-"}, [ e1; e2; e3 ]) ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm e3))
-  | Op (op, [ e1; e2; e3 ]) when op = ".[]<-" ->
+  | Op ({idText = ".[]<-"}, [ e1; e2; e3 ]) ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTerm e3))
@@ -846,13 +859,13 @@ and p_noSeqTerm' e = match (unparen e).tm with
                   | If (_,_,e3) when is_unit e3 ->
                       soft_parens_with_nesting (p_noSeqTerm e2)
                   | _ -> p_noSeqTerm e2
-           in group (
-               (str "if" ^/+^ p_noSeqTerm e1) ^/^
-               (str "then" ^/+^ e2_doc) ^/^
-               (str "else" ^/+^ p_noSeqTerm e3))
+          in group (
+              (str "if" ^/+^ p_noSeqTerm e1) ^/^
+              (str "then" ^/+^ e2_doc) ^/^
+              (str "else" ^/+^ p_noSeqTerm e3))
   | TryWith(e, branches) ->
       group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^
-             separate_map hardline p_patternBranch branches)
+            separate_map hardline p_patternBranch branches)
   | Match (e, branches) ->
       group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
@@ -862,7 +875,7 @@ and p_noSeqTerm' e = match (unparen e).tm with
     group (precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in") ^/^
       p_term e
   | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
-     group (str "function" ^/^ separate_map hardline p_patternBranch branches)
+    group (str "function" ^/^ separate_map hardline p_patternBranch branches)
   | Assign (id, e) ->
       group (p_lident id ^/^ larrow ^/^ p_noSeqTerm e)
   | _ -> p_typ e
@@ -921,11 +934,11 @@ and p_maybeWhen = function
     | Some e -> str "when" ^/+^ p_tmFormula e ^^ space  (*always immediately followed by an arrow*)
 
 and p_tmIff e = match (unparen e).tm with
-    | Op("<==>", [e1;e2]) -> infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
+    | Op({idText = "<==>"}, [e1;e2]) -> infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match (unparen e).tm with
-    | Op("==>", [e1;e2]) -> infix0 (str "==>") (p_tmArrow p_tmFormula e1) (p_tmImplies e2)
+    | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow p_tmFormula e1) (p_tmImplies e2)
     | _ -> p_tmArrow p_tmFormula e
 
 and p_tmArrow p_Tm e = match (unparen e).tm with
@@ -934,12 +947,12 @@ and p_tmArrow p_Tm e = match (unparen e).tm with
   | _ -> p_Tm e
 
 and p_tmFormula e = match (unparen e).tm with
-  | Op("\\/", [e1;e2]) ->
+  | Op({idText = "\\/"}, [e1;e2]) ->
       infix0 (str "\\/") (p_tmFormula e1) (p_tmConjunction e2)
   | _ -> p_tmConjunction e
 
 and p_tmConjunction e = match (unparen e).tm with
-  | Op("/\\", [e1;e2]) ->
+  | Op({idText = "/\\"}, [e1;e2]) ->
       infix0 (str "/\\") (p_tmConjunction e1) (p_tmTuple e2)
   | _ -> p_tmTuple e
 
@@ -963,16 +976,20 @@ and p_tmEq e =
 
 and p_tmEq' curr e = match (unparen e).tm with
     (* We don't have any information to print `infix` aplication *)
-  | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || op = "=" || op = "|>" ->
+  | Op (op, [ e1; e2]) when is_operatorInfix0ad12 op || Ident.text_of_id op = "=" || Ident.text_of_id op = "|>" ->
+      let op = Ident.text_of_id op in
       let left, mine, right = levels op in
-      paren_if curr mine (infix0 (str op) (p_tmEq' left e1) (p_tmEq' right e2))
-  | Op (":=", [ e1; e2 ]) ->
+      paren_if curr mine (infix0 (str <| op) (p_tmEq' left e1) (p_tmEq' right e2))
+  | Op ({idText = ":="}, [ e1; e2 ]) ->
       group (p_tmEq e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEq e2)
+  | Op({idText = "-"}, [e]) ->
+      let left, mine, right = levels "-" in
+      minus ^/^ p_tmEq' mine e
   | _ -> p_tmNoEq e
 
 and p_tmNoEq e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
-  let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in (* minus is not a level *)
+  let n = max_level [colon_colon ; amp ; opinfix3 ; opinfix4] in
   p_tmNoEq' n e
 
 and p_tmNoEq' curr e = match (unparen e).tm with
@@ -983,14 +1000,12 @@ and p_tmNoEq' curr e = match (unparen e).tm with
   | Sum(binders, res) ->
       let op = "&" in
       let left, mine, right = levels op in
-      let p_dsumfst b = p_binder false b ^^ space ^^ str "&" ^^ break1 in
+      let p_dsumfst b = p_binder false b ^^ space ^^ str op ^^ break1 in
       paren_if curr mine (concat_map p_dsumfst binders ^^ p_tmNoEq' right res)
-  | Op (op, [ e1; e2]) when is_operatorInfix34 op -> // also takes care of infix '-'
+  | Op (op, [ e1; e2]) when is_operatorInfix34 op ->
+      let op = Ident.text_of_id op in
       let left, mine, right = levels op in
       paren_if curr mine (infix0 (str op) (p_tmNoEq' left e1) (p_tmNoEq' right e2))
-  | Op("-", [e]) ->
-      let left, mine, right = levels "-" in
-      minus ^/^ p_tmNoEq' mine e
   | NamedTyp(lid, e) ->
       group (p_lidentOrUnderscore lid ^/^ colon ^/^ p_appTerm e)
   | Refine(b, phi) ->
@@ -998,7 +1013,7 @@ and p_tmNoEq' curr e = match (unparen e).tm with
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
                             separate_map (semi ^^ break1) p_simpleDef record_fields )
-  | Op("~", [e]) ->
+  | Op({idText = "~"}, [e]) ->
       group (str "~" ^^ p_atomicTerm e)
   | _ -> p_appTerm e
 
@@ -1057,9 +1072,9 @@ and p_argTerm arg_imp = match arg_imp with
 and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match (unparen e).tm with
-  | Op(".()", [e1 ; e2]) ->
+  | Op({idText = ".()"}, [e1 ; e2]) ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2))
-  | Op(".[]", [e1; e2]) ->
+  | Op({idText = ".[]"}, [e1; e2]) ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term e2))
   | _ ->
       exit e
@@ -1073,7 +1088,7 @@ and p_atomicTerm e = match (unparen e).tm with
   | Name lid ->
       p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
-      str op ^^ p_atomicTerm e
+      str (Ident.text_of_id op) ^^ p_atomicTerm e
   | _ -> p_atomicTermNotQUident e
 
 and p_atomicTermNotQUident e = match (unparen e).tm with
@@ -1081,15 +1096,20 @@ and p_atomicTermNotQUident e = match (unparen e).tm with
   | Var lid when lid_equals lid C.assert_lid ->
     str "assert"
   | Tvar tv -> p_tvar tv
-  | Const c -> p_constant c
+  | Const c ->
+    begin match c with
+    | Const.Const_char x  when x = '\n' ->
+       str "0x0Az"
+    | _ -> p_constant c
+    end
   | Name lid when lid_equals lid C.true_lid ->
     str "True"
   | Name lid when lid_equals lid C.false_lid ->
     str "False"
   | Op(op, [e]) when is_general_prefix_op op ->
-    str op ^^ p_atomicTermNotQUident e
+    str (Ident.text_of_id op) ^^ p_atomicTermNotQUident e
   | Op(op, []) ->
-    lparen ^^ space ^^ str op ^^ space ^^ rparen
+    lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
   | Construct (lid, args) when is_dtuple_constructor lid ->
     surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
   | Project (e, lid) ->
@@ -1120,20 +1140,23 @@ and p_projectionLHS e = match (unparen e).tm with
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
+  (* KM : I still think that it is wrong to print a term that's not parseable... *)
+  | Labeled (e, s, b) ->
+      break_ 0 ^^ str ("(*" ^ s ^ "*)") ^/^ p_term e
+
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
   | Op (op, args) when not (handleable_op op args) ->
-    failwith ("Operation " ^ op ^ " with " ^ string_of_int (List.length args) ^
+    failwith ("Operation " ^ Ident.text_of_id op ^ " with " ^ string_of_int (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
   | Uvar _ -> failwith "Unexpected universe variable out of universe context"
-  | Labeled _   -> failwith "Not valid in universe"
 
   (* All the cases are explicitly listed below so that a modification of the ast doesn't lead to a loop *)
   (* We must also make sure that all the constructors listed below are handled somewhere *)
   | Wild        (* p_atomicTermNotQUident *)
   | Const _     (* p_atomicTermNotQUident *)
-  | Op _        (* what about 3+ args ? are all possible labels caught somewhere ? *)
+  | Op _        (* All handleable cases should be caught in the recursion loop *)
   | Tvar _      (* p_atomicTermNotQUident *)
   | Var _       (* p_projectionLHS *)
   | Name _      (* p_atomicTerm *)
@@ -1143,6 +1166,7 @@ and p_projectionLHS e = match (unparen e).tm with
   | Let _       (* p_noSeqTerm *)
   | LetOpen _   (* p_noSeqTerm *)
   | Seq _       (* p_term *)
+  | Bind _      (* p_term *)
   | If _        (* p_noSeqTerm *)
   | Match _     (* p_noSeqTerm *)
   | TryWith _   (* p_noSeqTerm *)
@@ -1189,14 +1213,14 @@ and p_constant = function
 and p_universe u = str "u#" ^^ p_atomicUniverse u
 
 and p_universeFrom u = match (unparen u).tm with
-  | Op("+", [u1 ; u2]) ->
+  | Op({idText = "+"}, [u1 ; u2]) ->
     group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
   | App _ ->
     let head, args = head_and_args u in
     begin match (unparen head).tm with
       | Var maybe_max_lid when lid_equals maybe_max_lid C.max_lid ->
         group (p_qlident C.max_lid ^/+^
-               separate_map space (fun (u,_) -> p_atomicUniverse u) args)
+              separate_map space (fun (u,_) -> p_atomicUniverse u) args)
       | _ ->
         (* TODO : refine the failwiths with informations *)
         failwith (Util.format1 ("Invalid term in universe context %s") (term_to_string u))
@@ -1208,59 +1232,63 @@ and p_atomicUniverse u = match (unparen u).tm with
     | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
     | Uvar _ -> p_univar u
     | Paren u -> soft_parens_with_nesting (p_universeFrom u)
-    | Op("+", [_ ; _])
+    | Op({idText = "+"}, [_ ; _])
     | App _ -> soft_parens_with_nesting (p_universeFrom u)
-    | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
+      | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
-and p_univar u = match (unparen u).tm with
-    | Uvar id -> str (text_of_id id)
-    | _ -> failwith (Util.format1 "Not a universe variable %s" (term_to_string u))
+    and p_univar u = match (unparen u).tm with
+        | Uvar id -> str (text_of_id id)
+        | _ -> failwith (Util.format1 "Not a universe variable %s" (term_to_string u))
 
 
-let term_to_document e = p_term e
+    let term_to_document e = p_term e
 
-let decl_to_document e = p_decl e
+    let decl_to_document e = p_decl e
 
-let modul_to_document (m:modul) =
-  should_print_fs_typ_app := false ;
-  let res =
-    match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) ->
-        decls |> List.map decl_to_document |> separate hardline
-  in  should_print_fs_typ_app := false ;
-  res
+    let pat_to_document p = p_disjunctivePattern p
 
-let comments_to_document (comments : list<(string * FStar.Range.range)>) =
-    separate_map hardline (fun (comment, range) -> str comment) comments
+    let binder_to_document b = p_binder true b
 
-(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
-(* to insert the comments from [comments]. The list comments is composed of *)
-(* pairs of a raw string and a position which is used to place the comment *)
-(* not too far from its original position. The rules for placing comments *)
-(* are described in the ``Taking care of comments`` section *)
-let modul_with_comments_to_document (m:modul) comments =
-  let decls = match m with
-    | Module (_, decls)
-    | Interface (_, decls, _) -> decls
-  in
-  should_print_fs_typ_app := false ;
-  match decls with
-    | [] -> empty, comments
-    | d :: ds ->
-      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
-      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
-      let decls, first_range =
-        match ds with
-        | { d = Pragma LightOff } :: _ ->
-            let d0 = List.hd ds in
-            d0 :: d :: List.tl ds, d0.drange
-        | _ -> d :: ds, d.drange
+    let modul_to_document (m:modul) =
+      should_print_fs_typ_app := false ;
+      let res =
+        match m with
+        | Module (_, decls)
+        | Interface (_, decls, _) ->
+            decls |> List.map decl_to_document |> separate hardline
+      in  should_print_fs_typ_app := false ;
+      res
+
+    let comments_to_document (comments : list<(string * FStar.Range.range)>) =
+        separate_map hardline (fun (comment, range) -> str comment) comments
+
+    (* [modul_with_comments_to_document m comments] prints the module [m] trying *)
+    (* to insert the comments from [comments]. The list comments is composed of *)
+    (* pairs of a raw string and a position which is used to place the comment *)
+    (* not too far from its original position. The rules for placing comments *)
+    (* are described in the ``Taking care of comments`` section *)
+    let modul_with_comments_to_document (m:modul) comments =
+      let decls = match m with
+        | Module (_, decls)
+        | Interface (_, decls, _) -> decls
       in
-      (* TODO : take into account the space of the fsdoc (and attributes ?) *)
-      let extract_decl_range d = d.drange in
-      comment_stack := comments ;
-      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
+      should_print_fs_typ_app := false ;
+      match decls with
+        | [] -> empty, comments
+        | d :: ds ->
+          (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
+          (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
+          let decls, first_range =
+            match ds with
+            | { d = Pragma LightOff } :: _ ->
+                let d0 = List.hd ds in
+                d0 :: d :: List.tl ds, d0.drange
+            | _ -> d :: ds, d.drange
+          in
+          (* TODO : take into account the space of the fsdoc (and attributes ?) *)
+          let extract_decl_range d = d.drange in
+          comment_stack := comments ;
+          let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
       let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
       let comments = !comment_stack in
       comment_stack := [] ;

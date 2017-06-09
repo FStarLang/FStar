@@ -36,8 +36,9 @@
         "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Monotonic.Seq.rid", "equation_HyE.HCCA2.rid",
         "fuel_guarded_inversion_HyE.HCCA2.pkey",
-        "proj_equation_HyE.HCCA2.PKey_region", "proj_equation_Prims.V_v",
-        "projection_inverse_Prims.V_v",
+        "proj_equation_FStar.Pervasives.V_v",
+        "proj_equation_HyE.HCCA2.PKey_region",
+        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4"
       ],
       0
@@ -48,13 +49,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
-        "data_elim_Prims.V", "disc_equation_Prims.None",
-        "disc_equation_Prims.Some", "disc_equation_Prims.V",
-        "equation_HyE.PlainPKE.t",
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_elim_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.V", "equation_HyE.PlainPKE.t",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
-        "function_token_typing_HyE.AE.key", "lemma_Prims.invertOption",
-        "proj_equation_Prims.V_v", "projection_inverse_BoxBool_proj_0"
+        "function_token_typing_HyE.AE.key",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_None",
+        "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ]

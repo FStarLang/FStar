@@ -12,6 +12,7 @@ Package       : fullpage
 ~BB           : .comment color=purple author="Benjamin Beurdouche"
 ~NS           : .comment color=red author="Nik"
 ~MK           : .comment color=blue author=Markulf
+~KK           : .comment color=orange author="Konrad Kohbrok"
 ~Todo         : .comment author="Todo"
 
 ~Remark       : font-style=italic padding-left=1em
@@ -108,8 +109,8 @@ can be found on the [F\* website].
 
 It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
-with [Haskell]---we provide a quick review of basic concepts if you're
-a little rusty. If you feel you need more background, there are many useful
+with [Haskell]---we provide a quick review of some basic concepts if you're
+a little rusty, but if you feel you need more background, there are many useful
 resources freely available on the web, e.g., [TryF#],
 [F# for fun and profit], [Introduction to Caml], or the
 [Real World OCaml] book.
@@ -123,6 +124,23 @@ resources freely available on the web, e.g., [TryF#],
 [TryF#]: http://tryfsharp.org
 [Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
+
+~KK
+Without any experience in ML or Ocaml my experience has been that the later
+exercises are very hard to solve, as some of the notation was not obvious to me. Even
+knowing the correct solution, I had to either infer syntax from the exercise
+code (which is fine) or go by trial and error (which was frustrating at times).
+I will leave comments on the exercises detailing what kind of notation I was (or
+am still) missing. Is there a resource (maybe in the wiki) that we can point
+readers to, that includes examples for most of the concepts? Something like the
+[F# reference] would be really helpful. Also, it might help to specify the
+audience of this tutorial a bit more. As a programmer with slightly faded memory
+of how inductive proofs work, the lemmas are not very straight forward. As
+someone who has never seen ML or has never done any functional programming, the
+syntax and some of the patterns are hard to grasp, I feel.
+~
+
+[F# reference]: https://docs.microsoft.com/en-us/dotnet/articles/fsharp/language-reference/
 
 The easiest way to try F\* and solve the verification exercises in this tutorial is
 directly in your browser by using the [online F\* editor]. You can
@@ -143,16 +161,33 @@ the [source code on github] using these [instructions].
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can edit F\* code using your favorite text editor, but [Emacs],
-[Atom], and [Vim] have extensions that add special support for F\*,
-including syntax highlighting and interactive development. More
-details on [editor support] on the [F\* wiki].
+You can edit F\* code using your favorite text editor, but for Emacs
+we provide [fstar-mode.el], a sophisticated extension that adds special
+support for F\*, including syntax highlighting, completion, type
+hints, navigation, documentation queries, and interactive development
+(in the style of CoqIDE or ProofGeneral).
+You can find more details about [editor support] on the [F\* wiki].
 
-[Emacs]: https://github.com/FStarLang/fstar-mode.el
+The code for the exercises in this tutorial and their solutions are in the [F\*
+repository] on Github. For some exercises, you have to include
+additional libraries, as done by the provided Makefiles.
+To include libraries for the Emacs interactive mode follow the
+[instructions here](https://github.com/FStarLang/fstar-mode.el#including-non-standard-libraries-when-using-fstar-mode).
+
+~KK
+The code available on the tutorial page and on github differs
+quite a bit (as does the F\* version I guess). In my case, this lead to some
+unexpected errors when copying code from the online-editor to Emacs. It would be
+nice to have a pointer to the actual file and maybe the proper parameters to
+verify it, in case someone prefers emacs over the online editor.
+~
+
+[fstar-mode.el]: https://github.com/FStarLang/fstar-mode.el
 [Atom]: https://github.com/FStarLang/fstar-interactive
 [Vim]: https://github.com/FStarLang/VimFStar
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
+[F\* repository]: https://github.com/FStarLang/FStar/tree/master/doc/tutorial/code/
 
 By default F\* only verifies the input code, **it does not execute it**.
 To execute F\* code one needs to extract it to OCaml or F# and then
@@ -184,10 +219,10 @@ programming in general and a couple of F\*-specific features.
 
 Let's say we want to model a simple access control discipline on
 files---certain files are readable or writable, whereas others may be
-inaccessible. We'd like to write a policy to describe the privileges
-on each file, and we'd like to write programs whose file access
-patterns are checked against this policy, guaranteeing statically that an
-inaccessible file is never accessed mistakenly.
+unauthorized. We'd like to write a policy to describe the privileges
+on each file, and we'd like to write programs whose file accesses
+are checked against this policy, guaranteeing statically that an
+unauthorized file is never accessed mistakenly.
 
 Our model of this scenario (which we'll make more realistic in later
 sections) proceeds in three easy steps.
@@ -479,6 +514,22 @@ the other hand, the body of a function may perform some non-trivial
 computation and so the result is always given both a type and an
 effect, as explained above.
 
+Like many functional languages, function application has higher precedence
+than almost any other operation.  Remembering this can help you keep track
+of when you do (and do not) need parentheses.  For example, if, using the 
+definitions for `is_positive` and `max` above, you try to write:
+```
+let x = is_positive max 1 2
+```
+you will get a type resolution failure, since F\* will try to apply
+`is_positive` to the `max` function itself, and it will complain that
+`is_positive` expects an `int` argument, whereas `max` is a function
+that maps two integers to another integer.  In this case, you need one 
+set of parentheses around `max`:
+```
+let x = is_positive (max 1 2)
+```
+
 ~Exercise
 As you could see above, we use `val` to ask F\* to check that a
 definition has a certain expected type.  Write down the expected types
@@ -517,25 +568,26 @@ as arguments (e.g. sorting).
 
 _Skip this section on a first read, if you are new to functional programming._
 
+
 Sometimes it is useful to return a function after performing some
 computation. For example, here is a function that makes a new counter,
 initializing it to `init`.
 
+    val new_counter: int -> St (unit -> St int)
     let new_counter init =
       let c = ST.alloc init in
       fun () -> c := !c + 1; !c
 
-F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
+F\* can show that `new_counter` has type `:int -> St (unit -> St int)`,
 the type of a function that given an integer, may read, write or
-allocate references, and then returns a `:unit -> ST unit`
-function. You can write down this type and have F\* check it; or,
-using sub-effecting, you can write the type below and F\* will check
-that `new_counter` has that type as well.
+allocate references, and then returns a `:unit -> St unit`
+function. Using sub-effecting, we can also write the type below
+and F\* will check that `new_counter` has that type as well.
 
     val new_counter: int -> ML (unit -> ML int)
 
-Note, the type above, is *not* the same as `:int -> unit -> int`. The
-latter is a shorthand for `:int -> Tot (unit -> Tot int)`.
+Note, the type above, is *not* the same as `:int -> unit -> ML int`.
+The latter is a shorthand for `:int -> Tot (unit -> ML int)`.
 
 # First proofs about functions on integers { #sec-firstproofs }
 
@@ -965,6 +1017,14 @@ sounds mysterious to you. However, as you start to use quantified
 formulas in refinement types, you should make sure you understand this
 section._
 
+~KK
+Depending on the audience of this tutorial, we might want to move this to
+further towards the end of the tutorial.
+~
+~CH
+Agreed
+~
+
 We mentioned earlier that a refinement type has the form `:x:t{phi(x)}`.
 In its primitive form, `phi` is in fact a type, a predicate on the value
 `x:t`. We allow you to use a boolean function in place of a type: under
@@ -1117,29 +1177,50 @@ let rec append_len l1 l2 = match l1 with
 ~~
 ~
 
+We wrote the type of the function `append` above using an ML-like type
+variable `:'a` to stand for an arbitrary type. Under the hood F*
+expands this out to something like this:
+```
+val append : #a:Type -> list a -> list a -> Tot (list a)
+let rec append #a l1 l2 = match l1 with
+  | [] -> l2
+  | hd :: tl -> hd :: append #a tl l2
+```
+
+This exposes the fact that `a` is really just an implicit argument of
+`append`. The implicit argument `a` is preceded by the `#` symbol
+both in the type of append, where we say that `a` has type `Type`,
+and in the definition of append, which takes an extra `a` argument.
+When calling `append` recursively we have a choice, we can either
+pass `a` explicitly by preceding it with the `#` sign, or we can
+leave it out and the F* type-checker will infer it automatically.
+(Implicit argument are further discussed in [#sec-implicit-arguments].)
+
+We would like to define a function `mem: x:'a -> l:list 'a -> Tot bool`
+that decides whether `x` is present in a list `l` or
+not. However, not all types in F\* have decidable equality, so in
+order to write `mem` we cannot quantify over arbitrary types, but only
+over those with decidable equality. Thus the following definition of
+`mem` has to use `:#a:eqtype` instead of `:#a:Type`.
+```
+[INCLUDE=code/exercises/Ex04c.fst:Mem]
+```
+
 ~ Exercise
-Define a function `mem: x:'a -> l:list 'a -> Tot bool` that
-decides whether `x` is present in the `l` or not, then prove it satisfies the
+Prove that mem satisfies the
 following property:
 ~~ ExerciseFragment {exname=Ex04c}
-val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
-        -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
+[INCLUDE=code/exercises/Ex04c.fst:AppendMem]
 ~~
 ~~ AnswerFragment {exname=Ex04c}
-
-val mem: 'a -> list 'a -> Tot bool
-let rec mem a l = match l with
-  | [] -> false
-  | hd::tl -> hd=a || mem a tl
-
-val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
-    -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
-let rec append_mem l1 l2 a = match l1 with
-  | [] -> ()
-  | hd::tl -> append_mem tl l2 a
+[INCLUDE=code/solutions/Ex04c.fst:AppendMemProof]
 ~~
 ~
 
+~CH
+Introduced implicits and eqtypes here already because they are
+used in mem exercise. Alternatively, could get rid of this exercise.
+~
 
 ## To type intrinsically, or to prove lemmas?
 
@@ -1195,6 +1276,13 @@ it is:
 In the `Cons` case of `rev_involutive` we are explicitly applying not just
 the induction hypothesis but also the `snoc_cons` lemma we proved above.
 
+~KK
+At this point it would be nice to have an explaination on how these two
+functions actually help F\* (or Z3) prove the property. It took me quite a while
+to figure out how this might work and I'm still not entirely certain. Again,
+this depends on who the audience of this tutorial is.
+~
+
 ~Exercise
 Prove that reverse is injective, i.e.,
 ~~ ExerciseFragment {exname=Ex04d}
@@ -1247,6 +1335,14 @@ By adding a type annotation we can give a _different_ type to `map`:
 
 This type is neither a subtype nor a supertype of the type F\*
 inferred on its own.
+
+~KK
+I could not really figure out how the type inferred by F\* and the
+explicitly written type differ functionally. I suspect this is due to my limited
+knowledge of functional programming and has something to do with currying.
+Anyway, a small remark about this might make sense here.
+Also: why can or does F\* not infer the different type? 
+~
 
 >**No parametric polymorphism on effects**: You might hope to give
 `map` a very general type, one that accepts a function with any effect
@@ -1308,6 +1404,14 @@ Prove that `(fold_right Cons [] l = l)`.
 ~
 -->
 
+~KK
+This exercise seems to be commented out in the Github version of the tutorial as
+opposed to the version actually available on the tutorial page. I don't mind
+having multiple exercises of a certain type. However, it might be nice to have
+an explaination to go along with it. Even looking at the code I often had a hard
+time figuring out why exactly the solution checks out.
+~
+
 ## Implicitly defined functions on inductive types
 
 For each definition of an inductive type, F\* automatically introduces a
@@ -1324,23 +1428,31 @@ as a running example.
 
 A discriminator is a boolean-valued total function that tests whether a
 term is the application of a particular constructor. For the `list` type,
-we have two discriminators:
+we have two discriminators that are automatically generated.
 
-    val is_Nil: list 'a -> Tot bool
-    let is_Nil xs = match xs with [] -> true | _ -> false
+    val Nil?: list 'a -> Tot bool
+    let Nil? xs = match xs with [] -> true | _ -> false
 
-    val is_Cons: list 'a -> Tot bool
-    let is_Cons xs = match xs with _::_-> true | _ -> false
+    val Cons?: list 'a -> Tot bool
+    let Cons? xs = match xs with _::_-> true | _ -> false
+
+Identifiers like `Nil?` and `Cons?` cannot be defined by the user
+directly. They are reserved to be automatically generated by the
+compiler. So, the above code will not typecheck as written---it's only
+for illustration purposes. 
+
+~KK
+The notation without a "|" before the first case causes syntax errors. Or am I
+missing something?
+~
 
 ### Projectors
 
 From the type of the `Cons` constructor, F\* generates the following
 signatures:
 
-    val Cons.hd : l:list 'a{is_Cons l} -> Tot 'a
-    val Cons.tl : l:list 'a{is_Cons l} -> Tot (list 'a)
-
-(here `Cons.hd` is a qualified name)
+    val Cons?.hd : l:list 'a{Cons? l} -> Tot 'a
+    val Cons?.tl : l:list 'a{Cons? l} -> Tot (list 'a)
 
 This indicates why the names `hd` and `tl` in the types of `Cons` are
 significant: they correspond to the names of the auto-generated
@@ -1349,26 +1461,11 @@ will generate names automatically (although these names are derived from
 the position of the arguments and their form is unspecified; so, it's
 good practice to name the arguments yourself).
 
-<!--
-~ Remark
-F\* also generates projectors corresponding to the type arguments of each
-constructor. We show them below for completeness, although you may have
-trouble understanding what these signatures mean until you've read a bit
-more about higher kinds in Section [#sec-indexed-types]. Besides, for the
-list type, these type projectors are not particularly useful.
-
-    type Nil.a : a:Type -> l:list a{is_Nil l} -> Type
-    type Cons.a : a:Type -> l:list a{is_Cons l} -> Type
-
-The projectors for more complex inductive types have more complex
-signatures---we will see this in the section on indexed types
-([#sec-indexed-types]).
-~
--->
+Again, names like `Cons?.hd` are reserved for internal use.
 
 ~Exercise
 Write functions (call them `hd` and `tl`) whose types match
-those of `Cons.hd` and `Cons.tl`.
+those of `Cons?.hd` and `Cons?.tl`.
 ~~ ExerciseFragment {exname=Ex04g}
 [INCLUDE=code/exercises/Ex04g.fst]
 ~~
@@ -1440,7 +1537,7 @@ This is equivalent to the following, more verbose, source program:
     type triple 'a 'b 'c =
       | MkTriple: fst:'a -> snd:'b -> third:'c -> triple 'a 'b 'c
 
-    let f x = MkTriple.fst x + MkTriple.snd x + MkTriple.third x
+    let f x = MkTriple?.fst x + MkTriple?.snd x + MkTriple?.third x
 
 # Proving termination { #sec-termination }
 
@@ -1837,6 +1934,11 @@ F\* to prove it.
 Is this an exercise or not? :)
 ~
 
+~KK
+This was also my thought. To make the online-editor verify it, definitions of
+sorted, mem, etc would be needed.
+~
+
 Unsurprisingly, it fails, on several counts:
 
 1. We fail to prove the function total. On what grounds can we claim
@@ -2203,11 +2305,11 @@ it is shadowed by the local `x`. The other cases are straightforward.
 
 > _Note for experts: Because we will only reduce closed expressions,
   where all variables
-  are bound by previous lambdas, we will ever only substitute closed
-  expressions (closed values in fact), and this naive definition of
+  are bound by previous lambdas, we will only ever substitute closed
+  expressions `e`, and this naive definition of
   substitution is good enough. Substitution would become trickier to define
   or the representation of variables would have to change if we were considering
-  the case where e, the expression replacing a variable in
+  the case where `e`, the expression replacing a variable in
   some other expression, may itself contain free variables._
 
 Given the definition of values and of substitution we can now define
@@ -2248,7 +2350,8 @@ val step : exp -> Tot (option exp)
 
 ```
 We execute an application expression `EApp e1 e2` in multiple steps by first reducing
-`e1` to a value, then reducing `e2` to a value, and if additionally `e1`
+`e1` to a value, then reducing `e2` to a value (following a *call-by-value*
+evaluation order), and if additionally `e1`
 is an abstraction `EAbs x t e' `we continue by substituting the formal
 argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
 (a non-functional value is applied to arguments) by returning `None`.
@@ -2258,8 +2361,8 @@ and if the guard reduces to something else (e.g. a function) we report a
 dynamic typing error. The `None -> None` cases simply propagate errors to
 the top level.
 ```
-assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
-assert (step (EApp ETrue ETrue) = None)
+let _ = assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
+let _ = assert (step (EApp ETrue ETrue) = None)
 ```
 
 ## Type-checker
@@ -2333,8 +2436,8 @@ or it can take an evaluation step.
 The proof is a relatively straightforward induction.
 ```
 val progress : e:exp -> Lemma
-      (requires (is_Some (typing empty e)))
-      (ensures (is_value e \/ (is_Some (step e))))
+      (requires (Some? (typing empty e)))
+      (ensures (is_value e \/ (Some? (step e))))
 let rec progress e =
   match e with
   | EApp e1 e2 -> progress e1; progress e2
@@ -2352,12 +2455,12 @@ Under the hood F\* and Z3 are doing quite a bit of work though.
 
 In case `e = (EApp e1 e2)` F\* and Z3 automate the following intuitive argument:
 We case split on the first instance of the induction
-hypothesis `(is_value e1 \/ (is_Some (step e1)))`.
+hypothesis `(is_value e1 \/ (Some? (step e1)))`.
 
 * If `e1` steps to `e1'` then, by the definition of `step`,
 `(EApp e1 e2)` steps to `(EApp e1' e2)`.
 * If `e1` is a value, we case split on the second induction hypothesis instance,
-``(is_value e2 \/ (is_Some (step e2)))``.
+``(is_value e2 \/ (Some? (step e2)))``.
   * If `e2` steps to `e2'` then `(EApp e1 e2)` steps to `(EApp e1 e2')`,
   since `e1` is a value.
   * If `e2` is also a value, then we need to obtain that `e1` has
@@ -2421,8 +2524,8 @@ and if we know that `e` is well typed in context `g`,
 then it must be the case that `g` assigns some type to `x`.
 ```
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
-      (requires (is_Some (typing g e)))
-      (ensures (appears_free_in x e ==> is_Some (g x)))
+      (requires (Some? (typing g e)))
+      (ensures (appears_free_in x e ==> Some? (g x)))
 let rec free_in_context x e g =
   match e with
   | EVar _
@@ -2438,7 +2541,7 @@ As a corollary for `g=empty` we obtain that expressions typable
 in the empty environment have no free variables.
 ```
 val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing empty e)))
+      (requires (Some? (typing empty e)))
       (ensures (not(appears_free_in x e)))
       [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
@@ -2505,11 +2608,11 @@ We can use these results to show the following substitution lemma:
 ```
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env -> Lemma
-        (requires ( is_Some (typing empty v) /\
-              is_Some (typing (extend g x (Some.v (typing empty v))) e)))
-        (ensures (is_Some (typing empty v) /\
+        (requires ( Some? (typing empty v) /\
+              Some? (typing (extend g x (Some?.v (typing empty v))) e)))
+        (ensures (Some? (typing empty v) /\
                   typing g (subst x v e) ==
-                  typing (extend g x (Some.v (typing empty v))) e))
+                  typing (extend g x (Some?.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
   let gx = extend g x t_x in
@@ -2585,9 +2688,9 @@ then `e'` is also a closed expression with type `t`.
 In other words, the small-step evaluation relation preserves types.
 ```
 val preservation : e:exp -> Lemma
-        (requires(is_Some (typing empty e) /\ is_Some (step e) ))
-        (ensures(is_Some (step e) /\
-                 typing empty (Some.v (step e)) == typing empty e))
+        (requires(Some? (typing empty e) /\ Some? (step e) ))
+        (ensures(Some? (step e) /\
+                 typing empty (Some?.v (step e)) == typing empty e))
 let rec preservation e =
   match e with
   | EApp e1 e2 ->
@@ -2605,10 +2708,10 @@ We only have two cases to consider, since only applications and conditionals
 can take successful execution steps. The case for `e = EIf e1 e2 e3` is simple:
 either `e1` is a value and thus the conditional reduces to `e2` or `e3` which
 by the typing hypothesis also have type `t`, or `e1` takes a successful step and
-we can apply the induction hypothesis. We use the `Some.v` projector for options
+we can apply the induction hypothesis. We use the `Some?.v` projector for options
 with the following type:
 ```
-  Some.v : x:(option 'a){is_Some x} -> Tot 'a
+  Some?.v : x:(option 'a){Some? x} -> Tot 'a
 ```
 which requires F\* to prove that indeed `e1` can take a step;
 this is immediate since we know that the whole conditional takes a step
@@ -2631,12 +2734,12 @@ produces the expression to which `e` steps. Give `typed_step`
 the following strong type
 (basically this type captures both progress and preservation):
 ~~ ExerciseFragment {exname=Ex07a}
-  val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
+  val typed_step : e:exp{Some? (typing empty e) /\ not(is_value e)} ->
                    Tot (e':exp{typing empty e' = typing empty e})
 ~~
 (Hint: the most direct solution to this exercise fits on one line)
 ~~ AnswerFragment {exname=Ex07a}
-    let typed_step e = progress e; preservation e; Some.v (step e)
+    let typed_step e = progress e; preservation e; Some?.v (step e)
 ~~
 ~
 
@@ -2732,8 +2835,8 @@ The proofs of the lemmas are also easy to extend by just calling
 the induction hypothesis:
 ~~~ SolutionFragment {exname=Ex07b}
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
-      (requires (is_Some (typing g e)))
-      (ensures (appears_free_in x e ==> is_Some (g x)))
+      (requires (Some? (typing g e)))
+      (ensures (appears_free_in x e ==> Some? (g x)))
 let rec free_in_context x e g =
 ...
   | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
@@ -2754,10 +2857,10 @@ let rec context_invariance e g g' =
   | ESnd e1 -> context_invariance e1 g g'
 
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
-      g:env{is_Some (typing empty v) &&
-            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
+      g:env{Some? (typing empty v) &&
+            Some? (typing (extend g x (Some?.v (typing empty v))) e)} ->
       Tot (u:unit{typing g (subst x v e) ==
-                  typing (extend g x (Some.v (typing empty v))) e})
+                  typing (extend g x (Some?.v (typing empty v))) e})
 let rec substitution_preserves_typing x e v g =
 ...
   | EPair e1 e2 ->
@@ -2776,8 +2879,8 @@ it must be the case that `e2` is not a value and further evaluates, so
 we apply the induction hypothesis to it. The cases for `EFst` and
 `ESnd` are similar.
 ~~~ SolutionFragment {exname=Ex07b}
-val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
-      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
+val preservation : e:exp{Some? (typing empty e) /\ Some? (step e)} ->
+      Tot (u:unit{typing empty (Some?.v (step e)) == typing empty e})
 let rec preservation e =
 ...
   | EPair e1 e2 ->
@@ -2842,17 +2945,16 @@ or it diverges if the evaluation of `e` loops. Give `eval` the following
 strong type ensuring that `v` has the same type as `e`
 (basically this type captures both progress and preservation):
 ~~ ExerciseFragment {exname=Ex07d}
-  val eval : e:exp{is_Some (typing empty e)} ->
+  val eval : e:exp{Some? (typing empty e)} ->
              Dv (v:exp{is_value v && typing empty v = typing empty e})
 ~~
 The `Dv` effect is that of potentially divergent computations.
-We cannot mark this as `Tot` since a priori STLC computations could loop,
-and it is hard to prove that well-typed ones don't, while defining an
-interpreter.
+We cannot mark this as `Tot` since _a priori_ STLC computations could loop,
+and it is hard to prove that well-typed ones don't.
 ~~Answer
 Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
 ~~~ SolutionFragment {exname=Ex07d}
-val eval : e:exp{is_Some (typing empty e)} ->
+val eval : e:exp{Some? (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
   if is_value e then e
@@ -2861,7 +2963,7 @@ let rec eval e =
 or using the `progress` and `preservation` lemmas instead of `typed_step`
 (suggested by Guido Martinez):
 ```
-val eval : e:exp{is_Some (typing empty e)} ->
+val eval : e:exp{Some? (typing empty e)} ->
   Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e = match step e with
   | None -> progress e; e
@@ -2869,7 +2971,7 @@ let rec eval e = match step e with
 ```
 Here is another solution that only uses the substitution lemma:
 ~~~ SolutionFragment {exname=Ex07d}
-val eval' : e:exp{is_Some (typing empty e)} ->
+val eval' : e:exp{Some? (typing empty e)} ->
             Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval' e =
   let Some t = typing empty e in
@@ -2915,7 +3017,7 @@ assume val step_last : e:exp -> e':exp -> e'':exp -> Lemma
              (requires (Steps e e' /\ step e' = Some e''))
              (ensures (Steps e e''))
 
-val eval : e:exp{is_Some (typing empty e)} ->
+val eval : e:exp{Some? (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e
                      /\ Steps e v}) --- added this
 -->
@@ -2931,7 +3033,7 @@ but it seems quite interesting)
 
 # Higher kinds, indexed types, implicit arguments, and type-level functions
 
-So far, we have mostly programmed total functions and give them
+So far, we have mostly programmed total functions and given them
 specifications using rich types. Under the covers, F\* has a second
 level of checking at work to ensure that the specifications that you
 write are also meaningful---this is F\*'s kind system. Before moving
@@ -3043,17 +3145,6 @@ The type `fun x -> phi(x)` is type function, a lambda abstraction at
 the level of types, which when applied to a particular value, say,
 `0`, reduces as usual to `phi(0)`.
 
-## Kind abbreviations
-
-F\* allows top-level declarations to define abbreviations for kinds. For example,
-one can write:
-
-```
-kind Predicate (a:Type) = a -> Type
-```
-
-Now, the kind `Predicate a` is an abbreviation for `a -> Type`.
-
 # Specifying effects
 
 ~CH
@@ -3112,7 +3203,7 @@ and [Leino] both study this problem and provide equivalent
 solutions. In essence, they show that for a first-order,
 assignment-free guarded command language the weakest pre-condition can
 be computed in a size nearly linear in the size of the program. Then,
-they show that first-order imperative WHILE language can be converted
+they show that the first-order imperative WHILE language can be converted
 into SSA form and then into a guarded command language.
 
 [Flanagan and Saxe]: http://dl.acm.org/citation.cfm?id=360220
@@ -3270,9 +3361,9 @@ following form---they transform pure post-conditions to pure
 pre-conditions.
 
 ```
-kind PurePost (a:Type) = a -> Type
-kind PurePre = Type
-kind PureWP (a:Type) = PurePost a -> PurePre
+let pure_post (a:Type) = a -> Type
+let pure_pre = Type
+let pure_wp (a:Type) = pure_post a -> pure_pre
 ```
 
 For example, one computation type for `0` is
@@ -3287,7 +3378,7 @@ expect. The type `return_zero` is an instance of the more general form
 below:
 
 ```
-type return_PURE (#a:Type) (x:a) = fun (post: PurePost a) -> post x
+type return_PURE (#a:Type) (x:a) = fun (post: pure_post a) -> post x
 ```
 
 When sequentially composing two pure computations using
@@ -3301,12 +3392,13 @@ PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)
 where:
 ```
 type bind_PURE (#a:Type) (#b:Type)
-               (wp1: PureWP a)
-               (wp2: a -> PureWP b)
- = fun (post:PurePost b) -> wp1 (fun (x:a) -> wp2 x post)
+               (wp1: pure_wp a)
+               (wp2: a -> pure_wp b)
+ = fun (post:pure_post b) -> wp1 (fun (x:a) -> wp2 x post)
 ```
 
-One can show that `return_PURE` and `bind_PURE` together form a monad.
+One can show that `return_PURE` and `bind_PURE` together form a monad over
+`PureWP`.
 
 ### `Pure` and `Tot`
 
@@ -3316,8 +3408,8 @@ predicate transformers. It is defined as follows:
 
 ```
 effect Pure (a:Type) (pre:Type) (post: a -> Type) =
-       PURE a (fun (p:PurePost a) -> pre /\ forall (x:a). post x ==> p x)
-              (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
+       PURE a (fun (p:pure_post a) -> pre /\ forall (x:a). post x ==> p x)
+              (fun (p:pure_post a) -> forall (x:a). pre /\ post x ==> p x)
 ```
 
 That is `Pure a pre post` is a computation which when `pre` is true
@@ -3327,8 +3419,8 @@ The `Tot` effect is defined below:
 
 ```
 effect Tot (a:Type) =
-       PURE a (fun (p:PurePost a) -> forall (x:a). p x)
-              (fun (p:PurePost a) -> forall (x:a). p x)
+       PURE a (fun (p:pure_post a) -> forall (x:a). p x)
+              (fun (p:pure_post a) -> forall (x:a). p x)
 ```
 
 This means that a computation type `Tot a` only reveals that the
@@ -3346,11 +3438,11 @@ derived form `Pure`. Instead, one uses an explicit coercion for this
 purpose, with the signature shown below.
 
 ```
-type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
-type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
+type as_requires (#a:Type) (wp:pure_wp a)  = wp (fun x -> True)
+type as_ensures  (#a:Type) (wlp:pure_wp a) (x:a) = ~ (wlp (fun y -> ~(y==x)))
 assume val as_Pure: #a:Type -> #b:(a -> Type)
-          -> #wp:(x:a -> PureWP (b x))
-          -> #wlp:(x:a -> PureWP (b x))
+          -> #wp:(x:a -> pure_wp (b x))
+          -> #wlp:(x:a -> pure_wp (b x))
           -> =f:(x:a -> PURE (b x) (wp x) (wlp x))
           -> x:a -> Pure (b x) (as_requires (wp x))
                                (as_ensures (wlp x))
@@ -3358,7 +3450,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
 ~Remark
 
- The second last argument to `as_Pure` is named `f` and is tagged with
+ The second-to-last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
  with the equality symbol, i.e., `=f`. Given an application
  `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
@@ -3383,7 +3475,7 @@ with the `as_ensures wlp` function. Perhaps the easiest way to
 understand it is by studying the roundtrip transformation of `PURE` to
 `Pure` and back to `PURE`. The key step below is in the transformation
 from (b) to (c), where we see that by ensuring
-`~wlp (fun y -> y <> x)`, we make use precisely of the Identity 1
+`~wlp (fun y -> y <> x)`, we make use precisely of Identity 1
 from the previous section. Given only a `wp` without a `wlp`, we would be
 stuck not being able to construct `as_ensures`.
 
@@ -3487,12 +3579,12 @@ Pure t (p)
 
 Stateful programs operate on an input heap producing a result and an
 output heap. The computation type `STATE t wp wlp` describes such a
-computation, where `wp, wlp : StateWP t` has the signature below.
+computation, where `wp, wlp : state_wp t` has the signature below.
 
 ```
-kind StatePost t = t -> heap -> Type
-kind StatePre    = heap -> Type
-kind StateWP t   = StatePost t -> StatePre
+let state_post t = t -> heap -> Type
+let state_pre    = heap -> Type
+let state_wp t   = state_post t -> state_pre
 ```
 
 In other words, WPs and WLPs for stateful programs transform stateful
@@ -3549,11 +3641,11 @@ Let's start with the signature of `read`:
 
 ```
 assume val read: #a:Type -> r:ref a -> STATE a (wp_read r) (wp_read r)
-where wp_read r = fun (post:StatePost a) (h0:heap) ->  post (sel h0 r) h0
+where wp_read r = fun (post:state_post a) (h0:heap) ->  post (sel h0 r) h0
 ```
 
 This says that `read r` returns a result `v:a` when `r:ref a`;
-and, to prove for any post-condition `post:StatePost a` relating the
+and, to prove for any post-condition `post:state_post a` relating the
 `v` to the resulting heap, it suffices to prove `post (sel h0 r) h0`
 when `read r` is run in the initial heap `h0`.
 
@@ -3561,11 +3653,11 @@ Next, here's the signature of `write`:
 
 ```
 assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write r)
-where wp_write r = fun (post:StatePost a) (h0:heap) -> post () (upd h0 r v)
+where wp_write r = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
 ```
 
 This says that `write r v` returns a a `unit`-typed result when
-`r:ref a` and `v:a`; and, to prove any post-condition `post:StatePost a`
+`r:ref a` and `v:a`; and, to prove any post-condition `post:state_post a`
 relating the `()` to the resulting heap, it suffices to prove
 `post () (upd h0 r v)` when `write r v` is run in the initial heap `h0`.
 
@@ -3581,14 +3673,14 @@ let op_Colon_Equals x v = ST.write x v
 ```
 ~
 
-As with the `PureWP`, the predicate transformers `StateWP t` form a
+As with the `pure_wp`, the predicate transformers `state_wp t` form a
 monad, as shown by the combinators below.
 
 ```
-type return_STATE (#a:Type) (v:a) = fun (post:StatePost a) (h0:heap) -> post v h0
+type return_STATE (#a:Type) (v:a) = fun (post:state_post a) (h0:heap) -> post v h0
 
-type bind_STATE (#a:Type) (wp1:StateWP a) (wp2:a -> StateWP b)
-     = fun (post:StatePost b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
+type bind_STATE (#a:Type) (wp1:state_wp a) (wp2:a -> state_wp b)
+     = fun (post:state_post b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
 ```
 
 ### The `ST` effect
@@ -3599,10 +3691,10 @@ of predicate transformers. It is defined as shown below (in
 `lib/st.fst`):
 
 ```
-effect ST (a:Type) (pre:StatePre) (post: (heap -> StatePost a)) = STATE a
-  (fun (p:StatePost a) (h:heap) ->
+effect ST (a:Type) (pre:state_pre) (post: (heap -> state_post a)) = STATE a
+  (fun (p:state_post a) (h:heap) ->
      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-  (fun (p:StatePost a) (h:heap) ->
+  (fun (p:state_post a) (h:heap) ->
      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 ```
 
@@ -3668,20 +3760,20 @@ from `lib/prims.fst`):
 
 ```
 sub_effect
-  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:StatePost a) (h:heap) ->
+  PURE   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:state_post a) (h:heap) ->
                     wp (fun a -> p a h)
 ```
 
 This says that in order to lift a `PURE` computation to `STATE`, we
-lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
+lift its `wp:pure_wp a` (equivalently for its `wlp`) to a `state_wp a`
 that says that that pure computation leaves the state unmodified.
 
 Note that the type of `PURE ~> STATE` is
-`(a:Type) -> PureWP a -> StatePost a -> heap -> Type` which corresponds
-to `(a:Type) -> PureWP a -> StateWP a` since:
+`(a:Type) -> pure_wp a -> state_post a -> heap -> Type` which corresponds
+to `(a:Type) -> pure_wp a -> state_wp a` since:
 ```
-kind StateWP a   = StatePost a -> StatePre
-kind StatePre    = heap -> Type
+let state_wp a   = state_post a -> state_pre
+let state_pre    = heap -> Type
 ```
 
 ## Indexed computation types
@@ -3766,6 +3858,13 @@ let revoke e =
 ~~
 ~
 
+~KK
+The notation to reason about heaps was introduced in the previous section, which
+was marked as "optional" on the first read. A primer on how it works on a
+more superficial level (without the theoretical background) at the start of this
+section might be helpful.
+~
+
 ## Reasoning about (anti-)aliased heap structures
 
 A central problem in reasoning about heap-manipulating programs has to do
@@ -3794,7 +3893,7 @@ Allocating a new point is straightforward:
 
 As is moving a point by a unit along the `x`-axis.
 ```
-let shift_x p = Point.x p := !(Point.x p) + 1
+let shift_x p = Point?.x p := !(Point?.x p) + 1
 ```
 
 Now, things get a bit more interesting. Let's say we have
@@ -3854,7 +3953,7 @@ Here's one very precise type for it:
 ```
 val shift_x : p:point -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> h1=upd h0 (Point.x p) (sel h0 (Point.x p) + 1)))
+  (ensures (fun h0 _ h1 -> h1=upd h0 (Point?.x p) (sel h0 (Point?.x p) + 1)))
 ```
 
 Another, less precise but more idiomatic type for it is:
@@ -3864,7 +3963,7 @@ Another, less precise but more idiomatic type for it is:
 ```
 
 Informally, `ensures`-clause above says that the heap after calling this
-function (`h1`) differs from the initial heap `h0` only at `Point.x` (and
+function (`h1`) differs from the initial heap `h0` only at `Point?.x` (and
 possibly some newly allocated locations). Let's look at it in more detail.
 
 The predicate `modifies` is defined in the module `Heap`
@@ -3963,12 +4062,12 @@ type fresh (refs:set aref) (h0:heap) (h1:heap) =
 
 
 Coming back to the type of `new_point`: By stating that the new heap
-contains both `Point.x` and `Point.y`, we provide the caller with enough
+contains both `Point?.x` and `Point?.y`, we provide the caller with enough
 information to prove that any references that it might allocate
 subsequently will be different from the references in the newly allocated
 point. For example, the assertion in the code below succeeds, only
 because `new_point` guarantees that the heap prior to the allocation of
-`z` contains `Point.x p`; and `ST.alloc` guarantees that `z` is different
+`z` contains `Point?.x p`; and `ST.alloc` guarantees that `z` is different
 from any reference that exists in the prior heap. Carrying
 `Heap.contains` predicates in specifications is important for this
 reason.
@@ -4015,8 +4114,8 @@ strong type to prove that its assertion will never fail (if its pre-condition is
 [INCLUDE=code/exercises/Ex10b.fst:ShiftXP1Spec]
 ```
 
-In order to prove that the assignment to `Point.x p1` did not change
-`p2`, we need to know that `Point.x p1` does not alias either component
+In order to prove that the assignment to `Point?.x p1` did not change
+`p2`, we need to know that `Point?.x p1` does not alias either component
 of `p2`. In general, if `p1` can change arbitrarily, we also need the
 other two conjuncts, i.e., we will need that the references of `p1` and `p2`
 are pairwise distinct.
@@ -4034,7 +4133,7 @@ of its argument by some amount. Prove that calling this function in a
 function like `shift_p1` does not change `p2`.
 
 ~~ ExerciseFragment {exname=Ex10b}
-let shift p = Point.x p := ...; Point.y p := ...
+let shift p = Point?.x p := ...; Point?.y p := ...
 ~~
 
 ~~Answer
@@ -4557,8 +4656,8 @@ type t =
 val mk_counter: unit
              -> ST t (requires (fun h -> True))
                      (ensures  (fun h v h' ->
-                             On  (Evens.fp v) (Evens.inv v) h'
-                             /\ Heap.fresh h (Evens.fp v)))
+                             On  (Evens?.fp v) (Evens?.inv v) h'
+                             /\ Heap.fresh h (Evens?.fp v)))
                      (modifies no_refs)
 let mk_counter _ =
   let x = ST.alloc 0 in
@@ -4575,8 +4674,8 @@ let mk_counter _ =
 val mk_counter_2: unit
                -> ST t (requires (fun h -> True))
                        (ensures  (fun h v h' ->
-                         On  (Evens.fp v) (Evens.inv v) h'
-                         /\ Heap.fresh h (Evens.fp v)))
+                         On  (Evens?.fp v) (Evens?.inv v) h'
+                         /\ Heap.fresh h (Evens?.fp v)))
                        (modifies no_refs)
 let mk_counter_2 _ =
   let x = ST.alloc 0 in
@@ -4594,8 +4693,8 @@ Fix this example.
 val mk_counter_2: unit
                -> ST t (requires (fun h -> True))
                        (ensures  (fun h v h' ->
-                         On  (Evens.fp v) (Evens.inv v) h'
-                         /\ Heap.fresh h (Evens.fp v)))
+                         On  (Evens?.fp v) (Evens?.inv v) h'
+                         /\ Heap.fresh h (Evens?.fp v)))
                        (modifies no_refs)
 let mk_counter_2 _ =
   let x = ST.alloc 0 in
@@ -4682,13 +4781,21 @@ We now attach these predicates to unforgeable cryptographic tokens also called c
 
 Capabilities need to be kept secret, as everyone knowing the capabilities is granted access to 
 the corresponding files, however, parties no longer need to keep a synchronized access control database.
-In order to verify capabilities, they only need to store the cryptographic key used to generate the capability.
+In order to verify capabilities, they only need to store the cryptographic key
+used to generate the capability. The tokens generated in this fashion work in a
+similar fashion as tokens in the *Kerberos* authentication protocol.
+
+~KK
+So far we have only introduced UF-CMA. It might be better to either introduce
+the reader to the security assumptions we use here or to just omit them for
+simplicity.
+~
 
 ~ Exercise
 Relying on `ACLs` and `MAC`, implement a pair of functions with
 the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CMA.
-
+security assumption that HMACSHA1 is INT-CMA. Use `failwith "bad capability"` in
+case the verification fails.
 ~~ ExerciseFragment {exname=Ex12a.Cap}
 [INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
 ~~
@@ -4711,6 +4818,18 @@ The patterns instructs the SMT solver to associate the injectivity axiom only wi
 ~~
 
 How would we extend it to also cover write access?
+
+~~ Answer
+```
+[INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation2]
+```
+~~
+
+~
+
+~KK
+Added Ex12a1.Cap.fst as a proposed answer to this question. It would be nice if
+someone could review my code and confirm that it is actually a valid solution.
 ~
 
 ## Secure RPC
@@ -4768,6 +4887,11 @@ in the following protocol
 ```
 [INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
 ```
+
+~KK
+Where "@|" is a macro for "append"?
+~
+
 For simplicity we initially elide the client code which is similar.
 
 The `assert` guarantee that messages that are received by a party have been sent by its peer.
@@ -4858,6 +4982,10 @@ The security goals of our RPC protocol are that (1) whenever a principal `b` acc
 request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
 (2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
 message in response to a matching request from `a`.
+~
+
+~KK
+What lecture is this exactly?
 ~
 
 <!--
@@ -4986,8 +5114,8 @@ opaque type key_prop : key -> text2 -> Type
 
 type pkey (p:(text2 -> Type)) =
   k:key{ key_prop k == p
-      /\ BMAC.key_prop (Keys.k0 k) == bspec0 p
-      /\ BMAC.key_prop (Keys.k1 k) == bspec1 p }
+      /\ BMAC.key_prop (Keys?.k0 k) == bspec0 p
+      /\ BMAC.key_prop (Keys?.k1 k) == bspec1 p }
 
 val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
@@ -5028,6 +5156,9 @@ A program is *safe* if, in every run of the program, all runtime
 values satisfy their type. A key property of a type system is that
 well-typed programs are always safe.
 
+~KK
+Are modules and expressions the same in this notation?
+~
 [link]: http://link.com "link title"
 
 **Theorem 1 (Safety by Typing):** If $\emptyset \vdash A : t$, then $A$ is safe.
@@ -5072,6 +5203,11 @@ is $\epsilon$. If $A$ is not closed, then the value of $\epsilon$ may depend on 
 it is executed, in this case we model $\epsilon(\cdot)$ as a function that depends on the context 
 and call it an advantage function.
 
+~KK
+I dit not quite understand what M is at this point and what the $\Downarrow$
+notation means.
+~
+
 *c) Keyed module:* Keyed modules export `gen`, `leak`, and `coerce`
 functions and provide some cryptographic functionality modeled
 using idealization for honest keys and strong algorithms. To this
@@ -5079,6 +5215,11 @@ end keys can be associated with a unique index upon generation. Keyed
 modules enforce that `gen` is called at most once per index. The index
 describes the context the key was created in and the algorithms it is
 to be used with.
+
+~KK
+Many buzzwords in this paragraph. What is "idealization", "honest" and "strong"
+in this context?
+~
 
 *d) Plain module:* To define confidentiality using types, consider a
 module $P$ that is typeable using an interface $IP$ of the form
@@ -5113,6 +5254,11 @@ of `plain` , if `conf=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ w
 we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `conf=true`, 
 $P \cdot C \cdot A$
 
+~KK
+I was not able to parse this definition. It might make sense to add a verbatim
+explaination of the formalism? 
+~
+
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
 When `conf=true`, $C\cdot A$ is well typed with respect to interface "`conf=true`, $IP$" 
@@ -5130,6 +5276,14 @@ needs to be idealized. For encryption modules this is typically done by encrypti
 value that is independent of the plaintext, such as a string of zeros. To make also the 
 decryption of such encryptions of zero indistinguishable from decryptions of the acutal 
 plaintext, the idealization of $C$ decrypts using a table lookup.
+
+~KK
+At this point, maybe it would be possible to reuse some of the material of the
+intro to the Record-Layer paper? It might be helpful to provide the reader with
+a more high-lever overview over what we are actually trying to achieve here and
+how F\* is used in the process. For the encrypt-then-mac example in the next
+section, it might be nice to have an introduction to game-based proofs.
+~
 
 Lets make the theory more concrete by looking at Encrypt-then-MAC 
 based authenticated encryption. 
@@ -5265,7 +5419,7 @@ This can be expressed as a stateful precondition for `decrypt`:
 ```
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
-    ( (b2t ind_cpa_rest_adv) ==> is_Some (seq_find (fun mc -> snd mc = c) (get_log h0 k) ))))
+    ( (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) (get_log h0 k) ))))
 ```
 where function `get_log` retrives `k.log` as stored in heap `h0`.
 
@@ -5311,6 +5465,10 @@ As any adversary that causes a difference between `verified` and `found` is also
 `uf_cma=false`, `MAC`⋅$A$ $\approx_{\epsilon_{ufcma}}(A)$
 `uf_cma=true`, `MAC`⋅$A$. 
 
+~KK
+At this point maybe another verbatim explaination of the formal statement?
+~
+
 For our Encrypt-then-MAC scheme we establish the invariant that all `mac`ed messages correspond to 
 `encrypt`ed ciphertexts. This allows us to establish the precondition of `decrypt` after MAC `verify`.
 
@@ -5341,7 +5499,8 @@ We can thus set `ind_cpa_rest_adv=uf_cma`.
 ### The computational security proof
 
 We want to prove that:
-For all 𝐴 such that well typed with respect to an unrestricted Plain and AE interfec, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
+For all 𝐴 such that well typed with respect to an unrestricted Plain and AE
+interface, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
 the following computational equivalence holds:
 
 > (1) `conf=false, auth=false, Plain` ⋅ `CPA` ⋅ `MAC` ⋅ `AE` ⋅
@@ -5537,9 +5696,9 @@ analogous.
 ```
 module Stateful
 type st_enc = StEnc : #r:rid -> log: rref r (seq st_entry) -> ctr: rref r nat
-           -> key:encryptor{extends (Enc.r key) r} -> st_enc
+           -> key:encryptor{extends (Enc?.r key) r} -> st_enc
 and st_dec =  StDec : #r:rid -> log: rref r (seq st_entry) -> ctr: rref r nat
-           -> key:decryptor{extends (Dec.r key) r} -> st_dec
+           -> key:decryptor{extends (Dec?.r key) r} -> st_dec
 and st_entry = StEntry : c:cipher -> p:plain -> st_entry
 ```
 
@@ -5584,7 +5743,7 @@ val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
             st_enc_inv e h1
          /\ HyperHeap.modifies (Set.singleton i) h0 h1
          /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
-         /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
+         /\ sel h1 (StEnc?.log e) = snoc (sel h0 (StEnc?.log e)) (StEntry c p)))
 let stateful_enc i (StEnc log ctr e) p =
     let c = enc e (op_Bang ctr) p in
     op_Colon_Equals log (snoc (op_Bang log) (StEntry c p));
@@ -5597,16 +5756,16 @@ val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
         st_dec_inv d h0    //repeating pre
         /\ st_dec_inv d h1
         /\ HyperHeap.modifies (Set.singleton i) h0 h1
-        /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
-        /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
-           Let (sel h0 (StDec.log d))
-           (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
-           (is_None p ==> (r = Seq.length log           //nothing encrypted yet
-                          || StEntry.c (Seq.index log r) <> c //wrong cipher
-                            ) /\ sel h1 (StDec.ctr d) = r)
-        /\ (is_Some p ==>
-                  ((sel h1 (StDec.ctr d) = r + 1)
-                   /\ StEntry.p (Seq.index log r) = Some.v p))))))
+        /\ Heap.modifies !{as_ref (StDec?.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
+        /\ Let (sel h0 (StDec?.ctr d)) (fun (r:nat{r=sel h0 (StDec?.ctr d)}) ->
+           Let (sel h0 (StDec?.log d))
+           (fun (log:seq statefulEntry{log=sel h0 (StDec?.log d)}) ->
+           (None? p ==> (r = Seq.length log           //nothing encrypted yet
+                          || StEntry?.c (Seq.index log r) <> c //wrong cipher
+                            ) /\ sel h1 (StDec?.ctr d) = r)
+        /\ (Some? p ==>
+                  ((sel h1 (StDec?.ctr d) = r + 1)
+                   /\ StEntry?.p (Seq.index log r) = Some?.v p))))))
 
 let stateful_dec _id (StDec _ ctr d) c =
   let i = op_Bang ctr in
@@ -5767,7 +5926,7 @@ let create (p:Type) plain repr =
   let decrypt: key:keyT p -> cipher p (keyT p) key -> p = fun k c ->
     match k with
     | Ideal kv _ -> (match List.find (fun (Entry k' c' _) -> k=k' && c= c') !log with
-                     | Some e -> Entry.plain e
+                     | Some e -> Entry?.plain e
                      | _ -> failwith "never")
     | Concrete kv _ -> plain (AES.dec kv c)  in
 

@@ -1,5 +1,5 @@
 [
-  "(æÁAøÌN¡t)>MÖÜúm",
+  "\u007fœ‡*¦\u000e$\u0019Ýí‚ªa\t:F",
   [
     [
       "Ex10a.entry",
@@ -64,6 +64,14 @@
       0
     ],
     [
+      "Ex10a.canRead",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
       "Ex10a.revoke",
       1,
       2,
@@ -79,18 +87,13 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_FStar.Heap.Equals", "assumption_FStar.Heap.RestrictSel",
-        "assumption_FStar.Heap.SelConcat", "b2t_def",
-        "data_typing_intro_FStar.Heap.Ref@tok",
-        "data_typing_intro_Prims.V@tok", "eq2-interp",
+        "data_typing_intro_FStar.Pervasives.V@tok", "eq2-interp",
         "equation_Ex10a.canWrite_t", "equation_Ex10a.file",
-        "equation_FStar.ST.modifies", "equation_FStar.ST.modifies_none",
-        "function_token_typing_Prims.unit", "kinding_FStar.Heap.aref@tok",
-        "l_not-interp", "lemma_FStar.TSet.mem_complement",
-        "lemma_FStar.TSet.mem_empty", "proj_equation_Prims.V_v",
-        "projection_inverse_Prims.V_v", "ref_inversion", "string_inversion",
-        "typing_FStar.Heap.concat", "typing_FStar.Heap.restrict",
-        "typing_FStar.TSet.complement", "typing_FStar.TSet.empty",
+        "equation_FStar.Heap.modifies", "equation_FStar.Heap.modifies_t",
+        "equation_FStar.ST.modifies_none",
+        "function_token_typing_Prims.unit",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_FStar.Pervasives.V_v", "string_inversion",
         "unit_inversion", "unit_typing"
       ],
       0
@@ -101,24 +104,26 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_FStar.Heap.SelUpd1", "bool_typing",
-        "constructor_distinct_Ex10a.Readable",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Some",
-        "disc_equation_Prims.Some", "disc_equation_Prims.V", "eq2-interp",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "bool_typing", "constructor_distinct_Ex10a.Readable",
+        "constructor_distinct_FStar.Pervasives.Some",
+        "constructor_distinct_Prims.Cons",
+        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.V", "eq2-interp",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
         "equation_Ex10a.db", "equation_FStar.ST.ref",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
         "interpretation_Ex10a_Tm_abs_bfa07ed00b702381db27b21147165776",
-        "primitive_Prims.op_Equality",
+        "lemma_FStar.Heap.lemma_sel_upd1", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
+        "projection_inverse_FStar.Pervasives.Some_a",
+        "projection_inverse_FStar.Pervasives.Some_v",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v"
+        "projection_inverse_Prims.Cons_tl"
       ],
       0
     ]

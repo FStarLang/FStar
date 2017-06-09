@@ -22,7 +22,7 @@
       0
     ],
     [
-      "ImmutableST.2762",
+      "ImmutableST.182595",
       1,
       2,
       1,
@@ -92,21 +92,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_ImmutableST.contains",
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.fst",
+        "equation_FStar.Pervasives.snd", "equation_ImmutableST.contains",
         "equation_ImmutableST.heap_rel", "equation_NatHeap.alloc_ref",
-        "equation_Preorder.stable", "equation_Prims.fst",
-        "equation_Prims.nat", "equation_Prims.snd",
+        "equation_Preorder.stable", "equation_Prims.nat",
         "function_token_typing_NatHeap.heap",
         "lemma_ImmutableST.contains_lemma",
-        "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
         "refinement_interpretation_ImmutableST_Tm_refine_6f8aef5da32367b0818e015b75ddf1d7",
-        "refinement_interpretation_NatHeap_Tm_refine_116e09534423f6bb69ae556c00002c3f",
         "refinement_interpretation_NatHeap_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96",
+        "refinement_interpretation_NatHeap_Tm_refine_fc20cbed7f4be015c3340e3f66f79d87",
         "token_correspondence_ImmutableST.contains",
         "token_correspondence_ImmutableST.heap_rel",
-        "typing_NatHeap.alloc_ref", "typing_NatHeap.ref",
-        "typing_Prims.__proj__Mktuple2__item___2", "typing_Prims.fst"
+        "typing_FStar.Pervasives.fst", "typing_NatHeap.alloc_ref",
+        "typing_NatHeap.ref"
       ],
       0
     ],

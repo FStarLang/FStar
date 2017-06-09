@@ -37,6 +37,7 @@ module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Syntax.Const
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
+module BU      = FStar.Util
 
 let module_or_interface_name m = m.is_interface, m.name
 
@@ -47,18 +48,26 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
   : DsEnv.env
   * list<Syntax.modul> =
   let ast, _ = Parser.Driver.parse_file fn in
-  let ast = match pre_fn with
+  let env, ast = match pre_fn with
     | None ->
-        ast
+        env, ast
     | Some pre_fn ->
         let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
         | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
           when Ident.lid_equals lid1 lid2 ->
-            [ Parser.AST.Module (lid1, FStar.Parser.Interleave.interleave decls1 decls2) ]
+          let env = FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 env in
+          let env, ast = FStar.ToSyntax.Interleave.interleave_module env (List.hd ast) true in
+          env, [ast]
         | _ ->
             raise (Err ("mismatch between pre-module and module\n"))
   in
+//  if fn = "test.fst"
+//  then printfn "<front end>\n%s\n</front end>\n" ast (ast |> List.map
+//        (fun m ->
+//            let doc = FStar.Parser.ToDocument.modul_to_document m in
+//            FStar.Pprint.pretty_string 0.8 100 doc)
+//       |>  String.concat "\n\n");
   Desugar.desugar_file env ast
 
 
@@ -91,10 +100,7 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
         it type-checks a fragment, can actually parse an entire module.
         Actually, this is an abuse, and just means that we're type-checking the
         first chunk. *)
-      let ast_modul =
-        if is_interface_dependence
-        then FStar.ToSyntax.ToSyntax.as_interface ast_modul
-        else ast_modul in
+      let ds_env, ast_modul = FStar.ToSyntax.Interleave.interleave_module dsenv ast_modul false in
       let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
       let dsenv = if is_interface_dependence then FStar.ToSyntax.Env.set_iface dsenv false else dsenv in
       let env = match curmod with
@@ -110,15 +116,21 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
         | None ->
             env
       in
-      let modul, _, env = Tc.tc_partial_modul env modul in
+      let modul, _, env = if DsEnv.syntax_only dsenv then (modul, [], env)
+                          else Tc.tc_partial_modul env modul in
       Some (Some modul, dsenv, env)
 
     | Parser.Driver.Decls ast_decls ->
-      let dsenv, decls = Desugar.desugar_decls dsenv ast_decls in
+      let dsenv, ast_decls_l =
+            BU.fold_map FStar.ToSyntax.Interleave.prefix_with_interface_decls
+                        dsenv
+                        ast_decls in
+      let dsenv, decls = Desugar.desugar_decls dsenv (List.flatten ast_decls_l) in
       match curmod with
         | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
         | Some modul ->
-            let modul, _, env  = Tc.tc_more_partial_modul env modul decls in
+            let modul, _, env  = if DsEnv.syntax_only dsenv then (modul, [], env)
+                                 else Tc.tc_more_partial_modul env modul decls in
             Some (Some modul, dsenv, env)
 
     with
@@ -128,6 +140,26 @@ let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence)
       | FStar.Errors.Err msg when not ((Options.trace_error())) ->
           TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
           None
+      | e when not ((Options.trace_error())) -> raise e
+
+let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.TypeChecker.Env.env =
+  try
+    let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
+    match r with
+    | Inl (Inl [FStar.Parser.AST.Interface(l, decls, _)], _) ->
+      FStar.ToSyntax.Interleave.initialize_interface l decls dsenv, env
+    | Inl _ ->
+      raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
+                               interface_file_name))
+    | Inr (err, rng) ->
+      raise (FStar.Errors.Error(err, rng))
+  with
+      | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+          TypeChecker.Err.add_errors env [(msg,r)];
+          dsenv, env
+      | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+          TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
+          dsenv, env
       | e when not ((Options.trace_error())) -> raise e
 
 (***********************************************************************)
@@ -171,33 +203,6 @@ let push_context (dsenv, env) msg =
     let env = TcEnv.push env msg in
     (dsenv, env)
 
-let tc_one_file_and_intf (intf:option<string>) (impl:string) (dsenv:DsEnv.env) (env:env) = //:(modul * int) list * Parser.Env.env * env =
-  Syntax.reset_gensym ();
-  match intf with
-    | None -> //no interface; easy
-      tc_one_file dsenv env None impl
-    | Some _ when ((Options.codegen()) <> None) ->
-        if not (Options.lax())
-        then raise (Err "Verification and code generation are no supported together with partial modules (i.e, *.fsti); use --lax to extract code separately");
-        tc_one_file dsenv env intf impl
-    | Some iname ->
-        if Options.debug_any () then
-        FStar.Util.print1 "Interleaving iface+module: %s\n" iname;
-        let caption = "interface: " ^ iname in
-        //push a new solving context, so that we can blow away implementation details below
-
-        // JP: TcEnv.pop and TcEnv.push in turn call z3 push & pop -- the z3
-        // queries have a notion of push & pop that allow one to "scope" a bunch
-        // of queries and make them invisible to the outside -- what we're doing
-        // in addition to that is we're being paranoid and are killing the z3 process to be
-        // absolutely sure it doesn't use any knowledge acquired from checking the queries
-        // that stem from the implementation
-        let dsenv', env' = push_context (dsenv, env) caption in
-        let _, dsenv', env' = tc_one_file dsenv' env' intf impl in //check the impl and interface together, if any
-        // discard the impl and check the interface alone for the rest of the program
-        let _ = pop_context env' caption in
-        tc_one_file dsenv env None iname //check the interface alone
-
 type uenv = DsEnv.env * env
 
 let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string list * (modul* int) list * uenv) =
@@ -205,9 +210,9 @@ let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string
   let remaining, (nmods, dsenv, env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          remaining, tc_one_file_and_intf (Some intf) impl dsenv env
+          remaining, tc_one_file dsenv env (Some intf) impl
         | intf_or_impl :: remaining ->
-          remaining, tc_one_file_and_intf None intf_or_impl dsenv env
+          remaining, tc_one_file dsenv env None intf_or_impl
         | [] -> [], ([], dsenv, env)
   in
   remaining, nmods, (dsenv, env)
@@ -242,4 +247,3 @@ let batch_mode_tc filenames =
   end;
   let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
   prims_mod :: all_mods, dsenv, env
-

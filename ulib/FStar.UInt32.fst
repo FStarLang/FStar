@@ -80,9 +80,15 @@ val mul_mod: a:t -> b:t -> Pure t
 let mul_mod a b =
   Mk (mul_mod (v a) (v b))
 
+val mul_div: a:t -> b:t -> Pure t
+  (requires True)
+  (ensures (fun c -> (v a * v b) / pow2 n = v c))
+let mul_div a b =
+  Mk (mul_div (v a) (v b))
+
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
-  (requires (size (v a / v b) n))
+  (requires (True))
   (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
 let div a b =
   Mk (div (v a) (v b))
@@ -90,7 +96,7 @@ let div a b =
 val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
   (requires True)
   (ensures (fun c ->
-    (v b <> 0 /\ size (v a / v b) n) ==> v a / v b = v c))
+    (v b <> 0) ==> v a / v b = v c))
 let div_underspec a b =
   Mk (div_underspec (v a) (v b))
 
@@ -111,10 +117,25 @@ let logor a b = Mk (logor (v a) (v b))
 val lognot: t -> Tot t
 let lognot a = Mk (lognot (v a))
 
-val uint_to_t: x:(uint_t n) -> Pure t
+val uint_to_t: x:uint_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))
 let uint_to_t x = Mk x
+
+#set-options "--lax"
+//This private primitive is used internally by the
+//compiler to translate bounded integer constants
+//with a desugaring-time check of the size of the number,
+//rather than an expensive verifiation check.
+//Since it is marked private, client programs cannot call it directly
+//Since it is marked unfold, it eagerly reduces,
+//eliminating the verification overhead of the wrapper
+private
+unfold
+let __uint_to_t (x:int) : Tot t
+    = uint_to_t x
+#reset-options
+
 
 (* Shift operators *)
 val shift_right: a:t -> s:t -> Pure t
@@ -147,6 +168,7 @@ unfold let op_Subtraction_Percent_Hat = sub_mod
 unfold let op_Star_Hat = mul
 unfold let op_Star_Question_Hat = mul_underspec
 unfold let op_Star_Percent_Hat = mul_mod
+unfold let op_Star_Slash_Hat = mul_div
 unfold let op_Slash_Hat = div
 unfold let op_Percent_Hat = rem
 unfold let op_Hat_Hat = logxor
