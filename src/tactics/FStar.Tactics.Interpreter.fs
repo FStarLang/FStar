@@ -146,6 +146,9 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
     ]@reflection_primops
 
+// Please note, there is some makefile magic to tweak this function in the OCaml output,
+// BESIDES the markers you see right here. If you change anything, be sure to revise it.
+
 //IN F*: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
