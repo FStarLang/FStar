@@ -441,6 +441,7 @@ let modifies_1_disjoint_buffer_vs_pointer_live
     P.modifies_1 p h h'
   ))
   (ensures (live h' b /\ as_seq h b == as_seq h' b))
+  [SMTPat (P.modifies_1 p h h'); SMTPat (live h b)]
 = P.modifies_1_reveal p h h';
   let f
     (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )

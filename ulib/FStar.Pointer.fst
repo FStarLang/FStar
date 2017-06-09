@@ -798,7 +798,7 @@ abstract let gread_gfield
 : Lemma
   (requires True)
   (ensures (gread h (gfield p fd) == DM.sel (gread h p) fd))
-  [SMTPat (gread h (gfield p fd))]
+  [SMTPatOr [[SMTPat (gread h (gfield p fd))]; [SMTPat (DM.sel (gread h p) fd)]]]
 = ()
 
 abstract let frameOf_gfield
