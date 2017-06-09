@@ -6,3 +6,4 @@ fstar-mono.exe
 tests-mono.exe
 fstar.exe
 FsLexYacc.Runtime.dll
+*.XML

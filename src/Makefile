@@ -16,7 +16,7 @@ ifeq ($(OS),Windows_NT)
   RUNTIME =
 else
   FSC     = fsharpc
-  MSBUILD = xbuild
+  MSBUILD = msbuild
   UNAME   = $(shell uname -s)
   FSTAR   = ../bin/fstar-any.sh
   RUNTIME = mono
