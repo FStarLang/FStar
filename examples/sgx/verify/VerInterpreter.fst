@@ -627,18 +627,18 @@ match instr with
        -> buf:buffer dword{ucodestart >=^ base        /\
 
 *)
-		let sm = C (base, wbmapstart, wbmapsize, ucodestart, ucodesize, uheapstart, uheapsize, ustackstart, ustacksize, buf) in
+		let sm = C base ucodestart wbmapstart uheapstart ustackstart ucodesize wbmapsize uheapsize ustacksize buf in
 	       let status' = store n  addr v env sm  in
 	       let _ = if debugflag then
-				let _ = debug_print_string (to_string iaddr) in
-				let _ = debug_print_string ":" in
-				let _ = debug_print_string "Store " in
-				let _ = debug_print_string " " in
-				let _ = debug_print_string (to_string addr) in
-				let _ = debug_print_string " " in
-				let _ = debug_print_string (to_string v) in
-				debug_print_string ";\n"
-			else true in
+	       			let _ = debug_print_string (to_string iaddr) in
+	       			let _ = debug_print_string ":" in
+	       			let _ = debug_print_string "Store " in
+	       			let _ = debug_print_string " " in
+	       			let _ = debug_print_string (to_string addr) in
+	       			let _ = debug_print_string " " in
+	       			let _ = debug_print_string (to_string v) in
+	       			debug_print_string ";\n"
+	       		else true in
 	       (status', env)
 	else
 		(false, env)
