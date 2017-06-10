@@ -40,17 +40,7 @@ let un_protect_embedded_term : term -> term =
             when S.fv_eq_lid fv SC.fstar_refl_embed_lid ->
           x
         | _ ->
-          failwith (BU.format1 "Not a protected embedded term (2): %s" (Print.term_to_string t))
-
-let type_of_embedded : term -> typ =
-    fun (t:term) ->
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(t,_); _]
-            when S.fv_eq_lid fv SC.fstar_refl_embed_lid ->
-          t
-        | _ ->
-          failwith (BU.format1 "Not a protected embedded term (1): %s" (Print.term_to_string t))
+          failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
 let embed_unit (u:unit) : term = SC.exp_unit
 let unembed_unit (_:term) :unit = ()
