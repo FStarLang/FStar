@@ -129,10 +129,9 @@
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.IFC",
-      2,
+      1,
       2,
       1,
       [
@@ -142,16 +141,16 @@
       ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC", 3, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IFC.IFC", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.IFC",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC", 5, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IFC.IFC", 4, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IFC.xor", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.xor",

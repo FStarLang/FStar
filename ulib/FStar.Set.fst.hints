@@ -189,10 +189,9 @@
       ],
       0
     ],
-    [ "FStar.Set.as_set'", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Set.as_set'",
-      2,
+      1,
       2,
       1,
       [
@@ -203,11 +202,6 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
-    ],
-    [ "FStar.Set.as_set'", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set'", 4, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set'", 5, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

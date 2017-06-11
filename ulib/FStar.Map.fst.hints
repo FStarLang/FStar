@@ -1,10 +1,6 @@
 [
   "\u0005\"”Iµ\f•\u0017ç¨\u0000ŒŒ‡˚j",
   [
-    [ "FStar.Map.t", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.__proj__Mkt__item__domain", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.restrict", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.domain", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Map.upd", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.upd",
@@ -17,17 +13,7 @@
       ],
       0
     ],
-    [ "FStar.Map.upd", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.upd", 4, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.const", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.const", 2, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Map.concat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.concat", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.concat", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.contains", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.restrict", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_SelRestrict", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_SelRestrict", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.lemma_InDomUpd1",
       1,
@@ -39,8 +25,6 @@
       ],
       0
     ],
-    [ "FStar.Map.lemma_InDomRestrict", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_InDomRestrict", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.lemma_ContainsDom",
       1,
@@ -49,11 +33,6 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [ "FStar.Map.lemma_ContainsDom", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_UpdDomain", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_UpdDomain", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_UpdDomain", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.lemma_UpdDomain", 4, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.lemma_SelUpd1",
       1,
@@ -106,7 +85,7 @@
     ],
     [
       "FStar.Map.lemma_SelRestrict",
-      3,
+      1,
       2,
       1,
       [
@@ -222,7 +201,7 @@
     ],
     [
       "FStar.Map.lemma_InDomRestrict",
-      3,
+      1,
       2,
       1,
       [
@@ -238,7 +217,7 @@
     ],
     [
       "FStar.Map.lemma_ContainsDom",
-      3,
+      2,
       2,
       1,
       [
@@ -250,7 +229,7 @@
     ],
     [
       "FStar.Map.lemma_UpdDomain",
-      5,
+      1,
       2,
       1,
       [
@@ -265,7 +244,6 @@
       ],
       0
     ],
-    [ "FStar.Map.equal", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.lemma_equal_intro",
       1,
@@ -322,10 +300,6 @@
         "lemma_FStar.Map.lemma_equal_intro", "unit_typing"
       ],
       0
-    ],
-    [ "FStar.Map.const_on", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.has_dom", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.has_dom", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Map.has_dom", 3, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

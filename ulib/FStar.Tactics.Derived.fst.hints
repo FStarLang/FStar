@@ -1,9 +1,8 @@
 [
-  "¶%ø\u0019Ñ'Ê1ˇh⁄f{\u0013\u0005Á",
+  "Åº√ä6Ãµ0\u0002Ù•Øß·?-",
   [
     [ "FStar.Tactics.Derived.fix", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Tactics.Derived.fix1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Tactics.Derived.fail", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Derived.or_else",
       1,
@@ -14,7 +13,7 @@
         "disc_equation_FStar.Pervasives.None",
         "disc_equation_FStar.Pervasives.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_None",
         "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
@@ -29,14 +28,12 @@
         "disc_equation_FStar.Pervasives.None",
         "disc_equation_FStar.Pervasives.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.uu___is_None",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ],
-    [ "FStar.Tactics.Derived.repeat1", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Tactics.Derived.repeatseq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Tactics.Derived.tcut", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Derived.revert_all",
       1,
@@ -67,6 +64,19 @@
       0
     ],
     [
+      "FStar.Tactics.Derived.assumption",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil",
+        "equation_FStar.Reflection.Syntax.binders",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
       "FStar.Tactics.Derived.destruct_equality_implication",
       1,
       2,
@@ -86,8 +96,7 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Reflection.Syntax.binders",
         "equation_FStar.Tactics.Builtins.rewrite",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -101,11 +110,8 @@
         "binder_x_600174244456cffd2507e718cf78d82a_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.Reflection.Syntax.binders",
-        "equation_FStar.Tactics.Builtins.rewrite",
         "equation_FStar.Tactics.Derived.idtac",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -139,6 +145,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Builtins.exact",
         "equation_FStar.Tactics.Derived.fail", "unit_typing"
       ],
       0

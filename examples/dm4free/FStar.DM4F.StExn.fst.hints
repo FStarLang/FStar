@@ -62,10 +62,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.StExn.STEXN", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN", 4, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExn.div_intrinsic",
       1,
@@ -163,8 +159,7 @@
         "data_typing_intro_FStar.Pervasives.None@tok",
         "data_typing_intro_FStar.Pervasives.Some@tok",
         "function_token_typing_Prims.int", "int_inversion",
-        "kinding_FStar.Pervasives.option@tok", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0"
+        "kinding_FStar.Pervasives.option@tok", "primitive_Prims.op_Equality"
       ],
       0
     ],

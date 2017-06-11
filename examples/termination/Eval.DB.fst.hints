@@ -63,10 +63,9 @@
       ],
       0
     ],
-    [ "Eval.DB.__proj__S__item___3", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Eval.DB.__proj__S__item___3",
-      2,
+      1,
       2,
       1,
       [
@@ -103,10 +102,9 @@
       ],
       0
     ],
-    [ "Eval.DB.__proj__Var__item___2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Eval.DB.__proj__Var__item___2",
-      2,
+      1,
       2,
       1,
       [
@@ -156,10 +154,9 @@
       ],
       0
     ],
-    [ "Eval.DB.__proj__Lam__item__body", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Eval.DB.__proj__Lam__item__body",
-      2,
+      1,
       2,
       1,
       [
@@ -210,10 +207,9 @@
       ],
       0
     ],
-    [ "Eval.DB.__proj__App__item__e1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Eval.DB.__proj__App__item__e1",
-      2,
+      1,
       2,
       1,
       [
@@ -228,10 +224,9 @@
       ],
       0
     ],
-    [ "Eval.DB.__proj__App__item__e2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Eval.DB.__proj__App__item__e2",
-      2,
+      1,
       2,
       1,
       [

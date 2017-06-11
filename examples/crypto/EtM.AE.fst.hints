@@ -30,21 +30,20 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "data_elim_EtM.AE.Key", "equation_EtM.AE.rid",
-        "equation_FStar.HyperHeap.disjoint",
+        "equation_EtM.AE.rid", "equation_FStar.HyperHeap.disjoint",
+        "equation_FStar.HyperStack.is_eternal_region",
         "equation_FStar.Monotonic.RRef.rid",
-        "equation_FStar.Monotonic.Seq.rid",
-        "fuel_guarded_inversion_EtM.AE.key",
-        "fuel_guarded_inversion_EtM.MAC.key", "primitive_Prims.op_AmpAmp",
+        "equation_FStar.Monotonic.Seq.rid", "primitive_Prims.op_AmpAmp",
         "proj_equation_EtM.AE.Key_ke", "proj_equation_EtM.AE.Key_region",
         "proj_equation_EtM.MAC.Key_region",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_EtM.AE.Key_km",
+        "projection_inverse_EtM.AE.Key_ke",
         "projection_inverse_EtM.AE.Key_region",
         "refinement_interpretation_EtM.AE_Tm_refine_58e53a70a90eeda61d84e45605b9d20c",
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
         "typing_EtM.MAC.__proj__Key__item__region",
-        "typing_FStar.HyperHeap.extends"
+        "typing_FStar.HyperHeap.extends",
+        "typing_FStar.HyperStack.is_eternal_region"
       ],
       0
     ],

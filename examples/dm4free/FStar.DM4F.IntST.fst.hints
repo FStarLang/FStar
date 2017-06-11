@@ -18,9 +18,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.IntST.STINT", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntST.STINT", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntST.STINT", 3, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IntST.incr_intrinsic",
       1,
@@ -106,7 +103,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_FStar.Pervasives.Mktuple2@tok",
         "function_token_typing_Prims.int",
         "function_token_typing_Prims.unit", "int_typing",
@@ -181,8 +177,6 @@
     ],
     [ "FStar.DM4F.IntST.action_get", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IntST.action_put", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntST.get'", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntST.put'", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IntST.assert_after_reify",
       1,

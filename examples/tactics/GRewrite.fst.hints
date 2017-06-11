@@ -1,7 +1,6 @@
 [
   "\u001fòñr˝\u0015»|ùD\u001f&M∏›f",
   [
-    [ "GRewrite.test_grewrite", 1, 2, 1, [ "@query" ], 0 ],
     [
       "GRewrite.test_grewrite2",
       1,
@@ -32,8 +31,8 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0
     ],
@@ -78,10 +77,9 @@
       [ "@query", "eq2-interp", "equation_Prims.eq2" ],
       0
     ],
-    [ "GRewrite.test_grewrite5", 1, 2, 1, [ "@query" ], 0 ],
     [
       "GRewrite.test_grewrite5",
-      2,
+      1,
       2,
       1,
       [

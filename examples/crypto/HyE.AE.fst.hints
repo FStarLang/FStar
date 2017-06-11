@@ -328,6 +328,7 @@
         "function_token_typing_HyE.Plain.t", "int_inversion",
         "interpretation_HyE.AE_Tm_abs_ad024afc35c1984a5529edd0237bce5a",
         "kinding_FStar.Pervasives.tuple2@tok",
+        "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConcat",
         "lemma_FStar.Map.lemma_InDomRestrict",
         "lemma_FStar.Map.lemma_SelConcat1",

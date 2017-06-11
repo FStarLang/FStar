@@ -43,8 +43,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.ExnSt.EXNST", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ExnSt.EXNST", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.ExnSt.div_intrinsic",
       1,
@@ -146,7 +144,6 @@
         "fuel_guarded_inversion_FStar.Pervasives.tuple2",
         "function_token_typing_Prims.int", "int_inversion",
         "kinding_FStar.Pervasives.tuple2@tok", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Some_a",
         "projection_inverse_FStar.Pervasives.Some_v", "unit_typing"
       ],

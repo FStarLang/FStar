@@ -314,10 +314,10 @@
         "bool_typing", "constructor_distinct_LambdaOmega.EVar",
         "disc_equation_LambdaOmega.EVar", "equality_tok_Prims.LexTop@tok",
         "equation_LambdaOmega.erenaming", "equation_LambdaOmega.esub",
-        "equation_LambdaOmega.esub_inc", "equation_LambdaOmega.is_erenaming",
-        "equation_LambdaOmega.is_evar", "equation_LambdaOmega.var",
-        "equation_Prims.nat", "function_token_typing_LambdaOmega.esub_inc",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
+        "equation_LambdaOmega.esub_inc", "equation_LambdaOmega.is_evar",
+        "equation_LambdaOmega.var", "equation_Prims.nat",
+        "function_token_typing_LambdaOmega.esub_inc", "int_inversion",
+        "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -325,7 +325,8 @@
         "refinement_interpretation_LambdaOmega_Tm_refine_e966d49e99bb259fb40f929bd1862f96",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_LambdaOmega.esub_inc",
-        "typing_LambdaOmega.is_erenaming", "well-founded-ordering-on-nat"
+        "typing_LambdaOmega.is_erenaming", "typing_LambdaOmega.is_evar",
+        "typing_LambdaOmega.uu___is_EVar", "well-founded-ordering-on-nat"
       ],
       0
     ],
@@ -493,23 +494,24 @@
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_18f4961c1d91234a8baf199895e17f88_1",
         "binder_x_82c741e99312e71219473071e8fee127_0", "bool_inversion",
-        "bool_typing", "constructor_distinct_LambdaOmega.TVar",
-        "data_elim_LambdaOmega.TVar", "disc_equation_LambdaOmega.TApp",
-        "disc_equation_LambdaOmega.TArr", "disc_equation_LambdaOmega.TLam",
-        "disc_equation_LambdaOmega.TVar", "equality_tok_Prims.LexTop@tok",
-        "equation_LambdaOmega.is_trenaming", "equation_LambdaOmega.is_tvar",
-        "equation_LambdaOmega.trenaming", "equation_LambdaOmega.tsub",
-        "equation_LambdaOmega.tsub_inc",
+        "bool_typing", "constructor_distinct_LambdaOmega.TApp",
+        "constructor_distinct_LambdaOmega.TArr",
+        "constructor_distinct_LambdaOmega.TVar",
+        "disc_equation_LambdaOmega.TApp", "disc_equation_LambdaOmega.TArr",
+        "disc_equation_LambdaOmega.TLam", "disc_equation_LambdaOmega.TVar",
+        "equality_tok_Prims.LexTop@tok", "equation_LambdaOmega.is_trenaming",
+        "equation_LambdaOmega.is_tvar", "equation_LambdaOmega.trenaming",
+        "equation_LambdaOmega.tsub", "equation_LambdaOmega.tsub_inc",
         "equation_LambdaOmega.tsub_inc_above", "equation_LambdaOmega.var",
         "equation_Prims.nat", "fuel_guarded_inversion_LambdaOmega.typ",
         "function_token_typing_LambdaOmega.tsub_inc", "int_inversion",
         "int_typing",
         "interpretation_LambdaOmega_Tm_abs_b7283506e76ca1940c0d3bcadd093bdb",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_LambdaOmega.TLam_t",
+        "projection_inverse_LambdaOmega.TApp__0",
+        "projection_inverse_LambdaOmega.TArr__1",
         "projection_inverse_LambdaOmega.TVar__0",
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_LambdaOmega_Tm_refine_b9286de32aeb68aee611dc4e1590ee03",
@@ -989,10 +991,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__SApp1__item__hst", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__SApp1__item__hst",
-      2,
+      1,
       1,
       1,
       [
@@ -1043,10 +1044,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__SApp2__item__hst", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__SApp2__item__hst",
-      2,
+      1,
       1,
       1,
       [
@@ -1149,10 +1149,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__KiVar__item__a", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiVar__item__a",
-      2,
+      1,
       1,
       1,
       [
@@ -1314,10 +1313,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__KiApp__item__hk1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiApp__item__hk1",
-      2,
+      1,
       1,
       1,
       [
@@ -1336,10 +1334,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__KiApp__item__hk2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiApp__item__hk2",
-      2,
+      1,
       1,
       1,
       [
@@ -1396,10 +1393,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__KiArr__item__hk1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiArr__item__hk1",
-      2,
+      1,
       1,
       1,
       [
@@ -1414,10 +1410,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__KiArr__item__hk2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__KiArr__item__hk2",
-      2,
+      1,
       1,
       1,
       [
@@ -1481,10 +1476,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqSymm__item__he", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqSymm__item__he",
-      2,
+      1,
       1,
       1,
       [
@@ -1535,10 +1529,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqTran__item__he12", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqTran__item__he12",
-      2,
+      1,
       1,
       1,
       [
@@ -1552,10 +1545,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqTran__item__he23", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqTran__item__he23",
-      2,
+      1,
       1,
       1,
       [
@@ -1606,10 +1598,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqLam__item__he", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqLam__item__he",
-      2,
+      1,
       1,
       1,
       [
@@ -1672,10 +1663,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqApp__item__he1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqApp__item__he1",
-      2,
+      1,
       1,
       1,
       [
@@ -1689,10 +1679,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqApp__item__he2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqApp__item__he2",
-      2,
+      1,
       1,
       1,
       [
@@ -1792,10 +1781,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqArr__item__he1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqArr__item__he1",
-      2,
+      1,
       1,
       1,
       [
@@ -1809,10 +1797,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__EqArr__item__he2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__EqArr__item__he2",
-      2,
+      1,
       1,
       1,
       [
@@ -1865,10 +1852,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyVar__item__x", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyVar__item__x",
-      2,
+      1,
       1,
       1,
       [
@@ -1895,8 +1881,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_LambdaOmega.var",
-        "equation_Prims.nat",
-        "refinement_interpretation_LambdaOmega_Tm_refine_228c3b2c3c8e5a651f73508546e24eda"
+        "equation_Prims.nat", "proj_equation_LambdaOmega.TyVar_x",
+        "refinement_interpretation_LambdaOmega_Tm_refine_228c3b2c3c8e5a651f73508546e24eda",
+        "typing_LambdaOmega.__proj__TyVar__item__x"
       ],
       0
     ],
@@ -1970,10 +1957,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyLam__item__hk", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyLam__item__hk",
-      2,
+      1,
       1,
       1,
       [
@@ -2076,10 +2062,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyApp__item__ht1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyApp__item__ht1",
-      2,
+      1,
       1,
       1,
       [
@@ -2098,10 +2083,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyApp__item__ht2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyApp__item__ht2",
-      2,
+      1,
       1,
       1,
       [
@@ -2171,10 +2155,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyEqu__item__ht", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyEqu__item__ht",
-      2,
+      1,
       1,
       1,
       [
@@ -2191,10 +2174,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyEqu__item__he", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyEqu__item__he",
-      2,
+      1,
       1,
       1,
       [
@@ -2209,10 +2191,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TyEqu__item__hk", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TyEqu__item__hk",
-      2,
+      1,
       1,
       1,
       [
@@ -2532,8 +2513,10 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_0f94a85e12455d40abc5a7e501edf70a_0",
         "binder_x_18f4961c1d91234a8baf199895e17f88_1",
+        "binder_x_70c83ac278a85936c5acf6225bba94f0_5",
         "binder_x_8aaf1d45bebed33bc36bbf557748330b_3",
         "binder_x_fd2118004c9b4fcd0fcebc3eabc62881_4",
+        "constructor_distinct_FStar.Pervasives.Some",
         "constructor_distinct_LambdaOmega.KiApp",
         "constructor_distinct_LambdaOmega.KiLam",
         "constructor_distinct_LambdaOmega.KiVar",
@@ -2544,7 +2527,8 @@
         "constructor_distinct_LambdaOmega.typ",
         "constructor_distinct_Prims.unit", "data_elim_LambdaOmega.KiArr",
         "data_elim_LambdaOmega.KiLam", "data_elim_LambdaOmega.KiVar",
-        "data_elim_LambdaOmega.TVar", "disc_equation_FStar.Pervasives.Some",
+        "data_elim_LambdaOmega.TVar", "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
         "disc_equation_LambdaOmega.KiApp", "disc_equation_LambdaOmega.KiArr",
         "disc_equation_LambdaOmega.KiLam", "disc_equation_LambdaOmega.KiVar",
         "disc_equation_LambdaOmega.TVar",
@@ -2557,9 +2541,11 @@
         "equation_Prims.nat",
         "equation_with_fuel_LambdaOmega.tsubst.fuel_instrumented",
         "fuel_guarded_inversion_LambdaOmega.env",
-        "fuel_guarded_inversion_LambdaOmega.kinding", "int_inversion",
+        "fuel_guarded_inversion_LambdaOmega.kinding",
+        "fuel_guarded_inversion_LambdaOmega.knd", "int_inversion",
         "int_typing",
         "interpretation_LambdaOmega_Tm_abs_22f2fff553b803414f8e201a9733e10e",
+        "kinding_LambdaOmega.knd@tok", "lemma_FStar.Pervasives.invertOption",
         "partial_app_typing_be6e4803788ea8fa11040eebb3377f75",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_Subtraction",
@@ -2581,6 +2567,7 @@
         "projection_inverse_LambdaOmega.KiLam_k_",
         "projection_inverse_LambdaOmega.KiLam_t",
         "projection_inverse_LambdaOmega.KiVar_a",
+        "projection_inverse_LambdaOmega.KiVar_g",
         "projection_inverse_LambdaOmega.MkEnv_a",
         "projection_inverse_LambdaOmega.TApp__0",
         "projection_inverse_LambdaOmega.TApp__1",
@@ -2595,6 +2582,7 @@
         "subterm_ordering_LambdaOmega.KiLam",
         "token_correspondence_LambdaOmega.__proj__MkEnv__item__a",
         "token_correspondence_LambdaOmega.tsub_inc_above",
+        "typing_LambdaOmega.extend_tvar", "typing_LambdaOmega.lookup_tvar",
         "typing_LambdaOmega.tshift_up_above", "typing_LambdaOmega.tsubst",
         "typing_tok_LambdaOmega.KTyp@tok", "unit_typing"
       ],
@@ -3029,7 +3017,8 @@
         "binder_x_6a04811a3f854d3aedcee81cba095638_5",
         "binder_x_72be33445e3cf5d60d578600fdf4ad4e_3",
         "binder_x_d1118ee19aa57516fe7fabc70fe73d16_6", "bool_inversion",
-        "bool_typing", "constructor_distinct_LambdaOmega.EApp",
+        "bool_typing", "constructor_distinct_FStar.Pervasives.Some",
+        "constructor_distinct_LambdaOmega.EApp",
         "constructor_distinct_LambdaOmega.ELam",
         "constructor_distinct_LambdaOmega.EVar",
         "constructor_distinct_LambdaOmega.TyApp",
@@ -3037,8 +3026,8 @@
         "constructor_distinct_LambdaOmega.TyLam",
         "constructor_distinct_LambdaOmega.TyVar",
         "data_elim_LambdaOmega.EVar", "data_elim_LambdaOmega.MkEnv",
-        "data_elim_LambdaOmega.TyApp", "data_elim_LambdaOmega.TyVar",
-        "disc_equation_FStar.Pervasives.Some",
+        "data_elim_LambdaOmega.TyApp", "data_elim_LambdaOmega.TyLam",
+        "data_elim_LambdaOmega.TyVar", "disc_equation_FStar.Pervasives.Some",
         "disc_equation_LambdaOmega.EVar", "disc_equation_LambdaOmega.TyApp",
         "disc_equation_LambdaOmega.TyEqu", "disc_equation_LambdaOmega.TyLam",
         "disc_equation_LambdaOmega.TyVar",
@@ -3059,6 +3048,7 @@
         "fuel_guarded_inversion_LambdaOmega.typing",
         "function_token_typing_LambdaOmega.esub_inc",
         "function_token_typing_LambdaOmega.esub_lam",
+        "function_token_typing_LambdaOmega.esubst",
         "function_token_typing_Prims.nat", "int_inversion", "int_typing",
         "interpretation_LambdaOmega_Tm_abs_39e7d3d40465603caa821422caf0e413",
         "interpretation_LambdaOmega_Tm_abs_662ba37a9d5b50e5920a635c1f7c90f3",
@@ -3070,6 +3060,8 @@
         "proj_equation_LambdaOmega.MkEnv_x",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Some_a",
+        "projection_inverse_FStar.Pervasives.Some_v",
         "projection_inverse_LambdaOmega.EApp__0",
         "projection_inverse_LambdaOmega.EApp__1",
         "projection_inverse_LambdaOmega.EVar__0",
@@ -3089,9 +3081,7 @@
         "projection_inverse_LambdaOmega.TyEqu_t2",
         "projection_inverse_LambdaOmega.TyLam_e1",
         "projection_inverse_LambdaOmega.TyLam_g",
-        "projection_inverse_LambdaOmega.TyLam_ht",
         "projection_inverse_LambdaOmega.TyLam_t",
-        "projection_inverse_LambdaOmega.TyLam_t_",
         "projection_inverse_LambdaOmega.TyVar_g",
         "projection_inverse_LambdaOmega.TyVar_hk",
         "projection_inverse_LambdaOmega.TyVar_x",
@@ -3112,7 +3102,8 @@
         "token_correspondence_LambdaOmega.esub_lam",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_LambdaOmega.is_renaming", "typing_LambdaOmega.is_var",
-        "typing_LambdaOmega.renaming", "typing_LambdaOmega.uu___is_EVar",
+        "typing_LambdaOmega.renaming",
+        "typing_LambdaOmega_Tm_abs_39e7d3d40465603caa821422caf0e413",
         "typing_tok_LambdaOmega.KTyp@tok", "well-founded-ordering-on-nat"
       ],
       0
@@ -3267,9 +3258,9 @@
         "@query", "LambdaOmega_pretyping_18f4961c1d91234a8baf199895e17f88",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_LambdaOmega.TVar",
-        "data_elim_LambdaOmega.TVar",
+        "data_elim_LambdaOmega.TVar", "disc_equation_LambdaOmega.TVar",
         "equation_FStar.FunctionalExtensionality.feq",
-        "equation_LambdaOmega.tshift_up",
+        "equation_LambdaOmega.trenaming", "equation_LambdaOmega.tshift_up",
         "equation_LambdaOmega.tshift_up_above",
         "equation_LambdaOmega.tsub_beta_gen",
         "equation_LambdaOmega.tsub_inc",
@@ -3277,7 +3268,7 @@
         "equation_LambdaOmega.tsub_lam", "equation_LambdaOmega.var",
         "equation_Prims._assert", "equation_Prims.nat",
         "equation_with_fuel_LambdaOmega.tsubst.fuel_instrumented",
-        "int_inversion",
+        "int_inversion", "int_typing",
         "interpretation_LambdaOmega_Tm_abs_195f6a8a67aecb8d824ede39ebd0407d",
         "interpretation_LambdaOmega_Tm_abs_c6e3c1690213ee1d824a8e649177d8ce",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
@@ -3487,10 +3478,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrArr__item__hr1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrArr__item__hr1",
-      2,
+      1,
       1,
       1,
       [
@@ -3504,10 +3494,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrArr__item__hr2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrArr__item__hr2",
-      2,
+      1,
       1,
       1,
       [
@@ -3558,10 +3547,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrLam__item__hr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrLam__item__hr",
-      2,
+      1,
       1,
       1,
       [
@@ -3624,10 +3612,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrApp__item__hr1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrApp__item__hr1",
-      2,
+      1,
       1,
       1,
       [
@@ -3641,10 +3628,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrApp__item__hr2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrApp__item__hr2",
-      2,
+      1,
       1,
       1,
       [
@@ -3719,10 +3705,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrBeta__item__hr1", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrBeta__item__hr1",
-      2,
+      1,
       1,
       1,
       [
@@ -3736,10 +3721,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TrBeta__item__hr2", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TrBeta__item__hr2",
-      2,
+      1,
       1,
       1,
       [
@@ -4268,16 +4252,15 @@
         "constructor_distinct_LambdaOmega.TrBeta",
         "constructor_distinct_LambdaOmega.TrLam",
         "constructor_distinct_LambdaOmega.TrRefl",
-        "data_elim_LambdaOmega.TrApp", "data_elim_LambdaOmega.TrArr",
-        "data_elim_LambdaOmega.TrBeta", "data_elim_LambdaOmega.TrLam",
-        "data_elim_LambdaOmega.TrRefl", "disc_equation_LambdaOmega.TLam",
-        "disc_equation_LambdaOmega.TrApp", "disc_equation_LambdaOmega.TrArr",
+        "data_elim_LambdaOmega.TrApp", "data_elim_LambdaOmega.TrBeta",
+        "data_elim_LambdaOmega.TrLam", "data_elim_LambdaOmega.TrRefl",
+        "disc_equation_LambdaOmega.TLam", "disc_equation_LambdaOmega.TrApp",
+        "disc_equation_LambdaOmega.TrArr",
         "disc_equation_LambdaOmega.TrBeta",
         "disc_equation_LambdaOmega.TrLam",
         "disc_equation_LambdaOmega.TrRefl", "equality_tok_Prims.LexTop@tok",
         "equation_LambdaOmega.tsubst_beta",
         "fuel_guarded_inversion_LambdaOmega.tred",
-        "fuel_guarded_inversion_LambdaOmega.typ",
         "proj_equation_LambdaOmega.MkLTup_h1",
         "proj_equation_LambdaOmega.MkLTup_h2",
         "proj_equation_LambdaOmega.MkLTup_s",
@@ -4460,10 +4443,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TsStep__item__hr12", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TsStep__item__hr12",
-      2,
+      1,
       1,
       1,
       [
@@ -4477,10 +4459,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TsStep__item__hr23", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TsStep__item__hr23",
-      2,
+      1,
       1,
       1,
       [
@@ -4584,10 +4565,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TssBase__item__hr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssBase__item__hr",
-      2,
+      1,
       1,
       1,
       [
@@ -4627,10 +4607,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TssSym__item__hr", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssSym__item__hr",
-      2,
+      1,
       1,
       1,
       [
@@ -4684,10 +4663,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TssTran__item__hr12", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssTran__item__hr12",
-      2,
+      1,
       1,
       1,
       [
@@ -4702,10 +4680,9 @@
       ],
       0
     ],
-    [ "LambdaOmega.__proj__TssTran__item__hr23", 1, 1, 1, [ "@query" ], 0 ],
     [
       "LambdaOmega.__proj__TssTran__item__hr23",
-      2,
+      1,
       1,
       1,
       [
@@ -4886,24 +4863,22 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_e93b1302a18a833d9aeed77330c8e15a_2",
-        "constructor_distinct_LambdaOmega.TrApp",
         "constructor_distinct_LambdaOmega.TrArr",
-        "constructor_distinct_LambdaOmega.TrBeta",
-        "constructor_distinct_LambdaOmega.TrLam",
         "constructor_distinct_LambdaOmega.TrRefl",
-        "data_elim_LambdaOmega.TrArr", "data_elim_LambdaOmega.TrBeta",
-        "data_elim_LambdaOmega.TrLam", "data_elim_LambdaOmega.TrRefl",
-        "disc_equation_LambdaOmega.TrApp", "disc_equation_LambdaOmega.TrArr",
+        "data_elim_LambdaOmega.TrApp", "data_elim_LambdaOmega.TrArr",
+        "data_elim_LambdaOmega.TrBeta", "data_elim_LambdaOmega.TrLam",
+        "data_elim_LambdaOmega.TrRefl", "disc_equation_LambdaOmega.TrApp",
+        "disc_equation_LambdaOmega.TrArr",
         "disc_equation_LambdaOmega.TrBeta",
         "disc_equation_LambdaOmega.TrLam",
         "disc_equation_LambdaOmega.TrRefl", "equality_tok_Prims.LexTop@tok",
         "fuel_guarded_inversion_LambdaOmega.tred",
-        "projection_inverse_LambdaOmega.TrApp_hr1",
-        "projection_inverse_LambdaOmega.TrApp_hr2",
-        "projection_inverse_LambdaOmega.TrApp_t1",
-        "projection_inverse_LambdaOmega.TrApp_t1_",
-        "projection_inverse_LambdaOmega.TrApp_t2",
-        "projection_inverse_LambdaOmega.TrApp_t2_",
+        "projection_inverse_LambdaOmega.TrArr_hr1",
+        "projection_inverse_LambdaOmega.TrArr_hr2",
+        "projection_inverse_LambdaOmega.TrArr_t1",
+        "projection_inverse_LambdaOmega.TrArr_t1_",
+        "projection_inverse_LambdaOmega.TrArr_t2",
+        "projection_inverse_LambdaOmega.TrArr_t2_",
         "projection_inverse_LambdaOmega.TrBeta_hr1",
         "projection_inverse_LambdaOmega.TrBeta_hr2",
         "projection_inverse_LambdaOmega.TrBeta_k",
@@ -5072,7 +5047,7 @@
         "projection_inverse_LambdaOmega.TyLam_t_",
         "refinement_interpretation_LambdaOmega_Tm_refine_9905a098cd2081ba5e7ac6fe0963c694",
         "subterm_ordering_LambdaOmega.TyEqu",
-        "typing_LambdaOmega.tred_tarr_preserved__6104"
+        "typing_LambdaOmega.tred_tarr_preserved__6005"
       ],
       0
     ],

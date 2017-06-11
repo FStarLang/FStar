@@ -54,10 +54,9 @@
       ],
       0
     ],
-    [ "MerkleTree.__proj__Concat__item__s1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MerkleTree.__proj__Concat__item__s1",
-      2,
+      1,
       2,
       1,
       [
@@ -69,10 +68,9 @@
       ],
       0
     ],
-    [ "MerkleTree.__proj__Concat__item__s2", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MerkleTree.__proj__Concat__item__s2",
-      2,
+      1,
       2,
       1,
       [
@@ -178,10 +176,9 @@
       ],
       0
     ],
-    [ "MerkleTree.__proj__N__item__left", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MerkleTree.__proj__N__item__left",
-      2,
+      1,
       2,
       1,
       [
@@ -194,10 +191,9 @@
       ],
       0
     ],
-    [ "MerkleTree.__proj__N__item__right", 1, 2, 1, [ "@query" ], 0 ],
     [
       "MerkleTree.__proj__N__item__right",
-      2,
+      1,
       2,
       1,
       [

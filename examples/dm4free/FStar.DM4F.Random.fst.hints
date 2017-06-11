@@ -95,7 +95,6 @@
     [ "FStar.DM4F.Random.RAND", 3, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Random.RAND", 4, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Random.RAND", 5, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Random.RAND", 6, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Random.sample",
       1,

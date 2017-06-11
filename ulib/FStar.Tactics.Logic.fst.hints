@@ -1,5 +1,5 @@
 [
-  "³Α\u000b’μι\u0011°δΏΙ<c1ª\u007f",
+  "'-ΝO½¶T\u000fGÒ\u000bμβ‘m{",
   [
     [
       "FStar.Tactics.Logic.revert_squash",
@@ -13,7 +13,6 @@
       ],
       0
     ],
-    [ "FStar.Tactics.Logic.l_revert", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Logic.l_revert_all",
       1,
@@ -64,7 +63,6 @@
       ],
       0
     ],
-    [ "FStar.Tactics.Logic.imp_intro_lem", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Logic.implies_intro",
       1,
@@ -120,14 +118,6 @@
       0
     ],
     [
-      "FStar.Tactics.Logic.rewrite_all_equalities",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [
       "FStar.Tactics.Logic.unfold_definition_and_simplify_eq'",
       1,
       2,
@@ -149,15 +139,6 @@
       ],
       0
     ],
-    [
-      "FStar.Tactics.Logic.unfold_definition_and_simplify_eq",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [ "FStar.Tactics.Logic.unsquash", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Logic.or_ind",
       1,
@@ -183,7 +164,6 @@
       ],
       0
     ],
-    [ "FStar.Tactics.Logic.cases_bool", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Logic.or_intro_1",
       1,

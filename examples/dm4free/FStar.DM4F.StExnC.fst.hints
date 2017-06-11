@@ -50,8 +50,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.StExnC.STEXNC", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExnC.div_intrinsic",
       1,

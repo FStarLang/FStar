@@ -194,7 +194,7 @@
         "disc_equation_FStar.Pervasives.Some",
         "lemma_FStar.Pervasives.invertOption",
         "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some", "uvar_typing_14374"
+        "typing_FStar.Pervasives.uu___is_Some", "uvar_typing_14373"
       ],
       0
     ],
@@ -611,10 +611,9 @@
       [ "@query", "assumption_BinaryTrees.tree_haseq" ],
       0
     ],
-    [ "BinaryTrees.remove_add_root", 2, 2, 1, [ "@query" ], 0 ],
     [
       "BinaryTrees.remove_add_root",
-      3,
+      2,
       2,
       1,
       [
@@ -740,10 +739,9 @@
       ],
       0
     ],
-    [ "BinaryTrees.count_remove_root", 4, 2, 2, [ "@query" ], 0 ],
     [
       "BinaryTrees.count_remove_root",
-      5,
+      4,
       2,
       2,
       [
@@ -779,6 +777,14 @@
     ],
     [
       "BinaryTrees.count_remove_root",
+      5,
+      2,
+      2,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "BinaryTrees.count_remove_root",
       6,
       2,
       2,
@@ -788,14 +794,6 @@
     [
       "BinaryTrees.count_remove_root",
       7,
-      2,
-      2,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "BinaryTrees.count_remove_root",
-      8,
       2,
       2,
       [
@@ -812,10 +810,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "BinaryTrees.count_remove", 2, 2, 1, [ "@query" ], 0 ],
     [
       "BinaryTrees.count_remove",
-      3,
+      2,
       2,
       1,
       [
@@ -853,7 +850,7 @@
     ],
     [
       "BinaryTrees.count_remove",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -861,7 +858,7 @@
     ],
     [
       "BinaryTrees.count_remove",
-      5,
+      4,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

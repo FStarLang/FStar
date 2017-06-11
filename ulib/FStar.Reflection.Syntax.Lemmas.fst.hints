@@ -19,7 +19,6 @@
         "disc_equation_FStar.Reflection.Syntax.Tv_App",
         "equation_FStar.Reflection.Syntax.Lemmas.uncurry",
         "equation_FStar.Reflection.Syntax.inspect",
-        "equation_FStar.Reflection.Syntax.pack",
         "equation_FStar.Reflection.Syntax.smaller",
         "equation_with_fuel_FStar.Reflection.Syntax.collect_app_.fuel_instrumented",
         "equation_with_fuel_FStar.Reflection.Syntax.mk_app.fuel_instrumented",

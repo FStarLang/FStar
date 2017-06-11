@@ -587,7 +587,7 @@
       1,
       2,
       1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0
     ],
     [

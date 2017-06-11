@@ -16,6 +16,7 @@
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Division", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_BinarySearch_Tm_refine_4ffa9e8c4781dcb9f839d32e17e092af",
         "refinement_interpretation_BinarySearch_Tm_refine_83f587e68677148e460204d370039d71",
@@ -56,18 +57,7 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [
-      "BinarySearch.bsearch_rec_correct",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Some",
-        "refinement_interpretation_BinarySearch_Tm_refine_5d820218f95035bfa67bc583200cf455"
-      ],
-      0
-    ],
+    [ "BinarySearch.bsearch_rec_correct", 2, 2, 1, [ "@query" ], 0 ],
     [
       "BinarySearch.bsearch_rec_correct",
       3,
@@ -87,8 +77,8 @@
         "equation_with_fuel_BinarySearch.bsearch_rec.fuel_instrumented",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Division", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Minus",
+        "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Some_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -268,7 +258,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "disc_equation_FStar.Pervasives.None",
         "equation_BinarySearch.bsearch", "equation_Prims.nat",
         "function_token_typing_Prims.int", "int_inversion",
         "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",

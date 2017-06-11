@@ -1,5 +1,5 @@
 [
-  "$ý¿\f\u001bC1¼EJ®á\u000f\u000bÄc",
+  "í\u0005·\u0015\u0004,þUz‰ëÄ\u0001¶PŠ",
   [
     [ "FStar.Reflection.Formula.uu___is_Eq", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Reflection.Formula.uu___is_BoolEq", 1, 2, 1, [ "@query" ], 0 ],
@@ -322,11 +322,10 @@
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_FStar.Reflection.Formula.And",
         "constructor_distinct_FStar.Reflection.Formula.App",
-        "constructor_distinct_FStar.Reflection.Formula.F_Unknown",
+        "constructor_distinct_FStar.Reflection.Formula.Exists",
         "constructor_distinct_FStar.Reflection.Formula.False_",
         "constructor_distinct_FStar.Reflection.Formula.Implies",
         "constructor_distinct_FStar.Reflection.Formula.Or",
-        "constructor_distinct_FStar.Reflection.Formula.True_",
         "disc_equation_FStar.Reflection.Formula.And",
         "disc_equation_FStar.Reflection.Formula.App",
         "disc_equation_FStar.Reflection.Formula.Comp",
@@ -342,6 +341,7 @@
         "disc_equation_FStar.Reflection.Formula.Not",
         "disc_equation_FStar.Reflection.Formula.Or",
         "disc_equation_FStar.Reflection.Formula.True_",
+        "equality_tok_FStar.Reflection.Formula.False_@tok",
         "equation_Prims.l_True",
         "fuel_guarded_inversion_FStar.Reflection.Formula.formula"
       ],
@@ -376,14 +376,12 @@
         "constructor_distinct_FStar.Reflection.Formula.True_",
         "constructor_distinct_FStar.Reflection.Syntax.Tv_App",
         "constructor_distinct_FStar.Reflection.Syntax.Tv_Arrow",
-        "constructor_distinct_FStar.Reflection.Syntax.Tv_Const",
-        "constructor_distinct_FStar.Reflection.Syntax.Tv_FVar",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "constructor_distinct_Prims.list", "constructor_distinct_Prims.unit",
         "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "data_typing_intro_FStar.Reflection.Syntax.Tv_Unknown@tok",
-        "disc_equation_FStar.Reflection.Formula.Comp",
-        "disc_equation_FStar.Reflection.Syntax.Tv_App",
+        "disc_equation_FStar.Reflection.Formula.Or",
+        "disc_equation_Prims.Cons",
         "equality_tok_FStar.Reflection.Formula.BoolEq@tok",
         "equality_tok_FStar.Reflection.Formula.Eq@tok",
         "equality_tok_FStar.Reflection.Formula.F_Unknown@tok",
@@ -393,15 +391,19 @@
         "equality_tok_FStar.Reflection.Formula.True_@tok",
         "equation_FStar.Pervasives.snd",
         "equation_FStar.Reflection.Formula.smaller",
+        "equation_FStar.Reflection.Syntax.collect_app",
         "equation_FStar.Reflection.Syntax.inspect",
         "equation_FStar.Reflection.Syntax.smaller",
+        "equation_FStar.Reflection.Syntax.type_of_binder",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.Reflection.Syntax.Lemmas.forall_list.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.Reflection.Syntax.term",
         "interpretation_FStar.Reflection.Formula_Tm_abs_6db5b1892fd0f67938aabdc7f9e3f4d4",
-        "l_and-interp", "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
+        "kinding_Prims.list@tok", "l_and-interp",
+        "proj_equation_FStar.Pervasives.Mktuple2__2",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Mktuple2__2",
         "projection_inverse_FStar.Reflection.Formula.And__0",
         "projection_inverse_FStar.Reflection.Formula.And__1",
@@ -427,11 +429,170 @@
         "projection_inverse_FStar.Reflection.Syntax.Tv_Arrow__1",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "ref_valid_FStar.Reflection.Formula_Tm_refine_3fe7f13f9dd8fa5d3f6f4fa4a2260b8a",
+        "ref_valid_FStar.Reflection.Formula_Tm_refine_9af62e8063c519c07b2535d29caf9e3a",
         "refinement_interpretation_FStar.Reflection.Syntax_Tm_refine_2253eb13f1af233a64b1a092facd80b2",
-        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
-        "true_interp", "typing_FStar.Reflection.Syntax.__inspect",
-        "unit_typing"
+        "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "true_interp", "typing_FStar.Pervasives.snd",
+        "typing_FStar.Reflection.Syntax.__inspect",
+        "typing_FStar.Reflection.Syntax.collect_app",
+        "typing_Prims.__proj__Cons__item__tl", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      10,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      14,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
@@ -460,19 +621,28 @@
       0
     ],
     [
+      "FStar.Reflection.Formula.term_as_formula",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Syntax.name",
+        "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Formula.formula_as_term_view",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Reflection.Formula.And",
+        "constructor_distinct_FStar.Reflection.Formula.Comp",
         "constructor_distinct_FStar.Reflection.Formula.F_Unknown",
-        "constructor_distinct_FStar.Reflection.Formula.False_",
-        "constructor_distinct_FStar.Reflection.Formula.Iff",
-        "constructor_distinct_FStar.Reflection.Formula.Implies",
-        "constructor_distinct_FStar.Reflection.Formula.Not",
-        "constructor_distinct_FStar.Reflection.Formula.True_",
+        "constructor_distinct_FStar.Reflection.Formula.Name",
         "disc_equation_FStar.Reflection.Formula.And",
         "disc_equation_FStar.Reflection.Formula.App",
         "disc_equation_FStar.Reflection.Formula.BoolEq",
@@ -492,8 +662,7 @@
         "disc_equation_FStar.Reflection.Formula.Not",
         "disc_equation_FStar.Reflection.Formula.Or",
         "disc_equation_FStar.Reflection.Formula.True_",
-        "equality_tok_FStar.Reflection.Formula.False_@tok",
-        "equality_tok_FStar.Reflection.Formula.True_@tok",
+        "equality_tok_FStar.Reflection.Formula.F_Unknown@tok",
         "equality_tok_FStar.Reflection.Syntax.Tv_Unknown@tok",
         "fuel_guarded_inversion_FStar.Reflection.Formula.comparison",
         "fuel_guarded_inversion_FStar.Reflection.Formula.formula",
@@ -511,10 +680,8 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Reflection.Formula.FV",
+        "constructor_distinct_FStar.Reflection.Formula.And",
         "constructor_distinct_FStar.Reflection.Formula.F_Unknown",
-        "constructor_distinct_FStar.Reflection.Formula.Implies",
-        "constructor_distinct_FStar.Reflection.Formula.IntLit",
         "constructor_distinct_FStar.Reflection.Formula.True_",
         "disc_equation_FStar.Reflection.Formula.And",
         "disc_equation_FStar.Reflection.Formula.App",

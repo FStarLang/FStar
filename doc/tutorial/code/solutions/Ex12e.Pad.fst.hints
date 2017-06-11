@@ -86,17 +86,7 @@
       ],
       0
     ],
-    [
-      "Ex12e.Pad.lemma_append_inj",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Ex12e.Pad_Tm_refine_4d9c92860015ea426c4f6ed9b5e23b20"
-      ],
-      0
-    ],
+    [ "Ex12e.Pad.lemma_append_inj", 3, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12e.Pad.inj",
       1,

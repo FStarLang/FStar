@@ -80,14 +80,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "NegativeTests.BST.__proj__Node__item__left",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
@@ -139,6 +131,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_NegativeTests.BST.Node",
+        "disc_equation_FStar.Pervasives.None",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
         "proj_equation_NegativeTests.BST.Node_l",
         "proj_equation_NegativeTests.BST.Node_left",

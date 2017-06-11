@@ -7,7 +7,6 @@
     [ "GC.uu___is_Black", 1, 2, 1, [ "@query" ], 0 ],
     [ "GC.uu___is_F1", 1, 2, 1, [ "@query" ], 0 ],
     [ "GC.uu___is_F2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "GC.valid", 1, 2, 1, [ "@query" ], 0 ],
     [
       "GC.to_abs_inj",
       1,
@@ -19,8 +18,6 @@
       ],
       0
     ],
-    [ "GC.to_abs_inj", 2, 2, 1, [ "@query" ], 0 ],
-    [ "GC.ptr_lifts_to", 1, 2, 1, [ "@query" ], 0 ],
     [ "GC.inv", 1, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [ "GC.gc_inv", 1, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [ "GC.gc_inv", 2, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
@@ -341,7 +338,14 @@
       [ "@query", "assumption_GC.color_haseq" ],
       0
     ],
-    [ "GC.sweep_aux_inv", 5, 2, 1, [ "@query" ], 0 ],
+    [
+      "GC.sweep_aux_inv",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_GC.color_haseq" ],
+      0
+    ],
     [
       "GC.sweep_aux_inv",
       6,
@@ -369,14 +373,6 @@
     [
       "GC.sweep_aux_inv",
       9,
-      2,
-      1,
-      [ "@query", "assumption_GC.color_haseq" ],
-      0
-    ],
-    [
-      "GC.sweep_aux_inv",
-      10,
       2,
       1,
       [ "@query", "assumption_GC.color_haseq" ],
@@ -426,12 +422,10 @@
     [ "GC.test2", 2, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [ "GC.sweep", 1, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [ "GC.sweep", 2, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
-    [ "GC.sweep", 3, 2, 1, [ "@query" ], 0 ],
-    [ "GC.sweep", 4, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
-    [ "GC.sweep", 5, 2, 1, [ "@query" ], 0 ],
+    [ "GC.sweep", 3, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [
       "GC.sweep",
-      6,
+      4,
       2,
       1,
       [
@@ -482,10 +476,10 @@
       ],
       0
     ],
-    [ "GC.sweep", 7, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
+    [ "GC.sweep", 5, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [
       "GC.sweep",
-      8,
+      6,
       2,
       1,
       [
@@ -494,6 +488,18 @@
       ],
       0
     ],
+    [
+      "GC.sweep",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_GC.mem_addr",
+        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27"
+      ],
+      0
+    ],
+    [ "GC.sweep", 8, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [
       "GC.sweep",
       9,
@@ -505,26 +511,12 @@
       ],
       0
     ],
-    [ "GC.sweep", 10, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
-    [
-      "GC.sweep",
-      11,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_GC.mem_addr",
-        "haseqGC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27"
-      ],
-      0
-    ],
     [ "GC.gc", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [ "GC.gc", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "GC.gc", 3, 2, 1, [ "@query" ], 0 ],
-    [ "GC.gc", 4, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "GC.gc", 5, 2, 1, [ "@query" ], 0 ],
+    [ "GC.gc", 3, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "GC.gc",
-      6,
+      4,
       2,
       1,
       [
@@ -562,7 +554,7 @@
       ],
       0
     ],
-    [ "GC.gc", 7, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "GC.gc", 5, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "GC.try_alloc_invariant",
       1,
@@ -571,24 +563,14 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "GC.try_alloc_invariant", 2, 2, 1, [ "@query" ], 0 ],
-    [ "GC.try_alloc_invariant", 3, 2, 1, [ "@query" ], 0 ],
-    [ "GC.try_alloc_invariant", 4, 2, 1, [ "@query" ], 0 ],
-    [ "GC.alloc", 1, 2, 1, [ "@query" ], 0 ],
-    [ "GC.alloc", 2, 2, 1, [ "@query" ], 0 ],
+    [ "GC.alloc", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "GC.alloc", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [ "GC.alloc", 3, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "GC.alloc", 4, 2, 1, [ "@query" ], 0 ],
+    [ "GC.alloc", 4, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [ "GC.alloc", 5, 2, 1, [ "@query" ], 0 ],
-    [ "GC.alloc", 6, 2, 1, [ "@query" ], 0 ],
-    [ "GC.alloc", 7, 2, 1, [ "@query" ], 0 ],
-    [ "GC.alloc", 8, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "GC.alloc", 9, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "GC.alloc", 10, 2, 1, [ "@query" ], 0 ],
-    [ "GC.alloc", 11, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "GC.alloc", 12, 2, 1, [ "@query" ], 0 ],
     [
       "GC.alloc",
-      13,
+      6,
       2,
       1,
       [
@@ -653,10 +635,10 @@
       ],
       0
     ],
-    [ "GC.alloc", 14, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
+    [ "GC.alloc", 7, 2, 1, [ "@query", "assumption_GC.color_haseq" ], 0 ],
     [
       "GC.alloc",
-      15,
+      8,
       2,
       1,
       [
@@ -667,7 +649,7 @@
     ],
     [
       "GC.alloc",
-      16,
+      9,
       2,
       1,
       [

@@ -63,10 +63,9 @@
       ],
       0
     ],
-    [ "FStar.Constructive.ceq_eq", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Constructive.ceq_eq",
-      2,
+      1,
       2,
       1,
       [

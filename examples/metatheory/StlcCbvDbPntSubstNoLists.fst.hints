@@ -217,14 +217,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "StlcCbvDbPntSubstNoLists.__proj__TyVar__item__x",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "StlcCbvDbPntSubstNoLists_pretyping_50e78c3fdc2d5cb83ab6b5165045e606",
@@ -405,14 +397,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "StlcCbvDbPntSubstNoLists.__proj__TyApp__item___5",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "disc_equation_StlcCbvDbPntSubstNoLists.TyApp",
@@ -433,14 +417,6 @@
     [
       "StlcCbvDbPntSubstNoLists.__proj__TyApp__item___6",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "StlcCbvDbPntSubstNoLists.__proj__TyApp__item___6",
-      2,
       2,
       1,
       [

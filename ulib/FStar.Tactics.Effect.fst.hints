@@ -1,5 +1,5 @@
 [
-  "k”ËjK\u0004≤D=c'|7Ò≈Ò",
+  "b\u001bŒ,Y[Xî≤kŸ]≤›™3",
   [
     [ "FStar.Tactics.Effect.uu___is_Success", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -94,8 +94,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.Tactics.Effect.TAC", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Tactics.Effect.TAC", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Effect.return",
       1,
@@ -117,6 +115,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Effect.Success",
         "data_elim_FStar.Tactics.Effect.Failed",
         "data_typing_intro_FStar.Tactics.Effect.Failed@tok",
         "fuel_guarded_inversion_FStar.Tactics.Effect.__result"
@@ -150,6 +149,14 @@
         "ref_valid_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.by_tactic_seman",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
       0
     ]
   ]

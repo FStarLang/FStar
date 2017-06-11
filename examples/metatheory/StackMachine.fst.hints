@@ -513,10 +513,9 @@
       ],
       0
     ],
-    [ "StackMachine.__proj__TBinop__item___3", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StackMachine.__proj__TBinop__item___3",
-      2,
+      1,
       2,
       1,
       [
@@ -533,10 +532,9 @@
       ],
       0
     ],
-    [ "StackMachine.__proj__TBinop__item___4", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StackMachine.__proj__TBinop__item___4",
-      2,
+      1,
       2,
       1,
       [
@@ -549,10 +547,9 @@
       ],
       0
     ],
-    [ "StackMachine.__proj__TBinop__item___5", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StackMachine.__proj__TBinop__item___5",
-      2,
+      1,
       2,
       1,
       [
@@ -766,10 +763,9 @@
       ],
       0
     ],
-    [ "StackMachine.__proj__TiBinop__item___4", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StackMachine.__proj__TiBinop__item___4",
-      2,
+      1,
       2,
       1,
       [
@@ -851,10 +847,9 @@
       ],
       0
     ],
-    [ "StackMachine.__proj__TCons__item___3", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StackMachine.__proj__TCons__item___3",
-      2,
+      1,
       2,
       1,
       [
@@ -868,10 +863,9 @@
       ],
       0
     ],
-    [ "StackMachine.__proj__TCons__item___4", 1, 2, 1, [ "@query" ], 0 ],
     [
       "StackMachine.__proj__TCons__item___4",
-      2,
+      1,
       2,
       1,
       [

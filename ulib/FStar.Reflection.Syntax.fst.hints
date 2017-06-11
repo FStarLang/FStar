@@ -1,5 +1,5 @@
 [
-  "o£ìÜ®Ã∫Œ\u0012\u001dÆ∂\\µ˙Ø",
+  "≠ÅΩ˛\tñπƒ?\u0013®îˆí‚ª",
   [
     [ "FStar.Reflection.Syntax.uu___is_C_Unit", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Reflection.Syntax.uu___is_C_Int", 1, 2, 1, [ "@query" ], 0 ],
@@ -275,14 +275,6 @@
       ],
       0
     ],
-    [
-      "FStar.Reflection.Syntax.eq_qn",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
     [ "FStar.Reflection.Syntax.uu___is_Simpl", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Reflection.Syntax.uu___is_WHNF", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Reflection.Syntax.uu___is_Primops", 1, 2, 1, [ "@query" ], 0 ],
@@ -314,8 +306,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_f2be2d73ffa2ecd6853040537b61dd05_0",
-        "constructor_distinct_FStar.Reflection.Syntax.Tv_App",
+        "binder_x_f2be2d73ffa2ecd6853040537b61dd05_0", "bool_inversion",
+        "bool_typing",
+        "constructor_distinct_FStar.Reflection.Syntax.Tv_Refine",
         "disc_equation_FStar.Reflection.Syntax.Tv_Abs",
         "disc_equation_FStar.Reflection.Syntax.Tv_App",
         "disc_equation_FStar.Reflection.Syntax.Tv_Arrow",
@@ -331,12 +324,15 @@
         "equation_FStar.Reflection.Syntax.smaller",
         "fuel_guarded_inversion_FStar.Reflection.Syntax.term_view",
         "l_and-interp", "proj_equation_FStar.Pervasives.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2",
         "projection_inverse_FStar.Reflection.Syntax.Tv_Abs__1",
         "projection_inverse_FStar.Reflection.Syntax.Tv_App__0",
         "projection_inverse_FStar.Reflection.Syntax.Tv_App__1",
         "projection_inverse_FStar.Reflection.Syntax.Tv_Arrow__1",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_Refine__0",
         "projection_inverse_FStar.Reflection.Syntax.Tv_Refine__1",
         "refinement_interpretation_FStar.Reflection.Syntax_Tm_refine_2253eb13f1af233a64b1a092facd80b2",
         "typing_FStar.Reflection.Syntax.__inspect"

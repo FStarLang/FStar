@@ -14,14 +14,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_UserTactics.A",
-        "constructor_distinct_UserTactics.B", "disc_equation_UserTactics.A",
+        "constructor_distinct_UserTactics.B",
+        "constructor_distinct_UserTactics.C",
+        "constructor_distinct_UserTactics.D", "disc_equation_UserTactics.A",
         "disc_equation_UserTactics.B", "disc_equation_UserTactics.C",
         "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
       ],
       0
     ],
-    [ "UserTactics.test_trivial", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UserTactics.explicitly_trigger_normalizer", 1, 2, 1, [ "@query" ], 0 ],
     [
       "UserTactics.implicitly_unfolfed_before_preprocessing",
       1,
@@ -33,8 +33,6 @@
       ],
       0
     ],
-    [ "UserTactics.local_let_bindings", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UserTactics.scanning_environment", 1, 2, 1, [ "@query" ], 0 ],
     [
       "UserTactics.lemma_mul_comm",
       1,
@@ -57,23 +55,15 @@
       ],
       0
     ],
-    [ "UserTactics.test_apply_ascription'", 1, 2, 1, [ "@query" ], 0 ],
     [
       "UserTactics.test_apply_ascription'",
-      2,
+      1,
       2,
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0
     ],
     [ "UserTactics.test_inspect", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "UserTactics.test_simpl",
-      1,
-      2,
-      1,
-      [ "@query", "equation_FStar.Tactics.Builtins.dump" ],
-      0
-    ]
+    [ "UserTactics.test_simpl", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]
