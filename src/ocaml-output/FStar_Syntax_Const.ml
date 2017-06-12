@@ -120,15 +120,8 @@ let b2t_lid: FStar_Ident.lident = pconst "b2t"
 let admit_lid: FStar_Ident.lident = pconst "admit"
 let magic_lid: FStar_Ident.lident = pconst "magic"
 let has_type_lid: FStar_Ident.lident = pconst "has_type"
-let c_true_lid: FStar_Ident.lident = pconst "c_True"
-let c_false_lid: FStar_Ident.lident = pconst "c_False"
-let c_and_lid: FStar_Ident.lident = pconst "c_and"
-let c_or_lid: FStar_Ident.lident = pconst "c_or"
-let dtuple2_lid: FStar_Ident.lident = pconst "dtuple2"
 let eq2_lid: FStar_Ident.lident = pconst "eq2"
 let eq3_lid: FStar_Ident.lident = pconst "eq3"
-let c_eq2_lid: FStar_Ident.lident = pconst "equals"
-let c_eq3_lid: FStar_Ident.lident = pconst "h_equals"
 let exp_true_bool: FStar_Syntax_Syntax.term =
   mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool true))
 let exp_false_bool: FStar_Syntax_Syntax.term =
@@ -157,7 +150,6 @@ let strcat_lid: FStar_Ident.lident = p2l ["Prims"; "strcat"]
 let let_in_typ: FStar_Ident.lident = p2l ["Prims"; "Let"]
 let string_of_int_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_bool"]
-let string_compare: FStar_Ident.lident = p2l ["FStar"; "String"; "compare"]
 let op_Eq: FStar_Ident.lident = pconst "op_Equality"
 let op_notEq: FStar_Ident.lident = pconst "op_disEquality"
 let op_LT: FStar_Ident.lident = pconst "op_LessThan"
@@ -217,31 +209,11 @@ let range_0: FStar_Ident.lident = pconst "range_0"
 let guard_free: FStar_Ident.lident = pconst "guard_free"
 let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
-let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
-  fun l  ->
-    let uu____112 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None in
-    FStar_All.pipe_right uu____112 FStar_Syntax_Syntax.fv_to_tm
-let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lident =
+let fstar_tactics_lid: Prims.string -> FStar_Ident.lident =
   fun s  ->
-    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] s)
+    FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] [s])
       FStar_Range.dummyRange
-let fstar_tactics_lid: Prims.string -> FStar_Ident.lid =
-  fun s  -> fstar_tactics_lid' [s]
-let tactic_lid: FStar_Ident.lid = fstar_tactics_lid' ["Effect"; "tactic"]
-let by_tactic_lid: FStar_Ident.lid =
-  fstar_tactics_lid' ["Effect"; "__by_tactic"]
-let synth_lid: FStar_Ident.lid =
-  fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
-let assert_by_tactic_lid: FStar_Ident.lid =
-  fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
-let reify_tactic_lid: FStar_Ident.lid =
-  fstar_tactics_lid' ["Effect"; "reify_tactic"]
-let quote_lid: FStar_Ident.lident =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "quote"]
-    FStar_Range.dummyRange
-let fstar_refl_embed_lid: FStar_Ident.lident =
-  FStar_Ident.lid_of_path ["FStar"; "Tactics"; "Builtins"; "__embed"]
-    FStar_Range.dummyRange
-let fstar_refl_embed: FStar_Syntax_Syntax.term =
-  lid_as_tm fstar_refl_embed_lid
+let tactic_lid: FStar_Ident.lident = fstar_tactics_lid "tactic"
+let by_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "by_tactic"
+let reify_tactic_lid: FStar_Ident.lident = fstar_tactics_lid "reify_tactic"
+let fstar_tactics_embed_lid: FStar_Ident.lident = fstar_tactics_lid "__embed"
