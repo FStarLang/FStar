@@ -27,6 +27,7 @@ FStar_HyperStack_All
 FStar_HyperStack_ST
 FStar_IndefiniteDescription
 FStar_Int
+FStar_Int_Cast
 FStar_Int128
 FStar_Int16
 FStar_Int31
@@ -34,7 +35,6 @@ FStar_Int32
 FStar_Int63
 FStar_Int64
 FStar_Int8
-FStar_Int_Cast
 FStar_Integers
 FStar_IO
 FStar_List
