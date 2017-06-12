@@ -3,7 +3,7 @@ module Test
 
 module DM = FStar.DependentMap
 module S  = FStar.Struct
-module HST = FStar.HyperStack.ST
+module HST = FStar.ST
 
 type fields =
 | I

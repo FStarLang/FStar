@@ -1,7 +1,6 @@
 (* to be used with Ex12.MAC.fst and Ex12a.ACLs.fst *)
 
 module Ex12a.Cap (* capabilities *) 
-open FStar.ST
 open FStar.All
 open Platform.Bytes
 

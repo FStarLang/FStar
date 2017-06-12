@@ -1,4 +1,4 @@
-module FStar.HyperStack.ST
+module FStar.ST
 open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack

@@ -1,11 +1,11 @@
 // with: --include ulib --include ulib/hyperstack
 
 module FStar.Struct
-open FStar.HyperStack.ST
+
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module HST = FStar.HyperStack.ST
+module HST = FStar.ST
 
 (** Paths within nested dependent maps *)
 

@@ -15,7 +15,7 @@
 *)
 module FStar.All
 open FStar.Heap
-include FStar.ST
+open FStar.ST
 
 let all_pre = all_pre_h heap
 let all_post (a : Type) = all_post_h heap a

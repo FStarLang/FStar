@@ -1,5 +1,5 @@
 module EtM.AE
-open FStar.HyperStack.ST
+
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
@@ -9,7 +9,7 @@ open FStar.Monotonic.RRef
 module MAC = EtM.MAC
 
 open Platform.Bytes
-open HyperStack.CoreCrypto
+open CoreCrypto
 
 abstract type cipher = (CPA.cipher * MAC.tag)
 

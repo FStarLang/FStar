@@ -2206,12 +2206,17 @@ let prepare_module_or_interface:
               then []
               else
                 if
-                  FStar_Ident.lid_equals mname
-                    FStar_Parser_Const.pervasives_lid
-                then [FStar_Parser_Const.prims_lid]
+                  FStar_Util.starts_with "FStar."
+                    (FStar_Ident.text_of_lid mname)
+                then
+                  [FStar_Parser_Const.prims_lid;
+                  FStar_Parser_Const.pervasives_lid;
+                  FStar_Parser_Const.fstar_ns_lid]
                 else
                   [FStar_Parser_Const.prims_lid;
                   FStar_Parser_Const.pervasives_lid;
+                  FStar_Parser_Const.st_lid;
+                  FStar_Parser_Const.all_lid;
                   FStar_Parser_Const.fstar_ns_lid] in
             let open_ns1 =
               if

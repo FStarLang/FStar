@@ -14,10 +14,10 @@ all: uall
 uall: $(POSTARGETS) $(NEGTARGETS)
 
 $(POSTARGETS): %.pver: %
-	$(FSTAR) --include $(FSTAR_HOME)/ulib --include $^ --odir $^ Test.fst
+	$(FSTAR) --include $(FSTAR_HOME)/ulib --include $(FSTAR_HOME)/ulib/hyperstack --include $^ --odir $^ Test.fst
 
 $(NEGTARGETS): %.nver: %
-	! $(FSTAR) --include $(FSTAR_HOME)/ulib --include $^ --odir $^ Test.fst > $^/error.log 2>&1
+	! $(FSTAR) --include $(FSTAR_HOME)/ulib --include $(FSTAR_HOME)/ulib/hyperstack --include $^ --odir $^ Test.fst > $^/error.log 2>&1
 	@echo $^ failed as expected
 
 clean:

@@ -1,4 +1,4 @@
-(*
+ (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,25 +13,25 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.HyperStack.All
-open FStar.HyperStack.ST
+module FStar.All
+open FStar.ST
 
-let all_pre = all_pre_h HyperStack.mem
-let all_post (a:Type) = all_post_h HyperStack.mem a
-let all_wp (a:Type) = all_wp_h HyperStack.mem a
-new_effect ALL = ALL_h HyperStack.mem
+let all_pre = all_pre_h HyperHeap.t
+let all_post (a:Type) = all_post_h HyperHeap.t a
+let all_wp (a:Type) = all_wp_h HyperHeap.t a
+new_effect ALL = ALL_h HyperHeap.t
 
 unfold let lift_state_all (a:Type) (wp:st_wp a) (p:all_post a) =  wp (fun a -> p (V a))
 sub_effect STATE ~> ALL = lift_state_all
 
-unfold let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperStack.mem) = wp (fun ra -> p ra h)
+unfold let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperHeap.t) = wp (fun ra -> p ra h)
 sub_effect EXN   ~> ALL = lift_exn_all
 
-effect All (a:Type) (pre:all_pre) (post: (HyperStack.mem -> Tot (all_post a))) =
+effect All (a:Type) (pre:all_pre) (post: (HyperHeap.t -> Tot (all_post a))) =
        ALL a
-           (fun (p:all_post a) (h:HyperStack.mem) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* WP  *)
+           (fun (p:all_post a) (h:HyperHeap.t) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* WP  *)
 effect ML (a:Type) =
-  ALL a (all_null_wp HyperStack.mem a)
+  ALL a (all_null_wp HyperHeap.t a)
 
 assume val pipe_right: 'a -> ('a -> ML 'b) -> ML 'b
 assume val pipe_left: ('a -> ML 'b) -> 'a -> ML 'b

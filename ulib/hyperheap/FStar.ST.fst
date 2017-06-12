@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.HyperHeap.ST
+module FStar.ST
 open FStar.HyperHeap
 let modifies s h0 h1 = HyperHeap.modifies s h0 h1
 let modifies_none h0 h1 = modifies Set.empty h0 h1
