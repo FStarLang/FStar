@@ -9,7 +9,7 @@ open FStar.Monotonic.RRef
 module MAC = EtM.MAC
 
 open Platform.Bytes
-open HyperStack.CoreCrypto
+open CoreCrypto
 module CPA = EtM.CPA
 module MAC = EtM.MAC
 module Ideal = EtM.Ideal

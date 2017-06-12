@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.HyperStack.All
-open FStar.HyperStack.ST
+include FStar.HyperStack.ST
 
 let all_pre = all_pre_h HyperStack.mem
 let all_post (a:Type) = all_post_h HyperStack.mem a
