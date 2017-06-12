@@ -1,5 +1,5 @@
 [
-  "vRb\\QZµ\u0013rvþÌò\n)\u0017",
+  "ØÔ’„­N¬\u0017-¯ùy \u0010‚=",
   [
     [
       "FStar.BufferNG.uu___is_BufferRootSingleton",
@@ -1432,7 +1432,7 @@
         "function_token_typing_FStar.HyperHeap.rid",
         "function_token_typing_FStar.HyperHeap.root",
         "function_token_typing_FStar.UInt32.n", "int_inversion",
-        "int_typing", "lemma_FStar.BufferNG.live_gpointer_of_buffer_cell",
+        "lemma_FStar.BufferNG.live_gpointer_of_buffer_cell",
         "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomRestrict",
         "lemma_FStar.Pointer.disjoint_sym_",
@@ -1471,6 +1471,7 @@
         "typing_FStar.BufferNG.__proj__Buffer__item__broot",
         "typing_FStar.BufferNG.as_seq",
         "typing_FStar.BufferNG.buffer_root_length",
+        "typing_FStar.BufferNG.gpointer_of_buffer_cell",
         "typing_FStar.HyperStack.__proj__HS__item__h",
         "typing_FStar.HyperStack.is_in", "typing_FStar.Map.restrict",
         "typing_FStar.Pointer.__proj__APointer__item__a",

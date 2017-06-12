@@ -43,7 +43,7 @@ private let rec path_sel
     | StepField key value fd ->
       let (m': DM.t key value) = m' in
       DM.sel m' fd
-    | StepCell length value i -> Seq.index m' (UInt32.v i) 
+    | StepCell length value i -> Seq.index m' (UInt32.v i)
     end
 
 private let rec path_upd
@@ -370,7 +370,7 @@ private let path_includes_exists_concat
       )
     )
     p q
-  
+
 let step_disjoint
   (#from: Type)
   (#to1 #to2: Type)
@@ -469,7 +469,7 @@ private let rec path_disjoint_t_rect
 = match h with
   | PathDisjointStep p s1 s2 -> h_step p s1 s2 h
   | PathDisjointIncludes p1_ p2_ p1' p2' h_ -> h_includes p1_ p2_ p1' p2' h_ h (path_disjoint_t_rect x h_step h_includes p1_ p2_ h_)
-  
+
 private let path_disjoint
   (#from: Type)
   (#value1: Type)
@@ -529,7 +529,7 @@ private let path_disjoint_step
   (#to2: Type)
   (p: path from through)
   (s1: step through to1)
-  (s2: step through to2 { step_disjoint s1 s2 } ) 
+  (s2: step through to2 { step_disjoint s1 s2 } )
 : Lemma
   (requires True)
   (ensures (path_disjoint (PathStep through to1 p s1) (PathStep through to2 p s2)))
@@ -575,7 +575,7 @@ private let path_sel_upd_other
   (ensures (forall (m: from) (v: to1) . path_sel (path_upd m p1 v) p2 == path_sel m p2))
 = path_disjoint_ind
   (fun #v1 #v2 p1_ p2_ -> forall (m: from) (v: v1) . path_sel (path_upd m p1_ v) p2_ == path_sel m p2_)
-  (fun #through #to1_ #to2_ p s1 s2 -> 
+  (fun #through #to1_ #to2_ p s1 s2 ->
       FStar.Classical.forall_intro' #_ #(fun m -> forall  (v: to1_) . path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun m ->
 	  FStar.Classical.forall_intro' #_ #(fun v -> path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun v ->
 	  match s1 with
@@ -672,17 +672,17 @@ abstract let live_not_unused_in
 : Lemma
   (ensures (live h p /\ p `unused_in` h ==> False))
   [SMTPatT (live h p); SMTPatT (p `unused_in` h)]
-= () 
+= ()
 
 abstract let gread
   (#value: Type)
   (h: HS.mem)
-  (p: pointer value) 
+  (p: pointer value)
 : GTot value
 = let (Pointer content p') = p in
   path_sel (HS.sel h content) p'
 
-abstract let frameOf 
+abstract let frameOf
   (#value: Type)
   (p: pointer value)
 : GTot HH.rid
@@ -798,7 +798,7 @@ abstract let gread_gfield
 : Lemma
   (requires True)
   (ensures (gread h (gfield p fd) == DM.sel (gread h p) fd))
-  [SMTPat (gread h (gfield p fd))]
+  [SMTPatOr [[SMTPat (gread h (gfield p fd))]; [SMTPat (DM.sel (gread h p) fd)]]]
 = ()
 
 abstract let frameOf_gfield
@@ -1022,7 +1022,7 @@ let live_includes
 = includes_ind
   (fun #v1 #v2 p1 p2 -> live h p1 <==> live h p2)
   (fun #k #v p fd -> live_gfield h p fd)
-  (fun #length #value p i -> live_gcell h p i)  
+  (fun #length #value p i -> live_gcell h p i)
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
   p1 p2
@@ -1063,7 +1063,7 @@ abstract let disjoint_gcell
   (#value: Type)
   (p: pointer (array length value))
   (i1: UInt32.t {UInt32.v i1 < UInt32.v length})
-  (i2: UInt32.t {UInt32.v i2 < UInt32.v length})  
+  (i2: UInt32.t {UInt32.v i2 < UInt32.v length})
 : Lemma
   (requires (UInt32.v i1 <> UInt32.v i2))
   (ensures (disjoint (gcell p i1) (gcell p i2)))
@@ -1215,7 +1215,7 @@ let live_disjoint
 (*** The modifies clause *)
 
 // private // in fact, we have to expose this type, otherwise unification problems will appear everywhere
-noeq type apointer = 
+noeq type apointer =
 | APointer:
   (a: Type) ->
   (p: pointer a) ->

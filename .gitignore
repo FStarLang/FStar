@@ -76,3 +76,6 @@ tags
 /nuobj/
 nubuild.log
 nubuild.progress
+
+# Z3/F* nightly/weekly files
+/nightly

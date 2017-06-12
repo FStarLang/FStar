@@ -82,6 +82,7 @@ abstract let equal_intro
 : Lemma
   (requires (forall k . sel m1 k == sel m2 k))
   (ensures (equal m1 m2))
+  [SMTPat (equal m1 m2)]
 = ()
 
 abstract let equal_refl
@@ -90,6 +91,7 @@ abstract let equal_refl
   (m: t key value)
 : Lemma
   (ensures (equal m m))
+  [SMTPat (equal m m)]
 = ()
 
 (** TODO: we need dependent functional extensionality *)
@@ -101,6 +103,7 @@ assume val equal_elim
 : Lemma
   (requires (equal m1 m2))
   (ensures (m1 == m2))
+  [SMTPat (equal m1 m2)]
 
 abstract let restrict
   (#key: eqtype)
