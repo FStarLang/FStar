@@ -332,3 +332,7 @@ let rec uncurry_mlty_fun t =
         let args, res = uncurry_mlty_fun b in
         a::args, res
     | _ -> [], t
+
+//tactics
+let mk_interpretation_fun () =
+    MLE_Const MLC_Unit

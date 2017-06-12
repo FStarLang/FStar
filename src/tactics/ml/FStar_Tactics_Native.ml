@@ -2,8 +2,11 @@ open FStar_Tactics_Types
 open FStar_Tactics
 open FStar_Tactics_Basic
 open FStar_Syntax_Syntax
+open FStar_Range
 module Core = FStar_Tactics_Basic
 module BU = FStar_Util
+
+let r = dummyRange
 
 type itac = proofstate -> args -> term option
 type native_primitive_step =
@@ -31,18 +34,40 @@ let register_tactic (s: string) (arity: int) (t: itac)=
 let interpret_goal (g: FStar_Tactics.goal): Core.goal =
     {context=(fst g); witness=None; goal_ty=(snd g)}
 
+let interpret_state (s: FStar_Tactics.state): FStar_Tactics_Embedding.state =
+    (List.map interpret_goal (fst s), List.map interpret_goal (snd s))
+
+let state_to_proofstate (s: FStar_Tactics.state): proofstate =
+    match (fst s) with
+    | hd::tl ->
+        {
+            main_context=fst hd;
+            main_goal=interpret_goal hd;
+            all_implicits=[];
+            goals=List.map interpret_goal (fst s);
+            smt_goals=List.map interpret_goal (snd s);
+            transaction=FStar_Unionfind.new_transaction()
+        }
+
+let unembed_res (ps:proofstate) (res:term) (unembed_a:term -> 'a): 'a __result =
+    match (FStar_Tactics_Embedding.unembed_result ps res unembed_a) with
+    | BU.Inl (u, state) -> Success(u, uninterpret_state state)
+    | BU.Inr (s, state) -> Failed(s, uninterpret_state state)
+
+let interpret_tactic (ps: proofstate) (t: state -> 'b __result) =
+    let (ps_goals: goals) = List.map (fun s -> (s.context, s.goal_ty)) ps.goals in
+    let (ps_smt_goals: goals) = List.map (fun s -> (s.context, s.goal_ty)) ps.smt_goals in
+    let res = t (ps_goals, ps_smt_goals) in
+    match res with
+    | Success (a, s2) -> Success (a, {ps with goals=(List.map interpret_goal (fst s2)); smt_goals=(List.map interpret_goal (fst s2))})
+    | Failed (str, s2) -> Failed (str, {ps with goals=(List.map interpret_goal (fst s2)); smt_goals=(List.map interpret_goal (fst s2))})
+
 let from_tactic_0 (t: 'b tactic): ('b tac) =
     let rtac =
         (mk_tac (fun (ps: proofstate) ->
             let (m2: state -> 'b __result) = t () in
-            let (ps_goals: goals) = List.map (fun s -> (s.context, s.goal_ty)) ps.goals in
-            let (ps_smt_goals: goals) = List.map (fun s -> (s.context, s.goal_ty)) ps.smt_goals in
-            let res = m2 (ps_goals, ps_smt_goals) in
-            match res with
-            | Success (a, s2) -> Success (a, {ps with goals=(List.map interpret_goal (fst s2)); smt_goals=(List.map interpret_goal (fst s2))})
-            | Failed (str, s2) -> Failed (str, {ps with goals=(List.map interpret_goal (fst s2)); smt_goals=(List.map interpret_goal (fst s2))})
-        )) in
-    rtac
+            interpret_tactic ps m2
+        )) in rtac
 
 let from_tactic_1 (t: 'a -> 'b tactic): ('a -> 'b tac) =
     let rtac =
@@ -50,11 +75,18 @@ let from_tactic_1 (t: 'a -> 'b tactic): ('a -> 'b tac) =
             mk_tac (fun (ps: proofstate) ->
                 let m = t x in
                 let (m2: state -> 'b __result) = m () in
-                let (ps_goals: goals) = List.map (fun s -> (s.context, s.goal_ty)) ps.goals in
-                let (ps_smt_goals: goals) = List.map (fun s -> (s.context, s.goal_ty)) ps.smt_goals in
-                let res = m2 (ps_goals, ps_smt_goals) in
-                match res with
-                | Success (a, s2) -> Success (a, {ps with goals=(List.map interpret_goal (fst s2)); smt_goals=(List.map interpret_goal (fst s2))})
-                | Failed (str, s2) -> Failed (str, {ps with goals=(List.map interpret_goal (fst s2)); smt_goals=(List.map interpret_goal (fst s2))})
-                )) in
-    rtac
+                interpret_tactic ps m2
+        )) in rtac
+
+let from_tactic_2 (t: 'a -> 'b -> 'c tactic): ('a -> 'b -> 'c tac) =
+    let rtac =
+        (fun (x: 'a) ->
+            (fun (y: 'b) ->
+                mk_tac (fun (ps: proofstate) ->
+                    let m = t x y in
+                    let (m2: state -> 'c __result) = m () in
+                    interpret_tactic ps m2
+        ))) in rtac
+
+let from_tac_0 (t: 'b tac): ('b tactic) =
+    failwith "wip"

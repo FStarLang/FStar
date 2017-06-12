@@ -297,12 +297,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   | _ -> false)
               | _ -> false in
 
-            let mk_interpretation_fun () =
-              (* wip *)
-              MLE_Const MLC_Unit in
-
             let mk_registration lid t bs =
               let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (FStar.Syntax.Const.fstar_tactics_lid "Native.register_tactic")) in
+                (* fix this: FStar_Tactics.Native -> FStar_Tactics_Native*)
               let lid_arg = MLE_Const (MLC_String (string_of_lid lid)) in
               let arity = MLE_Const (MLC_Int (BU.string_of_int (List.length bs), None)) in
               let interp = mk_interpretation_fun () in
