@@ -1108,7 +1108,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     in
 
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
-          (b) Generalize the type of lb only if none of the lbs have val decls
+          (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
     let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
