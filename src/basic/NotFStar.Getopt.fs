@@ -62,12 +62,13 @@ let rec parse (opts:list<opt>) def (ar:string []) ix max i =
                 | None -> Error ("unrecognized option '" + arg + "'\n")
           else go_on ()
 
+let parse_array specs others args offset =
+  parse specs others args offset (args.Length - 1) 0
+
 let parse_cmdline specs others =
   let argv = System.Environment.GetCommandLineArgs() in
-  let len = Array.length argv in
-  let go_on () = parse specs others argv 1 (len - 1) 0 in
-    if len = 1 then Help
-    else go_on ()
+  if Array.length argv = 1 then Help
+  else parse_array specs others argv 1
 
 let parse_string specs others (str:string) =
     let split_spaces (str:string) =
@@ -92,7 +93,7 @@ let parse_string specs others (str:string) =
     match split_quoted_fragments str with
     | None -> Error("Failed to parse options; unmatched quote \"'\"")
     | Some args ->
-      parse specs others args 0 (args.Length - 1) 0
+      parse_array specs others args 0
 
 let cmdline () =
   let argv = System.Environment.GetCommandLineArgs() in
