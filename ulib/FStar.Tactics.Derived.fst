@@ -21,17 +21,17 @@ let liftM2' f ma mb = a <-- ma;
 val liftM2 : ('a -> 'b -> 'c) -> (tactic 'a -> tactic 'b -> tactic 'c)
 let liftM2 f = liftM2' (fun x y -> return (f x y))
 
+val mapM : ('a -> tactic 'b) -> list 'a -> tactic (list 'b)
+let rec mapM f l = match l with
+               | [] -> return []
+               | x::xs -> (y <-- f x;
+                           ys <-- mapM f xs;
+                           return (y::ys))
+
 let idtac : tactic unit = return ()
 
-(* Fix combinator, so we need not expose the TAC effect (c.f. 1017) *)
-val fix : #a:Type -> (tactic a -> tactic a) -> unit -> Tac a
-let rec fix #a ff (u:unit) = ff (fix #a ff) ()
-
-val fix1 : #a:Type -> #b:Type -> ((b -> tactic a) -> (b -> tactic a)) -> b -> unit -> Tac a
-let rec fix1 #a #b ff x (u:unit) = ff (fix1 #a #b ff) x ()
-
 (* working around #885 *)
-let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
+private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
 let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
@@ -59,7 +59,7 @@ let simpl : tactic unit = norm [Simpl; Primops]
 let whnf  : tactic unit = norm [WHNF; Primops]
 
 private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
-let __cut #b a f x = f x
+private let __cut #b a f x = f x
 
 let tcut (t:term) : tactic binder =
     qq <-- quote __cut;

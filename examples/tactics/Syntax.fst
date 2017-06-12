@@ -19,26 +19,23 @@ let test2 = assert_by_tactic (x <-- quote test1;
                               | _ -> fail "wat") True
 
 
-let blah' (ff : term -> tactic term) (t : term) =
+let rec blah  (t : term) =
     tv <-- (match inspect t with
             | Tv_Var b -> return (Tv_Var b)
             | Tv_FVar f -> return (Tv_FVar f)
-            | Tv_App l r -> l <-- ff l;
-                            r <-- ff r;
+            | Tv_App l r -> l <-- blah l;
+                            r <-- blah r;
                             return (Tv_App l r)
-            | Tv_Abs b t -> t <-- ff t;
+            | Tv_Abs b t -> t <-- blah t;
                             return (Tv_Abs b t)
-            | Tv_Arrow b t -> t <-- ff t;
+            | Tv_Arrow b t -> t <-- blah t;
                               return (Tv_Arrow b t)
-            | Tv_Refine b t -> t <-- ff t;
+            | Tv_Refine b t -> t <-- blah t;
                                return (Tv_Refine b t)
             | Tv_Type u -> return (Tv_Type ())
             | Tv_Const c -> return (Tv_Const c)
             | Tv_Unknown -> return Tv_Unknown);
      return (pack tv)
-
-let blah : term -> tactic term =
-    fix1 blah'
 
 let _ = assert_by_tactic (t <-- quote (1+1);
                           t' <-- blah t;
