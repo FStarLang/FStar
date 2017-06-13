@@ -12,7 +12,6 @@ all:	Apply.uver		\
 	Syntax.uver		\
 	GRewrite.uver		\
 	UserTactics.uver	\
-	BinaryTreesEnumeration.uver	\
 	Logic.uver		\
 	Synthesis.uver		\
 	Neg.uver		\
