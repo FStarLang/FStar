@@ -3465,12 +3465,8 @@ and tc_decl:
                                 (match uu____3550 with
                                  | (tps4,c4) ->
                                      (if
-                                        ((FStar_List.length uvs1) <>
-                                           (Prims.parse_int "1"))
-                                          &&
-                                          (Prims.op_Negation
-                                             (FStar_Ident.lid_equals lid
-                                                FStar_Syntax_Const.effect_Lemma_lid))
+                                        (FStar_List.length uvs1) <>
+                                          (Prims.parse_int "1")
                                       then
                                         (let uu____3645 =
                                            FStar_Syntax_Subst.open_univ_vars
