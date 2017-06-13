@@ -1253,7 +1253,7 @@ and translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ =
       | FStar_Extraction_ML_Syntax.MLTY_Named ([],(path,type_name)) ->
           TQualified (path, type_name)
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,(ns,t1)) when
-          ((ns = ["Prims"]) || (ns = ["FStar"; "Pervasives"])) &&
+          ((ns = ["Prims"]) || (ns = ["FStar"; "Pervasives"; "Native"])) &&
             (FStar_Util.starts_with t1 "tuple")
           ->
           let uu____2813 = FStar_List.map (translate_type env) args  in
