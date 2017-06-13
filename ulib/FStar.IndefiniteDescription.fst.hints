@@ -10,7 +10,8 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
         "disc_equation_Prims.Left", "disc_equation_Prims.Right",
         "equation_Prims.l_not", "fuel_guarded_inversion_Prims.c_or",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0", "typing_Prims.l_not",
+        "typing_Prims.uu___is_Left"
       ],
       0
     ],
@@ -99,7 +100,7 @@
       2,
       2,
       1,
-      [ "@query" ],
+      [ "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing" ],
       0
     ],
     [

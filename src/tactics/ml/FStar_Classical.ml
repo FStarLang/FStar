@@ -1,8 +1,8 @@
 open Prims
 let give_witness x = ()
-let get_squashed = Obj.magic (fun uu____18  -> ())
+let get_squashed = Obj.magic (fun uu____22  -> ())
 let get_equality a b = ()
-let get_forall uu____73 = ()
+let get_forall uu____90 = ()
 let impl_to_arrow impl sx = ()
 let arrow_to_impl f = ()
 let forall_intro_gtot f = ()

@@ -58,8 +58,7 @@ verify-%: __force__
 		 --z3rlimit 20 $*
 
 verify_hh-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
-		 $(FSTAR_INCLUDE_PATHS) \
+	$(FSTAR) $(FSTAR_INCLUDE_PATHS) \
 		 --z3rlimit 20 $*
 
 all: uall

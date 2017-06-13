@@ -24,16 +24,16 @@ open FStar.Reflection.Data
 
 type name = bv
 
-let fstar_tactics_lid s = Ident.lid_of_path (["FStar"; "Tactics"]@[s]) Range.dummyRange
-let by_tactic_lid = fstar_tactics_lid "by_tactic"
+let fstar_tactics_lid' s = SC.fstar_tactics_lid' s
+let fstar_tactics_lid s = SC.fstar_tactics_lid s
+let by_tactic_lid = SC.by_tactic_lid
 let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
-let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid s)
+let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
 let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
-let fstar_tactics_term_view = mk_tactic_lid_as_term "term_view"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))
-let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid s)
+let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid' ["Effect";s])
 
 let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
@@ -46,17 +46,14 @@ let fstar_tac_prefix_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm SC.list_lid) [U
                                        None
                                        Range.dummyRange
 
-let fstar_tac_nselt_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
-                                      [S.as_arg fstar_tac_prefix_typ;
-                                       S.as_arg t_bool]
+let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
+                                      [S.as_arg t;
+                                       S.as_arg s]
                                       None
                                       Range.dummyRange
 
-let fstar_tac_ns_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
-                                   [S.as_arg fstar_tac_nselt_typ;
-                                    S.as_arg t_bool]
-                                   None
-                                   Range.dummyRange
+let fstar_tac_nselt_typ = pair_typ fstar_tac_prefix_typ t_bool
+let fstar_tac_ns_typ = pair_typ fstar_tac_nselt_typ t_bool
 
 // TODO: for now, we just embed the head of the list. Tactics cannot
 // push/pop proof namespaces
@@ -94,17 +91,27 @@ let unembed_env (ps:proofstate) (protected_embedded_env:term) : Env.env =
                     | _ -> env) env binders in
     env
 
+let embed_witness (ps:proofstate) w =
+    embed_term w
+
+let unembed_witness (ps:proofstate) t =
+    unembed_term t
+
 let embed_goal (ps:proofstate) (g:goal) : term =
-    embed_pair (embed_env ps) fstar_refl_env
-               embed_term fstar_refl_term
-               (g.context, g.goal_ty)
+    embed_pair
+        (embed_pair (embed_env ps) fstar_refl_env
+                     embed_term fstar_refl_term)
+        (pair_typ fstar_refl_env fstar_refl_term)
+        (embed_witness ps)
+        fstar_refl_term
+               ((g.context, g.goal_ty), g.witness)
 
 let unembed_goal (ps:proofstate) (t:term) : goal =
-    let env, goal_ty = unembed_pair (unembed_env ps) unembed_term t in
+    let (env, goal_ty), witness = unembed_pair (unembed_pair (unembed_env ps) unembed_term) (unembed_witness ps) t in
     {
       context = env;
       goal_ty = goal_ty;
-      witness = None //TODO: sort this out for proof-relevant goals
+      witness = witness
     }
 
 let embed_goals (ps:proofstate) (l:list<goal>) : term =
@@ -144,11 +151,11 @@ let unembed_result (ps:proofstate) (res:term) (unembed_a:term -> 'a) : either<('
     let hd, args = U.head_and_args res in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_t; (a, _); (embedded_state, _)]
-        when S.fv_eq_lid fv (fstar_tactics_lid "Success") ->
+        when S.fv_eq_lid fv (fstar_tactics_lid' ["Effect";"Success"]) ->
       Inl (unembed_a a, unembed_state ps embedded_state)
 
     | Tm_fvar fv, [_t; (embedded_string, _); (embedded_state, _)]
-        when S.fv_eq_lid fv (fstar_tactics_lid "Failed") ->
+        when S.fv_eq_lid fv (fstar_tactics_lid' ["Effect";"Failed"]) ->
       Inr (unembed_string embedded_string, unembed_state ps embedded_state)
 
     | _ -> failwith (BU.format1 "Not an embedded result: %s" (Print.term_to_string res))

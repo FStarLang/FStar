@@ -58,11 +58,11 @@ type universe =
   | U_max   of list<universe>
   | U_bvar  of int
   | U_name  of univ_name
-  | U_unif  of Unionfind.uvar<option<universe>>
+  | U_unif  of Unionfind.p_uvar<option<universe>>
   | U_unknown
 and univ_name = ident
 
-type universe_uvar = Unionfind.uvar<option<universe>>
+type universe_uvar = Unionfind.p_uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
@@ -94,7 +94,6 @@ and branch = pat * option<term> * term                           (* optional whe
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
@@ -134,7 +133,7 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.uvar<uvar_basis<term>>
+and uvar = Unionfind.p_uvar<option<term>>
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -144,9 +143,6 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-and uvar_basis<'a> =
-  | Uvar
-  | Fixed of 'a
 and meta_source_info =
   | Data_app
   | Sequence
@@ -210,8 +206,6 @@ type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
-val new_uv_set: unit -> uvars
-val new_universe_uvar_set: unit -> set<universe_uvar>
 val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
 
 type qualifier =
@@ -408,8 +402,6 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_uvs:            uvars
-val no_universe_uvars: set<universe_uvar>
 val no_universe_names: fifo_set<univ_name>
 val no_fvars:          set<lident>
 

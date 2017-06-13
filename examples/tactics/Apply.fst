@@ -1,4 +1,4 @@
-module ApplyBug
+module Apply
 
 #reset-options "--eager_inference"
 

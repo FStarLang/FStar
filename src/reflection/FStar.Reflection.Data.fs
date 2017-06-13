@@ -5,10 +5,11 @@ open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
 
-
 type vconst =
     | C_Unit
     | C_Int of string
+    | C_True
+    | C_False
 
 type term_view =
     | Tv_Var    of binder
@@ -20,6 +21,12 @@ type term_view =
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Unknown
+
+type norm_step =
+    | Simpl
+    | WHNF
+    | Primops
+    | Delta
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
@@ -61,11 +68,15 @@ let ref_Tv_Const   = lid_as_data_tm ref_Tv_Const_lid
 let ref_Tv_Unknown = lid_as_data_tm ref_Tv_Unknown_lid
 
 (* const *)
-let ref_C_Unit_lid = fstar_refl_syntax_lid "C_Unit"
-let ref_C_Int_lid  = fstar_refl_syntax_lid "C_Int"
+let ref_C_Unit_lid  = fstar_refl_syntax_lid "C_Unit"
+let ref_C_True_lid  = fstar_refl_syntax_lid "C_True"
+let ref_C_False_lid = fstar_refl_syntax_lid "C_False"
+let ref_C_Int_lid   = fstar_refl_syntax_lid "C_Int"
 
-let ref_C_Unit = lid_as_data_tm ref_C_Unit_lid
-let ref_C_Int  = lid_as_data_tm ref_C_Int_lid
+let ref_C_Unit   = lid_as_data_tm ref_C_Unit_lid
+let ref_C_True   = lid_as_data_tm ref_C_True_lid
+let ref_C_False  = lid_as_data_tm ref_C_False_lid
+let ref_C_Int    = lid_as_data_tm ref_C_Int_lid
 
 (* assumed functions *)
 
@@ -78,3 +89,15 @@ let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
 let ord_Lt = lid_as_data_tm ord_Lt_lid
 let ord_Eq = lid_as_data_tm ord_Eq_lid
 let ord_Gt = lid_as_data_tm ord_Gt_lid
+
+let fstar_refl_norm_step = mk_refl_syntax_lid_as_term "norm_step"
+
+let ref_Simpl_lid      = fstar_refl_syntax_lid "Simpl"
+let ref_WHNF_lid       = fstar_refl_syntax_lid "WHNF"
+let ref_Primops_lid    = fstar_refl_syntax_lid "Primops"
+let ref_Delta_lid      = fstar_refl_syntax_lid "Delta"
+
+let ref_Simpl          = lid_as_data_tm ref_Simpl_lid
+let ref_WHNF           = lid_as_data_tm ref_WHNF_lid
+let ref_Primops        = lid_as_data_tm ref_Primops_lid
+let ref_Delta          = lid_as_data_tm ref_Delta_lid

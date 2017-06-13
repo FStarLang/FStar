@@ -1,5 +1,5 @@
 [
-  "Šèr\u000b„hF´D\u0017£ã˜ªÏR",
+  "\u0016Ù‚6¨¥}k,ð29‚›Æw",
   [
     [
       "Ex12a.Cap.capRead",
@@ -8,7 +8,6 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0
-    ],
-    [ "Ex12a.Cap.redeem", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

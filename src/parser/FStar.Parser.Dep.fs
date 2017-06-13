@@ -257,10 +257,10 @@ let collect_one
   let auto_open =
     if basename filename = Options.prims_basename () then
       []
+    else if basename filename = Options.pervasives_basename () then
+      [Const.prims_lid]
     else
-      let l = [ Const.fstar_ns_lid; Const.prims_lid ] in
-      if basename filename = Options.pervasives_basename () then l
-      else l @ [ Const.pervasives_lid ]
+      [Const.fstar_ns_lid; Const.pervasives_lid; Const.prims_lid]
   in
   List.iter (record_open false) auto_open;
 

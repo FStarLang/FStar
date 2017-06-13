@@ -1,5 +1,6 @@
-open FStar_Tactics_Types
-open FStar_Tactics
+(*open FStar_Tactics_Types
+open FStar_Tactics*)
+open FStar_Tactics_Effect
 open FStar_Tactics_Basic
 open FStar_Syntax_Syntax
 open FStar_Range
@@ -31,13 +32,13 @@ let register_tactic (s: string) (arity: int) (t: itac)=
     compiled_tactics := step :: !compiled_tactics;
     BU.print1 "Registered tactic %s\n" s
 
-let interpret_goal (g: FStar_Tactics.goal): Core.goal =
+let interpret_goal (g: FStar_Tactics_Effect.goal): Core.goal =
     {context=(fst g); witness=None; goal_ty=(snd g)}
 
-let interpret_state (s: FStar_Tactics.state): FStar_Tactics_Embedding.state =
+let interpret_state (s: FStar_Tactics_Effect.state): FStar_Tactics_Embedding.state =
     (List.map interpret_goal (fst s), List.map interpret_goal (snd s))
 
-let state_to_proofstate (s: FStar_Tactics.state): proofstate =
+let state_to_proofstate (s: FStar_Tactics_Effect.state): proofstate =
     match (fst s) with
     | hd::tl ->
         {

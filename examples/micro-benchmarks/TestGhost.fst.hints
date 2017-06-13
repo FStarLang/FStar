@@ -1,7 +1,6 @@
 [
   "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
   [
-    [ "TestGhost.g", 1, 2, 1, [ "@query" ], 0 ],
     [ "TestGhost.h", 1, 2, 1, [ "@query" ], 0 ],
     [ "TestGhost.i", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
@@ -11,7 +10,7 @@
       1,
       [
         "@query", "function_token_typing_Prims.int",
-        "lemma_FStar.Ghost.lemma_hide_reveal"
+        "lemma_FStar.Ghost.hide_reveal"
       ],
       0
     ],

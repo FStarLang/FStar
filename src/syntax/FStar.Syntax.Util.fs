@@ -139,7 +139,7 @@ let rec compare_univs u1 u2 = match u1, u2 with
     | U_name _, U_unif _ -> -1
     | U_unif _, U_name _ -> 1
 
-    | U_unif u1, U_unif u2 -> Unionfind.uvar_id u1 - Unionfind.uvar_id u2
+    | U_unif u1, U_unif u2 -> Unionfind.univ_uvar_id u1 - Unionfind.univ_uvar_id u2
 
     | U_max us1, U_max us2 ->
       let n1 = List.length us1 in
@@ -271,14 +271,15 @@ let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
     | _ -> true
 
-let is_lemma t =  match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
-        | _ -> false
-      end
+let is_lemma_comp c =
+    match c.n with
+    | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
     | _ -> false
 
+let is_lemma t =
+    match (compress t).n with
+    | Tm_arrow(_, c) -> is_lemma_comp c
+    | _ -> false
 
 let head_and_args t =
     let t = compress t in
@@ -381,8 +382,12 @@ type eq_result =
     | Unknown
 
 let rec eq_tm (t1:term) (t2:term) : eq_result =
-    let t1 = unascribe t1 in
-    let t2 = unascribe t2 in
+    let canon_app t =
+        let hd, args = head_and_args' (unascribe t) in
+        mk_Tm_app hd args None t.pos
+    in
+    let t1 = canon_app t1 in
+    let t2 = canon_app t2 in
     let equal_if = function
         | true -> Equal
         | _ -> Unknown
@@ -395,6 +400,14 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       match f with
       | Equal -> g()
       | _ -> Unknown
+    in
+    let eq_inj f g =
+      match f, g with
+      | Equal, Equal -> Equal
+      | NotEqual, _
+      | _, NotEqual -> NotEqual
+      | Unknown, _
+      | _, Unknown -> Unknown
     in
     match t1.n, t2.n with
     | Tm_name a, Tm_name b ->
@@ -410,10 +423,23 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       equal_iff (FStar.Const.eq_const c d)
 
     | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
-      equal_if (Unionfind.equivalent u1 u2)
+      equal_if (Unionfind.equiv u1 u2)
 
-    | Tm_app (h1, args1), Tm_app(h2, args2) ->
-      eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
+    | Tm_app (h1, args1), Tm_app (h2, args2) ->
+      begin match (un_uinst h1).n, (un_uinst h2).n with
+      | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
+        // we got constructors! we know they are injective and disjoint, so we can do some
+        // good analysis on them
+        if fv_eq f1 f2
+        then (
+            assert (List.length args1 = List.length args2);
+            List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
+                                assert (q1 = q2);
+                                eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
+        ) else NotEqual
+      | _ -> // can only they're equal if they syntactically match, nothing else
+          eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
+      end
 
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
@@ -601,8 +627,8 @@ let mk_field_projector_name lid (x:bv) i =
 
 let set_uvar uv t =
   match Unionfind.find uv with
-    | Fixed _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
-    | _ -> Unionfind.change uv (Fixed t)
+    | Some _ -> failwith (U.format1 "Changing a fixed uvar! ?%s\n" (U.string_of_int <| Unionfind.uvar_id uv))
+    | _ -> Unionfind.change uv t
 
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
@@ -727,19 +753,19 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
 let is_tuple_constructor_string (s:string) :bool =
-  s = "Prims.tuple2" || U.starts_with s "FStar.Pervasives.tuple"
+  U.starts_with s "FStar.Pervasives.tuple"
 
 let is_dtuple_constructor_string (s:string) :bool =
   s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
 
 let is_tuple_datacon_string (s:string) :bool =
-  s = "Prims.Mktuple2" || U.starts_with s "FStar.Pervasives.Mktuple"
+  U.starts_with s "FStar.Pervasives.Mktuple"
 
 let is_dtuple_datacon_string (s:string) :bool =
   s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
 
-(* tuple is defined in prims if n = 2, in pervasives otherwise *)
-let mod_prefix_tuple (n:int) :(string -> lident) =
+(* dtuple is defined in prims if n = 2, in pervasives otherwise *)
+let mod_prefix_dtuple (n:int) :(string -> lident) =
   if n = 2 then Const.pconst else Const.psconst
 
 let is_tuple_constructor (t:typ) = match t.n with
@@ -748,11 +774,11 @@ let is_tuple_constructor (t:typ) = match t.n with
 
 let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_tuple n) t) r
+  set_lid_range (Const.psconst t) r
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_tuple n) t) r
+  set_lid_range (Const.psconst t) r
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
@@ -772,11 +798,11 @@ let is_dtuple_constructor (t:typ) = match t.n with
 
 let mk_dtuple_lid n r =
   let t = U.format1 "dtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_tuple n) t) r
+  set_lid_range ((mod_prefix_dtuple n) t) r
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
-  set_lid_range ((mod_prefix_tuple n) t) r
+  set_lid_range ((mod_prefix_dtuple n) t) r
 
 let is_dtuple_data_lid' f = is_dtuple_datacon_string (Ident.text_of_lid f)
     //U.starts_with (Ident.text_of_lid f) "Mkdtuple"
@@ -840,7 +866,7 @@ let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
-    let u = U_unif <| Unionfind.fresh None in
+    let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None Range.dummyRange, u
 
 let kt_kt = Const.kunary ktype0 ktype0
@@ -849,8 +875,8 @@ let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0
 let fvar_const l = fvar l Delta_constant None
 let tand    = fvar_const Const.and_lid
 let tor     = fvar_const Const.or_lid
-let timp    = fvar_const Const.imp_lid
-let tiff    = fvar_const Const.iff_lid
+let timp    = fvar Const.imp_lid (Delta_defined_at_level 1) None
+let tiff    = fvar Const.iff_lid (Delta_defined_at_level 2) None
 let t_bool  = fvar_const Const.bool_lid
 let t_false = fvar_const Const.false_lid
 let t_true  = fvar_const Const.true_lid
@@ -926,6 +952,48 @@ let if_then_else b t1 t2 =
     let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
+
+let mk_squash p =
+    let sq = fvar SC.squash_lid (Delta_defined_at_level 1) None in
+    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
+
+let un_squash t =
+    let head, args = head_and_args t in
+    match (un_uinst head).n, args with
+    | Tm_fvar fv, [(p, _)]
+        when fv_eq_lid fv SC.squash_lid ->
+      Some p
+    | Tm_refine (b, p), [] ->
+        begin match b.sort.n with
+        | Tm_fvar fv when fv_eq_lid fv SC.unit_lid ->
+            let bs, p = Subst.open_term [mk_binder b] p in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible"
+            in
+            // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
+            if set_mem (fst b) (Free.names p)
+            then None
+            else Some p
+        | _ -> None
+        end
+    | _ ->
+      None
+
+let arrow_one (t:typ) : option<(binder * comp)> =
+    match (compress t).n with
+    | Tm_arrow ([], c) ->
+        failwith "fatal: empty binders on arrow?"
+    | Tm_arrow ([b], c) ->
+        Some (b, c)
+    | Tm_arrow (b::bs, c) ->
+        Some (b, mk_Total (arrow bs c))
+    | _ ->
+        None
+
+let is_free_in (bv:bv) (t:term) : bool =
+    U.set_mem bv (FStar.Syntax.Free.names t)
+
 (**************************************************************************************)
 (* Destructing a type as a formula *)
 (**************************************************************************************)
@@ -955,7 +1023,9 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, 2);
                             (Const.eq3_lid, 4);
                             (Const.eq3_lid, 2)
-                        ] in
+                        ]
+        in
+
         let aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
             let t = un_uinst t in
@@ -972,10 +1042,15 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> [], compress t in
 
     let destruct_q_conn t =
-        let is_q : bool -> fv -> Tot<bool> = fun fa fv -> if fa then is_forall fv.fv_name.v else is_exists fv.fv_name.v in
+        let is_q (fa:bool) (fv:fv) : bool =
+            if fa
+            then is_forall fv.fv_name.v else
+            is_exists fv.fv_name.v
+        in
         let flat t =
             let t, args = head_and_args t in
-            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
+            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp)
+        in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs([b], t2, _)}, _)])
             | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs([b], t2, _)}, _)])
@@ -998,10 +1073,115 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
+    // Unfolded connectives
+    let u_connectives =
+        [ (Const.true_lid,  Const.c_true_lid, 0);
+          (Const.false_lid, Const.c_false_lid, 0);
+          (Const.and_lid,   Const.c_and_lid, 2);
+          (Const.or_lid,    Const.c_or_lid, 2);
+        ]
+    in
+    let destruct_sq_base_conn t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n, List.length args with
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_and_lid ->
+                Some (BaseConn (Const.and_lid, args))
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_or_lid ->
+                Some (BaseConn (Const.or_lid, args))
+
+        // eq2 can have 2 args or 3
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_eq2_lid ->
+                Some (BaseConn (Const.eq2_lid, args))
+        | Tm_fvar fv, 3
+            when fv_eq_lid fv Const.c_eq2_lid ->
+                Some (BaseConn (Const.eq2_lid, args))
+
+        // eq3 can have 2 args or 4
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_eq3_lid ->
+                Some (BaseConn (Const.eq3_lid, args))
+        | Tm_fvar fv, 4
+            when fv_eq_lid fv Const.c_eq3_lid ->
+                Some (BaseConn (Const.eq3_lid, args))
+
+        | Tm_fvar fv, 0
+            when fv_eq_lid fv Const.c_true_lid ->
+                Some (BaseConn (Const.true_lid, args))
+        | Tm_fvar fv, 0
+            when fv_eq_lid fv Const.c_false_lid ->
+                Some (BaseConn (Const.false_lid, args))
+
+        | _ ->
+            None
+        )
+    in
+    let rec destruct_sq_forall t =
+        bind_opt (un_squash t) (fun t ->
+        match arrow_one t with
+        | Some (b, c) ->
+            if not (is_tot_or_gtot_comp c)
+            then None
+            else
+                let q = (comp_to_comp_typ c).result_typ in
+                let bs, q = open_term [b] q in
+                let b = match bs with // coverage...
+                        | [b] -> b
+                        | _ -> failwith "impossible"
+                in
+                if is_free_in (fst b) q
+                then (
+                    let pats, q = patterns q in
+                    maybe_collect <| Some (QAll([b], pats, q))
+                ) else (
+                    // Since we know it's not free, we can just open and discard the binder
+                    Some (BaseConn (Const.imp_lid, [as_arg (fst b).sort; as_arg q]))
+                )
+        | _ -> None)
+    and destruct_sq_exists t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n, args with
+        | Tm_fvar fv, [(a1, _); (a2, _)]
+            when fv_eq_lid fv Const.dtuple2_lid ->
+                begin match (compress a2).n with
+                | Tm_abs ([b], q, _) ->
+                    let bs, q = open_term [b] q in
+                    let b = match bs with // coverage...
+                            | [b] -> b
+                            | _ -> failwith "impossible"
+                    in
+                    let pats, q = patterns q in
+                    maybe_collect <| Some (QEx ([b], pats, q))
+                | _ -> None
+                end
+        | _ -> None)
+    and maybe_collect f =
+        match f with
+        | Some (QAll (bs, pats, phi)) ->
+            begin match destruct_sq_forall phi with
+            | Some (QAll (bs', pats', psi)) -> Some <| QAll(bs@bs', pats@pats', psi)
+            | _ -> f
+            end
+        | Some (QEx (bs, pats, phi)) ->
+            begin match destruct_sq_exists phi with
+            | Some (QEx (bs', pats', psi)) -> Some <| QEx(bs@bs', pats@pats', psi)
+            | _ -> f
+            end
+        | _ -> f
+    in
+
     let phi = unmeta_monadic f in
-        match destruct_base_conn phi with
-        | Some b -> Some b
-        | None -> destruct_q_conn phi
+        // Try all possibilities, stopping at the first
+        catch_opt (destruct_base_conn phi) (fun () ->
+        catch_opt (destruct_q_conn phi) (fun () ->
+        catch_opt (destruct_sq_base_conn phi) (fun () ->
+        catch_opt (destruct_sq_forall phi) (fun () ->
+        catch_opt (destruct_sq_exists phi) (fun () ->
+                   None)))))
 
 
 let action_as_lb eff_lid a =
@@ -1129,6 +1309,8 @@ let rec term_eq t1 t2 =
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
+  | Tm_uinst (t1, us1), Tm_uinst (t2, us2) ->
+        eqlist eq_univs us1 us2 && term_eq t1 t2
   | Tm_constant x, Tm_constant y -> x = y
   | Tm_type x, Tm_type y -> x = y
   | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
@@ -1179,3 +1361,8 @@ let rec sizeof (t:term) : int =
     | Tm_app (hd, args) -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
     // TODO: obviously want much more
     | _ -> 1
+
+let is_synth_by_tactic t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv SC.synth_lid
+    | _ -> false

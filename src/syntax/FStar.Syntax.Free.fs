@@ -24,6 +24,7 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module Util = FStar.Util
+module UF = FStar.Syntax.Unionfind
 
 
 (********************************************************************************)
@@ -31,6 +32,15 @@ module Util = FStar.Util
 (********************************************************************************)
 
 type free_vars_and_fvars = free_vars * set<Ident.lident>
+
+let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> UF.uvar_id x - UF.uvar_id y)
+                                           (fun (x, _) -> UF.uvar_id x)
+let new_universe_uvar_set () : set<universe_uvar> =
+    Util.new_set (fun x y -> UF.univ_uvar_id x - UF.univ_uvar_id y)
+                 (fun x -> UF.univ_uvar_id x)
+
+let no_uvs : uvars = new_uv_set()
+let no_universe_uvars = new_universe_uvar_set()
 
 let no_free_vars = {
     free_names=no_names;
@@ -215,10 +225,10 @@ and free_names_and_uvars_comp c use_cache =
 
 and should_invalidate_cache n use_cache =
     not use_cache ||
-      (n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match Unionfind.find u with
-         | Fixed _ -> true
+      (n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match UF.find u with
+         | Some _ -> true
          | _ -> false)
-       || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match Unionfind.find u with
+       || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match UF.univ_find u with
            | Some _ -> true
            | None -> false)
       )

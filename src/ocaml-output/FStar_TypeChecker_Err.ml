@@ -41,11 +41,11 @@ let add_errors:
                       (msg, uu____122)
                     else
                       (let r' =
-                         let uu___208_125 = r in
+                         let uu___206_125 = r in
                          {
                            FStar_Range.def_range = (r.FStar_Range.use_range);
                            FStar_Range.use_range =
-                             (uu___208_125.FStar_Range.use_range)
+                             (uu___206_125.FStar_Range.use_range)
                          } in
                        let uu____126 =
                          let uu____127 = FStar_Range.file_of_range r' in
@@ -184,7 +184,7 @@ let expected_pattern_of_type:
                 s1 uu____257 s2
 let basic_type_error:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term Prims.option ->
+    FStar_Syntax_Syntax.term option ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.string
   =
   fun env  ->
@@ -332,7 +332,7 @@ let expected_pure_expression e c =
   let uu____511 = FStar_Syntax_Print.term_to_string e in
   let uu____512 =
     let uu____513 = name_and_result c in
-    FStar_All.pipe_left Prims.fst uu____513 in
+    FStar_All.pipe_left FStar_Pervasives.fst uu____513 in
   FStar_Util.format2
     "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
     uu____511 uu____512
@@ -340,7 +340,7 @@ let expected_ghost_expression e c =
   let uu____540 = FStar_Syntax_Print.term_to_string e in
   let uu____541 =
     let uu____542 = name_and_result c in
-    FStar_All.pipe_left Prims.fst uu____542 in
+    FStar_All.pipe_left FStar_Pervasives.fst uu____542 in
   FStar_Util.format2
     "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
     uu____540 uu____541

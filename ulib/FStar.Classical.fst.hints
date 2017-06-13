@@ -29,8 +29,6 @@
       [ "@query", "equation_Prims.l_Forall" ],
       0
     ],
-    [ "FStar.Classical.impl_to_arrow", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Classical.arrow_to_impl", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Classical.forall_intro_gtot", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Classical.lemma_forall_intro_gtot",

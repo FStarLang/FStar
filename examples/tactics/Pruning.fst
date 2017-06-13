@@ -64,7 +64,7 @@ let _ = assert_by_tactic (prune "";;
                           (* rev [1;2] == [2;1] *)
                               addns "FStar.List";;
                               addns "Prims";;
-                              smt;;
+                              smt ();;
                           (* 1 == 1 *)
-                              smt)
+                              smt ())
                          (rev [1;2] == [2;1] /\ 1 == 1)

@@ -117,6 +117,11 @@ let is_fstar_tactics_embed t =
     | Tm_fvar fv -> S.fv_eq_lid fv SC.fstar_refl_embed_lid
     | _ -> false
 
+let is_fstar_tactics_by_tactic t =
+    match (U.un_uinst t).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv SC.by_tactic_lid
+    | _ -> false
+
 let mk t r = mk t None r
 let set_memo r t =
   match !r with
@@ -347,11 +352,6 @@ let rec closure_as_term cfg env t =
              let norm_one_branch env (pat, w_opt, tm) =
                 let rec norm_pat env p = match p.v with
                     | Pat_constant _ -> p, env
-                    | Pat_disj [] -> failwith "Impossible"
-                    | Pat_disj (hd::tl) ->
-                      let hd, env' = norm_pat env hd in
-                      let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-                      {p with v=Pat_disj(hd::tl)}, env'
                     | Pat_cons(fv, pats) ->
                       let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                             let p, env = norm_pat env p in
@@ -624,12 +624,14 @@ let built_in_primitive_steps : list<primitive_step> =
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
 let equality_ops : list<primitive_step> =
-    let interp_bool rng (args:args) : option<term> =
+    let interp_bool (neg:bool) (rng:Range.range) (args:args) : option<term> =
+        let tru = mk (Tm_constant (FC.Const_bool true)) rng in
+        let fal = mk (Tm_constant (FC.Const_bool false)) rng in
         match args with
         | [(_typ, _); (a1, _); (a2, _)] ->
             (match U.eq_tm a1 a2 with
-            | U.Equal -> Some (mk (Tm_constant (FC.Const_bool true)) rng)
-            | U.NotEqual -> Some (mk (Tm_constant (FC.Const_bool false)) rng)
+            | U.Equal -> Some (if neg then fal else tru)
+            | U.NotEqual -> Some (if neg then tru else fal)
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
@@ -646,10 +648,14 @@ let equality_ops : list<primitive_step> =
             failwith "Unexpected number of arguments"
     in
     let decidable_equality =
-        {name = Const.op_Eq;
+        [{name = Const.op_Eq;
          arity = 3;
          strong_reduction_ok=true;
-         interpretation=interp_bool}
+         interpretation=interp_bool false};
+         {name = Const.op_notEq;
+         arity = 3;
+         strong_reduction_ok=true;
+         interpretation=interp_bool true}]
     in
     let propositional_equality =
         {name = Const.eq2_lid;
@@ -664,7 +670,7 @@ let equality_ops : list<primitive_step> =
          interpretation = interp_prop}
     in
 
-    [decidable_equality;propositional_equality; hetero_propositional_equality]
+    decidable_equality @ [propositional_equality; hetero_propositional_equality]
 
 let reduce_primops cfg tm =
     if not <| List.contains Primops cfg.steps
@@ -700,8 +706,9 @@ let maybe_simplify cfg tm =
         | Tm_fvar fv when S.fv_eq_lid fv Const.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
+    let tm = reduce_primops cfg tm in
     if not <| List.contains Simplify steps
-    then reduce_primops cfg tm
+    then tm
     else match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
@@ -724,6 +731,10 @@ let maybe_simplify cfg tm =
                      | [_; (Some true, _)]
                      | [(Some false, _); _] -> w U.t_true
                      | [(Some true, _); (_, (arg, _))] -> arg
+                     | [(_, (p, _)); (_, (q, _))] ->
+                        if U.term_eq p q
+                        then w U.t_true
+                        else tm
                      | _ -> tm
               else if S.fv_eq_lid fv Const.not_lid
               then match args |> List.map simplify with
@@ -805,7 +816,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
-            when is_fstar_tactics_embed hd ->
+            when is_fstar_tactics_embed hd
+              || is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in
             let t = {t with n=Tm_app(hd, args)} in
@@ -883,7 +895,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f SC.or_lid
                    || S.fv_eq_lid f SC.imp_lid
                    || S.fv_eq_lid f SC.forall_lid
+                   || S.fv_eq_lid f SC.squash_lid
                    || S.fv_eq_lid f SC.exists_lid
+                   || S.fv_eq_lid f SC.eq2_lid
                    || S.fv_eq_lid f SC.true_lid
                    || S.fv_eq_lid f SC.false_lid)
                 then false
@@ -901,6 +915,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Some (us, t) ->
                       log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
                                     (Print.term_to_string t0) (Print.term_to_string t));
+                      let t =
+                        if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+                        //we're really trying to compute here; no point propagating range information
+                        //which can be expensive
+                        then t
+                        else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+                      in
                       let n = List.length us in
                       if n > 0
                       then match stack with //universe beta reduction
@@ -1584,11 +1605,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       in
       let rec norm_pat env p = match p.v with
         | Pat_constant _ -> p, env
-        | Pat_disj [] -> failwith "Impossible"
-        | Pat_disj (hd::tl) ->
-          let hd, env' = norm_pat env hd in
-          let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-          {p with v=Pat_disj(hd::tl)}, env'
         | Pat_cons(fv, pats) ->
           let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                 let p, env = norm_pat env p in
@@ -1646,28 +1662,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       = let scrutinee = U.unmeta scrutinee in
         let head, args = U.head_and_args scrutinee in
         match p.v with
-        | Pat_disj ps ->
-          let mopt = BU.find_map ps (fun p ->
-            let m = matches_pat scrutinee p in
-            match m with
-              | Inl _ -> Some m //definite match
-              | Inr true -> Some m //maybe match; stop considering other cases
-              | Inr false -> None (*definite mismatch*))
-          in
-          begin match mopt with
-            | None -> Inr false //all cases definitely do not match
-            | Some m -> m
-          end
         | Pat_var _
         | Pat_wild _ -> Inl [scrutinee]
         | Pat_dot_term _ -> Inl []
-        | Pat_constant s ->
-          begin match scrutinee.n with
+        | Pat_constant s -> begin
+          match scrutinee.n with
             | Tm_constant s' when (s=s') -> Inl []
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
           end
-        | Pat_cons(fv, arg_pats) ->
-          begin match (U.un_uinst head).n with
+        | Pat_cons(fv, arg_pats) -> begin
+          match (U.un_uinst head).n with
             | Tm_fvar fv' when fv_eq fv fv' ->
               matches_args [] args arg_pats
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
@@ -1771,6 +1775,10 @@ let normalize_refinement steps env t0 =
    aux t
 
 let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
+let reduce_uvar_solutions env t =
+    normalize [Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm]
+              env
+              t
 
 let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
   //unfold_whnf env t_e in

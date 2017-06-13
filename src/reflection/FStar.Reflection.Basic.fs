@@ -1,6 +1,7 @@
 #light "off"
 module FStar.Reflection.Basic
 
+open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
@@ -12,9 +13,6 @@ module Range = FStar.Range
 module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
-
-//TODO:figure out why I need to annotate Data. everywhere.
-// might be due to the fsproj hack
 
 (* These file provides implementation for reflection primitives in F*.
  * 
@@ -42,17 +40,7 @@ let un_protect_embedded_term : term -> term =
             when S.fv_eq_lid fv SC.fstar_refl_embed_lid ->
           x
         | _ ->
-          failwith (BU.format1 "Not a protected embedded term (2): %s" (Print.term_to_string t))
-
-let type_of_embedded : term -> typ =
-    fun (t:term) ->
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [(t,_); _]
-            when S.fv_eq_lid fv SC.fstar_refl_embed_lid ->
-          t
-        | _ ->
-          failwith (BU.format1 "Not a protected embedded term (1): %s" (Print.term_to_string t))
+          failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
 let embed_unit (u:unit) : term = SC.exp_unit
 let unembed_unit (_:term) :unit = ()
@@ -82,7 +70,7 @@ let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
 let lid_tuple2   = U.mk_tuple_lid 2 Range.dummyRange
 
 let embed_binder (b:binder) : term =
-    protect_embedded_term Data.fstar_refl_binder (S.bv_to_name (fst b))
+    protect_embedded_term fstar_refl_binder (S.bv_to_name (fst b))
 
 let unembed_binder (t:term) : binder =
     let t = un_protect_embedded_term t in
@@ -119,11 +107,11 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
     | _ ->
       failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
 
-let embed_binders l = embed_list embed_binder Data.fstar_refl_binder l
+let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (t:term) : term =
-    protect_embedded_term Data.fstar_refl_term t
+    protect_embedded_term fstar_refl_term t
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t
@@ -168,7 +156,7 @@ let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
    | _ -> failwith "Not an embedded option"
 
 let embed_fvar (fv:fv) : term =
-    protect_embedded_term Data.fstar_refl_fvar (S.fv_to_tm fv)
+    protect_embedded_term fstar_refl_fvar (S.fv_to_tm fv)
 
 let unembed_fvar (t:term) : fv =
     let t = un_protect_embedded_term t in
@@ -179,8 +167,9 @@ let unembed_fvar (t:term) : fv =
 
 let embed_const (c:vconst) : term =
     match c with
-    | C_Unit ->
-        ref_C_Unit
+    | C_Unit    -> ref_C_Unit
+    | C_True    -> ref_C_True
+    | C_False   -> ref_C_False
 
     | C_Int s ->
         S.mk_Tm_app ref_C_Int [S.as_arg (SC.exp_int s)]
@@ -229,6 +218,12 @@ let unembed_const (t:term) : vconst =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unit_lid ->
         C_Unit
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_True_lid ->
+        C_True
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_False_lid ->
+        C_False
 
     | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
         begin match (SS.compress i).n with
@@ -354,6 +349,8 @@ let inspect (t:term) : term_view =
         let c = (match c with
         | FStar.Const.Const_unit -> C_Unit
         | FStar.Const.Const_int (s, _) -> C_Int s
+        | FStar.Const.Const_bool true  -> C_True
+        | FStar.Const.Const_bool false -> C_False
         | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c)))
         in
         Tv_Const c
@@ -362,11 +359,18 @@ let inspect (t:term) : term_view =
         BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
         Tv_Unknown
 
+let pack_const (c:vconst) : term =
+    match c with
+    | C_Unit    -> SC.exp_unit
+    | C_Int s   -> SC.exp_int s
+    | C_True    -> SC.exp_true_bool
+    | C_False   -> SC.exp_false_bool
+
 // TODO: pass in range?
 let pack (tv:term_view) : term =
     match tv with
     | Tv_Var (bv, _) ->
-        S.bv_to_tm bv
+        S.bv_to_name bv
 
     | Tv_FVar fv ->
         S.fv_to_tm fv
@@ -386,11 +390,8 @@ let pack (tv:term_view) : term =
     | Tv_Refine ((bv, _), t) ->
         U.refine bv t
 
-    | Tv_Const (C_Unit) ->
-        SC.exp_unit
-
-    | Tv_Const (C_Int s) ->
-        SC.exp_int s
+    | Tv_Const c ->
+        pack_const c
 
     | _ ->
         failwith "pack: unexpected term view"
@@ -417,4 +418,30 @@ let order_binder (x:binder) (y:binder) : order =
     else Gt
 
 let is_free (x:binder) (t:term) : bool =
-    BU.set_mem (fst x) (FStar.Syntax.Free.names t)
+    U.is_free_in (fst x) t
+
+let embed_norm_step (n:norm_step) : term =
+    match n with
+    | Simpl ->
+        ref_Simpl
+    | WHNF ->
+        ref_WHNF
+    | Primops ->
+        ref_Primops
+    | Delta ->
+        ref_Delta
+
+let unembed_norm_step (t:term) : norm_step =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Simpl_lid ->
+        Simpl
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_WHNF_lid ->
+        WHNF
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Primops_lid ->
+        Primops
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
+        Delta
+    | _ ->
+        failwith "not an embedded norm_step"

@@ -1,112 +1,62 @@
 module Canon
 
-#reset-options "--eager_inference"
-
-//
-
-open FStar.Mul
 open FStar.Tactics
-open FStar.Tactics.Arith
-open FStar.Reflection.Arith
+open FStar.Tactics.Canon
 
 assume val x : int
 assume val y : int
 assume val z : int
 
-(* val refl : (a:Type) -> (x:a) -> Lemma (x == x) *)
-(* let refl a x = () *)
+// Testing the canonizer, it should be the only thing needed for this file
+let check_canon =
+    canon;;
+    or_else qed
+            (dump "`canon` left the following goals";;
+             fail "")
 
-val congl : (#a:Type) -> (x : a) -> (y : a) -> (z : a) -> (x == y) -> (y == z) -> Lemma (x == z)
-let congl #a x y z p1 p2 = ()
+let lem0 = assert_by_tactic check_canon (x * (y * z) == (x * y) * z)
 
-val congr : (#a:Type) -> (x : a) -> (y : a) -> (z : a) -> (x == y) -> (z == y) -> Lemma (z == x)
-let congr #a x y z p1 p2 = ()
+// TODO: for now, canon is not enough as we don't collect factors
+let lem1 =
+    assert_by_tactic canon ((x + y) * (z + z) == 2 * z * (y + x))
 
-assume val p : (y + z == x + y)
+let lem2 (x : int) =
+    assert_by_tactic check_canon (2 + x + 3 * 8 == x + 26)
 
-val distr : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y + z) == x * y + x * z)
-let distr #x #y #z = ()
+let lem3 (a b c d e : int) =
+    assert_by_tactic check_canon (c + (b + a) == b + (a + c))
 
-val distl : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x + y) * z == x * z + y * z)
-let distl #x #y #z = ()
+let lem4 (a b c : int) =
+    assert_by_tactic check_canon ((a+c+b)*(b+c+a) == a * a + (((b+c)*(c+b) + a * (b+c)) + c*a) + b*a)
 
-val ass_l : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x + (y + z) == (x + y) + z)
-let ass_l #x #y #z = ()
-
-(* // When taking a goal of the form *)
-(* //   a * (b + c) = ?u *)
-(* // it applies distl to cause ?u to unify to *)
-(* //   a * b   +   a * c *)
-(* // when it's a different shape, apply refl to unify it to the LHS *)
-(* let tau : tactic unit = *)
-(*     eg <-- cur_goal; *)
-(*     let e, g = eg in *)
-(*     match run_tm (is_arith_prop g) with *)
-(*     | Inr (CompProp l C_Eq r) -> *)
-(*         begin match l with *)
-(*         | Mult (Plus a b) c -> *)
-(*             apply_lemma (distl _ _ _) *)
-(*         | _ -> *)
-(*             apply_lemma refl *)
-(*         end *)
-(*     | _ -> *)
-(*         apply_lemma refl *)
-
-val midway : (#a:Type) -> (#x:a) -> (#y:a) -> (z:a) -> squash (x == z) -> squash (z == y) -> Lemma (x == y)
-let midway #a #x #y z e1 e2 = ()
-
-val midl : (#x:int) -> (#y:int) -> (#z:int) -> (#w:int) -> (x * z + y * z == w) -> Lemma ((x + y) * z == w)
-let midl #x #y #z #w e = ()
-
-val midr : (#x:int) -> (#y:int) -> (#z:int) -> (#w:int) -> (z * x + z * y == w) -> Lemma (z * (x + y) == w)
-let midr #x #y #z #w e = ()
-
-let rec canon : unit -> Tac unit = fun () -> (
-    simpl;; // Needed to unfold op_Star into op_Multiply...
-    eg <-- cur_goal;
-    let e, g = eg in
-    match term_as_formula g with
-    | Comp Eq t l r ->
-        begin match run_tm (is_arith_expr l) with
-        | Inl s ->
-            refl
-
-        | Inr (Plus a (Plus b c)) ->
-            apply_lemma (quote ass_l)
-
-        | Inr (Mult (Plus a b) c) ->
-            apply_lemma (quote distl)
-
-        | Inr (Mult a (Plus b c)) ->
-            apply_lemma (quote distr)
-
-        | Inr _ ->
-            refl
-        end
-    | _ ->
-        fail ("impossible: " ^ term_to_string g)
-    ) ()
-
-let tau : tactic unit =
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon;;
-    pointwise canon
-
-let lem1 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") ((x + y) * (z + z) == 2 * z * (y + x))
-
-(* let lem2 = assert_by_tactic (dump "BEFORE";; tau;; dump "AFTER") (x == x) *)
-
-let lemma_mul_5 (a b c d e : int) =
-    assert_by_tactic
-        (dump "BEFORE";; tau;; dump "AFTER")
+let lem5 (a b c d e : int) =
+    assert_by_tactic check_canon
         ((a+b+c+d+e)*(a+b+c+d+e) ==
                 a * a + a * b + a * c + a * d + a * e
               + b * a + b * b + b * c + b * d + b * e
               + c * a + c * b + c * c + c * d + c * e
               + d * a + d * b + d * c + d * d + d * e
               + e * a + e * b + e * c + e * d + e * e)
+
+let lem6 (a b c d e : int) =
+    assert_by_tactic check_canon
+        ((a+b+c+d+e)*(e+d+c+b+a) ==
+                a * a + a * b + a * c + a * d + a * e
+              + b * a + b * b + b * c + b * d + b * e
+              + c * a + c * b + c * c + c * d + c * e
+              + d * a + d * b + d * c + d * d + d * e
+              + e * a + e * b + e * c + e * d + e * e)
+
+let lem7 (a b c d : int) =
+    assert_by_tactic check_canon
+        ((a+b+c+d)*(b+c+d+a) ==
+                a * a
+              + b * b
+              + c * c
+              + d * d
+              + a * b + a * b
+              + a * c + a * c
+              + a * d + a * d
+              + b * c + b * c
+              + b * d + b * d
+              + c * d + c * d)

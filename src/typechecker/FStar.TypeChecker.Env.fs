@@ -32,6 +32,7 @@ open FStar.TypeChecker.Common
 module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
+module UF = FStar.Syntax.Unionfind
 
 type binding =
   | Binding_var      of bv
@@ -101,7 +102,8 @@ type env = {
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
-  proof_ns       :proof_namespace                    (* the current names that will be encoded to SMT *)
+  proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
+  synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -173,9 +175,10 @@ let initial_env type_of universe_of solver module_lid =
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
-    proof_ns = match Options.using_facts_from () with
+    proof_ns = (match Options.using_facts_from () with
                | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
-               | None -> [[]]
+               | None -> [[]]);
+    synth = (fun e g tau -> failwith "no synthesizer available");
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -280,7 +283,7 @@ let variable_not_found v =
   format1 "Variable \"%s\" not found" (Print.bv_to_string v)
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.fresh None)
+let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
 //Instantiate the universe variables in a type scheme with provided universes
 let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
@@ -563,7 +566,7 @@ let lookup_definition delta_levels env lid =
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
-              then Some (lb.lbunivs, Subst.set_use_range (range_of_lid lid) (U.unascribe lb.lbdef))
+              then Some (lb.lbunivs, lb.lbdef)
               else None)
       | _ -> None
     end
@@ -1094,7 +1097,7 @@ let finish_module =
 // Collections from the environment                       //
 ////////////////////////////////////////////////////////////
 let uvars_in_env env =
-  let no_uvs = new_uv_set () in
+  let no_uvs = Free.new_uv_set () in
   let ext out uvs = BU.set_union out uvs in
   let rec aux out g = match g with
     | [] -> out
@@ -1106,7 +1109,7 @@ let uvars_in_env env =
   aux no_uvs env.gamma
 
 let univ_vars env =
-    let no_univs = Syntax.no_universe_uvars in
+    let no_univs = Free.new_universe_uvar_set () in
     let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
       | [] -> out

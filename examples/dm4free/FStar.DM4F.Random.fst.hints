@@ -9,9 +9,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "lemma_FStar.Pervasives.invertOption", "typing_Prims.uu___is_None",
-        "typing_Prims.uu___is_Some"
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_None"
       ],
       0
     ],
@@ -31,14 +33,29 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_Prims.None", "disc_equation_Prims.Some",
-        "fuel_guarded_inversion_Prims.option", "lemma_Prims.invertOption",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.uu___is_None"
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_FStar.Pervasives.Some",
+        "fuel_guarded_inversion_FStar.Pervasives.option",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_Some"
       ],
       0
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__get_elab",
+      1,
+      2,
+      1,
+      [
+        "@query", "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__a",
+        "projection_inverse_FStar.Pervasives.Mktuple2__b"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__get_complete_type",
       1,
       2,
       1,
@@ -58,6 +75,18 @@
       1,
       2,
       1,
+      [
+        "@query", "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__a",
+        "projection_inverse_FStar.Pervasives.Mktuple2__b"
+      ],
+      0
+    ],
+    [
+      "FStar.DM4F.Random._dm4f_RAND___proj__RAND__item__raise_complete_type",
+      1,
+      2,
+      1,
       [ "@query" ],
       0
     ],
@@ -65,6 +94,7 @@
     [ "FStar.DM4F.Random.RAND", 2, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Random.RAND", 3, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Random.RAND", 4, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.Random.RAND", 5, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Random.sample",
       1,
@@ -79,10 +109,9 @@
       2,
       1,
       [
-        "@query", "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2"
+        "@query", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2"
       ],
       0
     ],
@@ -93,6 +122,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.None",
+        "constructor_distinct_FStar.Pervasives.Some",
+        "equation_FStar.DM4F.Heap.Random.elem",
         "equation_FStar.DM4F.Heap.Random.incr",
         "equation_FStar.DM4F.Heap.Random.incrementable",
         "equation_FStar.DM4F.Heap.Random.sel",
@@ -100,6 +132,7 @@
         "equation_FStar.DM4F.Heap.Random.to_id",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
         "refinement_interpretation_FStar.DM4F.Random_Tm_refine_307a96a635cff6d2da620168267e2279"
       ],
       0
@@ -141,7 +174,7 @@
         "proj_equation_FStar.DM4F.Random.Bijection_f",
         "projection_inverse_FStar.DM4F.Random.Bijection_f",
         "projection_inverse_FStar.DM4F.Random.Bijection_finv",
-        "refinement_interpretation_FStar.DM4F.Random_Tm_refine_1dc65025393692fae7f376b70737c62a",
+        "refinement_interpretation_FStar.DM4F.Random_Tm_refine_d7b8b1f09ba6d136ef025fb9ed4aacac",
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__f"
       ],
       0
@@ -205,8 +238,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.option_haseq",
-        "equation_Prims.eqtype",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.option_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
@@ -235,7 +268,7 @@
         "equation_FStar.DM4F.Random.inverse",
         "equation_FStar.DM4F.Random.mass", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.DM4F.Random.bijection",
-        "interpretation_FStar.DM4F.Random_Tm_abs_88b23adac0a332f8d30d2a9a7e18b029",
+        "interpretation_FStar.DM4F.Random_Tm_abs_a99e9be1c08ce75436d2c27b27789868",
         "lemma_FStar.DM4F.Heap.Random.lemma_eq_elim",
         "proj_equation_FStar.DM4F.Random.Bijection_f",
         "proj_equation_FStar.DM4F.Random.Bijection_finv",
@@ -253,6 +286,7 @@
       1,
       [
         "@query", "equation_FStar.DM4F.Heap.Random.size",
+        "equation_Prims.eq2", "equation_Prims.nat",
         "projection_inverse_BoxInt_proj_0"
       ],
       0

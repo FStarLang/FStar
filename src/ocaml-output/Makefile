@@ -219,7 +219,6 @@ endif
 
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
-#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/

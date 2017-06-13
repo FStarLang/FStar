@@ -31,6 +31,13 @@ module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
+module Unionfind = FStar.Syntax.Unionfind
+
+let rec delta_depth_to_string = function
+    | Delta_constant -> "Delta_constant"
+    | Delta_defined_at_level i -> "Delta_defined_at_level " ^ string_of_int i
+    | Delta_equational -> "Delta_equational"
+    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -175,14 +182,20 @@ let tag_of_term (t:term) = match t.n with
   | Tm_unknown -> "Tm_unknown"
 
 let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int)
+let univ_uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
 
 let rec int_of_univ n u = match Subst.compress_univ u with
     | U_zero -> n, None
     | U_succ u -> int_of_univ (n+1) u
     | _ -> n, Some u
 
-let rec univ_to_string u = match Subst.compress_univ u with
-    | U_unif u -> uvar_to_string u
+let rec univ_to_string u =
+  if not (Options.ugly()) then
+    let e = Resugar.resugar_universe u Range.dummyRange in
+    let d = ToDocument.term_to_document e in
+    Pp.pretty_string (float_of_string "1.0") 100 d
+  else match Subst.compress_univ u with
+    | U_unif u -> univ_uvar_to_string u
     | U_name x -> x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
@@ -303,7 +316,12 @@ let rec term_to_string x =
       | _ -> tag_of_term x
   end
 
-and pat_to_string x = match x.v with
+and pat_to_string x =
+  if not (Options.ugly()) then
+    let e = Resugar.resugar_pat x in
+    let d = ToDocument.pat_to_document e in
+    Pp.pretty_string (float_of_string "1.0") 100 d
+  else match x.v with
     | Pat_cons(l, pats) -> U.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
     | Pat_dot_term (x, _) ->
       if Options.print_bound_var_types()
@@ -315,7 +333,6 @@ and pat_to_string x = match x.v with
       else bv_to_string x
     | Pat_constant c -> const_to_string c
     | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
-    | Pat_disj ps ->  U.concat_l " | " (List.map pat_to_string ps)
 
 
 and lbs_to_string quals lbs =
@@ -360,6 +377,11 @@ and imp_to_string s = function
   | _ -> s
 
 and binder_to_string' is_arrow b =
+  if not (Options.ugly()) then
+    let e = Resugar.resugar_binder b Range.dummyRange in
+    let d = ToDocument.binder_to_document e in
+    Pp.pretty_string (float_of_string "1.0") 100 d
+  else
     let (a, imp) = b in
     if is_null_binder b
     then ("_:" ^ term_to_string a.sort)
@@ -384,7 +406,12 @@ and args_to_string args =
     args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string c =
-  match c.n with
+  if not (Options.ugly()) then
+    let e = Resugar.resugar_comp c in
+    let d = ToDocument.term_to_document e in
+    Pp.pretty_string (float_of_string "1.0") 100 d
+  else
+    match c.n with
     | Total (t, _) ->
       begin match (compress t).n with
         | Tm_type _ when not (Options.print_implicits()) -> term_to_string t
@@ -449,9 +476,21 @@ let enclose_universes s =
     then "<" ^ s ^ ">"
     else ""
 
-let tscheme_to_string (us, t) = U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
+let tscheme_to_string s =
+  if not (Options.ugly()) then
+    let d = Resugar.resugar_tscheme s in
+    let d = ToDocument.decl_to_document d in
+    Pp.pretty_string (float_of_string "1.0") 100 d
+  else
+    let (us, t) = s in
+    U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
-let eff_decl_to_string for_free ed =
+let eff_decl_to_string' for_free r q ed =
+ if not (Options.ugly()) then
+    let d = Resugar.resugar_eff_decl for_free r q ed in
+    let d = ToDocument.decl_to_document d in
+    Pp.pretty_string (float_of_string "1.0") 100 d
+ else
     let actions_to_string actions =
         actions |> List.map (fun a ->
           U.format5 "%s%s %s : %s = %s"
@@ -497,7 +536,20 @@ let eff_decl_to_string for_free ed =
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]
 
-let rec sigelt_to_string (x: sigelt) = match x.sigel with
+let eff_decl_to_string for_free ed =
+  eff_decl_to_string' for_free Range.dummyRange [] ed
+
+let rec sigelt_to_string (x: sigelt) =
+ if not (Options.ugly()) then
+    let e = Resugar.resugar_sigelt x in
+    begin match e with
+    | Some d ->
+      let d = ToDocument.decl_to_document d in
+      Pp.pretty_string (float_of_string "1.0") 100 d
+    | _ -> ""
+    end
+ else
+  begin match x.sigel with
   | Sig_pragma(LightOff) -> "#light \"off\""
   | Sig_pragma(ResetOptions None) -> "#reset-options"
   | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
@@ -524,8 +576,8 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
   | Sig_let(lbs, _, _) -> lbs_to_string x.sigquals lbs
   | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed) -> eff_decl_to_string false ed
-  | Sig_new_effect_for_free (ed) -> eff_decl_to_string true ed
+  | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
+  | Sig_new_effect_for_free (ed) -> eff_decl_to_string' true x.sigrng x.sigquals ed
   | Sig_sub_effect (se) ->
     let lift_wp = match se.lift_wp, se.lift with
       // TODO pretty-print this better
@@ -548,7 +600,7 @@ let rec sigelt_to_string (x: sigelt) = match x.sigel with
             | _ -> failwith "impossible" in
          U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
     else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
-
+  end
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

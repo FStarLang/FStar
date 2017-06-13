@@ -2,7 +2,6 @@ module FStar.Reflection.Formula
 
 open FStar.Reflection.Syntax
 open FStar.Reflection.Syntax.Lemmas
-open FStar.Tactics.Types
 
 type comparison =
   | Eq            (* Propositional equality (eq2) *)
@@ -56,8 +55,8 @@ let smaller f t =
     | False_ ->
         True
 
-#reset-options "--z3rlimit 10"
-let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+#reset-options "--z3rlimit 15"
+let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
     match inspect t with
     | Tv_Var n ->
         Name n
@@ -65,8 +64,8 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     | Tv_FVar fv ->
         // Cannot use `when` clauses when verifying!
         let qn = inspect_fv fv in
-        if eq_qn qn true_qn then True_
-        else if eq_qn qn false_qn then False_
+        if qn = true_qn then True_
+        else if qn = false_qn then False_
         else FV fv
 
     // TODO: l_Forall
@@ -78,24 +77,24 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
         match inspect h, ts@[t] with
         | Tv_FVar fv, [a1; a2; a3] ->
             let qn = inspect_fv fv in
-            if      eq_qn qn eq2_qn then Comp Eq a1 a2 a3
-            else if eq_qn qn eq1_qn then Comp BoolEq a1 a2 a3
-            else if eq_qn qn lt_qn  then Comp Lt a1 a2 a3
-            else if eq_qn qn lte_qn then Comp Le a1 a2 a3
-            else if eq_qn qn gt_qn  then Comp Lt a1 a3 a2
-            else if eq_qn qn gte_qn then Comp Le a1 a3 a2
+            if      qn = eq2_qn then Comp Eq a1 a2 a3
+            else if qn = eq1_qn then Comp BoolEq a1 a2 a3
+            else if qn = lt_qn  then Comp Lt a1 a2 a3
+            else if qn = lte_qn then Comp Le a1 a2 a3
+            else if qn = gt_qn  then Comp Lt a1 a3 a2
+            else if qn = gte_qn then Comp Le a1 a3 a2
             else App h0 t
         | Tv_FVar fv, [a1; a2] ->
             let qn = inspect_fv fv in
-            if eq_qn qn imp_qn then Implies a1 a2
-            else if eq_qn qn and_qn then And a1 a2
-            else if eq_qn qn or_qn  then Or a1 a2
-            else if eq_qn qn forall_qn then (admit(); //TODO: admitting termination check for now
+            if qn = imp_qn then Implies a1 a2
+            else if qn = and_qn then And a1 a2
+            else if qn = or_qn  then Or a1 a2
+            else if qn = forall_qn then (admit(); //TODO: admitting termination check for now
                                              mk_Forall a1 a2) //a1 is type, a2 predicate
             else App h0 t
         | Tv_FVar fv, [a] ->
             let qn = inspect_fv fv in
-            if eq_qn qn not_qn then Not a
+            if qn = not_qn then Not a
             else App h0 t
         | _ ->
             App h0 t
@@ -116,6 +115,19 @@ let term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
     | Tv_Const (C_Unit)
     | _ -> 
         F_Unknown
+
+// Unsquashing
+let rec term_as_formula (t:term) : Tot (f:formula{smaller f t}) =
+    match inspect t with
+    | Tv_App l r ->
+        begin match inspect l with
+        | Tv_FVar fv ->
+            if inspect_fv fv = squash_qn
+            then term_as_formula' r
+            else F_Unknown
+        | _ -> F_Unknown
+        end
+    | _ -> F_Unknown
 
 #reset-options
 

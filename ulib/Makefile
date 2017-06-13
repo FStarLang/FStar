@@ -3,15 +3,17 @@
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
+FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst FStar.StructNG.fst
 
-HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst FStar.Struct.fst FStar.StructNG.fst
+ALL=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
-ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
-
-all: $(addsuffix -ver, $(ALL)) st m_rref bufferq struct
+all: $(addsuffix -ver, $(ALL))
 
 indent: $(addsuffix -indent, $(ALL))
+
+%-ver: %
+	$(FSTAR) $^
+	touch $@
 
 %.fst-indent: %.fst
 	$(FSTAR) --indent $^ > $^.indent.fst
@@ -77,9 +79,9 @@ bitvector:
 int:
 	$(FSTAR) FStar.UInt.fst FStar.UInt8.fst FStar.UInt16.fst FStar.UInt31.fst FStar.UInt32.fst FStar.UInt63.fst FStar.UInt64.fst FStar.Int.fst FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst FStar.Int.Cast.fst
 
-reflection: $(patsubst %.fst,%.fst-ver,$(wildcard FStar.Reflection.*.fst))
+reflection: $(patsubst %.fst,%.fst-ver,FStar.Reflection.fst $(wildcard FStar.Reflection.*.fst))
 
-tactics: $(patsubst %.fst,%.fst-ver,$(wildcard FStar.Tactics.fst))
+tactics: $(patsubst %.fst,%.fst-ver,FStar.Tactics.fst $(wildcard FStar.Tactics.*.fst))
 
 wc:	
 	wc -l prims.fst $(ALL)

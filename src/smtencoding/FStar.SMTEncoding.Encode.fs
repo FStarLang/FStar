@@ -449,6 +449,19 @@ let curried_arrow_formals_comp k =
   | Tm_arrow(bs, c) -> Subst.open_comp bs c
   | _ -> [], Syntax.mk_Total k
 
+let is_arithmetic_primitive head args =
+    match head.n, args with
+    | Tm_fvar fv, [_;_]->
+      S.fv_eq_lid fv Const.op_Addition
+      || S.fv_eq_lid fv Const.op_Subtraction
+      || S.fv_eq_lid fv Const.op_Multiply
+      || S.fv_eq_lid fv Const.op_Division
+      || S.fv_eq_lid fv Const.op_Modulus
+
+    | Tm_fvar fv, [_] ->
+      S.fv_eq_lid fv Const.op_Minus
+
+    | _ -> false
 
 let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
@@ -486,6 +499,58 @@ and encode_term_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : ter
     match fuel_opt with
         | None -> mk_HasTypeZ e t, decls
         | Some f -> mk_HasTypeFuel f e t, decls
+
+and encode_arith_term env head args_e =
+    let arg_tms, decls = encode_args args_e env in
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary arg_tms =
+        Term.unboxInt (List.hd arg_tms)
+    in
+    let binary arg_tms =
+        Term.unboxInt (List.hd arg_tms),
+        Term.unboxInt (List.hd (List.tl arg_tms))
+    in
+    let mk_default () =
+        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
+        Util.mkApp'(fname, fuel_args@arg_tms)
+    in
+    let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts ->
+          if Options.smtencoding_l_arith_native () then
+             op (mk_args ts) |> Term.boxInt
+          else mk_default ()
+    in
+    let mk_nl nm op ts =
+      if Options.smtencoding_nl_arith_wrapped () then
+          let t1, t2 = binary ts in
+          Util.mkApp(nm, [t1;t2]) |> Term.boxInt
+      else if Options.smtencoding_nl_arith_native () then
+          op (binary ts) |> Term.boxInt
+      else mk_default ()
+    in
+    let add     = mk_l Util.mkAdd binary in
+    let sub     = mk_l Util.mkSub binary in
+    let minus   = mk_l Util.mkMinus unary in
+    let mul     = mk_nl "_mul" Util.mkMul in
+    let div     = mk_nl "_div" Util.mkDiv in
+    let modulus = mk_nl "_mod" Util.mkMod in
+    let ops =
+        [(Const.op_Addition, add);
+         (Const.op_Subtraction, sub);
+         (Const.op_Multiply, mul);
+         (Const.op_Division, div);
+         (Const.op_Modulus, modulus);
+         (Const.op_Minus, minus)]
+    in
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
+        BU.must
+    in
+    op arg_tms, decls
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -652,6 +717,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, None) in
               let t = mkApp(tsym, List.map mkFreeV cvars) in
 
+              let x_has_base_t = mk_HasType xtm base_t in
               let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
               let t_has_kind = mk_HasType t mk_Term_type in
 
@@ -663,6 +729,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
                               "haseq" ^ tsym) in
+              let t_valid =
+                let xx = (x, Term_sort) in
+                let valid_t = mkApp ("Valid", [t]) in
+                Util.mkAssume(mkForall ([[valid_t]], cvars,
+                    mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
+                              Some ("validity axiom for refinement"),
+                              "ref_valid_" ^ tsym)
+              in
 
               let t_kinding =
                 //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
@@ -679,6 +753,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @decls'
                             @[tdecl;
                               t_kinding;
+                              t_valid;
                               t_interp;t_haseq] in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
@@ -695,32 +770,33 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let head, args_e = U.head_and_args t0 in
         (* if Env.debug env.tcenv <| Options.Other "SMTEncoding" *)
         (* then printfn "Encoding app head=%s, n_args=%d" (Print.term_to_string head) (List.length args_e); *)
-        begin match (SS.compress head).n, args_e with
-            | _, _ when head_redex env head -> encode_term (whnf env t) env
+        begin
+        match (SS.compress head).n, args_e with
+        | _ when head_redex env head ->
+            encode_term (whnf env t) env
 
-            | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
-            | Tm_fvar fv,  [_; (v1, _); (v2, _)] when S.fv_eq_lid fv Const.lexcons_lid ->
-              //lex tuples are primitive
-              let v1, decls1 = encode_term v1 env in
-              let v2, decls2 = encode_term v2 env in
-              mk_LexCons v1 v2, decls1@decls2
+        | _ when is_arithmetic_primitive head args_e ->
+            encode_arith_term env head args_e
 
-            | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-              let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
-              if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
-              then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
-              let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
-              encode_term e env
+        | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
+        | Tm_fvar fv,  [_; (v1, _); (v2, _)]
+            when S.fv_eq_lid fv Const.lexcons_lid ->
+            //lex tuples are primitive
+            let v1, decls1 = encode_term v1 env in
+            let v2, decls2 = encode_term v2 env in
+            mk_LexCons v1 v2, decls1@decls2
 
+        | Tm_constant Const_reify, _ (* (_::_::_) *) ->
+            let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
+            if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+            then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
+            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
+            encode_term e env
 
-            (* | Tm_constant Const_reify, [(arg, _)] -> *)
-            (*   let tm, decls = encode_term arg env in *)
-            (*   mkApp("Reify", [tm]), decls *)
+        | Tm_constant (Const_reflect _), [(arg, _)] ->
+            encode_term arg env
 
-            | Tm_constant (Const_reflect _), [(arg, _)] ->
-              encode_term arg env
-
-            | _ ->
+        | _ ->
             let args, decls = encode_args args_e env in
 
             let encode_partial_app ht_opt =
@@ -923,86 +999,77 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
         let p, w, br = SS.open_branch b in
-        let patterns = encode_pat env p in
-        (* KM : Why are we using a fold_right here ? does the order of patterns in a disjunction really matter ? *)
-        List.fold_right (fun (env0, pattern) (else_case, decls) ->
-          let guard = pattern.guard scr' in
-          let projections = pattern.projections scr' in
-          let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
-          let guard, decls2 = match w with
+        let env0, pattern = encode_pat env p in
+        let guard = pattern.guard scr' in
+        let projections = pattern.projections scr' in
+        let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
+        let guard, decls2 =
+            match w with
             | None -> guard, []
             | Some w ->
               let w, decls2 = encode_term w env in
               mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
-          in
-          let br, decls3 = encode_br br env in
-          mkITE(guard, br, else_case), decls@decls2@decls3)
-          patterns (else_case, decls)
+       in
+       let br, decls3 = encode_br br env in
+       mkITE(guard, br, else_case), decls@decls2@decls3
       in
       List.fold_right encode_branch pats (default_case (* default; should be unreachable *), decls)
     in
     mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
+and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
+    if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+    let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
-and encode_pat (env:env_t) (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each disjunct *) =
-    match pat.v with
-        | Pat_disj ps -> List.map (encode_one_pat env) ps
-        | _ -> [encode_one_pat env pat]
+    let env, vars = vars |> List.fold_left (fun (env, vars) v ->
+            let xx, _, env = gen_term_var env v in
+            env, (v, (xx, Term_sort))::vars) (env, []) in
 
-and encode_one_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
-        if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
-        let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
+    let rec mk_guard pat (scrutinee:term) : term =
+        match pat.v with
+        | Pat_var _
+        | Pat_wild _
+        | Pat_dot_term _ -> mkTrue
+        | Pat_constant c ->
+            mkEq(scrutinee, encode_const c)
+        | Pat_cons(f, args) ->
+            let is_f =
+                let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
+                match Env.datacons_of_typ env.tcenv tc_name with
+                | _, [_] -> mkTrue //single constructor type; no need for a test
+                | _ -> mk_data_tester env f.fv_name.v scrutinee
+            in
+            let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                mk_guard arg (mkApp(proj, [scrutinee]))) in
+            mk_and_l (is_f::sub_term_guards)
+    in
 
-        let env, vars = vars |> List.fold_left (fun (env, vars) v ->
-              let xx, _, env = gen_term_var env v in
-              env, (v, (xx, Term_sort))::vars) (env, []) in
+        let rec mk_projections pat (scrutinee:term) =
+        match pat.v with
+        | Pat_dot_term (x, _)
+        | Pat_var x
+        | Pat_wild x -> [x, scrutinee]
 
-        let rec mk_guard pat (scrutinee:term) : term = match pat.v with
-            | Pat_disj _ -> failwith "Impossible"
-            | Pat_var _
-            | Pat_wild _
-            | Pat_dot_term _ -> mkTrue
-            | Pat_constant c ->
-               mkEq(scrutinee, encode_const c)
-            | Pat_cons(f, args) ->
-                let is_f =
-                    let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
-                    match Env.datacons_of_typ env.tcenv tc_name with
-                    | _, [_] -> mkTrue //single constructor type; no need for a test
-                    | _ -> mk_data_tester env f.fv_name.v scrutinee
-                in
-                let sub_term_guards = args |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                    mk_guard arg (mkApp(proj, [scrutinee]))) in
-                mk_and_l (is_f::sub_term_guards)
-        in
+        | Pat_constant _ -> []
 
-         let rec mk_projections pat (scrutinee:term) =  match pat.v with
-            | Pat_disj _ -> failwith "Impossible"
+        | Pat_cons(f, args) ->
+            args
+            |> List.mapi (fun i (arg, _) ->
+                let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
+                mk_projections arg (mkApp(proj, [scrutinee])))
+            |> List.flatten in
 
-            | Pat_dot_term (x, _)
-            | Pat_var x
-            | Pat_wild x -> [x, scrutinee]
+    let pat_term () = encode_term pat_term env in
 
-            | Pat_constant _ -> []
+    let pattern = {
+            pat_vars=vars;
+            pat_term=pat_term;
+            guard=mk_guard pat;
+            projections=mk_projections pat;
+        }  in
 
-            | Pat_cons(f, args) ->
-                args
-                |> List.mapi (fun i (arg, _) ->
-                    let proj = primitive_projector_by_pos env.tcenv f.fv_name.v i in
-                    mk_projections arg (mkApp(proj, [scrutinee])))
-                |> List.flatten in
-
-        let pat_term () = encode_term pat_term env in
-
-        let pattern = {
-                pat_vars=vars;
-                pat_term=pat_term;
-                guard=mk_guard pat;
-                projections=mk_projections pat;
-            }  in
-
-        env, pattern
+    env, pattern
 
 and encode_args (l:args) (env:env_t) : (list<term> * decls_t)  =
     let l, decls = l |> List.fold_left
@@ -1092,10 +1159,18 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             [] l in
         ({f phis with rng=r}, decls) in
 
-    let eq_op r : Tot<(args -> (term * decls_t))> = function
-        | [_; e1; e2]
-        | [_;_;e1;e2] -> enc  (bin_op mkEq) r [e1;e2]
-        | l -> enc (bin_op mkEq) r l in
+    // This gets called for eq2, eq3, equals and h_equals. They have types:
+    // eq2 : #a:Type -> a -> a -> Type
+    // eq3 : #a:Type -> #b:Type -> a -> b -> Type
+    // equals : #a:Type -> a -> a -> Type
+    // h_equals : #a:Type -> a -> #b:Type -> b -> Type
+    // So, to properly cover all cases, extract the two non-implicit arguments and state their equality
+    let eq_op r args : (term * decls_t) =
+        let rf = List.filter (fun (a,q) -> match q with | Some (Implicit _) -> false | _ -> true) args in
+        if List.length rf <> 2
+        then failwith (BU.format1 "eq_op: got %s non-implicit arguments instead of 2?" (string_of_int (List.length rf)))
+        else enc (bin_op mkEq) r rf
+    in
 
     let mk_imp r : Tot<(args -> (term * decls_t))> = function
         | [(lhs, _); (rhs, _)] ->
@@ -1275,9 +1350,14 @@ let prims =
         (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
         (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
         (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
-        ] in
+        ]
+    in
     let mk : lident -> string -> term * list<decl> =
-        fun l v -> prims |> List.find (fun (l', _) -> lid_equals l l') |> Option.map (fun (_, b) -> b v) |> Option.get in
+        fun l v ->
+            prims |>
+            List.find (fun (l', _) -> lid_equals l l') |>
+            Option.map (fun (_, b) -> b v) |>
+            Option.get in
     let is : lident -> bool =
         fun l -> prims |> BU.for_some (fun (l', _) -> lid_equals l l') in
     {mk=mk;
