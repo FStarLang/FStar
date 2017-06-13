@@ -875,15 +875,9 @@ let rec extract_sig:
                 (g, uu____1718))
        | FStar_Syntax_Syntax.Sig_new_effect_for_free uu____1723 ->
            failwith "impossible -- removed by tc.fs"
-<<<<<<< HEAD
-       | FStar_Syntax_Syntax.Sig_assume uu____1640 -> (g, [])
-       | FStar_Syntax_Syntax.Sig_sub_effect uu____1645 -> (g, [])
-       | FStar_Syntax_Syntax.Sig_effect_abbrev uu____1647 -> (g, [])
-=======
        | FStar_Syntax_Syntax.Sig_assume uu____1727 -> (g, [])
-       | FStar_Syntax_Syntax.Sig_sub_effect uu____1731 -> (g, [])
-       | FStar_Syntax_Syntax.Sig_effect_abbrev uu____1733 -> (g, [])
->>>>>>> origin/master
+       | FStar_Syntax_Syntax.Sig_sub_effect uu____1732 -> (g, [])
+       | FStar_Syntax_Syntax.Sig_effect_abbrev uu____1734 -> (g, [])
        | FStar_Syntax_Syntax.Sig_pragma p ->
            (if p = FStar_Syntax_Syntax.LightOff
             then FStar_Options.set_ml_ish ()
@@ -893,15 +887,9 @@ let extract_iface:
   FStar_Extraction_ML_UEnv.env -> FStar_Syntax_Syntax.modul -> env_t =
   fun g  ->
     fun m  ->
-<<<<<<< HEAD
-      let uu____1665 =
+      let uu____1752 =
         FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations in
-      FStar_All.pipe_right uu____1665 FStar_Pervasives.fst
-=======
-      let uu____1751 =
-        FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations in
-      FStar_All.pipe_right uu____1751 FStar_Pervasives.fst
->>>>>>> origin/master
+      FStar_All.pipe_right uu____1752 FStar_Pervasives.fst
 let extract:
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.modul ->
@@ -911,95 +899,51 @@ let extract:
   fun g  ->
     fun m  ->
       FStar_Syntax_Syntax.reset_gensym ();
-<<<<<<< HEAD
-      (let uu____1691 = FStar_Options.debug_any () in
-       if uu____1691
+      (let uu____1778 = FStar_Options.debug_any () in
+       if uu____1778
        then
-         let uu____1692 =
+         let uu____1779 =
            FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-         FStar_Util.print1 "Extracting module %s\n" uu____1692
+         FStar_Util.print1 "Extracting module %s\n" uu____1779
        else ());
-      (let uu____1694 = FStar_Options.restore_cmd_line_options true in
-=======
-      (let uu____1777 = FStar_Options.debug_any () in
-       if uu____1777
-       then
-         let uu____1778 =
-           FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-         FStar_Util.print1 "Extracting module %s\n" uu____1778
-       else ());
-      (let uu____1780 = FStar_Options.restore_cmd_line_options true in
->>>>>>> origin/master
+      (let uu____1781 = FStar_Options.restore_cmd_line_options true in
        let name =
          FStar_Extraction_ML_Syntax.mlpath_of_lident
            m.FStar_Syntax_Syntax.name in
        let g1 =
-<<<<<<< HEAD
-         let uu___160_1697 = g in
+         let uu___160_1784 = g in
          {
            FStar_Extraction_ML_UEnv.tcenv =
-             (uu___160_1697.FStar_Extraction_ML_UEnv.tcenv);
+             (uu___160_1784.FStar_Extraction_ML_UEnv.tcenv);
            FStar_Extraction_ML_UEnv.gamma =
-             (uu___160_1697.FStar_Extraction_ML_UEnv.gamma);
+             (uu___160_1784.FStar_Extraction_ML_UEnv.gamma);
            FStar_Extraction_ML_UEnv.tydefs =
-             (uu___160_1697.FStar_Extraction_ML_UEnv.tydefs);
+             (uu___160_1784.FStar_Extraction_ML_UEnv.tydefs);
            FStar_Extraction_ML_UEnv.currentModule = name
          } in
-       let uu____1698 =
+       let uu____1785 =
          FStar_Util.fold_map extract_sig g1
            m.FStar_Syntax_Syntax.declarations in
-       match uu____1698 with
+       match uu____1785 with
        | (g2,sigs) ->
            let mlm = FStar_List.flatten sigs in
            let is_kremlin =
-             let uu____1715 = FStar_Options.codegen () in
-             match uu____1715 with
+             let uu____1802 = FStar_Options.codegen () in
+             match uu____1802 with
              | Some "Kremlin" -> true
-             | uu____1717 -> false in
-           let uu____1719 =
-=======
-         let uu___160_1783 = g in
-         {
-           FStar_Extraction_ML_UEnv.tcenv =
-             (uu___160_1783.FStar_Extraction_ML_UEnv.tcenv);
-           FStar_Extraction_ML_UEnv.gamma =
-             (uu___160_1783.FStar_Extraction_ML_UEnv.gamma);
-           FStar_Extraction_ML_UEnv.tydefs =
-             (uu___160_1783.FStar_Extraction_ML_UEnv.tydefs);
-           FStar_Extraction_ML_UEnv.currentModule = name
-         } in
-       let uu____1784 =
-         FStar_Util.fold_map extract_sig g1
-           m.FStar_Syntax_Syntax.declarations in
-       match uu____1784 with
-       | (g2,sigs) ->
-           let mlm = FStar_List.flatten sigs in
-           let is_kremlin =
-             let uu____1801 = FStar_Options.codegen () in
-             match uu____1801 with
-             | Some "Kremlin" -> true
-             | uu____1803 -> false in
-           let uu____1805 =
->>>>>>> origin/master
+             | uu____1804 -> false in
+           let uu____1806 =
              (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
                 (is_kremlin ||
                    (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
                &&
                (FStar_Options.should_extract
                   (m.FStar_Syntax_Syntax.name).FStar_Ident.str) in
-<<<<<<< HEAD
-           if uu____1719
+           if uu____1806
            then
-             ((let uu____1724 =
+             ((let uu____1811 =
                  FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-               FStar_Util.print1 "Extracted module %s\n" uu____1724);
-=======
-           if uu____1805
-           then
-             ((let uu____1810 =
-                 FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-               FStar_Util.print1 "Extracted module %s\n" uu____1810);
->>>>>>> origin/master
+               FStar_Util.print1 "Extracted module %s\n" uu____1811);
               (g2,
                 [FStar_Extraction_ML_Syntax.MLLib
                    [(name, (Some ([], mlm)),
