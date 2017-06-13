@@ -8,8 +8,8 @@ open FStar.Monotonic.RRef
 open HyE.Ideal
 
 open Platform.Bytes
-open HyperStack.CoreCrypto
-module CC = HyperStack.CoreCrypto
+open CoreCrypto
+module CC = CoreCrypto
 module B = Platform.Bytes
 
 open HyE.Plain

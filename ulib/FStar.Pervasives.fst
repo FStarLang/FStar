@@ -14,6 +14,10 @@ effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
 
+(* We use the EXT effect to underspecify external system calls
+   as being impure but having no observable effect on the state *)
+effect EXT (a:Type) = Dv a
+
 let st_pre_h  (heap:Type)          = heap -> GTot Type0
 let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
 let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)

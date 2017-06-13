@@ -7,7 +7,7 @@ open FStar.HyperStack
 open FStar.Monotonic.RRef
 
 open Platform.Bytes
-open HyperStack.CoreCrypto
+open CoreCrypto
 
 module Ideal = EtM.Ideal
 module CPA = EtM.CPA
