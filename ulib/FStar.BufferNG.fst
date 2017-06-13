@@ -411,8 +411,8 @@ let disjoint_buffer_vs_buffer
 = forall
     (i1: UInt32.t { UInt32.v i1 < UInt32.v (length b1) } )
     (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b2) } )
-  . 
-    P.disjoint (gpointer_of_buffer_cell b1 i1) (gpointer_of_buffer_cell b2 i2) 
+  .
+    P.disjoint (gpointer_of_buffer_cell b1 i1) (gpointer_of_buffer_cell b2 i2)
 
 let write
   (#t: Type)
@@ -421,17 +421,17 @@ let write
   (v: t)
 : HST.Stack unit
   (requires (fun h -> live h b))
-  (ensures (fun h _ h' -> 
+  (ensures (fun h _ h' ->
     P.modifies_1 (gpointer_of_buffer_cell b i) h h' /\
     live h' b /\
     Seq.index (as_seq h' b) (UInt32.v i) == v /\ (
       forall (j: UInt32.t {UInt32.v j < UInt32.v (length b) /\ UInt32.v j <> UInt32.v i }) .
-        Seq.index (as_seq h' b) (UInt32.v j) == Seq.index (as_seq h b) (UInt32.v j)    
+        Seq.index (as_seq h' b) (UInt32.v j) == Seq.index (as_seq h b) (UInt32.v j)
   )))
 = P.write (pointer_of_buffer_cell b i) v
 
 let modifies_1_disjoint_buffer_vs_pointer_live
-  (#t1 t2: Type)
+  (#t1 #t2: Type)
   (b: buffer t1)
   (p: P.pointer t2)
   (h h': HS.mem)
@@ -442,6 +442,7 @@ let modifies_1_disjoint_buffer_vs_pointer_live
     P.modifies_1 p h h'
   ))
   (ensures (live h' b /\ as_seq h b == as_seq h' b))
+  [SMTPat (P.modifies_1 p h h'); SMTPat (live h b)]
 = P.modifies_1_reveal p h h';
   let f
     (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )

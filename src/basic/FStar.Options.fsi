@@ -101,7 +101,6 @@ val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
-val norm_then_print             : unit    -> bool
 val output_dir                  : unit    -> option<string>
 val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string

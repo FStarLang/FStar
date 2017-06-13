@@ -47,9 +47,8 @@ let precedes_lid = pconst "precedes"
 let lex_t_lid    = pconst "lex_t"
 let lexcons_lid  = pconst "LexCons"
 let lextop_lid   = pconst "LexTop"
-let smtpat_lid   = pconst "SMTPat"
-let smtpatT_lid  = pconst "SMTPatT"
-let smtpatOr_lid = pconst "SMTPatOr"
+let smtpat_lid   = pconst "smt_pat"
+let smtpatOr_lid = pconst "smt_pat_or"
 let monadic_lid  = pconst "M"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
