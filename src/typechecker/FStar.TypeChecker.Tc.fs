@@ -100,7 +100,7 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
-let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
+let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
   let effect_params_un, signature_un, opening = SS.open_term' ed.binders ed.signature in
   let effect_params, env, _ = tc_tparams env0 effect_params_un in
@@ -453,7 +453,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
   ed
 
 
-and cps_and_elaborate env ed =
+let cps_and_elaborate env ed =
   // Using [STInt: a:Type -> Effect] as an example...
   let effect_binders_un, signature_un = SS.open_term ed.binders ed.signature in
   // [binders] is the empty list (for [ST (h: heap)], there would be one binder)
@@ -767,7 +767,7 @@ and cps_and_elaborate env ed =
   List.rev !sigelts @ sigelts', ed, lift_from_pure_opt
 
 
-and tc_lex_t env ses quals lids =
+let tc_lex_t env ses quals lids =
     (* We specifically type lex_t as:
 
           type lex_t<u> : Type(u) =
@@ -827,7 +827,7 @@ and tc_lex_t env ses quals lids =
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids)))))
     end
 
-and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
+let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
     let env = Env.set_range env r in
     let k, _ = U.type_u() in
     let phi = tc_check_trivial_guard env phi k |> N.normalize [N.Beta; N.Eager_unfolding] env in
@@ -838,8 +838,8 @@ and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
       sigrng = r;
       sigmeta = default_sigmeta  }
 
-and tc_inductive env ses quals lids =
-    let env0 = env in
+let tc_inductive env ses quals lids =
+    let env = Env.push env "tc_inductive" in
     let sig_bndle, tcs, datas = TcInductive.check_inductive_well_typedness env ses quals lids in
     (* we have a well-typed inductive;
             we still need to check whether or not it supports equality
@@ -852,7 +852,7 @@ and tc_inductive env ses quals lids =
     //strict positivity check
     (if Options.no_positivity () || Options.lax ()  then ()  //skipping positivity check if lax mode
      else
-       let env = push_sigelt env0 sig_bndle in
+       let env = push_sigelt env sig_bndle in
        let b = List.iter (fun ty ->
          let b = TcInductive.check_positivity ty env in
          if not b then
@@ -882,23 +882,26 @@ and tc_inductive env ses quals lids =
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
-    then [sig_bndle], data_ops_ses
-    else
-        let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
-        let ses =
-          if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
-          else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env0 tc_assume
-        in
-        { sigel = Sig_bundle(tcs@datas, lids);
-          sigquals = quals;
-          sigrng = Env.get_range env0;
-          sigmeta = default_sigmeta  }::ses, data_ops_ses
+    let res =
+        if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
+        then [sig_bndle], data_ops_ses
+        else
+            let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
+            let ses =
+              if is_unopteq then TcInductive.unoptimized_haseq_scheme sig_bndle tcs datas env tc_assume
+              else TcInductive.optimized_haseq_scheme sig_bndle tcs datas env tc_assume
+            in
+            { sigel = Sig_bundle(tcs@datas, lids);
+              sigquals = quals;
+              sigrng = Env.get_range env;
+              sigmeta = default_sigmeta  }::ses, data_ops_ses in
+    ignore (Env.pop env "tc_inductive");
+    res
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
 (* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
-and tc_decl env se: list<sigelt> * list<sigelt> =
+let tc_decl env se: list<sigelt> * list<sigelt> =
   let env = set_hint_correlator env se in
   TcUtil.check_sigelt_quals env se;
   let r = se.sigrng in
@@ -1314,6 +1317,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect (ne) ->
     let env = Env.push_sigelt env se in
+
     ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
@@ -1327,11 +1331,14 @@ let tc_decls env ses =
 
     let ses', ses_elaborated = tc_decl env se in
     let ses' = ses' |> List.map (N.elim_uvars env) in
+
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
     FStar.Syntax.Unionfind.reset();
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
-    then BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses');
+    then begin
+      BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses');
+    end;
 
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
