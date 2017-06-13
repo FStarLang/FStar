@@ -44,12 +44,10 @@ val sel_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r
 
 val sel: #a:Type0 -> #rel:preorder a -> heap -> ref a rel -> GTot a
 
-val upd_tot:
-  #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r} ->
-  x:a{rel (sel_tot h r) x} -> Tot heap
+let valid_upd (#a:Type0) (#rel:preorder a) (h:heap) (r:ref a rel) (x:a) = rel (sel h r) x
 
-let valid_upd (#a:Type0) (#rel:preorder a) (h:heap) (r:ref a rel) (x:a) =
-  h `contains` r ==> rel (sel_tot h r) x
+val upd_tot:
+  #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r} -> x:a{valid_upd h r x} -> Tot heap
 
 //if the reference is contained in the heap, it better evolve per the preorder
 val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel -> x:a{valid_upd h r x} -> GTot heap
@@ -92,7 +90,7 @@ val lemma_distinct_addrs_unused
 val lemma_alloc (#a:Type0) (rel:preorder a) (h0:heap) (x:a) (mm:bool)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc rel h0 x mm in
-                    fresh r h0 h1 /\ h1 == upd h0 r x /\ is_mm r = mm))  //note that we are using `upd` without the valid_upd precondition, becaise from `fresh` we can reason that h0 does not contain r, the order of conjunction matters!
+                    fresh r h0 h1 /\ valid_upd h0 r x /\ h1 == upd h0 r x /\ is_mm r = mm))
 	 [SMTPat (alloc rel h0 x mm)]
 
 val lemma_free_mm_sel
