@@ -1,74 +1,37 @@
 module FStar.Heap
 
 open FStar.Classical
+open FStar.Monotonic.Heap
 
-private noeq type heap_rec = {
-  next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & a))
-}
+let heap = heap
 
-let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
+let emp = emp
 
-let emp = {
-  next_addr = 0;
-  memory    = (fun (r:nat) -> None)
-}
+let trivial_preorder (a:Type0) = fun _ _ -> True
 
-private type ref' (a:Type0) :Type0 = {
-  addr: nat;
-  init: a;
-  mm:   bool;  //manually managed flag
-}
+let ref a = ref a (trivial_preorder a)
 
-let ref a = ref' a
+let addr_of #a r = addr_of r
 
-let addr_of #a r = r.addr
+let is_mm #a r = is_mm r
 
-let is_mm #a r = r.mm
+let compare_addrs #a #b r1 r2 = compare_addrs r1 r2
 
-let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
+let contains #a h r = contains h r
 
-let contains #a h r =
-  let _ = () in
-  Some? (h.memory r.addr) /\ dfst (Some?.v (h.memory r.addr)) == a
+let unused_in #a r h = unused_in r h
 
-let unused_in #a r h = None? (h.memory r.addr)
+let sel_tot #a h r = sel_tot h r
 
-let sel_tot #a h r =
-  let Some (| _, x |) = h.memory r.addr in
-  x
+let sel #a h r = sel h r
 
-let sel #a h r =
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r) then
-    sel_tot #a h r
-  else r.init
+let upd_tot #a h r x = upd_tot h r x
 
-let upd_tot #a h r x =
-  { h with memory = (fun r' -> if r.addr = r'
-			    then Some (| a, x |)
-                            else h.memory r') }
+let upd #a h r x = upd h r x
 
-let upd #a h r x =
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
-  then upd_tot h r x
-  else
-    if r.addr >= h.next_addr
-    then
-      { next_addr = r.addr + 1;
-        memory    = (fun (r':nat) -> if r' = r.addr
-	   		         then Some (| a, x |)
-                                 else h.memory r') }
-    else
-      { h with memory = (fun r' -> if r' = r.addr
-				then Some (| a, x |)
-                                else h.memory r') }
+let alloc #a h x mm = alloc (trivial_preorder a) h x mm
 
-let alloc #a h x mm =
-  let r = { addr = h.next_addr; init = x; mm = mm } in
-  r, upd #a h r x
-
-let free_mm #a h r =
-  { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
+let free_mm #a h r = free_mm h r
 
 (*
  * update of a well-typed reference
@@ -95,7 +58,7 @@ private let lemma_upd_contains_not_necessarily_well_typed_test
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
            (forall (b:Type) (r':ref b). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')           /\
-	   (forall (b:Type) (r':ref b). (r'.addr <> r.addr /\ h0 `contains` r') ==> h1 `contains` r') /\
+	   (forall (b:Type) (r':ref b). (addr_of r' <> addr_of r /\ h0 `contains` r') ==> h1 `contains` r') /\
 	   (forall (b:Type) (r':ref b). r' `unused_in` h0 <==> r' `unused_in` h1)))
   = ()
 
@@ -146,7 +109,7 @@ let lemma_alloc #a h0 x mm = ()
 let lemma_free_mm_sel #a #b h0 r1 r2 = ()
 let lemma_free_mm_contains #a #b h0 r1 r2 = ()
 let lemma_free_mm_unused #a #b h0 r1 r2 = ()
-let lemma_sel_same_addr #a h r1 r2 = ()
+let lemma_sel_same_addr #a h r1 r2 = lemma_sel_same_addr h r1 r2  //AR: figure out why this is not fired automatically
 let lemma_sel_upd1 #a h r1 x r2 = ()
 let lemma_sel_upd2 #a #b h r1 r2 x = ()
 let lemma_ref_injectivity = ()
@@ -159,10 +122,7 @@ let lemma_upd_unused #a #b h r1 x r2 = ()
 let lemma_contains_upd_modifies #a h r x = ()
 let lemma_unused_upd_modifies #a h r x = ()
 
-let equal h1 h2 =
-  let _ = () in
-  h1.next_addr = h2.next_addr /\
-  FStar.FunctionalExtensionality.feq h1.memory h2.memory
+let equal h1 h2 = equal h1 h2
 
 let equal_extensional h1 h2 = ()
 
