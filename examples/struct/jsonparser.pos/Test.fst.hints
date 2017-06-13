@@ -208,7 +208,6 @@
         "refinement_interpretation_Test_Tm_refine_3e9883cb02df6ccc737a42b808b18337",
         "refinement_interpretation_Test_Tm_refine_ce948322b5192a8b1eca29395d26ccff",
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
-        "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.fst",
         "token_correspondence_JSONParser.Spec.gparse_whitespace.fuel_instrumented",
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",

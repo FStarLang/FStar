@@ -1984,6 +1984,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
+    let is_opaque_to_smt (t:S.term) =
+        match (SS.compress t).n with
+        | Tm_constant (Const_string(bytes, _)) ->
+          BU.string_of_bytes bytes = "opaque_to_smt"
+        | _ -> false
+    in
     match se.sigel with
      | Sig_new_effect_for_free _ ->
          failwith "impossible -- removed by tc.fs"
@@ -2071,11 +2077,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
-     | Sig_let(lbs, _, _) when (se.sigquals |> List.contains S.Irreducible) ->
+     | Sig_let(lbs, _, attrs)
+        when se.sigquals |> List.contains S.Irreducible
+          || attrs |> BU.for_some is_opaque_to_smt ->
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
-        then let val_decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp) } in
+        then let val_decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
+                                      sigquals = S.Irreducible :: se.sigquals } in
              let decls, env = encode_sigelt' env val_decl in
              env, decls
         else env, []) env (snd lbs) in

@@ -9,6 +9,12 @@ type parse_cmdline_res =
   | Error of string
   | Success
 
+let bind l f =
+    match l with
+    | Help
+    | Error _ -> l
+    | Success -> f ()
+
 (* remark: doesn't work with files starting with -- *)
 let rec parse (opts:opt list) def ar ix max i =
   if ix > max then Success
@@ -29,8 +35,10 @@ let rec parse (opts:opt list) def ar ix max i =
                if ix + 1 > max
                then Error ("last option '" ^ argtrim ^ "' takes an argument but has none\n")
                else
-                 (f (ar.(ix + 1));
-                  parse opts def ar (ix + 2) max (i + 1)))
+                 let r =
+                     try (f (ar.(ix + 1)); Success)
+                     with _ -> Error ("wrong argument given to option `" ^ argtrim ^ "`\n")
+                 in bind r (fun () -> parse opts def ar (ix + 2) max (i + 1)))
         | None -> Error ("unrecognized option '" ^ arg ^ "'\n")
       else go_on ()
 

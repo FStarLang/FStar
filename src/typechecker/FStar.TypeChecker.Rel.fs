@@ -857,7 +857,6 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             rebuild, matches, tcs
 
         | Tm_arrow(bs, c) ->
-            let fail () = failwith "Bad reconstruction" in
             let bs, c = Subst.open_comp bs c in
 
             let rebuild tcs =
@@ -1847,6 +1846,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
+           let k = N.normalize [N.Beta] env k in
            let all_formals, _ = U.arrow_formals k in
            assert (List.length all_formals = List.length args);
 
@@ -2667,10 +2667,9 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           Errors.err r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
+           Errors.err r (BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
                                     (Print.term_to_string t)
-                                    (Print.term_to_string e)
-                                    reason)
+                                    (Print.term_to_string e))
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

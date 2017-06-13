@@ -64,6 +64,14 @@
       0
     ],
     [
+      "Ex10a.canRead",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
       "Ex10a.revoke",
       1,
       2,

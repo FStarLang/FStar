@@ -629,7 +629,10 @@ and tc_value env (e:term) : term
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
-    then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
+    then raise (Error(BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+                                    (Print.fv_to_string fv)
+                                    (string_of_int (List.length us))
+                                    (string_of_int (List.length us')), Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> UF.univ_change u'' u
             | _ -> failwith "Impossible") us' us;
@@ -1388,7 +1391,6 @@ and tc_eqn scrutinee env branch
         Rel.discharge_guard_no_smt env1 g |>
         Rel.resolve_implicits in
     let norm_exp = N.normalize [N.Beta] env1 exp in
-    let uvars_to_string uvs = uvs |> BU.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
     let uvs1 = Free.uvars norm_exp in
     let uvs2 = Free.uvars expected_pat_t in
     if not <| BU.set_is_subset_of uvs1 uvs2
@@ -1731,9 +1733,10 @@ and check_top_level_let_rec env top =
           let _ = e2.tk := Some Common.t_unit.n in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
+          Rel.discharge_guard env g_lbs |> Rel.force_trivial_guard env;
           mk (Tm_let((true, lbs), e2)) (Some Common.t_unit.n) top.pos,
           cres,
-          Rel.discharge_guard env g_lbs
+          Rel.trivial_guard
 
         | _ -> failwith "Impossible"
 
