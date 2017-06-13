@@ -1337,7 +1337,7 @@ let tc_decls env ses =
 
     if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
     then begin
-      BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses');
+      BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses')
     end;
 
     List.iter (fun se -> env.solver.encode_sig env se) ses';
