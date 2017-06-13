@@ -113,6 +113,7 @@ let defaults =
       ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
+      ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
       ("include"                      , List []);
@@ -212,6 +213,7 @@ let get_fstar_home              ()      = lookup_opt "fstar_home"               
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
+let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
@@ -455,6 +457,12 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs(fun () -> Bool true),
         "Print information regarding hints");
 
+        ( noshort,
+         "hint_file",
+         OneArg (Path,
+                 "[path]"),
+        "Read/write hints to <path> (instead of module-specific hints files)");
+
        ( noshort,
         "in",
         ZeroArgs (fun () -> Bool true),
@@ -634,7 +642,7 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "smt",
         OneArg (Path,
-                 "[path]"),
+                "[path]"),
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
 
        (noshort,
@@ -817,6 +825,7 @@ let settable = function
     | "hide_genident_nums"
     | "hide_uvar_nums"
     | "hint_info"
+    | "hint_file"
     | "initial_fuel"
     | "initial_ifuel"
     | "inline_arith"
@@ -1013,6 +1022,7 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
