@@ -1,5 +1,9 @@
 # -*- Makefile -*-
 
+FSTAR_HOME=..
+include gmake/z3.mk    # This pins $(Z3) ...
+include gmake/fstar.mk # and $(FSTAR) for all sub-make calls
+
 # --------------------------------------------------------------------
 LIB=../lib
 BIN=../bin
