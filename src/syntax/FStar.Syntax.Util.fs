@@ -26,6 +26,7 @@ open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
+open FStar.Dyn
 module U = FStar.Util
 module List = FStar.List
 module SC = FStar.Syntax.Const
@@ -1366,3 +1367,13 @@ let is_synth_by_tactic t =
     match (un_uinst t).n with
     | Tm_fvar fv -> fv_eq_lid fv SC.synth_lid
     | _ -> false
+
+(* Spooky behaviours are possible with this, procede with caution *)
+
+let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+
+let un_alien (t : term) : dyn =
+    match t.n with
+    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | _ -> failwith "Something paranormal occurred"
