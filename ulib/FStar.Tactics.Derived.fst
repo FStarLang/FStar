@@ -73,16 +73,8 @@ let rec revert_all (bs:binders) : tactic unit =
     | _::tl -> revert;;
                revert_all tl
 
-let cur_goal : tactic goal =
-  ps <-- get;
-  let goals, _ = ps in
-  match goals with
-  | [] -> fail "No more goals"
-  | hd::_ -> return hd
-
 let assumption : tactic unit =
-    egw <-- cur_goal;
-    let (e, g), w = egw in
+    e <-- cur_env;
     let rec aux (bs : binders) =
         match bs with
         | [] -> fail "no assumption matches goal"
@@ -131,19 +123,17 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
         end
 
 let rewrite_eqs_from_context : tactic unit =
-    g <-- cur_goal;
-    let (context, _), _ = g in
-    rewrite_all_context_equalities (binders_of_env context)
+    e <-- cur_env;
+    rewrite_all_context_equalities (binders_of_env e)
 
 let rewrite_equality (x:tactic term) : tactic unit =
-    g <-- cur_goal;
-    let (context, _), _ = g in
+    e <-- cur_env;
     t <-- x;
-    try_rewrite_equality t (binders_of_env context)
+    try_rewrite_equality t (binders_of_env e)
 
 let unfold_point (t:term) : tactic unit =
-    eg <-- cur_goal;
-    let (e, g), _ = eg in
+    e <-- cur_env;
+    g <-- cur_goal;
     let f = term_as_formula g in
     match f with
     | Comp Eq _ l r ->
@@ -157,8 +147,7 @@ let unfold_def (t:term) : tactic unit =
     pointwise (unfold_point t)
 
 let grewrite' (t1 t2 eq : term) : tactic unit =
-    egw <-- cur_goal;
-    let (e, g), w = egw in
+    g <-- cur_goal;
     match term_as_formula g with
     | Comp Eq _ l _ ->
         if term_eq l t1

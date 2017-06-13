@@ -4,6 +4,16 @@ open FStar.Tactics.Effect
 open FStar.Order
 open FStar.Reflection
 
+(* Inspecting proofstate, needs to go via this since it is an assumed type *)
+assume private val __cur_env     : __tac env
+let cur_env = fun () -> TAC?.reflect __cur_env
+
+assume private val __cur_goal    : __tac term
+let cur_goal = fun () -> TAC?.reflect __cur_goal
+
+assume private val __cur_witness : __tac term
+let cur_witness = fun () -> TAC?.reflect __cur_witness
+
 (*
  * This is the way we inspect goals and any other term. We can quote them
  * to turn them into a representation of them. Having a total function

@@ -77,8 +77,7 @@ let test_apply (x:nat) (y:nat) =
 
 let mul_commute_ascription : tactic unit =
     g <-- cur_goal;
-    let ((_, t), _) = g in
-    match term_as_formula t with
+    match term_as_formula g with
     | Comp Eq _ _ _ ->
         apply_lemma (quote lemma_mul_comm)
     | _ ->
@@ -117,14 +116,12 @@ let test_inspect =
                    ) (True)
 
 let test_simpl =
-    assert_by_tactic (eg <-- cur_goal;
-                      let (e, g), _ = eg in
+    assert_by_tactic (g <-- cur_goal;
                       (match term_as_formula g with
                       | And _ _ -> return ()
                       | _ -> dump "not a conjunction?");;
                       simpl;;
-                      eg <-- cur_goal;
-                      let (e, g), _ = eg in
+                      g <-- cur_goal;
                       (match term_as_formula g with
                       | True_ -> return ()
                       | _ -> dump ("not true after simpl? " ^ term_to_string g)))

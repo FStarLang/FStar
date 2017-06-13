@@ -774,3 +774,7 @@ let proofstate_of_goal_ty env typ =
         goals = [g];
         smt_goals = [];
     }
+
+let cur_env     : tac<env>  = bind get (fun ps -> ret <| (List.hd ps.goals).context)
+let cur_goal'   : tac<term> = bind get (fun ps -> ret <| (List.hd ps.goals).goal_ty)
+let cur_witness : tac<term> = bind get (fun ps -> ret <| (List.hd ps.goals).witness)
