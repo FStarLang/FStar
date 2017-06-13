@@ -161,12 +161,13 @@ let string_of_lid (l: lident) (last: bool) =
   let names = List.map (fun x -> x.idText) l.ns @ suffix in
   String.concat "." names
 
-
 (** All the components of a [lident] joined by "." (the last component of the
  * lident is included iff [last = true]).  *)
 let lowercase_join_longident (l: lident) (last: bool) =
   String.lowercase (string_of_lid l last)
 
+let namespace_of_lid l =
+  String.concat "_" (List.map text_of_id l.ns)
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
@@ -232,20 +233,20 @@ let collect_one
     (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
        module name itself, so only its namespace part is to be
        recorded as a module dependency.  *)
-      let try_key key =
-        begin match smap_try_find working_map key with
-        | Some pair ->
-            List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
-        | None ->
-            if List.length lid.ns > 0 && Options.debug_any() then
-              Util.print2_warning "%s (Warning): unbound module reference %s\n"
-                                  (Range.string_of_range (range_of_lid lid))
-                                  (string_of_lid lid false)
-        end
-      in
-      // Option.Some x
-      try_key (lowercase_join_longident lid false);
-      ()
+    let try_key key =
+      begin match smap_try_find working_map key with
+      | Some pair ->
+          List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
+      | None ->
+          if List.length lid.ns > 0 && Options.debug_any () then
+            Util.print2_warning "%s (Warning): unbound module reference %s\n"
+                                (Range.string_of_range (range_of_lid lid))
+                                (string_of_lid lid false)
+      end
+    in
+    // Option.Some x
+    try_key (lowercase_join_longident lid false);
+    ()
   in
 
 
@@ -271,6 +272,8 @@ let collect_one
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
+        if List.length lid.ns > 0 then
+          ignore (enter_namespace original_map working_map (namespace_of_lid lid));
         (* We discovered a new file in the graph. *)
         begin match verify_mode with
         | VerifyAll ->

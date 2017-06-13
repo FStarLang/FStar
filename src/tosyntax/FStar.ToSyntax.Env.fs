@@ -1096,7 +1096,8 @@ let finish_module_or_interface env modul =
 let prepare_module_or_interface intf admitted env mname = (* AR: open the pervasives namespace *)
   let prep env =
     let filename = BU.strcat (text_of_lid mname) ".fst" in
-    let open_ns = FStar.Parser.Dep.hard_coded_dependencies filename in
+    let namespace_of_module = if List.length mname.ns > 0 then [ lid_of_ids mname.ns ] else [] in
+    let open_ns = FStar.Parser.Dep.hard_coded_dependencies filename @ namespace_of_module in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
