@@ -151,7 +151,7 @@ rename_as_fst:
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
 prep: $(U_ALL_INTERFACES)
-	make rename_as_fst
+	$(MAKE) rename_as_fst
 	#fix up a use of polymorphic recursion in F#, which has a different syntax than F*
 	$(SED) -i 's/^and unembed_tactic_0.*//g' u_boot_fsts/FStar.Tactics.Interpreter.fst
 	$(SED) -i 's/^\/\/F\* version: and unembed_tactic_0/and unembed_tactic_0/g' u_boot_fsts/FStar.Tactics.Interpreter.fst
@@ -224,28 +224,28 @@ u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fs
 u_extract_all: u_extract_misc u_extract_syntax u_extract_parser	u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction u_extract_tactics u_extract_fstar
 
 uz:
-	make prep
-	+make u_extract_uz
+	$(MAKE) prep
+	+$(MAKE) u_extract_uz
 	cp u_ocaml-output/*.ml ocaml-output/
-	+make -C ocaml-output
+	+$(MAKE) -C ocaml-output
 
 ocaml: clean_u_extract_ocaml
-	make prep
-	+make u_extract_all
+	$(MAKE) prep
+	+$(MAKE) u_extract_all
 	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
-	+make boot-ocaml
-	+make ocaml
-	+make -C ocaml-output
+	+$(MAKE) boot-ocaml
+	+$(MAKE) ocaml
+	+$(MAKE) -C ocaml-output
 
 fstar-ocaml:
-	+make ocaml
-	+make boot-ocaml
+	+$(MAKE) ocaml
+	+$(MAKE) boot-ocaml
 
 boot-ocaml:
-	+make -C ocaml-output all
+	+$(MAKE) -C ocaml-output all
 
 # --------------------------------------------------------------------
 # Testing
@@ -253,18 +253,18 @@ boot-ocaml:
 OTHERFLAGS+=--hint_info
 
 utest:
-	make all
+	+$(MAKE) all
 ifeq ($(OS),Windows_NT)
-	make fsharp-regressions #normalizer failures on linux so only run on windows
+	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
 endif
-	+make -C ocaml-output
-	+make fstar-ocaml
-	+make -C ../examples/hello ocaml #a basic regression test for extraction
-	+make uregressions interactive-test
+	+$(MAKE) -C ocaml-output
+	+$(MAKE) fstar-ocaml
+	+$(MAKE) -C ../examples/hello ocaml #a basic regression test for extraction
+	+$(MAKE) uregressions interactive-test
 
 # Interactive mode regressions
 interactive-test:
-	+make -C tests/interactive
+	$(MAKE) -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
@@ -274,14 +274,14 @@ fsharp-regressions:
 uregressions: ulib uexamples
 
 ulib:
-	+make -C ../ulib
+	+$(MAKE) -C ../ulib
 
 uexamples:
-	+make -C ../examples all
+	+$(MAKE) -C ../examples all
 
 ulong:
-	+make utest
-	+make -C ../examples/low-level/crypto extra
+	+$(MAKE) utest
+	+$(MAKE) -C ../examples/low-level/crypto extra
 
 wc-boot:
 	wc -l $(BOOT_ALL)

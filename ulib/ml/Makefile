@@ -23,10 +23,10 @@ OBJS=$(FILES:.ml=.o)
 CMX=$(FILES:.ml=.cmx)
 
 .mgen:
-	make -C .. mgen
+	$(MAKE) -C .. mgen
 
 all: .mgen
-	make $(OBJS)
+	$(MAKE) $(OBJS)
 	ocamlopt -a $(CMX) -o fstarlib.cmxa
 
 # Common rules
