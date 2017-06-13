@@ -225,10 +225,9 @@ type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-noeq type pattern =
-  | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type0 -> pattern 
-  | SMTPatOr : list (list pattern) -> pattern 
+abstract type pattern = unit
+irreducible let smt_pat (#a:Type) (x:a) : pattern = ()
+irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
 
 assume type decreases : #a:Type -> a -> Type0
 

@@ -1846,6 +1846,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
+           let k = N.normalize [N.Beta] env k in
            let all_formals, _ = U.arrow_formals k in
            assert (List.length all_formals = List.length args);
 
