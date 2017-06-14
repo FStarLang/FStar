@@ -216,7 +216,7 @@ let collect_one
         false
   in
 
-  let record_open_namespace (error_msg: option string) lid =
+  let record_open_namespace error_msg lid =
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key in
     if not r then
