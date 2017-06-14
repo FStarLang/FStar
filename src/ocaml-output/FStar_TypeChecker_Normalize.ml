@@ -3999,21 +3999,21 @@ and rebuild:
                         mk (FStar_Syntax_Syntax.Tm_match (scrutinee, rest)) r in
                       FStar_Syntax_Util.if_then_else w then_branch
                         else_branch in
-                let rec matches_pat scrutinee1 p =
-                  let scrutinee2 = FStar_Syntax_Util.unmeta scrutinee1 in
+                let rec matches_pat scrutinee_orig p =
+                  let scrutinee1 = FStar_Syntax_Util.unmeta scrutinee_orig in
                   let uu____10275 =
-                    FStar_Syntax_Util.head_and_args scrutinee2 in
+                    FStar_Syntax_Util.head_and_args scrutinee1 in
                   match uu____10275 with
                   | (head1,args) ->
                       (match p.FStar_Syntax_Syntax.v with
                        | FStar_Syntax_Syntax.Pat_var uu____10307 ->
-                           FStar_Util.Inl [scrutinee2]
+                           FStar_Util.Inl [scrutinee_orig]
                        | FStar_Syntax_Syntax.Pat_wild uu____10309 ->
-                           FStar_Util.Inl [scrutinee2]
+                           FStar_Util.Inl [scrutinee_orig]
                        | FStar_Syntax_Syntax.Pat_dot_term uu____10311 ->
                            FStar_Util.Inl []
                        | FStar_Syntax_Syntax.Pat_constant s ->
-                           (match scrutinee2.FStar_Syntax_Syntax.n with
+                           (match scrutinee1.FStar_Syntax_Syntax.n with
                             | FStar_Syntax_Syntax.Tm_constant s' when 
                                 s = s' -> FStar_Util.Inl []
                             | uu____10323 ->
