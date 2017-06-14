@@ -72,7 +72,7 @@ type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
-  scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
+  scope_mods:           list<scope_mod>;                  (* a STACK of toplevel or definition-local scope modifiers *)
   exported_ids:         BU.smap<exported_id_set>;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
@@ -1105,7 +1105,8 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
       List.map (fun (lid, kind) -> (lid, convert_kind kind)) auto_open
     in
     let namespace_of_module = if List.length mname.ns > 0 then [ (lid_of_ids mname.ns, Open_namespace) ] else [] in
-    let auto_open = auto_open @ namespace_of_module in
+    (* [scope_mods] is a stack, so reverse the order *)
+    let auto_open = List.rev (auto_open @ namespace_of_module) in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
