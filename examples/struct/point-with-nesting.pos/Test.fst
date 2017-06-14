@@ -1,7 +1,7 @@
 module Test
 
 module DM = FStar.DependentMap
-module S  = FStar.Struct
+module S  = FStar.Pointer
 module HST = FStar.ST
 
 type point_fd =
@@ -13,7 +13,7 @@ let point_struct = DM.t point_fd (function
 | Y -> int
 )
 
-let point = S.struct_ptr point_struct
+let point = S.pointer point_struct
 
 type colored_object_fd =
 | Carrier
@@ -24,7 +24,7 @@ let colored_object_struct (t: Type) = DM.t colored_object_fd (function
 | Color -> bool
 )
 
-let colored_object (t: Type) = S.struct_ptr (colored_object_struct t)
+let colored_object (t: Type) = S.pointer (colored_object_struct t)
 
 let colored_point = colored_object point_struct
 
@@ -36,9 +36,9 @@ let flip
       S.live h0 p
     /\ S.live h1 p
     /\ S.modifies_1 p h0 h1
-    /\ S.as_value h1 (S.gfield (S.gfield p Carrier) X) == S.as_value h0 (S.gfield (S.gfield p Carrier) Y)
-    /\ S.as_value h1 (S.gfield (S.gfield p Carrier) Y) == S.as_value h0 (S.gfield (S.gfield p Carrier) X)
-    /\ S.as_value h1 (S.gfield p Color) == not (S.as_value h0 (S.gfield p Color))
+    /\ S.gread h1 (S.gfield (S.gfield p Carrier) X) == S.gread h0 (S.gfield (S.gfield p Carrier) Y)
+    /\ S.gread h1 (S.gfield (S.gfield p Carrier) Y) == S.gread h0 (S.gfield (S.gfield p Carrier) X)
+    /\ S.gread h1 (S.gfield p Color) == not (S.gread h0 (S.gfield p Color))
     ))
 = let pt = S.field p Carrier in
   let x = S.read (S.field pt X) in
@@ -56,9 +56,9 @@ let flip'
       S.live h0 p
     /\ S.live h1 p
     /\ S.modifies_1 p h0 h1
-    /\ S.as_value h1 (S.gfield (S.gfield p Carrier) X) == S.as_value h0 (S.gfield (S.gfield p Carrier) Y)
-    /\ S.as_value h1 (S.gfield (S.gfield p Carrier) Y) == S.as_value h0 (S.gfield (S.gfield p Carrier) X)
-    /\ S.as_value h1 (S.gfield p Color) == not (S.as_value h0 (S.gfield p Color))
+    /\ S.gread h1 (S.gfield (S.gfield p Carrier) X) == S.gread h0 (S.gfield (S.gfield p Carrier) Y)
+    /\ S.gread h1 (S.gfield (S.gfield p Carrier) Y) == S.gread h0 (S.gfield (S.gfield p Carrier) X)
+    /\ S.gread h1 (S.gfield p Color) == not (S.gread h0 (S.gfield p Color))
     ))
 = let pt = S.field p Carrier in
   let x = S.read (S.field pt X) in

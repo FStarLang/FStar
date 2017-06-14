@@ -3,7 +3,7 @@ let mk:
   FStar_Syntax_Syntax.term' ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
       FStar_Syntax_Syntax.syntax
-  = fun t  -> (FStar_Syntax_Syntax.mk t) None FStar_Range.dummyRange
+  = fun t  -> FStar_Syntax_Syntax.mk t None FStar_Range.dummyRange
 let p2l: Prims.string Prims.list -> FStar_Ident.lident =
   fun l  -> FStar_Ident.lid_of_path l FStar_Range.dummyRange
 let pconst: Prims.string -> FStar_Ident.lident = fun s  -> p2l ["Prims"; s]
@@ -27,9 +27,8 @@ let precedes_lid: FStar_Ident.lident = pconst "precedes"
 let lex_t_lid: FStar_Ident.lident = pconst "lex_t"
 let lexcons_lid: FStar_Ident.lident = pconst "LexCons"
 let lextop_lid: FStar_Ident.lident = pconst "LexTop"
-let smtpat_lid: FStar_Ident.lident = pconst "SMTPat"
-let smtpatT_lid: FStar_Ident.lident = pconst "SMTPatT"
-let smtpatOr_lid: FStar_Ident.lident = pconst "SMTPatOr"
+let smtpat_lid: FStar_Ident.lident = pconst "smt_pat"
+let smtpatOr_lid: FStar_Ident.lident = pconst "smt_pat_or"
 let monadic_lid: FStar_Ident.lident = pconst "M"
 let int8_lid: FStar_Ident.lident = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid: FStar_Ident.lident = p2l ["FStar"; "UInt8"; "t"]
@@ -52,14 +51,14 @@ let kunary:
   =
   fun k  ->
     fun k'  ->
-      let uu____29 =
-        let uu____30 =
-          let uu____38 =
-            let uu____40 = FStar_Syntax_Syntax.null_binder k in [uu____40] in
-          let uu____41 = FStar_Syntax_Syntax.mk_Total k' in
-          (uu____38, uu____41) in
-        FStar_Syntax_Syntax.Tm_arrow uu____30 in
-      mk uu____29
+      let uu____25 =
+        let uu____26 =
+          let uu____34 =
+            let uu____36 = FStar_Syntax_Syntax.null_binder k in [uu____36] in
+          let uu____37 = FStar_Syntax_Syntax.mk_Total k' in
+          (uu____34, uu____37) in
+        FStar_Syntax_Syntax.Tm_arrow uu____26 in
+      mk uu____25
 let kbin:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -68,18 +67,18 @@ let kbin:
   fun k1  ->
     fun k2  ->
       fun k'  ->
-        let uu____52 =
-          let uu____53 =
-            let uu____61 =
-              let uu____63 = FStar_Syntax_Syntax.null_binder k1 in
-              let uu____64 =
-                let uu____66 = FStar_Syntax_Syntax.null_binder k2 in
-                [uu____66] in
-              uu____63 :: uu____64 in
-            let uu____67 = FStar_Syntax_Syntax.mk_Total k' in
-            (uu____61, uu____67) in
-          FStar_Syntax_Syntax.Tm_arrow uu____53 in
-        mk uu____52
+        let uu____48 =
+          let uu____49 =
+            let uu____57 =
+              let uu____59 = FStar_Syntax_Syntax.null_binder k1 in
+              let uu____60 =
+                let uu____62 = FStar_Syntax_Syntax.null_binder k2 in
+                [uu____62] in
+              uu____59 :: uu____60 in
+            let uu____63 = FStar_Syntax_Syntax.mk_Total k' in
+            (uu____57, uu____63) in
+          FStar_Syntax_Syntax.Tm_arrow uu____49 in
+        mk uu____48
 let ktern:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -90,21 +89,21 @@ let ktern:
     fun k2  ->
       fun k3  ->
         fun k'  ->
-          let uu____81 =
-            let uu____82 =
-              let uu____90 =
-                let uu____92 = FStar_Syntax_Syntax.null_binder k1 in
-                let uu____93 =
-                  let uu____95 = FStar_Syntax_Syntax.null_binder k2 in
-                  let uu____96 =
-                    let uu____98 = FStar_Syntax_Syntax.null_binder k3 in
-                    [uu____98] in
-                  uu____95 :: uu____96 in
-                uu____92 :: uu____93 in
-              let uu____99 = FStar_Syntax_Syntax.mk_Total k' in
-              (uu____90, uu____99) in
-            FStar_Syntax_Syntax.Tm_arrow uu____82 in
-          mk uu____81
+          let uu____77 =
+            let uu____78 =
+              let uu____86 =
+                let uu____88 = FStar_Syntax_Syntax.null_binder k1 in
+                let uu____89 =
+                  let uu____91 = FStar_Syntax_Syntax.null_binder k2 in
+                  let uu____92 =
+                    let uu____94 = FStar_Syntax_Syntax.null_binder k3 in
+                    [uu____94] in
+                  uu____91 :: uu____92 in
+                uu____88 :: uu____89 in
+              let uu____95 = FStar_Syntax_Syntax.mk_Total k' in
+              (uu____86, uu____95) in
+            FStar_Syntax_Syntax.Tm_arrow uu____78 in
+          mk uu____77
 let true_lid: FStar_Ident.lident = pconst "l_True"
 let false_lid: FStar_Ident.lident = pconst "l_False"
 let and_lid: FStar_Ident.lident = pconst "l_and"

@@ -316,8 +316,8 @@ type lexargs =
   contents: Prims.string;}
 let mkLexargs:
   ((Prims.unit -> Prims.string)* Prims.string* Prims.string) -> lexargs =
-  fun uu____503  ->
-    match uu____503 with
+  fun uu____507  ->
+    match uu____507 with
     | (srcdir,filename,contents) ->
         { getSourceDirectory = srcdir; filename; contents }
 let kwd_or_id:
@@ -325,31 +325,31 @@ let kwd_or_id:
   fun args  ->
     fun r  ->
       fun s  ->
-        let uu____525 = kwd s in
-        match uu____525 with
+        let uu____529 = kwd s in
+        match uu____529 with
         | Some v1 -> v1
         | None  ->
             (match s with
              | "__SOURCE_DIRECTORY__" ->
-                 let uu____528 =
-                   let uu____529 = args.getSourceDirectory () in
-                   FStar_Bytes.string_as_unicode_bytes uu____529 in
-                 FStar_Parser_Parse.STRING uu____528
-             | "__SOURCE_FILE__" ->
-                 let uu____530 =
-                   let uu____531 = FStar_Range.file_of_range r in
-                   FStar_Bytes.string_as_unicode_bytes uu____531 in
-                 FStar_Parser_Parse.STRING uu____530
-             | "__LINE__" ->
                  let uu____532 =
-                   let uu____535 =
-                     let uu____536 =
-                       let uu____537 = FStar_Range.start_of_range r in
-                       FStar_Range.line_of_pos uu____537 in
-                     FStar_All.pipe_left FStar_Util.string_of_int uu____536 in
-                   (uu____535, false) in
-                 FStar_Parser_Parse.INT uu____532
-             | uu____538 ->
+                   let uu____533 = args.getSourceDirectory () in
+                   FStar_Bytes.string_as_unicode_bytes uu____533 in
+                 FStar_Parser_Parse.STRING uu____532
+             | "__SOURCE_FILE__" ->
+                 let uu____534 =
+                   let uu____535 = FStar_Range.file_of_range r in
+                   FStar_Bytes.string_as_unicode_bytes uu____535 in
+                 FStar_Parser_Parse.STRING uu____534
+             | "__LINE__" ->
+                 let uu____536 =
+                   let uu____539 =
+                     let uu____540 =
+                       let uu____541 = FStar_Range.start_of_range r in
+                       FStar_Range.line_of_pos uu____541 in
+                     FStar_All.pipe_left FStar_Util.string_of_int uu____540 in
+                   (uu____539, false) in
+                 FStar_Parser_Parse.INT uu____536
+             | uu____542 ->
                  if FStar_Util.starts_with s FStar_Ident.reserved_prefix
                  then
                    raise
@@ -357,5 +357,5 @@ let kwd_or_id:
                         ((Prims.strcat FStar_Ident.reserved_prefix
                             " is a reserved prefix for an identifier"), r))
                  else
-                   (let uu____540 = intern_string s in
-                    FStar_Parser_Parse.IDENT uu____540))
+                   (let uu____544 = intern_string s in
+                    FStar_Parser_Parse.IDENT uu____544))

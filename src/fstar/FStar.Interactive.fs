@@ -45,7 +45,7 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
       (None, intf_or_impl), dsenv, env, remaining
     | [] -> failwith "Impossible"
   in
-  (intf, impl), (dsenv, env), None, remaining
+  (intf, impl), (dsenv, env), remaining
 
 // Ibid.
 let tc_prims () = //:uenv =
@@ -163,7 +163,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
       let env = push env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
-      let (intf, impl), env, modl, remaining = tc_one_file remaining env in
+      let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
           match intf with
@@ -434,14 +434,14 @@ let json_of_issue_level i =
 let json_of_issue issue =
   JsonAssoc [("level", json_of_issue_level issue.issue_level);
              ("message", JsonStr issue.issue_message);
-             ("ranges", JsonList (match issue.issue_range with
-                                  | None -> []
-                                  | Some r -> [json_of_use_range r]));
-             ("related_ranges", JsonList (match issue.issue_range with
-                                          | Some r
-                                             when r.def_range <> r.use_range ->
-                                            [json_of_def_range r]
-                                          | _ -> []))]
+             ("ranges", JsonList
+                          ((match issue.issue_range with
+                            | None -> []
+                            | Some r -> [json_of_use_range r]) @
+                           (match issue.issue_range with
+                            | Some r when r.def_range <> r.use_range ->
+                              [json_of_def_range r]
+                            | _ -> [])))]
 
 type lookup_result = { lr_name: string;
                        lr_def_range: option<Range.range>;

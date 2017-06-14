@@ -183,11 +183,11 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 (*
   pat_as_exps allow_implicits env p:
-    Turns a (possibly disjunctive) pattern p into a triple:
+    Turns a pattern p into a triple:
 *)
-let pat_as_exps allow_implicits env p
+let pat_as_exp allow_implicits env p
                         : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
-                         * list<term>        (* expressions corresponding to each arm of the disjunct *)
+                         * term              (* expressions corresponding to the pattern *)
                          * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
 
       let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) :
@@ -237,8 +237,7 @@ let pat_as_exps allow_implicits env p
                 env,
                 e,
                 {p with v=Pat_cons(fv, List.rev pats)})
-
-           | Pat_disj _ -> failwith "impossible" in
+          in
 
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         let maybe_dot inaccessible a r =
@@ -287,31 +286,10 @@ let pat_as_exps allow_implicits env p
             | Some x -> raise (Error(Err.nonlinear_pattern_variable x, p.p))
             | _ -> b, a, w, arg, p in
 
-   let top_level_pat_as_args env (p:pat) : (list<bv>                    (* pattern bound variables *)
-                                            * list<arg>                 (* pattern sub-terms *)
-                                            * pat)  =                   (* decorated pattern *)
-        match p.v with
-           | Pat_disj [] -> failwith "impossible"
+   let b, _, _, tm, p = one_pat true env p in
+   b, tm, p
 
-           | Pat_disj (q::pats) ->
-              let b, a, _, te, q = one_pat false env q in //in disjunctive patterns, the wildcards are not accessible even for typing
-              let w, args, pats = List.fold_right (fun p (w, args, pats) ->
-                  let b', a', w', arg, p = one_pat false env p in
-                  if not (BU.multiset_equiv bv_eq a a')
-                  then raise (Error(Err.disjunctive_pattern_vars a a', Env.get_range env))
-                  else (w'@w, S.as_arg arg::args, p::pats))
-                  pats ([], [], []) in
-              b@w, S.as_arg te::args, {p with v=Pat_disj(q::pats)}
-
-           | _ ->
-             let b, _, _, arg, p = one_pat true env p in //in single pattersn, the wildcards are available, at least for typing
-             b, [S.as_arg arg], p in
-
-    let b, args, p = top_level_pat_as_args env p in
-    let exps = args |> List.map fst in
-    b, exps, p
-
-let decorate_pattern env p exps =
+let decorate_pattern env p exp =
     let qq = p in
     let rec aux p e : pat  =
         let pkg q t = withinfo q t p.p in
@@ -373,18 +351,14 @@ let decorate_pattern env p exps =
 
               match_args [] args argpats
 
-           | _ -> failwith (BU.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range qq.p) (Print.pat_to_string qq)
-                    (exps |> List.map Print.term_to_string |> String.concat "\n\t")) in
-
-    match p.v, exps with
-        | Pat_disj ps, _ when (List.length ps = List.length exps) ->
-          let ps = List.map2 aux ps exps in
-          withinfo (Pat_disj ps) tun.n p.p
-
-        | _, [e] ->
-          aux p e
-
-        | _ -> failwith "Unexpected number of patterns"
+           | _ ->
+            failwith (BU.format3
+                            "(%s) Impossible: pattern to decorate is %s; expression is %s\n"
+                            (Range.string_of_range qq.p)
+                            (Print.pat_to_string qq)
+                            (Print.term_to_string exp))
+    in
+    aux p exp
 
  let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
     let topt = Some pat.ty in
@@ -393,24 +367,21 @@ let decorate_pattern env p exps =
     let pat_as_arg (p, i) =
         let vars, te = decorated_pattern_as_term p in
         vars, (te, as_implicit i) in
-
     match pat.v with
-        | Pat_disj _ -> failwith "Impossible" (* these are only on top-level patterns *)
+    | Pat_constant c ->
+        [], mk (Tm_constant c)
 
-        | Pat_constant c ->
-          [], mk (Tm_constant c)
+    | Pat_wild x
+    | Pat_var x  ->
+        [x], mk (Tm_name x)
 
-        | Pat_wild x
-        | Pat_var x  ->
-          [x], mk (Tm_name x)
+    | Pat_cons(fv, pats) ->
+        let vars, args = pats |> List.map pat_as_arg |> List.unzip in
+        let vars = List.flatten vars in
+        vars,  mk (Tm_app(Syntax.fv_to_tm fv, args))
 
-        | Pat_cons(fv, pats) ->
-            let vars, args = pats |> List.map pat_as_arg |> List.unzip in
-            let vars = List.flatten vars in
-            vars,  mk (Tm_app(Syntax.fv_to_tm fv, args))
-
-        | Pat_dot_term(x, e) ->
-            [], e
+    | Pat_dot_term(x, e) ->
+        [], e
 
 
 (*********************************************************************************************)
@@ -1214,20 +1185,20 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
           let e, c = match tvars, gen_univs with
             | [], [] -> //nothing generalized
-              e, c
+              N.reduce_uvar_solutions env e, c
 
             | [], _ ->
               //nothing generalized, or
               //only universes generalized, still need to compress out invariant-broken uvars
               let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm] env c in
-              let e = N.normalize [N.Beta; N.NoDeltaSteps; N.NoFullNorm] env e in
+              let e = N.reduce_uvar_solutions env e in
               e, c
 
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in
               let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm] env c in
-              let e = N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm] env e in
+              let e = N.reduce_uvar_solutions env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with
                     | Tm_arrow(bs, cod) ->

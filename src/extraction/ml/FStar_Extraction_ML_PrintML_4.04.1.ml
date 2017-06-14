@@ -348,6 +348,7 @@ let build_label_decl (sym, ty): label_declaration =
   Type.field (mk_sym sym) (build_core_type ty)
 
 let build_constructor_decl (sym, tys): constructor_declaration =
+  let tys = List.map snd tys in
   let args = if BatList.is_empty tys then None else
     Some (Pcstr_tuple (map build_core_type tys)) in
   Type.constructor ?args:args (mk_sym sym)
@@ -368,7 +369,7 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration =
+let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration option =
   if skip_type_defn !current_module x then None
   else
     let ptype_name = match mangle_opt with
@@ -381,10 +382,11 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_dec
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
   let recf = Recursive in
-  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in 
-  if type_declarations = [] then None else Some (Pstr_type type_declarations)
+  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in
+  if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
 
 let build_exn (sym, tys): extension_constructor =
+  let tys = List.map snd tys in
   let name = mk_sym sym in
   let args = Some (Pcstr_tuple (map build_core_type tys)) in
   Te.decl ?args:args name
