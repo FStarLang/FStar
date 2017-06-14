@@ -651,15 +651,19 @@ and star_type' env t =
           is_tuple_constructor (SS.compress head)
         ) ->
             true
-        | Tm_fvar fv when is_non_dependent_arrow fv.fv_name.ty (List.length args) ->
-            // We need to check that the result of the application is a datatype
-             let res = N.normalize [N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
-             begin match res.n with
-             | Tm_app _ -> true
-             | _ ->
-                BU.print1_warning "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head) ;
-                false
-             end
+        | Tm_fvar fv -> 
+             let (_, ty), _ = Env.lookup_lid env.env fv.fv_name.v in
+             if is_non_dependent_arrow ty (List.length args)
+             then 
+               // We need to check that the result of the application is a datatype
+                let res = N.normalize [N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
+                begin match res.n with
+                  | Tm_app _ -> true
+                  | _ ->
+                    BU.print1_warning "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head) ;
+                    false
+                end
+             else false
         | Tm_bvar _
         | Tm_name _ ->
             true

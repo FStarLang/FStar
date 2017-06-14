@@ -61,7 +61,7 @@ let get () = !state
 let set (u:uf) = state := u
 let reset () =
     let v = vops.next_major () in
-//    printfn "UF version = %s" (version_to_string v);
+    printfn "UF version = %s" (version_to_string v);
     set (empty v)
 
 ////////////////////////////////////////////////////////////////////////////////
