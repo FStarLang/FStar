@@ -1,7 +1,3 @@
-./extracted/FStar_Pervasives.cmo : prims.cmo
-./extracted/FStar_Pervasives.cmx : prims.cmx
-FStar_All.cmo :
-FStar_All.cmx :
 FStar_BaseTypes.cmo : FStar_UInt8.cmo FStar_UInt16.cmo FStar_Int8.cmo \
     FStar_Int64.cmo FStar_Int32.cmo FStar_Int16.cmo FStar_Float.cmo \
     FStar_Char.cmo
@@ -40,8 +36,6 @@ FStar_Mul.cmo : prims.cmo
 FStar_Mul.cmx : prims.cmx
 FStar_Option.cmo :
 FStar_Option.cmx :
-FStar_ST.cmo : FStar_Heap.cmo FStar_CommonST.cmo
-FStar_ST.cmx : FStar_Heap.cmx FStar_CommonST.cmx
 FStar_Set.cmo :
 FStar_Set.cmx :
 FStar_String.cmo : FStar_List.cmo
@@ -56,5 +50,27 @@ FStar_UInt64.cmo : prims.cmo
 FStar_UInt64.cmx : prims.cmx
 FStar_UInt8.cmo : prims.cmo
 FStar_UInt8.cmx : prims.cmx
+extracted/FStar_HyperHeap.cmo : prims.cmo FStar_Set.cmo \
+    extracted/FStar_Map.cmo FStar_Heap.cmo
+extracted/FStar_HyperHeap.cmx : prims.cmx FStar_Set.cmx \
+    extracted/FStar_Map.cmx FStar_Heap.cmx
+extracted/FStar_HyperStack.cmo : prims.cmo FStar_Set.cmo \
+    extracted/FStar_Map.cmo extracted/FStar_HyperHeap.cmo FStar_Heap.cmo
+extracted/FStar_HyperStack.cmx : prims.cmx FStar_Set.cmx \
+    extracted/FStar_Map.cmx extracted/FStar_HyperHeap.cmx FStar_Heap.cmx
+extracted/FStar_Map.cmo : prims.cmo FStar_Set.cmo
+extracted/FStar_Map.cmx : prims.cmx FStar_Set.cmx
+extracted/FStar_Pervasives.cmo : prims.cmo
+extracted/FStar_Pervasives.cmx : prims.cmx
+extracted/FStar_TSet.cmo : prims.cmo
+extracted/FStar_TSet.cmx : prims.cmx
+hyperstack/FStar_All.cmo :
+hyperstack/FStar_All.cmx :
+hyperstack/FStar_ST.cmo : extracted/FStar_Map.cmo \
+    extracted/FStar_HyperStack.cmo extracted/FStar_HyperHeap.cmo \
+    FStar_Heap.cmo FStar_CommonST.cmo
+hyperstack/FStar_ST.cmx : extracted/FStar_Map.cmx \
+    extracted/FStar_HyperStack.cmx extracted/FStar_HyperHeap.cmx \
+    FStar_Heap.cmx FStar_CommonST.cmx
 prims.cmo :
 prims.cmx :
