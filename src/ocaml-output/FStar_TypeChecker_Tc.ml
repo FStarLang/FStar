@@ -4080,6 +4080,8 @@ let tc_decls:
                     FStar_All.pipe_right ses'
                       (FStar_List.map
                          (FStar_TypeChecker_Normalize.elim_uvars env1)) in
+                  let ses_elaborated =
+                      FStar_List.map (FStar_TypeChecker_Normalize.elim_uvars env1) ses_elaborated in
                   let env2 =
                     FStar_All.pipe_right ses'1
                       (FStar_List.fold_left

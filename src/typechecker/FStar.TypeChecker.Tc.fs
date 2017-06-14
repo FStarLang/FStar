@@ -1331,11 +1331,12 @@ let tc_decls env ses =
 
     let ses', ses_elaborated = tc_decl env se in
     let ses' = ses' |> List.map (N.elim_uvars env) in
+    let ses_elaborated = ses_elaborated |> List.map (N.elim_uvars env) in
 
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
     FStar.Syntax.Unionfind.reset();
 
-    if (Options.log_types()) || Env.debug env <| Options.Other "LogTypes"
+    if Options.log_types() || Env.debug env <| Options.Other "LogTypes"
     then begin
       BU.print1 "Checked: %s\n" (List.fold_left (fun s se -> s ^ Print.sigelt_to_string se ^ "\n") "" ses')
     end;
