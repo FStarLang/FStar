@@ -2,6 +2,7 @@ module Canon
 
 open FStar.Tactics
 open FStar.Tactics.Canon
+open FStar.Mul
 
 assume val x : int
 assume val y : int

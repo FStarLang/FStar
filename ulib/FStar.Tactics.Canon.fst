@@ -1,5 +1,6 @@
 module FStar.Tactics.Canon
 
+private
 unfold let op_Star = op_Multiply
 
 open FStar.Tactics

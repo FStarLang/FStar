@@ -106,7 +106,7 @@ let rec is_arith_expr (t:term) =
         collect_app_order t;
         let aa = is_arith_expr (a <: x:term{x << t}) in
         if qn = neg_qn then liftM Neg aa
-        else fail "unary"
+        else fail ("unary: " ^ fv_to_string fv)
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
     | Tv_FVar _ , []
