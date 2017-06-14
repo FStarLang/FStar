@@ -565,10 +565,10 @@ let mk_data l args =
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
       mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
 
-let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
+let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
 let unmangle_field_name x =
-    if U.starts_with x.idText "^fname^"
-    then mk_ident(U.substring_from x.idText 7, x.idRange)
+    if U.starts_with x.idText "__fname__"
+    then mk_ident(U.substring_from x.idText 9, x.idRange)
     else x
 
 (***********************************************************************************************)
