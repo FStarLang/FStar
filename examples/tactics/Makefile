@@ -1,6 +1,8 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
+.PHONY: neg
+
 all:	Apply.uver		\
 	Canon.uver		\
 	MetaCoq.uver		\

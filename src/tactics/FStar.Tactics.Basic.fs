@@ -441,7 +441,8 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
         if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply: got non-trivial guard" else
         match U.arrow_one typ with
         | None -> fail1 "apply: cannot unify (%s)" (Print.term_to_string typ)
-        | Some ((bv, aq), _) ->
+        | Some ((bv, aq), c) ->
+            if not (U.is_total_comp c) then fail "apply: not total" else
             let u, _, g_u = TcUtil.new_implicit_var "apply" goal.goal_ty.pos goal.context bv.sort in
             let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
             bind (__apply uopt tm') (fun _ ->
