@@ -78,14 +78,10 @@ let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
 let lid_tuple2   = U.mk_tuple_lid 2 Range.dummyRange
 
 let embed_binder (b:binder) : term =
-    protect_embedded_term fstar_refl_binder (S.bv_to_name (fst b))
+    U.mk_alien b "reflection.embed_binder" None
 
 let unembed_binder (t:term) : binder =
-    let t = un_protect_embedded_term t in
-    let t = U.unascribe t in
-    match t.n with
-    | Tm_name bv -> S.mk_binder bv
-    | _ -> failwith "Not an embedded binder"
+    U.un_alien t |> FStar.Dyn.undyn
 
 let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
     match l with
@@ -123,7 +119,6 @@ let embed_term (t:term) : term =
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t
-
 
 let embed_pair (embed_a:'a -> term) (t_a:term)
                (embed_b:'b -> term) (t_b:term)
@@ -164,14 +159,10 @@ let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
    | _ -> failwith "Not an embedded option"
 
 let embed_fvar (fv:fv) : term =
-    protect_embedded_term fstar_refl_fvar (S.fv_to_tm fv)
+    U.mk_alien fv "reflection.embed_fvar" None
 
 let unembed_fvar (t:term) : fv =
-    let t = un_protect_embedded_term t in
-    let t = U.unascribe t in
-    match t.n with
-    | Tm_fvar fv -> fv
-    | _ -> failwith "Not an embedded fv"
+    U.un_alien t |> FStar.Dyn.undyn
 
 let embed_const (c:vconst) : term =
     match c with

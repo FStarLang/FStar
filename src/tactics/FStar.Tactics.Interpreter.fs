@@ -40,8 +40,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let goals, smt_goals = E.unembed_state ps embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let ps = E.unembed_proofstate ps embedded_state in
     let res = run t ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
@@ -57,8 +56,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let goals, smt_goals = E.unembed_state ps embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let ps = E.unembed_proofstate ps embedded_state in
     let res = run (t (unembed_b b)) ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
@@ -74,8 +72,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let goals, smt_goals = E.unembed_state ps embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let ps = E.unembed_proofstate ps embedded_state in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
     Some (E.embed_result ps res embed_c t_c)
   | _ ->
@@ -91,8 +88,7 @@ let mk_tactic_interpretation_3 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let goals, smt_goals = E.unembed_state ps embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let ps = E.unembed_proofstate ps embedded_state in
     let res = run (t (unembed_a a) (unembed_b b) (unembed_c c)) ps in
     Some (E.embed_result ps res embed_d t_d)
   | _ ->
@@ -110,8 +106,7 @@ let mk_tactic_interpretation_5 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let goals, smt_goals = E.unembed_state ps embedded_state in
-    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let ps = E.unembed_proofstate ps embedded_state in
     let res = run (t (unembed_a a) (unembed_b b) (unembed_c c) (unembed_d d) (unembed_e e)) ps in
     Some (E.embed_result ps res embed_f t_f)
   | _ ->
@@ -207,7 +202,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> = //JUST FSHARP
     bind get (fun proof_state ->
     let tm = S.mk_Tm_app embedded_tac_b
-                         [S.as_arg (E.embed_state proof_state (proof_state.goals, proof_state.smt_goals))]
+                         [S.as_arg (E.embed_proofstate proof_state)]
                           None
                           Range.dummyRange in
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops] in
@@ -215,17 +210,12 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
     let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
     bind (mlog <| (fun _ -> BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result))) (fun _ ->
     match E.unembed_result proof_state result unembed_b with
-    | Inl (b, (goals, smt_goals)) ->
-        bind dismiss_all (fun _ ->
-        bind (add_goals goals) (fun _ ->
-        bind (add_smt_goals smt_goals) (fun _ ->
-        ret b)))
+    | Inl (b, ps) ->
+        bind (set ps) (fun _ -> ret b)
 
-    | Inr (msg, (goals, smt_goals)) ->
-        bind dismiss_all (fun _ ->
-        bind (add_goals goals) (fun _ ->
-        bind (add_smt_goals smt_goals) (fun _ ->
-        fail msg))))))
+    | Inr (msg, ps) ->
+        bind (set ps) (fun _ -> fail msg)
+    )))
 
 let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
                                                         * term // witness, in case it's needed, as in synthesis)
