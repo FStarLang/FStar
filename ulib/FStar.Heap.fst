@@ -2,13 +2,21 @@ module FStar.Heap
 
 open FStar.Classical
 
+module S   = FStar.Set
+module TS  = FStar.TSet
+module Seq = FStar.Seq
+
+type set  = Set.set
+type tset = TSet.set
+
 private noeq type heap_rec = {
   next_addr: nat;
   memory   : nat -> Tot (option (a:Type0 & a))
 }
 
-let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
+type heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
+val emp :heap
 let emp = {
   next_addr = 0;
   memory    = (fun (r:nat) -> None)
@@ -20,55 +28,184 @@ private type ref' (a:Type0) :Type0 = {
   mm:   bool;  //manually managed flag
 }
 
-let ref a = ref' a
+type ref (a:Type0) = ref' a
 
+val addr_of: #a:Type0 -> ref a -> GTot nat
 let addr_of #a r = r.addr
 
+val is_mm: #a:Type0 -> ref a -> GTot bool
 let is_mm #a r = r.mm
 
+val compare_addrs: #a:Type0 -> #b:Type0 -> r1:ref a -> r2:ref b -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
 
+val contains: #a:Type0 -> heap -> ref a -> Type0
 let contains #a h r =
   let _ = () in
   Some? (h.memory r.addr) /\ dfst (Some?.v (h.memory r.addr)) == a
 
+val unused_in: #a:Type0 -> ref a -> heap -> Type0
 let unused_in #a r h = None? (h.memory r.addr)
 
+let fresh (#a:Type) (r:ref a) (h0:heap) (h1:heap) =
+  r `unused_in` h0 /\ h1 `contains` r
+
+let only_t (#a:Type0) (x:ref a) = TS.singleton (addr_of x)
+
+let only (#a:Type0) (x:ref a) = S.singleton (addr_of x)
+
+let op_Hat_Plus_Plus (#a:Type0) (r:ref a) (s:set nat) = S.union (only r) s
+
+let op_Plus_Plus_Hat (#a:Type0) (s:set nat) (r:ref a) = S.union s (only r)
+
+let op_Hat_Plus_Hat (#a:Type0) (#b:Type0) (r1:ref a) (r2:ref b) = S.union (only r1) (only r2)
+
+val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot a
 let sel_tot #a h r =
   let Some (| _, x |) = h.memory r.addr in
   x
 
-let sel #a h r =
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r) then
-    sel_tot #a h r
-  else r.init
+(*
+ * AR: Flat view change: see the upd function below
+ *)
+val hsel: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> GTot a
+let hsel #a h r = sel_tot h r
 
+val upd_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> a -> Tot heap
 let upd_tot #a h r x =
   { h with memory = (fun r' -> if r.addr = r'
 			    then Some (| a, x |)
                             else h.memory r') }
 
-let upd #a h r x =
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
-  then upd_tot h r x
-  else
-    if r.addr >= h.next_addr
-    then
-      { next_addr = r.addr + 1;
-        memory    = (fun (r':nat) -> if r' = r.addr
-	   		         then Some (| a, x |)
-                                 else h.memory r') }
-    else
-      { h with memory = (fun r' -> if r' = r.addr
-				then Some (| a, x |)
-                                else h.memory r') }
+(*
+ * AR: Flat view change: strong updates are a problem
+ * since we may not have allocated enough size in the flat view
+ *)
+val hupd: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> a -> GTot heap
+let hupd #a h r x = upd_tot h r x
 
-let alloc #a h x mm =
+val halloc: #a:Type0 -> heap -> a -> mm:bool -> GTot (ref a * heap)
+let halloc #a h x mm =
   let r = { addr = h.next_addr; init = x; mm = mm } in
-  r, upd #a h r x
+  r, { h with next_addr = h.next_addr + 1;
+              memory = (fun r' -> if r.addr = r'
+			then Some (| a, x |)
+                        else h.memory r') }
 
-let free_mm #a h r =
+val hfree_mm: #a:Type0 -> h:heap -> r:ref a{h `contains` r /\ is_mm r} -> GTot heap
+let hfree_mm #a h r =
   { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
+
+let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
+  (forall (a:Type) (r:ref a).{:pattern (hsel h1 r)}
+                         ((~ (TS.mem (addr_of r) s)) /\ h0 `contains` r) ==> (h1 `contains` r /\ hsel h1 r == hsel h0 r)) /\
+  (forall (a:Type) (r:ref a).{:pattern (contains h1 r)}
+                        h0 `contains` r ==> h1 `contains` r) /\
+  (forall (a:Type) (r:ref a).{:pattern (r `unused_in` h0)}
+                        r `unused_in` h1 ==> r `unused_in` h0)
+
+let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 h1
+
+let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
+  (forall (a:Type0) (r:ref a). h1 `contains` r <==> h2 `contains` r) /\
+  (forall (a:Type0) (r:ref a). r `unused_in` h1 <==> r `unused_in` h2)
+
+(***** Flat view changes *****)
+
+type byte
+
+type bytes = Seq.seq byte
+
+assume val b0:byte
+assume val b1:byte
+assume val b2:byte
+
+assume HasEq_byte: hasEq byte
+assume Distinct_bytes: b0 <> b1 /\ b1 <> b2 /\ b2 <> b0
+
+let marshal_bool (b:bool) :(b:bytes)  =
+  Seq.create 1 (if b then b1 else b0)
+
+let unmarshal_bool (b:bytes) :option bool =
+  if Seq.length b = 1 then
+    let b = Seq.index b 0 in
+    if b = b1 then Some true
+    else if b = b0 then Some false
+    else None
+  else None
+
+type rtti =
+  | Bool
+
+let type_of (r:rtti) :Type =
+  match r with
+  | Bool -> bool
+
+let size_of (r:rtti) :pos =
+  match r with
+  | Bool -> 1
+
+let marshal (#r:rtti) (x:type_of r) :(b:bytes{Seq.length b = size_of r}) =
+  match r with
+  | Bool -> marshal_bool x
+
+let unmarshal (r:rtti) (b:bytes) :option (type_of r) =
+  match r with
+  | Bool -> unmarshal_bool b
+
+type hi_addr = nat
+
+type lo_addr = nat
+
+type hi_view = heap
+
+type lo_view = lo_addr -> byte
+
+noeq type meta_data = {
+  hi_to_lo: hi_addr -> (rtti * lo_addr * lo_addr)
+}
+
+noeq type mem' =
+  |C: hi:hi_view -> lo:lo_view -> md:meta_data -> mem'
+
+let non_overlapping (a1:nat) (b1:nat{a1 <= b1}) (a2:nat) (b2:nat{a2 <= b2}) :Type0 =
+  (a1 < a2 /\ b1 < a2) \/
+  (a2 < a1 /\ b2 < a1)
+
+assume val read_lo (lo:lo_view) (lo_start:nat) (lo_end:nat{lo_end >= lo_start})
+  :(b:bytes{Seq.length b = lo_end - lo_start + 1 /\
+            (forall (i:nat). (i < Seq.length b) ==> Seq.index b i = lo (lo_start + i))})
+
+let wf_mem (m:mem') =
+  forall (a:Type0) (r:ref a). m.hi `contains` r ==>
+    (let (rtti, lo_start, lo_end) = m.md.hi_to_lo (addr_of r) in
+     type_of rtti == a                    /\  //rtti matches the type of the reference
+     lo_end - lo_start + 1 = size_of rtti /\  //the range has size per the marshaling of rtti
+     read_lo m.lo lo_start lo_end == marshal #rtti (hsel m.hi r) /\  //lo view is in sync with the hi view value
+     (forall (b:Type0) (r':ref b). (m.hi `contains` r' /\ addr_of r' <> addr_of r) ==>  //for all other different r'
+			      (let (_, lo_start', lo_end') = m.md.hi_to_lo (addr_of r') in
+		               lo_start' <= lo_end' /\ non_overlapping lo_start lo_end lo_start' lo_end')))  //the lo-level addresses are non-overlapping
+
+type mem = m:mem'{wf_mem m}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (*
  * update of a well-typed reference
