@@ -485,7 +485,7 @@
       "UnionFind.Functions.find_opt",
       8,
       2,
-      2,
+      1,
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_UnionFind.Forest.set_n.fuel_instrumented",
@@ -534,14 +534,13 @@
         "token_correspondence_Prims.op_LessThanOrEqual",
         "typing_FStar.DM4F.Heap.ref", "typing_FStar.DM4F.Heap.sel",
         "typing_FStar.Ghost.erased", "typing_FStar.Ghost.reveal",
-        "typing_FStar.OrdSet.mem", "typing_FStar.OrdSet.minus",
-        "typing_FStar.OrdSet.size", "typing_FStar.OrdSet.strict_subset",
+        "typing_FStar.OrdSet.mem", "typing_FStar.OrdSet.strict_subset",
         "typing_FStar.OrdSet.subset",
         "typing_FStar.Pervasives.__proj__Mktuple3__item___1",
         "typing_FStar.Pervasives.__proj__Mktuple3__item___3",
         "typing_FStar.Seq.Base.index", "typing_UnionFind.Forest.elt",
         "typing_UnionFind.Forest.id", "typing_UnionFind.Forest.set_n",
-        "well-founded-ordering-on-nat"
+        "typing_UnionFind.Functions.diff", "well-founded-ordering-on-nat"
       ],
       0
     ],
