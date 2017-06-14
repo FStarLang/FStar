@@ -485,7 +485,9 @@ and arg_as_mlty (g:env) (a, _) : mlty =
     else erasedContent
 
 and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
-    let formals, t = U.arrow_formals fv.fv_name.ty in
+    let formals, t =
+        let (_, ty), _ = TcEnv.lookup_lid g.tcenv fv.fv_name.v in
+        U.arrow_formals ty in
     let mlargs = List.map (arg_as_mlty g) args in
     let mlargs =
         let n_args = List.length args in

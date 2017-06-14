@@ -483,8 +483,8 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
         (x::l), e, x
   in
   let rec aux (loc:lenv_t) env (p:pattern) =
-    let pos q = Syntax.withinfo q tun.n p.prange in
-    let pos_r r q = Syntax.withinfo q tun.n r in
+    let pos q = Syntax.withinfo q p.prange in
+    let pos_r r q = Syntax.withinfo q r in
     match p.pat with
       | PatOr _ -> failwith "impossible"
 
@@ -926,12 +926,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                           | Tm_name _, _ ->
                             let tup2 = S.lid_as_fv (U.mk_tuple_data_lid 2 top.range) Delta_constant (Some Data_ctor) in
                             let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
-                            let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
+                            let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | Tm_app(_, args), Pat_cons(_, pats) ->
                             let tupn = S.lid_as_fv (U.mk_tuple_data_lid (1 + List.length args) top.range) Delta_constant (Some Data_ctor) in
                             let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
-                            let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
+                            let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | _ -> failwith "Impossible"
                           end
@@ -1109,8 +1109,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       let x = Syntax.new_bv (Some t3.range) S.tun in
       let t_bool = mk (Tm_fvar(S.lid_as_fv C.bool_lid Delta_constant None)) in
       mk (Tm_match(ascribe (desugar_term env t1) (Inl t_bool, None),
-                    [(withinfo (Pat_constant (Const_bool true)) tun.n t2.range, None, desugar_term env t2);
-                     (withinfo (Pat_wild x) tun.n t3.range, None, desugar_term env t3)]))
+                    [(withinfo (Pat_constant (Const_bool true)) t2.range, None, desugar_term env t2);
+                     (withinfo (Pat_wild x) t3.range, None, desugar_term env t3)]))
 
     | TryWith(e, branches) ->
       let r = top.range in

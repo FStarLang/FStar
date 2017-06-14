@@ -636,8 +636,7 @@ and tc_value env (e:term) : term
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> UF.univ_change u'' u
             | _ -> failwith "Impossible") us' us;
-    let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
-    let fv' = S.set_range_of_fv fv' range in
+    let fv' = S.set_range_of_fv fv range in
     FStar.TypeChecker.Common.insert_fv fv' t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
@@ -651,8 +650,7 @@ and tc_value env (e:term) : term
             (Range.string_of_range range)
             (Range.string_of_use_range range)
             (Print.term_to_string t);
-    let fv' = {fv with fv_name={fv.fv_name with ty=t}} in
-    let fv' = S.set_range_of_fv fv' range in
+    let fv' = S.set_range_of_fv fv range in
     FStar.TypeChecker.Common.insert_fv fv' t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t

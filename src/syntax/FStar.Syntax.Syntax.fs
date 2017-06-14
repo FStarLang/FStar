@@ -27,14 +27,13 @@ open FStar.Ident
 open FStar.Const
 
 (* Objects with metadata *)
-type withinfo_t<'a,'t> = {
+type withinfo_t<'a> = {
   v:  'a;
-  ty: 't;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-type var<'t>  = withinfo_t<lident,'t>
+type var = withinfo_t<lident>
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -121,7 +120,7 @@ and comp' =
   | Comp   of comp_typ
 and term = syntax<term',term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
-and pat = withinfo_t<pat',term'>
+and pat = withinfo_t<pat'>
 and comp = syntax<comp', unit>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -182,7 +181,7 @@ and bv = {
     sort:term
 }
 and fv = {
-    fv_name :var<term>;
+    fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
 }
@@ -357,8 +356,8 @@ let contains_reflectable (l: list<qualifier>): bool =
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-let withinfo v s r = {v=v; ty=s; p=r}
-let withsort v s = withinfo v s dummyRange
+let withinfo v r = {v=v; p=r}
+let withsort v = withinfo v dummyRange
 
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
 let order_bv x y =
@@ -505,7 +504,7 @@ let fv_eq fv1 fv2 = lid_equals fv1.fv_name.v fv2.fv_name.v
 let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
 let lid_as_fv l dd dq : fv = {
-    fv_name=withinfo l tun (range_of_lid l);
+    fv_name=withinfo l (range_of_lid l);
     fv_delta=dd;
     fv_qual =dq;
 }

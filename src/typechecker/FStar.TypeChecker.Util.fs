@@ -242,8 +242,8 @@ let pat_as_exp allow_implicits env p
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         let maybe_dot inaccessible a r =
             if allow_implicits && inaccessible
-            then withinfo (Pat_dot_term(a, tun)) tun.n r
-            else withinfo (Pat_var a) tun.n r in
+            then withinfo (Pat_dot_term(a, tun)) r
+            else withinfo (Pat_var a) r in
         match p.v with
            | Pat_cons(fv, pats) ->
                let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
@@ -292,13 +292,13 @@ let pat_as_exp allow_implicits env p
 let decorate_pattern env p exp =
     let qq = p in
     let rec aux p e : pat  =
-        let pkg q t = withinfo q t p.p in
+        let pkg q = withinfo q p.p in
         let e = U.unmeta e in
         match p.v, e.n with
             | _, Tm_uinst(e, _) -> aux p e
 
             | Pat_constant _, Tm_constant _ ->
-              pkg p.v (force_sort' e)
+              pkg p.v
 
             | Pat_var x, Tm_name y ->
               if not (bv_eq x y)
@@ -307,24 +307,24 @@ let decorate_pattern env p exp =
               then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
               let s = Normalize.normalize [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
-              pkg (Pat_var x) s.n
+              pkg (Pat_var x)
 
             | Pat_wild x, Tm_name y ->
               if bv_eq x y |> not
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
               let s = Normalize.normalize [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
-              pkg (Pat_wild x) s.n
+              pkg (Pat_wild x)
 
             | Pat_dot_term(x, _), _ ->
               let s = force_sort e in
               let x = {x with sort=s} in
-              pkg (Pat_dot_term(x, e)) s.n
+              pkg (Pat_dot_term(x, e))
 
             | Pat_cons(fv, []), Tm_fvar fv' ->
               if not (Syntax.fv_eq fv fv')
               then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
-              pkg (Pat_cons(fv', [])) (force_sort' e)
+              pkg (Pat_cons(fv', []))
 
             | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
             | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
@@ -334,12 +334,12 @@ let decorate_pattern env p exp =
 
               let fv = fv' in
               let rec match_args matched_pats args argpats = match args, argpats with
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_sort' e)
+                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats))
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
                         | (e, Some (Implicit true)), Pat_dot_term _ ->
                           let x = Syntax.new_bv (Some p.p) (force_sort e) in
-                          let q = withinfo (Pat_dot_term(x, e)) x.sort.n p.p in
+                          let q = withinfo (Pat_dot_term(x, e)) p.p in
                           match_args ((q, true)::matched_pats) args argpats
 
                         | (e, imp), _ ->
@@ -361,8 +361,7 @@ let decorate_pattern env p exp =
     aux p exp
 
  let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
-    let topt = Some pat.ty in
-    let mk f : term = mk f topt pat.p in
+    let mk f : term = mk f None pat.p in
 
     let pat_as_arg (p, i) =
         let vars, te = decorated_pattern_as_term p in
@@ -1558,7 +1557,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                                             (fields:binders)         (* Fields of the constructor               *)
                                             : list<sigelt> =
     let p = range_of_lid lid in
-    let pos q = Syntax.withinfo q tun.n p in
+    let pos q = Syntax.withinfo q p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
     let inst_univs = List.map (fun u -> U_name u) uvs in
     let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in

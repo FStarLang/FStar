@@ -30,14 +30,13 @@ open FStar.Ident
 // fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
 
 (* Objects with metadata *)
-type withinfo_t<'a,'t> = {
+type withinfo_t<'a> = {
   v: 'a;
-  ty: 't;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-type var<'t>  = withinfo_t<lident,'t>
+type var  = withinfo_t<lident>
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -124,7 +123,7 @@ and comp' =
   | Comp   of comp_typ
 and term = syntax<term',term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
-and pat = withinfo_t<pat',term'>
+and pat = withinfo_t<pat'>
 and comp = syntax<comp', unit>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -185,7 +184,7 @@ and bv = {
     sort:term
 }
 and fv = {
-    fv_name :var<term>;
+    fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
 }
@@ -375,8 +374,8 @@ type mk_t = mk_t_a<term',term'>
 
 val contains_reflectable:  list<qualifier> -> bool
 
-val withsort: 'a -> 'b -> withinfo_t<'a,'b>
-val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
+val withsort: 'a -> withinfo_t<'a>
+val withinfo: 'a -> Range.range -> withinfo_t<'a>
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> Tot<mk_t_a<'a,'b>>

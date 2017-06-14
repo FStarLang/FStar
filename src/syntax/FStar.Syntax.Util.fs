@@ -914,8 +914,8 @@ let rec is_wild_pat p =
     | _ -> false
 
 let if_then_else b t1 t2 =
-    let then_branch = (withinfo (Pat_constant (Const_bool true)) tun.n t1.pos, None, t1) in
-    let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
+    let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
+    let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
 (**************************************************************************************)

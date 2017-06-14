@@ -255,7 +255,7 @@ let rec closure_as_term cfg env t =
             | Tm_unknown
             | Tm_constant _
             | Tm_name _
-            | Tm_fvar _ -> t
+            | Tm_fvar _ -> t.tk := None; t
 
             | Tm_uvar _ -> t //should be closed anyway
 
@@ -777,6 +777,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
+            t.tk := None;
             rebuild cfg env stack t
 
           | Tm_app({n=Tm_fvar fv}, _)
@@ -785,8 +786,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(hd, args)
             when is_fstar_tactics_embed hd ->
+            let hd = closure_as_term cfg env hd in
             let args = closures_as_args_delayed cfg env args in
             let t = {t with n=Tm_app(hd, args)} in
+            t.tk := None;
             let t = reduce_primops cfg t in
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 

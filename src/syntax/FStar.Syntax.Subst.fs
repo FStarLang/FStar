@@ -368,7 +368,7 @@ let push_subst s t =
                     else subst' s lb.lbdef in
         let lbname = match lb.lbname with
             | Inl x -> Inl ({x with sort=lbt})
-            | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
+            | Inr fv -> Inr fv in
         {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
         mk (Tm_let((is_rec, lbs), body))
 
