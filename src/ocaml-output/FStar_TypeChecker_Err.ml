@@ -374,9 +374,14 @@ let failed_to_prove_specification: Prims.string Prims.list -> Prims.string =
           uu____579
 let top_level_effect: Prims.string =
   "Top-level let-bindings must be total; this term may have effects"
-let cardinality_constraint_violated l a =
-  let uu____597 = FStar_Syntax_Print.lid_to_string l in
-  let uu____598 = FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v in
-  FStar_Util.format2
-    "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
-    uu____597 uu____598
+let cardinality_constraint_violated:
+  FStar_Ident.lid ->
+    FStar_Syntax_Syntax.bv FStar_Syntax_Syntax.withinfo_t -> Prims.string
+  =
+  fun l  ->
+    fun a  ->
+      let uu____589 = FStar_Syntax_Print.lid_to_string l in
+      let uu____590 = FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v in
+      FStar_Util.format2
+        "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
+        uu____589 uu____590
