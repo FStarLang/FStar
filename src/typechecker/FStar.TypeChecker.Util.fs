@@ -1681,6 +1681,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
           let only_decl =
               lid_equals C.prims_lid  (Env.current_module env)
+              || fvq<>Data_ctor
               || Options.dont_gen_projectors (Env.current_module env).str
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)

@@ -4646,12 +4646,15 @@ let mk_discriminator_and_indexed_projectors:
                                                  (FStar_Syntax_Subst.close_univ_vars
                                                     uvs) uu____7998 in
                                              let only_decl =
-                                               (let uu____8004 =
-                                                  FStar_TypeChecker_Env.current_module
-                                                    env in
-                                                FStar_Ident.lid_equals
-                                                  FStar_Syntax_Const.prims_lid
-                                                  uu____8004)
+                                               ((let uu____8004 =
+                                                   FStar_TypeChecker_Env.current_module
+                                                     env in
+                                                 FStar_Ident.lid_equals
+                                                   FStar_Syntax_Const.prims_lid
+                                                   uu____8004)
+                                                  ||
+                                                  (fvq <>
+                                                     FStar_Syntax_Syntax.Data_ctor))
                                                  ||
                                                  (let uu____8005 =
                                                     let uu____8006 =
