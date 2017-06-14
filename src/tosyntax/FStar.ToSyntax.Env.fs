@@ -72,7 +72,7 @@ type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
-  scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
+  scope_mods:           list<scope_mod>;                  (* a STACK of toplevel or definition-local scope modifiers *)
   exported_ids:         BU.smap<exported_id_set>;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
@@ -281,7 +281,7 @@ let try_lookup_id''
         when check_rec_binding_id r ->
         k_rec_binding r
 
-      | Open_module_or_namespace (ns, _) ->
+      | Open_module_or_namespace (ns, Open_module) ->
         find_in_module_with_includes eikind find_in_module Cont_ignore env ns id
 
       | Top_level_def id'
@@ -1096,7 +1096,17 @@ let finish_module_or_interface env modul =
 let prepare_module_or_interface intf admitted env mname = (* AR: open the pervasives namespace *)
   let prep env =
     let filename = BU.strcat (text_of_lid mname) ".fst" in
-    let open_ns = FStar.Parser.Dep.hard_coded_dependencies filename in
+    let auto_open = FStar.Parser.Dep.hard_coded_dependencies filename in
+    let auto_open =
+      let convert_kind = function
+      | FStar.Parser.Dep.Open_namespace -> Open_namespace
+      | FStar.Parser.Dep.Open_module -> Open_module
+      in
+      List.map (fun (lid, kind) -> (lid, convert_kind kind)) auto_open
+    in
+    let namespace_of_module = if List.length mname.ns > 0 then [ (lid_of_ids mname.ns, Open_namespace) ] else [] in
+    (* [scope_mods] is a stack, so reverse the order *)
+    let auto_open = List.rev (auto_open @ namespace_of_module) in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
@@ -1107,7 +1117,7 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
     {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
-      scope_mods = List.map (fun lid -> Open_module_or_namespace (lid, Open_namespace)) open_ns;
+      scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
       iface=intf;
       admitted_iface=admitted }
   in
