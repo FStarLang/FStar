@@ -900,16 +900,16 @@ let mk_data l args =
 let mangle_field_name: FStar_Ident.ident -> FStar_Ident.ident =
   fun x  ->
     FStar_Ident.mk_ident
-      ((Prims.strcat "^fname^" x.FStar_Ident.idText),
+      ((Prims.strcat "__fname__" x.FStar_Ident.idText),
         (x.FStar_Ident.idRange))
 let unmangle_field_name: FStar_Ident.ident -> FStar_Ident.ident =
   fun x  ->
-    if FStar_Util.starts_with x.FStar_Ident.idText "^fname^"
+    if FStar_Util.starts_with x.FStar_Ident.idText "__fname__"
     then
       let uu____2264 =
         let uu____2267 =
           FStar_Util.substring_from x.FStar_Ident.idText
-            (Prims.parse_int "7") in
+            (Prims.parse_int "9") in
         (uu____2267, (x.FStar_Ident.idRange)) in
       FStar_Ident.mk_ident uu____2264
     else x
