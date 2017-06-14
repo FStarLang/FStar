@@ -52,6 +52,7 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
+type open_kind = | Open_module | Open_namespace
 
 
 let check_and_strip_suffix (f: string): option<string> =
@@ -185,7 +186,9 @@ let hard_coded_dependencies filename =
   in
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs then []
-  else [ Const.fstar_ns_lid; Const.prims_lid ; Const.pervasives_lid ]
+  else [ (Const.fstar_ns_lid, Open_namespace);
+         (Const.prims_lid, Open_module);
+         (Const.pervasives_lid, Open_module) ]
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
@@ -203,22 +206,46 @@ let collect_one
   in
   let working_map = smap_copy original_map in
 
-  let record_open let_open lid =
+  let record_open_module lid =
     let key = lowercase_join_longident lid true in
-    begin match smap_try_find working_map key with
+    match smap_try_find working_map key with
     | Some pair ->
-        List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
+        List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair);
+        true
     | None ->
-        let r = enter_namespace original_map working_map key in
-        if not r then begin
-          if let_open then
-            raise (Err ("let-open only supported for modules, not namespaces"))
-          else
-            Util.print1_warning "Warning: no modules in namespace %s and no file with \
-              that name either\n" (string_of_lid lid true)
-        end
-    end
+        false
   in
+
+  let record_open_namespace (error_msg: option string) lid =
+    let key = lowercase_join_longident lid true in
+    let r = enter_namespace original_map working_map key in
+    if not r then
+      match error_msg with
+      | Some e ->
+          raise (Err e)
+      | None ->
+          Util.print1_warning "Warning: no modules in namespace %s and no file with \
+            that name either\n" (string_of_lid lid true)
+  in
+
+  let record_open let_open lid =
+    if record_open_module lid
+    then ()
+    else
+      let msg =
+        if let_open
+        then Some ("let-open only supported for modules, not namespaces")
+        else None
+      in
+      record_open_namespace msg lid
+  in
+
+  let record_open_module_or_namespace (lid, kind) =
+    match kind with
+    | Open_namespace -> record_open_namespace None lid
+    | Open_module -> let _ = record_open_module lid in ()
+  in
+
   let record_module_alias ident lid =
     let key = String.lowercase (text_of_id ident) in
     let alias = lowercase_join_longident lid true in
@@ -251,7 +278,7 @@ let collect_one
 
 
   let auto_open = hard_coded_dependencies filename in
-  List.iter (record_open false) auto_open;
+  List.iter record_open_module_or_namespace auto_open;
 
   let num_of_toplevelmods = BU.mk_ref 0 in
 
