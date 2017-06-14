@@ -1,5 +1,6 @@
 ULIB_GEN_DIR=./extracted
 
+FIND=$(shell which gfind && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
 OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_GEN_DIR) -build-dir ulib/ml/_build
 
@@ -8,20 +9,18 @@ OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_G
 all: .mgen fstarlib.cmxa
 
 fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
-	echo $^ | $(SED) -e 's;\(.mgen \|\w*/\);;g' \
-	                 -e 's/\.ml//g' \
-	                 -e 's/\./_/g' \
-	                 -e 's/\<./\u&/g' \
-	                 -e 's/ /\n/g' | sort | uniq > $@
+	find . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
+		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
+		| sort | uniq > $@
 
 FSTARLIB_DIR=../../bin/fstarlib/
 
 fstarlib.cmxa:fstarlib.mllib
-	$(OCAMLBUILD) -I ulib/ml/heap fstarlib.cmxa
+	$(OCAMLBUILD) fstarlib.cmxa
 	make install
 
 fstarlib.cma:fstarlib.mllib
-	$(OCAMLBUILD) -I ulib/ml/heap fstarlib.cma
+	$(OCAMLBUILD) fstarlib.cma
 	make install
 
 install:
