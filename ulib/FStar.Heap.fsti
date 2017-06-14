@@ -35,6 +35,26 @@ let op_Plus_Plus_Hat (#a:Type0) (s:set nat) (r:ref a) = S.union s (only r)
 
 let op_Hat_Plus_Hat (#a:Type0) (#b:Type0) (r1:ref a) (r2:ref b) = S.union (only r1) (only r2)
 
+val live_at: h: heap -> a: nat -> t: Type0 -> GTot Type0
+
+val ref_of: h: heap -> a: nat -> t: Type0 -> Pure (ref t) (requires (live_at h a t)) (ensures (fun _ -> True))
+
+val addr_of_ref_of
+  (h: heap)
+  (a: nat)
+  (t: Type0)
+: Lemma
+  (requires (live_at h a t))
+  (ensures (live_at h a t /\ addr_of (ref_of h a t) == a))
+
+val ref_of_addr_of
+  (h: heap)
+  (#t: Type0)
+  (r: ref t)
+: Lemma
+  (requires (contains h r))
+  (ensures (live_at h (addr_of r) t /\ ref_of h (addr_of r) t == r))
+
 val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot a
 
 val sel: #a:Type0 -> heap -> ref a -> GTot a

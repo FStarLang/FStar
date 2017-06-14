@@ -2,9 +2,15 @@ module FStar.Heap
 
 open FStar.Classical
 
+private noeq type ref_contents (a: Type0): Type0 = {
+  c_cur: a;
+  c_init: a;
+  c_mm: bool;
+}
+
 private noeq type heap_rec = {
   next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & a))
+  memory   : nat -> Tot (option (a:Type0 & ref_contents a))
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -30,13 +36,38 @@ let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
 
 let contains #a h r =
   let _ = () in
-  Some? (h.memory r.addr) /\ dfst (Some?.v (h.memory r.addr)) == a
+  Some? (h.memory r.addr) /\ (
+    let raw_contents = Some?.v (h.memory r.addr) in (
+      dfst raw_contents == a /\ (
+      let contents = dsnd raw_contents in (
+        contents.c_init == r.init /\
+        contents.c_mm == r.mm
+  ))))
 
 let unused_in #a r h = None? (h.memory r.addr)
 
+let live_at' h a t =
+  Some? (h.memory a) /\
+  dfst (Some?.v (h.memory a)) == t
+
+let live_at = live_at'
+
+let ref_of h a t =
+  let raw_contents = Some?.v (h.memory a) in
+  let contents: ref_contents t = dsnd raw_contents in
+  {
+    addr = a;
+    init = contents.c_init;
+    mm = contents.c_mm
+  }
+
+let addr_of_ref_of h a t = ()
+
+let ref_of_addr_of h #t r = ()
+
 let sel_tot #a h r =
   let Some (| _, x |) = h.memory r.addr in
-  x
+  x.c_cur
 
 let sel #a h r =
   if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r) then
@@ -44,6 +75,12 @@ let sel #a h r =
   else r.init
 
 let upd_tot #a h r x =
+  let x = {
+    c_cur = x;
+    c_init = r.init;
+    c_mm = r.mm;
+  }
+  in
   { h with memory = (fun r' -> if r.addr = r'
 			    then Some (| a, x |)
                             else h.memory r') }
@@ -52,6 +89,12 @@ let upd #a h r x =
   if FStar.StrongExcludedMiddle.strong_excluded_middle (h `contains` r)
   then upd_tot h r x
   else
+    let x = {
+      c_cur = x;
+      c_init = r.init;
+      c_mm = r.mm;
+    }
+    in
     if r.addr >= h.next_addr
     then
       { next_addr = r.addr + 1;
