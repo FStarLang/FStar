@@ -673,8 +673,8 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         focus_cur_goal (
             bind tau (fun _ ->
             TcRel.force_trivial_guard env guard;
-            // Try to get rid of all the unification lambdas, which should all be at the head
-            let ut = N.normalize [N.WHNF] env ut in
+            // Try to get rid of all the unification lambdas
+            let ut = N.reduce_uvar_solutions env ut in
             ret ut))
         )
 
