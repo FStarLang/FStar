@@ -1654,16 +1654,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     in
 
 
-    let rec matches_pat (scrutinee:term) (p:pat)
+    let rec matches_pat (scrutinee_orig:term) (p:pat)
       : either<list<term>, bool>
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
-      = let scrutinee = U.unmeta scrutinee in
+      = let scrutinee = U.unmeta scrutinee_orig in
         let head, args = U.head_and_args scrutinee in
         match p.v with
         | Pat_var _
-        | Pat_wild _ -> Inl [scrutinee]
+        | Pat_wild _ -> Inl [scrutinee_orig]
         | Pat_dot_term _ -> Inl []
         | Pat_constant s -> begin
           match scrutinee.n with
