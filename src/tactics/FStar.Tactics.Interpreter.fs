@@ -12,7 +12,7 @@ module SC = FStar.Syntax.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
-module Rel = FStar.TypeChecker.Rel
+module TcRel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
@@ -203,6 +203,14 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
             if !tacdbg then
                 BU.print1 "Tactic generated proofterm %s\n"
                                 (Print.term_to_string w);
+            List.iter (fun g -> if is_irrelevant g
+                                then if TcRel.teq_nosmt g.context g.witness SC.exp_unit
+                                     then ()
+                                     else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s" (Print.term_to_string g.witness))
+                                else ())
+                      (ps.goals @ ps.smt_goals);
+            let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
+            let _ = TcRel.discharge_guard_no_smt e g in
             (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
         | Failed (s, ps) ->
             raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, assertion.pos))
@@ -279,7 +287,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                            | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))
                            | Some phi -> phi
                  in
-                 if not (Rel.teq_nosmt g.context g.witness SC.exp_unit)
+                 if not (TcRel.teq_nosmt g.context g.witness SC.exp_unit)
                  then failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
                          (Print.term_to_string g.witness))
                  else
@@ -305,6 +313,9 @@ let synth (env:Env.env) (typ:typ) (tau:term) : term =
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n"
                             (Print.term_to_string w);
+        // TODO, check for others goals? Not really needed...
+        let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
+        let _ = TcRel.discharge_guard_no_smt env g in
         w
     | Failed (s, ps) ->
         FStar.Errors.err typ.pos (BU.format1 "user tactic failed: %s" s);

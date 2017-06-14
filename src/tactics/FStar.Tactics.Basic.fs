@@ -669,6 +669,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         log ps (fun () ->
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
                                                                  (Print.term_to_string ut));
+        bind (add_implicits g.implicits) (fun _ ->
         bind (add_irrelevant_goal env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)) (fun _ ->
         focus_cur_goal (
             bind tau (fun _ ->
@@ -676,7 +677,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
             // Try to get rid of all the unification lambdas
             let ut = N.reduce_uvar_solutions env ut in
             ret ut))
-        )
+        ))
 
 let pointwise (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->
