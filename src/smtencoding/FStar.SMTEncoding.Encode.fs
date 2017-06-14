@@ -100,7 +100,7 @@ let varops =
         | Some f -> f
         | None ->
             let id = next_id () in
-            let f = Term.boxString <| mk_String_const id in
+            let f = mk_String_const id in
             let top_scope = snd <| List.hd !scopes in
             BU.smap_add top_scope s f;
             f in
@@ -217,6 +217,7 @@ let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
 //    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a =
+
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None)
 let contains_name env (s:string) =
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when (b.str=s) -> Some () | _ -> None) |> Option.isSome
@@ -422,10 +423,10 @@ exception Let_rec_unencodeable
 
 let encode_const = function
     | Const_unit -> mk_Term_unit
-    | Const_bool true -> boxBool mkTrue
-    | Const_bool false -> boxBool mkFalse
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
-    | Const_int (i, None)  -> boxInt (mkInteger i)
+    | Const_bool true -> mkTrue
+    | Const_bool false -> mkFalse
+    | Const_char c -> mkApp("FStar.Char.Char", [mkInteger' (BU.int_of_char c)])
+    | Const_int (i, None)  -> mkInteger i
     | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
     | Const_string(bytes, _) -> varops.string_const (BU.string_of_bytes <| bytes)
     | Const_range r -> mk_Range_const
@@ -508,11 +509,11 @@ and encode_arith_term env head args_e =
         | _ -> failwith "Impossible"
     in
     let unary arg_tms =
-        Term.unboxInt (List.hd arg_tms)
+        List.hd arg_tms
     in
     let binary arg_tms =
-        Term.unboxInt (List.hd arg_tms),
-        Term.unboxInt (List.hd (List.tl arg_tms))
+        List.hd arg_tms,
+        List.hd (List.tl arg_tms)
     in
     let mk_default () =
         let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
@@ -521,15 +522,15 @@ and encode_arith_term env head args_e =
     let mk_l : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts ->
           if Options.smtencoding_l_arith_native () then
-             op (mk_args ts) |> Term.boxInt
+             op (mk_args ts)
           else mk_default ()
     in
     let mk_nl nm op ts =
       if Options.smtencoding_nl_arith_wrapped () then
           let t1, t2 = binary ts in
-          Util.mkApp(nm, [t1;t2]) |> Term.boxInt
+          Util.mkApp(nm, [t1;t2])
       else if Options.smtencoding_nl_arith_native () then
-          op (binary ts) |> Term.boxInt
+          op (binary ts)
       else mk_default ()
     in
     let add     = mk_l Util.mkAdd binary in
@@ -998,7 +999,7 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
             | None -> guard, []
             | Some w ->
               let w, decls2 = encode_term w env in
-              mkAnd(guard, mkEq(w, Term.boxBool mkTrue)), decls2
+              mkAnd(guard, mkEq(w, mkTrue)), decls2
        in
        let br, decls3 = encode_br br env in
        mkITE(guard, br, else_case), decls@decls2@decls3
@@ -1174,7 +1175,6 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         | _ -> failwith "impossible" in
 
 
-    let unboxInt_l : (list<term> -> term) -> list<term> -> term = fun f l -> f (List.map Term.unboxInt l) in
     let connectives = [
         (Const.and_lid,   enc_prop_c (bin_op mkAnd));
         (Const.or_lid,    enc_prop_c (bin_op mkOr));
@@ -1316,21 +1316,21 @@ let prims =
     let xy = [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = [(xsym, Term_sort)] in
     let prims = [
-        (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
-        (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
-        (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
-        (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
-        (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
-        (Const.op_GTE,         (quant xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
-        (Const.op_Subtraction, (quant xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
-        (Const.op_Minus,       (quant qx  (boxInt  <| mkMinus(unboxInt x))));
-        (Const.op_Addition,    (quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
-        (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
-        (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
-        (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
-        (Const.op_And,         (quant xy  (boxBool <| mkAnd(unboxBool x, unboxBool y))));
-        (Const.op_Or,          (quant xy  (boxBool <| mkOr(unboxBool x, unboxBool y))));
-        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        (Const.op_Eq,          (quant axy (mkEq(x,y))));
+        (Const.op_notEq,       (quant axy (mkNot(mkEq(x,y)))));
+        (Const.op_LT,          (quant xy  (mkLT(x, y))));
+        (Const.op_LTE,         (quant xy  (mkLTE(x, y))));
+        (Const.op_GT,          (quant xy  (mkGT(x, y))));
+        (Const.op_GTE,         (quant xy  (mkGTE(x, y))));
+        (Const.op_Subtraction, (quant xy  (mkSub(x, y))));
+        (Const.op_Minus,       (quant qx  (mkMinus(x))));
+        (Const.op_Addition,    (quant xy  (mkAdd(x, y))));
+        (Const.op_Multiply,    (quant xy  (mkMul(x, y))));
+        (Const.op_Division,    (quant xy  (mkDiv(x, y))));
+        (Const.op_Modulus,     (quant xy  (mkMod(x, y))));
+        (Const.op_And,         (quant xy  (mkAnd(x, y))));
+        (Const.op_Or,          (quant xy  (mkOr(x, y))));
+        (Const.op_Negation,    (quant qx  (mkNot(x))));
         ]
     in
     let mk : lident -> string -> term * list<decl> =
@@ -1370,7 +1370,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let typing_pred = mk_HasType x tt in
         let bb = ("b", Bool_sort) in
         let b = mkFreeV bb in
-        [Util.mkAssume(mkForall([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
+        [Util.mkAssume(mkForall([[b]], [bb], mk_HasType (b) tt), Some "bool typing", "bool_typing");
          Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester "BoxBool" x)), Some "bool inversion", "bool_inversion")] in
     let mk_int : env -> string -> term -> decls_t  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
@@ -1379,24 +1379,24 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let a = mkFreeV aa in
         let bb = ("b", Int_sort) in
         let b = mkFreeV bb in
-        let precedes = mk_Valid <| mkApp("Prims.Precedes", [tt;tt;Term.boxInt a; Term.boxInt b]) in
+        let precedes = mk_Valid <| mkApp("Prims.Precedes", [tt;tt;a; b]) in
         let precedes_y_x = mk_Valid <| mkApp("Precedes", [y; x]) in
-        [Util.mkAssume(mkForall([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
+        [Util.mkAssume(mkForall([[b]], [bb], mk_HasType (b) tt), Some "int typing", "int_typing");
          Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester "BoxInt" x)), Some "int inversion", "int_inversion");
          Util.mkAssume(mkForall_fuel([[typing_pred; typing_pred_y;precedes_y_x]],
                                    [xx;yy],
                                    mkImp(mk_and_l [typing_pred;
                                                    typing_pred_y;
-                                                   mkGT (Term.unboxInt x, mkInteger' 0);
-                                                   mkGTE (Term.unboxInt y, mkInteger' 0);
-                                                   mkLT (Term.unboxInt y, Term.unboxInt x)],
+                                                   mkGT (x, mkInteger' 0);
+                                                   mkGTE (y, mkInteger' 0);
+                                                   mkLT (y, x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
     let mk_str : env -> string -> term -> decls_t  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = ("b", String_sort) in
         let b = mkFreeV bb in
-        [Util.mkAssume(mkForall([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
+        [Util.mkAssume(mkForall([[b]], [bb], mk_HasType (b) tt), Some "string typing", "string_typing");
          Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester "BoxString" x)),  Some "string inversion", "string_inversion")] in
     let mk_ref : env -> string -> term -> decls_t = fun env reft_name _ ->
         let r = ("r", Ref_sort) in
@@ -1581,7 +1581,7 @@ let encode_free_var env fv tt t_norm quals =
                     let _, (xxsym, _) = BU.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
                     [Util.mkAssume(mkForall([[vapp]], vars,
-                                            mkEq(vapp, Term.boxBool <| mk_tester (escape d.str) xx)),
+                                            mkEq(vapp, mk_tester (escape d.str) xx)),
                                           Some "Discriminator equation",
                                           ("disc_equation_"^escape d.str))]
 

@@ -701,44 +701,19 @@ let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
-let maybe_elim_box u v t =
-    match t.tm with
-    | App(Var v', [t])
-        when v=v' && Options.smtencoding_elim_box() -> t
-    | _ -> mkApp(u, [t]) t.rng
-let boxInt t      = maybe_elim_box "BoxInt" "BoxInt_proj_0" t
-let unboxInt t    = maybe_elim_box "BoxInt_proj_0" "BoxInt" t
-let boxBool t     = maybe_elim_box "BoxBool" "BoxBool_proj_0" t
-let unboxBool t   = maybe_elim_box "BoxBool_proj_0" "BoxBool" t
-let boxString t   = maybe_elim_box "BoxString" "BoxString_proj_0" t
-let unboxString t = maybe_elim_box "BoxString_proj_0" "BoxString" t
-let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
-let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
-let boxTerm sort t = match sort with
-  | Int_sort -> boxInt t
-  | Bool_sort -> boxBool t
-  | String_sort -> boxString t
-  | Ref_sort -> boxRef t
-  | _ -> raise Impos
-let unboxTerm sort t = match sort with
-  | Int_sort -> unboxInt t
-  | Bool_sort -> unboxBool t
-  | String_sort -> unboxString t
-  | Ref_sort -> unboxRef t
-  | _ -> raise Impos
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng
 let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Equality", [_; t1; t2])}]) -> mkEq (t1, t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_disEquality", [_; t1; t2])}]) -> mkNot (mkEq (t1, t2) norng) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThanOrEqual", [t1; t2])}]) -> mkLTE (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThan", [t1; t2])}]) -> mkLT (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThanOrEqual", [t1; t2])}]) -> mkGTE (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThan", [t1; t2])}]) -> mkGT (unboxInt t1, unboxInt t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
-    | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThanOrEqual", [t1; t2])}]) -> mkLTE (t1, t2) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThan", [t1; t2])}]) -> mkLT (t1, t2) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThanOrEqual", [t1; t2])}]) -> mkGTE (t1, t2) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThan", [t1; t2])}]) -> mkGT (t1, t2) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (t1, t2) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (t1, t2) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot t t.rng
+    | App(Var "Prims.b2t", [t1]) -> {t1 with rng=t.rng}
     | _ -> mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng

@@ -165,15 +165,6 @@ val mk_Term_uvar: int -> Range.range -> term
 val mk_and_l: list<term> -> Range.range -> term
 val mk_or_l: list<term> -> Range.range -> term
 
-val boxInt:      term -> term
-val unboxInt:    term -> term
-val boxBool:     term -> term
-val unboxBool:   term -> term
-val boxString:   term -> term
-val unboxString: term -> term
-val boxRef:      term -> term
-val unboxRef:    term -> term
-
 val mk_Range_const:  term
 val mk_Term_unit:    term
 
