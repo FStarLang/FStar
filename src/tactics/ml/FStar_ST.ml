@@ -10,4 +10,4 @@ let alloc init = failwith "Not yet implemented:alloc"
 let read r = failwith "Not yet implemented:read"
 let write r v = failwith "Not yet implemented:write"
 let get: Prims.unit -> FStar_Heap.heap =
-  fun uu____141  -> failwith "Not yet implemented:get"
+  fun uu____131  -> failwith "Not yet implemented:get"

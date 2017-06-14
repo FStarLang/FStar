@@ -3,17 +3,15 @@
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst FStar.StructNG.fst
+FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
-ALL=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
+HYPERSTACK=FStar.Buffer.fst FStar.Buffer.Quantifiers.fst FStar.Monotonic.RRef.fst FStar.Monotonic.Seq.fst FStar.Pointer.fst FStar.BufferNG.fst
 
-all: $(addsuffix -ver, $(ALL))
+ALL=$(filter-out $(FLAKY) $(HYPERSTACK) $(MATH),$(wildcard FStar.*.fst FStar.*.fsti))
+
+all: $(addsuffix -ver, $(ALL)) st m_rref buffer bufferq struct
 
 indent: $(addsuffix -indent, $(ALL))
-
-%-ver: %
-	$(FSTAR) $^
-	touch $@
 
 %.fst-indent: %.fst
 	$(FSTAR) --indent $^ > $^.indent.fst
@@ -62,7 +60,7 @@ buffer:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Buffer.fst
 
 struct:
-	$(FSTAR) hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Struct.fst
+	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst hyperstack/FStar.All.fst FStar.Pointer.fst FStar.BufferNG.fst
 
 bufferq:
 	$(FSTAR) FStar.Map.fst FStar.HyperStack.fst hyperstack/FStar.ST.fst FStar.Buffer.fst FStar.Buffer.Quantifiers.fst

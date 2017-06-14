@@ -1,5 +1,5 @@
 open Prims
-let uncurry f uu____37 = match uu____37 with | (x,y) -> f x y
+let uncurry f uu____32 = match uu____32 with | (x,y) -> f x y
 let curry f x y = f (x, y)
 let rec mk_app_collect_inv_s:
   FStar_Reflection_Syntax.term ->

@@ -1,5 +1,5 @@
 module SHA1
-open FStar.ST
+open FStar.All
 open FStar.Seq
 open Platform.Bytes
 open CoreCrypto

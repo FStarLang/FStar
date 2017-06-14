@@ -5,14 +5,14 @@ type comparison =
   | Lt
   | Le
 let uu___is_Eq: comparison -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____7 -> false
+  fun projectee  -> match projectee with | Eq  -> true | uu____6 -> false
 let uu___is_BoolEq: comparison -> Prims.bool =
   fun projectee  ->
-    match projectee with | BoolEq  -> true | uu____14 -> false
+    match projectee with | BoolEq  -> true | uu____12 -> false
 let uu___is_Lt: comparison -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____21 -> false
+  fun projectee  -> match projectee with | Lt  -> true | uu____18 -> false
 let uu___is_Le: comparison -> Prims.bool =
-  fun projectee  -> match projectee with | Le  -> true | uu____28 -> false
+  fun projectee  -> match projectee with | Le  -> true | uu____24 -> false
 type formula =
   | True_
   | False_
@@ -32,13 +32,13 @@ type formula =
   | F_Unknown
 let uu___is_True_: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | True_  -> true | uu____123 -> false
+    match projectee with | True_  -> true | uu____118 -> false
 let uu___is_False_: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | False_  -> true | uu____130 -> false
+    match projectee with | False_  -> true | uu____124 -> false
 let uu___is_Comp: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Comp (_0,_1,_2,_3) -> true | uu____145 -> false
+    match projectee with | Comp (_0,_1,_2,_3) -> true | uu____138 -> false
 let __proj__Comp__item___0: formula -> comparison =
   fun projectee  -> match projectee with | Comp (_0,_1,_2,_3) -> _0
 let __proj__Comp__item___1: formula -> FStar_Reflection_Syntax.typ =
@@ -49,75 +49,75 @@ let __proj__Comp__item___3: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Comp (_0,_1,_2,_3) -> _3
 let uu___is_And: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | And (_0,_1) -> true | uu____224 -> false
+    match projectee with | And (_0,_1) -> true | uu____212 -> false
 let __proj__And__item___0: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | And (_0,_1) -> _0
 let __proj__And__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | And (_0,_1) -> _1
 let uu___is_Or: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Or (_0,_1) -> true | uu____261 -> false
+    match projectee with | Or (_0,_1) -> true | uu____246 -> false
 let __proj__Or__item___0: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Or (_0,_1) -> _0
 let __proj__Or__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Or (_0,_1) -> _1
 let uu___is_Not: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Not _0 -> true | uu____296 -> false
+    match projectee with | Not _0 -> true | uu____278 -> false
 let __proj__Not__item___0: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Not _0 -> _0
 let uu___is_Implies: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Implies (_0,_1) -> true | uu____318 -> false
+    match projectee with | Implies (_0,_1) -> true | uu____298 -> false
 let __proj__Implies__item___0: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Implies (_0,_1) -> _0
 let __proj__Implies__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Implies (_0,_1) -> _1
 let uu___is_Iff: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Iff (_0,_1) -> true | uu____355 -> false
+    match projectee with | Iff (_0,_1) -> true | uu____332 -> false
 let __proj__Iff__item___0: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Iff (_0,_1) -> _0
 let __proj__Iff__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Iff (_0,_1) -> _1
 let uu___is_Forall: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Forall (_0,_1) -> true | uu____392 -> false
+    match projectee with | Forall (_0,_1) -> true | uu____366 -> false
 let __proj__Forall__item___0: formula -> FStar_Reflection_Syntax.binder =
   fun projectee  -> match projectee with | Forall (_0,_1) -> _0
 let __proj__Forall__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Forall (_0,_1) -> _1
 let uu___is_Exists: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Exists (_0,_1) -> true | uu____429 -> false
+    match projectee with | Exists (_0,_1) -> true | uu____400 -> false
 let __proj__Exists__item___0: formula -> FStar_Reflection_Syntax.binder =
   fun projectee  -> match projectee with | Exists (_0,_1) -> _0
 let __proj__Exists__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | Exists (_0,_1) -> _1
 let uu___is_App: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | App (_0,_1) -> true | uu____466 -> false
+    match projectee with | App (_0,_1) -> true | uu____434 -> false
 let __proj__App__item___0: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | App (_0,_1) -> _0
 let __proj__App__item___1: formula -> FStar_Reflection_Syntax.term =
   fun projectee  -> match projectee with | App (_0,_1) -> _1
 let uu___is_Name: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | Name _0 -> true | uu____501 -> false
+    match projectee with | Name _0 -> true | uu____466 -> false
 let __proj__Name__item___0: formula -> FStar_Reflection_Syntax.binder =
   fun projectee  -> match projectee with | Name _0 -> _0
 let uu___is_FV: formula -> Prims.bool =
-  fun projectee  -> match projectee with | FV _0 -> true | uu____521 -> false
+  fun projectee  -> match projectee with | FV _0 -> true | uu____484 -> false
 let __proj__FV__item___0: formula -> FStar_Reflection_Syntax.fv =
   fun projectee  -> match projectee with | FV _0 -> _0
 let uu___is_IntLit: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | IntLit _0 -> true | uu____541 -> false
+    match projectee with | IntLit _0 -> true | uu____502 -> false
 let __proj__IntLit__item___0: formula -> Prims.int =
   fun projectee  -> match projectee with | IntLit _0 -> _0
 let uu___is_F_Unknown: formula -> Prims.bool =
   fun projectee  ->
-    match projectee with | F_Unknown  -> true | uu____559 -> false
+    match projectee with | F_Unknown  -> true | uu____518 -> false
 let mk_Forall:
   FStar_Reflection_Syntax.term -> FStar_Reflection_Syntax.term -> formula =
   fun typ  ->
@@ -210,19 +210,19 @@ let term_as_formula': FStar_Reflection_Syntax.term -> formula =
                       FStar_Reflection_Syntax.not_qn
                   then Not a
                   else App (h0, t1)
-              | uu____741 -> App (h0, t1)))
+              | uu____697 -> App (h0, t1)))
     | FStar_Reflection_Syntax.Tv_Arrow (b,t1) ->
         if FStar_Reflection_Syntax.is_free b t1
         then Forall (b, t1)
         else Implies ((FStar_Reflection_Syntax.type_of_binder b), t1)
     | FStar_Reflection_Syntax.Tv_Const (FStar_Reflection_Syntax.C_Int i) ->
         IntLit i
-    | FStar_Reflection_Syntax.Tv_Type uu____750 -> F_Unknown
-    | FStar_Reflection_Syntax.Tv_Abs (uu____751,uu____752) -> F_Unknown
-    | FStar_Reflection_Syntax.Tv_Refine (uu____753,uu____754) -> F_Unknown
+    | FStar_Reflection_Syntax.Tv_Type uu____706 -> F_Unknown
+    | FStar_Reflection_Syntax.Tv_Abs (uu____707,uu____708) -> F_Unknown
+    | FStar_Reflection_Syntax.Tv_Refine (uu____709,uu____710) -> F_Unknown
     | FStar_Reflection_Syntax.Tv_Const (FStar_Reflection_Syntax.C_Unit ) ->
         F_Unknown
-    | uu____755 -> F_Unknown
+    | uu____711 -> F_Unknown
 let rec term_as_formula: FStar_Reflection_Syntax.term -> formula =
   fun t  ->
     match FStar_Reflection_Syntax.inspect t with
@@ -234,8 +234,8 @@ let rec term_as_formula: FStar_Reflection_Syntax.term -> formula =
                  FStar_Reflection_Syntax.squash_qn
              then term_as_formula' r
              else F_Unknown
-         | uu____781 -> F_Unknown)
-    | uu____782 -> F_Unknown
+         | uu____736 -> F_Unknown)
+    | uu____737 -> F_Unknown
 let formula_as_term_view: formula -> FStar_Reflection_Syntax.term_view =
   fun f  ->
     match f with

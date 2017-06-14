@@ -1,5 +1,5 @@
 module Cert.ACLs
-open FStar.All
+
 open FStar.String
 open FStar.List.Tot
 

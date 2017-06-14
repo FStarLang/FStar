@@ -1,7 +1,7 @@
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
 module RPC
-open FStar.ST
+
 open FStar.All
 open FStar.String
 open FStar.IO

@@ -24,6 +24,7 @@ endif
 
 CONFIGURATION=Release
 -include Makefile.local
+-include Makefile.z3
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -111,7 +112,7 @@ boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
-	$(SED) -i 's/open System.IO/open FStar.All/g' $@
+	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
@@ -124,7 +125,7 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
-	$(SED) -i 's/type pa_t.*/open FStar.All/g' $@
+	$(SED) -i 's/type pa_t.*/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/and data.*//g' $@
 	$(SED) -i 's/.*| PArray.*//g' $@
 	$(SED) -i 's/.*| PDiff.*//g' $@

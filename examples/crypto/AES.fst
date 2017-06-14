@@ -1,5 +1,4 @@
 module AES (* concrete implementation of a one-block symmetric cipher *)
-open FStar.ST
 open FStar.Array
 
 module Bytes = Platform.Bytes
