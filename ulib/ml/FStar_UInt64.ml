@@ -23,8 +23,8 @@ let mul (a:uint64) (b:uint64) : uint64 = Stdint.Uint64.mul a b
 let mul_underspec a b = mul a b
 let mul_mod a b = mul a b
 let mul_div a b =
-  let a = Stdint.Uint128.of_int64 a in
-  let b = Stdint.Uint128.of_int64 b in
+  let a = Stdint.Uint128.of_uint64 a in
+  let b = Stdint.Uint128.of_uint64 b in
   let r = Stdint.Uint128.mul a b in
   let r = Stdint.Uint128.shift_right r 64 in
   Stdint.Uint64.of_uint128 r

@@ -10,7 +10,7 @@
       0
     ],
     [
-      "AllocST.181899",
+      "AllocST.181638",
       1,
       2,
       1,
@@ -81,7 +81,6 @@
         "refinement_interpretation_NatHeap_Tm_refine_fc20cbed7f4be015c3340e3f66f79d87",
         "token_correspondence_AllocST.contains",
         "token_correspondence_AllocST.heap_rel",
-        "typing_FStar.Pervasives.__proj__Mktuple2__item___2",
         "typing_FStar.Pervasives.fst", "typing_NatHeap.alloc_ref",
         "typing_NatHeap.ref"
       ],
@@ -119,8 +118,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_AllocST.contains",
         "equation_AllocST.heap_rel", "equation_AllocST.ref",
-        "equation_NatHeap.upd", "equation_Preorder.stable",
-        "lemma_AllocST.contains_lemma",
+        "equation_Preorder.stable", "lemma_AllocST.contains_lemma",
         "refinement_interpretation_AllocST_Tm_refine_a8458d0cd2385c727af0fa1002df0eb2",
         "refinement_interpretation_NatHeap_Tm_refine_6a27c6788c8781b120f5dae512341216",
         "token_correspondence_AllocST.contains",
