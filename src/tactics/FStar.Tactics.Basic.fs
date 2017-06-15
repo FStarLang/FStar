@@ -608,19 +608,6 @@ let addns (s:string) : tac<unit> =
     let g' = { g with context = ctx' } in
     bind dismiss (fun _ -> add_goals [g']))
 
-let rec bottom_fold_env (f : env -> term -> term) (env : env) (t : term) : term =
-    let tn = (SS.compress t).n in
-    let tn = match tn with
-             | Tm_app (hd, args) ->
-                let ff = bottom_fold_env f env in
-                Tm_app (ff hd, List.map (fun (a, q) -> (ff a, q)) args)
-             | Tm_abs (bs, t, k) -> let bs, t' = SS.open_term bs t in
-                                    let t'' = bottom_fold_env f (Env.push_binders env bs) t' in
-                                    Tm_abs (bs, SS.close bs t'', k)
-             | Tm_arrow (bs, k) -> tn //TODO
-             | _ -> tn in
-    f env ({ t with n = tn })
-
 let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
     match l with
     | [] -> ret []
@@ -641,7 +628,7 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
              | Tm_abs (bs, t, k) ->
                  let bs, t' = SS.open_term bs t in
                  bind (tac_bottom_fold_env f (Env.push_binders env bs) t') (fun t'' ->
-                 ret (Tm_abs (bs, SS.close bs t'', k)))
+                 ret (Tm_abs (SS.close_binders bs, SS.close bs t'', k)))
              | Tm_arrow (bs, k) -> ret tn //TODO
              | _ -> ret tn in
     bind tn (fun tn ->
