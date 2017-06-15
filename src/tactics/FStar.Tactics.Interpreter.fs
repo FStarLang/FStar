@@ -21,6 +21,7 @@ module E = FStar.Tactics.Embedding
 module Core = FStar.Tactics.Basic
 open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
+module RD = FStar.Reflection.Data
 
 let tacdbg = BU.mk_ref false
 
@@ -100,7 +101,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
     BU.print1 "Loaded %s native tactics\n" (string_of_int <| List.length native_tactics);
     let mk_refl nm arity interpretation =
-      let nm = FStar.Reflection.Data.fstar_refl_lid nm in {
+      let nm = RD.fstar_refl_lid nm in {
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
@@ -123,7 +124,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
     [
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) (fun t-> t) (unembed_tactic_0 (fun t -> t)) (embed_option (fun t -> t) t_unit) t_unit;
-      mktac0 "__intro"         intro embed_binder FStar.Reflection.Data.fstar_refl_binder;
+      mktac0 "__intro"         intro embed_binder RD.fstar_refl_binder;
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
@@ -149,14 +150,18 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
       mktac1 "__cases"         cases unembed_term (embed_pair
-                                                      embed_term FStar.Reflection.Data.fstar_refl_term
-                                                      embed_term FStar.Reflection.Data.fstar_refl_term)
-                                                  (E.pair_typ FStar.Reflection.Data.fstar_refl_term FStar.Reflection.Data.fstar_refl_term);
+                                                      embed_term RD.fstar_refl_term
+                                                      embed_term RD.fstar_refl_term)
+                                                  (E.pair_typ RD.fstar_refl_term RD.fstar_refl_term);
 
       //TODO: this is more well-suited to be in FStar.Reflection
       //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
       mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
-    ] @reflection_primops @native_tactics_steps
+
+      mktac0 "__cur_env"       cur_env     (E.embed_env ps) RD.fstar_refl_env;
+      mktac0 "__cur_goal"      cur_goal'   embed_term  RD.fstar_refl_term;
+      mktac0 "__cur_witness"   cur_witness embed_term  RD.fstar_refl_term;
+    ]@reflection_primops @native_tactics_steps
 
 // Please note, there is some makefile magic to tweak this function in the OCaml output,
 // BESIDES the markers you see right here. If you change anything, be sure to revise it.

@@ -4,6 +4,7 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Derived
 open FStar.Reflection
+open FStar.Reflection.Types
 
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
@@ -26,8 +27,7 @@ private val fa_intro_lem : (#a:Type) -> (#b : (a -> Type)) ->
 let fa_intro_lem #a #b f = FStar.Squash.(return_squash (squash_double_arrow (return_squash f)))
 
 let forall_intro : tactic binder =
-    egw <-- cur_goal;
-    let (_, g), _ = egw in
+    g <-- cur_goal;
     match term_as_formula g with
     | Forall _ _ -> (
         apply (quote fa_intro_lem);;
@@ -42,8 +42,7 @@ private val split_lem : (#a:Type) -> (#b:Type) ->
 let split_lem #a #b sa sb = ()
 
 let split : tactic unit =
-    egw <-- cur_goal;
-    let (_, g), _ = egw in
+    g <-- cur_goal;
     match term_as_formula g with
     | And _ _ ->
         apply (quote split_lem)
@@ -56,8 +55,7 @@ private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
 let imp_intro_lem #a #b f = FStar.Squash.(return_squash (squash_double_arrow (return_squash f)))
 
 let implies_intro : tactic binder =
-    egw <-- cur_goal;
-    let (_, g), _ = egw in
+    g <-- cur_goal;
     match term_as_formula g with
     | Implies _ _ -> (
         apply (quote imp_intro_lem);;
@@ -71,8 +69,7 @@ let implies_intros : tactic binders = repeat1 implies_intro
 
 let rec visit (callback:tactic unit) () : Tac unit =
     focus (or_else callback
-                   (eg <-- cur_goal;
-                    let (e, g), _ = eg in
+                   (g <-- cur_goal;
                     match term_as_formula g with
                     | Forall b phi ->
                         binders <-- forall_intros;
@@ -96,9 +93,9 @@ let rec visit (callback:tactic unit) () : Tac unit =
 // Need to thunk it like to this for proper handling of non-termination.
 // (not doing it would still work, because of issue #1017, but should not)
 let rec simplify_eq_implication (u:unit) : Tac unit = (
+    e <-- cur_env;
     g <-- cur_goal;
-    let (context, goal_t), _ = g in // G |- x=e ==> P
-    r <-- destruct_equality_implication goal_t;
+    r <-- destruct_equality_implication g;
     match r with
     | None ->
         fail "Not an equality implication"
@@ -114,14 +111,13 @@ let rewrite_all_equalities : tactic unit =
 // See comment on `simplify_eq_implication`
 let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
     g <-- cur_goal;
-    let (_, goal_t), _ = g in
-    match term_as_formula goal_t with
+    match term_as_formula g with
     | App hd arg ->
         if term_eq hd tm
         then trivial
         else return ()
     | _ -> begin
-        r <-- destruct_equality_implication goal_t;
+        r <-- destruct_equality_implication g;
         match r with
         | None -> fail "Not an equality implication"
         | Some (_, rhs) ->

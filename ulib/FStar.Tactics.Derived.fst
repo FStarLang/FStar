@@ -1,6 +1,7 @@
 module FStar.Tactics.Derived
 
 open FStar.Reflection
+open FStar.Reflection.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
@@ -21,17 +22,17 @@ let liftM2' f ma mb = a <-- ma;
 val liftM2 : ('a -> 'b -> 'c) -> (tactic 'a -> tactic 'b -> tactic 'c)
 let liftM2 f = liftM2' (fun x y -> return (f x y))
 
+val mapM : ('a -> tactic 'b) -> list 'a -> tactic (list 'b)
+let rec mapM f l = match l with
+               | [] -> return []
+               | x::xs -> (y <-- f x;
+                           ys <-- mapM f xs;
+                           return (y::ys))
+
 let idtac : tactic unit = return ()
 
-(* Fix combinator, so we need not expose the TAC effect (c.f. 1017) *)
-val fix : #a:Type -> (tactic a -> tactic a) -> unit -> Tac a
-let rec fix #a ff (u:unit) = ff (fix #a ff) ()
-
-val fix1 : #a:Type -> #b:Type -> ((b -> tactic a) -> (b -> tactic a)) -> b -> unit -> Tac a
-let rec fix1 #a #b ff x (u:unit) = ff (fix1 #a #b ff) x ()
-
 (* working around #885 *)
-let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
+private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
 let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
@@ -58,14 +59,14 @@ let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
 let simpl : tactic unit = norm [Simpl; Primops]
 let whnf  : tactic unit = norm [WHNF; Primops]
 
-// private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
-// let __cut #b a f x = f x
+private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
+private let __cut #b a f x = f x
 
-// let tcut (t:term) : tactic binder =
-//     qq <-- quote __cut;
-//     let tt = pack (Tv_App qq t) in
-//     apply (return tt);;
-//     intro
+let tcut (t:term) : tactic binder =
+    qq <-- quote __cut;
+    let tt = pack (Tv_App qq t) in
+    apply (return tt);;
+    intro
 
 let rec revert_all (bs:binders) : tactic unit =
     match bs with
@@ -73,16 +74,8 @@ let rec revert_all (bs:binders) : tactic unit =
     | _::tl -> revert;;
                revert_all tl
 
-let cur_goal : tactic goal =
-  ps <-- get;
-  let goals, _ = ps in
-  match goals with
-  | [] -> fail "No more goals"
-  | hd::_ -> return hd
-
 let assumption : tactic unit =
-    egw <-- cur_goal;
-    let (e, g), w = egw in
+    e <-- cur_env;
     let rec aux (bs : binders) =
         match bs with
         | [] -> fail "no assumption matches goal"
@@ -131,19 +124,17 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
         end
 
 let rewrite_eqs_from_context : tactic unit =
-    g <-- cur_goal;
-    let (context, _), _ = g in
-    rewrite_all_context_equalities (binders_of_env context)
+    e <-- cur_env;
+    rewrite_all_context_equalities (binders_of_env e)
 
 let rewrite_equality (x:tactic term) : tactic unit =
-    g <-- cur_goal;
-    let (context, _), _ = g in
+    e <-- cur_env;
     t <-- x;
-    try_rewrite_equality t (binders_of_env context)
+    try_rewrite_equality t (binders_of_env e)
 
 let unfold_point (t:term) : tactic unit =
-    eg <-- cur_goal;
-    let (e, g), _ = eg in
+    e <-- cur_env;
+    g <-- cur_goal;
     let f = term_as_formula g in
     match f with
     | Comp Eq _ l r ->
@@ -157,8 +148,7 @@ let unfold_def (t:term) : tactic unit =
     pointwise (unfold_point t)
 
 let grewrite' (t1 t2 eq : term) : tactic unit =
-    egw <-- cur_goal;
-    let (e, g), w = egw in
+    g <-- cur_goal;
     match term_as_formula g with
     | Comp Eq _ l _ ->
         if term_eq l t1
@@ -172,6 +162,6 @@ let mk_sq_eq (t1 t2 : term) : term =
     let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
     mk_app sq [mk_app eq [t1; t2]]
 
-// let grewrite (t1 t2 : term) : tactic unit =
-//     e <-- tcut (mk_sq_eq t1 t2);
-//     pointwise (grewrite' t1 t2 (pack (Tv_Var e)))
+let grewrite (t1 t2 : term) : tactic unit =
+    e <-- tcut (mk_sq_eq t1 t2);
+    pointwise (grewrite' t1 t2 (pack (Tv_Var e)))

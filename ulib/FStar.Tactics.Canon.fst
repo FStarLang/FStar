@@ -99,8 +99,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
     (* But nested `pointwise` calls break (c.f. #1065) *)
     norm [Delta];;
 
-    eg <-- cur_goal;
-    let (e, g), _ = eg in
+    g <-- cur_goal;
     let f = term_as_formula g in
     match f with
     | Comp Eq t l r ->

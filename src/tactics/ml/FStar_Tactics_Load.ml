@@ -1,9 +1,9 @@
 open Dynlink
-open FStar_Tactics_Native
+(*open FStar_Tactics_Native*)
 module U = FStar_Util
 
 (* This module needs to be referenced in order for Dynlink to work *)
-module X = FStar_Tactics
+module X = FStar_Tactics_Effect
 
 let load_tactic s =
     let _ = (try Dynlink.loadfile s with

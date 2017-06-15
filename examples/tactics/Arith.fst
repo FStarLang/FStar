@@ -21,8 +21,6 @@ let tau1 : tactic unit =
       smt ();;
     (* arithmetic part *)
       addns "Prims";;
-      g <-- cur_goal;
-      let _, t = g in
       smt ();;
     return ()
 

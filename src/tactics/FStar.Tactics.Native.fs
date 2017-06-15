@@ -1,7 +1,6 @@
 #light "off"
 module FStar.Tactics.Native
 
-// open FStar.Tactics.Effect
 open FStar.Tactics.Basic
 open FStar.Syntax.Syntax
 open FStar.Range

@@ -1244,7 +1244,7 @@ Let's try proving that reversing a list twice is the identity function.
 It's possible to
 *specify* this property in the type of `reverse` using a refinement type.
 
-    val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
+    val reverse: f:(list 'a -> Tot (list 'a)){forall l. l == f (f l)}
 
 ~CH
 This signature doesn't work:
@@ -1263,12 +1263,12 @@ it is:
 
     let snoc l h = append l [h]
 
-    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) = h::reverse l)
+    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) == h::reverse l)
     let rec snoc_cons l h = match l with
       | [] -> ()
       | hd::tl -> snoc_cons tl h
 
-    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) = l)
+    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) == l)
     let rec rev_involutive l = match l with
       | [] -> ()
       | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd

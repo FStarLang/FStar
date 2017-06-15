@@ -1,21 +1,18 @@
 module FStar.Tactics.Effect
 
+open FStar.Tactics.Types
 open FStar.Reflection
 
-type goal    = (env * term) * term
-type goals   = list goal
-type state   = goals  //active goals
-             * goals  //goals that have to be dispatched to SMT: maybe change this part of the state to be opaque to a user program
 
 noeq type __result (a:Type) =
-  | Success: a -> state -> __result a
-  | Failed: string -> state -> __result a
+  | Success: a -> proofstate -> __result a
+  | Failed: string -> proofstate -> __result a
 
-let __tac (a:Type) = state -> M (__result a)
+let __tac (a:Type) = proofstate -> M (__result a)
 
 (* monadic return *)
 val __ret : a:Type -> x:a -> __tac a
-let __ret a x = fun (s:state) -> Success x s
+let __ret a x = fun (s:proofstate) -> Success x s
 
 (* monadic bind *)
 let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
@@ -25,9 +22,9 @@ let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
              | Failed msg q -> Failed msg q
 
 (* Actions *)
-let __get () : __tac state = fun s0 -> Success s0 s0
+let __get () : __tac proofstate = fun s0 -> Success s0 s0
 
-let __tac_wp a = state -> (__result a -> Tot Type0) -> Tot Type0
+let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
 (*
  * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"
@@ -66,7 +63,7 @@ let bind (#a:Type) (#b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
     fun () -> let r = t () in f r ()
 
 (* Cannot eta reduce this... *)
-let get : tactic state = fun () -> TAC?.__get ()
+let get : tactic proofstate = fun () -> TAC?.__get ()
 
 let reify_tactic (t:tactic 'a) : __tac 'a =
   fun s -> reify (t ()) s

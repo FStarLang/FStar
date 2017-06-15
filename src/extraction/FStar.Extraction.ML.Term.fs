@@ -940,6 +940,14 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else let head = U.un_uinst head in
                    begin match head.n with
+                    | Tm_fvar fv when S.fv_eq_lid fv C.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
+                        (match args with
+                         | [a;b] ->
+                            // BU.print1 "First term %s \n" (Print.term_to_string (fst a));
+                            // BU.print1 "Second term %s \n" (Print.term_to_string (fst b));
+                            // BU.print1 "Embedded term %s \n" (Print.term_to_string embedded);
+                            term_as_mlexpr g (fst a)
+                         | _ -> failwith (Print.args_to_string args))
                     | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));

@@ -2,6 +2,7 @@ module FStar.Reflection.Formula
 
 open FStar.Reflection.Syntax
 open FStar.Reflection.Syntax.Lemmas
+open FStar.Reflection.Types
 
 type comparison =
   | Eq            (* Propositional equality (eq2) *)

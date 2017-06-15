@@ -24,7 +24,6 @@ endif
 
 CONFIGURATION=Release
 -include Makefile.local
--include Makefile.z3
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -198,12 +197,10 @@ u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst Interleave.f
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
-# u_extract_tactics:../ulib/FStar.Tactics.Types.fsti $(addprefix u_boot_fsts/FStar.Tactics., Types.fst Basic.fst Embedding.fst Interpreter.fst Native.fst)
-# 	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
-u_extract_tactics:$(addprefix u_boot_fsts/FStar.Tactics., Basic.fst Embedding.fst Interpreter.fst Native.fst)
+u_extract_tactics:../ulib/FStar.Tactics.Types.fsti $(addprefix u_boot_fsts/FStar.Tactics., Types.fst Basic.fst Embedding.fst Interpreter.fst Native.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
 
-u_extract_reflection:$(addprefix u_boot_fsts/FStar.Reflection., Basic.fst Data.fst Interpreter.fst)
+u_extract_reflection:../ulib/FStar.Reflection.Types.fsti $(addprefix u_boot_fsts/FStar.Reflection., Types.fst Basic.fst Data.fst Interpreter.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Reflection
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
