@@ -165,10 +165,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
     let t =
        match t with
        | Inr c ->
-	     if U.is_tot_or_gtot_comp c
-	     then U.comp_result c
-	     else raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-				                        (Print.comp_to_string c),
+             if U.is_tot_or_gtot_comp c
+             then U.comp_result c
+             else raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                                        (Print.comp_to_string c),
                            rng))
        | Inl t -> t in
     [], t, b
@@ -1164,6 +1164,11 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let t = U.comp_result c in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
+          let univs =
+            List.fold_left
+              (fun univs (_, t) -> BU.set_union univs (Free.univs t))
+              univs
+             (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
          univs, (uvs, e, c)) |> List.unzip in
 
