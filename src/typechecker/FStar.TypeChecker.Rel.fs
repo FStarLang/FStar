@@ -819,7 +819,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                            then let t1' = normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1 in
                                 t1', t2
                            else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
-                                t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+                                t1, t2' in
               aux retry (n_delta + 1) t1 t2
 
             | MisMatch _ -> fail r
