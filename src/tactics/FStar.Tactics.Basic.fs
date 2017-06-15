@@ -115,7 +115,7 @@ let comp_to_typ (c:comp) : typ =
     | Comp ct -> ct.result_typ
 
 let is_irrelevant (g:goal) : bool =
-    match U.un_squash g.goal_ty with
+    match U.un_squash (N.unfold_whnf g.context g.goal_ty) with
     | Some t -> true
     | _ -> false
 
