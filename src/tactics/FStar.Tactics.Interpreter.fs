@@ -180,8 +180,10 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         fail msg))))))
 
 let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
-                                                        * term // witness, in case it's needed 9as in synthesis)
+                                                        * term // witness, in case it's needed, as in synthesis)
                                                         =
+    let env, _ = Env.clear_expected_typ env in
+    let env = { env with Env.instantiate_imp = false } in
     let ps, w = proofstate_of_goal_ty env typ in
     let r = try run tau ps
             with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
@@ -197,8 +199,12 @@ let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remainin
                             else ())
                   (ps.goals @ ps.smt_goals);
         let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
-        // Check that all implicits are instantiated
-        let _ = TcRel.discharge_guard_no_smt env g in
+        // Check that all implicits are instantiated. This will also typecheck
+        // the implicits, so make it do a lax check because we certainly
+        // do not want to repeat all of the reasoning that took place in tactics.
+        // It would also most likely fail.
+        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_lax in
+        let _ = TcRel.force_trivial_guard env g in
         (ps.goals@ps.smt_goals, w)
     | Failed (s, ps) ->
         raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
@@ -278,8 +284,6 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
         BU.print2 "About to preprocess %s |= %s\n"
                         (Env.all_binders env |> Print.binders_to_string ",")
                         (Print.term_to_string goal);
-    let env, _ = Env.clear_expected_typ env in
-    let env = { env with Env.instantiate_imp = false } in
     let initial = (1, []) in
     let (t', gs) = traverse by_tactic_interp Pos env goal in
     if !tacdbg then
@@ -306,5 +310,5 @@ let reify_tactic (a : term) : term =
 let synth (env:Env.env) (typ:typ) (tau:term) : term =
     let gs, w = run_tactic_on_typ (unembed_tactic_0 unembed_unit (reify_tactic tau)) env typ in
     match gs with
+    | [] -> w
     | _::_ -> raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
-    | _ -> w

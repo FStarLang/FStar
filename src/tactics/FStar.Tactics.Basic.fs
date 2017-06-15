@@ -12,15 +12,12 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module SC = FStar.Syntax.Const
 module SF = FStar.Syntax.Free
-module Env = FStar.TypeChecker.Env
-module BU = FStar.Util
 module U = FStar.Syntax.Util
+module BU = FStar.Util
+module Env = FStar.TypeChecker.Env
 module Rel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
-module TcErr  = FStar.TypeChecker.Err
-module TcEnv  = FStar.TypeChecker.Env
-module TcRel  = FStar.TypeChecker.Rel
 module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
@@ -236,11 +233,15 @@ let add_implicits (i:implicits) : tac<unit> =
     bind get (fun p ->
     set ({p with all_implicits=i@p.all_implicits}))
 
+let new_uvar (env:env) (typ:typ) : tac<(term * guard_t)> =
+    let u, _, g_u = TcUtil.new_implicit_var "tactics.new_uvar" typ.pos env typ in
+    bind (add_implicits g_u.implicits) (fun _ ->
+    ret (u, g_u))
+
 let add_irrelevant_goal (env:env) (phi:typ) : tac<unit> =
     let typ = U.mk_squash phi in
-    let u, _, g_u = TcUtil.new_implicit_var "add_irrelevant_goal" phi.pos env typ in
+    bind (new_uvar env typ) (fun (u, g_u) ->
     let goal = { context = env; witness = u; goal_ty = typ } in
-    bind (add_implicits g_u.implicits) (fun _ ->
     add_goals [goal])
 
 
@@ -339,15 +340,14 @@ let intro : tac<binder> =
         then fail "Codomain is effectful"
         else let env' = Env.push_binders goal.context [b] in
              let typ' = comp_to_typ c in
-             let u, _, g = TcUtil.new_implicit_var "intro" typ'.pos env' typ' in
-             if TcRel.teq_nosmt goal.context goal.witness (U.abs [b] u None)
-             then let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
-                  bind (add_implicits g.implicits) (fun _ ->
-                  bind (replace_cur ({ goal with context = env';
+             bind (new_uvar env' typ') (fun (u, g) ->
+             if Rel.teq_nosmt goal.context goal.witness (U.abs [b] u None)
+             then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' typ';
                                                  witness = bnorm env' u})) (fun _ ->
-                  ret b))
+                  ret b)
              else fail "intro: unification failed"
+             )
     | None ->
         fail1 "intro: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
     )
@@ -443,20 +443,18 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
         | None -> fail1 "apply: cannot unify (%s)" (Print.term_to_string typ)
         | Some ((bv, aq), c) ->
             if not (U.is_total_comp c) then fail "apply: not total" else
-            let u, _, g_u = TcUtil.new_implicit_var "apply" goal.goal_ty.pos goal.context bv.sort in
+            bind (new_uvar goal.context bv.sort) (fun (u, g_u) ->
             let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
             bind (__apply uopt tm') (fun _ ->
-            let g_u = Rel.solve_deferred_constraints goal.context g_u |> Rel.resolve_implicits in
             match (SS.compress (fst (U.head_and_args u))).n with
             | Tm_uvar (uvar, _) ->
-                bind (add_implicits g_u.implicits) (fun _ ->
                 bind get (fun ps ->
                 if uopt && uvar_free uvar ps
                 then ret ()
                 else add_goals [{context = goal.context;
                                  witness = bnorm goal.context u;
-                                 goal_ty = bnorm goal.context bv.sort}]))
-            | _ -> ret ())))
+                                 goal_ty = bnorm goal.context bv.sort}])
+            | _ -> ret ()))))
 
 let apply (tm:term) : tac<unit> =
     // Focus not really needed, but might help a bit for speed
@@ -489,7 +487,6 @@ let apply_lemma (tm:term) : tac<unit> =
                                  (Print.term_to_string (U.mk_squash post))
                                  (Print.term_to_string goal.goal_ty)
     | Some g ->
-        let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
@@ -553,13 +550,11 @@ let clear : tac<unit> =
         let fns_tm = FStar.Syntax.Free.names goal.witness in
         if Util.set_mem x fns_ty
         then fail "Cannot clear; variable appears in goal"
-        else let u, _, g = TcUtil.new_implicit_var "clear" goal.goal_ty.pos env' goal.goal_ty in
-             if not (TcRel.teq_nosmt goal.context goal.witness u)
+        else bind (new_uvar env' goal.goal_ty) (fun (u, g) ->
+             if not (Rel.teq_nosmt goal.context goal.witness u)
              then fail "clear: unification failed"
              else let new_goal = {goal with context = env'; witness = bnorm env' u} in
-                  let g = Rel.solve_deferred_constraints goal.context g |> Rel.resolve_implicits in
                   bind dismiss (fun _ ->
-                  bind (add_implicits g.implicits) (fun _ ->
                   add_goals [new_goal])))
 
 let clear_hd (x:name) : tac<unit> =
@@ -620,7 +615,7 @@ let rec bottom_fold_env (f : env -> term -> term) (env : env) (t : term) : term 
                 let ff = bottom_fold_env f env in
                 Tm_app (ff hd, List.map (fun (a, q) -> (ff a, q)) args)
              | Tm_abs (bs, t, k) -> let bs, t' = SS.open_term bs t in
-                                    let t'' = bottom_fold_env f (TcEnv.push_binders env bs) t' in
+                                    let t'' = bottom_fold_env f (Env.push_binders env bs) t' in
                                     Tm_abs (bs, SS.close bs t'', k)
              | Tm_arrow (bs, k) -> tn //TODO
              | _ -> tn in
@@ -645,7 +640,7 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
                   ret (Tm_app (hd, args))))
              | Tm_abs (bs, t, k) ->
                  let bs, t' = SS.open_term bs t in
-                 bind (tac_bottom_fold_env f (TcEnv.push_binders env bs) t') (fun t'' ->
+                 bind (tac_bottom_fold_env f (Env.push_binders env bs) t') (fun t'' ->
                  ret (Tm_abs (bs, SS.close bs t'', k)))
              | Tm_arrow (bs, k) -> ret tn //TODO
              | _ -> ret tn in
@@ -661,19 +656,18 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term env t in
-    if not (U.is_total_lcomp lcomp) || not (TcRel.is_trivial g) then
+    if not (U.is_total_lcomp lcomp) || not (Rel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
         let typ = lcomp.res_typ in
-        let ut, uvs, guard  = TcUtil.new_implicit_var "pointwise tactic" t.pos env typ in
+        bind (new_uvar env typ) (fun (ut, guard) ->
         log ps (fun () ->
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
                                                                  (Print.term_to_string ut));
-        bind (add_implicits g.implicits) (fun _ ->
         bind (add_irrelevant_goal env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)) (fun _ ->
         focus_cur_goal (
             bind tau (fun _ ->
-            TcRel.force_trivial_guard env guard;
+            Rel.force_trivial_guard env guard;
             // Try to get rid of all the unification lambdas
             let ut = N.reduce_uvar_solutions env ut in
             ret ut))
@@ -705,7 +699,7 @@ let trefl : tac<unit> =
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv SC.eq2_lid ->
             let l = N.normalize [N.UnfoldUntil Delta_constant; N.UnfoldTac] g.context l in
             let r = N.normalize [N.UnfoldUntil Delta_constant; N.UnfoldTac] g.context r in
-            if not (TcRel.teq_nosmt g.context l r)
+            if not (Rel.teq_nosmt g.context l r)
             then fail2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r)
             else
             begin
