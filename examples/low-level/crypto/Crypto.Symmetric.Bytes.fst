@@ -4,6 +4,9 @@ open FStar.UInt32
 open FStar.Ghost
 open FStar.Mul
 open FStar.Int.Cast
+open FStar.HyperStack.ST
+
+module ST = FStar.HyperStack.ST
 
 //-------------------- this part now lives in FStar.Endian ---------------------
 
