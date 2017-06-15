@@ -21,7 +21,8 @@ FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
 # 	OCAML_DEFAULT_FLAGS=-predicates hyperstack
 # endif
 
-OCAMLOPT_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt
+OCAMLOPT_BARE=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt
+OCAMLOPT_=$(OCAMLOPT_BARE) -package fstarlib -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)
-OCAMLC_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind c
+OCAMLC_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind c -package fstarlib -linkpkg -g
 OCAMLC=$(OCAMLC_) $(OCAML_DEFAULT_FLAGS)
