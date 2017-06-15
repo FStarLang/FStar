@@ -708,8 +708,7 @@ let trefl : tac<unit> =
             then fail2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r)
             else
             begin
-                let t_unit = FStar.TypeChecker.Common.t_unit in
-                solve g t_unit;
+                solve g SC.exp_unit;
                 dismiss
             end
         | hd, _ ->
