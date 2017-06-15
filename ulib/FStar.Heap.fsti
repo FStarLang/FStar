@@ -22,6 +22,15 @@ val contains: #a:Type0 -> heap -> ref a -> Type0
 
 val unused_in: #a:Type0 -> ref a -> heap -> Type0
 
+val addr_unused_in: nat -> heap -> Type0
+
+val addr_unused_in_addr_of
+  (#a: Type0)
+  (r: ref a)
+  (h: heap)
+: Lemma
+  (addr_unused_in (addr_of r) h <==> unused_in r h)
+
 let fresh (#a:Type) (r:ref a) (h0:heap) (h1:heap) =
   r `unused_in` h0 /\ h1 `contains` r
 
@@ -45,7 +54,12 @@ val addr_of_ref_of
   (t: Type0)
 : Lemma
   (requires (live_at h a t))
-  (ensures (live_at h a t /\ addr_of (ref_of h a t) == a))
+  (ensures (
+    live_at h a t /\ (
+      let r = ref_of h a t in (
+        contains h r /\
+        addr_of r == a
+  ))))
 
 val ref_of_addr_of
   (h: heap)

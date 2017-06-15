@@ -46,6 +46,10 @@ let contains #a h r =
 
 let unused_in #a r h = None? (h.memory r.addr)
 
+let addr_unused_in a h = None? (h.memory a)
+
+let addr_unused_in_addr_of #a r h = ()
+
 let live_at' h a t =
   Some? (h.memory a) /\
   dfst (Some?.v (h.memory a)) == t
