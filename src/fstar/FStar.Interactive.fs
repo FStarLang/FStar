@@ -384,7 +384,7 @@ let validate_interactive_query = function
 let read_interactive_query stream : query =
   try
     match Util.read_line stream with
-    | None -> exit 0
+    | None -> exit (Prims.parse_int "0")
     | Some line ->
       match Util.json_of_string line with
       | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
@@ -931,7 +931,7 @@ let rec go st : unit =
   write_response query.qid status response;
   match state_opt with
   | Inl st' -> go st'
-  | Inr exitcode -> exit (Prims.to_int exitcode)
+  | Inr exitcode -> exit exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in

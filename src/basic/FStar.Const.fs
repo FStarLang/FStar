@@ -51,7 +51,7 @@ let rec pow2 (x:Prims.int) : Prims.int =
   | _  -> Prims.op_Multiply (Prims.parse_int "2") (pow2 (x-(Prims.parse_int "1")))
 
 
-let bounds signedness width : (Prims.int * Prims.int)=
+let bounds signedness width =
     let n =
         match width with
         | Int8 -> Prims.parse_int "8"

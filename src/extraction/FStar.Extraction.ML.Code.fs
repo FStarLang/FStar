@@ -589,7 +589,7 @@ and doc_of_loc (lineno, file) =
         empty
     else
         let file = BU.basename file in
-        reduce1 [ text "#"; num (Prims.to_int lineno); text ("\"" ^ file ^ "\"") ]
+        reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
@@ -778,8 +778,8 @@ let doc_of_mllib mllib =
 
 let string_of_mlexpr cmod (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
-    FStar.Format.pretty 0 doc
+    FStar.Format.pretty (Prims.parse_int "0") doc
 
 let string_of_mlty (cmod) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
-    FStar.Format.pretty 0 doc
+    FStar.Format.pretty (Prims.parse_int "0") doc

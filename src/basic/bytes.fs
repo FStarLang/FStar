@@ -45,8 +45,8 @@ let dWw0 n = int32 (n          &&& 0xFFFFFFFFL)
 type bytes = byte[]
 
 let length (b:byte[]) : Prims.int = Prims.of_int (Array.length b)
-let get (b:byte[]) n = int32 (Array.get b n)
-let make (f : _ -> int) (n: Prims.int) = Array.init (Prims.to_int n) (fun i -> byte (f i))
+let get (b:byte[]) (n:Prims.int) = int32 (Array.get b (Prims.to_int n))
+let make (f : _ -> int) (n: Prims.int) = Array.init (Prims.to_int n) (fun i -> byte (f (Prims.of_int i)))
 let zero_create n : byte[] = Array.create n (byte 0)
 
 let really_input (is:TextReader) n =
@@ -70,8 +70,8 @@ let utf8_bytes_as_string (b:bytes) = System.Text.Encoding.UTF8.GetString b
 let unicode_bytes_as_string (b:bytes) = System.Text.Encoding.Unicode.GetString b
 let compare (b1:bytes) (b2:bytes) = compare b1 b2
 
-let to_intarray (b:bytes) =  Array.init (Prims.to_int (length b)) (get b)
-let of_intarray (arr:int[]) = make (fun i -> arr.[i]) (Prims.of_int (Array.length arr))
+let to_intarray (b:bytes) =  Array.init (Prims.to_int (length b)) (Array.get b)
+let of_intarray (arr:int[]) = make (fun i -> arr.[Prims.to_int i]) (Prims.of_int (Array.length arr))
 
 let string_as_utf8_bytes (s:string) = System.Text.Encoding.UTF8.GetBytes s
 
@@ -93,7 +93,7 @@ module Bytestream =
 
     let read_byte b  =
         if b.pos >= b.max then failwith "Bytestream.of_bytes.read_byte: end of stream";
-        let res = get b.bytes (Prims.to_int b.pos) in
+        let res = get b.bytes b.pos in
         b.pos <- b.pos + (Prims.parse_int "1");
         res
 

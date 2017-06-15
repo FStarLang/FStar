@@ -294,6 +294,8 @@ let abs (x:int) : Tot int = if x >= 0 then x else -x
 
 assume val string_of_bool: bool -> Tot string
 assume val string_of_int: int -> Tot string
+assume val parse_int: string -> Tot int
+assume val to_string: int -> Tot string
 
 
 

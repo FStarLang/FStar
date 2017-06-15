@@ -15,12 +15,12 @@ let hardline = Doc Engine.hardline
 
 (* -------------------------------------------------------------------- *)
 let text (s : string) = Doc (Engine.string s)
-let num (i : int) = Doc (Engine.string (string_of_int i))
+let num (i : Prims.int) = Doc (Engine.string (Prims.to_string i))
 
 (* -------------------------------------------------------------------- *)
-let break_ (i : int   ) = Doc (Engine.break_ i)
+let break_ (i : Prims.int   ) = Doc (Engine.break_ (Prims.to_int i))
 
-let break0 = break_ 0
+let break0 = break_ (Prims.parse_int "0")
 let break1 = text " "
 
 (* -------------------------------------------------------------------- *)
@@ -60,8 +60,8 @@ let reduce1 (docs : list<doc>) =
     combine break1 docs
 
 (* -------------------------------------------------------------------- *)
-let nest (i : int) (Doc d : doc) =
-    Doc (Engine.nest i d)
+let nest (i : Prims.int) (Doc d : doc) =
+    Doc (Engine.nest (Prims.to_int i) d)
 
 (* -------------------------------------------------------------------- *)
 let align (docs : list<doc>) =
@@ -72,8 +72,8 @@ let align (docs : list<doc>) =
 let hbox (d : doc) = d (* FIXME *)
 
 (* -------------------------------------------------------------------- *)
-let pretty (sz : int) (Doc doc : doc) : string =
-    FStar.Pprint.pretty_string 0.8 sz doc
+let pretty (sz : Prims.int) (Doc doc : doc) : string =
+    FStar.Pprint.pretty_string 0.8 (Prims.to_int sz) doc
 //    let buffer = Buffer.create 0 in
 //    PPrint.Engine.ToBuffer.pretty 0.8 sz buffer doc;
 //    Buffer.contents buffer

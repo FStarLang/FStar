@@ -66,14 +66,14 @@ let add_byte_char buf (c:char) = add_int_char buf ((Util.int_of_char c) % (Prims
 (* stored using add_int_char *)
 let stringbuf_as_bytes buf =
     let bytes = Bytes.close buf in
-    Bytes.make (fun i -> Bytes.get bytes (i*2)) (Bytes.length bytes / (Prims.parse_int "2"))
+    Bytes.make (fun (i:Prims.int) -> Bytes.get bytes (i*(Prims.parse_int "2"))) (Bytes.length bytes / (Prims.parse_int "2"))
 
 (* Sanity check that high bytes are zeros. Further check each low byte <= 127 *)
 let stringbuf_is_bytes buf =
     let bytes = Bytes.close buf in
     let ok = Util.mk_ref true in
     Util.for_range (Prims.parse_int "0") (Bytes.length bytes/(Prims.parse_int "2")-(Prims.parse_int "1")) (fun i ->
-      if Bytes.get bytes ((Prims.to_int i)*2+1) <> 0
+      if Bytes.get bytes (i*(Prims.parse_int "2")+(Prims.parse_int "1")) <> 0
       then ok := false
       else ());
     !ok

@@ -9,12 +9,12 @@ type doc
 (* -------------------------------------------------------------------- *)
 val empty  : doc
 val text   : string -> doc
-val num    : int -> doc
+val num    : Prims.int -> doc
 val cat    : doc -> doc -> doc
-val nest   : int -> doc -> doc
+val nest   : Prims.int -> doc -> doc
 val group  : doc -> doc
 
-val break_ : int -> doc
+val break_ : Prims.int -> doc
 val break0 : doc
 val break1 : doc
 
@@ -36,4 +36,4 @@ val brackets : doc -> doc
 val cbrackets : doc -> doc
 
 (* -------------------------------------------------------------------- *)
-val pretty : int -> doc -> string
+val pretty : Prims.int -> doc -> string

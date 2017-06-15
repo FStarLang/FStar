@@ -4,14 +4,14 @@ open FStar.All
 type bytes = (* abstract *)
     byte[]   (* except in F# *)
 val length : bytes -> Prims.int
-val get: bytes -> int -> int
+val get: bytes -> Prims.int -> int
 val zero_create : int -> bytes
 val of_intarray: int[] -> bytes
 val string_as_unicode_bytes: string -> bytes
 val unicode_bytes_as_string: bytes -> string
 val utf8_bytes_as_string: bytes -> string
 val append: bytes -> bytes -> bytes
-val make: (int -> int) -> Prims.int -> bytes
+val make: (Prims.int -> int) -> Prims.int -> bytes
 
 type bytebuf = (* abstract *)
     { mutable bbArray: bytes;  (* except in F# *)
