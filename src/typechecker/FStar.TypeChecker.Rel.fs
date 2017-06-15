@@ -2609,8 +2609,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
-        if not use_smt then None
-        else
+        if not use_smt then (
+            if Env.debug env <| Options.Other "Rel" then
+                Errors.diag (Env.get_range env)
+                            (BU.format1 "Cannot solve without SMT : %s\n" (Print.term_to_string vc));
+                None
+        ) else
           let _ =
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
