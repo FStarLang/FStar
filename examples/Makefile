@@ -4,6 +4,7 @@ include Makefile.include
 ALL_EXAMPLE_DIRS=\
 bug-reports \
 data_structures \
+data_structures/graph \
 algorithms \
 crypto \
 termination \
