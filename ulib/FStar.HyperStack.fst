@@ -127,6 +127,10 @@ let unused_in (#a:Type) (r:reference a) (h:mem) =
   ~ (live_region h r.id) \/
   HH.unused_in r.ref h.h
 
+let addr_unused_in (i: rid) (a: nat) (h: mem) =
+  ~ (live_region h i) \/
+  HH.addr_unused_in i a h.h
+
 private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
   (requires (weak_live_region m r))
   (ensures (is_eternal_region r \/ Map.contains m.h r))
@@ -209,6 +213,44 @@ let frameOf #a (s:reference a) = s.id
 
 let as_ref #a (x:reference a)  : GTot (Heap.ref a) = HH.as_ref #a #x.id x.ref
 let as_addr #a (x:reference a) : GTot nat = Heap.addr_of (HH.as_ref #a #x.id x.ref)
+
+let live_at (h: mem) (i: rid) (a: nat) (v: Type) : GTot Type0 =
+  live_region h i
+  /\ HH.live_at i a v h.h
+
+let reference_of (h: mem) (i: rid) (a: nat) (v: Type) : Pure (reference v)
+  (requires (live_at h i a v))
+  (ensures (fun _ -> True))
+= MkRef i (HH.rref_of i a v h.h)
+
+let live_at_contains (h: mem) (i: rid) (a: nat) (v: Type) : Lemma
+  (requires (live_at h i a v))
+  (ensures (
+    live_at h i a v /\ (
+      let r = reference_of h i a v in (
+        h `contains` r /\
+        frameOf r == i /\
+        as_addr r == a
+  ))))
+= HH.live_at_contains_ref i a v h.h
+
+let contains_live_at
+  (#a: Type)
+  (r: reference a)
+  (h: mem)
+: Lemma
+  (requires (h `contains` r))
+  (ensures (live_at h (frameOf r) (as_addr r) a /\ reference_of h (frameOf r) (as_addr r) a == r))
+= HH.contains_ref_live_at r.ref h.h
+
+let addr_unused_in_as_addr
+  (#a: Type)
+  (r: reference a)
+  (h: mem)
+: Lemma
+  (addr_unused_in (frameOf r) (as_addr r) h <==> unused_in r h)
+= HH.addr_unused_in_addr_of r.ref h.h
+
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
   HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip

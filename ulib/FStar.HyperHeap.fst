@@ -242,9 +242,53 @@ let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool  =
   (* AR: in master this is the code *)
   (* Map.contains m i && Heap.contains (Map.sel m i) (as_ref r) *)
 
+let live_at (i: rid) (a: nat) (v: Type) (m: t) : GTot Type0 =
+  Map.contains m i /\
+  Heap.live_at (Map.sel m i) a v
+
+let rref_of (i: rid) (a: nat) (v: Type) (m: t) : Pure (rref i v)
+  (requires (live_at i a v m))
+  (ensures (fun _ -> True))
+= Heap.ref_of (Map.sel m i) a v
+
+let live_at_contains_ref
+  (i: rid)
+  (a: nat)
+  (v: Type)
+  (m: t)
+: Lemma
+  (requires (live_at i a v m))
+  (ensures (
+    live_at i a v m /\ (
+    let r = rref_of i a v m in (
+      contains_ref r m /\
+      addr_of r == a
+  ))))
+= Heap.addr_of_ref_of (Map.sel m i) a v
+
+let contains_ref_live_at
+  (#a:Type) (#i:rid) (r:rref i a) (m:t)
+: Lemma
+  (requires (contains_ref r m))
+  (ensures (live_at i (addr_of r) a m /\ rref_of i (addr_of r) a m == r))
+= ref_of_addr_of (Map.sel m i) r
+
 let unused_in (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool =
   not (Map.contains m i) ||
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
+
+let addr_unused_in (i: rid) (r: nat) (m: t) : GTot Type0 =
+  not (Map.contains m i) \/
+  Heap.addr_unused_in r (Map.sel m i)
+
+let addr_unused_in_addr_of
+  (#a: Type)
+  (#i: rid)
+  (r: rref i a)
+  (m: t)
+: Lemma
+  (addr_unused_in i (addr_of r) m <==> unused_in r m)
+= Heap.addr_unused_in_addr_of r (Map.sel m i)
 
 (*
  * AR: using this from HyperStack:weak_contains,
