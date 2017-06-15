@@ -179,6 +179,31 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (add_smt_goals smt_goals) (fun _ ->
         fail msg))))))
 
+let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
+                                                        * term // witness, in case it's needed 9as in synthesis)
+                                                        =
+    let ps, w = proofstate_of_goal_ty env typ in
+    let r = try run tau ps
+            with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
+    in
+    match r with
+    | Success (_, ps) ->
+        if !tacdbg then
+            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
+        List.iter (fun g -> if is_irrelevant g
+                            then if TcRel.teq_nosmt g.context g.witness SC.exp_unit
+                                 then ()
+                                 else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s" (Print.term_to_string g.witness))
+                            else ())
+                  (ps.goals @ ps.smt_goals);
+        let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
+        // Check that all implicits are instantiated
+        let _ = TcRel.discharge_guard_no_smt env g in
+        (ps.goals@ps.smt_goals, w)
+    | Failed (s, ps) ->
+        raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
+
+
 // Polarity
 type pol = | Pos | Neg
 
@@ -192,29 +217,9 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
         (assertion, []) // Peel away tactics in negative positions, they're assumptions!
 
     | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid && pol = Pos ->
-        // kinda unclean
-        let ps = proofstate_of_goal_ty e assertion in
-        let w = (List.hd ps.goals).witness in
-        let r = try run (unembed_tactic_0 unembed_unit tactic) ps
-                with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
-        in
-        begin match r with
-        | Success (_, ps) ->
-            if !tacdbg then
-                BU.print1 "Tactic generated proofterm %s\n"
-                                (Print.term_to_string w);
-            List.iter (fun g -> if is_irrelevant g
-                                then if TcRel.teq_nosmt g.context g.witness SC.exp_unit
-                                     then ()
-                                     else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s" (Print.term_to_string g.witness))
-                                else ())
-                      (ps.goals @ ps.smt_goals);
-            let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
-            let _ = TcRel.discharge_guard_no_smt e g in
-            (FStar.Syntax.Util.t_true, ps.goals@ps.smt_goals)
-        | Failed (s, ps) ->
-            raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, assertion.pos))
-        end
+        let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
+        (FStar.Syntax.Util.t_true, gs)
+
     | _ ->
         (t, [])
 
@@ -287,10 +292,6 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                            | None -> failwith (BU.format1 "Tactic returned proof-relevant goal: %s" (Print.term_to_string g.goal_ty))
                            | Some phi -> phi
                  in
-                 if not (TcRel.teq_nosmt g.context g.witness SC.exp_unit)
-                 then failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
-                         (Print.term_to_string g.witness))
-                 else
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                  let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange phi in
@@ -303,21 +304,7 @@ let reify_tactic (a : term) : term =
     mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
 
 let synth (env:Env.env) (typ:typ) (tau:term) : term =
-    let ps = proofstate_of_goal_ty env typ in
-    let w = (List.hd ps.goals).witness in
-    let r = try run (unembed_tactic_0 unembed_unit (reify_tactic tau)) ps
-            with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
-    in
-    begin match r with
-    | Success (_, ps) ->
-        if !tacdbg then
-            BU.print1 "Tactic generated proofterm %s\n"
-                            (Print.term_to_string w);
-        // TODO, check for others goals? Not really needed...
-        let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
-        let _ = TcRel.discharge_guard_no_smt env g in
-        w
-    | Failed (s, ps) ->
-        FStar.Errors.err typ.pos (BU.format1 "user tactic failed: %s" s);
-        failwith "aborting"
-    end
+    let gs, w = run_tactic_on_typ (unembed_tactic_0 unembed_unit (reify_tactic tau)) env typ in
+    match gs with
+    | _::_ -> raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
+    | _ -> w
