@@ -2648,7 +2648,7 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
-let resolve_implicits g =
+let resolve_implicits' forcelax g =
   let unresolved u = match UF.find u with
     | None -> true
     | _ -> false in
@@ -2665,6 +2665,7 @@ let resolve_implicits g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
+               let env = if forcelax then {env with lax=true} else env in
                let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
@@ -2676,6 +2677,9 @@ let resolve_implicits g =
                in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
+
+let resolve_implicits     g = resolve_implicits' false g
+let resolve_implicits_lax g = resolve_implicits' true  g
 
 let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits in
