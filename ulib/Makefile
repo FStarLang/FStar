@@ -41,6 +41,4 @@ EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.
 	@# creating a dummy file so that the target is not regenerated unless a file has changed
 	touch .mgen
 	mkdir -p ml/extracted
-	@# What about the files present in HYPERSTACK ?
 	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_ALL)
-	# $(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) --include hyperstack $(HYPERSTACK)

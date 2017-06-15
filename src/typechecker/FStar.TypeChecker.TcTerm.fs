@@ -1384,13 +1384,38 @@ and tc_eqn scrutinee env branch
                     (Print.term_to_string exp)
                     (Print.term_to_string pat_t);
 
+    let env1 = Env.set_expected_typ env1 expected_pat_t in
     let exp, lc, g = tc_tot_or_gtot_term env1 exp in
+    //To support nested patterns, it's important to
+    //only keep the unification/subtyping constraints and to discard the logical guard for patterns
+    //Consider the following:
+    //   t = x:(int * int){fst x = snd x}
+    //   o : option t
+    //and
+    //   match o with Some #t (MkTuple2 #int #int a b)
+    //In this case, the guard_f will require (a = b), because of the refinement on t
+    //But, this is impossible to prove for two fresh ints a and b
+    //Instead, we check below that the inferred type for the entire pattern is unifiable
+    //with the expected type.
+    //This should guarantee that the equality assumption between the scrutinee and the pattern
+    //is at least well-typed and the branch gets to use any implied relations among the
+    //pattern-bound variables, e.g., a=b in this case
+    let g = {g with guard_f= Trivial} in
 
-    let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-    let g = Rel.conj_guard g g' in
     let _ =
+        //But, it's really important to confirm that the inferred type of the pattern
+        //unifies with the expected pattern type.
+        //Otherwise, its easy to get inconsistent;
+        //e.g., if expected_pat_t is (option nat)
+        //and   lc.res_typ is (option int)
+        //Rel.teq below will produce a logical guard (int = nat)
+        //which will fail the discharge_guard_no_smt check
+        //Without out, we will be able to conclude in the branch of the pattern,
+        //with the equality Some #nat x = Some #int x
+        //that nat=int and hence False
+        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
+        let g = Rel.conj_guard g g' in
         let env1 = Env.set_range env1 exp.pos in
-        let g = {g with guard_f=Trivial} in
         Rel.discharge_guard_no_smt env1 g |>
         Rel.resolve_implicits in
     let norm_exp = N.normalize [N.Beta] env1 exp in

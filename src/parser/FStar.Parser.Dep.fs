@@ -206,14 +206,22 @@ let collect_one
   in
   let working_map = smap_copy original_map in
 
-  let record_open_module lid =
+  let record_open_module let_open lid =
     let key = lowercase_join_longident lid true in
     match smap_try_find working_map key with
     | Some pair ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair);
         true
     | None ->
-        false
+      let r = enter_namespace original_map working_map key in
+      begin if not r then
+        if let_open then
+          raise (Err ("let-open only supported for modules, not namespaces"))
+        else
+            Util.print2_warning "Warning: in %s: no modules in namespace %s and no file with \
+              that name either\n" filename (string_of_lid lid true)
+      end ;
+      false
   in
 
   let record_open_namespace error_msg lid =
@@ -229,7 +237,7 @@ let collect_one
   in
 
   let record_open let_open lid =
-    if record_open_module lid
+    if record_open_module let_open lid
     then ()
     else
       let msg =
@@ -243,7 +251,7 @@ let collect_one
   let record_open_module_or_namespace (lid, kind) =
     match kind with
     | Open_namespace -> record_open_namespace None lid
-    | Open_module -> let _ = record_open_module lid in ()
+    | Open_module -> let _ = record_open_module false lid in ()
   in
 
   let record_module_alias ident lid =
