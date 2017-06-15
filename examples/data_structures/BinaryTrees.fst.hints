@@ -198,7 +198,7 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some", "uvar_typing_28086"
+        "typing_FStar.Pervasives.Native.uu___is_Some", "uvar_typing_28056"
       ],
       0
     ],

@@ -4,8 +4,11 @@ include $(FSTAR_HOME)/src/gmake/fstar.mk
 
 all: fstarlib.cmxa
 
+
 ULIB_GEN_DIR=extracted
 
+FIND=$(shell which gfind && echo gfind || echo find)
+SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
 OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_GEN_DIR) -build-dir ulib/ml/_build
 
 .PHONY:clean
