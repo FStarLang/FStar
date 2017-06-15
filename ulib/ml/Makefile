@@ -7,7 +7,7 @@ all: fstarlib.cmxa
 
 ULIB_GEN_DIR=extracted
 
-FIND=$(shell which gfind && echo gfind || echo find)
+FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
 OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_GEN_DIR) -build-dir ulib/ml/_build
 
@@ -16,7 +16,7 @@ OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_G
 all: .mgen fstarlib.cmxa
 
 fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
-	find . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
+	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
 
