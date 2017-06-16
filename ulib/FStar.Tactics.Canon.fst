@@ -1,12 +1,10 @@
 module FStar.Tactics.Canon
 
-private
-unfold let op_Star = op_Multiply
-
 open FStar.Tactics
 open FStar.Tactics.Arith
 open FStar.Reflection
 open FStar.Reflection.Arith
+open FStar.Mul
 module O = FStar.Order
 
 val distr : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y + z) == x * y + x * z)
@@ -94,12 +92,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         canon_point;;
         trefl
     in
-
-    (* What we really want is this:  *)
-    (* s <-- quote op_Star; unfold_def s;; *)
-    (* But nested `pointwise` calls break (c.f. #1065) *)
-    norm [Delta];;
-
+    norm [];;
     g <-- cur_goal;
     let f = term_as_formula g in
     match f with
