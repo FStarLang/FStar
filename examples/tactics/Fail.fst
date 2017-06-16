@@ -14,8 +14,7 @@ assume val g : squash q -> squash r
 assume val vq : squash q
 
 let tau : tactic unit =
-    trytac #unit (dump "GG1";; apply (quote f);; dump "GG2";; fail "oops wrong way");;
-    dump "GG 3";;
+    trytac #unit (apply (quote f);; fail "oops wrong way");;
     apply (quote g);;
     exact (quote vq)
 

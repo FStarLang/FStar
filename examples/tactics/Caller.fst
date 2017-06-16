@@ -10,9 +10,7 @@ open FStar.Tactics
 
 let tau : tactic unit =
     let proof : b2t (3 > 0) = magic () in
-    dump "GG 1";;
-    exact (quote proof);;
-    dump "GG 2"
+    exact (quote proof)
 
 assume val ax : i:int -> Pure int (requires (by_tactic tau (i > 0)))
                                   (ensures (fun i' -> i' == i + 1))
