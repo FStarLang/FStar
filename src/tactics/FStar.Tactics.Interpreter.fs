@@ -317,7 +317,7 @@ let getprop (e:env) (t:term) : option<term> =
         | Tm_fvar fv when S.fv_eq_lid fv SC.eq2_lid -> Some t
         | _ -> None
 
-let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
+let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
     tacdbg := Env.debug env (Options.Other "Tac");
     if !tacdbg then
         BU.print2 "About to preprocess %s |= %s\n"
@@ -338,9 +338,10 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term)> =
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
                  let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange phi in
-                 (n+1, (g.context, gt')::gs)) s gs in
+                 (n+1, (g.context, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
-    (env, t') :: gs
+    // Use default opts for main goal
+    (env, t', FStar.Options.peek ()) :: gs
 
 let reify_tactic (a : term) : term =
     let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv SC.reify_tactic_lid Delta_equational None)) [U_zero] in
