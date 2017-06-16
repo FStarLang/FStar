@@ -2647,3 +2647,22 @@ let is_synth_by_tactic: FStar_Syntax_Syntax.term -> Prims.bool =
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.synth_lid
     | uu____7421 -> false
+let mk_alien b s r =
+  let uu____7441 =
+    let uu____7444 =
+      let uu____7445 =
+        let uu____7450 =
+          let uu____7451 =
+            let uu____7454 = FStar_Dyn.mkdyn b in (uu____7454, s) in
+          FStar_Syntax_Syntax.Meta_alien uu____7451 in
+        (FStar_Syntax_Syntax.tun, uu____7450) in
+      FStar_Syntax_Syntax.Tm_meta uu____7445 in
+    FStar_Syntax_Syntax.mk uu____7444 in
+  uu____7441 None
+    (match r with | Some r1 -> r1 | None  -> FStar_Range.dummyRange)
+let un_alien: FStar_Syntax_Syntax.term -> FStar_Dyn.dyn =
+  fun t  ->
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_meta
+        (uu____7469,FStar_Syntax_Syntax.Meta_alien (blob,uu____7471)) -> blob
+    | uu____7476 -> failwith "Something paranormal occurred"
