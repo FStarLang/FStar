@@ -1,0 +1,25 @@
+[
+  "°tŸ,\u00184ëËW²Ý4>•\"\u000b",
+  [
+    [
+      "Seq.Complements.op_At_Hat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Seq.Complements._in",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349"
+      ],
+      0
+    ],
+    [
+      "Seq.Complements.snoc",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ]
+  ]
+]

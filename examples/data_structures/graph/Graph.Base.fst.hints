@@ -1,5 +1,5 @@
 [
-  "\u001f\"æuÿ¢\u0007÷DžöŠ„Ü(y",
+  "{ž=k\u001d*WÏ¼Z­=‹\u0012,\u0002",
   [
     [
       "Graph.Base.no_self_loop",
@@ -31,18 +31,6 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Graph.Base._in",
-        "equation_Prims.nat",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349"
-      ],
-      0
-    ],
-    [
-      "Graph.Base.no_parallel_edge",
-      2,
-      2,
-      1,
-      [
         "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
         "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
       ],
@@ -54,20 +42,127 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Graph.Base._in",
-        "equation_Prims.nat",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349"
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
       ],
       0
     ],
     [
-      "Graph.Base.undirected",
+      "Graph.Base.valid_path",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Graph.Base.graph0", "equation_Prims.nat", "int_inversion",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Graph.Base_Tm_refine_9991d3d54059e5e3eeef5da1fc1be7a2",
+        "refinement_interpretation_Graph.Base_Tm_refine_e750d975cf3a8e8211b5cbaee54a7d3d",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.valid_path",
       2,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
         "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.from",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Graph.Base.path",
+        "equation_Graph.Base.valid_path", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Graph.Base_Tm_refine_bf8d44d5785ddc4d6a01a07377bf1e95",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.to",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Graph.Base.path",
+        "equation_Graph.Base.valid_path", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Graph.Base_Tm_refine_bf8d44d5785ddc4d6a01a07377bf1e95",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.empty_path_at",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Fin.fin", "equation_Graph.Base.graph0",
+        "equation_Graph.Base.valid_path", "equation_Prims.nat",
+        "equation_Seq.Complements._in", "int_inversion",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
+        "refinement_interpretation_Graph.Base_Tm_refine_9991d3d54059e5e3eeef5da1fc1be7a2",
+        "refinement_interpretation_Graph.Base_Tm_refine_e750d975cf3a8e8211b5cbaee54a7d3d",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Fin.fin"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.elementary",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.prefix",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.fin",
+        "equation_Graph.Base.length", "equation_Prims.nat",
+        "equation_Seq.Complements._in",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349"
+      ],
+      0
+    ],
+    [
+      "Graph.Base.elementary_cycle",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Graph.Base.length",
+        "equation_Graph.Base.path", "equation_Graph.Base.valid_path",
+        "equation_Prims.nat", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Graph.Base_Tm_refine_bf8d44d5785ddc4d6a01a07377bf1e95",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ]
