@@ -51,6 +51,14 @@ let unembed_bool (t:term) : bool =
     | Tm_constant(FStar.Const.Const_bool b) -> b
     | _ -> failwith "Not an embedded bool"
 
+let embed_int (i:int) : term = SC.exp_int (BU.string_of_int i)
+let unembed_int (t:term) : int =
+    // What's the portable solution? Let's do this for now
+    match (SS.compress t).n with
+    | Tm_constant(FStar.Const.Const_int (s, _)) ->
+        BU.int_of_string s
+    | _ -> failwith "Not an embedded int"
+
 let embed_string (s:string) : term =
     let bytes = BU.unicode_of_string s in
     S.mk (Tm_constant(FStar.Const.Const_string(bytes, Range.dummyRange)))

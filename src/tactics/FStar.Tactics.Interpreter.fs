@@ -81,6 +81,42 @@ let mk_tactic_interpretation_2 (ps:proofstate)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let mk_tactic_interpretation_3 (ps:proofstate)
+                               (t:'a -> 'b -> 'c -> tac<'d>) (unembed_a:term -> 'a) (unembed_b:term -> 'b) (unembed_c:term -> 'c)
+                               (embed_d:'d -> term) (t_d:typ)
+                               (nm:Ident.lid) (args:args) : option<term> =
+  match args with
+  | [(a, _); (b, _); (c, _); (embedded_state, _)] ->
+    log ps (fun () ->
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state));
+    let goals, smt_goals = E.unembed_state ps embedded_state in
+    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let res = run (t (unembed_a a) (unembed_b b) (unembed_c c)) ps in
+    Some (E.embed_result ps res embed_d t_d)
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
+let mk_tactic_interpretation_5 (ps:proofstate)
+                               (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'f>)
+                               (unembed_a:term -> 'a) (unembed_b:term -> 'b) (unembed_c:term -> 'c)
+                               (unembed_d:term -> 'd) (unembed_e:term -> 'e)
+                               (embed_f:'f -> term) (t_f:typ)
+                               (nm:Ident.lid) (args:args) : option<term> =
+  match args with
+  | [(a, _); (b, _); (c, _); (d, _); (e, _); (embedded_state, _)] ->
+    log ps (fun () ->
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state));
+    let goals, smt_goals = E.unembed_state ps embedded_state in
+    let ps = {ps with goals=goals; smt_goals=smt_goals} in
+    let res = run (t (unembed_a a) (unembed_b b) (unembed_c c) (unembed_d d) (unembed_e e)) ps in
+    Some (E.embed_result ps res embed_f t_f)
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
 let rec primitive_steps ps : list<N.primitive_step> =
     let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
@@ -105,6 +141,16 @@ let rec primitive_steps ps : list<N.primitive_step> =
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'c>) (u_a : term -> 'a) (u_b : term -> 'b) (e_c : 'c -> term) (tc : typ) : N.primitive_step =
         mk name 3 (mk_tactic_interpretation_2 ps f u_a u_b e_c tc)
     in
+    let mktac3 (name : string) (f : 'a -> 'b -> 'c -> tac<'d>) (u_a : term -> 'a) (u_b : term -> 'b) (u_c : term -> 'c)
+                               (e_d : 'd -> term) (tc : typ) : N.primitive_step =
+        mk name 4 (mk_tactic_interpretation_3 ps f u_a u_b u_c e_d tc)
+    in
+    let mktac5 (name : string) (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'f>)
+                               (u_a : term -> 'a) (u_b : term -> 'b) (u_c : term -> 'c)
+                               (u_d : term -> 'd) (u_e : term -> 'e)
+                               (e_f : 'f -> term) (tc : typ) : N.primitive_step =
+        mk name 6 (mk_tactic_interpretation_5 ps f u_a u_b u_c u_d u_e e_f tc)
+    in
     let binders_of_env_int nm args : option<term> =
         match args with
         | [(e, _)] -> Some (embed_binders (Env.all_binders (E.unembed_env ps e)))
@@ -123,7 +169,9 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__exact_lemma"   exact_lemma unembed_term embed_unit t_unit;
       mktac1 "__apply"         apply unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
-      mktac1 "__focus"         focus_cur_goal (unembed_tactic_0 unembed_unit) embed_unit t_unit;
+      // A tac 5... oh my...
+      mktac5 "__divide"        (fun _ _ -> divide) (fun t -> t) (fun t -> t) unembed_int (unembed_tactic_0 (fun t -> t)) (unembed_tactic_0 (fun t -> t))
+                                                            (embed_pair (fun t -> t) t_unit (fun t -> t) t_unit) t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
 
       mktac1 "__prune"         prune unembed_string embed_unit t_unit;

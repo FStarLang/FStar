@@ -164,3 +164,7 @@ let mk_sq_eq (t1 t2 : term) : term =
 let grewrite (t1 t2 : term) : tactic unit =
     e <-- tcut (mk_sq_eq t1 t2);
     pointwise (grewrite' t1 t2 (pack (Tv_Var e)))
+
+let focus (f : tactic 'a) : tactic 'a =
+    res <-- divide 1 f idtac;
+    return (fst res)

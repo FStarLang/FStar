@@ -300,9 +300,9 @@ let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind (set p') (fun _ ->
     ret (a, b))))))))))
     
-
-(* focus_cur_goal: runs f on the current goal only, and then restores all the goals *)
-let focus_cur_goal (f:tac<'a>) : tac<'a> =
+(* focus: runs f on the current goal only, and then restores all the goals *)
+(* There is a user defined version as well, we use this one just internally, so marked as private *)
+let private focus (f:tac<'a>) : tac<'a> =
     bind (divide 1 f idtac) (fun (a, ()) -> ret a)
 
 (* Applies t to each of the current goals
@@ -322,7 +322,7 @@ let rec map (tau:tac<'a>): tac<(list<'a>)> =
    Collects the resulting goals of t2 along with the initial auxiliary goals
  *)
 let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
-    focus_cur_goal (
+    focus (
         bind t1 (fun _ ->
         bind (map t2) (fun _ -> ret ()))
     )
@@ -458,7 +458,7 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
 
 let apply (tm:term) : tac<unit> =
     // Focus not really needed, but might help a bit for speed
-    focus_cur_goal (__apply true tm)
+    focus (__apply true tm)
 
 let apply_lemma (tm:term) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -652,7 +652,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
                                                                  (Print.term_to_string ut));
         bind (add_irrelevant_goal env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)) (fun _ ->
-        focus_cur_goal (
+        focus (
             bind tau (fun _ ->
             Rel.force_trivial_guard env guard;
             // Try to get rid of all the unification lambdas

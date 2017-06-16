@@ -51,8 +51,8 @@ let rewrite (b:binder) : tactic unit = fun () -> TAC?.reflect (__rewrite b)
 assume private val __smt     : __tac unit
 let smt () : tactic unit = fun () -> TAC?.reflect __smt
 
-assume private val __focus: __tac unit -> __tac unit
-let focus (f:tactic unit) : tactic unit = fun () -> TAC?.reflect (__focus (reify_tactic f))
+assume private val __divide: int -> __tac 'a -> __tac 'b -> __tac ('a * 'b)
+let divide (n:int) (f:tactic 'a) (g:tactic 'b): tactic ('a * 'b) = fun () -> TAC?.reflect (__divide n (reify_tactic f) (reify_tactic g))
 
 (* could be implemented using __focus *)
 assume private val __seq : __tac unit -> __tac unit -> __tac unit
