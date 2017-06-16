@@ -880,7 +880,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 lc.comp()
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
-                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
                         //it's trivial

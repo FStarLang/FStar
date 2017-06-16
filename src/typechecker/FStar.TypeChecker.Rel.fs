@@ -2436,7 +2436,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -2605,7 +2605,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       || Env.debug env <| Options.Other "SMTQuery"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [N.Eager_unfolding; N.Simplify] env vc in
+      let vc = N.normalize [N.Eager_unfolding; N.Simplify; N.Primops] env vc in
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
@@ -2624,7 +2624,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                 then env.solver.preprocess env vc
                 else [env,vc,FStar.Options.peek ()] in
             vcs |> List.iter (fun (env, goal, opts) ->
-                    let goal = N.normalize [N.Simplify] env goal in
+                    let goal = N.normalize [N.Simplify; N.Primops] env goal in
                     match check_trivial goal with
                     | Trivial ->
                         if (Env.debug env <| Options.Other "Rel") || (Env.debug env <| Options.Other "Tac")
