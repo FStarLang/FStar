@@ -662,7 +662,7 @@ let rec resugar_term (t : S.term) : A.term =
       | Meta_desugared i ->
           resugar_meta_desugared i
       | Meta_alien (_, s) ->
-          failwith (BU.format1 "fatal: we should never try to resugar an alien (%s)" s)
+          resugar_term e
       | Meta_named t ->
           mk (A.Name t)
       | Meta_monadic (name, t)
