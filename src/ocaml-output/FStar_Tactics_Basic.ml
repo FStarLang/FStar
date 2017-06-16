@@ -456,7 +456,7 @@ let divide n1 l r =
                                               let uu____906 = set p' in
                                               bind uu____906
                                                 (fun uu____910  -> ret (a, b))))))))))
-let focus_cur_goal f =
+let focus f =
   let uu____923 = divide (Prims.parse_int "1") f idtac in
   bind uu____923 (fun uu____929  -> match uu____929 with | (a,()) -> ret a)
 let rec map tau =
@@ -478,7 +478,7 @@ let seq: Prims.unit tac -> Prims.unit tac -> Prims.unit tac =
           (fun uu____991  ->
              let uu____992 = map t2 in
              bind uu____992 (fun uu____996  -> ret ())) in
-      focus_cur_goal uu____989
+      focus uu____989
 let intro: (FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual) tac =
   bind cur_goal
     (fun goal  ->
@@ -800,7 +800,7 @@ let rec __apply: Prims.bool -> FStar_Syntax_Syntax.term -> Prims.unit tac =
                                                                uu____1489))
                                                  | uu____1494 -> ret ())))))))
 let apply: FStar_Syntax_Syntax.term -> Prims.unit tac =
-  fun tm  -> let uu____1500 = __apply true tm in focus_cur_goal uu____1500
+  fun tm  -> let uu____1500 = __apply true tm in focus uu____1500
 let apply_lemma: FStar_Syntax_Syntax.term -> Prims.unit tac =
   fun tm  ->
     bind cur_goal
@@ -1292,7 +1292,7 @@ let pointwise_rec:
                                            FStar_TypeChecker_Normalize.reduce_uvar_solutions
                                              env ut in
                                          ret ut1)) in
-                                 focus_cur_goal uu____2501)))))
+                                 focus uu____2501)))))
 let pointwise: Prims.unit tac -> Prims.unit tac =
   fun tau  ->
     bind get
