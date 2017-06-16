@@ -301,8 +301,8 @@ let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     ret (a, b))))))))))
     
 (* focus: runs f on the current goal only, and then restores all the goals *)
-(* There is a user defined version as well, we use this one just internally, so marked as private *)
-let private focus (f:tac<'a>) : tac<'a> =
+(* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
+let focus (f:tac<'a>) : tac<'a> =
     bind (divide 1 f idtac) (fun (a, ()) -> ret a)
 
 (* Applies t to each of the current goals
