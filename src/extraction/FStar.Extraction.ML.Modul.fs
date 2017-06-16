@@ -141,28 +141,40 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
 type env_t = UEnv.env
 
 let extract_bundle env se =
-    let extract_ctor (ml_tyvars:list<(mlsymbol*Prims.int)>) (env:env_t) (ctor: data_constructor):  env_t * (mlsymbol * list<mlty>) =
+    let extract_ctor (ml_tyvars:list<(mlsymbol*Prims.int)>) (env:env_t) (ctor: data_constructor):
+        env_t * (mlsymbol * list<(mlsymbol * mlty)>)
+        =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
+        let steps = [ N.Inlining; N.UnfoldUntil S.Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
+        let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
+          | Tm_arrow (bs, _) ->
+              List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
+          | _ ->
+              []
+        in
         let tys = (ml_tyvars, mlt) in
         let fvv = mkFvvar ctor.dname ctor.dtyp in
         fst (extend_fv env fvv tys false false),
-        (lident_as_mlsymbol ctor.dname, argTypes mlt) in
+        (lident_as_mlsymbol ctor.dname, List.zip names (argTypes mlt)) in
 
     let extract_one_family env ind =
        let env, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i, (Prims.parse_int "0"))) in
-       let tbody = match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
-            | Some (RecordType (ns, ids)) ->
-              let _, c_ty = List.hd ctors in
-              assert (List.length ids = List.length c_ty);
-              let fields = List.map2 (fun id ty -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
-              MLTD_Record fields
-
-            | _ -> MLTD_DType ctors in
+       let tbody =
+         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         | Some (RecordType (ns, ids)) ->
+             // JP: why are the names in c_ty prefixed with ^fname^? Why do we
+             // have to do this voodoo dance to recover field names? Why don't
+             // we just drop the special ^fname^ prefix?
+             let _, c_ty = List.hd ctors in
+             assert (List.length ids = List.length c_ty);
+             let fields = List.map2 (fun id (_, ty) -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
+             MLTD_Record fields
+         | _ ->
+             MLTD_DType ctors in
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
-
 
     match se.sigel, se.sigquals with
         | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->

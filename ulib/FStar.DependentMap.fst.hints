@@ -1,5 +1,5 @@
 [
-  "É\u0012”eRõ\u0002t\u0013‚ìé^w\u000bé",
+  "Fp]tï÷Åπç1∞I|V[q",
   [
     [ "FStar.DependentMap.create", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -365,6 +365,44 @@
         "projection_inverse_FStar.DependentMap.Mkt_mappings",
         "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings",
         "typing_FStar.DependentMap.sel", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.DependentMap.sel_map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.DependentMap.map",
+        "equation_FStar.DependentMap.sel",
+        "fuel_guarded_inversion_FStar.DependentMap.t",
+        "interpretation_FStar.DependentMap_Tm_abs_bbbc362debd08819affd5c90eb369c62",
+        "proj_equation_FStar.DependentMap.Mkt_mappings",
+        "projection_inverse_FStar.DependentMap.Mkt_mappings",
+        "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.DependentMap.map_upd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DependentMap.equal",
+        "equation_FStar.DependentMap.sel", "equation_FStar.DependentMap.upd",
+        "fuel_guarded_inversion_FStar.DependentMap.t",
+        "interpretation_FStar.DependentMap_Tm_abs_40f0fc63ec3ac737e41163ee1006f5ba",
+        "lemma_FStar.DependentMap.sel_map",
+        "lemma_FStar.DependentMap.sel_upd_other",
+        "primitive_Prims.op_Equality",
+        "proj_equation_FStar.DependentMap.Mkt_mappings",
+        "projection_inverse_FStar.DependentMap.Mkt_mappings",
+        "token_correspondence_FStar.DependentMap.__proj__Mkt__item__mappings",
+        "typing_FStar.DependentMap.upd"
       ],
       0
     ]

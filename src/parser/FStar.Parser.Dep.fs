@@ -211,8 +211,8 @@ let collect_one
           if let_open then
             raise (Err ("let-open only supported for modules, not namespaces"))
           else
-            Util.print1_warning "Warning: no modules in namespace %s and no file with \
-              that name either\n" (string_of_lid lid true)
+            Util.print2_warning "Warning: in %s: no modules in namespace %s and no file with \
+              that name either\n" filename (string_of_lid lid true)
         end
     end
   in
