@@ -1188,7 +1188,7 @@ let compile_op: Prims.int -> Prims.string -> Prims.string =
             FStar_String.concat "_" uu____3528 in
           Prims.strcat "op_" uu____3527
 let compile_op': Prims.string -> Prims.string =
-  fun s  -> compile_op (- (Prims.parse_int "1")) s
+  fun s  -> compile_op (Prims.parse_int "-1") s
 let string_of_fsdoc:
   (Prims.string* (Prims.string* Prims.string) Prims.list) -> Prims.string =
   fun uu____3542  ->

@@ -977,9 +977,9 @@ let inspect: FStar_Syntax_Syntax.term -> term_view option =
         let uu____2154 =
           let uu____2155 = FStar_Syntax_Syntax.mk_binder bv in
           Tv_Var uu____2155 in
-        FStar_All.pipe_left (fun _0_29  -> Some _0_29) uu____2154
+        FStar_All.pipe_left (fun _0_27  -> Some _0_27) uu____2154
     | FStar_Syntax_Syntax.Tm_fvar fv ->
-        FStar_All.pipe_left (fun _0_30  -> Some _0_30) (Tv_FVar fv)
+        FStar_All.pipe_left (fun _0_28  -> Some _0_28) (Tv_FVar fv)
     | FStar_Syntax_Syntax.Tm_app (hd1,[]) ->
         failwith "inspect: empty arguments on Tm_app"
     | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
@@ -995,7 +995,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view option =
                    uu____2213 None t.FStar_Syntax_Syntax.pos in
                  (uu____2210, a) in
                Tv_App uu____2207 in
-             FStar_All.pipe_left (fun _0_31  -> Some _0_31) uu____2206)
+             FStar_All.pipe_left (fun _0_29  -> Some _0_29) uu____2206)
     | FStar_Syntax_Syntax.Tm_abs ([],uu____2228,uu____2229) ->
         failwith "inspect: empty arguments on Tm_abs"
     | FStar_Syntax_Syntax.Tm_abs (b::bs,t1,k) ->
@@ -1013,9 +1013,9 @@ let inspect: FStar_Syntax_Syntax.term -> term_view option =
                       let uu____2345 = FStar_Syntax_Util.abs bs1 t2 k in
                       (b1, uu____2345) in
                     Tv_Abs uu____2342 in
-                  FStar_All.pipe_left (fun _0_32  -> Some _0_32) uu____2341))
+                  FStar_All.pipe_left (fun _0_30  -> Some _0_30) uu____2341))
     | FStar_Syntax_Syntax.Tm_type uu____2349 ->
-        FStar_All.pipe_left (fun _0_33  -> Some _0_33) (Tv_Type ())
+        FStar_All.pipe_left (fun _0_31  -> Some _0_31) (Tv_Type ())
     | FStar_Syntax_Syntax.Tm_arrow ([],k) ->
         failwith "inspect: empty binders on arrow"
     | FStar_Syntax_Syntax.Tm_arrow (b::bs,k) ->
@@ -1031,7 +1031,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view option =
                  let uu____2408 = FStar_Syntax_Util.arrow bs k1 in
                  (b1, uu____2408) in
                Tv_Arrow uu____2405 in
-             FStar_All.pipe_left (fun _0_34  -> Some _0_34) uu____2404)
+             FStar_All.pipe_left (fun _0_32  -> Some _0_32) uu____2404)
     | FStar_Syntax_Syntax.Tm_refine (bv,t1) ->
         let b = FStar_Syntax_Syntax.mk_binder bv in
         let uu____2423 = FStar_Syntax_Subst.open_term [b] t1 in
@@ -1041,7 +1041,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view option =
                match b' with
                | b'1::[] -> b'1
                | uu____2441 -> failwith "impossible" in
-             FStar_All.pipe_left (fun _0_35  -> Some _0_35)
+             FStar_All.pipe_left (fun _0_33  -> Some _0_33)
                (Tv_Refine (b1, t2)))
     | FStar_Syntax_Syntax.Tm_constant c ->
         let c1 =
@@ -1049,7 +1049,7 @@ let inspect: FStar_Syntax_Syntax.term -> term_view option =
           | FStar_Const.Const_unit  -> C_Unit
           | FStar_Const.Const_int (s,uu____2450) -> C_Int s
           | uu____2457 -> failwith "unknown constant" in
-        FStar_All.pipe_left (fun _0_36  -> Some _0_36) (Tv_Const c1)
+        FStar_All.pipe_left (fun _0_34  -> Some _0_34) (Tv_Const c1)
     | uu____2459 ->
         (FStar_Util.print_string "inspect: outside of expected syntax\n";
          None)

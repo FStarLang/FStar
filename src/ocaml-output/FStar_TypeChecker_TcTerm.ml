@@ -344,7 +344,7 @@ let value_check_expected_typ:
                                then None
                                else
                                  FStar_All.pipe_left
-                                   (fun _0_29  -> Some _0_29)
+                                   (fun _0_27  -> Some _0_27)
                                    (FStar_TypeChecker_Err.subtyping_failed
                                       env t1 t') in
                              let g1 =
@@ -2980,7 +2980,7 @@ and tc_abs:
                                          (FStar_Util.dflt cbody1 c_opt)
                                          FStar_Syntax_Util.lcomp_of_comp in
                                      FStar_All.pipe_right uu____5669
-                                       (fun _0_30  -> FStar_Util.Inl _0_30) in
+                                       (fun _0_28  -> FStar_Util.Inl _0_28) in
                                    Some uu____5663 in
                                  FStar_Syntax_Util.abs bs1 body3 uu____5656 in
                                let uu____5683 =
@@ -4105,7 +4105,7 @@ and tc_eqn:
                                                FStar_Syntax_Util.t_bool w
                                                FStar_Syntax_Const.exp_true_bool in
                                            FStar_All.pipe_left
-                                             (fun _0_31  -> Some _0_31)
+                                             (fun _0_29  -> Some _0_29)
                                              uu____8061 in
                                      let uu____8063 =
                                        let eqs =
@@ -4791,8 +4791,8 @@ and check_inner_let:
                              FStar_Syntax_Util.mk_eq2 uu____8834
                                c1.FStar_Syntax_Syntax.res_typ uu____8835 e11 in
                            FStar_All.pipe_left
-                             (fun _0_32  ->
-                                FStar_TypeChecker_Common.NonTrivial _0_32)
+                             (fun _0_30  ->
+                                FStar_TypeChecker_Common.NonTrivial _0_30)
                              uu____8833 in
                          let g21 =
                            let uu____8837 =
@@ -4897,7 +4897,7 @@ and check_top_level_let_rec:
                                           FStar_Util.right
                                             lb.FStar_Syntax_Syntax.lbname)) in
                                 FStar_All.pipe_right uu____8933
-                                  (fun _0_33  -> Some _0_33) in
+                                  (fun _0_31  -> Some _0_31) in
                               let lbs4 =
                                 if
                                   Prims.op_Negation

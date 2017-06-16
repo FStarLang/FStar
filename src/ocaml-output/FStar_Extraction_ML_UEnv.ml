@@ -485,7 +485,7 @@ let mkContext: FStar_TypeChecker_Env.env -> env =
   fun e  ->
     let env =
       { tcenv = e; gamma = []; tydefs = []; currentModule = emptyMlPath } in
-    let a = ("'a", (- (Prims.parse_int "1"))) in
+    let a = ("'a", (Prims.parse_int "-1")) in
     let failwith_ty =
       ([a],
         (FStar_Extraction_ML_Syntax.MLTY_Fun

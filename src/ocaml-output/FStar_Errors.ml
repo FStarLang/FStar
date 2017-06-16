@@ -84,7 +84,7 @@ let compare_issues: issue -> issue -> Prims.int =
     fun i2  ->
       match ((i1.issue_range), (i2.issue_range)) with
       | (None ,None ) -> Prims.parse_int "0"
-      | (None ,Some uu____211) -> - (Prims.parse_int "1")
+      | (None ,Some uu____211) -> Prims.parse_int "-1"
       | (Some uu____214,None ) -> Prims.parse_int "1"
       | (Some r1,Some r2) -> FStar_Range.compare_use_range r1 r2
 let default_handler: error_handler =

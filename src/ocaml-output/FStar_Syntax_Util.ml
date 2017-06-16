@@ -203,16 +203,16 @@ let rec compare_univs:
           failwith "Impossible: compare_univs"
       | (FStar_Syntax_Syntax.U_unknown ,FStar_Syntax_Syntax.U_unknown ) ->
           Prims.parse_int "0"
-      | (FStar_Syntax_Syntax.U_unknown ,uu____463) -> - (Prims.parse_int "1")
+      | (FStar_Syntax_Syntax.U_unknown ,uu____463) -> Prims.parse_int "-1"
       | (uu____464,FStar_Syntax_Syntax.U_unknown ) -> Prims.parse_int "1"
       | (FStar_Syntax_Syntax.U_zero ,FStar_Syntax_Syntax.U_zero ) ->
           Prims.parse_int "0"
-      | (FStar_Syntax_Syntax.U_zero ,uu____465) -> - (Prims.parse_int "1")
+      | (FStar_Syntax_Syntax.U_zero ,uu____465) -> Prims.parse_int "-1"
       | (uu____466,FStar_Syntax_Syntax.U_zero ) -> Prims.parse_int "1"
       | (FStar_Syntax_Syntax.U_name u11,FStar_Syntax_Syntax.U_name u21) ->
           FStar_String.compare u11.FStar_Ident.idText u21.FStar_Ident.idText
       | (FStar_Syntax_Syntax.U_name uu____469,FStar_Syntax_Syntax.U_unif
-         uu____470) -> - (Prims.parse_int "1")
+         uu____470) -> Prims.parse_int "-1"
       | (FStar_Syntax_Syntax.U_unif uu____473,FStar_Syntax_Syntax.U_name
          uu____474) -> Prims.parse_int "1"
       | (FStar_Syntax_Syntax.U_unif u11,FStar_Syntax_Syntax.U_unif u21) ->
@@ -235,7 +235,7 @@ let rec compare_univs:
                         if c <> (Prims.parse_int "0") then Some c else None) in
              match copt with | None  -> Prims.parse_int "0" | Some c -> c)
       | (FStar_Syntax_Syntax.U_max uu____523,uu____524) ->
-          - (Prims.parse_int "1")
+          Prims.parse_int "-1"
       | (uu____526,FStar_Syntax_Syntax.U_max uu____527) ->
           Prims.parse_int "1"
       | uu____529 ->
@@ -1206,7 +1206,7 @@ let close_univs_and_mk_letbinding:
                     let universes =
                       FStar_All.pipe_right univ_vars
                         (FStar_List.map
-                           (fun _0_26  -> FStar_Syntax_Syntax.U_name _0_26)) in
+                           (fun _0_25  -> FStar_Syntax_Syntax.U_name _0_25)) in
                     let inst1 =
                       FStar_All.pipe_right fvs
                         (FStar_List.map
@@ -1410,7 +1410,7 @@ let type_u:
   fun uu____3428  ->
     let u =
       let uu____3432 = FStar_Unionfind.fresh None in
-      FStar_All.pipe_left (fun _0_27  -> FStar_Syntax_Syntax.U_unif _0_27)
+      FStar_All.pipe_left (fun _0_26  -> FStar_Syntax_Syntax.U_unif _0_26)
         uu____3432 in
     let uu____3438 =
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_type u) None

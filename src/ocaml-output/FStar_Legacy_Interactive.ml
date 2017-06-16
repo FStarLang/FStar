@@ -781,28 +781,28 @@ let rec go:
                              match (uu____2144, uu____2145) with
                              | ((cd1,ns1,uu____2160),(cd2,ns2,uu____2163)) ->
                                  (match FStar_String.compare cd1 cd2 with
-                                  | _0_41 when _0_41 = (Prims.parse_int "0")
-                                      -> FStar_String.compare ns1 ns2
+                                  | x when x = (Prims.parse_int "0") ->
+                                      FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches in
                     FStar_List.iter
-                      (fun uu____2174  ->
-                         match uu____2174 with
+                      (fun uu____2175  ->
+                         match uu____2175 with
                          | (candidate,ns,match_len) ->
-                             let uu____2181 =
+                             let uu____2182 =
                                FStar_Util.string_of_int match_len in
-                             FStar_Util.print3 "%s %s %s \n" uu____2181 ns
+                             FStar_Util.print3 "%s %s %s \n" uu____2182 ns
                                candidate) uu____2136);
                    FStar_Util.print_string "#done-ok\n";
                    go line_col filename stack curmod env ts)
               | Pop msg ->
                   (pop env msg;
-                   (let uu____2185 =
+                   (let uu____2186 =
                       match stack with
                       | [] ->
                           (FStar_Util.print_error "too many pops";
                            FStar_All.exit (Prims.parse_int "1"))
                       | hd1::tl1 -> (hd1, tl1) in
-                    match uu____2185 with
+                    match uu____2186 with
                     | ((env1,curmod1),stack1) ->
                         (if
                            (FStar_List.length stack1) =
@@ -811,14 +811,14 @@ let rec go:
                          else ();
                          go line_col filename stack1 curmod1 env1 ts)))
               | Push (lax1,l,c) ->
-                  let uu____2252 =
+                  let uu____2253 =
                     if (FStar_List.length stack) = (FStar_List.length ts)
                     then
-                      let uu____2275 =
+                      let uu____2276 =
                         update_deps filename curmod stack env ts in
-                      (true, uu____2275)
+                      (true, uu____2276)
                     else (false, (stack, env, ts)) in
-                  (match uu____2252 with
+                  (match uu____2253 with
                    | (restore_cmd_line_options1,(stack1,env1,ts1)) ->
                        let stack2 = (env1, curmod) :: stack1 in
                        let env2 =
@@ -846,50 +846,50 @@ let rec go:
                           (let env2 = commit_mark env1 in
                            go line_col filename stack curmod1 env2 ts))
                        else fail2 curmod1 env_mark
-                   | uu____2355 -> fail2 curmod env_mark)
+                   | uu____2356 -> fail2 curmod env_mark)
 let interactive_mode: Prims.string -> Prims.unit =
   fun filename  ->
-    (let uu____2367 =
-       let uu____2368 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____2368 in
-     if uu____2367
+    (let uu____2368 =
+       let uu____2369 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____2369 in
+     if uu____2368
      then
        FStar_Util.print_warning
          "code-generation is not supported in interactive mode, ignoring the codegen flag"
      else ());
-    (let uu____2371 = deps_of_our_file filename in
-     match uu____2371 with
+    (let uu____2372 = deps_of_our_file filename in
+     match uu____2372 with
      | (filenames,maybe_intf) ->
          let env = tc_prims () in
-         let uu____2385 = tc_deps None [] env filenames [] in
-         (match uu____2385 with
+         let uu____2386 = tc_deps None [] env filenames [] in
+         (match uu____2386 with
           | (stack,env1,ts) ->
               let initial_range =
-                let uu____2401 =
-                  FStar_Range.mk_pos (Prims.parse_int "1")
-                    (Prims.parse_int "0") in
                 let uu____2402 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                FStar_Range.mk_range "<input>" uu____2401 uu____2402 in
+                let uu____2403 =
+                  FStar_Range.mk_pos (Prims.parse_int "1")
+                    (Prims.parse_int "0") in
+                FStar_Range.mk_range "<input>" uu____2402 uu____2403 in
               let env2 =
-                let uu____2406 =
+                let uu____2407 =
                   FStar_TypeChecker_Env.set_range (snd env1) initial_range in
-                ((fst env1), uu____2406) in
+                ((fst env1), uu____2407) in
               let env3 =
                 match maybe_intf with
                 | Some intf -> FStar_Universal.load_interface_decls env2 intf
                 | None  -> env2 in
-              let uu____2413 =
+              let uu____2414 =
                 (FStar_Options.record_hints ()) ||
                   (FStar_Options.use_hints ()) in
-              if uu____2413
+              if uu____2414
               then
-                let uu____2414 =
-                  let uu____2415 = FStar_Options.file_list () in
-                  FStar_List.hd uu____2415 in
-                FStar_SMTEncoding_Solver.with_hints_db uu____2414
-                  (fun uu____2417  ->
+                let uu____2415 =
+                  let uu____2416 = FStar_Options.file_list () in
+                  FStar_List.hd uu____2416 in
+                FStar_SMTEncoding_Solver.with_hints_db uu____2415
+                  (fun uu____2418  ->
                      go ((Prims.parse_int "1"), (Prims.parse_int "0"))
                        filename stack None env3 ts)
               else

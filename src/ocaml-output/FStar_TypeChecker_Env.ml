@@ -1845,7 +1845,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
             | (i,j) ->
                 if FStar_Ident.lid_equals i j
                 then
-                  FStar_All.pipe_right (id_edge i) (fun _0_29  -> Some _0_29)
+                  FStar_All.pipe_right (id_edge i) (fun _0_27  -> Some _0_27)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt
