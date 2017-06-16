@@ -16,4 +16,4 @@ endif
 	$(FSTAR) --verify_module $* $^
 
 %.fail-uver: %.fst
-	(! $(FSTAR) --verify_module $* $^ &>/dev/null) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)
+	(! $(FSTAR) --verify_module $* $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)
