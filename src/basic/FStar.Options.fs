@@ -69,7 +69,9 @@ let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
 
-let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
+type optionstate = Util.smap<option_val>
+
+let fstar_options : ref<list<optionstate> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () =
     match !fstar_options with
@@ -77,6 +79,11 @@ let pop  () =
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let set o =
+    match !fstar_options with
+    | [] -> failwith "set on empty option stack"
+    | _::os -> fstar_options := (o::os)
+
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
