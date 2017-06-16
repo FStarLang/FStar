@@ -36,8 +36,9 @@ let compare_addrs #a #b r1 r2 = r1.addr = r2.addr
 
 let contains #a h r =
   let _ = () in
-  Some? (h.memory r.addr) /\ (
-    let raw_contents = Some?.v (h.memory r.addr) in (
+  let maybe_raw_contents = h.memory r.addr in
+  Some? maybe_raw_contents /\ (
+    let raw_contents = Some?.v maybe_raw_contents in (
       dfst raw_contents == a /\ (
       let contents = dsnd raw_contents in (
         contents.c_init == r.init /\
@@ -45,29 +46,6 @@ let contains #a h r =
   ))))
 
 let unused_in #a r h = None? (h.memory r.addr)
-
-let addr_unused_in a h = None? (h.memory a)
-
-let addr_unused_in_addr_of #a r h = ()
-
-let live_at' h a t =
-  Some? (h.memory a) /\
-  dfst (Some?.v (h.memory a)) == t
-
-let live_at = live_at'
-
-let ref_of h a t =
-  let raw_contents = Some?.v (h.memory a) in
-  let contents: ref_contents t = dsnd raw_contents in
-  {
-    addr = a;
-    init = contents.c_init;
-    mm = contents.c_mm
-  }
-
-let addr_of_ref_of h a t = ()
-
-let ref_of_addr_of h #t r = ()
 
 let sel_tot #a h r =
   let Some (| _, x |) = h.memory r.addr in
@@ -214,3 +192,52 @@ let equal h1 h2 =
 let equal_extensional h1 h2 = ()
 
 let upd_upd_same_ref #a h r x y = assert (equal (upd (upd h r x) r y) (upd h r y))
+
+(*** Untyped views of references *)
+
+(* Definition and ghost decidable equality *)
+noeq type aref' :Type0 = {
+  a_addr: nat;
+  a_mm:   bool;  //manually managed flag
+}
+let aref = aref'
+let dummy_aref = {
+  a_addr = 0;
+  a_mm   = false;
+}
+let aref_equal a1 a2 = a1.a_addr = a2.a_addr && a1.a_mm = a2.a_mm
+
+(* Introduction rule *)
+let aref_of #t r = {
+  a_addr = r.addr;
+  a_mm   = r.mm;
+}
+
+(* Operators lifted from ref *)
+let addr_of_aref a = a.a_addr
+let addr_of_aref_of #t r = ()
+let aref_is_mm a = a.a_mm
+let is_mm_aref_of #t r = ()
+let aref_unused_in a h = None? (h.memory a.a_addr)
+let unused_in_aref_of #t r h = ()
+let contains_aref_unused_in #a h x y = ()
+
+(* Elimination rule *)
+let aref_live_at (h: heap) (a: aref) (t: Type0) =
+  let maybe_raw_contents = h.memory a.a_addr in
+  Some? maybe_raw_contents /\ (
+    let raw_contents = Some?.v maybe_raw_contents in (
+      dfst raw_contents == t /\ (
+        let contents = dsnd raw_contents in
+        contents.c_mm == a.a_mm
+  )))
+let ref_of h a t =
+  let raw_contents = Some?.v (h.memory a.a_addr) in
+  let contents: ref_contents t = dsnd raw_contents in
+  {
+    addr = a.a_addr;
+    init = contents.c_init;
+    mm = contents.c_mm
+  }
+let contains_aref_live_at h #t r = ()
+let aref_live_at_contains h a t = ()

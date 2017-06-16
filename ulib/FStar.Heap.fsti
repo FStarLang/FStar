@@ -22,15 +22,6 @@ val contains: #a:Type0 -> heap -> ref a -> Type0
 
 val unused_in: #a:Type0 -> ref a -> heap -> Type0
 
-val addr_unused_in: nat -> heap -> Type0
-
-val addr_unused_in_addr_of
-  (#a: Type0)
-  (r: ref a)
-  (h: heap)
-: Lemma
-  (addr_unused_in (addr_of r) h <==> unused_in r h)
-
 let fresh (#a:Type) (r:ref a) (h0:heap) (h1:heap) =
   r `unused_in` h0 /\ h1 `contains` r
 
@@ -43,31 +34,6 @@ let op_Hat_Plus_Plus (#a:Type0) (r:ref a) (s:set nat) = S.union (only r) s
 let op_Plus_Plus_Hat (#a:Type0) (s:set nat) (r:ref a) = S.union s (only r)
 
 let op_Hat_Plus_Hat (#a:Type0) (#b:Type0) (r1:ref a) (r2:ref b) = S.union (only r1) (only r2)
-
-val live_at: h: heap -> a: nat -> t: Type0 -> GTot Type0
-
-val ref_of: h: heap -> a: nat -> t: Type0 -> Pure (ref t) (requires (live_at h a t)) (ensures (fun _ -> True))
-
-val addr_of_ref_of
-  (h: heap)
-  (a: nat)
-  (t: Type0)
-: Lemma
-  (requires (live_at h a t))
-  (ensures (
-    live_at h a t /\ (
-      let r = ref_of h a t in (
-        contains h r /\
-        addr_of r == a
-  ))))
-
-val ref_of_addr_of
-  (h: heap)
-  (#t: Type0)
-  (r: ref t)
-: Lemma
-  (requires (contains h r))
-  (ensures (live_at h (addr_of r) t /\ ref_of h (addr_of r) t == r))
 
 val sel_tot: #a:Type0 -> h:heap -> r:ref a{h `contains` r} -> Tot a
 
@@ -206,3 +172,47 @@ val upd_upd_same_ref (#a:Type) (h:heap) (r:ref a) (x:a) (y:a)
   :Lemma (requires True)
          (ensures  (upd (upd h r x) r y == upd h r y))
 	 [SMTPat (upd (upd h r x) r y)]
+
+(*** Untyped views of references *)
+
+(* Definition and ghost decidable equality *)
+val aref: Type0
+val dummy_aref: aref
+val aref_equal: a1: aref -> a2: aref -> Ghost bool (requires True) (ensures (fun b -> b == true <==> a1 == a2))
+
+(* Introduction rule *)
+val aref_of: #t: Type0 -> r: ref t -> Tot aref
+
+(* Operators lifted from ref *)
+val addr_of_aref: a: aref -> GTot nat
+val addr_of_aref_of: #t: Type0 -> r: ref t -> Lemma (addr_of r == addr_of_aref (aref_of r))
+val aref_is_mm: aref -> GTot bool
+val is_mm_aref_of: #t: Type0 -> r: ref t -> Lemma (is_mm r == aref_is_mm (aref_of r))
+val aref_unused_in: aref -> heap -> Type0
+val unused_in_aref_of: #t: Type0 -> r: ref t -> h: heap -> Lemma (unused_in r h <==> aref_unused_in (aref_of r) h)
+val contains_aref_unused_in: #a:Type ->  h:heap -> x:ref a -> y:aref -> Lemma
+  (requires (contains h x /\ aref_unused_in y h))
+  (ensures  (addr_of x <> addr_of_aref y))
+
+(* Elimination rule *)
+val aref_live_at: h: heap -> a: aref -> t: Type0 -> GTot Type0
+val ref_of: h: heap -> a: aref -> t: Type0 -> Pure (ref t) (requires (aref_live_at h a t)) (ensures (fun _ -> True))
+val contains_aref_live_at
+  (h: heap)
+  (#t: Type0)
+  (r: ref t)
+: Lemma
+  (requires (contains h r))
+  (ensures (aref_live_at h (aref_of r) t /\ ref_of h (aref_of r) t == r))
+val aref_live_at_contains
+  (h: heap)
+  (a: aref)
+  (t: Type0)
+: Lemma
+  (requires (aref_live_at h a t))
+  (ensures (
+    aref_live_at h a t /\ (
+      let r = ref_of h a t in (
+        contains h r /\
+        aref_of r == a
+  ))))

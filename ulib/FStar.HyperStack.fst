@@ -127,9 +127,9 @@ let unused_in (#a:Type) (r:reference a) (h:mem) =
   ~ (live_region h r.id) \/
   HH.unused_in r.ref h.h
 
-let addr_unused_in (i: rid) (a: nat) (h: mem) =
-  ~ (live_region h i) \/
-  HH.addr_unused_in i a h.h
+let contains_unused_in (#a: Type) (m: mem) (s: reference a) : Lemma
+  (contains m s /\ unused_in s m ==> False)
+= ()
 
 private val weak_live_region_implies_eternal_or_in_map: r:rid -> m:mem -> Lemma
   (requires (weak_live_region m r))
@@ -213,43 +213,6 @@ let frameOf #a (s:reference a) = s.id
 
 let as_ref #a (x:reference a)  : GTot (Heap.ref a) = HH.as_ref #a #x.id x.ref
 let as_addr #a (x:reference a) : GTot nat = Heap.addr_of (HH.as_ref #a #x.id x.ref)
-
-let live_at (h: mem) (i: rid) (a: nat) (v: Type) : GTot Type0 =
-  live_region h i
-  /\ HH.live_at i a v h.h
-
-let reference_of (h: mem) (i: rid) (a: nat) (v: Type) : Pure (reference v)
-  (requires (live_at h i a v))
-  (ensures (fun _ -> True))
-= MkRef i (HH.rref_of i a v h.h)
-
-let live_at_contains (h: mem) (i: rid) (a: nat) (v: Type) : Lemma
-  (requires (live_at h i a v))
-  (ensures (
-    live_at h i a v /\ (
-      let r = reference_of h i a v in (
-        h `contains` r /\
-        frameOf r == i /\
-        as_addr r == a
-  ))))
-= HH.live_at_contains_ref i a v h.h
-
-let contains_live_at
-  (#a: Type)
-  (r: reference a)
-  (h: mem)
-: Lemma
-  (requires (h `contains` r))
-  (ensures (live_at h (frameOf r) (as_addr r) a /\ reference_of h (frameOf r) (as_addr r) a == r))
-= HH.contains_ref_live_at r.ref h.h
-
-let addr_unused_in_as_addr
-  (#a: Type)
-  (r: reference a)
-  (h: mem)
-: Lemma
-  (addr_unused_in (frameOf r) (as_addr r) h <==> unused_in r h)
-= HH.addr_unused_in_addr_of r.ref h.h
 
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
@@ -375,3 +338,136 @@ let f (a:Type0) (b:Type0) (x:reference a) (x':reference a)
 (*   assume (mods_2 [Ref x] h0 h1); *)
 (*  //-------------------------------------------------------------------------------- *)
 (*   assert (modifies_ref x.id (TSet.singleton (as_aref x)) h0 h1) *)
+
+(*** Untyped views of references *)
+
+(* Definition and ghost decidable equality *)
+
+noeq abstract type aref: Type0 =
+| ARef:
+    (aref_region: rid) ->
+    (aref_aref: HH.aref aref_region) ->
+    aref
+
+abstract let dummy_aref : aref = ARef _ (HH.dummy_aref HH.root)
+
+abstract let aref_equal
+  (a1 a2: aref)
+: Ghost bool
+  (requires True)
+  (ensures (fun b -> b == true <==> a1 == a2))
+= a1.aref_region = a2.aref_region && HH.aref_equal a1.aref_aref a2.aref_aref
+
+(* Introduction rule *)
+
+abstract let aref_of
+  (#t: Type)
+  (r: reference t)
+: Tot aref
+= ARef r.id (HH.aref_of r.ref)
+
+(* Operators lifted from reference *)
+
+abstract let frameOf_aref
+  (a: aref)
+: GTot HH.rid
+= a.aref_region
+
+abstract let frameOf_aref_of
+  (#t: Type)
+  (r: reference t)
+: Lemma
+  (frameOf_aref (aref_of r) == frameOf r)
+= ()
+
+abstract let aref_as_addr
+  (a: aref)
+: GTot nat
+= HH.addr_of_aref a.aref_aref
+
+abstract let aref_as_addr_aref_of
+  (#t: Type)
+  (r: reference t)
+: Lemma
+  (aref_as_addr (aref_of r) == as_addr r)
+= HH.addr_of_aref_of r.ref
+
+abstract let aref_is_mm
+  (r: aref)
+: GTot bool
+= HH.aref_is_mm r.aref_aref
+
+abstract let is_mm_aref_of
+  (#t: Type)
+  (r: reference t)
+: Lemma
+  (aref_is_mm (aref_of r) == is_mm r)
+= HH.is_mm_aref_of r.ref
+
+abstract let aref_unused_in
+  (a: aref)
+  (h: mem)
+: GTot Type0
+= ~ (live_region h a.aref_region) \/
+  HH.aref_unused_in a.aref_aref h.h
+
+abstract let unused_in_aref_of
+  (#t: Type)
+  (r: reference t)
+  (h: mem)
+: Lemma
+  (aref_unused_in (aref_of r) h <==> unused_in r h)
+= HH.unused_in_aref_of r.ref h.h
+
+abstract
+val contains_aref_unused_in: #a:Type ->  h:mem -> x:reference a -> y:aref -> Lemma
+  (requires (contains h x /\ aref_unused_in y h))
+  (ensures  (frameOf x <> frameOf_aref y \/ as_addr x <> aref_as_addr y))
+  [SMTPat (contains h x); SMTPat (aref_unused_in y h)]
+let contains_aref_unused_in #a h x y =
+  if frameOf x = frameOf_aref y
+  then HH.contains_ref_aref_unused_in h.h x.ref y.aref_aref
+  else ()
+
+(* Elimination rule *)
+
+abstract
+let aref_live_at
+  (h: mem)
+  (a: aref)
+  (v: Type)
+: GTot Type0
+= live_region h a.aref_region
+  /\ HH.aref_live_at h.h a.aref_aref v
+
+abstract
+let reference_of
+  (h: mem)
+  (a: aref) (v: Type) : Pure (reference v)
+  (requires (aref_live_at h a v))
+  (ensures (fun _ -> True))
+= MkRef a.aref_region (HH.rref_of h.h a.aref_aref v)
+
+abstract
+let contains_aref_live_at
+  (h: mem)
+  (#a: Type)
+  (r: reference a)
+: Lemma
+  (requires (h `contains` r))
+  (ensures (aref_live_at h (aref_of r) a /\ reference_of h (aref_of r) a == r))
+= HH.contains_ref_aref_live_at h.h r.ref
+
+let aref_live_at_contains
+  (h: mem)
+  (a: aref)
+  (v: Type)
+: Lemma
+  (requires (aref_live_at h a v))
+  (ensures (
+    aref_live_at h a v /\ (
+      let r = reference_of h a v in (
+        h `contains` r /\
+        aref_of r == a
+  ))))
+= HH.aref_live_at_contains_ref h.h a.aref_aref v
