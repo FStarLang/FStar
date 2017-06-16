@@ -174,7 +174,7 @@ let eq_univs u1 u2 = compare_univs u1 u2 = 0
 (********************************************************************************)
 
 let ml_comp t r =
-  mk_Comp ({comp_univs=[U_unknown];
+  mk_Comp ({comp_univs=[U_zero];
             effect_name=set_lid_range Const.effect_ML_lid r;
             result_typ=t;
             effect_args=[];
@@ -1123,8 +1123,8 @@ let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
   | _, _ -> false // TODO missing cases
 and arg_eq a1 a2 = eqprod term_eq (fun q1 q2 -> q1 = q2) a1 a2
 and binder_eq b1 b2 = eqprod (fun b1 b2 -> term_eq b1.sort b2.sort) (fun q1 q2 -> q1 = q2) b1 b2
-and lcomp_eq c1 c2 = false// TODO
-and residual_eq r1 r2 = false// TODO
+and lcomp_eq (c1:lcomp) (c2:lcomp) = false// TODO
+and residual_eq (r1:residual_comp) (r2:residual_comp) = false// TODO
 and comp_eq c1 c2 = match c1.n, c2.n with
   | Total (t1, u1), Total (t2, u2) -> term_eq t1 t2 // TODO what are the u's for? isn't the universe on t?
   | GTotal (t1, u1), GTotal (t2, u2) -> term_eq t1 t2

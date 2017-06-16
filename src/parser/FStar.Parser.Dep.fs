@@ -531,7 +531,7 @@ let print_graph graph =
   )
 
 (** Collect the dependencies for a list of given files. *)
-let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
+let collect (verify_mode: verify_mode) (filenames: list<string>) =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
   let graph = smap_create 41 in

@@ -1164,15 +1164,36 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let t = U.comp_result c in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
+          if Env.debug env <| Options.Other "Gen"
+          then printfn "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n%A"
+                (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
+                (BU.set_elements uvt |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
+                                                                    (Print.uvar_to_string u)
+                                                                    (Print.term_to_string t)) |> String.concat ", ")
+                t;
           let univs =
             List.fold_left
               (fun univs (_, t) -> BU.set_union univs (Free.univs t))
               univs
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
+          if Env.debug env <| Options.Other "Gen"
+          then printfn "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
+                (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
+                (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
+                                                        (Print.uvar_to_string u)
+                                                        (Print.term_to_string t)) |> String.concat ", ");
+
          univs, (uvs, e, c)) |> List.unzip in
 
-     let univs = List.fold_left BU.set_union (Free.new_universe_uvar_set()) univs in
+     let univs =
+        List.fold_left (fun out u ->
+            if BU.set_is_subset_of out u
+            && BU.set_is_subset_of u out
+            then out
+            else raise (Error("Generalizing the types of these mutually recursive definitions requires an incompatible set of universes", Env.get_range env)))
+            (List.hd univs)
+            (List.tl univs) in
      let gen_univs = gen_univs env univs in
      if debug env Options.Medium then gen_univs |> List.iter (fun x -> BU.print1 "Generalizing uvar %s\n" x.idText);
 

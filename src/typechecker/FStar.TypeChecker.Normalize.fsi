@@ -40,6 +40,7 @@ type step =
   | Reify
   | CompressUvars
   | NoFullNorm
+  | CheckNoUvars
 and steps = list<step>
 type primitive_step = {
     name:FStar.Ident.lid;

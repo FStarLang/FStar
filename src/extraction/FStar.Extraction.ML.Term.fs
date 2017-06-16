@@ -199,7 +199,8 @@ let rec is_type_aux env t =
     | Tm_fvar fv ->
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
       then true
-      else let (_, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
+      else let (us, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
+           debug env (fun () -> printfn "Looked up type of %s; got <%s>.%s" (Print.fv_to_string fv) (List.map Print.univ_to_string us |> String.concat ", ") (Print.term_to_string t));
            is_arity env t
 
     | Tm_uvar (_, t)
@@ -232,6 +233,9 @@ let rec is_type_aux env t =
       is_type_aux env head
 
 let is_type env t =
+    debug env (fun () -> printfn "checking is_type (%s) %s"
+                                (Print.tag_of_term t)
+                                (Print.term_to_string t));
     let b = is_type_aux env t in
     debug env (fun _ ->
         if b

@@ -410,21 +410,28 @@ and comp_to_string c =
     Pp.pretty_string (float_of_string "1.0") 100 d
   else
     match c.n with
-    | Total (t, _) ->
+    | Total (t, uopt) ->
       begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits()) -> term_to_string t
-        | _ -> U.format1 "Tot %s" (term_to_string t)
+        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
+        | _ ->
+          match uopt with
+          | Some u when Options.print_universes() -> U.format2 "Tot<%s> %s" (univ_to_string u) (term_to_string t)
+          | _ -> U.format1 "Tot %s" (term_to_string t)
       end
-    | GTotal (t, _) ->
+    | GTotal (t, uopt) ->
       begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits()) -> term_to_string t
-        | _ -> U.format1 "GTot %s" (term_to_string t)
+        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
+        | _ ->
+          match uopt with
+          | Some u when Options.print_universes() -> U.format2 "GTot<%s> %s" (univ_to_string u) (term_to_string t)
+          | _ -> U.format1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
         let basic =
           if (Options.print_effect_args())
-          then U.format4 "%s (%s) %s (attributes %s)"
+          then U.format5 "%s<%s> (%s) %s (attributes %s)"
                             (sli c.effect_name)
+                            (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
                             (term_to_string c.result_typ)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
                             (c.flags |> List.map cflags_to_string |> String.concat " ")

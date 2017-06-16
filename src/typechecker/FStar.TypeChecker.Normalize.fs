@@ -66,6 +66,7 @@ type step =
   | Reify
   | CompressUvars
   | NoFullNorm
+  | CheckNoUvars
 and steps = list<step>
 
 type primitive_step = {
@@ -201,6 +202,9 @@ let norm_universe cfg env u =
                           then [U_unknown]
                           else failwith "Universe variable not found"
             end
+          | U_unif _ when cfg.steps |> List.contains CheckNoUvars ->
+            failwith (BU.format1 "CheckNoUvars: unexpected universes variable remains: %s" (Print.univ_to_string u))
+
           | U_zero
           | U_unif _
           | U_name _
@@ -257,7 +261,10 @@ let rec closure_as_term cfg env t =
             | Tm_name _
             | Tm_fvar _ -> t.tk := None; t
 
-            | Tm_uvar _ -> t //should be closed anyway
+            | Tm_uvar _ ->
+              if cfg.steps |> List.contains CheckNoUvars
+              then failwith (BU.format1 "CheckNoUvars: Unexpected unification variable remains: %s" (Print.term_to_string t))
+              else t //should be closed anyway
 
             | Tm_type u ->
               mk (Tm_type (norm_universe cfg env u)) t.pos
@@ -769,6 +776,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_delayed _ ->
             failwith "Impossible"
 
+          | Tm_uvar _ when cfg.steps |> List.contains CheckNoUvars ->
+            failwith (BU.format1 "CheckNoUvars: Unexpected unification variable remains: %s" (Print.term_to_string t))
+
+//          | Tm_name x  when cfg.steps |> List.contains CheckNoUvars ->
+//            let sort = norm cfg env [] x.sort in
+//            let t = {t with n=Tm_name ({x with sort=sort})} in
+//            t.tk := None;
+//            rebuild cfg env stack t
+
           | Tm_unknown
           | Tm_uvar _
           | Tm_constant _
@@ -1049,8 +1065,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then let env = Clos(env, lb.lbdef, BU.mk_ref None, false)::env in
                  norm cfg env stack body
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
-                 let lb = {lb with lbname=List.hd bs |> fst |> Inl;
-                                   lbtyp=norm cfg env [] lb.lbtyp;
+                 let ty = norm cfg env [] lb.lbtyp in
+                 let lbname =
+                    let x = fst (List.hd bs) in
+                    Inl ({x with sort=ty}) in
+                 let lb = {lb with lbname=lbname;
+                                   lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
@@ -1726,10 +1746,13 @@ let normalize_refinement steps env t0 =
    aux t
 
 let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
-let reduce_uvar_solutions env t =
-    normalize [Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm]
+let reduce_or_remove_uvar_solutions remove env t =
+    normalize ((if remove then [CheckNoUvars] else [])
+              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm])
               env
               t
+let reduce_uvar_solutions env t = reduce_or_remove_uvar_solutions false env t
+let remove_uvar_solutions env t = reduce_or_remove_uvar_solutions true env t
 
 let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
   //unfold_whnf env t_e in
@@ -1779,7 +1802,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
       | _ , Inl t -> S.mk (Tm_arrow(binders, S.mk_Total t)) None t.pos
     in
     let univ_names, t = Subst.open_univ_vars univ_names t in
-    let t = reduce_uvar_solutions env t in
+    let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
     let binders, tc =
         match binders with
@@ -1822,7 +1845,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids, attrs) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = Subst.close_univ_vars lbunivs (reduce_uvar_solutions env (Subst.subst opening t)) in
+        let elim t = Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t)) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;
@@ -1832,7 +1855,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       {s with sigel = Sig_let((b, lbs), lids, attrs)}
 
     | Sig_main t ->
-      {s with sigel = Sig_main (reduce_uvar_solutions env t)}
+      {s with sigel = Sig_main (remove_uvar_solutions env t)}
 
     | Sig_assume (l, us, t) ->
       let us, _, t = elim_uvars_aux_t env us [] t in
