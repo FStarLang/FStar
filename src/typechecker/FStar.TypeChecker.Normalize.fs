@@ -325,10 +325,13 @@ let rec closure_as_term cfg env t =
              let env = List.fold_left (fun env _ -> Dummy::env) env lb.lbunivs in
              let typ = closure_as_term_delayed cfg env lb.lbtyp in
              let def = closure_as_term cfg env lb.lbdef in
-             let body = match lb.lbname with
-                | Inr _ -> body
-                | Inl _ -> closure_as_term cfg (Dummy::env0) body in
-             let lb = {lb with lbtyp=typ; lbdef=def} in
+             let nm, body =
+                if S.is_top_level [lb]
+                then lb.lbname, body
+                else let x = Util.left lb.lbname in
+                     Inl ({x with sort=typ}),
+                     closure_as_term cfg (Dummy::env0) body in
+             let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
              mk (Tm_let((false, [lb]), body)) t.pos
 
            | Tm_let((_,lbs), body) -> //recursive let
@@ -337,7 +340,10 @@ let rec closure_as_term cfg env t =
                 let env = if S.is_top_level lbs
                           then env_univs
                           else List.fold_right (fun _ env -> Dummy::env) lbs env_univs in
-                {lb with lbtyp=closure_as_term cfg env_univs lb.lbtyp;
+                let ty = closure_as_term cfg env_univs lb.lbtyp in
+                let nm = if S.is_top_level lbs then lb.lbname else let x = Util.left lb.lbname in {x with sort=ty} |> Inl in
+                {lb with lbname=nm;
+                         lbtyp=ty;
                          lbdef=closure_as_term cfg env lb.lbdef} in
              let lbs = lbs |> List.map (norm_one_lb env) in
              let body =
@@ -963,7 +969,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                               log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
-                            | _ when (cfg.steps |> List.contains Reify) ->
+                            | _ when cfg.steps |> List.contains Reify
+                                  || cfg.steps |> List.contains CheckNoUvars ->
                               norm cfg (c :: env) stack_rest body
 
                             | _ -> //can't reduce, as it may not terminate
@@ -996,10 +1003,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
-                       let lopt = match lopt with
-                        | Some (Inl l) -> SS.subst_comp opening (l.comp()) |> U.lcomp_of_comp |> Inl |> Some
-                        | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
+                       let lopt = match lopt with
+                        | Some (Inl l) ->
+                          let c = SS.subst_comp opening (l.comp()) in
+                          let c =
+                            if cfg.steps |> List.contains CheckNoUvars
+                            then norm_comp cfg env' c
+                            else c in
+                          Some (Inl (U.lcomp_of_comp c))
+                        | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
                        let cfg = {cfg with primitive_steps=List.filter (fun ps -> ps.strong_reduction_ok) cfg.primitive_steps} in
@@ -1047,7 +1060,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl t -> Inl (norm cfg env [] t)
                     | Inr c -> Inr (norm_comp cfg env c) in
                 let tacopt = BU.map_opt tacopt (norm cfg env []) in
-                rebuild cfg env stack (mk (Tm_ascribed(t1, (tc, tacopt), l)) t.pos)
+                rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
             end
 
           | Tm_match(head, branches) ->
@@ -1074,6 +1087,27 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
+
+          | Tm_let((true, lbs), body) when List.contains CompressUvars cfg.steps -> //no fixpoint reduction allowed
+            let lbs, body = Subst.open_let_rec lbs body in
+            let lbs = List.map (fun lb ->
+                let ty = norm cfg env [] lb.lbtyp in
+                let lbname = Inl ({Util.left lb.lbname with sort=ty}) in
+                let xs, def_body, lopt = Util.abs_formals lb.lbdef in
+                let xs = norm_binders cfg env xs in
+                let env = List.map (fun _ -> Dummy) lbs
+                        @ List.map (fun _ -> Dummy) xs
+                        @ env in
+                let def_body = norm cfg env [] def_body in
+                let def = U.abs xs def_body None in
+                { lb with lbname = lbname;
+                          lbtyp = ty;
+                          lbdef = def}) lbs in
+            let env' = List.map (fun _ -> Dummy) lbs @ env in
+            let body = norm cfg env' [] body in
+            let lbs, body = Subst.close_let_rec lbs body in
+            let t = {t with n=Tm_let((true, lbs), body)} in
+            rebuild cfg env stack t
 
           | Tm_let(lbs, body) when List.contains (Exclude Zeta) cfg.steps -> //no fixpoint reduction allowed
             rebuild cfg env stack (closure_as_term cfg env t)

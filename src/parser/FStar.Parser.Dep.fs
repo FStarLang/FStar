@@ -266,13 +266,7 @@ let collect_one
 
   let num_of_toplevelmods = BU.mk_ref 0 in
 
-  let rec collect_fragment = function
-    | Inl file ->
-        collect_file file
-    | Inr decls ->
-        collect_decls decls
-
-  and collect_file = function
+  let rec collect_file = function
     | [ modul ] ->
         collect_module modul
     | modules ->
@@ -328,7 +322,7 @@ let collect_one
         collect_term t0;
         collect_term t1
     | Tycon (_, ts) ->
-        let ts = List.map (fun (x,doc) -> x) ts in
+        let ts = List.map (fun (x,docnik) -> x) ts in
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term

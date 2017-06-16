@@ -271,7 +271,7 @@ let rec term_to_string x =
       | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
       | Tm_meta(t, _) ->    term_to_string t
-      | Tm_bvar x ->        db_to_string x
+      | Tm_bvar x ->        db_to_string x ^ ":" ^ (tag_of_term x.sort)
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f
       | Tm_uvar (u, _) ->   uvar_to_string u
@@ -298,7 +298,7 @@ let rec term_to_string x =
         let topt = match topt with
             | None -> ""
             | Some t -> U.format1 "by %s" (term_to_string t) in
-        U.format3 "(%s <: %s %s)" (term_to_string e) annot topt
+        U.format3 "(%s <ascribed: %s %s)" (term_to_string e) annot topt
       | Tm_match(head, branches) ->
         U.format2 "(match %s with\n\t| %s)"
           (term_to_string head)

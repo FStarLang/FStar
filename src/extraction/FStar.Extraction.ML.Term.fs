@@ -233,9 +233,10 @@ let rec is_type_aux env t =
       is_type_aux env head
 
 let is_type env t =
-    debug env (fun () -> printfn "checking is_type (%s) %s"
+    debug env (fun () -> printfn "checking is_type (%s) %s\n"
                                 (Print.tag_of_term t)
-                                (Print.term_to_string t));
+                                (Print.term_to_string t)
+                                );
     let b = is_type_aux env t in
     debug env (fun _ ->
         if b
