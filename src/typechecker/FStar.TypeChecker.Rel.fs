@@ -2605,7 +2605,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       || Env.debug env <| Options.Other "SMTQuery"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [N.Eager_unfolding] env vc in
+      let vc = N.normalize [N.Eager_unfolding; N.Simplify] env vc in
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
