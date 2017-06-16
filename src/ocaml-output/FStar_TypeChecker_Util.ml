@@ -2442,7 +2442,8 @@ let weaken_result_typ:
                           FStar_TypeChecker_Normalize.normalize
                             [FStar_TypeChecker_Normalize.Beta;
                             FStar_TypeChecker_Normalize.Eager_unfolding;
-                            FStar_TypeChecker_Normalize.Simplify] env f in
+                            FStar_TypeChecker_Normalize.Simplify;
+                            FStar_TypeChecker_Normalize.Primops] env f in
                         let uu____4293 =
                           let uu____4294 = FStar_Syntax_Subst.compress f1 in
                           uu____4294.FStar_Syntax_Syntax.n in

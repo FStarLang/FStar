@@ -1480,11 +1480,11 @@ let record_cache_aux_with_filter:
     let uu____3298 =
       let uu____3301 = FStar_ST.read record_cache in FStar_List.tl uu____3301 in
     FStar_ST.write record_cache uu____3298 in
-  let peek uu____3317 =
+  let peek1 uu____3317 =
     let uu____3318 = FStar_ST.read record_cache in FStar_List.hd uu____3318 in
   let insert r =
     let uu____3330 =
-      let uu____3333 = let uu____3335 = peek () in r :: uu____3335 in
+      let uu____3333 = let uu____3335 = peek1 () in r :: uu____3335 in
       let uu____3337 =
         let uu____3340 = FStar_ST.read record_cache in
         FStar_List.tl uu____3340 in
@@ -1496,7 +1496,7 @@ let record_cache_aux_with_filter:
     | hd1::uu____3365::tl1 -> FStar_ST.write record_cache (hd1 :: tl1)
     | uu____3378 -> failwith "Impossible" in
   let filter1 uu____3384 =
-    let rc = peek () in
+    let rc = peek1 () in
     pop1 ();
     (match () with
      | () ->
@@ -1507,7 +1507,7 @@ let record_cache_aux_with_filter:
            let uu____3394 = FStar_ST.read record_cache in filtered ::
              uu____3394 in
          FStar_ST.write record_cache uu____3391) in
-  let aux = (push1, pop1, peek, insert, commit1) in (aux, filter1)
+  let aux = (push1, pop1, peek1, insert, commit1) in (aux, filter1)
 let record_cache_aux:
   ((Prims.unit -> Prims.unit)* (Prims.unit -> Prims.unit)*
     (Prims.unit -> record_or_dc Prims.list)* (record_or_dc -> Prims.unit)*
@@ -1529,7 +1529,7 @@ let pop_record_cache: Prims.unit -> Prims.unit =
 let peek_record_cache: Prims.unit -> record_or_dc Prims.list =
   let uu____3705 = record_cache_aux in
   match uu____3705 with
-  | (uu____3725,uu____3726,peek,uu____3728,uu____3729) -> peek
+  | (uu____3725,uu____3726,peek1,uu____3728,uu____3729) -> peek1
 let insert_record_cache: record_or_dc -> Prims.unit =
   let uu____3754 = record_cache_aux in
   match uu____3754 with

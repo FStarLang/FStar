@@ -1742,7 +1742,7 @@ let run_query:
       | DescribeProtocol  -> run_describe_protocol st
       | DescribeRepl  -> run_describe_repl st
       | Pop  -> run_pop st
-      | Push (kind,text1,l,c,peek) -> run_push st kind text1 l c peek
+      | Push (kind,text1,l,c,peek1) -> run_push st kind text1 l c peek1
       | AutoComplete search_term -> run_completions st search_term
       | Lookup (symbol,pos_opt,rqi) -> run_lookup st symbol pos_opt rqi
       | Compute (term,rules) -> run_compute st term rules

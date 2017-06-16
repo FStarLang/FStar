@@ -7940,6 +7940,7 @@ let encode_env_bindings:
                      [FStar_TypeChecker_Normalize.Beta;
                      FStar_TypeChecker_Normalize.Eager_unfolding;
                      FStar_TypeChecker_Normalize.Simplify;
+                     FStar_TypeChecker_Normalize.Primops;
                      FStar_TypeChecker_Normalize.EraseUniverses] env1.tcenv
                      x.FStar_Syntax_Syntax.sort in
                  ((let uu____16007 =
@@ -8366,6 +8367,7 @@ let encode_query:
                           [FStar_TypeChecker_Normalize.Eager_unfolding;
                           FStar_TypeChecker_Normalize.Beta;
                           FStar_TypeChecker_Normalize.Simplify;
+                          FStar_TypeChecker_Normalize.Primops;
                           FStar_TypeChecker_Normalize.EraseUniverses]
                           env.tcenv t in
                       let uu____16622 =
