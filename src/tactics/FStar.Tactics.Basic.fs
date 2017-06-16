@@ -271,12 +271,11 @@ let cur_goal : tac<goal> =
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
 
-let add_irrelevant_goal (env:env) (phi:typ) : tac<unit> =
-    bind cur_goal (fun cur ->
+let add_irrelevant_goal (env:env) (phi:typ) opts : tac<unit> =
     let typ = U.mk_squash phi in
     bind (new_uvar env typ) (fun (u, g_u) ->
-    let goal = { context = env; witness = u; goal_ty = typ; opts = cur.opts } in
-    add_goals [goal]))
+    let goal = { context = env; witness = u; goal_ty = typ; opts = opts } in
+    add_goals [goal])
 
 let smt : tac<unit> =
     bind cur_goal (fun g ->
@@ -406,7 +405,7 @@ let exact_lemma (t:term) : tac<unit> =
                     | _ -> failwith "exact_lemma: impossible: not a lemma"
     in
     if Rel.teq_nosmt goal.context post goal.goal_ty
-    then let _ = solve goal t in bind dismiss (fun _ -> add_irrelevant_goal goal.context pre)
+    then let _ = solve goal t in bind dismiss (fun _ -> add_irrelevant_goal goal.context pre goal.opts)
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (Print.term_to_string t)
                     (Print.term_to_string post)
@@ -524,7 +523,7 @@ let apply_lemma (tm:term) : tac<unit> =
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
-        bind (add_irrelevant_goal goal.context pre) (fun _ ->
+        bind (add_irrelevant_goal goal.context pre goal.opts) (fun _ ->
         // Try to discharge the precondition, which is often trivial
         bind (trytac trivial) (fun _ ->
         bind (add_implicits g.implicits) (fun _ ->
@@ -644,7 +643,7 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  * calls apply_lemma to fully instantiate `u` and provide a proof of the equality.
  * If all that is successful, the term is rewritten.
  *)
-let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term) : tac<term> =
+let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term env t in
     if not (U.is_total_lcomp lcomp) || not (Rel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
@@ -654,7 +653,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) (env : Env.env) (t : term)
         log ps (fun () ->
             BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
                                                                  (Print.term_to_string ut));
-        bind (add_irrelevant_goal env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut)) (fun _ ->
+        bind (add_irrelevant_goal env (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
         focus (
             bind tau (fun _ ->
             Rel.force_trivial_guard env guard;
@@ -673,7 +672,7 @@ let pointwise (tau:tac<unit>) : tac<unit> =
     log ps (fun () ->
         BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
-    bind (tac_bottom_fold_env (pointwise_rec ps tau) g.context gt) (fun gt' ->
+    bind (tac_bottom_fold_env (pointwise_rec ps tau g.opts) g.context gt) (fun gt' ->
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
