@@ -84,6 +84,8 @@
     <Compile Include="range.fs" />
     <Compile Include="getopt.fsi" />
     <Compile Include="getopt.fs" />
+    <Compile Include="dyn.fsi" />
+    <Compile Include="dyn.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
     <Compile Include="unionfind.fsi" />
