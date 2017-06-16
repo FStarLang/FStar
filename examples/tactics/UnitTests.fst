@@ -86,3 +86,4 @@ let _ = assert_by_tactic trivial (xx.x == 4)
 assume val dlem : squash True -> squash True -> squash True
 
 let _ = assert_by_tactic (apply (quote dlem);; divide 1 (trivial;; qed) (trivial;; qed);; qed) True
+let _ = assert_by_tactic (apply (quote dlem);; focus (trivial;; qed);; focus (trivial;; qed);; qed) True
