@@ -43,7 +43,8 @@ let bnorm e t = N.normalize [] e t
 type goal = {
     context : env;
     witness : term;
-    goal_ty : typ
+    goal_ty : typ;
+    opts    : FStar.Options.optionstate; // option state for this particular goal
 }
 
 type proofstate = {
@@ -238,13 +239,6 @@ let new_uvar (env:env) (typ:typ) : tac<(term * guard_t)> =
     bind (add_implicits g_u.implicits) (fun _ ->
     ret (u, g_u))
 
-let add_irrelevant_goal (env:env) (phi:typ) : tac<unit> =
-    let typ = U.mk_squash phi in
-    bind (new_uvar env typ) (fun (u, g_u) ->
-    let goal = { context = env; witness = u; goal_ty = typ } in
-    add_goals [goal])
-
-
 //Any function that directly calls these utilities is also trusted
 //End: Trusted utilities
 ////////////////////////////////////////////////////////////////////
@@ -276,6 +270,13 @@ let cur_goal : tac<goal> =
     match p.goals with
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
+
+let add_irrelevant_goal (env:env) (phi:typ) : tac<unit> =
+    bind cur_goal (fun cur ->
+    let typ = U.mk_squash phi in
+    bind (new_uvar env typ) (fun (u, g_u) ->
+    let goal = { context = env; witness = u; goal_ty = typ; opts = cur.opts } in
+    add_goals [goal]))
 
 let smt : tac<unit> =
     bind cur_goal (fun g ->
@@ -453,7 +454,8 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
                 then ret ()
                 else add_goals [{context = goal.context;
                                  witness = bnorm goal.context u;
-                                 goal_ty = bnorm goal.context bv.sort}])
+                                 goal_ty = bnorm goal.context bv.sort;
+                                 opts    = goal.opts; }])
             | _ -> ret ()))))
 
 let apply (tm:term) : tac<unit> =
@@ -511,7 +513,8 @@ let apply_lemma (tm:term) : tac<unit> =
              implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
                      {context = goal.context;
                       witness = bnorm goal.context term;
-                      goal_ty = bnorm goal.context typ})
+                      goal_ty = bnorm goal.context typ;
+                      opts    = goal.opts; })
         in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. TODO: maybe keep and check later?
@@ -736,18 +739,35 @@ let cases (t : term) : tac<(term * term)> =
     | _ ->
         fail1 "Not a disjunction: %s" (Print.term_to_string typ))
 
-// Should probably be moved somewhere else
-type order = | Lt | Eq | Gt
+let set_options (s : string) : tac<unit> =
+    bind cur_goal (fun g ->
+    FStar.Options.push ();
+    FStar.Options.set (Util.smap_copy g.opts); // copy the map, they are not purely functional
+    let res = FStar.Options.set_options FStar.Options.Set s in
+    let opts' = FStar.Options.peek () in
+    FStar.Options.pop ();
+    match res with
+    | FStar.Getopt.Success ->
+        let g' = { g with opts = opts' } in
+        replace_cur g'
+    | FStar.Getopt.Error err ->
+        fail2 "Setting options `%s` failed: %s" s err
+    | FStar.Getopt.Help ->
+        fail1 "Setting options `%s` failed (got `Help`?)" s
+    )
 
-let order_binder (x:binder) (y:binder) : order =
-    let n = S.order_bv (fst x) (fst y) in
-    if n < 0 then Lt
-    else if n = 0 then Eq
-    else Gt
+let cur_env     : tac<env>  = bind get (fun ps -> ret <| (List.hd ps.goals).context)
+let cur_goal'   : tac<term> = bind get (fun ps -> ret <| (List.hd ps.goals).goal_ty)
+let cur_witness : tac<term> = bind get (fun ps -> ret <| (List.hd ps.goals).witness)
 
 let proofstate_of_goal_ty env typ =
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
-    let g = { context = env; witness = u; goal_ty = typ } in
+    let g = {
+        context = env;
+        witness = u;
+        goal_ty = typ;
+        opts    = FStar.Options.peek ();
+    } in
     let ps = {
         main_context = env;
         main_goal = g;
@@ -757,7 +777,3 @@ let proofstate_of_goal_ty env typ =
     }
     in
     (ps, u)
-
-let cur_env     : tac<env>  = bind get (fun ps -> ret <| (List.hd ps.goals).context)
-let cur_goal'   : tac<term> = bind get (fun ps -> ret <| (List.hd ps.goals).goal_ty)
-let cur_witness : tac<term> = bind get (fun ps -> ret <| (List.hd ps.goals).witness)

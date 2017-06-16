@@ -167,6 +167,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       // A tac 5... oh my...
       mktac5 "__divide"        (fun _ _ -> divide) (fun t -> t) (fun t -> t) unembed_int (unembed_tactic_0 (fun t -> t)) (unembed_tactic_0 (fun t -> t))
                                                             (embed_pair (fun t -> t) t_unit (fun t -> t) t_unit) t_unit;
+      mktac1 "__set_options"   set_options unembed_string embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
 
       mktac1 "__prune"         prune unembed_string embed_unit t_unit;
@@ -257,10 +258,10 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid && pol = Neg ->
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv SC.by_tactic_lid && pol = Neg ->
         (assertion, []) // Peel away tactics in negative positions, they're assumptions!
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv E.by_tactic_lid && pol = Pos ->
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv SC.by_tactic_lid && pol = Pos ->
         let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
         (FStar.Syntax.Util.t_true, gs)
 

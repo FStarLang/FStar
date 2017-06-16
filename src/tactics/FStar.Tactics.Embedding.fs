@@ -25,84 +25,25 @@ open FStar.Reflection.Data
 type name = bv
 
 let fstar_tactics_lid' s = SC.fstar_tactics_lid' s
-let fstar_tactics_lid s = SC.fstar_tactics_lid s
-let by_tactic_lid = SC.by_tactic_lid
 let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
-let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
-let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))
 let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid' ["Effect";s])
 
-let fstar_tactics_Failed = fstar_tactics_lid_as_data_tm "Failed"
-let fstar_tactics_Success= fstar_tactics_lid_as_data_tm "Success"
-
-let t_bool = FStar.TypeChecker.Common.t_bool
-let t_string = FStar.TypeChecker.Common.t_string
-
-let fstar_tac_prefix_typ = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm SC.list_lid) [U_zero])
-                                       [S.as_arg t_string]
-                                       None
-                                       Range.dummyRange
-
+let fstar_tactics_Failed  = fstar_tactics_lid_as_data_tm "Failed"
+let fstar_tactics_Success = fstar_tactics_lid_as_data_tm "Success"
 let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
                                       [S.as_arg t;
                                        S.as_arg s]
                                       None
                                       Range.dummyRange
 
-let fstar_tac_nselt_typ = pair_typ fstar_tac_prefix_typ t_bool
-let fstar_tac_ns_typ = pair_typ fstar_tac_nselt_typ t_bool
-
-// TODO: for now, we just embed the head of the list. Tactics cannot
-// push/pop proof namespaces
-let embed_proof_namespace (ps:proofstate) (ns:Env.proof_namespace) : term =
-    let embed_prefix prf = embed_list embed_string t_string prf in
-    let embed_elt e = embed_pair embed_prefix fstar_tac_prefix_typ embed_bool t_bool e in
-    embed_list embed_elt fstar_tac_nselt_typ (List.hd ns)
-
-let unembed_proof_namespace (ps:proofstate) (t:term) : Env.proof_namespace =
-    let orig_ns = Env.get_proof_ns ps.main_context in
-    let hd = unembed_list (unembed_pair (unembed_list unembed_string) unembed_bool) t in
-    hd::orig_ns
-
-// Unsure we need to thunk these, they are normal forms already.
-// They also cannot be `eliminated` because the abstract types we give them.
 let embed_env (ps:proofstate) (env:Env.env) : term =
     U.mk_alien env "tactics_embed_env" None
 
 let unembed_env (ps:proofstate) (t:term) : Env.env =
     U.un_alien t |> FStar.Dyn.undyn
-
-let embed_witness (ps:proofstate) w =
-    embed_term w
-
-let unembed_witness (ps:proofstate) t =
-    unembed_term t
-
-let embed_goal (ps:proofstate) (g:goal) : term =
-    embed_pair
-        (embed_pair (embed_env ps) fstar_refl_env
-                     embed_term fstar_refl_term)
-        (pair_typ fstar_refl_env fstar_refl_term)
-        (embed_witness ps)
-        fstar_refl_term
-               ((g.context, g.goal_ty), g.witness)
-
-let unembed_goal (ps:proofstate) (t:term) : goal =
-    let (env, goal_ty), witness = unembed_pair (unembed_pair (unembed_env ps) unembed_term) (unembed_witness ps) t in
-    {
-      context = env;
-      goal_ty = goal_ty;
-      witness = witness
-    }
-
-let embed_goals (ps:proofstate) (l:list<goal>) : term =
-    embed_list (embed_goal ps) fstar_tactics_goal l
-
-let unembed_goals (ps:proofstate) (egs:term) : list<goal> =
-    unembed_list (unembed_goal ps) egs
 
 let embed_proofstate (ps:proofstate) : term =
     U.mk_alien ps "tactics.embed_proofstate" None
