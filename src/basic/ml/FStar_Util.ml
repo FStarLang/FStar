@@ -800,18 +800,9 @@ let get_oreader (filename:string) : oReader = {
   close = (fun _ -> ());
 }
 
-let getcwd = Unix.getcwd
+let getcwd = Sys.getcwd
 
-let readdir dir =
-  let handle = Unix.opendir dir in
-  let files = ref [] in
-  try
-    while true do
-      files := Unix.readdir handle :: !files
-    done;
-    assert false
-  with End_of_file ->
-    !files
+let readdir dir = "." :: ".." :: Array.to_list (Sys.readdir dir)
 
 let file_exists = Sys.file_exists
 let basename = Filename.basename
