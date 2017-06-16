@@ -7378,7 +7378,8 @@ let discharge_guard':
                    else ());
                   (let vc1 =
                      FStar_TypeChecker_Normalize.normalize
-                       [FStar_TypeChecker_Normalize.Eager_unfolding] env vc in
+                       [FStar_TypeChecker_Normalize.Eager_unfolding;
+                       FStar_TypeChecker_Normalize.Simplify] env vc in
                    let uu____15101 = check_trivial vc1 in
                    match uu____15101 with
                    | FStar_TypeChecker_Common.Trivial  -> Some ret_g
