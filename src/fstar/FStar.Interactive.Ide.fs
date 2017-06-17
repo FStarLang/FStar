@@ -38,8 +38,6 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-exception ExitREPL of int
-
 (** Checkpoint the current (typechecking and desugaring) environment **)
 let push env msg =
   let res = push_context env msg in
@@ -627,13 +625,16 @@ let unpack_interactive_query json =
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
 let read_interactive_query stream : query =
+  match Util.read_line stream with
+  | None -> exit 0
+  | Some line ->
+    match Util.json_of_string line with
+    | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
+    | Some request -> safe_unpack_interactive_query request
+
+let safe_unpack_interactive_query js_query =
   try
-    match Util.read_line stream with
-    | None -> raise (ExitREPL 0)
-    | Some line ->
-      match Util.json_of_string line with
-      | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-      | Some request -> unpack_interactive_query request
+    unpack_interactive_query js_query
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
@@ -755,26 +756,35 @@ let write_json json =
   Util.print_raw (Util.string_of_json json);
   Util.print_raw "\n"
 
-let write_response qid status response =
+let json_of_response qid status response =
   let qid = JsonStr qid in
   let status = match status with
                | QueryOK -> JsonStr "success"
                | QueryNOK -> JsonStr "failure"
                | QueryViolatesProtocol -> JsonStr "protocol-violation" in
-  write_json (JsonAssoc [("kind", JsonStr "response");
-                         ("query-id", qid);
-                         ("status", status);
-                         ("response", response)])
+  JsonAssoc [("kind", JsonStr "response");
+             ("query-id", qid);
+             ("status", status);
+             ("response", response)]
+
+let write_response qid status response =
+  write_json (json_of_response qid status response)
+
+let json_of_message level js_contents =
+  JsonAssoc [("kind", JsonStr "message");
+             ("level", JsonStr level);
+             ("contents", js_contents)]
 
 let write_message level contents =
-  write_json (JsonAssoc [("kind", JsonStr "message");
-                         ("level", JsonStr level);
-                         ("contents", contents)])
+  write_json (json_of_message level contents)
 
-let write_hello () =
+let json_of_hello =
   let js_version = JsonInt interactive_protocol_vernum in
   let js_features = JsonList (List.map JsonStr interactive_protocol_features) in
-  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info))
+  JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info)
+
+let write_hello () =
+  write_json json_of_hello
 
 (*****************)
 (* Options cache *)
@@ -1346,19 +1356,21 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-let rec go st : int =
-  let rec loop st : int =
-    let query = validate_query st (read_interactive_query st.repl_stdin) in
-    let (status, response), state_opt = run_query st query.qq in
-    write_response query.qid status response;
-    match state_opt with
-    | Inl st' -> loop st'
-    | Inr exitcode -> raise (ExitREPL exitcode) in
+(** This is the body of the JavaScript port's main loop. **)
+let single_repl_iteration js_query st =
+  let query = safe_unpack_interactive_query js_query |> validate_query st in
+  let (status, response), state_opt = run_query st query.qq in
+  let js_response = json_of_response query.qid status response in
+  js_response, state_opt
 
-  if Options.trace_error () then
-    loop st
-  else
-    try loop st with ExitREPL n -> n
+(** This is the main loop for the desktop version **)
+let rec go st : int =
+  let query = read_interactive_query st.repl_stdin |> validate_query st in
+  let (status, response), state_opt = run_query st query.qq in
+  write_response query.qid status response;
+  match state_opt with
+  | Inl st' -> go st'
+  | Inr exitcode -> exitcode
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
@@ -1371,26 +1383,31 @@ let interactive_error_handler = // No printing here — collect everything for f
     eh_report = report;
     eh_clear = clear }
 
-let interactive_printer =
-  { printer_prinfo = (fun s -> write_message "info" (JsonStr s));
-    printer_prwarning = (fun s -> write_message "warning" (JsonStr s));
-    printer_prerror = (fun s -> write_message "error" (JsonStr s));
-    printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
+let interactive_printer printer =
+  { printer_prinfo = (fun s -> forward_message printer "info" (JsonStr s));
+    printer_prwarning = (fun s -> forward_message printer "warning" (JsonStr s));
+    printer_prerror = (fun s -> forward_message printer "error" (JsonStr s));
+    printer_prgeneric = (fun label get_string get_json ->
+                         forward_message printer label (get_json ())) }
+
+let install_ide_mode_hooks () =
+  FStar.Util.set_printer interactive_printer;
+  FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
-let interactive_mode' (filename: string): unit =
-  write_hello ();
-
+let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
-  let init_st =
-    { repl_line = 1; repl_column = 0; repl_fname = filename;
-      repl_curmod = None; repl_env = env; repl_deps_stack = [];
-      repl_stdin = open_stdin ();
-      repl_names = CompletionTable.empty } in
+  { repl_line = 1; repl_column = 0; repl_fname = filename;
+    repl_curmod = None; repl_env = env; repl_deps_stack = [];
+    repl_stdin = open_stdin ();
+    repl_names = CompletionTable.empty }
+
+let interactive_mode' init_st =
+  write_hello ();
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
@@ -1400,18 +1417,18 @@ let interactive_mode' (filename: string): unit =
   exit exit_code
 
 let interactive_mode (filename:string): unit =
-  FStar.Util.set_printer interactive_printer;
+  install_ide_mode_hooks write_json;
 
   if Option.isSome (Options.codegen ()) then
     Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
+  let init = build_initial_repl_state filename in
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces
-    interactive_mode' filename
+    interactive_mode' init
   else
     try
-      FStar.Errors.set_handler interactive_error_handler;
-      interactive_mode' filename
+      interactive_mode' init
     with
     | e -> (// Revert to default handler since we won't have an opportunity to
            // print errors ourselves.
