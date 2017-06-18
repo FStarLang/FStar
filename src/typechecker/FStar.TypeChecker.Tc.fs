@@ -1049,7 +1049,6 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       | _,  Tm_arrow(tps, c) -> tps, c
       | _ -> failwith "Impossible" in
     if List.length uvs <> 1
-    && not (Ident.lid_equals lid Const.effect_Lemma_lid)
     then (let _, t = Subst.open_univ_vars uvs t in
           raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                   (Print.lid_to_string lid)

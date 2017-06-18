@@ -1,6 +1,7 @@
 .PHONY: indent
 
 FSTAR_HOME=..
+include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
 FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
@@ -79,9 +80,3 @@ int:
 
 wc:	
 	wc -l prims.fst $(ALL)
-
-##
-
-mgen:
-	mkdir -p ml/extracted
-	$(FSTAR) --lax --codegen OCaml --odir ml/extracted --no_extract FStar.List.Tot --no_extract FStar.List.Tot.Base --no_extract FStar.Heap --no_extract FStar.List.Tot.Properties --no_extract FStar.Set FStar.TSet.fst FStar.Map.fst FStar.HyperHeap.fst FStar.HyperStack.fst

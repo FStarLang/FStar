@@ -58,12 +58,14 @@ effect S (a:Type) =
  * doesn't modify the state.
  *)
 
+let div_intrsic_spec i j h0 z =
+  match x with
+  | None -> j=0
+  | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j
 
 val div_intrinsic : i:nat -> j:int -> ExnSt int
   (requires (fun h -> True))
-  (ensures (fun h0 x -> match x with
-                     | None -> j=0
-                     | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j))
+  (ensures (fun h0 x -> div_intrsic_spec i j x))
 
 let div_intrinsic i j =
     if j = 0 then (
