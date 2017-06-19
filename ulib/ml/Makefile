@@ -44,4 +44,4 @@ clean:
 	rm -f fstarlib.mllib || :
 	rm -f $(ULIB_GEN_DIR)/*
 	rm -f ../.mgen || :
-	-ocamlbuild -clean
+	rm -rf _build # ← ocamlbuild -clean does not work on Cygwin
