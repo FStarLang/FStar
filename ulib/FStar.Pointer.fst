@@ -22,6 +22,7 @@ type base_typ =
 | TInt64
 | TChar
 | TBool
+| TUnit
 
 type typ =
 | TBase:
@@ -215,6 +216,7 @@ let type_of_base_typ
   | TInt64 -> FStar.Int64.t
   | TChar -> FStar.Char.char
   | TBool -> bool
+  | TUnit -> unit
 
 type array (length: UInt32.t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
@@ -295,6 +297,7 @@ let rec dummy_val
     | TInt64 -> Int64.int_to_t 0
     | TChar -> 'c'
     | TBool -> false
+    | TUnit -> ()
     end
   | TStruct l ->
     struct_create (fun f -> (
