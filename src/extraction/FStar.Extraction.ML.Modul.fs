@@ -194,7 +194,7 @@ let extract_bundle env se =
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
-     debug g (fun u -> printfn ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
+     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
      match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _

@@ -200,7 +200,10 @@ let rec is_type_aux env t =
       if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
       then true
       else let (us, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
-           debug env (fun () -> printfn "Looked up type of %s; got <%s>.%s" (Print.fv_to_string fv) (List.map Print.univ_to_string us |> String.concat ", ") (Print.term_to_string t));
+           debug env (fun () -> BU.print3 "Looked up type of %s; got <%s>.%s"
+                             (Print.fv_to_string fv)
+                             (List.map Print.univ_to_string us |> String.concat ", ")
+                             (Print.term_to_string t));
            is_arity env t
 
     | Tm_uvar (_, t)
@@ -214,15 +217,24 @@ let rec is_type_aux env t =
     | Tm_uinst(t, _) ->
       is_type_aux env t
 
-    | Tm_abs(_, body, _) ->
+    | Tm_abs(bs, body, _) ->
+      let _, body = SS.open_term bs body in
       is_type_aux env body
 
-    | Tm_let(_, body) ->
+    | Tm_let((false, [lb]), body) ->
+      let x = BU.left lb.lbname in
+      let _, body = SS.open_term [S.mk_binder x] body in
+      is_type_aux env body
+
+    | Tm_let((_, lbs), body) ->
+      let _, body = SS.open_let_rec lbs body in
       is_type_aux env body
 
     | Tm_match(_, branches) ->
       begin match branches with
-        | (_, _, e)::_ -> is_type_aux env e
+        | b::_ -> 
+          let _, _, e = SS.open_branch b in
+          is_type_aux env e
         | _ -> false
       end
 
@@ -233,7 +245,7 @@ let rec is_type_aux env t =
       is_type_aux env head
 
 let is_type env t =
-    debug env (fun () -> printfn "checking is_type (%s) %s\n"
+    debug env (fun () -> BU.print2 "checking is_type (%s) %s\n"
                                 (Print.tag_of_term t)
                                 (Print.term_to_string t)
                                 );

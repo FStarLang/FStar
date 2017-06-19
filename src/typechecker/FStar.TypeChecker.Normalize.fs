@@ -328,7 +328,7 @@ let rec closure_as_term cfg env t =
              let nm, body =
                 if S.is_top_level [lb]
                 then lb.lbname, body
-                else let x = Util.left lb.lbname in
+                else let x = BU.left lb.lbname in
                      Inl ({x with sort=typ}),
                      closure_as_term cfg (Dummy::env0) body in
              let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
@@ -341,7 +341,7 @@ let rec closure_as_term cfg env t =
                           then env_univs
                           else List.fold_right (fun _ env -> Dummy::env) lbs env_univs in
                 let ty = closure_as_term cfg env_univs lb.lbtyp in
-                let nm = if S.is_top_level lbs then lb.lbname else let x = Util.left lb.lbname in {x with sort=ty} |> Inl in
+                let nm = if S.is_top_level lbs then lb.lbname else let x = BU.left lb.lbname in {x with sort=ty} |> Inl in
                 {lb with lbname=nm;
                          lbtyp=ty;
                          lbdef=closure_as_term cfg env lb.lbdef} in
@@ -1092,8 +1092,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
-                let lbname = Inl ({Util.left lb.lbname with sort=ty}) in
-                let xs, def_body, lopt = Util.abs_formals lb.lbdef in
+                let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
+                let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
                 let env = List.map (fun _ -> Dummy) lbs
                         @ List.map (fun _ -> Dummy) xs

@@ -1165,12 +1165,11 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let univs = Free.univs t in
           let uvt = Free.uvars t in
           if Env.debug env <| Options.Other "Gen"
-          then printfn "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n%A"
+          then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (BU.set_elements uvt |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                                     (Print.uvar_to_string u)
-                                                                    (Print.term_to_string t)) |> String.concat ", ")
-                t;
+                                                                    (Print.term_to_string t)) |> String.concat ", ");
           let univs =
             List.fold_left
               (fun univs (_, t) -> BU.set_union univs (Free.univs t))
@@ -1178,7 +1177,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
           if Env.debug env <| Options.Other "Gen"
-          then printfn "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
+          then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u)
