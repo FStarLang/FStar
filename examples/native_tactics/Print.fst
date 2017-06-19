@@ -1,4 +1,4 @@
-module UserPrintTactic
+module Print
 
 open FStar.Tactics
 

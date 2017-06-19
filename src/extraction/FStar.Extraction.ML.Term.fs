@@ -848,6 +848,22 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
+        | Tm_app(head, [_; v]) when U.is_fstar_tactics_embed head ->
+          let _ = BU.format2 "Trying to extract a quotation of %s" (Print.term_to_string v) in
+          let s = with_ty ml_string_ty (MLE_Const(MLC_Bytes(BU.bytes_of_string (BU.marshal v)))) in
+          let zero = with_ty ml_int_ty (MLE_Const (MLC_Int("0", None))) in
+          let term_ty =
+            term_as_mlty g (S.fvar FStar.Syntax.Const.fstar_syntax_syntax_term Delta_constant None) in
+          let marshal_from_string =
+            let string_to_term_ty = MLTY_Fun (ml_string_ty, E_PURE, term_ty) in
+            with_ty string_to_term_ty (MLE_Name(["Marshal"], "from_string"))
+          in
+          //This is pure, to coincide with the type of __embed;
+          //note that __embed is marked private so as to not compromise soundness
+          with_ty term_ty <| MLE_App (marshal_from_string, [ s; zero ]),
+          E_PURE,
+          term_ty
+
         | Tm_app(head, args) ->
           let is_total = function
             | Inl l -> FStar.Syntax.Util.is_total_lcomp l

@@ -112,16 +112,6 @@ type stack_elt =
 
 type stack = list<stack_elt>
 
-let is_fstar_tactics_embed t =
-    match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv SC.fstar_refl_embed_lid
-    | _ -> false
-
-let is_fstar_tactics_by_tactic t =
-    match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv SC.by_tactic_lid
-    | _ -> false
-
 let mk t r = mk t None r
 let set_memo r t =
   match !r with
@@ -816,8 +806,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
-            when is_fstar_tactics_embed hd
-              || is_fstar_tactics_by_tactic hd ->
+            when U.is_fstar_tactics_embed hd
+              || U.is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in
             let t = {t with n=Tm_app(hd, args)} in

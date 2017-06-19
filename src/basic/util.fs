@@ -978,3 +978,6 @@ let string_of_json json : string =
 
 let read r = !r
 let write r x = r := x
+
+let marshal (x:'a) : string = failwith "Marshaling to/from strings: not yet supported in F#"
+let unmarshal (x:string) : 'a = failwith "Marshaling to/from strings: not yet supported in F#"

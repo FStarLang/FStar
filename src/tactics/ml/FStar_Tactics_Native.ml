@@ -48,12 +48,14 @@ let from_tactic_0 (t: 'b E.tactic): ('b tac) =
             interpret_tactic ps m2
         )) in rtac*)
     (fun (ps: proofstate) ->
+        print_string "In compiled code\n";
         let m = t () in
         interpret_tactic ps m) |> mk_tac
 
 let from_tactic_1 (t: 'a -> 'b E.tactic): ('a -> 'b tac) =
     fun (x: 'a) ->
         (fun (ps: proofstate) ->
+            print_string "In compiled code\n";
             let m = t x in
             let (m2: proofstate -> 'b E.__result) = m () in
             interpret_tactic ps m2) |> mk_tac
@@ -69,6 +71,7 @@ let from_tactic_2 (t: 'a -> 'b -> 'c E.tactic): ('a -> 'b -> 'c tac) =
     fun (x: 'a) ->
         fun (y: 'b) ->
             (fun (ps: proofstate) ->
+                print_string "In compiled code\n";
                 let m = t x y in
                 let (m2: proofstate -> 'b E.__result) = m () in
                 interpret_tactic ps m2) |> mk_tac

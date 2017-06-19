@@ -309,14 +309,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   | _ -> false)
               | _ -> false in
 
-            let mk_registration lid t bs =
-              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (FStar.Syntax.Const.fstar_tactics_lid "Native.register_tactic")) in
-                (* fix this: FStar_Tactics.Native -> FStar_Tactics_Native*)
-              let lid_arg = MLE_Const (MLC_String (string_of_lid lid)) in
-              let arity = MLE_Const (MLC_Int (BU.string_of_int (List.length bs), None)) in
-              let interp = mk_interpretation_fun () in
-              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; interp]) in
-              MLM_Top app in
+//            let mk_registration lid t bs =
+//              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (FStar.Syntax.Const.fstar_tactics_lid "Native.register_tactic")) in
+//                (* fix this: FStar_Tactics.Native -> FStar_Tactics_Native*)
+//              let lid_arg = MLE_Const (MLC_String (string_of_lid lid)) in
+//              let arity = MLE_Const (MLC_Int (BU.string_of_int (List.length bs), None)) in
+//              let interp = mk_interpretation_fun () in
+//              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; interp]) in
+//              MLM_Top app in
 
             (match (snd lbs) with
              | [hd] ->
@@ -333,7 +333,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                         BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
                         BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
                         List.iter (fun x -> BU.print1 "Binder %s\n" (Print.term_to_string (fst x).sort)) bs;
-                        [mk_registration assm_lid hd.lbtyp bs]
+                        [] //This doesn't yet generate the right code; [mk_registration assm_lid hd.lbtyp bs]
                       end else []
                  | _ -> [])
              | _ -> []

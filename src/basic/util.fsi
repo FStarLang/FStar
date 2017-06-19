@@ -389,3 +389,7 @@ val string_of_json : json -> string
 (* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)
 val read : ref<'a> -> 'a
 val write : ref<'a> -> 'a -> unit
+
+(* Marshaling to and from strings *)
+val marshal: 'a -> string
+val unmarshal: string -> 'a

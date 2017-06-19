@@ -37,7 +37,7 @@ let forall_intro : tactic binder =
 
 let forall_intros : tactic binders = repeat1 forall_intro
 
-private val split_lem : (#a:Type) -> (#b:Type) ->
+(* private  *)val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> squash (a /\ b)
 let split_lem #a #b sa sb = ()
 

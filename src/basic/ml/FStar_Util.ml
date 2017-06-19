@@ -979,3 +979,6 @@ let read = FStar_ST.read
 let write = FStar_ST.write
 let (!) = FStar_ST.read
 let (:=) = FStar_ST.write
+
+let marshal (x:'a) : string = Marshal.to_string x []
+let unmarshal (x:string) : 'a = Marshal.from_string x 0
