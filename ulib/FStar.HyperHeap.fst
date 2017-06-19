@@ -242,6 +242,20 @@ let contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool  =
   (* AR: in master this is the code *)
   (* Map.contains m i && Heap.contains (Map.sel m i) (as_ref r) *)
 
+let lemma_same_addrs_same_types_same_refs
+  (#a: Type0)
+  (#i: rid)
+  (h: t)
+  (r1 r2: rref i a)
+: Lemma
+  (requires (
+    contains_ref r1 h /\
+    contains_ref r2 h /\
+    addr_of r1 == addr_of r2
+  ))
+  (ensures (r1 == r2))
+= Heap.lemma_same_addrs_same_types_same_refs (Map.sel h i) (as_ref r1) (as_ref r2)
+
 let unused_in (#a:Type) (#i:rid) (r:rref i a) (m:t) :GTot bool =
   not (Map.contains m i) ||
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
@@ -345,6 +359,7 @@ abstract let addr_of_aref_of
   (r: rref id a)
 : Lemma
   (addr_of r == addr_of_aref (aref_of r))
+  [SMTPat (addr_of_aref (aref_of r))]
 = Heap.addr_of_aref_of r
 
 abstract let aref_is_mm
@@ -359,6 +374,7 @@ abstract let is_mm_aref_of
   (r: rref id a)
 : Lemma
   (is_mm r == aref_is_mm (aref_of r))
+  [SMTPat (aref_is_mm (aref_of r))]
 = Heap.is_mm_aref_of r
 
 abstract let aref_unused_in
@@ -376,6 +392,7 @@ abstract let unused_in_aref_of
   (m: t)
 : Lemma
   (aref_unused_in (aref_of r) m <==> unused_in r m)
+  [SMTPat (aref_unused_in (aref_of r))]
 = Heap.unused_in_aref_of r (Map.sel m i)
 
 abstract
@@ -390,37 +407,105 @@ abstract let aref_live_at (m: t) (#i: rid) (a: aref i) (v: Type) : GTot Type0 =
   Map.contains m i /\
   Heap.aref_live_at (Map.sel m i) a v
 
-abstract let rref_of (m: t) (#i: rid) (a: aref i) (v: Type) : Pure (rref i v)
-  (requires (aref_live_at m a v))
-  (ensures (fun _ -> True))
-= Heap.ref_of (Map.sel m i) a v
+abstract let grref_of
+  (#i: rid)
+  (a: aref i)
+  (v: Type0)
+: Ghost (rref i v)
+  (requires (exists m . aref_live_at m a v))
+  (ensures (fun x -> True))
+= Heap.gref_of a v
 
-abstract
-let contains_ref_aref_live_at
-  (m:t)
-  (#i:rid)
-  (#a:Type)
-  (r:rref i a)
-: Lemma
-  (requires (contains_ref r m))
-  (ensures (
-    aref_live_at m (aref_of r) a /\
-    rref_of m (aref_of r) a == r
-  ))
-= Heap.contains_aref_live_at (Map.sel m i) r
-
-abstract
-let aref_live_at_contains_ref
+abstract let rref_of
   (m: t)
   (#i: rid)
   (a: aref i)
   (v: Type)
-: Lemma
+: Pure (rref i v)
   (requires (aref_live_at m a v))
-  (ensures (
-    aref_live_at m a v /\ (
-    let r = rref_of m a v in (
-      contains_ref r m /\
-      aref_of r == a
-  ))))
-= Heap.aref_live_at_contains (Map.sel m i) a v
+  (ensures (fun x -> aref_live_at m a v /\ x == grref_of a v))
+= Heap.ref_of (Map.sel m i) a v
+
+abstract
+let aref_live_at_aref_of
+  (m: t)
+  (#i: rid)
+  (#v: Type0)
+  (r: rref i v)
+: Lemma
+  (ensures (aref_live_at m (aref_of r) v <==> contains_ref r m))
+  [SMTPat (aref_live_at m (aref_of r) v)]
+= ()
+
+abstract
+let contains_ref_grref_of
+  (m: t)
+  (#i: rid)
+  (a: aref i)
+  (v: Type0)
+: Lemma
+  (requires (exists h' . aref_live_at h' a v))
+  (ensures ((exists h' . aref_live_at h' a v) /\ (contains_ref (grref_of a v) m <==> aref_live_at m a v)))
+  [SMTPatOr [
+    [SMTPat (contains_ref (grref_of a v) m)];
+    [SMTPat (aref_live_at m a v)];
+  ]]
+= ()
+
+abstract
+let aref_of_grref_of
+  (#i: rid)
+  (a: aref i)
+  (v: Type0)
+: Lemma
+  (requires (exists h . aref_live_at h a v))
+  (ensures ((exists h. aref_live_at h a v) /\ aref_of (grref_of a v) == a))
+  [SMTPat (aref_of (grref_of a v))]
+= ()
+
+abstract
+let grref_of_aref_of
+  (#i: rid)
+  (#v: Type0)
+  (r: rref i v)
+: Lemma
+  (requires (exists h . contains_ref r h))
+  (ensures ((exists h . contains_ref r h) /\ grref_of (aref_of r) v == r))
+  [SMTPat (grref_of (aref_of r) v)]
+= ()
+
+(* Operators lowered to rref *)
+
+abstract
+let addr_of_grref_of
+  (#i: rid)
+  (a: aref i)
+  (t: Type0)
+: Lemma
+  (requires (exists h . aref_live_at h a t))
+  (ensures ((exists h . aref_live_at h a t) /\ addr_of (grref_of a t) == addr_of_aref a))
+  [SMTPat (addr_of (grref_of a t))]
+= ()
+
+abstract
+let is_mm_grref_of
+  (#i: rid)
+  (a: aref i)
+  (t: Type0)
+: Lemma
+  (requires (exists h . aref_live_at h a t))
+  (ensures ((exists h . aref_live_at h a t) /\ is_mm (grref_of a t) == aref_is_mm a))
+  [SMTPat (is_mm (grref_of a t))]
+= ()
+
+abstract
+let unused_in_gref_of
+  (#i: rid)
+  (a: aref i)
+  (v: Type0)
+  (h: t)
+: Lemma
+  (requires (exists h . aref_live_at h a v))
+  (ensures ((exists h . aref_live_at h a v) /\ (unused_in (grref_of a v) h <==> aref_unused_in a h)))
+  [SMTPat (unused_in (grref_of a v) h)]
+= ()

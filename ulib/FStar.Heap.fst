@@ -166,6 +166,7 @@ private let lemma_alloc_fresh_test (#a:Type) (h0:heap) (x:a) (mm:bool)
 
 let lemma_contains_implies_used #a h r = ()
 let lemma_distinct_addrs_distinct_types #a #b h r1 r2 = ()
+let lemma_same_addrs_same_types_same_refs #a h r1 r2 = ()
 let lemma_distinct_addrs_unused #a #b h r1 r2 = ()
 let lemma_alloc #a h0 x mm = ()
 let lemma_free_mm_sel #a #b h0 r1 r2 = ()
@@ -231,13 +232,40 @@ let aref_live_at (h: heap) (a: aref) (t: Type0) =
         let contents = dsnd raw_contents in
         contents.c_mm == a.a_mm
   )))
-let ref_of h a t =
-  let raw_contents = Some?.v (h.memory a.a_addr) in
+
+let ref_of'
+  (h: heap)
+  (a: aref)
+  (t: Type0)
+: Pure (ref t)
+  (requires (aref_live_at h a t))
+  (ensures (fun _ -> True))
+= let raw_contents = Some?.v (h.memory a.a_addr) in
   let contents: ref_contents t = dsnd raw_contents in
   {
     addr = a.a_addr;
     init = contents.c_init;
     mm = contents.c_mm
   }
-let contains_aref_live_at h #t r = ()
-let aref_live_at_contains h a t = ()
+
+let gref_of a t =
+  let m : squash (exists (h: heap) . aref_live_at h a t) = () in
+  let l : (exists (h: heap) . aref_live_at h a t) =
+    Squash.join_squash #(h: heap & aref_live_at h a t) m
+  in
+  let k : (exists (h: heap { aref_live_at h a t} ) . squash True ) =
+    FStar.Squash.bind_squash
+      #(h: heap & aref_live_at h a t)
+      #(h: (h: heap { aref_live_at h a t} ) & squash True)
+      l
+      (fun h -> let (| h', _ |) = h in Squash.return_squash (| h', () |) )
+  in
+  let h = FStar.ErasedLogic.exists_proj1 #(h: heap {aref_live_at h a t}) #(fun _ -> squash True) k in
+  ref_of' h a t
+
+let ref_of h a t = ref_of' h a t
+
+let aref_live_at_aref_of h #t r = ()
+let contains_gref_of h a t = ()
+let aref_of_gref_of a t = ()
+let gref_of_aref_of #t r = ()
