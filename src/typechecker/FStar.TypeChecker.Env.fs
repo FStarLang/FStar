@@ -180,7 +180,7 @@ let initial_env type_of universe_of solver module_lid =
                | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
                | None -> [[]]);
     synth = (fun e g tau -> failwith "no synthesizer available");
-    is_native_tactic = fun _ -> false;
+    is_native_tactic = (fun _ -> false);
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
