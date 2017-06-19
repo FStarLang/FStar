@@ -278,3 +278,6 @@ let unused_in_gref_of
   (ensures ((exists h . aref_live_at h a t) /\ (unused_in (gref_of a t) h <==> aref_unused_in a h)))
   [SMTPat (unused_in (gref_of a t) h)]
 = unused_in_aref_of (gref_of a t) h
+
+(* Work around #1088 *)
+val _eof: unit

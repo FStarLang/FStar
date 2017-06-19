@@ -269,3 +269,5 @@ let aref_live_at_aref_of h #t r = ()
 let contains_gref_of h a t = ()
 let aref_of_gref_of a t = ()
 let gref_of_aref_of #t r = ()
+
+let _eof = ()
