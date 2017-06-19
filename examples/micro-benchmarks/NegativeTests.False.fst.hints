@@ -33,7 +33,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
+        "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0
     ],
@@ -45,7 +45,7 @@
       1,
       [
         "@query", "assumption_Prims.HasEq_unit", "equation_Prims.l_True",
-        "haseqTm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
+        "haseqNegativeTests.False_Tm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
       ],
       0
     ],
@@ -55,8 +55,8 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_FStar.Classical_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "unit_inversion", "unit_typing"
       ],
       0

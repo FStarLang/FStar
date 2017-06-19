@@ -1,5 +1,5 @@
 [
-  "eŽ‡'%dFe\u0001Ñ\u0018ð‡^›Ó",
+  "\\I\u0010\u0018,=Ð<Ù}r;—a\u0000",
   [
     [ "Encrypt_SymEnc.uu___is_Ideal", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -11,7 +11,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Ideal",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
       0
     ],
@@ -24,7 +24,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Ideal",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
       0
     ],
@@ -37,7 +37,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Ideal",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
       0
     ],
@@ -50,7 +50,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Ideal",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
       0
     ],
@@ -64,7 +64,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Concrete",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
       0
     ],
@@ -77,7 +77,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Concrete",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
       0
     ],
@@ -90,7 +90,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Concrete",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
       0
     ],
@@ -103,7 +103,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Concrete",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
+        "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
       0
     ],
@@ -128,7 +128,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Encrypt_SymEnc.Concrete",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Encrypt_SymEnc.Concrete",
         "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.plain",
         "fuel_guarded_inversion_Encrypt_SymEnc.key"
       ],
@@ -140,19 +141,11 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Heap.SelUpd1",
-        "constructor_distinct_Prims.Nil", "constructor_distinct_Prims.None",
-        "constructor_distinct_Prims.Some", "data_elim_Prims.None",
+        "@MaxIFuel_assumption", "@query",
         "disc_equation_Encrypt_SymEnc.Concrete",
-        "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.plain",
-        "equation_FStar.ST.ref",
-        "equation_with_fuel_FStar.List.Tot.find.fuel_instrumented",
-        "fuel_correspondence_FStar.List.Tot.find.fuel_instrumented",
-        "fuel_guarded_inversion_Encrypt_SymEnc.key",
-        "kinding_Encrypt_SymEnc.entry@tok", "kinding_Prims.list@tok",
-        "pretyping_779086306c29597e3dd1127d16405da1",
-        "proj_equation_Prims.V_v", "projection_inverse_Prims.Nil_a",
-        "projection_inverse_Prims.V_v"
+        "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.blocksize",
+        "equation_AES.nbytes", "equation_AES.plain", "equation_AES.psize",
+        "fuel_guarded_inversion_Encrypt_SymEnc.key"
       ],
       0
     ],
@@ -166,8 +159,8 @@
         "equation_AES.bytes", "equation_AES.cipher", "equation_AES.csize",
         "equation_AES.nbytes", "equation_AES.plain",
         "equation_Platform.Bytes.bytes",
-        "haseqTm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
-        "haseqTm_refine_a4882effbbffebcebded1bfc535411cb"
+        "haseqEncrypt_SymEnc_Tm_refine_a4882effbbffebcebded1bfc535411cb",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0
     ]

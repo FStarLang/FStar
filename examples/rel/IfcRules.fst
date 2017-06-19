@@ -15,25 +15,30 @@ type label =
 val op_Less : label -> label -> Tot bool
 let op_Less l1 l2 =
   match l1, l2 with
-  | Low,High -> true
-  | _, _ -> false
+  | Low, High -> true
+  | _, _      -> false
 
 val op_Less_Equals : label -> label -> Tot bool
 let op_Less_Equals l1 l2 =
   match l1, l2 with
-  | High,Low -> false
-  | _, _ -> true
+  | High, Low -> false
+  | _, _      -> true
 
 val join : label -> label -> Tot label
 let join l1 l2 =
   match l1, l2 with
-  | Low,Low -> Low
-  | _, _ -> High
+  | Low, Low -> Low
+  | _, _     -> High
 
-type label_fun = ref int -> Tot label
+(*
+ * function from the addr_of refs to label
+ *)
+type label_fun = nat -> GTot label
 
-type low_equiv (env:label_fun) (h1:rel heap) =
-  forall (x:ref int). env x = Low ==> sel (R?.l h1) x = sel (R?.r h1) x
+let label_of (env:label_fun) (r:id) :GTot label = env (addr_of r)
+
+type low_equiv (env:label_fun) (h1:rel heap) = 
+  forall (x:ref int). label_of env x = Low ==> sel (R?.l h1) x = sel (R?.r h1) x
 
 
 (**************************** Typing Judgements ****************************)
@@ -65,13 +70,13 @@ type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) =
     (Some? (R?.l h0) ==>
      (let hl = Some?.v (R?.l h0) in
       let o_l = interpret_com hl c in
-        (forall r. (env r < l /\ Some? o_l)
+        (forall r. (label_of env r < l /\ Some? o_l)
           ==> sel hl r = sel (Some?.v o_l) r)))
     /\
     (Some? (R?.r h0) ==>
      (let hr = Some?.v (R?.r h0) in
       let o_r = interpret_com hr c in
-        (forall r. (env r < l /\ Some? o_r)
+        (forall r. (label_of env r < l /\ Some? o_r)
           ==> sel hr r = sel (Some?.v o_r) r)))
 
 type ni_com (env:label_fun) (c:com) (l:label) =
@@ -107,7 +112,7 @@ let sub_exp _ _ _ _ = ()
 
 val avar_exp : env:label_fun -> r:id ->
   Lemma (requires True)
-        (ensures  (ni_exp env (AVar r) (env r)))
+        (ensures  (ni_exp env (AVar r) (label_of env r))) 
 let avar_exp _ _ = ()
 
 
@@ -160,9 +165,9 @@ let sub_com _ _ _ _ = ()
     - label of expression and context label have to be below label of r
       (first one to prevent explicit, second to prevent implicit flows)
 *)
-val assign_com : env:label_fun -> e:exp -> r:id ->
-  Lemma (requires (ni_exp env e (env r)))
-        (ensures  (ni_com env (Assign r e) (env r)))
+val assign_com : env:label_fun -> e:exp -> r:id -> 
+  Lemma (requires (ni_exp env e (label_of env r)))
+        (ensures  (ni_com env (Assign r e) (label_of env r)))
 let assign_com _ _ _ = ()
 
 (* Sequencing rule for commands
@@ -264,7 +269,7 @@ let rec while_com' env e c v l h =
     let o_l = interpret_com h_l c in
     let o_r = interpret_com h_r c in
 
-    // Case analysis on termination of bodies
+    (* Case analysis on termination of bodies *)
     match o_l, o_r with
     | Some hl , Some hr  ->
       begin

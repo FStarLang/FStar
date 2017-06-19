@@ -15,9 +15,9 @@
         "equation_Ex12f.TMAC.pkey", "equation_FStar.UInt8.byte",
         "equation_FStar.UInt8.t", "kinding_FStar.UInt8.t_@tok",
         "lemma_Ex12.Pad.inj", "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "refinement_interpretation_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
-        "refinement_interpretation_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
+        "refinement_interpretation_Ex12.Pad_Tm_refine_0b4eea63038be23ac97553bb7c8a71cc",
+        "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
+        "refinement_interpretation_Ex12f.TMAC_Tm_refine_9f8cb5a84b67f50c9d5f87a914037545",
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
@@ -36,8 +36,8 @@
         "equation_Ex12f.TMAC.key", "equation_Ex12f.TMAC.pkey",
         "equation_FStar.UInt8.byte", "equation_FStar.UInt8.t",
         "kinding_FStar.UInt8.t_@tok", "lemma_FStar.Seq.Base.lemma_eq_refl",
-        "refinement_interpretation_Tm_refine_3c40c68998e031e6744deee90305e0e2",
-        "refinement_interpretation_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
+        "refinement_interpretation_Ex12.Pad_Tm_refine_b769c0bf16cb286238e7b11ff583e99b",
+        "refinement_interpretation_Ex12f.TMAC_Tm_refine_3c40c68998e031e6744deee90305e0e2",
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],

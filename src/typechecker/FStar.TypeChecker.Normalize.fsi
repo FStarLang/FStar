@@ -45,14 +45,16 @@ type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(args -> option<term>)
+    interpretation:(FStar.Range.range -> args -> option<term>)
 }
-val eta_expand_with_type :term -> typ -> term
+val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term
 val normalize_universe:   Env.env -> universe -> universe
 val normalize_comp:       steps -> Env.env -> comp -> comp
 val normalize_refinement: steps -> Env.env -> typ -> typ
+val unfold_whnf:          Env.env -> term -> term
+val reduce_uvar_solutions:Env.env -> term -> term
 val ghost_to_pure:        Env.env -> comp -> comp
 val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 val normalize_with_primitive_steps : list<primitive_step> -> list<step> -> Env.env -> term -> term

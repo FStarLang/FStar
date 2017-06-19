@@ -1,4 +1,4 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: MetaCoq.uver
+all: UserTactics.uver Syntax.uver GRewrite.uver MetaCoq.uver

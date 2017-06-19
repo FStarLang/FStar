@@ -51,7 +51,7 @@ assume val new_colored_region: r0:rid -> c:int -> ST rid
 
 unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
     let region_i = Map.sel m0 i in
-    not (Heap.contains region_i (as_ref x))
+    ~ (Heap.contains region_i (as_ref x))
   /\ m1==(m0.[x]<-init)
 
 assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
@@ -60,7 +60,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
 
 unfold let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
    let region_i = Map.sel m0 root in
-   not (Heap.contains region_i (as_ref x))
+   ~ (Heap.contains region_i (as_ref x))
  /\ m1==(m0.[x]<-init)
 
 assume val alloc: #a:Type -> init:a -> ST (ref a)

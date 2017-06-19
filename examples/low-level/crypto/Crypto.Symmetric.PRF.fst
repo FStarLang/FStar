@@ -148,7 +148,7 @@ noeq type state (i:id) =
 	   #mac_rgn: region{mac_rgn `HH.extends` rgn} ->
            // key is immutable once generated, we should make it private
            key: lbuffer (v (statelen i)) 
-             {Buffer.frameOf key = rgn /\ ~(HS.MkRef?.mm (Buffer.content key))} ->
+             {Buffer.frameOf key = rgn /\ ~(HS.is_mm (Buffer.content key))} ->
            table: table_t rgn mac_rgn i ->
            state i
 
@@ -250,14 +250,14 @@ val prf_mac:
               t1 == Seq.snoc t0 (Entry x mc) /\
               CMA.genPost (i,x.iv) t.mac_rgn h0 mc h1 /\
               HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
-              HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
-	 HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+              HS.modifies_ref t.rgn (Set.singleton (Heap.addr_of (HS.as_ref r))) h0 h1 /\
+	 HS.modifies_ref t.mac_rgn Set.empty h0 h1
           | None -> False ))
     else (
       CMA.genPost (i,x.iv) t.mac_rgn h0 mc h1 /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn and t.mac_rgn
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but modifies nothing in them
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
+      HS.modifies_ref t.rgn Set.empty h0 h1  /\              //but modifies nothing in them
+      HS.modifies_ref t.mac_rgn Set.empty h0 h1 )))
 
 
 #reset-options "--z3rlimit 100"
@@ -314,14 +314,14 @@ val prf_sk0:
               k == r1 /\
               t1 == Seq.snoc t0 (Entry x r1) /\
               HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\
-              HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
-              HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+              HS.modifies_ref t.rgn (Set.singleton (Heap.addr_of (HS.as_ref r))) h0 h1 /\
+              HS.modifies_ref t.mac_rgn Set.empty h0 h1
           | None -> False ))
     else (
       Buffer.live h1 k /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1 )))
+      HS.modifies_ref t.rgn Set.empty h0 h1  /\              //but nothing within it is modified
+      HS.modifies_ref t.mac_rgn Set.empty h0 h1 )))
 
 let prf_sk0 #i t = 
   let x = { ctr=0ul; iv=iv_0() } in 
@@ -369,7 +369,7 @@ let modifies_x_buffer_1 #i (t:state i) x b h0 h1 =
     // can't use !{ t.rgn, rb}, why?
     let rgns = Set.union (Set.singleton #HH.rid t.rgn) (Set.singleton #HH.rid rb) in
     HS.modifies rgns h0 h1 /\
-    HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1 /\
+    HS.modifies_ref t.rgn (Set.singleton (Heap.addr_of (HS.as_ref r))) h0 h1 /\
     extends (HS.sel h0 r) (HS.sel h1 r) x /\
     Buffer.modifies_buf_1 rb b h0 h1 
   else

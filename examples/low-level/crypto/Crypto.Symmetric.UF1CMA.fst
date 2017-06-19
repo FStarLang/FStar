@@ -55,7 +55,7 @@ let skeyed (i:id) =
   | CHACHA20_POLY1305 -> false
 
 type skey (rgn:rid) (i:id) =
-  b:lbuffer (UInt32.v (skeylen i)){Buffer.frameOf b == rgn /\ ~HS.((Buffer.content b).mm)}
+  b:lbuffer (UInt32.v (skeylen i)){Buffer.frameOf b == rgn /\ ~(HS.is_mm ((Buffer.content b)))}
 
 //16-10-16 can't make it abstract?
 (** Conditionally-allocated abstract key (accessed only in this module) *)
@@ -72,7 +72,7 @@ val akey_gen: r:erid -> i:id -> ST (akey r i)
   (ensures  (fun h0 k h1 ->
     if skeyed i then
       HS.modifies (Set.singleton r) h0 h1 /\
-      HS.modifies_ref r TSet.empty h0 h1 /\
+      HS.modifies_ref r Set.empty h0 h1 /\
       ~(live h0 (get_skey #r #i k)) /\
       live h1 (get_skey #r #i k)
     else h0 == h1))
@@ -89,7 +89,7 @@ val akey_coerce: r:erid -> i:id -> kb:lbuffer (UInt32.v (skeylen i)) -> ST (akey
   (ensures  (fun h0 k h1 ->
     if skeyed i then
       HS.modifies (Set.singleton r) h0 h1 /\
-      HS.modifies_ref r TSet.empty h0 h1 /\
+      HS.modifies_ref r Set.empty h0 h1 /\
       ~(live h0 (get_skey #r #i k)) /\
       live h1 (get_skey #r #i k)
     else h0 == h1))
@@ -149,8 +149,8 @@ noeq type state (i:id) =
   | State:
     #region: erid ->
     r: MAC.elemB i{
-      let b = MAC.as_buffer r in Buffer.frameOf b == region /\ ~HS.((Buffer.content b).mm)} ->
-    s: wordB_16{frameOf s == region /\ disjoint (MAC.as_buffer r) s /\ ~ HS.((Buffer.content s).mm)} ->
+      let b = MAC.as_buffer r in Buffer.frameOf b == region /\ ~(HS.is_mm ((Buffer.content b)))} ->
+    s: wordB_16{frameOf s == region /\ disjoint (MAC.as_buffer r) s /\ ~ (HS.is_mm ((Buffer.content s)))} ->
     log: log_ref i region ->
     state i
 
@@ -197,7 +197,7 @@ let alloc region i ak k =
       sub k 0ul 16ul, sub k 16ul 16ul
   in
   let hz = ST.get () in
-  assert(modifies_ref region TSet.empty h0 hz);
+  assert(modifies_ref region Set.empty h0 hz);
   MAC.encode_r r rb;
   let h2 = ST.get () in
   if skeyed (fst i)
@@ -227,7 +227,7 @@ val gen: region:erid -> i:id -> ak:akey region (fst i) -> ST (state i)
   (ensures (fun m0 st m1 ->
     genPost i region m0 st m1 /\
     modifies_one region m0 m1 /\
-    modifies_ref region TSet.empty m0 m1 ))
+    modifies_ref region Set.empty m0 m1 ))
 let gen region i ak =
   let len = keylen (fst i) in
   let k = FStar.Buffer.rcreate region 0uy len in
@@ -283,8 +283,8 @@ let acc_inv (#i:id) (st:state i) (acc:accBuffer i) h : Type0 =
     let a = MAC.sel_elem h acc.a in
     let r = MAC.sel_elem h st.r in
     HS.contains h (alog acc) /\
-    disjoint_ref_1 (MAC.as_buffer acc.a) (HS.as_aref (alog acc)) /\
-    disjoint_ref_1 (MAC.as_buffer st.r)  (HS.as_aref (alog acc)) /\
+    disjoint_ref_1 (MAC.as_buffer acc.a) (alog acc) /\
+    disjoint_ref_1 (MAC.as_buffer st.r)  (alog acc) /\
     a == MAC.poly log r))
 
 val frame_acc_inv: #i:id -> st:state i -> acc:accBuffer i -> h0:mem -> h1:mem -> Lemma
@@ -337,10 +337,11 @@ let modifies_buf_and_ref (#a:Type) (#b:Type)
   (buf:Buffer.buffer a)
   (ref:reference b{frameOf buf == ref.id}) h0 h1 : GTot Type0 =
   HS.modifies_one ref.id h0 h1 /\
-  HS.modifies_ref ref.id !{HS.as_ref ref, Buffer.as_ref buf} h0 h1 /\
+  HS.modifies_ref ref.id (Set.union (Set.singleton (Heap.addr_of (HS.as_ref ref)))
+                                    (Set.singleton (Heap.addr_of (Buffer.as_ref buf)))) h0 h1 /\
   (forall (#t:Type) (buf':Buffer.buffer t).
     (frameOf buf' == ref.id /\ Buffer.live h0 buf' /\
-    Buffer.disjoint buf buf' /\ Buffer.disjoint_ref_1 buf' (HS.as_aref ref)) ==>
+    Buffer.disjoint buf buf' /\ Buffer.disjoint_ref_1 buf' ref) ==>
     equal h0 buf' h1 buf')
 
 // update [was add]; could add finalize (for POLY1305 when last block < 16).
@@ -351,7 +352,7 @@ val update: #i:id -> st:state i -> acc:accBuffer i -> w:lbuffer 16 ->
     Buffer.live h w /\
     Buffer.disjoint (MAC.as_buffer acc.a) w /\
     Buffer.disjoint (MAC.as_buffer st.r) w /\
-    (mac_log ==> Buffer.disjoint_ref_1 w (HS.as_aref (alog acc))) ))
+    (mac_log ==> Buffer.disjoint_ref_1 w (alog acc)) ))
   (ensures  (fun h0 _ h1 ->
      acc_inv st acc h1 /\
      Buffer.live h0 w /\
@@ -392,7 +393,7 @@ let modifies_bufs_and_ref (#a:Type) (#b:Type) (#c:Type)
   (buf1:Buffer.buffer a) (buf2:Buffer.buffer b)
   (ref:reference c{pairwise_distinct (frameOf buf1) (frameOf buf2) ref.id}) h0 h1 : GTot Type0 =
   HS.modifies (Set.as_set [frameOf buf1; frameOf buf2; ref.id]) h0 h1 /\
-  HS.modifies_ref ref.id !{HS.as_ref ref} h0 h1 /\
+  HS.modifies_ref ref.id (Set.singleton (Heap.addr_of (HS.as_ref ref))) h0 h1 /\
   Buffer.modifies_buf_1 (frameOf buf1) buf1 h0 h1 /\
   Buffer.modifies_buf_1 (frameOf buf2) buf2 h0 h1
 
@@ -434,7 +435,7 @@ val mac:
     Buffer.disjoint_2 (MAC.as_buffer st.r) st.s tag /\
     Buffer.disjoint st.s tag /\
     (mac_log ==> frameOf tag <> (alog acc).id \/
-                 Buffer.disjoint_ref_1 tag (HS.as_aref (alog acc))) /\
+                 Buffer.disjoint_ref_1 tag (alog acc)) /\
     (authId i ==> RR.m_sel h0 (ilog st.log) == (snd i, None)) ))
   (ensures (fun h0 _ h1 -> mac_ensures i st acc tag h0 h1))
 
@@ -500,8 +501,8 @@ private val modifies_verify_aux: #a:Type -> #b:Type -> #c:Type -> #d:Type ->
   buf1:Buffer.buffer a -> buf2:Buffer.buffer b ->
   h0:mem -> h1:mem -> h2:mem -> h3:mem -> Lemma
   (requires (
-    disjoint_ref_2 buf1 (HS.as_aref (RR.as_hsref mref)) (HS.as_aref ref) /\
-    disjoint_ref_1 buf2 (HS.as_aref (RR.as_hsref mref)) /\
+    disjoint_ref_2 buf1 (RR.as_hsref mref) ref /\
+    disjoint_ref_1 buf2 (RR.as_hsref mref) /\
     frameOf buf2 == h1.tip /\
     fresh_frame h0 h1 /\ modifies_0 h1 h2 /\ modifies_2 buf1 buf2 h2 h3))
   (ensures (

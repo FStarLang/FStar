@@ -1,1 +1,16 @@
-[ "Ê¸ƒ9˜VE\"PJ8vºè4¬", [] ]
+[
+  "î'› ¹\u001fV\u000b\u0013RHQ6\u0002\u000e¬",
+  [
+    [
+      "FStar.ST.modifies_none",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ]
+  ]
+]

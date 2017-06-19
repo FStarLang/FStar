@@ -1,5 +1,9 @@
 # -*- Makefile -*-
 
+FSTAR_HOME=..
+include gmake/z3.mk    # This pins $(Z3) ...
+include gmake/fstar.mk # and $(FSTAR) for all sub-make calls
+
 # --------------------------------------------------------------------
 LIB=../lib
 BIN=../bin
@@ -26,6 +30,7 @@ CONFIGURATION=Release
 -include Makefile.local
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
+DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 ifeq ($(UNAME),Darwin)
   HEAD=ghead
@@ -51,6 +56,8 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 all: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
+	# An artefact of the build process is that parse.fsi is auto-generated
+	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
@@ -144,7 +151,7 @@ rename_as_fst:
 	cp parser/parseit.fsi u_boot_fsts/FStar.Parser.Parseit.fsti
 
 prep: $(U_ALL_INTERFACES)
-	make rename_as_fst
+	$(MAKE) rename_as_fst
 	#fix up a use of polymorphic recursion in F#, which has a different syntax than F*
 	$(SED) -i 's/^and unembed_tactic_0.*//g' u_boot_fsts/FStar.Tactics.Interpreter.fst
 	$(SED) -i 's/^\/\/F\* version: and unembed_tactic_0/and unembed_tactic_0/g' u_boot_fsts/FStar.Tactics.Interpreter.fst
@@ -155,14 +162,14 @@ clean_u_extract_ocaml:
 
 u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
 					 FStar.Format.fst)
-	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
-							InstFV.fst Util.fst Print.fst MutRecTy.fst) \
+							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst) \
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
-u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Interleave.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
+u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Parser
 
 u_extract_normalizer: $(addprefix u_boot_fsts/FStar.TypeChecker., Common.fst Env.fst Normalize.fst Err.fst)
@@ -188,16 +195,13 @@ u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 
 u_extract_typechecker: u_extract_normalizer u_extract_rel u_extract_util u_extract_dmff u_extract_tcterm u_extract_tcinductive u_extract_tc
 
-u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst ToSyntax.fst)
+u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst Interleave.fst ToSyntax.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.ToSyntax
 
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
 u_extract_tactics:$(addprefix u_boot_fsts/FStar.Tactics., Basic.fst Embedding.fst Interpreter.fst)
-	# cp tactics/FStar.Tactics.Basic.fs u_boot_fsts/FStar.Tactics.Basic.fst
-	# cp tactics/FStar.Tactics.Embedding.fs u_boot_fsts/FStar.Tactics.Embedding.fst
-	# cp tactics/FStar.Tactics.Interpreter.fs u_boot_fsts/FStar.Tactics.Interpreter.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
@@ -215,50 +219,52 @@ u_extract_solver: u_boot_fsts/FStar.SMTEncoding.Solver.fst
 u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_solver
 
 u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
-	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
+	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Legacy.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
 u_extract_all: u_extract_misc u_extract_syntax u_extract_parser	u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction u_extract_tactics u_extract_fstar
 
 uz:
-	make prep
-	+make u_extract_uz
+	$(MAKE) prep
+	+$(MAKE) u_extract_uz
 	cp u_ocaml-output/*.ml ocaml-output/
-	+make -C ocaml-output
+	+$(MAKE) -C ocaml-output
 
 ocaml: clean_u_extract_ocaml
-	make prep
-	+make u_extract_all
+	$(MAKE) prep
+	+$(MAKE) u_extract_all
 	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
-	+make boot-ocaml
-	+make ocaml
-	+make -C ocaml-output
+	+$(MAKE) boot-ocaml
+	+$(MAKE) ocaml
+	+$(MAKE) -C ocaml-output
 
 fstar-ocaml:
-	+make ocaml
-	+make boot-ocaml
+	+$(MAKE) ocaml
+	+$(MAKE) boot-ocaml
 
 boot-ocaml:
-	+make -C ocaml-output all
+	+$(MAKE) -C ocaml-output all
 
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------
+OTHERFLAGS+=--hint_info
 
 utest:
-	make all
+	+$(MAKE) all
 ifeq ($(OS),Windows_NT)
-	make fsharp-regressions #normalizer failures on linux so only run on windows
+	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
 endif
-	+make -C ocaml-output
-	+make fstar-ocaml
-	+make uregressions interactive-test
+	+$(MAKE) -C ocaml-output
+	+$(MAKE) fstar-ocaml
+	+$(MAKE) -C ../examples/hello ocaml #a basic regression test for extraction
+	+$(MAKE) uregressions interactive-test
 
 # Interactive mode regressions
 interactive-test:
-	+make -C tests/interactive
+	$(MAKE) -C tests/interactive
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
@@ -268,14 +274,14 @@ fsharp-regressions:
 uregressions: ulib uexamples
 
 ulib:
-	+make -C ../ulib
+	+$(MAKE) -C ../ulib
 
 uexamples:
-	+make -C ../examples all
+	+$(MAKE) -C ../examples all
 
 ulong:
-	+make utest
-	+make -C ../examples/low-level/crypto extra
+	+$(MAKE) utest
+	+$(MAKE) -C ../examples/low-level/crypto extra
 
 wc-boot:
 	wc -l $(BOOT_ALL)

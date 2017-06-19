@@ -39,8 +39,8 @@ val check_uvars: Range.range -> typ -> unit
 val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
 
 //pattern utilities
-val pat_as_exps: bool -> env -> pat -> (list<bv> * list<term> * pat)
-val decorate_pattern: env -> pat -> list<term> -> pat
+val pat_as_exp: bool -> env -> pat -> (list<bv> * term * pat)
+val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation and generalization
@@ -63,7 +63,7 @@ val strengthen_precondition: (option<(unit -> string)> -> env -> term -> lcomp -
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
-val close_comp: env -> list<bv> -> lcomp -> lcomp
+val close_lcomp: env -> list<bv> -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 
@@ -80,6 +80,9 @@ val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders
 val fvar_const: env -> lident -> term
 val mk_toplevel_definition: env -> lident -> term -> sigelt * term
+val reify_body: env -> term -> term
+val reify_body_with_arg: env -> term -> arg -> term
+val remove_reify: term -> term
 
 //decorating terms with monadic operators
 val maybe_lift: env -> term -> lident -> lident -> typ -> term

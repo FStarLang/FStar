@@ -1,4 +1,18 @@
 open Prims
+let mkAssume:
+  (FStar_SMTEncoding_Term.term* FStar_SMTEncoding_Term.caption* Prims.string)
+    -> FStar_SMTEncoding_Term.decl
+  =
+  fun uu____6  ->
+    match uu____6 with
+    | (tm,cap,nm) ->
+        FStar_SMTEncoding_Term.Assume
+          {
+            FStar_SMTEncoding_Term.assumption_term = tm;
+            FStar_SMTEncoding_Term.assumption_caption = cap;
+            FStar_SMTEncoding_Term.assumption_name = nm;
+            FStar_SMTEncoding_Term.assumption_fact_ids = []
+          }
 let norng f x = f x FStar_Range.dummyRange
 let mkTrue: FStar_SMTEncoding_Term.term =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange
@@ -94,12 +108,12 @@ let mkForall:
     FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkForall
 let mkForall':
-  (FStar_SMTEncoding_Term.pat Prims.list Prims.list* Prims.int Prims.option*
+  (FStar_SMTEncoding_Term.pat Prims.list Prims.list* Prims.int option*
     FStar_SMTEncoding_Term.fvs* FStar_SMTEncoding_Term.term) ->
     FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkForall'
 let mkForall'':
-  (FStar_SMTEncoding_Term.pat Prims.list Prims.list* Prims.int Prims.option*
+  (FStar_SMTEncoding_Term.pat Prims.list Prims.list* Prims.int option*
     FStar_SMTEncoding_Term.sort Prims.list* FStar_SMTEncoding_Term.term) ->
     FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkForall''

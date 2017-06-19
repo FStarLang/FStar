@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Ident
+open Prims
 open FStar.All
 open FStar.Range
 
@@ -34,6 +35,8 @@ let lid_of_ns_and_id ns id =
 let lid_of_ids ids =
     let ns, id = Util.prefix ids in
     lid_of_ns_and_id ns id
+let lid_of_str str =
+    lid_of_ids (List.map id_of_text (Util.split str "."))
 let lid_of_path path pos =
     let ids = List.map (fun s -> mk_ident(s, pos)) path in
     lid_of_ids ids

@@ -53,9 +53,11 @@ let encrypt #p k text =
 
 let decrypt #p k c = 
   match k with 
-  | Ideal plain repr kv _ -> (match List.Tot.find (fun (Entry k' c' _) -> (*k=k' && MK *) c=c') !(log p) with 
-                             | Some(Entry _ _ p) -> p 
-                             | _ -> failwith "never")
+  | Ideal plain repr kv _ ->
+    let f (Entry k' c' _) = c=c' in
+    (match List.Tot.find f !(log p) with
+     | Some (Entry _ _ p) -> p
+     | _ -> failwith "never")
   | Concrete plain repr kv _ -> plain (AES.dec kv c)
 
 (* (\* below is for CCA2, with just bytes as ciphers. *\) *)

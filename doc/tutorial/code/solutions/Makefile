@@ -30,26 +30,26 @@ Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
 Ex12g.TMAC2.fst
 
-VERFILES_HH=Ex11a.fst
+VERFILES_HS=Ex11a.fst
 
 FSTAR_HOME=../../../../
 HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
-HYPERHEAP=$(FSTAR_HOME)/ulib/hyperheap
+HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
 
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
 
-verify_hh-%: __force__
-	$(FSTAR) --include $(HYPERHEAP) $*
+verify_hs-%: __force__
+	$(FSTAR) --include $(HYPERSTACK) $*
 
 
 all: uall sall Ex01a-ocaml
 
 sall:
 
-uall: $(VERFILES:%=verify-%) $(VERFILES_HH:%=verify_hh-%)
+uall: $(VERFILES:%=verify-%) $(VERFILES_HS:%=verify_hs-%)
 
 
 # Importing targets for simplified extraction to Ocaml
@@ -64,3 +64,9 @@ Ex01a-ocaml: out Ex01a.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml Ex01a.fst
 	$(OCAMLOPT) out/Ex01a.ml -o Ex01a.exe 2>&1
 	-./Ex01a.exe 2>&1
+
+# # Parameter for interactive mode
+# %.fst-in: 
+# 	@echo $(OPTIONS) \
+#  	--include $(FSTAR_HOME)/ulib/hyperstack \
+#  	--verify_module $(basename $(notdir $@))

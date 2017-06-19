@@ -1,0 +1,9 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Minimal\n","line":1,"column":0}}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"let hello : string = \"Hello F*!\"\n","line":2,"column":0}}
+{"query-id":"3","query":"pop","args":{"dummy":null}}
+{"query-id":"4","query":"pop","args":{"dummy":null}}
+{"query-id":"5","query":"push","args":{"kind":"full","code":"module Minimal\n","line":1,"column":0}}
+{"query-id":"6","query":"push","args":{"kind":"full","code":"let hello : string = \"Hello F*!\"\n","line":2,"column":0}}
+{"query-id":"7","query":"pop","args":{"dummy":null}}
+{"query-id":"8","query":"pop","args":{"dummy":null}}
+{"query-id":"9","query":"push","args":{"kind":"full","code":"module Minimal\nlet hello : string = \"Hello F*!\"\n","line":1,"column":0}}

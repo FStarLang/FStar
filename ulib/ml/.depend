@@ -1,56 +1,76 @@
-prims.cmo :
-prims.cmx :
-FStar_ST.cmo :
-FStar_ST.cmx :
-FStar_HyperHeap.cmo : FStar_ST.cmo
-FStar_HyperHeap.cmx : FStar_ST.cmx
-FStar_Mul.cmo : prims.cmo
-FStar_Mul.cmx : prims.cmx
-FStar_Float.cmo :
-FStar_Float.cmx :
-FStar_Char.cmo :
-FStar_Char.cmx :
-FStar_Int8.cmo : prims.cmo
-FStar_Int8.cmx : prims.cmx
-FStar_UInt8.cmo : prims.cmo
-FStar_UInt8.cmx : prims.cmx
-FStar_Int16.cmo : prims.cmo
-FStar_Int16.cmx : prims.cmx
-FStar_UInt16.cmo : prims.cmo
-FStar_UInt16.cmx : prims.cmx
-FStar_Int32.cmo : prims.cmo
-FStar_Int32.cmx : prims.cmx
-FStar_UInt32.cmo : prims.cmo
-FStar_UInt32.cmx : prims.cmx
-FStar_Int64.cmo : prims.cmo
-FStar_Int64.cmx : prims.cmx
-FStar_UInt64.cmo : prims.cmo
-FStar_UInt64.cmx : prims.cmx
-FStar_UInt128.cmo : prims.cmo
-FStar_UInt128.cmx : prims.cmx
-FStar_Int_Cast.cmo :
-FStar_Int_Cast.cmx :
 FStar_BaseTypes.cmo : FStar_UInt8.cmo FStar_UInt16.cmo FStar_Int8.cmo \
     FStar_Int64.cmo FStar_Int32.cmo FStar_Int16.cmo FStar_Float.cmo \
     FStar_Char.cmo
 FStar_BaseTypes.cmx : FStar_UInt8.cmx FStar_UInt16.cmx FStar_Int8.cmx \
     FStar_Int64.cmx FStar_Int32.cmx FStar_Int16.cmx FStar_Float.cmx \
     FStar_Char.cmx
-FStar_All.cmo :
-FStar_All.cmx :
-FStar_IO.cmo :
-FStar_IO.cmx :
-FStar_Heap.cmo :
-FStar_Heap.cmx :
-FStar_List.cmo :
-FStar_List.cmx :
-FStar_Option.cmo :
-FStar_Option.cmx :
-FStar_String.cmo : FStar_List.cmo
-FStar_String.cmx : FStar_List.cmx
-FStar_Set.cmo :
-FStar_Set.cmx :
 FStar_Buffer.cmo : FStar_UInt8.cmo FStar_UInt64.cmo FStar_UInt32.cmo \
     FStar_UInt128.cmo
 FStar_Buffer.cmx : FStar_UInt8.cmx FStar_UInt64.cmx FStar_UInt32.cmx \
     FStar_UInt128.cmx
+FStar_Char.cmo :
+FStar_Char.cmx :
+FStar_CommonST.cmo : FStar_Heap.cmo
+FStar_CommonST.cmx : FStar_Heap.cmx
+FStar_Float.cmo :
+FStar_Float.cmx :
+FStar_Heap.cmo :
+FStar_Heap.cmx :
+FStar_IO.cmo :
+FStar_IO.cmx :
+FStar_Int16.cmo : prims.cmo
+FStar_Int16.cmx : prims.cmx
+FStar_Int32.cmo : prims.cmo
+FStar_Int32.cmx : prims.cmx
+FStar_Int64.cmo : prims.cmo
+FStar_Int64.cmx : prims.cmx
+FStar_Int8.cmo : prims.cmo
+FStar_Int8.cmx : prims.cmx
+FStar_Int_Cast.cmo :
+FStar_Int_Cast.cmx :
+FStar_List.cmo : FStar_List_Tot_Base.cmo
+FStar_List.cmx : FStar_List_Tot_Base.cmx
+FStar_List_Tot_Base.cmo :
+FStar_List_Tot_Base.cmx :
+FStar_Mul.cmo : prims.cmo
+FStar_Mul.cmx : prims.cmx
+FStar_Option.cmo :
+FStar_Option.cmx :
+FStar_Set.cmo :
+FStar_Set.cmx :
+FStar_String.cmo : FStar_List.cmo
+FStar_String.cmx : FStar_List.cmx
+FStar_UInt128.cmo : prims.cmo
+FStar_UInt128.cmx : prims.cmx
+FStar_UInt16.cmo : prims.cmo
+FStar_UInt16.cmx : prims.cmx
+FStar_UInt32.cmo : prims.cmo
+FStar_UInt32.cmx : prims.cmx
+FStar_UInt64.cmo : prims.cmo
+FStar_UInt64.cmx : prims.cmx
+FStar_UInt8.cmo : prims.cmo
+FStar_UInt8.cmx : prims.cmx
+extracted/FStar_HyperHeap.cmo : prims.cmo FStar_Set.cmo \
+    extracted/FStar_Map.cmo FStar_Heap.cmo
+extracted/FStar_HyperHeap.cmx : prims.cmx FStar_Set.cmx \
+    extracted/FStar_Map.cmx FStar_Heap.cmx
+extracted/FStar_HyperStack.cmo : prims.cmo FStar_Set.cmo \
+    extracted/FStar_Map.cmo extracted/FStar_HyperHeap.cmo FStar_Heap.cmo
+extracted/FStar_HyperStack.cmx : prims.cmx FStar_Set.cmx \
+    extracted/FStar_Map.cmx extracted/FStar_HyperHeap.cmx FStar_Heap.cmx
+extracted/FStar_Map.cmo : prims.cmo FStar_Set.cmo
+extracted/FStar_Map.cmx : prims.cmx FStar_Set.cmx
+extracted/FStar_Pervasives.cmo : prims.cmo
+extracted/FStar_Pervasives.cmx : prims.cmx
+extracted/FStar_TSet.cmo : prims.cmo
+extracted/FStar_TSet.cmx : prims.cmx
+hyperstack/FStar_All.cmo :
+hyperstack/FStar_All.cmx :
+hyperstack/FStar_ST.cmo : extracted/FStar_Map.cmo \
+    extracted/FStar_HyperStack.cmo extracted/FStar_HyperHeap.cmo \
+    FStar_Heap.cmo FStar_CommonST.cmo
+hyperstack/FStar_ST.cmx : extracted/FStar_Map.cmx \
+    extracted/FStar_HyperStack.cmx extracted/FStar_HyperHeap.cmx \
+    FStar_Heap.cmx FStar_CommonST.cmx
+prims.cmo :
+prims.cmx :

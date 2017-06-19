@@ -2,9 +2,9 @@
   "\u000fÿ½µ©\fd\fo…Üv±}Bª",
   [
     [ "FStar.DM4F.ST.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ST.STATE_h_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.ST._dm4f_STATE_h_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.ST.STATE_h___proj__STATE_h__item__get_elab",
+      "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__get_elab",
       1,
       2,
       1,
@@ -12,7 +12,7 @@
       0
     ],
     [
-      "FStar.DM4F.ST.STATE_h___proj__STATE_h__item__put_elab",
+      "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__put_elab",
       1,
       2,
       1,

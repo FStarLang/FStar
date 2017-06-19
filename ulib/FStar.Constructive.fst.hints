@@ -1,5 +1,5 @@
 [
-  "r[¯\u001dCFèZ:ú‹Ô⁄qÁz",
+  "Û\u000f\u0002ù\u000b\u0015G\u0019 —m\u0007'\u0010+≈",
   [
     [ "FStar.Constructive.cand", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Constructive.__proj__Conj__item__h1", 1, 2, 1, [ "@query" ], 0 ],
@@ -15,7 +15,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.Constructive.IntroL",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5f96298b0b74547bf135efed6725faec"
+        "refinement_interpretation_FStar.Constructive_Tm_refine_5f96298b0b74547bf135efed6725faec"
       ],
       0
     ],
@@ -29,7 +29,7 @@
         "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.Constructive.IntroR",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7fbfb42f7ce95e0df3d91787685cfbfc"
+        "refinement_interpretation_FStar.Constructive_Tm_refine_7fbfb42f7ce95e0df3d91787685cfbfc"
       ],
       0
     ],
@@ -59,7 +59,10 @@
       1,
       2,
       1,
-      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
       0
     ],
     [ "FStar.Constructive.ceq_eq", 1, 2, 1, [ "@query" ], 0 ],
@@ -69,8 +72,8 @@
       2,
       1,
       [
-        "@query", "fuel_guarded_inversion_FStar.Constructive.ceq",
-        "unit_typing"
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq", "unit_typing"
       ],
       0
     ],
@@ -79,7 +82,10 @@
       1,
       2,
       1,
-      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
       0
     ],
     [
@@ -87,7 +93,10 @@
       1,
       2,
       1,
-      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
       0
     ],
     [
@@ -95,7 +104,10 @@
       1,
       2,
       1,
-      [ "@query", "fuel_guarded_inversion_FStar.Constructive.ceq" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.ceq"
+      ],
       0
     ],
     [
@@ -103,7 +115,10 @@
       1,
       2,
       1,
-      [ "@query", "fuel_guarded_inversion_FStar.Constructive.cfalse" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Constructive.cfalse"
+      ],
       0
     ],
     [
@@ -112,6 +127,7 @@
       2,
       1,
       [
+        "@MaxIFuel_assumption",
         "binder_x_611e56218f4c28201d355e496e09caa7_2",
         "fuel_guarded_inversion_FStar.Constructive.cfalse"
       ],
@@ -123,9 +139,10 @@
       2,
       1,
       [
-        "binder_x_c711cf3155d70c8a28818acaff9c5da1_2",
+        "@MaxIFuel_assumption",
+        "binder_x_27672a0694ca5377bbd1682fdc19a13b_2",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_16d7dda25a162db0722685f27f707102"
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_16d7dda25a162db0722685f27f707102"
       ],
       0
     ]
