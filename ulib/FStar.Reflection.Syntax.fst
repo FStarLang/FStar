@@ -114,6 +114,9 @@ let b2t_qn       = ["Prims"; "b2t"]
 let forall_qn    = ["Prims"; "l_Forall"]
 let squash_qn    = ["Prims"; "squash"]
 
+let bool_true_qn  = ["Prims"; "true"]
+let bool_false_qn = ["Prims"; "false"]
+
 let int_lid      = ["Prims"; "int"]
 let bool_lid     = ["Prims"; "bool"]
 let unit_lid     = ["Prims"; "unit"]

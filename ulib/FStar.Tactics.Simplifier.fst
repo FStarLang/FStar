@@ -53,6 +53,9 @@ let lem_p_imp_true #p = ()
 val lem_false_imp_p : #p:Type -> Lemma ((False ==> p) <==> True)
 let lem_false_imp_p #p = ()
 
+val lem_fa_true : #a:Type -> Lemma ((forall (x:a). True) <==> True)
+let lem_fa_true #a = ()
+
 val and_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
                                       squash (q <==> q') ->
                                       Lemma ((p /\ q) <==> (p' /\ q'))
@@ -64,21 +67,51 @@ val or_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
 let or_cong #p #q #p' #q' _ _ = ()
 
 val imp_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
-                                     squash (q <==> q') ->
-                                     Lemma ((p ==> q) <==> (p' ==> q'))
+                                      squash (q <==> q') ->
+                                      Lemma ((p ==> q) <==> (p' ==> q'))
 let imp_cong #p #q #p' #q' _ _ = ()
 
+val fa_cong (#a : Type) (#p #q : a -> Type) :
+    (x:a -> squash (p x <==> q x)) ->
+    Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
+let fa_cong #a #p #q f = admit() //fix, this should certainly be provable
+
+// Absolutely hideous, do something about normalization
 val is_true : term -> bool
 let is_true t =
-    match term_as_formula' t with
+    begin match term_as_formula' t with
     | True_ -> true
-    | _ -> false
+    | _ -> begin match inspect t with
+           | Tv_App l r ->
+            begin match inspect l with
+            | Tv_Abs b t ->
+                begin match term_as_formula' t with
+                | True_ -> true
+                | _ -> false
+                end
+            | _ -> false
+            end
+           | _ -> false
+           end
+    end
 
 val is_false : term -> bool
 let is_false t =
-    match term_as_formula' t with
+    begin match term_as_formula' t with
     | False_ -> true
-    | _ -> false
+    | _ -> begin match inspect t with
+           | Tv_App l r ->
+            begin match inspect l with
+            | Tv_Abs b t ->
+                begin match term_as_formula' t with
+                | False_ -> true
+                | _ -> false
+                end
+            | _ -> false
+            end
+           | _ -> false
+           end
+    end
 
 val simplify_point : unit -> Tac unit
 val recurse : unit -> Tac unit
@@ -86,6 +119,7 @@ val recurse : unit -> Tac unit
 let rec simplify_point = fun () -> (
     (* dump "1 ALIVE";; *)
     recurse;;
+    norm [];;
     g <-- cur_goal;
     let f = term_as_formula g in
     (* print ("1 g = " ^ term_to_string g);; *)
@@ -113,6 +147,12 @@ let rec simplify_point = fun () -> (
             else if is_false p then apply_lemma (quote lem_false_imp_p)
             else tiff
 
+        | Forall b p ->
+            dump "Hey";;
+            print ("f' = " ^ formula_to_string (term_as_formula' l));;
+                 if is_true p then apply_lemma (quote lem_fa_true)
+            else tiff
+
         | _ -> tiff
         end
     | _ -> fail "simplify_point: failed precondition: goal should be `g <==> ?u`"
@@ -120,6 +160,7 @@ let rec simplify_point = fun () -> (
 and recurse : unit -> Tac unit = fun () -> (
     (* dump "2 ALIVE";; *)
     step;;
+    norm [];;
     g <-- cur_goal;
     let f = term_as_formula g in
     (* print ("2 g = " ^ term_to_string g);; *)
@@ -127,14 +168,19 @@ and recurse : unit -> Tac unit = fun () -> (
     match f with
     | Iff l r ->
         begin match term_as_formula' l with
-        | And p q ->
+        | And _ _ ->
             seq (apply_lemma (quote and_cong)) simplify_point
 
-        | Or p q ->
+        | Or _ _ ->
             seq (apply_lemma (quote or_cong)) simplify_point
 
-        | Implies p q ->
+        | Implies _ _ ->
             seq (apply_lemma (quote imp_cong)) simplify_point
+
+        | Forall _ _ ->
+            apply_lemma (quote fa_cong);;
+            intro;;
+            simplify_point
 
         | _ -> tiff
         end
