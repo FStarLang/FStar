@@ -19,13 +19,13 @@ verifythis \
 preorders \
 dm4free \
 incl \
-struct \
 micro-benchmarks \
 bytes \
 tactics
 
 
 # low-level \  ... NS: removing from CI for this branch
+# struct \  ... TR: removing from CI for this branch
 
 # WARNING: this target shouldn't depend on anything other than the F*
 # binary; in particular it shouldn't depend on OCaml, F#, git, etc.
