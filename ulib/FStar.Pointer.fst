@@ -10,10 +10,12 @@ module HST = FStar.ST
 (** Type codes *)
 
 type base_typ =
+| TUInt
 | TUInt8
 | TUInt16
 | TUInt32
 | TUInt64
+| TInt
 | TInt8
 | TInt16
 | TInt32
@@ -201,10 +203,12 @@ let type_of_base_typ
   (t: base_typ)
 : Tot Type0
 = match t with
+  | TUInt -> nat
   | TUInt8 -> FStar.UInt8.t
   | TUInt16 -> FStar.UInt16.t
   | TUInt32 -> FStar.UInt32.t
   | TUInt64 -> FStar.UInt64.t
+  | TInt -> int
   | TInt8 -> FStar.Int8.t
   | TInt16 -> FStar.Int16.t
   | TInt32 -> FStar.Int32.t
@@ -279,10 +283,12 @@ let rec dummy_val
 = match t with
   | TBase b ->
     begin match b with
+    | TUInt -> 0
     | TUInt8 -> UInt8.uint_to_t 0
     | TUInt16 -> UInt16.uint_to_t 0
     | TUInt32 -> UInt32.uint_to_t 0
     | TUInt64 -> UInt64.uint_to_t 0
+    | TInt -> 0
     | TInt8 -> Int8.int_to_t 0
     | TInt16 -> Int16.int_to_t 0
     | TInt32 -> Int32.int_to_t 0
