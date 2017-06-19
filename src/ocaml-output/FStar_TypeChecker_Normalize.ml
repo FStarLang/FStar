@@ -4380,7 +4380,9 @@ let eta_expand:
                                    FStar_TypeChecker_Env.proof_ns =
                                      (uu___204_11069.FStar_TypeChecker_Env.proof_ns);
                                    FStar_TypeChecker_Env.synth =
-                                     (uu___204_11069.FStar_TypeChecker_Env.synth)
+                                     (uu___204_11069.FStar_TypeChecker_Env.synth);
+                                   FStar_TypeChecker_Env.is_native_tactic =
+                                     (uu___204_11069.FStar_TypeChecker_Env.is_native_tactic)
                                  }) t in
                             match uu____11065 with
                             | (uu____11070,ty,uu____11072) ->
@@ -4438,7 +4440,9 @@ let eta_expand:
                            FStar_TypeChecker_Env.proof_ns =
                              (uu___205_11078.FStar_TypeChecker_Env.proof_ns);
                            FStar_TypeChecker_Env.synth =
-                             (uu___205_11078.FStar_TypeChecker_Env.synth)
+                             (uu___205_11078.FStar_TypeChecker_Env.synth);
+                           FStar_TypeChecker_Env.is_native_tactic =
+                             (uu___205_11078.FStar_TypeChecker_Env.is_native_tactic)
                          }) t in
                     (match uu____11074 with
                      | (uu____11079,ty,uu____11081) ->

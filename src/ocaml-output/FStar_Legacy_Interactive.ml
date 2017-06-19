@@ -54,59 +54,61 @@ let push:
           match uu____215 with
           | (dsenv,env) ->
               let env1 =
-                let uu___227_226 = env in
+                let uu___258_226 = env in
                 {
                   FStar_TypeChecker_Env.solver =
-                    (uu___227_226.FStar_TypeChecker_Env.solver);
+                    (uu___258_226.FStar_TypeChecker_Env.solver);
                   FStar_TypeChecker_Env.range =
-                    (uu___227_226.FStar_TypeChecker_Env.range);
+                    (uu___258_226.FStar_TypeChecker_Env.range);
                   FStar_TypeChecker_Env.curmodule =
-                    (uu___227_226.FStar_TypeChecker_Env.curmodule);
+                    (uu___258_226.FStar_TypeChecker_Env.curmodule);
                   FStar_TypeChecker_Env.gamma =
-                    (uu___227_226.FStar_TypeChecker_Env.gamma);
+                    (uu___258_226.FStar_TypeChecker_Env.gamma);
                   FStar_TypeChecker_Env.gamma_cache =
-                    (uu___227_226.FStar_TypeChecker_Env.gamma_cache);
+                    (uu___258_226.FStar_TypeChecker_Env.gamma_cache);
                   FStar_TypeChecker_Env.modules =
-                    (uu___227_226.FStar_TypeChecker_Env.modules);
+                    (uu___258_226.FStar_TypeChecker_Env.modules);
                   FStar_TypeChecker_Env.expected_typ =
-                    (uu___227_226.FStar_TypeChecker_Env.expected_typ);
+                    (uu___258_226.FStar_TypeChecker_Env.expected_typ);
                   FStar_TypeChecker_Env.sigtab =
-                    (uu___227_226.FStar_TypeChecker_Env.sigtab);
+                    (uu___258_226.FStar_TypeChecker_Env.sigtab);
                   FStar_TypeChecker_Env.is_pattern =
-                    (uu___227_226.FStar_TypeChecker_Env.is_pattern);
+                    (uu___258_226.FStar_TypeChecker_Env.is_pattern);
                   FStar_TypeChecker_Env.instantiate_imp =
-                    (uu___227_226.FStar_TypeChecker_Env.instantiate_imp);
+                    (uu___258_226.FStar_TypeChecker_Env.instantiate_imp);
                   FStar_TypeChecker_Env.effects =
-                    (uu___227_226.FStar_TypeChecker_Env.effects);
+                    (uu___258_226.FStar_TypeChecker_Env.effects);
                   FStar_TypeChecker_Env.generalize =
-                    (uu___227_226.FStar_TypeChecker_Env.generalize);
+                    (uu___258_226.FStar_TypeChecker_Env.generalize);
                   FStar_TypeChecker_Env.letrecs =
-                    (uu___227_226.FStar_TypeChecker_Env.letrecs);
+                    (uu___258_226.FStar_TypeChecker_Env.letrecs);
                   FStar_TypeChecker_Env.top_level =
-                    (uu___227_226.FStar_TypeChecker_Env.top_level);
+                    (uu___258_226.FStar_TypeChecker_Env.top_level);
                   FStar_TypeChecker_Env.check_uvars =
-                    (uu___227_226.FStar_TypeChecker_Env.check_uvars);
+                    (uu___258_226.FStar_TypeChecker_Env.check_uvars);
                   FStar_TypeChecker_Env.use_eq =
-                    (uu___227_226.FStar_TypeChecker_Env.use_eq);
+                    (uu___258_226.FStar_TypeChecker_Env.use_eq);
                   FStar_TypeChecker_Env.is_iface =
-                    (uu___227_226.FStar_TypeChecker_Env.is_iface);
+                    (uu___258_226.FStar_TypeChecker_Env.is_iface);
                   FStar_TypeChecker_Env.admit =
-                    (uu___227_226.FStar_TypeChecker_Env.admit);
+                    (uu___258_226.FStar_TypeChecker_Env.admit);
                   FStar_TypeChecker_Env.lax = lax1;
                   FStar_TypeChecker_Env.lax_universes =
-                    (uu___227_226.FStar_TypeChecker_Env.lax_universes);
+                    (uu___258_226.FStar_TypeChecker_Env.lax_universes);
                   FStar_TypeChecker_Env.type_of =
-                    (uu___227_226.FStar_TypeChecker_Env.type_of);
+                    (uu___258_226.FStar_TypeChecker_Env.type_of);
                   FStar_TypeChecker_Env.universe_of =
-                    (uu___227_226.FStar_TypeChecker_Env.universe_of);
+                    (uu___258_226.FStar_TypeChecker_Env.universe_of);
                   FStar_TypeChecker_Env.use_bv_sorts =
-                    (uu___227_226.FStar_TypeChecker_Env.use_bv_sorts);
+                    (uu___258_226.FStar_TypeChecker_Env.use_bv_sorts);
                   FStar_TypeChecker_Env.qname_and_index =
-                    (uu___227_226.FStar_TypeChecker_Env.qname_and_index);
+                    (uu___258_226.FStar_TypeChecker_Env.qname_and_index);
                   FStar_TypeChecker_Env.proof_ns =
-                    (uu___227_226.FStar_TypeChecker_Env.proof_ns);
+                    (uu___258_226.FStar_TypeChecker_Env.proof_ns);
                   FStar_TypeChecker_Env.synth =
-                    (uu___227_226.FStar_TypeChecker_Env.synth)
+                    (uu___258_226.FStar_TypeChecker_Env.synth);
+                  FStar_TypeChecker_Env.is_native_tactic =
+                    (uu___258_226.FStar_TypeChecker_Env.is_native_tactic)
                 } in
               let res = FStar_Universal.push_context (dsenv, env1) msg in
               (FStar_Options.push ();
@@ -239,7 +241,7 @@ let the_interactive_state: interactive_state =
 let rec read_chunk: Prims.unit -> input_chunks =
   fun uu____706  ->
     let s = the_interactive_state in
-    let log =
+    let log1 =
       let uu____711 = FStar_Options.debug_any () in
       if uu____711
       then
@@ -266,13 +268,13 @@ let rec read_chunk: Prims.unit -> input_chunks =
       match uu____743 with
       | None  -> FStar_All.exit (Prims.parse_int "0")
       | Some l -> l in
-    log line;
+    log1 line;
     (let l = FStar_Util.trim_string line in
      if FStar_Util.starts_with l "#end"
      then
        let responses =
          match FStar_Util.split l " " with
-         | uu____753::ok::fail1::[] -> (ok, fail1)
+         | uu____753::ok::fail4::[] -> (ok, fail4)
          | uu____756 -> ("ok", "fail") in
        let str = FStar_Util.string_of_string_builder s.chunk in
        (FStar_Util.clear_string_builder s.chunk; Code (str, responses))
@@ -828,10 +830,10 @@ let rec go:
                        let env2 =
                          push env1 lax1 restore_cmd_line_options1 "#push" in
                        go (l, c) filename stack2 curmod env2 ts1)
-              | Code (text1,(ok,fail1)) ->
-                  let fail2 curmod1 env_mark =
+              | Code (text1,(ok,fail4)) ->
+                  let fail5 curmod1 env_mark =
                     report_fail ();
-                    FStar_Util.print1 "%s\n" fail1;
+                    FStar_Util.print1 "%s\n" fail4;
                     (let env1 = reset_mark env_mark in
                      go line_col filename stack curmod1 env1 ts) in
                   let env_mark = mark env in
@@ -849,8 +851,8 @@ let rec go:
                          (FStar_Util.print1 "\n%s\n" ok;
                           (let env2 = commit_mark env1 in
                            go line_col filename stack curmod1 env2 ts))
-                       else fail2 curmod1 env_mark
-                   | uu____2437 -> fail2 curmod env_mark)
+                       else fail5 curmod1 env_mark
+                   | uu____2437 -> fail5 curmod env_mark)
 let interactive_mode: Prims.string -> Prims.unit =
   fun filename  ->
     (let uu____2450 =

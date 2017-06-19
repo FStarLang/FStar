@@ -7552,7 +7552,9 @@ let resolve_implicits:
                                FStar_TypeChecker_Env.proof_ns =
                                  (uu___185_15586.FStar_TypeChecker_Env.proof_ns);
                                FStar_TypeChecker_Env.synth =
-                                 (uu___185_15586.FStar_TypeChecker_Env.synth)
+                                 (uu___185_15586.FStar_TypeChecker_Env.synth);
+                               FStar_TypeChecker_Env.is_native_tactic =
+                                 (uu___185_15586.FStar_TypeChecker_Env.is_native_tactic)
                              }) tm1 in
                         match uu____15582 with
                         | (uu____15587,uu____15588,g1) ->
