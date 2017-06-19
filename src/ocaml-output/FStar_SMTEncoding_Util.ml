@@ -3,8 +3,8 @@ let mkAssume:
   (FStar_SMTEncoding_Term.term* FStar_SMTEncoding_Term.caption* Prims.string)
     -> FStar_SMTEncoding_Term.decl
   =
-  fun uu____7  ->
-    match uu____7 with
+  fun uu____6  ->
+    match uu____6 with
     | (tm,cap,nm) ->
         FStar_SMTEncoding_Term.Assume
           {

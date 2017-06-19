@@ -18,13 +18,13 @@ type 'Aa result =
   | E of Prims.exn
   | Err of Prims.string
 let uu___is_V projectee =
-  match projectee with | V v -> true | uu____383 -> false
+  match projectee with | V v -> true | uu____381 -> false
 let __proj__V__item__v projectee = match projectee with | V v -> v
 let uu___is_E projectee =
-  match projectee with | E e -> true | uu____412 -> false
+  match projectee with | E e -> true | uu____406 -> false
 let __proj__E__item__e projectee = match projectee with | E e -> e
 let uu___is_Err projectee =
-  match projectee with | Err msg -> true | uu____441 -> false
+  match projectee with | Err msg -> true | uu____431 -> false
 let __proj__Err__item__msg projectee = match projectee with | Err msg -> msg
 type ex_pre = Obj.t
 type 'Aa ex_post = 'Aa result -> Obj.t
@@ -40,12 +40,12 @@ type ('Aa,'Aq,'Awp,'Ap) ex_assume_p = Prims.unit
 type ('Aa,'Ap) ex_null_wp = Prims.unit
 type ('Aa,'Awp) ex_trivial = 'Awp
 type ('Aa,'Awp,'Ap) lift_div_exn = 'Awp
-let raise uu____717 = failwith "Not yet implemented:raise"
+let raise uu____703 = failwith "Not yet implemented:raise"
 type 'Ah all_pre_h = 'Ah -> Obj.t
 type ('Ah,'Aa) all_post_h = 'Aa result -> 'Ah -> Obj.t
 type ('Ah,'Aa) all_wp_h = Prims.unit -> 'Ah all_pre_h
 type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = Prims.unit
-type ('Aheap,'Aa,'Ax,'Ap,'Auu____822) all_return = 'Ap
+type ('Aheap,'Aa,'Ax,'Ap,'Auu____808) all_return = 'Ap
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else =
   Prims.unit
@@ -58,19 +58,19 @@ type ('Aheap,'Aa,'Awp) all_trivial = Prims.unit
 type 'Aa inversion = Prims.unit
 let allow_inversion = ()
 let uu___is_None projectee =
-  match projectee with | None  -> true | uu____1101 -> false
+  match projectee with | None  -> true | uu____1084 -> false
 let uu___is_Some projectee =
-  match projectee with | Some v -> true | uu____1115 -> false
+  match projectee with | Some v -> true | uu____1096 -> false
 let __proj__Some__item__v projectee = match projectee with | Some v -> v
-let invertOption uu____1135 = ()
+let invertOption uu____1113 = ()
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
 let uu___is_Inl projectee =
-  match projectee with | Inl v -> true | uu____1172 -> false
+  match projectee with | Inl v -> true | uu____1147 -> false
 let __proj__Inl__item__v projectee = match projectee with | Inl v -> v
 let uu___is_Inr projectee =
-  match projectee with | Inr v -> true | uu____1212 -> false
+  match projectee with | Inr v -> true | uu____1181 -> false
 let __proj__Inr__item__v projectee = match projectee with | Inr v -> v
 type ('a,'b) tuple2 =
   | Mktuple2 of 'a* 'b
