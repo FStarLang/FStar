@@ -288,11 +288,8 @@ let subst_pat' s p : (pat * int) =
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
-    | None
-    | Some (Inr _) -> lopt
-    | Some (Inl l) ->
-      Some (Inl ({l with res_typ=subst' s l.res_typ;
-                         comp=(fun () -> subst_comp' s (l.comp()))}))
+    | None -> None
+    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
 
 let push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s

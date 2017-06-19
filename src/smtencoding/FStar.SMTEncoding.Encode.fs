@@ -310,13 +310,10 @@ let head_normal env t =
 
 let head_redex env t =
     match (U.un_uinst t).n with
-    | Tm_abs(_, _, Some (BU.Inr (l, flags))) ->
-      Ident.lid_equals l Const.effect_Tot_lid
-      || Ident.lid_equals l Const.effect_GTot_lid
-      || List.existsb (function TOTAL -> true | _ -> false) flags
-
-    | Tm_abs(_, _, Some (BU.Inl lc)) ->
-      U.is_tot_or_gtot_lcomp lc
+    | Tm_abs(_, _, Some rc) ->
+      Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
+      || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
+      || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_fvar fv ->
       Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
@@ -858,33 +855,32 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             mkFreeV(f, Term_sort), [decl]
           in
 
-          let is_impure (lc:BU.either<S.lcomp, S.residual_comp>) = match lc with
-            | BU.Inl lc -> not (U.is_pure_or_ghost_lcomp lc)
-            | BU.Inr (eff, _) -> TypeChecker.Util.is_pure_or_ghost_effect env.tcenv eff |> not
+          let is_impure (rc:S.residual_comp) =
+            TypeChecker.Util.is_pure_or_ghost_effect env.tcenv rc.residual_effect |> not
           in
 
-          let reify_comp_and_body env c body =
-            let reified_body = TcUtil.reify_body env.tcenv body in
-            let c = match c with
-              | BU.Inl lc ->
-                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
-                BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
+//          let reify_comp_and_body env body =
+//            let reified_body = TcUtil.reify_body env.tcenv body in
+//            let c = match c with
+//              | BU.Inl lc ->
+//                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
+//                BU.Inl (U.lcomp_of_comp (S.mk_Total typ))
+//
+//              (* In this case we don't have enough information to reconstruct the *)
+//              (* whole computation type and reify it *)
+//              | BU.Inr (eff_name, _) -> c
+//            in
+//            c, reified_body
+//          in
 
-              (* In this case we don't have enough information to reconstruct the *)
-              (* whole computation type and reify it *)
-              | BU.Inr (eff_name, _) -> c
-            in
-            c, reified_body
-          in
-
-          let codomain_eff lc = match lc with
-            | BU.Inl lc -> SS.subst_comp opening (lc.comp()) |> Some
-            | BU.Inr (eff, flags) ->
-              let new_uvar () = FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst in
-              if Ident.lid_equals eff Const.effect_Tot_lid
-              then S.mk_Total (new_uvar()) |> Some
-              else if Ident.lid_equals eff Const.effect_GTot_lid
-              then S.mk_GTotal (new_uvar()) |> Some
+          let codomain_eff rc =
+              let res_typ = match rc.residual_typ with
+                | None -> FStar.TypeChecker.Rel.new_uvar Range.dummyRange [] (U.ktype0) |> fst
+                | Some t -> t in
+              if Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
+              then Some (S.mk_Total res_typ)
+              else if Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
+              then Some (S.mk_GTotal res_typ)
               (* TODO (KM) : shouldn't we do something when flags contains TOTAL ? *)
               else None
           in
@@ -897,21 +893,16 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0));
               fallback ()
 
-            | Some lc ->
-              let lc : BU.either<S.lcomp, S.residual_comp> = lc in
-              if is_impure lc && not (is_reifiable env.tcenv lc)
+            | Some rc ->
+              if is_impure rc && not (is_reifiable env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let lc, body =
-                  if is_reifiable env.tcenv lc
-                  then reify_comp_and_body envbody lc body
-                  else lc, body
-                in
+                let body = TcUtil.reify_body env.tcenv body in
                 let body, decls' = encode_term body envbody in
                 let arrow_t_opt, decls'' =
-                  match codomain_eff lc with
+                  match codomain_eff rc with
                   | None   -> None, []
                   | Some c ->
                     let tfun = U.arrow bs c in
@@ -2033,7 +2024,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some <| BU.Inr (Const.effect_Tot_lid, [TOTAL]))) None tm.pos
+              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) None tm.pos
             in
 
             let encode_action env (a:S.action) =

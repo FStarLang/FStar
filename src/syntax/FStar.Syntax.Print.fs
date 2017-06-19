@@ -282,11 +282,8 @@ let rec term_to_string x =
       | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
       | Tm_abs(bs, t2, lc) ->
         begin match lc with
-            | Some (Inl l) when (Options.print_implicits()) ->
-              U.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
-              (* TODO : Consider adding an option printing the cflags *)
-            | Some (Inr (l, flags)) when (Options.print_implicits()) ->
-              U.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
+            | Some rc when (Options.print_implicits()) ->
+              U.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) rc.residual_effect.str
             | _ ->
               U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end

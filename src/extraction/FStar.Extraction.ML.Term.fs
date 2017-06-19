@@ -832,10 +832,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let body =
             match copt with
             | Some c ->
-                debug g (fun () ->
-                    (match c with
-                    | Inl lc -> BU.print1 "Computation lc: %s\n" (Print.lcomp_to_string lc)
-                    | Inr rc -> BU.print1 "Computation rc: %s\n" (Ident.text_of_lid (fst rc))));
                 if TcEnv.is_reifiable env.tcenv c
                 then TcUtil.reify_body env.tcenv body
                 else body
@@ -865,17 +861,16 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           term_ty
 
         | Tm_app(head, args) ->
-          let is_total = function
-            | Inl l -> FStar.Syntax.Util.is_total_lcomp l
-            | Inr (l, flags) -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid
-                             || flags |> List.existsb (function TOTAL -> true | _ -> false)
+          let is_total rc =
+              Ident.lid_equals rc.residual_effect FStar.Syntax.Const.effect_Tot_lid
+              || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, (SS.compress head).n with
             | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
-            | _, Tm_abs(bs, _, Some lc) when is_total lc -> //this is a beta_redex --- also reduce it before extraction
+            | _, Tm_abs(bs, _, Some rc) when is_total rc -> //this is a beta_redex --- also reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 

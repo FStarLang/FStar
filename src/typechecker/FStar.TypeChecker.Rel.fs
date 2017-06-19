@@ -59,7 +59,7 @@ let abstract_guard x g = match g with
       let f = match g.guard_f with
         | NonTrivial f -> f
         | _ -> failwith "impossible" in
-      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (mk_Total U.ktype0 |> U.lcomp_of_comp |> Inl))})
+      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (U.residual_tot U.ktype0))})
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
@@ -518,9 +518,9 @@ let u_abs k ys t =
         | _ -> (ys, t), ([], S.mk_Total k) in
     if List.length xs <> List.length ys
     (* TODO : not putting any cflags here on the annotation... *)
-    then U.abs ys t (Some (Inr (Const.effect_Tot_lid, []))) //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.; causing a loss in precision for the SMT encoding
+    then U.abs ys t (Some (U.mk_residual_comp Const.effect_Tot_lid None [])) //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.; causing a loss in precision for the SMT encoding
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
-         U.abs ys t (U.lcomp_of_comp c |> Inl |> Some)
+         U.abs ys t (Some (U.residual_comp_of_comp c))
 
 let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
@@ -1624,7 +1624,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
         let r = Env.get_range env in
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = U.abs xs (h gs_xs) (U.lcomp_of_comp c |> Inl |> Some) in
+        let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
         if Env.debug env <| Options.Other "Rel"
         then BU.print6 "Imitating  binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
             (Print.binders_to_string ", " xs)
@@ -1668,7 +1668,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then None
         else let g_xs, _ = gs xi.sort in
              let xi = S.bv_to_name xi in
-             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.lcomp_of_comp c |> Inl |> Some) in
+             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.residual_comp_of_comp c |> Some) in
              let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
              if debug env <| Options.Other "Rel" then BU.print2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
              let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
@@ -1702,7 +1702,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                                   (fst (new_uvar k.pos scope (U.type_u () |> fst)))) in
                              let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
                              let k' = U.arrow xs c in
-                             let uv_sol = U.abs scope k' (Some (Inl (U.lcomp_of_comp <| S.mk_Total (U.type_u () |> fst)))) in
+                             let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
                              UF.change uvar uv_sol;
                              Some (xs, c))
                         | _ -> None

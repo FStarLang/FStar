@@ -230,7 +230,7 @@ val reify_comp          : env -> comp -> universe -> term
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
 val is_reifiable_effect : env -> lident -> bool
-val is_reifiable : env -> BU.either<lcomp, residual_comp> -> bool
+val is_reifiable : env -> residual_comp -> bool
 val is_reifiable_comp : env -> comp -> bool
 val is_reifiable_function : env -> term -> bool
 

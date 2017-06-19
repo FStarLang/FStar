@@ -541,6 +541,11 @@ and cps_and_elaborate env ed =
 
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
+  let rc_gtot = {
+            residual_effect = Const.effect_GTot_lid;
+            residual_typ = None;
+            residual_flags = []
+  } in
 
   (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
   (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
@@ -568,22 +573,18 @@ and cps_and_elaborate env ed =
               (Print.term_to_string body)
               (match what' with
                | None -> "None"
-               | Some (Inl lc) -> Print.lcomp_to_string lc
-               | Some (Inr (lid, _)) -> FStar.Ident.text_of_lid lid)
+               | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
           in failwith error_msg
         in
         begin match what' with
         | None -> fail ()
-        | Some (Inl lc) ->
-          if U.is_pure_or_ghost_lcomp lc
-          then
-            let g_opt = Rel.try_teq true env lc.res_typ U.ktype0 in
-            match g_opt with
-            | Some g' -> Rel.force_trivial_guard env g'
-            | None -> fail ()
-          else fail ()
-        | Some (Inr (lid, _)) ->
-          if not (U.is_pure_effect lid) then fail ()
+        | Some rc ->
+          if not (U.is_pure_effect rc.residual_effect) then fail ();
+          BU.map_opt rc.residual_typ (fun rt ->
+              let g_opt = Rel.try_teq true env rt U.ktype0 in
+              match g_opt with
+                | Some g' -> Rel.force_trivial_guard env g'
+                | None -> fail ()) |> ignore
         end ;
 
         let wp =
@@ -594,7 +595,10 @@ and cps_and_elaborate env ed =
 
         (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
         let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-        U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
+        U.abs ([ b1; S.mk_binder wp ])
+              (U.abs (bs) body what)
+              (Some rc_gtot)
+
       | _ ->
           failwith "unexpected shape for return"
   in
@@ -603,7 +607,7 @@ and cps_and_elaborate env ed =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr (Const.effect_GTot_lid, [])))
+        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
         failwith "unexpected shape for return"
   in
@@ -1257,8 +1261,8 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       (* TAC?. reflect (__native_tac x) *)
 
       let unit_binder = mk_binder <| new_bv None t_unit in
-      let body = abs [unit_binder] app <| Some (Inl (lcomp_of_comp comp)) in
-      let func = abs bs body <| Some (Inl (lcomp_of_comp comp)) in
+      let body = abs [unit_binder] app <| Some (U.residual_comp_of_comp comp) in
+      let func = abs bs body <| Some (U.residual_comp_of_comp comp) in
       {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids, attrs)} in
 
     let tactic_decls =
