@@ -3465,11 +3465,11 @@ and solve_t': FStar_TypeChecker_Env.env -> tprob -> worklist -> solution =
                                                    | USolved wl2 ->
                                                        let subprobs =
                                                          FStar_List.map2
-                                                           (fun uu____8249 
+                                                           (fun uu____8249
                                                               ->
-                                                              fun uu____8250 
+                                                              fun uu____8250
                                                                 ->
-                                                                match 
+                                                                match
                                                                   (uu____8249,
                                                                     uu____8250)
                                                                 with
