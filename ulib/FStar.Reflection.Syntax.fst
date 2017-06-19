@@ -2,11 +2,6 @@ module FStar.Reflection.Syntax
 
 open FStar.Order
 
-// assume val term : Type0
-
-// assume val fv : Type0
-// assume val binder : Type0 // really a bv, qualifiers are ignored, unsure they're really needed
-// assume val env : Type0// would maybe make more sense in tactics, as they're special cased
 open FStar.Reflection.Types
 
 type name    = list string
