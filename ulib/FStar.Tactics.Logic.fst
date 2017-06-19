@@ -140,6 +140,8 @@ let unsquash (t:term) : tactic term =
     b <-- intro;
     return (pack (Tv_Var b))
 
+let squash_intro : tactic unit =
+    apply (quote FStar.Squash.return_squash)
 
 private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                      (p \/ q) ->

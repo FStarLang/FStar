@@ -101,13 +101,14 @@ let rec is_arith_expr (t:term) =
         if      qn = add_qn   then liftM2 Plus ll rr
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
+        else if qn = mult'_qn then liftM2 Mult ll rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in
         collect_app_order t;
         let aa = is_arith_expr (a <: x:term{x << t}) in
         if qn = neg_qn then liftM Neg aa
-        else fail "unary"
+        else fail ("unary: " ^ fv_to_string fv)
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
     | Tv_FVar _ , []

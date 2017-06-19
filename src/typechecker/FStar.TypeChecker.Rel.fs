@@ -819,7 +819,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                            then let t1' = normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1 in
                                 t1', t2
                            else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
-                                t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+                                t1, t2' in
               aux retry (n_delta + 1) t1 t2
 
             | MisMatch _ -> fail r
@@ -2436,7 +2436,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -2605,12 +2605,16 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       || Env.debug env <| Options.Other "SMTQuery"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [N.Eager_unfolding] env vc in
+      let vc = N.normalize [N.Eager_unfolding; N.Simplify; N.Primops] env vc in
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
-        if not use_smt then None
-        else
+        if not use_smt then (
+            if Env.debug env <| Options.Other "Rel" then
+                Errors.diag (Env.get_range env)
+                            (BU.format1 "Cannot solve without SMT : %s\n" (Print.term_to_string vc));
+                None
+        ) else
           let _ =
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
@@ -2618,9 +2622,9 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
-                else [env,vc] in
-            vcs |> List.iter (fun (env, goal) ->
-                    let goal = N.normalize [N.Simplify] env goal in
+                else [env,vc,FStar.Options.peek ()] in
+            vcs |> List.iter (fun (env, goal, opts) ->
+                    let goal = N.normalize [N.Simplify; N.Primops] env goal in
                     match check_trivial goal with
                     | Trivial ->
                         if (Env.debug env <| Options.Other "Rel") || (Env.debug env <| Options.Other "Tac")
@@ -2628,13 +2632,18 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                         () // do nothing
 
                     | NonTrivial goal ->
+                        FStar.Options.push ();
+                        FStar.Options.set opts;
                         env.solver.refresh ();
                         if Env.debug env <| Options.Other "Rel"
                         then Errors.diag (Env.get_range env)
                                          (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
                                                  (Print.term_to_string goal)
                                                  (Env.string_of_proof_ns env));
-                        env.solver.solve use_env_range_msg env goal)
+                        let res = env.solver.solve use_env_range_msg env goal in
+                        FStar.Options.pop ();
+                        res
+                        )
           in
           Some ret_g
 
@@ -2648,7 +2657,7 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
-let resolve_implicits g =
+let resolve_implicits' forcelax g =
   let unresolved u = match UF.find u with
     | None -> true
     | _ -> false in
@@ -2665,6 +2674,7 @@ let resolve_implicits g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
+               let env = if forcelax then {env with lax=true} else env in
                let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
@@ -2676,6 +2686,9 @@ let resolve_implicits g =
                in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
+
+let resolve_implicits     g = resolve_implicits' false g
+let resolve_implicits_lax g = resolve_implicits' true  g
 
 let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits in

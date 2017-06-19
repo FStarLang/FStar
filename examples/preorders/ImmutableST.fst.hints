@@ -22,7 +22,7 @@
       0
     ],
     [
-      "ImmutableST.182543",
+      "ImmutableST.182268",
       1,
       2,
       1,
@@ -105,7 +105,6 @@
         "refinement_interpretation_NatHeap_Tm_refine_fc20cbed7f4be015c3340e3f66f79d87",
         "token_correspondence_ImmutableST.contains",
         "token_correspondence_ImmutableST.heap_rel",
-        "typing_FStar.Pervasives.__proj__Mktuple2__item___2",
         "typing_FStar.Pervasives.fst", "typing_NatHeap.alloc_ref",
         "typing_NatHeap.ref"
       ],

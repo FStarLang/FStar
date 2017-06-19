@@ -9,6 +9,12 @@ let quote_sanity_check =
                       | Tv_App _ _ -> return ()
                       | _ -> fail ("oops!: " ^ term_to_string t)) True
 
+let goal_sanity_check =
+    assert_by_tactic (g <-- cur_goal;
+                      match term_as_formula g with
+                      | And _ _ -> return ()
+                      | _ -> fail ("oops!: " ^ term_to_string g)) (True /\ True)
+
 // should reduce to 30
 let test1 = assert_by_tactic (let _ = pack (Tv_Const (C_Int ((10 + 8) + (3 + 9)))) in
                               return ()) True

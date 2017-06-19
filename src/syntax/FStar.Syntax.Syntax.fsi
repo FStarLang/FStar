@@ -24,6 +24,7 @@ open FStar
 open FStar.Util
 open FStar.Range
 open FStar.Ident
+open FStar.Dyn
 
 // JP: all these types are defined twice and every change has to be performed
 // twice (because of the .fs). TODO: move the type definitions into a standalone
@@ -143,6 +144,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
+  | Meta_alien         of dyn * string                           (* A blob embedded into syntax, with an annotation to print it *)
 and meta_source_info =
   | Data_app
   | Sequence

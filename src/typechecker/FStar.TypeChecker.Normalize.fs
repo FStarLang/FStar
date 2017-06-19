@@ -573,6 +573,18 @@ let built_in_primitive_steps : list<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         string_as_const rng (if b then "true" else "false")
     in
+    let decidable_eq (neg:bool) (rng:Range.range) (args:args) : option<term> =
+        let tru = mk (Tm_constant (FC.Const_bool true)) rng in
+        let fal = mk (Tm_constant (FC.Const_bool false)) rng in
+        match args with
+        | [(_typ, _); (a1, _); (a2, _)] ->
+            (match U.eq_tm a1 a2 with
+            | U.Equal -> Some (if neg then fal else tru)
+            | U.NotEqual -> Some (if neg then tru else fal)
+            | _ -> None)
+        | _ ->
+            failwith "Unexpected number of arguments"
+    in
     let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
             [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
              (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
@@ -591,6 +603,8 @@ let built_in_primitive_steps : list<primitive_step> =
              (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (Const.string_compare, 2, binary_op arg_as_string string_compare');
+             (Const.op_Eq,          3, decidable_eq false);
+             (Const.op_notEq,       3, decidable_eq true);
              (Const.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (Const.p2l ["FStar"; "String"; "string_of_list"],
@@ -614,18 +628,6 @@ let built_in_primitive_steps : list<primitive_step> =
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
 let equality_ops : list<primitive_step> =
-    let interp_bool (neg:bool) (rng:Range.range) (args:args) : option<term> =
-        let tru = mk (Tm_constant (FC.Const_bool true)) rng in
-        let fal = mk (Tm_constant (FC.Const_bool false)) rng in
-        match args with
-        | [(_typ, _); (a1, _); (a2, _)] ->
-            (match U.eq_tm a1 a2 with
-            | U.Equal -> Some (if neg then fal else tru)
-            | U.NotEqual -> Some (if neg then tru else fal)
-            | _ -> None)
-        | _ ->
-            failwith "Unexpected number of arguments"
-    in
     let interp_prop (r:Range.range) (args:args) : option<term> =
         match args with
         | [(_typ, _); (a1, _); (a2, _)]    //eq2
@@ -636,16 +638,6 @@ let equality_ops : list<primitive_step> =
             | _ -> None)
         | _ ->
             failwith "Unexpected number of arguments"
-    in
-    let decidable_equality =
-        [{name = Const.op_Eq;
-         arity = 3;
-         strong_reduction_ok=true;
-         interpretation=interp_bool false};
-         {name = Const.op_notEq;
-         arity = 3;
-         strong_reduction_ok=true;
-         interpretation=interp_bool true}]
     in
     let propositional_equality =
         {name = Const.eq2_lid;
@@ -660,7 +652,7 @@ let equality_ops : list<primitive_step> =
          interpretation = interp_prop}
     in
 
-    decidable_equality @ [propositional_equality; hetero_propositional_equality]
+    [propositional_equality; hetero_propositional_equality]
 
 let reduce_primops cfg tm =
     if not <| List.contains Primops cfg.steps
@@ -1362,6 +1354,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(m,r)::stack) head
 
+                      | Meta_alien (b, s) ->
+                        norm cfg env (Meta(m, t.pos)::stack) head
+
                       | Meta_pattern args ->
                           let args = norm_pattern_args cfg env args in
                           norm cfg env (Meta(Meta_pattern args, t.pos)::stack) head //meta doesn't block reduction, but we need to put the label back
@@ -1711,7 +1706,7 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps@equality_ops}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in

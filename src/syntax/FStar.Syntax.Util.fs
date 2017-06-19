@@ -26,6 +26,7 @@ open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
+open FStar.Dyn
 module U = FStar.Util
 module List = FStar.List
 module SC = FStar.Syntax.Const
@@ -565,10 +566,10 @@ let mk_data l args =
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
       mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
 
-let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
+let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
 let unmangle_field_name x =
-    if U.starts_with x.idText "^fname^"
-    then mk_ident(U.substring_from x.idText 7, x.idRange)
+    if U.starts_with x.idText "__fname__"
+    then mk_ident(U.substring_from x.idText 9, x.idRange)
     else x
 
 (***********************************************************************************************)
@@ -1376,3 +1377,13 @@ let is_synth_by_tactic t =
     match (un_uinst t).n with
     | Tm_fvar fv -> fv_eq_lid fv SC.synth_lid
     | _ -> false
+
+(* Spooky behaviours are possible with this, procede with caution *)
+
+let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+
+let un_alien (t : term) : dyn =
+    match t.n with
+    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | _ -> failwith "Something paranormal occurred"

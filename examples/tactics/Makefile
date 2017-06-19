@@ -5,7 +5,6 @@ include ../Makefile.include
 
 all:	Apply.uver		\
 	Canon.uver		\
-	MetaCoq.uver		\
 	Arith.uver		\
 	Pruning.uver		\
 	Cut.uver		\
@@ -16,9 +15,11 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Synthesis.uver		\
+	Setopts.uver		\
 	Neg.uver		\
 	Caller.uver		\
 	UnitTests.uver		\
+	MetaCoq.uver		\
 	neg
 
 neg:

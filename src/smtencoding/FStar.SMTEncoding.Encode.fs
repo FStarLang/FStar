@@ -2439,7 +2439,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
           i+1, [], env
 
         | Env.Binding_var x ->
-            let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
+            let t1 = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "SMTEncoding"
             then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term t1 env in
@@ -2613,7 +2613,7 @@ let encode_query use_env_msg tcenv q
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->
                       x.sort in
-                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv t in
+                let t = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify; N.Primops; N.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux bindings in

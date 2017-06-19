@@ -115,7 +115,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal)>;  //a hook for a tactic; still too simple
+    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
     is_trivial   :env -> goal -> bool;
     finish       :unit -> unit;

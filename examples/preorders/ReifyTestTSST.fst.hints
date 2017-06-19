@@ -45,6 +45,10 @@
       ],
       0
     ],
+    [ "ReifyTestTSST.153577", 1, 2, 1, [ "@query" ], 0 ],
+    [ "ReifyTestTSST.witnessed", 1, 2, 1, [ "@query" ], 0 ],
+    [ "ReifyTestTSST.witness", 1, 2, 1, [ "@query" ], 0 ],
+    [ "ReifyTestTSST.recall", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ReifyTestTSST.reify_recall_test",
       1,

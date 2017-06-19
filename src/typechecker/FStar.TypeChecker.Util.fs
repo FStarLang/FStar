@@ -880,7 +880,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 lc.comp()
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
-                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
                         //it's trivial
@@ -1681,7 +1681,6 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
           let only_decl =
               lid_equals C.prims_lid  (Env.current_module env)
-              || fvq<>Data_ctor
               || Options.dont_gen_projectors (Env.current_module env).str
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)

@@ -89,6 +89,7 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
             let qn = inspect_fv fv in
             if qn = imp_qn then Implies a1 a2
             else if qn = and_qn then And a1 a2
+            else if qn = iff_qn then Iff a1 a2
             else if qn = or_qn  then Or a1 a2
             else if qn = forall_qn then (admit(); //TODO: admitting termination check for now
                                              mk_Forall a1 a2) //a1 is type, a2 predicate

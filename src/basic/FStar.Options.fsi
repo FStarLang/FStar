@@ -49,6 +49,13 @@ val init                        : unit    -> unit  //sets the current options to
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
+type optionstate = Util.smap<option_val>
+(* Control the option stack *)
+val push                        : unit -> unit
+val pop                         : unit -> unit
+val peek                        : unit -> optionstate
+val set                         : optionstate -> unit
+
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
@@ -102,7 +109,6 @@ val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
 val output_dir                  : unit    -> option<string>
-val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string
@@ -115,7 +121,6 @@ val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
-val push                        : unit    -> unit
 val record_hints                : unit    -> bool
 val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>

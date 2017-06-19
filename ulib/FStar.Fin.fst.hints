@@ -121,7 +121,6 @@
         "binder_x_8f7114194c5d6abeb66956762904efa1_1",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
         "constructor_distinct_FStar.Pervasives.Some",
-        "data_elim_FStar.Pervasives.Some",
         "disc_equation_FStar.Pervasives.None",
         "disc_equation_FStar.Pervasives.Some",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.Fin.fin",
