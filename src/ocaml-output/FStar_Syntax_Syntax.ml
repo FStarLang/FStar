@@ -3,12 +3,16 @@ type ('a,'t) withinfo_t = {
   v: 'a;
   ty: 't;
   p: FStar_Range.range;}
+[@@deriving show]
 type 't var = (FStar_Ident.lident,'t) withinfo_t
+[@@deriving show]
 type sconst = FStar_Const.sconst
+[@@deriving show]
 type pragma =
   | SetOptions of Prims.string
   | ResetOptions of Prims.string option
   | LightOff
+[@@deriving show]
 let uu___is_SetOptions: pragma -> Prims.bool =
   fun projectee  ->
     match projectee with | SetOptions _0 -> true | uu____96 -> false
@@ -23,9 +27,12 @@ let uu___is_LightOff: pragma -> Prims.bool =
   fun projectee  ->
     match projectee with | LightOff  -> true | uu____127 -> false
 type 'a memo = 'a option FStar_ST.ref
+[@printer fun fmt x -> Format.pp_print_string fmt "None"]
+[@@deriving show]
 type arg_qualifier =
   | Implicit of Prims.bool
   | Equality
+[@@deriving show]
 let uu___is_Implicit: arg_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Implicit _0 -> true | uu____142 -> false
@@ -35,6 +42,7 @@ let uu___is_Equality: arg_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Equality  -> true | uu____155 -> false
 type aqual = arg_qualifier option
+[@@deriving show]
 type universe =
   | U_zero
   | U_succ of universe
@@ -43,6 +51,7 @@ type universe =
   | U_name of FStar_Ident.ident
   | U_unif of universe option FStar_Unionfind.p_uvar
   | U_unknown
+[@@deriving show]
 let uu___is_U_zero: universe -> Prims.bool =
   fun projectee  ->
     match projectee with | U_zero  -> true | uu____184 -> false
@@ -76,15 +85,21 @@ let uu___is_U_unknown: universe -> Prims.bool =
   fun projectee  ->
     match projectee with | U_unknown  -> true | uu____271 -> false
 type univ_name = FStar_Ident.ident
+[@@deriving show]
 type universe_uvar = universe option FStar_Unionfind.p_uvar
+[@@deriving show]
 type univ_names = univ_name Prims.list
+[@@deriving show]
 type universes = universe Prims.list
+[@@deriving show]
 type monad_name = FStar_Ident.lident
+[@@deriving show]
 type delta_depth =
   | Delta_constant
   | Delta_defined_at_level of Prims.int
   | Delta_equational
   | Delta_abstract of delta_depth
+[@@deriving show]
 let uu___is_Delta_constant: delta_depth -> Prims.bool =
   fun projectee  ->
     match projectee with | Delta_constant  -> true | uu____288 -> false
@@ -218,6 +233,7 @@ and lcomp =
   res_typ: (term',term') syntax;
   cflags: cflags Prims.list;
   comp: Prims.unit -> (comp',Prims.unit) syntax;}
+[@@deriving show]
 let uu___is_Tm_bvar: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Tm_bvar _0 -> true | uu____814 -> false
@@ -486,6 +502,7 @@ let __proj__UD__item___0: subst_elt -> (univ_name* Prims.int) =
   fun projectee  -> match projectee with | UD _0 -> _0
 type pat = (pat',term') withinfo_t
 type term = (term',term') syntax
+[@@deriving show]
 type branch =
   ((pat',term') withinfo_t* (term',term') syntax option* (term',term')
     syntax)

@@ -212,6 +212,7 @@ let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -246,6 +247,7 @@ let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
 
 (* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
 type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let fifo_set_is_empty ((s, _):'a fifo_set) =
   match s with
@@ -448,6 +450,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
+[@@deriving show]
 
 let is_left = function
   | Inl _ -> true

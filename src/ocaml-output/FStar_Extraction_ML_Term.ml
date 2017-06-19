@@ -1485,6 +1485,15 @@ and term_as_mlexpr':
              let uu____3828 = FStar_Syntax_Print.term_to_string v1 in
              FStar_Util.format2 "Trying to extract a quotation of %s"
                uu____3828 in
+           print_newline ();
+           let v2 = FStar_TypeChecker_Normalize.reduce_uvar_solutions
+              g.FStar_Extraction_ML_UEnv.tcenv
+              v1 in
+           print_endline (FStar_Syntax_Print.term_to_string v2);
+           print_newline ();
+           print_endline (FStar_Syntax_Syntax.show_term v2);
+           print_newline ();
+           print_newline ();
            let s =
              let uu____3830 =
                let uu____3831 =
