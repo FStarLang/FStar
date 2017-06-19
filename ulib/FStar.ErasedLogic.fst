@@ -32,7 +32,7 @@ type ex (a:Type) (p:a->Type) = erased (exists (x:a). (p x))
 
 (*how to use the above:*)
 (*assuming that existentials in F* are constructive. If so, the following 2 assumes must be definable*)
-assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x.p x) -> Tot a
+assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x.p x) -> GTot a
 assume val mkexists : #a:Type -> #p:(a->Type) -> x:a -> (p x) -> Tot (exists x.p x)
 
 
