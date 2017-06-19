@@ -3592,7 +3592,9 @@ let check_and_ascribe:
               FStar_TypeChecker_Env.proof_ns =
                 (uu___147_6751.FStar_TypeChecker_Env.proof_ns);
               FStar_TypeChecker_Env.synth =
-                (uu___147_6751.FStar_TypeChecker_Env.synth)
+                (uu___147_6751.FStar_TypeChecker_Env.synth);
+              FStar_TypeChecker_Env.is_native_tactic =
+                (uu___147_6751.FStar_TypeChecker_Env.is_native_tactic)
             } in
           let uu____6753 = check env2 t1 t2 in
           match uu____6753 with

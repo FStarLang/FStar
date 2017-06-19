@@ -778,7 +778,9 @@ let preprocess:
                FStar_TypeChecker_Env.proof_ns =
                  (uu___115_1569.FStar_TypeChecker_Env.proof_ns);
                FStar_TypeChecker_Env.synth =
-                 (uu___115_1569.FStar_TypeChecker_Env.synth)
+                 (uu___115_1569.FStar_TypeChecker_Env.synth);
+               FStar_TypeChecker_Env.is_native_tactic =
+                 (uu___115_1569.FStar_TypeChecker_Env.is_native_tactic)
              } in
            let initial = ((Prims.parse_int "1"), []) in
            let uu____1581 = traverse by_tactic_interp Pos env2 goal in

@@ -22,6 +22,7 @@ module Core = FStar.Tactics.Basic
 open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
+open FStar.Tactics.Native
 
 let tacdbg = BU.mk_ref false
 
@@ -81,7 +82,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let step_from_native_step (ps: proofstate) (s: FStar.Tactics.Native.native_primitive_step): N.primitive_step =
+let step_from_native_step (ps: proofstate) (s: native_primitive_step): N.primitive_step =
     BU.print1 "Registered primitive step %s\n" (Ident.string_of_lid s.name);
     { N.name=s.name;
       N.arity=s.arity;
@@ -96,7 +97,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
-    let native_tactics = FStar.Tactics.Native.list_all () in
+    let native_tactics = list_all () in
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
     BU.print1 "Loaded %s native tactics\n" (string_of_int <| List.length native_tactics);
     let mk_refl nm arity interpretation =

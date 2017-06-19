@@ -515,11 +515,6 @@ let rec uncurry_mlty_fun:
         let uu____925 = uncurry_mlty_fun b in
         (match uu____925 with | (args,res) -> ((a :: args), res))
     | uu____937 -> ([], t)
-<<<<<<< HEAD
-let mk_interpretation_fun: Prims.unit -> FStar_Extraction_ML_Syntax.mlexpr' =
-  fun uu____942  ->
-    FStar_Extraction_ML_Syntax.MLE_Const FStar_Extraction_ML_Syntax.MLC_Unit
-=======
 let lid_to_name: FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlexpr' =
   fun l  ->
     let uu____943 = FStar_Extraction_ML_Syntax.mlpath_of_lident l in
@@ -623,4 +618,3 @@ let mk_interpretation_fun tac_lid assm_lid t bs =
     ([(("ps", (Prims.parse_int "0")), FStar_Extraction_ML_Syntax.MLTY_Top);
      (("args", (Prims.parse_int "0")), FStar_Extraction_ML_Syntax.MLTY_Top)],
       app)
->>>>>>> fe0a88dd62fa9c3c79b1a95157ac9c8af989cfa0

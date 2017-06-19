@@ -1251,7 +1251,9 @@ and encode_term:
                               FStar_TypeChecker_Env.proof_ns =
                                 (uu___134_3185.FStar_TypeChecker_Env.proof_ns);
                               FStar_TypeChecker_Env.synth =
-                                (uu___134_3185.FStar_TypeChecker_Env.synth)
+                                (uu___134_3185.FStar_TypeChecker_Env.synth);
+                              FStar_TypeChecker_Env.is_native_tactic =
+                                (uu___134_3185.FStar_TypeChecker_Env.is_native_tactic)
                             }) res in
                        (match uu____3181 with
                         | (pre_opt,res_t) ->
@@ -2089,7 +2091,9 @@ and encode_term:
                                FStar_TypeChecker_Env.proof_ns =
                                  (uu___135_4585.FStar_TypeChecker_Env.proof_ns);
                                FStar_TypeChecker_Env.synth =
-                                 (uu___135_4585.FStar_TypeChecker_Env.synth)
+                                 (uu___135_4585.FStar_TypeChecker_Env.synth);
+                               FStar_TypeChecker_Env.is_native_tactic =
+                                 (uu___135_4585.FStar_TypeChecker_Env.is_native_tactic)
                              }) uu____4584 FStar_Syntax_Syntax.U_unknown in
                         let uu____4586 =
                           let uu____4587 = FStar_Syntax_Syntax.mk_Total typ in
@@ -4364,7 +4368,9 @@ let encode_free_var:
                                    FStar_TypeChecker_Env.proof_ns =
                                      (uu___143_10410.FStar_TypeChecker_Env.proof_ns);
                                    FStar_TypeChecker_Env.synth =
-                                     (uu___143_10410.FStar_TypeChecker_Env.synth)
+                                     (uu___143_10410.FStar_TypeChecker_Env.synth);
+                                   FStar_TypeChecker_Env.is_native_tactic =
+                                     (uu___143_10410.FStar_TypeChecker_Env.is_native_tactic)
                                  }) comp FStar_Syntax_Syntax.U_unknown in
                             FStar_Syntax_Syntax.mk_Total uu____10409
                           else comp in
@@ -4962,7 +4968,9 @@ let encode_top_level_let:
                        FStar_TypeChecker_Env.proof_ns =
                          (uu___146_11333.FStar_TypeChecker_Env.proof_ns);
                        FStar_TypeChecker_Env.synth =
-                         (uu___146_11333.FStar_TypeChecker_Env.synth)
+                         (uu___146_11333.FStar_TypeChecker_Env.synth);
+                       FStar_TypeChecker_Env.is_native_tactic =
+                         (uu___146_11333.FStar_TypeChecker_Env.is_native_tactic)
                      }) c FStar_Syntax_Syntax.U_unknown
                 else FStar_Syntax_Util.comp_result c in
               let rec aux norm1 t_norm1 =
