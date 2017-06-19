@@ -1,5 +1,7 @@
 type int16 = int
+[@@deriving show]
 type t = int16
+[@@deriving show]
 
 let v (x:int16) : Prims.int = Prims.parse_int (string_of_int x)
 

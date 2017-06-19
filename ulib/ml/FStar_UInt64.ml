@@ -1,7 +1,10 @@
 type uint64 = Stdint.Uint64.t
+[@@deriving show]
 type uint8 = int
+[@@deriving show]
 type t = uint64
-           
+[@@deriving show]
+
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
 let n = Prims.parse_int "64"

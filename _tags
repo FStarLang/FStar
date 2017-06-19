@@ -1,3 +1,4 @@
 true: annot, bin_annot, warn(-8-11-21-26-28), package(batteries), \
   package(zarith), package(yojson), package(pprint), package(dynlink), \
-  package(compiler-libs), package(compiler-libs.common), thread, -traverse
+  package(compiler-libs), package(compiler-libs.common), \
+  package(ppx_deriving.std), thread, -traverse

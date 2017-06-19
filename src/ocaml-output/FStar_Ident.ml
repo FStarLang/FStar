@@ -2,13 +2,16 @@ open Prims
 type ident = {
   idText: Prims.string;
   idRange: FStar_Range.range;}
+[@@deriving show]
 type lident =
   {
   ns: ident Prims.list;
   ident: ident;
   nsstr: Prims.string;
   str: Prims.string;}
+[@@deriving show]
 type lid = lident
+[@@deriving show]
 let mk_ident: (Prims.string* FStar_Range.range) -> ident =
   fun uu____63  ->
     match uu____63 with | (text,range) -> { idText = text; idRange = range }
