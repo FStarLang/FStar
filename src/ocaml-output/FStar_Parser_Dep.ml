@@ -289,7 +289,7 @@ let collect_one:
                    uu____525 = uu____526 in
                  if uu____524
                  then l
-                 else l ) in
+                 else FStar_List.append l [FStar_Parser_Const.pervasives_lid]) in
             FStar_List.iter (record_open false) auto_open;
             (let num_of_toplevelmods =
                FStar_Util.mk_ref (Prims.parse_int "0") in

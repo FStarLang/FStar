@@ -565,7 +565,7 @@ let open_let_rec lbs (t:term) =
                     let u = Syntax.new_univ_name None in
                     i+1, u::us, UN(i, U_name u)::out)
                   lb.lbunivs (n_let_recs, [], let_rec_opening) in
-             {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in
+              {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef; lbtyp=subst u_let_rec_opening lb.lbtyp}) in
 
          let t = subst let_rec_opening t in
          lbs, t
