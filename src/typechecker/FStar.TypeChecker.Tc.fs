@@ -65,7 +65,8 @@ let is_native_tactic (tac_lid: lident) (h: term) =
   | Tm_uinst (h', _) ->
     (match (SS.compress h').n with
       | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
-          FStar.Tactics.Native.is_native_tactic tac_lid
+        //NS:THIS IS HOSED; it introduces a circular dependence. Need to move this elsewhere
+                FStar.Tactics.Native.is_native_tactic tac_lid
       | _ -> false)
   | _ -> false
 
