@@ -104,6 +104,7 @@ type env = {
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  is_native_tactic: lid -> bool                   (* callback into the native tactics engine *)
 }
 and solver_t = {
     init         :env -> unit;

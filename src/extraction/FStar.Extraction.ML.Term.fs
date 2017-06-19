@@ -848,7 +848,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
-        | Tm_app(head, [_; v]) when U.is_fstar_tactics_embed head ->
+        | Tm_app(head, [_; (v, _)]) when U.is_fstar_tactics_embed head ->
           let _ = BU.format2 "Trying to extract a quotation of %s" (Print.term_to_string v) in
           let s = with_ty ml_string_ty (MLE_Const(MLC_Bytes(BU.bytes_of_string (BU.marshal v)))) in
           let zero = with_ty ml_int_ty (MLE_Const (MLC_Int("0", None))) in

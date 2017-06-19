@@ -104,6 +104,7 @@ type env = {
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  is_native_tactic: lid -> bool                      (* callback into the native tactics engine *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -179,6 +180,7 @@ let initial_env type_of universe_of solver module_lid =
                | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
                | None -> [[]]);
     synth = (fun e g tau -> failwith "no synthesizer available");
+    is_native_tactic = fun _ -> false;
   }
 
 (* Marking and resetting the environment, for the interactive mode *)

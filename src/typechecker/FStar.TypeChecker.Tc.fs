@@ -60,13 +60,12 @@ let set_hint_correlator env se =
 
 let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.current_module env))
 
-let is_native_tactic (tac_lid: lident) (h: term) =
+let is_native_tactic env (tac_lid: lident) (h: term) =
   match h.n with
   | Tm_uinst (h', _) ->
     (match (SS.compress h').n with
       | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
-        //NS:THIS IS HOSED; it introduces a circular dependence. Need to move this elsewhere
-                FStar.Tactics.Native.is_native_tactic tac_lid
+                env.is_native_tactic tac_lid
       | _ -> false)
   | _ -> false
 
@@ -1273,7 +1272,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
                 let tac_lid = (right hd.lbname).fv_name.v in
                 let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
                 (* check if tactic has been dynamically loaded and has not already been typechecked *)
-                if is_native_tactic assm_lid h && not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
+                if is_native_tactic env assm_lid h && not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
                   let se_assm = reified_tactic_decl assm_lid hd in
                   let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
                   Some (se_assm, se_refl)

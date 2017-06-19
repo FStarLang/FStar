@@ -82,7 +82,6 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let step_from_native_step (ps: proofstate) (s: FStar.Tactics.Native.native_primitive_step): N.primitive_step =
-    let open FStar.Tactics.Native in
     BU.print1 "Registered primitive step %s\n" (Ident.string_of_lid s.name);
     { N.name=s.name;
       N.arity=s.arity;
