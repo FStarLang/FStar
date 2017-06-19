@@ -86,7 +86,7 @@ type term' =
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
+  | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -196,7 +196,8 @@ and lcomp = {
     comp: unit -> comp //a lazy computation
 }
 
-and residual_comp = lident * list<cflags> (* Residual of a computation type after typechecking *)
+and residual_comp = lident
+                  * list<cflags> (* Residual of a computation type after typechecking *)
                                           (* first component is the effect name *)
                                           (* second component contains (an approximation of) the cflags *)
 
@@ -381,7 +382,7 @@ val mk_Tm_app:      term -> args -> Tot<mk_t>
 val mk_Tm_uinst:    term -> universes -> term
 val extend_app:     term -> arg -> Tot<mk_t>
 val extend_app_n:   term -> args -> Tot<mk_t>
-val mk_Tm_delayed:  either<(term * subst_ts), (unit -> term)> -> Range.range -> term
+val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp

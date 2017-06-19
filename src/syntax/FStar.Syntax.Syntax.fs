@@ -83,7 +83,7 @@ type term' =
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
+  | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
