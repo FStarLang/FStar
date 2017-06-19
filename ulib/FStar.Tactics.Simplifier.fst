@@ -148,8 +148,6 @@ let rec simplify_point = fun () -> (
             else tiff
 
         | Forall b p ->
-            dump "Hey";;
-            print ("f' = " ^ formula_to_string (term_as_formula' l));;
                  if is_true p then apply_lemma (quote lem_fa_true)
             else tiff
 

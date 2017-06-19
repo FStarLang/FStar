@@ -68,6 +68,9 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
         else if qn = false_qn then False_
         else FV fv
 
+    // TODO: l_Forall
+    // ...or should we just try to drop all squashes?
+    // TODO: b2t at this point ?
     | Tv_App h0 t -> begin
         let (h, ts) = collect_app h0 in
         collect_app_order h0;
@@ -98,10 +101,10 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
             App h0 t
         end
 
-    (* | Tv_Arrow b t -> *)
-    (*     if is_free b t *)
-    (*     then Forall b t *)
-    (*     else Implies (type_of_binder b) t *)
+    | Tv_Arrow b t ->
+        if is_free b t
+        then Forall b t
+        else Implies (type_of_binder b) t
 
     | Tv_Const (C_Int i) ->
         IntLit i
