@@ -2442,7 +2442,8 @@ let weaken_result_typ:
                           FStar_TypeChecker_Normalize.normalize
                             [FStar_TypeChecker_Normalize.Beta;
                             FStar_TypeChecker_Normalize.Eager_unfolding;
-                            FStar_TypeChecker_Normalize.Simplify] env f in
+                            FStar_TypeChecker_Normalize.Simplify;
+                            FStar_TypeChecker_Normalize.Primops] env f in
                         let uu____4415 =
                           let uu____4416 = FStar_Syntax_Subst.compress f1 in
                           uu____4416.FStar_Syntax_Syntax.n in
@@ -4648,15 +4649,12 @@ let mk_discriminator_and_indexed_projectors:
                                                  (FStar_Syntax_Subst.close_univ_vars
                                                     uvs) uu____8185 in
                                              let only_decl =
-                                               ((let uu____8191 =
-                                                   FStar_TypeChecker_Env.current_module
-                                                     env in
-                                                 FStar_Ident.lid_equals
-                                                   FStar_Syntax_Const.prims_lid
-                                                   uu____8191)
-                                                  ||
-                                                  (fvq <>
-                                                     FStar_Syntax_Syntax.Data_ctor))
+                                               (let uu____8191 =
+                                                  FStar_TypeChecker_Env.current_module
+                                                    env in
+                                                FStar_Ident.lid_equals
+                                                  FStar_Syntax_Const.prims_lid
+                                                  uu____8191)
                                                  ||
                                                  (let uu____8192 =
                                                     let uu____8193 =

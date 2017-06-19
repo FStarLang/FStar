@@ -82,7 +82,7 @@ let __smt: unit __tac = from_tac_0 B.smt
 (*this is probably unnecessary? also change in Builtins.fst *)
 let smt: unit -> unit -> unit __tac = fun () -> fun ()  -> __smt
 
-let __focus (f: unit __tac): unit __tac = from_tac_1 B.focus_cur_goal (to_tac_0 f)
+let __focus (f: unit __tac): unit __tac = from_tac_1 B.focus (to_tac_0 f)
 let focus: unit E.tactic -> unit -> unit __tac = fun f  -> fun () -> __focus (E.reify_tactic f)
 
 let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)

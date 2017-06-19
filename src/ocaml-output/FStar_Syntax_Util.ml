@@ -900,16 +900,16 @@ let mk_data l args =
 let mangle_field_name: FStar_Ident.ident -> FStar_Ident.ident =
   fun x  ->
     FStar_Ident.mk_ident
-      ((Prims.strcat "^fname^" x.FStar_Ident.idText),
+      ((Prims.strcat "__fname__" x.FStar_Ident.idText),
         (x.FStar_Ident.idRange))
 let unmangle_field_name: FStar_Ident.ident -> FStar_Ident.ident =
   fun x  ->
-    if FStar_Util.starts_with x.FStar_Ident.idText "^fname^"
+    if FStar_Util.starts_with x.FStar_Ident.idText "__fname__"
     then
       let uu____2378 =
         let uu____2381 =
           FStar_Util.substring_from x.FStar_Ident.idText
-            (Prims.parse_int "7") in
+            (Prims.parse_int "9") in
         (uu____2381, (x.FStar_Ident.idRange)) in
       FStar_Ident.mk_ident uu____2378
     else x
@@ -2664,3 +2664,22 @@ let is_synth_by_tactic: FStar_Syntax_Syntax.term -> Prims.bool =
     | FStar_Syntax_Syntax.Tm_fvar fv ->
         FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.synth_lid
     | uu____7735 -> false
+let mk_alien b s r =
+  let uu____7759 =
+    let uu____7762 =
+      let uu____7763 =
+        let uu____7768 =
+          let uu____7769 =
+            let uu____7772 = FStar_Dyn.mkdyn b in (uu____7772, s) in
+          FStar_Syntax_Syntax.Meta_alien uu____7769 in
+        (FStar_Syntax_Syntax.tun, uu____7768) in
+      FStar_Syntax_Syntax.Tm_meta uu____7763 in
+    FStar_Syntax_Syntax.mk uu____7762 in
+  uu____7759 None
+    (match r with | Some r1 -> r1 | None  -> FStar_Range.dummyRange)
+let un_alien: FStar_Syntax_Syntax.term -> FStar_Dyn.dyn =
+  fun t  ->
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_meta
+        (uu____7788,FStar_Syntax_Syntax.Meta_alien (blob,uu____7790)) -> blob
+    | uu____7795 -> failwith "Something paranormal occurred"

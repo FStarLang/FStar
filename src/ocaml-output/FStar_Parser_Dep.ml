@@ -228,9 +228,9 @@ let collect_one:
                             "let-open only supported for modules, not namespaces")
                      else
                        (let uu____492 = string_of_lid lid true in
-                        FStar_Util.print1_warning
-                          "Warning: no modules in namespace %s and no file with that name either\n"
-                          uu____492))
+                        FStar_Util.print2_warning
+                          "Warning: in %s: no modules in namespace %s and no file with that name either\n"
+                          filename uu____492))
                   else () in
             let record_module_alias ident lid =
               let key = FStar_String.lowercase (FStar_Ident.text_of_id ident) in
