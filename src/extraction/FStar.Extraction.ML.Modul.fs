@@ -309,14 +309,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   | _ -> false)
               | _ -> false in
 
-//            let mk_registration lid t bs =
-//              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (FStar.Syntax.Const.fstar_tactics_lid "Native.register_tactic")) in
-//                (* fix this: FStar_Tactics.Native -> FStar_Tactics_Native*)
-//              let lid_arg = MLE_Const (MLC_String (string_of_lid lid)) in
-//              let arity = MLE_Const (MLC_Int (BU.string_of_int (List.length bs), None)) in
-//              let interp = mk_interpretation_fun () in
-//              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; interp]) in
-//              MLM_Top app in
+            let mk_registration tac_lid assm_lid t bs =
+              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
+              let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
+              let tac_arity = List.length bs in
+              let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
+              let tac_interpretation = mk_interpretation_fun tac_lid lid_arg t bs in
+              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
+              MLM_Top app in
 
             (match (snd lbs) with
              | [hd] ->
@@ -328,12 +328,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                       let tac_lid = (right hd.lbname).fv_name.v in
                       let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
                       if is_tactic_decl assm_lid h then begin
-                        BU.print1 "Extracting tactic %s\n" (Print.lid_to_string assm_lid);
-                        BU.print1 "Head %s \n" (Print.term_to_string h);
-                        BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
-                        BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
-                        List.iter (fun x -> BU.print1 "Binder %s\n" (Print.term_to_string (fst x).sort)) bs;
-                        [] //This doesn't yet generate the right code; [mk_registration assm_lid hd.lbtyp bs]
+                        // BU.print1 "Extracting tactic %s\n" (Print.lid_to_string assm_lid);
+                        // BU.print1 "Head %s \n" (Print.term_to_string h);
+                        // BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
+                        // BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
+                        [mk_registration tac_lid assm_lid (fst(List.hd args)) bs]
                       end else []
                  | _ -> [])
              | _ -> []

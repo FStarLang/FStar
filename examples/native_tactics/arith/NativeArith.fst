@@ -4,7 +4,7 @@ open FStar.Tactics
 open FStar.Tactics.Arith
 open FStar.List
 
-let tau1 : tactic unit =
+  let tau1 : tactic unit =
     prune "";;
     FStar.Tactics.split;;
     (* rev part *)
@@ -13,7 +13,5 @@ let tau1 : tactic unit =
       smt ();;
     (* arithmetic part *)
       addns "Prims";;
-      g <-- cur_goal;
-      let _, t = g in
       smt ();;
     return ()
