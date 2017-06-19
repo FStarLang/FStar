@@ -537,8 +537,14 @@ let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
     subst_comp s c
 
 let open_let_rec lbs (t:term) =
-    if is_top_level lbs then lbs, t //top-level let recs are not opened
-    else (* Consider
+    let n_let_recs, lbs, let_rec_opening =
+      if is_top_level lbs then 0, lbs, []  //top-level let recs are not opened
+      else
+         List.fold_right (fun lb (i, lbs, out) ->
+           let x = Syntax.freshen_bv (left lb.lbname) in
+           i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs (0, [], [])
+      in
+      (* Consider
                 let rec f<u> x = g x
                 and g<u'> y = f y in
                 f 0, g 0
@@ -553,11 +559,6 @@ let open_let_rec lbs (t:term) =
                   and for the body is
                         f, g
          *)
-         let n_let_recs, lbs, let_rec_opening =
-             List.fold_right (fun lb (i, lbs, out) ->
-                let x = Syntax.freshen_bv (left lb.lbname) in
-                i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs (0, [], []) in
-
          let lbs = lbs |> List.map (fun lb ->
               let _, us, u_let_rec_opening =
                   List.fold_right (fun u (i, us, out) ->
