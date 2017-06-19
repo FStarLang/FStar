@@ -941,6 +941,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               else let head = U.un_uinst head in
                    begin match head.n with
                     | Tm_fvar fv when S.fv_eq_lid fv C.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
+                        (* handle applications of __embed differently *)
                         (match args with
                          | [a;b] ->
                             // BU.print1 "First term %s \n" (Print.term_to_string (fst a));

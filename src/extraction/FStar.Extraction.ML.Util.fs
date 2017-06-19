@@ -27,6 +27,7 @@ open FStar.Ident
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
+module C = FStar.Syntax.Const
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -317,6 +318,41 @@ let rec uncurry_mlty_fun t =
         a::args, res
     | _ -> [], t
 
-//tactics
-let mk_interpretation_fun () =
-    MLE_Const MLC_Unit
+(* helper functions used to extract, alongside a tactic, its corresponding call 
+   to FStar.Tactics.Native.register_tactic *)
+let lid_to_name l = MLE_Name (mlpath_of_lident l)
+let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l)
+let str_to_name s = lid_to_name (lid_of_str s)
+let str_to_top_name s = lid_to_top_name (lid_of_str s)
+
+let mk_tac_embedding_path t =
+    (match t.n with
+     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_Reflection_Basic.embed_unit"
+     //TODO add the others and print term when not found
+     | _ -> failwith "Embedding not defined for type ") |> str_to_name
+
+let mk_tac_unembedding_path t =
+    (match t.n with
+     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> "FStar_Reflection_Basic.unembed_string"
+     //TODO add the others and print term when not found
+     | _ -> failwith "Unembedding not defined for type ") |> str_to_name
+
+let mk_tac_param_type t =
+    (match t.n with
+     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_TypeChecker_Common.t_unit"
+     //TODO add the others and print term when not found
+     | _ -> failwith "Type term not defined for ") |> str_to_name
+
+let mk_interpretation_fun tac_lid assm_lid t bs =
+    // List.iter (fun x -> BU.print1 "Binder %s\n" (FStar.Syntax.Print.term_to_string (fst x).sort)) bs;
+    let arg_types = List.map (fun x -> (fst x).sort) bs in
+    let arity = List.length bs in
+    let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
+    let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name tac_lid]) in
+    let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
+    let args =
+        [str_to_name "ps"; tac_fun] @
+        (List.map mk_tac_unembedding_path arg_types) @
+        [mk_tac_embedding_path t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
+    let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
+    MLE_Fun ([(("ps", 0), MLTY_Top); (("args", 0), MLTY_Top)], app)
