@@ -130,7 +130,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
-    BU.print1 "Loaded %s native tactics\n" (string_of_int <| List.length native_tactics);
     let mk_refl nm arity interpretation =
       let nm = RD.fstar_refl_lid nm in {
       N.name=nm;
