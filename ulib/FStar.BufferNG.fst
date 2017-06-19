@@ -9,35 +9,35 @@ module P = FStar.Pointer
 
 (* Buffers *)
 
-noeq private type buffer_root (t: Type) =
+noeq private type buffer_root (t: P.typ) =
 | BufferRootSingleton:
   (p: P.pointer t) ->
   buffer_root t
 | BufferRootArray:
   (#max_length: UInt32.t) ->
-  (p: P.pointer (P.array max_length t)) ->
+  (p: P.pointer (P.TArray max_length t)) ->
   buffer_root t
 
-private let buffer_root_length (#t: Type) (b: buffer_root t): Tot UInt32.t = match b with
+private let buffer_root_length (#t: P.typ) (b: buffer_root t): Tot UInt32.t = match b with
 | BufferRootSingleton _ -> 1ul
 | BufferRootArray #t #len _ -> len
 
-noeq private type _buffer (t: Type) =
+noeq private type _buffer (t: P.typ) =
 | Buffer:
   (broot: buffer_root t) ->
   (bidx: UInt32.t) ->
   (blength: UInt32.t { UInt32.v bidx + UInt32.v blength <= UInt32.v (buffer_root_length broot) } ) ->
   _buffer t
-abstract let buffer (t: Type): Tot Type = _buffer t
+abstract let buffer (t: P.typ): Tot Type = _buffer t
 
 abstract let gsingleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (p: P.pointer t)
 : GTot (buffer t)
 = Buffer (BufferRootSingleton p) 0ul 1ul
 
 abstract let singleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (p: P.pointer t)
 : Stack (buffer t)
   (requires (fun h -> P.live h p))
@@ -45,29 +45,29 @@ abstract let singleton_buffer_of_pointer
 = Buffer (BufferRootSingleton p) 0ul 1ul
 
 abstract let gbuffer_of_array_pointer
-  (#t: Type)
+  (#t: P.typ)
   (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+  (p: P.pointer (P.TArray length t))
 : GTot (buffer t)
 = Buffer (BufferRootArray p) 0ul length
 
 abstract let buffer_of_array_pointer
-  (#t: Type)
+  (#t: P.typ)
   (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+  (p: P.pointer (P.TArray length t))
 : Stack (buffer t)
   (requires (fun h -> P.live h p))
   (ensures (fun h b h' -> h' == h /\ b == gbuffer_of_array_pointer p))
 = Buffer (BufferRootArray p) 0ul length
 
 abstract let length
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
 : GTot UInt32.t
 = Buffer?.blength b
 
 abstract let length_gsingleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (p: P.pointer t)
 : Lemma
   (requires True)
@@ -76,9 +76,9 @@ abstract let length_gsingleton_buffer_of_pointer
 = ()
 
 abstract let length_gbuffer_of_array_pointer
-  (#t: Type)
+  (#t: P.typ)
   (#len: UInt32.t)
-  (p: P.pointer (P.array len t))
+  (p: P.pointer (P.TArray len t))
 : Lemma
   (requires True)
   (ensures (length (gbuffer_of_array_pointer p) == len))
@@ -86,7 +86,7 @@ abstract let length_gbuffer_of_array_pointer
 = ()
 
 abstract let live
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
 : GTot Type0
@@ -97,7 +97,7 @@ abstract let live
   )
 
 abstract let live_gsingleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (p: P.pointer t)
   (h: HS.mem)
 : Lemma
@@ -106,9 +106,9 @@ abstract let live_gsingleton_buffer_of_pointer
 = ()
 
 abstract let live_gbuffer_of_array_pointer
-  (#t: Type)
+  (#t: P.typ)
   (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+  (p: P.pointer (P.TArray length t))
   (h: HS.mem)
 : Lemma
   (requires (UInt32.v length > 0))
@@ -117,7 +117,7 @@ abstract let live_gbuffer_of_array_pointer
 = ()
 
 abstract let frameOf
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
 : GTot HH.rid
 = match b.broot with
@@ -125,7 +125,7 @@ abstract let frameOf
   | BufferRootArray #mlen p -> P.frameOf p
 
 abstract let frameOf_gsingleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (p: P.pointer t)
 : Lemma
   (ensures (frameOf (gsingleton_buffer_of_pointer p) == P.frameOf p))
@@ -133,16 +133,16 @@ abstract let frameOf_gsingleton_buffer_of_pointer
 = ()
 
 abstract let frameOf_gbuffer_of_array_pointer
-  (#t: Type)
+  (#t: P.typ)
   (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+  (p: P.pointer (P.TArray length t))
 : Lemma
   (ensures (frameOf (gbuffer_of_array_pointer p) == P.frameOf p))
   [SMTPat (frameOf (gbuffer_of_array_pointer p))]
 = ()
 
 abstract let gsub
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
@@ -150,7 +150,7 @@ abstract let gsub
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
 
 abstract let sub
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
@@ -160,7 +160,7 @@ abstract let sub
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
 
 abstract let length_gsub
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
@@ -171,7 +171,7 @@ abstract let length_gsub
 = ()
 
 abstract let live_gsub
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
@@ -183,7 +183,7 @@ abstract let live_gsub
 = ()
 
 abstract let gsub_gsub
-  (#a: Type)
+  (#a: P.typ)
   (b: buffer a)
   (i1: UInt32.t)
   (len1: UInt32.t{UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b)})
@@ -194,17 +194,17 @@ abstract let gsub_gsub
 = ()
 
 abstract let gsub_zero_length
-  (#a: Type)
+  (#a: P.typ)
   (b: buffer a)
 : Lemma
   (ensures (gsub b 0ul (length b) == b))
 = ()
 
 private let buffer_root_as_seq
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer_root t)
-: GTot (Seq.seq t)
+: GTot (Seq.seq (P.type_of_typ t))
 = match b with
   | BufferRootSingleton p ->
     Seq.create 1 (P.gread h p)
@@ -212,7 +212,7 @@ private let buffer_root_as_seq
     P.gread h p
 
 private let length_buffer_root_as_seq
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer_root t)
 : Lemma
@@ -222,15 +222,15 @@ private let length_buffer_root_as_seq
 = ()
 
 abstract let as_seq
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
-: GTot (Seq.seq t)
+: GTot (Seq.seq (P.type_of_typ t))
 = let i = UInt32.v (Buffer?.bidx b) in
   Seq.slice (buffer_root_as_seq h (Buffer?.broot b)) i (i + UInt32.v (Buffer?.blength b))
 
 abstract let length_as_seq
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
 : Lemma
@@ -240,7 +240,7 @@ abstract let length_as_seq
 = ()
 
 abstract let as_seq_gsingleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (p: P.pointer t)
 : Lemma
@@ -251,17 +251,18 @@ abstract let as_seq_gsingleton_buffer_of_pointer
 
 abstract let as_seq_gbuffer_of_array_pointer
   (#length: UInt32.t)
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
-  (p: P.pointer (P.array length t))
+  (p: P.pointer (P.TArray length t))
 : Lemma
   (requires True)
   (ensures (as_seq h (gbuffer_of_array_pointer p) == P.gread h p))
   [SMTPat (as_seq h (gbuffer_of_array_pointer p))]
-= Seq.slice_length (P.gread h p)
+= let s : P.array length (P.type_of_typ t) = P.gread h p in
+  Seq.slice_length s
 
 abstract let as_seq_gsub
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t)
@@ -273,7 +274,7 @@ abstract let as_seq_gsub
 = Seq.slice_slice (buffer_root_as_seq h (Buffer?.broot b)) (UInt32.v (Buffer?.bidx b)) (UInt32.v (Buffer?.bidx b) + UInt32.v (Buffer?.blength b)) (UInt32.v i) (UInt32.v i + UInt32.v len)
 
 abstract let gpointer_of_buffer_cell
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
 : GTot (P.pointer t)
@@ -283,7 +284,7 @@ abstract let gpointer_of_buffer_cell
     P.gcell p FStar.UInt32.(Buffer?.bidx b +^ i)
 
 abstract let pointer_of_buffer_cell
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
 : Stack (P.pointer t)
@@ -295,7 +296,7 @@ abstract let pointer_of_buffer_cell
     P.cell p FStar.UInt32.(Buffer?.bidx b +^ i)
 
 abstract let gpointer_of_buffer_cell_gsub
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i1: UInt32.t)
   (len: UInt32.t { UInt32.v i1 + UInt32.v len <= UInt32.v (length b) } )
@@ -307,7 +308,7 @@ abstract let gpointer_of_buffer_cell_gsub
 = ()
 
 abstract let live_gpointer_of_buffer_cell
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
   (h: HS.mem)
@@ -317,7 +318,7 @@ abstract let live_gpointer_of_buffer_cell
 = ()
 
 abstract let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
-  (#t: Type)
+  (#t: P.typ)
   (p: P.pointer t)
   (i: UInt32.t { UInt32.v i < 1 } )
 : Lemma
@@ -328,8 +329,8 @@ abstract let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
 
 abstract let gpointer_of_buffer_cell_gbuffer_of_array_pointer
   (#length: UInt32.t)
-  (#t: Type)
-  (p: P.pointer (P.array length t))
+  (#t: P.typ)
+  (p: P.pointer (P.TArray length t))
   (i: UInt32.t { UInt32.v i < UInt32.v length } )
 : Lemma
   (requires True)
@@ -338,7 +339,7 @@ abstract let gpointer_of_buffer_cell_gbuffer_of_array_pointer
 = ()
 
 abstract let gread_gpointer_of_buffer_cell
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
@@ -348,7 +349,7 @@ abstract let gread_gpointer_of_buffer_cell
 = ()
 
 abstract let gread_gpointer_of_buffer_cell'
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
@@ -357,7 +358,7 @@ abstract let gread_gpointer_of_buffer_cell'
 = ()
 
 abstract let gread_pointer_of_buffer_cell'
-  (#t: Type)
+  (#t: P.typ)
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
@@ -370,10 +371,10 @@ abstract let gread_pointer_of_buffer_cell'
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
 
 let read
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
-: HST.Stack t
+: HST.Stack (P.type_of_typ t)
   (requires (fun h -> live h b))
   (ensures (fun h v h' -> h' == h /\ v == Seq.index (as_seq h b) (UInt32.v i)))
 = P.read (pointer_of_buffer_cell b i)
@@ -381,7 +382,7 @@ let read
 (* buffer write: needs clearer "modifies" clauses *)
 
 abstract let disjoint_gpointer_of_buffer_cell
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i1: UInt32.t { UInt32.v i1 < UInt32.v (length b) } )
   (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b) } )
@@ -395,7 +396,7 @@ abstract let disjoint_gpointer_of_buffer_cell
 
 unfold
 let disjoint_buffer_vs_pointer
-  (#t1 #t2: Type)
+  (#t1 #t2: P.typ)
   (b: buffer t1)
   (p: P.pointer t2)
 : GTot Type0
@@ -403,7 +404,7 @@ let disjoint_buffer_vs_pointer
 
 unfold
 let disjoint_buffer_vs_buffer
-  (#t1 #t2: Type)
+  (#t1 #t2: P.typ)
   (b1: buffer t1)
   (b2: buffer t2)
 : GTot Type0
@@ -414,10 +415,10 @@ let disjoint_buffer_vs_buffer
     P.disjoint (gpointer_of_buffer_cell b1 i1) (gpointer_of_buffer_cell b2 i2)
 
 let write
-  (#t: Type)
+  (#t: P.typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
-  (v: t)
+  (v: P.type_of_typ t)
 : HST.Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h _ h' ->
@@ -430,7 +431,7 @@ let write
 = P.write (pointer_of_buffer_cell b i) v
 
 let modifies_1_disjoint_buffer_vs_pointer_live
-  (#t1 #t2: Type)
+  (#t1 #t2: P.typ)
   (b: buffer t1)
   (p: P.pointer t2)
   (h h': HS.mem)
