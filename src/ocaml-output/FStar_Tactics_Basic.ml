@@ -1537,23 +1537,11 @@ let set_options: Prims.string -> Prims.unit tac =
            | FStar_Getopt.Help  ->
                fail1 "Setting options `%s` failed (got `Help`?)" s)))
 let cur_env: env tac =
-  bind get
-    (fun ps  ->
-       let uu____2857 =
-         let uu____2858 = FStar_List.hd ps.goals in uu____2858.context in
-       FStar_All.pipe_left ret uu____2857)
+  bind cur_goal (fun g  -> FStar_All.pipe_left ret g.context)
 let cur_goal': FStar_Syntax_Syntax.typ tac =
-  bind get
-    (fun ps  ->
-       let uu____2862 =
-         let uu____2863 = FStar_List.hd ps.goals in uu____2863.goal_ty in
-       FStar_All.pipe_left ret uu____2862)
+  bind cur_goal (fun g  -> FStar_All.pipe_left ret g.goal_ty)
 let cur_witness: FStar_Syntax_Syntax.term tac =
-  bind get
-    (fun ps  ->
-       let uu____2867 =
-         let uu____2868 = FStar_List.hd ps.goals in uu____2868.witness in
-       FStar_All.pipe_left ret uu____2867)
+  bind cur_goal (fun g  -> FStar_All.pipe_left ret g.witness)
 let proofstate_of_goal_ty:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
@@ -1561,14 +1549,14 @@ let proofstate_of_goal_ty:
   =
   fun env  ->
     fun typ  ->
-      let uu____2882 =
+      let uu____2876 =
         FStar_TypeChecker_Util.new_implicit_var "proofstate_of_goal_ty"
           typ.FStar_Syntax_Syntax.pos env typ in
-      match uu____2882 with
-      | (u,uu____2892,g_u) ->
+      match uu____2876 with
+      | (u,uu____2886,g_u) ->
           let g =
-            let uu____2901 = FStar_Options.peek () in
-            { context = env; witness = u; goal_ty = typ; opts = uu____2901 } in
+            let uu____2895 = FStar_Options.peek () in
+            { context = env; witness = u; goal_ty = typ; opts = uu____2895 } in
           let ps =
             {
               main_context = env;
