@@ -1331,8 +1331,8 @@ let tc_decls env ses =
 
     let ses', ses_elaborated = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
-        (* if Env.debug env (Options.Other "UF") *)
-        (* then printfn "About to elim vars from %s" (Print.sigelt_to_string se); *)
+        if Env.debug env (Options.Other "UF")
+        then BU.print1 "About to elim vars from %s" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
     let ses_elaborated = ses_elaborated |> List.map (fun se ->
         (* if Env.debug env (Options.Other "UF") *)

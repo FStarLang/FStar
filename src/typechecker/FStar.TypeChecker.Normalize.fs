@@ -263,7 +263,9 @@ let rec closure_as_term cfg env t =
 
             | Tm_uvar _ ->
               if cfg.steps |> List.contains CheckNoUvars
-              then failwith (BU.format1 "CheckNoUvars: Unexpected unification variable remains: %s" (Print.term_to_string t))
+              then failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
+                                (Range.string_of_range t.pos)
+                                (Print.term_to_string t))
               else t //should be closed anyway
 
             | Tm_type u ->
@@ -783,13 +785,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             failwith "Impossible"
 
           | Tm_uvar _ when cfg.steps |> List.contains CheckNoUvars ->
-            failwith (BU.format1 "CheckNoUvars: Unexpected unification variable remains: %s" (Print.term_to_string t))
-
-//          | Tm_name x  when cfg.steps |> List.contains CheckNoUvars ->
-//            let sort = norm cfg env [] x.sort in
-//            let t = {t with n=Tm_name ({x with sort=sort})} in
-//            t.tk := None;
-//            rebuild cfg env stack t
+            failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                            (Range.string_of_range t.pos)
+                            (Print.term_to_string t))
 
           | Tm_unknown
           | Tm_uvar _

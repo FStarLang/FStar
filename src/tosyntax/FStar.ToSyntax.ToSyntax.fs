@@ -675,7 +675,7 @@ and desugar_name mk setpos (env: env_t) (resolve: bool) (l: lid) : S.term =
     if mut then mk <| Tm_meta (mk_ref_read tm, Meta_desugared Mutable_rval)
     else tm
 
-and desugar_attributes env (cattributes:list<term>) : list<cflags> =
+and desugar_attributes (env:env_t) (cattributes:list<term>) : list<cflags> =
     let desugar_attribute t =
         match (unparen t).tm with
             | Var ({str="cps"}) -> CPS
