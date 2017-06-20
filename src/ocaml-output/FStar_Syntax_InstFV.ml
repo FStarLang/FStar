@@ -59,90 +59,90 @@ let rec inst:
           let pats1 =
             FStar_All.pipe_right pats
               (FStar_List.map
-                 (fun uu____360  ->
-                    match uu____360 with
+                 (fun uu____366  ->
+                    match uu____366 with
                     | (p,wopt,t3) ->
                         let wopt1 =
                           match wopt with
                           | None  -> None
                           | Some w ->
-                              let uu____382 = inst s w in Some uu____382 in
+                              let uu____388 = inst s w in Some uu____388 in
                         let t4 = inst s t3 in (p, wopt1, t4))) in
-          let uu____386 =
-            let uu____387 = let uu____402 = inst s t2 in (uu____402, pats1) in
-            FStar_Syntax_Syntax.Tm_match uu____387 in
-          mk1 uu____386
+          let uu____392 =
+            let uu____393 = let uu____408 = inst s t2 in (uu____408, pats1) in
+            FStar_Syntax_Syntax.Tm_match uu____393 in
+          mk1 uu____392
       | FStar_Syntax_Syntax.Tm_ascribed (t11,asc,f) ->
-          let inst_asc uu____457 =
-            match uu____457 with
+          let inst_asc uu____463 =
+            match uu____463 with
             | (annot,topt) ->
                 let topt1 = FStar_Util.map_opt topt (inst s) in
                 let annot1 =
                   match annot with
                   | FStar_Util.Inl t2 ->
-                      let uu____498 = inst s t2 in FStar_Util.Inl uu____498
+                      let uu____504 = inst s t2 in FStar_Util.Inl uu____504
                   | FStar_Util.Inr c ->
-                      let uu____506 = inst_comp s c in
-                      FStar_Util.Inr uu____506 in
+                      let uu____512 = inst_comp s c in
+                      FStar_Util.Inr uu____512 in
                 (annot1, topt1) in
-          let uu____516 =
-            let uu____517 =
-              let uu____535 = inst s t11 in
-              let uu____536 = inst_asc asc in (uu____535, uu____536, f) in
-            FStar_Syntax_Syntax.Tm_ascribed uu____517 in
-          mk1 uu____516
+          let uu____522 =
+            let uu____523 =
+              let uu____541 = inst s t11 in
+              let uu____542 = inst_asc asc in (uu____541, uu____542, f) in
+            FStar_Syntax_Syntax.Tm_ascribed uu____523 in
+          mk1 uu____522
       | FStar_Syntax_Syntax.Tm_let (lbs,t2) ->
           let lbs1 =
-            let uu____568 =
+            let uu____574 =
               FStar_All.pipe_right (snd lbs)
                 (FStar_List.map
                    (fun lb  ->
-                      let uu___148_574 = lb in
-                      let uu____575 = inst s lb.FStar_Syntax_Syntax.lbtyp in
-                      let uu____578 = inst s lb.FStar_Syntax_Syntax.lbdef in
+                      let uu___148_584 = lb in
+                      let uu____585 = inst s lb.FStar_Syntax_Syntax.lbtyp in
+                      let uu____588 = inst s lb.FStar_Syntax_Syntax.lbdef in
                       {
                         FStar_Syntax_Syntax.lbname =
-                          (uu___148_574.FStar_Syntax_Syntax.lbname);
+                          (uu___148_584.FStar_Syntax_Syntax.lbname);
                         FStar_Syntax_Syntax.lbunivs =
-                          (uu___148_574.FStar_Syntax_Syntax.lbunivs);
-                        FStar_Syntax_Syntax.lbtyp = uu____575;
+                          (uu___148_584.FStar_Syntax_Syntax.lbunivs);
+                        FStar_Syntax_Syntax.lbtyp = uu____585;
                         FStar_Syntax_Syntax.lbeff =
-                          (uu___148_574.FStar_Syntax_Syntax.lbeff);
-                        FStar_Syntax_Syntax.lbdef = uu____578
+                          (uu___148_584.FStar_Syntax_Syntax.lbeff);
+                        FStar_Syntax_Syntax.lbdef = uu____588
                       })) in
-            ((fst lbs), uu____568) in
-          let uu____583 =
-            let uu____584 = let uu____592 = inst s t2 in (lbs1, uu____592) in
-            FStar_Syntax_Syntax.Tm_let uu____584 in
-          mk1 uu____583
+            ((fst lbs), uu____574) in
+          let uu____593 =
+            let uu____594 = let uu____602 = inst s t2 in (lbs1, uu____602) in
+            FStar_Syntax_Syntax.Tm_let uu____594 in
+          mk1 uu____593
       | FStar_Syntax_Syntax.Tm_meta
           (t2,FStar_Syntax_Syntax.Meta_pattern args) ->
-          let uu____608 =
-            let uu____609 =
-              let uu____614 = inst s t2 in
-              let uu____615 =
-                let uu____616 =
+          let uu____618 =
+            let uu____619 =
+              let uu____624 = inst s t2 in
+              let uu____625 =
+                let uu____626 =
                   FStar_All.pipe_right args (FStar_List.map (inst_args s)) in
-                FStar_Syntax_Syntax.Meta_pattern uu____616 in
-              (uu____614, uu____615) in
-            FStar_Syntax_Syntax.Tm_meta uu____609 in
-          mk1 uu____608
+                FStar_Syntax_Syntax.Meta_pattern uu____626 in
+              (uu____624, uu____625) in
+            FStar_Syntax_Syntax.Tm_meta uu____619 in
+          mk1 uu____618
       | FStar_Syntax_Syntax.Tm_meta
           (t2,FStar_Syntax_Syntax.Meta_monadic (m,t')) ->
-          let uu____656 =
-            let uu____657 =
-              let uu____662 = inst s t2 in
-              let uu____663 =
-                let uu____664 = let uu____669 = inst s t' in (m, uu____669) in
-                FStar_Syntax_Syntax.Meta_monadic uu____664 in
-              (uu____662, uu____663) in
-            FStar_Syntax_Syntax.Tm_meta uu____657 in
-          mk1 uu____656
+          let uu____666 =
+            let uu____667 =
+              let uu____672 = inst s t2 in
+              let uu____673 =
+                let uu____674 = let uu____679 = inst s t' in (m, uu____679) in
+                FStar_Syntax_Syntax.Meta_monadic uu____674 in
+              (uu____672, uu____673) in
+            FStar_Syntax_Syntax.Tm_meta uu____667 in
+          mk1 uu____666
       | FStar_Syntax_Syntax.Tm_meta (t2,tag) ->
-          let uu____676 =
-            let uu____677 = let uu____682 = inst s t2 in (uu____682, tag) in
-            FStar_Syntax_Syntax.Tm_meta uu____677 in
-          mk1 uu____676
+          let uu____686 =
+            let uu____687 = let uu____692 = inst s t2 in (uu____692, tag) in
+            FStar_Syntax_Syntax.Tm_meta uu____687 in
+          mk1 uu____686
 and inst_binders:
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -154,20 +154,20 @@ and inst_binders:
     fun bs  ->
       FStar_All.pipe_right bs
         (FStar_List.map
-           (fun uu____696  ->
-              match uu____696 with
+           (fun uu____710  ->
+              match uu____710 with
               | (x,imp) ->
-                  let uu____703 =
-                    let uu___149_704 = x in
-                    let uu____705 = inst s x.FStar_Syntax_Syntax.sort in
+                  let uu____717 =
+                    let uu___149_718 = x in
+                    let uu____719 = inst s x.FStar_Syntax_Syntax.sort in
                     {
                       FStar_Syntax_Syntax.ppname =
-                        (uu___149_704.FStar_Syntax_Syntax.ppname);
+                        (uu___149_718.FStar_Syntax_Syntax.ppname);
                       FStar_Syntax_Syntax.index =
-                        (uu___149_704.FStar_Syntax_Syntax.index);
-                      FStar_Syntax_Syntax.sort = uu____705
+                        (uu___149_718.FStar_Syntax_Syntax.index);
+                      FStar_Syntax_Syntax.sort = uu____719
                     } in
-                  (uu____703, imp)))
+                  (uu____717, imp)))
 and inst_args:
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -180,9 +180,9 @@ and inst_args:
     fun args  ->
       FStar_All.pipe_right args
         (FStar_List.map
-           (fun uu____731  ->
-              match uu____731 with
-              | (a,imp) -> let uu____738 = inst s a in (uu____738, imp)))
+           (fun uu____749  ->
+              match uu____749 with
+              | (a,imp) -> let uu____756 = inst s a in (uu____756, imp)))
 and inst_comp:
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -194,33 +194,33 @@ and inst_comp:
     fun c  ->
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Total (t,uopt) ->
-          let uu____757 = inst s t in
-          FStar_Syntax_Syntax.mk_Total' uu____757 uopt
+          let uu____775 = inst s t in
+          FStar_Syntax_Syntax.mk_Total' uu____775 uopt
       | FStar_Syntax_Syntax.GTotal (t,uopt) ->
-          let uu____766 = inst s t in
-          FStar_Syntax_Syntax.mk_GTotal' uu____766 uopt
+          let uu____784 = inst s t in
+          FStar_Syntax_Syntax.mk_GTotal' uu____784 uopt
       | FStar_Syntax_Syntax.Comp ct ->
           let ct1 =
-            let uu___150_769 = ct in
-            let uu____770 = inst s ct.FStar_Syntax_Syntax.result_typ in
-            let uu____773 = inst_args s ct.FStar_Syntax_Syntax.effect_args in
-            let uu____779 =
+            let uu___150_787 = ct in
+            let uu____788 = inst s ct.FStar_Syntax_Syntax.result_typ in
+            let uu____791 = inst_args s ct.FStar_Syntax_Syntax.effect_args in
+            let uu____797 =
               FStar_All.pipe_right ct.FStar_Syntax_Syntax.flags
                 (FStar_List.map
-                   (fun uu___146_783  ->
-                      match uu___146_783 with
+                   (fun uu___146_804  ->
+                      match uu___146_804 with
                       | FStar_Syntax_Syntax.DECREASES t ->
-                          let uu____787 = inst s t in
-                          FStar_Syntax_Syntax.DECREASES uu____787
+                          let uu____808 = inst s t in
+                          FStar_Syntax_Syntax.DECREASES uu____808
                       | f -> f)) in
             {
               FStar_Syntax_Syntax.comp_univs =
-                (uu___150_769.FStar_Syntax_Syntax.comp_univs);
+                (uu___150_787.FStar_Syntax_Syntax.comp_univs);
               FStar_Syntax_Syntax.effect_name =
-                (uu___150_769.FStar_Syntax_Syntax.effect_name);
-              FStar_Syntax_Syntax.result_typ = uu____770;
-              FStar_Syntax_Syntax.effect_args = uu____773;
-              FStar_Syntax_Syntax.flags = uu____779
+                (uu___150_787.FStar_Syntax_Syntax.effect_name);
+              FStar_Syntax_Syntax.result_typ = uu____788;
+              FStar_Syntax_Syntax.effect_args = uu____791;
+              FStar_Syntax_Syntax.flags = uu____797
             } in
           FStar_Syntax_Syntax.mk_Comp ct1
 and inst_lcomp_opt:
@@ -238,43 +238,43 @@ and inst_lcomp_opt:
     fun l  ->
       match l with
       | None  -> l
-      | Some (FStar_Util.Inr uu____814) -> l
+      | Some (FStar_Util.Inr uu____835) -> l
       | Some (FStar_Util.Inl lc) ->
-          let uu____835 =
-            let uu____841 =
-              let uu___151_842 = lc in
-              let uu____843 = inst s lc.FStar_Syntax_Syntax.res_typ in
+          let uu____856 =
+            let uu____862 =
+              let uu___151_863 = lc in
+              let uu____864 = inst s lc.FStar_Syntax_Syntax.res_typ in
               {
                 FStar_Syntax_Syntax.eff_name =
-                  (uu___151_842.FStar_Syntax_Syntax.eff_name);
-                FStar_Syntax_Syntax.res_typ = uu____843;
+                  (uu___151_863.FStar_Syntax_Syntax.eff_name);
+                FStar_Syntax_Syntax.res_typ = uu____864;
                 FStar_Syntax_Syntax.cflags =
-                  (uu___151_842.FStar_Syntax_Syntax.cflags);
+                  (uu___151_863.FStar_Syntax_Syntax.cflags);
                 FStar_Syntax_Syntax.comp =
-                  (fun uu____846  ->
-                     let uu____847 = lc.FStar_Syntax_Syntax.comp () in
-                     inst_comp s uu____847)
+                  (fun uu____869  ->
+                     let uu____870 = lc.FStar_Syntax_Syntax.comp () in
+                     inst_comp s uu____870)
               } in
-            FStar_Util.Inl uu____841 in
-          Some uu____835
+            FStar_Util.Inl uu____862 in
+          Some uu____856
 let instantiate:
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun i  ->
     fun t  ->
       match i with
       | [] -> t
-      | uu____866 ->
+      | uu____889 ->
           let inst_fv t1 fv =
-            let uu____874 =
+            let uu____897 =
               FStar_Util.find_opt
-                (fun uu____880  ->
-                   match uu____880 with
-                   | (x,uu____884) ->
+                (fun uu____906  ->
+                   match uu____906 with
+                   | (x,uu____910) ->
                        FStar_Ident.lid_equals x
                          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                 i in
-            match uu____874 with
+            match uu____897 with
             | None  -> t1
-            | Some (uu____887,us) ->
+            | Some (uu____913,us) ->
                 mk t1 (FStar_Syntax_Syntax.Tm_uinst (t1, us)) in
           inst inst_fv t

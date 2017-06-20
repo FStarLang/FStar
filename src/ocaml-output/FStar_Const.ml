@@ -89,21 +89,21 @@ let eq_const: sconst -> sconst -> Prims.bool =
     fun c2  ->
       match (c1, c2) with
       | (Const_int (s1,o1),Const_int (s2,o2)) ->
-          (let uu____242 = FStar_Util.ensure_decimal s1 in
-           let uu____243 = FStar_Util.ensure_decimal s2 in
-           uu____242 = uu____243) && (o1 = o2)
-      | (Const_bytearray (a,uu____248),Const_bytearray (b,uu____250)) ->
+          (let uu____246 = FStar_Util.ensure_decimal s1 in
+           let uu____247 = FStar_Util.ensure_decimal s2 in
+           uu____246 = uu____247) && (o1 = o2)
+      | (Const_bytearray (a,uu____252),Const_bytearray (b,uu____254)) ->
           a = b
-      | (Const_string (a,uu____257),Const_string (b,uu____259)) -> a = b
+      | (Const_string (a,uu____261),Const_string (b,uu____263)) -> a = b
       | (Const_reflect l1,Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
-      | uu____267 -> c1 = c2
+      | uu____271 -> c1 = c2
 let rec pow2: Prims.int -> Prims.int =
   fun x  ->
     match x with
     | _0_25 when _0_25 = (Prims.parse_int "0") -> Prims.parse_int "1"
-    | uu____273 ->
-        let uu____274 = pow2 (x - (Prims.parse_int "1")) in
-        (Prims.parse_int "2") * uu____274
+    | uu____277 ->
+        let uu____278 = pow2 (x - (Prims.parse_int "1")) in
+        (Prims.parse_int "2") * uu____278
 let bounds: signedness -> width -> (Prims.int* Prims.int) =
   fun signedness  ->
     fun width  ->
@@ -113,13 +113,13 @@ let bounds: signedness -> width -> (Prims.int* Prims.int) =
         | Int16  -> Prims.parse_int "16"
         | Int32  -> Prims.parse_int "32"
         | Int64  -> Prims.parse_int "64" in
-      let uu____284 =
+      let uu____288 =
         match signedness with
         | Unsigned  ->
-            let uu____289 =
-              let uu____290 = pow2 n1 in uu____290 - (Prims.parse_int "1") in
-            ((Prims.parse_int "0"), uu____289)
+            let uu____293 =
+              let uu____294 = pow2 n1 in uu____294 - (Prims.parse_int "1") in
+            ((Prims.parse_int "0"), uu____293)
         | Signed  ->
             let upper = pow2 (n1 - (Prims.parse_int "1")) in
             ((- upper), (upper - (Prims.parse_int "1"))) in
-      match uu____284 with | (lower,upper) -> (lower, upper)
+      match uu____288 with | (lower,upper) -> (lower, upper)

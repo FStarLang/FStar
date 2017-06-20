@@ -77,14 +77,14 @@ let range_of_lid: lid -> FStar_Range.range = fun lid  -> (lid.ident).idRange
 let set_lid_range: lident -> FStar_Range.range -> lident =
   fun l  ->
     fun r  ->
-      let uu___47_177 = l in
+      let uu___47_178 = l in
       {
-        ns = (uu___47_177.ns);
+        ns = (uu___47_178.ns);
         ident =
-          (let uu___48_178 = l.ident in
-           { idText = (uu___48_178.idText); idRange = r });
-        nsstr = (uu___47_177.nsstr);
-        str = (uu___47_177.str)
+          (let uu___48_180 = l.ident in
+           { idText = (uu___48_180.idText); idRange = r });
+        nsstr = (uu___47_178.nsstr);
+        str = (uu___47_178.str)
       }
 let lid_add_suffix: lident -> Prims.string -> lident =
   fun l  ->
@@ -92,4 +92,4 @@ let lid_add_suffix: lident -> Prims.string -> lident =
       let path = path_of_lid l in
       lid_of_path (FStar_List.append path [s]) (range_of_lid l)
 let string_of_lid: lident -> Prims.string =
-  fun lid  -> let uu____190 = path_of_lid lid in text_of_path uu____190
+  fun lid  -> let uu____192 = path_of_lid lid in text_of_path uu____192

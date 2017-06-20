@@ -787,10 +787,10 @@ type mk_t = (term',term') mk_t_a
 let contains_reflectable: qualifier Prims.list -> Prims.bool =
   fun l  ->
     FStar_Util.for_some
-      (fun uu___87_3245  ->
-         match uu___87_3245 with
-         | Reflectable uu____3246 -> true
-         | uu____3247 -> false) l
+      (fun uu___87_3247  ->
+         match uu___87_3247 with
+         | Reflectable uu____3248 -> true
+         | uu____3249 -> false) l
 let withinfo v1 r = { v = v1; p = r }
 let withsort v1 = withinfo v1 FStar_Range.dummyRange
 let bv_eq: bv -> bv -> Prims.bool =
@@ -818,27 +818,27 @@ let range_of_bv: bv -> FStar_Range.range =
 let set_range_of_bv: bv -> FStar_Range.range -> bv =
   fun x  ->
     fun r  ->
-      let uu___94_3303 = x in
+      let uu___94_3305 = x in
       {
         ppname = (FStar_Ident.mk_ident (((x.ppname).FStar_Ident.idText), r));
-        index = (uu___94_3303.index);
-        sort = (uu___94_3303.sort)
+        index = (uu___94_3305.index);
+        sort = (uu___94_3305.sort)
       }
 let syn p k f = f k p
-let mk_fvs uu____3344 = FStar_Util.mk_ref None
-let mk_uvs uu____3356 = FStar_Util.mk_ref None
+let mk_fvs uu____3346 = FStar_Util.mk_ref None
+let mk_uvs uu____3358 = FStar_Util.mk_ref None
 let new_bv_set: Prims.unit -> bv FStar_Util.set =
-  fun uu____3362  ->
+  fun uu____3364  ->
     FStar_Util.new_set order_bv
       (fun x  ->
          x.index + (FStar_Util.hashcode (x.ppname).FStar_Ident.idText))
 let new_fv_set: Prims.unit -> FStar_Ident.lident FStar_Util.set =
-  fun uu____3368  ->
+  fun uu____3371  ->
     FStar_Util.new_set order_fv
       (fun x  -> FStar_Util.hashcode x.FStar_Ident.str)
 let new_universe_names_fifo_set:
   Prims.unit -> FStar_Ident.ident FStar_Util.fifo_set =
-  fun uu____3376  ->
+  fun uu____3380  ->
     FStar_Util.new_fifo_set
       (fun x  ->
          fun y  ->
@@ -854,17 +854,17 @@ let freenames_of_list: bv Prims.list -> bv FStar_Util.set =
 let list_of_freenames: freenames -> bv Prims.list =
   fun fvs  -> FStar_Util.set_elements fvs
 let mk t topt r =
-  let uu____3422 = FStar_Util.mk_ref topt in
-  let uu____3426 = FStar_Util.mk_ref None in
-  { n = t; tk = uu____3422; pos = r; vars = uu____3426 }
+  let uu____3429 = FStar_Util.mk_ref topt in
+  let uu____3433 = FStar_Util.mk_ref None in
+  { n = t; tk = uu____3429; pos = r; vars = uu____3433 }
 let bv_to_tm: bv -> (term',term') syntax =
   fun bv  ->
-    let uu____3437 = range_of_bv bv in
-    mk (Tm_bvar bv) (Some ((bv.sort).n)) uu____3437
+    let uu____3444 = range_of_bv bv in
+    mk (Tm_bvar bv) (Some ((bv.sort).n)) uu____3444
 let bv_to_name: bv -> (term',term') syntax =
   fun bv  ->
-    let uu____3445 = range_of_bv bv in
-    mk (Tm_name bv) (Some ((bv.sort).n)) uu____3445
+    let uu____3452 = range_of_bv bv in
+    mk (Tm_name bv) (Some ((bv.sort).n)) uu____3452
 let mk_Tm_app:
   typ ->
     arg Prims.list ->
@@ -876,16 +876,16 @@ let mk_Tm_app:
         fun p  ->
           match args with
           | [] -> t1
-          | uu____3466 -> mk (Tm_app (t1, args)) k p
+          | uu____3473 -> mk (Tm_app (t1, args)) k p
 let mk_Tm_uinst: term -> universes -> term =
   fun t  ->
-    fun uu___88_3478  ->
-      match uu___88_3478 with
+    fun uu___88_3485  ->
+      match uu___88_3485 with
       | [] -> t
       | us ->
           (match t.n with
-           | Tm_fvar uu____3480 -> mk (Tm_uinst (t, us)) None t.pos
-           | uu____3485 -> failwith "Unexpected universe instantiation")
+           | Tm_fvar uu____3487 -> mk (Tm_uinst (t, us)) None t.pos
+           | uu____3492 -> failwith "Unexpected universe instantiation")
 let extend_app_n:
   term -> args -> term' option -> FStar_Range.range -> (term',term') syntax =
   fun t  ->
@@ -895,7 +895,7 @@ let extend_app_n:
           match t.n with
           | Tm_app (head1,args) ->
               mk_Tm_app head1 (FStar_List.append args args') kopt r
-          | uu____3523 -> mk_Tm_app t args' kopt r
+          | uu____3530 -> mk_Tm_app t args' kopt r
 let extend_app:
   term -> arg -> term' option -> FStar_Range.range -> (term',term') syntax =
   fun t  -> fun arg  -> fun kopt  -> fun r  -> extend_app_n t [arg] kopt r
@@ -905,13 +905,13 @@ let mk_Tm_delayed:
   =
   fun lr  ->
     fun pos  ->
-      let uu____3560 =
-        let uu____3563 =
-          let uu____3564 =
-            let uu____3585 = FStar_Util.mk_ref None in (lr, uu____3585) in
-          Tm_delayed uu____3564 in
-        mk uu____3563 in
-      uu____3560 None pos
+      let uu____3567 =
+        let uu____3570 =
+          let uu____3571 =
+            let uu____3592 = FStar_Util.mk_ref None in (lr, uu____3592) in
+          Tm_delayed uu____3571 in
+        mk uu____3570 in
+      uu____3567 None pos
 let mk_Total': typ -> universe option -> (comp',Prims.unit) syntax =
   fun t  -> fun u  -> mk (Total (t, u)) None t.pos
 let mk_GTotal': typ -> universe option -> (comp',Prims.unit) syntax =
@@ -923,8 +923,8 @@ let mk_Comp: comp_typ -> (comp',Prims.unit) syntax =
 let mk_lb:
   (lbname* univ_name Prims.list* FStar_Ident.lident* typ* term) -> letbinding
   =
-  fun uu____3663  ->
-    match uu____3663 with
+  fun uu____3670  ->
+    match uu____3670 with
     | (x,univs,eff,t,e) ->
         { lbname = x; lbunivs = univs; lbtyp = t; lbeff = eff; lbdef = e }
 let default_sigmeta: sig_metadata =
@@ -949,16 +949,16 @@ let is_teff: term -> Prims.bool =
   fun t  ->
     match t.n with
     | Tm_constant (FStar_Const.Const_effect ) -> true
-    | uu____3711 -> false
+    | uu____3718 -> false
 let is_type: term -> Prims.bool =
-  fun t  -> match t.n with | Tm_type uu____3715 -> true | uu____3716 -> false
+  fun t  -> match t.n with | Tm_type uu____3722 -> true | uu____3723 -> false
 let null_id: FStar_Ident.ident =
   FStar_Ident.mk_ident ("_", FStar_Range.dummyRange)
 let null_bv: term -> bv =
   fun k  -> { ppname = null_id; index = (Prims.parse_int "0"); sort = k }
 let mk_binder: bv -> (bv* arg_qualifier option) = fun a  -> (a, None)
 let null_binder: term -> (bv* arg_qualifier option) =
-  fun t  -> let uu____3727 = null_bv t in (uu____3727, None)
+  fun t  -> let uu____3734 = null_bv t in (uu____3734, None)
 let imp_tag: arg_qualifier = Implicit false
 let iarg: term -> (term* arg_qualifier option) =
   fun t  -> (t, (Some imp_tag))
@@ -967,90 +967,90 @@ let is_null_bv: bv -> Prims.bool =
   fun b  -> (b.ppname).FStar_Ident.idText = null_id.FStar_Ident.idText
 let is_null_binder: binder -> Prims.bool = fun b  -> is_null_bv (fst b)
 let is_top_level: letbinding Prims.list -> Prims.bool =
-  fun uu___89_3746  ->
-    match uu___89_3746 with
-    | { lbname = FStar_Util.Inr uu____3748; lbunivs = uu____3749;
-        lbtyp = uu____3750; lbeff = uu____3751; lbdef = uu____3752;_}::uu____3753
+  fun uu___89_3753  ->
+    match uu___89_3753 with
+    | { lbname = FStar_Util.Inr uu____3755; lbunivs = uu____3756;
+        lbtyp = uu____3757; lbeff = uu____3758; lbdef = uu____3759;_}::uu____3760
         -> true
-    | uu____3760 -> false
+    | uu____3767 -> false
 let freenames_of_binders: binders -> bv FStar_Util.set =
   fun bs  ->
     FStar_List.fold_right
-      (fun uu____3768  ->
+      (fun uu____3779  ->
          fun out  ->
-           match uu____3768 with | (x,uu____3775) -> FStar_Util.set_add x out)
+           match uu____3779 with | (x,uu____3786) -> FStar_Util.set_add x out)
       bs no_names
 let binders_of_list: bv Prims.list -> (bv* arg_qualifier option) Prims.list =
   fun fvs  -> FStar_All.pipe_right fvs (FStar_List.map (fun t  -> (t, None)))
 let binders_of_freenames: freenames -> binders =
   fun fvs  ->
-    let uu____3794 = FStar_Util.set_elements fvs in
-    FStar_All.pipe_right uu____3794 binders_of_list
+    let uu____3806 = FStar_Util.set_elements fvs in
+    FStar_All.pipe_right uu____3806 binders_of_list
 let is_implicit: aqual -> Prims.bool =
-  fun uu___90_3799  ->
-    match uu___90_3799 with
-    | Some (Implicit uu____3800) -> true
-    | uu____3801 -> false
+  fun uu___90_3811  ->
+    match uu___90_3811 with
+    | Some (Implicit uu____3812) -> true
+    | uu____3813 -> false
 let as_implicit: Prims.bool -> arg_qualifier option =
-  fun uu___91_3804  -> if uu___91_3804 then Some imp_tag else None
+  fun uu___91_3816  -> if uu___91_3816 then Some imp_tag else None
 let pat_bvs: pat -> bv Prims.list =
   fun p  ->
     let rec aux b p1 =
       match p1.v with
-      | Pat_dot_term uu____3824 -> b
-      | Pat_constant uu____3829 -> b
+      | Pat_dot_term uu____3836 -> b
+      | Pat_constant uu____3841 -> b
       | Pat_wild x -> x :: b
       | Pat_var x -> x :: b
-      | Pat_cons (uu____3832,pats) ->
+      | Pat_cons (uu____3844,pats) ->
           FStar_List.fold_left
             (fun b1  ->
-               fun uu____3847  ->
-                 match uu____3847 with | (p2,uu____3854) -> aux b1 p2) b pats in
-    let uu____3857 = aux [] p in
-    FStar_All.pipe_left FStar_List.rev uu____3857
+               fun uu____3863  ->
+                 match uu____3863 with | (p2,uu____3870) -> aux b1 p2) b pats in
+    let uu____3873 = aux [] p in
+    FStar_All.pipe_left FStar_List.rev uu____3873
 let gen_reset: ((Prims.unit -> Prims.int)* (Prims.unit -> Prims.unit)) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0") in
-  let gen1 uu____3873 = FStar_Util.incr x; FStar_ST.read x in
-  let reset uu____3883 = FStar_ST.write x (Prims.parse_int "0") in
+  let gen1 uu____3889 = FStar_Util.incr x; FStar_ST.read x in
+  let reset uu____3899 = FStar_ST.write x (Prims.parse_int "0") in
   (gen1, reset)
 let next_id: Prims.unit -> Prims.int = fst gen_reset
 let reset_gensym: Prims.unit -> Prims.unit = snd gen_reset
 let range_of_ropt: FStar_Range.range option -> FStar_Range.range =
-  fun uu___92_3905  ->
-    match uu___92_3905 with | None  -> FStar_Range.dummyRange | Some r -> r
+  fun uu___92_3921  ->
+    match uu___92_3921 with | None  -> FStar_Range.dummyRange | Some r -> r
 let gen_bv: Prims.string -> FStar_Range.range option -> typ -> bv =
   fun s  ->
     fun r  ->
       fun t  ->
         let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
-        let uu____3920 = next_id () in
-        { ppname = id; index = uu____3920; sort = t }
+        let uu____3936 = next_id () in
+        { ppname = id; index = uu____3936; sort = t }
 let new_bv: FStar_Range.range option -> typ -> bv =
   fun ropt  -> fun t  -> gen_bv FStar_Ident.reserved_prefix ropt t
 let freshen_bv: bv -> bv =
   fun bv  ->
-    let uu____3932 = is_null_bv bv in
-    if uu____3932
+    let uu____3948 = is_null_bv bv in
+    if uu____3948
     then
-      let uu____3933 = let uu____3935 = range_of_bv bv in Some uu____3935 in
-      new_bv uu____3933 bv.sort
+      let uu____3949 = let uu____3951 = range_of_bv bv in Some uu____3951 in
+      new_bv uu____3949 bv.sort
     else
-      (let uu___95_3937 = bv in
-       let uu____3938 = next_id () in
+      (let uu___95_3953 = bv in
+       let uu____3954 = next_id () in
        {
-         ppname = (uu___95_3937.ppname);
-         index = uu____3938;
-         sort = (uu___95_3937.sort)
+         ppname = (uu___95_3953.ppname);
+         index = uu____3954;
+         sort = (uu___95_3953.sort)
        })
 let new_univ_name: FStar_Range.range option -> FStar_Ident.ident =
   fun ropt  ->
     let id = next_id () in
-    let uu____3945 =
-      let uu____3948 =
-        let uu____3949 = FStar_Util.string_of_int id in
-        Prims.strcat FStar_Ident.reserved_prefix uu____3949 in
-      (uu____3948, (range_of_ropt ropt)) in
-    FStar_Ident.mk_ident uu____3945
+    let uu____3961 =
+      let uu____3964 =
+        let uu____3965 = FStar_Util.string_of_int id in
+        Prims.strcat FStar_Ident.reserved_prefix uu____3965 in
+      (uu____3964, (range_of_ropt ropt)) in
+    FStar_Ident.mk_ident uu____3961
 let mkbv: FStar_Ident.ident -> Prims.int -> (term',term') syntax -> bv =
   fun x  -> fun y  -> fun t  -> { ppname = x; index = y; sort = t }
 let lbname_eq:
@@ -1062,7 +1062,7 @@ let lbname_eq:
       match (l1, l2) with
       | (FStar_Util.Inl x,FStar_Util.Inl y) -> bv_eq x y
       | (FStar_Util.Inr l,FStar_Util.Inr m) -> FStar_Ident.lid_equals l m
-      | uu____3993 -> false
+      | uu____4009 -> false
 let fv_eq: fv -> fv -> Prims.bool =
   fun fv1  ->
     fun fv2  -> FStar_Ident.lid_equals (fv1.fv_name).v (fv2.fv_name).v
@@ -1071,50 +1071,50 @@ let fv_eq_lid: fv -> FStar_Ident.lident -> Prims.bool =
 let set_bv_range: bv -> FStar_Range.range -> bv =
   fun bv  ->
     fun r  ->
-      let uu___96_4018 = bv in
+      let uu___96_4034 = bv in
       {
         ppname = (FStar_Ident.mk_ident (((bv.ppname).FStar_Ident.idText), r));
-        index = (uu___96_4018.index);
-        sort = (uu___96_4018.sort)
+        index = (uu___96_4034.index);
+        sort = (uu___96_4034.sort)
       }
 let lid_as_fv: FStar_Ident.lident -> delta_depth -> fv_qual option -> fv =
   fun l  ->
     fun dd  ->
       fun dq  ->
-        let uu____4030 = withinfo l (FStar_Ident.range_of_lid l) in
-        { fv_name = uu____4030; fv_delta = dd; fv_qual = dq }
+        let uu____4046 = withinfo l (FStar_Ident.range_of_lid l) in
+        { fv_name = uu____4046; fv_delta = dd; fv_qual = dq }
 let fv_to_tm: fv -> (term',term') syntax =
   fun fv  -> mk (Tm_fvar fv) None (FStar_Ident.range_of_lid (fv.fv_name).v)
 let fvar: FStar_Ident.lident -> delta_depth -> fv_qual option -> term =
   fun l  ->
     fun dd  ->
-      fun dq  -> let uu____4049 = lid_as_fv l dd dq in fv_to_tm uu____4049
+      fun dq  -> let uu____4065 = lid_as_fv l dd dq in fv_to_tm uu____4065
 let lid_of_fv: fv -> FStar_Ident.lident = fun fv  -> (fv.fv_name).v
 let range_of_fv: fv -> FStar_Range.range =
   fun fv  ->
-    let uu____4056 = lid_of_fv fv in FStar_Ident.range_of_lid uu____4056
+    let uu____4072 = lid_of_fv fv in FStar_Ident.range_of_lid uu____4072
 let set_range_of_fv: fv -> FStar_Range.range -> fv =
   fun fv  ->
     fun r  ->
-      let uu___97_4063 = fv in
-      let uu____4064 =
-        let uu___98_4065 = fv.fv_name in
-        let uu____4066 =
-          let uu____4067 = lid_of_fv fv in
-          FStar_Ident.set_lid_range uu____4067 r in
-        { v = uu____4066; p = (uu___98_4065.p) } in
+      let uu___97_4079 = fv in
+      let uu____4080 =
+        let uu___98_4081 = fv.fv_name in
+        let uu____4082 =
+          let uu____4083 = lid_of_fv fv in
+          FStar_Ident.set_lid_range uu____4083 r in
+        { v = uu____4082; p = (uu___98_4081.p) } in
       {
-        fv_name = uu____4064;
-        fv_delta = (uu___97_4063.fv_delta);
-        fv_qual = (uu___97_4063.fv_qual)
+        fv_name = uu____4080;
+        fv_delta = (uu___97_4079.fv_delta);
+        fv_qual = (uu___97_4079.fv_qual)
       }
 let has_simple_attribute: term Prims.list -> Prims.string -> Prims.bool =
   fun l  ->
     fun s  ->
       FStar_List.existsb
-        (fun uu___93_4078  ->
-           match uu___93_4078 with
-           | { n = Tm_constant (FStar_Const.Const_string (data,uu____4082));
-               tk = uu____4083; pos = uu____4084; vars = uu____4085;_} when
+        (fun uu___93_4100  ->
+           match uu___93_4100 with
+           | { n = Tm_constant (FStar_Const.Const_string (data,uu____4104));
+               tk = uu____4105; pos = uu____4106; vars = uu____4107;_} when
                (FStar_Util.string_of_unicode data) = s -> true
-           | uu____4090 -> false) l
+           | uu____4112 -> false) l
