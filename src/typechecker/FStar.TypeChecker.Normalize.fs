@@ -1097,7 +1097,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         @ List.map (fun _ -> Dummy) xs
                         @ env in
                 let def_body = norm cfg env [] def_body in
-                let def = U.abs xs def_body None in
+                let lopt = match lopt with
+                    | Some (Inl l) ->
+                      let c = norm_comp cfg env (l.comp()) in
+                      Some (Inl (U.lcomp_of_comp c))
+                    | _ -> lopt in
+                let def = U.abs xs def_body lopt in
                 { lb with lbname = lbname;
                           lbtyp = ty;
                           lbdef = def}) lbs in
