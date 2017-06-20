@@ -7,7 +7,7 @@ module Range = FStar.Range
 
 type vconst =
     | C_Unit
-    | C_Int of string
+    | C_Int of int
     | C_True
     | C_False
 

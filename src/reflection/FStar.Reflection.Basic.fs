@@ -170,8 +170,8 @@ let embed_const (c:vconst) : term =
     | C_True    -> ref_C_True
     | C_False   -> ref_C_False
 
-    | C_Int s ->
-        S.mk_Tm_app ref_C_Int [S.as_arg (SC.exp_int s)]
+    | C_Int i ->
+        S.mk_Tm_app ref_C_Int [S.as_arg (SC.exp_int (BU.string_of_int i))]
                     None Range.dummyRange
 
 let embed_term_view (t:term_view) : term =
@@ -226,7 +226,7 @@ let unembed_const (t:term) : vconst =
 
     | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
         begin match (SS.compress i).n with
-        | Tm_constant (FStar.Const.Const_int (s, _)) -> C_Int s
+        | Tm_constant (FStar.Const.Const_int (s, _)) -> C_Int (BU.int_of_string s)
         | _ -> failwith "unembed_const: unexpected arg for C_Int"
         end
 
@@ -347,7 +347,7 @@ let inspect (t:term) : term_view =
     | Tm_constant c ->
         let c = (match c with
         | FStar.Const.Const_unit -> C_Unit
-        | FStar.Const.Const_int (s, _) -> C_Int s
+        | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
         | FStar.Const.Const_bool true  -> C_True
         | FStar.Const.Const_bool false -> C_False
         | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c)))
@@ -361,7 +361,7 @@ let inspect (t:term) : term_view =
 let pack_const (c:vconst) : term =
     match c with
     | C_Unit    -> SC.exp_unit
-    | C_Int s   -> SC.exp_int s
+    | C_Int i   -> SC.exp_int (BU.string_of_int i)
     | C_True    -> SC.exp_true_bool
     | C_False   -> SC.exp_false_bool
 
