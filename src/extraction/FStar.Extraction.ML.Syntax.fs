@@ -126,6 +126,11 @@ type c_flag = // C backend only
   | NoExtract
   | Attribute of string
 
+// JP: merge these two?
+type inductive_flag = // OCaml only
+  | PpxDeriving
+  | PpxDerivingConstant of string
+
 type mlletflavor =
   | Rec
   | NonRec

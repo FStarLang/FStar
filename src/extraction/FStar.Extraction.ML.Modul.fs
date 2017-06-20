@@ -107,7 +107,8 @@ type inductive_family = {
   iparams: binders;
   ityp   : term;
   idatas : list<data_constructor>;
-  iquals : list<S.qualifier>
+  iquals : list<S.qualifier>;
+  iattrs : list<inductive_flag>;
 }
 
 let print_ifamily i =
@@ -130,11 +131,20 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
+                let attrs = List.choose (function
+                  | { n = Tm_app ({ n = Tm_fvar fv }, []) } when string_of_lid (lid_of_fv fv) = "PpxDeriving" ->
+                      Some PpxDeriving
+                  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "PpxDerivingConstant" ->
+                      Some (PpxDerivingConstant (string_of_unicode data))
+                  | _ ->
+                      None
+                ) se.sigattrs in
                 [{  iname=l
                   ; iparams=bs
                   ; ityp=t
                   ; idatas=datas
-                  ; iquals=se.sigquals  }]
+                  ; iquals=se.sigquals
+                  ; iattrs = attrs  }]
 
             | _ -> [])
 

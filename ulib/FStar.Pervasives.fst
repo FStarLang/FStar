@@ -315,3 +315,13 @@ val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
 irreducible
 let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
+
+(* For the compiler. Use as follows:
+ *
+ * [@ PpxDeriving ]
+ * type t = A | B
+ *
+ * The resulting OCaml extracted type definition will have [@@ ppx_deriving show] attached to it. *)
+type __internal_ocaml_attributes =
+  | PpxDeriving
+  | PpxDerivingConstant of string
