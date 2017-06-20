@@ -1604,8 +1604,9 @@ let mk_has_type t x t' =
   uu____3830 None FStar_Range.dummyRange
 let lex_t: FStar_Syntax_Syntax.term = fvar_const FStar_Syntax_Const.lex_t_lid
 let lex_top: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.fvar FStar_Syntax_Const.lextop_lid
-    FStar_Syntax_Syntax.Delta_constant (Some FStar_Syntax_Syntax.Data_ctor)
+  FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_uinst 
+  (FStar_Syntax_Syntax.fvar FStar_Syntax_Const.lextop_lid FStar_Syntax_Syntax.Delta_constant (Some FStar_Syntax_Syntax.Data_ctor),
+   [FStar_Syntax_Syntax.U_zero])) None FStar_Range.dummyRange
 let lex_pair: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.fvar FStar_Syntax_Const.lexcons_lid
     FStar_Syntax_Syntax.Delta_constant (Some FStar_Syntax_Syntax.Data_ctor)
