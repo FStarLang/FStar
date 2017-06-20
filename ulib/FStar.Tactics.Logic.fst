@@ -13,7 +13,7 @@ let revert_squash #a #b s x = ()
 
 let l_revert : tactic unit =
     revert;;
-    apply (quote revert_squash)
+    apply (quote_lid ["FStar";"Tactics";"Logic";"revert_squash"])
 
 let rec l_revert_all (bs:binders) : tactic unit =
     match bs with
@@ -30,7 +30,7 @@ let forall_intro : tactic binder =
     g <-- cur_goal;
     match term_as_formula g with
     | Forall _ _ -> (
-        apply (quote fa_intro_lem);;
+        apply (quote_lid ["FStar";"Tactics";"Logic";"fa_intro_lem"]);;
         intro)
     | _ ->
         fail "not a forall"
@@ -45,7 +45,7 @@ let split : tactic unit =
     g <-- cur_goal;
     match term_as_formula g with
     | And _ _ ->
-        apply (quote split_lem)
+        apply (quote_lid ["FStar";"Tactics";"Logic";"split_lem"])
     | _ ->
         fail "not a conjunction"
 
@@ -58,7 +58,7 @@ let implies_intro : tactic binder =
     g <-- cur_goal;
     match term_as_formula g with
     | Implies _ _ -> (
-        apply (quote imp_intro_lem);;
+        apply (quote_lid ["FStar";"Tactics";"Logic";"imp_intro_lem"]);;
         b <-- intro;
         return b
         )
@@ -135,13 +135,13 @@ private val vbind : (#p:Type) -> (#q:Type) -> squash p -> (p -> squash q) -> squ
 let vbind #p #q sq f = FStar.Squash.bind_squash sq f
 
 let unsquash (t:term) : tactic term =
-    v <-- quote vbind;
+    v <-- quote_lid ["FStar";"Tactics";"Logic";"vbind"];
     apply (return (mk_app v [t]));;
     b <-- intro;
     return (pack (Tv_Var b))
 
 let squash_intro : tactic unit =
-    apply (quote FStar.Squash.return_squash)
+    apply (quote_lid ["FStar";"Squash";"return_squash"])
 
 private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                      (p \/ q) ->
@@ -151,7 +151,7 @@ private val or_ind : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
 let or_ind #p #q #phi o l r = ()
 
 let cases_or (o:term) : tactic unit =
-    oi <-- quote or_ind;
+    oi <-- quote_lid ["FStar";"Tactics";"Logic";"or_ind"];
     apply (return (mk_app oi [o]))
 
 private val bool_ind : (b:bool) -> (phi:Type) -> (squash (b == true  ==> phi)) ->
@@ -160,7 +160,7 @@ private val bool_ind : (b:bool) -> (phi:Type) -> (squash (b == true  ==> phi)) -
 let bool_ind b phi l r = ()
 
 let cases_bool (b:term) : tactic unit =
-    bi <-- quote bool_ind;
+    bi <-- quote_lid ["FStar";"Tactics";"Logic";"bool_ind"];
     seq (apply (return (mk_app bi [b])))
         (trytac (b <-- implies_intro; rewrite b;; clear);; idtac)
 
@@ -171,10 +171,10 @@ private val or_intro_2 : (#p:Type) -> (#q:Type) -> squash q -> squash (p \/ q)
 let or_intro_2 #p #q _ = ()
 
 let left : tactic unit =
-    apply (quote or_intro_1)
+    apply (quote_lid ["FStar";"Tactics";"Logic";"or_intro_1"])
 
 let right : tactic unit =
-    apply (quote or_intro_2)
+    apply (quote_lid ["FStar";"Tactics";"Logic";"or_intro_2"])
 
 private val __and_elim : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                               (p /\ q) ->
@@ -183,5 +183,5 @@ private val __and_elim : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
 let __and_elim #p #q #phi p_and_q f = ()
 
 let and_elim (t : term) : tactic unit =
-    ae <-- quote __and_elim;
+    ae <-- quote_lid ["FStar";"Tactics";"Logic";"__and_elim"];
     apply (return (mk_app ae [t]))

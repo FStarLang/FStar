@@ -5,6 +5,10 @@ open FStar.Reflection.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
+let quote_lid (ns:name) : tactic term =
+    let t = pack (Tv_FVar (pack_fv ns)) in
+    return t
+
 (* Monadic helpers, could be made generic for do notation? *)
 
 val liftM1' : ('a -> tactic 'b) -> (tactic 'a -> tactic 'b)
@@ -63,7 +67,7 @@ private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
 private let __cut #b a f x = f x
 
 let tcut (t:term) : tactic binder =
-    qq <-- quote __cut;
+    qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];
     let tt = pack (Tv_App qq t) in
     apply (return tt);;
     intro
