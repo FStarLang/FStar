@@ -314,7 +314,6 @@ type sigelt' =
                        * typ
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
                        * formula
@@ -331,7 +330,8 @@ and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
     sigquals: list<qualifier>;
-    sigmeta:  sig_metadata
+    sigmeta:  sig_metadata;
+    sigattrs: list<attribute>
 }
 
 type sigelts = list<sigelt>
@@ -427,7 +427,7 @@ let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos

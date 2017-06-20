@@ -809,7 +809,8 @@ and tc_lex_t env ses quals lids =
         let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid]);
                    sigquals = [];
                    sigrng = r;
-                   sigmeta = default_sigmeta } in
+                   sigmeta = default_sigmeta;
+                   sigattrs = [] } in
 
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
@@ -817,7 +818,8 @@ and tc_lex_t env ses quals lids =
         let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, []);
                           sigquals = [];
                           sigrng = r1;
-                          sigmeta = default_sigmeta  } in
+                          sigmeta = default_sigmeta;
+                          sigattrs = []  } in
 
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
@@ -831,11 +833,13 @@ and tc_lex_t env ses quals lids =
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, []);
                            sigquals = [];
                            sigrng = r2;
-                           sigmeta = default_sigmeta  } in
+                           sigmeta = default_sigmeta;
+                           sigattrs = []  } in
         { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], lids);
           sigquals = [];
           sigrng = Env.get_range env;
-          sigmeta = default_sigmeta  }
+          sigmeta = default_sigmeta;
+          sigattrs = []  }
       | _ ->
         failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids)))))
     end
@@ -848,7 +852,8 @@ and tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Ra
     { sigel = Sig_assume(lid, phi);
       sigquals = quals;
       sigrng = r;
-      sigmeta = default_sigmeta  }
+      sigmeta = default_sigmeta;
+      sigattrs = []  }
 
 and tc_inductive env ses quals lids =
     let env0 = env in
@@ -905,7 +910,8 @@ and tc_inductive env ses quals lids =
         { sigel = Sig_bundle(tcs@datas, lids);
           sigquals = quals;
           sigrng = Env.get_range env0;
-          sigmeta = default_sigmeta  }::ses, data_ops_ses
+          sigmeta = default_sigmeta;
+          sigattrs = [] }::ses, data_ops_ses
 
 
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *)
@@ -1071,7 +1077,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     [se], []
 
   | Sig_declare_typ (_, _, _)
-  | Sig_let (_, _, _)
+  | Sig_let (_, _)
       when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) ->
       (* Dummy declaration which must be erased since it has been elaborated somewhere else *)
       [], []
@@ -1104,7 +1110,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     let se = { se with sigel = Sig_main(e) } in
     [se], []
 
-  | Sig_let(lbs, lids, attrs) ->
+  | Sig_let(lbs, lids) ->
     let env = Env.set_range env r in
     let check_quals_eq l qopt q = match qopt with
       | None -> Some q
@@ -1184,7 +1190,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
             | q ->
                 Some q
           ) quals in
-          { se with sigel = Sig_let(lbs, lids, attrs);
+          { se with sigel = Sig_let(lbs, lids);
                     sigquals =  quals },
           lbs
       | _ -> failwith "impossible"
@@ -1246,7 +1252,8 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       { sigel = Sig_declare_typ(assm_lid, lb.lbunivs, t);
         sigquals =[Assumption];
         sigrng = Ident.range_of_lid assm_lid;
-        sigmeta = default_sigmeta } in
+        sigmeta = default_sigmeta;
+        sigattrs = [] } in
 
     (* makes `let native_tac (x: 'a): tactic 'b = fun () -> TAC?.reflect (__native_tac x)` *)
     let reflected_tactic_decl (b: bool) (lb: letbinding) (bs: binders) (assm_lid: lident) comp: sigelt =
@@ -1262,7 +1269,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       let unit_binder = mk_binder <| new_bv None t_unit in
       let body = abs [unit_binder] app <| Some (U.residual_comp_of_comp comp) in
       let func = abs bs body <| Some (U.residual_comp_of_comp comp) in
-      {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids, attrs)} in
+      {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids)} in
 
     let tactic_decls =
       (match (snd lbs) with
@@ -1377,7 +1384,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _ -> [se], hidden
 
-  | Sig_let((false, [lb]), _, _)
+  | Sig_let((false, [lb]), _)
         when se.sigquals |> BU.for_some is_hidden_proj_or_disc ->
     let fv = right lb.lbname in
     let lid = fv.fv_name.v in
@@ -1386,10 +1393,11 @@ let for_export hidden se : list<sigelt> * list<lident> =
     else let dec = { sigel = Sig_declare_typ(fv.fv_name.v, lb.lbunivs, lb.lbtyp);
                      sigquals =[Assumption];
                      sigrng = Ident.range_of_lid lid;
-                     sigmeta = default_sigmeta  } in
+                     sigmeta = default_sigmeta;
+                     sigattrs = [] } in
           [dec], lid::hidden
 
-  | Sig_let(lbs, l, _) ->
+  | Sig_let(lbs, l) ->
     if is_abstract se.sigquals
     then (snd lbs |>  List.map (fun lb ->
            { se with sigel = Sig_declare_typ((right lb.lbname).fv_name.v, lb.lbunivs, lb.lbtyp);
@@ -1420,7 +1428,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
     let env = Env.push_sigelt env se in
     ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
   | Sig_declare_typ (_, _, _)
-  | Sig_let (_, _, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
+  | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
   | _ -> Env.push_sigelt env se
 
 
@@ -1444,6 +1452,8 @@ let tc_decls env ses =
       in
       List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
+
+    let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in
 
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
@@ -1520,7 +1530,7 @@ let check_exports env (modul:modul) exports =
         | Sig_declare_typ(l, univs, t) ->
           if not (se.sigquals |> List.contains Private)
           then check_term l univs t
-        | Sig_let((_, lbs), _, _) ->
+        | Sig_let((_, lbs), _) ->
           if not (se.sigquals |> List.contains Private)
           then lbs |> List.iter (fun lb ->
                let fv = right lb.lbname in
@@ -1570,13 +1580,13 @@ let check_module env m =
   if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
-        | Sig_let ((b, lbs), ids, attrs) ->
+        | Sig_let ((b, lbs), ids) ->
             let n = N.normalize [N.Beta ; N.Eager_unfolding; N.Reify ; N.Inlining ; N.Primops ; N.UnfoldUntil S.Delta_constant ; N.AllowUnboundUniverses ] in
             let update lb =
                 let univnames, e = SS.open_univ_vars lb.lbunivs lb.lbdef in
                 { lb with lbdef = n (Env.push_univ_vars env univnames) e }
             in
-            { se with sigel = Sig_let ((b, List.map update lbs), ids, attrs) }
+            { se with sigel = Sig_let ((b, List.map update lbs), ids) }
         | _ -> se
     in
     let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in

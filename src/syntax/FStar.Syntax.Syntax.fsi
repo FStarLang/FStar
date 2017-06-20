@@ -337,7 +337,6 @@ type sigelt' =
                        * typ
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
                        * formula
@@ -355,7 +354,8 @@ and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
     sigquals: list<qualifier>;
-    sigmeta:  sig_metadata
+    sigmeta:  sig_metadata;
+    sigattrs: list<attribute>
 }
 
 type sigelts = list<sigelt>

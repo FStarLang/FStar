@@ -765,7 +765,7 @@ let run_compute st term rules =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _) }] -> Some def
+    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _) }] -> Some def
     | _ -> None in
 
   let parse frag =

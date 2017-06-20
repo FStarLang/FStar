@@ -404,10 +404,10 @@ let try_lookup_bv env (bv:bv) =
     | _ -> None)
 
 let lookup_type_of_let se lid = match se.sigel with
-    | Sig_let((_, [lb]), _, _) ->
+    | Sig_let((_, [lb]), _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
-    | Sig_let((_, lbs), _, _) ->
+    | Sig_let((_, lbs), _) ->
         BU.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
           | Inr fv ->
@@ -564,7 +564,7 @@ let lookup_definition delta_levels env lid =
   match lookup_qname env lid with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
-      | Sig_let((_, lbs), _, _) when visible se.sigquals ->
+      | Sig_let((_, lbs), _) when visible se.sigquals ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
@@ -672,7 +672,7 @@ let is_record env lid =
 
 let is_action env lid =
     match lookup_qname env lid with
-        | Some (Inr ({ sigel = Sig_let(_, _, _); sigquals = quals }, _), _) ->
+        | Some (Inr ({ sigel = Sig_let(_, _); sigquals = quals }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) quals
         | _ -> false
 

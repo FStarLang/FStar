@@ -279,7 +279,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                let fv = S.lid_as_fv lid Delta_constant None in
                extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
 
-        | Sig_let((false, [lb]), _, _) when Term.is_arity g lb.lbtyp ->
+        | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
           let quals = se.sigquals in
@@ -292,7 +292,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           //eta expansion is important; see issue #490
           extract_typ_abbrev g (right lb.lbname) quals lbdef
 
-        | Sig_let (lbs, _, attrs) ->
+        | Sig_let (lbs, _) ->
+          let attrs = se.sigattrs in
           let quals = se.sigquals in
           let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
 
@@ -387,7 +388,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                       lbunivs=[];
                                                       lbtyp=t;
                                                       lbeff=FStar.Syntax.Const.effect_ML_lid;
-                                                      lbdef=imp}]), [], []) } in
+                                                      lbdef=imp}]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
