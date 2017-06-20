@@ -322,8 +322,9 @@ let norm_universe:
               ->
               let uu____915 =
                 let uu____916 = FStar_Syntax_Print.univ_to_string u2 in
-                FStar_Util.format1
-                  "CheckNoUvars: unexpected universes variable remains: %s"
+                FStar_Util.format2
+                "(%s) CheckNoUvars: unexpected universes variable remains: %s"
+                 (FStar_Range.string_of_range (FStar_TypeChecker_Env.get_range cfg.tcenv))
                   uu____916 in
               failwith uu____915
           | FStar_Syntax_Syntax.U_zero  -> [u2]
