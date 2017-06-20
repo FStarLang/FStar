@@ -12,8 +12,8 @@ let uu___is_Z3V: z3version -> Prims.bool =
 let __proj__Z3V__item___0: z3version -> (Prims.int* Prims.int* Prims.int) =
   fun projectee  -> match projectee with | Z3V _0 -> _0
 let z3version_as_string: z3version -> Prims.string =
-  fun uu___95_55  ->
-    match uu___95_55 with
+  fun uu___96_55  ->
+    match uu___96_55 with
     | Z3V_Unknown s -> FStar_Util.format1 "unknown version: %s" s
     | Z3V (i,j,k) ->
         let uu____60 = FStar_Util.string_of_int i in
@@ -136,8 +136,8 @@ let uu___is_KILLED: z3status -> Prims.bool =
     match projectee with | KILLED  -> true | uu____273 -> false
 type z3statistics = Prims.string FStar_Util.smap
 let status_to_string: z3status -> Prims.string =
-  fun uu___96_278  ->
-    match uu___96_278 with
+  fun uu___97_278  ->
+    match uu___97_278 with
     | SAT uu____279 -> "sat"
     | UNSAT uu____281 -> "unsat"
     | UNKNOWN uu____282 -> "unknown"
@@ -562,12 +562,12 @@ let z3_job:
   fun fresh1  ->
     fun label_messages  ->
       fun input  ->
-        fun uu____1312  ->
-          let ekind uu___97_1323 =
-            match uu___97_1323 with
-            | TIMEOUT uu____1324 -> Timeout
-            | SAT uu____1326 -> Default
-            | UNKNOWN uu____1328 -> Default
+        fun uu____1196  ->
+          let ekind uu___98_1207 =
+            match uu___98_1207 with
+            | TIMEOUT uu____1208 -> Timeout
+            | SAT uu____1210 -> Default
+            | UNKNOWN uu____1212 -> Default
             | KILLED  -> Kill
             | uu____1330 -> failwith "Impossible" in
           let start = FStar_Util.now () in
@@ -782,8 +782,8 @@ let giveZ3: FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___98_2136  ->
-            match uu___98_2136 with
+         (fun uu___99_2020  ->
+            match uu___99_2020 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____2137 -> ()));

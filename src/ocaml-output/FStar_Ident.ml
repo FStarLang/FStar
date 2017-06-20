@@ -2,42 +2,12 @@ open Prims
 type ident = {
   idText: Prims.string;
   idRange: FStar_Range.range;}
-let __proj__Mkident__item__idText: ident -> Prims.string =
-  fun projectee  ->
-    match projectee with
-    | { idText = __fname__idText; idRange = __fname__idRange;_} ->
-        __fname__idText
-let __proj__Mkident__item__idRange: ident -> FStar_Range.range =
-  fun projectee  ->
-    match projectee with
-    | { idText = __fname__idText; idRange = __fname__idRange;_} ->
-        __fname__idRange
 type lident =
   {
   ns: ident Prims.list;
   ident: ident;
   nsstr: Prims.string;
   str: Prims.string;}
-let __proj__Mklident__item__ns: lident -> ident Prims.list =
-  fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__ns
-let __proj__Mklident__item__ident: lident -> ident =
-  fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__ident
-let __proj__Mklident__item__nsstr: lident -> Prims.string =
-  fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__nsstr
-let __proj__Mklident__item__str: lident -> Prims.string =
-  fun projectee  ->
-    match projectee with
-    | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
-        str = __fname__str;_} -> __fname__str
 type lid = lident
 let mk_ident: (Prims.string* FStar_Range.range) -> ident =
   fun uu____81  ->
@@ -122,4 +92,4 @@ let lid_add_suffix: lident -> Prims.string -> lident =
       let path = path_of_lid l in
       lid_of_path (FStar_List.append path [s]) (range_of_lid l)
 let string_of_lid: lident -> Prims.string =
-  fun lid  -> let uu____240 = path_of_lid lid in text_of_path uu____240
+  fun lid  -> let uu____222 = path_of_lid lid in text_of_path uu____222

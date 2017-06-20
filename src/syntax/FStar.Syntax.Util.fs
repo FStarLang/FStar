@@ -646,10 +646,8 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
-      | None
-      | Some (Inr _) -> lopt
-      | Some (Inl lc) ->
-          Some (Inl (close_lcomp bs lc))
+      | None -> None
+      | Some rc -> Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (close bs)})
   in
   match bs with
   | [] -> t
@@ -700,10 +698,8 @@ let rec arrow_formals k =
 
 let abs_formals t =
     let subst_lcomp_opt s l = match l with
-        | Some (Inl l) ->
-          let l = {l with res_typ=Subst.subst s l.res_typ;
-                          comp=(fun () -> Subst.subst_comp s (l.comp()))} in
-          Some (Inl l)
+        | Some rc ->
+          Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
@@ -939,9 +935,31 @@ let lcomp_of_comp c0 =
      cflags = flags;
      comp = fun() -> c0}
 
+let mk_residual_comp l t f = {
+    residual_effect=l;
+    residual_typ=t;
+    residual_flags=f
+  }
+let residual_tot t = {
+    residual_effect=Const.effect_Tot_lid;
+    residual_typ=Some t;
+    residual_flags=[TOTAL]
+  }
+let residual_comp_of_comp (c:comp) = {
+    residual_effect=comp_effect_name c;
+    residual_typ=Some (comp_result c);
+    residual_flags=comp_flags c;
+  }
+let residual_comp_of_lcomp (lc:lcomp) = {
+    residual_effect=lc.eff_name;
+    residual_typ=Some (lc.res_typ);
+    residual_flags=lc.cflags
+  }
+
+
 let mk_forall_aux fa x body =
   mk (Tm_app(fa, [ iarg (x.sort);
-                   as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
+                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) None dummyRange
 
 let mk_forall_no_univ (x:bv) (body:typ) : typ =
   mk_forall_aux tforall x body

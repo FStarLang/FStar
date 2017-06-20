@@ -5,8 +5,8 @@ type z3_result = (FStar_SMTEncoding_Z3.unsat_core,z3_err) FStar_Util.either
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
-let z3_result_as_replay_result uu___83_27 =
-  match uu___83_27 with
+let z3_result_as_replay_result uu___84_27 =
+  match uu___84_27 with
   | FStar_Util.Inl l -> FStar_Util.Inl l
   | FStar_Util.Inr (r,uu____36) -> FStar_Util.Inr r
 type hint_stat =
@@ -137,8 +137,8 @@ let next_hint: Prims.string -> Prims.int -> FStar_Util.hint option =
       match uu____238 with
       | Some hints ->
           FStar_Util.find_map hints
-            (fun uu___84_246  ->
-               match uu___84_246 with
+            (fun uu___85_230  ->
+               match uu___85_230 with
                | Some hint when
                    (hint.FStar_Util.hint_name = qname) &&
                      (hint.FStar_Util.hint_index = qindex)
@@ -152,13 +152,13 @@ let record_hint: FStar_Util.hint option -> Prims.unit =
       | None  -> None
       | Some h ->
           Some
-            (let uu___88_264 = h in
+            (let uu___89_248 = h in
              {
-               FStar_Util.hint_name = (uu___88_264.FStar_Util.hint_name);
-               FStar_Util.hint_index = (uu___88_264.FStar_Util.hint_index);
-               FStar_Util.fuel = (uu___88_264.FStar_Util.fuel);
-               FStar_Util.ifuel = (uu___88_264.FStar_Util.ifuel);
-               FStar_Util.unsat_core = (uu___88_264.FStar_Util.unsat_core);
+               FStar_Util.hint_name = (uu___89_248.FStar_Util.hint_name);
+               FStar_Util.hint_index = (uu___89_248.FStar_Util.hint_index);
+               FStar_Util.fuel = (uu___89_248.FStar_Util.fuel);
+               FStar_Util.ifuel = (uu___89_248.FStar_Util.ifuel);
+               FStar_Util.unsat_core = (uu___89_248.FStar_Util.unsat_core);
                FStar_Util.query_elapsed_time = (Prims.parse_int "0")
              }) in
     let uu____265 = FStar_ST.read recorded_hints in
@@ -278,8 +278,8 @@ let filter_assertions:
                                let uu____491 =
                                  FStar_All.pipe_right th
                                    (FStar_Util.for_some
-                                      (fun uu___85_493  ->
-                                         match uu___85_493 with
+                                      (fun uu___86_477  ->
+                                         match uu___86_477 with
                                          | FStar_SMTEncoding_Term.Assume a ->
                                              nm =
                                                a.FStar_SMTEncoding_Term.assumption_name
@@ -292,8 +292,8 @@ let filter_assertions:
                      let uu____498 =
                        FStar_All.pipe_right th
                          (FStar_List.collect
-                            (fun uu___86_502  ->
-                               match uu___86_502 with
+                            (fun uu___87_486  ->
+                               match uu___87_486 with
                                | FStar_SMTEncoding_Term.Assume a ->
                                    [a.FStar_SMTEncoding_Term.assumption_name]
                                | uu____505 -> [])) in
@@ -365,9 +365,9 @@ let ask_and_report_errors:
              match uu____582 with
              | (query_name,query_index) ->
                  let minimum_workable_fuel = FStar_Util.mk_ref None in
-                 let set_minimum_workable_fuel f uu___87_638 =
-                   match uu___87_638 with
-                   | ([],uu____645) -> ()
+                 let set_minimum_workable_fuel f uu___88_622 =
+                   match uu___88_622 with
+                   | ([],uu____629) -> ()
                    | errs ->
                        let uu____651 = FStar_ST.read minimum_workable_fuel in
                        (match uu____651 with

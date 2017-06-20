@@ -76,7 +76,7 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option<residual_comp>          (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
@@ -84,7 +84,7 @@ type term' =
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
+  | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -195,9 +195,12 @@ and lcomp = {
     comp: unit -> comp //a lazy computation
 }
 
-and residual_comp = lident * list<cflags> (* Residual of a computation type after typechecking *)
-                                          (* first component is the effect name *)
-                                          (* second component contains (an approximation of) the cflags *)
+(* Residual of a computation type after typechecking *)
+and residual_comp = {
+    residual_effect:lident;                (* first component is the effect name *)
+    residual_typ   :option<typ>;           (* second component: result type *)
+    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+}
 
 type tscheme = list<univ_name> * typ
 

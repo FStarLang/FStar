@@ -249,8 +249,8 @@ let rec delta_depth_greater_than:
           delta_depth_greater_than l d
 let rec decr_delta_depth:
   FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth option =
-  fun uu___97_595  ->
-    match uu___97_595 with
+  fun uu___99_480  ->
+    match uu___99_480 with
     | FStar_Syntax_Syntax.Delta_constant  -> None
     | FStar_Syntax_Syntax.Delta_equational  -> None
     | FStar_Syntax_Syntax.Delta_defined_at_level _0_38 when
@@ -291,8 +291,8 @@ let insert_col_info col info col_infos =
   let uu____733 = __insert [] col_infos in
   match uu____733 with | (l,r) -> FStar_List.append (FStar_List.rev l) r
 let find_nearest_preceding_col_info col col_infos =
-  let rec aux out uu___98_798 =
-    match uu___98_798 with
+  let rec aux out uu___100_677 =
+    match uu___100_677 with
     | [] -> out
     | (c,i)::rest -> if c > col then out else aux (Some i) rest in
   aux None col_infos
@@ -314,10 +314,10 @@ let insert_identifier_info:
       fun range  ->
         let info = mk_info id ty in
         let use_range =
-          let uu___99_853 = range in
+          let uu___101_732 = range in
           {
             FStar_Range.def_range = (range.FStar_Range.use_range);
-            FStar_Range.use_range = (uu___99_853.FStar_Range.use_range)
+            FStar_Range.use_range = (uu___101_732.FStar_Range.use_range)
           } in
         let fn = FStar_Range.file_of_range use_range in
         let start = FStar_Range.start_of_range use_range in

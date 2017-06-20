@@ -38,6 +38,7 @@ val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
 val close_univ_vars_comp: univ_names -> comp -> comp
 val close_let_rec:        list<letbinding> -> term -> list<letbinding> * term
+val closing_subst:        binders -> list<subst_elt>
 
 val open_binders:       binders -> binders
 val open_term:          binders -> term -> binders * term

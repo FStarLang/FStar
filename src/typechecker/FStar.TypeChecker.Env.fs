@@ -979,12 +979,8 @@ let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
-let is_reifiable (env:env) (c:either<S.lcomp, S.residual_comp>) : bool =
-    let effect_lid = match c with
-        | Inl lc -> lc.eff_name
-        | Inr (eff_name, _) -> eff_name
-    in
-    is_reifiable_effect env effect_lid
+let is_reifiable (env:env) (c:S.residual_comp) : bool =
+    is_reifiable_effect env c.residual_effect
 
 let is_reifiable_comp (env:env) (c:S.comp) : bool =
     match c.n with

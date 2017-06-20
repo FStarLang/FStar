@@ -29,8 +29,8 @@ let definition_lids: FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
     | FStar_Parser_AST.Tycon (uu____68,tys) ->
         FStar_All.pipe_right tys
           (FStar_List.collect
-             (fun uu___194_86  ->
-                match uu___194_86 with
+             (fun uu___195_86  ->
+                match uu___195_86 with
                 | (FStar_Parser_AST.TyconAbbrev
                    (id,uu____92,uu____93,uu____94),uu____95) ->
                     let uu____102 = FStar_Ident.lid_of_ids [id] in
@@ -57,8 +57,8 @@ let rec prefix_with_iface_decls:
            | FStar_Parser_AST.Tycon (uu____149,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___195_166  ->
-                       match uu___195_166 with
+                    (fun uu___196_166  ->
+                       match uu___196_166 with
                        | (FStar_Parser_AST.TyconAbstract uu____170,uu____171)
                            -> true
                        | uu____179 -> false))
@@ -158,8 +158,8 @@ let check_initial_interface:
            | FStar_Parser_AST.Tycon (uu____363,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___196_380  ->
-                       match uu___196_380 with
+                    (fun uu___197_380  ->
+                       match uu___197_380 with
                        | (FStar_Parser_AST.TyconAbstract uu____384,uu____385)
                            -> true
                        | uu____393 -> false))

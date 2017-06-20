@@ -103,7 +103,7 @@ type stack_elt =
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders * env * option<either<lcomp,residual_comp>> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
+ | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
@@ -404,18 +404,18 @@ and close_comp cfg env c =
                                result_typ=rt;
                                effect_args=args;
                                flags=flags})
-and filter_out_lcomp_cflags lc =
+
+and filter_out_lcomp_cflags flags =
     (* TODO : lc.comp might have more cflags than lcomp.cflags *)
-    lc.cflags |> List.filter (function DECREASES _ -> false | _ -> true)
+    flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 and close_lcomp_opt cfg env lopt = match lopt with
-    | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
-      let flags = filter_out_lcomp_cflags lc in
-      if U.is_total_lcomp lc
-      then Some (Inr (Const.effect_Tot_lid, flags))
-      else if U.is_tot_or_gtot_lcomp lc
-      then Some (Inr (Const.effect_GTot_lid, flags))
-      else Some (Inr (lc.eff_name, flags)) //retaining the effect name and flags is sufficient
+    | Some rc -> //(Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
+      let flags =
+          rc.residual_flags |>
+          List.filter (function DECREASES _ -> false | _ -> true) in
+      let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (closure_as_term cfg env)} in
+      Some rc
     | _ -> lopt
 
 (*******************************************************************)
@@ -962,17 +962,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
                               log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
-                            | Some (Inr (l, cflags))
+                            | Some rc
                             (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
-                                when (Ident.lid_equals l Const.effect_Tot_lid
-                                      || Ident.lid_equals l Const.effect_GTot_lid
-                                      || cflags |> BU.for_some (function TOTAL -> true | _ -> false)) ->
+                                when (Ident.lid_equals rc.residual_effect Const.effect_Tot_lid
+                                      || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
+                                      || rc.residual_flags |> BU.for_some (function TOTAL -> true | _ -> false)) ->
                               log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
 
-                            | Some (Inl lc) when (U.is_tot_or_gtot_lcomp lc) ->
-                              log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack_rest body
 
                             | _ when (cfg.steps |> List.contains Reify) ->
                               norm cfg (c :: env) stack_rest body
@@ -1008,7 +1005,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let lopt = match lopt with
-                        | Some (Inl l) -> SS.subst_comp opening (l.comp()) |> U.lcomp_of_comp |> Inl |> Some
+                        | Some rc -> Some ({rc with residual_typ=BU.map_opt rc.residual_typ (SS.subst opening)})
                         | _ -> lopt in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
@@ -1204,7 +1201,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                               let head = U.mk_reify <| lb.lbdef in
                               let body = U.mk_reify <| body in
                               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
-                              let body = S.mk (Tm_abs([S.mk_binder x], body, Some (Inr (m, [])))) None body.pos in
+                              let body_rc = {
+                                residual_effect=m;
+                                residual_flags=[];
+                                residual_typ=Some t
+                              } in
+                              let body = S.mk (Tm_abs([S.mk_binder x], body, Some body_rc)) None body.pos in
                               let close = closure_as_term cfg env in
                               let bind_inst = match (SS.compress bind_repr).n with
                                 | Tm_uinst (bind, [_ ; _]) ->
@@ -1470,17 +1472,12 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs in
         List.rev nbs
 
-and norm_lcomp_opt : cfg -> env -> option<either<lcomp, residual_comp>> -> option<either<lcomp, residual_comp>> =
+and norm_lcomp_opt : cfg -> env -> option<residual_comp> -> option<residual_comp> =
     fun cfg env lopt ->
         match lopt with
-        | Some (Inl lc) ->
-          let flags = filter_out_lcomp_cflags lc in
-          if U.is_tot_or_gtot_lcomp lc
-          then let t = norm cfg env [] lc.res_typ in
-               if U.is_total_lcomp lc
-               then Some (Inl (U.lcomp_of_comp (comp_set_flags (S.mk_Total t) flags)))
-               else Some (Inl (U.lcomp_of_comp (comp_set_flags (S.mk_GTotal t) flags)))
-          else Some (Inr (lc.eff_name, flags))
+        | Some rc ->
+          let flags = filter_out_lcomp_cflags rc.residual_flags in
+          Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
        | _ -> lopt
 
 
@@ -1779,7 +1776,7 @@ let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
     then e
     else let binders, args = formals |> U.args_of_binders in
          U.abs binders (mk_Tm_app e args None e.pos)
-                       (U.lcomp_of_comp c |> Inl |> Some)
+                       (Some (U.residual_comp_of_comp c))
 
 let eta_expand (env:Env.env) (t:term) : term =
   match !t.tk, t.n with
