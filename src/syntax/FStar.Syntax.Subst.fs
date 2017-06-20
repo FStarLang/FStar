@@ -389,7 +389,7 @@ let rec compress (t:term) =
 let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
 let subst_comp s t = subst_comp' ([s], None) t
-let closing_subst bs =
+let closing_subst (bs:binders) =
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
    let rec aux bs o = match bs with

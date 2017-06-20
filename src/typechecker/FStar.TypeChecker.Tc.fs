@@ -330,7 +330,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
 
       let actions =
-        let check_action act =
+        let check_action (act:action) =
           (* We should not have action params anymore, they should have been handled by dmff below *)
           assert (match act.action_params with | [] -> true | _ -> false) ;
 
@@ -351,7 +351,6 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act_defn in
           let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
-
           // 2) This implies that [action_typ] has Type(k): good for us!
 
           // 3) Unify [action_typ] against [expected_k], because we also need
@@ -687,7 +686,7 @@ and cps_and_elaborate env ed =
         (Print.binders_to_string "," params_un)
         (Print.binders_to_string "," action_params)
         (Print.term_to_string action_typ_with_wp)
-        (Print.term_to_string action_elab) ;
+        (Print.term_to_string action_elab);
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
     (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)

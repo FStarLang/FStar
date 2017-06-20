@@ -893,8 +893,22 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_name bv ->
       N bv.sort, e, e
 
-  | Tm_abs _ ->
-      let binders, body, rc_opt = U.abs_formals e in
+  | Tm_abs (binders, body, rc_opt) ->
+      let subst_rc_opt subst rc_opt =
+        match rc_opt with
+        | Some {residual_typ=None}
+        | None -> rc_opt
+        | Some rc -> Some ({rc with residual_typ=Some (SS.subst subst (BU.must rc.residual_typ))}) in
+
+      //NS: note, this is explicitly written with opening binders
+      //    rather than U.abs_formals
+      //    since the specific number of binders to open is determined very syntactically
+      //    We do not want to collapse (fun x -> (fun y -> e)) into (fun x y -> e)
+      //    since this changes the way the selectve CPS transform works
+      let binders = SS.open_binders binders in
+      let subst = SS.opening_of_binders binders in
+      let body = SS.subst subst body in
+      let rc_opt = subst_rc_opt subst rc_opt in
       let env = { env with env = push_binders env.env binders } in
 
       // For the *-translation, [x: t] becomes [x: t*].
@@ -961,8 +975,15 @@ and infer (env: env) (e: term): nm * term * term =
           Some (U.residual_comp_of_comp comp)
       in
 
-      let s_term = U.abs s_binders s_body s_rc_opt in
-      let u_term = U.abs u_binders u_body u_rc_opt in
+
+      let s_body = close s_binders s_body in
+      let s_binders = close_binders s_binders in
+      let s_term = mk (Tm_abs (s_binders, s_body, subst_rc_opt (Subst.closing_subst s_binders) s_rc_opt)) in
+
+      let u_body = close u_binders u_body in
+      let u_binders = close_binders u_binders in
+      let u_term = mk (Tm_abs (u_binders, u_body, subst_rc_opt (Subst.closing_subst u_binders) u_rc_opt)) in
+
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
