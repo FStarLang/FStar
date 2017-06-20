@@ -56,6 +56,15 @@ let lem_false_imp_p #p = ()
 val lem_fa_true : #a:Type -> Lemma ((forall (x:a). True) <==> True)
 let lem_fa_true #a = ()
 
+val lem_ex_false : #a:Type -> Lemma ((exists (x:a). False) <==> False)
+let lem_ex_false #a = ()
+
+val lem_neg_false : unit -> Lemma (~False <==> True)
+let lem_neg_false () = ()
+
+val lem_neg_true : unit -> Lemma (~True <==> False)
+let lem_neg_true () = ()
+
 val and_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
                                       squash (q <==> q') ->
                                       Lemma ((p /\ q) <==> (p' /\ q'))
@@ -75,6 +84,17 @@ val fa_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
 let fa_cong #a #p #q f = admit() //fix, this should certainly be provable
+
+val ex_cong (#a : Type) (#p #q : a -> Type) :
+    (x:a -> squash (p x <==> q x)) ->
+    Lemma ((exists (x:a). p x) <==> (exists (x:a). q x))
+let ex_cong #a #p #q f = admit() //fix, this should certainly be provable
+
+val neg_cong (#p #q:Type) : squash (p <==> q) -> Lemma (~p <==> ~q)
+let neg_cong #p #q _ = ()
+
+val iff_cong (#p #p' #q #q' : Type) : squash (p <==> p') -> squash (q <==> q') -> Lemma ((p <==> q) <==> (p' <==> q'))
+let iff_cong #p #p' #q #q' _ _ = ()
 
 // Absolutely hideous, do something about normalization
 val is_true : term -> bool
@@ -151,6 +171,15 @@ let rec simplify_point = fun () -> (
                  if is_true p then apply_lemma (quote lem_fa_true)
             else tiff
 
+        | Exists b p ->
+                 if is_false p then apply_lemma (quote lem_ex_false)
+            else tiff
+
+        | Not p ->
+                 if is_true p then (apply_lemma (quote lem_neg_true);; exact (quote ()))
+            else if is_false p then (apply_lemma (quote lem_neg_false);; exact (quote ()))
+            else tiff
+
         | _ -> tiff
         end
     | _ -> fail "simplify_point: failed precondition: goal should be `g <==> ?u`"
@@ -178,6 +207,15 @@ and recurse : unit -> Tac unit = fun () -> (
         | Forall _ _ ->
             apply_lemma (quote fa_cong);;
             intro;;
+            simplify_point
+
+        | Exists _ _ ->
+            apply_lemma (quote ex_cong);;
+            intro;;
+            simplify_point
+
+        | Not _ ->
+            apply_lemma (quote neg_cong);;
             simplify_point
 
         | _ -> tiff

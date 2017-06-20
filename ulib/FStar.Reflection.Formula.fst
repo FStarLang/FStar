@@ -30,6 +30,10 @@ let mk_Forall (typ : term) (pred : term) : formula =
     let b = fresh_binder typ in
     Forall b (pack (Tv_App pred (pack (Tv_Var b))))
 
+let mk_Exists (typ : term) (pred : term) : formula =
+    let b = fresh_binder typ in
+    Exists b (pack (Tv_App pred (pack (Tv_Var b))))
+
 val smaller : formula -> term -> Type0
 let smaller f t =
     match f with
@@ -93,6 +97,8 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
             else if qn = or_qn  then Or a1 a2
             else if qn = forall_qn then (admit(); //TODO: admitting termination check for now
                                              mk_Forall a1 a2) //a1 is type, a2 predicate
+            else if qn = exists_qn then (admit(); //TODO: admitting termination check for now
+                                             mk_Exists a1 a2) //a1 is type, a2 predicate
             else App h0 t
         | Tv_FVar fv, [a] ->
             let qn = inspect_fv fv in
