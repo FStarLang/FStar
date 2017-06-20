@@ -63,7 +63,7 @@ type univ_ineq = universe * universe
 module C = FStar.Syntax.Const
 
 let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange
+let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level (Prims.parse_int "1")) None)) (Some Util.ktype0.n) Range.dummyRange
 let t_unit   = tconst C.unit_lid
 let t_bool   = tconst C.bool_lid
 let t_int    = tconst C.int_lid
@@ -92,8 +92,8 @@ let rec delta_depth_greater_than l m = match l, m with
 let rec decr_delta_depth = function
     | Delta_constant
     | Delta_equational -> None
-    | Delta_defined_at_level 1 -> Some Delta_constant
-    | Delta_defined_at_level i -> Some (Delta_defined_at_level (i - 1))
+    | Delta_defined_at_level l when l = (Prims.parse_int "1") -> Some Delta_constant
+    | Delta_defined_at_level i -> Some (Delta_defined_at_level (i - (Prims.parse_int "1")))
     | Delta_abstract d -> decr_delta_depth d
 
 (***********************************************************************************)
@@ -135,7 +135,7 @@ let mk_info id ty = {
     identifier=id;
     identifier_ty=ty;
 }
-let file_info_table : file_info = BU.smap_create 50 //50 files
+let file_info_table : file_info = BU.smap_create (Prims.parse_int "50") //50 files
 open FStar.Range
 let insert_identifier_info id ty range =
     let info = mk_info id ty in
@@ -146,7 +146,7 @@ let insert_identifier_info id ty range =
     match BU.smap_try_find file_info_table fn with
     | None -> 
       let col_info = BU.mk_ref (insert_col_info col info []) in
-      let rows = BU.imap_create 1000 in //1000 rows per file
+      let rows = BU.imap_create (Prims.parse_int "1000") in //1000 rows per file
       BU.imap_add rows row col_info;
       BU.smap_add file_info_table fn rows
     | Some file_rows -> begin

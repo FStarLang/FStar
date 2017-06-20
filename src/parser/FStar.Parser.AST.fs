@@ -213,7 +213,7 @@ type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
 let check_id id =
-    let first_char = String.substring id.idText 0 1 in
+    let first_char = String.substring id.idText (Prims.parse_int "0") (Prims.parse_int "1") in
     if String.lowercase first_char = first_char
     then ()
     else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
@@ -451,12 +451,12 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
       ) ds;
       Inr ds
 
-let compile_op arity s =
+let compile_op (arity:Prims.int) s =
     let name_of_char = function
       |'&' -> "Amp"
       |'@'  -> "At"
       |'+' -> "Plus"
-      |'-' when (arity=1) -> "Minus"
+      |'-' when (arity=(Prims.parse_int "1")) -> "Minus"
       |'-' -> "Subtraction"
       |'/' -> "Slash"
       |'<' -> "Less"
@@ -479,7 +479,7 @@ let compile_op arity s =
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
 let compile_op' s =
-  compile_op (-1) s
+  compile_op (Prims.parse_int "-1") s
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging
@@ -642,5 +642,5 @@ let modul_to_string (m:modul) = match m with
 
 let error msg tm r =
  let tm = tm |> term_to_string in
- let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
+ let tm = if String.length tm >= (Prims.parse_int "80") then Util.substring tm (Prims.parse_int "0") (Prims.parse_int "77") ^ "..." else tm in
  raise (Error(msg^"\n"^tm, r))

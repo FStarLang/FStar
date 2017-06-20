@@ -265,7 +265,7 @@ let gen_wps_for_free
 
   let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
   let mk_generic_app c =
-    if List.length binders > 0 then
+    if List.length binders > (Prims.parse_int "0") then
       mk (Tm_app (c, args_of_binders binders))
     else
       c
@@ -279,7 +279,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level 2) None in
+      let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level (Prims.parse_int "2")) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -296,7 +296,7 @@ let gen_wps_for_free
   let wp_assert =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar Const.and_lid (S.Delta_defined_at_level 1) None in
+    let l_and = fvar Const.and_lid (S.Delta_defined_at_level (Prims.parse_int "1")) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -314,7 +314,7 @@ let gen_wps_for_free
   let wp_assume =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar Const.imp_lid (S.Delta_defined_at_level 1) None in
+    let l_imp = fvar Const.imp_lid (S.Delta_defined_at_level (Prims.parse_int "1")) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -415,7 +415,7 @@ let gen_wps_for_free
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (U.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            let projector = S.fvar (Env.lookup_projector env (U.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level (Prims.parse_int "1")) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -634,7 +634,7 @@ and star_type' env t =
                         let ct = U.comp_result c in
                         non_dependent_or_raise s ct ;
                         let k = n - List.length binders in
-                        if k > 0 then is_non_dependent_arrow ct k else true
+                        if k > (Prims.parse_int "0") then is_non_dependent_arrow ct k else true
                     with Not_found -> false
             end
         | _ ->
@@ -692,10 +692,10 @@ and star_type' env t =
   | Tm_refine (x, t) when false ->
       let x = freshen_bv x in
       let sort = star_type' env x.sort in
-      let subst = [DB(0, x)] in
+      let subst = [DB((Prims.parse_int "0"), x)] in
       let t = SS.subst subst t in
       let t = star_type' env t in
-      let subst = [NM(x, 0)] in
+      let subst = [NM(x, (Prims.parse_int "0"))] in
       let t = SS.subst subst t in
       mk (Tm_refine ({ x with sort = sort }, t))
 

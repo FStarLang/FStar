@@ -100,10 +100,10 @@ let eq_const: sconst -> sconst -> Prims.bool =
 let rec pow2: Prims.int -> Prims.int =
   fun x  ->
     match x with
-    | _0_25 when _0_25 = (Prims.parse_int "0") -> Prims.parse_int "1"
-    | uu____273 ->
-        let uu____274 = pow2 (x - (Prims.parse_int "1")) in
-        (Prims.parse_int "2") * uu____274
+    | x1 when x1 = (Prims.parse_int "0") -> Prims.parse_int "1"
+    | uu____274 ->
+        let uu____275 = pow2 (x - (Prims.parse_int "1")) in
+        (Prims.parse_int "2") * uu____275
 let bounds: signedness -> width -> (Prims.int* Prims.int) =
   fun signedness  ->
     fun width  ->
@@ -113,13 +113,13 @@ let bounds: signedness -> width -> (Prims.int* Prims.int) =
         | Int16  -> Prims.parse_int "16"
         | Int32  -> Prims.parse_int "32"
         | Int64  -> Prims.parse_int "64" in
-      let uu____284 =
+      let uu____285 =
         match signedness with
         | Unsigned  ->
-            let uu____289 =
-              let uu____290 = pow2 n1 in uu____290 - (Prims.parse_int "1") in
-            ((Prims.parse_int "0"), uu____289)
+            let uu____290 =
+              let uu____291 = pow2 n1 in uu____291 - (Prims.parse_int "1") in
+            ((Prims.parse_int "0"), uu____290)
         | Signed  ->
             let upper = pow2 (n1 - (Prims.parse_int "1")) in
             ((- upper), (upper - (Prims.parse_int "1"))) in
-      match uu____284 with | (lower,upper) -> (lower, upper)
+      match uu____285 with | (lower,upper) -> (lower, upper)

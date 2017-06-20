@@ -16,12 +16,12 @@ let hardline = Doc "\n"
 
 (* -------------------------------------------------------------------- *)
 let text (s : string) = Doc s
-let num (i : int) = Doc (string_of_int i)
+let num (i : Prims.int) = Doc (string_of_int i)
 
 (* -------------------------------------------------------------------- *)
-let break_ (i : int   ) = Doc ""
+let break_ (i : Prims.int   ) = Doc ""
 
-let break0 = break_ 0
+let break0 = break_ (Prims.parse_int "0")
 let break1 = text " "
 
 (* -------------------------------------------------------------------- *)
@@ -61,7 +61,7 @@ let reduce1 (docs : list<doc>) =
     combine break1 docs
 
 (* -------------------------------------------------------------------- *)
-let nest (i : int) (Doc d) =
+let nest (i : Prims.int) (Doc d) =
     Doc (d)
 
 (* -------------------------------------------------------------------- *)
@@ -73,4 +73,4 @@ let align (docs : list<doc>) =
 let hbox (d : doc) = d (* FIXME *)
 
 (* -------------------------------------------------------------------- *)
-let pretty (sz : int) (Doc doc) = doc
+let pretty (sz : Prims.int) (Doc doc) = doc

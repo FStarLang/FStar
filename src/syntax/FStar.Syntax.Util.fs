@@ -39,7 +39,7 @@ let mk_discriminator lid =
   lid_of_ids (lid.ns@[mk_ident(Ident.reserved_prefix ^ "is_" ^ lid.ident.idText, lid.ident.idRange)])
 
 let is_name (lid:lident) =
-  let c = U.char_at lid.ident.idText 0 in
+  let c = U.char_at lid.ident.idText (Prims.parse_int "0") in
   U.is_upper c
 
 let arg_of_non_null_binder (b, imp) = (bv_to_name b, imp)
@@ -61,7 +61,7 @@ let name_binders binders =
             if is_null_binder b
             then let a, imp = b in
                  let b = id_of_text ("_" ^ string_of_int i) in
-                 let b = {ppname=b; index=0; sort=a.sort} in
+                 let b = {ppname=b; index=(Prims.parse_int "0"); sort=a.sort} in
                  b, imp
             else b)
 
@@ -108,8 +108,8 @@ let rec univ_kernel u = match u with
     | U_unknown
     | U_name _
     | U_unif _
-    | U_zero -> u, 0
-    | U_succ u -> let k, n = univ_kernel u in k, n+1
+    | U_zero -> u, Prims.parse_int "0"
+    | U_succ u -> let k, n = univ_kernel u in k, n+(Prims.parse_int "1")
     | U_max _  -> failwith "Imposible: univ_kernel (U_max _)"
     | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)"
 
@@ -127,17 +127,17 @@ let rec compare_univs u1 u2 = match u1, u2 with
     | U_bvar _, _
     | _, U_bvar _  -> failwith "Impossible: compare_univs"
 
-    | U_unknown, U_unknown -> 0
-    | U_unknown, _ -> -1
-    | _, U_unknown -> 1
+    | U_unknown, U_unknown -> (Prims.parse_int "0")
+    | U_unknown, _ -> (Prims.parse_int "-1")
+    | _, U_unknown -> (Prims.parse_int "1")
 
-    | U_zero, U_zero -> 0
-    | U_zero, _ -> -1
-    | _, U_zero -> 1
+    | U_zero, U_zero -> (Prims.parse_int "0")
+    | U_zero, _ -> (Prims.parse_int "-1")
+    | _, U_zero -> (Prims.parse_int "1")
 
     | U_name u1 , U_name u2 -> String.compare u1.idText u2.idText
-    | U_name _, U_unif _ -> -1
-    | U_unif _, U_name _ -> 1
+    | U_name _, U_unif _ -> (Prims.parse_int "-1")
+    | U_unif _, U_name _ -> (Prims.parse_int "1")
 
     | U_unif u1, U_unif u2 -> Unionfind.uvar_id u1 - Unionfind.uvar_id u2
 
@@ -148,26 +148,26 @@ let rec compare_univs u1 u2 = match u1, u2 with
       then n1 - n2
       else let copt = U.find_map (List.zip us1 us2) (fun (u1, u2) ->
                 let c = compare_univs u1 u2 in
-                if c<>0 then Some c
+                if c<>(Prims.parse_int "0") then Some c
                 else None) in
            begin match copt with
-            | None -> 0
+            | None -> (Prims.parse_int "0")
             | Some c -> c
            end
 
-    | U_max _, _ -> -1
+    | U_max _, _ -> (Prims.parse_int "-1")
 
-    | _, U_max _ -> 1
+    | _, U_max _ -> (Prims.parse_int "1")
 
     | _ ->
         let k1, n1 = univ_kernel u1 in
         let k2, n2 = univ_kernel u2 in
         let r = compare_univs k1 k2 in
-        if r=0
+        if r=(Prims.parse_int "0")
         then n1 - n2
         else r
 
-let eq_univs u1 u2 = compare_univs u1 u2 = 0
+let eq_univs u1 u2 = compare_univs u1 u2 = (Prims.parse_int "0")
 
 (********************************************************************************)
 (*********************** Utilities for computation types ************************)
@@ -534,7 +534,7 @@ let mk_data l args =
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
 let unmangle_field_name x =
     if U.starts_with x.idText "^fname^"
-    then mk_ident(U.substring_from x.idText 7, x.idRange)
+    then mk_ident(U.substring_from x.idText (Prims.parse_int "7"), x.idRange)
     else x
 
 (***********************************************************************************************)
@@ -732,7 +732,7 @@ let is_dtuple_datacon_string (s:string) :bool =
 
 (* dtuple is defined in prims if n = 2, in pervasives otherwise *)
 let mod_prefix_dtuple (n:int) :(string -> lident) =
-  if n = 2 then Const.pconst else Const.psconst
+  if n = (Prims.parse_int "2") then Const.pconst else Const.psconst
 
 let is_tuple_constructor (t:typ) = match t.n with
   | Tm_fvar fv -> is_tuple_constructor_string fv.fv_name.v.str
@@ -880,7 +880,7 @@ let mk_has_type t x t' =
 let lex_t    = fvar_const Const.lex_t_lid
 let lex_top  = fvar Const.lextop_lid Delta_constant (Some Data_ctor)
 let lex_pair = fvar Const.lexcons_lid Delta_constant (Some Data_ctor)
-let tforall  = fvar Const.forall_lid (Delta_defined_at_level 1) None
+let tforall  = fvar Const.forall_lid (Delta_defined_at_level (Prims.parse_int "1")) None
 let t_haseq   = fvar Const.haseq_lid Delta_constant None
 
 let lcomp_of_comp c0 =
@@ -935,18 +935,18 @@ let destruct_typ_as_formula f : option<connective> =
       | Tm_meta(t, Meta_monadic_lift _) -> unmeta_monadic t
       | _ -> f in
     let destruct_base_conn f =
-        let connectives = [ (Const.true_lid,  0);
-                            (Const.false_lid, 0);
-                            (Const.and_lid,   2);
-                            (Const.or_lid,    2);
-                            (Const.imp_lid, 2);
-                            (Const.iff_lid, 2);
-                            (Const.ite_lid, 3);
-                            (Const.not_lid, 1);
-                            (Const.eq2_lid, 3);
-                            (Const.eq2_lid, 2);
-                            (Const.eq3_lid, 4);
-                            (Const.eq3_lid, 2)
+        let connectives = [ (Const.true_lid,  (Prims.parse_int "0"));
+                            (Const.false_lid, (Prims.parse_int "0"));
+                            (Const.and_lid,   (Prims.parse_int "2"));
+                            (Const.or_lid,    (Prims.parse_int "2"));
+                            (Const.imp_lid, (Prims.parse_int "2"));
+                            (Const.iff_lid, (Prims.parse_int "2"));
+                            (Const.ite_lid, (Prims.parse_int "3"));
+                            (Const.not_lid, (Prims.parse_int "1"));
+                            (Const.eq2_lid, (Prims.parse_int "3"));
+                            (Const.eq2_lid, (Prims.parse_int "2"));
+                            (Const.eq3_lid, (Prims.parse_int "4"));
+                            (Const.eq3_lid, (Prims.parse_int "2"))
                         ] in
         let rec aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
@@ -1044,8 +1044,8 @@ let rec delta_qualifier t =
 let rec incr_delta_depth d =
     match d with
     | Delta_equational -> d
-    | Delta_constant -> Delta_defined_at_level 1
-    | Delta_defined_at_level i -> Delta_defined_at_level (i + 1)
+    | Delta_constant -> Delta_defined_at_level (Prims.parse_int "1")
+    | Delta_defined_at_level i -> Delta_defined_at_level (i + (Prims.parse_int "1"))
     | Delta_abstract d -> incr_delta_depth d
 
 let incr_delta_qualifier t =

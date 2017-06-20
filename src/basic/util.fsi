@@ -29,8 +29,8 @@ val return_all: 'a -> 'a
 
 type time = System.DateTime
 val now : unit -> time
-val time_diff: time -> time -> float*int
-val record_time: (unit -> 'a) -> ('a * int)
+val time_diff: time -> time -> float*Prims.int
+val record_time: (unit -> 'a) -> ('a * Prims.int)
 val is_before: time -> time -> bool
 val get_file_last_modification_time: string -> time
 val string_of_time: time -> string
@@ -38,7 +38,7 @@ val string_of_time: time -> string
 (* generic utils *)
 (* Functional sets *)
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
-val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
+val new_set: ('a -> 'a -> Prims.int) -> ('a -> Prims.int) -> set<'a>
 val set_is_empty: set<'a> -> bool
 val set_add: 'a -> set<'a> -> set<'a>
 val set_remove: 'a -> set<'a> -> set<'a>
@@ -46,13 +46,13 @@ val set_mem: 'a -> set<'a> -> bool
 val set_union: set<'a> -> set<'a> -> set<'a>
 val set_intersect: set<'a> -> set<'a> -> set<'a>
 val set_is_subset_of: set<'a> -> set<'a> -> bool
-val set_count: set<'a> -> int
+val set_count: set<'a> -> Prims.int
 val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
 (* A fifo_set is a set preserving the insertion order *)
 type fifo_set<'a> = set<'a>
-val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
+val new_fifo_set: ('a -> 'a -> Prims.int) -> ('a -> Prims.int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
 (* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
 val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
@@ -61,12 +61,12 @@ val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_mem: 'a -> fifo_set<'a> -> bool
 (* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
 val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
-val fifo_set_count: fifo_set<'a> -> int
+val fifo_set_count: fifo_set<'a> -> Prims.int
 val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_elements: fifo_set<'a> -> list<'a>
 
 type smap<'value> = System.Collections.Generic.Dictionary<string,'value> (* not relying on representation *)
-val smap_create: int -> smap<'value>
+val smap_create: Prims.int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
 val smap_of_list: list<(string*'value)> -> smap<'value>
@@ -76,18 +76,18 @@ val smap_remove: smap<'value> -> string -> unit
 (* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
-val smap_size: smap<'value> -> int
+val smap_size: smap<'value> -> Prims.int
 
-type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
-val imap_create: int -> imap<'value>
+type imap<'value> = System.Collections.Generic.Dictionary<Prims.int,'value> (* not relying on representation *)
+val imap_create: Prims.int -> imap<'value>
 val imap_clear:imap<'value> -> unit
-val imap_add: imap<'value> -> int -> 'value -> unit
-val imap_of_list: list<(int*'value)> -> imap<'value>
-val imap_try_find: imap<'value> -> int -> option<'value>
-val imap_fold: imap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
-val imap_remove: imap<'value> -> int -> unit
+val imap_add: imap<'value> -> Prims.int -> 'value -> unit
+val imap_of_list: list<(Prims.int*'value)> -> imap<'value>
+val imap_try_find: imap<'value> -> Prims.int -> option<'value>
+val imap_fold: imap<'value> -> (Prims.int -> 'value -> 'a -> 'a) -> 'a -> 'a
+val imap_remove: imap<'value> -> Prims.int -> unit
 (* The list may contain duplicates. *)
-val imap_keys: imap<'value> -> list<int>
+val imap_keys: imap<'value> -> list<Prims.int>
 val imap_copy: imap<'value> -> imap<'value>
 
 val format: string -> list<string> -> string
@@ -305,7 +305,7 @@ val is_symbol: char -> bool
 type oWriter = {
     write_byte: byte -> unit;
     write_bool: bool -> unit;
-    write_int: int -> unit;
+    write_int: int32 -> unit;
     write_int32: int32 -> unit;
     write_int64: int64 -> unit;
     write_char: char -> unit;
@@ -319,7 +319,7 @@ type oWriter = {
 type oReader = {
     read_byte: unit -> byte;
     read_bool: unit -> bool;
-    read_int: unit -> int;
+    read_int: unit -> int32;
     read_int32: unit -> int32;
     read_int64: unit -> int64;
     read_char: unit -> char;

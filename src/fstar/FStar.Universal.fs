@@ -74,7 +74,7 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
 (***********************************************************************)
 (* Checking Prims.fst                                                  *)
 (***********************************************************************)
-let tc_prims () : (Syntax.modul * int)
+let tc_prims () : (Syntax.modul * Prims.int)
                   * DsEnv.env
                   * TcEnv.env =
   let solver = if Options.lax() then SMT.dummy else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
@@ -165,7 +165,7 @@ let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.Typ
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module and its elapsed checking time
+let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * Prims.int)> //each module and its elapsed checking time
                                     * DsEnv.env
                                     * TcEnv.env  =
   let dsenv, fmods = parse dsenv pre_fn fn in
@@ -217,7 +217,7 @@ let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string
   in
   remaining, nmods, (dsenv, env)
 
-let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<string>) =
+let rec tc_fold_interleave (acc:list<(modul * Prims.int)> * uenv) (remaining:list<string>) =
   match remaining with
     | [] -> acc
     | _  ->
@@ -231,7 +231,7 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * uenv) (remaining:list<stri
 let batch_mode_tc_no_prims dsenv env filenames =
   let all_mods, (dsenv, env) = tc_fold_interleave ([], (dsenv, env)) filenames in
   if Options.interactive()
-  && FStar.Errors.get_err_count () = 0
+  && FStar.Errors.get_err_count () = (Prims.parse_int "0")
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, dsenv, env

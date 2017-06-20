@@ -18,15 +18,15 @@ open FSharp.Compatibility.OCaml
 let split (chars:list<char>) s = String.split chars s
 let strcat s1 s2 = s1 ^ s2
 let concat (s:string) (ts:list<string>) = String.concat s ts
-let compare s1 s2 = String.compare s1 s2
-let strlen s = String.length s
-let length s = String.length s
+let compare s1 s2 = Prims.of_int (String.compare s1 s2)
+let strlen s = Prims.of_int (String.length s)
+let length s = Prims.of_int (String.length s)
 let collect f s = String.collect f s
 let lowercase s = String.lowercase s
 
 (* may fail with index out of bounds *)
-let substring s i j = String.sub s i j
-let get s i = String.get s i
+let substring s (i:Prims.int) (j:Prims.int) = String.sub s (Prims.parse_int32(Prims.to_string i)) (Prims.parse_int32(Prims.to_string j))
+let get s (i:Prims.int) = String.get s (Prims.parse_int32(Prims.to_string i))
 
 let rec list_of_string (s:string) = [for c in s -> c]
 let string_of_list (l:list<char>) = List.fold_right (fun c a -> (string c) ^ a) l ""

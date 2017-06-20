@@ -58,7 +58,7 @@ let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifie
 
 let rec universe_to_int n u =
   match u with
-    | U_succ u -> universe_to_int (n+1) u
+    | U_succ u -> universe_to_int (n+(Prims.parse_int "1")) u
     | _ -> (n, u)
 
 let rec resugar_universe (u:S.universe) r: A.term =
@@ -71,7 +71,7 @@ let rec resugar_universe (u:S.universe) r: A.term =
       mk (A.Const(Const_int ("0", None))) r
 
     | U_succ _ ->
-      let (n, u) = universe_to_int 0 u in
+      let (n, u) = universe_to_int (Prims.parse_int "0") u in
       begin match u with
       | U_zero ->
         mk (A.Const(Const_int(string_of_int n, None))) r
@@ -102,30 +102,30 @@ let rec resugar_universe (u:S.universe) r: A.term =
 
 let string_to_op s =
   let name_of_op = function
-    | "Amp" -> Some ("&", 0)
-    | "At" -> Some ("@", 0)
-    | "Plus" -> Some ("+", 0)
-    | "Minus" -> Some ("-", 0)
-    | "Subtraction" -> Some ("-", 2)
-    | "Slash" -> Some ("/", 0)
-    | "Less" -> Some ("<", 0)
-    | "Equals" -> Some ("=", 0)
-    | "Greater" -> Some (">", 0)
-    | "Underscore" -> Some ("_", 0)
-    | "Bar" -> Some ("|", 0)
-    | "Bang" -> Some ("!", 0)
-    | "Hat" -> Some ("^", 0)
-    | "Percent" -> Some ("%", 0)
-    | "Star" -> Some ("*", 0)
-    | "Question" -> Some ("?", 0)
-    | "Colon" -> Some (":", 0)
+    | "Amp" -> Some ("&", (Prims.parse_int "0"))
+    | "At" -> Some ("@", (Prims.parse_int "0"))
+    | "Plus" -> Some ("+", (Prims.parse_int "0"))
+    | "Minus" -> Some ("-", (Prims.parse_int "0"))
+    | "Subtraction" -> Some ("-", (Prims.parse_int "2"))
+    | "Slash" -> Some ("/", (Prims.parse_int "0"))
+    | "Less" -> Some ("<", (Prims.parse_int "0"))
+    | "Equals" -> Some ("=", (Prims.parse_int "0"))
+    | "Greater" -> Some (">", (Prims.parse_int "0"))
+    | "Underscore" -> Some ("_", (Prims.parse_int "0"))
+    | "Bar" -> Some ("|", (Prims.parse_int "0"))
+    | "Bang" -> Some ("!", (Prims.parse_int "0"))
+    | "Hat" -> Some ("^", (Prims.parse_int "0"))
+    | "Percent" -> Some ("%", (Prims.parse_int "0"))
+    | "Star" -> Some ("*", (Prims.parse_int "0"))
+    | "Question" -> Some ("?", (Prims.parse_int "0"))
+    | "Colon" -> Some (":", (Prims.parse_int "0"))
     | _ -> None
   in
   match s with
-  | "op_String_Assignment" -> Some (".[]<-", 0)
-  | "op_Array_Assignment" -> Some (".()<-", 0)
-  | "op_String_Access" -> Some (".[]", 0)
-  | "op_Array_Access" -> Some (".()", 0)
+  | "op_String_Assignment" -> Some (".[]<-", (Prims.parse_int "0"))
+  | "op_Array_Assignment" -> Some (".()<-", (Prims.parse_int "0"))
+  | "op_String_Access" -> Some (".[]", (Prims.parse_int "0"))
+  | "op_Array_Access" -> Some (".()", (Prims.parse_int "0"))
   | _ ->
     if BU.starts_with s "op_" then
       let s = BU.split (BU.substring_from s (String.length "op_"))  "_" in
@@ -136,11 +136,11 @@ let string_to_op s =
                                   | Some (op, _) -> acc ^ op
                                   | None -> failwith "wrong composed operator format")
                                   "" (List.map name_of_op s)  in
-        Some (op, 0)
+        Some (op, (Prims.parse_int "0"))
     else
       None
 
-let rec resugar_term_as_op(t:S.term) : option<(string*int)> =
+let rec resugar_term_as_op(t:S.term) : option<(string*Prims.int)> =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
@@ -179,22 +179,22 @@ let rec resugar_term_as_op(t:S.term) : option<(string*int)> =
   let fallback fv =
     match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
     | Some op ->
-      Some (snd op, 0)
+      Some (snd op, Prims.parse_int "0")
     | _ ->
       let length = String.length(fv.fv_name.v.nsstr) in
-      let str = if length=0 then fv.fv_name.v.str
-          else BU.substring_from fv.fv_name.v.str (length+1) in
-      if BU.starts_with str "dtuple" then Some ("dtuple", 0)
-      else if BU.starts_with str "tuple" then Some ("tuple", 0)
-      else if BU.starts_with str "try_with" then Some ("try_with", 0)
-      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, 0)
+      let str = if length=(Prims.parse_int "0") then fv.fv_name.v.str
+          else BU.substring_from fv.fv_name.v.str (length+(Prims.parse_int "1")) in
+      if BU.starts_with str "dtuple" then Some ("dtuple", (Prims.parse_int "0"))
+      else if BU.starts_with str "tuple" then Some ("tuple", (Prims.parse_int "0"))
+      else if BU.starts_with str "try_with" then Some ("try_with", (Prims.parse_int "0"))
+      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, (Prims.parse_int "0"))
       else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
       let length = String.length(fv.fv_name.v.nsstr) in
-      let s = if length=0 then fv.fv_name.v.str
-              else BU.substring_from fv.fv_name.v.str (length+1) in
+      let s = if length=(Prims.parse_int "0") then fv.fv_name.v.str
+              else BU.substring_from fv.fv_name.v.str (length+(Prims.parse_int "1")) in
       begin match string_to_op s with
         | Some t -> Some t
         | _ -> fallback fv
@@ -246,8 +246,8 @@ let rec resugar_term (t : S.term) : A.term =
       //and A.Name if uppercase
       let a = fv.fv_name.v in
       let length = String.length(fv.fv_name.v.nsstr) in
-      let s = if length=0 then a.str
-          else BU.substring_from a.str (length+1) in
+      let s = if length=(Prims.parse_int "0") then a.str
+          else BU.substring_from a.str (length+(Prims.parse_int "1")) in
       let is_prefix = I.reserved_prefix ^ "is_" in
       if BU.starts_with s is_prefix then
         let rest = BU.substring_from s (String.length is_prefix) in
@@ -265,7 +265,7 @@ let rec resugar_term (t : S.term) : A.term =
         end
        else if (lid_equals a C.assert_lid
             || lid_equals a C.assume_lid
-            || Char.uppercase (String.get s 0) <> String.get s 0) then
+            || Char.uppercase (String.get s (Prims.parse_int "0")) <> String.get s (Prims.parse_int "0")) then
               mk (var a.str t.pos)
           else
               mk (name a.str t.pos)
@@ -365,7 +365,7 @@ let rec resugar_term (t : S.term) : A.term =
             | _ -> resugar_as_app e args
           end
 
-        | Some ("dtuple", _) when List.length args > 0 ->
+        | Some ("dtuple", _) when List.length args > (Prims.parse_int "0") ->
           (* this is desugared from Sum(binders*term) *)
           let args = last args in
           let body = match args with
@@ -399,7 +399,7 @@ let rec resugar_term (t : S.term) : A.term =
             | _ -> resugar_term t
           end
 
-        | Some ("try_with", _) when List.length args > 1 ->
+        | Some ("try_with", _) when List.length args > (Prims.parse_int "1") ->
           (* only the last two args are from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           let new_args = last_two args in
@@ -477,7 +477,7 @@ let rec resugar_term (t : S.term) : A.term =
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
-          if List.length args > 0 then
+          if List.length args > (Prims.parse_int "0") then
             let args = last args in
             begin match args with
               | [(b, _)] -> resugar b
@@ -499,13 +499,13 @@ let rec resugar_term (t : S.term) : A.term =
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           //NS: this seems to produce the wrong output on things like
           begin match arity with
-          | 0 -> begin match D.handleable_args_length op with
-                 | 1 when List.length args > 0 -> mk (A.Op(op, resugar (last args)))
-                 | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
-                 | 3 when List.length args > 2 -> mk (A.Op(op, resugar (last_three args)))
+          | x when x = (Prims.parse_int "0") -> begin match D.handleable_args_length op with
+                 | 1 when List.length args > (Prims.parse_int "0") -> mk (A.Op(op, resugar (last args)))
+                 | 2 when List.length args > (Prims.parse_int "1") -> mk (A.Op(op, resugar (last_two args)))
+                 | 3 when List.length args > (Prims.parse_int "2") -> mk (A.Op(op, resugar (last_three args)))
                  | _ -> resugar_as_app e args
                  end
-          | 2 when List.length args > 1 -> mk (A.Op(op, resugar (last_two args)))
+          | x when x = (Prims.parse_int "2") && List.length args > (Prims.parse_int "1") -> mk (A.Op(op, resugar (last_two args)))
           | _ -> resugar_as_app e args
           end
     end
@@ -760,7 +760,7 @@ and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
   //| Tm_type U_unknown
   | Tm_unknown ->
     let i = String.compare x.ppname.idText I.reserved_prefix in
-    if i = 0 then
+    if i = (Prims.parse_int "0") then
       Some (mk (A.PatWild))
     else
       BU.bind_opt (resugar_arg_qual qual) (fun aq -> Some (mk (A.PatVar(bv_as_unique_ident x, aq))))

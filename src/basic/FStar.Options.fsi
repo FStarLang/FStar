@@ -33,7 +33,7 @@ type option_val =
   | Bool of bool
   | String of string
   | Path of string
-  | Int of int
+  | Int of Prims.int
   | List of list<option_val>
   | Unset
 
@@ -84,19 +84,19 @@ val hint_info                   : unit    -> bool
 val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool
-val initial_fuel                : unit    -> int
-val initial_ifuel               : unit    -> int
+val initial_fuel                : unit    -> Prims.int
+val initial_ifuel               : unit    -> Prims.int
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
 val legacy_interactive          : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
-val max_fuel                    : unit    -> int
-val max_ifuel                   : unit    -> int
-val min_fuel                    : unit    -> int
+val max_fuel                    : unit    -> Prims.int
+val max_ifuel                   : unit    -> Prims.int
+val min_fuel                    : unit    -> Prims.int
 val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
-val n_cores                     : unit    -> int
+val n_cores                     : unit    -> Prims.int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
@@ -130,7 +130,7 @@ val smtencoding_nl_arith_wrapped: unit -> bool
 val smtencoding_nl_arith_native : unit -> bool
 val smtencoding_l_arith_default : unit -> bool
 val smtencoding_l_arith_native  : unit -> bool
-val split_cases                 : unit    -> int
+val split_cases                 : unit    -> Prims.int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool
@@ -146,10 +146,10 @@ val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
-val z3_rlimit                   : unit    -> int
-val z3_rlimit_factor            : unit    -> int
-val z3_seed                     : unit    -> int
-val z3_timeout                  : unit    -> int
+val z3_rlimit                   : unit    -> Prims.int
+val z3_rlimit_factor            : unit    -> Prims.int
+val z3_seed                     : unit    -> Prims.int
+val z3_timeout                  : unit    -> Prims.int
 val no_positivity               : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,

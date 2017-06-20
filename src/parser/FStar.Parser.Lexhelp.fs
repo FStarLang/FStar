@@ -40,7 +40,7 @@ open FStar.Parser.Parse
 open FStar.BaseTypes
 
 let intern_string : string -> string =
-  let strings = Util.smap_create 100 in
+  let strings = Util.smap_create (Prims.parse_int "100") in
   fun s ->
     match Util.smap_try_find strings s with
       | Some res -> res
@@ -52,12 +52,12 @@ let call_string_finish fin buf endm b = fin endm b (Bytes.close buf)
 
 let add_string buf x = Bytes.emit_bytes buf (Bytes.string_as_unicode_bytes x)
 
-let add_int_char buf c =
-  Bytes.emit_int_as_byte buf (c % 256);
-  Bytes.emit_int_as_byte buf (c / 256)
+let add_int_char buf (c:Prims.int) =
+  Bytes.emit_int_as_byte buf (c % (Prims.parse_int "256"));
+  Bytes.emit_int_as_byte buf (c / (Prims.parse_int "256"))
 
 let add_unichar buf c = add_int_char buf c
-let add_byte_char buf (c:char) = add_int_char buf (Util.int_of_char c % 256)
+let add_byte_char buf (c:char) = add_int_char buf ((Util.int_of_char c) % (Prims.parse_int "256"))
 
 (* When lexing bytearrays we don't expect to see any unicode stuff. *)
 (* Likewise when lexing string constants we shouldn't see any trigraphs > 127 *)
@@ -66,21 +66,21 @@ let add_byte_char buf (c:char) = add_int_char buf (Util.int_of_char c % 256)
 (* stored using add_int_char *)
 let stringbuf_as_bytes buf =
     let bytes = Bytes.close buf in
-    Bytes.make (fun i -> Bytes.get bytes (i*2)) (Bytes.length bytes / 2)
+    Bytes.make (fun (i:Prims.int) -> Bytes.get bytes (i*(Prims.parse_int "2"))) (Bytes.length bytes / (Prims.parse_int "2"))
 
 (* Sanity check that high bytes are zeros. Further check each low byte <= 127 *)
 let stringbuf_is_bytes buf =
     let bytes = Bytes.close buf in
     let ok = Util.mk_ref true in
-    Util.for_range 0 (Bytes.length bytes/2-1) (fun i ->
-      if Bytes.get bytes (i*2+1) <> 0
+    Util.for_range (Prims.parse_int "0") (Bytes.length bytes/(Prims.parse_int "2")-(Prims.parse_int "1")) (fun i ->
+      if Bytes.get bytes (i*(Prims.parse_int "2")+(Prims.parse_int "1")) <> 0
       then ok := false
       else ());
     !ok
 
 let trigraph c1 c2 c3 =
     let digit (c:char) = Util.int_of_char c - Util.int_of_char '0' in
-    char_of_int (digit c1 * 100 + digit c2 * 10 + digit c3)
+    char_of_int (digit c1 * (Prims.parse_int "100") + digit c2 * (Prims.parse_int "10") + digit c3)
 
 let digit d =
     let dd = int_of_char d in
@@ -90,31 +90,31 @@ let digit d =
 let hexdigit d =
     let dd = int_of_char d in
     if dd >= int_of_char '0' && dd <= int_of_char '9' then digit d
-    else if dd >= int_of_char 'a' && dd <= int_of_char 'f' then dd - int_of_char 'a' + 10
-    else if dd >= int_of_char 'A' && dd <= int_of_char 'F' then dd - int_of_char 'A' + 10
+    else if dd >= int_of_char 'a' && dd <= int_of_char 'f' then dd - int_of_char 'a' + (Prims.parse_int "10")
+    else if dd >= int_of_char 'A' && dd <= int_of_char 'F' then dd - int_of_char 'A' + (Prims.parse_int "10")
     else failwith "hexdigit"
 
 let unicodegraph_short s =
-    if String.length s <> 4
+    if String.length s <> (Prims.parse_int "4")
     then failwith "unicodegraph"
-    else uint16_of_int (hexdigit (char_at s 0) * 4096 + hexdigit (char_at s 1) * 256 + hexdigit (char_at s 2) * 16 + hexdigit (char_at s 3))
+    else uint16_of_int (hexdigit (char_at s (Prims.parse_int "0")) * (Prims.parse_int "4096") + hexdigit (char_at s (Prims.parse_int "1")) * (Prims.parse_int "256") + hexdigit (char_at s (Prims.parse_int "2")) * (Prims.parse_int "16") + hexdigit (char_at s (Prims.parse_int "3")))
 
 let hexgraph_short s =
-    if String.length s <> 2
+    if String.length s <> (Prims.parse_int "2")
     then failwith "hexgraph"
-    else uint16_of_int (hexdigit (char_at s 0) * 16 + hexdigit (char_at s 1))
+    else uint16_of_int (hexdigit (char_at s (Prims.parse_int "0")) * (Prims.parse_int "16") + hexdigit (char_at s (Prims.parse_int "1")))
 
 let unicodegraph_long s =
-    if String.length s <> 8
+    if String.length s <> (Prims.parse_int "8")
     then failwith "unicodegraph_long"
     else
-      let high = hexdigit (char_at s 0) * 4096 + hexdigit (char_at s 1) * 256 + hexdigit (char_at s 2) * 16 + hexdigit (char_at s 3) in
-      let low = hexdigit (char_at s 4) * 4096 + hexdigit (char_at s 5) * 256 + hexdigit (char_at s 6) * 16 + hexdigit (char_at s 7) in
-      if high = 0 then None, uint16_of_int low
+      let high = hexdigit (char_at s (Prims.parse_int "0")) * (Prims.parse_int "4096") + hexdigit (char_at s (Prims.parse_int "1")) * (Prims.parse_int "256") + hexdigit (char_at s (Prims.parse_int "2")) * (Prims.parse_int "16") + hexdigit (char_at s (Prims.parse_int "3")) in
+      let low = hexdigit (char_at s (Prims.parse_int "4")) * (Prims.parse_int "4096") + hexdigit (char_at s (Prims.parse_int "5")) * (Prims.parse_int "256") + hexdigit (char_at s (Prims.parse_int "6")) * (Prims.parse_int "16") + hexdigit (char_at s (Prims.parse_int "7")) in
+      if high = (Prims.parse_int "0") then None, uint16_of_int low
       else
       // A surrogate pair - see http://www.unicode.org/unicode/uni2book/ch03.pdf, section 3.7
-        Some (uint16_of_int (0xD800 + ((high * 0x10000 + low - 0x10000) / 0x400))),
-        uint16_of_int (0xDF30 + ((high * 0x10000 + low - 0x10000) % 0x400))
+        Some (uint16_of_int ((Prims.parse_int "0xD800") + ((high * (Prims.parse_int "0x10000") + low - (Prims.parse_int "0x10000")) / (Prims.parse_int "0x400")))),
+        uint16_of_int ((Prims.parse_int "0xDF30") + ((high * (Prims.parse_int "0x10000") + low - (Prims.parse_int "0x10000")) % (Prims.parse_int "0x400")))
 
 let escape c =
     match c with
@@ -203,7 +203,7 @@ let unreserve_words =
     List.choose (fun (mode,keyword,_) -> if mode = FSHARP then Some keyword else None) keywords
 
 let kwd_table =
-    let tab = Util.smap_create 1000 in
+    let tab = Util.smap_create (Prims.parse_int "1000") in
     List.iter (fun (mode,keyword,token) -> Util.smap_add tab keyword token) keywords;
     tab
 let kwd s = Util.smap_try_find kwd_table s

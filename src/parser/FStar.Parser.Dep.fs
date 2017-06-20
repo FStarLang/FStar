@@ -59,7 +59,7 @@ let check_and_strip_suffix (f: string): option<string> =
     let lext = String.length ext in
     let l = String.length f in
     if l > lext && String.substring f (l - lext) lext = ext then
-      Some (String.substring f 0 (l - lext))
+      Some (String.substring f (Prims.parse_int "0") (l - lext))
     else
       None
   ) suffixes in
@@ -71,7 +71,7 @@ let check_and_strip_suffix (f: string): option<string> =
 
 
 let is_interface (f: string): bool =
-  String.get f (String.length f - 1) = 'i'
+  String.get f (String.length f - (Prims.parse_int "1")) = 'i'
 
 let is_implementation f =
   not (is_interface f)
@@ -108,7 +108,7 @@ let build_map (filenames: list<string>): map =
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
-  let map = smap_create 41 in
+  let map = smap_create (Prims.parse_int "41") in
   let add_entry key full_path =
     match smap_try_find map key with
     | Some (intf, impl) ->
@@ -235,7 +235,7 @@ let collect_one
         | Some pair ->
             List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
         | None ->
-            if List.length lid.ns > 0 && Options.debug_any() then
+            if List.length lid.ns > (Prims.parse_int "0") && Options.debug_any() then
               Util.print2_warning "%s (Warning): unbound module reference %s\n"
                                   (Range.string_of_range (range_of_lid lid))
                                   (string_of_lid lid false)
@@ -264,7 +264,7 @@ let collect_one
   in
   List.iter (record_open false) auto_open;
 
-  let num_of_toplevelmods = BU.mk_ref 0 in
+  let num_of_toplevelmods = BU.mk_ref (Prims.parse_int "0") in
 
   let rec collect_fragment = function
     | Inl file ->
@@ -339,7 +339,7 @@ let collect_one
         ()
     | TopLevelModule lid ->
         incr num_of_toplevelmods;
-        if (!num_of_toplevelmods > 1) then
+        if (!num_of_toplevelmods > (Prims.parse_int "1")) then
             raise (Err (Util.format1 "Automatic dependency analysis demands one \
               module per file (module %s not supported)" (string_of_lid lid true)))
 
@@ -410,7 +410,7 @@ let collect_one
     | Name lid ->
         record_lid lid
     | Construct (lid, termimps) ->
-        if List.length termimps = 1 then
+        if List.length termimps = (Prims.parse_int "1") then
           record_lid lid;
         List.iter (fun (t, _) -> collect_term t) termimps
     | Abs (pats, t) ->
@@ -534,7 +534,7 @@ let print_graph graph =
 let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
-  let graph = smap_create 41 in
+  let graph = smap_create (Prims.parse_int "41") in
 
   (* A bitmap that ensures every --verify_module X was matched by an existing X
    * in our dependency graph. *)
@@ -663,7 +663,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
   let must_find_r f = List.rev (must_find f) in
   let by_target = List.collect (fun k ->
     let as_list = must_find k in
-    let is_interleaved = List.length as_list = 2 in
+    let is_interleaved = List.length as_list = (Prims.parse_int "2") in
     List.map (fun f ->
       let should_append_fsti = is_implementation f && is_interleaved in
       let k = lowercase_module_name f in
@@ -684,8 +684,8 @@ let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
     if not !r && not (Options.interactive ()) then
       let maybe_fst =
         let k = String.length m in
-        if k > 4 && String.substring m (k-4) 4 = ".fst"
-        then Util.format1 " Did you mean %s ?" (String.substring m 0 (k-4))
+        if k > (Prims.parse_int "4") && String.substring m (k-(Prims.parse_int "4")) (Prims.parse_int "4") = ".fst"
+        then Util.format1 " Did you mean %s ?" (String.substring m (Prims.parse_int "0") (k-(Prims.parse_int "4")))
         else ""
       in
       raise (Err (Util.format3 "You passed --verify_module %s but I found no \

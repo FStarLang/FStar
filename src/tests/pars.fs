@@ -57,7 +57,7 @@ let rec init () =
         | _ -> init_once(); init()
 
 open FStar.Parser.ParseIt
-let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
+let frag_of_text s = {frag_text=s; frag_line=(Prims.parse_int "1"); frag_col=(Prims.parse_int "0")}
 
 let pars_term_or_fragment is_term s =
   try
@@ -77,7 +77,7 @@ let pars_term_or_fragment is_term s =
       then let t = Parser.Parse.term lexer lexbuf in
            Some (ToSyntax.desugar_term env t)
       else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
-                | Some (test_mod', (env', tcenv'), 0) ->
+                | Some (test_mod', (env', tcenv'), x) when x = (Prims.parse_int "0")->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
                   tcenv_ref := Some tcenv';
@@ -138,7 +138,7 @@ let pars_and_tc_fragment (s:string) =
             test_mod_ref := test_mod';
             dsenv_ref := Some env';
             tcenv_ref := Some tcenv';
-            if n <> 0
+            if n <> (Prims.parse_int "0")
             then (report ();
                   raise (Err (Util.format1 "%s errors were reported" (string_of_int n))))
         | _ -> report(); raise (Err ("check_frag returned None: " ^s))

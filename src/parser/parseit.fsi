@@ -24,8 +24,8 @@ type filename = string
 
 type input_frag = {
     frag_text:string;
-    frag_line:int;
-    frag_col:int
+    frag_line:Prims.int;
+    frag_col:Prims.int
 }
 
 val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>

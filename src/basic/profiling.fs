@@ -132,7 +132,7 @@ let print_profile () =
     Printf.sprintf "%s:%s\t %fmin %fsec\n" ctr.name pad (!ctr.total_time).TotalMinutes (!ctr.total_time).TotalSeconds in
   let all_keys = List.ofSeq (counters.Keys) in (* Hashtbl.fold (fun name ctr accum -> ctr::accum) counters [] in *)
   let all_ctrs = all_keys |> List.map (fun k -> snd <| counters.TryGetValue(k)) in
-  let all_ctrs = List.sortWith (fun c1 c2 -> if (!c2.total_time).TotalSeconds >= (!c1.total_time).TotalSeconds then 1 else -1) all_ctrs in
+  let all_ctrs = List.sortWith (fun c1 c2 -> if (!c2.total_time).TotalSeconds >= (!c1.total_time).TotalSeconds then Prims.parse_int "1" else Prims.parse_int "-1") all_ctrs in
   let output = List.fold_left
     (fun accum c ->
       if !c.nstarts > 0 then Printf.printf "Warning: counter %s is unreliable; %d starts were not stopped\n" c.name !c.nstarts;

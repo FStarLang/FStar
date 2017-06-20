@@ -101,7 +101,7 @@ let err_unexpected_eff t f0 f1 =
 (* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)
 (***********************************************************************)
 let effect_as_etag =
-    let cache = BU.smap_create 20 in
+    let cache = BU.smap_create (Prims.parse_int "20") in
     let rec delta_norm_eff g (l:lident) =
         match BU.smap_try_find cache l.str with
             | Some l -> l
@@ -306,7 +306,7 @@ let check_pats_for_ite (l:list<(pat * option<term> * term)>) : (bool   //if l is
                                                              * option<term>  //the 'then' case
                                                              * option<term>) = //the 'else' case
     let def = false, None, None in
-    if List.length l <> 2 then def
+    if List.length l <> (Prims.parse_int "2") then def
     else
         let (p1, w1, e1) = List.hd l in
         let (p2, w2, e2) = List.hd (List.tl l) in
@@ -879,7 +879,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //   and the head is not a primitive short-circuiting op,
                         //   then evaluation order must be enforced to be L-to-R (by hoisting)
                         let evaluation_order_guaranteed =
-                          List.length mlargs_f = 1 ||
+                          List.length mlargs_f = (Prims.parse_int "1") ||
                           Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
@@ -1005,7 +1005,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                  else let lb = List.hd lbs in
                       let x = S.freshen_bv (left lb.lbname) in
                       let lb = {lb with lbname=Inl x} in
-                      let e' = SS.subst [DB(0, x)] e' in
+                      let e' = SS.subst [DB((Prims.parse_int "0"), x)] e' in
                       [lb], e' in
           let lbs =
             if top_level
@@ -1241,7 +1241,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
 
 (*copied from ocaml-asttrans.fs*)
-let fresh = let c = mk_ref 0 in
+let fresh = let c = mk_ref (Prims.parse_int "0") in
             fun (x:string) -> (incr c; (x, !c))
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =

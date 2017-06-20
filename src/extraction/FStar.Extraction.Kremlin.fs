@@ -37,11 +37,11 @@ type program =
 
 and decl =
   | DGlobal of list<flag> * lident * typ * expr
-  | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
-  | DTypeAlias of lident * int * typ
-  | DTypeFlat of lident * int * fields_t
+  | DFunction of option<cc> * list<flag> * Prims.int * typ * lident * list<binder> * expr
+  | DTypeAlias of lident * Prims.int * typ
+  | DTypeFlat of lident * Prims.int * fields_t
   | DExternal of option<cc> * lident * typ
-  | DTypeVariant of lident * int * branches_t
+  | DTypeVariant of lident * Prims.int * branches_t
 
 and cc =
   | StdCall
@@ -128,7 +128,7 @@ and width =
 and constant = width * string
 
 (* a De Bruijn index *)
-and var = int
+and var = Prims.int
 
 and binder = {
   name: ident;
@@ -151,7 +151,7 @@ and typ =
   | TAny
   | TArrow of typ * typ
   | TZ
-  | TBound of int
+  | TBound of Prims.int
   | TApp of lident * list<typ>
   | TTuple of list<typ>
 
@@ -365,7 +365,7 @@ and translate_decl env d: option<decl> =
       let name = env.module_name, name in
       let flags = translate_flags flags in
       if assumed then
-        if List.length tvars = 0 then
+        if List.length tvars = (Prims.parse_int "0") then
           Some (DExternal (None, name, translate_type env t0))
         else
           None
@@ -479,7 +479,7 @@ and translate_type env t: typ =
   | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"]) && BU.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
   | MLTY_Named (args, lid) ->
-      if List.length args > 0 then
+      if List.length args > (Prims.parse_int "0") then
         TApp (lid, List.map (translate_type env) args)
       else
         TQualified lid
@@ -691,7 +691,7 @@ and translate_expr env e: expr =
 and assert_lid env t =
   match t with
   | MLTY_Named (ts, lid) ->
-      if List.length ts > 0 then
+      if List.length ts > (Prims.parse_int "0") then
         TApp (lid, List.map (translate_type env) ts)
       else
         TQualified lid

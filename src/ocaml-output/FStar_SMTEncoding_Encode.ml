@@ -52,7 +52,7 @@ let primitive_projector_by_pos:
           let uu____156 =
             FStar_Util.format2
               "Projector %s on data constructor %s not found"
-              (Prims.string_of_int i) lid.FStar_Ident.str in
+              (Prims.to_string i) lid.FStar_Ident.str in
           failwith uu____156 in
         let uu____157 = FStar_TypeChecker_Env.lookup_datacon env lid in
         match uu____157 with
@@ -78,8 +78,7 @@ let mk_term_projector_name_by_pos:
   fun lid  ->
     fun i  ->
       let uu____200 =
-        FStar_Util.format2 "%s_%s" lid.FStar_Ident.str
-          (Prims.string_of_int i) in
+        FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (Prims.to_string i) in
       FStar_All.pipe_left escape uu____200
 let mk_term_projector:
   FStar_Ident.lident -> FStar_Syntax_Syntax.bv -> FStar_SMTEncoding_Term.term
@@ -145,7 +144,7 @@ let varops: varops_t =
            (let uu____514 =
               let uu____515 =
                 let uu____516 = FStar_ST.read ctr in
-                Prims.string_of_int uu____516 in
+                Prims.to_string uu____516 in
               Prims.strcat "__" uu____515 in
             Prims.strcat y1 uu____514)) in
     let top_scope =
@@ -156,13 +155,13 @@ let varops: varops_t =
   let new_var pp rn =
     FStar_All.pipe_left mk_unique
       (Prims.strcat pp.FStar_Ident.idText
-         (Prims.strcat "__" (Prims.string_of_int rn))) in
+         (Prims.strcat "__" (Prims.to_string rn))) in
   let new_fvar lid = mk_unique lid.FStar_Ident.str in
   let next_id1 uu____565 = FStar_Util.incr ctr; FStar_ST.read ctr in
   let fresh1 pfx =
     let uu____576 =
       let uu____577 = next_id1 () in
-      FStar_All.pipe_left Prims.string_of_int uu____577 in
+      FStar_All.pipe_left Prims.to_string uu____577 in
     FStar_Util.format2 "%s_%s" pfx uu____576 in
   let string_const s =
     let uu____582 =
@@ -326,7 +325,7 @@ let gen_term_var:
   =
   fun env  ->
     fun x  ->
-      let ysym = Prims.strcat "@x" (Prims.string_of_int env.depth) in
+      let ysym = Prims.strcat "@x" (Prims.to_string env.depth) in
       let y =
         FStar_SMTEncoding_Util.mkFreeV
           (ysym, FStar_SMTEncoding_Term.Term_sort) in
@@ -451,7 +450,7 @@ let new_term_constant_and_tok_from_lid:
             let uu____1224 =
               let uu____1231 =
                 let uu____1233 = FStar_SMTEncoding_Util.mkApp (ftok, []) in
-                FStar_All.pipe_left (fun _0_29  -> Some _0_29) uu____1233 in
+                FStar_All.pipe_left (fun _0_27  -> Some _0_27) uu____1233 in
               (x, fname, uu____1231, None) in
             Binding_fvar uu____1224 in
           uu____1223 :: (env.bindings) in
@@ -590,7 +589,7 @@ let try_lookup_free_var:
                                  (name, FStar_SMTEncoding_Term.Term_sort) in
                              FStar_SMTEncoding_Term.mk_ApplyTF uu____1448
                                fuel in
-                           FStar_All.pipe_left (fun _0_30  -> Some _0_30)
+                           FStar_All.pipe_left (fun _0_28  -> Some _0_28)
                              uu____1447
                          else Some t
                      | uu____1451 -> Some t)
@@ -2056,7 +2055,7 @@ and encode_term:
                         let uu____4397 = lc1.FStar_Syntax_Syntax.comp () in
                         FStar_Syntax_Subst.subst_comp opening uu____4397 in
                       FStar_All.pipe_right uu____4396
-                        (fun _0_31  -> Some _0_31)
+                        (fun _0_29  -> Some _0_29)
                   | FStar_Util.Inr (eff,flags) ->
                       let new_uvar1 uu____4409 =
                         let uu____4410 =
@@ -2072,7 +2071,7 @@ and encode_term:
                           let uu____4419 = new_uvar1 () in
                           FStar_Syntax_Syntax.mk_Total uu____4419 in
                         FStar_All.pipe_right uu____4418
-                          (fun _0_32  -> Some _0_32)
+                          (fun _0_30  -> Some _0_30)
                       else
                         if
                           FStar_Ident.lid_equals eff
@@ -2082,7 +2081,7 @@ and encode_term:
                              let uu____4424 = new_uvar1 () in
                              FStar_Syntax_Syntax.mk_GTotal uu____4424 in
                            FStar_All.pipe_right uu____4423
-                             (fun _0_33  -> Some _0_33))
+                             (fun _0_31  -> Some _0_31))
                         else None in
                 (match lopt with
                  | None  ->
@@ -4549,8 +4548,8 @@ let encode_free_var:
                                                          (vname,
                                                            FStar_SMTEncoding_Term.Term_sort) in
                                                      FStar_All.pipe_left
-                                                       (fun _0_34  ->
-                                                          Some _0_34)
+                                                       (fun _0_32  ->
+                                                          Some _0_32)
                                                        uu____10466 in
                                                    push_free_var env1 lid
                                                      vname uu____10464 in
@@ -4831,7 +4830,7 @@ let encode_top_level_let:
                       let uu____10996 =
                         let uu____10997 = FStar_Syntax_Subst.subst subst1 t in
                         uu____10997.FStar_Syntax_Syntax.n in
-                      FStar_All.pipe_left (fun _0_35  -> Some _0_35)
+                      FStar_All.pipe_left (fun _0_33  -> Some _0_33)
                         uu____10996 in
                     let uu____11001 =
                       let uu____11002 = FStar_Syntax_Subst.compress body in
@@ -5293,7 +5292,7 @@ let encode_top_level_let:
                                                  FStar_SMTEncoding_Util.mkApp
                                                    (g, [fuel_tm]) in
                                                FStar_All.pipe_left
-                                                 (fun _0_36  -> Some _0_36)
+                                                 (fun _0_34  -> Some _0_34)
                                                  uu____12200 in
                                              push_free_var env2 flid gtok
                                                uu____12198 in
@@ -5868,7 +5867,7 @@ and encode_sigelt':
                      let uu____13051 =
                        let uu____13052 =
                          let uu____13067 =
-                           FStar_All.pipe_left (fun _0_37  -> Some _0_37)
+                           FStar_All.pipe_left (fun _0_35  -> Some _0_35)
                              (FStar_Util.Inr
                                 (FStar_Syntax_Const.effect_Tot_lid,
                                   [FStar_Syntax_Syntax.TOTAL])) in
@@ -6502,7 +6501,7 @@ and encode_sigelt':
                                             FStar_SMTEncoding_Util.mkApp
                                               (tname, []) in
                                           FStar_All.pipe_left
-                                            (fun _0_38  -> Some _0_38)
+                                            (fun _0_36  -> Some _0_36)
                                             uu____14214 in
                                         push_free_var env1 t tname
                                           uu____14212 in
@@ -7689,7 +7688,7 @@ let encode_labels labs =
             | (l,uu____15512,uu____15513) ->
                 let uu____15518 =
                   FStar_All.pipe_left
-                    (fun _0_39  -> FStar_SMTEncoding_Term.Echo _0_39) (
+                    (fun _0_37  -> FStar_SMTEncoding_Term.Echo _0_37) (
                     fst l) in
                 let uu____15519 =
                   let uu____15521 =
@@ -7898,7 +7897,7 @@ let encode_modul:
          let uu____15770 =
            FStar_All.pipe_right
              (FStar_List.length modul.FStar_Syntax_Syntax.exports)
-             Prims.string_of_int in
+             Prims.to_string in
          FStar_Util.print2
            "+++++++++++Encoding externals for %s ... %s exports\n" name
            uu____15770

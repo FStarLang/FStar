@@ -32,7 +32,7 @@ type error_kind =
 type z3statistics = BU.smap<string>
 type z3result =
     either<unsat_core, (error_labels*error_kind)>
-    * int
+    * Prims.int
     * z3statistics
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit

@@ -141,7 +141,7 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
 type env_t = UEnv.env
 
 let extract_bundle env se =
-    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (env:env_t) (ctor: data_constructor):
+    let extract_ctor (ml_tyvars:list<(mlsymbol*Prims.int)>) (env:env_t) (ctor: data_constructor):
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
@@ -161,7 +161,7 @@ let extract_bundle env se =
        let env, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
-       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i, 0)) in
+       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i, (Prims.parse_int "0"))) in
        let tbody =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
@@ -305,7 +305,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                     then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
                          let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                         env, {ml_lb with mllb_name=(snd mname,0)}
+                         env, {ml_lb with mllb_name=(snd mname,(Prims.parse_int "0"))}
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in

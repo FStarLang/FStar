@@ -24,8 +24,8 @@ type filename = string
 
 type input_frag = {
     frag_text:string;
-    frag_line:int;
-    frag_col:int
+    frag_line:Prims.int;
+    frag_col:Prims.int
 }
 
 
@@ -83,8 +83,8 @@ let parse fn =
         "<input>",
         new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader,
         frag.frag_text,
-        frag.frag_line,
-        frag.frag_col  in
+        Prims.to_int frag.frag_line,
+        Prims.to_int frag.frag_col  in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
   setLexbufPos filename lexbuf line col;

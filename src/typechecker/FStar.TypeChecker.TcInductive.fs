@@ -107,7 +107,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = BU.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
-                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
+                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - ((Prims.parse_int "1") + i), x)) in
 (*open*)          U.arrow_formals (SS.subst subst t)
                 | _ -> [], t in
 
@@ -330,7 +330,7 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
 
 //dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid
 //us are the universes, see the exaplanation on ty_nested_positive_in_inductive
-and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
+and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:Prims.int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
   debug_log env ("Checking nested positivity in data constructor " ^ dlid.str ^ " of the inductive " ^ ilid.str);
   //get the type of the data constructor
   let univ_unif_vars, dt = lookup_datacon env dlid in
@@ -369,7 +369,7 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
     ty_nested_positive_in_type ty_lid (SS.compress dt).n ilid num_ibs unfolded env  //in this case, we don't have anything to substitute, simply check
 
 //t is some data constructor type of ilid, after ilid type parameters have been substituted
-and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
+and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:Prims.int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
   match t with
   | Tm_app (t, args) ->
     //if it's an application node, it must be ilid directly

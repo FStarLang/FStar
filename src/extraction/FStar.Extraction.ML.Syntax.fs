@@ -27,7 +27,7 @@ open FStar.BaseTypes
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
-type mlident  = mlsymbol * int //what is the second component? Why do we need it?
+type mlident  = mlsymbol * Prims.int //what is the second component? Why do we need it?
 type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
@@ -59,10 +59,10 @@ type gensym_t = {
 }
 
 let gs =
-  let ctr = Util.mk_ref 0 in
-  let n_resets = Util.mk_ref 0 in
-  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)), 0);
-   reset = (fun () -> ctr := 0; incr n_resets)}
+  let ctr = Util.mk_ref (Prims.parse_int "0") in
+  let n_resets = Util.mk_ref (Prims.parse_int "0") in
+  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)), (Prims.parse_int "0"));
+   reset = (fun () -> ctr := (Prims.parse_int "0"); incr n_resets)}
 
 let gensym () = gs.gensym()
 let reset_gensym() = gs.reset()
@@ -87,8 +87,8 @@ type e_tag =
   | E_IMPURE
 
 // Line number, file name; that's all we can emit in OCaml anyhwow
-type mlloc = int * string
-let dummy_loc: mlloc = 0, ""
+type mlloc = Prims.int * string
+let dummy_loc: mlloc = (Prims.parse_int "0"), ""
 
 type mlty =
 | MLTY_Var   of mlident
@@ -252,5 +252,5 @@ open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv): mlident =
   if Util.starts_with x.ppname.idText Ident.reserved_prefix
   || is_null_bv x || is_reserved x.ppname.idText
-  then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
-  else x.ppname.idText, 0
+  then x.ppname.idText ^ "_" ^ (string_of_int x.index), (Prims.parse_int "0")
+  else x.ppname.idText, (Prims.parse_int "0")

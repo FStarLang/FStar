@@ -36,7 +36,7 @@ type ranges = list<(option<string> * Range.range)>
 
 //decorate a term with an error label
 let fresh_label : string -> Range.range -> term -> label * term =
-    let ctr = BU.mk_ref 0 in
+    let ctr = BU.mk_ref (Prims.parse_int "0") in
     fun message range t ->
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
@@ -176,7 +176,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                     match tm.tm with
                     | Quant(Forall, [[{tm=App(Var "Prims.guard_free", [p])}]], iopt, sorts, {tm=App(Iff, [l;r])}) ->
                         let labels, r = aux default_msg None post_name_opt labels r in
-                        labels, mk (Quant(Forall, [[p]], Some 0, sorts, norng mk (App(Iff, [l;r])))) q.rng
+                        labels, mk (Quant(Forall, [[p]], Some (Prims.parse_int "0"), sorts, norng mk (App(Iff, [l;r])))) q.rng
                     | _ -> labels, tm)
                 labels (conjuncts lhs) in
 
@@ -257,14 +257,14 @@ let label_goals use_env_msg  //when present, provides an alternate error message
  *)
 let detail_errors env
                  (all_labels:labels)
-                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int * Z3.z3statistics))
+                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * Prims.int * Z3.z3statistics))
     : error_labels =
 
     let print_banner () =
         BU.print3_error
             "Detailed error report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
                 (Range.string_of_range (TypeChecker.Env.get_range env))
-                (BU.string_of_int 5)
+                (BU.string_of_int (Prims.parse_int "5"))
                 (BU.string_of_int (List.length all_labels))
     in
 
@@ -304,7 +304,7 @@ let detail_errors env
               else linear_check eliminated (hd::errors) tl in
 
     print_banner ();
-    Options.set_option "z3rlimit" (Options.Int 5);
+    Options.set_option "z3rlimit" (Options.Int (Prims.parse_int "5"));
     let res = linear_check [] [] all_labels in
     BU.print_string "\n";
     res |> List.iter print_result;

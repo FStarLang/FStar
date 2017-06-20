@@ -68,7 +68,7 @@ type mforest =
 | Leaf of string * string
 | Branch of smap<mforest>
 
-let htree : smap<mforest> = smap_create 50
+let htree : smap<mforest> = smap_create (Prims.parse_int "50")
 
 // if xo=Some(x) then f x else y
 // SI: use the one in FStar.Option -- there must be one there!

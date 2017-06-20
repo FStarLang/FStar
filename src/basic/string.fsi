@@ -30,8 +30,8 @@ val lowercase: string -> Tot<string>
 
 (* may fail with index out of bounds *)
 (* Second argument is a length, not an index. *)
-val substring: string -> int -> int -> string
-val get: string -> int -> char
+val substring: string -> Prims.int -> Prims.int -> string
+val get: string -> Prims.int -> char
 val collect: (char -> string) -> string -> string
 
 val list_of_string : string -> list<char>

@@ -30,9 +30,9 @@ let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
-let time_diff (t1:time) (t2:time) : float * int =
+let time_diff (t1:time) (t2:time) : float * Prims.int =
     let ts = t2 - t1 in
-    ts.TotalSeconds, int32 ts.TotalMilliseconds
+    ts.TotalSeconds, Prims.of_int (int32 ts.TotalMilliseconds)
 let record_time f =
     let start = now () in
     let res = f () in
@@ -59,8 +59,8 @@ let monitor_enter m = System.Threading.Monitor.Enter(m)
 let monitor_exit m = System.Threading.Monitor.Exit(m)
 let monitor_wait m = ignore <| System.Threading.Monitor.Wait(m)
 let monitor_pulse m = System.Threading.Monitor.Pulse(m)
-let current_tid () = System.Threading.Thread.CurrentThread.ManagedThreadId
-let sleep n = System.Threading.Thread.Sleep(0+n)
+let current_tid () = Prims.of_int System.Threading.Thread.CurrentThread.ManagedThreadId
+let sleep n = System.Threading.Thread.Sleep(Prims.to_int (Prims.parse_int "0"+n))
 let atomically (f:unit -> 'a) =
     System.Threading.Monitor.Enter(global_lock);
     let result = f () in
@@ -197,8 +197,8 @@ let set_is_empty ((s, _):set<'a>) =
     | [] -> true
     | _ -> false
 
-let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> =
-    ([], fun x y -> cmp x y = 0)
+let new_set (cmp:'a -> 'a -> Prims.int) (hash:'a -> Prims.int) : set<'a> =
+    ([], fun x y -> cmp x y = Prims.parse_int "0")
 
 let set_elements ((s1, eq):set<'a>) :list<'a> =
    let rec aux out = function
@@ -213,7 +213,7 @@ let set_mem a ((s, b):set<'a>) = List.exists (b a) s
 let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = (s1@s2, b)//set_elements (s1,b)@set_elements (s2,b), b)
 let set_intersect ((s1, eq):set<'a>) ((s2, _):set<'a>) = List.filter (fun y -> List.exists (eq y) s2) s1, eq
 let set_is_subset_of ((s1, eq): set<'a>) ((s2, _):set<'a>) = List.for_all (fun y -> List.exists (eq y) s2) s1
-let set_count ((s1, _):set<'a>) = s1.Length
+let set_count ((s1, _):set<'a>) = Prims.of_int s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 
@@ -228,8 +228,8 @@ let fifo_set_is_empty ((s, _):fifo_set<'a>) =
     | [] -> true
     | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> int) (hash:'a -> int) : fifo_set<'a> =
-    ([], fun x y -> cmp x y = 0)
+let new_fifo_set (cmp:'a -> 'a -> Prims.int) (hash:'a -> Prims.int) : fifo_set<'a> =
+    ([], fun x y -> cmp x y = Prims.parse_int "0")
 
 (* The input list [s1] is in reverse order and we need to keep only the last       *)
 (* occurence of each elements in s1. Note that accumulating over such elements     *)
@@ -247,7 +247,7 @@ let fifo_set_add a ((s, b):fifo_set<'a>) = (a::s, b)
 let fifo_set_remove x ((s1, eq):fifo_set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
 let fifo_set_mem a ((s, b):fifo_set<'a>) = List.exists (b a) s
 let fifo_set_union ((s1, b):fifo_set<'a>) ((s2, _):fifo_set<'a>) = (s2@s1, b)
-let fifo_set_count ((s1, _):fifo_set<'a>) = s1.Length
+let fifo_set_count ((s1, _):fifo_set<'a>) = Prims.of_int s1.Length
 let fifo_set_difference ((s1, eq):fifo_set<'a>) ((s2, _):fifo_set<'a>) : fifo_set<'a> =
   List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
@@ -258,7 +258,7 @@ type System.Collections.Generic.Dictionary<'K, 'V> with
     | _ -> None
 open System.Collections.Generic
 type smap<'value>=System.Collections.Generic.Dictionary<string,'value>
-let smap_create<'value> (i:int) = new Dictionary<string,'value>(i)
+let smap_create<'value> (i:Prims.int) = new Dictionary<string,'value>(Prims.to_int i)
 let smap_clear<'value> (s:smap<'value>) = s.Clear()
 let smap_add (m:smap<'value>) k (v:'value) = ignore <| m.Remove(k); m.Add(k,v)
 let smap_of_list<'value> (l:list<string*'value>) =
@@ -274,16 +274,16 @@ let smap_fold (m:smap<'value>) f a =
 let smap_remove (m:smap<'value>) k = m.Remove k |> ignore
 let smap_keys (m:smap<'value>) = smap_fold m (fun k v keys -> k::keys) []
 let smap_copy (m:smap<'value>) =
-    let n = smap_create (m.Count) in
+    let n = smap_create (Prims.of_int (m.Count)) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
-let smap_size (m:smap<'value>) = m.Count
+let smap_size (m:smap<'value>) = Prims.of_int m.Count
 
-type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
-let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
+type imap<'value>=System.Collections.Generic.Dictionary<Prims.int,'value>
+let imap_create<'value> (i:Prims.int) = new Dictionary<Prims.int,'value>(Prims.to_int i)
 let imap_clear<'value> (s:imap<'value>) = s.Clear()
 let imap_add (m:imap<'value>) k (v:'value) = ignore <| m.Remove(k); m.Add(k,v)
-let imap_of_list<'value> (l:list<int*'value>) =
+let imap_of_list<'value> (l:list<Prims.int*'value>) =
     let s = imap_create (List.length l) in
     List.iter (fun (x,y) -> imap_add s x y) l;
     s
@@ -296,13 +296,13 @@ let imap_fold (m:imap<'value>) f a =
 let imap_remove (m:imap<'value>) k = m.Remove k |> ignore
 let imap_keys (m:imap<'value>) = imap_fold m (fun k v keys -> k::keys) []
 let imap_copy (m:imap<'value>) =
-    let n = imap_create (m.Count) in
+    let n = imap_create (Prims.of_int m.Count) in
     imap_fold m (fun k v () -> imap_add n k v) ();
     n
 
 let format (fmt:string) (args:list<string>) =
     let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
-    if frags.Length <> List.length args + 1
+    if frags.Length <> Prims.to_int (List.length args) + 1
     then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
     else let args = Array.ofList (args@[""]) in
          Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
@@ -352,12 +352,12 @@ let asciiEncoding = new System.Text.ASCIIEncoding()
 let string_of_unicode (bytes:byte []) = unicodeEncoding.GetString(bytes)
 let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
-let char_of_int (i:int) = char i
-let int_of_string (s:string) = int_of_string s
-let int_of_char (s:char) = int32 s
-let int_of_byte (s:byte) = int32 s
-let int_of_uint8 (i:uint8) = int32 i
-let uint16_of_int (i:int) = uint16 i
+let char_of_int (i:Prims.int) = char (Prims.to_int i)
+let int_of_string (s:string) = Prims.parse_int s
+let int_of_char (s:char) = Prims.of_int (int32 s)
+let int_of_byte (s:byte) = Prims.of_int (int32 s)
+let int_of_uint8 (i:uint8) = Prims.of_int (int32 i)
+let uint16_of_int (i:Prims.int) = uint16 i
 let byte_of_char (s:char) = byte s
 
 let float_of_string (s:string) = (float)s
@@ -365,13 +365,13 @@ let float_of_byte (b:byte) = (float)b
 let float_of_int32 (n:int32) = (float)n
 let float_of_int64 (n:int64) = (float)n
 
-let int_of_int32 (i:int32) = i
-let int32_of_int (i:int) = int32 i
+let int_of_int32 (i:int32) = Prims.of_int i
+let int32_of_int (i:Prims.int) = int32 i
 
-let string_of_int   i = string_of_int i
+let string_of_int (i: Prims.int) = i.ToString()
 let string_of_bool b = if b then "true" else "false"
 let string_of_int64  (i:int64) = i.ToString()
-let string_of_int32 i = string_of_int i
+let string_of_int32 (i:int32) = i.ToString()
 let string_of_float i = sprintf "%f" i
 let hex_string_of_byte  (i:byte) =
     let hs = spr "%x" i in
@@ -383,15 +383,15 @@ let bytes_of_string (s:string) = unicode_of_string s
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let trim_string (s:string) = s.Trim()
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
-let char_at (s:string) (i:int) : char = s.[i]
+let char_at (s:string) (i:Prims.int) : char = s.[Prims.to_int i]
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
 let contains (s1:string) (s2:string) = s1.IndexOf(s2) >= 0
-let substring_from (s:string) i = s.Substring(i)
-let substring (s:string) i j = s.Substring(i, j)
+let substring_from (s:string) (i:Prims.int) = s.Substring(Prims.to_int i)
+let substring (s:string) (i:Prims.int) (j:Prims.int) = s.Substring((Prims.to_int i), (Prims.to_int j))
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
 let replace_chars (s:string) (c:char) (by:string) = s.Replace(String.of_char c,by)
-let hashcode (s:string) = s.GetHashCode()
-let compare (s1:string) (s2:string) = s1.CompareTo(s2)
+let hashcode (s:string) = Prims.of_int(s.GetHashCode())
+let compare (s1:string) (s2:string) = Prims.of_int(s1.CompareTo(s2))
 let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine;"\n"|], StringSplitOptions.None))
 let split (s1:string) (s2:string) = Array.toList (s1.Split([|s2|], StringSplitOptions.None))
 
@@ -482,12 +482,15 @@ let find_opt f l =
 
 let try_find f l = List.tryFind f l
 
-let try_find_index f l = List.tryFindIndex f l
+let try_find_index f l = 
+    match List.tryFindIndex f l with
+    | None -> None
+    | Some i -> Some (Prims.of_int i)
 
 let sort_with f l = List.sortWith f l
 
 let set_eq f l1 l2 =
-  let eq x y = f x y = 0 in
+  let eq x y = f x y = Prims.parse_int "0" in
   let l1 = sort_with f l1 |> remove_dups eq in
   let l2 = sort_with f l2 |> remove_dups eq in
   if List.length l1 <> List.length l2
@@ -515,8 +518,8 @@ let try_find_i f l =
         | hd::tl ->
             if f i hd
             then Some(i, hd)
-            else aux (i+1) tl in
-    aux 0 l
+            else aux (i+Prims.parse_int "1") tl in
+    aux (Prims.parse_int "0") l
 
 let rec find_map l f =
     match l with
@@ -562,7 +565,8 @@ let add_unique f x l =
   else x::l
 
 (**split the list at index n and return the 2 parts *)
-let first_N n l (*: list 'a * list 'a*)=
+let first_N (n:Prims.int) l (*: list 'a * list 'a*)=
+  let n = Prims.to_int n in
   let rec f acc i l =
     if i = n then List.rev acc,l else
     match l with
@@ -571,8 +575,8 @@ let first_N n l (*: list 'a * list 'a*)=
   in
   f [] 0 l
 
-let rec nth_tail n l =
-   if n=0 then l else nth_tail (n - 1) (List.tl l)
+let rec nth_tail (n:Prims.int) l =
+   if n=Prims.parse_int "0" then l else nth_tail (n - Prims.parse_int "1") (List.tl l)
 
 let prefix l =
     match List.rev l with
@@ -661,14 +665,14 @@ let mkdir clean dname =
 let concat_dir_filename dname fname =
   System.IO.Path.Combine(dname, fname)
 
-let for_range lo hi f =
-  for i = lo to hi do
-    f i
+let for_range (lo:Prims.int) (hi:Prims.int) f =
+  for i = (Prims.to_int lo) to (Prims.to_int hi) do
+    f (Prims.of_int i)
   done
 
-let incr r = r := !r + 1
-let decr r = r := !r - 1
-let geq (i:int) (j:int) = i >= j
+let incr (r:Prims.int ref) = r := !r + Prims.parse_int "1"
+let decr (r:Prims.int ref) = r := !r - Prims.parse_int "1"
+let geq (i:Prims.int) (j:Prims.int) = i >= j
 
 let get_exec_dir () =
     let asm = System.Reflection.Assembly.GetEntryAssembly() in
@@ -814,11 +818,11 @@ let ensure_decimal (s: string) =
 (** Hints. *)
 type hint = {
     hint_name: string; //name associated to the top-level term in the source program
-    hint_index: int;   //the nth query associated with that top-level term
-    fuel:int;  //fuel for unrolling recursive functions
-    ifuel:int; //fuel for inverting inductive datatypes
+    hint_index: Prims.int;   //the nth query associated with that top-level term
+    fuel:Prims.int;  //fuel for unrolling recursive functions
+    ifuel:Prims.int; //fuel for inverting inductive datatypes
     unsat_core:option<(list<string>)>; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    query_elapsed_time:Prims.int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
 }
 
 type hints = list<(option<hint>)>
@@ -858,7 +862,7 @@ let internal json_db_from_hints_db (hdb) : json_db =
 let internal hints_db_from_json_db (jdb : json_db) : hints_db =
     let unsat_core_from_json_unsat_core (core : System.Object) =
         let core_list = core :?> System.Object [] |> Array.toList in
-        if (List.length core_list) = 0 then None else
+        if (List.length core_list) = Prims.parse_int "0" then None else
         Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
     let hint_from_json_hint (h : System.Object) =
         if  h = null then None
@@ -867,11 +871,11 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
                 if (Array.length ha) <> 6 then failwith "malformed hint" else
                 Some {
                     hint_name=ha.[0] :?> System.String;
-                    hint_index=ha.[1] :?> int;
-                    fuel=ha.[2] :?> int;
-                    ifuel=ha.[3] :?> int;
+                    hint_index=Prims.of_int (ha.[1] :?> int);
+                    fuel=Prims.of_int (ha.[2] :?> int);
+                    ifuel=Prims.of_int (ha.[3] :?> int);
                     unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                    query_elapsed_time=ha.[5] :?> int
+                    query_elapsed_time=Prims.of_int (ha.[5] :?> int)
                 } in
     let hints_from_json_hints (hs : System.Object) =
         let hint_list =
@@ -929,7 +933,7 @@ let read_hints (filename : string) : option<hints_db> =
 type json =
 | JsonNull
 | JsonBool of bool
-| JsonInt of int
+| JsonInt of Prims.int
 | JsonStr of string
 | JsonList of json list
 | JsonAssoc of (string * json) list
@@ -950,7 +954,7 @@ let rec obj_to_json (o: obj) : option<json> =
     match o with
     | null -> JsonNull
     | :? bool as b -> JsonBool b
-    | :? int as i -> JsonInt i
+    | :? Prims.int as i -> JsonInt i
     | :? string as s -> JsonStr s
     | :? (obj[]) as l -> JsonList (List.map aux (Array.toList l))
     | :? System.Collections.Generic.IDictionary<string, obj> as a ->

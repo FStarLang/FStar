@@ -121,10 +121,10 @@ let report_fail () =
 (* Internal data structures for managing chunks of input from the editor                *)
 (****************************************************************************************)
 type input_chunks =
-  | Push of bool * int * int //the bool flag indicates lax flag set from the editor
+  | Push of bool * Prims.int * Prims.int //the bool flag indicates lax flag set from the editor
   | Pop  of string
   | Code of string * (string * string)
-  | Info of string * bool * option<(string * int * int)>
+  | Info of string * bool * option<(string * Prims.int * Prims.int)>
   | Completions of string
 
 
@@ -200,7 +200,7 @@ let rec read_chunk () =
             | [l; c]         -> false, Util.int_of_string l, Util.int_of_string c
             | _              ->
               Util.print_warning ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax);
-              false, 1, 0
+              false, (Prims.parse_int "1"), (Prims.parse_int "0")
         in
         Push lc)
   else if Util.starts_with l "#info " then
@@ -390,7 +390,7 @@ let format_info env name typ range (doc: option<string>) =
      | Some docstring -> Util.format1 "#doc %s" docstring
      | None -> "")
 
-let rec go (line_col:(int*int))
+let rec go (line_col:(Prims.int*Prims.int))
            (filename:string)
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
@@ -423,7 +423,7 @@ let rec go (line_col:(int*int))
     //search_term is the partially written identifer by the user
     // FIXME a regular expression might be faster than this explicit matching
     let rec measure_anchored_match
-      : list<string> -> list<ident> -> option<(list<ident> * int)>
+      : list<string> -> list<ident> -> option<(list<ident> * Prims.int)>
       //determines it the candidate may match the search term
       //and, if so, provides an integer measure of the degree of the match
       //Q: isn't the output list<ident> always the same as the candidate?
@@ -437,7 +437,7 @@ let rec go (line_col:(int*int))
         //      as FStar.List.append.
       = fun search_term candidate ->
           match search_term, candidate with
-          | [], _ -> Some ([], 0)
+          | [], _ -> Some ([], (Prims.parse_int "0"))
           | _, [] -> None
           | hs :: ts, hc :: tc ->
             let hc_text = FStar.Ident.text_of_id hc in
@@ -445,10 +445,10 @@ let rec go (line_col:(int*int))
                match ts with
                | [] -> Some (candidate, String.length hs)
                | _ -> measure_anchored_match ts tc |>
-                        Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
+                        Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + (Prims.parse_int "1") + len))
             else None in
     let rec locate_match
-      : list<string> -> list<ident> -> option<(list<ident> * list<ident> * int)>
+      : list<string> -> list<ident> -> option<(list<ident> * list<ident> * Prims.int)>
       = fun needle candidate ->
       match measure_anchored_match needle candidate with
       | Some (matched, n) -> Some ([], matched, n)
@@ -470,7 +470,7 @@ let rec go (line_col:(int*int))
       if prefix = "" then
         (matched, stripped_ns, match_len)
       else
-        (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
+        (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + (Prims.parse_int "1")) in
     let needle = Util.split search_term "." in
     let all_lidents_in_env = FStar.TypeChecker.Env.lidents (snd env) in
     let matches =
@@ -483,13 +483,13 @@ let rec go (line_col:(int*int))
         //In case (b), we find all lidents in the type-checking environment
         //   and rank them by potential matches to the needle
         let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
-            : list<(list<ident> * list<ident> * int)>
+            : list<(list<ident> * list<ident> * Prims.int)>
             =
             let dsenv = fst env in
             let exported_names = DsEnv.transitive_exported_ids dsenv m in
             let matched_length =
               List.fold_left
-                (fun out s -> String.length s + out + 1)
+                (fun out s -> String.length s + out + (Prims.parse_int "1"))
                 (String.length id)
                 orig_ns
             in
@@ -502,7 +502,7 @@ let rec go (line_col:(int*int))
             else None)
         in
         let case_b_find_matches_in_env ()
-          : list<(list<ident> * list<ident> * int)>
+          : list<(list<ident> * list<ident> * Prims.int)>
           = let dsenv, _ = env in
             let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
@@ -531,7 +531,7 @@ let rec go (line_col:(int*int))
                (Util.string_of_int match_len) ns candidate)
               (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
                                match String.compare cd1 cd2 with
-                               | 0 -> String.compare ns1 ns2
+                               | x when x = (Prims.parse_int "0") -> String.compare ns1 ns2
                                | n -> n)
                               matches);
     Util.print_string "#done-ok\n";
@@ -580,7 +580,7 @@ let rec go (line_col:(int*int))
       let res = check_frag env_mark curmod (frag, false) in begin
         match res with
         | Some (curmod, env, n_errs) ->
-            if n_errs=0 then begin
+            if n_errs=(Prims.parse_int "0") then begin
               Util.print1 "\n%s\n" ok;
               // Side-effect: pops from an internal, hidden stack
               // At this stage, the internal stack has grown with size 1.
@@ -618,5 +618,5 @@ let interactive_mode (filename:string): unit =
   || FStar.Options.use_hints()
   then FStar.SMTEncoding.Solver.with_hints_db
             (List.hd (Options.file_list ()))
-            (fun () -> go (1, 0) filename stack None env ts)
-  else go (1, 0) filename stack None env ts
+            (fun () -> go ((Prims.parse_int "1"), (Prims.parse_int "0")) filename stack None env ts)
+  else go ((Prims.parse_int "1"), (Prims.parse_int "0")) filename stack None env ts

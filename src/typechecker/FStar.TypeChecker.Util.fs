@@ -737,7 +737,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
           let (md, _, _), (u_res_t, res_t, wp_then), (_, _, wp_else) = lift_and_destruct env (lcomp_then.comp()) (lcomp_else.comp()) in
           let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.if_then_else) [S.as_arg res_t; S.as_arg g; S.as_arg wp_t; S.as_arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
           let wp = ifthenelse md res_t guard wp_then wp_else in
-          if (Options.split_cases()) > 0
+          if (Options.split_cases()) > (Prims.parse_int "0")
           then let comp = mk_comp md u_res_t res_t wp [] in
                add_equality_to_post_condition env comp res_t
           else let wp = mk_Tm_app  (inst_effect_fun_with [u_res_t] env md md.ite_wp)  [S.as_arg res_t; S.as_arg wp] None wp.pos in
@@ -774,7 +774,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let comp = List.fold_right (fun (g, cthen) celse ->
                 let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env (cthen.comp()) celse in
                 mk_comp md u_res_t res_t (ifthenelse md res_t g wp_then wp_else)  []) lcases default_case in
-            if (Options.split_cases()) > 0
+            if (Options.split_cases()) > (Prims.parse_int "0")
             then add_equality_to_post_condition env comp res_t
             else let comp = Env.comp_to_comp_typ env comp in
                  let md = Env.get_effect_decl env comp.effect_name in
@@ -845,7 +845,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         when S.fv_eq_lid fv Const.bool_lid
           && is_type t ->
       let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-      let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
+      let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level (Prims.parse_int "1")) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
       let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
       e, lc
@@ -1033,7 +1033,7 @@ let maybe_instantiate (env:Env.env) e t =
         in
         let decr_inst = function
                 | None -> None
-                | Some i -> Some (i - 1)
+                | Some i -> Some (i - (Prims.parse_int "1"))
         in
         begin match torig.n with
             | Tm_arrow(bs, c) ->
@@ -1043,7 +1043,7 @@ let maybe_instantiate (env:Env.env) e t =
               //See issue #807 for why this is important
               let rec aux subst inst_n bs =
                   match inst_n, bs with
-                  | Some 0, _ -> [], bs, subst, Rel.trivial_guard //no more instantiations to do
+                  | Some x, _  when x = (Prims.parse_int "0")-> [], bs, subst, Rel.trivial_guard //no more instantiations to do
                   | _, (x, Some (Implicit dot))::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
@@ -1754,7 +1754,7 @@ let mk_data_operations iquals env tcs se =
             then match se.sigel with
                   | Sig_inductive_typ(_, uvs', tps, typ0, _, constrs) ->
                       assert (List.length uvs = List.length uvs') ;
-                      Some (tps, typ0, List.length constrs > 1)
+                      Some (tps, typ0, List.length constrs > (Prims.parse_int "1"))
                   | _ -> failwith "Impossible"
             else None)
         in

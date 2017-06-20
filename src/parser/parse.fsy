@@ -1,7 +1,6 @@
 %{
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-open Prims
 open FStar
 open FStar.Errors
 open FStar.List
@@ -680,7 +679,7 @@ rawDecl:
       (
         let r = rhs2 parseState 1 3 in
         let lbs = focusLetBindings lbs r in
-        if q <> Rec && List.length lbs <> 1
+        if q <> Rec && List.length lbs <> (Prims.parse_int "1")
         then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
         TopLevelLet(q, lbs)
       )}

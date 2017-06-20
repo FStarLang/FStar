@@ -81,18 +81,18 @@ let default_or_map n f x =
   | Some x' -> f x'
 
 (* changing PPrint's ^//^ to ^/+^ since '//' wouldn't work in F# *)
-let prefix2 prefix_ body = prefix 2 1 prefix_ body
+let prefix2 prefix_ body = prefix (Prims.parse_int "2") (Prims.parse_int "1") prefix_ body
 
 let ( ^/+^ ) prefix_ body = prefix2 prefix_ body
 
 let jump2 body =
-  jump 2 1 body
+  jump (Prims.parse_int "2") (Prims.parse_int "1") body
 
-let infix2 = infix 2 1
-let infix0 = infix 0 1
+let infix2 = infix (Prims.parse_int "2") (Prims.parse_int "1")
+let infix0 = infix (Prims.parse_int "0") (Prims.parse_int "1")
 
 let break1 =
-  break_ 1
+  break_ (Prims.parse_int "1")
 
 
 (* [separate_break_map sep f l] has the following
@@ -123,28 +123,28 @@ let precede_break_separate_map prec sep f l =
 let concat_break_map f l = group (concat_map (fun x -> f x ^^ break1) l)
 
 let parens_with_nesting contents =
-  surround 2 0 lparen contents rparen
+  surround (Prims.parse_int "2") (Prims.parse_int "0") lparen contents rparen
 
 let soft_parens_with_nesting contents =
-  soft_surround 2 0 lparen contents rparen
+  soft_surround (Prims.parse_int "2") (Prims.parse_int "0") lparen contents rparen
 
 let braces_with_nesting contents =
-  surround 2 1 lbrace contents rbrace
+  surround (Prims.parse_int "2") (Prims.parse_int "1") lbrace contents rbrace
 
 let soft_braces_with_nesting contents =
-  soft_surround 2 1 lbrace contents rbrace
+  soft_surround (Prims.parse_int "2") (Prims.parse_int "1") lbrace contents rbrace
 
 let brackets_with_nesting contents =
-  surround 2 1 lbracket contents rbracket
+  surround (Prims.parse_int "2") (Prims.parse_int "1") lbracket contents rbracket
 
 let soft_brackets_with_nesting contents =
-  soft_surround 2 1 lbracket contents rbracket
+  soft_surround (Prims.parse_int "2") (Prims.parse_int "1") lbracket contents rbracket
 
 let soft_begin_end_with_nesting contents =
-  soft_surround 2 1 (str "begin") contents (str "end")
+  soft_surround (Prims.parse_int "2") (Prims.parse_int "1") (str "begin") contents (str "end")
 
 let separate_map_or_flow sep f l =
-    if List.length l < 10
+    if List.length l < (Prims.parse_int "10")
     then separate_map sep f l
     else flow_map sep f l
 
@@ -220,7 +220,7 @@ let is_general_construction e =
   not (is_list e || is_lex_list e)
 
 let is_general_prefix_op op =
-  let op_starting_char =  char_at (Ident.text_of_id op) 0 in
+  let op_starting_char =  char_at (Ident.text_of_id op) (Prims.parse_int "0") in
   op_starting_char = '!' || op_starting_char = '?' ||
   (op_starting_char = '~' && Ident.text_of_id op <> "~")
 
@@ -252,7 +252,7 @@ let token_to_string = function
     | Inr s -> s
 
 let matches_token (s:string) = function
-    | Inl c -> FStar.String.get s 0 = c
+    | Inl c -> FStar.String.get s (Prims.parse_int "0") = c
     | Inr s' -> s = s'
 
 let matches_level s (assoc_levels, tokens) =
@@ -293,14 +293,14 @@ let level_associativity_spec =
   ]
 
 let level_table =
-  let levels_from_associativity (l:int) = function
-    | Left -> l, l, l-1
-    | Right -> l-1, l, l
+  let levels_from_associativity (l:Prims.int) = function
+    | Left -> l, l, l-(Prims.parse_int "1")
+    | Right -> l-(Prims.parse_int "1"), l, l
     | NonAssoc -> l, l, l
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
-let assign_levels (token_associativity_spec : list<associativity_level>) (s:string) : int * int * int =
+let assign_levels (token_associativity_spec : list<associativity_level>) (s:string) : Prims.int * Prims.int * Prims.int =
     match List.tryFind (matches_level s) level_table with
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
@@ -313,7 +313,7 @@ let max_level l =
       | Some ((_,l,_), _) -> max n l
       | None -> failwith (Util.format1 "Undefined associativity level %s"
                                       (String.concat "," (List.map token_to_string (snd level))))
-  in List.fold_left find_level_and_max 0 l
+  in List.fold_left find_level_and_max (Prims.parse_int "0") l
 
 let levels = assign_levels level_associativity_spec
 
@@ -338,13 +338,13 @@ let handleable_args_length (op:ident) =
 
 let handleable_op op args =
   match List.length args with
-  | 0 -> true
-  | 1 -> is_general_prefix_op op || List.mem (Ident.text_of_id op) [ "-" ; "~" ]
-  | 2 ->
+  | x when x = (Prims.parse_int "0") -> true
+  | x when x = (Prims.parse_int "1") -> is_general_prefix_op op || List.mem (Ident.text_of_id op) [ "-" ; "~" ]
+  | x when x = (Prims.parse_int "2") ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
     List.mem (Ident.text_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
-  | 3 -> List.mem (Ident.text_of_id op) [".()<-" ; ".[]<-"]
+  | x when x = (Prims.parse_int "3") -> List.mem (Ident.text_of_id op) [".()<-" ; ".[]<-"]
   | _ -> false
 
 (* ****************************************************************************)
@@ -413,9 +413,9 @@ let rec place_comments_until_pos k lbegin pos_end doc =
     comment_stack := cs ;
     let lnum = max k (line_of_pos (start_of_range crange) - lbegin) in
     let doc = doc ^^ repeat lnum hardline ^^ str comment in
-    place_comments_until_pos 1 (line_of_pos (end_of_range crange)) pos_end doc
+    place_comments_until_pos (Prims.parse_int "1") (line_of_pos (end_of_range crange)) pos_end doc
   | _ ->
-    let lnum = max 1 (line_of_pos pos_end - lbegin) in
+    let lnum = max (Prims.parse_int "1") (line_of_pos pos_end - lbegin) in
     doc ^^ repeat lnum hardline
 
 (* [separate_map_with_comments prefix sep f xs extract_range] is the document *)
@@ -434,7 +434,7 @@ let rec place_comments_until_pos k lbegin pos_end doc =
 let separate_map_with_comments prefix sep f xs extract_range =
   let fold_fun (last_line, doc) x =
     let r = extract_range x in
-    let doc = place_comments_until_pos 1 last_line (start_of_range r) doc in
+    let doc = place_comments_until_pos (Prims.parse_int "1") last_line (start_of_range r) doc in
     line_of_pos (end_of_range r), doc ^^ sep ^^ f x
   in
   let x, xs = List.hd xs, List.tl xs in
@@ -456,7 +456,7 @@ let rec p_decl d =
         (if d.quals = [] then empty else break1) ^^ p_rawDecl d)
 
 and p_attributes attrs =
-  soft_surround_separate_map 0 2 empty
+  soft_surround_separate_map (Prims.parse_int "0") (Prims.parse_int "2") empty
                         (lbracket ^^ str "@") space (rbracket ^^ hardline)
                         p_atomicTerm attrs
 
@@ -484,7 +484,7 @@ and p_rawDecl d = match d.d with
     group(str "module" ^^ space ^^ p_quident uid)
   | Tycon(true, [TyconAbbrev(uid, tpars, None, t), None]) ->
     let effect_prefix_doc = str "effect" ^^ space ^^ p_uident uid in
-    surround 2 1 effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
+    surround (Prims.parse_int "2") (Prims.parse_int "1") effect_prefix_doc (p_typars tpars) equals ^/+^ p_typ t
   | Tycon(false, tcdefs) ->
     (* TODO : needs some range information to be able to use this *)
     (* separate_map_with_comments (str "type" ^^ space) (str "and" ^^ space) p_fsdocTypeDeclPairs tcdefs *)
@@ -498,7 +498,7 @@ and p_rawDecl d = match d.d with
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
-      if char_at id.idText 0 |> is_upper
+      if char_at id.idText (Prims.parse_int "0") |> is_upper
       then empty
       else str "val" ^^ space
     in
@@ -568,7 +568,7 @@ and p_typeDeclPrefix lid bs typ_opt cont =
   else
       let binders_doc =
         p_typars bs ^^ optional (fun t -> break1 ^^ colon ^^ space ^^ p_typ t) typ_opt
-      in surround 2 1 (p_ident lid) binders_doc (cont ())
+      in surround (Prims.parse_int "2") (Prims.parse_int "1") (p_ident lid) binders_doc (cont ())
 
 and p_recordFieldDecl (lid, t, doc_opt) =
   (* TODO : Should we allow tagging individual field with a comment ? *)
@@ -578,7 +578,7 @@ and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
   let sep = if use_of then str "of" else colon in
   let uid_doc = p_uident uid in
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
-  optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
+  optional p_fsdoc doc_opt ^^ break_ (Prims.parse_int "0") ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
 and p_letbinding (pat, e) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
@@ -590,7 +590,7 @@ and p_letbinding (pat, e) =
     in
     match pat.pat with
     | PatApp ({pat=PatVar (x, _)}, pats) ->
-        surround 2 1 (p_lident x)
+        surround (Prims.parse_int "2") (Prims.parse_int "1") (p_lident x)
                       (separate_map break1 p_atomicPattern pats ^^ ascr_doc)
                       equals
     | _ -> group (p_tuplePattern pat ^^ ascr_doc ^/^ equals)
@@ -610,11 +610,11 @@ and p_newEffect = function
     p_effectDefinition lid bs t eff_decls
 
 and p_effectRedefinition uid bs t =
-    surround 2 1 (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
+    surround (Prims.parse_int "2") (Prims.parse_int "1") (p_uident uid) (p_binders true bs) (prefix2 equals (p_simpleTerm t))
 
 and p_effectDefinition uid bs t eff_decls =
   braces_with_nesting (
-    group (surround 2 1 (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
+    group (surround (Prims.parse_int "2") (Prims.parse_int "1") (p_uident uid) (p_binders true bs)  (prefix2 colon (p_typ t))) ^/^
     prefix2 (str "with") (separate_break_map semi p_effectDecl eff_decls)
     )
 
@@ -715,15 +715,15 @@ and p_atomicPattern p = match p.pat with
     | PatWild, Refine({b = NoName t}, phi) ->
       soft_parens_with_nesting (p_refinement None underscore t phi)
     | _ ->
-        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ 0 ^^ colon ^^ p_typ t)
+        soft_parens_with_nesting (p_tuplePattern pat ^^ break_ (Prims.parse_int "0") ^^ colon ^^ p_typ t)
     end
   | PatList pats ->
-    surround 2 0 lbracket (separate_break_map semi p_tuplePattern pats) rbracket
+    surround (Prims.parse_int "2") (Prims.parse_int "0") lbracket (separate_break_map semi p_tuplePattern pats) rbracket
   | PatRecord pats ->
     let p_recordFieldPat (lid, pat) = infix2 equals (p_qlident lid) (p_tuplePattern pat) in
     soft_braces_with_nesting (separate_break_map semi p_recordFieldPat pats)
   | PatTuple(pats, true) ->
-    surround 2 1 (lparen ^^ bar) (separate_break_map comma p_constructorPattern pats) (bar ^^ rparen)
+    surround (Prims.parse_int "2") (Prims.parse_int "1") (lparen ^^ bar) (separate_break_map comma p_constructorPattern pats) (bar ^^ rparen)
   | PatTvar (tv, arg_qualifier_opt) ->
     assert (arg_qualifier_opt = None) ;
     p_tvar tv
@@ -755,7 +755,7 @@ and p_binder is_atomic b = match b.b with
         | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
           p_refinement b.aqual (p_ident lid) t phi
         | _ ->
-          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ 0 ^^ p_tmFormula t
+          optional p_aqual b.aqual ^^ p_lident lid ^^ colon ^^ break_ (Prims.parse_int "0") ^^ p_tmFormula t
       in
       if is_atomic
       then group (lparen ^^ doc ^^ rparen)
@@ -867,9 +867,9 @@ and p_noSeqTerm' e = match (unparen e).tm with
       group (prefix2 (str "try") (p_noSeqTerm e) ^/^ str "with" ^/^
             separate_map hardline p_patternBranch branches)
   | Match (e, branches) ->
-      group (surround 2 1 (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
+      group (surround (Prims.parse_int "2") (Prims.parse_int "1") (str "match") (p_noSeqTerm e) (str "with") ^/^ separate_map hardline p_patternBranch branches)
   | LetOpen (uid, e) ->
-      group (surround 2 1 (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
+      group (surround (Prims.parse_int "2") (Prims.parse_int "1") (str "let open") (p_quident uid) (str "in") ^/^ p_term e)
   | Let(q, lbs, e) ->
     let let_doc = str "let" ^^ p_letqualifier q in
     group (precede_break_separate_map let_doc (str "and") p_letbinding lbs ^/^ str "in") ^/^
@@ -886,7 +886,7 @@ and p_typ' e = match (unparen e).tm with
   | QForall (bs, trigger, e1)
   | QExists (bs, trigger, e1) ->
       prefix2
-        (soft_surround 2 0 (p_quantifier e ^^ space) (p_binders true bs) dot)
+        (soft_surround (Prims.parse_int "2") (Prims.parse_int "0") (p_quantifier e ^^ space) (p_binders true bs) dot)
         (p_trigger trigger ^^ p_noSeqTerm e1)
   | _ -> p_simpleTerm e
 
@@ -1040,11 +1040,11 @@ and p_appTerm e = match (unparen e).tm with
         then
           let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
           p_indexingTerm head ^^
-          soft_surround_separate_map 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
+          soft_surround_separate_map (Prims.parse_int "2") (Prims.parse_int "0") empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
           args
         else p_indexingTerm head, args
       in
-      group (soft_surround_separate_map 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
+      group (soft_surround_separate_map (Prims.parse_int "2") (Prims.parse_int "0") head_doc (head_doc ^^ space) break1 empty p_argTerm args)
 
   (* dependent tuples are handled below *)
   | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) ->
@@ -1065,7 +1065,7 @@ and p_argTerm arg_imp = match arg_imp with
   | (e, FsTypApp) ->
       (* This case should not happen since it might lead to badly formed type applications (e.g t<a><b>)*)
       BU.print_warning "Unexpected FsTypApp, output might not be formatted correctly.\n" ;
-      surround 2 1 langle (p_indexingTerm e) rangle
+      surround (Prims.parse_int "2") (Prims.parse_int "1") langle (p_indexingTerm e) rangle
   | (e, Hash) -> str "#" ^^ p_indexingTerm e
   | (e, Nothing) -> p_indexingTerm e
 
@@ -1111,9 +1111,9 @@ and p_atomicTermNotQUident e = match (unparen e).tm with
   | Op(op, []) ->
     lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
   | Construct (lid, args) when is_dtuple_constructor lid ->
-    surround 2 1 (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
+    surround (Prims.parse_int "2") (Prims.parse_int "1") (lparen ^^ bar) (separate_map (comma ^^ break1) p_tmEq (List.map fst args)) (bar ^^ rparen)
   | Project (e, lid) ->
-    group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
+    group (prefix (Prims.parse_int "2") (Prims.parse_int "0") (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->
     p_projectionLHS e
   (* BEGIN e END skipped *)
@@ -1131,18 +1131,18 @@ and p_projectionLHS e = match (unparen e).tm with
     soft_parens_with_nesting (p_term e)
   | _ when is_array e ->
     let es = extract_from_list e in
-    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow (semi ^^ break1) p_noSeqTerm es) (bar ^^ rbracket)
+    surround (Prims.parse_int "2") (Prims.parse_int "0") (lbracket ^^ bar) (separate_map_or_flow (semi ^^ break1) p_noSeqTerm es) (bar ^^ rbracket)
   | _ when is_list e ->
-    surround 2 0 lbracket (separate_map_or_flow (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
+    surround (Prims.parse_int "2") (Prims.parse_int "0") lbracket (separate_map_or_flow (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
   | _ when is_lex_list e ->
-    surround 2 1 (percent ^^ lbracket) (separate_map_or_flow (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
+    surround (Prims.parse_int "2") (Prims.parse_int "1") (percent ^^ lbracket) (separate_map_or_flow (semi ^^ break1) p_noSeqTerm (extract_from_list e)) rbracket
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
-    surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
+    surround (Prims.parse_int "2") (Prims.parse_int "0") (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
 
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   | Labeled (e, s, b) ->
-      break_ 0 ^^ str ("(*" ^ s ^ "*)") ^/^ p_term e
+      break_ (Prims.parse_int "0") ^^ str ("(*" ^ s ^ "*)") ^/^ p_term e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
@@ -1288,7 +1288,7 @@ and p_atomicUniverse u = match (unparen u).tm with
           (* TODO : take into account the space of the fsdoc (and attributes ?) *)
           let extract_decl_range d = d.drange in
           comment_stack := comments ;
-          let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
+          let initial_comment = place_comments_until_pos (Prims.parse_int "0") (Prims.parse_int "1") (start_of_range first_range) empty in
       let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
       let comments = !comment_stack in
       comment_stack := [] ;

@@ -28,10 +28,10 @@ open FStar.Parser.AST
 open FStar.Parser.Util
 open FStar.Errors
 
-let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
+let string_trim_both s n m = Util.substring s n (Prims.of_int(String.length s) - (n+m))
 let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m
-let trim_right  lexbuf n = trim_both lexbuf 0 n
-let trim_left   lexbuf n = trim_both lexbuf n 0
+let trim_right  lexbuf n = trim_both lexbuf (Prims.parse_int "0") n
+let trim_left   lexbuf n = trim_both lexbuf n (Prims.parse_int "0")
 
 let fail lexbuf msg dflt =
      let m = getLexerRange lexbuf in
@@ -40,7 +40,7 @@ let fail lexbuf msg dflt =
 
 let trim_right_char s c =
   if String.length s > 1 && s.[String.length s - 1] = c
-  then string_trim_both s 0 1
+  then string_trim_both s (Prims.parse_int "0") (Prims.parse_int "1")
   else s
 
 let stripped_integer lexbuf =
@@ -95,16 +95,16 @@ let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*Unicode
                         STRING s)  in
     buf,fin,m
 
-let lc = Util.mk_ref 1
+let lc = Util.mk_ref (Prims.parse_int "1")
 let rec mknewline n lexbuf =
-  if n > 0 then (newline lexbuf; Util.incr lc; mknewline (n-1) lexbuf)
+  if n > (Prims.parse_int "0") then (newline lexbuf; Util.incr lc; mknewline (n-(Prims.parse_int "1")) lexbuf)
 
 type delimiters = {
   angle:ref<int>;
   paren:ref<int>
 }
 
-let n_typ_apps = Util.mk_ref 0
+let n_typ_apps = Util.mk_ref (Prims.parse_int "0")
 let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
  if not (Options.fs_typ_app args.filename) then ((* printfn "False 0" ; *) false) else
  try
@@ -113,11 +113,11 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
     if Util.char_at contents pos <> '<' then
       (printfn "Unexpected position"; failwith "die!");
     let d = {angle=ref 1; paren=ref 0} in
-    let upd i = match Util.char_at contents i with
+    let upd i = match Util.char_at contents (Prims.of_int i) with
       | '(' -> incr d.paren
       | ')' -> decr d.paren
       | '<' -> incr d.angle
-      | '>' when Util.char_at contents (i-1) <> '-' -> decr d.angle
+      | '>' when Util.char_at contents (Prims.of_int (i-1)) <> '-' -> decr d.angle
       | _ -> () in
     let ok () = !d.angle > 0 && !d.paren >= 0 in
     let rec aux i =
@@ -127,15 +127,15 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
       else if (not <| char_ok.IsMatch(contents, i)) || (contents.IndexOf("then", i)=i)
       then ((* printfn "False 2: %A\n" (Util.char_at contents i);*)  false)
       else (upd i; aux (i + 1)) in
-      aux (pos + 1) in
-   let res = balanced args.contents lexbuf.StartPos.AbsoluteOffset in
+      aux (Prims.to_int (pos + Prims.parse_int "1")) in
+   let res = balanced args.contents (Prims.of_int lexbuf.StartPos.AbsoluteOffset) in
    if res then Util.incr n_typ_apps;
    ((*printfn "Result < : %s" (if res then "true" else "false") ;*) res)
  with e -> printfn "Resolving typ_app<...> syntax failed: %A" e; false
 
 let is_typ_app_gt () =
   let res =
-      if !n_typ_apps > 0
+      if !n_typ_apps > (Prims.parse_int "0")
       then (Util.decr n_typ_apps; true)
       else false
    in
@@ -243,7 +243,7 @@ rule token args = parse
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
  | '#' ' ' (digit)*
-     { let n = Util.int_of_string (trim_left lexbuf 2) in
+     { let n = Util.int_of_string (trim_left lexbuf (Prims.parse_int "2")) in
      mknewline (n - !lc) lexbuf;
        cpp_filename args lexbuf }
  | char8
@@ -275,7 +275,7 @@ rule token args = parse
 
  | xieee64
      {
-       let n64 = int64 (trim_right lexbuf 2) in
+       let n64 = int64 (trim_right lexbuf (Prims.parse_int "2")) in
        IEEE64 (System.BitConverter.Int64BitsToDouble(n64)) }
 
  | (integer | xinteger | float) ident_char+
@@ -301,8 +301,8 @@ rule token args = parse
  | "-"     { MINUS }
  | "/\\"   { CONJUNCTION }
  | "\\/"   { DISJUNCTION }
- | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf 3 1)))) }
- | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
+ | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf (Prims.parse_int "3") (Prims.parse_int "1"))))) }
+ | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf (Prims.parse_int "3") (Prims.parse_int "1"))))) }
  | '\'' unicodegraph_long '\''  { failwith "This unicode encoding is only valid in string literals" }
  | "<:"             { SUBTYPE }
  | "<@"             { SUBKIND }
@@ -345,11 +345,11 @@ rule token args = parse
      { token args lexbuf  }
 
  | newline
-     { mknewline 1 lexbuf;
+     { mknewline (Prims.parse_int "1") lexbuf;
        token args lexbuf }
 
  | '`' '`' ([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t']) + '`' '`'
-     { IDENT (trim_both lexbuf 2 2) }
+     { IDENT (trim_both lexbuf (Prims.parse_int "2") (Prims.parse_int "2")) }
 
  | "=" { EQUALS }
  | '#' { HASH }
@@ -403,7 +403,7 @@ rule token args = parse
  | op_infix3  symbolchar* { OPINFIX3 (ulexeme lexbuf) }
 
  | _ { unexpected_char lexbuf }
- | eof { lc := 1; EOF }
+ | eof { lc := (Prims.parse_int "1"); EOF }
 
 and symbolchar_parser args = parse
  | symbolchar* { OPINFIX0c (">" ^  ulexeme lexbuf) }
@@ -411,7 +411,7 @@ and symbolchar_parser args = parse
 and string sargs = parse
  |  '\\' newline anywhite*
     { let (buf,fin,m,args) = sargs in
-      mknewline 1 lexbuf;
+      mknewline (Prims.parse_int "1") lexbuf;
       string sargs lexbuf }
 
  |  escape_char
@@ -429,20 +429,20 @@ and string sargs = parse
 
  | hexgraph_short
     { let (buf,fin,m,args) = sargs in
-      Lexhelp.add_unichar buf (int (Lexhelp.hexgraph_short (trim_left lexbuf 2)));
+      Lexhelp.add_unichar buf (Prims.of_int (int (Lexhelp.hexgraph_short (trim_left lexbuf (Prims.parse_int "2")))));
       string sargs lexbuf  }
 
  | unicodegraph_short
     (* REVIEW: Disallow these in bytearray constants *)
     { let (buf,fin,m,args) = sargs in
-      Lexhelp.add_unichar buf (int (Lexhelp.unicodegraph_short (trim_left lexbuf 2)));
+      Lexhelp.add_unichar buf (Prims.of_int (int (Lexhelp.unicodegraph_short (trim_left lexbuf (Prims.parse_int "2")))));
       string sargs lexbuf  }
 
  | unicodegraph_long
     { let (buf,fin,m,args) = sargs in
-      let hi,lo = Lexhelp.unicodegraph_long (trim_left lexbuf 2) in
-      (match hi with | None -> () | Some c -> Lexhelp.add_unichar buf (int c));
-      Lexhelp.add_unichar buf (int lo);
+      let hi,lo = Lexhelp.unicodegraph_long (trim_left lexbuf (Prims.parse_int "2")) in
+      (match hi with | None -> () | Some c -> Lexhelp.add_unichar buf (Prims.of_int (int c)));
+      Lexhelp.add_unichar buf (Prims.of_int (int lo));
       string sargs lexbuf  }
 
  |  '"'
@@ -457,7 +457,7 @@ and string sargs = parse
 
  | newline
     { let (buf,fin,m,args) = sargs in
-      mknewline 1 lexbuf;
+      mknewline (Prims.parse_int "1") lexbuf;
       Lexhelp.add_string buf (ulexeme lexbuf);
       string sargs lexbuf }
 
@@ -503,7 +503,7 @@ and vstring sargs = parse
 
  | newline
     { let (buf,fin,m,args) = sargs in
-      mknewline 1 lexbuf;
+      mknewline (Prims.parse_int "1") lexbuf;
       Lexhelp.add_string buf (ulexeme lexbuf);
       vstring sargs lexbuf }
 
@@ -543,7 +543,7 @@ and comment cargs = parse
 
  | newline
     { let n,m,args = cargs in
-      mknewline 1 lexbuf;
+      mknewline (Prims.parse_int "1") lexbuf;
       comment cargs lexbuf }
 
  | "*)"
@@ -573,30 +573,30 @@ and fsdoc cargs = parse
  // token from fsdoc annotations to avoid all grammar ambiguities
  | "*)" newline newline
     { let n,doc,kw = cargs in
-	  mknewline 2 lexbuf;
+	  mknewline (Prims.parse_int "1") lexbuf;
       if n > 1 then fsdoc (n-1,doc^(ulexeme lexbuf),kw) lexbuf
       else FSDOC_STANDALONE(doc,kw) }
 
  | "*)" newline
     { let n,doc,kw = cargs in
-	  mknewline 1 lexbuf;
+	  mknewline (Prims.parse_int "1") lexbuf;
       if n > 1 then fsdoc (n-1,doc^(ulexeme lexbuf),kw) lexbuf
       else FSDOC(doc,kw) }
 
  | newline "\\@"
     { let n,doc,kw = cargs in
-	  mknewline 1 lexbuf;
-	  let nl = trim_right lexbuf 2 in
+	  mknewline (Prims.parse_int "1") lexbuf;
+	  let nl = trim_right lexbuf (Prims.parse_int "2") in
 	  fsdoc(n,doc^nl^"@",kw) lexbuf}
 
  | newline "@"
 	 { let n,doc,kw = cargs in
-	   mknewline 1 lexbuf;
+	   mknewline (Prims.parse_int "1") lexbuf;
 	   fsdoc_kw (n,doc,kw) lexbuf}
 
  | newline
     { let n,doc,kw = cargs in
-      mknewline 1 lexbuf;
+      mknewline (Prims.parse_int "1") lexbuf;
       fsdoc (n,doc^(ulexeme lexbuf),kw) lexbuf }
 
  | _ { let n,doc,kw = cargs in
@@ -619,7 +619,7 @@ and fsdoc_kw_arg cargs = parse
 
 and cpp_filename args = parse
  | ' ' '"' [^ '"']+ '"'
-     { let s = trim_both lexbuf 2 1 in
+     { let s = trim_both lexbuf (Prims.parse_int "2") (Prims.parse_int "1") in
      let r = getLexerRange lexbuf in
      Range.set_file_of_range r s;
      ignore_endline args lexbuf }

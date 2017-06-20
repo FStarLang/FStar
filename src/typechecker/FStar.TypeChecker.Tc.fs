@@ -48,7 +48,7 @@ let set_hint_correlator env se =
     match Options.reuse_hint_for () with
     | Some l ->
       let lid = Ident.lid_add_suffix (Env.current_module env) l in
-      {env with qname_and_index=Some (lid, 0)}
+      {env with qname_and_index=Some (lid, (Prims.parse_int "0"))}
 
     | None ->
       let lids = U.lids_of_sigelt se in
@@ -56,7 +56,7 @@ let set_hint_correlator env se =
             | [] -> Ident.lid_add_suffix (Env.current_module env)
                                          (S.next_id () |> BU.string_of_int)
             | l::_ -> l in
-      {env with qname_and_index=Some (lid, 0)}
+      {env with qname_and_index=Some (lid, (Prims.parse_int "0"))}
 
 let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.current_module env))
 
@@ -408,7 +408,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     // We always close [bind_repr], even though it may be [Tm_unknown]
     // (non-reifiable, non-reflectable effect)
     let m = List.length (fst ts) in
-    if n >= 0 && not (is_unknown (snd ts)) && m <> n
+    if n >= (Prims.parse_int "0") && not (is_unknown (snd ts)) && m <> n
     then begin
         let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
         failwith (BU.format3
@@ -419,32 +419,32 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
     end ;
     ts in
   let close_action act =
-    let univs, defn = close (-1) (act.action_univs, act.action_defn) in
-    let univs', typ = close (-1) (act.action_univs, act.action_typ) in
+    let univs, defn = close (Prims.parse_int "-1") (act.action_univs, act.action_defn) in
+    let univs', typ = close (Prims.parse_int "-1") (act.action_univs, act.action_typ) in
     assert (List.length univs = List.length univs');
     { act with
         action_univs=univs;
         action_defn=defn;
         action_typ=typ; }
   in
-  assert (List.length effect_params > 0 || List.length univs = 1);
+  assert (List.length effect_params > (Prims.parse_int "0") || List.length univs = (Prims.parse_int "1"));
   let ed = { ed with
       univs       = univs
     ; binders     = effect_params (* QUESTION (KM) : don't we need to close the effect params ? *)
     ; signature   = signature
-    ; ret_wp      = close 0 return_wp
-    ; bind_wp     = close 1 bind_wp
-    ; if_then_else= close 0 if_then_else
-    ; ite_wp      = close 0 ite_wp
-    ; stronger    = close 0 stronger
-    ; close_wp    = close 1 close_wp
-    ; assert_p    = close 0 assert_p
-    ; assume_p    = close 0 assume_p
-    ; null_wp     = close 0 null_wp
-    ; trivial     = close 0 trivial_wp
-    ; repr        = (snd (close 0 ([], repr)))
-    ; return_repr = close 0 return_repr
-    ; bind_repr   = close 1 bind_repr
+    ; ret_wp      = close (Prims.parse_int "0") return_wp
+    ; bind_wp     = close (Prims.parse_int "1") bind_wp
+    ; if_then_else= close (Prims.parse_int "0") if_then_else
+    ; ite_wp      = close (Prims.parse_int "0") ite_wp
+    ; stronger    = close (Prims.parse_int "0") stronger
+    ; close_wp    = close (Prims.parse_int "1") close_wp
+    ; assert_p    = close (Prims.parse_int "0") assert_p
+    ; assume_p    = close (Prims.parse_int "0") assume_p
+    ; null_wp     = close (Prims.parse_int "0") null_wp
+    ; trivial     = close (Prims.parse_int "0") trivial_wp
+    ; repr        = (snd (close (Prims.parse_int "0") ([], repr)))
+    ; return_repr = close (Prims.parse_int "0") return_repr
+    ; bind_repr   = close (Prims.parse_int "1") bind_repr
     ; actions     = List.map close_action actions} in
 
   if Env.debug env Options.Low
@@ -602,14 +602,14 @@ and cps_and_elaborate env ed =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv Const.range_lid (S.Delta_defined_at_level 1) None in
+        let r = S.lid_as_fv Const.range_lid (S.Delta_defined_at_level (Prims.parse_int "1")) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
         failwith "unexpected shape for bind"
   in
 
   let apply_close t =
-    if List.length effect_binders = 0 then
+    if List.length effect_binders = (Prims.parse_int "0") then
       t
     else
       close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
@@ -752,7 +752,7 @@ and cps_and_elaborate env ed =
     BU.print_string (Print.eff_decl_to_string true ed);
 
   let lift_from_pure_opt =
-    if List.length effect_binders = 0 then begin
+    if List.length effect_binders = (Prims.parse_int "0") then begin
       // Won't work with parameterized effect
       let lift_from_pure = {
           source = Const.effect_PURE_lid;
@@ -784,11 +784,12 @@ and tc_lex_t env ses quals lids =
     end;
     begin match ses with
       | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _);  sigquals = []; sigrng = r };
-         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
-         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
+         { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, x_top, _); sigquals = []; sigrng = r1 };
+         { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, x_cons, _); sigquals = []; sigrng = r2 }]
          when (lid_equals lex_t Const.lex_t_lid
             && lid_equals lex_top Const.lextop_lid
-            && lid_equals lex_cons Const.lexcons_lid) ->
+            && lid_equals lex_cons Const.lexcons_lid
+            && x_top = (Prims.parse_int "0") && x_cons = (Prims.parse_int "0")) ->
 
         let u = S.new_univ_name (Some r) in
         let t = mk (Tm_type(U_name u)) None r in
@@ -801,7 +802,7 @@ and tc_lex_t env ses quals lids =
         let utop = S.new_univ_name (Some r1) in
         let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, []);
+        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, (Prims.parse_int "0"), []);
                           sigquals = [];
                           sigrng = r1;
                           sigmeta = default_sigmeta  } in
@@ -815,7 +816,7 @@ and tc_lex_t env ses quals lids =
             let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, []);
+        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, (Prims.parse_int "0"), []);
                            sigquals = [];
                            sigrng = r2;
                            sigmeta = default_sigmeta  } in
@@ -881,7 +882,7 @@ and tc_inductive env ses quals lids =
 
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
-    if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
+    if ((List.length tcs = (Prims.parse_int "0")) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
     then [sig_bndle], data_ops_ses
     else
         let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
@@ -1048,7 +1049,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       | [], Tm_arrow(_, c) -> [], c
       | _,  Tm_arrow(tps, c) -> tps, c
       | _ -> failwith "Impossible" in
-    if List.length uvs <> 1
+    if List.length uvs <> (Prims.parse_int "1")
     then (let _, t = Subst.open_univ_vars uvs t in
           raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                   (Print.lid_to_string lid)

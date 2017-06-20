@@ -492,7 +492,7 @@ let cons_extract_module: Prims.string -> option_val =
         let uu____1001 = get_extract_module () in (FStar_String.lowercase s)
           :: uu____1001 in
       FStar_All.pipe_right uu____999
-        (FStar_List.map (fun _0_26  -> String _0_26)) in
+        (FStar_List.map (fun _0_25  -> String _0_25)) in
     List uu____997
 let cons_extract_namespace: Prims.string -> option_val =
   fun s  ->
@@ -501,7 +501,7 @@ let cons_extract_namespace: Prims.string -> option_val =
         let uu____1012 = get_extract_namespace () in
         (FStar_String.lowercase s) :: uu____1012 in
       FStar_All.pipe_right uu____1010
-        (FStar_List.map (fun _0_27  -> String _0_27)) in
+        (FStar_List.map (fun _0_26  -> String _0_26)) in
     List uu____1008
 let add_extract_module: Prims.string -> Prims.unit =
   fun s  ->
@@ -518,7 +518,7 @@ let cons_verify_module: Prims.string -> option_val =
         let uu____1031 = get_verify_module () in (FStar_String.lowercase s)
           :: uu____1031 in
       FStar_All.pipe_right uu____1029
-        (FStar_List.map (fun _0_28  -> String _0_28)) in
+        (FStar_List.map (fun _0_27  -> String _0_27)) in
     List uu____1027
 let cons_using_facts_from: Prims.string -> option_val =
   fun s  ->
@@ -528,7 +528,7 @@ let cons_using_facts_from: Prims.string -> option_val =
      | None  -> List [String s]
      | Some l ->
          let uu____1046 =
-           FStar_List.map (fun _0_29  -> String _0_29) (s :: l) in
+           FStar_List.map (fun _0_28  -> String _0_28) (s :: l) in
          List uu____1046)
 let add_verify_module: Prims.string -> Prims.unit =
   fun s  ->
@@ -563,7 +563,7 @@ let rec specs:
                   let uu____1104 =
                     let uu____1106 = get_codegen_lib () in s :: uu____1106 in
                   FStar_All.pipe_right uu____1104
-                    (FStar_List.map (fun _0_30  -> String _0_30)) in
+                    (FStar_List.map (fun _0_29  -> String _0_29)) in
                 List uu____1102)), "[namespace]")),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
       (FStar_Getopt.noshort, "debug",
@@ -573,7 +573,7 @@ let rec specs:
                   let uu____1121 =
                     let uu____1123 = get_debug () in x :: uu____1123 in
                   FStar_All.pipe_right uu____1121
-                    (FStar_List.map (fun _0_31  -> String _0_31)) in
+                    (FStar_List.map (fun _0_30  -> String _0_30)) in
                 List uu____1119)), "[module name]")),
         "Print lots of debugging information while checking module");
       (FStar_Getopt.noshort, "debug_level",
@@ -583,7 +583,7 @@ let rec specs:
                   let uu____1138 =
                     let uu____1140 = get_debug_level () in x :: uu____1140 in
                   FStar_All.pipe_right uu____1138
-                    (FStar_List.map (fun _0_32  -> String _0_32)) in
+                    (FStar_List.map (fun _0_31  -> String _0_31)) in
                 List uu____1136)), "[Low|Medium|High|Extreme|...]")),
         "Control the verbosity of debugging info");
       (FStar_Getopt.noshort, "dep",
@@ -606,8 +606,8 @@ let rec specs:
                   let uu____1179 =
                     let uu____1181 = get_dump_module () in x :: uu____1181 in
                   FStar_All.pipe_right uu____1179
-                    (FStar_List.map (fun _0_33  -> String _0_33)) in
-                FStar_All.pipe_right uu____1177 (fun _0_34  -> List _0_34))),
+                    (FStar_List.map (fun _0_32  -> String _0_32)) in
+                FStar_All.pipe_right uu____1177 (fun _0_33  -> List _0_33))),
              "[module name]")), "");
       (FStar_Getopt.noshort, "eager_inference",
         (FStar_Getopt.ZeroArgs ((fun uu____1192  -> Bool true))),
@@ -625,7 +625,7 @@ let rec specs:
         (FStar_Getopt.OneArg (cons_extract_namespace, "[namespace name]")),
         "Only extract modules in the specified namespace");
       (FStar_Getopt.noshort, "fstar_home",
-        (FStar_Getopt.OneArg (((fun _0_35  -> Path _0_35)), "[dir]")),
+        (FStar_Getopt.OneArg (((fun _0_34  -> Path _0_34)), "[dir]")),
         "Set the FSTAR_HOME variable to [dir]");
       (FStar_Getopt.noshort, "hide_genident_nums",
         (FStar_Getopt.ZeroArgs ((fun uu____1237  -> Bool true))),
@@ -648,7 +648,7 @@ let rec specs:
                 let uu____1275 =
                   let uu____1277 =
                     let uu____1279 = get_include () in
-                    FStar_List.map (fun _0_36  -> String _0_36) uu____1279 in
+                    FStar_List.map (fun _0_35  -> String _0_35) uu____1279 in
                   FStar_List.append uu____1277 [Path s] in
                 List uu____1275)), "[path]")),
         "A directory in which to search for files included on the command line");
@@ -716,7 +716,7 @@ let rec specs:
                   let uu____1401 =
                     let uu____1403 = get_no_extract () in x :: uu____1403 in
                   FStar_All.pipe_right uu____1401
-                    (FStar_List.map (fun _0_37  -> String _0_37)) in
+                    (FStar_List.map (fun _0_36  -> String _0_36)) in
                 List uu____1399)), "[module name]")),
         "Do not extract code from this module");
       (FStar_Getopt.noshort, "no_location_info",
@@ -727,7 +727,7 @@ let rec specs:
            (((fun p  -> let uu____1423 = validate_dir p in Path uu____1423)),
              "[dir]")), "Place output in directory [dir]");
       (FStar_Getopt.noshort, "prims",
-        (FStar_Getopt.OneArg (((fun _0_38  -> String _0_38)), "file")), "");
+        (FStar_Getopt.OneArg (((fun _0_37  -> String _0_37)), "file")), "");
       (FStar_Getopt.noshort, "print_bound_var_types",
         (FStar_Getopt.ZeroArgs ((fun uu____1438  -> Bool true))),
         "Print the types of bound variables");
@@ -760,7 +760,7 @@ let rec specs:
         "Check new hints for replayability");
       (FStar_Getopt.noshort, "reuse_hint_for",
         (FStar_Getopt.OneArg
-           (((fun _0_39  -> String _0_39)),
+           (((fun _0_38  -> String _0_38)),
              "top-level name in the current module")),
         "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
       (FStar_Getopt.noshort, "show_signatures",
@@ -771,13 +771,13 @@ let rec specs:
                     let uu____1523 = get_show_signatures () in x ::
                       uu____1523 in
                   FStar_All.pipe_right uu____1521
-                    (FStar_List.map (fun _0_40  -> String _0_40)) in
+                    (FStar_List.map (fun _0_39  -> String _0_39)) in
                 List uu____1519)), "[module name]")),
         "Show the checked signatures for all top-level symbols in the module");
       (FStar_Getopt.noshort, "silent",
         (FStar_Getopt.ZeroArgs ((fun uu____1533  -> Bool true))), " ");
       (FStar_Getopt.noshort, "smt",
-        (FStar_Getopt.OneArg (((fun _0_41  -> Path _0_41)), "[path]")),
+        (FStar_Getopt.OneArg (((fun _0_40  -> Path _0_40)), "[path]")),
         "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
       (FStar_Getopt.noshort, "smtencoding.elim_box",
         (FStar_Getopt.OneArg
@@ -785,11 +785,11 @@ let rec specs:
         "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
       (FStar_Getopt.noshort, "smtencoding.nl_arith_repr",
         (FStar_Getopt.OneArg
-           (((fun _0_42  -> String _0_42)), "native|wrapped|boxwrap")),
+           (((fun _0_41  -> String _0_41)), "native|wrapped|boxwrap")),
         "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\ti.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\tif 'native' use '*, div, mod';\n\t\tif 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'; \n\t\t(default 'boxwrap')");
       (FStar_Getopt.noshort, "smtencoding.l_arith_repr",
         (FStar_Getopt.OneArg
-           (((fun _0_43  -> String _0_43)), "native|boxwrap")),
+           (((fun _0_42  -> String _0_42)), "native|boxwrap")),
         "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\ti.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\tif 'native', use '+, -, -'; \n\t\t(default 'boxwrap')");
       (FStar_Getopt.noshort, "split_cases",
         (FStar_Getopt.OneArg
@@ -834,7 +834,7 @@ let rec specs:
                   let uu____1659 =
                     let uu____1661 = get___temp_no_proj () in x :: uu____1661 in
                   FStar_All.pipe_right uu____1659
-                    (FStar_List.map (fun _0_44  -> String _0_44)) in
+                    (FStar_List.map (fun _0_43  -> String _0_43)) in
                 List uu____1657)), "[module name]")),
         "Don't generate projectors for this module");
       ('v', "version",
@@ -853,7 +853,7 @@ let rec specs:
                     let uu____1693 = get_z3cliopt () in
                     FStar_List.append uu____1693 [s] in
                   FStar_All.pipe_right uu____1691
-                    (FStar_List.map (fun _0_45  -> String _0_45)) in
+                    (FStar_List.map (fun _0_44  -> String _0_44)) in
                 List uu____1689)), "[option]")), "Z3 command line options");
       (FStar_Getopt.noshort, "z3refresh",
         (FStar_Getopt.ZeroArgs ((fun uu____1703  -> Bool true))),
@@ -1059,7 +1059,7 @@ let restore_cmd_line_options: Prims.bool -> FStar_Getopt.parse_cmdline_res =
      (let uu____2016 =
         let uu____2019 =
           let uu____2020 =
-            FStar_List.map (fun _0_46  -> String _0_46) old_verify_module in
+            FStar_List.map (fun _0_45  -> String _0_45) old_verify_module in
           List uu____2020 in
         ("verify_module", uu____2019) in
       set_option' uu____2016);

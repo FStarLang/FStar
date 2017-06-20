@@ -29,31 +29,31 @@ let tl x = tail x
 
 let rec length = (fun ( _5_3  :  'a Prims.list ) -> (match (_5_3) with
 | [] -> begin
-0
+Prims.parse_int "0"
 end
 | _5_37::tl -> begin
-(1 + (length tl))
+(Prims.parse_int "1" + (length tl))
 end))
 
 let rec nth = fun ( l  :  'a Prims.list ) ( n  :  Prims.int ) ->
-    if n < 0
+    if n < Prims.parse_int "0"
     then failwith "nth takes a non-negative integer as input"
-    else if n=0 then
+    else if n= Prims.parse_int "0"then
         match (l) with
         | [] -> failwith "not enough elements"
         | hd::_ -> hd
     else match l with
         | [] ->  failwith "not enough elements"
-        | _5_50::tl -> nth tl (n - 1)
+        | _5_50::tl -> nth tl (n - Prims.parse_int "1")
 
 let rec count = (fun ( x  :  'a ) ( _5_4  :  'a Prims.list ) -> (match (_5_4) with
 | [] -> begin
-0
+Prims.parse_int "0"
 end
 | hd::tl -> begin
 (match ((x = hd)) with
 | true -> begin
-(1 + (count x tl))
+(Prims.parse_int "1" + (count x tl))
 end
 | false -> begin
 (count x tl)
@@ -99,10 +99,10 @@ let rec mapi_init = (fun ( f  :  Prims.int  ->  'a  ->  'b ) ( l  :  'a Prims.li
 []
 end
 | hd::tl -> begin
-((f i hd))::(mapi_init f tl (i + 1))
+((f i hd))::(mapi_init f tl (i + Prims.parse_int "1"))
 end))
 
-let mapi f l = List.mapi f l
+let mapi f l = List.mapi (fun i x -> f (Prims.of_int i) x) l
 
 let concatMap f l = List.collect f l
 
@@ -236,7 +236,7 @@ let rec assoc = fun ( a  :  'a ) ( x  :  ('a * 'b) Prims.list ) ->
    then Some b
    else assoc a tl
 
-let splitAt n l = List.splitAt n l
+let splitAt (n:Prims.int) l = List.splitAt (Prims.parse_int32(Prims.to_string n)) l
 
 let split l = List.split l
 
@@ -266,10 +266,11 @@ end
 | (_5_528, _5_530, _5_532) -> begin
 (failwith "The lists do not have the same length")
 end))
+ 
+let sortFunction = (fun  ( f  :  'a  ->  'a  ->  Prims.int ) ( x  :  'a ) ( y  :  'a )  -> Prims.to_int (f x y))
+let sortWith f l = List.sortWith (sortFunction f) l
 
-let sortWith f l = List.sortWith f l
-
-let bool_of_compare = (fun ( f  :  'a  ->  'a  ->  Prims.int ) ( x  :  'a ) ( y  :  'a ) -> ((f x y) >= 0))
+let bool_of_compare = (fun ( f  :  'a  ->  'a  ->  Prims.int ) ( x  :  'a ) ( y  :  'a ) -> ((f x y) >= Prims.parse_int "0"))
 
 let rec unique l =
   // this matches the semantics of BatList.unique.
@@ -283,8 +284,8 @@ let rec unique l =
 
 let rec iteri_aux i f x = match x with
   | [] -> ()
-  | a::tl -> f i a; iteri_aux (i+1) f tl
-let iteri f x = iteri_aux 0 f x
+  | a::tl -> f i a; iteri_aux (i+ Prims.parse_int "1") f tl
+let iteri f x = iteri_aux (Prims.parse_int "0") f x
 
 let filter_map f l =
   let rec filter_map acc l =
@@ -300,4 +301,4 @@ let filter_map f l =
   in
   filter_map [] l
 
-let index f l = List.findIndex f l
+let index f l = Prims.of_int (List.findIndex f l)
