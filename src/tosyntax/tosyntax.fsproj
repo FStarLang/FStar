@@ -61,13 +61,6 @@
     </PreBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-    <Error Condition="!Exists('..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets'))" />
-  </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
     <Compile Include="FStar.ToSyntax.Env.fsi" />
@@ -109,7 +102,9 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" />
+  <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
+
+  <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" Condition="Exists('..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">
