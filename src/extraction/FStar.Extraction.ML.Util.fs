@@ -328,14 +328,16 @@ let str_to_top_name s = lid_to_top_name (lid_of_str s)
 let mk_tac_embedding_path t =
     (match t.n with
      | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_Reflection_Basic.embed_unit"
-     //TODO add the others and print term when not found
-     | _ -> failwith "Embedding not defined for type ") |> str_to_name
+     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> "FStar_Reflection_Basic.embed_string"
+     //TODO add the others
+     | _ -> failwith (BU.format1 "Embedding not defined for type %s" (Print.term_to_string t))) |> str_to_name
 
 let mk_tac_unembedding_path t =
     (match t.n with
+     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_Reflection_Basic.unembed_unit"
      | Tm_fvar fv when fv_eq_lid fv C.string_lid -> "FStar_Reflection_Basic.unembed_string"
-     //TODO add the others and print term when not found
-     | _ -> failwith "Unembedding not defined for type ") |> str_to_name
+     //TODO add the others
+     | _ -> failwith (BU.format1 "Unembedding not defined for type %s" (Print.term_to_string t))) |> str_to_name
 
 let mk_tac_param_type t =
     (match t.n with
