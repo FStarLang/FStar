@@ -893,10 +893,8 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_name bv ->
       N bv.sort, e, e
 
-  | Tm_abs (binders, body, what) ->
-      let binders = SS.open_binders binders in
-      let subst = SS.opening_of_binders binders in
-      let body = SS.subst subst body in
+  | Tm_abs _ ->
+      let binders, body, rc_opt = U.abs_formals e in
       let env = { env with env = push_binders env.env binders } in
 
       // For the *-translation, [x: t] becomes [x: t*].
@@ -927,42 +925,44 @@ and infer (env: env) (e: term): nm * term * term =
       *)
 
       let comp, s_body, u_body =
-        let check_what = if is_monadic what then check_m else check_n in
+        let check_what = if is_monadic rc_opt then check_m else check_n in
         let t, s_body, u_body = check_what env body in
-        comp_of_nm (if is_monadic what then M t else N t), s_body, u_body
+        comp_of_nm (if is_monadic rc_opt then M t else N t), s_body, u_body
       in
 
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.
       let t = U.arrow binders comp in
 
-      let s_what = match what with
-        | None
-        | Some ({residual_typ=None}) -> None // That should not happen according to some other comment
-        | Some rc ->
-            let rt = BU.must rc.residual_typ in
-            if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
-            then
-                let double_starred_comp = S.mk_Total (double_star rt) in
+      let s_rc_opt = match rc_opt with
+        | None -> None // That should not happen according to some other comment
+        | Some rc -> begin
+            match rc.residual_typ with
+            | None ->
+              let rc =
+                 if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
+                 then U.mk_residual_comp Const.effect_Tot_lid None (List.filter (function CPS -> false | _ -> true) rc.residual_flags)
+                 else rc in
+              Some rc
+
+            | Some rt ->
+              if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
+              then
                 let flags = List.filter (function CPS -> false | _ -> true) rc.residual_flags in
-                Some (U.residual_comp_of_lcomp (U.lcomp_of_comp (comp_set_flags double_starred_comp flags)))
-            else Some ({rc with residual_typ = Some (star_type' env rt)})
+                Some (U.mk_residual_comp Const.effect_Tot_lid (Some (double_star rt)) flags)
+              else Some ({rc with residual_typ = Some (star_type' env rt)})
+            end
       in
 
-      let u_body, u_what =
-          let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
+      let u_body, u_rc_opt =
+          let comp = trans_G env (U.comp_result comp) (is_monadic rc_opt) (SS.subst env.subst s_body) in
           (* TODO : consider removing this ascription *)
           U.ascribe u_body (Inr comp, None),
           Some (U.residual_comp_of_comp comp)
       in
 
-      let s_body = close s_binders s_body in
-      let s_binders = close_binders s_binders in
-      let s_term = mk (Tm_abs (s_binders, s_body, s_what)) in
-
-      let u_body = close u_binders u_body in
-      let u_binders = close_binders u_binders in
-      let u_term = mk (Tm_abs (u_binders, u_body, u_what)) in
+      let s_term = U.abs s_binders s_body s_rc_opt in
+      let u_term = U.abs u_binders u_body u_rc_opt in
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->

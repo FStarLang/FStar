@@ -283,7 +283,11 @@ let rec term_to_string x =
       | Tm_abs(bs, t2, lc) ->
         begin match lc with
             | Some rc when (Options.print_implicits()) ->
-              U.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) rc.residual_effect.str
+              U.format4 "(fun %s -> (%s $$ (residual) %s %s))"
+                            (binders_to_string " " bs)
+                            (term_to_string t2)
+                            rc.residual_effect.str
+                            (if Option.isNone rc.residual_typ then "None" else term_to_string (Option.get rc.residual_typ))
             | _ ->
               U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end
