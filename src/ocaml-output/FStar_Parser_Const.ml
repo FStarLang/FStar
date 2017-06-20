@@ -127,14 +127,14 @@ let normalize : FStar_Ident.lident = pconst "normalize"
 let normalize_term : FStar_Ident.lident = pconst "normalize_term" 
 let gen_reset : ((Prims.unit -> Prims.int) * (Prims.unit -> Prims.unit)) =
   let x = FStar_Util.mk_ref (Prims.parse_int "0")  in
-  let gen1 uu____24 = FStar_Util.incr x; FStar_Util.read x  in
-  let reset uu____34 = FStar_Util.write x (Prims.parse_int "0")  in
+  let gen1 uu____27 = FStar_Util.incr x; FStar_Util.read x  in
+  let reset uu____37 = FStar_Util.write x (Prims.parse_int "0")  in
   (gen1, reset) 
 let next_id : Prims.unit -> Prims.int = fst gen_reset 
 let sli : FStar_Ident.lident -> Prims.string =
   fun l  ->
-    let uu____50 = FStar_Options.print_real_names ()  in
-    if uu____50
+    let uu____55 = FStar_Options.print_real_names ()  in
+    if uu____55
     then l.FStar_Ident.str
     else (l.FStar_Ident.ident).FStar_Ident.idText
   
@@ -145,16 +145,16 @@ let const_to_string : FStar_Const.sconst -> Prims.string =
     | FStar_Const.Const_unit  -> "()"
     | FStar_Const.Const_bool b -> if b then "true" else "false"
     | FStar_Const.Const_float x1 -> FStar_Util.string_of_float x1
-    | FStar_Const.Const_string (bytes,uu____59) ->
+    | FStar_Const.Const_string (bytes,uu____65) ->
         FStar_Util.format1 "\"%s\"" (FStar_Util.string_of_bytes bytes)
-    | FStar_Const.Const_bytearray uu____62 -> "<bytearray>"
-    | FStar_Const.Const_int (x1,uu____67) -> x1
+    | FStar_Const.Const_bytearray uu____68 -> "<bytearray>"
+    | FStar_Const.Const_int (x1,uu____73) -> x1
     | FStar_Const.Const_char c ->
         Prims.strcat "'" (Prims.strcat (FStar_Util.string_of_char c) "'")
     | FStar_Const.Const_range r -> FStar_Range.string_of_range r
     | FStar_Const.Const_reify  -> "reify"
     | FStar_Const.Const_reflect l ->
-        let uu____77 = sli l  in FStar_Util.format1 "[[%s.reflect]]" uu____77
+        let uu____83 = sli l  in FStar_Util.format1 "[[%s.reflect]]" uu____83
   
 let mod_prefix_dtuple : Prims.int -> Prims.string -> FStar_Ident.lident =
   fun n1  -> if n1 = (Prims.parse_int "2") then pconst else psconst 
@@ -163,20 +163,20 @@ let mk_tuple_data_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident
   fun n1  ->
     fun r  ->
       let t =
-        let uu____95 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mktuple%s" uu____95  in
-      let uu____96 = psconst t  in FStar_Ident.set_lid_range uu____96 r
+        let uu____104 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mktuple%s" uu____104  in
+      let uu____105 = psconst t  in FStar_Ident.set_lid_range uu____105 r
   
 let mk_dtuple_data_lid : Prims.int -> FStar_Range.range -> FStar_Ident.lident
   =
   fun n1  ->
     fun r  ->
       let t =
-        let uu____104 = FStar_Util.string_of_int n1  in
-        FStar_Util.format1 "Mkdtuple%s" uu____104  in
-      let uu____105 = let uu____106 = mod_prefix_dtuple n1  in uu____106 t
+        let uu____115 = FStar_Util.string_of_int n1  in
+        FStar_Util.format1 "Mkdtuple%s" uu____115  in
+      let uu____116 = let uu____117 = mod_prefix_dtuple n1  in uu____117 t
          in
-      FStar_Ident.set_lid_range uu____105 r
+      FStar_Ident.set_lid_range uu____116 r
   
 let is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool =
   fun f  -> FStar_Util.starts_with (FStar_Ident.text_of_lid f) "Mkdtuple" 

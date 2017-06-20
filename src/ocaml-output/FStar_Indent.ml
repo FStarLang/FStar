@@ -2,18 +2,18 @@ open Prims
 let generate : FStar_Parser_ParseIt.filename Prims.list -> Prims.unit =
   fun filenames  ->
     let parse_and_indent filename =
-      let uu____10 = FStar_Parser_Driver.parse_file filename  in
-      match uu____10 with
+      let uu____11 = FStar_Parser_Driver.parse_file filename  in
+      match uu____11 with
       | (moduls,comments) ->
           let leftover_comments =
             FStar_List.fold_left
               (fun comments1  ->
                  fun module_  ->
-                   let uu____36 =
+                   let uu____37 =
                      FStar_Parser_ToDocument.modul_with_comments_to_document
                        module_ comments1
                       in
-                   match uu____36 with
+                   match uu____37 with
                    | (doc1,comments2) ->
                        (FStar_Pprint.pretty_out_channel
                           (FStar_Util.float_of_string "1.0")
@@ -21,17 +21,17 @@ let generate : FStar_Parser_ParseIt.filename Prims.list -> Prims.unit =
                         comments2)) (FStar_List.rev comments) moduls
              in
           let left_over_doc =
-            let uu____57 =
-              let uu____59 =
-                let uu____61 =
-                  let uu____63 =
+            let uu____58 =
+              let uu____60 =
+                let uu____62 =
+                  let uu____64 =
                     FStar_Parser_ToDocument.comments_to_document
                       leftover_comments
                      in
-                  [uu____63]  in
-                FStar_Pprint.hardline :: uu____61  in
-              FStar_Pprint.hardline :: uu____59  in
-            FStar_Pprint.concat uu____57  in
+                  [uu____64]  in
+                FStar_Pprint.hardline :: uu____62  in
+              FStar_Pprint.hardline :: uu____60  in
+            FStar_Pprint.concat uu____58  in
           FStar_Pprint.pretty_out_channel (FStar_Util.float_of_string "1.0")
             (Prims.parse_int "100") left_over_doc FStar_Util.stdout
        in
