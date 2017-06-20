@@ -65,6 +65,18 @@ let lem_neg_false () = ()
 val lem_neg_true : unit -> Lemma (~True <==> False)
 let lem_neg_true () = ()
 
+val lem_true_iff_p : #p:Type -> Lemma ((True <==> p) <==> p)
+let lem_true_iff_p #p = ()
+
+val lem_false_iff_p : #p:Type -> Lemma ((False <==> p) <==> ~p)
+let lem_false_iff_p #p = ()
+
+val lem_p_iff_true : #p:Type -> Lemma ((p <==> True) <==> p)
+let lem_p_iff_true #p = ()
+
+val lem_p_iff_false : #p:Type -> Lemma ((p <==> False) <==> ~p)
+let lem_p_iff_false #p = ()
+
 val and_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
                                       squash (q <==> q') ->
                                       Lemma ((p /\ q) <==> (p' /\ q'))
@@ -180,6 +192,17 @@ let rec simplify_point = fun () -> (
             else if is_false p then (apply_lemma (quote lem_neg_false);; exact (quote ()))
             else tiff
 
+        | Iff p q ->
+            // After applying the lemma, we might still have more simpl to do,
+            // so add an intermediate step.
+            step;;
+                 if is_true p then apply_lemma (quote lem_true_iff_p)
+            else if is_true q then apply_lemma (quote lem_p_iff_true)
+            else if is_false p then apply_lemma (quote lem_false_iff_p)
+            else if is_false q then apply_lemma (quote lem_p_iff_false)
+            else tiff;;
+            simplify_point
+
         | _ -> tiff
         end
     | _ -> fail "simplify_point: failed precondition: goal should be `g <==> ?u`"
@@ -217,6 +240,9 @@ and recurse : unit -> Tac unit = fun () -> (
         | Not _ ->
             apply_lemma (quote neg_cong);;
             simplify_point
+
+        | Iff _ _ ->
+            seq (apply_lemma (quote iff_cong)) simplify_point
 
         | _ -> tiff
         end
