@@ -1214,10 +1214,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
           let e, c = match tvars, gen_univs with
             | [], [] ->
-              //nothing generalized, or only universes generalized
-              //still need to GC all uvars
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm; N.CompressUvars] env c in
-              let e = N.reduce_uvar_solutions env e in
+              //nothing generalized
               e, c
 
             | _ ->
