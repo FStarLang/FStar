@@ -36,6 +36,15 @@ let from_tac_2 (t: 'a -> 'b -> 'c B.tac): 'a  -> 'b -> 'c __tac =
         let m = t x y in
         interpret_tac m ps
 
+let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
+  fun (x: 'a) ->
+    fun (y: 'b) ->
+      fun (z: 'c) ->
+        fun (ps: proofstate) ->
+          let m = t x y z in
+          interpret_tac m ps
+
+
 let transform_norm_step (s: FStar_Reflection_Syntax.norm_step): FStar_Reflection_Data.norm_step =
   match s with
   | FStar_Reflection_Syntax.Simpl -> FStar_Reflection_Data.Simpl
@@ -82,8 +91,8 @@ let __smt: unit __tac = from_tac_0 B.smt
 (*this is probably unnecessary? also change in Builtins.fst *)
 let smt: unit -> unit -> unit __tac = fun () -> fun ()  -> __smt
 
-let __focus (f: unit __tac): unit __tac = from_tac_1 B.focus (to_tac_0 f)
-let focus: unit E.tactic -> unit -> unit __tac = fun f  -> fun () -> __focus (E.reify_tactic f)
+let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
+let divide: int -> 'a E.tactic -> 'b E.tactic -> ('a * 'b) E.tactic = fun n f g -> fun () -> __divide n (E.reify_tactic f) (E.reify_tactic g)
 
 let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)
 let seq: unit E.tactic -> unit E.tactic -> unit -> unit __tac = fun f  -> fun g  -> fun () -> __seq (E.reify_tactic f) (E.reify_tactic g)

@@ -63,7 +63,7 @@ let rec visit:
   =
   fun callback  ->
     fun uu____460  ->
-      FStar_Tactics_Builtins.focus
+      FStar_Tactics_Derived.focus
         (FStar_Tactics_Derived.or_else callback
            (FStar_Tactics_Effect.bind FStar_Tactics_Builtins.cur_goal
               (fun g  ->
@@ -175,7 +175,7 @@ let unsquash:
                 (fun b  ->
                    FStar_Tactics_Effect.return
                      (FStar_Reflection_Syntax.pack
-                        (FStar_Reflection_Syntax.Tv_Var b)))))
+                        (FStar_Reflection_Data.Tv_Var b)))))
 let or_ind o l r = ()
 let cases_or:
   FStar_Reflection_Types.term -> Prims.unit FStar_Tactics_Effect.tactic =

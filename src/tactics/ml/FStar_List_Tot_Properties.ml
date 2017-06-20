@@ -6,7 +6,7 @@ let rev_length l = ()
 let rec rev_acc_mem l acc x = ()
 let rev_mem l x = ()
 let append_nil_l l = ()
-let rec append_l_nil uu___45_187 = ()
+let rec append_l_nil uu___26_187 = ()
 let append_cons_l hd1 tl1 l = ()
 let rec append_l_cons hd1 tl1 l = ()
 let rec append_assoc l1 l2 l3 = ()
@@ -21,8 +21,8 @@ let rec append_inv_head l l1 l2 = ()
 let rec append_inv_tail l l1 l2 = ()
 let rec append_length_inv_head left1 right1 left2 right2 = ()
 let append_length_inv_tail left1 right1 left2 right2 = ()
-let rec rev' uu___46_731 =
-  match uu___46_731 with
+let rec rev' uu___27_731 =
+  match uu___27_731 with
   | [] -> []
   | hd1::tl1 -> FStar_List_Tot_Base.op_At (rev' tl1) [hd1]
 let rev'T uu____747 = rev'
@@ -30,9 +30,9 @@ let rec rev_acc_rev' l acc = ()
 let rev_rev' l = ()
 let rec rev'_append l1 l2 = ()
 let rev_append l1 l2 = ()
-let rec rev'_involutive uu___47_850 = ()
+let rec rev'_involutive uu___28_850 = ()
 let rev_involutive l = ()
-let rec rev'_list_ind p uu___48_895 = ()
+let rec rev'_list_ind p uu___29_895 = ()
 let rev_ind p l = ()
 let rec map_lemma f l = ()
 let rec partition_mem f l x = ()
@@ -41,8 +41,8 @@ let rec partition_mem_p_forall p l = ()
 let rec partition_count f l x = ()
 let rec partition_count_forall f l = ()
 let rec sortWith_permutation f l = ()
-let rec sorted f uu___49_1268 =
-  match uu___49_1268 with
+let rec sorted f uu___30_1268 =
+  match uu___30_1268 with
   | [] -> true
   | uu____1274::[] -> true
   | x::y::tl1 -> (f x y) && (sorted f (y :: tl1))
