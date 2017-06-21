@@ -42,4 +42,4 @@ let length (#n:nat) (p:prepath n) = S.length p
 
 let prefix (#n:nat) (p1 p2:prepath n) = length p1 <= length p2 /\ (forall (i:_in p1). p1 @^ i == p2 @^ ((i <: nat) <: _in p2))
 
-let elementary_cycle (#n:nat) (#g:graph0 n) (p:path g) = elementary (S.slice p 1 (length p)) /\ from p == to p
+let elementary_cycle (#n:nat) (#g:graph0 n) (p:path g) = elementary (S.slice p 0 (length p - 1)) /\ from p == to p
