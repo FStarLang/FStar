@@ -628,8 +628,8 @@ let fst3 uu____1880 = match uu____1880 with | (x,uu____1885,uu____1886) -> x
 let snd3 uu____1904 = match uu____1904 with | (uu____1908,x,uu____1910) -> x 
 let thd3 uu____1928 = match uu____1928 with | (uu____1932,uu____1933,x) -> x 
 let mk_width : Prims.string -> width option =
-  fun uu___120_1939  ->
-    match uu___120_1939 with
+  fun uu___119_1939  ->
+    match uu___119_1939 with
     | "UInt8" -> Some UInt8
     | "UInt16" -> Some UInt16
     | "UInt32" -> Some UInt32
@@ -641,8 +641,8 @@ let mk_width : Prims.string -> width option =
     | uu____1941 -> None
   
 let mk_bool_op : Prims.string -> op option =
-  fun uu___121_1946  ->
-    match uu___121_1946 with
+  fun uu___120_1946  ->
+    match uu___120_1946 with
     | "op_Negation" -> Some Not
     | "op_AmpAmp" -> Some And
     | "op_BarBar" -> Some Or
@@ -653,8 +653,8 @@ let mk_bool_op : Prims.string -> op option =
 let is_bool_op : Prims.string -> Prims.bool =
   fun op  -> (mk_bool_op op) <> None 
 let mk_op : Prims.string -> op option =
-  fun uu___122_1958  ->
-    match uu___122_1958 with
+  fun uu___121_1958  ->
+    match uu___121_1958 with
     | "add" -> Some Add
     | "op_Plus_Hat" -> Some Add
     | "add_mod" -> Some AddW
@@ -741,21 +741,21 @@ let extend : env -> Prims.string -> Prims.bool -> env =
   fun env  ->
     fun x  ->
       fun is_mut  ->
-        let uu___127_2060 = env  in
+        let uu___126_2060 = env  in
         {
           names = ({ pretty = x; mut = is_mut } :: (env.names));
-          names_t = (uu___127_2060.names_t);
-          module_name = (uu___127_2060.module_name)
+          names_t = (uu___126_2060.names_t);
+          module_name = (uu___126_2060.module_name)
         }
   
 let extend_t : env -> Prims.string -> env =
   fun env  ->
     fun x  ->
-      let uu___128_2069 = env  in
+      let uu___127_2069 = env  in
       {
-        names = (uu___128_2069.names);
+        names = (uu___127_2069.names);
         names_t = (x :: (env.names_t));
-        module_name = (uu___128_2069.module_name)
+        module_name = (uu___127_2069.module_name)
       }
   
 let find_name : env -> Prims.string -> name =
@@ -845,8 +845,8 @@ and translate_flags :
   FStar_Extraction_ML_Syntax.c_flag Prims.list -> flag Prims.list =
   fun flags  ->
     FStar_List.choose
-      (fun uu___123_2358  ->
-         match uu___123_2358 with
+      (fun uu___122_2358  ->
+         match uu___122_2358 with
          | FStar_Extraction_ML_Syntax.Private  -> Some Private
          | FStar_Extraction_ML_Syntax.NoExtract  -> Some NoExtract
          | FStar_Extraction_ML_Syntax.Attribute "c_inline" -> Some CInline
@@ -882,8 +882,8 @@ and translate_decl :
           ->
           let assumed =
             FStar_Util.for_some
-              (fun uu___124_2389  ->
-                 match uu___124_2389 with
+              (fun uu___123_2389  ->
+                 match uu___123_2389 with
                  | FStar_Extraction_ML_Syntax.Assumed  -> true
                  | uu____2390 -> false) flags
              in
@@ -898,8 +898,8 @@ and translate_decl :
                    match uu____2397 with
                    | (name1,uu____2401) -> extend_t env2 name1) env1 tvars
              in
-          let rec find_return_type uu___125_2405 =
-            match uu___125_2405 with
+          let rec find_return_type uu___124_2405 =
+            match uu___124_2405 with
             | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____2406,uu____2407,t)
                 -> find_return_type t
             | t -> t  in
@@ -963,8 +963,8 @@ and translate_decl :
           ->
           let assumed =
             FStar_Util.for_some
-              (fun uu___124_2500  ->
-                 match uu___124_2500 with
+              (fun uu___123_2500  ->
+                 match uu___123_2500 with
                  | FStar_Extraction_ML_Syntax.Assumed  -> true
                  | uu____2501 -> false) flags
              in
@@ -979,8 +979,8 @@ and translate_decl :
                    match uu____2508 with
                    | (name1,uu____2512) -> extend_t env2 name1) env1 tvars
              in
-          let rec find_return_type uu___125_2516 =
-            match uu___125_2516 with
+          let rec find_return_type uu___124_2516 =
+            match uu___124_2516 with
             | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____2517,uu____2518,t)
                 -> find_return_type t
             | t -> t  in
@@ -1276,8 +1276,8 @@ and translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
           ->
           let is_mut =
             FStar_Util.for_some
-              (fun uu___126_3139  ->
-                 match uu___126_3139 with
+              (fun uu___125_3139  ->
+                 match uu___125_3139 with
                  | FStar_Extraction_ML_Syntax.Mutable  -> true
                  | uu____3140 -> false) flags
              in
