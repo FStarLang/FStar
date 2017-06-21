@@ -30,24 +30,6 @@ private type ref' (a:Type0) :Type0 = {
 
 abstract type ref (a:Type0) = ref' a
 
-type rtti =
-  | Bool
-
-let type_of (r:rtti) :Type0 =
-  match r with
-  | Bool -> bool
-
-let foo (rt:rtti) (r:ref (type_of rt)) = assert False
-
-type rtti =
-  | Bool
-
-let type_of (r:rtti) :Type0 =
-  match r with
-  | Bool -> bool
-
-let foo (rt:rtti) (r:ref (type_of rt)) = assert False
-
 abstract val addr_of: #a:Type0 -> ref a -> GTot nat
 let addr_of #a r = r.addr
 
@@ -189,40 +171,87 @@ abstract noeq type meta_data = {
 private noeq type mem' =
   |C: hi:hi_view -> lo:lo_view -> md:meta_data -> mem'
 
-let non_overlapping (a1:nat) (b1:nat{a1 <= b1}) (a2:nat) (b2:nat{a2 <= b2}) :Type0 =
-  (a1 < a2 /\ b1 < a2) \/
-  (a2 < a1 /\ b2 < a1)
+abstract let non_overlapping (a1:nat) (b1:nat{a1 <= b1}) (a2:nat) (b2:nat{a2 <= b2}) :Type0 = True
+  (* (a1 < a2 /\ b1 < a2) \/ *)
+  (* (a2 < a1 /\ b2 < a1) *)
 
 assume val read_lo (lo:lo_view) (lo_start:nat) (lo_end:nat{lo_end >= lo_start})
   :(b:bytes{Seq.length b = lo_end - lo_start + 1 /\
             (forall (i:nat). (i < Seq.length b) ==> Seq.index b i = lo (lo_start + i))})
 
 abstract let wf_mem (m:mem') =
-  forall (a:Type0) (r:ref a). m.hi `contains` r ==>
-    (let (rtti, lo_start, lo_end) = m.md.hi_to_lo (addr_of r) in
-     type_of rtti == a                    /\  //rtti matches the type of the reference
-     lo_end - lo_start + 1 = size_of rtti /\  //the range has size per the marshaling of rtti
-     read_lo m.lo lo_start lo_end == marshal #rtti (hsel m.hi r) /\  //lo view is in sync with the hi view value
+  (forall (rt:rtti) (r:ref (type_of rt)). m.hi `contains` r ==>
+    (let (rtti', lo_start, lo_end) = m.md.hi_to_lo (addr_of r) in
+     rt == rtti'                    /\  //rtti matches the type of the reference
+     lo_end - lo_start + 1 = size_of rt /\  //the range has size per the marshaling of rtti
+     read_lo m.lo lo_start lo_end == marshal #rt (hsel m.hi r) /\  //lo view is in sync with the hi view value
      (forall (b:Type0) (r':ref b). (m.hi `contains` r' /\ addr_of r' <> addr_of r) ==>  //for all other different r'
 			      (let (_, lo_start', lo_end') = m.md.hi_to_lo (addr_of r') in
-		               lo_start' <= lo_end' /\ non_overlapping lo_start lo_end lo_start' lo_end')))  //the lo-level addresses are non-overlapping
+		               lo_start' <= lo_end' /\ non_overlapping lo_start lo_end lo_start' lo_end'))))  //the lo-level addresses are non-overlapping
 
 abstract type mem = m:mem'{wf_mem m}
 
 abstract let mcontains (#rt:rtti) (m:mem) (r:ref (type_of rt)) = m.hi `contains` r
 
+     (* /\  //lo view is in sync with the hi view value *)
+     (* (forall (b:Type0) (r':ref b). (m.hi `contains` r' /\ addr_of r' <> addr_of r) ==>  //for all other different r' *)
+     (* 			      (let (_, lo_start', lo_end') = m.md.hi_to_lo (addr_of r') in *)
+     (* 		               lo_start' <= lo_end' /\ non_overlapping lo_start lo_end lo_start' lo_end'))))  //the lo-level addresses are non-overlapping *)
+
+private let lemma_mcontains_contains (#rt:rtti) (m:mem) (r:ref (type_of rt))
+  :Lemma (requires True)
+         (ensures  (m `mcontains` r == m.hi `contains` r))
+   [SMTPat (m `mcontains` r)]
+  = admit ()
+
 abstract let munused_in (#rt:rtti) (r:ref (type_of rt)) (m:mem) = r `unused_in` m.hi
 
-let mfresh (#rt:rtti) (r:ref (type_of rt)) (m0:mem) (m1:mem) = fresh r m0.hi m1.hi
+private let lemma_munused_in_unused_in (#rt:rtti) (r:ref (type_of rt)) (m:mem)
+  :Lemma (requires True)
+         (ensures  (r `munused_in` m == r `unused_in` m.hi))
+   [SMTPat (r `munused_in` m)]
+  = admit ()
 
-val sel: #rt:rtti -> mem -> ref (type_of rt) -> GTot (type_of rt)
+abstract let get_hi_view (m:mem) :heap = m.hi
+
+let mfresh (#rt:rtti) (r:ref (type_of rt)) (m0:mem) (m1:mem) =
+  r `munused_in` m0 /\ m1 `mcontains` r
+
+private let lemma_get_hi_view (m:mem)
+  :Lemma (requires True)
+         (ensures  (get_hi_view m == m.hi))
+   [SMTPat (get_hi_view m)]
+  = admit ()
+
+abstract val sel: #rt:rtti -> mem -> ref (type_of rt) -> GTot (type_of rt)
 let sel #rt m r = hsel m.hi r
+
+private let lemma_sel_hsel (#rt:rtti) (m:mem) (r:ref (type_of rt))
+  :Lemma (requires True)
+         (ensures  (sel m r = hsel m.hi r))
+   [SMTPat (sel m r)]
+  = admit ()
 
 assume val upd: #rt:rtti -> m0:mem -> r:ref (type_of rt){m0 `mcontains` r} -> x:(type_of rt) -> GTot mem
          (* -> GTot (m1:mem{m1.hi = hupd m0.hi r x /\ *)
 	 (*                m1.md = m0.md          /\ *)
 	 (*                (let (_, lo_start, lo_end) = m0.md.hi_to_lo (addr_of r) in *)
 	 (* 		 (read_lo m1.lo lo_start lo_end = marshal #rt x))}) *)
+
+private val lemma_upd_sync:
+  #rt:rtti -> m0:mem -> r:ref (type_of rt){m0 `mcontains` r} -> x:(type_of rt)
+  -> Lemma (let m1 = upd m0 r x in
+           m1.hi == hupd m0.hi r x /\
+	   m1.md = m0.md)
+    [SMTPat (upd m0 r x)]
+let lemma_upd_sync #rt m0 r x = admit ()  //AR: hoping that lemmas for hupd give us framing for other refs in the heap
+
+abstract let get_lo_view (m:mem) :lo_view = m.lo
+
+abstract let get_lo_range (#rt:rtti) (m:mem) (r:ref (type_of rt))
+  :GTot (t:(rtti * nat * nat){let Mktuple3 _ s e = t in s <= e})
+  = let (rt, s , e) = m.md.hi_to_lo (addr_of r) in
+    (rt, s, e)
 
 assume val alloc: #rt:rtti -> m0:mem -> x:(type_of rt) -> mm:bool -> (ref (type_of rt) * mem)
                   (* -> (t:(ref (type_of rt) * mem){let (r, m1) = t in *)
@@ -231,21 +260,46 @@ assume val alloc: #rt:rtti -> m0:mem -> x:(type_of rt) -> mm:bool -> (ref (type_
 		  (* 				(let (_, lo_start, lo_end) = m1.md.hi_to_lo (addr_of r) in *)
 		  (* 				 read_lo m1.lo lo_start lo_end = marshal #rt x))}) *)
 
+private let lemma_alloc_md_and_sync (#rt:rtti) (m0:mem) (x:type_of rt) (mm:bool)
+  :Lemma (requires True)
+         (ensures (let r, m1 = alloc m0 x mm in
+                   (r, m1.hi) == halloc #(type_of rt) m0.hi x mm /\
+		   mfresh r m0 m1 /\
+	           (forall (rt:rtti) (r':ref (type_of rt)). addr_of r' <> addr_of r ==> get_lo_range m1 r' == get_lo_range m0 r') /\
+	           (forall (rt:rtti) (r:ref (type_of rt)). m0 `mcontains` r ==> m1 `mcontains` r) /\
+	           (let (_, lo_start, lo_end) = get_lo_range m1 r in
+	            read_lo (get_lo_view m1) lo_start lo_end = marshal #rt x)))
+   [SMTPat (alloc m0 x mm)]
+  = admit ()
+
 assume val free_mm: #rt:rtti -> m:mem -> r:ref (type_of rt){m `mcontains` r} -> mem
 
-assume val sync:
-  m0:mem -> s:set hi_addr -> lo:lo_view ->
-  Pure (option mem) (requires (forall (a:nat). S.mem a s \/
-                                        (let (_, lo_start, lo_end) = m0.md.hi_to_lo a in
-		     	                 read_lo m0.lo lo_start lo_end = read_lo lo lo_start lo_end)))
-	   (ensures  (fun m_opt ->
-	              ((forall (a:nat). S.mem a s ==>
-		                 (let (rt, lo_start, lo_end) = m0.md.hi_to_lo a in
-				  Some? (unmarshal rt (read_lo lo lo_start lo_end)))) ==> Some? m_opt) /\
-		      (Some? m_opt ==>
-		       (let m1 = Some?.v m_opt in
-		        m1.lo == lo /\ m1.md == m0.md))))
+assume val store:
+  lo:lo_view -> s:lo_addr -> e:lo_addr{s <= e} -> b:bytes{Seq.length b = e - s + 1} ->
+  Tot (r:lo_view{read_lo r s e == b /\
+                 (forall (s':lo_addr) (e':lo_addr).
+		    (s' <= e' /\ non_overlapping s' e' s e) ==> read_lo lo s' e' == read_lo r s' e')})
 
+assume val sync: m0:mem -> s:set hi_addr -> lo:lo_view -> Tot (option mem)
+
+private let lemma_sync (m0:mem) (s:set hi_addr)  
+  (lo:lo_view{let m_lo = get_lo_view m0 in  
+              (forall (rt:rtti) (r:ref (type_of rt)). S.mem (addr_of r) s \/
+                 (let (_, lo_start, lo_end) = get_lo_range m0 r in
+	          read_lo m_lo lo_start lo_end = read_lo lo lo_start lo_end)) /\  //forall references not in the set s, their lo projection remains same as m0, we should be able to derive that their hi projection also remains same from Wf predicate on mem
+	      (forall (rt:rtti) (r:ref (type_of rt)).  //and forall references in s, their lo projection in lo can be unmarshaled back to hi view
+	         (m0 `mcontains` r /\ S.mem (addr_of r) s) ==>
+		 (let (rt, s, e) = get_lo_range m0 r in
+		  Some? (unmarshal rt (read_lo lo s e))))})
+  :Lemma (requires True)
+         (ensures (let m_opt = sync m0 s lo in
+	           Some? m_opt /\  //syncing succeeds
+                   (let m1 = Some?.v m_opt in
+		    get_lo_view m1 == lo /\
+                    (forall (rt:rtti) (r:ref (type_of rt)). get_lo_range m0 r == get_lo_range m1 r))))
+	 [SMTPat (sync m0 s lo)]
+  = admit ()
+          
 val lemma_contains_implies_used (#rt:rtti) (m:mem) (r:ref (type_of rt))
   :Lemma (requires (m `mcontains` r))
          (ensures  (~ (r `munused_in` m)))
@@ -267,15 +321,16 @@ let lemma_distinct_addrs_unused #rt_a #rt_b m r1 r2 = ()
 val lemma_alloc (#rt:rtti) (m0:mem) (x:(type_of rt)) (mm:bool)
   :Lemma (requires True)
          (ensures  (let r, m1 = alloc m0 x mm in
-                    mfresh r m0 m1 /\ is_mm r = mm))
+                    mfresh r m0 m1 /\ is_mm r = mm /\ sel m1 r == x /\
+		    (forall (rt':rtti) (r':ref (type_of rt')). addr_of r' <> addr_of r ==> sel m1 r' == sel m0 r')))
 	 [SMTPat (alloc m0 x mm)]
 let lemma_alloc #rt m0 x mm = ()
 
-val lemma_sel_same_addr (rt:rtti) (m:mem') (r1:ref (type_of rt)) (r2:ref (type_of rt))
+val lemma_sel_same_addr (rt:rtti) (m:mem) (r1:ref (type_of rt)) (r2:ref (type_of rt))
   :Lemma (requires (m `mcontains` r1 /\ addr_of r1 = addr_of r2))
          (ensures  (m `mcontains` r2 /\ sel m r1 == sel m r2))
 	 [SMTPat (sel m r1); SMTPat (sel m r2)]
-let lemma_sel_same_addr rt m r1 r2 = assert False
+let lemma_sel_same_addr rt m r1 r2 = ()
 
 val lemma_sel_upd1 (#rt:rtti) (m:mem) (r1:ref (type_of rt){m `mcontains` r1}) (x:(type_of rt)) (r2:ref (type_of rt))
   :Lemma (requires (addr_of r1 = addr_of r2))
@@ -321,16 +376,40 @@ let lemma_upd_contains_different_addr #rt_a #rt_b m r1 x r2 = ()
 
 (***** Flat view lemmas *****)
 
-abstract let get_lo_view (m:mem) :lo_view = m.lo
-
-abstract let get_lo_range (#rt:rtti) (m:mem) (r:ref (type_of rt)) :GTot (t:(nat * nat){fst  t <= snd t})
-  = let (_, s , e) = m.md.hi_to_lo (addr_of r) in
-    (s, e)
+private let lemma_get_lo_range (#rt:rtti) (m:mem) (r:ref (type_of rt))
+  :Lemma (requires True)
+         (ensures  (let _, s, e = get_lo_range m r in
+	            let (_, lo_start, lo_end) = m.md.hi_to_lo r.addr in
+		    s == lo_start /\ e == lo_end))
+   [SMTPat (get_lo_range m r)]
+  = admit ()
 
 let lemma_consistent_views (#rt:rtti) (m:mem) (r:ref (type_of rt){m `mcontains` r})
-  :Lemma (read_lo (get_lo_view m) (fst (get_lo_range m r)) (snd (get_lo_range m r)) =
-          marshal (sel m r))
+  :Lemma (let _, s, e = get_lo_range m r in
+          read_lo (get_lo_view m) s e = marshal (sel m r))
   = ()
+
+assume Wf_mem:
+  (forall (m:mem).
+            (forall (rt:rtti) (r:ref (type_of rt)). m `mcontains` r ==>
+                                              (let lo = get_lo_view m in
+                                               let rt', s, e = get_lo_range m r in
+                                               read_lo lo s e == marshal #rt (sel m r) /\
+					       rt == rt' /\
+					       Some? (unmarshal rt (read_lo lo s e)) /\
+					       Some?.v (unmarshal rt (read_lo lo s e)) == sel m r)) /\
+	    (forall (rt_a:rtti) (rt_b:rtti) (r1:ref (type_of rt_a)) (r2:ref (type_of rt_b)).
+	       (let _, s1, e1 = get_lo_range #rt_a m r1 in
+	        let _, s2, e2 = get_lo_range #rt_b m r2 in
+		s1 <= e1 /\ s2 <= e2 /\
+	        (addr_of r1 <> addr_of r2 ==> non_overlapping s1 e1 s2 e2))))
+
+
+    (* (let (rtti', lo_start, lo_end) = m.md.hi_to_lo (addr_of r) in *)
+    (*  rt == rtti'                    /\  //rtti matches the type of the reference *)
+    (*  lo_end - lo_start + 1 = size_of rt /\  //the range has size per the marshaling of rtti *)
+    (*  read_lo m.lo lo_start lo_end == marshal #rt (hsel m.hi r))) *)
+
 
 (* val lemma_contains_upd_modifies (#a:Type0) (h:heap) (r:ref a) (x:a) *)
 (*   :Lemma (requires (h `contains` r)) *)
