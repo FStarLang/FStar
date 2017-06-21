@@ -104,26 +104,29 @@ let lid_as_data_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
         (Some FStar_Syntax_Syntax.Data_ctor) in
     FStar_Syntax_Syntax.fv_to_tm uu____258
+let fstar_refl_types_lid: Prims.string -> FStar_Ident.lident =
+  fun s  -> fstar_refl_lid ["Types"; s]
+let fstar_refl_syntax_lid: Prims.string -> FStar_Ident.lident =
+  fun s  -> fstar_refl_lid ["Syntax"; s]
+let mk_refl_types_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
+  fun s  -> let uu____271 = fstar_refl_types_lid s in lid_as_tm uu____271
 let mk_refl_syntax_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
-  fun s  ->
-    let uu____263 = fstar_refl_lid ["Syntax"; s] in lid_as_tm uu____263
+  fun s  -> let uu____276 = fstar_refl_syntax_lid s in lid_as_tm uu____276
 let fstar_refl_lid_as_data_tm:
   Prims.string Prims.list -> FStar_Syntax_Syntax.term =
-  fun s  -> let uu____270 = fstar_refl_lid s in lid_as_data_tm uu____270
+  fun s  -> let uu____283 = fstar_refl_lid s in lid_as_data_tm uu____283
 let fstar_refl_term: FStar_Syntax_Syntax.term =
-  mk_refl_syntax_lid_as_term "term"
+  mk_refl_types_lid_as_term "term"
 let fstar_refl_env: FStar_Syntax_Syntax.term =
-  mk_refl_syntax_lid_as_term "env"
+  mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar: FStar_Syntax_Syntax.term =
-  mk_refl_syntax_lid_as_term "fv"
+  mk_refl_types_lid_as_term "fv"
 let fstar_refl_binder: FStar_Syntax_Syntax.term =
-  mk_refl_syntax_lid_as_term "binder"
+  mk_refl_types_lid_as_term "binder"
 let fstar_refl_binders: FStar_Syntax_Syntax.term =
   mk_refl_syntax_lid_as_term "binders"
 let fstar_refl_term_view: FStar_Syntax_Syntax.term =
   mk_refl_syntax_lid_as_term "term_view"
-let fstar_refl_syntax_lid: Prims.string -> FStar_Ident.lident =
-  fun s  -> fstar_refl_lid ["Syntax"; s]
 let ref_Tv_Var_lid: FStar_Ident.lident = fstar_refl_syntax_lid "Tv_Var"
 let ref_Tv_FVar_lid: FStar_Ident.lident = fstar_refl_syntax_lid "Tv_FVar"
 let ref_Tv_App_lid: FStar_Ident.lident = fstar_refl_syntax_lid "Tv_App"
@@ -158,11 +161,11 @@ type order =
   | Eq
   | Gt
 let uu___is_Lt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____279 -> false
+  fun projectee  -> match projectee with | Lt  -> true | uu____288 -> false
 let uu___is_Eq: order -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____284 -> false
+  fun projectee  -> match projectee with | Eq  -> true | uu____293 -> false
 let uu___is_Gt: order -> Prims.bool =
-  fun projectee  -> match projectee with | Gt  -> true | uu____289 -> false
+  fun projectee  -> match projectee with | Gt  -> true | uu____298 -> false
 let ord_Lt_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange
 let ord_Eq_lid: FStar_Ident.lident =

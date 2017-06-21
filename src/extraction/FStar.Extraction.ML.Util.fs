@@ -318,35 +318,72 @@ let rec uncurry_mlty_fun t =
         a::args, res
     | _ -> [], t
 
-(* helper functions used to extract, alongside a tactic, its corresponding call 
+(* helper functions used to extract, alongside a tactic, its corresponding call
    to FStar.Tactics.Native.register_tactic *)
+module RD = FStar.Reflection.Data
+
+type emb_decl =
+    | Embed
+    | Unembed
+
 let lid_to_name l = MLE_Name (mlpath_of_lident l)
 let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l)
 let str_to_name s = lid_to_name (lid_of_str s)
 let str_to_top_name s = lid_to_top_name (lid_of_str s)
 
-let mk_tac_embedding_path t =
-    (match t.n with
-     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_Reflection_Basic.embed_unit"
-     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> "FStar_Reflection_Basic.embed_string"
-     //TODO add the others
-     | _ -> failwith (BU.format1 "Embedding not defined for type %s" (Print.term_to_string t))) |> str_to_name
+let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s)
+let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s)
+let mk_embedding (m: emb_decl) (s: string) =
+    match m with
+    | Embed -> fstar_refl_basic_prefix ("embed_" ^ s)
+    | Unembed -> fstar_refl_basic_prefix ("unembed_" ^ s)
 
-let mk_tac_unembedding_path t =
-    (match t.n with
-     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_Reflection_Basic.unembed_unit"
-     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> "FStar_Reflection_Basic.unembed_string"
-     //TODO add the others
-     | _ -> failwith (BU.format1 "Unembedding not defined for type %s" (Print.term_to_string t))) |> str_to_name
+let rec mk_tac_param_type (t: term): mlexpr' =
+    match (FStar.Syntax.Subst.compress t).n with
+    | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> fstar_tc_common_prefix "t_unit"
+    | Tm_fvar fv when fv_eq_lid fv C.string_lid -> fstar_tc_common_prefix "t_string"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> fstar_tc_common_prefix "t_binder"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> fstar_tc_common_prefix "t_term"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> fstar_tc_common_prefix "t_fv"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binder") -> fstar_tc_common_prefix "t_binders"
+    | Tm_app (h, args) ->
+       (match (FStar.Syntax.Subst.compress h).n with
+        | Tm_uinst (h', _) ->
+           (match (FStar.Syntax.Subst.compress h').n with
+            | Tm_fvar fv when fv_eq_lid fv C.list_lid ->
+                let arg_term = fst (List.hd args) in
+                MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_list_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term])
+            | _ -> failwith ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h'))) )
+        | _ -> failwith "Impossible")
+     | _ -> failwith ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
 
-let mk_tac_param_type t =
-    (match t.n with
-     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> "FStar_TypeChecker_Common.t_unit"
-     //TODO add the others and print term when not found
-     | _ -> failwith "Type term not defined for ") |> str_to_name
+let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
+    match (FStar.Syntax.Subst.compress t).n with
+    | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> mk_embedding m "unit"
+    | Tm_fvar fv when fv_eq_lid fv C.string_lid -> mk_embedding m "string"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> mk_embedding m "binder"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> mk_embedding m "term"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> mk_embedding m "fvar"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binders") -> mk_embedding m "binders"
+    | Tm_app (h, args) ->
+        (match (FStar.Syntax.Subst.compress h).n with
+         | Tm_uinst (h', _) ->
+            let ht, hargs, type_arg =
+                (match (FStar.Syntax.Subst.compress h').n with
+                 | Tm_fvar fv when fv_eq_lid fv C.list_lid ->
+                     let arg_term = fst (List.hd args) in
+                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
+                //  | Tm_fvar fv when fv_eq_lid fv C.option_lid -> TODO
+                 | _ -> failwith ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))) in
+            let hargs =
+                match m with
+                | Embed -> hargs @ [type_arg]
+                | Unembed -> hargs in
+            MLE_App (with_ty MLTY_Top (mk_embedding m ht), List.map (with_ty MLTY_Top) hargs)
+         | _ -> failwith "Impossible")
+    | _ -> failwith ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
 
 let mk_interpretation_fun tac_lid assm_lid t bs =
-    // List.iter (fun x -> BU.print1 "Binder %s\n" (FStar.Syntax.Print.term_to_string (fst x).sort)) bs;
     let arg_types = List.map (fun x -> (fst x).sort) bs in
     let arity = List.length bs in
     let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
@@ -354,7 +391,7 @@ let mk_interpretation_fun tac_lid assm_lid t bs =
     let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
     let args =
         [str_to_name "ps"; tac_fun] @
-        (List.map mk_tac_unembedding_path arg_types) @
-        [mk_tac_embedding_path t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
+        (List.map (mk_tac_embedding_path Unembed) arg_types) @
+        [mk_tac_embedding_path Embed t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
     let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
     MLE_Fun ([(("ps", 0), MLTY_Top); (("args", 0), MLTY_Top)], app)

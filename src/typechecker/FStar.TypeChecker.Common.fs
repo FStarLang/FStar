@@ -72,6 +72,15 @@ let t_float  = tconst C.float_lid
 let t_char   = tabbrev C.char_lid
 let t_range  = tconst C.range_lid
 let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [S.as_arg t_unit] (Some Util.ktype0.n) Range.dummyRange
+
+module RD = FStar.Reflection.Data
+let t_binder = tabbrev <| RD.fstar_refl_types_lid "binder"
+let t_term = tabbrev <| RD.fstar_refl_types_lid "term"
+let t_fv = tabbrev <| RD.fstar_refl_types_lid "fv"
+let t_binders = tabbrev <| RD.fstar_refl_syntax_lid "binders"
+let t_list_binder = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [S.as_arg t_binder] (Some Util.ktype0.n) Range.dummyRange
+let t_list_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [S.as_arg t] (Some Util.ktype0.n) Range.dummyRange
+
 let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) (Some t_unit.n) Range.dummyRange
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in

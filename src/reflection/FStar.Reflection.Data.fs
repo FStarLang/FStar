@@ -33,18 +33,20 @@ let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummy
 let lid_as_tm l = lid_as_fv l Delta_constant None |> fv_to_tm // Move to syntax util?
 let lid_as_data_tm l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
 
-let mk_refl_syntax_lid_as_term (s:string) = lid_as_tm (fstar_refl_lid ["Syntax"; s])
+let fstar_refl_types_lid s = fstar_refl_lid ["Types"; s]
+let fstar_refl_syntax_lid s = fstar_refl_lid ["Syntax"; s]
+
+let mk_refl_types_lid_as_term (s:string) = lid_as_tm (fstar_refl_types_lid s)
+let mk_refl_syntax_lid_as_term (s:string) = lid_as_tm (fstar_refl_syntax_lid s)
 let fstar_refl_lid_as_data_tm s = lid_as_data_tm (fstar_refl_lid s)
 
 (* abstract types *)
-let fstar_refl_term      = mk_refl_syntax_lid_as_term "term"
-let fstar_refl_env       = mk_refl_syntax_lid_as_term "env"
-let fstar_refl_fvar      = mk_refl_syntax_lid_as_term "fv" //TODO: be consistent
-let fstar_refl_binder    = mk_refl_syntax_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
+let fstar_refl_term      = mk_refl_types_lid_as_term "term"
+let fstar_refl_env       = mk_refl_types_lid_as_term "env"
+let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
+let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
 let fstar_refl_binders   = mk_refl_syntax_lid_as_term "binders"
 let fstar_refl_term_view = mk_refl_syntax_lid_as_term "term_view"
-
-let fstar_refl_syntax_lid s = fstar_refl_lid ["Syntax"; s]
 
 (* term_view *)
 let ref_Tv_Var_lid     = fstar_refl_syntax_lid "Tv_Var"
