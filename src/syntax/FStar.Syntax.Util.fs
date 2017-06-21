@@ -224,7 +224,8 @@ let is_named_tot c =
         | GTotal _ -> false
 
 let is_total_comp c =
-    comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+    lid_equals (comp_effect_name c) Const.effect_Tot_lid
+    || comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_total_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid || c.cflags |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 

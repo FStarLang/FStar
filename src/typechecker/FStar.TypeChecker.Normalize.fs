@@ -203,7 +203,7 @@ let norm_universe cfg env u =
                           else failwith "Universe variable not found"
             end
           | U_unif _ when cfg.steps |> List.contains CheckNoUvars ->
-            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s" 
+            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
                                        (Range.string_of_range (Env.get_range cfg.tcenv))
                                        (Print.univ_to_string u))
 
@@ -1479,7 +1479,8 @@ and ghost_to_pure_aux cfg env c =
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
-                   {ct with effect_name=pure_eff}
+                   let flags = if Ident.lid_equals pure_eff Const.effect_Tot_lid then TOTAL::ct.flags else ct.flags in
+                   {ct with effect_name=pure_eff; flags=flags}
                  | None ->
                     let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
                     {ct with effect_name=Const.effect_PURE_lid} in
