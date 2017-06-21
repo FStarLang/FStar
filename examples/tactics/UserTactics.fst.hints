@@ -1,0 +1,246 @@
+[
+  "öf|*å¥¦y§;Ê\u001bXÍj)",
+  [
+    [ "UserTactics.test_print_goal", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.simple_equality_assertions",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [ "UserTactics.simple_equality_assertions", 5, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.simple_equality_assertions",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions",
+      7,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [ "UserTactics.simple_equality_assertions", 8, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.explicitly_trigger_normalizer", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.explicitly_trigger_normalizer", 2, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.explicitly_trigger_normalizer", 3, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.implicitly_unfolfed_before_preprocessing",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "UserTactics.implicitly_unfolfed_before_preprocessing",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_UserTactics.visible_boolean",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [
+      "UserTactics.implicitly_unfolfed_before_preprocessing",
+      3,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      4,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      7,
+      2,
+      1,
+      [
+        "@query", "equation_UserTactics.visible_boolean",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      8,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      9,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      10,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.simple_equality_assertions_within_a_function",
+      11,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [ "UserTactics.local_let_bindings", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.local_let_bindings", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.partially_solved_using_smt",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_UserTactics_Tm_refine_d53b3bc1e4d2c8cd792de29515c351c9"
+      ],
+      0
+    ],
+    [
+      "UserTactics.partially_solved_using_smt",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_UserTactics.Pred1_saturated", "int_typing" ],
+      0
+    ],
+    [
+      "UserTactics.partially_solved_using_smt",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_UserTactics.Pred1_saturated", "int_typing" ],
+      0
+    ],
+    [ "UserTactics.scanning_environment", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.scanning_environment", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.lemma_mul_comm",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply", "unit_typing" ],
+      0
+    ],
+    [ "UserTactics.test_exact", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.test_exact", 2, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.test_apply", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.test_apply", 2, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.mul_commute_ascription", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.test_apply_ascription'", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.test_apply_ascription'",
+      2,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0
+    ],
+    [ "UserTactics.test_inspect", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.test_inspect", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]

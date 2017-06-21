@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -36,6 +37,7 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
+module C = FStar.Parser.Const
 
 
 type env = {
@@ -55,7 +57,6 @@ let empty env tc_const = {
   subst = [];
   tc_const = tc_const
 }
-
 
 // Synthesis of WPs from a partial effect definition (in F*) ------------------
 
@@ -100,9 +101,7 @@ let gen_wps_for_free
     | _ ->
         failwith "wp_a doesn't end in Type0" in
 
-  let mk_lid name: lident =
-    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
-  in
+  let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
   if Env.debug env (Options.Other "ED") then
@@ -282,12 +281,12 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level 2) None in
+      let l_ite = fvar C.ite_lid (S.Delta_defined_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
-      ) (Inr result_comp)
+      ) (Inr result_comp, None)
     ) (Some (Inl (U.lcomp_of_comp result_comp)))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
@@ -299,7 +298,7 @@ let gen_wps_for_free
   let wp_assert =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar Const.and_lid (S.Delta_defined_at_level 1) None in
+    let l_and = fvar C.and_lid (S.Delta_defined_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -317,7 +316,7 @@ let gen_wps_for_free
   let wp_assume =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar Const.imp_lid (S.Delta_defined_at_level 1) None in
+    let l_imp = fvar C.imp_lid (S.Delta_defined_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -406,7 +405,7 @@ let gen_wps_for_free
     | _ ->
         (* TODO: assert that this is a base type. *)
         (* BU.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
-        U.mk_eq t t x y
+        U.mk_untyped_eq2 x y
   in
   let stronger =
     let wp1 = S.gen_bv "wp1" None wp_a in
@@ -418,7 +417,7 @@ let gen_wps_for_free
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (U.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            let projector = S.fvar (Env.lookup_projector env (C.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -455,14 +454,14 @@ let gen_wps_for_free
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_as_fv Const.guard_free Delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_as_fv C.guard_free Delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
-          U.close_forall binders pattern_guarded_body
+          U.close_forall_no_univs binders pattern_guarded_body
         | _ -> failwith "Impossible: Expected the equivalence to be a quantified formula"
     in
     let body  = U.abs gamma (
-      U.mk_forall k (U.mk_imp
+      U.mk_forall_no_univ k (U.mk_imp
         equiv
         (U.mk_app (S.bv_to_name wp) (args_of_binders wp_args @ [ S.as_arg (S.bv_to_name k) ])))
     ) ret_gtot_type in
@@ -475,7 +474,7 @@ let gen_wps_for_free
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     let x = S.gen_bv "x" None S.tun in
-    let body = U.mk_forall x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
+    let body = U.mk_forall_no_univ x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in
@@ -515,6 +514,7 @@ let gen_wps_for_free
 type env_ = env
 
 let get_env env = env.env
+let set_env dmff_env env' = { dmff_env with env = env' }
 
 type nm = | N of typ | M of typ
 
@@ -524,7 +524,7 @@ let nm_of_comp = function
   | Total (t, _) ->
       N t
   | Comp c when c.flags |> BU.for_some (function CPS -> true | _ -> false) ->
-                //lid_equals c.effect_name Const.monadic_lid ->
+                //lid_equals c.effect_name C.monadic_lid ->
       M c.result_typ
   | Comp c ->
       failwith (BU.format1 "[nm_of_comp]: impossible (%s)" (Print.comp_to_string <| mk_Comp c))
@@ -647,9 +647,9 @@ and star_type' env t =
         match (SS.compress head).n with
         | Tm_fvar fv when (
           // TODO: implement a better check (non-dependent, user-defined data type)
-          fv_eq_lid fv Const.option_lid ||
-          fv_eq_lid fv Const.either_lid ||
-          fv_eq_lid fv Const.eq2_lid ||
+          fv_eq_lid fv C.option_lid ||
+          fv_eq_lid fv C.either_lid ||
+          fv_eq_lid fv C.eq2_lid ||
           is_tuple_constructor (SS.compress head)
         ) ->
             true
@@ -704,8 +704,8 @@ and star_type' env t =
   | Tm_meta (t, m) ->
       mk (Tm_meta (star_type' env t, m))
 
-  | Tm_ascribed (e, Inl t, something) ->
-      mk (Tm_ascribed (star_type' env e, Inl (star_type' env t), something))
+  | Tm_ascribed (e, (Inl t, None), something) ->
+      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None), something))
 
   | Tm_ascribed _ ->
       raise (Err (BU.format1 "Tm_ascribed is outside of the definition language: %s"
@@ -744,7 +744,7 @@ let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
   | Some (Inl { cflags = flags }) | Some (Inr (_, flags)) ->
-      // lid_equals lid Const.monadic_lid
+      // lid_equals lid C.monadic_lid
       flags |> BU.for_some (function CPS -> true | _ -> false)
 
 // TODO: this function implements a (partial) check for the well-formedness of
@@ -789,7 +789,7 @@ let mk_return env (t: typ) (e: term) =
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
   let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
-  U.abs [ S.mk_binder p ] body None
+  U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
 
@@ -805,7 +805,6 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // - the second is [_e_], the elaborated version of [e]
 let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
-  let mk x = mk x None e.pos in
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
@@ -915,7 +914,7 @@ and infer (env: env) (e: term): nm * term * term =
       let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
         let c = bv.sort in
         if is_C c then
-          let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type' env c) in
+          let xw = S.gen_bv (bv.ppname.idText ^ "__w") None (star_type' env c) in
           let x = { bv with sort = trans_F_ env c (S.bv_to_name xw) } in
           let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
           env, S.mk_binder x :: S.mk_binder xw :: acc
@@ -956,14 +955,14 @@ and infer (env: env) (e: term): nm * term * term =
                       end  }))
         | Some (Inr (lid, flags)) ->
             Some (Inr (if flags |> BU.for_some (function CPS -> true | _ -> false)
-                       then (Const.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
+                       then (C.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
                        else (lid, flags)))
       in
 
       let u_body, u_what =
           let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
           (* TODO : consider removing this ascription *)
-          U.ascribe u_body (Inr comp), Some (Inl (U.lcomp_of_comp comp))
+          U.ascribe u_body (Inr comp, None), Some (Inl (U.lcomp_of_comp comp))
       in
 
       let s_body = close s_binders s_body in
@@ -976,21 +975,9 @@ and infer (env: env) (e: term): nm * term * term =
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
-      // Can't trust the [t] type to still carry an M annotation... because the
-      // F* type-checker silently drops it. So, for now, we have a whitelist of
-      // combinators that we know for sure don't return an M.
-      let _, t = Env.lookup_lid env.env lid in
-      let txt = text_of_lid lid in
-//      let allowed_prefixes = [ "Mktuple"; "Left"; "Right"; "Some"; "None";
-//                              "op_Addition"; "op_BarBar"; "op_AmpAmp"; "op_Negation"; "op_Equality" ] in
-//      // BU.print2 "[debug]: lookup %s miss %s\n" txt (Print.term_to_string t);
-//      if List.existsb (fun s -> BU.starts_with txt ("Prims." ^ s)) allowed_prefixes then
-        // Need to erase universes here! This is an F* type that is fully annotated.
-        N (normalize t), e, e
-//      else
-//        raise (Err (BU.format1 "The %s constructor has not been whitelisted \
-//          for the definition language; if this is a function application, \
-//          consider using [inline]" txt))
+      let _, t = fst <| Env.lookup_lid env.env lid in
+      // Need to erase universes here! This is an F* type that is fully annotated.
+      N (normalize t), e, e
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in
@@ -1137,17 +1124,21 @@ and mk_match env e0 branches f =
       ) s_branches in
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
-    let s_e = U.abs [ S.mk_binder p ] (mk (Tm_match (s_e0, s_branches))) None in
+    let s_e =
+      U.abs [ S.mk_binder p ]
+            (mk (Tm_match (s_e0, s_branches)))
+            (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
+    in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
-    mk (Tm_ascribed (s_e, Inl t1_star, None)) ,
+    mk (Tm_ascribed (s_e, (Inl t1_star, None), None)) ,
     mk (Tm_match (u_e0, u_branches))
   end else begin
     let s_branches = List.map close_branch s_branches in
     let u_branches = List.map close_branch u_branches in
     let t1_star = t1 in
     N t1,
-    mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), Inl t1_star, None)),
+    mk (Tm_ascribed (mk (Tm_match (s_e0, s_branches)), (Inl t1_star, None), None)),
     mk (Tm_match (u_e0, u_branches))
   end
 
@@ -1180,7 +1171,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
 
   | M t1, s_e1, u_e1 ->
       // BU.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
-      let u_binding = { binding with lbeff = Const.effect_PURE_lid ; lbtyp = t1 } in
+      let u_binding = { binding with lbeff = C.effect_PURE_lid ; lbtyp = t1 } in
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
@@ -1190,11 +1181,11 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       // e2* p
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
-      let s_e2 = U.abs x_binders s_e2 None in
+      let s_e2 = U.abs x_binders s_e2 (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))) in
       // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
-      U.abs [ S.mk_binder p ] body None,
+      U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 
@@ -1219,7 +1210,7 @@ and comp_of_nm (nm: nm_): comp =
 and mk_M (t: typ): comp =
   mk_Comp ({
     comp_univs=[U_unknown];
-    effect_name = Const.monadic_lid;
+    effect_name = C.monadic_lid;
     result_typ = t;
     effect_args = [];
     flags = [CPS ; TOTAL]
@@ -1237,7 +1228,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       // It's a product, the only form of [Tm_app] allowed.
       let wp_head, wp_args = head_and_args wp in
       if not (List.length wp_args = List.length args) ||
-         not (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
+         not (is_constructor wp_head (C.mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
@@ -1250,10 +1241,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let bvs, binders = List.split (List.map (fun (bv, q) ->
         let h = bv.sort in
         if is_C h then
-          let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type' env h) in
+          let w' = S.gen_bv (bv.ppname.idText ^ "__w'") None (star_type' env h) in
           w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q ]
         else
-          let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
+          let x = S.gen_bv (bv.ppname.idText ^ "__x") None (star_type' env h) in
           x, [ x, q ]
       ) binders_orig) in
       let binders = List.flatten binders in
@@ -1268,11 +1259,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       failwith "impossible trans_F_"
 
 and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
-  let mk x = mk x None h.pos in
   if is_monadic then
     mk_Comp ({
       comp_univs = [U_unknown];
-      effect_name = Const.effect_PURE_lid;
+      effect_name = C.effect_PURE_lid;
       result_typ = star_type' env h;
       effect_args = [ wp, S.as_implicit false ];
       flags = []

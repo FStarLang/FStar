@@ -32,12 +32,7 @@
 module FStar.Bytes
 
 open System.IO
-open Microsoft.FSharp.Compatibility
-open Microsoft.FSharp.Compatibility.OCaml.Pervasives
-
-(* open Microsoft.FSharp.Compiler.AbstractIL  *)
-(* open Microsoft.FSharp.Compiler.AbstractIL.Internal  *)
-
+open FSharp.Compatibility.OCaml
 
 let b0 n =  (n &&& 0xFF)
 let b1 n =  ((n >>> 8) &&& 0xFF)

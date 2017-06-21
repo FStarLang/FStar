@@ -91,7 +91,7 @@ let rec typing g e =
 val progress : e:exp -> Lemma
       (requires (Some? (typing empty e)))
       (ensures (is_value e \/ (Some? (step e))))
-let rec progress e = // by_induction_on e progress
+let rec progress e =
   match e with
   | EVar y -> ()
   | EApp e1 e2 -> 

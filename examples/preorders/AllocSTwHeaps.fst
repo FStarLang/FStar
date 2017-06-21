@@ -83,7 +83,8 @@ assume val ist_recall :  p:predicate FStar.Heap.heap{stable heap_rel p} ->
 (* Swapping the reference and heap arguments of (FStar.Heap.contains) 
    to use it in point-free style in (witness) and (recall). *)
 
-let contains (#a:Type) (r:FStar.Heap.ref a) (h:FStar.Heap.heap) = b2t (FStar.Heap.contains h r)
+let contains (#a:Type) (r:FStar.Heap.ref a) (h:FStar.Heap.heap) =
+  b2t (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Heap.contains h r))
 
 
 val contains_lemma : #a:Type -> 
@@ -105,7 +106,7 @@ type ref a = r:FStar.Heap.ref a{ist_witnessed (contains r)}
 
 assume val gen_ref : #a:Type -> 
                      h:FStar.Heap.heap -> 
-		     Tot (r:FStar.Heap.ref a{~(FStar.Heap.contains h r)})
+		     Tot (r:FStar.Heap.ref a{r `Heap.unused_in` h})
 
 
 (* Pre- and postconditions for the allocated references instance of IST. *)
@@ -129,7 +130,7 @@ effect AllocST (a:Type)
 val alloc : #a:Type -> 
             x:a -> 
 	    AllocST (ref a) (fun _ -> True)
-                            (fun h0 r h1 -> ~(FStar.Heap.contains h0 r) /\
+                            (fun h0 r h1 -> r `Heap.unused_in` h0 /\
 					    FStar.Heap.contains h1 r /\
 				            h1 == FStar.Heap.upd h0 r x)
 let alloc #a x = 
@@ -153,7 +154,7 @@ let read #a r =
 val write : #a:Type -> 
             r:ref a -> 
 	    x:a -> 
-	    AllocST unit (fun _       -> True)
+	    AllocST unit (fun h0       -> FStar.Heap.contains h0 r)
                          (fun h0 _ h1 -> h1 == FStar.Heap.upd h0 r x)
 let write #a r x =
   let h = ist_get () in

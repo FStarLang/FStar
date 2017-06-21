@@ -1,5 +1,5 @@
 ﻿module Prims
-
+open FSharp.Compatibility.OCaml
 (* Needed to make bootstraping working (boot target of the Makefile);
    but when we actually type-check this within F*, we have the right
    definition of totality *)
@@ -16,3 +16,5 @@ type 'a option = 'a option'
 type 'a list' = 'a list
 type 'a list = 'a list'
 let op_Multiply x y = x * y
+let string_of_int x = string_of_int x
+let string_of_bool b = string_of_bool b

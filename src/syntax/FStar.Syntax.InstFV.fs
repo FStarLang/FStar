@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.InstFV
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -74,11 +75,15 @@ let rec inst (s:term -> fv -> term) t =
             (p, wopt, t)) in
         mk (Tm_match(inst s t, pats))
 
-      | Tm_ascribed(t1, Inl t2, f) ->
-        mk (Tm_ascribed(inst s t1, Inl (inst s t2), f))
-
-      | Tm_ascribed(t1, Inr c, f) ->
-        mk (Tm_ascribed(inst s t1, Inr (inst_comp s c), f))
+      | Tm_ascribed(t1, asc, f) ->
+        let inst_asc (annot, topt) =
+            let topt = FStar.Util.map_opt topt (inst s) in
+            let annot = match annot with
+                | Inl t -> Inl (inst s t)
+                | Inr c -> Inr (inst_comp s c) in
+            annot, topt
+        in
+        mk (Tm_ascribed(inst s t1, inst_asc asc, f))
 
       | Tm_let(lbs, t) ->
         let lbs = fst lbs, snd lbs |> List.map (fun lb -> {lb with lbtyp=inst s lb.lbtyp; lbdef=inst s lb.lbdef}) in

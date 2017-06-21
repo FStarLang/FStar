@@ -3,8 +3,6 @@ include Makefile.include
 
 ALL_EXAMPLE_DIRS=\
 bug-reports \
-hello \
-low-level \
 data_structures \
 algorithms \
 crypto \
@@ -12,8 +10,8 @@ termination \
 software_foundations \
 ../doc/tutorial/code/exercises \
 ../doc/tutorial/code/solutions \
-rel \
 maths \
+rel \
 paradoxes \
 printf \
 metatheory \
@@ -26,12 +24,15 @@ micro-benchmarks \
 bytes \
 tactics
 
+
+# low-level \  ... NS: removing from CI for this branch
+
 # WARNING: this target shouldn't depend on anything other than the F*
 # binary; in particular it shouldn't depend on OCaml, F#, git, etc.
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
 
 %.all: %
-	+make -C $^ all
+	+$(MAKE) -C $^ all
 
 test: all
 

@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.ErrorReporting
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.BaseTypes
@@ -237,6 +238,11 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, pats, iopt, sorts, body) ->
           let labels, body = aux default_msg ropt post_name_opt labels body in
           labels, Term.mk (Quant(Forall, pats, iopt, sorts, body)) q.rng
+
+        (* TODO (KM) : I am not sure whether we should label the let-bounded expressions here *)
+        | Let(es, body) ->
+          let labels, body = aux default_msg ropt post_name_opt labels body in
+          labels, Term.mkLet (es, body) q.rng
     in
     aux "assertion failed" None None [] q
 
@@ -252,7 +258,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
  *)
 let detail_errors env
                  (all_labels:labels)
-                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int))
+                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int * Z3.z3statistics))
     : error_labels =
 
     let print_banner () =
@@ -266,12 +272,20 @@ let detail_errors env
     let print_result ((_, msg, r), success) =
         if success
         then BU.print1_error "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
-        else FStar.Errors.report r msg
+        else FStar.Errors.err r msg
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
-        (labs |> List.map (fun (l, _, _) ->
-                 Term.Assume(mkEq(mkFreeV l, mkTrue), Some "Disabling label", Some ("disable_label_"^fst l)))) in
+        labs
+        |> List.map (fun (l, _, _) ->
+            let a = {
+                    assumption_name="disable_label_"^fst l;
+                    assumption_caption=Some "Disabling label";
+                    assumption_term=mkEq(mkFreeV l, mkTrue);
+                    assumption_fact_ids=[]
+                }
+            in
+            Term.Assume a) in
 
     //check all active labels linearly and classify as eliminated/error
     let rec linear_check eliminated errors active =
@@ -285,7 +299,7 @@ let detail_errors env
             | hd::tl ->
 	      BU.print1 "%s, " (BU.string_of_int (List.length active));
 	      FStar.SMTEncoding.Z3.refresh();
-              let result, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
+              let result, _, _ = askZ3 (elim <| (eliminated @ errors @ tl)) in //hd is the only thing to prove
               if BU.is_left result //hd is provable
               then linear_check (hd::eliminated) errors tl
               else linear_check eliminated (hd::errors) tl in

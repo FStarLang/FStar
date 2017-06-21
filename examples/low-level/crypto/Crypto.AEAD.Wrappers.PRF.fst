@@ -1,6 +1,7 @@
 module Crypto.AEAD.Wrappers.PRF
 open FStar.UInt32
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open Crypto.Indexing
@@ -15,6 +16,7 @@ open Crypto.AEAD.Invariant
 open Crypto.AEAD.Encrypt.Invariant
 
 module HS  = FStar.HyperStack
+module ST  = FStar.HyperStack.ST
 
 module MAC = Crypto.Symmetric.MAC
 module PRF = Crypto.Symmetric.PRF
@@ -54,8 +56,8 @@ let prf_mac_added (i:id{prf i}) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:P
       t1 == Seq.snoc t0 (PRF.Entry x returned_mac) /\ //precisely extended the table with 1 new entry
       CMA.genPost (i,x.iv) t.mac_rgn h0 returned_mac h1      /\ //the mac is freshly generated (and unset)
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1   /\ //only touched the prf's region (and its children)
-      HS.modifies_ref t.rgn !{HS.as_ref r} h0 h1             /\ //in the prf region, only modified the table
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1               //in the mac region, didn't touch any existing ref
+      HS.modifies_ref t.rgn (Set.singleton (Heap.addr_of (HS.as_ref r))) h0 h1             /\ //in the prf region, only modified the table
+      HS.modifies_ref t.mac_rgn Set.empty h0 h1               //in the mac region, didn't touch any existing ref
     | None -> False //we definitely allocated a new mac, so we should find it
 
 let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.domain_mac i)
@@ -73,8 +75,8 @@ let prf_mac_ensures (i:id) (t:PRF.state i) (k_0: CMA.akey t.mac_rgn i) (x:PRF.do
     else 
       CMA.genPost (i,x.iv) t.mac_rgn h0 returned_mac h1 /\
       HS.modifies_transitively (Set.singleton t.rgn) h0 h1 /\ //allocates in t.rgn
-      HS.modifies_ref t.rgn TSet.empty h0 h1  /\              //but nothing within it is modified
-      HS.modifies_ref t.mac_rgn TSet.empty h0 h1
+      HS.modifies_ref t.rgn Set.empty h0 h1  /\              //but nothing within it is modified
+      HS.modifies_ref t.mac_rgn Set.empty h0 h1
 
 (*****)
 

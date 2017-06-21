@@ -2,8 +2,8 @@ module Test
 
 
 module DM = FStar.DependentMap
-module S  = FStar.Struct
-module HST = FStar.ST
+module S  = FStar.Pointer
+module HST = FStar.HyperStack.ST
 
 type fields =
 | I
@@ -15,7 +15,7 @@ let fields_def (x: fields) : Tot Type = match x with
 
 let struct = DM.t _ fields_def
 
-let obj = S.struct_ptr struct
+let obj = S.pointer struct
 
 let callee
    (pfrom pto: obj)
@@ -25,8 +25,8 @@ let callee
     S.live h pfrom /\ S.live h pto /\
     S.live h' pfrom /\ S.live h' pto /\
     S.modifies_1 (S.gfield pto I) h h' /\
-    S.as_value h (S.gfield pfrom I) == z /\
-    S.as_value h' (S.gfield pto I) == z + 1))
+    S.gread h (S.gfield pfrom I) == z /\
+    S.gread h' (S.gfield pto I) == z + 1))
 = S.write (S.field pto I) (S.read (S.field pfrom I) + 1);
   S.read (S.field pfrom I)
 
@@ -40,7 +40,7 @@ let more_fields_def (x: more_fields) : Tot Type = match x with
 
 type more_struct = DM.t _ more_fields_def
 
-let more_obj = S.struct_ptr more_struct
+let more_obj = S.pointer more_struct
 
 let caller
   ()

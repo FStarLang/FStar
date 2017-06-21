@@ -7,8 +7,9 @@
       2,
       1,
       [
-        "@query", "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
-        "primitive_Prims.op_LessThanOrEqual",
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
+        "int_typing", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],

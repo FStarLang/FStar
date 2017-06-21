@@ -298,7 +298,7 @@ new_effect {
      ; stronger     = st2_stronger heap
 }
 
-new_effect_for_free {
+new_effect {
   STATE2_h_for_free (heap:Type) : result:Type -> wp:st2_wp heap result -> Effect
   with return       = st2_return heap
      ; bind_wp      = st2_bind_wp heap
