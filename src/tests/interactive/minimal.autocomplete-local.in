@@ -1,0 +1,3 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Minimal\nlet hello : string = \"Hello F*!\"\n","line":1,"column":0}}
+{"query-id":"2","query":"autocomplete","args":{"partial-symbol":"hel"}}
+{"query-id":"3","query":"lookup","args":{"symbol":"Minimal.hello","requested-info":["type","documentation","defined-at"]}}

@@ -1,8 +1,10 @@
 type uint16 = int
 type t = uint16
+type t' = t
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
+let n = Prims.parse_int "16"
 let v (x:uint16) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0

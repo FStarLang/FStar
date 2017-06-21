@@ -1,7 +1,7 @@
-module Bug
+module Bug377
 
-open FStar.Comp
-open FStar.Relational
+open FStar.Relational.Comp
+open FStar.Relational.Relational
 
 type ni_exp (l:unit) = unit -> St2 (double int)
 

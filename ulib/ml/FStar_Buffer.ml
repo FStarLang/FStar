@@ -24,7 +24,7 @@ type uint32s = FStar_UInt32.uint32 buffer
 type uint64s = FStar_UInt64.uint64 buffer
 type uint128s = FStar_UInt128.uint128 buffer
 
-type u9 = FStar_UInt8.t
+type u8 = FStar_UInt8.t
 type u32 = FStar_UInt32.t
 type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t

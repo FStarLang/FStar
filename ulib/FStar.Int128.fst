@@ -106,10 +106,24 @@ let logor a b = Mk (logor (v a) (v b))
 val lognot: t -> Tot t
 let lognot a = Mk (lognot (v a))
 
-val int_to_t: x:(int_t n) -> Pure t
+val int_to_t: x:int_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))
 let int_to_t x = Mk x
+
+#set-options "--lax"
+//This private primitive is used internally by the
+//compiler to translate bounded integer constants
+//with a desugaring-time check of the size of the number,
+//rather than an expensive verifiation check.
+//Since it is marked private, client programs cannot call it directly
+//Since it is marked unfold, it eagerly reduces,
+//eliminating the verification overhead of the wrapper
+private
+unfold
+let __int_to_t (x:int) : Tot t
+    = int_to_t x
+#reset-options
 
 (* Shift operators *)
 val shift_right: a:t -> s:UInt32.t -> Pure t
@@ -141,7 +155,7 @@ unfold let op_Star_Question_Hat = mul_underspec
 unfold let op_Star_Percent_Hat = mul_mod
 unfold let op_Slash_Hat = div
 unfold let op_Percent_Hat = rem
-unfold let op_Hat_Hat = logxor  
+unfold let op_Hat_Hat = logxor
 unfold let op_Amp_Hat = logand
 unfold let op_Bar_Hat = logor
 unfold let op_Less_Less_Hat = shift_left

@@ -1,8 +1,10 @@
 type uint32 = int
 type t = uint32
+type t' = t
                 
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 
+let n = Prims.parse_int "32"
 let v (x:uint32) : Prims.int = Prims.parse_int (string_of_int x)
 
 let zero = 0
@@ -41,6 +43,11 @@ let gt (a:uint32) (b:uint32) : bool = a > b
 let gte (a:uint32) (b:uint32) : bool = a >= b
 let lt (a:uint32) (b:uint32) : bool = a < b
 let lte (a:uint32) (b:uint32) : bool =  a <= b
+
+let eq_mask (a:uint32) (b:uint32) : uint32 =
+  if a = b then -1 else 0
+let gte_mask (a:uint32) (b:uint32) : uint32 =
+  if a >= b then -1 else 0
 
 (* Infix notations *)
 let op_Plus_Hat = add

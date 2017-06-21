@@ -1,5 +1,5 @@
 [
-  "’\u0014Ñ#Ä1G\u0010´K“º{ý'^",
+  "càëÔGÛ‡„T¿YÕá'Kï",
   [
     [ "HyE.CCA2.__proj__Entry__item__c", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.CCA2.__proj__Entry__item__p", 1, 2, 1, [ "@query" ], 0 ],
@@ -24,13 +24,15 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "disc_equation_Prims.V",
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
         "equation_FStar.HyperStack.is_eternal_region",
-        "equation_FStar.Monotonic.RRef.rid",
+        "equation_FStar.HyperStack.upd", "equation_FStar.Monotonic.RRef.rid",
         "equation_FStar.Monotonic.Seq.rid",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
-        "typing_FStar.HyperStack.is_eternal_region"
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_HyE.CCA2.pkey@tok", "kinding_HyE.CCA2.skey@tok",
+        "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4"
       ],
       0
     ],
@@ -40,8 +42,13 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "equation_HyE.Ideal.conf",
-        "function_token_typing_HyE.Ideal.ind_cca"
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "equation_HyE.Ideal.conf", "equation_HyE.RSA.cipher",
+        "equation_HyE.RSA.plain", "fuel_guarded_inversion_HyE.CCA2.pkey",
+        "function_token_typing_HyE.Ideal.ind_cca",
+        "function_token_typing_HyE.RSA.cipher",
+        "refinement_interpretation_HyE.CCA2_Tm_refine_1c6722903ddd7320ab2f1c0508d45292"
       ],
       0
     ],
@@ -51,10 +58,10 @@
       2,
       1,
       [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_HyE.RSA.cipher", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes",
-        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "equation_HyE.PlainPKE.t", "function_token_typing_HyE.AE.key",
+        "kinding_FStar.Pervasives.Native.option@tok"
       ],
       0
     ],
@@ -67,7 +74,7 @@
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
         "equation_HyE.RSA.cipher", "equation_Platform.Bytes.bytes",
         "equation_Platform.Bytes.lbytes",
-        "haseqTm_refine_810128ef5f4b05b21d8806119a5984f5"
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0
     ]

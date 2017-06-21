@@ -1,5 +1,6 @@
 type int16 = int
 type t = int16
+type t' = t
 
 let v (x:int16) : Prims.int = Prims.parse_int (string_of_int x)
 
@@ -67,4 +68,4 @@ let cmod x =
   if x > 32767 then x - 65536 else x
 
 let to_string s = string_of_int (cmod s)
-let int_to_t s = s
+let int_to_t s = int_to_int16 s

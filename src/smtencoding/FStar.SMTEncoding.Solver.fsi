@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Solver
+open FStar.ST
 open FStar.All
 
 val with_hints_db : string -> (unit -> 'a) -> 'a

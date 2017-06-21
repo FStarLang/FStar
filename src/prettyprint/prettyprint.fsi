@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Pprint
+open FStar.ST
 open FStar.All
 open FStar.BaseTypes
 
@@ -189,6 +190,7 @@ val underscore: document
 val bang: document
 val bar: document
 val rarrow: document
+val long_left_arrow: document
 val larrow: document
 
 (** {1 Delimiters} *)

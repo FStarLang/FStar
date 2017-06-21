@@ -1,0 +1,4 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Search\nopen FStar.Seq\nopen FStar.Seq.Properties\n","line":1,"column":0}}
+{"query-id":"2","query":"search","args":{"terms":"cons snoc"}}
+{"query-id":"3","query":"search","args":{"terms":"cons snoc \"lemma\""}}
+{"query-id":"4","query":"search","args":{"terms":"cons snoc -\"lemma\""}}

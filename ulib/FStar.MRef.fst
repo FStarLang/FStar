@@ -12,8 +12,7 @@ abstract let mref (a:Type) (b:reln a) = ref a
 val as_ref: #a:Type -> #b:reln a -> mref a b -> GTot (ref a)
 let as_ref #a #b m = m
 
-val contains: #a:Type -> #b:reln a -> h:heap -> mref a b -> GTot bool
-let contains #a #b h m = Heap.contains h (as_ref m)
+let contains (#a:Type) (#b:reln a) (h:heap) (m:mref a b) = Heap.contains h (as_ref m)
 
 val sel: #a:Type -> #b:reln a -> h:heap -> mref a b -> GTot a
 let sel #a #b h m = Heap.sel h (as_ref m)
@@ -25,7 +24,7 @@ abstract type token (#a:Type) (#b:reln a) (r:mref a b) (p:a -> Type) = True
 abstract type witnessed (p:heap -> Type) = True
 
 type fresh(#a:Type) (#b:reln a) (x:a) h0 (r:mref a b) h1 = 
-  not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r x
+  ~ (contains h0 r) /\ contains h1 r /\ h1==upd h0 r x
 
 val alloc: #a:Type
         -> #b:reln a

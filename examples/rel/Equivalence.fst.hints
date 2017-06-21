@@ -8,9 +8,11 @@
       2,
       1,
       [
-        "@query", "interpretation_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2", "unit_typing"
+        "@query",
+        "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "unit_typing"
       ],
       0
     ],
@@ -20,13 +22,13 @@
       2,
       1,
       [
-        "@query", "fuel_guarded_inversion_Prims.tuple2",
-        "interpretation_Tm_abs_86e6d9d94d01c3cfb388b33ae07f7d58",
-        "pretyping_f8666440faa91836cc5a13998af863fc",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Mktuple2__a",
-        "refinement_interpretation_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "interpretation_Equivalence_Tm_abs_94257d9e083c345dc685e5e5ac84db79",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__a",
+        "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281",
         "unit_typing"
       ],
       0
@@ -37,8 +39,8 @@
       2,
       1,
       [
-        "@query",
-        "refinement_interpretation_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Equivalence_Tm_refine_a57ea088cd75024e5f3551c25f47b7ac"
       ],
       0
     ],
@@ -48,13 +50,13 @@
       2,
       1,
       [
-        "@query", "bool_inversion", "equation_Prims.fst",
-        "interpretation_Tm_abs_ff7d31858c1bc9660111ab9db69bd9b6",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "proj_equation_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_008ce3792f325163110297275391381d"
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Pervasives.Native.fst",
+        "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0
     ]

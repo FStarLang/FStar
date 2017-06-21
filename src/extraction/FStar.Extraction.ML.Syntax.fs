@@ -18,6 +18,7 @@
 #light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Ident
@@ -72,7 +73,7 @@ let rec gensyms x = match x with
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
-    if Ident.lid_equals x FStar.Syntax.Const.failwith_lid
+    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
     then ([], x.ident.idText)
     else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
@@ -172,7 +173,7 @@ and mlletbinding = mlletflavor * c_flags * list<mllb>
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)>
+| MLTD_DType  of list<(mlsymbol * list<(mlsymbol * mlty)>)>
     (*list of constructors? list<mlty> is the list of arguments of the constructors?
         One could have instead used a mlty and tupled the argument types?
      *)
@@ -184,7 +185,7 @@ type mltydecl = list<one_mltydecl> // each element of this list is one among a c
 type mlmodule1 =
 | MLM_Ty  of mltydecl
 | MLM_Let of mlletbinding
-| MLM_Exn of mlsymbol * list<mlty>
+| MLM_Exn of mlsymbol * list<(mlsymbol * mlty)>
 | MLM_Top of mlexpr // this seems outdated
 | MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
 

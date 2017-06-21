@@ -1,5 +1,6 @@
 type int32 = int
 type t = int32
+type t' = t
 
 let v (x:int32) : Prims.int = Prims.parse_int (string_of_int x)
 
@@ -67,4 +68,4 @@ let cmod x =
   if x > 2147483647 then x - 4294967296 else x
 
 let to_string s = string_of_int (cmod s)
-let int_to_t s = s
+let int_to_t s = int_to_int32 s

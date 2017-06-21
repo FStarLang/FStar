@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.ToSyntax.ToSyntax
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -22,7 +23,6 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
-open FStar.Syntax.Const
 open FStar.Parser
 open FStar.ToSyntax.Env
 open FStar.Parser.AST
@@ -31,6 +31,7 @@ open FStar.Ident
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+val as_interface: AST.modul -> AST.modul
 val desugar_file: env -> file -> env * list<S.modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
 val desugar_partial_modul: option<S.modul> -> env -> AST.modul -> env * Syntax.modul

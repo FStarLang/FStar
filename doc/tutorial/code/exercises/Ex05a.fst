@@ -18,11 +18,12 @@ let rec rev l1 l2 =
   | []     -> l1
   | hd::tl -> rev (hd::l1) tl
 
-val append_assoc : #t:eqtype -> xs:list t -> ys:list t -> zs:list t -> Lemma
-      (ensures (append (append xs ys) zs = append xs (append ys zs)))
-let rec append_assoc #t xs ys zs =
+val append_assoc : xs:list 'a -> ys:list 'a -> zs:list 'a -> Lemma
+      (ensures (append (append xs ys) zs == append xs (append ys zs)))
+let rec append_assoc xs ys zs =
   match xs with
   | [] -> ()
   | x::xs' -> append_assoc xs' ys zs
 
-val rev_is_ok : #t:eqtype -> l:list t -> Lemma (rev [] l = reverse l)
+val rev_is_ok : l:list 'a -> Lemma (rev [] l == reverse l)
+

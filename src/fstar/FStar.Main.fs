@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Main
+open FStar.ST
 open FStar.All
 open FStar.Util
 open FStar.Getopt
@@ -50,9 +51,10 @@ let finished_message fmods errs =
 
 (* printing total error count *)
 let report_errors fmods =
-  let errs = FStar.Errors.get_err_count() in
-  if errs > 0 then begin
-    finished_message fmods errs;
+  FStar.Errors.report_all () |> ignore;
+  let nerrs = FStar.Errors.get_err_count() in
+  if nerrs > 0 then begin
+    finished_message fmods nerrs;
     exit 1
   end
 
@@ -99,7 +101,7 @@ let go _ =
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
         else if Options.interactive () then begin //--in
           if Options.explicit_deps () then begin
-            Util.print_error "--explicit_deps incompatible with --in|n";
+            Util.print_error "--explicit_deps incompatible with --in\n";
             exit 1
           end;
           if List.length filenames <> 1 then begin
@@ -108,13 +110,12 @@ let go _ =
           end;
           let filename = List.hd filenames in
 
-
-          let filename = FStar.Common.try_convert_file_name_to_mixed filename in
-
           if Options.verify_module () <> [] then
             Util.print_warning "Interactive mode; ignoring --verify_module";
+
           (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          FStar.Interactive.interactive_mode filename
+          if Options.legacy_interactive () then FStar.Legacy.Interactive.interactive_mode filename
+          else FStar.Interactive.interactive_mode filename
 	  //and then start checking chunks from the current buffer
         end //end interactive mode
         else if Options.doc() then // --doc Generate Markdown documentation files
@@ -154,14 +155,14 @@ let main () =
     cleanup ();
     exit 0
   with | e ->
+    let trace = Util.trace_of_exn e in
     (begin
-        if FStar.Errors.handleable e then FStar.Errors.handle_err false e;
+        if FStar.Errors.handleable e then FStar.Errors.err_exn e;
         if (Options.trace_error()) then
-          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
         else if not (FStar.Errors.handleable e) then
           Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
      end;
      cleanup();
-     FStar.Errors.report_all () |> ignore;
      report_errors [];
      exit 1)

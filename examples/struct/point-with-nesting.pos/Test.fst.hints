@@ -1,5 +1,5 @@
 [
-  "¿\n£rõ˝+-Fè°[ÿÈÃ",
+  "\u0005F˜mÉô‡§„ãö‘Ù|ˇ\u0013",
   [
     [ "Test.uu___is_X", 1, 2, 1, [ "@query" ], 0 ],
     [ "Test.uu___is_Y", 1, 2, 1, [ "@query" ], 0 ],
@@ -9,7 +9,7 @@
       2,
       1,
       [
-        "@query", "assumption_Test.point_fd_haseq",
+        "@MaxIFuel_assumption", "@query", "assumption_Test.point_fd_haseq",
         "constructor_distinct_Test.X", "constructor_distinct_Test.Y",
         "disc_equation_Test.X", "disc_equation_Test.Y",
         "fuel_guarded_inversion_Test.point_fd"
@@ -24,68 +24,61 @@
       2,
       1,
       [
-        "@query", "assumption_Test.colored_object_fd_haseq", "bool_typing",
-        "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Test.colored_object_fd_haseq", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
     [
       "Test.flip",
       1,
-      4,
       2,
+      1,
       [
-        "@query", "assumption_Test.colored_object_fd_haseq",
-        "assumption_Test.point_fd_haseq", "bool_typing",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Test_interpretation_Tm_arrow_109ecf232fc8b4fcaca6d3f6c4859660",
+        "Test_interpretation_Tm_arrow_697d55bcb5b737abc48f31be45b2930f",
+        "Test_pretyping_1ced3406d558ec97d638f660574a8ceb",
+        "Test_pretyping_23a1b5183ae4479670bad568516205e5",
+        "assumption_Test.colored_object_fd_haseq",
+        "assumption_Test.point_fd_haseq",
         "constructor_distinct_Test.Carrier",
         "constructor_distinct_Test.Color", "constructor_distinct_Test.X",
         "constructor_distinct_Test.Y", "data_typing_intro_Test.Color@tok",
         "data_typing_intro_Test.Y@tok", "equality_tok_Test.Carrier@tok",
         "equality_tok_Test.Color@tok", "equality_tok_Test.X@tok",
-        "equality_tok_Test.Y@tok", "equation_FStar.HyperHeap.contains_ref",
-        "equation_FStar.Struct.equal_values", "equation_Prims.eqtype",
-        "equation_Test.colored_object",
+        "equality_tok_Test.Y@tok", "equation_FStar.Pointer.equal_values",
+        "equation_Prims.eqtype", "equation_Test.colored_object",
         "equation_Test.colored_object_struct", "equation_Test.colored_point",
         "equation_Test.point_struct",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_Prims.bool",
         "function_token_typing_Prims.int",
         "function_token_typing_Test.point_struct",
-        "interpretation_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
-        "interpretation_Tm_abs_63f61f54aa6fc3e8efcb9353b84d3e3c",
-        "interpretation_Tm_arrow_109ecf232fc8b4fcaca6d3f6c4859660",
-        "interpretation_Tm_arrow_697d55bcb5b737abc48f31be45b2930f",
-        "interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "interpretation_Test_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
+        "interpretation_Test_Tm_abs_ce71af378a4db80eda6384564d36a27e",
         "kinding_Test.colored_object_fd@tok", "kinding_Test.point_fd@tok",
         "lemma_FStar.HyperStack.lemma_equal_domains_trans",
-        "lemma_FStar.Struct.as_value_gfield",
-        "lemma_FStar.Struct.as_value_gfield_live",
-        "lemma_FStar.Struct.contains_includes",
-        "lemma_FStar.Struct.disjoint_gfield",
-        "lemma_FStar.Struct.disjoint_includes_l_swap",
-        "lemma_FStar.Struct.disjoint_sym_",
-        "lemma_FStar.Struct.includes_trans",
-        "lemma_FStar.Struct.live_disjoint", "lemma_FStar.Struct.live_gfield",
-        "lemma_FStar.Struct.live_includes",
-        "lemma_FStar.Struct.modifies_1_trans",
-        "lemma_FStar.Struct.modifies_substruct_1",
-        "lemma_FStar.Struct.no_upd_lemma_1",
-        "pretyping_1ced3406d558ec97d638f660574a8ceb",
-        "pretyping_23a1b5183ae4479670bad568516205e5",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "primitive_Prims.op_AmpAmp",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_a7a5ab9bdffb748bb68af33a38f98591",
-        "refinement_interpretation_Tm_refine_bdc30b90c0a545f9132f7e5de564ee02",
-        "refinement_interpretation_Tm_refine_e65e1e4759b402531f69972ef7e5179f",
-        "refinement_interpretation_Tm_refine_f0c919128386ffb96a31ec3211eefcf0",
-        "typing_FStar.Struct.gfield", "typing_Test.colored_object_struct",
-        "typing_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
-        "typing_Tm_abs_63f61f54aa6fc3e8efcb9353b84d3e3c",
+        "lemma_FStar.Pointer.disjoint_gfield",
+        "lemma_FStar.Pointer.disjoint_includes_l_swap",
+        "lemma_FStar.Pointer.disjoint_sym_",
+        "lemma_FStar.Pointer.gread_gfield",
+        "lemma_FStar.Pointer.includes_trans",
+        "lemma_FStar.Pointer.live_includes",
+        "lemma_FStar.Pointer.modifies_1_trans",
+        "lemma_FStar.Pointer.modifies_substruct_1",
+        "lemma_FStar.Pointer.no_upd_lemma_1",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_4e40a31e4ba27eb166aaf2274d919a8e",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Pointer.gfield", "typing_Test.colored_object_struct",
+        "typing_Test_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
+        "typing_Test_Tm_abs_ce71af378a4db80eda6384564d36a27e",
         "typing_tok_Test.Carrier@tok", "typing_tok_Test.Color@tok",
         "typing_tok_Test.X@tok", "typing_tok_Test.Y@tok"
       ],
@@ -97,7 +90,8 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
         "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -116,11 +110,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -138,8 +132,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
-        "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -157,11 +152,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -179,7 +174,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
         "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -198,11 +194,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -220,7 +216,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
         "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -239,11 +236,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -261,10 +258,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -282,11 +280,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -304,9 +302,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.X",
-        "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
+        "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -324,11 +322,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -346,9 +344,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.X",
-        "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
+        "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -366,11 +364,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -388,8 +386,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
+        "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -407,11 +406,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -429,7 +428,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
         "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -448,11 +448,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -470,11 +470,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -492,11 +492,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -514,11 +514,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -536,8 +536,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
-        "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -555,9 +556,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -575,10 +576,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -596,10 +598,8 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.X",
-        "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -617,10 +617,8 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.X",
-        "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -638,11 +636,11 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equality_tok_Test.Carrier@tok", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -657,55 +655,61 @@
     [
       "Test.flip'",
       1,
-      4,
       2,
+      1,
       [
-        "@query", "assumption_Test.colored_object_fd_haseq",
-        "assumption_Test.point_fd_haseq", "bool_typing",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Test_interpretation_Tm_arrow_109ecf232fc8b4fcaca6d3f6c4859660",
+        "Test_interpretation_Tm_arrow_697d55bcb5b737abc48f31be45b2930f",
+        "Test_pretyping_1ced3406d558ec97d638f660574a8ceb",
+        "Test_pretyping_23a1b5183ae4479670bad568516205e5",
+        "assumption_Test.colored_object_fd_haseq",
+        "assumption_Test.point_fd_haseq",
         "constructor_distinct_Test.Carrier",
         "constructor_distinct_Test.Color", "constructor_distinct_Test.X",
         "constructor_distinct_Test.Y", "data_typing_intro_Test.Color@tok",
         "data_typing_intro_Test.Y@tok", "equality_tok_Test.Carrier@tok",
         "equality_tok_Test.Color@tok", "equality_tok_Test.X@tok",
-        "equality_tok_Test.Y@tok", "equation_FStar.HyperHeap.contains_ref",
-        "equation_FStar.Struct.equal_values", "equation_Prims.eqtype",
+        "equality_tok_Test.Y@tok", "equation_FStar.HyperHeap.t",
+        "equation_FStar.HyperStack.equal_domains",
+        "equation_FStar.HyperStack.hh", "equation_FStar.HyperStack.is_above",
+        "equation_FStar.HyperStack.is_in",
+        "equation_FStar.Pointer.equal_values", "equation_Prims.eqtype",
         "equation_Test.colored_object",
         "equation_Test.colored_object_struct", "equation_Test.colored_point",
         "equation_Test.point_struct",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "function_token_typing_FStar.HyperHeap.root",
         "function_token_typing_Prims.bool",
         "function_token_typing_Prims.int",
         "function_token_typing_Test.point_struct",
-        "interpretation_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
-        "interpretation_Tm_abs_63f61f54aa6fc3e8efcb9353b84d3e3c",
-        "interpretation_Tm_arrow_109ecf232fc8b4fcaca6d3f6c4859660",
-        "interpretation_Tm_arrow_697d55bcb5b737abc48f31be45b2930f",
-        "interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
+        "interpretation_Test_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
+        "interpretation_Test_Tm_abs_ce71af378a4db80eda6384564d36a27e",
         "kinding_Test.colored_object_fd@tok", "kinding_Test.point_fd@tok",
         "lemma_FStar.HyperStack.lemma_equal_domains_trans",
-        "lemma_FStar.Struct.as_value_gfield",
-        "lemma_FStar.Struct.as_value_gfield_live",
-        "lemma_FStar.Struct.disjoint_gfield",
-        "lemma_FStar.Struct.disjoint_includes_l_swap",
-        "lemma_FStar.Struct.disjoint_sym_",
-        "lemma_FStar.Struct.includes_trans",
-        "lemma_FStar.Struct.live_disjoint", "lemma_FStar.Struct.live_gfield",
-        "lemma_FStar.Struct.live_includes",
-        "lemma_FStar.Struct.modifies_1_trans",
-        "lemma_FStar.Struct.modifies_substruct_1",
-        "lemma_FStar.Struct.no_upd_lemma_1",
-        "pretyping_1ced3406d558ec97d638f660574a8ceb",
-        "pretyping_23a1b5183ae4479670bad568516205e5",
-        "pretyping_f537159ed795b314b4e58c260361ae86",
-        "primitive_Prims.op_AmpAmp",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_a7a5ab9bdffb748bb68af33a38f98591",
-        "refinement_interpretation_Tm_refine_bdc30b90c0a545f9132f7e5de564ee02",
-        "refinement_interpretation_Tm_refine_e65e1e4759b402531f69972ef7e5179f",
-        "refinement_interpretation_Tm_refine_f0c919128386ffb96a31ec3211eefcf0",
-        "typing_FStar.Struct.gfield", "typing_Test.colored_object_struct",
-        "typing_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
-        "typing_Tm_abs_63f61f54aa6fc3e8efcb9353b84d3e3c",
+        "lemma_FStar.Pointer.disjoint_gfield",
+        "lemma_FStar.Pointer.disjoint_includes_l_swap",
+        "lemma_FStar.Pointer.disjoint_sym_",
+        "lemma_FStar.Pointer.gread_gfield",
+        "lemma_FStar.Pointer.includes_trans",
+        "lemma_FStar.Pointer.live_includes",
+        "lemma_FStar.Pointer.modifies_1_trans",
+        "lemma_FStar.Pointer.modifies_substruct_1",
+        "lemma_FStar.Pointer.no_upd_lemma_1",
+        "proj_equation_FStar.HyperStack.HS_h",
+        "proj_equation_FStar.HyperStack.HS_tip",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_17c32ea1674222a60392f05cf1ea594b",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_f724abd6de992fc2f861487694296e1a",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_4e40a31e4ba27eb166aaf2274d919a8e",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.HyperStack.__proj__HS__item__h",
+        "typing_FStar.HyperStack.__proj__HS__item__tip",
+        "typing_FStar.HyperStack.is_above", "typing_FStar.HyperStack.is_in",
+        "typing_FStar.Pointer.gfield", "typing_Test.colored_object_struct",
+        "typing_Test_Tm_abs_5ceac6df6df134aae3a8281b7ec65278",
+        "typing_Test_Tm_abs_ce71af378a4db80eda6384564d36a27e",
         "typing_tok_Test.Carrier@tok", "typing_tok_Test.Color@tok",
         "typing_tok_Test.X@tok", "typing_tok_Test.Y@tok"
       ],
@@ -717,7 +721,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.X",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
         "constructor_distinct_Test.Y", "disc_equation_Test.X",
         "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
@@ -737,11 +741,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -759,8 +763,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
+        "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -778,11 +783,18 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
-        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
-        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "constructor_distinct_Test.Carrier",
+        "constructor_distinct_Test.Color", "data_elim_FStar.HyperStack.HS",
+        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
+        "equation_FStar.HyperHeap.t", "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperStack.is_in", "equation_Test.point_struct",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "function_token_typing_FStar.HyperHeap.root",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -800,7 +812,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
         "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -819,10 +832,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -840,8 +854,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
-        "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -859,10 +873,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -880,10 +895,18 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
-        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "constructor_distinct_Test.Carrier",
+        "constructor_distinct_Test.Color", "data_elim_FStar.HyperStack.HS",
+        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
+        "equation_FStar.HyperHeap.t", "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperStack.is_in", "equation_Test.point_struct",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "function_token_typing_FStar.HyperHeap.root",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -901,10 +924,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -922,8 +946,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
-        "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -941,11 +966,17 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "data_elim_FStar.HyperStack.HS", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_FStar.HyperHeap.t",
+        "equation_FStar.HyperStack.hh", "equation_FStar.HyperStack.is_in",
         "equation_Test.point_struct",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "function_token_typing_FStar.HyperHeap.root",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -963,8 +994,8 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
-        "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -982,11 +1013,18 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Carrier",
-        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
-        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "constructor_distinct_Test.Carrier",
+        "constructor_distinct_Test.Color", "data_elim_FStar.HyperStack.HS",
+        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
+        "equation_FStar.HyperHeap.t", "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperStack.is_in", "equation_Test.point_struct",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "function_token_typing_FStar.HyperHeap.root",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -1004,7 +1042,8 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
         "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -1023,10 +1062,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -1044,8 +1084,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.Y",
+        "disc_equation_Test.X", "disc_equation_Test.Y",
+        "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -1063,10 +1104,9 @@
       2,
       1,
       [
-        "@query", "bool_typing", "disc_equation_Test.Carrier",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Test.Carrier",
         "disc_equation_Test.Color", "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -1084,11 +1124,18 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "constructor_distinct_Test.Carrier",
+        "constructor_distinct_Test.Color", "data_elim_FStar.HyperStack.HS",
         "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
+        "equation_FStar.HyperHeap.t", "equation_FStar.HyperStack.hh",
+        "equation_FStar.HyperStack.is_in", "equation_Test.point_struct",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "function_token_typing_FStar.HyperHeap.root",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -1106,11 +1153,17 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "data_elim_FStar.HyperStack.HS", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_FStar.HyperHeap.t",
+        "equation_FStar.HyperStack.hh", "equation_FStar.HyperStack.is_in",
         "equation_Test.point_struct",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
         "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "function_token_typing_FStar.HyperHeap.root",
+        "refinement_interpretation_FStar.HyperStack_Tm_refine_0dc1829dbc3c1d1c42b7a4e9e5c89884",
+        "typing_FStar.HyperStack.is_in"
       ],
       0
     ],
@@ -1128,11 +1181,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "disc_equation_Test.Carrier", "disc_equation_Test.Color",
         "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -1150,7 +1203,8 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
         "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
@@ -1169,9 +1223,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Test.X", "disc_equation_Test.Y",
-        "fuel_guarded_inversion_Test.point_fd",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -1189,9 +1243,9 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Test.X",
+        "constructor_distinct_Test.Y", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -1209,9 +1263,8 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Y", "disc_equation_Test.X",
-        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@MaxIFuel_assumption", "@query", "disc_equation_Test.X",
+        "disc_equation_Test.Y", "fuel_guarded_inversion_Test.point_fd"
       ],
       0
     ],
@@ -1229,11 +1282,11 @@
       2,
       1,
       [
-        "@query", "bool_typing", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
@@ -1251,11 +1304,12 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Test.Color",
-        "disc_equation_Test.Carrier", "disc_equation_Test.Color",
-        "equation_Test.point_struct",
-        "fuel_guarded_inversion_Test.colored_object_fd",
-        "pretyping_f537159ed795b314b4e58c260361ae86"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "constructor_distinct_Test.Carrier",
+        "constructor_distinct_Test.Color", "disc_equation_Test.Carrier",
+        "disc_equation_Test.Color", "equation_Test.point_struct",
+        "fuel_guarded_inversion_Test.colored_object_fd"
       ],
       0
     ],
