@@ -1,10 +1,12 @@
 module EtM.AE
-
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
+
+module MAC = EtM.MAC
 
 open Platform.Bytes
 open CoreCrypto

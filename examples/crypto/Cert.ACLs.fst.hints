@@ -17,13 +17,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_Cert.ACLs.canRead", "equation_Cert.ACLs.canWrite",
-        "equation_Cert.ACLs.file", "equation_Cert.ACLs.publicFile",
+        "@query", "equation_Cert.ACLs.canRead",
+        "equation_Cert.ACLs.canWrite", "equation_Cert.ACLs.publicFile",
         "equation_Cert.ACLs.readme", "equation_Cert.ACLs.tmp",
-        "function_token_typing_Cert.ACLs.readme",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0",
-        "typing_Cert.ACLs.canRead"
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],

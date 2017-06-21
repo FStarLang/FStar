@@ -1,5 +1,5 @@
 module EtM.MAC
-
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
@@ -8,6 +8,7 @@ open FStar.Monotonic.RRef
 
 open Platform.Bytes
 open CoreCrypto
+
 module Ideal = EtM.Ideal
 module CPA = EtM.CPA
 

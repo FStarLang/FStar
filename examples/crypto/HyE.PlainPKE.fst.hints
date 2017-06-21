@@ -1,20 +1,12 @@
 [
-  "&l6\u00113¯A‰jÛ\tÕ\u0016uYâ",
+  "(g\u000bÂ[§ŸµÕ\rè‘ù\u000f†\u001d",
   [
     [
       "HyE.PlainPKE.repr",
       1,
       2,
       1,
-      [
-        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
-        "constructor_distinct_HyperStack.CoreCrypto.AES_128_GCM",
-        "equality_tok_CoreCrypto.AES_128_GCM@tok",
-        "equality_tok_HyperStack.CoreCrypto.AES_128_GCM@tok",
-        "equation_CoreCrypto.aeadKeySize", "equation_HyE.AE.keysize",
-        "equation_HyE.RSA.plainsize",
-        "equation_HyperStack.CoreCrypto.aeadKeySize"
-      ],
+      [ "@query", "equation_HyE.AE.keysize", "equation_HyE.RSA.plainsize" ],
       0
     ]
   ]
