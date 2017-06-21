@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.All
-open FStar.ST
+module FStar.HyperHeap.All
+open FStar.HyperHeap.ST
 
 let all_pre = all_pre_h HyperHeap.t
 let all_post (a:Type) = all_post_h HyperHeap.t a

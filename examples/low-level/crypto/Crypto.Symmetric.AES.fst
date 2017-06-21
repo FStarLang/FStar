@@ -10,6 +10,7 @@ module Crypto.Symmetric.AES
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -17,6 +18,7 @@ open FStar.Buffer
 (* Module abbreviations *)
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32
@@ -206,7 +208,7 @@ type sbox  = lbytes 256
 (*   0x55uy; 0x21uy; 0x0cuy; 0x7duy *)
 
 
-val mk_sbox: sb:sbox -> STL unit
+val mk_sbox: sb:sbox -> Stack unit
   (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> live h1 sb /\ modifies_1 sb h0 h1))
 let mk_sbox sbox =
@@ -275,7 +277,7 @@ let mk_sbox sbox =
   sbox.(248ul) <- 0x41uy; sbox.(249ul) <- 0x99uy; sbox.(250ul) <- 0x2duy; sbox.(251ul) <- 0x0fuy;
   sbox.(252ul) <- 0xb0uy; sbox.(253ul) <- 0x54uy; sbox.(254ul) <- 0xbbuy; sbox.(255ul) <- 0x16uy
 
-val mk_inv_sbox: sb:sbox -> STL unit
+val mk_inv_sbox: sb:sbox -> Stack unit
   (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> live h1 sb /\ modifies_1 sb h0 h1))
 let mk_inv_sbox sbox =
@@ -345,7 +347,7 @@ let mk_inv_sbox sbox =
   sbox.(252ul) <- 0x55uy; sbox.(253ul) <- 0x21uy; sbox.(254ul) <- 0x0cuy; sbox.(255ul) <- 0x7duy
 #reset-options
 
-let rec access_aux: sb:sbox -> byte -> ctr:UInt32.t{v ctr <= 256} -> byte -> STL byte
+let rec access_aux: sb:sbox -> byte -> ctr:UInt32.t{v ctr <= 256} -> byte -> Stack byte
   (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> h1 == h0))
   = fun sbox i ctr tmp ->
@@ -354,7 +356,7 @@ let rec access_aux: sb:sbox -> byte -> ctr:UInt32.t{v ctr <= 256} -> byte -> STL
        let tmp = tmp |^ (mask &^ sbox.(ctr)) in
        access_aux sbox i (U32.(ctr +^ 1ul)) tmp
 
-val access: sb:sbox -> idx:byte -> STL byte
+val access: sb:sbox -> idx:byte -> Stack byte
   (requires (fun h -> live h sb))
   (ensures  (fun h0 _ h1 -> h1 == h0))
 let access sbox i =
@@ -364,7 +366,7 @@ let access sbox i =
 
 // ENCRYPTION 
 
-val subBytes_aux_sbox: state:block -> sb:sbox{disjoint state sb} -> ctr:idx_16 -> STL unit
+val subBytes_aux_sbox: state:block -> sb:sbox{disjoint state sb} -> ctr:idx_16 -> Stack unit
   (requires (fun h -> live h state /\ live h sb))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec subBytes_aux_sbox state sbox ctr =
@@ -376,13 +378,13 @@ let rec subBytes_aux_sbox state sbox ctr =
     subBytes_aux_sbox state sbox (U32.(ctr +^ 1ul))
   end
 
-val subBytes_sbox: state:block -> sbox:sbox{disjoint state sbox} -> STL unit
+val subBytes_sbox: state:block -> sbox:sbox{disjoint state sbox} -> Stack unit
   (requires (fun h -> live h state /\ live h sbox))
   (ensures  (fun h0 _ h1 -> modifies_1 state h0 h1 /\ live h1 state))
 let subBytes_sbox state sbox =
   subBytes_aux_sbox state sbox 0ul
 
-val shiftRows: state:block -> STL unit
+val shiftRows: state:block -> Stack unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let shiftRows state =
@@ -409,7 +411,7 @@ let shiftRows state =
   state.(i+^ 8ul) <- state.(i+^ 4ul);
   state.(i+^ 4ul) <- tmp
 
-val mixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
+val mixColumns_: state:block -> c:UInt32.t{v c < 4} -> Stack unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let mixColumns_ state c =
@@ -425,7 +427,7 @@ let mixColumns_ state c =
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
-val mixColumns: state:block -> STL unit
+val mixColumns: state:block -> Stack unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let mixColumns state =
@@ -436,7 +438,7 @@ let mixColumns state =
 
 #reset-options "--z3rlimit 10 --initial_fuel 0 --max_fuel 0"
 
-val addRoundKey_: state:block -> w:xkey{disjoint state w} -> rnd -> c:UInt32.t{v c < 4} -> STL unit
+val addRoundKey_: state:block -> w:xkey{disjoint state w} -> rnd -> c:UInt32.t{v c < 4} -> Stack unit
   (requires (fun h -> live h state /\ live h w))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let addRoundKey_ state w round c =
@@ -449,7 +451,7 @@ let addRoundKey_ state w round c =
   target.(2ul) <- target.(2ul) ^^ subkey.(2ul);
   target.(3ul) <- target.(3ul) ^^ subkey.(3ul)
 
-val addRoundKey: state:block -> w:xkey{disjoint state w} -> round:rnd  -> STL unit
+val addRoundKey: state:block -> w:xkey{disjoint state w} -> round:rnd  -> Stack unit
   (requires (fun h -> live h state /\ live h w))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let addRoundKey state w round =
@@ -458,7 +460,7 @@ let addRoundKey state w round =
   addRoundKey_ state w round 2ul;
   addRoundKey_ state w round 3ul
 
-val cipher_loop: state:block -> w:xkey{disjoint state w} -> sb:sbox{disjoint sb state} -> round:rnd -> STL unit
+val cipher_loop: state:block -> w:xkey{disjoint state w} -> sb:sbox{disjoint sb state} -> round:rnd -> Stack unit
   (requires (fun h -> live h state /\ live h w /\ live h sb))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec cipher_loop state w sbox round =
@@ -474,7 +476,7 @@ let rec cipher_loop state w sbox round =
 
 #reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
-val cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
+val cipher: out:block -> input:block -> w:xkey -> sb:sbox -> Stack unit
   (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\ 
                    disjoint out input /\ disjoint out w /\ disjoint out sb))
   (ensures  (fun h0 _ h1 -> live h1 out /\ modifies_1 out h0 h1))
@@ -493,7 +495,7 @@ let cipher out input w sbox =
 
 // KEY EXPANSION
 
-val rotWord: word:lbytes 4 -> STL unit
+val rotWord: word:lbytes 4 -> Stack unit
   (requires (fun h -> live h word))
   (ensures  (fun h0 _ h1 -> live h1 word /\ modifies_1 word h0 h1))
 let rotWord word =
@@ -506,7 +508,7 @@ let rotWord word =
   word.(2ul) <- w3;
   word.(3ul) <- w0
 
-val subWord: word:lbytes 4 -> sbox:sbox -> STL unit
+val subWord: word:lbytes 4 -> sbox:sbox -> Stack unit
   (requires (fun h -> live h word /\ live h sbox /\ disjoint word sbox))
   (ensures  (fun h0 _ h1 -> live h1 word /\ modifies_1 word h0 h1))
 let subWord word sbox =
@@ -527,7 +529,7 @@ let rec rcon i tmp =
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --max_fuel 0"
 
-val keyExpansion_aux_0:w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> STL unit
+val keyExpansion_aux_0:w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> Stack unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox /\ 
                    disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 temp /\ modifies_1 temp h0 h1))
@@ -548,7 +550,7 @@ let keyExpansion_aux_0 w temp sbox j =
 
 #reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0"
 
-val keyExpansion_aux_1: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> STL unit
+val keyExpansion_aux_1: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i < (v xkeylen / 4) /\ v i >= v nk} -> Stack unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
     /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 w /\ modifies_1 w h0 h1))
@@ -568,7 +570,7 @@ let keyExpansion_aux_1 w temp sbox j =
   w.(i+^2ul) <- H8.(t2 ^^ w2);
   w.(i+^3ul) <- H8.(t3 ^^ w3)
 
-val keyExpansion_aux: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= (v xkeylen / 4) /\ v i >= v nk} -> STL unit
+val keyExpansion_aux: w:xkey -> temp:lbytes 4 -> sbox:sbox -> i:UInt32.t{v i <= (v xkeylen / 4) /\ v i >= v nk} -> Stack unit
   (requires (fun h -> live h w /\ live h temp /\ live h sbox
     /\ disjoint w temp /\ disjoint w sbox /\ disjoint temp sbox))
   (ensures  (fun h0 _ h1 -> live h1 temp /\ live h1 w /\ modifies_2 temp w h0 h1))
@@ -582,7 +584,7 @@ let rec keyExpansion_aux w temp sbox j =
     keyExpansion_aux w temp sbox (j +^ 1ul)
   end
 
-val keyExpansion: key:skey -> w:xkey -> sb:sbox -> STL unit
+val keyExpansion: key:skey -> w:xkey -> sb:sbox -> Stack unit
   (requires (fun h -> live h key /\ live h w /\ live h sb /\ disjoint key w /\ disjoint w sb))
   (ensures  (fun h0 _ h1 -> live h1 w /\ modifies_1 w h0 h1))
 let keyExpansion key w sbox =
@@ -596,7 +598,7 @@ let keyExpansion key w sbox =
 
 // DECRYPTION
 
-val invSubBytes_aux_sbox: state:block -> sbox:sbox -> ctr:idx_16 -> STL unit
+val invSubBytes_aux_sbox: state:block -> sbox:sbox -> ctr:idx_16 -> Stack unit
   (requires (fun h -> live h state /\ live h sbox /\ disjoint state sbox))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let rec invSubBytes_aux_sbox state sbox ctr =
@@ -608,13 +610,13 @@ let rec invSubBytes_aux_sbox state sbox ctr =
     invSubBytes_aux_sbox state sbox (U32.(ctr+^1ul))
   end
 
-val invSubBytes_sbox: state:block -> sbox:sbox -> STL unit
+val invSubBytes_sbox: state:block -> sbox:sbox -> Stack unit
   (requires (fun h -> live h state /\ live h sbox /\ disjoint state sbox))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let invSubBytes_sbox state sbox =
   invSubBytes_aux_sbox state sbox 0ul
 
-val invShiftRows: state:block -> STL unit
+val invShiftRows: state:block -> Stack unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1))
 let invShiftRows state =
@@ -641,7 +643,7 @@ let invShiftRows state =
   state.(i+^8ul)  <- state.(i+^4ul);
   state.(i+^4ul)  <- tmp
 
-val invMixColumns_: state:block -> c:UInt32.t{v c < 4} -> STL unit
+val invMixColumns_: state:block -> c:UInt32.t{v c < 4} -> Stack unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let invMixColumns_ state c =
@@ -658,7 +660,7 @@ let invMixColumns_ state c =
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
-val invMixColumns: state:block -> STL unit
+val invMixColumns: state:block -> Stack unit
   (requires (fun h -> live h state))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let invMixColumns state =
@@ -667,7 +669,7 @@ let invMixColumns state =
   invMixColumns_ state 2ul;
   invMixColumns_ state 3ul
 
-val inv_cipher_loop: state:block -> w:xkey -> sb:sbox -> round:UInt32.t{v round <= v nr - 1} -> STL unit
+val inv_cipher_loop: state:block -> w:xkey -> sb:sbox -> round:UInt32.t{v round <= v nr - 1} -> Stack unit
   (requires (fun h -> live h state /\ live h w /\ live h sb /\ disjoint state w /\ disjoint state sb /\ disjoint sb w))
   (ensures  (fun h0 _ h1 -> live h1 state /\ modifies_1 state h0 h1 ))
 let rec inv_cipher_loop state w sbox round =
@@ -681,7 +683,7 @@ let rec inv_cipher_loop state w sbox round =
     inv_cipher_loop state w sbox (round -^ 1ul)
   end
 
-val inv_cipher: out:block -> input:block -> w:xkey -> sb:sbox -> STL unit
+val inv_cipher: out:block -> input:block -> w:xkey -> sb:sbox -> Stack unit
   (requires (fun h -> live h out /\ live h input /\ live h w /\ live h sb /\ 
                    disjoint out input /\ disjoint out w /\ disjoint out sb /\ disjoint sb w))
   (ensures  (fun h0 _ h1 -> live h1 out /\ modifies_1 out h0 h1))

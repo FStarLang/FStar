@@ -3,9 +3,12 @@
    computational assumption *)
 
 module Ex12.MAC
+open FStar.ST
 open FStar.All
 open Ex12.SHA1
 open FStar.IO
+
+module SHA1 = Ex12.SHA1
 
 (* ---- specification *)
 

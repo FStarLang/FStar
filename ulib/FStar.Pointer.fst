@@ -3,7 +3,7 @@ module FStar.Pointer
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 (*** Definitions *)
 
@@ -2310,7 +2310,7 @@ let modifies_0_1 (#a:typ) (b:pointer a) h0 h1 h2 : Lemma
 abstract let screate
   (value:typ)
   (s: type_of_typ value)
-: StackInline (pointer value)
+: HST.StackInline (pointer value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
        unused_in b h0
@@ -2336,7 +2336,7 @@ abstract let ecreate
   (t:typ)
   (r:HH.rid)
   (s: type_of_typ t)
-: ST (pointer t)
+: HST.ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r))
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
@@ -2357,7 +2357,7 @@ abstract let field
  (#l: struct_typ)
  (p: pointer (TStruct l))
  (fd: struct_field l)
-: ST (pointer (typ_of_struct_field l fd))
+: HST.ST (pointer (typ_of_struct_field l fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
 = _field p fd
@@ -2367,7 +2367,7 @@ abstract let cell
  (#value: typ)
  (p: pointer (TArray length value))
  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: ST (pointer value)
+: HST.ST (pointer value)
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gcell p i))
 = _cell p i
@@ -2375,7 +2375,7 @@ abstract let cell
 abstract let read
  (#value: typ)
  (p: pointer value)
-: ST (type_of_typ value)
+: HST.ST (type_of_typ value)
   (requires (fun h -> live h p))
   (ensures (fun h0 v h1 -> live h0 p /\ h0 == h1 /\ v == gread h0 p))
 = let h = HST.get () in
@@ -2385,7 +2385,7 @@ abstract let read
 
 #reset-options "--z3rlimit 32"
 
-abstract val write: #a:typ -> b:pointer a -> z:(type_of_typ a) -> Stack unit
+abstract val write: #a:Type -> b:pointer a -> z:a -> HST.Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b
     /\ modifies_1 b h0 h1

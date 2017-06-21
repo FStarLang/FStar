@@ -54,7 +54,7 @@ let screate
 
 let f () =
   let s : Pointer.pointer (netype_carrier ty) = screate ty in
-  let h = ST.get () in
+  let h = FStar.HyperStack.ST.get () in
   let p = Pointer.field (Pointer.field s "A") "Y" in
   let _ = Pointer.write (Pointer.cell p 1ul) 19ul in
   let b = BufferNG.buffer_of_array_pointer p in

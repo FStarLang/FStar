@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tactics.Basic
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -10,7 +11,7 @@ open FStar.TypeChecker.Env
 module SP = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -182,11 +183,11 @@ let add_implicits (i:Env.implicits) : tac<unit> =
 (* Some utilities on goals *)
 let is_true t =
     match U.destruct_typ_as_formula t with
-    | Some (U.BaseConn(l, [])) -> Ident.lid_equals l SC.true_lid
+    | Some (U.BaseConn(l, [])) -> Ident.lid_equals l PC.true_lid
     | _ -> false
 let is_false t =
     match U.destruct_typ_as_formula t with
-    | Some (U.BaseConn(l, [])) -> Ident.lid_equals l SC.false_lid
+    | Some (U.BaseConn(l, [])) -> Ident.lid_equals l PC.false_lid
     | _ -> false
 let conj_goals g1 g2 =
     let t1 = g1.goal_ty in
@@ -374,17 +375,17 @@ let intros : tac<binders>
 let intros_no_names = bind intros (fun _ -> ret ())
 
 let mk_squash p =
-    let sq = U.fvar_const FStar.Syntax.Const.squash_lid in
-    U.mk_app sq [S.as_arg p]
+  let sq = U.fvar_const PC.squash_lid in
+  U.mk_app sq [S.as_arg p]
 
 let un_squash t =
     let head, args = U.head_and_args t in
     match (U.un_uinst head).n, args with
     | Tm_fvar fv, [(p, _)]
-        when S.fv_eq_lid fv FStar.Syntax.Const.squash_lid ->
+        when S.fv_eq_lid fv PC.squash_lid ->
       Some p
     | Tm_refine({sort={n=Tm_fvar fv}}, p), []
-        when S.fv_eq_lid fv FStar.Syntax.Const.unit_lid ->
+        when S.fv_eq_lid fv PC.unit_lid ->
       Some p
     | _ ->
       None
@@ -397,7 +398,7 @@ let imp_intro : tac<binder> =
     with_cur_goal "imp_intro" (fun goal ->
     match U.destruct_typ_as_formula goal.goal_ty with
     | Some (U.BaseConn(l, [(lhs, _); (rhs, _)]))
-        when Ident.lid_equals l SC.imp_lid ->
+        when Ident.lid_equals l PC.imp_lid ->
       let name = S.new_bv None lhs in //(maybe_squash goal.context lhs) in
       let new_goal = {
         context = Env.push_bv goal.context name;
@@ -415,7 +416,7 @@ let split : tac<unit>
     = with_cur_goal "split" (fun goal ->
         match U.destruct_typ_as_formula goal.goal_ty with
         | Some (U.BaseConn(l, args))
-            when Ident.lid_equals l SC.and_lid ->
+            when Ident.lid_equals l PC.and_lid ->
           let new_goals = args |> List.map (fun (a, _) ->
                  {goal with witness=None;
                             goal_ty=a}) in
@@ -431,7 +432,7 @@ let trivial
       let t = N.normalize steps goal.context goal.goal_ty in
       match U.destruct_typ_as_formula t with
       | Some (U.BaseConn(l, []))
-            when Ident.lid_equals l SC.true_lid ->
+            when Ident.lid_equals l PC.true_lid ->
         bind dismiss (fun _ ->
         add_goals ([{goal with goal_ty=t}]))
       | _ -> fail "Not a trivial goal")
@@ -509,7 +510,7 @@ let rewrite (h:binder) : tac<unit>
       bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
       match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
       | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
-                when Ident.lid_equals l SC.eq2_lid ->
+                when Ident.lid_equals l PC.eq2_lid ->
         (match (SS.compress x).n with
          | Tm_name x ->
            let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty} in
@@ -599,11 +600,11 @@ let as_name x =
 let destruct_equality_imp t =
     match U.destruct_typ_as_formula t with
     | Some (U.BaseConn(l, [(lhs, _); (rhs, _)]))
-        when Ident.lid_equals l SC.imp_lid ->
+        when Ident.lid_equals l PC.imp_lid ->
       (match U.destruct_typ_as_formula lhs with
        | Some (U.BaseConn(eq, [_; (x, _); (e, _)]))
        | Some (U.BaseConn(eq, [(x, _); (e, _)])) //NS: The mk_eq using in TypeChecker.Util.add_equality_to_post_condition is not instantiating the type and universe properly. FIX IT! TODO
-            when Ident.lid_equals eq SC.eq2_lid
+            when Ident.lid_equals eq PC.eq2_lid
             && is_name x ->
          Some (as_name x, e, rhs)
        | _ -> None)
@@ -663,12 +664,12 @@ let rec visit (callback:tac<unit>) : tac<unit> =
                       ret())))))
 
                     | Some (U.BaseConn(l, _))
-                        when Ident.lid_equals l SC.and_lid ->
+                        when Ident.lid_equals l PC.and_lid ->
                       bind (seq split (visit callback)) (fun _ ->
                             merge_sub_goals)
 
                     | Some (U.BaseConn(l, _))
-                        when Ident.lid_equals l SC.imp_lid ->
+                        when Ident.lid_equals l PC.imp_lid ->
                       bind imp_intro (fun h ->
                       seq (visit callback) revert)
 

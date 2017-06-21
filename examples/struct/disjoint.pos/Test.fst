@@ -1,7 +1,7 @@
 module Test
 
 module S  = FStar.Pointer
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 let struct : S.struct_typ = [
   ("I", S.TBase S.TInt);

@@ -11,6 +11,8 @@ open FStar.Monotonic.RRef
 open Platform.Bytes
 open CoreCrypto
 
+module Ideal = EtM.Ideal
+
 type msg = EtM.CPA.cipher
 
 let keysize   = 64

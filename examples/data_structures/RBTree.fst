@@ -221,7 +221,7 @@ val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              (requires (pre_balance c lt ky rt))
              (ensures (fun r -> post_balance c lt ky rt r))
 
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 40"
 
 (* it's pretty cool that the spec is proved easily without any hints ! *)
 let balance c lt ky rt =

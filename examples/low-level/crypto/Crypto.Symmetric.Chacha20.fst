@@ -11,12 +11,14 @@ open FStar.UInt32
 open FStar.Int.Cast
 (*  Effects and memory layout *)
 open FStar.HyperStack
+open FStar.HyperStack.ST
 (*  Buffers *)
 open FStar.Buffer
 open Buffer.Utils
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 type u64 = FStar.UInt64.t
 
