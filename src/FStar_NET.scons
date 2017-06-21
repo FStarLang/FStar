@@ -29,8 +29,8 @@ chmod_a_plus_x = 0777  # 'a+x' implemented as rwx/rwx/rwx
 NoCache('$BIN/fstar.exe') # don't cache these... Always regenerate from msbuild
 vs_fstar = env.Command( '$BIN/fstar.exe', fstar_sln, 
                         ['$MSBUILD $MSBUILDARGS $SOURCE',
-                        Chmod(str(env['BIN'])+'/tests.exe', chmod_a_plus_x),
-                        Chmod(str(env['BIN'])+'/fstar.exe', chmod_a_plus_x)])
+                        Chmod(env['BIN']+'/tests.exe', chmod_a_plus_x),
+                        Chmod(env['BIN']+'/fstar.exe', chmod_a_plus_x)])
 Requires(vs_fstar, chmod_packages) # 'install_packages" must complete ahead of 'vs_fstar')
 
 my_top = vs_fstar # for external use

@@ -49,7 +49,7 @@ else:  # Unix
 
 env['FSTARBOOT'] = '$FSTAR $OTHERFLAGS --eager_inference --lax --MLish --no_location_info --odir ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis'               
 
-print("****************************** FSTAR = " + env['FSTAR'])
+print("****************************** $FSTAR = " + env['FSTAR'])
 
 prior = env.Alias('boot-prior')     # ocaml-LKG if it works
 # --------------------------------------------------------------------

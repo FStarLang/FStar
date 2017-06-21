@@ -72,10 +72,13 @@ else:
         
 # propagate the OS PATH environment variable into child processes, so tools like menhir can be found  
 env['ENV']['PATH']=os.environ['PATH']
-env['BIN']=Dir('../bin')
+env['BIN']=str(Dir('../bin'))
 env['CONFIGURATION']='Release'
 env['MSBUILDARGS']='/verbosity:minimal /p:Configuration=$CONFIGURATION'
 env['NUGET']=File('#/VS/.nuget/NuGet.exe')
+
+print("****************************** $BIN = " + env['BIN'])
+
 
 Export('env')
 
