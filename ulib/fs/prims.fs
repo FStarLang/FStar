@@ -20,7 +20,7 @@ module Prims
   type 'a option = 'a Microsoft.FSharp.Core.option
   type nat = int
   type 'dummy b2t = Dummy_b2t of unit
-  type ('a,'b) l__HashMultiMap = ('a, 'b) Microsoft.FSharp.Collections.HashMultiMap
+  //type ('a,'b) l__HashMultiMap = ('a, 'b) Microsoft.FSharp.Collections.HashMultiMap
   type (' p, ' q) l_or =
   | Left of ' p
   | Right of ' q
@@ -106,3 +106,11 @@ module Prims
   let raise e = raise e
   let string_of_bool b = sprintf "%b" b
   let string_of_int i = sprintf "%d" i
+
+  type ('a, 'b) dtuple2 =
+  | Mkdtuple2 of 'a * 'b
+
+  let __proj__Mkdtuple2__item___1 x = match x with
+  | Mkdtuple2 (x, _) -> x
+  let __proj__Mkdtuple2__item___2 x = match x with
+  | Mkdtuple2 (_, x) -> x
