@@ -6,8 +6,8 @@ include ../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
 	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
-	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.ImplicitFalse.fst \
-         NegativeTests.Positivity.fst
+	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.Positivity.fst \
+         NegativeTests.ZZImplicitFalse.fst #this one needs to be last, since it contains an unrecoverable error (implicit arg could not be resolved)
 
 
 # if the `--lax` flag is used, negative tests will report a single error.

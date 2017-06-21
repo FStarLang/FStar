@@ -2,15 +2,9 @@ module Test
 
 
 module DM = FStar.DependentMap
-<<<<<<< HEAD
 module S  = FStar.Struct
 module HST = FStar.HyperStack.ST
 module B = FStar.Buffer
-=======
-module S  = FStar.Pointer
-module B  = FStar.BufferNG
-module HST = FStar.ST
->>>>>>> origin/master
 
 type fields =
 | I
