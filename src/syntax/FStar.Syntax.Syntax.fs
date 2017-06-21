@@ -28,6 +28,7 @@ open FStar.Const
 open FStar.Dyn
 
 (* Objects with metadata *)
+[@ PpxDeriving ]
 type withinfo_t<'a,'t> = {
   v:  'a;
   ty: 't;
@@ -35,21 +36,31 @@ type withinfo_t<'a,'t> = {
 }
 
 (* Free term and type variables *)
+[@ PpxDeriving ]
 type var<'t>  = withinfo_t<lident,'t>
+
 (* Term language *)
+[@ PpxDeriving ]
 type sconst = FStar.Const.sconst
 
+[@ PpxDeriving ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
   | LightOff
 
+[@ (PpxDerivingConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
+[@ PpxDeriving ]
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
+
+[@ PpxDeriving ]
 type aqual = option<arg_qualifier>
+
+[@ PpxDeriving ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -60,15 +71,26 @@ type universe =
   | U_unknown
 and univ_name = ident
 
+[@ PpxDeriving ]
 type universe_uvar = Unionfind.p_uvar<option<universe>>
+
+[@ PpxDeriving ]
 type univ_names    = list<univ_name>
+
+[@ PpxDeriving ]
 type universes     = list<universe>
+
+[@ PpxDeriving ]
 type monad_name    = lident
+
+[@ PpxDeriving ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+[@ PpxDeriving ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
