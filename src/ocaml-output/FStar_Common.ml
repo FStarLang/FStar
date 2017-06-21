@@ -13,8 +13,8 @@ let try_convert_file_name_to_mixed: Prims.string -> Prims.string =
     then
       let uu____16 = FStar_Util.smap_try_find cache s in
       match uu____16 with
-      | Some s1 -> s1
-      | None  ->
+      | FStar_Pervasives_Native.Some s1 -> s1
+      | FStar_Pervasives_Native.None  ->
           let uu____19 =
             FStar_Util.run_proc "cygpath" (Prims.strcat "-m " s) "" in
           (match uu____19 with

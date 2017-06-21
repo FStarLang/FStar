@@ -57,7 +57,7 @@
       "FStar.Math.Lib.slash_decr_axiom",
       2,
       2,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
         "equation_Prims.nat", "equation_Prims.pos", "int_inversion",

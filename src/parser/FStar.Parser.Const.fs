@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.Const
+open FStar.ST
 open FStar.All
 open FStar.Util
 open FStar.Ident
@@ -25,6 +26,7 @@ module U = FStar.Util
 let p2l l = lid_of_path l dummyRange
 let pconst s       = p2l ["Prims";s]
 let psconst s      = p2l ["FStar"; "Pervasives"; s]
+let psnconst s      = p2l ["FStar"; "Pervasives" ; "Native" ; s]
 let prims_lid      = p2l ["Prims"]
 let pervasives_lid = p2l ["FStar"; "Pervasives"]
 let fstar_ns_lid   = p2l ["FStar"]
@@ -38,7 +40,7 @@ let bytes_lid    = pconst "bytes"
 let int_lid      = pconst "int"
 let exn_lid      = pconst "exn"
 let list_lid     = pconst "list"
-let option_lid   = psconst "option"
+let option_lid   = psnconst "option"
 let either_lid   = psconst "either"
 let pattern_lid  = pconst "pattern"
 let precedes_lid = pconst "precedes"
@@ -93,6 +95,8 @@ let eq3_lid    = pconst  "eq3"
 (* Some common term constructors *)
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
+let some_lid        = psnconst  "Some"
+let none_lid        = psnconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 (* list_append_lid is needed to desugar @ in the compiler *)
@@ -101,6 +105,8 @@ let list_append_lid = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
+let string_of_int_lid = p2l ["Prims"; "string_of_int"]
+let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -186,9 +192,9 @@ let gen_reset =
 let next_id = fst gen_reset
 
 let sli (l:lident) : string =
-    if FStar.Options.print_real_names()
-    then l.str
-    else l.ident.idText
+  if FStar.Options.print_real_names()
+  then l.str
+  else l.ident.idText
 
 let const_to_string x = match x with
   | Const_effect -> "Effect"
@@ -203,24 +209,66 @@ let const_to_string x = match x with
   | Const_reify -> "reify"
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 
-(* tuple is defined in prims if n = 2, in pervasives otherwise *)
+
+(* Tuples  *)
+
+let mk_tuple_lid n r =
+  let t = U.format1 "tuple%s" (U.string_of_int n) in
+  set_lid_range (psnconst t) r
+
+let is_tuple_constructor_string (s:string) :bool =
+  U.starts_with s "FStar.Pervasives.Native.tuple"
+
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
+
+let mk_tuple_data_lid n r =
+  let t = U.format1 "Mktuple%s" (U.string_of_int n) in
+  set_lid_range (psnconst t) r
+
+let is_tuple_datacon_string (s:string) :bool =
+  U.starts_with s "FStar.Pervasives.Native.Mktuple"
+
+let is_tuple_data_lid f n =
+  lid_equals f (mk_tuple_data_lid n dummyRange)
+
+let is_tuple_data_lid' f = is_tuple_datacon_string f.str
+
+
+(* Dtuples *)
+
+(* dtuple is defined in prims if n = 2, in pervasives otherwise *)
 let mod_prefix_dtuple (n:int) :(string -> lident) =
   if n = 2 then pconst else psconst
 
- let mk_tuple_data_lid n r =
-  let t = U.format1 "Mktuple%s" (U.string_of_int n) in
-  set_lid_range (psconst t) r
+let mk_dtuple_lid n r =
+  let t = U.format1 "dtuple%s" (U.string_of_int n) in
+  set_lid_range ((mod_prefix_dtuple n) t) r
+
+let is_dtuple_constructor_string (s:string) :bool =
+  s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
+
+let is_dtuple_constructor_lid lid = is_dtuple_constructor_string lid.str
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
   set_lid_range ((mod_prefix_dtuple n) t) r
 
-let is_dtuple_data_lid' f =
-    U.starts_with (FStar.Ident.text_of_lid f) "Mkdtuple"
+let is_dtuple_datacon_string (s:string) :bool =
+  s = "Prims.Mkdtuple2" || U.starts_with s "FStar.Pervasives.Mkdtuple"
 
-let is_tuple_data_lid' f =
-    f.nsstr = "FStar.Pervasives" && U.starts_with f.ident.idText "Mktuple"
+let is_dtuple_data_lid f n =
+  lid_equals f (mk_dtuple_data_lid n dummyRange)
+
+let is_dtuple_data_lid' f = is_dtuple_datacon_string (text_of_lid f)
 
 let is_name (lid:lident) =
   let c = U.char_at lid.ident.idText 0 in
   U.is_upper c
+
+
+(* tactic constants *)
+let fstar_tactics_lid s = lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
+let tactic_lid = fstar_tactics_lid "tactic"
+let by_tactic_lid = fstar_tactics_lid "by_tactic"
+let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
+let fstar_tactics_embed_lid = fstar_tactics_lid "__embed"

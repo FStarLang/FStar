@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Char
+open FStar.ST
 open FStar.All
 type char' = char
 type char = char'

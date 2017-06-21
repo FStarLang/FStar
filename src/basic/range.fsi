@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Range
+open FStar.ST
 open FStar.All
 open FStar.BaseTypes
 
