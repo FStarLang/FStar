@@ -203,9 +203,10 @@ let norm_universe cfg env u =
                           else failwith "Universe variable not found"
             end
           | U_unif _ when cfg.steps |> List.contains CheckNoUvars ->
-            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
-                                       (Range.string_of_range (Env.get_range cfg.tcenv))
-                                       (Print.univ_to_string u))
+            [U_zero]
+//            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
+//                                       (Range.string_of_range (Env.get_range cfg.tcenv))
+//                                       (Print.univ_to_string u))
 
           | U_zero
           | U_unif _
