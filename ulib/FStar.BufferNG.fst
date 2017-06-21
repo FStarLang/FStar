@@ -370,6 +370,7 @@ abstract let gread_pointer_of_buffer_cell'
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
 
+abstract
 let read
   (#t: Type)
   (b: buffer t)
@@ -392,9 +393,14 @@ abstract let disjoint_gpointer_of_buffer_cell
   [SMTPat (P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2))]
 = ()
 
-(* For a "disjoint" clause on buffers, we could use the following TRANSPARENT definitions: *)
+(* For a "disjoint" clause on buffers, we use the following
+   definitions.  We used to make them transparent, but doing so
+   actually led to unplayable hints in some examples. So it seems that
+   we still need to take the "axiomatic" approach, by defining
+   everything abstract and providing specific introduction and
+   elimination rules with suitable patterns.  *)
 
-unfold
+abstract
 let disjoint_buffer_vs_pointer
   (#t1 #t2: Type)
   (b: buffer t1)
@@ -402,7 +408,73 @@ let disjoint_buffer_vs_pointer
 : GTot Type0
 = forall (i: UInt32.t { UInt32.v i < UInt32.v (length b) } ) . P.disjoint (gpointer_of_buffer_cell b i) p
 
-unfold
+
+abstract
+let disjoint_buffer_vs_pointer_gsingleton_buffer_of_pointer
+  (#t1 #t2: Type)
+  (p1: P.pointer t1)
+  (p2: P.pointer t2)
+: Lemma
+  (requires (P.disjoint p1 p2))
+  (ensures (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2))
+  [SMTPat (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2)]
+= ()
+
+abstract
+let disjoint_buffer_vs_pointer_gbuffer_of_array_pointer
+  (#len: UInt32.t)
+  (#t1 #t2: Type)
+  (p1: P.pointer (P.array len t1))
+  (p2: P.pointer t2)
+: Lemma
+  (requires (P.disjoint p1 p2))
+  (ensures (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2))
+  [SMTPat (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2)]
+= let b = gbuffer_of_array_pointer p1 in
+  assert (forall (i: UInt32.t {UInt32.v i < UInt32.v len}) . P.includes p1 (gpointer_of_buffer_cell b i))
+
+abstract
+let disjoint_buffer_vs_pointer_includes
+  (#t1 #t2 #t2': Type)
+  (b1: buffer t1)
+  (p2: P.pointer t2)
+  (p2': P.pointer t2')
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2 /\ P.includes p2 p2'))
+  (ensures (disjoint_buffer_vs_pointer b1 p2'))
+  [SMTPatOr [
+    [SMTPat (disjoint_buffer_vs_pointer b1 p2'); SMTPat (P.includes p2 p2')];
+    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (P.includes p2 p2')];
+    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (disjoint_buffer_vs_pointer b1 p2)];
+  ]]
+= ()
+
+abstract
+let disjoint_buffer_vs_pointer_gsub
+  (#t1 #t2: Type)
+  (b1: buffer t1)
+  (i: UInt32.t)
+  (len: UInt32.t {UInt32.v i + UInt32.v len <= UInt32.v (length b1)} )
+  (p2: P.pointer t2)
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2))
+  (ensures (disjoint_buffer_vs_pointer (gsub b1 i len) p2))
+  [SMTPat (disjoint_buffer_vs_pointer (gsub b1 i len) p2)]
+= ()
+
+abstract
+let disjoint_buffer_vs_pointer_elim
+  (#t1 #t2: Type)
+  (b1: buffer t1)
+  (p2: P.pointer t2)
+  (i: UInt32.t { UInt32.v i < UInt32.v (length b1)})
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2))
+  (ensures (P.disjoint (gpointer_of_buffer_cell b1 i) p2))
+  [SMTPat (P.disjoint (gpointer_of_buffer_cell b1 i) p2)]
+= ()
+
+abstract
 let disjoint_buffer_vs_buffer
   (#t1 #t2: Type)
   (b1: buffer t1)
@@ -414,6 +486,65 @@ let disjoint_buffer_vs_buffer
   .
     P.disjoint (gpointer_of_buffer_cell b1 i1) (gpointer_of_buffer_cell b2 i2)
 
+abstract
+let disjoint_buffer_vs_buffer_sym
+  (#t1 #t2: Type)
+  (b1: buffer t1)
+  (b2: buffer t2)
+: Lemma
+  (disjoint_buffer_vs_buffer b1 b2 <==> disjoint_buffer_vs_buffer b2 b1)
+  [SMTPat (disjoint_buffer_vs_buffer b1 b2)]
+= ()
+
+abstract
+let disjoint_buffer_vs_buffer_gsingleton_buffer_of_pointer
+  (#t1 #t2: Type)
+  (b1: buffer t1)
+  (p2: P.pointer t2)
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2))
+  (ensures (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2)))
+  [SMTPat (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2))]
+= ()
+
+abstract
+let disjoint_buffer_vs_buffer_gbuffer_of_array_pointer
+  (#t1 #t2: Type)
+  (#len: UInt32.t)
+  (b1: buffer t1)
+  (p2: P.pointer (P.array len t2))
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2))
+  (ensures (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2)))
+  [SMTPat (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2))]
+= ()
+
+abstract
+let disjoint_buffer_vs_buffer_gsub
+  (#t1 #t2: Type)
+  (b1: buffer t1)
+  (b2: buffer t2)
+  (i2: UInt32.t)
+  (len2: UInt32.t { UInt32.v i2 + UInt32.v len2 <= UInt32.v (length b2) } )
+: Lemma
+  (requires (disjoint_buffer_vs_buffer b1 b2))
+  (ensures (disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2)))
+  [SMTPat (disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2))]
+= ()
+
+abstract
+let disjoint_buffer_vs_buffer_elim
+  (#t1 #t2: Type)
+  (b1: buffer t1)
+  (b2: buffer t2)
+  (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b2) } )
+: Lemma
+  (requires (disjoint_buffer_vs_buffer b1 b2))
+  (ensures (disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2)))
+  [SMTPat (disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2))]
+= ()
+
+abstract
 let write
   (#t: Type)
   (b: buffer t)
@@ -430,6 +561,7 @@ let write
   )))
 = P.write (pointer_of_buffer_cell b i) v
 
+abstract
 let modifies_1_disjoint_buffer_vs_pointer_live
   (#t1 #t2: Type)
   (b: buffer t1)

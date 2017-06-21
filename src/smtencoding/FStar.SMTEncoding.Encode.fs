@@ -2304,11 +2304,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | Tm_fvar fv ->
                   let encoded_head = lookup_free_var_name env' fv.fv_name in
                   let encoded_args, arg_decls = encode_args args env' in
-                  let guards_for_parameter (arg:term) xv =
+                  let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
                     let fv =
                       match arg.tm with
                       | FreeV fv -> fv
-                      | _ -> failwith "Impossible: parameter must be a variable"
+                      | _ ->
+                         raise (FStar.Errors.Error (
+                           BU.format1 "Inductive type parameter %s must be a variable ; \
+                                       You may want to change it to an index."
+                                      (FStar.Syntax.Print.term_to_string orig_arg),
+                           orig_arg.pos
+                           ))
                     in
                     let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
@@ -2318,17 +2324,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     mk_and_l guards
                   in
                   let _, arg_vars, elim_eqns_or_guards, _ =
-                    List.fold_left (fun (env, arg_vars, eqns_or_guards, i) arg ->
+                    List.fold_left (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
                       let _, xv, env = gen_term_var env (S.new_bv None tun) in
                       (* we only get equations induced on the type indices, not parameters; *)
                       (* Also see https://github.com/FStarLang/FStar/issues/349 *)
                       let eqns =
                         if i < n_tps
-                        then guards_for_parameter arg xv::eqns_or_guards
+                        then guards_for_parameter (fst orig_arg) arg xv::eqns_or_guards
                         else mkEq(arg, xv)::eqns_or_guards
                       in
                       (env, xv::arg_vars, eqns, i + 1))
-                      (env', [], [], 0) encoded_args
+                      (env', [], [], 0) (FStar.List.zip args encoded_args)
                   in
                   let arg_vars = List.rev arg_vars in
                   let ty = mkApp(encoded_head, arg_vars) in
