@@ -140,7 +140,7 @@ let print_ifamily i =
         (Print.term_to_string i.ityp)
         (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals : list<inductive_family> =
+let bundle_as_inductive_families env ses quals attrs: list<inductive_family> =
     ses |> List.collect
         (fun se -> match se.sigel with
             | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
@@ -153,7 +153,7 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let attrs = extract_attrs se.sigattrs in
+                let attrs = extract_attrs (se.sigattrs @ attrs) in
                 [{  iname=l
                   ; iparams=bs
                   ; ityp=t
@@ -207,7 +207,7 @@ let extract_bundle env se =
           env, [MLM_Exn ctor]
 
         | Sig_bundle(ses, _), quals ->
-          let ifams = bundle_as_inductive_families env ses quals in
+          let ifams = bundle_as_inductive_families env ses quals se.sigattrs in
 //          ifams |> List.iter print_ifamily;
           let env, td = BU.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
