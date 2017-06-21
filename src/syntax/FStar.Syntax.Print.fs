@@ -490,6 +490,14 @@ let tscheme_to_string s =
     let (us, t) = s in
     U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
+let action_to_string a =
+    U.format5 "%s%s %s : %s = %s"
+        (sli a.action_name)
+        (binders_to_string " " a.action_params)
+        (enclose_universes <| univ_names_to_string a.action_univs)
+        (term_to_string a.action_typ)
+        (term_to_string a.action_defn)
+
 let eff_decl_to_string' for_free r q ed =
  if not (Options.ugly()) then
     let d = Resugar.resugar_eff_decl for_free r q ed in
@@ -497,13 +505,7 @@ let eff_decl_to_string' for_free r q ed =
     Pp.pretty_string (float_of_string "1.0") 100 d
  else
     let actions_to_string actions =
-        actions |> List.map (fun a ->
-          U.format5 "%s%s %s : %s = %s"
-            (sli a.action_name)
-            (binders_to_string " " a.action_params)
-            (enclose_universes <| univ_names_to_string a.action_univs)
-            (term_to_string a.action_typ)
-            (term_to_string a.action_defn))
+        actions |> List.map action_to_string
         |> String.concat ",\n\t" in
     U.format "new_effect%s { \
       %s%s %s : %s \n  \

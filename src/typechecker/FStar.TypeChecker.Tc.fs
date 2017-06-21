@@ -384,8 +384,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
           (*         (Print.term_to_string (N.normalize [N.Beta] env act_typ)); *)
 
           let univs, act_defn = TcUtil.generalize_universes env act_defn in
-
           let act_typ = N.normalize [N.Beta] env act_typ in
+          let act_typ = Subst.close_univ_vars univs act_typ in
           {act with
               action_univs=univs;
               action_defn=act_defn;

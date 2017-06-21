@@ -1941,21 +1941,33 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
         t
       in
       let elim_action a =
-        let action_typ_templ = S.mk (Tm_ascribed(a.action_defn, (Inl a.action_typ, None), None)) None a.action_defn.pos in
-        let destruct_action_typ_templ t =
-            match (SS.compress t).n with
+        let action_typ_templ =
+            let body = S.mk (Tm_ascribed(a.action_defn, (Inl a.action_typ, None), None)) None a.action_defn.pos in
+            match a.action_params with
+            | [] -> body
+            | _ -> S.mk (Tm_abs(a.action_params, body, None)) None a.action_defn.pos in
+        let destruct_action_body body =
+            match (SS.compress body).n with
             | Tm_ascribed(defn, (Inl typ, None), None) -> defn, typ
             | _ -> failwith "Impossible"
         in
-        let u_action_univs, b_action_params, res =
-            elim_uvars_aux_t env (univs@a.action_univs) (binders@a.action_params) action_typ_templ in
-        let action_univs = BU.nth_tail n u_action_univs in
-        let action_params = BU.nth_tail (List.length binders) b_action_params in
-        let action_defn, action_typ = destruct_action_typ_templ res in
-        {a with action_univs = action_univs;
-                action_params = action_params;
-                action_defn = action_defn;
-                action_typ = action_typ}
+        let destruct_action_typ_templ t =
+            match (SS.compress t).n with
+            | Tm_abs(pars, body, _) ->
+              let defn, typ = destruct_action_body body in
+              pars, defn, typ
+            | _ ->
+              let defn, typ = destruct_action_body t in
+              [], defn, typ
+        in
+        let action_univs, t = elim_tscheme (a.action_univs, action_typ_templ) in
+        let action_params, action_defn, action_typ = destruct_action_typ_templ t in
+        let a' =
+            {a with action_univs = action_univs;
+                    action_params = action_params;
+                    action_defn = action_defn;
+                    action_typ = action_typ} in
+        a'
       in
       let ed = { ed with
                univs        = univs;
