@@ -8,7 +8,7 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 # This target is very concise and re-uses the variables defined in
 # Makefile.include. You shouldn't need to call `cp` ever.
-ocaml: out hello.fst
+ocaml: out $(FSTARLIB) hello.fst
 	$(MAKE) -C $(ULIB_ML)
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml hello.fst
 	$(OCAMLOPT) out/Hello.ml -o hello.exe
