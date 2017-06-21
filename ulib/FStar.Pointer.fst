@@ -4,6 +4,7 @@ module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
+open HST // for := , !
 
 (*** Definitions *)
 
@@ -2385,7 +2386,7 @@ abstract let read
 
 #reset-options "--z3rlimit 32"
 
-abstract val write: #a:Type -> b:pointer a -> z:a -> HST.Stack unit
+abstract val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b
     /\ modifies_1 b h0 h1
@@ -2508,7 +2509,7 @@ abstract let gsingleton_buffer_of_pointer
 abstract let singleton_buffer_of_pointer
   (#t: typ)
   (p: pointer t)
-: Stack (buffer t)
+: HST.Stack (buffer t)
   (requires (fun h -> live h p))
   (ensures (fun h b h' -> h' == h /\ b == gsingleton_buffer_of_pointer p))
 = Buffer (BufferRootSingleton p) 0ul 1ul
@@ -2524,7 +2525,7 @@ abstract let buffer_of_array_pointer
   (#t: typ)
   (#length: UInt32.t)
   (p: pointer (TArray length t))
-: Stack (buffer t)
+: HST.Stack (buffer t)
   (requires (fun h -> live h p))
   (ensures (fun h b h' -> h' == h /\ b == gbuffer_of_array_pointer p))
 = Buffer (BufferRootArray p) 0ul length
@@ -2623,7 +2624,7 @@ abstract let sub_buffer
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) } )
-: Stack (buffer t)
+: HST.Stack (buffer t)
   (requires (fun h -> buffer_live h b))
   (ensures (fun h b' h' -> h' == h /\ b' == gsub_buffer b i len ))
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
@@ -2758,7 +2759,7 @@ abstract let pointer_of_buffer_cell
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) })
-: Stack (pointer t)
+: HST.Stack (pointer t)
   (requires (fun h -> buffer_live h b))
   (ensures (fun h p h' -> h' == h /\ p == gpointer_of_buffer_cell b i))
 = match Buffer?.broot b with
