@@ -102,7 +102,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.ppname.idText))
 
-let tyscheme_of_td (_, _, _, vars, body_opt) : option<mltyscheme> = match body_opt with
+let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> = match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
     | _ -> None
 
@@ -111,7 +111,7 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
     BU.find_map env.tydefs  (fun (m, tds) ->
         if module_name = m
         then BU.find_map tds (fun td ->
-             let (_, n, _, _, _) = td in
+             let (_, n, _, _, _, _) = td in
              if n=ty_name
              then tyscheme_of_td td
              else None)
@@ -123,7 +123,7 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun (m, tds) ->
-        BU.find_map tds (fun (_, n, mangle_opt, _, _) ->
+        BU.find_map tds (fun (_, n, mangle_opt, _, _, _) ->
             if m = mname
             then if n=ty_name
                  then match mangle_opt with

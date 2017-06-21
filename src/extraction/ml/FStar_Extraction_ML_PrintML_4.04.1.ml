@@ -369,7 +369,7 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration option =
+let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration option =
   if skip_type_defn !current_module x then None
   else
     let ptype_name = match mangle_opt with

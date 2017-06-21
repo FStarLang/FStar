@@ -39,7 +39,7 @@ else
 endif
 
 # Final sanity check for the OCaml version
-_UNUSED=$(shell echo 'if Sys.ocaml_version < "4.02.3" then (print_endline "We need OCaml >= 4.02.3"; exit 0)' | ocaml -noinit -noprompt)
+_UNUSED=$(shell ocaml check_version.ml)
 OCAML_VERSION=$(shell echo 'print_endline Sys.ocaml_version' | ocaml -noprompt -noinit -stdin)
 
 .PHONY: fstar.exe ../extraction/ml/FStar_Extraction_ML_PrintML.ml

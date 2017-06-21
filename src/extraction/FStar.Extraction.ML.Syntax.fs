@@ -127,9 +127,11 @@ type c_flag = // C backend only
   | Attribute of string
 
 // JP: merge these two?
-type inductive_flag = // OCaml only
+type tyattr = // OCaml only
   | PpxDeriving
   | PpxDerivingConstant of string
+
+type tyattrs = list<tyattr>
 
 type mlletflavor =
   | Rec
@@ -183,7 +185,7 @@ type mltybody =
      *)
 
 // bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * option<mltybody>
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * tyattrs * option<mltybody>
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =

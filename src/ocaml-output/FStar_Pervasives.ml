@@ -189,3 +189,19 @@ let __proj__Mkdtuple4__item___4 projectee =
   match projectee with | Mkdtuple4 (_1,_2,_3,_4) -> _4 
 let ignore x = () 
 let rec false_elim u = false_elim () 
+type __internal_ocaml_attributes =
+  | PpxDeriving 
+  | PpxDerivingConstant of Prims.string 
+let uu___is_PpxDeriving : __internal_ocaml_attributes -> Prims.bool =
+  fun projectee  ->
+    match projectee with | PpxDeriving  -> true | uu____3572 -> false
+  
+let uu___is_PpxDerivingConstant : __internal_ocaml_attributes -> Prims.bool =
+  fun projectee  ->
+    match projectee with
+    | PpxDerivingConstant _0 -> true
+    | uu____3578 -> false
+  
+let __proj__PpxDerivingConstant__item___0 :
+  __internal_ocaml_attributes -> Prims.string =
+  fun projectee  -> match projectee with | PpxDerivingConstant _0 -> _0 

@@ -28,6 +28,8 @@ open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Util
 
+(* This is the old printer used exclusively for the F# build of F*. It will not
+ * evolve in the future. *)
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
@@ -593,7 +595,7 @@ and doc_of_loc (lineno, file) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
-    let for1 (_, x, mangle_opt, tparams, body) =
+    let for1 (_, x, mangle_opt, tparams, _, body) =
         let x = match mangle_opt with
                 | None -> x
                 | Some y -> y in

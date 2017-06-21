@@ -24,7 +24,7 @@ open FStar.All
 open FStar.Util
 
 (* Persistent union-find implementation adapted from
-   https://www.lri.fr/~filliatr/puf/ *)
+   https:  / /www.lri.fr/~filliatr/puf/ *)
 
 (* Persistent arrays *)
 type pa_t<'a> = ref<data<'a>>
