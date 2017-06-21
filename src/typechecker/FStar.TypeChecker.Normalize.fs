@@ -1036,7 +1036,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | Some rc ->
                           let rct = 
                             if cfg.steps |> List.contains CheckNoUvars
-                            then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] t)
+                            then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
                             else BU.map_opt rc.residual_typ (SS.subst opening) in
                           Some ({rc with residual_typ=rct})
                         | _ -> lopt in
