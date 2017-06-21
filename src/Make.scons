@@ -34,7 +34,11 @@ if cache_dir != None:
 env = Environment()
 
 # --------------------------------------------------------------------
-# Configuration of some platform-specific tools; eventually we will want a configure script
+# Configuration of some platform-specific tools
+
+fstar_path = os.path.realpath('../bin/fstar.exe')       # the path to the fstar.exe which may not exist yet
+env['FSTAR']   = fstar_path
+
 
 if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-bit
     if sys.platform == 'cygwin':
@@ -51,17 +55,7 @@ if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-
     env['FSC']     = 'fsc'
     env['MSBUILD'] = '"'+os.path.join(v, 'MSBuild.exe')+'"'
     uname          = 'Windows_NT'
-
-    # Copy the current fstar.exe to ExtractionFStar.exe so the ExtractionFStar.exe can be used
-    # to run extraction to OCaml and fstar.exe can be the output target for the build, without
-    # creating a circular dependency.
-    #if os.path.exists('../bin/fstar.exe'):
-    #    shutil.copy2('../bin/fstar.exe', '../bin/ExtractionFStar.exe')
-    #env['FSTAR']   = '#/../bin/ExtractionFStar.exe'  # the path to the FStar binary
-
-    env['FSTAR']   = '#/../bin/Fstar.exe'  # the path to the FStar binary
     env['RUNTIME'] = ''     # no Mono needed to run .NET code (FSLexYacc, etc.)
-    env['FSTAR_RUNTIME']='' # no Mono needed to run the FStar compiler
 
     # propagate the TMP environment variable into the OS environment block used to launch
     # child processes.  nuget.exe uses TMP as the path to its lock file and falls back
@@ -75,22 +69,6 @@ else:
     env['MSBUILD'] = 'xbuild'
     uname          = os.uname()[0]  # sysname is at index 0
     env['RUNTIME'] = 'mono'
-    # reproduce what fstar-any.sh does:
-    l = os.readlink('../bin/fstar.exe')
-    fstar = os.path.join(os.path.dirname('../bin'), l) # convert l to absolute path
-    if os.path.exists(fstar):
-        filetype = subprocess.check_output(['file',fstar])
-        # Copy the current fstar.exe to ExtractionFStar.exe so the ExtractionFStar.exe can be used
-        # to run extraction to OCaml and fstar.exe can be the output target for the build, without
-        # creating a circular dependency.
-        shutil.copy2(fstar, '../bin/ExtractionFStar.exe')
-        env['FSTAR'] = File('#/../bin/ExtractionFStar.exe')  # the path to the FStar binary
-        if filetype.contains('Mono'):                                   # how to execute the FStar binary
-            env['FSTAR_RUNTIME'] = env['RUNTIME']  # it's the F# version
-        else:
-            env['FSTAR_RUNTIME'] = '' # it's the OCaml verion
-    else:
-        raise SCons.Errors.UserError('fstar.exe not found')
         
 # propagate the OS PATH environment variable into child processes, so tools like menhir can be found  
 env['ENV']['PATH']=os.environ['PATH']
@@ -102,10 +80,6 @@ env['NUGET']=File('#/VS/.nuget/NuGet.exe')
 Export('env')
 
 # --------------------------------------------------------------------
-
-
-# SConscript(['S_Local.py', 
-#             'ocaml-output/S_Local.py'])
 
 #top_NET = SConscript('FStar_NET.scons')                                 # vs-fstar
 #no_prior, top_LKG = SConscript('ocaml-LKG/ocaml-output.scons')          # boot-ocaml , no prior 
@@ -141,68 +115,25 @@ elif 'ocaml' in COMMAND_LINE_TARGETS :  # boot, extract, new ocaml
     #env.Default(top)
     pass
 elif 'all' in COMMAND_LINE_TARGETS :    # LKG ocaml, boot, extract, new ocaml
+    top_NET = SConscript('FStar_NET.scons')
     env_LKG = env.Clone()
     no_prior, top_LKG = env_LKG.SConscript('ocaml-output.scons', exports={'My_env' : env_LKG}, variant_dir='ocaml-LKG', duplicate=0)
     if GetOption('clean') :
         top = Connect_Stages(None)
-        all = env.Alias('all', [top, top_LKG])
-        env.AlwaysBuild(top_LKG)
+        all = env.Alias('all', [top])
     else:
         top = Connect_Stages(top_LKG)
-        all = env.Alias('all', [top_LKG, top])
+        all = env.Alias('all', [top_NET, top_LKG, top])
 
-    #all = env.Alias('all', [top_LKG, top])
-    #all = env.Alias('all', top) if GetOption('clean') else env.Alias('all', [top_LKG, top])
-    #all = env.Alias('all', top)
+    # This is a compromise. Building SMake all will force build LKG and .NET but cleanup (-c) won't clean it.
+    # to clean up LKG you'll still need to invoke SMake boot-ocaml -c
+    # to clean up .NET you'll need to invoke SMake vs-fstar -c
+
     #env.Default(all)
     pass
 
 print("COMMAND_LINE_TARGETS: %s" % COMMAND_LINE_TARGETS)
 print("DEFAULT_TARGETS: %s" % [a.name for a in DEFAULT_TARGETS])
 
-
-
-
-
-
-
-if 0 : # easier then commenting out
-        all = Alias('all', vs_fstar)
-
-        Default(all)    # make the 'all' target be the default
-        # Force the 'all' target to AlwaysBuild, so that MsBuild is invoked to do its own
-        # evaluation of dependencies from the F# source code to fstar.exe.
-        building_all = False
-        if COMMAND_LINE_TARGETS:
-            if 'all' in COMMAND_LINE_TARGETS:
-                building_all = True
-        else:
-            if all[0] in DEFAULT_TARGETS:
-                building_all = True
-        if building_all:
-            AlwaysBuild(nuget_restore)
-            AlwaysBuild(install_packages)
-            AlwaysBuild(vs_fstar)
-
-
-
 # --------------------------------------------------------------------
-
-
-# fstar-ocaml target:
-#ml = env.MakeOcaml() # extract .fs to .ml using ExtractionFStar.exe
-#fstar_ocaml = env.MakeOcamlOutput('FStar')
-#env.Depends(fstar_ocaml, ml)
-#Alias('fstar-ocaml', fstar_ocaml)
-
-# ocaml-fstar-ocaml target
-#extraction_fstar = env.MakeOcamlOutput('ExtractionFStar')
-#ml = env.MakeOcaml()
-#fstar_ocaml = env.MakeOcamlOutput('FStar')
-#env.Depends(ml, extraction_fstar)
-#env.Depends(fstar_ocaml, ml)
-#Alias('ocaml-fstar-ocaml', fstar_ocaml)
-
-# boot-ocaml
-#env.Ignore(extraction_fstar)
 

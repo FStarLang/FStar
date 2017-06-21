@@ -18,7 +18,38 @@ env['FSLYDIR'] = '#VS/packages/FsLexYacc.6.1.0'
 env['FSYACC']  = '$(RUNTIME) $(FSLYDIR)/build/fsyacc.exe'
 env['FSLEX']   = '$(RUNTIME) $(FSLYDIR)/build/fslex.exe'
 
-env['FSTARBOOT'] = '$FSTAR_RUNTIME $FSTAR $OTHERFLAGS --eager_inference --lax --MLish --no_location_info --odir ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis'               
+
+###### Keep this just in case - not needed for now
+def CopyFstar(fstar_path):
+    new_path = fstar_path
+    # Copy the current fstar.exe to ExtractionFStar.exe so the ExtractionFStar.exe can be used
+    # to run extraction to OCaml and fstar.exe can be the output target for the build, without
+    # creating a circular dependency.
+    if os.path.isfile(fstar_path):
+        new_path = '../bin/ExtractionFStar.exe'
+        shutil.copy2(fstar_path, new_path)
+        env['FSTAR']   = '#/../bin/ExtractionFStar.exe'     # overiding for the copy
+
+    return new_path
+
+
+if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows
+    fstar_path = '../bin/fstar.exe'
+    #CopyFstar(fstar_path)           # => ExtractionFStar.exe
+else:  # Unix
+    fstar_path = os.path.realpath('../bin/fstar.exe')
+    #CopyFstar(fstar_path)           # => ExtractionFStar.exe
+    if os.path.exists(fstar):
+        filetype = subprocess.check_output(['file',fstar_path])
+        if filetype.contains('Mono'):
+            env['FSTAR'] = env['RUNTIME'] + ' ' + env['FSTAR']  # F# version, mono fstar.exe
+        else:
+            env['FSTAR'] = fstar_path                           # OCaml verion, fstar.exe
+
+
+env['FSTARBOOT'] = '$FSTAR $OTHERFLAGS --eager_inference --lax --MLish --no_location_info --odir ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis'               
+
+print("****************************** FSTAR = " + env['FSTAR'])
 
 prior = env.Alias('boot-prior')     # ocaml-LKG if it works
 # --------------------------------------------------------------------
@@ -303,5 +334,6 @@ register_extractions(env, fstar_extractions)
 
 # --------------------------------------------------------------------
 
+#env.Depends(extract_done, boot_done)
 Return( 'prior','extract_done')
 

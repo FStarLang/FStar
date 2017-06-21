@@ -10,10 +10,11 @@ Import('My_env')
 env = My_env
 
 this_dir=os.path.basename(os.getcwd())  # ocaml-output, ocaml-LKG
-prior = env.Alias(this_dir +'-prior')   # ocaml-output-prior, ocaml-LKG-prior
-
 alt_dir = Dir('.').path
-print ("**************************** alt_dir = " + alt_dir)
+prior = env.Alias(alt_dir +'-prior')   # ocaml-output-prior, ocaml-LKG-prior
+
+print ("****************************** this_dir = " + this_dir)
+print ("****************************** alt_dir = " + alt_dir)
 
 
 # --------------------------------------------------------------------
@@ -36,10 +37,10 @@ env['OCAMLBUILD']='ocamlbuild'
 
 # CAREFUL - single space more or less will break you
 env['OCAMLBUILDARGS'] = ( 
-                "-cflag \'-g\' -I " + this_dir + " -I basic/ml "
+                "-cflag \'-g\' -I " + alt_dir + " -I basic/ml "
                 "-I parser/ml -I fstar/ml -I extraction/ml -j 24 "
-                "-build-dir " + this_dir + "/_build "
-                "-I prettyprint/ml -I " + this_dir + "/"
+                "-build-dir " + alt_dir + "/_build "
+                "-I prettyprint/ml -I " + alt_dir + "/"
                 "bootlibs -use-ocamlfind"
         )
 
@@ -242,8 +243,8 @@ ResPath = '_build/src/fstar/ml/'
 
 main_native = env.Command(ResPath + ResFile, '', 
                            ['$OCAMLBUILD $OCAMLBUILDARGS ' + ResFile
-                            , Copy(File('../../bin/FStar.exe'), File(ResPath + ResFile))
-                            , Copy(File('../../bin/FStar.ocaml'), File(ResPath + ResFile)) 
+                            , Copy(File('../../bin/fstar.exe'), File(ResPath + ResFile))
+                            , Copy(File('../../bin/fstar.ocaml'), File(ResPath + ResFile)) 
                            ])
 
 
@@ -251,18 +252,16 @@ for gen_name in GENERATED_FILES:    # they depend on prior
     Depends(main_native, gen_name)
 
 
-# NOTE: If you uncomment these tow bellow SCons is going to complain is S_Make includes FStar_NET.scons
+# NOTE: If you uncomment these two bellow SCons is going to complain if Make.scons includes FStar_NET.scons
 #       Doesn't matter that he's not going to build it till you ask - still going to complain and block 
 #       But, if Copy actions are hidden in the list above, SCons keeps quiet
 
-#fstar_exe   = env.Command('../../bin/FStar.exe', main_native, Copy('$TARGET', '$SOURCE'))
-#fstar_ocaml = env.Command('../../bin/FStar.ocaml', main_native, Copy('$TARGET', '$SOURCE'))
-
-#env.Alias('boot-ocaml')
-#env.Depends('boot-ocaml', [fstar_exe, fstar_ocaml])
-#env.Default('boot-ocaml')
+#fstar_exe   = env.Command('../../bin/fstar.exe', main_native, Copy('$TARGET', '$SOURCE'))
+#fstar_ocaml = env.Command('../../bin/fstar.ocaml', main_native, Copy('$TARGET', '$SOURCE'))
 
 
-final = env.Alias(this_dir +'-final', main_native)   # ocaml-output-final, ocaml-LKG-final
+final = env.Alias(alt_dir +'-final', main_native)   # ocaml-output-final, ocaml-LKG-final
+#boot_ocaml = env.Alias('boot-ocaml', final)
+
 Return('prior', 'final')
 

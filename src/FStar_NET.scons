@@ -33,7 +33,7 @@ vs_fstar = env.Command( '$BIN/fstar.exe', fstar_sln,
                         Chmod(str(env['BIN'])+'/fstar.exe', chmod_a_plus_x)])
 Requires(vs_fstar, chmod_packages) # 'install_packages" must complete ahead of 'vs_fstar')
 
-my_top = env.Alias('vs-fstar', vs_fstar) # for external use
+my_top = vs_fstar # for external use
 
 # if '-c' or '--clean' is passed on the command line, call out to msbuild to clean, too
 if GetOption('clean'):
