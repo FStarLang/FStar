@@ -61,8 +61,8 @@ let rec none_count_zero (#a:eqtype) (e:a) (s:seq a)
   else
     let s' = tail s in
     assert (not (e = s @^ 0)) ;
-    assert (forall (i:_in (tail s)). not (e = s @^ (i+1))) ;
-    none_count_zero #a e (tail s)
+    assert (forall (i:_in s'). not (e = s @^ (i+1))) ;
+    none_count_zero #a e s'
 
 let index_of_l_count (#a:eqtype) (e:a) (s:seq a)
   : Lemma (match index_of_l (fun x -> x = e) s with | None -> count e s == 0 | Some i0 -> s @^ i0 = e)
