@@ -1,0 +1,11 @@
+
+let _ = FStar_Tactics_Native.register_tactic "Split.__compiled_split" 2
+    (fun ps args ->
+        FStar_Tactics_Interpreter.mk_tactic_interpretation_1
+            ps
+            (FStar_Tactics_Native.from_tactic_1 compiled_split)
+            FStar_Reflection_Basic.unembed_unit
+            FStar_Reflection_Basic.embed_unit
+            FStar_TypeChecker_Common.t_unit
+            (FStar_Ident.lid_of_str "Split.__compiled_split")
+            args)

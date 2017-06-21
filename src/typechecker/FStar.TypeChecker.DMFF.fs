@@ -155,7 +155,7 @@ let gen_wps_for_free
   let c_pure =
     let t = S.gen_bv "t" None U.ktype in
     let x = S.gen_bv "x" None (S.bv_to_name t) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (S.bv_to_name t))))) in
+    let ret = Some (U.residual_tot (mk_ctx (S.bv_to_name t))) in
     let body = U.abs gamma (S.bv_to_name x) ret in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t, true; x, false ]) body ret
   in
@@ -173,7 +173,7 @@ let gen_wps_for_free
       (U.arrow [ S.mk_binder (S.new_bv None (S.bv_to_name t1)) ] (S.mk_GTotal (S.bv_to_name t2))))
     in
     let r = S.gen_bv "r" None (mk_gctx (S.bv_to_name t1)) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    let ret = Some (U.residual_tot (mk_gctx (S.bv_to_name t2))) in
     let outer_body =
       let gamma_as_args = args_of_binders gamma in
       let inner_body =
@@ -200,7 +200,7 @@ let gen_wps_for_free
     let t_f = U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)) in
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t2))))) in
+    let ret = Some (residual_tot (mk_gctx (S.bv_to_name t2))) in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; f, false; a1, false ]) (
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [ S.bv_to_name f ]);
@@ -229,7 +229,7 @@ let gen_wps_for_free
     let f = S.gen_bv "f" None t_f in
     let a1 = S.gen_bv "a1" None (mk_gctx (S.bv_to_name t1)) in
     let a2 = S.gen_bv "a2" None (mk_gctx (S.bv_to_name t2)) in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_gctx (S.bv_to_name t3))))) in
+    let ret = Some (U.residual_tot (mk_gctx (S.bv_to_name t3))) in
     U.abs (mk_all_implicit binders @ binders_of_list [ a, true; t1, true; t2, true; t3, true; f, false; a1, false; a2, false ]) (
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_app (List.map S.as_arg [
@@ -252,9 +252,7 @@ let gen_wps_for_free
       (S.mk_Total (mk_gctx (S.bv_to_name t2)))
     in
     let f = S.gen_bv "f" None t_f in
-    let ret = Some (Inl (U.lcomp_of_comp (mk_Total (mk_ctx (
-      U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2)))))))
-    in
+    let ret = Some (U.residual_tot (mk_ctx (U.arrow [ S.null_binder (S.bv_to_name t1) ] (S.mk_GTotal (S.bv_to_name t2))))) in
     let e1 = S.gen_bv "e1" None (S.bv_to_name t1) in
     let body = U.abs (gamma @ [ S.mk_binder e1 ]) (
       U.mk_app (S.bv_to_name f) (S.as_arg (S.bv_to_name e1) :: args_of_binders gamma)
@@ -263,7 +261,7 @@ let gen_wps_for_free
   in
   let c_push = register env (mk_lid "push") c_push in
 
-  let ret_tot_wp_a = Some (Inl (U.lcomp_of_comp (mk_Total wp_a))) in
+  let ret_tot_wp_a = Some (U.residual_tot wp_a) in
   let mk_generic_app c =
     if List.length binders > 0 then
       mk (Tm_app (c, args_of_binders binders))
@@ -285,7 +283,7 @@ let gen_wps_for_free
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
         ])
       ) (Inr result_comp, None)
-    ) (Some (Inl (U.lcomp_of_comp result_comp)))
+    ) (Some (U.residual_comp_of_comp result_comp))
   in
   let wp_if_then_else = register env (mk_lid "wp_if_then_else") wp_if_then_else in
   let wp_if_then_else = mk_generic_app wp_if_then_else in
@@ -344,8 +342,8 @@ let gen_wps_for_free
   let wp_close = register env (mk_lid "wp_close") wp_close in
   let wp_close = mk_generic_app wp_close in
 
-  let ret_tot_type = Some (Inl (U.lcomp_of_comp <| S.mk_Total U.ktype)) in
-  let ret_gtot_type = Some (Inl (U.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
+  let ret_tot_type = Some (U.residual_tot U.ktype) in
+  let ret_gtot_type = Some (U.residual_comp_of_lcomp (U.lcomp_of_comp <| S.mk_GTotal U.ktype)) in
   let mk_forall (x: S.bv) (body: S.term): S.term =
     S.mk (Tm_app (U.tforall, [ S.as_arg (U.abs [ S.mk_binder x ] body ret_tot_type)])) None Range.dummyRange
   in
@@ -745,9 +743,9 @@ and star_type' env t =
 let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
-  | Some (Inl { cflags = flags }) | Some (Inr (_, flags)) ->
+  | Some rc ->
       // lid_equals lid Const.monadic_lid
-      flags |> BU.for_some (function CPS -> true | _ -> false)
+      rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
 
 // TODO: this function implements a (partial) check for the well-formedness of
 // C-types...
@@ -791,7 +789,7 @@ let mk_return env (t: typ) (e: term) =
   let p_type = mk_star_to_type mk env t in
   let p = S.gen_bv "p'" None p_type in
   let body = mk (Tm_app (S.bv_to_name p, [ e, S.as_implicit false ])) in
-  U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
+  U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0))
 
 let is_unknown = function | Tm_unknown -> true | _ -> false
 
@@ -899,10 +897,22 @@ and infer (env: env) (e: term): nm * term * term =
   | Tm_name bv ->
       N bv.sort, e, e
 
-  | Tm_abs (binders, body, what) ->
+  | Tm_abs (binders, body, rc_opt) ->
+      let subst_rc_opt subst rc_opt =
+        match rc_opt with
+        | Some {residual_typ=None}
+        | None -> rc_opt
+        | Some rc -> Some ({rc with residual_typ=Some (SS.subst subst (BU.must rc.residual_typ))}) in
+
+      //NS: note, this is explicitly written with opening binders
+      //    rather than U.abs_formals
+      //    since the specific number of binders to open is determined very syntactically
+      //    We do not want to collapse (fun x -> (fun y -> e)) into (fun x y -> e)
+      //    since this changes the way the selectve CPS transform works
       let binders = SS.open_binders binders in
       let subst = SS.opening_of_binders binders in
       let body = SS.subst subst body in
+      let rc_opt = subst_rc_opt subst rc_opt in
       let env = { env with env = push_binders env.env binders } in
 
       // For the *-translation, [x: t] becomes [x: t*].
@@ -933,47 +943,51 @@ and infer (env: env) (e: term): nm * term * term =
       *)
 
       let comp, s_body, u_body =
-        let check_what = if is_monadic what then check_m else check_n in
+        let check_what = if is_monadic rc_opt then check_m else check_n in
         let t, s_body, u_body = check_what env body in
-        comp_of_nm (if is_monadic what then M t else N t), s_body, u_body
+        comp_of_nm (if is_monadic rc_opt then M t else N t), s_body, u_body
       in
 
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.
       let t = U.arrow binders comp in
 
-      let s_what = match what with
+      let s_rc_opt = match rc_opt with
         | None -> None // That should not happen according to some other comment
-        | Some (Inl lc) ->
-            if lc.cflags |> BU.for_some (function CPS -> true | _ -> false)
-            then
-                let double_starred_comp = S.mk_Total (double_star <| U.comp_result (lc.comp ())) in
-                let flags = List.filter (function CPS -> false | _ -> true) lc.cflags in
-                Some (Inl (U.lcomp_of_comp (comp_set_flags double_starred_comp flags)))
-            else Some (Inl ({ lc with comp = begin fun () ->
-                        let c = lc.comp () in
-                        let result_typ = star_type' env (U.comp_result c) in
-                        U.set_result_typ c result_typ
-                      end  }))
-        | Some (Inr (lid, flags)) ->
-            Some (Inr (if flags |> BU.for_some (function CPS -> true | _ -> false)
-                       then (Const.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
-                       else (lid, flags)))
+        | Some rc -> begin
+            match rc.residual_typ with
+            | None ->
+              let rc =
+                 if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
+                 then U.mk_residual_comp Const.effect_Tot_lid None (List.filter (function CPS -> false | _ -> true) rc.residual_flags)
+                 else rc in
+              Some rc
+
+            | Some rt ->
+              if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
+              then
+                let flags = List.filter (function CPS -> false | _ -> true) rc.residual_flags in
+                Some (U.mk_residual_comp Const.effect_Tot_lid (Some (double_star rt)) flags)
+              else Some ({rc with residual_typ = Some (star_type' env rt)})
+            end
       in
 
-      let u_body, u_what =
-          let comp = trans_G env (U.comp_result comp) (is_monadic what) (SS.subst env.subst s_body) in
+      let u_body, u_rc_opt =
+          let comp = trans_G env (U.comp_result comp) (is_monadic rc_opt) (SS.subst env.subst s_body) in
           (* TODO : consider removing this ascription *)
-          U.ascribe u_body (Inr comp, None), Some (Inl (U.lcomp_of_comp comp))
+          U.ascribe u_body (Inr comp, None),
+          Some (U.residual_comp_of_comp comp)
       in
+
 
       let s_body = close s_binders s_body in
       let s_binders = close_binders s_binders in
-      let s_term = mk (Tm_abs (s_binders, s_body, s_what)) in
+      let s_term = mk (Tm_abs (s_binders, s_body, subst_rc_opt (Subst.closing_of_binders s_binders) s_rc_opt)) in
 
       let u_body = close u_binders u_body in
       let u_binders = close_binders u_binders in
-      let u_term = mk (Tm_abs (u_binders, u_body, u_what)) in
+      let u_term = mk (Tm_abs (u_binders, u_body, subst_rc_opt (Subst.closing_of_binders u_binders) u_rc_opt)) in
+
       N t, s_term, u_term
 
   | Tm_fvar { fv_name = { v = lid } } ->
@@ -1129,7 +1143,7 @@ and mk_match env e0 branches f =
     let s_e =
       U.abs [ S.mk_binder p ]
             (mk (Tm_match (s_e0, s_branches)))
-            (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0))))
+            (Some (U.residual_tot U.ktype0))
     in
     let t1_star =  U.arrow [S.mk_binder <| S.new_bv None p_type] (S.mk_Total U.ktype0) in
     M t1,
@@ -1183,11 +1197,11 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       // e2* p
       let s_e2 = mk (Tm_app (s_e2, [ S.bv_to_name p, S.as_implicit false ])) in
       // fun x -> s_e2* p; this takes care of closing [x].
-      let s_e2 = U.abs x_binders s_e2 (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))) in
+      let s_e2 = U.abs x_binders s_e2 (Some (U.residual_tot U.ktype0)) in
       // e1* (fun x -> e2* p)
       let body = mk (Tm_app (s_e1, [ s_e2, S.as_implicit false ])) in
       M t2,
-      U.abs [ S.mk_binder p ] body (Some (Inl (U.lcomp_of_comp (S.mk_Total U.ktype0)))),
+      U.abs [ S.mk_binder p ] body (Some (U.residual_tot U.ktype0)),
       mk (Tm_let ((false, [ { u_binding with lbdef = u_e1 } ]), SS.close x_binders u_e2))
   end
 

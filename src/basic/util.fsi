@@ -263,6 +263,7 @@ val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 (* FIXME: these functions have the wrong argument order when compared to
  List.map, List.iter, etc. *)
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
+val catch_opt: option<'a> -> (unit -> option<'a>) -> option<'a>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 val iter_opt: option<'a> -> ('a -> unit) -> unit
 
@@ -297,6 +298,8 @@ val expand_environment_variable: string -> string
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
 
+val is_letter: char -> bool
+val is_digit: char -> bool
 val is_letter_or_digit: char -> bool
 val is_punctuation: char -> bool
 val is_symbol: char -> bool
@@ -388,3 +391,7 @@ val string_of_json : json -> string
 (* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)
 val read : ref<'a> -> 'a
 val write : ref<'a> -> 'a -> unit
+
+(* Marshaling to and from strings *)
+val marshal: 'a -> string
+val unmarshal: string -> 'a

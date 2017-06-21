@@ -26,6 +26,7 @@ open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Const
+open FStar.Dyn
 module U = FStar.Util
 module List = FStar.List
 module SC = FStar.Syntax.Const
@@ -272,19 +273,28 @@ let is_pure_or_ghost_function t = match (compress t).n with
     | Tm_arrow(_, c) -> is_pure_or_ghost_comp c
     | _ -> true
 
-let is_lemma t =  match (compress t).n with
-    | Tm_arrow(_, c) ->
-      begin match c.n with
-        | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
-        | _ -> false
-      end
+let is_lemma_comp c =
+    match c.n with
+    | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
     | _ -> false
 
+let is_lemma t =
+    match (compress t).n with
+    | Tm_arrow(_, c) -> is_lemma_comp c
+    | _ -> false
 
 let head_and_args t =
     let t = compress t in
     match t.n with
         | Tm_app(head, args) -> head, args
+        | _ -> t, []
+
+let rec head_and_args' t =
+    let t = compress t in
+    match t.n with
+        | Tm_app(head, args) ->
+            let (head, args') = head_and_args' head
+            in (head, args'@args)
         | _ -> t, []
 
  let un_uinst t =
@@ -374,8 +384,12 @@ type eq_result =
     | Unknown
 
 let rec eq_tm (t1:term) (t2:term) : eq_result =
-    let t1 = unascribe t1 in
-    let t2 = unascribe t2 in
+    let canon_app t =
+        let hd, args = head_and_args' (unascribe t) in
+        mk_Tm_app hd args None t.pos
+    in
+    let t1 = canon_app t1 in
+    let t2 = canon_app t2 in
     let equal_if = function
         | true -> Equal
         | _ -> Unknown
@@ -388,6 +402,14 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       match f with
       | Equal -> g()
       | _ -> Unknown
+    in
+    let eq_inj f g =
+      match f, g with
+      | Equal, Equal -> Equal
+      | NotEqual, _
+      | _, NotEqual -> NotEqual
+      | Unknown, _
+      | _, Unknown -> Unknown
     in
     match t1.n, t2.n with
     | Tm_name a, Tm_name b ->
@@ -405,8 +427,21 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
       equal_if (Unionfind.equiv u1 u2)
 
-    | Tm_app (h1, args1), Tm_app(h2, args2) ->
-      eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
+    | Tm_app (h1, args1), Tm_app (h2, args2) ->
+      begin match (un_uinst h1).n, (un_uinst h2).n with
+      | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
+        // we got constructors! we know they are injective and disjoint, so we can do some
+        // good analysis on them
+        if fv_eq f1 f2
+        then (
+            assert (List.length args1 = List.length args2);
+            List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
+                                assert (q1 = q2);
+                                eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
+        ) else NotEqual
+      | _ -> // can only they're equal if they syntactically match, nothing else
+          eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
+      end
 
     | Tm_type u, Tm_type v ->
       equal_if (eq_univs u v)
@@ -532,10 +567,10 @@ let mk_data l args =
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
       mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
 
-let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
+let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
 let unmangle_field_name x =
-    if U.starts_with x.idText "^fname^"
-    then mk_ident(U.substring_from x.idText 7, x.idRange)
+    if U.starts_with x.idText "__fname__"
+    then mk_ident(U.substring_from x.idText 9, x.idRange)
     else x
 
 (***********************************************************************************************)
@@ -612,10 +647,8 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
-      | None
-      | Some (Inr _) -> lopt
-      | Some (Inl lc) ->
-          Some (Inl (close_lcomp bs lc))
+      | None -> None
+      | Some rc -> Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (close bs)})
   in
   match bs with
   | [] -> t
@@ -666,10 +699,8 @@ let rec arrow_formals k =
 
 let abs_formals t =
     let subst_lcomp_opt s l = match l with
-        | Some (Inl l) ->
-          let l = {l with res_typ=Subst.subst s l.res_typ;
-                          comp=(fun () -> Subst.subst_comp s (l.comp()))} in
-          Some (Inl l)
+        | Some rc ->
+          Some ({rc with residual_typ=FStar.Util.map_opt rc.residual_typ (Subst.subst s)})
         | _ -> l
     in
     let rec aux t abs_body_lcomp =
@@ -824,6 +855,16 @@ let is_interpreted l =
      Const.op_Negation] in
   U.for_some (lid_equals l) theory_syms
 
+let is_fstar_tactics_embed t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv SC.fstar_refl_embed_lid
+    | _ -> false
+
+let is_fstar_tactics_by_tactic t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv SC.by_tactic_lid
+    | _ -> false
+
 (********************************************************************************)
 (*********************** Constructors of common terms  **************************)
 (********************************************************************************)
@@ -842,8 +883,8 @@ let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0
 let fvar_const l = fvar l Delta_constant None
 let tand    = fvar_const Const.and_lid
 let tor     = fvar_const Const.or_lid
-let timp    = fvar_const Const.imp_lid
-let tiff    = fvar_const Const.iff_lid
+let timp    = fvar Const.imp_lid (Delta_defined_at_level 1) None
+let tiff    = fvar Const.iff_lid (Delta_defined_at_level 2) None
 let t_bool  = fvar_const Const.bool_lid
 let t_false = fvar_const Const.false_lid
 let t_true  = fvar_const Const.true_lid
@@ -895,9 +936,31 @@ let lcomp_of_comp c0 =
      cflags = flags;
      comp = fun() -> c0}
 
+let mk_residual_comp l t f = {
+    residual_effect=l;
+    residual_typ=t;
+    residual_flags=f
+  }
+let residual_tot t = {
+    residual_effect=Const.effect_Tot_lid;
+    residual_typ=Some t;
+    residual_flags=[TOTAL]
+  }
+let residual_comp_of_comp (c:comp) = {
+    residual_effect=comp_effect_name c;
+    residual_typ=Some (comp_result c);
+    residual_flags=comp_flags c;
+  }
+let residual_comp_of_lcomp (lc:lcomp) = {
+    residual_effect=lc.eff_name;
+    residual_typ=Some (lc.res_typ);
+    residual_flags=lc.cflags
+  }
+
+
 let mk_forall_aux fa x body =
   mk (Tm_app(fa, [ iarg (x.sort);
-                   as_arg (abs [mk_binder x] body (Some (Inl (lcomp_of_comp <| mk_Total ktype0))))])) None dummyRange
+                   as_arg (abs [mk_binder x] body (Some (residual_tot ktype0)))])) None dummyRange
 
 let mk_forall_no_univ (x:bv) (body:typ) : typ =
   mk_forall_aux tforall x body
@@ -918,6 +981,48 @@ let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) t2.pos, None, t2) in
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
+
+
+let mk_squash p =
+    let sq = fvar SC.squash_lid (Delta_defined_at_level 1) None in
+    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
+
+let un_squash t =
+    let head, args = head_and_args t in
+    match (un_uinst head).n, args with
+    | Tm_fvar fv, [(p, _)]
+        when fv_eq_lid fv SC.squash_lid ->
+      Some p
+    | Tm_refine (b, p), [] ->
+        begin match b.sort.n with
+        | Tm_fvar fv when fv_eq_lid fv SC.unit_lid ->
+            let bs, p = Subst.open_term [mk_binder b] p in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible"
+            in
+            // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
+            if set_mem (fst b) (Free.names p)
+            then None
+            else Some p
+        | _ -> None
+        end
+    | _ ->
+      None
+
+let arrow_one (t:typ) : option<(binder * comp)> =
+    match (compress t).n with
+    | Tm_arrow ([], c) ->
+        failwith "fatal: empty binders on arrow?"
+    | Tm_arrow ([b], c) ->
+        Some (b, c)
+    | Tm_arrow (b::bs, c) ->
+        Some (b, mk_Total (arrow bs c))
+    | _ ->
+        None
+
+let is_free_in (bv:bv) (t:term) : bool =
+    U.set_mem bv (FStar.Syntax.Free.names t)
 
 (**************************************************************************************)
 (* Destructing a type as a formula *)
@@ -948,8 +1053,10 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, 2);
                             (Const.eq3_lid, 4);
                             (Const.eq3_lid, 2)
-                        ] in
-        let rec aux f (lid, arity) =
+                        ]
+        in
+
+        let aux f (lid, arity) =
             let t, args = head_and_args (unmeta_monadic f) in
             let t = un_uinst t in
             if is_constructor t lid
@@ -965,10 +1072,15 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> [], compress t in
 
     let destruct_q_conn t =
-        let is_q : bool -> fv -> Tot<bool> = fun fa fv -> if fa then is_forall fv.fv_name.v else is_exists fv.fv_name.v in
+        let is_q (fa:bool) (fv:fv) : bool =
+            if fa
+            then is_forall fv.fv_name.v else
+            is_exists fv.fv_name.v
+        in
         let flat t =
             let t, args = head_and_args t in
-            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
+            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp)
+        in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs([b], t2, _)}, _)])
             | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs([b], t2, _)}, _)])
@@ -991,27 +1103,132 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
-    let phi = unmeta_monadic f in
-        match destruct_base_conn phi with
-        | Some b -> Some b
-        | None -> destruct_q_conn phi
-
-
-  let action_as_lb eff_lid a =
-    let lb =
-      close_univs_and_mk_letbinding
-        None
-        (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
-        (Inr (lid_as_fv a.action_name Delta_equational None))
-        a.action_univs
-        (arrow a.action_params (mk_Total a.action_typ))
-        Const.effect_Tot_lid
-        (abs a.action_params a.action_defn None)
+    // Unfolded connectives
+    let u_connectives =
+        [ (Const.true_lid,  Const.c_true_lid, 0);
+          (Const.false_lid, Const.c_false_lid, 0);
+          (Const.and_lid,   Const.c_and_lid, 2);
+          (Const.or_lid,    Const.c_or_lid, 2);
+        ]
     in
-    { sigel = Sig_let((false, [lb]), [a.action_name], []);
-      sigrng = a.action_defn.pos;
-      sigquals = [Visible_default ; Action eff_lid];
-      sigmeta = default_sigmeta }
+    let destruct_sq_base_conn t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n, List.length args with
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_and_lid ->
+                Some (BaseConn (Const.and_lid, args))
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_or_lid ->
+                Some (BaseConn (Const.or_lid, args))
+
+        // eq2 can have 2 args or 3
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_eq2_lid ->
+                Some (BaseConn (Const.eq2_lid, args))
+        | Tm_fvar fv, 3
+            when fv_eq_lid fv Const.c_eq2_lid ->
+                Some (BaseConn (Const.eq2_lid, args))
+
+        // eq3 can have 2 args or 4
+        | Tm_fvar fv, 2
+            when fv_eq_lid fv Const.c_eq3_lid ->
+                Some (BaseConn (Const.eq3_lid, args))
+        | Tm_fvar fv, 4
+            when fv_eq_lid fv Const.c_eq3_lid ->
+                Some (BaseConn (Const.eq3_lid, args))
+
+        | Tm_fvar fv, 0
+            when fv_eq_lid fv Const.c_true_lid ->
+                Some (BaseConn (Const.true_lid, args))
+        | Tm_fvar fv, 0
+            when fv_eq_lid fv Const.c_false_lid ->
+                Some (BaseConn (Const.false_lid, args))
+
+        | _ ->
+            None
+        )
+    in
+    let rec destruct_sq_forall t =
+        bind_opt (un_squash t) (fun t ->
+        match arrow_one t with
+        | Some (b, c) ->
+            if not (is_tot_or_gtot_comp c)
+            then None
+            else
+                let q = (comp_to_comp_typ c).result_typ in
+                let bs, q = open_term [b] q in
+                let b = match bs with // coverage...
+                        | [b] -> b
+                        | _ -> failwith "impossible"
+                in
+                if is_free_in (fst b) q
+                then (
+                    let pats, q = patterns q in
+                    maybe_collect <| Some (QAll([b], pats, q))
+                ) else (
+                    // Since we know it's not free, we can just open and discard the binder
+                    Some (BaseConn (Const.imp_lid, [as_arg (fst b).sort; as_arg q]))
+                )
+        | _ -> None)
+    and destruct_sq_exists t =
+        bind_opt (un_squash t) (fun t ->
+        let hd, args = head_and_args' t in
+        match (un_uinst hd).n, args with
+        | Tm_fvar fv, [(a1, _); (a2, _)]
+            when fv_eq_lid fv Const.dtuple2_lid ->
+                begin match (compress a2).n with
+                | Tm_abs ([b], q, _) ->
+                    let bs, q = open_term [b] q in
+                    let b = match bs with // coverage...
+                            | [b] -> b
+                            | _ -> failwith "impossible"
+                    in
+                    let pats, q = patterns q in
+                    maybe_collect <| Some (QEx ([b], pats, q))
+                | _ -> None
+                end
+        | _ -> None)
+    and maybe_collect f =
+        match f with
+        | Some (QAll (bs, pats, phi)) ->
+            begin match destruct_sq_forall phi with
+            | Some (QAll (bs', pats', psi)) -> Some <| QAll(bs@bs', pats@pats', psi)
+            | _ -> f
+            end
+        | Some (QEx (bs, pats, phi)) ->
+            begin match destruct_sq_exists phi with
+            | Some (QEx (bs', pats', psi)) -> Some <| QEx(bs@bs', pats@pats', psi)
+            | _ -> f
+            end
+        | _ -> f
+    in
+
+    let phi = unmeta_monadic f in
+        // Try all possibilities, stopping at the first
+        catch_opt (destruct_base_conn phi) (fun () ->
+        catch_opt (destruct_q_conn phi) (fun () ->
+        catch_opt (destruct_sq_base_conn phi) (fun () ->
+        catch_opt (destruct_sq_forall phi) (fun () ->
+        catch_opt (destruct_sq_exists phi) (fun () ->
+                   None)))))
+
+
+let action_as_lb eff_lid a =
+  let lb =
+    close_univs_and_mk_letbinding
+      None
+      (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
+      (Inr (lid_as_fv a.action_name Delta_equational None))
+      a.action_univs
+      (arrow a.action_params (mk_Total a.action_typ))
+      Const.effect_Tot_lid
+      (abs a.action_params a.action_defn None)
+  in
+  { sigel = Sig_let((false, [lb]), [a.action_name], []);
+    sigrng = a.action_defn.pos;
+    sigquals = [Visible_default ; Action eff_lid];
+    sigmeta = default_sigmeta }
 
 (* Some reification utilities *)
 let mk_reify t =
@@ -1106,14 +1323,24 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices.
-// TODO: canonize applications?
 // TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
 // TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
 // that's ok.
-let rec term_eq t1 t2 = match (compress t1).n, (compress t2).n with
+let rec term_eq t1 t2 =
+  let canon_app t =
+    match t.n with
+    | Tm_app _ -> let (hd, args) = head_and_args' t in
+                  { t with n = Tm_app (hd, args) }
+    | _ -> t
+  in
+  let t1 = canon_app t1 in
+  let t2 = canon_app t2 in
+  match t1.n, t2.n with
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
+  | Tm_uinst (t1, us1), Tm_uinst (t2, us2) ->
+        eqlist eq_univs us1 us2 && term_eq t1 t2
   | Tm_constant x, Tm_constant y -> x = y
   | Tm_type x, Tm_type y -> x = y
   | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
@@ -1140,7 +1367,7 @@ and branch_eq (p1,w1,t1) (p2,w2,t2) = false // TODO
 
 let rec bottom_fold (f : term -> term) (t : term) : term =
     let ff = bottom_fold f in
-    let tn = (un_uinst t).n in
+    let tn = (compress t).n in
     let tn = match tn with
              | Tm_app (f, args) -> Tm_app (ff f, List.map (fun (a,q) -> (ff a, q)) args)
              // TODO: We ignore the types. Bug or feature?
@@ -1148,6 +1375,34 @@ let rec bottom_fold (f : term -> term) (t : term) : term =
                                     let t'' = ff t' in
                                     Tm_abs (bs, close bs t'', k)
              | Tm_arrow (bs, k) -> tn //TODO
+             | Tm_uinst (t, us) ->
+                Tm_uinst (ff t, us)
              | _ -> tn in
     f ({ t with n = tn })
 
+// An estimation of the size of a term, only for debugging
+let rec sizeof (t:term) : int =
+    match t.n with
+    | Tm_delayed _ -> 1 + sizeof (compress t)
+    | Tm_bvar bv
+    | Tm_name bv -> 1 + sizeof bv.sort
+    | Tm_uinst (t,us) -> List.length us + sizeof t
+    | Tm_abs (bs, t, _) -> sizeof t  + List.fold_left (fun acc (bv, _) -> acc + sizeof bv.sort) 0 bs
+    | Tm_app (hd, args) -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
+    // TODO: obviously want much more
+    | _ -> 1
+
+let is_synth_by_tactic t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv SC.synth_lid
+    | _ -> false
+
+(* Spooky behaviours are possible with this, procede with caution *)
+
+let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+
+let un_alien (t : term) : dyn =
+    match t.n with
+    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | _ -> failwith "Something paranormal occurred"

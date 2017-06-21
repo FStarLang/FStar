@@ -25,7 +25,8 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
 	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver \
 	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
-	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.fst
+	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.fst \
+	 Pruning.fst NormVsSMT.fst
 	#TestHasEq.uver #temporarily removed from mac_universes branch
 
 basictests: $(VERFILES)
@@ -43,5 +44,3 @@ inverse:
 
 testghost:
 	$(FSTAR) testghost.fst
-
-

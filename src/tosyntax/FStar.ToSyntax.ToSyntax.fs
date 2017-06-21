@@ -156,7 +156,7 @@ let op_as_term env arity rng op : option<S.term> =
     | "~"   ->
       r C.not_lid (Delta_defined_at_level 2)
     | "=="  ->
-      r C.eq2_lid Delta_constant
+      r C.eq2_lid (Delta_defined_at_level 2)
     | "<<" ->
       r C.precedes_lid Delta_constant
     | "/\\" ->
@@ -642,8 +642,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (Options.lax())
-  && not (lower <= value && value <= upper)
+  if not (lower <= value && value <= upper)
   then raise (Error(BU.format2 "%s is not in the expected range for %s"
                                repr tnm,
                     range));
@@ -951,6 +950,21 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 let head = desugar_term env e in
                 mk (Tm_uinst(head, universes))
        in aux [] top
+
+    | App ({tm=Var lid}, tau, Nothing)
+            when lid_equals lid C.assert_by_tactic_lid ->
+        // Get the left part of the app by re-matching, since there's no `as'
+        let l = match (unparen top).tm with
+                | App (l, _, _) -> l
+                | _ -> failwith "impossible"
+        in
+        let tactic_unit_type =
+            mk_term (App (mk_term (Var (lid_of_path ["FStar";"Tactics";"Effect";"tactic"] tau.range)) tau.range tau.level,
+                          mk_term (Var (lid_of_path ["Prims";"unit"] tau.range)) tau.range tau.level,
+                          Nothing)) tau.range tau.level
+        in
+        let t' = mk_term (App (l, mk_term (Ascribed (tau, tactic_unit_type, None)) tau.range tau.level, Nothing)) top.range top.level in
+        desugar_term env t'
 
     | App _ ->
       let rec aux args e = match (unparen e).tm with

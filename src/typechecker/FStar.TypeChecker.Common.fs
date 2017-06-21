@@ -110,14 +110,20 @@ type identifier_info = {
     identifier:either<bv, fv>;
     identifier_ty:typ;
 }
-let rec insert_col_info col info col_infos =
-    match col_infos with
-    | [] -> [col, info]
-    | (c,i)::rest ->
-      if col < c
-      then (col, info)::col_infos
-      else (c, i)::insert_col_info col info rest
-let find_nearest_preceding_col_info col col_infos =
+let insert_col_info col info col_infos =
+    // Tail recursive helper
+    let rec __insert aux rest =
+        match rest with
+        | [] -> (aux, [col, info])
+        | (c,i)::rest ->
+          if col < c
+          then (aux, (col, info)::rest)
+          else __insert ((c,i)::aux) rest
+     in
+     let l, r = __insert [] col_infos
+     in (List.rev l) @ r
+
+let find_nearest_preceding_col_info col col_infos = 
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->

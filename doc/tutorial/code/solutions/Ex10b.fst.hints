@@ -32,7 +32,7 @@
       [
         "@MaxIFuel_assumption", "@query", "proj_equation_Ex10b.Point_x",
         "projection_inverse_Ex10b.Point_x",
-        "refinement_interpretation_Ex10b_Tm_refine_f2a77ae22406f0f6f8f3003c6e41b99e"
+        "refinement_interpretation_Ex10b_Tm_refine_9e4d81f9b1c21ede8bd64e418289f419"
       ],
       0
     ],
@@ -83,8 +83,7 @@
         "proj_equation_Ex10b.Point_y", "projection_inverse_Ex10b.Point_x",
         "projection_inverse_Ex10b.Point_y",
         "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2", "ref_inversion",
-        "typing_Ex10b.__proj__Point__item__x"
+        "projection_inverse_FStar.Pervasives.Mktuple2__2", "ref_inversion"
       ],
       0
     ],

@@ -2,12 +2,17 @@ module Test
 
 module DM = FStar.DependentMap
 <<<<<<< HEAD
+<<<<<<< HEAD
 module S  = FStar.Struct
 module HST = FStar.HyperStack.ST
 =======
 module S  = FStar.Pointer
 module HST = FStar.ST
 >>>>>>> origin/master
+=======
+module S  = FStar.Pointer
+module HST = FStar.ST
+>>>>>>> origin/guido_tactics
 
 type point_fd =
 | X

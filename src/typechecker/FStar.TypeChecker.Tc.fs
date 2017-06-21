@@ -60,6 +60,15 @@ let set_hint_correlator env se =
 
 let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.current_module env))
 
+let is_native_tactic env (tac_lid: lident) (h: term) =
+  match h.n with
+  | Tm_uinst (h', _) ->
+    (match (SS.compress h').n with
+      | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
+                env.is_native_tactic tac_lid
+      | _ -> false)
+  | _ -> false
+
 (*****************Type-checking the signature of a module*****************************)
 
 let tc_check_trivial_guard env t k =
@@ -321,7 +330,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
 
       let actions =
-        let check_action act =
+        let check_action (act:action) =
           (* We should not have action params anymore, they should have been handled by dmff below *)
           assert (match act.action_params with | [] -> true | _ -> false) ;
 
@@ -342,7 +351,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
           let act_defn = N.normalize [ N.UnfoldUntil S.Delta_constant ] env act_defn in
           let act_typ = N.normalize [ N.UnfoldUntil S.Delta_constant; N.Eager_unfolding; N.Beta ] env act_typ in
-
           // 2) This implies that [action_typ] has Type(k): good for us!
 
           // 3) Unify [action_typ] against [expected_k], because we also need
@@ -532,6 +540,11 @@ let cps_and_elaborate env ed =
 
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
+  let rc_gtot = {
+            residual_effect = Const.effect_GTot_lid;
+            residual_typ = None;
+            residual_flags = []
+  } in
 
   (* Starting from [return_wp (b1:Type) (b2:b1) : M.wp b1 = fun bs -> body <: Type0], we elaborate *)
   (* [lift_from_pure (b1:Type) (wp:(b1 -> Type0)-> Type0) : M.wp b1 = fun bs -> wp (fun b2 -> body)] *)
@@ -559,22 +572,18 @@ let cps_and_elaborate env ed =
               (Print.term_to_string body)
               (match what' with
                | None -> "None"
-               | Some (Inl lc) -> Print.lcomp_to_string lc
-               | Some (Inr (lid, _)) -> FStar.Ident.text_of_lid lid)
+               | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
           in failwith error_msg
         in
         begin match what' with
         | None -> fail ()
-        | Some (Inl lc) ->
-          if U.is_pure_or_ghost_lcomp lc
-          then
-            let g_opt = Rel.try_teq true env lc.res_typ U.ktype0 in
-            match g_opt with
-            | Some g' -> Rel.force_trivial_guard env g'
-            | None -> fail ()
-          else fail ()
-        | Some (Inr (lid, _)) ->
-          if not (U.is_pure_effect lid) then fail ()
+        | Some rc ->
+          if not (U.is_pure_effect rc.residual_effect) then fail ();
+          BU.map_opt rc.residual_typ (fun rt ->
+              let g_opt = Rel.try_teq true env rt U.ktype0 in
+              match g_opt with
+                | Some g' -> Rel.force_trivial_guard env g'
+                | None -> fail ()) |> ignore
         end ;
 
         let wp =
@@ -585,7 +594,10 @@ let cps_and_elaborate env ed =
 
         (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
         let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
-        U.abs ([ b1; S.mk_binder wp ]) (U.abs (bs) body what) (Some (Inr (Const.effect_GTot_lid, [])))
+        U.abs ([ b1; S.mk_binder wp ])
+              (U.abs (bs) body what)
+              (Some rc_gtot)
+
       | _ ->
           failwith "unexpected shape for return"
   in
@@ -594,7 +606,7 @@ let cps_and_elaborate env ed =
     // TODO: fix [tc_eff_decl] to deal with currying
     match (SS.compress return_wp).n with
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
-        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some (Inr (Const.effect_GTot_lid, [])))
+        U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
         failwith "unexpected shape for return"
   in
@@ -624,7 +636,8 @@ let cps_and_elaborate env ed =
     let l' = lid_of_path p' Range.dummyRange in
     match try_lookup_lid env l' with
     | Some (_us,_t) -> begin
-        BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
+        if Options.debug_any () then
+            BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
         // TODO: GM: get exact delta depth, needs a change of interfaces
         fv_to_tm (lid_as_fv l' Delta_equational None)
         end
@@ -673,7 +686,7 @@ let cps_and_elaborate env ed =
         (Print.binders_to_string "," params_un)
         (Print.binders_to_string "," action_params)
         (Print.term_to_string action_typ_with_wp)
-        (Print.term_to_string action_elab) ;
+        (Print.term_to_string action_elab);
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
     (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
@@ -1198,7 +1211,92 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
           then BU.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Print.term_to_string (*env*) lb.lbtyp)
           else "") |> String.concat "\n");
 
-    [se], []
+    (* 5. If top-level let is a user-defined tactic, check if it has been dynamically loaded as a native tactic.
+          If so, don't add its definition to the environment, instead add the reified tactic as an assumption and
+          replace its definition by the reflection of this assumed tactic. *)
+    let reified_tactic_type (l: lident) (t: typ): typ =
+      (* transform computations of type tactic to type __tac *)
+      let t = Subst.compress t in
+      match t.n with
+        | Tm_arrow(bs, c) ->
+            let bs, c = Subst.open_comp bs c in
+            if is_total_comp c
+            then begin
+              let c' =
+              (match c.n with
+                | Total (t', u) ->
+                  (match (Subst.compress t').n with
+                  | Tm_app (h, args) ->
+                      (match (Subst.compress h).n with
+                       | Tm_uinst (h', u') ->
+                          let h'' = fv_to_tm <| lid_as_fv FStar.Syntax.Const.u_tac_lid Delta_constant None in
+                          mk_Total' (mk_Tm_app (mk_Tm_uinst h'' u') args None t'.pos) u
+                       | _ -> c)
+                  | _ -> c)
+                | _ -> c) in
+              {t with n=Tm_arrow(bs, Subst.close_comp bs c')}
+            end else t
+        | Tm_app(h, args) ->
+          (* tactics which take no arguments *)
+            (match (Subst.compress h).n with
+              | Tm_uinst (h', u') ->
+                let h'' = fv_to_tm <| lid_as_fv FStar.Syntax.Const.u_tac_lid Delta_constant None in
+                mk_Tm_app (mk_Tm_uinst h'' u') args None t.pos
+              | _ -> t)
+        | _ -> t in
+
+    (* makes `assume val __native_tac: 'a -> __tac 'b` *)
+    let reified_tactic_decl (assm_lid: lident) (lb: letbinding): sigelt =
+      let t = reified_tactic_type assm_lid lb.lbtyp in
+      { sigel = Sig_declare_typ(assm_lid, lb.lbunivs, t);
+        sigquals =[Assumption];
+        sigrng = Ident.range_of_lid assm_lid;
+        sigmeta = default_sigmeta } in
+
+    (* makes `let native_tac (x: 'a): tactic 'b = fun () -> TAC?.reflect (__native_tac x)` *)
+    let reflected_tactic_decl (b: bool) (lb: letbinding) (bs: binders) (assm_lid: lident) comp: sigelt =
+      let reified_tac = fv_to_tm <| lid_as_fv assm_lid Delta_constant None in
+      let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
+      (* __native_tac x *)
+
+      let reflect_head = mk (Tm_constant (Const_reflect FStar.Syntax.Const.tac_effect_lid)) None Range.dummyRange in
+      let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
+      let app = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
+      (* TAC?. reflect (__native_tac x) *)
+
+      let unit_binder = mk_binder <| new_bv None t_unit in
+      let body = abs [unit_binder] app <| Some (U.residual_comp_of_comp comp) in
+      let func = abs bs body <| Some (U.residual_comp_of_comp comp) in
+      {se with sigel=Sig_let((b, [{lb with lbdef=func}]), lids, attrs)} in
+
+    let tactic_decls =
+      (match (snd lbs) with
+        | [hd] ->
+          let bs, comp = U.arrow_formals_comp hd.lbtyp in
+          let t = comp_result comp in
+          (match (SS.compress t).n with
+            | Tm_app(h, args) ->
+                let h = SS.compress h in
+                let tac_lid = (right hd.lbname).fv_name.v in
+                let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+                (* check if tactic has been dynamically loaded and has not already been typechecked *)
+                if is_native_tactic env assm_lid h && not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
+                  let se_assm = reified_tactic_decl assm_lid hd in
+                  let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
+                  Some (se_assm, se_refl)
+                end else None
+            | _ -> None)
+        | _ -> None
+      ) in
+
+    match tactic_decls with
+    | Some (se_assm, se_refl) ->
+        if Env.debug env (Options.Other "NativeTactics") then
+          BU.print2 "Native tactic declarations: \n%s\n%s\n"
+            (Print.sigelt_to_string se_assm) (Print.sigelt_to_string se_refl)
+        else ();
+        [se_assm; se_refl], []
+    | None -> [se], []
 
 
 let for_export hidden se : list<sigelt> * list<lident> =
@@ -1312,7 +1410,15 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_pragma (p) ->
     (match p with
-     | ResetOptions _ -> env.solver.refresh (); env
+     | ResetOptions _ ->
+        env.solver.refresh ();
+        // `using_facts_from` requires some special handling..
+        begin match Options.using_facts_from () with
+        | Some ns ->
+            let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
+            { env with proof_ns = proof_ns }
+        | None -> env
+        end
      | _ -> env)
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect (ne) ->

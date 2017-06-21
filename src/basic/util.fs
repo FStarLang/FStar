@@ -499,6 +499,11 @@ let bind_opt opt f =
     | None -> None
     | Some x -> f x
 
+let catch_opt opt f =
+    match opt with
+    | Some _ -> opt
+    | None -> f ()
+
 let map_opt opt f =
     match opt with
       | None -> None
@@ -680,6 +685,8 @@ let expand_environment_variable s =
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
+let is_letter = Char.IsLetter
+let is_digit  = Char.IsDigit
 let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
 let is_symbol = Char.IsSymbol
@@ -973,3 +980,6 @@ let string_of_json json : string =
 
 let read r = !r
 let write r x = r := x
+
+let marshal (x:'a) : string = failwith "Marshaling to/from strings: not yet supported in F#"
+let unmarshal (x:string) : 'a = failwith "Marshaling to/from strings: not yet supported in F#"

@@ -1,5 +1,5 @@
 [
-  "!\u0017\u0014Ú¿Žœ\u0018l´Á3\fc©p",
+  "þM\u0012[cû\u0005\u0003žž`%ú,$\u0002",
   [
     [
       "FStar.Math.Lib.lemma_div_def",
@@ -57,7 +57,7 @@
       "FStar.Math.Lib.slash_decr_axiom",
       2,
       2,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
         "equation_Prims.nat", "equation_Prims.pos", "int_inversion",

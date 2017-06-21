@@ -1,5 +1,5 @@
 module Ex11a
-open FStar.HyperStack.ST
+open FStar.ST
 //robot
 
 open FStar.Heap

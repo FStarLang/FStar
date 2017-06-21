@@ -9,13 +9,19 @@ let test_or_else =
     assert_by_tactic (or_else (fail "failed")
                               (return ())) True
 
-let simple_equality_assertions =
-  assert_by_tactic rewrite_all_equalities
-                   (forall (y:int). y==0 ==> 0==y);
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y));
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z))
+type t = | A | B | C | D
+let f x = match x with | A -> 0 | B -> 1 | C -> 2 | D -> 3
+
+let test_trivial =
+    assert_by_tactic trivial ((f A == 0) /\ (f B == 1) /\ (f C == 2) /\ (f D == 3))
+
+(* let simple_equality_assertions = *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (y:int). y==0 ==> 0==y); *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)); *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)) *)
 
 let visible_boolean (x:int) = true
 let explicitly_trigger_normalizer =
@@ -23,28 +29,28 @@ let explicitly_trigger_normalizer =
 
 unfold let unfoldable_predicate (x:int) = True
 let implicitly_unfolfed_before_preprocessing =
-  assert_by_tactic smt
+  assert_by_tactic (smt ())
                    (unfoldable_predicate 0 /\ visible_boolean 2) //only "b2t (visible_boolean 2)" goes to SMT
 
 let visible_predicate (x:int) = True
-let simple_equality_assertions_within_a_function () =
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)); //identical to one of the queries above, but now inside a function, which produces a slightly different VC
-  assert_by_tactic rewrite_all_equalities
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized
-  assert_by_tactic (visit (unfold_definition_and_simplify_eq (quote visible_predicate)))
-                   (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away
+(* let simple_equality_assertions_within_a_function () = *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z)); //identical to one of the queries above, but now inside a function, which produces a slightly different VC *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized *)
+(*   assert_by_tactic (visit (unfold_definition_and_simplify_eq (quote visible_predicate))) *)
+(*                    (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away *)
 
 let local_let_bindings =
   assert_by_tactic trivial (let x = 10 in x + 0 == 10)
 
 assume type pred_1 : int -> Type0
 assume Pred1_saturated: forall x. pred_1 x
-let partially_solved_using_smt =
-  assert_by_tactic rewrite_all_equalities
-                   ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic
-                     pred_1 0 /\ //by 1 smt sub-goal
-                     pred_1 1)  //by another smt sub-goal
+(* let partially_solved_using_smt = *)
+(*   assert_by_tactic rewrite_all_equalities *)
+(*                    ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic *)
+(*                      pred_1 0 /\ //by 1 smt sub-goal *)
+(*                      pred_1 1)  //by another smt sub-goal *)
 
 assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x == 10))
 
@@ -59,9 +65,10 @@ assume val mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
 val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
 let lemma_mul_comm x y = ()
 
+let sqintro (x:'a) : squash 'a = ()
+
 let test_exact (x:nat) (y:nat) =
-  assert_by_tactic (m <-- quote (mul_comm x y);
-                    exact m)
+  assert_by_tactic (exact (quote (sqintro (mul_comm x y))))
                    (op_Multiply x y == op_Multiply y x)
 
 let test_apply (x:nat) (y:nat) =
@@ -70,10 +77,8 @@ let test_apply (x:nat) (y:nat) =
 
 let mul_commute_ascription : tactic unit =
     g <-- cur_goal;
-    let (_, t) = g in
-    f <-- term_as_formula t;
-    match f with
-    | Some (Eq _ _ _) ->
+    match term_as_formula g with
+    | Comp Eq _ _ _ ->
         apply_lemma (quote lemma_mul_comm)
     | _ ->
         fail "Not an equality"
@@ -97,8 +102,7 @@ let test_apply_ascription' (x:nat) (y:nat) =
 // and only afterwards is the error raised. Doesn't sound like good behaviour
 let test_inspect =
   assert_by_tactic (x <-- quote 8;
-                    y <-- inspect x;
-                    match y with
+                    match inspect x with
                     | Tv_App hd a -> print "application"
                     | Tv_Abs bv t -> print "abstraction"
                     | Tv_Arrow bv t -> print "arrow"
@@ -110,3 +114,15 @@ let test_inspect =
                     | Tv_Const (C_Int i) -> print ("int: " ^ string_of_int i)
                     | _ -> fail "unknown"
                    ) (True)
+
+let test_simpl =
+    assert_by_tactic (g <-- cur_goal;
+                      (match term_as_formula g with
+                      | And _ _ -> return ()
+                      | _ -> dump "not a conjunction?");;
+                      simpl;;
+                      g <-- cur_goal;
+                      (match term_as_formula g with
+                      | True_ -> return ()
+                      | _ -> dump ("not true after simpl? " ^ term_to_string g)))
+                     (True /\ 1 == 1)

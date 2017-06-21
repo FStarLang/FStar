@@ -211,8 +211,8 @@ let collect_one
           if let_open then
             raise (Err ("let-open only supported for modules, not namespaces"))
           else
-            Util.print1_warning "Warning: no modules in namespace %s and no file with \
-              that name either\n" (string_of_lid lid true)
+            Util.print2_warning "Warning: in %s: no modules in namespace %s and no file with \
+              that name either\n" filename (string_of_lid lid true)
         end
     end
   in
@@ -257,10 +257,10 @@ let collect_one
   let auto_open =
     if basename filename = Options.prims_basename () then
       []
-    else if basename filename = Options.pervasives_basename () then
-      [Const.prims_lid]
     else
-      [Const.fstar_ns_lid; Const.pervasives_lid; Const.prims_lid]
+      let l = [ Const.fstar_ns_lid; Const.prims_lid ] in
+      if basename filename = Options.pervasives_basename () then l
+      else l @ [ Const.pervasives_lid ]
   in
   List.iter (record_open false) auto_open;
 

@@ -32,7 +32,7 @@ tactics
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
 
 %.all: %
-	+make -C $^ all
+	+$(MAKE) -C $^ all
 
 test: all
 

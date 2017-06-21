@@ -33,6 +33,12 @@ module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
 module Unionfind = FStar.Syntax.Unionfind
 
+let rec delta_depth_to_string = function
+    | Delta_constant -> "Delta_constant"
+    | Delta_defined_at_level i -> "Delta_defined_at_level " ^ string_of_int i
+    | Delta_equational -> "Delta_equational"
+    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
+
 let sli (l:lident) : string =
     if Options.print_real_names()
     then l.str
@@ -268,6 +274,7 @@ let rec term_to_string x =
 
       | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
       | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
+      | Tm_meta(t, Meta_alien(_, s)) -> U.format1 "(Meta_alien \"%s\")" s
       | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
       | Tm_meta(t, _) ->    term_to_string t
@@ -280,11 +287,12 @@ let rec term_to_string x =
       | Tm_arrow(bs, c) ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
       | Tm_abs(bs, t2, lc) ->
         begin match lc with
-            | Some (Inl l) when (Options.print_implicits()) ->
-              U.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
-              (* TODO : Consider adding an option printing the cflags *)
-            | Some (Inr (l, flags)) when (Options.print_implicits()) ->
-              U.format3 "(fun %s -> (%s $$ (name only) %s))" (binders_to_string " " bs) (term_to_string t2) l.str
+            | Some rc when (Options.print_implicits()) ->
+              U.format4 "(fun %s -> (%s $$ (residual) %s %s))"
+                            (binders_to_string " " bs)
+                            (term_to_string t2)
+                            rc.residual_effect.str
+                            (if Option.isNone rc.residual_typ then "None" else term_to_string (Option.get rc.residual_typ))
             | _ ->
               U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end
@@ -505,8 +513,9 @@ let eff_decl_to_string' for_free r q ed =
     Pp.pretty_string (float_of_string "1.0") 100 d
  else
     let actions_to_string actions =
-        actions |> List.map action_to_string
-        |> String.concat ",\n\t" in
+        actions |>
+        List.map action_to_string |>
+        String.concat ",\n\t" in
     U.format "new_effect%s { \
       %s%s %s : %s \n  \
         return_wp   = %s\n\

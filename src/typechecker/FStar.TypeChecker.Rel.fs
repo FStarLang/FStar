@@ -59,7 +59,7 @@ let abstract_guard x g = match g with
       let f = match g.guard_f with
         | NonTrivial f -> f
         | _ -> failwith "impossible" in
-      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (mk_Total U.ktype0 |> U.lcomp_of_comp |> Inl))})
+      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (U.residual_tot U.ktype0))})
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
@@ -78,7 +78,7 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
 
-let check_trivial t = match t.n with
+let check_trivial t = match (U.unmeta t).n with
     | Tm_fvar tc when S.fv_eq_lid tc Const.true_lid -> Trivial
     | _ -> NonTrivial t
 
@@ -518,9 +518,9 @@ let u_abs k ys t =
         | _ -> (ys, t), ([], S.mk_Total k) in
     if List.length xs <> List.length ys
     (* TODO : not putting any cflags here on the annotation... *)
-    then U.abs ys t (Some (Inr (Const.effect_Tot_lid, []))) //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.; causing a loss in precision for the SMT encoding
+    then U.abs ys t (Some (U.mk_residual_comp Const.effect_Tot_lid None [])) //The annotation is imprecise, due to a discrepancy in currying/eta-expansions etc.; causing a loss in precision for the SMT encoding
     else let c = Subst.subst_comp (U.rename_binders xs ys) c in
-         U.abs ys t (U.lcomp_of_comp c |> Inl |> Some)
+         U.abs ys t (Some (U.residual_comp_of_comp c))
 
 let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
@@ -819,7 +819,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                            then let t1' = normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1 in
                                 t1', t2
                            else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
-                                t1, normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+                                t1, t2' in
               aux retry (n_delta + 1) t1 t2
 
             | MisMatch _ -> fail r
@@ -1559,7 +1559,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                              then has_type_guard t1 t2
                              else has_type_guard t2 t1 in
                     solve env (solve_prob orig (Some guard) [] wl)
-                else giveup env "head mismatch" orig
+                else giveup env (BU.format2 "head mismatch (%s vs %s)" (Print.term_to_string head1) (Print.term_to_string head2)) orig
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps
                 solve_t env ({problem with lhs=t1; rhs=t2}) wl
@@ -1624,7 +1624,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
         let r = Env.get_range env in
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = U.abs xs (h gs_xs) (U.lcomp_of_comp c |> Inl |> Some) in
+        let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
         if Env.debug env <| Options.Other "Rel"
         then BU.print6 "Imitating  binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
             (Print.binders_to_string ", " xs)
@@ -1668,7 +1668,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then None
         else let g_xs, _ = gs xi.sort in
              let xi = S.bv_to_name xi in
-             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.lcomp_of_comp c |> Inl |> Some) in
+             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.residual_comp_of_comp c |> Some) in
              let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
              if debug env <| Options.Other "Rel" then BU.print2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
              let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
@@ -1702,7 +1702,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                                   (fst (new_uvar k.pos scope (U.type_u () |> fst)))) in
                              let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
                              let k' = U.arrow xs c in
-                             let uv_sol = U.abs scope k' (Some (Inl (U.lcomp_of_comp <| S.mk_Total (U.type_u () |> fst)))) in
+                             let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
                              UF.change uvar uv_sol;
                              Some (xs, c))
                         | _ -> None
@@ -2436,7 +2436,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -2605,12 +2605,16 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
       || Env.debug env <| Options.Other "SMTQuery"
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
-      let vc = N.normalize [N.Eager_unfolding; N.Beta; N.Simplify] env vc in
+      let vc = N.normalize [N.Eager_unfolding; N.Simplify; N.Primops] env vc in
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
-        if not use_smt then None
-        else
+        if not use_smt then (
+            if Env.debug env <| Options.Other "Rel" then
+                Errors.diag (Env.get_range env)
+                            (BU.format1 "Cannot solve without SMT : %s\n" (Print.term_to_string vc));
+                None
+        ) else
           let _ =
             if Env.debug env <| Options.Other "Rel"
             then Errors.diag (Env.get_range env)
@@ -2618,8 +2622,28 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
             let vcs =
                 if Options.use_tactics()
                 then env.solver.preprocess env vc
-                else [env,vc] in
-            vcs |> List.iter (fun (env, goal) -> env.solver.solve use_env_range_msg env goal)
+                else [env,vc,FStar.Options.peek ()] in
+            vcs |> List.iter (fun (env, goal, opts) ->
+                    let goal = N.normalize [N.Simplify; N.Primops] env goal in
+                    match check_trivial goal with
+                    | Trivial ->
+                        if (Env.debug env <| Options.Other "Rel") || (Env.debug env <| Options.Other "Tac")
+                        then BU.print_string "Goal completely solved by tactic\n";
+                        () // do nothing
+
+                    | NonTrivial goal ->
+                        FStar.Options.push ();
+                        FStar.Options.set opts;
+                        env.solver.refresh ();
+                        if Env.debug env <| Options.Other "Rel"
+                        then Errors.diag (Env.get_range env)
+                                         (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
+                                                 (Print.term_to_string goal)
+                                                 (Env.string_of_proof_ns env));
+                        let res = env.solver.solve use_env_range_msg env goal in
+                        FStar.Options.pop ();
+                        res
+                        )
           in
           Some ret_g
 
@@ -2633,7 +2657,7 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
-let resolve_implicits g =
+let resolve_implicits' forcelax g =
   let unresolved u = match UF.find u with
     | None -> true
     | _ -> false in
@@ -2650,6 +2674,7 @@ let resolve_implicits g =
                if Env.debug env <| Options.Other "RelCheck"
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
+               let env = if forcelax then {env with lax=true} else env in
                let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
@@ -2661,6 +2686,9 @@ let resolve_implicits g =
                in
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
+
+let resolve_implicits     g = resolve_implicits' false g
+let resolve_implicits_lax g = resolve_implicits' true  g
 
 let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits in

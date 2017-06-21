@@ -1,5 +1,5 @@
 module FStar.Relational.Comp
-open FStar.ST
+
 open FStar.All
 open FStar.Heap
 open FStar.Relational.Relational

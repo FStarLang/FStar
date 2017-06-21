@@ -18,7 +18,6 @@ module Sig
 
 open FStar.Array
 open FStar.List.Tot
-open FStar.All
 open FStar.ST
 open Platform.Bytes
 

@@ -12,6 +12,7 @@ import shutil
 import traceback
 import zipfile
 import platform
+import stat
 
 PLATFORMS = [ "x64-osx", "x86-ubuntu", "x64-ubuntu", "x64-debian", "x86-win", "x64-win" ]
 REQUIRE_ALL_PLATFORMS = True
@@ -247,14 +248,19 @@ def get(binary_name, platform, bitness, log, Tested=True):
         Z3_BINARY_PATH = ""
         for root, dirs, files in os.walk(Z3_DIR):
             for f in files:
+                fp = os.path.join(root, f)
                 if f == binary_name:
-                    Z3_BINARY_PATH = os.path.join(root, f)
+                    Z3_BINARY_PATH = fp
+                if f.endswith("dll"):
+                    os.chmod(fp, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR) # Cygwin wants +x on dlls.
         
         if not os.path.isfile(Z3_BINARY_PATH):
             raise Z3NightlyException("Z3 not where it should be.")
         else:
             print("%s" % Z3_BINARY_PATH)
-        
+
+        os.chmod(Z3_BINARY_PATH, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
         os.chdir(wd)
         return 0
     except Exception as ex:

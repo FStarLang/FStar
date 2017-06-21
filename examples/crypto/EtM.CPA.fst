@@ -1,5 +1,5 @@
 module EtM.CPA
-open FStar.HyperStack.ST
+
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
@@ -8,8 +8,8 @@ open FStar.Monotonic.RRef
 open EtM.Ideal
 
 open Platform.Bytes
-open HyperStack.CoreCrypto
-module CC = HyperStack.CoreCrypto
+open CoreCrypto
+
 module B = Platform.Bytes
 
 open EtM.Plain
@@ -66,7 +66,7 @@ let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cpa && ind_cpa_rest_adv then createBytes (length m) 0z else repr m in
-  let c = CC.block_encrypt AES_128_CBC k.raw iv text in
+  let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
   let c = iv@|c in
   write_at_end k.log (m,c);
   c
@@ -110,4 +110,4 @@ let decrypt k c =
     | Some mc -> fst mc
   else
     let iv,c' = split c ivsize in
-    coerce (CC.block_decrypt AES_128_CBC k.raw iv c')
+    coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')

@@ -31,6 +31,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 module S  = FStar.Syntax.Syntax
+module SC = FStar.Syntax.Const
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
@@ -454,10 +455,25 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         e, c, Rel.conj_guard g' g
     end
 
+  | Tm_app(head, [(tau, _)]) when U.is_synth_by_tactic head ->
+    begin match env.expected_typ with
+    | Some typ -> tc_synth env typ tau
+    | None ->
+        raise (Error("synth_by_tactic: need a type annotation when no expected type is present", Env.get_range env))
+    end
+
+  | Tm_app(head, [(a, _); (tau, _)])
+  | Tm_app(head, [(a, _); _; (tau, _)]) when U.is_synth_by_tactic head ->
+    tc_synth env a tau
+
   | Tm_app(head, args) ->
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
+    let isquote = match head.n with
+                  | Tm_fvar fv when S.fv_eq_lid fv SC.quote_lid -> true
+                  | _ -> false
+    in
 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
@@ -472,7 +488,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                                then TcUtil.maybe_assume_result_eq_pure_term env e c
                                else c in
                        e, c, g
-                  else check_application_args env head chead g_head args (Env.expected_typ env0) in
+                  else
+                    // If we're descending under `quote`, don't instantiate implicits
+                    let env = if isquote then no_inst env else env
+                    in check_application_args env head chead g_head args (Env.expected_typ env0) in
     if Env.debug env Options.Extreme
     then BU.print1 "Introduced {%s} implicits in application\n" (Rel.print_pending_implicits g);
     let e, c, g' = comp_check_expected_typ env0 e c in
@@ -562,6 +581,27 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
 
+and tc_synth env typ tau =
+    let env', _ = Env.clear_expected_typ env in
+
+    // Check the result type
+    let typ, _, g1 = tc_term env' typ in
+    Rel.force_trivial_guard env' g1;
+
+    // Check the tactic (TODO: actually check against `tactic unit`, this is just asserting it has a type)
+    let tau, c, g2 = tc_term env' tau in
+    Rel.force_trivial_guard env' g2;
+
+    if Env.debug env <| Options.Other "Tac" then
+        BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
+    let t = env.synth env' typ tau in
+    if Env.debug env <| Options.Other "Tac" then
+        BU.print1 "Got %s\n" (Print.term_to_string t);
+
+    // TODO: fix, this gives a crappy error
+    TcUtil.check_uvars tau.pos t;
+    tc_term env t
+
 and tc_tactic_opt env topt =
     match topt with
     | None -> None
@@ -624,6 +664,10 @@ and tc_value env (e:term) : term
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
     let tc = if Env.should_verify env then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
+
+  | Tm_uinst({n=Tm_fvar fv}, _)
+  | Tm_fvar fv when S.fv_eq_lid fv SC.synth_lid ->
+    raise (Error ("Badly instantiated synth_by_tactic", Env.get_range env))
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
@@ -1000,7 +1044,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                      guard in
 
     let tfun_computed = U.arrow bs cbody in
-    let e = U.abs bs body (Some (dflt cbody c_opt |> U.lcomp_of_comp |> Inl)) in
+    let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->
            let t = SS.compress t in
@@ -1379,13 +1423,38 @@ and tc_eqn scrutinee env branch
                     (Print.term_to_string exp)
                     (Print.term_to_string pat_t);
 
+    let env1 = Env.set_expected_typ env1 expected_pat_t in
     let exp, lc, g = tc_tot_or_gtot_term env1 exp in
+    //To support nested patterns, it's important to
+    //only keep the unification/subtyping constraints and to discard the logical guard for patterns
+    //Consider the following:
+    //   t = x:(int * int){fst x = snd x}
+    //   o : option t
+    //and
+    //   match o with Some #t (MkTuple2 #int #int a b)
+    //In this case, the guard_f will require (a = b), because of the refinement on t
+    //But, this is impossible to prove for two fresh ints a and b
+    //Instead, we check below that the inferred type for the entire pattern is unifiable
+    //with the expected type.
+    //This should guarantee that the equality assumption between the scrutinee and the pattern
+    //is at least well-typed and the branch gets to use any implied relations among the
+    //pattern-bound variables, e.g., a=b in this case
+    let g = {g with guard_f= Trivial} in
 
-    let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-    let g = Rel.conj_guard g g' in
     let _ =
+        //But, it's really important to confirm that the inferred type of the pattern
+        //unifies with the expected pattern type.
+        //Otherwise, its easy to get inconsistent;
+        //e.g., if expected_pat_t is (option nat)
+        //and   lc.res_typ is (option int)
+        //Rel.teq below will produce a logical guard (int = nat)
+        //which will fail the discharge_guard_no_smt check
+        //Without out, we will be able to conclude in the branch of the pattern,
+        //with the equality Some #nat x = Some #int x
+        //that nat=int and hence False
+        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
+        let g = Rel.conj_guard g g' in
         let env1 = Env.set_range env1 exp.pos in
-        let g = {g with guard_f=Trivial} in
         Rel.discharge_guard_no_smt env1 g |>
         Rel.resolve_implicits in
     let norm_exp = N.normalize [N.Beta] env1 exp in
@@ -2009,7 +2078,7 @@ and tc_trivial_guard env t =
 let type_of_tot_term env e =
     if Env.debug env <| Options.Other "RelCheck" then BU.print1 "Checking term %s\n" (Print.term_to_string e);
     //let env, _ = Env.clear_expected_typ env in
-    let env = {env with top_level=false; use_bv_sorts=true; letrecs=[]} in
+    let env = {env with top_level=false; letrecs=[]} in
     let t, c, g =
         try tc_tot_or_gtot_term env e
         with Error(msg, _) -> raise (Error("Implicit argument: " ^ msg, Env.get_range env)) in

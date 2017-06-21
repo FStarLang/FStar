@@ -1,5 +1,7 @@
 type uint32 = int
+[@@deriving show]
 type t = uint32
+[@@deriving show]
                 
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 

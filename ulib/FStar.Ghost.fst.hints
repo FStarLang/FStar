@@ -78,8 +78,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
-        "equation_FStar.Ghost.reveal",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.Ghost_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
       0
@@ -102,8 +101,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Ghost.erased",
-        "equation_FStar.Ghost.reveal",
+        "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
       0

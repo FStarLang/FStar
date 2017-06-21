@@ -1,5 +1,5 @@
 [
-  "$.A\u0007­Å\u0000_¦¯|¦¿]Úm",
+  "0ìÑÖêZ½­¸=º•è}–\u0001",
   [
     [
       "MAC.entry",
@@ -26,7 +26,7 @@
         "@MaxIFuel_assumption", "@query", "equation_Platform.Bytes.bytes",
         "equation_SHA1.text", "proj_equation_MAC.Entry_k",
         "projection_inverse_MAC.Entry_k",
-        "refinement_interpretation_MAC_Tm_refine_efe335931539402e9fdf173d2969658e"
+        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
       ],
       0
     ],
@@ -95,6 +95,7 @@
         "disc_equation_FStar.Pervasives.Some",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
+        "fuel_guarded_inversion_FStar.Pervasives.option",
         "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",

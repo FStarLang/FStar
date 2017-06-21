@@ -93,9 +93,18 @@ let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
+(* Constructive variants *)
+let c_true_lid   = pconst "c_True"
+let c_false_lid  = pconst "c_False"
+let c_and_lid    = pconst "c_and"
+let c_or_lid     = pconst "c_or"
+let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
 let eq3_lid    = pconst  "eq3"
+let c_eq2_lid  = pconst "equals"
+let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
@@ -117,6 +126,7 @@ let strcat_lid      = p2l ["Prims"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
+let string_compare = p2l ["FStar"; "String"; "compare"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -194,9 +204,19 @@ let guard_free     = pconst "guard_free"
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
 
+let lid_as_tm l = lid_as_fv l Delta_constant None |> fv_to_tm
+
 (* tactic constants *)
-let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
-let tactic_lid = fstar_tactics_lid "tactic"
-let by_tactic_lid = fstar_tactics_lid "by_tactic"
-let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
-let fstar_tactics_embed_lid = fstar_tactics_lid "__embed"
+let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
+let fstar_tactics_lid  s = fstar_tactics_lid' [s]
+let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
+let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
+let tac_effect_lid = fstar_tactics_lid "TAC"
+let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]
+let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
+let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
+let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
+let quote_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
+let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
+let fstar_refl_embed = lid_as_tm fstar_refl_embed_lid
+let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"

@@ -23,7 +23,6 @@ Ex07c.fst \
 Ex07d.fst \
 Ex10a.fst \
 Ex10b.fst \
-Ex11a.fst \
 Ex12a.Cap.fst \
 Ex12b.RPC.fst \
 Ex12d.Pad.fst \
@@ -31,18 +30,26 @@ Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
 Ex12g.TMAC2.fst
 
+VERFILES_HS=Ex11a.fst
+
 FSTAR_HOME=../../../../
 HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
+HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
+
 verify-%: __force__
 	$(FSTAR) --include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst $*
+
+verify_hs-%: __force__
+	$(FSTAR) --include $(HYPERSTACK) $*
+
 
 all: uall sall Ex01a-ocaml
 
 sall:
 
-uall: $(VERFILES:%=verify-%)
+uall: $(VERFILES:%=verify-%) $(VERFILES_HS:%=verify_hs-%)
 
 
 # Importing targets for simplified extraction to Ocaml

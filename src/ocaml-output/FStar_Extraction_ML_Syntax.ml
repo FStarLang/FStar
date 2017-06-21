@@ -62,20 +62,37 @@ let ocamlkeywords: Prims.string Prims.list =
 let is_reserved: Prims.string -> Prims.bool =
   fun k  -> FStar_List.existsb (fun k'  -> k' = k) ocamlkeywords
 let idsym: mlident -> mlsymbol =
+<<<<<<< HEAD
   fun uu____14  -> match uu____14 with | (s,uu____16) -> s
 let string_of_mlpath: mlpath -> mlsymbol =
   fun uu____19  ->
     match uu____19 with
+=======
+  fun uu____15  -> match uu____15 with | (s,uu____17) -> s
+let string_of_mlpath: mlpath -> mlsymbol =
+  fun uu____21  ->
+    match uu____21 with
+>>>>>>> origin/guido_tactics
     | (p,s) -> FStar_String.concat "." (FStar_List.append p [s])
 type gensym_t =
   {
   gensym: Prims.unit -> mlident;
   reset: Prims.unit -> Prims.unit;}
+let __proj__Mkgensym_t__item__gensym: gensym_t -> Prims.unit -> mlident =
+  fun projectee  ->
+    match projectee with
+    | { gensym = __fname__gensym; reset = __fname__reset;_} ->
+        __fname__gensym
+let __proj__Mkgensym_t__item__reset: gensym_t -> Prims.unit -> Prims.unit =
+  fun projectee  ->
+    match projectee with
+    | { gensym = __fname__gensym; reset = __fname__reset;_} -> __fname__reset
 let gs: gensym_t =
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
   let n_resets = FStar_Util.mk_ref (Prims.parse_int "0") in
   {
     gensym =
+<<<<<<< HEAD
       (fun uu____68  ->
          FStar_Util.incr ctr;
          (let uu____73 =
@@ -97,23 +114,58 @@ let gs: gensym_t =
   }
 let gensym: Prims.unit -> mlident = fun uu____95  -> gs.gensym ()
 let reset_gensym: Prims.unit -> Prims.unit = fun uu____98  -> gs.reset ()
+=======
+      (fun uu____78  ->
+         FStar_Util.incr ctr;
+         (let uu____83 =
+            let uu____84 =
+              let uu____85 =
+                let uu____86 = FStar_ST.read n_resets in
+                FStar_Util.string_of_int uu____86 in
+              let uu____89 =
+                let uu____90 =
+                  let uu____91 = FStar_ST.read ctr in
+                  FStar_Util.string_of_int uu____91 in
+                Prims.strcat "_" uu____90 in
+              Prims.strcat uu____85 uu____89 in
+            Prims.strcat "_" uu____84 in
+          (uu____83, (Prims.parse_int "0"))));
+    reset =
+      (fun uu____94  ->
+         FStar_ST.write ctr (Prims.parse_int "0"); FStar_Util.incr n_resets)
+  }
+let gensym: Prims.unit -> mlident = fun uu____104  -> gs.gensym ()
+let reset_gensym: Prims.unit -> Prims.unit = fun uu____108  -> gs.reset ()
+>>>>>>> origin/guido_tactics
 let rec gensyms: Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
-    | _0_29 when _0_29 = (Prims.parse_int "0") -> []
+    | _0_39 when _0_39 = (Prims.parse_int "0") -> []
     | n1 ->
+<<<<<<< HEAD
         let uu____105 = gensym () in
         let uu____106 = gensyms (n1 - (Prims.parse_int "1")) in uu____105 ::
           uu____106
+=======
+        let uu____116 = gensym () in
+        let uu____117 = gensyms (n1 - (Prims.parse_int "1")) in uu____116 ::
+          uu____117
+>>>>>>> origin/guido_tactics
 let mlpath_of_lident:
   FStar_Ident.lident -> (Prims.string Prims.list* Prims.string) =
   fun x  ->
     if FStar_Ident.lid_equals x FStar_Syntax_Const.failwith_lid
     then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
     else
+<<<<<<< HEAD
       (let uu____113 =
          FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns in
        (uu____113, ((x.FStar_Ident.ident).FStar_Ident.idText)))
+=======
+      (let uu____125 =
+         FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns in
+       (uu____125, ((x.FStar_Ident.ident).FStar_Ident.idText)))
+>>>>>>> origin/guido_tactics
 type mlidents = mlident Prims.list
 type mlsymbols = mlsymbol Prims.list
 type e_tag =
@@ -122,6 +174,7 @@ type e_tag =
   | E_IMPURE
 let uu___is_E_PURE: e_tag -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | E_PURE  -> true | uu____123 -> false
 let uu___is_E_GHOST: e_tag -> Prims.bool =
   fun projectee  ->
@@ -129,6 +182,15 @@ let uu___is_E_GHOST: e_tag -> Prims.bool =
 let uu___is_E_IMPURE: e_tag -> Prims.bool =
   fun projectee  ->
     match projectee with | E_IMPURE  -> true | uu____131 -> false
+=======
+    match projectee with | E_PURE  -> true | uu____135 -> false
+let uu___is_E_GHOST: e_tag -> Prims.bool =
+  fun projectee  ->
+    match projectee with | E_GHOST  -> true | uu____140 -> false
+let uu___is_E_IMPURE: e_tag -> Prims.bool =
+  fun projectee  ->
+    match projectee with | E_IMPURE  -> true | uu____145 -> false
+>>>>>>> origin/guido_tactics
 type mlloc = (Prims.int* Prims.string)
 let dummy_loc: (Prims.int* Prims.string) = ((Prims.parse_int "0"), "")
 type mlty =
@@ -139,27 +201,47 @@ type mlty =
   | MLTY_Top
 let uu___is_MLTY_Var: mlty -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTY_Var _0 -> true | uu____163 -> false
+=======
+    match projectee with | MLTY_Var _0 -> true | uu____178 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTY_Var__item___0: mlty -> mlident =
   fun projectee  -> match projectee with | MLTY_Var _0 -> _0
 let uu___is_MLTY_Fun: mlty -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTY_Fun _0 -> true | uu____178 -> false
+=======
+    match projectee with | MLTY_Fun _0 -> true | uu____195 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTY_Fun__item___0: mlty -> (mlty* e_tag* mlty) =
   fun projectee  -> match projectee with | MLTY_Fun _0 -> _0
 let uu___is_MLTY_Named: mlty -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTY_Named _0 -> true | uu____202 -> false
+=======
+    match projectee with | MLTY_Named _0 -> true | uu____221 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTY_Named__item___0: mlty -> (mlty Prims.list* mlpath) =
   fun projectee  -> match projectee with | MLTY_Named _0 -> _0
 let uu___is_MLTY_Tuple: mlty -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTY_Tuple _0 -> true | uu____224 -> false
+=======
+    match projectee with | MLTY_Tuple _0 -> true | uu____245 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTY_Tuple__item___0: mlty -> mlty Prims.list =
   fun projectee  -> match projectee with | MLTY_Tuple _0 -> _0
 let uu___is_MLTY_Top: mlty -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTY_Top  -> true | uu____238 -> false
+=======
+    match projectee with | MLTY_Top  -> true | uu____261 -> false
+>>>>>>> origin/guido_tactics
 type mltyscheme = (mlidents* mlty)
 type mlconstant =
   | MLC_Unit
@@ -172,37 +254,64 @@ type mlconstant =
   | MLC_Bytes of FStar_BaseTypes.byte Prims.array
 let uu___is_MLC_Unit: mlconstant -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLC_Unit  -> true | uu____274 -> false
 let uu___is_MLC_Bool: mlconstant -> Prims.bool =
   fun projectee  ->
     match projectee with | MLC_Bool _0 -> true | uu____279 -> false
+=======
+    match projectee with | MLC_Unit  -> true | uu____298 -> false
+let uu___is_MLC_Bool: mlconstant -> Prims.bool =
+  fun projectee  ->
+    match projectee with | MLC_Bool _0 -> true | uu____304 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLC_Bool__item___0: mlconstant -> Prims.bool =
   fun projectee  -> match projectee with | MLC_Bool _0 -> _0
 let uu___is_MLC_Int: mlconstant -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLC_Int _0 -> true | uu____296 -> false
+=======
+    match projectee with | MLC_Int _0 -> true | uu____323 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLC_Int__item___0:
   mlconstant ->
     (Prims.string* (FStar_Const.signedness* FStar_Const.width) option)
   = fun projectee  -> match projectee with | MLC_Int _0 -> _0
 let uu___is_MLC_Float: mlconstant -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLC_Float _0 -> true | uu____323 -> false
+=======
+    match projectee with | MLC_Float _0 -> true | uu____352 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLC_Float__item___0: mlconstant -> FStar_BaseTypes.float =
   fun projectee  -> match projectee with | MLC_Float _0 -> _0
 let uu___is_MLC_Char: mlconstant -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLC_Char _0 -> true | uu____335 -> false
+=======
+    match projectee with | MLC_Char _0 -> true | uu____366 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLC_Char__item___0: mlconstant -> FStar_BaseTypes.char =
   fun projectee  -> match projectee with | MLC_Char _0 -> _0
 let uu___is_MLC_String: mlconstant -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLC_String _0 -> true | uu____347 -> false
+=======
+    match projectee with | MLC_String _0 -> true | uu____380 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLC_String__item___0: mlconstant -> Prims.string =
   fun projectee  -> match projectee with | MLC_String _0 -> _0
 let uu___is_MLC_Bytes: mlconstant -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLC_Bytes _0 -> true | uu____360 -> false
+=======
+    match projectee with | MLC_Bytes _0 -> true | uu____395 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLC_Bytes__item___0:
   mlconstant -> FStar_BaseTypes.byte Prims.array =
   fun projectee  -> match projectee with | MLC_Bytes _0 -> _0
@@ -216,36 +325,63 @@ type mlpattern =
   | MLP_Tuple of mlpattern Prims.list
 let uu___is_MLP_Wild: mlpattern -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLP_Wild  -> true | uu____409 -> false
 let uu___is_MLP_Const: mlpattern -> Prims.bool =
   fun projectee  ->
     match projectee with | MLP_Const _0 -> true | uu____414 -> false
+=======
+    match projectee with | MLP_Wild  -> true | uu____446 -> false
+let uu___is_MLP_Const: mlpattern -> Prims.bool =
+  fun projectee  ->
+    match projectee with | MLP_Const _0 -> true | uu____452 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLP_Const__item___0: mlpattern -> mlconstant =
   fun projectee  -> match projectee with | MLP_Const _0 -> _0
 let uu___is_MLP_Var: mlpattern -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLP_Var _0 -> true | uu____426 -> false
+=======
+    match projectee with | MLP_Var _0 -> true | uu____466 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLP_Var__item___0: mlpattern -> mlident =
   fun projectee  -> match projectee with | MLP_Var _0 -> _0
 let uu___is_MLP_CTor: mlpattern -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLP_CTor _0 -> true | uu____441 -> false
+=======
+    match projectee with | MLP_CTor _0 -> true | uu____483 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLP_CTor__item___0: mlpattern -> (mlpath* mlpattern Prims.list) =
   fun projectee  -> match projectee with | MLP_CTor _0 -> _0
 let uu___is_MLP_Branch: mlpattern -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLP_Branch _0 -> true | uu____463 -> false
+=======
+    match projectee with | MLP_Branch _0 -> true | uu____507 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLP_Branch__item___0: mlpattern -> mlpattern Prims.list =
   fun projectee  -> match projectee with | MLP_Branch _0 -> _0
 let uu___is_MLP_Record: mlpattern -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLP_Record _0 -> true | uu____484 -> false
+=======
+    match projectee with | MLP_Record _0 -> true | uu____530 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLP_Record__item___0:
   mlpattern -> (mlsymbol Prims.list* (mlsymbol* mlpattern) Prims.list) =
   fun projectee  -> match projectee with | MLP_Record _0 -> _0
 let uu___is_MLP_Tuple: mlpattern -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLP_Tuple _0 -> true | uu____515 -> false
+=======
+    match projectee with | MLP_Tuple _0 -> true | uu____563 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLP_Tuple__item___0: mlpattern -> mlpattern Prims.list =
   fun projectee  -> match projectee with | MLP_Tuple _0 -> _0
 type c_flag =
@@ -256,6 +392,7 @@ type c_flag =
   | Attribute of Prims.string
 let uu___is_Mutable: c_flag -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | Mutable  -> true | uu____533 -> false
 let uu___is_Assumed: c_flag -> Prims.bool =
   fun projectee  ->
@@ -269,16 +406,38 @@ let uu___is_NoExtract: c_flag -> Prims.bool =
 let uu___is_Attribute: c_flag -> Prims.bool =
   fun projectee  ->
     match projectee with | Attribute _0 -> true | uu____550 -> false
+=======
+    match projectee with | Mutable  -> true | uu____583 -> false
+let uu___is_Assumed: c_flag -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Assumed  -> true | uu____588 -> false
+let uu___is_Private: c_flag -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Private  -> true | uu____593 -> false
+let uu___is_NoExtract: c_flag -> Prims.bool =
+  fun projectee  ->
+    match projectee with | NoExtract  -> true | uu____598 -> false
+let uu___is_Attribute: c_flag -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Attribute _0 -> true | uu____604 -> false
+>>>>>>> origin/guido_tactics
 let __proj__Attribute__item___0: c_flag -> Prims.string =
   fun projectee  -> match projectee with | Attribute _0 -> _0
 type mlletflavor =
   | Rec
   | NonRec
 let uu___is_Rec: mlletflavor -> Prims.bool =
+<<<<<<< HEAD
   fun projectee  -> match projectee with | Rec  -> true | uu____561 -> false
 let uu___is_NonRec: mlletflavor -> Prims.bool =
   fun projectee  ->
     match projectee with | NonRec  -> true | uu____565 -> false
+=======
+  fun projectee  -> match projectee with | Rec  -> true | uu____617 -> false
+let uu___is_NonRec: mlletflavor -> Prims.bool =
+  fun projectee  ->
+    match projectee with | NonRec  -> true | uu____622 -> false
+>>>>>>> origin/guido_tactics
 type c_flags = c_flag Prims.list
 type mlexpr' =
   | MLE_Const of mlconstant
@@ -310,89 +469,198 @@ and mllb =
   print_typ: Prims.bool;}
 let uu___is_MLE_Const: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Const _0 -> true | uu____719 -> false
+=======
+    match projectee with | MLE_Const _0 -> true | uu____777 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Const__item___0: mlexpr' -> mlconstant =
   fun projectee  -> match projectee with | MLE_Const _0 -> _0
 let uu___is_MLE_Var: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Var _0 -> true | uu____731 -> false
+=======
+    match projectee with | MLE_Var _0 -> true | uu____791 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Var__item___0: mlexpr' -> mlident =
   fun projectee  -> match projectee with | MLE_Var _0 -> _0
 let uu___is_MLE_Name: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Name _0 -> true | uu____743 -> false
+=======
+    match projectee with | MLE_Name _0 -> true | uu____805 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Name__item___0: mlexpr' -> mlpath =
   fun projectee  -> match projectee with | MLE_Name _0 -> _0
 let uu___is_MLE_Let: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Let _0 -> true | uu____761 -> false
+=======
+    match projectee with | MLE_Let _0 -> true | uu____825 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Let__item___0:
   mlexpr' -> ((mlletflavor* c_flags* mllb Prims.list)* mlexpr) =
   fun projectee  -> match projectee with | MLE_Let _0 -> _0
 let uu___is_MLE_App: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_App _0 -> true | uu____794 -> false
+=======
+    match projectee with | MLE_App _0 -> true | uu____860 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_App__item___0: mlexpr' -> (mlexpr* mlexpr Prims.list) =
   fun projectee  -> match projectee with | MLE_App _0 -> _0
 let uu___is_MLE_Fun: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Fun _0 -> true | uu____820 -> false
+=======
+    match projectee with | MLE_Fun _0 -> true | uu____888 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Fun__item___0:
   mlexpr' -> ((mlident* mlty) Prims.list* mlexpr) =
   fun projectee  -> match projectee with | MLE_Fun _0 -> _0
 let uu___is_MLE_Match: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Match _0 -> true | uu____854 -> false
+=======
+    match projectee with | MLE_Match _0 -> true | uu____924 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Match__item___0:
   mlexpr' -> (mlexpr* (mlpattern* mlexpr option* mlexpr) Prims.list) =
   fun projectee  -> match projectee with | MLE_Match _0 -> _0
 let uu___is_MLE_Coerce: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Coerce _0 -> true | uu____890 -> false
+=======
+    match projectee with | MLE_Coerce _0 -> true | uu____962 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Coerce__item___0: mlexpr' -> (mlexpr* mlty* mlty) =
   fun projectee  -> match projectee with | MLE_Coerce _0 -> _0
 let uu___is_MLE_CTor: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_CTor _0 -> true | uu____914 -> false
+=======
+    match projectee with | MLE_CTor _0 -> true | uu____988 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_CTor__item___0: mlexpr' -> (mlpath* mlexpr Prims.list) =
   fun projectee  -> match projectee with | MLE_CTor _0 -> _0
 let uu___is_MLE_Seq: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Seq _0 -> true | uu____936 -> false
+=======
+    match projectee with | MLE_Seq _0 -> true | uu____1012 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Seq__item___0: mlexpr' -> mlexpr Prims.list =
   fun projectee  -> match projectee with | MLE_Seq _0 -> _0
 let uu___is_MLE_Tuple: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Tuple _0 -> true | uu____952 -> false
+=======
+    match projectee with | MLE_Tuple _0 -> true | uu____1030 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Tuple__item___0: mlexpr' -> mlexpr Prims.list =
   fun projectee  -> match projectee with | MLE_Tuple _0 -> _0
 let uu___is_MLE_Record: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Record _0 -> true | uu____973 -> false
+=======
+    match projectee with | MLE_Record _0 -> true | uu____1053 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Record__item___0:
   mlexpr' -> (mlsymbol Prims.list* (mlsymbol* mlexpr) Prims.list) =
   fun projectee  -> match projectee with | MLE_Record _0 -> _0
 let uu___is_MLE_Proj: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Proj _0 -> true | uu____1005 -> false
+=======
+    match projectee with | MLE_Proj _0 -> true | uu____1087 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Proj__item___0: mlexpr' -> (mlexpr* mlpath) =
   fun projectee  -> match projectee with | MLE_Proj _0 -> _0
 let uu___is_MLE_If: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_If _0 -> true | uu____1027 -> false
+=======
+    match projectee with | MLE_If _0 -> true | uu____1111 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_If__item___0: mlexpr' -> (mlexpr* mlexpr* mlexpr option) =
   fun projectee  -> match projectee with | MLE_If _0 -> _0
 let uu___is_MLE_Raise: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Raise _0 -> true | uu____1054 -> false
+=======
+    match projectee with | MLE_Raise _0 -> true | uu____1140 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Raise__item___0: mlexpr' -> (mlpath* mlexpr Prims.list) =
   fun projectee  -> match projectee with | MLE_Raise _0 -> _0
 let uu___is_MLE_Try: mlexpr' -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLE_Try _0 -> true | uu____1082 -> false
+=======
+    match projectee with | MLE_Try _0 -> true | uu____1170 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLE_Try__item___0:
   mlexpr' -> (mlexpr* (mlpattern* mlexpr option* mlexpr) Prims.list) =
   fun projectee  -> match projectee with | MLE_Try _0 -> _0
+let __proj__Mkmlexpr__item__expr: mlexpr -> mlexpr' =
+  fun projectee  ->
+    match projectee with
+    | { expr = __fname__expr; mlty = __fname__mlty; loc = __fname__loc;_} ->
+        __fname__expr
+let __proj__Mkmlexpr__item__mlty: mlexpr -> mlty =
+  fun projectee  ->
+    match projectee with
+    | { expr = __fname__expr; mlty = __fname__mlty; loc = __fname__loc;_} ->
+        __fname__mlty
+let __proj__Mkmlexpr__item__loc: mlexpr -> mlloc =
+  fun projectee  ->
+    match projectee with
+    | { expr = __fname__expr; mlty = __fname__mlty; loc = __fname__loc;_} ->
+        __fname__loc
+let __proj__Mkmllb__item__mllb_name: mllb -> mlident =
+  fun projectee  ->
+    match projectee with
+    | { mllb_name = __fname__mllb_name; mllb_tysc = __fname__mllb_tysc;
+        mllb_add_unit = __fname__mllb_add_unit; mllb_def = __fname__mllb_def;
+        print_typ = __fname__print_typ;_} -> __fname__mllb_name
+let __proj__Mkmllb__item__mllb_tysc: mllb -> mltyscheme option =
+  fun projectee  ->
+    match projectee with
+    | { mllb_name = __fname__mllb_name; mllb_tysc = __fname__mllb_tysc;
+        mllb_add_unit = __fname__mllb_add_unit; mllb_def = __fname__mllb_def;
+        print_typ = __fname__print_typ;_} -> __fname__mllb_tysc
+let __proj__Mkmllb__item__mllb_add_unit: mllb -> Prims.bool =
+  fun projectee  ->
+    match projectee with
+    | { mllb_name = __fname__mllb_name; mllb_tysc = __fname__mllb_tysc;
+        mllb_add_unit = __fname__mllb_add_unit; mllb_def = __fname__mllb_def;
+        print_typ = __fname__print_typ;_} -> __fname__mllb_add_unit
+let __proj__Mkmllb__item__mllb_def: mllb -> mlexpr =
+  fun projectee  ->
+    match projectee with
+    | { mllb_name = __fname__mllb_name; mllb_tysc = __fname__mllb_tysc;
+        mllb_add_unit = __fname__mllb_add_unit; mllb_def = __fname__mllb_def;
+        print_typ = __fname__print_typ;_} -> __fname__mllb_def
+let __proj__Mkmllb__item__print_typ: mllb -> Prims.bool =
+  fun projectee  ->
+    match projectee with
+    | { mllb_name = __fname__mllb_name; mllb_tysc = __fname__mllb_tysc;
+        mllb_add_unit = __fname__mllb_add_unit; mllb_def = __fname__mllb_def;
+        print_typ = __fname__print_typ;_} -> __fname__print_typ
 type mlbranch = (mlpattern* mlexpr option* mlexpr)
 type mlletbinding = (mlletflavor* c_flags* mllb Prims.list)
 type mltybody =
@@ -401,17 +669,29 @@ type mltybody =
   | MLTD_DType of (mlsymbol* (mlsymbol* mlty) Prims.list) Prims.list
 let uu___is_MLTD_Abbrev: mltybody -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTD_Abbrev _0 -> true | uu____1178 -> false
+=======
+    match projectee with | MLTD_Abbrev _0 -> true | uu____1307 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTD_Abbrev__item___0: mltybody -> mlty =
   fun projectee  -> match projectee with | MLTD_Abbrev _0 -> _0
 let uu___is_MLTD_Record: mltybody -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTD_Record _0 -> true | uu____1193 -> false
+=======
+    match projectee with | MLTD_Record _0 -> true | uu____1324 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTD_Record__item___0: mltybody -> (mlsymbol* mlty) Prims.list =
   fun projectee  -> match projectee with | MLTD_Record _0 -> _0
 let uu___is_MLTD_DType: mltybody -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLTD_DType _0 -> true | uu____1220 -> false
+=======
+    match projectee with | MLTD_DType _0 -> true | uu____1353 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLTD_DType__item___0:
   mltybody -> (mlsymbol* (mlsymbol* mlty) Prims.list) Prims.list =
   fun projectee  -> match projectee with | MLTD_DType _0 -> _0
@@ -426,28 +706,48 @@ type mlmodule1 =
   | MLM_Loc of mlloc
 let uu___is_MLM_Ty: mlmodule1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLM_Ty _0 -> true | uu____1283 -> false
+=======
+    match projectee with | MLM_Ty _0 -> true | uu____1418 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLM_Ty__item___0: mlmodule1 -> mltydecl =
   fun projectee  -> match projectee with | MLM_Ty _0 -> _0
 let uu___is_MLM_Let: mlmodule1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLM_Let _0 -> true | uu____1295 -> false
+=======
+    match projectee with | MLM_Let _0 -> true | uu____1432 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLM_Let__item___0: mlmodule1 -> mlletbinding =
   fun projectee  -> match projectee with | MLM_Let _0 -> _0
 let uu___is_MLM_Exn: mlmodule1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLM_Exn _0 -> true | uu____1312 -> false
+=======
+    match projectee with | MLM_Exn _0 -> true | uu____1451 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLM_Exn__item___0:
   mlmodule1 -> (mlsymbol* (mlsymbol* mlty) Prims.list) =
   fun projectee  -> match projectee with | MLM_Exn _0 -> _0
 let uu___is_MLM_Top: mlmodule1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLM_Top _0 -> true | uu____1339 -> false
+=======
+    match projectee with | MLM_Top _0 -> true | uu____1480 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLM_Top__item___0: mlmodule1 -> mlexpr =
   fun projectee  -> match projectee with | MLM_Top _0 -> _0
 let uu___is_MLM_Loc: mlmodule1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLM_Loc _0 -> true | uu____1351 -> false
+=======
+    match projectee with | MLM_Loc _0 -> true | uu____1494 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLM_Loc__item___0: mlmodule1 -> mlloc =
   fun projectee  -> match projectee with | MLM_Loc _0 -> _0
 type mlmodule = mlmodule1 Prims.list
@@ -458,22 +758,38 @@ type mlsig1 =
   | MLS_Exn of (mlsymbol* mlty Prims.list)
 let uu___is_MLS_Mod: mlsig1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLS_Mod _0 -> true | uu____1391 -> false
+=======
+    match projectee with | MLS_Mod _0 -> true | uu____1536 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLS_Mod__item___0: mlsig1 -> (mlsymbol* mlsig1 Prims.list) =
   fun projectee  -> match projectee with | MLS_Mod _0 -> _0
 let uu___is_MLS_Ty: mlsig1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLS_Ty _0 -> true | uu____1412 -> false
+=======
+    match projectee with | MLS_Ty _0 -> true | uu____1559 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLS_Ty__item___0: mlsig1 -> mltydecl =
   fun projectee  -> match projectee with | MLS_Ty _0 -> _0
 let uu___is_MLS_Val: mlsig1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLS_Val _0 -> true | uu____1426 -> false
+=======
+    match projectee with | MLS_Val _0 -> true | uu____1575 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLS_Val__item___0: mlsig1 -> (mlsymbol* mltyscheme) =
   fun projectee  -> match projectee with | MLS_Val _0 -> _0
 let uu___is_MLS_Exn: mlsig1 -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | MLS_Exn _0 -> true | uu____1447 -> false
+=======
+    match projectee with | MLS_Exn _0 -> true | uu____1598 -> false
+>>>>>>> origin/guido_tactics
 let __proj__MLS_Exn__item___0: mlsig1 -> (mlsymbol* mlty Prims.list) =
   fun projectee  -> match projectee with | MLS_Exn _0 -> _0
 type mlsig = mlsig1 Prims.list
@@ -503,12 +819,17 @@ let avoid_keyword: Prims.string -> Prims.string =
   fun s  -> if is_reserved s then Prims.strcat s "_" else s
 let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
   fun x  ->
+<<<<<<< HEAD
     let uu____1559 =
+=======
+    let uu____1722 =
+>>>>>>> origin/guido_tactics
       ((FStar_Util.starts_with
           (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
           FStar_Ident.reserved_prefix)
          || (FStar_Syntax_Syntax.is_null_bv x))
         || (is_reserved (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText) in
+<<<<<<< HEAD
     if uu____1559
     then
       let uu____1560 =
@@ -519,6 +840,18 @@ let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
         Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
           uu____1561 in
       (uu____1560, (Prims.parse_int "0"))
+=======
+    if uu____1722
+    then
+      let uu____1723 =
+        let uu____1724 =
+          let uu____1725 =
+            FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
+          Prims.strcat "_" uu____1725 in
+        Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+          uu____1724 in
+      (uu____1723, (Prims.parse_int "0"))
+>>>>>>> origin/guido_tactics
     else
       (((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText),
         (Prims.parse_int "0"))

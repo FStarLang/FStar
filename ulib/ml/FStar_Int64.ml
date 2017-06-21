@@ -1,12 +1,15 @@
 type int64 = Int64.t
+[@@deriving show]
 type uint8 = int
+[@@deriving show]
 type t = int64
-               
+[@@deriving show]
+
 let v (x:int64) : Prims.int = Prims.parse_int (Int64.to_string x)
 
 let zero = Int64.zero
 let one = Int64.one
-let ones = Int64.pred Int64.zero                                       
+let ones = Int64.pred Int64.zero
 
 let add (a:int64) (b:int64) : int64 = Int64.add a b
 let add_underspec a b = add a b
@@ -28,11 +31,11 @@ let logand (a:int64) (b:int64) : int64 = Int64.logand a b
 let logxor (a:int64) (b:int64) : int64 = Int64.logxor a b
 let logor  (a:int64) (b:int64) : int64 = Int64.logor a b
 let lognot (a:int64) : int64 = Int64.lognot a
-       
-let int_to_int64 (x:Prims.int) : int64 = Int64.of_string (Prims.to_string x) 
+
+let int_to_int64 (x:Prims.int) : int64 = Int64.of_string (Prims.to_string x)
 
 let shift_right (a:int64) (b:uint8) : int64 = Int64.shift_right a b
-let shift_left  (a:int64) (b:uint8) : int64 = Int64.shift_left a b 
+let shift_left  (a:int64) (b:uint8) : int64 = Int64.shift_left a b
 
 (* Comparison operators *)
 let eq (a:int64) (b:int64) : bool = a = b
@@ -53,7 +56,7 @@ let op_Star_Question_Hat = mul_underspec
 let op_Star_Percent_Hat = mul_mod
 let op_Slash_Hat = div
 let op_Percent_Hat = rem
-let op_Hat_Hat = logxor  
+let op_Hat_Hat = logxor
 let op_Amp_Hat = logand
 let op_Bar_Hat = logor
 let op_Less_Less_Hat = shift_left
@@ -64,5 +67,5 @@ let op_Greater_Equals_Hat = gte
 let op_Less_Hat = lt
 let op_Less_Equals_Hat = lte
 
-let to_string = Int64.to_string                     
+let to_string = Int64.to_string
 let int_to_t s = int_to_int64 s

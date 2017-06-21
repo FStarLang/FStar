@@ -1,9 +1,6 @@
 [
   "G\u0005Û\u00189öoJk∂çë«q \u0005",
   [
-    [ "MetaCoq.__proj__Goal__item___1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MetaCoq.__proj__AHyp__item___1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MetaCoq.__proj__AHyp__item___2", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.ttry", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.or", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.exact", 1, 2, 1, [ "@query" ], 0 ],

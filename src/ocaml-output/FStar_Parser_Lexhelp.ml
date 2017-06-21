@@ -2,8 +2,8 @@ open Prims
 let intern_string: Prims.string -> Prims.string =
   let strings = FStar_Util.smap_create (Prims.parse_int "100") in
   fun s  ->
-    let uu____6 = FStar_Util.smap_try_find strings s in
-    match uu____6 with
+    let uu____7 = FStar_Util.smap_try_find strings s in
+    match uu____7 with
     | Some res -> res
     | None  -> (FStar_Util.smap_add strings s s; s)
 let default_string_finish endm b s = FStar_Parser_Parse.STRING s
@@ -12,8 +12,8 @@ let call_string_finish fin buf endm b =
 let add_string: FStar_Bytes.bytebuf -> Prims.string -> Prims.unit =
   fun buf  ->
     fun x  ->
-      let uu____76 = FStar_Bytes.string_as_unicode_bytes x in
-      FStar_Bytes.emit_bytes buf uu____76
+      let uu____91 = FStar_Bytes.string_as_unicode_bytes x in
+      FStar_Bytes.emit_bytes buf uu____91
 let add_int_char: FStar_Bytes.bytebuf -> Prims.int -> Prims.unit =
   fun buf  ->
     fun c  ->
@@ -30,17 +30,18 @@ let add_byte_char: FStar_Bytes.bytebuf -> FStar_BaseTypes.char -> Prims.unit
 let stringbuf_as_bytes: FStar_Bytes.bytebuf -> FStar_Bytes.bytes =
   fun buf  ->
     let bytes = FStar_Bytes.close buf in
-    let uu____100 =
-      let uu____101 = FStar_Bytes.length bytes in
-      uu____101 / (Prims.parse_int "2") in
+    let uu____122 =
+      let uu____123 = FStar_Bytes.length bytes in
+      uu____123 / (Prims.parse_int "2") in
     FStar_Bytes.make
       (fun i  ->
          FStar_Bytes.get bytes (FStar_Mul.op_Star i (Prims.parse_int "2")))
-      uu____100
+      uu____122
 let stringbuf_is_bytes: FStar_Bytes.bytebuf -> Prims.bool =
   fun buf  ->
     let bytes = FStar_Bytes.close buf in
     let ok = FStar_Util.mk_ref true in
+<<<<<<< HEAD
     (let uu____116 =
        let uu____117 =
          let uu____118 = FStar_Bytes.length bytes in
@@ -55,6 +56,22 @@ let stringbuf_is_bytes: FStar_Bytes.bytebuf -> Prims.bool =
                    (Prims.parse_int "1")) in
             uu____126 <> (Prims.parse_int "0") in
           if uu____125 then FStar_ST.write ok false else ()));
+=======
+    (let uu____140 =
+       let uu____141 =
+         let uu____142 = FStar_Bytes.length bytes in
+         uu____142 / (Prims.parse_int "2") in
+       uu____141 - (Prims.parse_int "1") in
+     FStar_Util.for_range (Prims.parse_int "0") uu____140
+       (fun i  ->
+          let uu____150 =
+            let uu____151 =
+              FStar_Bytes.get bytes
+                ((FStar_Mul.op_Star i (Prims.parse_int "2")) +
+                   (Prims.parse_int "1")) in
+            uu____151 <> (Prims.parse_int "0") in
+          if uu____150 then FStar_ST.write ok false else ()));
+>>>>>>> origin/guido_tactics
     FStar_ST.read ok
 let trigraph:
   FStar_BaseTypes.char ->
@@ -100,6 +117,7 @@ let unicodegraph_short: Prims.string -> FStar_BaseTypes.uint16 =
     if (FStar_String.length s) <> (Prims.parse_int "4")
     then failwith "unicodegraph"
     else
+<<<<<<< HEAD
       (let uu____163 =
          let uu____164 =
            let uu____165 =
@@ -125,11 +143,39 @@ let unicodegraph_short: Prims.string -> FStar_BaseTypes.uint16 =
            hexdigit uu____176 in
          uu____164 + uu____175 in
        FStar_Util.uint16_of_int uu____163)
+=======
+      (let uu____196 =
+         let uu____197 =
+           let uu____198 =
+             let uu____199 =
+               let uu____200 =
+                 let uu____201 = FStar_Util.char_at s (Prims.parse_int "0") in
+                 hexdigit uu____201 in
+               FStar_Mul.op_Star uu____200 (Prims.parse_int "4096") in
+             let uu____202 =
+               let uu____203 =
+                 let uu____204 = FStar_Util.char_at s (Prims.parse_int "1") in
+                 hexdigit uu____204 in
+               FStar_Mul.op_Star uu____203 (Prims.parse_int "256") in
+             uu____199 + uu____202 in
+           let uu____205 =
+             let uu____206 =
+               let uu____207 = FStar_Util.char_at s (Prims.parse_int "2") in
+               hexdigit uu____207 in
+             FStar_Mul.op_Star uu____206 (Prims.parse_int "16") in
+           uu____198 + uu____205 in
+         let uu____208 =
+           let uu____209 = FStar_Util.char_at s (Prims.parse_int "3") in
+           hexdigit uu____209 in
+         uu____197 + uu____208 in
+       FStar_Util.uint16_of_int uu____196)
+>>>>>>> origin/guido_tactics
 let hexgraph_short: Prims.string -> FStar_BaseTypes.uint16 =
   fun s  ->
     if (FStar_String.length s) <> (Prims.parse_int "2")
     then failwith "hexgraph"
     else
+<<<<<<< HEAD
       (let uu____183 =
          let uu____184 =
            let uu____185 =
@@ -141,6 +187,19 @@ let hexgraph_short: Prims.string -> FStar_BaseTypes.uint16 =
            hexdigit uu____188 in
          uu____184 + uu____187 in
        FStar_Util.uint16_of_int uu____183)
+=======
+      (let uu____219 =
+         let uu____220 =
+           let uu____221 =
+             let uu____222 = FStar_Util.char_at s (Prims.parse_int "0") in
+             hexdigit uu____222 in
+           FStar_Mul.op_Star uu____221 (Prims.parse_int "16") in
+         let uu____223 =
+           let uu____224 = FStar_Util.char_at s (Prims.parse_int "1") in
+           hexdigit uu____224 in
+         uu____220 + uu____223 in
+       FStar_Util.uint16_of_int uu____219)
+>>>>>>> origin/guido_tactics
 let unicodegraph_long:
   Prims.string -> (FStar_BaseTypes.uint16 option* FStar_BaseTypes.uint16) =
   fun s  ->
@@ -148,6 +207,7 @@ let unicodegraph_long:
     then failwith "unicodegraph_long"
     else
       (let high =
+<<<<<<< HEAD
          let uu____205 =
            let uu____206 =
              let uu____207 =
@@ -195,6 +255,55 @@ let unicodegraph_long:
            let uu____231 = FStar_Util.char_at s (Prims.parse_int "7") in
            hexdigit uu____231 in
          uu____219 + uu____230 in
+=======
+         let uu____244 =
+           let uu____245 =
+             let uu____246 =
+               let uu____247 =
+                 let uu____248 = FStar_Util.char_at s (Prims.parse_int "0") in
+                 hexdigit uu____248 in
+               FStar_Mul.op_Star uu____247 (Prims.parse_int "4096") in
+             let uu____249 =
+               let uu____250 =
+                 let uu____251 = FStar_Util.char_at s (Prims.parse_int "1") in
+                 hexdigit uu____251 in
+               FStar_Mul.op_Star uu____250 (Prims.parse_int "256") in
+             uu____246 + uu____249 in
+           let uu____252 =
+             let uu____253 =
+               let uu____254 = FStar_Util.char_at s (Prims.parse_int "2") in
+               hexdigit uu____254 in
+             FStar_Mul.op_Star uu____253 (Prims.parse_int "16") in
+           uu____245 + uu____252 in
+         let uu____255 =
+           let uu____256 = FStar_Util.char_at s (Prims.parse_int "3") in
+           hexdigit uu____256 in
+         uu____244 + uu____255 in
+       let low =
+         let uu____258 =
+           let uu____259 =
+             let uu____260 =
+               let uu____261 =
+                 let uu____262 = FStar_Util.char_at s (Prims.parse_int "4") in
+                 hexdigit uu____262 in
+               FStar_Mul.op_Star uu____261 (Prims.parse_int "4096") in
+             let uu____263 =
+               let uu____264 =
+                 let uu____265 = FStar_Util.char_at s (Prims.parse_int "5") in
+                 hexdigit uu____265 in
+               FStar_Mul.op_Star uu____264 (Prims.parse_int "256") in
+             uu____260 + uu____263 in
+           let uu____266 =
+             let uu____267 =
+               let uu____268 = FStar_Util.char_at s (Prims.parse_int "6") in
+               hexdigit uu____268 in
+             FStar_Mul.op_Star uu____267 (Prims.parse_int "16") in
+           uu____259 + uu____266 in
+         let uu____269 =
+           let uu____270 = FStar_Util.char_at s (Prims.parse_int "7") in
+           hexdigit uu____270 in
+         uu____258 + uu____269 in
+>>>>>>> origin/guido_tactics
        if high = (Prims.parse_int "0")
        then (None, (FStar_Util.uint16_of_int low))
        else
@@ -226,10 +335,17 @@ type compatibilityMode =
   | FSHARP
 let uu___is_ALWAYS: compatibilityMode -> Prims.bool =
   fun projectee  ->
+<<<<<<< HEAD
     match projectee with | ALWAYS  -> true | uu____245 -> false
 let uu___is_FSHARP: compatibilityMode -> Prims.bool =
   fun projectee  ->
     match projectee with | FSHARP  -> true | uu____249 -> false
+=======
+    match projectee with | ALWAYS  -> true | uu____286 -> false
+let uu___is_FSHARP: compatibilityMode -> Prims.bool =
+  fun projectee  ->
+    match projectee with | FSHARP  -> true | uu____291 -> false
+>>>>>>> origin/guido_tactics
 let keywords:
   (compatibilityMode* Prims.string* FStar_Parser_Parse.token) Prims.list =
   [(ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT);
@@ -291,6 +407,7 @@ let keywords:
   (ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE)]
 let stringKeywords: Prims.string Prims.list =
   FStar_List.map
+<<<<<<< HEAD
     (fun uu____436  -> match uu____436 with | (uu____440,w,uu____442) -> w)
     keywords
 let unreserve_words: Prims.string Prims.list =
@@ -298,12 +415,26 @@ let unreserve_words: Prims.string Prims.list =
     (fun uu____451  ->
        match uu____451 with
        | (mode,keyword,uu____458) ->
+=======
+    (fun uu____474  -> match uu____474 with | (uu____478,w,uu____480) -> w)
+    keywords
+let unreserve_words: Prims.string Prims.list =
+  FStar_List.choose
+    (fun uu____485  ->
+       match uu____485 with
+       | (mode,keyword,uu____492) ->
+>>>>>>> origin/guido_tactics
            if mode = FSHARP then Some keyword else None) keywords
 let kwd_table: FStar_Parser_Parse.token FStar_Util.smap =
   let tab = FStar_Util.smap_create (Prims.parse_int "1000") in
   FStar_List.iter
+<<<<<<< HEAD
     (fun uu____472  ->
        match uu____472 with
+=======
+    (fun uu____502  ->
+       match uu____502 with
+>>>>>>> origin/guido_tactics
        | (mode,keyword,token) -> FStar_Util.smap_add tab keyword token)
     keywords;
   tab
@@ -314,10 +445,34 @@ type lexargs =
   getSourceDirectory: Prims.unit -> Prims.string;
   filename: Prims.string;
   contents: Prims.string;}
+let __proj__Mklexargs__item__getSourceDirectory:
+  lexargs -> Prims.unit -> Prims.string =
+  fun projectee  ->
+    match projectee with
+    | { getSourceDirectory = __fname__getSourceDirectory;
+        filename = __fname__filename; contents = __fname__contents;_} ->
+        __fname__getSourceDirectory
+let __proj__Mklexargs__item__filename: lexargs -> Prims.string =
+  fun projectee  ->
+    match projectee with
+    | { getSourceDirectory = __fname__getSourceDirectory;
+        filename = __fname__filename; contents = __fname__contents;_} ->
+        __fname__filename
+let __proj__Mklexargs__item__contents: lexargs -> Prims.string =
+  fun projectee  ->
+    match projectee with
+    | { getSourceDirectory = __fname__getSourceDirectory;
+        filename = __fname__filename; contents = __fname__contents;_} ->
+        __fname__contents
 let mkLexargs:
   ((Prims.unit -> Prims.string)* Prims.string* Prims.string) -> lexargs =
+<<<<<<< HEAD
   fun uu____523  ->
     match uu____523 with
+=======
+  fun uu____571  ->
+    match uu____571 with
+>>>>>>> origin/guido_tactics
     | (srcdir,filename,contents) ->
         { getSourceDirectory = srcdir; filename; contents }
 let kwd_or_id:
@@ -325,12 +480,18 @@ let kwd_or_id:
   fun args  ->
     fun r  ->
       fun s  ->
+<<<<<<< HEAD
         let uu____545 = kwd s in
         match uu____545 with
+=======
+        let uu____596 = kwd s in
+        match uu____596 with
+>>>>>>> origin/guido_tactics
         | Some v1 -> v1
         | None  ->
             (match s with
              | "__SOURCE_DIRECTORY__" ->
+<<<<<<< HEAD
                  let uu____548 =
                    let uu____549 = args.getSourceDirectory () in
                    FStar_Bytes.string_as_unicode_bytes uu____549 in
@@ -350,6 +511,27 @@ let kwd_or_id:
                    (uu____555, false) in
                  FStar_Parser_Parse.INT uu____552
              | uu____558 ->
+=======
+                 let uu____599 =
+                   let uu____600 = args.getSourceDirectory () in
+                   FStar_Bytes.string_as_unicode_bytes uu____600 in
+                 FStar_Parser_Parse.STRING uu____599
+             | "__SOURCE_FILE__" ->
+                 let uu____601 =
+                   let uu____602 = FStar_Range.file_of_range r in
+                   FStar_Bytes.string_as_unicode_bytes uu____602 in
+                 FStar_Parser_Parse.STRING uu____601
+             | "__LINE__" ->
+                 let uu____603 =
+                   let uu____606 =
+                     let uu____607 =
+                       let uu____608 = FStar_Range.start_of_range r in
+                       FStar_Range.line_of_pos uu____608 in
+                     FStar_All.pipe_left FStar_Util.string_of_int uu____607 in
+                   (uu____606, false) in
+                 FStar_Parser_Parse.INT uu____603
+             | uu____609 ->
+>>>>>>> origin/guido_tactics
                  if FStar_Util.starts_with s FStar_Ident.reserved_prefix
                  then
                    raise
@@ -357,5 +539,10 @@ let kwd_or_id:
                         ((Prims.strcat FStar_Ident.reserved_prefix
                             " is a reserved prefix for an identifier"), r))
                  else
+<<<<<<< HEAD
                    (let uu____560 = intern_string s in
                     FStar_Parser_Parse.IDENT uu____560))
+=======
+                   (let uu____611 = intern_string s in
+                    FStar_Parser_Parse.IDENT uu____611))
+>>>>>>> origin/guido_tactics

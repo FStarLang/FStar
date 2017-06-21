@@ -851,10 +851,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let body =
             match copt with
             | Some c ->
-                debug g (fun () ->
-                    (match c with
-                    | Inl lc -> BU.print1 "Computation lc: %s\n" (Print.lcomp_to_string lc)
-                    | Inr rc -> BU.print1 "Computation rc: %s\n" (Ident.text_of_lid (fst rc))));
                 if TcEnv.is_reifiable env.tcenv c
                 then TcUtil.reify_body env.tcenv body
                 else body
@@ -867,18 +863,33 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
+        | Tm_app(head, [_; (v, _)]) when U.is_fstar_tactics_embed head && false ->
+          let _ = BU.format2 "Trying to extract a quotation of %s" (Print.term_to_string v) in
+          let s = with_ty ml_string_ty (MLE_Const(MLC_Bytes(BU.bytes_of_string (BU.marshal v)))) in
+          let zero = with_ty ml_int_ty (MLE_Const (MLC_Int("0", None))) in
+          let term_ty =
+            term_as_mlty g (S.fvar FStar.Syntax.Const.fstar_syntax_syntax_term Delta_constant None) in
+          let marshal_from_string =
+            let string_to_term_ty = MLTY_Fun (ml_string_ty, E_PURE, term_ty) in
+            with_ty string_to_term_ty (MLE_Name(["Marshal"], "from_string"))
+          in
+          //This is pure, to coincide with the type of __embed;
+          //note that __embed is marked private so as to not compromise soundness
+          with_ty term_ty <| MLE_App (marshal_from_string, [ s; zero ]),
+          E_PURE,
+          term_ty
+
         | Tm_app(head, args) ->
-          let is_total = function
-            | Inl l -> FStar.Syntax.Util.is_total_lcomp l
-            | Inr (l, flags) -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid
-                             || flags |> List.existsb (function TOTAL -> true | _ -> false)
+          let is_total rc =
+              Ident.lid_equals rc.residual_effect FStar.Syntax.Const.effect_Tot_lid
+              || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, (SS.compress head).n with
             | Tm_uvar _, _ -> //This should be a resolved uvar --- so reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
-            | _, Tm_abs(bs, _, Some lc) when is_total lc -> //this is a beta_redex --- also reduce it before extraction
+            | _, Tm_abs(bs, _, Some rc) when is_total rc -> //this is a beta_redex --- also reduce it before extraction
               let t = N.normalize [N.Beta; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t in
               term_as_mlexpr' g t
 
@@ -959,6 +970,15 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else let head = U.un_uinst head in
                    begin match head.n with
+                    | Tm_fvar fv when S.fv_eq_lid fv C.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
+                        (* handle applications of __embed differently *)
+                        (match args with
+                         | [a;b] ->
+                            // BU.print1 "First term %s \n" (Print.term_to_string (fst a));
+                            // BU.print1 "Second term %s \n" (Print.term_to_string (fst b));
+                            // BU.print1 "Embedded term %s \n" (Print.term_to_string embedded);
+                            term_as_mlexpr g (fst a)
+                         | _ -> failwith (Print.args_to_string args))
                     | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));

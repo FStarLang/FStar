@@ -11,8 +11,8 @@
         "disc_equation_FStar.Pervasives.None",
         "disc_equation_FStar.Pervasives.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.uu___is_None"
       ],
       0
     ],
@@ -56,10 +56,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC", 4, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IntStoreExcFixed.raise_",
       1,

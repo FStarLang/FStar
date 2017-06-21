@@ -462,7 +462,7 @@ let close_comp env bvs (c:comp) =
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env x.sort] in
-                  let wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
+                  let wp = U.abs bs wp (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) in
                   mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
               bvs wp0 in
             let c = Env.unfold_effect_abbrev env c in
@@ -597,7 +597,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | None -> [null_binder t1]
                 | Some x -> [S.mk_binder x]
             in
-            let mk_lam wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in //we know it's total; let the normalizer reduce it
+            let mk_lam wp = U.abs bs wp (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) in //we know it's total; let the normalizer reduce it
             let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
             let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
             let k = SS.subst [NT(a, t2)] kwp in
@@ -718,7 +718,8 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
         mk_Tm_app (inst_effect_fun_with [u_res_t;u_res_t] env md_pure md_pure.close_wp)
                   [S.as_arg res_t;
                    S.as_arg res_t;
-                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr (Const.effect_Tot_lid, [TOTAL])))] //mark it as Tot for the normalizer
+                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret
+                        (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))] //mark it as Tot for the normalizer
                    None res_t.pos in
     let lc2 = mk_comp md_pure u_res_t res_t forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind (Env.get_range env) env None (U.lcomp_of_comp comp) (Some x, U.lcomp_of_comp lc2) in
@@ -767,7 +768,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                 let post   = S.new_bv None post_k in
                 let wp     = U.abs [mk_binder post]
                                    (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid)
-                                   (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
+                                   (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])) in
                 let md     = Env.get_effect_decl env Const.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
             let comp = List.fold_right (fun (g, cthen) celse ->
@@ -879,7 +880,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 lc.comp()
               else begin
                   //try to normalize one more time, since more unification variables may be resolved now
-                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
+                  let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
                   match (SS.compress f).n with
                       | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
                         //it's trivial
@@ -1206,7 +1207,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
                   let k = N.normalize [N.Beta] env k in
                   let bs, kres = U.arrow_formals k in
                   let a = S.new_bv (Some <| Env.get_range env) kres in
-                  let t = U.abs bs (S.bv_to_name a) (Some (Inl (U.lcomp_of_comp (S.mk_Total kres)))) in
+                  let t = U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres)) in
                   U.set_uvar u t;//t clearly has a free variable; this is the one place we break the
                                  //invariant of a uvar always being resolved to a closed term ... need to be careful, see below
                   a, Some S.imp_tag)
@@ -1230,7 +1231,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
                     | _ ->
                       U.arrow tvars c in
-              let e' = U.abs tvars e (Some (Inl (U.lcomp_of_comp c))) in
+              let e' = U.abs tvars e (Some (U.residual_comp_of_comp c)) in
               e', S.mk_Total t in
           (gen_univs, e, c)) in
      Some ecs
@@ -1701,7 +1702,6 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let t = SS.close_univ_vars uvs <| U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
           let only_decl =
               lid_equals C.prims_lid  (Env.current_module env)
-              || fvq<>Data_ctor
               || Options.dont_gen_projectors (Env.current_module env).str
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
