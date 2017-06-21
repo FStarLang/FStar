@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident

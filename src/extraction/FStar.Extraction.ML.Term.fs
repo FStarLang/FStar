@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Term
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -34,7 +35,7 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
-module C  = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
@@ -113,9 +114,9 @@ let effect_as_etag =
                 res in
     fun g l ->
         let l = delta_norm_eff g l in
-        if lid_equals l C.effect_PURE_lid
+        if lid_equals l PC.effect_PURE_lid
         then E_PURE
-        else if lid_equals l C.effect_GHOST_lid
+        else if lid_equals l PC.effect_GHOST_lid
         then E_GHOST
         else
             // Reifiable effects should be pure. Added guard because some effect declarations
@@ -136,7 +137,7 @@ let effect_as_etag =
 (* is_arity t:
          t is a sort s, i.e., Type i
      or, t = x1:t1 -> ... -> xn:tn -> C
-             where C.result_type is an arity
+             where PC.result_type is an arity
 
  *)
 let rec is_arity env t =
@@ -193,7 +194,7 @@ let rec is_type_aux env t =
     | Tm_arrow _ ->
       true
 
-    | Tm_fvar fv when S.fv_eq_lid fv FStar.Syntax.Const.failwith_lid ->
+    | Tm_fvar fv when S.fv_eq_lid fv PC.failwith_lid ->
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
 
     | Tm_fvar fv ->
@@ -868,7 +869,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let s = with_ty ml_string_ty (MLE_Const(MLC_Bytes(BU.bytes_of_string (BU.marshal v)))) in
           let zero = with_ty ml_int_ty (MLE_Const (MLC_Int("0", None))) in
           let term_ty =
-            term_as_mlty g (S.fvar FStar.Syntax.Const.fstar_syntax_syntax_term Delta_constant None) in
+            term_as_mlty g (S.fvar PC.fstar_syntax_syntax_term Delta_constant None) in
           let marshal_from_string =
             let string_to_term_ty = MLTY_Fun (ml_string_ty, E_PURE, term_ty) in
             with_ty string_to_term_ty (MLE_Name(["Marshal"], "from_string"))
@@ -881,7 +882,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
         | Tm_app(head, args) ->
           let is_total rc =
-              Ident.lid_equals rc.residual_effect FStar.Syntax.Const.effect_Tot_lid
+              Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
               || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, (SS.compress head).n with
@@ -913,8 +914,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
-			                    S.fv_eq_lid fv Syntax.Const.op_And ||
-			                    S.fv_eq_lid fv Syntax.Const.op_Or
+			                    S.fv_eq_lid fv PC.op_And ||
+			                    S.fv_eq_lid fv PC.op_Or
                            | _ ->
                               false)
                         in
@@ -970,7 +971,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else let head = U.un_uinst head in
                    begin match head.n with
-                    | Tm_fvar fv when S.fv_eq_lid fv C.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
+                    | Tm_fvar fv when S.fv_eq_lid fv PC.fstar_refl_embed_lid && not (string_of_mlpath g.currentModule = "FStar.Tactics.Builtins") ->
                         (* handle applications of __embed differently *)
                         (match args with
                          | [a;b] ->
@@ -1240,7 +1241,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
+                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid Delta_constant None) in
                     with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_unit_ty

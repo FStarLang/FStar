@@ -6,10 +6,12 @@ open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
 
-module MAC = EtM.MAC
-
 open Platform.Bytes
 open CoreCrypto
+module CPA = EtM.CPA
+module MAC = EtM.MAC
+module Ideal = EtM.Ideal
+module Plain = EtM.Plain
 
 abstract type cipher = (CPA.cipher * MAC.tag)
 

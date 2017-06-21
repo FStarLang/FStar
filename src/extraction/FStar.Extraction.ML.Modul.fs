@@ -15,11 +15,13 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
 open FStar.Syntax.Syntax
 open FStar.Const
+open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
@@ -34,13 +36,13 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
-module C  = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar C.failwith_lid Delta_constant None,
+    mk (Tm_app(S.fvar PC.failwith_lid Delta_constant None,
                [ S.iarg t
                ; S.as_arg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
         None
@@ -236,9 +238,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
             let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
-            let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
+            let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
-            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
+            let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
               BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
@@ -294,7 +296,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_let (lbs, _, attrs) ->
           let quals = se.sigquals in
-          let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
+          let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
 
           (* If the top-level let is a user-defined tactic, automatically add the matching invocation to
              FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked. *)
@@ -303,7 +305,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               match h.n with
               | Tm_uinst (h', _) ->
                 (match (SS.compress h').n with
-                  | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
+                  | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
                       (* TODO change this test *)
                       not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics")
                   | _ -> false)
@@ -386,7 +388,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
                                                       lbunivs=[];
                                                       lbtyp=t;
-                                                      lbeff=FStar.Syntax.Const.effect_ML_lid;
+                                                      lbeff=PC.effect_ML_lid;
                                                       lbdef=imp}]), [], []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with

@@ -1,5 +1,4 @@
 type nonrec char = char
-[@@deriving show]
 
 let lowercase = BatChar.lowercase
 let uppercase = BatChar.uppercase

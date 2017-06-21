@@ -1,6 +1,8 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
-
+open FStar
+open FStar.ST
+open FStar.All
 open FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
 

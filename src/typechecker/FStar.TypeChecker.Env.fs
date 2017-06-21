@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Env
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -33,6 +34,7 @@ module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
+module Const = FStar.Parser.Const
 
 type binding =
   | Binding_var      of bv

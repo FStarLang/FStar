@@ -16,6 +16,7 @@
 #light "off"
 module FStar.TypeChecker.Common
 open Prims
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -60,7 +61,7 @@ type deferred = list<(string * prob)>
 type univ_ineq = universe * universe
 
 
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 
 let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
 let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange

@@ -9,7 +9,6 @@ open EtM.Ideal
 
 open Platform.Bytes
 open CoreCrypto
-
 module B = Platform.Bytes
 
 open EtM.Plain

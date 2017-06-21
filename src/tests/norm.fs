@@ -11,6 +11,7 @@ module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module P  = FStar.Syntax.Print
+module Const = FStar.Parser.Const
 open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
@@ -36,7 +37,7 @@ let minus m n = app n [pred; m]
 let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term =
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
-    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=FStar.Syntax.Const.effect_Tot_lid}]), e'))
+    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid}]), e'))
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange

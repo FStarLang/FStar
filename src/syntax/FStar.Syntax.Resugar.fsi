@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -27,7 +28,7 @@ module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module A  = FStar.Parser.AST
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Range = FStar.Range

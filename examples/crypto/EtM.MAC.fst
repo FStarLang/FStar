@@ -8,6 +8,8 @@ open FStar.Monotonic.RRef
 
 open Platform.Bytes
 open CoreCrypto
+module Ideal = EtM.Ideal
+module CPA = EtM.CPA
 
 type msg = EtM.CPA.cipher
 

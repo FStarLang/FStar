@@ -20,6 +20,7 @@
 
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -38,6 +39,7 @@ module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 module UF = FStar.Syntax.Unionfind
+module Const = FStar.Parser.Const
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)

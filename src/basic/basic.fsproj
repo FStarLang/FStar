@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="basetypes-fake.fs" />
     <Compile Include="prims-fake.fs" />
+    <Compile Include="st-fake.fs" />
     <Compile Include="all-fake.fs" />
     <Compile Include="mul-fake.fs" />
     <Compile Include="char.fsi" />

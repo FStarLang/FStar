@@ -164,7 +164,7 @@ u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FSta
 					 FStar.Format.fst)
 	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
-u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
+u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst Unionfind.fst) \
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc

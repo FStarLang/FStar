@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -31,7 +32,6 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 module S  = FStar.Syntax.Syntax
-module SC = FStar.Syntax.Const
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
@@ -39,6 +39,7 @@ module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
+module Const = FStar.Parser.Const
 
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -471,7 +472,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
     let isquote = match head.n with
-                  | Tm_fvar fv when S.fv_eq_lid fv SC.quote_lid -> true
+                  | Tm_fvar fv when S.fv_eq_lid fv Const.quote_lid -> true
                   | _ -> false
     in
 
@@ -666,7 +667,7 @@ and tc_value env (e:term) : term
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar fv}, _)
-  | Tm_fvar fv when S.fv_eq_lid fv SC.synth_lid ->
+  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid ->
     raise (Error ("Badly instantiated synth_by_tactic", Env.get_range env))
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
@@ -1181,8 +1182,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-			     S.fv_eq_lid fv Syntax.Const.op_And ||
-			     S.fv_eq_lid fv Syntax.Const.op_Or
+			     S.fv_eq_lid fv Parser.Const.op_And ||
+			     S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1502,7 +1503,7 @@ and tc_eqn scrutinee env branch
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
   let when_condition = match when_clause with
         | None -> None
-        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w Const.exp_true_bool in
+        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
@@ -1586,7 +1587,7 @@ and tc_eqn scrutinee env branch
                         | _ ->
                             let disc = S.fvar discriminator Delta_equational None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
-                            [U.mk_eq2 U_zero U.t_bool disc Const.exp_true_bool]
+                            [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
             in
 

@@ -11,6 +11,7 @@ module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module UF = FStar.Syntax.Unionfind
+module Const = FStar.Parser.Const
 
 open FStar.Ident
 open FStar.Range

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -40,7 +41,7 @@ module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module TcInductive = FStar.TypeChecker.TcInductive
-
+module PC = FStar.Parser.Const
 
 
 //set the name of the query so that we can correlate hints to source program fragments
@@ -58,13 +59,13 @@ let set_hint_correlator env se =
             | l::_ -> l in
       {env with qname_and_index=Some (lid, 0)}
 
-let log env = (Options.log_types()) &&  not(lid_equals Const.prims_lid (Env.current_module env))
+let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
 let is_native_tactic env (tac_lid: lident) (h: term) =
   match h.n with
   | Tm_uinst (h', _) ->
     (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv FStar.Syntax.Const.tactic_lid) ->
+      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
                 env.is_native_tactic tac_lid
       | _ -> false)
   | _ -> false
@@ -273,7 +274,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | _ -> failwith "Unexpected repr type" in
 
         let bind_repr =
-            let r = S.lid_as_fv FStar.Syntax.Const.range_0 Delta_constant None |> S.fv_to_tm in
+            let r = S.lid_as_fv PC.range_0 Delta_constant None |> S.fv_to_tm in
             let b, wp_b = fresh_effect_signature () in
             let a_wp_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
             let wp_f = S.gen_bv "wp_f" None wp_a in
@@ -541,7 +542,7 @@ let cps_and_elaborate env ed =
   let dmff_env, _, bind_wp, bind_elab = elaborate_and_star dmff_env [] ed.bind_repr in
   let dmff_env, _, return_wp, return_elab = elaborate_and_star dmff_env [] ed.return_repr in
   let rc_gtot = {
-            residual_effect = Const.effect_GTot_lid;
+            residual_effect = PC.effect_GTot_lid;
             residual_typ = None;
             residual_flags = []
   } in
@@ -614,7 +615,7 @@ let cps_and_elaborate env ed =
     match (SS.compress bind_wp).n with
     | Tm_abs (binders, body, what) ->
         // TODO: figure out how to deal with ranges
-        let r = S.lid_as_fv Const.range_lid (S.Delta_defined_at_level 1) None in
+        let r = S.lid_as_fv PC.range_lid (S.Delta_defined_at_level 1) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
         failwith "unexpected shape for bind"
@@ -768,7 +769,7 @@ let cps_and_elaborate env ed =
     if List.length effect_binders = 0 then begin
       // Won't work with parameterized effect
       let lift_from_pure = {
-          source = Const.effect_PURE_lid;
+          source = PC.effect_PURE_lid;
           target = ed.mname ;
           lift_wp = Some ([], apply_close lift_from_pure_wp) ;
           lift = None //Some ([], apply_close return_elab)
@@ -790,31 +791,31 @@ let tc_lex_t env ses quals lids =
     assert (quals = []);
     begin match lids with
         | [lex_t; lex_top; lex_cons] when
-            (lid_equals lex_t Const.lex_t_lid
-             && lid_equals lex_top Const.lextop_lid
-             && lid_equals lex_cons Const.lexcons_lid) -> ()
+            (lid_equals lex_t PC.lex_t_lid
+             && lid_equals lex_top PC.lextop_lid
+             && lid_equals lex_cons PC.lexcons_lid) -> ()
         | _ -> assert false
     end;
     begin match ses with
       | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _);  sigquals = []; sigrng = r };
          { sigel = Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
          { sigel = Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
-         when (lid_equals lex_t Const.lex_t_lid
-            && lid_equals lex_top Const.lextop_lid
-            && lid_equals lex_cons Const.lexcons_lid) ->
+         when (lid_equals lex_t PC.lex_t_lid
+            && lid_equals lex_top PC.lextop_lid
+            && lid_equals lex_cons PC.lexcons_lid) ->
 
         let u = S.new_univ_name (Some r) in
         let t = mk (Tm_type(U_name u)) None r in
         let t = Subst.close_univ_vars [u] t in
-        let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid]);
+        let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [PC.lextop_lid; PC.lexcons_lid]);
                    sigquals = [];
                    sigrng = r;
                    sigmeta = default_sigmeta } in
 
         let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) Delta_constant None, [U_name utop])) None r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, []);
+        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
                           sigquals = [];
                           sigrng = r1;
                           sigmeta = default_sigmeta  } in
@@ -824,11 +825,11 @@ let tc_lex_t env ses quals lids =
         let lex_cons_t =
             let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_name ucons2])) None r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range Const.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) Delta_constant None, [U_name ucons2])) None r2) in
+            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) Delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, []);
+        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
                            sigquals = [];
                            sigrng = r2;
                            sigmeta = default_sigmeta  } in
@@ -896,7 +897,7 @@ let tc_inductive env ses quals lids =
     let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
     let res =
-        if ((List.length tcs = 0) || ((lid_equals env.curmodule Const.prims_lid) && skip_prims_type ()) || is_noeq)
+        if ((List.length tcs = 0) || ((lid_equals env.curmodule PC.prims_lid) && skip_prims_type ()) || is_noeq)
         then [sig_bndle], data_ops_ses
         else
             let is_unopteq = List.existsb (fun q -> q = Unopteq) quals in
@@ -923,7 +924,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
 
-  | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals Const.lex_t_lid)) ->
+  | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
     //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
     //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
     (*
@@ -1124,7 +1125,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     in
 
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
-          (b) Generalize the type of lb only if none of the lbs have val decls
+          (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
     let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
@@ -1144,7 +1145,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, lb.lbdef),
               quals_opt
           in
           gen, lb::lbs, quals_opt)
@@ -1229,7 +1230,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
                   | Tm_app (h, args) ->
                       (match (Subst.compress h).n with
                        | Tm_uinst (h', u') ->
-                          let h'' = fv_to_tm <| lid_as_fv FStar.Syntax.Const.u_tac_lid Delta_constant None in
+                          let h'' = fv_to_tm <| lid_as_fv PC.u_tac_lid Delta_constant None in
                           mk_Total' (mk_Tm_app (mk_Tm_uinst h'' u') args None t'.pos) u
                        | _ -> c)
                   | _ -> c)
@@ -1240,7 +1241,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
           (* tactics which take no arguments *)
             (match (Subst.compress h).n with
               | Tm_uinst (h', u') ->
-                let h'' = fv_to_tm <| lid_as_fv FStar.Syntax.Const.u_tac_lid Delta_constant None in
+                let h'' = fv_to_tm <| lid_as_fv PC.u_tac_lid Delta_constant None in
                 mk_Tm_app (mk_Tm_uinst h'' u') args None t.pos
               | _ -> t)
         | _ -> t in
@@ -1259,7 +1260,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       let tac_args: args = List.map (fun x -> bv_to_name (fst x), snd x) bs in
       (* __native_tac x *)
 
-      let reflect_head = mk (Tm_constant (Const_reflect FStar.Syntax.Const.tac_effect_lid)) None Range.dummyRange in
+      let reflect_head = mk (Tm_constant (Const_reflect PC.tac_effect_lid)) None Range.dummyRange in
       let refl_arg = mk_Tm_app reified_tac tac_args None Range.dummyRange in
       let app = mk_Tm_app reflect_head [(refl_arg, None)] None Range.dummyRange in
       (* TAC?. reflect (__native_tac x) *)
@@ -1554,7 +1555,7 @@ let check_exports env (modul:modul) exports =
         | Sig_sub_effect _
         | Sig_pragma _ -> ()
     in
-    if Ident.lid_equals modul.name Const.prims_lid
+    if Ident.lid_equals modul.name PC.prims_lid
     then ()
     else List.iter check_sigelt exports
 

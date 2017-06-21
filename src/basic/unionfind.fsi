@@ -18,6 +18,7 @@
 #light "off"
 module FStar.Unionfind
 
+open FStar.ST
 open FStar.Util
 
 type puf<'a>

@@ -64,9 +64,6 @@ let reset () =
 //    printfn "UF version = %s" (version_to_string v);
     set (empty v)
 
-let reset () =
-    state := { !state with current = { (!state).current with term_graph = PU.puf_empty (); univ_graph = PU.puf_empty () } }
-
 ////////////////////////////////////////////////////////////////////////////////
 //Transacational interface, used in FStar.TypeChecker.Rel
 ////////////////////////////////////////////////////////////////////////////////

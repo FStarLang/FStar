@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Main
+open FStar.ST
 open FStar.All
 open FStar.Util
 open FStar.Getopt
@@ -158,13 +159,13 @@ let main () =
     exit 0
   with | e ->
     let trace = Util.trace_of_exn e in
-    (begin
-        if FStar.Errors.handleable e then FStar.Errors.err_exn e;
-        if (Options.trace_error()) then
-          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
-        else if not (FStar.Errors.handleable e) then
-          Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
-     end;
-     cleanup();
-     report_errors [];
-     exit 1)
+    begin
+      if FStar.Errors.handleable e then FStar.Errors.err_exn e;
+      if (Options.trace_error()) then
+        Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
+      else if not (FStar.Errors.handleable e) then
+        Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
+    end;
+    cleanup();
+    report_errors [];
+    exit 1
