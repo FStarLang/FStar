@@ -3,7 +3,7 @@ module FStar.Pointer
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 type array (length: UInt32.t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
@@ -1638,7 +1638,7 @@ let modifies_0_1 (#a:Type) (b:pointer a) h0 h1 h2 : Lemma
 abstract let screate
   (#value:Type)
   (s: value)
-: StackInline (pointer value)
+: HST.StackInline (pointer value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
        unused_in b h0
@@ -1664,7 +1664,7 @@ abstract let ecreate
   (#t:Type)
   (r:HH.rid)
   (s: t)
-: ST (pointer t)
+: HST.ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r))
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
@@ -1675,7 +1675,7 @@ abstract let ecreate
     /\ gread h1 b == s
     /\ ~(memory_managed b)))
 = let h0 = HST.get() in
-  let content: HS.reference t = ralloc r s in
+  let content: HS.reference t = HST.ralloc r s in
   let b = Pointer content PathBase in
   let h1 = HST.get() in
   domain_upd h0 content s;
@@ -1686,7 +1686,7 @@ abstract let field
  (#value: (key -> Tot Type))
  (p: pointer (DM.t key value))
  (fd: key)
-: ST (pointer (value fd))
+: HST.ST (pointer (value fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
 = _field p fd
@@ -1696,7 +1696,7 @@ abstract let cell
  (#value: Type)
  (p: pointer (array length value))
  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: ST (pointer value)
+: HST.ST (pointer value)
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gcell p i))
 = _cell p i
@@ -1704,11 +1704,11 @@ abstract let cell
 abstract let read
  (#value: Type)
  (p: pointer value)
-: ST value
+: HST.ST value
   (requires (fun h -> live h p))
   (ensures (fun h0 v h1 -> live h0 p /\ h0 == h1 /\ v == gread h0 p))
 = let (Pointer content p') = p in
-  path_sel (!content) p'
+  path_sel HST.(!content) p'
 
 private val hs_upd_path_upd: #a:Type -> b:pointer a -> z:a
   -> h0:HS.mem -> Lemma
@@ -1721,12 +1721,13 @@ let hs_upd_path_upd #a b z h0 =
   let (ap: apointer { set_amem ap s } ) = APointer a b in
   ()
 
-abstract val write: #a:Type -> b:pointer a -> z:a -> Stack unit
+abstract val write: #a:Type -> b:pointer a -> z:a -> HST.Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b
     /\ modifies_1 b h0 h1
     /\ gread h1 b == z ))
 let write #a b z =
+  let open HST in
   let s0 = !b.content in
   let s = path_upd s0 (Pointer?.p b) z in
   b.content := s

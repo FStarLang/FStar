@@ -2,6 +2,7 @@ module Crypto.AEAD.Wrappers.CMA
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open Crypto.Indexing
@@ -19,6 +20,7 @@ module Plain = Crypto.Plain
 module Invariant = Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 module CMA = Crypto.Symmetric.UF1CMA
 module Seq = FStar.Seq
 module MAC = Crypto.Symmetric.MAC

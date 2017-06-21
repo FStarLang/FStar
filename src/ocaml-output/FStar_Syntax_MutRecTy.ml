@@ -4,7 +4,8 @@ let disentangle_abbrevs_from_bundle:
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Ident.lident Prims.list ->
         FStar_Range.range ->
-          (FStar_Syntax_Syntax.sigelt* FStar_Syntax_Syntax.sigelt Prims.list)
+          (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.sigelt Prims.list)
+            FStar_Pervasives_Native.tuple2
   =
   fun sigelts  ->
     fun quals  ->
@@ -104,11 +105,11 @@ let disentangle_abbrevs_from_bundle:
                         FStar_Ident.lid_equals
                           (fv'.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                        -> Some x
-                    | uu____204 -> None in
+                        -> FStar_Pervasives_Native.Some x
+                    | uu____204 -> FStar_Pervasives_Native.None in
                   let replacee_term x =
                     match replacee x with
-                    | Some
+                    | FStar_Pervasives_Native.Some
                         {
                           FStar_Syntax_Syntax.sigel =
                             FStar_Syntax_Syntax.Sig_let
@@ -125,18 +126,18 @@ let disentangle_abbrevs_from_bundle:
                           FStar_Syntax_Syntax.sigrng = uu____223;
                           FStar_Syntax_Syntax.sigquals = uu____224;
                           FStar_Syntax_Syntax.sigmeta = uu____225;_}
-                        -> Some tm
-                    | uu____244 -> None in
+                        -> FStar_Pervasives_Native.Some tm
+                    | uu____244 -> FStar_Pervasives_Native.None in
                   let uu____248 =
                     let uu____252 = FStar_ST.read rev_unfolded_type_abbrevs in
                     FStar_Util.find_map uu____252 replacee_term in
                   match uu____248 with
-                  | Some x -> x
-                  | None  ->
+                  | FStar_Pervasives_Native.Some x -> x
+                  | FStar_Pervasives_Native.None  ->
                       let uu____266 =
                         FStar_Util.find_map type_abbrev_sigelts replacee in
                       (match uu____266 with
-                       | Some se ->
+                       | FStar_Pervasives_Native.Some se ->
                            let uu____269 =
                              let uu____270 = FStar_ST.read in_progress in
                              FStar_List.existsb
@@ -268,11 +269,13 @@ let disentangle_abbrevs_from_bundle:
                            FStar_Ident.lid_equals
                              (fv'.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-                           -> Some tm
-                       | uu____443 -> None) in
+                           -> FStar_Pervasives_Native.Some tm
+                       | uu____443 -> FStar_Pervasives_Native.None) in
                 let unfold_fv t fv =
                   let uu____453 = find_in_unfolded fv in
-                  match uu____453 with | Some t' -> t' | uu____462 -> t in
+                  match uu____453 with
+                  | FStar_Pervasives_Native.Some t' -> t'
+                  | uu____462 -> t in
                 let unfold_in_sig x =
                   match x.FStar_Syntax_Syntax.sigel with
                   | FStar_Syntax_Syntax.Sig_inductive_typ

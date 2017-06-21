@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Indent
+open FStar.ST
 open FStar.All
 
 open FStar.Util

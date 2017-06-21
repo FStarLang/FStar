@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Encode
+open FStar.ST
 open FStar.All
 open Prims
 open FStar
@@ -35,6 +36,7 @@ module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
+module Const = FStar.Parser.Const
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -1686,7 +1688,7 @@ let encode_top_level_vals env bindings quals =
         decls@decls', env) ([], env)
 
 let is_tactic t =
-    let fstar_tactics_tactic_lid = FStar.Syntax.Const.p2l ["FStar"; "Tactics"; "tactic"] in
+    let fstar_tactics_tactic_lid = FStar.Parser.Const.p2l ["FStar"; "Tactics"; "tactic"] in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n with
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_tactic_lid ->

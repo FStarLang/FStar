@@ -6,6 +6,7 @@ open FStar.Ghost
 open FStar.UInt64
 (** Effects and memory layout *)
 open FStar.HyperStack
+open FStar.HyperStack.ST
 (** Buffers *)
 open FStar.Buffer
 (** Mathematical definitions *)
@@ -18,6 +19,7 @@ open Crypto.Symmetric.Poly1305.Bigint
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 open FStar.Buffer.Quantifiers
 open Crypto.Symmetric.Poly1305.Bignum.Lemmas.Part1

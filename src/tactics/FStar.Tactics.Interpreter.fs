@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -8,7 +9,7 @@ open FStar.Range
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -248,7 +249,7 @@ let rec traverse (f:Env.env -> term -> term * list<goal>) (e:Env.env) (t:term)
                              (Tm_uinst (t', us), gs)
         | Tm_meta (t, m) -> let (t', gs) = traverse f e t in
                             (Tm_meta (t', m), gs)
-        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv FStar.Syntax.Const.imp_lid ->
+        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
                let x = S.new_bv None p in
                let (q',gs) = traverse f (Env.push_bv e x) q in
                ((U.mk_imp p q').n, gs)
