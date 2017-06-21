@@ -236,7 +236,7 @@ ocaml: clean_u_extract_ocaml
 	$(MAKE) prep
 	+$(MAKE) u_extract_all
 	# TODO: remove this after #1072 is fixed
-	sed -i "s/^and unembed_tactic_0.*/and unembed_tactic_0 : 'b. (FStar_Syntax_Syntax.term -> 'b) -> FStar_Syntax_Syntax.term -> 'b FStar_Tactics_Basic.tac =\nfun unembed_b embedded_tac_b ->/" u_ocaml-output/FStar_Tactics_Interpreter.ml
+	$(SED) -i "s/^and unembed_tactic_0.*/and unembed_tactic_0 : 'b. (FStar_Syntax_Syntax.term -> 'b) -> FStar_Syntax_Syntax.term -> 'b FStar_Tactics_Basic.tac =\nfun unembed_b embedded_tac_b ->/" u_ocaml-output/FStar_Tactics_Interpreter.ml
 	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)
