@@ -210,52 +210,49 @@ let go uu____168 =
                            FStar_Dependencies.find_deps_if_needed verify_mode
                              filenames in
                          (let uu____249 = FStar_Options.load () in
-                          match uu____249 with
-                          | FStar_Pervasives_Native.Some s ->
-                              FStar_Tactics_Load.load_tactic s
-                          | FStar_Pervasives_Native.None  -> ());
-                         (let uu____252 =
+                          FStar_Tactics_Load.load_tactics uu____249);
+                         (let uu____251 =
                             FStar_Universal.batch_mode_tc filenames1 in
-                          match uu____252 with
+                          match uu____251 with
                           | (fmods,dsenv,env) ->
                               let module_names_and_times =
                                 FStar_All.pipe_right fmods
                                   (FStar_List.map
-                                     (fun uu____291  ->
-                                        match uu____291 with
+                                     (fun uu____290  ->
+                                        match uu____290 with
                                         | (x,t) ->
                                             ((FStar_Universal.module_or_interface_name
                                                 x), t))) in
                               (report_errors module_names_and_times;
-                               (let uu____304 =
-                                  let uu____308 =
+                               (let uu____303 =
+                                  let uu____307 =
                                     FStar_All.pipe_right fmods
                                       (FStar_List.map
                                          FStar_Pervasives_Native.fst) in
-                                  (uu____308, env) in
-                                codegen uu____304);
+                                  (uu____307, env) in
+                                codegen uu____303);
                                finished_message module_names_and_times
                                  (Prims.parse_int "0"))))
                       else FStar_Util.print_error "no file provided\n"))))
-let main uu____326 =
+let main uu____325 =
   try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
   with
   | e ->
       let trace = FStar_Util.trace_of_exn e in
       (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-       (let uu____345 = FStar_Options.trace_error () in
-        if uu____345
+       (let uu____344 = FStar_Options.trace_error () in
+        if uu____344
         then
-          let uu____346 = FStar_Util.message_of_exn e in
-          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____346
+          let uu____345 = FStar_Util.message_of_exn e in
+          FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____345
             trace
         else
           if Prims.op_Negation (FStar_Errors.handleable e)
           then
-            (let uu____348 = FStar_Util.message_of_exn e in
+            (let uu____347 = FStar_Util.message_of_exn e in
              FStar_Util.print1_error
                "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-               uu____348)
+               uu____347)
           else ());
        cleanup ();
        report_errors [];
