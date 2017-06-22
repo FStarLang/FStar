@@ -17,3 +17,5 @@ let load_tactic s =
     U.print1 "Dynlinked %s\n" s;
     ()
 
+let load_tactics ss =
+    List.iter load_tactic ss

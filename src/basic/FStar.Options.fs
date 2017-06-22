@@ -127,7 +127,7 @@ let defaults =
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
-      ("load"                         , Unset);
+      ("load"                         , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -226,7 +226,7 @@ let get_indent                  ()      = lookup_opt "indent"                   
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
-let get_load                    ()      = lookup_opt "load"                     (as_option as_string)
+let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -507,8 +507,8 @@ let rec specs () : list<Getopt.opt> =
 
       ( noshort,
        "load",
-        OneArg ((fun s -> String s),
-                 "[module]"),
+        OneArg ((fun s -> List (List.map String (get_load()) @ [Path s])),
+                "[module]"),
         "Load compiled module");
 
        ( noshort,
