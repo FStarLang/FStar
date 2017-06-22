@@ -422,7 +422,7 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-  if x `rel` y  then 1 
+  if x `rel` y  then 1
   else if x = y then 0
   else 0-1
 

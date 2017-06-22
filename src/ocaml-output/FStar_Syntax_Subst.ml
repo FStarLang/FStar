@@ -1259,77 +1259,79 @@ let close_let_rec:
   =
   fun lbs  ->
     fun t  ->
-      let uu____3886 = FStar_Syntax_Syntax.is_top_level lbs in
-      if uu____3886
-      then (lbs, t)
-      else
-        (let uu____3892 =
-           FStar_List.fold_right
-             (fun lb  ->
-                fun uu____3900  ->
-                  match uu____3900 with
-                  | (i,out) ->
-                      let uu____3911 =
-                        let uu____3913 =
-                          let uu____3914 =
-                            let uu____3917 =
-                              FStar_Util.left lb.FStar_Syntax_Syntax.lbname in
-                            (uu____3917, i) in
-                          FStar_Syntax_Syntax.NM uu____3914 in
-                        uu____3913 :: out in
-                      ((i + (Prims.parse_int "1")), uu____3911)) lbs
-             ((Prims.parse_int "0"), []) in
-         match uu____3892 with
-         | (n_let_recs,let_rec_closing) ->
-             let lbs1 =
-               FStar_All.pipe_right lbs
-                 (FStar_List.map
-                    (fun lb  ->
-                       let uu____3932 =
-                         FStar_List.fold_right
-                           (fun u  ->
-                              fun uu____3940  ->
-                                match uu____3940 with
-                                | (i,out) ->
-                                    ((i + (Prims.parse_int "1")),
-                                      ((FStar_Syntax_Syntax.UD (u, i)) ::
-                                      out))) lb.FStar_Syntax_Syntax.lbunivs
-                           (n_let_recs, let_rec_closing) in
-                       match uu____3932 with
-                       | (uu____3953,u_let_rec_closing) ->
-                           let uu___144_3957 = lb in
-                           let uu____3958 =
-                             subst u_let_rec_closing
-                               lb.FStar_Syntax_Syntax.lbdef in
-                           {
-                             FStar_Syntax_Syntax.lbname =
-                               (uu___144_3957.FStar_Syntax_Syntax.lbname);
-                             FStar_Syntax_Syntax.lbunivs =
-                               (uu___144_3957.FStar_Syntax_Syntax.lbunivs);
-                             FStar_Syntax_Syntax.lbtyp =
-                               (uu___144_3957.FStar_Syntax_Syntax.lbtyp);
-                             FStar_Syntax_Syntax.lbeff =
-                               (uu___144_3957.FStar_Syntax_Syntax.lbeff);
-                             FStar_Syntax_Syntax.lbdef = uu____3958
-                           })) in
-             let t1 = subst let_rec_closing t in (lbs1, t1))
+      let uu____3886 =
+        let uu____3890 = FStar_Syntax_Syntax.is_top_level lbs in
+        if uu____3890
+        then ((Prims.parse_int "0"), [])
+        else
+          FStar_List.fold_right
+            (fun lb  ->
+               fun uu____3900  ->
+                 match uu____3900 with
+                 | (i,out) ->
+                     let uu____3911 =
+                       let uu____3913 =
+                         let uu____3914 =
+                           let uu____3917 =
+                             FStar_Util.left lb.FStar_Syntax_Syntax.lbname in
+                           (uu____3917, i) in
+                         FStar_Syntax_Syntax.NM uu____3914 in
+                       uu____3913 :: out in
+                     ((i + (Prims.parse_int "1")), uu____3911)) lbs
+            ((Prims.parse_int "0"), []) in
+      match uu____3886 with
+      | (n_let_recs,let_rec_closing) ->
+          let lbs1 =
+            FStar_All.pipe_right lbs
+              (FStar_List.map
+                 (fun lb  ->
+                    let uu____3932 =
+                      FStar_List.fold_right
+                        (fun u  ->
+                           fun uu____3940  ->
+                             match uu____3940 with
+                             | (i,out) ->
+                                 ((i + (Prims.parse_int "1")),
+                                   ((FStar_Syntax_Syntax.UD (u, i)) :: out)))
+                        lb.FStar_Syntax_Syntax.lbunivs
+                        (n_let_recs, let_rec_closing) in
+                    match uu____3932 with
+                    | (uu____3953,u_let_rec_closing) ->
+                        let uu___144_3957 = lb in
+                        let uu____3958 =
+                          subst u_let_rec_closing
+                            lb.FStar_Syntax_Syntax.lbtyp in
+                        let uu____3961 =
+                          subst u_let_rec_closing
+                            lb.FStar_Syntax_Syntax.lbdef in
+                        {
+                          FStar_Syntax_Syntax.lbname =
+                            (uu___144_3957.FStar_Syntax_Syntax.lbname);
+                          FStar_Syntax_Syntax.lbunivs =
+                            (uu___144_3957.FStar_Syntax_Syntax.lbunivs);
+                          FStar_Syntax_Syntax.lbtyp = uu____3958;
+                          FStar_Syntax_Syntax.lbeff =
+                            (uu___144_3957.FStar_Syntax_Syntax.lbeff);
+                          FStar_Syntax_Syntax.lbdef = uu____3961
+                        })) in
+          let t1 = subst let_rec_closing t in (lbs1, t1)
 let close_tscheme:
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.tscheme ->
       (FStar_Syntax_Syntax.univ_name Prims.list* FStar_Syntax_Syntax.term)
   =
   fun binders  ->
-    fun uu____3968  ->
-      match uu____3968 with
+    fun uu____3971  ->
+      match uu____3971 with
       | (us,t) ->
           let n1 = (FStar_List.length binders) - (Prims.parse_int "1") in
           let k = FStar_List.length us in
           let s =
             FStar_List.mapi
               (fun i  ->
-                 fun uu____3986  ->
-                   match uu____3986 with
-                   | (x,uu____3990) ->
+                 fun uu____3989  ->
+                   match uu____3989 with
+                   | (x,uu____3993) ->
                        FStar_Syntax_Syntax.NM (x, (k + (n1 - i)))) binders in
           let t1 = subst s t in (us, t1)
 let close_univ_vars_tscheme:
@@ -1338,8 +1340,8 @@ let close_univ_vars_tscheme:
       (FStar_Syntax_Syntax.univ_name Prims.list* FStar_Syntax_Syntax.term)
   =
   fun us  ->
-    fun uu____4001  ->
-      match uu____4001 with
+    fun uu____4004  ->
+      match uu____4004 with
       | (us',t) ->
           let n1 = (FStar_List.length us) - (Prims.parse_int "1") in
           let k = FStar_List.length us' in
@@ -1347,7 +1349,7 @@ let close_univ_vars_tscheme:
             FStar_List.mapi
               (fun i  -> fun x  -> FStar_Syntax_Syntax.UD (x, (k + (n1 - i))))
               us in
-          let uu____4019 = subst s t in (us', uu____4019)
+          let uu____4022 = subst s t in (us', uu____4022)
 let opening_of_binders:
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_elt Prims.list =
   fun bs  ->
@@ -1355,6 +1357,6 @@ let opening_of_binders:
     FStar_All.pipe_right bs
       (FStar_List.mapi
          (fun i  ->
-            fun uu____4034  ->
-              match uu____4034 with
-              | (x,uu____4038) -> FStar_Syntax_Syntax.DB ((n1 - i), x)))
+            fun uu____4037  ->
+              match uu____4037 with
+              | (x,uu____4041) -> FStar_Syntax_Syntax.DB ((n1 - i), x)))

@@ -1121,6 +1121,10 @@ let check_universe_generalization
   (t : term)
   : list<univ_name>
 =
+  if Env.debug env <| Options.Other "Gen"
+  then BU.print1 "checking univ gen:\nexplicits: %s\generalized: %s\n"
+    (string_of_univs explicit_univ_names)
+    (string_of_univs generalized_univ_names);
   match explicit_univ_names, generalized_univ_names with
   | [], _ -> generalized_univ_names
   | _, [] -> explicit_univ_names

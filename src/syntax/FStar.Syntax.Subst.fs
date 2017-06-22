@@ -571,14 +571,16 @@ let open_let_rec lbs (t:term) =
          lbs, t
 
 let close_let_rec lbs (t:term) =
-    if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
-    else let n_let_recs, let_rec_closing =
-            List.fold_right (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out) lbs (0, []) in
-         let lbs = lbs |> List.map (fun lb ->
-                let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
-                {lb with lbdef=subst u_let_rec_closing lb.lbdef}) in
-         let t = subst let_rec_closing t in
-         lbs, t
+    let n_let_recs, let_rec_closing =
+      if is_top_level lbs then 0, [] //top-level let recs do not have to be closed
+      else
+         List.fold_right (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out) lbs (0, [])
+      in
+       let lbs = lbs |> List.map (fun lb ->
+              let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
+              {lb with lbdef=subst u_let_rec_closing lb.lbdef; lbtyp=subst u_let_rec_closing lb.lbtyp}) in
+       let t = subst let_rec_closing t in
+       lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
     let n = List.length binders - 1 in
