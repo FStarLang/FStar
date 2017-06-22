@@ -24,11 +24,11 @@ FSTARLIB_DIR=../../bin/fstarlib/
 
 fstarlib.cmxa:fstarlib.mllib
 	$(OCAMLBUILD) fstarlib.cmxa
-	make install
+	$(MAKE) install
 
 fstarlib.cma:fstarlib.mllib
 	$(OCAMLBUILD) fstarlib.cma
-	make install
+	$(MAKE) install
 
 install:
 	cp _build/ulib/ml/fstarlib.{cmxa,cma,a} $(FSTARLIB_DIR) 2>/dev/null || :
@@ -36,7 +36,7 @@ install:
 	cp _build/ulib/ml/extracted/*.cmi $(FSTARLIB_DIR)
 
 .mgen:
-	make -C .. .mgen
+	$(MAKE) -C .. .mgen
 
 
 # Common rules
