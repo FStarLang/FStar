@@ -7,7 +7,29 @@ open Manifest
 
 module HH = FStar.HyperHeap
 
+(* Modeling enclave instructions - In progress*)
+assume val eexit : emode:bool -> u_mem:HH.rid->v_mem:HH.rid -> uv_shared_buf:HH.rid -> non_enclave_regn: HH.rid-> exitaddress:(rref non_enclave_regn int) -> Heap  unit 
+  (requires (fun _ -> heap_only m /\ emode = true))
+  (ensures  (fun _ _ _ -> emode = false))
 
+assume val eenter : emode:bool -> u_mem:HH.rid->v_mem:HH.rid -> uv_shared_buf:HH.rid -> non_enclave_regn: HH.rid-> exitaddress:(rref non_enclave_regn int) -> Heap  unit 
+  (requires (fun _ -> heap_only m /\ emode = false))
+  (ensures  (fun _ _ _ -> emode = true))
+
+(* This is the first entry point inside an enclave. Using eenter should switch the control to this function *)
+assume val generic_enclave_entry : emode:bool -> u_mem:HH.rid->v_mem:HH.rid -> uv_shared_buf:HH.rid -> non_enclave_regn: HH.rid-> exitaddress:(rref non_enclave_regn int) -> Heap  unit 
+  (requires (fun _ -> heap_only m /\ emode = true ))
+  (ensures  (fun _ _ _ -> True))
+
+
+(* 2 Design Choices for Wrappers
+	1. Copy the arguments from uv_shared_buf to v_mem and then invoke CallEnclaveHost which then is verified using Vale
+	2. Copy the arguments directly to non-enclave memory and do all the CallEnclaveHost () functionality. This will reduce the number of copies involved. 
+*)
+
+
+type struct_for_wrapper1 =
+ | Mk_struct_1 of int * int
 (* 
   - modifies only non_enclave_regn and uv_shared_buf 
   - Wrapper for non_enclave_entry_point_1 : int -> int-> int
@@ -16,7 +38,7 @@ module HH = FStar.HyperHeap
 val callenclavehost_wrapper_1: emode: bool-> u_mem:HH.rid->v_mem:HH.rid -> uv_shared_buf:HH.rid -> non_enclave_regn: HH.rid->arg1: (rref uv_shared_buf int)-> arg2:(rref uv_shared_buf int) ->Heap unit
 			(requires (fun m -> heap_only m /\ emode = true ))
 			(ensures (fun m0 r m1 -> modifies_transitively (Set.singleton non_enclave_regn) m0 m1 ))
-let callenclavehost_wrapper_1 mode u_mem v_mem uv_shared_buf non_enclave_regn arg1 arg2 =
+let callenclavehost_wrapper_1 emode u_mem v_mem uv_shared_buf non_enclave_regn arg1 arg2 =
         (*
 		- copy the arguments from uv_shared_buf to v_mem
 		- which stack should wrapper use? In reality this is also responsible for switching the stack pointers between
@@ -28,28 +50,18 @@ let callenclavehost_wrapper_1 mode u_mem v_mem uv_shared_buf non_enclave_regn ar
 	(* read from uv_shared_buf *)
 	let argv1 = op_Bang uv_shared_buf arg1 in
 	let argv2 = op_Bang uv_shared_buf arg2 in
-
+	let struct_1 = Mk_struct_1 (argv1, argv2) in
 	
-	(* create a reference in non_enclave_regn and copy the arguments to a char * array of size nbytes_to_allocate *)
-	(* TODO:  Create a sequence and allocate a reference for it *)
-	let non_enclave_arg = ralloc non_enclave_regn  0 in
-	(* eexit *)
+	
+	(* create a reference in non_enclave_regn and copy the arguments to non_enclave_regn *)
+	let non_enclave_arg = ralloc non_enclave_regn  struct_1 in
+
+	(* Get the exit address from manifest *)
+	let exitaddress = get_exit_address () in
+
+	(* call eexit - should it just return? In the actual SGX implementation *)
+	let _ = eexit emode  u_mem v_mem uv_shared_buf non_enclave_regn exitaddress in
 	()
-
-(* Modeling an enclave exit *)
-assume eexit : emode:bool -> Heap  (HH.rid * HH.rid * HH.rid * HH.rid) 
-  (requires (fun _ -> heap_only m /\ emode = true))
-  (ensures  (fun _ _ _ -> emode = false))
-
-(* Modeling an enclave entry *)
-assume eenter : emode:bool -> Heap  (HH.rid * HH.rid * HH.rid * HH.rid) 
-  (requires (fun _ -> heap_only m /\ emode = false))
-  (ensures  (fun _ _ _ -> emode = true))
-
-(* This is the first entry point inside an enclave. Using eenter should switch the control to this function *)
-assume generic_enclave_entry : emode:bool -> Heap  (HH.rid * HH.rid * HH.rid * HH.rid) 
-  (requires (fun _ -> heap_only m /\ emode = true ))
-  (ensures  (fun _ _ _ -> True))
 
 
 

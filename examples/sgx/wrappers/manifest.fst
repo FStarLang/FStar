@@ -20,3 +20,13 @@ assume val non_enclave_entry_1 : int -> int -> int
 assume val non_enclave_entry_2 : string -> int -> int
 
 
+(* call table - record the function starting address and size of the function *)
+let non_enclave_entry_1_address = 1000
+let non_enclave_entry_1_size = 100
+
+
+let non_enclave_entry_2_address = 1100
+let non_enclave_entry_2_size = 100
+
+(* helper function to get the exit address of function *)
+let get_exit_address () = 2000
