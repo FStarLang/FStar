@@ -27,3 +27,7 @@ let fresh _ _ _ = Obj.magic ()
 let sel _ _ = Obj.magic ()
 let upd _ _ _ = Obj.magic ()
 let alloc _ _ _ = Obj.magic ()
+
+let dummy_aref = Ref ((), ())
+let aref_of _ = dummy_aref
+let ref_of _ _ = Obj.magic ()
