@@ -8,6 +8,7 @@ POSTESTS=\
   array.pos \
   disjoint.pos \
   point.pos \
+  nested.pos \
 
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))
 
