@@ -116,7 +116,7 @@ namespace fabc_make
             r.AutoScaleEnabled = true;
             r.AutoScaleFormula =
                 @"$averageActiveTaskCount = avg($ActiveTasks.GetSample(TimeInterval_Minute * 5, 50));
-                  $TargetDedicated = min(max(8, $averageActiveTaskCount / 4), 128);
+                  $TargetDedicated = min(max(4, $averageActiveTaskCount / 4), 128);
                   $NodeDeallocationOption=retaineddata;";
             r.AutoScaleEvaluationInterval = new TimeSpan(0, 5, 0); // 5 min is the minimal legal value?
 
@@ -124,7 +124,7 @@ namespace fabc_make
             {
                 WaitForSuccess = true,
                 MaxTaskRetryCount = 1,
-                CommandLine = "sudo apt-get install -y unzip mono-runtime libmono-system-numerics4.0-cil libmono-system-runtime-serialization4.0-cil libgomp1",
+                CommandLine = "sudo apt-get install -y unzip mono-runtime libmono-system-numerics4.0-cil libmono-system-runtime-serialization4.0-cil libgomp1 make",
                 UserIdentity = new UserIdentity(new AutoUserSpecification(elevationLevel: ElevationLevel.Admin))
             };
             r.Commit();
@@ -457,7 +457,7 @@ namespace fabc_make
             if (!InitPackage(myargs))
                 return 1;
 
-            j = MkJob(myargs.JobDisplayName != null ? myargs.JobDisplayName : JobDisplayName, 
+            j = MkJob(myargs.JobDisplayName != null ? myargs.JobDisplayName : JobDisplayName,
                       myargs.BatchIDFile != null);
 
             if (myargs.BatchIDFile != null)
@@ -492,6 +492,7 @@ namespace fabc_make
 
             if (myargs.HintCollection)
                 t.OutFileExtensions = new string[] { "hints" };
+                // t.OutFileExtensions = new string[] { "search.log.smt2" };
 
             string PkgBlobUri = "https://" + StorageAccountName + ".blob.core.windows.net/" + PackageBlobContainer + "/" + myargs.PackageBlobId;
             string taskId;

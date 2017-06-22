@@ -58,7 +58,7 @@ namespace fabc_make
                     case "-h": result.HintDirectory = args[++i]; break;
                     case "-hc": result.HintCollection = true; break;
                     case "-ns": result.SaveResultFiles = false; break;
-                    case "-name": result.JobDisplayName = args[i++]; break;
+                    case "-name": result.JobDisplayName = args[++i]; break;
                     case "--":
                         result.FStarArguments = new string[args.Length - i - 1];
                         for (int j = i + 1; j < args.Length; j++)
