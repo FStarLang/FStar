@@ -9,7 +9,7 @@ ULIB_GEN_DIR=extracted
 
 FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
-OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_GEN_DIR) -build-dir ulib/ml/_build
+OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I src/basic/ml -I src/ocaml-output -I src/prettyprint/ml -I ulib/ml -I ulib/ml/$(ULIB_GEN_DIR) -build-dir ulib/ml/_build
 
 .PHONY:clean
 
