@@ -384,14 +384,14 @@ val ones_nth_lemma: #n:pos -> i:nat{i < n} ->
 let rec ones_nth_lemma #n i = ()
 
 (* Bitwise operators *)
-val logand: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-let logand #n a b = from_vec #n (logand_vec #n (to_vec #n a) (to_vec #n b))
-val logxor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-let logxor #n a b = from_vec #n (logxor_vec #n (to_vec #n a) (to_vec #n b))
-val logor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-let logor #n a b = from_vec #n (logor_vec #n (to_vec #n a) (to_vec #n b))
-val lognot: #n:pos -> a:uint_t n  -> Tot (uint_t n)
-let lognot #n a = from_vec #n (lognot_vec #n (to_vec #n a))
+abstract val logand: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
+abstract let logand #n a b = from_vec #n (logand_vec #n (to_vec #n a) (to_vec #n b))
+abstract val logxor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
+abstract let logxor #n a b = from_vec #n (logxor_vec #n (to_vec #n a) (to_vec #n b))
+abstract val logor: #n:pos -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
+abstract let logor #n a b = from_vec #n (logor_vec #n (to_vec #n a) (to_vec #n b))
+abstract val lognot: #n:pos -> a:uint_t n  -> Tot (uint_t n)
+abstract let lognot #n a = from_vec #n (lognot_vec #n (to_vec #n a))
 
 (* Bitwise operators definitions *)
 val logand_definition: #n:pos -> a:uint_t n -> b:uint_t n -> i:nat{i < n} ->
