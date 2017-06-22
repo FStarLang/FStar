@@ -1,6 +1,7 @@
 module Seq.Complements
 
 open FStar.Seq
+open FStar.Classical
 
 let _in (s:seq 'a) = k:nat{k < length s}
 let ( @^ ) (s:seq 'a) (i:_in s) : 'a = index s i
@@ -49,7 +50,7 @@ let rec index_of_l_aux_spec (#a:Type) (f:a -> bool) (s:seq a) (i:_in s) :
 
 let rec index_of_l_spec (#a:Type) (f:a -> bool) (s:seq a) :
     Lemma (let r = index_of_l f s in
-    (forall (i:_in s). (~(Some? r) \/ i < Some?.v r) ==> not (f (s @^ i))) /\
+    (forall (i:_in s). (None? r \/ i < Some?.v r) ==> not (f (s @^ i))) /\
       (Some? r ==> f (s @^ Some?.v r)))
 = if length s = 0 then ()
   else index_of_l_aux_spec f s 0
@@ -64,6 +65,18 @@ let rec none_count_zero (#a:eqtype) (e:a) (s:seq a)
     assert (forall (i:_in s'). not (e = s @^ (i+1))) ;
     none_count_zero #a e s'
 
+let rec count_zero_none_aux (#a:eqtype) (e:a) (s:seq a) (i : _in s)
+  : Lemma (requires (count e s == 0) /\ (forall (i: k:nat{k< i}) . not (e = s @^ i))) 
+  (ensures (forall (i:_in s). not (e = s @^ i))) (decreases (length
+s - i))
+= lemma_count_slice s i;
+  if length s - i <= 1 then ()
+  else count_zero_none_aux #a e s (i + 1)
+
+let count_zero_none (#a:eqtype) (e:a) (s:seq a)
+ : Lemma (requires (count e s == 0)) (ensures (forall (i:_in s). not (e = s @^ i)))
+ = if length s = 0 then () else count_zero_none_aux #a e s 0
+
 let index_of_l_count (#a:eqtype) (e:a) (s:seq a)
   : Lemma (match index_of_l (fun x -> x = e) s with | None -> count e s == 0 | Some i0 -> s @^ i0 = e)
 = let f x = x = e in
@@ -71,3 +84,51 @@ let index_of_l_count (#a:eqtype) (e:a) (s:seq a)
   match index_of_l f s with
   | None -> none_count_zero e s
   | Some i0 -> ()
+
+let disjoint (#a:Type) (s1:seq a) (s2:seq a) = forall (i:_in s1)(j:_in s2). ~(s1 @^ i == s2 @^ j)
+
+
+let disjoint_implies_count_zero (#a:eqtype) (s1 s2:seq a)
+ : Lemma (requires (disjoint s1 s2))
+  (ensures (forall (i':_in s1). count (s1 @^ i') s2 == 0))
+= 
+  let disjoint_implies_count_zero_aux (#a:eqtype) (s1 s2:seq a)
+    (w:squash(disjoint s1 s2)) (i:_in s1) 
+    : Lemma (count (s1 @^ i) s2 == 0) =
+    FStar.Squash.give_proof w ;
+    assert(forall (j:_in s2). ~(s1 @^ i == s2 @^ j));
+    none_count_zero (s1 @^ i) s2
+  in
+  forall_intro (disjoint_implies_count_zero_aux #a s1 s2 
+    (FStar.Squash.get_proof (disjoint s1 s2)))
+
+
+
+let lemma_disjoint_slice (#a:Type) (s1 s2:seq a) (i j : k:nat{k <= length s2})
+  : Lemma (requires (i <= j /\ disjoint s1 s2))
+    (ensures (i <= j /\ disjoint s1 (slice s2 i j)))
+  = let s2' = slice s2 i j in
+    assert (forall (i0: _in s2') (k:_in s1). ~(s2 @^ (i+i0) == s1 @^ k))
+
+let disjoint_not_eq_head (#a:Type) (s1: s:seq a{length s >= 1}) (s2:seq a)
+ : Lemma (requires (disjoint s1 s2))
+   (ensures (forall (j:_in s2). ~(head s1 == s2 @^ j)))
+   = assert (forall (j:_in s2). ~(s1 @^ 0 == s2 @^ j))
+
+let rec lemma_disjoint_append (#a:Type) (s1 s2 s3: seq a)
+  : Lemma (requires (disjoint s1 s3) /\ (disjoint s2 s3))
+    (ensures (disjoint (append s1 s2) s3))
+    (decreases (length s2))
+  = match length s2 with
+  | 0 -> lemma_eq_elim s1 (append s1 s2)
+  | x -> 
+    let s1' = append s1 (create 1 (head s2)) in
+    let s2' = tail s2 in 
+    assert (forall (i: k:nat{k<length s1}) (j:_in s3). ~(s1 @^ i == s3 @^ j));
+    assert (forall (i: k:nat{k<length s1}) (j:_in s3). ~(s1' @^ i == s3 @^ j));
+    lemma_disjoint_slice s3 s2 0 1;
+    lemma_eq_elim (create 1 (head s2)) (slice s2 0 1);
+    disjoint_not_eq_head s2 s3;
+    lemma_eq_elim (append s1' s2') (append s1 s2);
+    lemma_disjoint_slice s3 s2 1 (length s2);
+    lemma_disjoint_append s1' s2' s3
