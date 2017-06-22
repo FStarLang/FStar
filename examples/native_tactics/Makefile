@@ -3,7 +3,7 @@ OCAML_OUTPUT=$(FSTAR_HOME)/src/ocaml-output
 INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocaml-output/ src/basic/ml)
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
-.PRECIOUS: %.ml
+.PRECIOUS: %.ml %.cmxs
 
 %.ml: %.fst
 	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
