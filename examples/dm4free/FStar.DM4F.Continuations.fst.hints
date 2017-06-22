@@ -1,5 +1,5 @@
 [
-  "\"÷@Å÷ÁæzÌÕ\rÑ?=U∫",
+  "ÿfèJ™W+t‰ÊH©uÍ-~",
   [
     [ "FStar.DM4F.Continuations.cont", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Continuations.uu___is_L", 1, 2, 1, [ "@query" ], 0 ],
@@ -9,9 +9,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.DM4F.Continuations.L",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.DM4F.Continuations.L",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9d1e289857847b04e83630d17b0076fb"
+        "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0
     ],
@@ -21,9 +22,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.DM4F.Continuations.L",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.DM4F.Continuations.L",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9d1e289857847b04e83630d17b0076fb"
+        "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0
     ],
@@ -41,11 +43,12 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.DM4F.Continuations.L",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.DM4F.Continuations.L",
         "proj_equation_FStar.DM4F.Continuations.L_a",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.DM4F.Continuations.L_a",
-        "refinement_interpretation_Tm_refine_9d1e289857847b04e83630d17b0076fb"
+        "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_8445d79c1f764e59f2958fa0cdffa351"
       ],
       0
     ],
@@ -56,9 +59,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.DM4F.Continuations.R",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.DM4F.Continuations.R",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c8eb3f8a785360e9d5b6f0e59bdcde30"
+        "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0
     ],
@@ -68,9 +72,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.DM4F.Continuations.R",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.DM4F.Continuations.R",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c8eb3f8a785360e9d5b6f0e59bdcde30"
+        "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0
     ],
@@ -88,17 +93,18 @@
       2,
       1,
       [
-        "@query", "disc_equation_FStar.DM4F.Continuations.R",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.DM4F.Continuations.R",
         "proj_equation_FStar.DM4F.Continuations.R_b",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.DM4F.Continuations.R_b",
-        "refinement_interpretation_Tm_refine_c8eb3f8a785360e9d5b6f0e59bdcde30"
+        "refinement_interpretation_FStar.DM4F.Continuations_Tm_refine_a6a39bffc11b264d9749ffb3bf1e08d0"
       ],
       0
     ],
     [ "FStar.DM4F.Continuations.em", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.CONT_wp_if_then_else",
+      "FStar.DM4F.Continuations._dm4f_CONT_wp_if_then_else",
       1,
       2,
       1,
@@ -107,7 +113,7 @@
     ],
     [ "FStar.DM4F.Continuations.CONT", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.Continuations.CONTINUATION_wp_if_then_else",
+      "FStar.DM4F.Continuations._dm4f_CONTINUATION_wp_if_then_else",
       1,
       2,
       1,
@@ -121,15 +127,17 @@
       2,
       1,
       [
-        "@query", "data_typing_intro_FStar.DM4F.Continuations.L@tok",
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.DM4F.Continuations.L@tok",
         "data_typing_intro_FStar.DM4F.Continuations.R@tok",
         "equation_FStar.DM4F.Continuations.em_wp", "equation_Prims.l_False",
         "equation_Prims.l_True",
         "kinding_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "typing_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
-        "typing_Tm_abs_be9ad73d93a28c50fbf774cb343f4d28"
+        "typing_FStar.DM4F.Continuations_Tm_abs_b48196a9c21586309b780bdadeab8ef4",
+        "typing_Prims_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
       ],
       0
-    ]
+    ],
+    [ "FStar.DM4F.Continuations.excluded_middle", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

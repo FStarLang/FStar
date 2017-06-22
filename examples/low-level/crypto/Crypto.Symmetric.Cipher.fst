@@ -4,10 +4,13 @@ module Crypto.Symmetric.Cipher
 // Consider also enforcing key abstraction (but quite verbose to code; see Plain.fst).
 
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Buffer
 open Buffer.Utils
+
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 open FStar.UInt32
 open Crypto.Symmetric.Bytes

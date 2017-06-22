@@ -28,122 +28,52 @@ module Bytes = struct
   type byte = char
   type nat = int
   type cbytes = string
-
-  let rec getByte (bl:cbytes list) (i:int) =
-      match bl with
-       [] -> failwith "getByte: array out of bounds"
-     | h::t when i >= String.length h -> getByte t (i-String.length h)
-     | h::t -> String.get h i
-
-  let rec getByte2 (bl: cbytes list) i : byte*byte =
-      match bl with
-       [] -> failwith "array out of bounds"
-     | h::t when i >= String.length h -> getByte2 t (i - String.length h)
-     | h::t when (String.length h) - i >= 2 -> String.get h i, String.get h (i+1)
-     | h1::h2::t when (String.length h1) - i = 1 && (String.length h2) > 0 -> String.get h1 i, String.get h2 0
-     | _ -> failwith "getByte2: array out of bounds"
-
-  let rec getBytes (bl:cbytes list) i n  =
-      match bl with
-       [] -> if n > 0 then failwith "getBytes: array out of bounds" else ""
-     | h::t ->
-          if i >= (String.length h)
-          then getBytes t (i- (String.length h)) n
-          else let curr = (String.length h) - i in
-               if curr >= n
-               then String.sub h i n
-               else (String.sub h i curr) ^ (getBytes t 0 (n-curr))
-
-  (* This type represents a subset of a sequence of bytes; the sequence of bytes
-   * is represented as a list of strings. *)
-  type bytes = {
-      (*  A series of strings whose total concatenated length is [max]. *)
-      bl: cbytes list;
-      max: int;
-      (* The length of the subset. *)
-      length: int;
-      (* The start index of the subset. *)
-      index: int;
-  }
+  type bytes = string
 
   let lemma_repr_bytes_values n = ()
 
   let cbyte (b:bytes) =
-      if b.length = 1 then
-        let b1 = getByte b.bl b.index in b1
-      else failwith "cbyte: expected an array of length 1"
+    try String.get b 0
+    with _ -> failwith "cbyte: called on empty string"
 
   let cbyte2 (b:bytes) =
-      if b.length = 2 then
-        let (b1,b2) = getByte2 b.bl b.index in b1,b2
-      else failwith "cbyte2: expected an array of length 2"
+    try (String.get b 0, String.get b 1)
+    with _ -> failwith "cbyte2: need at least length 2"
 
   let index (b:bytes) i =
-    let i = Z.to_int i in
-    if b.length >= i then
-      let s = getBytes b.bl b.index b.length in
-      String.get s i
-    else failwith "index: index out of range"
+    try String.get b (Z.to_int i)
+    with _ -> failwith "index: called out of bound"
 
-  let get_cbytes (b:bytes) =
-      if b.length = b.max && b.index = 0 then
-        let bl' = String.concat "" b.bl in  bl'
-      else
-        let bl' = getBytes b.bl b.index b.length in bl'
-
-  let abytes (ba:cbytes) =
-      {bl = [ba]; length = String.length ba; index = 0; max = String.length ba}
-  let abytes_max (ba:cbytes) (max:int) =
-      let arr = String.make max (char_of_int 0) in
-      let len = String.length ba in
-      (for i = 0 to len-1 do Bytes.set arr i ba.[0] done);
-      {bl = [arr]; length = len; index = 0; max = len}
-
-  let abyte (ba:byte) =
-      {bl = [String.make 1 ba]; length = 1; index = 0; max = 1}
-
+  let get_cbytes (b:bytes) = b
+  let abytes (ba:cbytes) = ba
+  let abyte (ba:byte) = String.make 1 ba
   let abyte2 (ba1,ba2) =
-      let s = String.make 2 ba1 in
-      Bytes.set s 1 ba2;
-      {bl = [s]; length = 2; index = 0; max = 2}
+    String.init 2 (fun i -> if i = 0 then ba1 else ba2)
 
-  (* JP: this makes the operator right-associative; is that desired? *)
-  let (@|) (a:bytes) (b:bytes) =
-      if a.length + a.index = a.max && b.index = 0 then
-        {bl = (a.bl @ b.bl);
-         length = a.length + b.length;
-         index = a.index;
-         max = a.max + b.max}
-      else
-        {bl = [(get_cbytes a)^(get_cbytes b)];
-         length = a.length + b.length;
-         index = 0;
-         max = a.length + b.length}
-
+  let (@|) (a:bytes) (b:bytes) = a ^ b
   let op_At_Bar a b = a @| b
   let op_AtBar a b = a @| b
 
   let split (b:bytes) i : bytes * bytes =
-    let i = Z.to_int i in
-      {bl = b.bl;
-       length = i;
-       index = b.index;
-       max = b.max},
-      {bl = b.bl;
-       length = b.length - i;
-       index = b.index + i;
-       max = b.max}
-
+    try
+      let i = Z.to_int i in
+      let b1 = String.sub b 0 i in
+      let b2 = String.sub b i (String.length b - i) in
+      (b1, b2)
+    with _ -> failwith "split: out of bound"
   let split_eq = split
+  let length (b:bytes) = Z.of_int (String.length b)
 
-  let length (d:bytes) = Z.of_int d.length
-
-
-  let empty_bytes = abytes ""
+  let empty_bytes = ""
   let createBytes len (value:char) : bytes =
       let len = Z.to_int len in
       try abytes (String.make len value)
       with _ -> failwith "Default integer for createBytes was greater than max_value"
+
+  let initBytes len f : bytes =
+      let len = Z.to_int len in
+      try abytes (String.init len (fun i -> f (Z.of_int i)))
+      with _ -> failwith "Platform.Bytes.initBytes: invalid char returned"
 
   type 'a lbytes = bytes
 
@@ -163,64 +93,40 @@ module Bytes = struct
           else bb
         end
     in
-    let b = String.make nb (char_of_int 0) in
-      abytes(put_bytes b nb i)
+    let b = Bytes.make nb (char_of_int 0) in
+    Bytes.to_string (put_bytes b nb i)
 
   let int_of_bytes (b:bytes) =
       let x = ref 0 in
-      let c = get_cbytes b in
-      for y = 0 to b.length-1 do
-          x := 256 * !x + (int_of_char (String.get c y))
+      let len = String.length b in
+      for y = 0 to len-1 do
+          x := 256 * !x + (int_of_char (String.get b y))
       done;
       Z.of_int !x
 
-  let equalBytes (b1:bytes) (b2:bytes) =
-      if length b1 = length b2 then
-         let cb1 = get_cbytes b1 in
-         let cb2 = get_cbytes b2 in
-         let ok = ref true in
-         for x = 0 to b1.length-1 do
-             ok := String.get cb1 x = String.get cb2 x && !ok;
-         done;
-         !ok
-      else false
+  let equalBytes (b1:bytes) (b2:bytes) = b1 = b2
 
   let xor len s1 s2 =
       let len = Z.to_int len in
-      let s1 = get_cbytes s1 in
-      let s2 = get_cbytes s2 in
-      let res = String.make len (char_of_int 0) in
-      for i=0 to len-1 do
-        Bytes.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i])))
-      done;
-      abytes res
-
+      let init i = char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i])) in
+      String.init len init
 
   let split2 (b:bytes) i j : bytes * bytes * bytes =
-    let b1,b2 = split b i in
-    let b2a,b2b = split b2 j in
-    (b1,b2a,b2b)
+    let b1, b2 = split b i in
+    let b2a, b2b = split b2 j in
+    (b1, b2a, b2b)
 
+  let utf8 (x:string) : bytes = x (* TODO: use Camomile *)
+  let iutf8 (x:bytes) : string = x (* TODO: use Camomile *)
+  let iutf8_opt (x:bytes) : string option = Some (x)
 
-  let utf8 (x:string) : bytes = abytes x (* TODO: use Camomile *)
-  let iutf8 (x:bytes) : string = get_cbytes x (* TODO: use Camomile *)
-  let iutf8_opt (x:bytes) : string option = Some (get_cbytes x)
-
-  let print_bytes (x:bytes) : string =
-    let s = get_cbytes x in
+  let print_bytes (s:bytes) : string =
     let res = ref "" in
     for i = 0 to String.length s - 1 do
-      res := !res ^ (Printf.sprintf "%x " (int_of_char s.[i]));
-    done;
-    !res
+      res := !res ^ (Printf.sprintf "%02X" (int_of_char s.[i]));
+    done; !res
 
-  (*
-  let utf8 (x:string) : bytes = abytes (System.Text.Encoding.UTF8.GetBytes x)
-  let iutf8 (x:bytes) : string = System.Text.Encoding.UTF8.GetString (cbytes x)
-  *)
-
-  let byte_of_int i =
-    char_of_int (Z.to_int i)
+  let byte_of_int i = char_of_int (Z.to_int i)
 
   (* Some helpers to deal with the conversation from hex literals to bytes and
    * conversely. Mostly for tests. *)
@@ -264,11 +170,11 @@ module Bytes = struct
       aux 0;
       res
 
-  let string_of_bytes b = get_cbytes b
-  let bytes_of_string s = abytes s
+  let string_of_bytes b = b
+  let bytes_of_string s = s
 
-  let bytes_of_hex s = bytes_of_string (string_of_hex s)
-  let hex_of_bytes b = hex_of_string (string_of_bytes b)
+  let bytes_of_hex s = string_of_hex s
+  let hex_of_bytes b = hex_of_string b
 
 end
 
@@ -318,16 +224,38 @@ module Tcp = struct
       let str = String.sub str 0 recvlen in
       abytes str
 
+  type 'a recv_result = 
+  | RecvWouldBlock
+  | RecvError of string
+  | Received of Bytes.bytes
+
+  let recv_async s i =
+      let i = Z.to_int i in
+      try Received (sock_recv s i) with
+      | Unix_error ((EAGAIN | EWOULDBLOCK),_,_) -> RecvWouldBlock
+      | Unix_error (e,s1,s2) -> RecvError (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
+
+  let set_nonblock = set_nonblock 
+  let clear_nonblock = clear_nonblock
+
   let recv s i =
       let i = Z.to_int i in
       try Correct (sock_recv s i)
       with Unix_error (e,s1,s2) ->
        Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
-  let send s b =
-      try (let n = sock_send s b in if n < Z.to_int (Bytes.length b) then Error(Printf.sprintf "Network error, wrote %d bytes" n) else Correct())
-      with Unix_error (e,s1,s2) ->
-       Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
+  let rec send s b =
+      try (
+          let n = sock_send s b in 
+          let m = Z.to_int (Bytes.length b) in 
+          if n < m
+          then 
+              (* send s (String.sub str n (m - n) *)
+              Error(Printf.sprintf "Network error, wrote %d bytes" n) 
+          else Correct())
+      with 
+      | Unix_error ((EAGAIN | EWOULDBLOCK),_,_) -> send s b
+      | Unix_error (e,s1,s2) -> Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
   let close s =
       close s

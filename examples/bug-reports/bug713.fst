@@ -9,7 +9,7 @@ let bind (a:Type0) (b:Type0)
          (m : cont a) (f : a -> Tot (cont b)) (k : b -> M r) : M r =
          m (fun (x:a) -> f x k)
 
-reifiable new_effect_for_free {
+reifiable new_effect {
   CONT: Type -> Effect
   with repr = cont
      ; return = return

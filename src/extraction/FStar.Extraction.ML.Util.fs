@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Util
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -202,17 +203,10 @@ let is_type_abstraction = function
     | _ -> false
 
 let is_xtuple (ns, n) =
-    if ns = ["Prims"]
-    then match n with
-            | "Mktuple2" -> Some 2
-            | "Mktuple3" -> Some 3
-            | "Mktuple4" -> Some 4
-            | "Mktuple5" -> Some 5
-            | "Mktuple6" -> Some 6
-            | "Mktuple7" -> Some 7
-            | "Mktuple8" -> Some 8
-            | _ -> None
-    else None
+  if FStar.Parser.Const.is_tuple_datacon_string (BU.concat_l "." (ns@[n]))
+  (* Returns the integer k in "Mktuplek" *)
+  then Some (BU.int_of_char (BU.char_at n 7))
+  else None
 
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
@@ -245,17 +239,10 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs v
 
 
 let is_xtuple_ty (ns, n) =
-    if ns = ["Prims"]
-    then match n with
-            | "tuple2" -> Some 2
-            | "tuple3" -> Some 3
-            | "tuple4" -> Some 4
-            | "tuple5" -> Some 5
-            | "tuple6" -> Some 6
-            | "tuple7" -> Some 7
-            | "tuple8" -> Some 8
-            | _ -> None
-    else None
+  if FStar.Parser.Const.is_tuple_constructor_string (BU.concat_l "." (ns@[n]))
+  (* Returns the integer k in "tuplek" *)
+  then Some (BU.int_of_char (BU.char_at n 5))
+  else None
 
 let resugar_mlty t = match t with
     | MLTY_Named (args, mlp) ->

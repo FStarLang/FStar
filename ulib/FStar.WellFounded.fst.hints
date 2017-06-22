@@ -1,0 +1,41 @@
+[
+  "∂\fÊè˘ﬁ\bL\u007fèfºA^e\u0015",
+  [
+    [
+      "FStar.WellFounded.__proj__AccIntro__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.WellFounded.acc_inv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0
+    ],
+    [ "FStar.WellFounded.axiom1", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.WellFounded.apply", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.WellFounded.fix_F",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_f744f63ab9a82765f30b542dd6ad1ecf_7",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.WellFounded.acc_inv",
+        "fuel_guarded_inversion_FStar.WellFounded.acc",
+        "subterm_ordering_FStar.WellFounded.AccIntro"
+      ],
+      0
+    ]
+  ]
+]

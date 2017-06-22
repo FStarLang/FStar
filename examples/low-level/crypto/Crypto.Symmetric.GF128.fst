@@ -3,6 +3,7 @@ module Crypto.Symmetric.GF128
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -12,7 +13,7 @@ open Crypto.Symmetric.GF128.Spec
 
 module U32 = FStar.UInt32
 module Spec = Crypto.Symmetric.GF128.Spec
-
+module ST = FStar.HyperStack.ST
 
 let len = 16ul // length of GF128 in bytes
 

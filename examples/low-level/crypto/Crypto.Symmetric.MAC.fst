@@ -12,6 +12,7 @@ module Crypto.Symmetric.MAC
 open Crypto.Symmetric.Bytes
 open Crypto.Indexing
 open Flag
+open FStar.HyperStack.ST
 
 module GS = Crypto.Symmetric.GF128.Spec
 module GF = Crypto.Symmetric.GF128
@@ -20,6 +21,7 @@ module PL = Crypto.Symmetric.Poly1305
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 type id = id * UInt128.t //NS: why not this definition : i:id & iv (alg i)
 let alg (i:id) = macAlg_of_id (fst i) 
@@ -159,8 +161,8 @@ val rcreate: rgn:HH.rid{HS.is_eternal_region rgn} -> i:id -> ST (elemB i)
   (requires (fun h0 -> True))
   (ensures  (fun h0 r h1 ->
     HS.modifies (Set.singleton rgn) h0 h1 /\
-    HS.modifies_ref rgn TSet.empty h0 h1 /\
-    ~(HS.((Buffer.content (as_buffer r)).mm)) /\
+    HS.modifies_ref rgn Set.empty h0 h1 /\
+    ~(HS.is_mm ((Buffer.content (as_buffer r)))) /\
     Buffer.frameOf (as_buffer r) == rgn /\
     ~(live h0 r) /\live h1 r))
 let rcreate rgn i =

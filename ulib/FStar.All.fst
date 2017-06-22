@@ -15,7 +15,7 @@
 *)
 module FStar.All
 open FStar.Heap
-open FStar.ST
+include FStar.ST
 
 let all_pre = all_pre_h heap
 let all_post (a : Type) = all_post_h heap a
@@ -31,7 +31,7 @@ sub_effect EXN ~> ALL { lift_wp = lift_exn_all }
 
 effect All (a:Type) (pre:all_pre) (post:(heap -> Tot (all_post a))) =
   ALL a
-    (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. pre h /\ post h ra h1 ==> p ra h1))
+    (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1))
 effect ML (a:Type) = ALL a (all_null_wp heap a)
 
 assume val pipe_right : 'a -> ('a -> ML 'b) -> ML 'b

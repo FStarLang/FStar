@@ -10,8 +10,8 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
-        "pretyping_ae567c2fb75be05905677af440075565"
+        "@query", "function_token_typing_Prims.int",
+        "lemma_FStar.Ghost.hide_reveal"
       ],
       0
     ],

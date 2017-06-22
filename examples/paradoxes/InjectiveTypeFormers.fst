@@ -10,7 +10,7 @@ open FStar.Constructive
 (* this file relies on a violation of the cardinality constraints of Type*)
 #set-options "--cardinality warn --print_universes --print_bound_var_types"
 
-noeq type i: (Type 'ua -> Type 'ub) -> Type u#(max ('ua + 1) ('ub + 1)) =
+noeq type i: (Type u#a -> Type u#b) -> Type u#(max (a + 1) (b + 1)) =
 | Mk: f:(Type -> Type) -> i f
 
 val injI : x:(Type->Type) -> y:(Type->Type) ->
@@ -55,9 +55,9 @@ let exInd (#p:((Type->Type) -> Type)) (p0:Type)
 (Error) Expected expression of type "Type((S n'ua))";
 got expression "x" of type "Type(n'ua)"
 *)
-type r (x:Type 'ua) =
+type r (x:Type u#a) =
   cexists_type_to_type
-    (fun (a:Type 'ua -> Type0) -> cand (ceq_type (i a) x) (cnot (a x)))
+    (fun (a:Type u#a -> Type0) -> cand (ceq_type (i a) x) (cnot (a x)))
 
 
 val aux : h:r p ->

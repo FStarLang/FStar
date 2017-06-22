@@ -79,7 +79,7 @@ assume val ist_recall :  p:predicate heap{stable heap_rel p} ->
    We need this in order to implement allocation in terms of the 
    IST monad, which is a global state monad in its nature. *)
 
-assume val gen_ref : #a:Type -> h:heap -> Tot (r:ref a{~(contains h r)})
+assume val gen_ref : #a:Type -> h:heap -> Tot (r:ref a{r `unused_in` h})
 
 
 (* Pre- and postconditions for the immutable references instance of IST. *)
@@ -103,7 +103,7 @@ effect ImmutableST (a:Type)
 val alloc : #a:Type -> 
             x:a -> 
 	    ImmutableST (ref a) (fun _ -> True)
-                                (fun h0 r h1 -> ~(contains h0 r) /\
+                                (fun h0 r h1 -> r `unused_in` h0 /\
 					        contains h1 r /\
 						h1 == upd h0 r x)
 let alloc #a x = 
@@ -128,7 +128,7 @@ let read #a r =
 val write : #a:Type -> 
             r:ref a -> 
 	    x:a -> 
-	    ImmutableST unit (fun h0      -> sel h0 r == x)
+	    ImmutableST unit (fun h0      -> sel h0 r == x /\ h0 `contains` r)
                              (fun h0 _ h1 -> h1 == upd h0 r x)
 let write #a r x =
   let h = ist_get () in

@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Tests.Pars
+open FSharp.Compatibility.OCaml
 open FStar
 open FStar.Range
 open FStar.Parser
@@ -75,7 +76,7 @@ let pars_term_or_fragment is_term s =
       if is_term
       then let t = Parser.Parse.term lexer lexbuf in
            Some (ToSyntax.desugar_term env t)
-      else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref frag with
+      else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
                 | Some (test_mod', (env', tcenv'), 0) ->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
@@ -122,7 +123,8 @@ let pars s =
 let tc s =
     let tm = pars s in
     let _, tcenv = init() in
-    let tm, _, _ = TcTerm.type_of_tot_term tcenv tm in
+    let tcenv = {tcenv with top_level=false} in
+    let tm, _, _ = TcTerm.tc_tot_or_gtot_term tcenv tm in
     tm
 
 let pars_and_tc_fragment (s:string) =
@@ -131,7 +133,7 @@ let pars_and_tc_fragment (s:string) =
     try
         let env, tcenv = init() in
         let frag = frag_of_text s in
-        match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref frag with
+        match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
         | Some (test_mod', (env', tcenv'), n) ->
             test_mod_ref := test_mod';
             dsenv_ref := Some env';

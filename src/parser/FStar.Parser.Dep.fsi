@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Parser.Dep
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Parser
@@ -10,7 +11,7 @@ open FStar.Const
 open FStar.String
 open FStar.Ident
 open FStar.Errors
-module Const = FStar.Syntax.Const
+module Const = FStar.Parser.Const
 module BU = FStar.Util
 
 (* In case the user passed [--verify_all], we record every single module name we
@@ -29,9 +30,15 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
+type open_kind = | Open_module | Open_namespace
+
 val lowercase_module_name : string -> string
 
 val build_map : list<string> -> map
+
+(* Given a filename, returns the list of automatically opened modules
+and namespaces *)
+val hard_coded_dependencies : string -> list<(lident * open_kind)>
 
 val collect : verify_mode -> list<string> -> list<(string * list<string>)> * list<string> * BU.smap<(list<string> * color)>
 
@@ -39,5 +46,3 @@ val print : list<(string * list<string>)> * 'a * smap<(list<string> * 'b)> -> un
 
 val is_interface: string -> bool
 val is_implementation: string -> bool
-
-val try_convert_file_name_to_windows: string -> string

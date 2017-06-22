@@ -4,7 +4,7 @@ open HyE.RSA
 open HyE.Ideal
 
 type t = HyE.AE.key // This should be abstract
-type r = RSA.plain
+type r = HyE.RSA.plain
 
 (* two pure functions, never called when ideal *)
 val repr:    p:t{not conf} -> Tot r

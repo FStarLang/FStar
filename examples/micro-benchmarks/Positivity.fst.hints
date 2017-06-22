@@ -10,9 +10,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Positivity.MCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0
     ],
@@ -22,9 +22,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Positivity.MCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.MCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_00cc95768cae04bdad385f349f0eb239"
+        "refinement_interpretation_Positivity_Tm_refine_00cc95768cae04bdad385f349f0eb239"
       ],
       0
     ],
@@ -36,9 +36,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Positivity.NCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0
     ],
@@ -48,9 +48,9 @@
       2,
       1,
       [
-        "@query", "disc_equation_Positivity.NCons",
+        "@MaxIFuel_assumption", "@query", "disc_equation_Positivity.NCons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
+        "refinement_interpretation_Positivity_Tm_refine_b1f025c1267dea430ff99e02f912bf79"
       ],
       0
     ],

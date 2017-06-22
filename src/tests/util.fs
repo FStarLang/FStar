@@ -10,6 +10,7 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module I = FStar.Ident
+module Const = FStar.Parser.Const
 open FStar.Ident
 open FStar.Range
 
@@ -63,18 +64,16 @@ let rec term_eq' t1 t2 =
       | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
       | Tm_refine(x, t), Tm_refine(y, u) -> term_eq x.sort y.sort && term_eq t u
       | Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some (Implicit _)); t1; t2]),
-        Tm_app({n=Tm_fvar fv_eq_2}, [s1; s2])
-      | Tm_app({n=Tm_fvar fv_eq_2}, [s1; s2]),
-        Tm_app({n=Tm_fvar fv_eq_1}, [(_, Some (Implicit _)); t1; t2])
+        Tm_app({n=Tm_fvar fv_eq_2}, [(_, Some (Implicit _)); s1; s2])
             when S.fv_eq_lid fv_eq_1 Const.eq2_lid
-              && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that miss their implicit arguments
+              && S.fv_eq_lid fv_eq_2 Const.eq2_lid -> //Unification produces equality applications that may have unconstrainted implicit arguments
         args_eq [s1;s2] [t1;t2]
       | Tm_app(t, args), Tm_app(s, args') -> term_eq t s && args_eq args args'
       | Tm_match(t, pats), Tm_match(t', pats') ->
         List.length pats = List.length pats'
         && List.forall2 (fun (_, _, e) (_, _, e') -> term_eq e e') pats pats'
         && term_eq t t'
-      | Tm_ascribed(t1, Inl t2, _), Tm_ascribed(s1, Inl s2, _) ->
+      | Tm_ascribed(t1, (Inl t2, _), _), Tm_ascribed(s1, (Inl s2, _), _) ->
         term_eq t1 s1 && term_eq t2 s2
       | Tm_let((is_rec, lbs), t), Tm_let((is_rec',lbs'), s) when is_rec=is_rec' ->
         List.length lbs = List.length lbs'

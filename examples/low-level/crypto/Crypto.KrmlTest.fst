@@ -16,6 +16,7 @@ module Crypto.KrmlTest
 open FStar.UInt32
 open FStar.Ghost
 open FStar.Buffer
+open FStar.HyperStack.ST
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
@@ -27,6 +28,7 @@ open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 module Plain = Crypto.Plain
 module MAC = Crypto.Symmetric.MAC

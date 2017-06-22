@@ -4,6 +4,27 @@ open FStar.Squash
 val give_witness: #a:Type -> a -> Lemma (ensures a)
 let give_witness #a x = return_squash x
 
+val get_squashed (#b a:Type) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
+let get_squashed #b a =
+  let p = get_proof a in
+  join_squash #b p
+
+val get_equality (#t:Type) (a b:t) : Pure (a == b) (requires (a == b)) (ensures (fun _ -> True))
+let get_equality #t a b = get_squashed #(equals a b) (a == b)
+
+val get_forall (#a:Type) (p:a -> GTot Type0) : Pure (forall (x:a). p x) (requires (forall (x:a). p x)) (ensures (fun _ -> True))
+let get_forall #a p =
+  get_squashed #(x:a -> GTot (p x)) (forall (x:a). p x)
+
+val impl_to_arrow : #a:Type0 -> #b:Type0 -> impl:(a ==> b) -> sx:squash a -> GTot (squash b)
+let impl_to_arrow #a #b impl sx =
+  bind_squash #(a -> GTot b) impl (fun f ->
+  bind_squash sx (fun x ->
+  return_squash (f x)))
+
+val arrow_to_impl : #a:Type0 -> #b:Type0 -> f:(squash a -> GTot (squash b)) -> GTot (a ==> b)
+let arrow_to_impl #a #b f = squash_double_arrow (return_squash (fun x -> f (return_squash x)))
+
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 val forall_intro_gtot  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (p x)) -> Tot (squash (forall (x:a). p x))
 let forall_intro_gtot #a #p $f = return_squash #(forall (x:a). p x) ()
@@ -23,11 +44,21 @@ let forall_intro_squash_gtot #a #p $f =
 	      (squash_double_arrow #a #p (return_squash f))
 	      (fun f -> lemma_forall_intro_gtot #a #p f)
 
+//This one seems more generally useful than the one above
+val forall_intro_squash_gtot_join  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> GTot (squash (p x))) -> Tot (forall (x:a). p x)
+let forall_intro_squash_gtot_join #a #p $f =
+  join_squash
+    (bind_squash #(x:a -> GTot (p x)) #(forall (x:a). p x)
+	      (squash_double_arrow #a #p (return_squash f))
+	      (fun f -> lemma_forall_intro_gtot #a #p f))
+
 val forall_intro  : #a:Type -> #p:(a -> GTot Type) -> $f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro #a #p $f = forall_intro_squash_gtot (lemma_to_squash_gtot #a #p f)
 
 val forall_intro'  : #a:Type -> #p:(a -> GTot Type) -> f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 let forall_intro' #a #p f = forall_intro f
+
+(* val forall_elim : #a:Type -> #p:(a -> GTot Type) -> (forall (x:a). p x) -> v:a -> Lemma (p v) *)
 
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 (#a:Type) (#b:(a -> Type)) (#p:(x:a -> b x -> GTot Type0))
@@ -78,6 +109,16 @@ let move_requires (#a:Type) (#p:a -> Type) (#q:a -> Type)
             | Left hp -> give_witness hp; f x; get_proof (p x ==> q x)
             | Right hnp -> give_witness hnp
           )))
+
+val forall_impl_intro :
+  #a:Type ->
+  #p:(a -> GTot Type) ->
+  #q:(a -> GTot Type) ->
+  $f:(x:a -> (squash(p x)) -> Lemma (q x)) ->
+  Lemma (forall x. p x ==> q x)
+let forall_impl_intro #a #p #q $f =
+  let f' (x:a) : Lemma (requires (p x)) (ensures (q x)) = f x (get_proof (p x)) in
+  forall_intro (move_requires f')
 
 // Thanks KM, CH and SZ
 val impl_intro_gen

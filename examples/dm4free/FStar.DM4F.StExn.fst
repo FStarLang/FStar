@@ -31,13 +31,12 @@ let put (s:int) : stexn unit = fun _ -> (Some (), s)
 let raise (a:Type) : stexn a = fun s -> (None, s)
 
 (* Define the new effect using DM4F *)
-reifiable reflectable new_effect_for_free {
+reifiable reflectable new_effect {
   STEXN: a:Type -> Effect
   with repr    = stexn
      ; return  = return
      ; bind    = bind
-  and effect_actions
-       get     = get
+     ; get     = get
      ; put     = put
      ; raise   = raise
 }
@@ -64,7 +63,7 @@ let div_intrinsic i j =
   if j = 0 then STEXN?.raise int
   else i / j
 
-reifiable let div_extrinsic (i:nat) (j:int) : S int =
+ let div_extrinsic (i:nat) (j:int) : S int =
   if j = 0 then STEXN?.raise int
   else i / j
 

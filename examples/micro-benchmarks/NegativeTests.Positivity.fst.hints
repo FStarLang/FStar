@@ -24,9 +24,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C41",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C41",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_b87d6bbfde336dc7bda327a6b8b57fe0"
       ],
       0
     ],
@@ -37,9 +38,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C42",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C42",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_57bfa41d0d733420720971d3c9002d84"
       ],
       0
     ],
@@ -49,9 +51,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C42",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C42",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_57bfa41d0d733420720971d3c9002d84"
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_57bfa41d0d733420720971d3c9002d84"
       ],
       0
     ],
@@ -70,9 +73,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C61",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C61",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3e14727dacbff8fb05eafdbe79143f6f"
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0
     ],
@@ -82,9 +86,10 @@
       2,
       1,
       [
-        "@query", "disc_equation_NegativeTests.Positivity.C61",
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_NegativeTests.Positivity.C61",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3e14727dacbff8fb05eafdbe79143f6f"
+        "refinement_interpretation_NegativeTests.Positivity_Tm_refine_d189dce05c186475c90958872418b4e6"
       ],
       0
     ],

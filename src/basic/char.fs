@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module FStar.Char
+open FSharp.Compatibility.OCaml
+
 type char' = char
 type char = char'
 let lowercase c = Char.lowercase c
