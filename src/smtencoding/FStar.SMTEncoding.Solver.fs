@@ -247,8 +247,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @[Term.SetOption ("rlimit", string_of_int rlimit)]
         @[Term.CheckSat]
         @(if Options.record_hints() then [Term.GetUnsatCore] else [])
-        @(if Options.print_z3_statistics() || Options.check_hints() then [Term.GetStatistics] else [])
-        @(if Options.check_hints() then [Term.GetReasonUnknown] else [])
+        @(if Options.print_z3_statistics() || Options.check_hints() then [Term.GetStatistics; Term.GetReasonUnknown] else [])
         @suffix in
 
     let check (p:decl) =
