@@ -1,7 +1,7 @@
 open Prims
 type z3version =
   | Z3V_Unknown of Prims.string
-  | Z3V of (Prims.int* Prims.int* Prims.int)
+  | Z3V of (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
 let uu___is_Z3V_Unknown: z3version -> Prims.bool =
   fun projectee  ->
     match projectee with | Z3V_Unknown _0 -> true | uu____16 -> false
@@ -9,8 +9,9 @@ let __proj__Z3V_Unknown__item___0: z3version -> Prims.string =
   fun projectee  -> match projectee with | Z3V_Unknown _0 -> _0
 let uu___is_Z3V: z3version -> Prims.bool =
   fun projectee  -> match projectee with | Z3V _0 -> true | uu____31 -> false
-let __proj__Z3V__item___0: z3version -> (Prims.int* Prims.int* Prims.int) =
-  fun projectee  -> match projectee with | Z3V _0 -> _0
+let __proj__Z3V__item___0:
+  z3version -> (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
+  = fun projectee  -> match projectee with | Z3V _0 -> _0
 let z3version_as_string: z3version -> Prims.string =
   fun uu___94_50  ->
     match uu___94_50 with
@@ -21,32 +22,40 @@ let z3version_as_string: z3version -> Prims.string =
         let uu____57 = FStar_Util.string_of_int k in
         FStar_Util.format3 "%s.%s.%s" uu____55 uu____56 uu____57
 let z3v_compare:
-  z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.int option =
+  z3version ->
+    (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3 ->
+      Prims.int FStar_Pervasives_Native.option
+  =
   fun known  ->
     fun uu____67  ->
       match uu____67 with
       | (w1,w2,w3) ->
           (match known with
-           | Z3V_Unknown uu____76 -> None
+           | Z3V_Unknown uu____76 -> FStar_Pervasives_Native.None
            | Z3V (k1,k2,k3) ->
-               Some
+               FStar_Pervasives_Native.Some
                  (if k1 <> w1
                   then w1 - k1
                   else if k2 <> w2 then w2 - k2 else w3 - k3))
-let z3v_le: z3version -> (Prims.int* Prims.int* Prims.int) -> Prims.bool =
+let z3v_le:
+  z3version ->
+    (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3 ->
+      Prims.bool
+  =
   fun known  ->
     fun wanted  ->
       match z3v_compare known wanted with
-      | None  -> false
-      | Some i -> i >= (Prims.parse_int "0")
-let _z3version: z3version option FStar_ST.ref = FStar_Util.mk_ref None
+      | FStar_Pervasives_Native.None  -> false
+      | FStar_Pervasives_Native.Some i -> i >= (Prims.parse_int "0")
+let _z3version: z3version FStar_Pervasives_Native.option FStar_ST.ref =
+  FStar_Util.mk_ref FStar_Pervasives_Native.None
 let get_z3version: Prims.unit -> z3version =
   fun uu____102  ->
     let prefix1 = "Z3 version " in
     let uu____104 = FStar_ST.read _z3version in
     match uu____104 with
-    | Some version -> version
-    | None  ->
+    | FStar_Pervasives_Native.Some version -> version
+    | FStar_Pervasives_Native.None  ->
         let uu____110 =
           let uu____114 = FStar_Options.z3_exe () in
           FStar_Util.run_proc uu____114 "-version" "" in
@@ -69,7 +78,8 @@ let get_z3version: Prims.unit -> z3version =
                     | i1::i2::i3::[] -> Z3V (i1, i2, i3)
                     | uu____137 -> Z3V_Unknown out)
                | uu____139 -> Z3V_Unknown out in
-             (FStar_ST.write _z3version (Some out1); out1))
+             (FStar_ST.write _z3version (FStar_Pervasives_Native.Some out1);
+              out1))
 let ini_params: Prims.unit -> Prims.string =
   fun uu____147  ->
     let z3_v = get_z3version () in
@@ -104,7 +114,7 @@ let ini_params: Prims.unit -> Prims.string =
        FStar_List.append uu____158 uu____165 in
      FStar_String.concat " " uu____156)
 type label = Prims.string
-type unsat_core = Prims.string Prims.list option
+type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
 type z3status =
   | UNSAT of unsat_core
   | SAT of label Prims.list
@@ -168,21 +178,22 @@ type query_log =
   log_file_name: Prims.unit -> Prims.string;}
 let query_logging: query_log =
   let query_number = FStar_Util.mk_ref (Prims.parse_int "0") in
-  let log_file_opt = FStar_Util.mk_ref None in
+  let log_file_opt = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let used_file_names = FStar_Util.mk_ref [] in
-  let current_module_name = FStar_Util.mk_ref None in
-  let current_file_name = FStar_Util.mk_ref None in
-  let set_module_name n1 = FStar_ST.write current_module_name (Some n1) in
+  let current_module_name = FStar_Util.mk_ref FStar_Pervasives_Native.None in
+  let current_file_name = FStar_Util.mk_ref FStar_Pervasives_Native.None in
+  let set_module_name n1 =
+    FStar_ST.write current_module_name (FStar_Pervasives_Native.Some n1) in
   let get_module_name uu____463 =
     let uu____464 = FStar_ST.read current_module_name in
     match uu____464 with
-    | None  -> failwith "Module name not set"
-    | Some n1 -> n1 in
+    | FStar_Pervasives_Native.None  -> failwith "Module name not set"
+    | FStar_Pervasives_Native.Some n1 -> n1 in
   let new_log_file uu____473 =
     let uu____474 = FStar_ST.read current_module_name in
     match uu____474 with
-    | None  -> failwith "current module not set"
-    | Some n1 ->
+    | FStar_Pervasives_Native.None  -> failwith "current module not set"
+    | FStar_Pervasives_Native.Some n1 ->
         let file_name =
           let uu____481 =
             let uu____485 = FStar_ST.read used_file_names in
@@ -190,13 +201,13 @@ let query_logging: query_log =
               (fun uu____496  ->
                  match uu____496 with | (m,uu____500) -> n1 = m) uu____485 in
           match uu____481 with
-          | None  ->
+          | FStar_Pervasives_Native.None  ->
               ((let uu____504 =
                   let uu____508 = FStar_ST.read used_file_names in
                   (n1, (Prims.parse_int "0")) :: uu____508 in
                 FStar_ST.write used_file_names uu____504);
                n1)
-          | Some (uu____524,k) ->
+          | FStar_Pervasives_Native.Some (uu____524,k) ->
               ((let uu____529 =
                   let uu____533 = FStar_ST.read used_file_names in
                   (n1, (k + (Prims.parse_int "1"))) :: uu____533 in
@@ -205,12 +216,15 @@ let query_logging: query_log =
                   FStar_Util.string_of_int (k + (Prims.parse_int "1")) in
                 FStar_Util.format2 "%s-%s" n1 uu____549)) in
         let file_name1 = FStar_Util.format1 "queries-%s.smt2" file_name in
-        (FStar_ST.write current_file_name (Some file_name1);
+        (FStar_ST.write current_file_name
+           (FStar_Pervasives_Native.Some file_name1);
          (let fh = FStar_Util.open_file_for_writing file_name1 in
-          FStar_ST.write log_file_opt (Some fh); fh)) in
+          FStar_ST.write log_file_opt (FStar_Pervasives_Native.Some fh); fh)) in
   let get_log_file uu____563 =
     let uu____564 = FStar_ST.read log_file_opt in
-    match uu____564 with | None  -> new_log_file () | Some fh -> fh in
+    match uu____564 with
+    | FStar_Pervasives_Native.None  -> new_log_file ()
+    | FStar_Pervasives_Native.Some fh -> fh in
   let append_to_log str =
     let uu____574 = get_log_file () in
     FStar_Util.append_to_file uu____574 str in
@@ -218,16 +232,19 @@ let query_logging: query_log =
     let dir_name =
       let uu____580 = FStar_ST.read current_file_name in
       match uu____580 with
-      | None  ->
+      | FStar_Pervasives_Native.None  ->
           let dir_name =
             let uu____586 = FStar_ST.read current_module_name in
             match uu____586 with
-            | None  -> failwith "current module not set"
-            | Some n1 -> FStar_Util.format1 "queries-%s" n1 in
+            | FStar_Pervasives_Native.None  ->
+                failwith "current module not set"
+            | FStar_Pervasives_Native.Some n1 ->
+                FStar_Util.format1 "queries-%s" n1 in
           (FStar_Util.mkdir true dir_name;
-           FStar_ST.write current_file_name (Some dir_name);
+           FStar_ST.write current_file_name
+             (FStar_Pervasives_Native.Some dir_name);
            dir_name)
-      | Some n1 -> n1 in
+      | FStar_Pervasives_Native.Some n1 -> n1 in
     let qnum = FStar_ST.read query_number in
     (let uu____602 =
        let uu____603 = FStar_ST.read query_number in
@@ -246,15 +263,19 @@ let query_logging: query_log =
   let close_log uu____621 =
     let uu____622 = FStar_ST.read log_file_opt in
     match uu____622 with
-    | None  -> ()
-    | Some fh -> (FStar_Util.close_file fh; FStar_ST.write log_file_opt None) in
+    | FStar_Pervasives_Native.None  -> ()
+    | FStar_Pervasives_Native.Some fh ->
+        (FStar_Util.close_file fh;
+         FStar_ST.write log_file_opt FStar_Pervasives_Native.None) in
   let log_file_name uu____635 =
     let uu____636 = FStar_ST.read current_file_name in
-    match uu____636 with | None  -> failwith "no log file" | Some n1 -> n1 in
+    match uu____636 with
+    | FStar_Pervasives_Native.None  -> failwith "no log file"
+    | FStar_Pervasives_Native.Some n1 -> n1 in
   { get_module_name; set_module_name; write_to_log; close_log; log_file_name
   }
 let bg_z3_proc: bgproc =
-  let the_z3proc = FStar_Util.mk_ref None in
+  let the_z3proc = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let new_proc =
     let ctr = FStar_Util.mk_ref (- (Prims.parse_int "1")) in
     fun uu____653  ->
@@ -267,10 +288,13 @@ let bg_z3_proc: bgproc =
       new_z3proc uu____654 in
   let z3proc uu____666 =
     (let uu____668 =
-       let uu____669 = FStar_ST.read the_z3proc in uu____669 = None in
+       let uu____669 = FStar_ST.read the_z3proc in
+       uu____669 = FStar_Pervasives_Native.None in
      if uu____668
      then
-       let uu____675 = let uu____677 = new_proc () in Some uu____677 in
+       let uu____675 =
+         let uu____677 = new_proc () in
+         FStar_Pervasives_Native.Some uu____677 in
        FStar_ST.write the_z3proc uu____675
      else ());
     (let uu____682 = FStar_ST.read the_z3proc in FStar_Util.must uu____682) in
@@ -280,15 +304,17 @@ let bg_z3_proc: bgproc =
   let refresh uu____703 =
     let proc = grab () in
     FStar_Util.kill_process proc;
-    (let uu____707 = let uu____709 = new_proc () in Some uu____709 in
+    (let uu____707 =
+       let uu____709 = new_proc () in FStar_Pervasives_Native.Some uu____709 in
      FStar_ST.write the_z3proc uu____707);
     query_logging.close_log ();
     release () in
   let restart uu____717 =
     FStar_Util.monitor_enter ();
     query_logging.close_log ();
-    FStar_ST.write the_z3proc None;
-    (let uu____725 = let uu____727 = new_proc () in Some uu____727 in
+    FStar_ST.write the_z3proc FStar_Pervasives_Native.None;
+    (let uu____725 =
+       let uu____727 = new_proc () in FStar_Pervasives_Native.Some uu____727 in
      FStar_ST.write the_z3proc uu____725);
     FStar_Util.monitor_exit () in
   { grab; release; refresh; restart }
@@ -300,7 +326,10 @@ let at_log_file: Prims.unit -> Prims.string =
       let uu____735 = query_logging.log_file_name () in
       Prims.strcat "@" uu____735
     else ""
-let doZ3Exe': Prims.bool -> Prims.string -> (z3status* z3statistics) =
+let doZ3Exe':
+  Prims.bool ->
+    Prims.string -> (z3status,z3statistics) FStar_Pervasives_Native.tuple2
+  =
   fun fresh1  ->
     fun input  ->
       let parse z3out =
@@ -314,13 +343,14 @@ let doZ3Exe': Prims.bool -> Prims.string -> (z3status* z3statistics) =
               FStar_Util.substring s1 (Prims.parse_int "1")
                 ((FStar_String.length s1) - (Prims.parse_int "2")) in
             if FStar_Util.starts_with s2 "error"
-            then None
+            then FStar_Pervasives_Native.None
             else
               (let uu____779 =
                  FStar_All.pipe_right (FStar_Util.split s2 " ")
                    (FStar_Util.sort_with FStar_String.compare) in
-               FStar_All.pipe_right uu____779 (fun _0_28  -> Some _0_28)) in
-          let core = FStar_Util.mk_ref None in
+               FStar_All.pipe_right uu____779
+                 (fun _0_28  -> FStar_Pervasives_Native.Some _0_28)) in
+          let core = FStar_Util.mk_ref FStar_Pervasives_Native.None in
           let statistics = FStar_Util.smap_create (Prims.parse_int "0") in
           let reason_unknown = FStar_Util.mk_ref "" in
           let in_core = FStar_Util.mk_ref false in
@@ -449,8 +479,10 @@ let doZ3Exe': Prims.bool -> Prims.string -> (z3status* z3statistics) =
            let stdout1 = FStar_Util.ask_process proc input in
            bg_z3_proc.release (); stdout1) in
       parse (FStar_Util.trim_string stdout1)
-let doZ3Exe: Prims.bool -> Prims.string -> (z3status* z3statistics) =
-  fun fresh1  -> fun input  -> doZ3Exe' fresh1 input
+let doZ3Exe:
+  Prims.bool ->
+    Prims.string -> (z3status,z3statistics) FStar_Pervasives_Native.tuple2
+  = fun fresh1  -> fun input  -> doZ3Exe' fresh1 input
 let z3_options: Prims.unit -> Prims.string =
   fun uu____995  ->
     "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n"
@@ -471,8 +503,10 @@ let uu___is_Default: error_kind -> Prims.bool =
   fun projectee  ->
     match projectee with | Default  -> true | uu____1058 -> false
 type z3job =
-  ((unsat_core,(FStar_SMTEncoding_Term.error_labels* error_kind))
-    FStar_Util.either* Prims.int* z3statistics) job
+  ((unsat_core,(FStar_SMTEncoding_Term.error_labels,error_kind)
+                 FStar_Pervasives_Native.tuple2)
+     FStar_Util.either,Prims.int,z3statistics)
+    FStar_Pervasives_Native.tuple3 job
 let job_queue: z3job Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let pending_jobs: Prims.int FStar_ST.ref =
   FStar_Util.mk_ref (Prims.parse_int "0")
@@ -484,8 +518,10 @@ let z3_job:
     FStar_SMTEncoding_Term.error_labels ->
       Prims.string ->
         Prims.unit ->
-          ((unsat_core,(FStar_SMTEncoding_Term.error_labels* error_kind))
-            FStar_Util.either* Prims.int* z3statistics)
+          ((unsat_core,(FStar_SMTEncoding_Term.error_labels,error_kind)
+                         FStar_Pervasives_Native.tuple2)
+             FStar_Util.either,Prims.int,z3statistics)
+            FStar_Pervasives_Native.tuple3
   =
   fun fresh1  ->
     fun label_messages  ->
@@ -534,10 +570,13 @@ let z3_job:
                                             (fun uu____1279  ->
                                                match uu____1279 with
                                                | (m,uu____1286,uu____1287) ->
-                                                   (fst m) = l)) in
+                                                   (FStar_Pervasives_Native.fst
+                                                      m)
+                                                     = l)) in
                                      match uu____1261 with
-                                     | None  -> []
-                                     | Some (lbl,msg,r) -> [(lbl, msg, r)])) in
+                                     | FStar_Pervasives_Native.None  -> []
+                                     | FStar_Pervasives_Native.Some
+                                         (lbl,msg,r) -> [(lbl, msg, r)])) in
                            let uu____1332 =
                              let uu____1343 =
                                let uu____1352 = ekind status in
@@ -564,10 +603,13 @@ let z3_job:
                                             (fun uu____1421  ->
                                                match uu____1421 with
                                                | (m,uu____1428,uu____1429) ->
-                                                   (fst m) = l)) in
+                                                   (FStar_Pervasives_Native.fst
+                                                      m)
+                                                     = l)) in
                                      match uu____1403 with
-                                     | None  -> []
-                                     | Some (lbl,msg,r) -> [(lbl, msg, r)])) in
+                                     | FStar_Pervasives_Native.None  -> []
+                                     | FStar_Pervasives_Native.Some
+                                         (lbl,msg,r) -> [(lbl, msg, r)])) in
                            let uu____1474 =
                              let uu____1485 =
                                let uu____1494 = ekind status in
@@ -594,10 +636,13 @@ let z3_job:
                                             (fun uu____1563  ->
                                                match uu____1563 with
                                                | (m,uu____1570,uu____1571) ->
-                                                   (fst m) = l)) in
+                                                   (FStar_Pervasives_Native.fst
+                                                      m)
+                                                     = l)) in
                                      match uu____1545 with
-                                     | None  -> []
-                                     | Some (lbl,msg,r) -> [(lbl, msg, r)])) in
+                                     | FStar_Pervasives_Native.None  -> []
+                                     | FStar_Pervasives_Native.Some
+                                         (lbl,msg,r) -> [(lbl, msg, r)])) in
                            let uu____1616 =
                              let uu____1627 =
                                let uu____1636 = ekind status in
@@ -766,12 +811,15 @@ let mk_input: FStar_SMTEncoding_Term.decl Prims.list -> Prims.string =
      if uu____2136 then query_logging.write_to_log r else ());
     r
 type z3result =
-  ((unsat_core,(FStar_SMTEncoding_Term.error_labels* error_kind))
-    FStar_Util.either* Prims.int* z3statistics)
+  ((unsat_core,(FStar_SMTEncoding_Term.error_labels,error_kind)
+                 FStar_Pervasives_Native.tuple2)
+     FStar_Util.either,Prims.int,z3statistics)
+    FStar_Pervasives_Native.tuple3
 type cb = z3result -> Prims.unit
 let ask_1_core:
   (FStar_SMTEncoding_Term.decls_t ->
-     (FStar_SMTEncoding_Term.decls_t* Prims.bool))
+     (FStar_SMTEncoding_Term.decls_t,Prims.bool)
+       FStar_Pervasives_Native.tuple2)
     ->
     FStar_SMTEncoding_Term.error_labels ->
       FStar_SMTEncoding_Term.decls_t -> cb -> Prims.unit
@@ -796,10 +844,12 @@ let ask_1_core:
                  })
 let ask_n_cores:
   (FStar_SMTEncoding_Term.decls_t ->
-     (FStar_SMTEncoding_Term.decls_t* Prims.bool))
+     (FStar_SMTEncoding_Term.decls_t,Prims.bool)
+       FStar_Pervasives_Native.tuple2)
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t -> scope_t option -> cb -> Prims.unit
+      FStar_SMTEncoding_Term.decls_t ->
+        scope_t FStar_Pervasives_Native.option -> cb -> Prims.unit
   =
   fun filter_theory  ->
     fun label_messages  ->
@@ -809,8 +859,8 @@ let ask_n_cores:
             let theory =
               let uu____2237 =
                 match scope with
-                | Some s -> FStar_List.rev s
-                | None  ->
+                | FStar_Pervasives_Native.Some s -> FStar_List.rev s
+                | FStar_Pervasives_Native.None  ->
                     (FStar_ST.write bg_scope [];
                      (let uu____2248 = FStar_ST.read fresh_scope in
                       FStar_List.rev uu____2248)) in
@@ -829,10 +879,12 @@ let ask_n_cores:
                   }
 let ask:
   (FStar_SMTEncoding_Term.decls_t ->
-     (FStar_SMTEncoding_Term.decls_t* Prims.bool))
+     (FStar_SMTEncoding_Term.decls_t,Prims.bool)
+       FStar_Pervasives_Native.tuple2)
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t -> scope_t option -> cb -> Prims.unit
+      FStar_SMTEncoding_Term.decls_t ->
+        scope_t FStar_Pervasives_Native.option -> cb -> Prims.unit
   =
   fun filter1  ->
     fun label_messages  ->

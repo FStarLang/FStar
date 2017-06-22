@@ -63,9 +63,6 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
   let codegen_libs = FStar_Options.codegen_libs() in
   match l with
   | [] -> mk_lident sym
-  | ["FStar"; "Pervasives"] when BatList.mem sym ["Some"; "None"] ->
-     (* as in the original printer, stripping module from some constructors *)
-     mk_lident sym
   | hd::tl ->
      let m_name = !current_module in
      let suffix, prefix =
@@ -87,8 +84,6 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
 
 
 (* names of F* functions which need to be handled differently *)
-let fst_ident = path_to_ident (["FStar"; "Pervasives"], "fst")
-let snd_ident = path_to_ident (["FStar"; "Pervasives"], "snd")
 let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
@@ -164,19 +159,9 @@ let rec build_core_type (ty: mlty): core_type =
      let label = Nolabel in
      Typ.mk (Ptyp_arrow (label,c_ty1,c_ty2))
   | MLTY_Named (tys, path) ->
-     let c_tys = map build_core_type tys in
-     let p = path_to_ident path in
-     (match path with
-      | (["FStar"; "Pervasives"], c) ->
-        if ((BatString.length c == 6) &&
-            (BatString.equal (BatString.sub c 0 5) "tuple")) then
-          (* resugar tuples (Prims.tupleX) *)
-          Typ.mk (Ptyp_tuple (map build_core_type tys))
-        else if BatString.equal c "option" then
-          Typ.mk (Ptyp_constr (path_to_ident ([], "option"), (map build_core_type tys)))
-        else
-          Typ.mk (Ptyp_constr (p, c_tys))
-      | _ -> Typ.mk (Ptyp_constr (p, c_tys)))
+    let c_tys = map build_core_type tys in
+    let p = path_to_ident path in
+    Typ.mk (Ptyp_constr (p, c_tys))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
 
@@ -292,10 +277,6 @@ and resugar_app f args es: expression =
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with" in
     Exp.try_ body variants
-  | Pexp_ident x when (x = fst_ident) ->
-    Exp.apply (Exp.ident (mk_lident "fst")) args
-  | Pexp_ident x when (x = snd_ident) ->
-    Exp.apply (Exp.ident (mk_lident "snd")) args
   | Pexp_ident x when (x = raise_ident) ->
     Exp.apply (Exp.ident (mk_lident "raise")) args
   | _ -> Exp.apply f args
@@ -366,23 +347,18 @@ let build_ty_manifest (b: mltybody): core_type option=
   | MLTD_DType l -> None
 
 
-let skip_type_defn (current_module:string) (type_name:string) :bool =
-  current_module = "FStar_Pervasives" && type_name = "option"
-
-let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration option =
-  if skip_type_defn !current_module x then None
-  else
-    let ptype_name = match mangle_opt with
-      | Some y -> mk_sym y
-      | None -> mk_sym x in
-    let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
-    let (ptype_manifest: core_type option) = BatOption.map_default build_ty_manifest None body in
-    let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-    Some (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name)
+let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration =
+  let ptype_name = match mangle_opt with
+    | Some y -> mk_sym y
+    | None -> mk_sym x in
+  let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
+  let (ptype_manifest: core_type option) = BatOption.map_default build_ty_manifest None body in
+  let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
+  Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
   let recf = Recursive in
-  let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in
+  let type_declarations = map build_one_tydecl td in
   if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
 
 let build_exn (sym, tys): extension_constructor =

@@ -15,11 +15,6 @@ assume new type udpListener: Type0
 // Equality of sockets
 assume HasEq_socket: hasEq socket
 
-(* Definition of the Exception effect based on HyperHeap ST *)
-effect EXT (a:Type) = ST a
-  (requires (fun _ -> True))
-  (ensures (fun h0 _ h1 -> h0 == h1))
-
 (* Server side *)
 assume val listen: string -> nat -> EXT udpListener
 assume val accept: udpListener -> EXT socket

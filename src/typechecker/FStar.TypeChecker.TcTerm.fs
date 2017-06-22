@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -37,6 +38,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module Const = FStar.Parser.Const
 
 
 
@@ -1140,8 +1142,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-			     S.fv_eq_lid fv Syntax.Const.op_And ||
-			     S.fv_eq_lid fv Syntax.Const.op_Or
+			     S.fv_eq_lid fv Parser.Const.op_And ||
+			     S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1461,7 +1463,7 @@ and tc_eqn scrutinee env branch
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
   let when_condition = match when_clause with
         | None -> None
-        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w Const.exp_true_bool in
+        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
@@ -1545,7 +1547,7 @@ and tc_eqn scrutinee env branch
                         | _ ->
                             let disc = S.fvar discriminator Delta_equational None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
-                            [U.mk_eq2 U_zero U.t_bool disc Const.exp_true_bool]
+                            [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
             in
 

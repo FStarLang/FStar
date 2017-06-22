@@ -1,6 +1,7 @@
 type int64 = Int64.t
 type uint8 = int
 type t = int64
+type t' = t
                
 let v (x:int64) : Prims.int = Prims.parse_int (Int64.to_string x)
 

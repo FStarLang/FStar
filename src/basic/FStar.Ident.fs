@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Ident
 open Prims
+open FStar.ST
 open FStar.All
 open FStar.Range
 

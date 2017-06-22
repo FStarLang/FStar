@@ -1,13 +1,14 @@
 ﻿#light "off"
 module FStar.Tactics.Embedding
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module C = FStar.Const
@@ -32,7 +33,7 @@ let fstar_tactics_binders= mk_tactic_lid_as_term "binders"
 let fstar_tactics_goal   = mk_tactic_lid_as_term "goal"
 let fstar_tactics_goals  = mk_tactic_lid_as_term "goals"
 let fstar_tactics_formula= mk_tactic_lid_as_term "formula"
-let fstar_tactics_embed  = lid_as_tm SC.fstar_tactics_embed_lid
+let fstar_tactics_embed  = lid_as_tm PC.fstar_tactics_embed_lid
 let fstar_tactics_term_view = mk_tactic_lid_as_term "term_view"
 
 let lid_as_data_tm l = S.fv_to_tm (S.lid_as_fv l Delta_constant (Some Data_ctor))
@@ -87,7 +88,7 @@ let ord_Lt = lid_as_data_tm ord_Lt_lid
 let ord_Eq = lid_as_data_tm ord_Eq_lid
 let ord_Gt = lid_as_data_tm ord_Gt_lid
 
-let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
+let lid_Mktuple2 = PC.mk_tuple_data_lid 2 Range.dummyRange
 
 let protect_embedded_term (t:typ) (x:term) =
     S.mk_Tm_app fstar_tactics_embed [S.iarg t; S.as_arg x] None x.pos
@@ -97,7 +98,7 @@ let type_of_embedded : term -> typ =
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n, args with
         | Tm_fvar fv, [(t,_); _]
-            when S.fv_eq_lid fv SC.fstar_tactics_embed_lid ->
+            when S.fv_eq_lid fv PC.fstar_tactics_embed_lid ->
           t
         | _ ->
           failwith (BU.format1 "Not a protected embedded term (1): %s" (Print.term_to_string t))
@@ -107,7 +108,7 @@ let un_protect_embedded_term : term -> term =
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n, args with
         | Tm_fvar fv, [_; (x, _)]
-            when S.fv_eq_lid fv SC.fstar_tactics_embed_lid ->
+            when S.fv_eq_lid fv PC.fstar_tactics_embed_lid ->
           x
         | _ ->
           failwith (BU.format1 "Not a protected embedded term (2): %s" (Print.term_to_string t))
@@ -143,30 +144,30 @@ let unembed_pair (pair:term) (unembed_a:term -> 'a) (unembed_b:term -> 'b) : ('a
 let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
     match o with
     | None ->
-      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.none_lid) [U_zero])
+      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.none_lid) [U_zero])
                   [S.iarg typ]
                   None Range.dummyRange
     | Some a ->
-      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.some_lid) [U_zero])
+      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.some_lid) [U_zero])
                   [S.iarg typ; S.as_arg (embed_a a)]
                   None Range.dummyRange
 
 let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
    let hd, args = U.head_and_args o in
    match (U.un_uinst hd).n, args with
-   | Tm_fvar fv, _ when S.fv_eq_lid fv SC.none_lid -> None
-   | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv SC.some_lid ->
+   | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> None
+   | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
      Some (unembed_a a)
    | _ -> failwith "Not an embedded option"
 
 let rec embed_list (embed_a: ('a -> term)) (t_a:term) (l:list<'a>) : term =
     match l with
-    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm FStar.Syntax.Const.nil_lid) [U_zero])
+    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.nil_lid) [U_zero])
                         [S.iarg t_a]
                         None
                         Range.dummyRange
     | hd::tl ->
-            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm FStar.Syntax.Const.cons_lid) [U_zero])
+            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.cons_lid) [U_zero])
                         [S.iarg t_a;
                          S.as_arg (embed_a hd);
                          S.as_arg (embed_list embed_a t_a tl)]
@@ -178,10 +179,10 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
     let hd, args = U.head_and_args l in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, _
-        when S.fv_eq_lid fv SC.nil_lid -> []
+        when S.fv_eq_lid fv PC.nil_lid -> []
 
     | Tm_fvar fv, [_t; (hd, _); (tl, _)]
-        when S.fv_eq_lid fv SC.cons_lid ->
+        when S.fv_eq_lid fv PC.cons_lid ->
       unembed_a hd :: unembed_list unembed_a tl
 
     | _ ->
@@ -236,9 +237,9 @@ let unembed_state (env:Env.env) (s:term) : state =
     let s = U.unascribe s in
     unembed_pair s (unembed_goals env) (unembed_goals env)
 
-let embed_unit (u:unit) : term = SC.exp_unit
+let embed_unit (u:unit) : term = U.exp_unit
 let unembed_unit (_:term) :unit = ()
-let embed_bool (b:bool) : term = if b then SC.exp_true_bool else SC.exp_false_bool
+let embed_bool (b:bool) : term = if b then U.exp_true_bool else U.exp_false_bool
 let unembed_bool (t:term) : bool =
     match (SS.compress t).n with
     | Tm_constant(Const.Const_bool b) -> b
@@ -298,14 +299,14 @@ type formula =
 let embed_formula (f:formula) : term =
     let encode_app (l:Ident.lid) (args:args) : term =
         let hd =
-            if Ident.lid_equals l SC.true_lid then fstar_tactics_True_
-            else if Ident.lid_equals l SC.false_lid then fstar_tactics_False_
-            else if Ident.lid_equals l SC.and_lid then fstar_tactics_And
-            else if Ident.lid_equals l SC.or_lid then fstar_tactics_Or
-            else if Ident.lid_equals l SC.not_lid then fstar_tactics_Not
-            else if Ident.lid_equals l SC.imp_lid then fstar_tactics_Implies
-            else if Ident.lid_equals l SC.iff_lid then fstar_tactics_Iff
-            else if Ident.lid_equals l SC.eq2_lid then fstar_tactics_Eq
+            if Ident.lid_equals l PC.true_lid then fstar_tactics_True_
+            else if Ident.lid_equals l PC.false_lid then fstar_tactics_False_
+            else if Ident.lid_equals l PC.and_lid then fstar_tactics_And
+            else if Ident.lid_equals l PC.or_lid then fstar_tactics_Or
+            else if Ident.lid_equals l PC.not_lid then fstar_tactics_Not
+            else if Ident.lid_equals l PC.imp_lid then fstar_tactics_Implies
+            else if Ident.lid_equals l PC.iff_lid then fstar_tactics_Iff
+            else if Ident.lid_equals l PC.eq2_lid then fstar_tactics_Eq
             else failwith ("Unrecognized connective" ^ (Ident.string_of_lid l)) in
         match args with
         | [] -> hd
@@ -384,7 +385,7 @@ let embed_const (c:vconst) : term =
         tac_C_Unit
 
     | C_Int s ->
-        S.mk_Tm_app tac_C_Int [S.as_arg (SC.exp_int s)]
+        S.mk_Tm_app tac_C_Int [S.as_arg (U.exp_int s)]
                     None Range.dummyRange
 
 let embed_term_view (t:term_view) : term =
@@ -486,7 +487,7 @@ let inspectfv (fv:fv) : list<string> =
 
 let packfv (ns:list<string>) : fv =
     // TODO: Delta_equational and None ok?
-    lid_as_fv (SC.p2l ns) Delta_equational None
+    lid_as_fv (PC.p2l ns) Delta_equational None
 
 let inspectbv (b:binder) : string =
     Print.bv_to_string (fst b)
@@ -585,10 +586,10 @@ let pack (tv:term_view) : term =
         U.refine bv t
 
     | Tv_Const (C_Unit) ->
-        SC.exp_unit
+        U.exp_unit
 
     | Tv_Const (C_Int s) ->
-        SC.exp_int s
+        U.exp_int s
 
     | _ ->
         failwith "pack: unexpected term view"

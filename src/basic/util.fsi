@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Util
+open FStar.ST
 open FStar.All
 open System.IO
 

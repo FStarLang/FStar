@@ -18,6 +18,7 @@
 #light "off"
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -30,7 +31,7 @@ module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module A  = FStar.Parser.AST
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module D = FStar.Parser.ToDocument
@@ -597,7 +598,7 @@ let rec resugar_term (t : S.term) : A.term =
                     let head, universes = aux head in
                     let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
                     let args = List.map (fun (t, _) -> (resugar_term t, A.Nothing)) args in
-                    if (U.is_tuple_data_lid' head) then
+                    if (C.is_tuple_data_lid' head) then
                       // ToDocument doesn't expect uvar that is added by the
                       // typechecker in tuple constructor
                       // TODO: where should be store the universe information?
@@ -788,9 +789,9 @@ and resugar_pat (p:S.pat) : A.pattern =
       let args = List.map(fun (p, b) -> aux p) args in
       mk (A.PatList(args))
 
-    | Pat_cons(fv, args) when U.is_tuple_data_lid' fv.fv_name.v || U.is_dtuple_data_lid' fv.fv_name.v ->
+    | Pat_cons(fv, args) when C.is_tuple_data_lid' fv.fv_name.v || C.is_dtuple_data_lid' fv.fv_name.v ->
       let args = List.map(fun (p, b) -> aux p) args in
-      if (U.is_dtuple_data_lid' fv.fv_name.v) then
+      if (C.is_dtuple_data_lid' fv.fv_name.v) then
         mk (A.PatTuple(args, true))
       else
         mk (A.PatTuple(args, false))

@@ -2,7 +2,7 @@ module Test
 
 module DM = FStar.DependentMap
 module S  = FStar.Pointer
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 type point_fd =
 | X

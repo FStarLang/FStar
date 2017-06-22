@@ -10,6 +10,7 @@ open FStar.UInt64
 open FStar.Int.Cast
 (** Effects and memory layout *)
 open FStar.HyperStack
+open FStar.HyperStack.ST
 (** Buffers *)
 open FStar.Buffer
 (** Mathematical definitions *)
@@ -30,6 +31,7 @@ module U8  = FStar.UInt8
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module HS  = FStar.HyperStack
+module ST  = FStar.HyperStack.ST
 
 (* 2016-11-22: we now forbid opening the current module name as a
 namespace, so we need to make the following abbrevs explicit *)
