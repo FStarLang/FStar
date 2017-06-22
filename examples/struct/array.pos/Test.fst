@@ -34,7 +34,7 @@ let caller
   (ensures (fun _ z _ -> z == 18))
 = HST.push_frame();
   let dm = S.struct_create struct (function | "I" -> 18 | "B" -> true) in
-  let b = S.buffer_of_array_pointer (S.screate (S.TArray 2ul struct_t) (Seq.create 2 dm)) in
+  let b = S.buffer_of_array_pointer (S.screate (S.TArray 2ul struct_t) (Some (Seq.create 2 dm))) in
   let pfrom : obj = S.pointer_of_buffer_cell b (UInt32.uint_to_t 0) in
   let pto : obj = S.pointer_of_buffer_cell b (UInt32.uint_to_t 1) in
   let z = callee pfrom pto in
