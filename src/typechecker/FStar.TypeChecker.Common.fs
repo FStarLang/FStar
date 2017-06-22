@@ -75,6 +75,7 @@ let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) 
 
 
 let t_list_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [S.as_arg t] (Some Util.ktype0.n) Range.dummyRange
+let t_option_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [S.as_arg t] (Some Util.ktype0.n) Range.dummyRange
 
 let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) (Some t_unit.n) Range.dummyRange
 let mk_by_tactic tac f =

@@ -209,3 +209,9 @@ let t_binders:
   =
   let uu____316 = fstar_refl_syntax_lid "binders" in
   FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____316
+let t_norm_step:
+  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+    FStar_Syntax_Syntax.syntax
+  =
+  let uu____321 = fstar_refl_syntax_lid "norm_step" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____321

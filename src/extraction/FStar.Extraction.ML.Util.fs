@@ -347,6 +347,7 @@ let rec mk_tac_param_type (t: term): mlexpr' =
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> fstar_refl_data_prefix "t_term"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> fstar_refl_data_prefix "t_fv"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binder") -> fstar_refl_data_prefix "t_binders"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "norm_step") -> fstar_refl_data_prefix "t_norm_step"
     | Tm_app (h, args) ->
        (match (FStar.Syntax.Subst.compress h).n with
         | Tm_uinst (h', _) ->
@@ -354,10 +355,15 @@ let rec mk_tac_param_type (t: term): mlexpr' =
             | Tm_fvar fv when fv_eq_lid fv C.list_lid ->
                 let arg_term = fst (List.hd args) in
                 MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_list_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term])
+            | Tm_fvar fv when fv_eq_lid fv C.option_lid ->
+                let arg_term = fst (List.hd args) in
+                MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_option_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term] )
             | _ -> failwith ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h'))) )
         | _ -> failwith "Impossible")
      | _ -> failwith ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
 
+(* this assumes that functions for embedding/unembedding a type live in the same place
+   and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> mk_embedding m "unit"
@@ -366,6 +372,7 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> mk_embedding m "term"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> mk_embedding m "fvar"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binders") -> mk_embedding m "binders"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "norm_step") -> mk_embedding m "norm_step"
     | Tm_app (h, args) ->
         (match (FStar.Syntax.Subst.compress h).n with
          | Tm_uinst (h', _) ->
@@ -374,7 +381,9 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
                  | Tm_fvar fv when fv_eq_lid fv C.list_lid ->
                      let arg_term = fst (List.hd args) in
                      "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
-                //  | Tm_fvar fv when fv_eq_lid fv C.option_lid -> TODO
+                 | Tm_fvar fv when fv_eq_lid fv C.option_lid ->
+                     let arg_term = fst (List.hd args) in
+                     "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
                  | _ -> failwith ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))) in
             let hargs =
                 match m with

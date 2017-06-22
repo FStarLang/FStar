@@ -109,3 +109,5 @@ let t_binder = TC.tabbrev <| fstar_refl_types_lid "binder"
 let t_term = TC.tabbrev <| fstar_refl_types_lid "term"
 let t_fv = TC.tabbrev <| fstar_refl_types_lid "fv"
 let t_binders = TC.tabbrev <| fstar_refl_syntax_lid "binders"
+
+let t_norm_step = TC.tabbrev <| fstar_refl_syntax_lid "norm_step"
