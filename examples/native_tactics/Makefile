@@ -6,7 +6,9 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 .PRECIOUS: %.ml
 
 %.ml: %.fst
-	$(FSTAR) $(OTHERFLAGS) --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
+	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
+	@# Sneaky fix...
+	sed -i 's/Reflection_Syntax\.\(Tv\|C_\)/Reflection_Data.\1/g' *.ml
 	cat $(patsubst %.fst,%,$<).fixup >> $@
 
 %.cmxs: %.ml
