@@ -113,6 +113,8 @@ let parse fn =
        let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
        Inl (frags, non_polymorphic_nil)
   with
+    | Empty_frag ->
+        Inl (Inl [], [])
     | Error(msg, r) ->
       Inr (msg, r)
     | e ->

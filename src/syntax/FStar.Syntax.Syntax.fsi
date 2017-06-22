@@ -94,7 +94,6 @@ and branch = pat * option<term> * term                           (* optional whe
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
@@ -272,8 +271,7 @@ type action = {
     action_typ: typ
 }
 type eff_decl = {
-    qualifiers  :list<qualifier>;  //[Reify;Reflect; ...]
-    cattributes  :list<cflags>;     // default cflags
+    cattributes :list<cflags>;     // default cflags
     mname       :lident;           //STATE_h
     univs       :univ_names;       //initially empty; but after type-checking and generalization, usually the universe of the result type etc.
     binders     :binders;          //heap:Type
@@ -298,49 +296,51 @@ type eff_decl = {
     actions     :list<action>
 }
 
-// JP: there are several issues with these type definition (TODO).
-// 1) octuples hinder readability, make it difficult to maintain code (see
+type sig_metadata = {
+    sigmeta_active:bool;
+    sigmeta_fact_db_ids:list<string>;
+}
+
+// JP/NS:
+//    the n-tuples hinder readability, make it difficult to maintain code (see
 //    lids_of_sigelt in syntax/util.fs) and do not help being familiar with the
-//    code. We should use a record beneath Sig_datacons and others.
-// 2) In particular, because of tuples, everytime one needs to extend a Sig_*,
+//    code.
+//    In particular, because of tuples, everytime one needs to extend a Sig_*,
 //    one needs to modify > 30 different places in the code that pattern-match
-//    on a fixed-length tuple. Records would solve this.
-and sigelt' =
+//    on a fixed-length tuple.
+//    Using a record for the arguments of Sig_datacons etc. would help a bit.
+//    But, given F*'s poor syntax for record arguments, this would require writing
+//    (Sig_inductive_typ ({...})) which is also painful, particularly since omitting
+//    the extra parentheses would not be caught by the F# parser during development.
+type sigelt' =
   | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
                        * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
                        * list<lident>              //data constructors for this type
-                       * list<qualifier>
-// JP: the comment below seems out of date -- Sig_tycons is gone?!
-(* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
+(* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
-   i.e., all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
+   i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
-                       * list<qualifier>
                        * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon        of lident
                        * univ_names                 //universe variables of the inductive type it belongs to
                        * typ
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive
-                       * list<qualifier>
                        * list<lident>               //mutually defined types
   | Sig_declare_typ    of lident
                        * univ_names
                        * typ
-                       * list<qualifier>
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<qualifier>
                        * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
                        * formula
-                       * list<qualifier>
   | Sig_new_effect     of eff_decl
   | Sig_new_effect_for_free of eff_decl
   | Sig_sub_effect     of sub_eff
@@ -348,12 +348,14 @@ and sigelt' =
                        * univ_names
                        * binders
                        * comp
-                       * list<qualifier>
                        * list<cflags>
   | Sig_pragma         of pragma
+
 and sigelt = {
-    sigel: sigelt';
-    sigrng: Range.range;
+    sigel:    sigelt';
+    sigrng:   Range.range;
+    sigquals: list<qualifier>;
+    sigmeta:  sig_metadata
 }
 
 type sigelts = list<sigelt>
@@ -378,6 +380,7 @@ val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 val mk: 'a -> Tot<mk_t_a<'a,'b>>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
+val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
 val mk_Tm_uinst:    term -> universes -> term

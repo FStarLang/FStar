@@ -1,5 +1,0 @@
-#push 1 0
-module Test
-let y = 0
-let x = 1
-#end #done-ok #done-nok

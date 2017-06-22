@@ -36,8 +36,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Heap.SelUpd1", "equation_FStar.ST.ref",
-        "function_token_typing_Prims.int", "int_typing",
+        "equation_FStar.ST.ref", "function_token_typing_Prims.int",
+        "int_typing", "lemma_FStar.Heap.lemma_sel_upd1",
         "primitive_Prims.op_Addition", "ref_inversion"
       ],
       0

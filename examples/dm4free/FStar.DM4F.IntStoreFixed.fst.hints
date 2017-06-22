@@ -3,7 +3,7 @@
   [
     [ "FStar.DM4F.IntStoreFixed.bind_is", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "FStar.DM4F.IntStoreFixed.INT_STORE_bind_wp",
+      "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE_bind_wp",
       1,
       2,
       1,
@@ -11,7 +11,7 @@
       0
     ],
     [
-      "FStar.DM4F.IntStoreFixed.INT_STORE___proj__INT_STORE__item__get_elab",
+      "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__get_elab",
       1,
       2,
       1,
@@ -19,7 +19,7 @@
       0
     ],
     [
-      "FStar.DM4F.IntStoreFixed.INT_STORE___proj__INT_STORE__item__put_elab",
+      "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__put_elab",
       1,
       2,
       1,
@@ -37,10 +37,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_Prims.Mktuple2",
-        "fuel_guarded_inversion_Prims.tuple2",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2"
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Mktuple2",
+        "fuel_guarded_inversion_FStar.Pervasives.tuple2",
+        "projection_inverse_FStar.Pervasives.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Mktuple2__2"
       ],
       0
     ],

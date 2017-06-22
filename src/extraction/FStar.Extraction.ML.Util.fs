@@ -202,7 +202,7 @@ let is_type_abstraction = function
     | _ -> false
 
 let is_xtuple (ns, n) =
-    if ns = ["Prims"]
+    if ns = ["Prims"] || ns = ["FStar"; "Pervasives"]
     then match n with
             | "Mktuple2" -> Some 2
             | "Mktuple3" -> Some 3
@@ -245,7 +245,7 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs v
 
 
 let is_xtuple_ty (ns, n) =
-    if ns = ["Prims"]
+    if ns = ["FStar"; "Pervasives"]
     then match n with
             | "tuple2" -> Some 2
             | "tuple3" -> Some 3

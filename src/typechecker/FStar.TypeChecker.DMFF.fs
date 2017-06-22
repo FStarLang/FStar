@@ -56,7 +56,6 @@ let empty env tc_const = {
   tc_const = tc_const
 }
 
-
 // Synthesis of WPs from a partial effect definition (in F*) ------------------
 
 let gen_wps_for_free
@@ -100,9 +99,7 @@ let gen_wps_for_free
     | _ ->
         failwith "wp_a doesn't end in Type0" in
 
-  let mk_lid name: lident =
-    lid_of_path (path_of_text (text_of_lid ed.mname ^ "_" ^ name)) Range.dummyRange
-  in
+  let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
   if Env.debug env (Options.Other "ED") then
@@ -806,7 +803,6 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // - the second is [_e_], the elaborated version of [e]
 let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
-  let mk x = mk x None e.pos in
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
@@ -916,7 +912,7 @@ and infer (env: env) (e: term): nm * term * term =
       let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
         let c = bv.sort in
         if is_C c then
-          let xw = S.gen_bv (bv.ppname.idText ^ "^w") None (star_type' env c) in
+          let xw = S.gen_bv (bv.ppname.idText ^ "__w") None (star_type' env c) in
           let x = { bv with sort = trans_F_ env c (S.bv_to_name xw) } in
           let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
           env, S.mk_binder x :: S.mk_binder xw :: acc
@@ -1243,10 +1239,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let bvs, binders = List.split (List.map (fun (bv, q) ->
         let h = bv.sort in
         if is_C h then
-          let w' = S.gen_bv (bv.ppname.idText ^ "-w'") None (star_type' env h) in
+          let w' = S.gen_bv (bv.ppname.idText ^ "__w'") None (star_type' env h) in
           w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q ]
         else
-          let x = S.gen_bv (bv.ppname.idText ^ "-x") None (star_type' env h) in
+          let x = S.gen_bv (bv.ppname.idText ^ "__x") None (star_type' env h) in
           x, [ x, q ]
       ) binders_orig) in
       let binders = List.flatten binders in
@@ -1261,7 +1257,6 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       failwith "impossible trans_F_"
 
 and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
-  let mk x = mk x None h.pos in
   if is_monadic then
     mk_Comp ({
       comp_univs = [U_unknown];

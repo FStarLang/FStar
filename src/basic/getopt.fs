@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.Getopt
+open FSharp.Compatibility.OCaml
 (* A simplified re-implementation of Getopt, a command line parsing tool *)
 let noshort='\000'
 let nolong=""
@@ -29,11 +30,17 @@ type parse_cmdline_res =
   | Error of string
   | Success
 
+let bind l f =
+    match l with
+    | Help
+    | Error _ -> l
+    | Success -> f ()
+
 (* remark: doesn't work with files starting with -- *)
-let rec parse (opts:list<opt>) def ar ix max i =
+let rec parse (opts:list<opt>) def (ar:string []) ix max i =
   if ix > max then Success
   else
-    let arg = ar.(ix) in
+    let arg = ar.[ix] in
     let go_on () = let _ = def arg in parse opts def ar (ix + 1) max (i + 1) in
       if String.length arg < 2 then
         go_on ()
@@ -48,22 +55,22 @@ let rec parse (opts:list<opt>) def ar ix max i =
                        | OneArg (f, _) ->
                            if ix + 1 > max then Error ("last option '" + argtrim + "' takes an argument but has none\n")
                            else
-                             try
-                               f (ar.(ix + 1));
-                               parse opts def ar (ix + 2) max (i + 1)
-                             with _ ->
-                                  Error ("wrong argument given to option '" + argtrim + "'\n"))
+                             let r =
+                                 try (f (ar.[ix + 1]); Success)
+                                 with _ -> Error ("wrong argument given to option '" + argtrim + "'\n")
+                             in bind r (fun () -> parse opts def ar (ix + 2) max (i + 1)))
                 | None -> Error ("unrecognized option '" + arg + "'\n")
           else go_on ()
 
 let parse_cmdline specs others =
-  let len = Array.length Sys.argv in
-  let go_on () = parse specs others Sys.argv 1 (len - 1) 0 in
+  let argv = System.Environment.GetCommandLineArgs() in
+  let len = Array.length argv in
+  let go_on () = parse specs others argv 1 (len - 1) 0 in
     if len = 1 then Help
     else go_on ()
 
 let parse_string specs others (str:string) =
-    let args = str.Split([|' '|]) in
+    // F#'s str.Split will return empty strings when there's two spaces together
+    // or at the boundaries. Filter them out, so we behave like OCaml
+    let args = Array.filter (fun s -> s <> "") <| str.Split([|' ';'\t'|]) in
     parse specs others args 0 (args.Length - 1) 0
-
-

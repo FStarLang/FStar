@@ -45,7 +45,7 @@ let ideal_ensures
     enc_dec_liveness st aad plain cipher_tag h1 /\
     HS.(h0.tip = h1.tip) /\
     HS.modifies (Set.as_set [st.log_region]) h0 h1 /\
-    HS.modifies_ref st.log_region (TSet.singleton (HS.as_aref (st_ilog st))) h0 h1 /\ (
+    HS.modifies_ref st.log_region (Set.singleton (HS.as_addr (st_ilog st))) h0 h1 /\ (
     let entry = AEADEntry n (Buffer.as_seq h0 aad) 
  			    (v plainlen)
 			    (Plain.sel_plain h0 plainlen plain)

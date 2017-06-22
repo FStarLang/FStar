@@ -81,20 +81,32 @@ type constructor_field = string  //name of the field
                        * bool    //true if the field is projectible
 type constructor_t = (string * list<constructor_field> * sort * int * bool)
 type constructors  = list<constructor_t>
+type fact_db_id =
+    | Name of Ident.lid
+    | Namespace of Ident.lid
+    | Tag of string
+type assumption = {
+    assumption_term: term;
+    assumption_caption: caption;
+    assumption_name: string;
+    assumption_fact_ids:list<fact_db_id>
+}
 type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
   | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of term   * caption * string                   //named top-level assertion
+  | Assume     of assumption
   | Caption    of string
   | Eval       of term
   | Echo       of string
+  | RetainAssumptions of list<string>
   | Push
   | Pop
   | CheckSat
   | GetUnsatCore
   | SetOption  of string * string
-  | PrintStats
+  | GetStatistics
+  | GetReasonUnknown
 type decls_t = list<decl>
 
 type error_label = (fv * string * Range.range)

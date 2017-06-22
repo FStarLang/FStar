@@ -432,10 +432,9 @@ and translate_decl env d: option<decl> =
   | MLM_Ty [ (_, name, _mangled_name, args, Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
-      Some (DTypeVariant (name, List.length args, List.mapi (fun i (cons, ts) ->
-        cons, List.mapi (fun j t ->
-          // TODO: carry the right names
-          BU.format2 "x%s%s" (string_of_int i) (string_of_int j), (translate_type env t, false)
+      Some (DTypeVariant (name, List.length args, List.map (fun (cons, ts) ->
+        cons, List.map (fun (name, t) ->
+          name, (translate_type env t, false)
         ) ts
       ) branches))
 
@@ -477,7 +476,7 @@ and translate_type env t: typ =
   | MLTY_Named ([], (path, type_name)) ->
       // Generate an unbound reference... to be filled in later by glue code.
       TQualified (path, type_name)
-  | MLTY_Named (args, ([ "Prims" ], t)) when BU.starts_with t "tuple" ->
+  | MLTY_Named (args, (ns, t)) when (ns = ["Prims"] || ns = ["FStar"; "Pervasives"]) && BU.starts_with t "tuple" ->
       TTuple (List.map (translate_type env) args)
   | MLTY_Named (args, lid) ->
       if List.length args > 0 then

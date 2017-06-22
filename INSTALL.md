@@ -5,6 +5,7 @@
     * [Testing a binary package](#testing-a-binary-package)
     * [OPAM package](#opam-package)
     * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
+    * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
     * [Running F* from a docker image](#running-f-from-a-docker-image)
   * [Building F* from sources](#building-f-from-sources)
     * [Step 1. Building F* from sources using the F# compiler](#step-1-building-f-from-sources-using-the-f-compiler)
@@ -30,14 +31,17 @@ the [online F\* editor] that's part of the [F\* tutorial].
 
 ## Binary releases ##
 
-Every now and then we release [F\* binaries on GitHub].
+Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
+and for Windows and Linux we also provide **experimental** [automatic weekly builds].
 This is the easiest way to get F\* quickly running on your machine,
-but if the release you use is old you might be missing out on new
+but if the build you use is old you might be missing out on new
 features and bug fixes. Please do not report bugs in old releases
 until making sure they still exist in the `master` branch (see
-Building F\* from sources section below).
+Building F\* from sources section below) or at least in the latest
+[automatic weekly builds].
 
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
+[automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
 
 ### Testing a binary package ###
 
@@ -49,11 +53,11 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.4.0
+        F* 0.9.4.3
         platform=Linux_x86_64
-        compiler=OCaml 4.03.0
-        date=2017-02-02T11:54:08+01:00
-        commit=9fc07cf
+        compiler=OCaml 4.02.3
+        date=2017-05-04T08:24:02+02:00
+        commit=c0784052f
         $ z3 --version
         Z3 version 4.5.0
 
@@ -74,9 +78,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -j6 -C examples
    
-   Note: Currently this is known to fail for the F# build of F\*
-   ([#633](https://github.com/FStarLang/FStar/issues/633)).
-   Use the OCaml build for this or stop passing `--use_hints`.
+   Note: Currently this is [known to fail for the F# build of F\*](https://github.com/FStarLang/FStar/issues/1023).
 
 ### OPAM package ###
 
@@ -101,6 +103,18 @@ For building and installing the latest F\* sources from GitHub (the `master` bra
 instead of the latest release you can do:
 
         $ brew install --HEAD fstar
+        
+### Chocolatey Package on Windows ###
+
+On windows you can use chocolatey package manager to install and update fstar
+    
+    > choco install fstar
+
+or
+    
+    > cinst fstar
+    
+you can find the package description [here](https://chocolatey.org/packages/FStar)
 
 ### Running F* from a docker image ###
 
@@ -201,7 +215,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 4.6.x.y) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 4.8.x.y) and fsharp (version 4.0.1.x)
 
     - On Debian/Ubuntu
 
@@ -216,7 +230,7 @@ Read on for the more complete solution involving Visual Studio itself.
       - http://www.mono-project.com/download/#download-lin
       - http://fsharp.org/use/linux/
 
-    - For Mac OS X install the MRE:
+    - For Mac OS X use HomeBrew or install the MRE:
       - http://www.mono-project.com/download/#download-mac
 
   - Depending on your distribution, you might need to manually import
@@ -232,7 +246,7 @@ Read on for the more complete solution involving Visual Studio itself.
           $ make -C src
 
   - Try out binary using [the instructions above](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#testing-a-binary-package).
-  
+
   - Another thing you can try is bootstrapping the F\* compiler:
 
           $ export PATH=/path/to/fstar/bin:$PATH
@@ -250,7 +264,7 @@ into your `~/.bashrc`.
 
 ### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-Steps 2 and 3 below require a working OCaml (any version from 4.02.2 to 4.04.0) setup.
+Steps 2 and 3 below require a working OCaml setup. Any version of OCaml from 4.02.2 to 4.04.1 should do, but we recommend to F\* developers who plan to commit their extracted ML files to master to stick with 4.02.3, which is the latest OCaml version that works with opam on Windows.
 
 #### Instructions for Windows ####
 
@@ -305,6 +319,9 @@ that's over there (it's optimized for F*). This will install both OCaml and OPAM
    or the OCaml build process (step 3 above).
 
 1. Make sure you follow the instructions above to get a working OCaml setup.
+
+1. On OSX, F\* has some extra dependencies on the GNU version of `head`, `sed`
+   and `find`. These can be installed using `brew install gnu-sed coreutils`.
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F* sources from F# to OCaml using F* by running:

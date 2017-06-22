@@ -24,9 +24,11 @@ open FStar.Const
 
 let mk t : term = mk t None dummyRange
 let p2l l = lid_of_path l dummyRange
-let pconst s     = p2l ["Prims";s]
-let prims_lid    = p2l ["Prims"]
-let fstar_ns_lid = p2l ["FStar"]
+let pconst s       = p2l ["Prims";s]
+let psconst s      = p2l ["FStar"; "Pervasives"; s]
+let prims_lid      = p2l ["Prims"]
+let pervasives_lid = p2l ["FStar"; "Pervasives"]
+let fstar_ns_lid   = p2l ["FStar"]
 
 (* Primitive types *)
 let bool_lid     = pconst "bool"
@@ -37,16 +39,15 @@ let bytes_lid    = pconst "bytes"
 let int_lid      = pconst "int"
 let exn_lid      = pconst "exn"
 let list_lid     = pconst "list"
-let option_lid   = pconst "option"
-let either_lid   = pconst "either"
+let option_lid   = psconst "option"
+let either_lid   = psconst "either"
 let pattern_lid  = pconst "pattern"
 let precedes_lid = pconst "precedes"
 let lex_t_lid    = pconst "lex_t"
 let lexcons_lid  = pconst "LexCons"
 let lextop_lid   = pconst "LexTop"
-let smtpat_lid   = pconst "SMTPat"
-let smtpatT_lid  = pconst "SMTPatT"
-let smtpatOr_lid = pconst "SMTPatOr"
+let smtpat_lid   = pconst "smt_pat"
+let smtpatOr_lid = pconst "smt_pat_or"
 let monadic_lid  = pconst "M"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
@@ -100,10 +101,12 @@ let eq3_lid    = pconst  "eq3"
 let exp_true_bool   = mk (Tm_constant (Const_bool true))
 let exp_false_bool  = mk (Tm_constant (Const_bool false))
 let exp_unit        = mk (Tm_constant (Const_unit))
+let exp_int s       = mk (Tm_constant (Const_int (s,None))) // Makes an (unbounded) integer from its string repr.
+let exp_string s    = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange)))
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
-let some_lid        = pconst  "Some"
-let none_lid        = pconst  "None"
+let some_lid        = psconst  "Some"
+let none_lid        = psconst  "None"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 (* list_append_lid is needed to desugar @ in the compiler *)
@@ -112,6 +115,8 @@ let list_append_lid = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
+let string_of_int_lid = p2l ["Prims"; "string_of_int"]
+let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -194,5 +199,4 @@ let fstar_tactics_lid s = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@[s]) FSt
 let tactic_lid = fstar_tactics_lid "tactic"
 let by_tactic_lid = fstar_tactics_lid "by_tactic"
 let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
-let fstar_tactics_embed_lid = fstar_tactics_lid "embed"
-let fstar_tactics_quote_lid = fstar_tactics_lid "quote"
+let fstar_tactics_embed_lid = fstar_tactics_lid "__embed"
