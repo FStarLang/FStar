@@ -2308,9 +2308,11 @@ let modifies_0_1 (#a:typ) (b:pointer a) h0 h1 h2 : Lemma
 
 (** Concrete allocators, getters and setters *)
 
+#reset-options "--z3rlimit 32"
+
 abstract let screate
   (value:typ)
-  (s: type_of_typ value)
+  (s: option (type_of_typ value))
 : HST.StackInline (pointer value)
   (requires (fun h -> True))
   (ensures (fun (h0:HS.mem) b h1 ->
@@ -2319,8 +2321,16 @@ abstract let screate
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
      /\ Map.domain h1.HS.h == Map.domain h0.HS.h
-     /\ gread h1 b == s))
-= let content: HS.reference pointer_ref_contents =
+     /\ begin match s with
+       | Some s' -> gread h1 b == s'
+       | _ -> True
+       end
+  ))
+= let s = match s with
+  | Some s -> s
+  | _ -> dummy_val value
+  in
+  let content: HS.reference pointer_ref_contents =
      HST.salloc (| value, s |)
   in
   Pointer value (HS.aref_of content) PathBase
@@ -2336,7 +2346,7 @@ private let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h x
 abstract let ecreate
   (t:typ)
   (r:HH.rid)
-  (s: type_of_typ t)
+  (s: option (type_of_typ t))
 : HST.ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r))
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
@@ -2345,9 +2355,16 @@ abstract let ecreate
     /\ h1.HS.tip = h0.HS.tip
     /\ HS.modifies (Set.singleton r) h0 h1
     /\ HS.modifies_ref r Set.empty h0 h1
-    /\ gread h1 b == s
+    /\ begin match s with
+      | Some s' -> gread h1 b == s'
+      | _ -> True
+      end
     /\ ~(is_mm b)))
-= let h0 = HST.get() in
+= let s = match s with
+  | Some s -> s
+  | _ -> dummy_val t
+  in
+  let h0 = HST.get() in
   let content: HS.reference pointer_ref_contents =
      HST.ralloc r (| t, s |)
   in
@@ -2383,8 +2400,6 @@ abstract let read
   let r = reference_of h p in
   let (| _ , c |) = !r in
   path_sel c (Pointer?.p p)
-
-#reset-options "--z3rlimit 32"
 
 abstract val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
   (requires (fun h -> live h b))
