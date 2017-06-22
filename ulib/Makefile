@@ -38,7 +38,7 @@ REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
 EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.*.fsti))
 
 .mgen: *.fst
-	@# creating a dummy file so that the target is not regenerated unless a file has changed
-	touch .mgen
 	mkdir -p ml/extracted
 	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_ALL)
+	@# creating a dummy file so that the target is not regenerated unless a file has changed
+	touch .mgen
