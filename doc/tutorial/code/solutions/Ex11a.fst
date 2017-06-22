@@ -1,5 +1,5 @@
 module Ex11a
-open FStar.ST
+open FStar.HyperStack.ST
 //robot
 
 open FStar.Heap
@@ -7,6 +7,7 @@ open FStar.Set
 open FStar.HyperStack
 
 module HH = FStar.HyperHeap
+module HST = FStar.HyperStack.ST
 
 type rid = HH.rid
 
@@ -216,9 +217,9 @@ let rec fly_robot_army #rs bs =
     //cut (rs == (rs' ++^ Bot?.r b));  //not necesary, doesn't improve speed
     //lemma_bots_tl_disjoint bs;      //not necessary; doesnt' improve speed
     fly b;
-    let h1 = ST.get () in
+    let h1 = HST.get () in
     fly_robot_army bs';
-    let h2 = ST.get () in
+    let h2 = HST.get () in
     lemma_frame_robot_inv_and_flying b rs' h1 h2
 
 #reset-options
