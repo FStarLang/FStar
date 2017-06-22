@@ -58,7 +58,6 @@
     <Compile Include="FStar.Extraction.ML.Code.fs" />
     <Compile Include="FStar.Extraction.ML.PrintML.fsi" />
     <Compile Include="FStar.Extraction.ML.PrintML.fs" />
-    
     <Compile Include="FStar.Extraction.ML.Term.fs" />
     <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />
@@ -116,6 +115,12 @@
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\reflection\reflection.fsproj">
+      <Name>syntax</Name>
+      <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

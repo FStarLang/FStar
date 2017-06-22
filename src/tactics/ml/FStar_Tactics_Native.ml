@@ -4,7 +4,7 @@ open FStar_Syntax_Syntax
 open FStar_Range
 
 open FStar_Tactics
-open FStar_Tactics_Logic
+open FStar_Tactics_Builtins
 
 
 module E = FStar_Tactics_Effect
@@ -42,11 +42,6 @@ let interpret_tactic (ps: proofstate) (t: proofstate -> 'a E.__result) =
     | E.Failed (s, state) -> B.Failed (s, state)
 
 let from_tactic_0 (t: 'b E.tactic): ('b tac) =
-    (*let rtac =
-        (mk_tac (fun (ps: proofstate) ->
-            let (m2: proofstate -> 'b E.__result) = t () in
-            interpret_tactic ps m2
-        )) in rtac*)
     (fun (ps: proofstate) ->
         print_string "In compiled code\n";
         let m = t () in
@@ -59,13 +54,6 @@ let from_tactic_1 (t: 'a -> 'b E.tactic): ('a -> 'b tac) =
             let m = t x in
             let (m2: proofstate -> 'b E.__result) = m () in
             interpret_tactic ps m2) |> mk_tac
-    (*let rtac =
-        (fun (x: 'a) ->
-            mk_tac (fun (ps: proofstate) ->
-                let m = t x in
-                let (m2: proofstate -> 'b E.__result) = m () in
-                interpret_tactic ps m2
-        )) in rtac*)
 
 let from_tactic_2 (t: 'a -> 'b -> 'c E.tactic): ('a -> 'b -> 'c tac) =
     fun (x: 'a) ->
@@ -75,11 +63,3 @@ let from_tactic_2 (t: 'a -> 'b -> 'c E.tactic): ('a -> 'b -> 'c tac) =
                 let m = t x y in
                 let (m2: proofstate -> 'b E.__result) = m () in
                 interpret_tactic ps m2) |> mk_tac
-    (*let rtac =
-        (fun (x: 'a) ->
-            (fun (y: 'b) ->
-                mk_tac (fun (ps: proofstate) ->
-                    let m = t x y in
-                    let (m2: proofstate -> 'c E.__result) = m () in
-                    interpret_tactic ps m2
-        ))) in rtac*)

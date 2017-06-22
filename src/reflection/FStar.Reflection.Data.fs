@@ -103,3 +103,9 @@ let ref_Simpl          = lid_as_data_tm ref_Simpl_lid
 let ref_WHNF           = lid_as_data_tm ref_WHNF_lid
 let ref_Primops        = lid_as_data_tm ref_Primops_lid
 let ref_Delta          = lid_as_data_tm ref_Delta_lid
+
+module TC = FStar.TypeChecker.Common
+let t_binder = TC.tabbrev <| fstar_refl_types_lid "binder"
+let t_term = TC.tabbrev <| fstar_refl_types_lid "term"
+let t_fv = TC.tabbrev <| fstar_refl_types_lid "fv"
+let t_binders = TC.tabbrev <| fstar_refl_syntax_lid "binders"

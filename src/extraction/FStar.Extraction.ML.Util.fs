@@ -333,6 +333,7 @@ let str_to_top_name s = lid_to_top_name (lid_of_str s)
 
 let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s)
 let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s)
+let fstar_refl_data_prefix s = str_to_name ("FStar_Reflection_Data." ^ s)
 let mk_embedding (m: emb_decl) (s: string) =
     match m with
     | Embed -> fstar_refl_basic_prefix ("embed_" ^ s)
@@ -342,10 +343,10 @@ let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> fstar_tc_common_prefix "t_unit"
     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> fstar_tc_common_prefix "t_string"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> fstar_tc_common_prefix "t_binder"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> fstar_tc_common_prefix "t_term"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> fstar_tc_common_prefix "t_fv"
-    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binder") -> fstar_tc_common_prefix "t_binders"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> fstar_refl_data_prefix "t_binder"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> fstar_refl_data_prefix "t_term"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> fstar_refl_data_prefix "t_fv"
+    | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_syntax_lid "binder") -> fstar_refl_data_prefix "t_binders"
     | Tm_app (h, args) ->
        (match (FStar.Syntax.Subst.compress h).n with
         | Tm_uinst (h', _) ->

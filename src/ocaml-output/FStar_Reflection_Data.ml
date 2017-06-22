@@ -185,3 +185,27 @@ let ref_Simpl: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Simpl_lid
 let ref_WHNF: FStar_Syntax_Syntax.term = lid_as_data_tm ref_WHNF_lid
 let ref_Primops: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Primops_lid
 let ref_Delta: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Delta_lid
+let t_binder:
+  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+    FStar_Syntax_Syntax.syntax
+  =
+  let uu____301 = fstar_refl_types_lid "binder" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____301
+let t_term:
+  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+    FStar_Syntax_Syntax.syntax
+  =
+  let uu____306 = fstar_refl_types_lid "term" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____306
+let t_fv:
+  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+    FStar_Syntax_Syntax.syntax
+  =
+  let uu____311 = fstar_refl_types_lid "fv" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____311
+let t_binders:
+  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+    FStar_Syntax_Syntax.syntax
+  =
+  let uu____316 = fstar_refl_syntax_lid "binders" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____316
