@@ -2592,6 +2592,17 @@ let rec solve_deferred_constraints env (g:guard_t) =
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=([], [])}
 
+let last_proof_ns : ref<option<Env.proof_namespace>> = BU.mk_ref None
+
+let maybe_update_proof_ns env : unit =
+    let pns = env.proof_ns in
+    match !last_proof_ns with
+    | None -> last_proof_ns := Some pns
+    | Some old ->
+        if old = pns
+        then ()
+        else (env.solver.refresh (); last_proof_ns := Some pns)
+
 //use_smt flag says whether to use the smt solver to discharge this guard
 //if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
 //if use_smt = false, then None means could not discharge the guard without using smt
@@ -2636,7 +2647,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                     | NonTrivial goal ->
                         FStar.Options.push ();
                         FStar.Options.set opts;
-                        env.solver.refresh ();
+                        maybe_update_proof_ns env;
                         if Env.debug env <| Options.Other "Rel"
                         then Errors.diag (Env.get_range env)
                                          (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
