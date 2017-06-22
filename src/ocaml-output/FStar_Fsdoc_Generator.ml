@@ -1,7 +1,8 @@
 open Prims
 let one_toplevel:
   FStar_Parser_AST.decl Prims.list ->
-    (FStar_Parser_AST.decl* FStar_Parser_AST.decl Prims.list) option
+    (FStar_Parser_AST.decl,FStar_Parser_AST.decl Prims.list)
+      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
   fun decls  ->
     let uu____10 =
@@ -12,14 +13,17 @@ let one_toplevel:
            | uu____17 -> false) decls in
     match uu____10 with
     | (top,nontops) ->
-        (match top with | t::[] -> Some (t, nontops) | uu____37 -> None)
+        (match top with
+         | t::[] -> FStar_Pervasives_Native.Some (t, nontops)
+         | uu____37 -> FStar_Pervasives_Native.None)
 type mforest =
-  | Leaf of (Prims.string* Prims.string)
+  | Leaf of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
   | Branch of mforest FStar_Util.smap
 let uu___is_Leaf: mforest -> Prims.bool =
   fun projectee  ->
     match projectee with | Leaf _0 -> true | uu____59 -> false
-let __proj__Leaf__item___0: mforest -> (Prims.string* Prims.string) =
+let __proj__Leaf__item___0:
+  mforest -> (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | Leaf _0 -> _0
 let uu___is_Branch: mforest -> Prims.bool =
   fun projectee  ->
@@ -28,9 +32,14 @@ let __proj__Branch__item___0: mforest -> mforest FStar_Util.smap =
   fun projectee  -> match projectee with | Branch _0 -> _0
 let htree: mforest FStar_Util.smap =
   FStar_Util.smap_create (Prims.parse_int "50")
-let string_of_optiont f y xo = match xo with | Some x -> f x | None  -> y
+let string_of_optiont f y xo =
+  match xo with
+  | FStar_Pervasives_Native.Some x -> f x
+  | FStar_Pervasives_Native.None  -> y
 let string_of_fsdoco:
-  (Prims.string* (Prims.string* Prims.string) Prims.list) option ->
+  (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
+                  Prims.list)
+    FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option ->
     Prims.string
   =
   fun d  ->
@@ -40,7 +49,8 @@ let string_of_fsdoco:
            let uu____144 = FStar_Parser_AST.string_of_fsdoc x in
            Prims.strcat uu____144 "*)" in
          Prims.strcat "(*" uu____143) "" d
-let string_of_termo: FStar_Parser_AST.term option -> Prims.string =
+let string_of_termo:
+  FStar_Parser_AST.term FStar_Pervasives_Native.option -> Prims.string =
   fun t  -> string_of_optiont FStar_Parser_AST.term_to_string "" t
 let code_wrap: Prims.string -> Prims.string =
   fun s  -> Prims.strcat "```fsharp\n" (Prims.strcat s "\n```\n")
@@ -184,7 +194,7 @@ let decl_documented: FStar_Parser_AST.decl -> Prims.bool =
            | (tycon,doco) ->
                (tyconvars_documented tycon) || (FStar_Util.is_some doco)) tt in
     match d.FStar_Parser_AST.doc with
-    | Some uu____568 -> true
+    | FStar_Pervasives_Native.Some uu____568 -> true
     | uu____569 ->
         (match d.FStar_Parser_AST.d with
          | FStar_Parser_AST.Fsdoc uu____571 -> true
@@ -206,7 +216,8 @@ let document_decl:
                 code_wrap uu____603 in
               w uu____602);
              (match fsdoc with
-              | Some (doc1,_kw) -> w (Prims.strcat "\n" doc1)
+              | FStar_Pervasives_Native.Some (doc1,_kw) ->
+                  w (Prims.strcat "\n" doc1)
               | uu____618 -> ());
              w "")
       else ()
@@ -214,15 +225,20 @@ let document_toplevel name topdecl =
   match topdecl.FStar_Parser_AST.d with
   | FStar_Parser_AST.TopLevelModule uu____637 ->
       (match topdecl.FStar_Parser_AST.doc with
-       | Some (doc1,kw) ->
+       | FStar_Pervasives_Native.Some (doc1,kw) ->
            let uu____655 =
              FStar_List.tryFind
                (fun uu____661  ->
                   match uu____661 with | (k,v1) -> k = "summary") kw in
            (match uu____655 with
-            | None  -> (None, (Some doc1))
-            | Some (uu____674,summary) -> ((Some summary), (Some doc1)))
-       | None  -> (None, None))
+            | FStar_Pervasives_Native.None  ->
+                (FStar_Pervasives_Native.None,
+                  (FStar_Pervasives_Native.Some doc1))
+            | FStar_Pervasives_Native.Some (uu____674,summary) ->
+                ((FStar_Pervasives_Native.Some summary),
+                  (FStar_Pervasives_Native.Some doc1)))
+       | FStar_Pervasives_Native.None  ->
+           (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
   | uu____682 -> raise (FStar_Errors.Err "Not a TopLevelModule")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
@@ -234,7 +250,7 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
     | (name,decls,_mt) ->
         let uu____715 = one_toplevel decls in
         (match uu____715 with
-         | Some (top_decl,other_decls) ->
+         | FStar_Pervasives_Native.Some (top_decl,other_decls) ->
              let on =
                FStar_Options.prepend_output_dir
                  (Prims.strcat name.FStar_Ident.str ".md") in
@@ -246,9 +262,13 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
              (match uu____734 with
               | (summary,comment) ->
                   let summary1 =
-                    match summary with | Some s -> s | None  -> no_summary in
+                    match summary with
+                    | FStar_Pervasives_Native.Some s -> s
+                    | FStar_Pervasives_Native.None  -> no_summary in
                   let comment1 =
-                    match comment with | Some s -> s | None  -> no_comment in
+                    match comment with
+                    | FStar_Pervasives_Native.Some s -> s
+                    | FStar_Pervasives_Native.None  -> no_comment in
                   ((let uu____750 =
                       FStar_Util.format "# module %s" [name.FStar_Ident.str] in
                     w uu____750);
@@ -259,7 +279,7 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
                    FStar_List.iter (document_decl w) other_decls;
                    FStar_Util.close_file fd;
                    name))
-         | None  ->
+         | FStar_Pervasives_Native.None  ->
              let uu____760 =
                let uu____761 =
                  FStar_Util.format1 "No singleton toplevel in module %s"
@@ -271,8 +291,8 @@ let generate: Prims.string Prims.list -> Prims.unit =
     let modules =
       FStar_List.collect
         (fun fn  ->
-           let uu____770 = FStar_Parser_Driver.parse_file fn in fst uu____770)
-        files in
+           let uu____770 = FStar_Parser_Driver.parse_file fn in
+           FStar_Pervasives_Native.fst uu____770) files in
     let mods = FStar_List.map document_module modules in
     let on = FStar_Options.prepend_output_dir "index.md" in
     let fd = FStar_Util.open_file_for_writing on in

@@ -1,6 +1,7 @@
 type uint128 = Stdint.Uint128.t
 type uint8 = int
 type t = uint128
+type t' = t
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 

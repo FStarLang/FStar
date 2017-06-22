@@ -1,29 +1,46 @@
 module Graph.Tree
 
 open Graph.Base
-open Seq.Complements
-
 module S = FStar.Seq
 module L = FStar.List.Tot
+
+open Seq.Complements
+open List.Complements
+
 
 let connected (#n:nat) (g:graph0 n) =
   forall (i j:_in g). exists (p:path g). from p == i /\ to p == j
 
+let non_visited_nodes (#n:nat) (g:graph0 n) (p:path g{elementary p}) : nat
+= noRepeats_length_lemma (S.seq_to_list p)  ; n - length p
 
 (* TODO : the basic structure of this lemma is set up but it still needs to be proven *)
-let rec extremal_node_or_cycle_from_aux (#n:nat) (g:graph0 n) (p:path g)
+#set-options "--detail_errors"
+let rec extremal_node_or_cycle_from_aux (#n:nat) (g:graph0 n) (p:path g{elementary p})
   : Pure (either (_in g) (path g))
-    (requires (elementary p))
+    (requires True)
     (ensures (fun r -> match r with | Inl i -> g @^ i == [] | Inr p' -> elementary_cycle p'))
-    (decreases (n - length p))
-= (* TODO : Remove me !!! *) admit () ;
+    (decreases (non_visited_nodes g p))
+=
   match g @^ (to p) with
   | [] -> Inl (to p)
   | i :: _ ->
-    match S.seq_find (fun j -> j = i) p with
-    | None -> extremal_node_or_cycle_from_aux #n g (p `snoc` i)
+    index_of_l_spec (fun j -> j = i) p ;
+    match index_of_l (fun j -> j = i) p with
+    | None ->
+      assume (elementary (p `snoc` i)) ;
+      extremal_node_or_cycle_from_aux #n g (p `snoc` i)
     | Some i0 ->
-      Inr (S.slice p i0 (length p) `snoc` i)
+      admit () ;
+      assert (p @^ i0 == i) ;
+      let p' : path g = S.slice p i0 (length p) in
+      let p'' : path g = p' `snoc` i in
+      assert (p' @^ 0 == i) ;
+      assume (elementary p') ;
+      S.lemma_eq_elim (S.slice p'' 0 (length p'' - 1)) p' ;
+      assert (elementary p'') ;
+      assert (from p'' == i /\ to p'' == i) ;
+      Inr  p''
 
 let extremal_node_or_cycle_from
   (#n:nat)

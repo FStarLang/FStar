@@ -1,5 +1,5 @@
 [
-  "{û=k\u001d*WœºZ≠=ã\u0012,\u0002",
+  "‘â˛í^oi√L∫ır´ßGù",
   [
     [
       "Graph.Base.no_self_loop",
@@ -159,6 +159,7 @@
         "equation_Graph.Base.path", "equation_Graph.Base.valid_path",
         "equation_Prims.nat", "int_inversion",
         "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Graph.Base_Tm_refine_bf8d44d5785ddc4d6a01a07377bf1e95",

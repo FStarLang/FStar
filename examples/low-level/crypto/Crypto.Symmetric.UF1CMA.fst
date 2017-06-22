@@ -7,6 +7,7 @@ module Crypto.Symmetric.UF1CMA
 
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Ghost
 open FStar.UInt64
 open FStar.Buffer
@@ -19,6 +20,7 @@ open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 module RR = FStar.Monotonic.RRef
 module MAC = Crypto.Symmetric.MAC
 

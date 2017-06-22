@@ -4,8 +4,8 @@ let rec get_next_n_ite:
     FStar_SMTEncoding_Term.term ->
       FStar_SMTEncoding_Term.term ->
         (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
-          (Prims.bool* FStar_SMTEncoding_Term.term*
-            FStar_SMTEncoding_Term.term* FStar_SMTEncoding_Term.term)
+          (Prims.bool,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,
+            FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple4
   =
   fun n1  ->
     fun t  ->
@@ -40,8 +40,8 @@ let rec is_ite_all_the_way:
     FStar_SMTEncoding_Term.term ->
       FStar_SMTEncoding_Term.term ->
         FStar_SMTEncoding_Term.term Prims.list ->
-          (Prims.bool* FStar_SMTEncoding_Term.term Prims.list*
-            FStar_SMTEncoding_Term.term)
+          (Prims.bool,FStar_SMTEncoding_Term.term Prims.list,FStar_SMTEncoding_Term.term)
+            FStar_Pervasives_Native.tuple3
   =
   fun n1  ->
     fun t  ->
@@ -74,10 +74,11 @@ let rec parse_query_for_split_cases:
   Prims.int ->
     FStar_SMTEncoding_Term.term ->
       (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
-        (Prims.bool*
-          ((FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)*
-          FStar_SMTEncoding_Term.term Prims.list*
-          FStar_SMTEncoding_Term.term))
+        (Prims.bool,(FStar_SMTEncoding_Term.term ->
+                       FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
+                                                     Prims.list,FStar_SMTEncoding_Term.term)
+                      FStar_Pervasives_Native.tuple3)
+          FStar_Pervasives_Native.tuple2
   =
   fun n1  ->
     fun t  ->
@@ -134,8 +135,9 @@ let strip_not: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
         -> hd1
     | uu____305 -> t
 let handle_query:
-  ((FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)*
-    FStar_SMTEncoding_Term.term Prims.list* FStar_SMTEncoding_Term.term) ->
+  (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
+                                                                Prims.list,
+    FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
     (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit
   =
   fun uu____320  ->

@@ -2,8 +2,8 @@ open Prims
 let info_at_pos env file row col =
   let uu____29 = FStar_TypeChecker_Common.info_at_pos file row col in
   match uu____29 with
-  | None  -> None
-  | Some info ->
+  | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+  | FStar_Pervasives_Native.Some info ->
       (match info.FStar_TypeChecker_Common.identifier with
        | FStar_Util.Inl bv ->
            let uu____50 =
@@ -13,7 +13,7 @@ let info_at_pos env file row col =
              let uu____60 = FStar_Syntax_Syntax.range_of_bv bv in
              (uu____56, (info.FStar_TypeChecker_Common.identifier_ty),
                uu____60) in
-           Some uu____50
+           FStar_Pervasives_Native.Some uu____50
        | FStar_Util.Inr fv ->
            let uu____69 =
              let uu____75 =
@@ -22,10 +22,11 @@ let info_at_pos env file row col =
              let uu____79 = FStar_Syntax_Syntax.range_of_fv fv in
              (uu____75, (info.FStar_TypeChecker_Common.identifier_ty),
                uu____79) in
-           Some uu____69)
+           FStar_Pervasives_Native.Some uu____69)
 let add_errors:
   FStar_TypeChecker_Env.env ->
-    (Prims.string* FStar_Range.range) Prims.list -> Prims.unit
+    (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
+      Prims.list -> Prims.unit
   =
   fun env  ->
     fun errs  ->
@@ -71,7 +72,8 @@ let add_errors:
 let err_msg_type_strings:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term -> (Prims.string* Prims.string)
+      FStar_Syntax_Syntax.term ->
+        (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
   =
   fun env  ->
     fun t1  ->
@@ -184,7 +186,7 @@ let expected_pattern_of_type:
                 s1 uu____257 s2
 let basic_type_error:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term option ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.string
   =
   fun env  ->
@@ -195,10 +197,10 @@ let basic_type_error:
           match uu____272 with
           | (s1,s2) ->
               (match eopt with
-               | None  ->
+               | FStar_Pervasives_Native.None  ->
                    FStar_Util.format2 "Expected type \"%s\"; got type \"%s\""
                      s1 s2
-               | Some e ->
+               | FStar_Pervasives_Native.Some e ->
                    let uu____278 = FStar_Syntax_Print.term_to_string e in
                    FStar_Util.format3
                      "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1
@@ -332,7 +334,7 @@ let expected_pure_expression e c =
   let uu____511 = FStar_Syntax_Print.term_to_string e in
   let uu____512 =
     let uu____513 = name_and_result c in
-    FStar_All.pipe_left FStar_Pervasives.fst uu____513 in
+    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____513 in
   FStar_Util.format2
     "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
     uu____511 uu____512
@@ -340,7 +342,7 @@ let expected_ghost_expression e c =
   let uu____540 = FStar_Syntax_Print.term_to_string e in
   let uu____541 =
     let uu____542 = name_and_result c in
-    FStar_All.pipe_left FStar_Pervasives.fst uu____542 in
+    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____542 in
   FStar_Util.format2
     "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
     uu____540 uu____541

@@ -58,8 +58,7 @@ verify-%: __force__
 		 --z3rlimit 20 $*
 
 verify_hh-%: __force__
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/hyperstack \
-		 $(FSTAR_INCLUDE_PATHS) \
+	$(FSTAR) $(FSTAR_INCLUDE_PATHS) \
 		 --z3rlimit 20 $*
 
 all: uall
@@ -78,13 +77,14 @@ CntProtocol.ml: SHA1.fst MAC.fst CntFormat.fst CntProtocol.fst
 		CntProtocol.fst \
 		--codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Seq --codegen OCaml
 
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/ucontrib/Platform/ml $(FSTAR_HOME)/ucontrib/CoreCrypto/ml $(FSTAR_HOME)/ulib/ml)
-
-OCAMLC=ocamlfind ocamlopt -package zarith,batteries -linkpkg -g -thread
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/ucontrib/Platform/ml $(FSTAR_HOME)/ucontrib/CoreCrypto/ml)
 
 CONTRIB_LIBS=$(FSTAR_HOME)/ucontrib/CoreCrypto/ml/CoreCrypto.cmxa
 
-SUPPORT_LIBS=$(FSTAR_HOME)/ulib/ml/fstarlib.cmxa
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+#OCAMLC automatically contains fstarlib
+SUPPORT_LIBS=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 $(CONTRIB_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/ucontrib/
@@ -93,13 +93,13 @@ $(SUPPORT_LIBS):
 	$(MAKE) -C $(FSTAR_HOME)/ulib/ml/
 
 RPC.exe: RPC.ml $(SUPPORT_LIBS) $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) SHA1.ml MAC.ml Formatting.ml RPC.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: RPC.exe
 	$(EXTRA_PATH) ./RPC.exe
 
 CntProtocol.exe: CntProtocol.ml $(SUPPORT_LIBS) $(CONTRIB_LIBS)
-	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(CONTRIB_LIBS) SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 cnt-test: CntProtocol.exe
 	$(EXTRA_PATH) ./CntProtocol.exe

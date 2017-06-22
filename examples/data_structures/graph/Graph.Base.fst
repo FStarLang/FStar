@@ -43,7 +43,7 @@ let length (#n:nat) (p:prepath n) = S.length p
 
 let prefix (#n:nat) (p1 p2:prepath n) = length p1 <= length p2 /\ (forall (i:_in p1). p1 @^ i == p2 @^ ((i <: nat) <: _in p2))
 
-let elementary_cycle (#n:nat) (#g:graph0 n) (p:path g) = elementary (S.slice p 1 (length p)) /\ from p == to p
+let elementary_cycle (#n:nat) (#g:graph0 n) (p:path g) = elementary (S.slice p 0 (length p - 1)) /\ from p == to p
 
 val is_in_graph : (#n:nat) -> (a:fin n) -> (b:fin n) -> (g : graph0 n) -> Tot bool
 let is_in_graph #n a b g = L.mem b (g @^ a)
@@ -129,3 +129,4 @@ let rec to_elementary_path_aux (#n:nat) (g:graph0 n) (p:path g) (pn : path g) (i
      to_elementary_path_aux g p pn v'
    end
  end
+
