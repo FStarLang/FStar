@@ -22,7 +22,11 @@ fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 
 FSTARLIB_DIR=../../bin/fstarlib/
 
-fstarlib.cmxa fstarlib.cma:fstarlib.mllib | fstarlib.cma
+fstarlib.cma:fstarlib.mllib
+	$(OCAMLBUILD) $@
+	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
+
+fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
 	$(OCAMLBUILD) $@
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
 
