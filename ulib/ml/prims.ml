@@ -1,6 +1,5 @@
 (** The [int] type and the various default operators. *)
 type int      = Big_int_Z.big_int
-let pp_int    = Z.pp_print
 type nonzero  = int
 let ( + )     = Big_int_Z.add_big_int
 let ( - )     = Big_int_Z.sub_big_int
@@ -18,19 +17,12 @@ let to_string = Big_int_Z.string_of_big_int
 
 (** Some misc. types defined in Prims *)
 type nonrec unit = unit
-[@@deriving show]
 type nonrec bool = bool
-[@@deriving show]
 type nonrec string = string
-[@@deriving show]
 type nonrec 'a array = 'a array
-[@@deriving show]
 type nonrec exn = exn
-[@@deriving show]
 type nonrec 'a list = 'a list
-[@@deriving show]
 type nonrec 'a option = 'a option
-[@@deriving show]
 
 type range     = unit
 type nat       = int
@@ -53,6 +45,8 @@ type (' p, ' q) c_and =
 type (' p, ' q) l_and = (' p, ' q) c_and
 
 let uu___is_And _ = true
+
+type 'a squash = unit
 
 type l_True =
   | T

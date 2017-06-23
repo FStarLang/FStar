@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Util
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -27,7 +28,7 @@ open FStar.Ident
 module BU = FStar.Util
 module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
-module C = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -203,17 +204,10 @@ let is_type_abstraction = function
     | _ -> false
 
 let is_xtuple (ns, n) =
-    if ns = ["Prims"] || ns = ["FStar"; "Pervasives"]
-    then match n with
-            | "Mktuple2" -> Some 2
-            | "Mktuple3" -> Some 3
-            | "Mktuple4" -> Some 4
-            | "Mktuple5" -> Some 5
-            | "Mktuple6" -> Some 6
-            | "Mktuple7" -> Some 7
-            | "Mktuple8" -> Some 8
-            | _ -> None
-    else None
+  if FStar.Parser.Const.is_tuple_datacon_string (BU.concat_l "." (ns@[n]))
+  (* Returns the integer k in "Mktuplek" *)
+  then Some (BU.int_of_char (BU.char_at n 7))
+  else None
 
 let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
@@ -246,17 +240,10 @@ let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs v
 
 
 let is_xtuple_ty (ns, n) =
-    if ns = ["FStar"; "Pervasives"]
-    then match n with
-            | "tuple2" -> Some 2
-            | "tuple3" -> Some 3
-            | "tuple4" -> Some 4
-            | "tuple5" -> Some 5
-            | "tuple6" -> Some 6
-            | "tuple7" -> Some 7
-            | "tuple8" -> Some 8
-            | _ -> None
-    else None
+  if FStar.Parser.Const.is_tuple_constructor_string (BU.concat_l "." (ns@[n]))
+  (* Returns the integer k in "tuplek" *)
+  then Some (BU.int_of_char (BU.char_at n 5))
+  else None
 
 let resugar_mlty t = match t with
     | MLTY_Named (args, mlp) ->
@@ -341,10 +328,10 @@ let mk_embedding (m: emb_decl) (s: string) =
 
 let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
-    | Tm_fvar fv when fv_eq_lid fv C.int_lid -> fstar_tc_common_prefix "t_int"
-    | Tm_fvar fv when fv_eq_lid fv C.bool_lid -> fstar_tc_common_prefix "t_bool"
-    | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> fstar_tc_common_prefix "t_unit"
-    | Tm_fvar fv when fv_eq_lid fv C.string_lid -> fstar_tc_common_prefix "t_string"
+    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> fstar_tc_common_prefix "t_int"
+    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> fstar_tc_common_prefix "t_bool"
+    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> fstar_tc_common_prefix "t_unit"
+    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> fstar_tc_common_prefix "t_string"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> fstar_refl_data_prefix "t_binder"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> fstar_refl_data_prefix "t_term"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> fstar_refl_data_prefix "t_fv"
@@ -354,10 +341,10 @@ let rec mk_tac_param_type (t: term): mlexpr' =
        (match (FStar.Syntax.Subst.compress h).n with
         | Tm_uinst (h', _) ->
            (match (FStar.Syntax.Subst.compress h').n with
-            | Tm_fvar fv when fv_eq_lid fv C.list_lid ->
+            | Tm_fvar fv when fv_eq_lid fv PC.list_lid ->
                 let arg_term = fst (List.hd args) in
                 MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_list_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term])
-            | Tm_fvar fv when fv_eq_lid fv C.option_lid ->
+            | Tm_fvar fv when fv_eq_lid fv PC.option_lid ->
                 let arg_term = fst (List.hd args) in
                 MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_option_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term] )
             | _ -> failwith ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h'))) )
@@ -368,10 +355,10 @@ let rec mk_tac_param_type (t: term): mlexpr' =
    and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
-    | Tm_fvar fv when fv_eq_lid fv C.int_lid -> mk_embedding m "int"
-    | Tm_fvar fv when fv_eq_lid fv C.bool_lid -> mk_embedding m "bool"
-    | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> mk_embedding m "unit"
-    | Tm_fvar fv when fv_eq_lid fv C.string_lid -> mk_embedding m "string"
+    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> mk_embedding m "int"
+    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> mk_embedding m "bool"
+    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> mk_embedding m "unit"
+    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> mk_embedding m "string"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> mk_embedding m "binder"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> mk_embedding m "term"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> mk_embedding m "fvar"
@@ -382,13 +369,13 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
          | Tm_uinst (h', _) ->
             let ht, hargs, type_arg =
                 (match (FStar.Syntax.Subst.compress h').n with
-                 | Tm_fvar fv when fv_eq_lid fv C.list_lid ->
+                 | Tm_fvar fv when fv_eq_lid fv PC.list_lid ->
                      let arg_term = fst (List.hd args) in
                      "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
-                 | Tm_fvar fv when fv_eq_lid fv C.option_lid ->
+                 | Tm_fvar fv when fv_eq_lid fv PC.option_lid ->
                      let arg_term = fst (List.hd args) in
                      "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
-                 | Tm_fvar fv when fv_eq_lid fv C.tactic_lid -> failwith "Embedding for tactics not defined"
+                 | Tm_fvar fv when fv_eq_lid fv PC.tactic_lid -> failwith "Embedding for tactics not defined"
                  | _ -> failwith ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))) in
             let hargs =
                 match m with

@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -357,7 +358,7 @@ let push_subst s t =
                     else subst' s lb.lbdef in
         let lbname = match lb.lbname with
             | Inl x -> Inl ({x with sort=lbt})
-            | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
+            | Inr fv -> Inr fv in
         {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
         mk (Tm_let((is_rec, lbs), body))
 
@@ -506,6 +507,10 @@ let univ_var_opening (us:univ_names) =
         UN(n - i, U_name u'), u') |> List.unzip in
     s, us'
 
+let univ_var_closing (us:univ_names) =
+    let n = List.length us - 1 in
+    us |> List.mapi (fun i u -> UD(u, n - i))
+
 let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term =
     let s, us' = univ_var_opening us in
     let t = subst s t in
@@ -516,8 +521,7 @@ let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names * comp =
     us', subst_comp s c
 
 let close_univ_vars (us:univ_names) (t:term) : term =
-    let n = List.length us - 1 in
-    let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
+    let s = univ_var_closing us in
     subst s t
 
 let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
@@ -584,3 +588,5 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
 let opening_of_binders (bs:binders) =
   let n = List.length bs - 1 in
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
+
+let closing_of_binders (bs:binders) = closing_subst bs

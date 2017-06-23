@@ -39,7 +39,8 @@ let __proj__Mklident__item__str: lident -> Prims.string =
     | { ns = __fname__ns; ident = __fname__ident; nsstr = __fname__nsstr;
         str = __fname__str;_} -> __fname__str
 type lid = lident
-let mk_ident: (Prims.string* FStar_Range.range) -> ident =
+let mk_ident:
+  (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 -> ident =
   fun uu____81  ->
     match uu____81 with | (text,range) -> { idText = text; idRange = range }
 let reserved_prefix: Prims.string = "uu___"
@@ -107,14 +108,14 @@ let range_of_lid: lid -> FStar_Range.range = fun lid  -> (lid.ident).idRange
 let set_lid_range: lident -> FStar_Range.range -> lident =
   fun l  ->
     fun r  ->
-      let uu___47_224 = l in
+      let uu___47_225 = l in
       {
-        ns = (uu___47_224.ns);
+        ns = (uu___47_225.ns);
         ident =
-          (let uu___48_225 = l.ident in
-           { idText = (uu___48_225.idText); idRange = r });
-        nsstr = (uu___47_224.nsstr);
-        str = (uu___47_224.str)
+          (let uu___48_227 = l.ident in
+           { idText = (uu___48_227.idText); idRange = r });
+        nsstr = (uu___47_225.nsstr);
+        str = (uu___47_225.str)
       }
 let lid_add_suffix: lident -> Prims.string -> lident =
   fun l  ->
@@ -122,4 +123,4 @@ let lid_add_suffix: lident -> Prims.string -> lident =
       let path = path_of_lid l in
       lid_of_path (FStar_List.append path [s]) (range_of_lid l)
 let string_of_lid: lident -> Prims.string =
-  fun lid  -> let uu____240 = path_of_lid lid in text_of_path uu____240
+  fun lid  -> let uu____242 = path_of_lid lid in text_of_path uu____242

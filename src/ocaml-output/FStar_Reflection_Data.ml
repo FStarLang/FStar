@@ -20,11 +20,15 @@ let uu___is_C_False: vconst -> Prims.bool =
 type term_view =
   | Tv_Var of FStar_Syntax_Syntax.binder
   | Tv_FVar of FStar_Syntax_Syntax.fv
-  | Tv_App of (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.term)
-  | Tv_Abs of (FStar_Syntax_Syntax.binder* FStar_Syntax_Syntax.term)
-  | Tv_Arrow of (FStar_Syntax_Syntax.binder* FStar_Syntax_Syntax.term)
+  | Tv_App of (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+  FStar_Pervasives_Native.tuple2
+  | Tv_Abs of (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+  FStar_Pervasives_Native.tuple2
+  | Tv_Arrow of (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+  FStar_Pervasives_Native.tuple2
   | Tv_Type of Prims.unit
-  | Tv_Refine of (FStar_Syntax_Syntax.binder* FStar_Syntax_Syntax.term)
+  | Tv_Refine of (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+  FStar_Pervasives_Native.tuple2
   | Tv_Const of vconst
   | Tv_Unknown
 let uu___is_Tv_Var: term_view -> Prims.bool =
@@ -41,20 +45,26 @@ let uu___is_Tv_App: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_App _0 -> true | uu____109 -> false
 let __proj__Tv_App__item___0:
-  term_view -> (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.term) =
-  fun projectee  -> match projectee with | Tv_App _0 -> _0
+  term_view ->
+    (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Tv_App _0 -> _0
 let uu___is_Tv_Abs: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Abs _0 -> true | uu____131 -> false
 let __proj__Tv_Abs__item___0:
-  term_view -> (FStar_Syntax_Syntax.binder* FStar_Syntax_Syntax.term) =
-  fun projectee  -> match projectee with | Tv_Abs _0 -> _0
+  term_view ->
+    (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Tv_Abs _0 -> _0
 let uu___is_Tv_Arrow: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Arrow _0 -> true | uu____153 -> false
 let __proj__Tv_Arrow__item___0:
-  term_view -> (FStar_Syntax_Syntax.binder* FStar_Syntax_Syntax.term) =
-  fun projectee  -> match projectee with | Tv_Arrow _0 -> _0
+  term_view ->
+    (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Tv_Arrow _0 -> _0
 let uu___is_Tv_Type: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Type _0 -> true | uu____173 -> false
@@ -63,8 +73,10 @@ let uu___is_Tv_Refine: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Refine _0 -> true | uu____189 -> false
 let __proj__Tv_Refine__item___0:
-  term_view -> (FStar_Syntax_Syntax.binder* FStar_Syntax_Syntax.term) =
-  fun projectee  -> match projectee with | Tv_Refine _0 -> _0
+  term_view ->
+    (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Tv_Refine _0 -> _0
 let uu___is_Tv_Const: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Const _0 -> true | uu____209 -> false
@@ -96,13 +108,14 @@ let fstar_refl_lid: Prims.string Prims.list -> FStar_Ident.lident =
 let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
   fun l  ->
     let uu____253 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None in
+      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
+        FStar_Pervasives_Native.None in
     FStar_All.pipe_right uu____253 FStar_Syntax_Syntax.fv_to_tm
 let lid_as_data_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
   fun l  ->
     let uu____258 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
-        (Some FStar_Syntax_Syntax.Data_ctor) in
+        (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
     FStar_Syntax_Syntax.fv_to_tm uu____258
 let fstar_refl_types_lid: Prims.string -> FStar_Ident.lident =
   fun s  -> fstar_refl_lid ["Types"; s]

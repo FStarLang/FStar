@@ -2,4 +2,4 @@
 
 module FStar.Tactics.Load
 
-val load_tactic: string -> unit
+val load_tactics: list<string> -> unit

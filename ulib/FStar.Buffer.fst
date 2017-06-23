@@ -1,13 +1,15 @@
 module FStar.Buffer
  
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
 open FStar.Ghost
 
+
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 

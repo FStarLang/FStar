@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.ST
 open FStar.All
 open FStar.Getopt
 
@@ -95,7 +96,7 @@ val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
-val load                        : unit    -> option<string>
+val load                        : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
@@ -114,6 +115,7 @@ val prims                       : unit    -> string
 val prims_basename              : unit    -> string
 val pervasives                  : unit    -> string
 val pervasives_basename         : unit    -> string
+val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_fuels                 : unit    -> bool

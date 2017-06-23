@@ -1,5 +1,6 @@
+﻿
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,14 +14,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-// (c) Microsoft Corporation. All rights reserved
-
-module FStar.Unionfind
-
-type uvar 'a
-assume val uvar_id: uvar<'a> -> int
-assume val fresh : 'a -> uvar<'a>
-assume val find : uvar<'a> -> 'a
-assume val change : uvar<'a> -> 'a -> unit
-assume val equivalent : uvar<'a> -> uvar<'a> -> Tot bool (* Cheating a bit? *)
-assume val union : uvar<'a> -> uvar<'a> -> unit
+#light "off"
+module FStar.Extraction.ML.Modul
+open FStar.All
+open FStar.Syntax.Syntax
+open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.UEnv
+val extract : env -> modul -> env * list<mllib>

@@ -54,11 +54,16 @@ open FStar.Reflection
 open FStar.Tactics
 open FStar.List
 
+// This query will go the SMT, in the default proof namespace
+let f (x:int) = assert (x + 1 == 1 + x)
+
+// This one should be sent in a pruned context
 let _ = assert_by_tactic (prune "";;
                           addns "FStar.List";;
                           addns "Prims")
                          (rev [1;2] == [2;1])
 
+// First one should go to the SMT, also in pruned context
 let _ = assert_by_tactic (prune "";;
                           FStar.Tactics.split;;
                           (* rev [1;2] == [2;1] *)

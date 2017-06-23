@@ -1,6 +1,7 @@
 ﻿#light "off"
 
 module FStar.SMTEncoding.Util
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -17,17 +18,17 @@ module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
 let mkAssume (tm, cap, nm) =
-    Term.Assume ({
+    Assume ({
         assumption_name=nm;
         assumption_caption=cap;
         assumption_term=tm;
         assumption_fact_ids=[]
     })
 let norng f = fun x -> f x Range.dummyRange
-let mkTrue   = Term.mkTrue Range.dummyRange
-let mkFalse  = Term.mkFalse Range.dummyRange
-let mkInteger  = norng Term.mkInteger
-let mkInteger' = norng Term.mkInteger'
+let mkTrue   = mkTrue Range.dummyRange
+let mkFalse  = mkFalse Range.dummyRange
+let mkInteger  = norng mkInteger
+let mkInteger' = norng mkInteger'
 let mkBoundV   = norng mkBoundV
 let mkFreeV    = norng mkFreeV
 let mkApp'     = norng mkApp'

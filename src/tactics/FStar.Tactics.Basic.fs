@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tactics.Basic
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -10,8 +11,8 @@ open FStar.TypeChecker.Env
 module SP = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module SC = FStar.Syntax.Const
 module SF = FStar.Syntax.Free
+module PC = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
@@ -249,7 +250,7 @@ let is_true t =
     match U.un_squash t with
     | Some t' ->
         begin match (SS.compress t').n with
-        | Tm_fvar fv -> S.fv_eq_lid fv SC.true_lid
+        | Tm_fvar fv -> S.fv_eq_lid fv PC.true_lid
         | _ -> false
         end
     | _ -> false
@@ -258,7 +259,7 @@ let is_false t =
     match U.un_squash t with
     | Some t' ->
         begin match (SS.compress t').n with
-        | Tm_fvar fv -> S.fv_eq_lid fv SC.false_lid
+        | Tm_fvar fv -> S.fv_eq_lid fv PC.false_lid
         | _ -> false
         end
     | _ -> false
@@ -375,7 +376,7 @@ let istrivial (e:env) (t:term) : bool =
 let trivial : tac<unit> =
     bind cur_goal (fun goal ->
     if istrivial goal.context goal.goal_ty
-    then (solve goal SC.exp_unit; dismiss)
+    then (solve goal U.exp_unit; dismiss)
     else fail1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty)
     )
 
@@ -534,7 +535,7 @@ let rewrite (h:binder) : tac<unit> =
     bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
     match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
     | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
-              when Ident.lid_equals l SC.eq2_lid ->
+              when Ident.lid_equals l PC.eq2_lid ->
       (match (SS.compress x).n with
        | Tm_name x ->
          let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty; witness = SS.subst [NT(x, e)] goal.witness} in
@@ -685,14 +686,14 @@ let trefl : tac<unit> =
         begin
         let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
-        | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv SC.eq2_lid ->
+        | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
             let l = N.normalize [N.UnfoldUntil Delta_constant; N.UnfoldTac] g.context l in
             let r = N.normalize [N.UnfoldUntil Delta_constant; N.UnfoldTac] g.context r in
             if not (Rel.teq_nosmt g.context l r)
             then fail2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r)
             else
             begin
-                solve g SC.exp_unit;
+                solve g U.exp_unit;
                 dismiss
             end
         | hd, _ ->
@@ -727,7 +728,7 @@ let cases (t : term) : tac<(term * term)> =
     let t, typ, guard = g.context.type_of g.context t in
     let hd, args = U.head_and_args typ in
     match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv SC.or_lid ->
+    | Tm_fvar fv, [(p, _); (q, _)] when S.fv_eq_lid fv PC.or_lid ->
         let v_p = S.new_bv None p in
         let v_q = S.new_bv None q in
         let g1 = {g with context = Env.push_bv g.context v_p } in

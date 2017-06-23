@@ -1,5 +1,5 @@
 [
-  "Õ÷\\,ÅÁ=(π∫+\u0011wf\u001d2",
+  "«ø\u0012ê\u001b^\u000e\u0014Ô\u001e9Z\u001c‘øI",
   [
     [ "HyE.HCCA2.__proj__PKey__item__region", 1, 2, 1, [ "@query" ], 0 ],
     [ "HyE.HCCA2.__proj__PKey__item__rawpk", 1, 2, 1, [ "@query" ], 0 ],
@@ -21,8 +21,8 @@
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_HyE.CCA2.pkey",
         "function_token_typing_HyE.CCA2.skey",
-        "kinding_FStar.Pervasives.tuple2@tok", "kinding_HyE.HCCA2.pkey@tok",
-        "kinding_HyE.HCCA2.skey@tok",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "kinding_HyE.HCCA2.pkey@tok", "kinding_HyE.HCCA2.skey@tok",
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_5a09de1efe4b8e150cfdaeaf95d864d4",
         "typing_FStar.HyperStack.is_eternal_region",
         "typing_FStar.Pervasives.uu___is_V"
@@ -55,21 +55,20 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "data_elim_FStar.Pervasives.V",
         "data_typing_intro_FStar.Pervasives.V@tok",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.V", "equation_HyE.AE.msg",
         "equation_HyE.HCCA2.p", "equation_HyE.PlainPKE.t",
         "fuel_guarded_inversion_FStar.HyperStack.mem",
         "function_token_typing_HyE.AE.key",
         "function_token_typing_HyE.Plain.t",
-        "kinding_FStar.Pervasives.option@tok",
+        "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Pervasives_Tm_refine_9db520b26a7f39c5a01493a3f375290d",
-        "typing_FStar.Pervasives.__proj__V__item__v",
-        "typing_FStar.Pervasives.uu___is_None"
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0
     ]

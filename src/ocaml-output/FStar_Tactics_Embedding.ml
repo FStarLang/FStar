@@ -1,11 +1,12 @@
 open Prims
 type name = FStar_Syntax_Syntax.bv
 let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lid =
-  fun s  -> FStar_Syntax_Const.fstar_tactics_lid' s
+  fun s  -> FStar_Parser_Const.fstar_tactics_lid' s
 let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
   fun l  ->
     let uu____11 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant None in
+      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
+        FStar_Pervasives_Native.None in
     FStar_All.pipe_right uu____11 FStar_Syntax_Syntax.fv_to_tm
 let mk_tactic_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
@@ -14,7 +15,7 @@ let lid_as_data_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
   fun l  ->
     let uu____21 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
-        (Some FStar_Syntax_Syntax.Data_ctor) in
+        (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
     FStar_Syntax_Syntax.fv_to_tm uu____21
 let fstar_tactics_lid_as_data_tm: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
@@ -43,13 +44,15 @@ let pair_typ:
             let uu____44 = FStar_Syntax_Syntax.as_arg s in [uu____44] in
           uu____41 :: uu____42 in
         FStar_Syntax_Syntax.mk_Tm_app uu____38 uu____40 in
-      uu____37 None FStar_Range.dummyRange
+      uu____37 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let embed_env:
   FStar_Tactics_Basic.proofstate ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term
   =
   fun ps  ->
-    fun env  -> FStar_Syntax_Util.mk_alien env "tactics_embed_env" None
+    fun env  ->
+      FStar_Syntax_Util.mk_alien env "tactics_embed_env"
+        FStar_Pervasives_Native.None
 let unembed_env:
   FStar_Tactics_Basic.proofstate ->
     FStar_Syntax_Syntax.term -> FStar_TypeChecker_Env.env
@@ -60,7 +63,9 @@ let unembed_env:
       FStar_All.pipe_right uu____65 FStar_Dyn.undyn
 let embed_proofstate:
   FStar_Tactics_Basic.proofstate -> FStar_Syntax_Syntax.term =
-  fun ps  -> FStar_Syntax_Util.mk_alien ps "tactics.embed_proofstate" None
+  fun ps  ->
+    FStar_Syntax_Util.mk_alien ps "tactics.embed_proofstate"
+      FStar_Pervasives_Native.None
 let unembed_proofstate:
   FStar_Tactics_Basic.proofstate ->
     FStar_Syntax_Syntax.term -> FStar_Tactics_Basic.proofstate
@@ -90,7 +95,7 @@ let embed_result ps res embed_a t_a =
             uu____121 :: uu____123 in
           uu____118 :: uu____119 in
         FStar_Syntax_Syntax.mk_Tm_app uu____116 uu____117 in
-      uu____115 None FStar_Range.dummyRange
+      uu____115 FStar_Pervasives_Native.None FStar_Range.dummyRange
   | FStar_Tactics_Basic.Success (a,ps1) ->
       let uu____133 =
         let uu____134 =
@@ -110,7 +115,7 @@ let embed_result ps res embed_a t_a =
             uu____139 :: uu____141 in
           uu____136 :: uu____137 in
         FStar_Syntax_Syntax.mk_Tm_app uu____134 uu____135 in
-      uu____133 None FStar_Range.dummyRange
+      uu____133 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let unembed_result ps res unembed_a =
   let res1 = FStar_Syntax_Util.unascribe res in
   let uu____182 = FStar_Syntax_Util.head_and_args res1 in

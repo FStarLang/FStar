@@ -6,7 +6,7 @@ let quote_lid:
   fun ns  ->
     FStar_Tactics_Effect.return
       (FStar_Reflection_Syntax.pack
-         (FStar_Reflection_Syntax.Tv_FVar
+         (FStar_Reflection_Data.Tv_FVar
             (FStar_Reflection_Syntax.pack_fv ns)))
 let liftM1' f ma = FStar_Tactics_Effect.bind ma (fun a  -> f a)
 let liftM1 f = liftM1' (fun x  -> FStar_Tactics_Effect.return (f x))
@@ -71,7 +71,7 @@ let tcut:
            (FStar_Tactics_Builtins.apply
               (FStar_Tactics_Effect.return
                  (FStar_Reflection_Syntax.pack
-                    (FStar_Reflection_Syntax.Tv_App (qq, t)))))
+                    (FStar_Reflection_Data.Tv_App (qq, t)))))
            (fun uu___52_712  -> FStar_Tactics_Builtins.intro))
 let rec revert_all:
   FStar_Reflection_Syntax.binders -> Prims.unit FStar_Tactics_Effect.tactic =
@@ -90,7 +90,7 @@ let assumption: Prims.unit FStar_Tactics_Effect.tactic =
          | b::bs1 ->
              let t =
                FStar_Reflection_Syntax.pack
-                 (FStar_Reflection_Syntax.Tv_Var b) in
+                 (FStar_Reflection_Data.Tv_Var b) in
              or_else
                (FStar_Tactics_Builtins.exact (FStar_Tactics_Effect.return t))
                (aux bs1) in
@@ -141,7 +141,7 @@ let rec rewrite_all_context_equalities:
            | FStar_Reflection_Formula.Comp
                (FStar_Reflection_Formula.Eq ,uu____897,lhs,uu____899) ->
                (match FStar_Reflection_Syntax.inspect lhs with
-                | FStar_Reflection_Syntax.Tv_Var uu____901 ->
+                | FStar_Reflection_Data.Tv_Var uu____901 ->
                     FStar_Tactics_Builtins.rewrite x_t
                 | uu____904 -> idtac)
            | uu____907 -> idtac)
@@ -210,12 +210,12 @@ let mk_sq_eq:
     fun t2  ->
       FStar_Reflection_Syntax.mk_app
         (FStar_Reflection_Syntax.pack
-           (FStar_Reflection_Syntax.Tv_FVar
+           (FStar_Reflection_Data.Tv_FVar
               (FStar_Reflection_Syntax.pack_fv
                  FStar_Reflection_Syntax.squash_qn)))
         [FStar_Reflection_Syntax.mk_app
            (FStar_Reflection_Syntax.pack
-              (FStar_Reflection_Syntax.Tv_FVar
+              (FStar_Reflection_Data.Tv_FVar
                  (FStar_Reflection_Syntax.pack_fv
                     FStar_Reflection_Syntax.eq2_qn))) [t1; t2]]
 let grewrite:
@@ -229,7 +229,7 @@ let grewrite:
            FStar_Tactics_Builtins.pointwise
              (grewrite' t1 t2
                 (FStar_Reflection_Syntax.pack
-                   (FStar_Reflection_Syntax.Tv_Var e))))
+                   (FStar_Reflection_Data.Tv_Var e))))
 let focus f =
   FStar_Tactics_Effect.bind
     (FStar_Tactics_Builtins.divide (Prims.parse_int "1") f idtac)

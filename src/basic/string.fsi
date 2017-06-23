@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.String
+open FStar.ST
 open FStar.All
 open Prims
 open FStar.Char

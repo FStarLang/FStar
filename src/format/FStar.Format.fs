@@ -2,6 +2,7 @@
 #light "off"
 
 module FStar.Format
+open FStar.ST
 open FStar.All
 open FStar
 

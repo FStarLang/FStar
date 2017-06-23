@@ -1,13 +1,14 @@
 ﻿#light "off"
 module FStar.Tactics.Embedding
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module C = FStar.Const
@@ -24,7 +25,7 @@ open FStar.Reflection.Data
 
 type name = bv
 
-let fstar_tactics_lid' s = SC.fstar_tactics_lid' s
+let fstar_tactics_lid' s = PC.fstar_tactics_lid' s
 let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
 let mk_tactic_lid_as_term (s:string) = lid_as_tm (fstar_tactics_lid' ["Effect"; s])
 

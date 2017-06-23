@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Env
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -33,6 +34,7 @@ module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
+module Const = FStar.Parser.Const
 
 type binding =
   | Binding_var      of bv
@@ -596,7 +598,8 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
       then None
       else let insts = if List.length univ_insts = List.length univs
                        then univ_insts
-                       else failwith (BU.format2 "Unexpected instantiation of effect %s with %s universes"
+                       else failwith (BU.format3 "(%s) Unexpected instantiation of effect %s with %s universes"
+                                            (Range.string_of_range (get_range env))
                                             (Print.lid_to_string lid)
                                             (List.length univ_insts |> BU.string_of_int)) in
            begin match binders, univs with

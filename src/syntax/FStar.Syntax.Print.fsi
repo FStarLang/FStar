@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -49,6 +50,5 @@ val tscheme_to_string : tscheme -> string
 val cflags_to_string  : cflags -> string
 val set_to_string     : ('a -> string) -> set<'a> -> string
 val list_to_string    : ('a -> string) -> list<'a> -> string
-
 val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string

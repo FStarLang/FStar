@@ -1,5 +1,6 @@
 type int63 = int
 type t = int63
+type t' = t
 
 let v (x:int63) : Prims.int = Prims.parse_int (string_of_int x)
 

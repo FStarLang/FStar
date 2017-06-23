@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -8,7 +9,7 @@ open FStar.Range
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -242,7 +243,7 @@ let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remainin
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
         List.iter (fun g -> if is_irrelevant g
-                            then if TcRel.teq_nosmt g.context g.witness SC.exp_unit
+                            then if TcRel.teq_nosmt g.context g.witness U.exp_unit
                                  then ()
                                  else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s" (Print.term_to_string g.witness))
                             else ())
@@ -268,10 +269,10 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv SC.by_tactic_lid && pol = Neg ->
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv PC.by_tactic_lid && pol = Neg ->
         (assertion, []) // Peel away tactics in negative positions, they're assumptions!
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv SC.by_tactic_lid && pol = Pos ->
+    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv PC.by_tactic_lid && pol = Pos ->
         let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
         (FStar.Syntax.Util.t_true, gs)
 
@@ -286,7 +287,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
         | Tm_meta (t, m) -> let (t', gs) = traverse f pol e t in
                             (Tm_meta (t', m), gs)
 
-        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv FStar.Syntax.Const.imp_lid ->
+        | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
                let x = S.new_bv None p in
                let (p', gs1) = traverse f (flip pol) (Env.push_bv e x) p in
                let (q', gs2) = traverse f       pol  (Env.push_bv e x) q in
@@ -324,7 +325,7 @@ let getprop (e:env) (t:term) : option<term> =
         // Check for an equality, since the delta depth is wrong... (TODO: fix that)
         let hd, _ = U.head_and_args tn in
         match (U.un_uinst hd).n with
-        | Tm_fvar fv when S.fv_eq_lid fv SC.eq2_lid -> Some t
+        | Tm_fvar fv when S.fv_eq_lid fv PC.eq2_lid -> Some t
         | _ -> None
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
@@ -354,7 +355,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
     (env, t', FStar.Options.peek ()) :: gs
 
 let reify_tactic (a : term) : term =
-    let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv SC.reify_tactic_lid Delta_equational None)) [U_zero] in
+    let r = S.mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv PC.reify_tactic_lid Delta_equational None)) [U_zero] in
     mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
 
 let synth (env:Env.env) (typ:typ) (tau:term) : term =

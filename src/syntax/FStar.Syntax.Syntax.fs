@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.ST
 open FStar.All
 (* Type definitions for the core AST *)
 
@@ -28,14 +29,13 @@ open FStar.Const
 open FStar.Dyn
 
 (* Objects with metadata *)
-type withinfo_t<'a,'t> = {
+type withinfo_t<'a> = {
   v:  'a;
-  ty: 't;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-type var<'t>  = withinfo_t<lident,'t>
+type var = withinfo_t<lident>
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -45,6 +45,12 @@ type pragma =
   | LightOff
 
 type memo<'a> = ref<option<'a>>
+
+//versioning for unification variables
+type version = {
+    major:int;
+    minor:int
+}
 
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
@@ -56,11 +62,11 @@ type universe =
   | U_max   of list<universe>
   | U_bvar  of int
   | U_name  of univ_name
-  | U_unif  of Unionfind.p_uvar<option<universe>>
+  | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
-type universe_uvar = Unionfind.p_uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
@@ -116,7 +122,7 @@ and comp' =
   | Comp   of comp_typ
 and term = syntax<term',term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
-and pat = withinfo_t<pat',term'>
+and pat = withinfo_t<pat'>
 and comp = syntax<comp', unit>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -131,7 +137,7 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.p_uvar<option<term>>
+and uvar = Unionfind.p_uvar<option<term>> * version
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -178,7 +184,7 @@ and bv = {
     sort:term
 }
 and fv = {
-    fv_name :var<term>;
+    fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
 }
@@ -317,6 +323,7 @@ type sigelt' =
                        * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
+                       * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
   | Sig_new_effect_for_free of eff_decl
@@ -355,8 +362,8 @@ let contains_reflectable (l: list<qualifier>): bool =
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-let withinfo v s r = {v=v; ty=s; p=r}
-let withsort v s = withinfo v s dummyRange
+let withinfo v r = {v=v; p=r}
+let withsort v = withinfo v dummyRange
 
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
 let order_bv x y =
@@ -503,7 +510,7 @@ let fv_eq fv1 fv2 = lid_equals fv1.fv_name.v fv2.fv_name.v
 let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
 let lid_as_fv l dd dq : fv = {
-    fv_name=withinfo l tun (range_of_lid l);
+    fv_name=withinfo l (range_of_lid l);
     fv_delta=dd;
     fv_qual =dq;
 }

@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Free
+open FStar.ST
 open FStar.All
 
 open Prims
@@ -198,7 +199,7 @@ and free_names_and_uvars t use_cache =
 and free_names_and_uvars_args args (acc:free_vars * set<Ident.lident>) use_cache =
         args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
 
-and free_names_and_uvars_binders bs acc use_cache =
+and free_names_and_uvars_binders (bs:binders) acc use_cache =
         bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) acc
 
 and free_names_and_uvars_comp c use_cache =

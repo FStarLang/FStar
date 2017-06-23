@@ -1,5 +1,6 @@
 module HyE.CCA2  (* intuitively, parameterized by both PlainPKE and RSA *)
-open FStar.All
+open FStar.HyperStack.All
+open FStar.HyperStack.ST
 open FStar.HyperHeap
 open FStar.HyperStack
 open FStar.Monotonic.RRef
@@ -8,6 +9,8 @@ open FStar.Monotonic.Seq
 
 open FStar.List.Tot
 open HyE.PlainPKE
+module RSA = HyE.RSA
+module PlainPKE = HyE.PlainPKE
 
 type cipher = RSA.cipher
 noeq type entry =
@@ -39,7 +42,7 @@ let keygen parent  =
 
 
 let encrypt pk (p:PlainPKE.t) : ML RSA.cipher =
-  let p' = if Ideal.ind_cca then RSA.dummy else PlainPKE.repr p in
+  let p' = if HyE.Ideal.ind_cca then RSA.dummy else PlainPKE.repr p in
   let c = RSA.enc pk.rawpk p' in
   write_at_end pk.log (Entry c p);
   c
@@ -47,10 +50,10 @@ let encrypt pk (p:PlainPKE.t) : ML RSA.cipher =
 
 let decrypt sk (c:RSA.cipher) : ML (option (PlainPKE.t)) =
   let log = m_read (PKey?.log sk.pk) in
-  match Ideal.ind_cca, seq_find (function Entry c' _ -> c=c') log with
+  match HyE.Ideal.ind_cca, seq_find (function Entry c' _ -> c=c') log with
   | true,  Some t  -> Some(Entry?.p t)
   | _,  _       -> None
-  | false, _ -> 
+  | false, _ ->
     (match RSA.dec sk.raw c with
      | Some(t') -> PlainPKE.coerce t'
      | None     -> None)

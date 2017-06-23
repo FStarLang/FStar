@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.UEnv
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -25,6 +26,7 @@ open FStar.Syntax.Syntax
 
 module U  = FStar.Syntax.Util
 module BU = FStar.Util
+module Const = FStar.Parser.Const
 
 // JP: my understanding of this is: we either bind a type (left injection) or a
 // term variable (right injection). In the latter case, the variable may need to
@@ -183,6 +185,7 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
 *)
 
 let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
+    (* TODO : the name of the type must avoid any ocaml keyword using avoid_keyword *)
     let ml_a =  bv_as_ml_tyvar a in
     let mapped_to = match mapped_to with
         | None -> MLTY_Var ml_a

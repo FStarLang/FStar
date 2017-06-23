@@ -6,7 +6,7 @@ open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module Range = FStar.Range
@@ -29,29 +29,32 @@ module Ident = FStar.Ident
  * I'm not sure if that's an actual gain.
  *)
 
+let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
+let fstar_refl_embed = lid_as_tm PC.fstar_refl_embed_lid
+
 let protect_embedded_term (t:typ) (x:term) =
-    S.mk_Tm_app SC.fstar_refl_embed [S.iarg t; S.as_arg x] None x.pos
+    S.mk_Tm_app fstar_refl_embed [S.iarg t; S.as_arg x] None x.pos
 
 let un_protect_embedded_term : term -> term =
     fun (t:term) ->
         let head, args = U.head_and_args t in
         match (U.un_uinst head).n, args with
         | Tm_fvar fv, [_; (x, _)]
-            when S.fv_eq_lid fv SC.fstar_refl_embed_lid ->
+            when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
           x
         | _ ->
           failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
-let embed_unit (u:unit) : term = SC.exp_unit
+let embed_unit (u:unit) : term = U.exp_unit
 let unembed_unit (_:term) :unit = ()
 
-let embed_bool (b:bool) : term = if b then SC.exp_true_bool else SC.exp_false_bool
+let embed_bool (b:bool) : term = if b then U.exp_true_bool else U.exp_false_bool
 let unembed_bool (t:term) : bool =
     match (SS.compress t).n with
     | Tm_constant(FStar.Const.Const_bool b) -> b
     | _ -> failwith "Not an embedded bool"
 
-let embed_int (i:int) : term = SC.exp_int (BU.string_of_int i)
+let embed_int (i:int) : term = U.exp_int (BU.string_of_int i)
 let unembed_int (t:term) : int =
     // What's the portable solution? Let's do this for now
     match (SS.compress t).n with
@@ -74,8 +77,8 @@ let unembed_string (t:term) : string =
       failwith ("Not an embedded string (" ^ Print.term_to_string t ^ ")")
 
 
-let lid_Mktuple2 = U.mk_tuple_data_lid 2 Range.dummyRange
-let lid_tuple2   = U.mk_tuple_lid 2 Range.dummyRange
+let lid_Mktuple2 = PC.mk_tuple_data_lid 2 Range.dummyRange
+let lid_tuple2   = PC.mk_tuple_lid 2 Range.dummyRange
 
 let embed_binder (b:binder) : term =
     U.mk_alien b "reflection.embed_binder" None
@@ -85,12 +88,12 @@ let unembed_binder (t:term) : binder =
 
 let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
     match l with
-    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.nil_lid) [U_zero])
+    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.nil_lid) [U_zero])
                         [S.iarg typ]
                         None
                         Range.dummyRange
     | hd::tl ->
-            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.cons_lid) [U_zero])
+            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.cons_lid) [U_zero])
                         [S.iarg typ;
                          S.as_arg (embed_a hd);
                          S.as_arg (embed_list embed_a typ tl)]
@@ -102,10 +105,10 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
     let hd, args = U.head_and_args l in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, _
-        when S.fv_eq_lid fv SC.nil_lid -> []
+        when S.fv_eq_lid fv PC.nil_lid -> []
 
     | Tm_fvar fv, [_t; (hd, _); (tl, _)]
-        when S.fv_eq_lid fv SC.cons_lid ->
+        when S.fv_eq_lid fv PC.cons_lid ->
       unembed_a hd :: unembed_list unembed_a tl
 
     | _ ->
@@ -142,19 +145,19 @@ let unembed_pair (unembed_a:term -> 'a) (unembed_b:term -> 'b) (pair:term) : ('a
 let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
     match o with
     | None ->
-      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.none_lid) [U_zero])
+      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.none_lid) [U_zero])
                   [S.iarg typ]
                   None Range.dummyRange
     | Some a ->
-      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm SC.some_lid) [U_zero])
+      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.some_lid) [U_zero])
                   [S.iarg typ; S.as_arg (embed_a a)]
                   None Range.dummyRange
 
 let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
    let hd, args = U.head_and_args o in
    match (U.un_uinst hd).n, args with
-   | Tm_fvar fv, _ when S.fv_eq_lid fv SC.none_lid -> None
-   | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv SC.some_lid ->
+   | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> None
+   | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
      Some (unembed_a a)
    | _ -> failwith "Not an embedded option"
 
@@ -171,7 +174,7 @@ let embed_const (c:vconst) : term =
     | C_False   -> ref_C_False
 
     | C_Int i ->
-        S.mk_Tm_app ref_C_Int [S.as_arg (SC.exp_int (BU.string_of_int i))]
+        S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (BU.string_of_int i))]
                     None Range.dummyRange
 
 let embed_term_view (t:term_view) : term =
@@ -285,7 +288,7 @@ let inspect_fv (fv:fv) : list<string> =
 
 let pack_fv (ns:list<string>) : fv =
     // TODO: Delta_equational and None ok?
-    lid_as_fv (SC.p2l ns) Delta_equational None
+    lid_as_fv (PC.p2l ns) Delta_equational None
 
 let inspect_bv (b:binder) : string =
     Print.bv_to_string (fst b)
@@ -360,10 +363,10 @@ let inspect (t:term) : term_view =
 
 let pack_const (c:vconst) : term =
     match c with
-    | C_Unit    -> SC.exp_unit
-    | C_Int i   -> SC.exp_int (BU.string_of_int i)
-    | C_True    -> SC.exp_true_bool
-    | C_False   -> SC.exp_false_bool
+    | C_Unit    -> U.exp_unit
+    | C_Int i   -> U.exp_int (BU.string_of_int i)
+    | C_True    -> U.exp_true_bool
+    | C_False   -> U.exp_false_bool
 
 // TODO: pass in range?
 let pack (tv:term_view) : term =

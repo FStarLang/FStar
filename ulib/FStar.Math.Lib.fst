@@ -6,22 +6,15 @@ open FStar.Mul
 val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a/b) + a % b)
 let lemma_div_def a b = ()
 
-private let mul_lemma (a:nat) (b:nat) (c:nat) : Lemma (requires (a <= b))
-                                           (ensures  (c * a <= c * b))
+private let mul_lemma (a:nat) (b:nat) (c:pos) : Lemma (requires (a < b))
+                                           (ensures  (c * a < c * b))
   = ()
-
-private let mul_lemma' (a:nat) (b:nat) (c:pos) : Lemma (requires (c * a <= c * b))
-                                           (ensures (a <= b))
-  = ()
-
-private let mul_div_lemma (a:nat) (b:pos) : Lemma (b * (a / b) <= a) = ()
 
 val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
 #reset-options "--z3rlimit 10"
 let slash_decr_axiom a b =
-    mul_lemma 1 b a;
-    mul_div_lemma a b;
-    mul_lemma' (a / b) a b
+  lemma_div_def a b;
+  if (a / b > a) then mul_lemma a (a/b) b
 
 #reset-options
 

@@ -1,5 +1,6 @@
 #light "off"
 module FStar.TypeChecker.TcInductive
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.TypeChecker

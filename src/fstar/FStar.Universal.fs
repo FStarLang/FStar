@@ -17,6 +17,7 @@
 
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Errors
@@ -34,7 +35,7 @@ module Syntax  = FStar.Syntax.Syntax
 module Util    = FStar.Syntax.Util
 module Desugar = FStar.ToSyntax.ToSyntax
 module SMT     = FStar.SMTEncoding.Solver
-module Const   = FStar.Syntax.Const
+module Const   = FStar.Parser.Const
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util

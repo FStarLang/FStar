@@ -2,11 +2,11 @@ open Prims
 type name = Prims.string Prims.list
 type typ = FStar_Reflection_Types.term
 type binders = FStar_Reflection_Types.binder Prims.list
-type const =
-  | C_Unit
-  | C_Int of Prims.int
-  | C_True
-  | C_False
+type const = FStar_Reflection_Data.vconst
+  (* | C_Unit *)
+  (* | C_Int of Prims.int *)
+  (* | C_True *)
+  (* | C_False *)
 let uu___is_C_Unit: const -> Prims.bool =
   fun projectee  ->
     match projectee with | C_Unit  -> true | uu____13 -> false
@@ -21,16 +21,16 @@ let uu___is_C_True: const -> Prims.bool =
 let uu___is_C_False: const -> Prims.bool =
   fun projectee  ->
     match projectee with | C_False  -> true | uu____47 -> false
-type term_view =
-  | Tv_Var of FStar_Reflection_Types.binder
-  | Tv_FVar of FStar_Reflection_Types.fv
-  | Tv_App of FStar_Reflection_Types.term* FStar_Reflection_Types.term
-  | Tv_Abs of FStar_Reflection_Types.binder* FStar_Reflection_Types.term
-  | Tv_Arrow of FStar_Reflection_Types.binder* FStar_Reflection_Types.term
-  | Tv_Type of Prims.unit
-  | Tv_Refine of FStar_Reflection_Types.binder* FStar_Reflection_Types.term
-  | Tv_Const of const
-  | Tv_Unknown
+type term_view = FStar_Reflection_Data.term_view
+  (* | Tv_Var of FStar_Reflection_Types.binder *)
+  (* | Tv_FVar of FStar_Reflection_Types.fv *)
+  (* | Tv_App of FStar_Reflection_Types.term* FStar_Reflection_Types.term *)
+  (* | Tv_Abs of FStar_Reflection_Types.binder* FStar_Reflection_Types.term *)
+  (* | Tv_Arrow of FStar_Reflection_Types.binder* FStar_Reflection_Types.term *)
+  (* | Tv_Type of Prims.unit *)
+  (* | Tv_Refine of FStar_Reflection_Types.binder* FStar_Reflection_Types.term *)
+  (* | Tv_Const of const *)
+  (* | Tv_Unknown *)
 let uu___is_Tv_Var: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Var _0 -> true | uu____104 -> false
@@ -90,29 +90,31 @@ let type_of_binder:
   fun b  -> __type_of_binder b
 type ('Atv,'At) smaller = Obj.t
 let __inspect: FStar_Reflection_Types.term -> term_view =
-  Obj.magic (fun t  -> failwith "Not yet implemented:__inspect")
+    FStar_Reflection_Basic.inspect
 let inspect: FStar_Reflection_Types.term -> term_view = fun t  -> __inspect t
 let __pack: term_view -> FStar_Reflection_Types.term =
-  Obj.magic (fun uu____391  -> failwith "Not yet implemented:__pack")
+    FStar_Reflection_Basic.pack
 let pack: term_view -> FStar_Reflection_Types.term = fun tv  -> __pack tv
 let pack_inspect_inv: FStar_Reflection_Types.term -> Prims.unit =
   Obj.magic (fun t  -> failwith "Not yet implemented:pack_inspect_inv")
 let inspect_pack_inv: term_view -> Prims.unit =
   Obj.magic (fun tv  -> failwith "Not yet implemented:inspect_pack_inv")
 let __inspect_fv: FStar_Reflection_Types.fv -> name =
-  Obj.magic (fun uu____414  -> failwith "Not yet implemented:__inspect_fv")
+    FStar_Reflection_Basic.inspect_fv
 let inspect_fv: FStar_Reflection_Types.fv -> name =
   fun fv  -> __inspect_fv fv
 let __pack_fv: name -> FStar_Reflection_Types.fv =
-  Obj.magic (fun uu____425  -> failwith "Not yet implemented:__pack_fv")
+    FStar_Reflection_Basic.pack_fv
 let pack_fv: name -> FStar_Reflection_Types.fv = fun ns  -> __pack_fv ns
 let __compare_binder:
   FStar_Reflection_Types.binder ->
     FStar_Reflection_Types.binder -> FStar_Order.order
   =
-  Obj.magic
-    (fun uu____441  ->
-       fun uu____442  -> failwith "Not yet implemented:__compare_binder")
+      fun b1 b2 -> match FStar_Reflection_Basic.order_binder b1 b2
+      with
+      | FStar_Reflection_Data.Eq -> FStar_Order.Eq
+      | FStar_Reflection_Data.Lt -> FStar_Order.Lt
+      | FStar_Reflection_Data.Gt -> FStar_Order.Gt
 let compare_binder:
   FStar_Reflection_Types.binder ->
     FStar_Reflection_Types.binder -> FStar_Order.order
@@ -137,15 +139,12 @@ let is_free:
   = fun b  -> fun t  -> __is_free b t
 let __term_eq:
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool =
-  Obj.magic
-    (fun uu____507  ->
-       fun uu____508  -> failwith "Not yet implemented:__term_eq")
+      FStar_Syntax_Util.term_eq
 let term_eq:
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool =
   fun t1  -> fun t2  -> __term_eq t1 t2
 let __term_to_string: FStar_Reflection_Types.term -> Prims.string =
-  Obj.magic
-    (fun uu____524  -> failwith "Not yet implemented:__term_to_string")
+    FStar_Syntax_Print.term_to_string
 let term_to_string: FStar_Reflection_Types.term -> Prims.string =
   fun t  -> __term_to_string t
 let __fresh_binder: typ -> FStar_Reflection_Types.binder =

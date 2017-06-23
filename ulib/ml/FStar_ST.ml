@@ -3,7 +3,6 @@
 open FStar_CommonST
 
 type 'a ref = 'a FStar_Heap.ref
-[@@deriving show]
 
 let read = read
 

@@ -32,7 +32,7 @@
       [
         "@MaxIFuel_assumption", "@query", "proj_equation_Ex10b.Point_x",
         "projection_inverse_Ex10b.Point_x",
-        "refinement_interpretation_Ex10b_Tm_refine_9e4d81f9b1c21ede8bd64e418289f419"
+        "refinement_interpretation_Ex10b_Tm_refine_f2a77ae22406f0f6f8f3003c6e41b99e"
       ],
       0
     ],
@@ -82,8 +82,9 @@
         "lemma_FStar.Heap.lemma_upd_unused", "proj_equation_Ex10b.Point_x",
         "proj_equation_Ex10b.Point_y", "projection_inverse_Ex10b.Point_x",
         "projection_inverse_Ex10b.Point_y",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2", "ref_inversion"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "ref_inversion", "typing_Ex10b.__proj__Point__item__x"
       ],
       0
     ],
@@ -178,7 +179,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0
@@ -216,8 +217,8 @@
         "lemma_FStar.Heap.lemma_contains_implies_used",
         "lemma_FStar.Heap.lemma_distinct_addrs_unused",
         "proj_equation_Ex10b.Point_x",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_Ex10b.__proj__Point__item__x"
       ],
@@ -314,7 +315,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.tuple2_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0
