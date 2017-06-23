@@ -9,7 +9,6 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
 	@# Sneaky fix...
 	sed -i 's/Reflection_Syntax\.\(Tv\|C_\)/Reflection_Data.\1/g' *.ml
-	cat $(patsubst %.fst,%,$<).fixup >> $@
 
 %.cmxs: %.ml
 	ocamlfind ocamlopt -shared $(INCLUDES) -linkpkg -package zarith -o $@ $<
