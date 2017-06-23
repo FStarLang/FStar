@@ -484,7 +484,7 @@ let doZ3Exe':
                         (if rsn <> "unknown"
                          then
                            FStar_Util.smap_add statistics "reason-unknown"
-                             rsn
+                             (Prims.strcat "\"" (Prims.strcat rsn "\""))
                          else ())
                       else ())) in
           FStar_List.iter (fun line  -> parse line) lines1;
