@@ -550,6 +550,7 @@ let rec resugar_term (t : S.term) : A.term =
       let mk_pat a = A.mk_pattern a t.pos in
       let bnds, body = SS.open_let_rec bnds body in
       let resugar_one_binding bnd =
+        (* TODO : some stuff are open twice there ! (may have already been opened in open_let_rec) *)
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
         let typ, def = match (SS.compress td).n with
           | Tm_app(_, [(t, _); (d, _)]) -> t, d
@@ -578,7 +579,8 @@ let rec resugar_term (t : S.term) : A.term =
           let f =
             if not (Options.print_universes ()) then fst
             (* Print bound universes as a comment *)
-            else function ((pat, body), univs) -> pat, mk (A.Labeled (body, univs, true))
+            else function ((pat, body), univs) ->
+              pat, (if univs = "" then body else mk (A.Labeled (body, univs, true)))
           in
           List.map f r
       in
