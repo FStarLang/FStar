@@ -62,6 +62,11 @@ let rec universe_to_int n u =
     | U_succ u -> universe_to_int (n+1) u
     | _ -> (n, u)
 
+let universe_to_string univs =
+  if (Options.print_universes()) then
+    List.map (fun x -> x.idText) univs |> String.concat  ", "
+  else ""
+
 let rec resugar_universe (u:S.universe) r: A.term =
   let mk (a:A.term') r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
@@ -512,12 +517,12 @@ let rec resugar_term (t : S.term) : A.term =
     end
 
     | Tm_match(e, [(pat, _, t)]) ->
-    (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
-       it would be better to print it as `let P = e in e1`. *)
-    (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
-    let bnds = [(resugar_pat pat, resugar_term e)] in
-    let body = resugar_term t in
-    mk (A.Let(A.NoLetQualifier, bnds, body))
+      (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
+        it would be better to print it as `let P = e in e1`. *)
+      (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
+      let bnds = [(resugar_pat pat, resugar_term e)] in
+      let body = resugar_term t in
+      mk (A.Let(A.NoLetQualifier, bnds, body))
 
     | Tm_match(e, [(pat1, _, t1); (pat2, _, t2)]) when is_true_pat pat1 && is_wild_pat pat2 ->
       mk (A.If(resugar_term e, resugar_term t1, resugar_term t2))
@@ -557,11 +562,6 @@ let rec resugar_term (t : S.term) : A.term =
             b, t, true
           | _ -> [], def, false
         in
-        let universe_to_string univs =
-          if (Options.print_universes()) then
-            List.map (fun x -> x.idText) univs |> String.concat  ", "
-          else ""
-        in
         let pat, term = match bnd.lbname with
           | Inr fv -> mk_pat (A.PatName fv.fv_name.v), term
           | Inl bv ->
@@ -574,8 +574,14 @@ let rec resugar_term (t : S.term) : A.term =
           ((pat, resugar_term term), (universe_to_string univs))
       in
       let r = List.map (resugar_one_binding) bnds in
-      let bnds = List.map fst r in
-      let comments = List.map snd r in
+      let bnds =
+          let f =
+            if not (Options.print_universes ()) then fst
+            (* Print bound universes as a comment *)
+            else function ((pat, body), univs) -> pat, mk (A.Labeled (body, univs, true))
+          in
+          List.map f r
+      in
       let body = resugar_term body in
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
@@ -1069,7 +1075,14 @@ let resugar_sigelt se : option<A.decl> =
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
-      Some (decl'_to_decl se (A.Val(lid.ident, resugar_term t)))
+      let t' =
+        if not (Options.print_universes ()) || isEmpty uvs then resugar_term t
+        else
+          let uvs, t = SS.open_univ_vars uvs t in
+          let universes = universe_to_string uvs in
+          A.mk_term (A.Labeled (resugar_term t, universes, true)) t.pos A.Un
+      in
+      Some (decl'_to_decl se (A.Val (lid.ident,t')))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

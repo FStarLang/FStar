@@ -1061,7 +1061,6 @@ and p_appTerm e = match (unparen e).tm with
       p_indexingTerm e
 
 and p_argTerm arg_imp = match arg_imp with
-  | ({tm=Uvar _}, UnivApp) -> p_univar (fst arg_imp)
   | (u, UnivApp) -> p_universe u
   | (e, FsTypApp) ->
       (* This case should not happen since it might lead to badly formed type applications (e.g t<a><b>)*)
@@ -1143,7 +1142,7 @@ and p_projectionLHS e = match (unparen e).tm with
 
   (* KM : I still think that it is wrong to print a term that's not parseable... *)
   | Labeled (e, s, b) ->
-      break_ 0 ^^ str ("(*" ^ s ^ "*)") ^/^ p_term e
+      str ("(*" ^ s ^ "*)") ^/^ p_term e
 
   (* Failure cases : these cases are not handled in the printing grammar since *)
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
@@ -1229,71 +1228,66 @@ and p_universeFrom u = match (unparen u).tm with
   | _ -> p_atomicUniverse u
 
 and p_atomicUniverse u = match (unparen u).tm with
-    | Wild -> underscore
-    | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
-    | Uvar _ -> p_univar u
-    | Paren u -> soft_parens_with_nesting (p_universeFrom u)
-    | Op({idText = "+"}, [_ ; _])
-    | App _ -> soft_parens_with_nesting (p_universeFrom u)
-      | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
+  | Wild -> underscore
+  | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
+  | Uvar id -> str (text_of_id id)
+  | Paren u -> soft_parens_with_nesting (p_universeFrom u)
+  | Op({idText = "+"}, [_ ; _])
+  | App _ -> soft_parens_with_nesting (p_universeFrom u)
+  | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
-    and p_univar u = match (unparen u).tm with
-        | Uvar id -> str (text_of_id id)
-        | _ -> failwith (Util.format1 "Not a universe variable %s" (term_to_string u))
+let term_to_document e = p_term e
 
+let decl_to_document e = p_decl e
 
-    let term_to_document e = p_term e
+let pat_to_document p = p_disjunctivePattern p
 
-    let decl_to_document e = p_decl e
+let binder_to_document b = p_binder true b
 
-    let pat_to_document p = p_disjunctivePattern p
+let modul_to_document (m:modul) =
+  should_print_fs_typ_app := false ;
+  let res =
+    match m with
+    | Module (_, decls)
+    | Interface (_, decls, _) ->
+        decls |> List.map decl_to_document |> separate hardline
+  in  should_print_fs_typ_app := false ;
+  res
 
-    let binder_to_document b = p_binder true b
+let comments_to_document (comments : list<(string * FStar.Range.range)>) =
+    separate_map hardline (fun (comment, range) -> str comment) comments
 
-    let modul_to_document (m:modul) =
-      should_print_fs_typ_app := false ;
-      let res =
-        match m with
-        | Module (_, decls)
-        | Interface (_, decls, _) ->
-            decls |> List.map decl_to_document |> separate hardline
-      in  should_print_fs_typ_app := false ;
-      res
-
-    let comments_to_document (comments : list<(string * FStar.Range.range)>) =
-        separate_map hardline (fun (comment, range) -> str comment) comments
-
-    (* [modul_with_comments_to_document m comments] prints the module [m] trying *)
-    (* to insert the comments from [comments]. The list comments is composed of *)
-    (* pairs of a raw string and a position which is used to place the comment *)
-    (* not too far from its original position. The rules for placing comments *)
-    (* are described in the ``Taking care of comments`` section *)
-    let modul_with_comments_to_document (m:modul) comments =
-      let decls = match m with
-        | Module (_, decls)
-        | Interface (_, decls, _) -> decls
+(* [modul_with_comments_to_document m comments] prints the module [m] trying *)
+(* to insert the comments from [comments]. The list comments is composed of *)
+(* pairs of a raw string and a position which is used to place the comment *)
+(* not too far from its original position. The rules for placing comments *)
+(* are described in the ``Taking care of comments`` section *)
+let modul_with_comments_to_document (m:modul) comments =
+  let decls = match m with
+    | Module (_, decls)
+    | Interface (_, decls, _) -> decls
+  in
+  should_print_fs_typ_app := false ;
+  match decls with
+    | [] -> empty, comments
+    | d :: ds ->
+      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
+      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
+      let decls, first_range =
+        match ds with
+        | { d = Pragma LightOff } :: _ ->
+            let d0 = List.hd ds in
+            d0 :: d :: List.tl ds, d0.drange
+        | _ -> d :: ds, d.drange
       in
-      should_print_fs_typ_app := false ;
-      match decls with
-        | [] -> empty, comments
-        | d :: ds ->
-          (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
-          (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
-          let decls, first_range =
-            match ds with
-            | { d = Pragma LightOff } :: _ ->
-                let d0 = List.hd ds in
-                d0 :: d :: List.tl ds, d0.drange
-            | _ -> d :: ds, d.drange
-          in
-          (* TODO : take into account the space of the fsdoc (and attributes ?) *)
-          let extract_decl_range d = d.drange in
-          comment_stack := comments ;
-          let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
-      let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
-      let comments = !comment_stack in
-      comment_stack := [] ;
-      should_print_fs_typ_app := false ;
-      (initial_comment ^^ doc, comments)
+      (* TODO : take into account the space of the fsdoc (and attributes ?) *)
+      let extract_decl_range d = d.drange in
+      comment_stack := comments ;
+      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
+  let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
+  let comments = !comment_stack in
+  comment_stack := [] ;
+  should_print_fs_typ_app := false ;
+  (initial_comment ^^ doc, comments)
 
 
