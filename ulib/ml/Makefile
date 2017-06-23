@@ -31,6 +31,7 @@ fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
 
 install: fstarlib.cmxa fstarlib.cma
+	cp _build/ulib/ml/fstarlib.a $(FSTARLIB_DIR)
 	cp _build/ulib/ml/*.cmi $(FSTARLIB_DIR)
 	cp _build/ulib/ml/extracted/*.cmi $(FSTARLIB_DIR)
 
