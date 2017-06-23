@@ -57,6 +57,24 @@ let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifie
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
 
+let resugar_imp (q:option<S.arg_qualifier>) : A.imp =
+  match q with
+  | None -> A.Nothing
+  | Some (S.Implicit false) -> A.Hash
+  | Some Equality
+  | Some (S.Implicit true) ->
+    (* This should be a proper error rather than a failwith *)
+    failwith "Not an imp"
+
+let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifier>)> =
+    match q with
+    | None -> Some None
+    | Some (S.Implicit b) ->
+        (* TODO : set an option to print these inaccessible patterns *)
+        if b then None
+        else Some (Some A.Implicit)
+    | Some S.Equality -> Some (Some A.Equality)
+
 let rec universe_to_int n u =
   match u with
     | U_succ u -> universe_to_int (n+1) u
@@ -146,7 +164,7 @@ let string_to_op s =
     else
       None
 
-let rec resugar_term_as_op(t:S.term) : option<(string*int)> =
+let rec resugar_term_as_op (t:S.term) : option<(string*int)> =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
@@ -205,7 +223,8 @@ let rec resugar_term_as_op(t:S.term) : option<(string*int)> =
         | Some t -> Some t
         | _ -> fallback fv
       end
-    | Tm_uinst(e, us) -> resugar_term_as_op e
+    | Tm_uinst(e, us) ->
+      resugar_term_as_op e
     | _ -> None
 
 let is_true_pat (p:S.pat) : bool = match p.v with
@@ -352,10 +371,9 @@ let rec resugar_term (t : S.term) : A.term =
             | _::t -> last_three t
       in
       let resugar_as_app e args =
-        let args = args |> List.map (fun (e, qual) ->
-              resugar_term e) in
+        let args = args |> List.map (fun (e, qual) -> resugar_term e, qual) in
         let e = resugar_term e in
-        List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
+        List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, resugar_imp qual))) e args
       in
       let args = if (Options.print_implicits()) then args else filter_imp args
       in
@@ -604,18 +622,19 @@ let rec resugar_term (t : S.term) : A.term =
                       | _ -> failwith "wrong Data_app head format"
                     in
                     let head, universes = aux head in
-                    let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
-                    let args = List.map (fun (t, _) -> (resugar_term t, A.Nothing)) args in
-                    if (C.is_tuple_data_lid' head) then
-                      // ToDocument doesn't expect uvar that is added by the
-                      // typechecker in tuple constructor
-                      // TODO: where should be store the universe information?
-                      mk (A.Construct(head, args))
-                    else
-                      if (Options.print_universes()) then
-                        mk (A.Construct(head, args@universes))
-                      else
-                        mk (A.Construct(head, args))
+                    let universes =
+                        List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes
+                    in
+                    let args = List.map (fun (t, q) -> (resugar_term t, resugar_imp q)) args in
+                    let args =
+                        // ToDocument doesn't expect uvar that is added by the
+                        // typechecker in tuple constructor
+                        // TODO: where should be store the universe information?
+                        if C.is_tuple_data_lid' head || not (Options.print_universes ()) then
+                            args
+                        else universes @ args
+                     in
+                     mk (A.Construct(head, args))
                 | Tm_meta(_, m) ->
                   // the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker
                   // applies monadic_application
