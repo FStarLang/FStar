@@ -5,6 +5,10 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 .PRECIOUS: %.ml %.cmxs
 
+MODULES=Print Split Canon
+
+all: $(patsubst %,%.test,$(MODULES))
+
 %.ml: %.fst
 	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
 	@# Sneaky fix...
@@ -16,7 +20,7 @@ FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 .PHONY: test
 
 %.test: %.cmxs %.Test.fst 
-	$(FSTAR) --load $^
+	$(FSTAR) --load $^ --admit_smt_queries true
 
 clean:
 	rm -f *.ml *.cm*
