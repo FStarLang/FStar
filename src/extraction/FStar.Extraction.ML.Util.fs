@@ -341,6 +341,8 @@ let mk_embedding (m: emb_decl) (s: string) =
 
 let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
+    | Tm_fvar fv when fv_eq_lid fv C.int_lid -> fstar_tc_common_prefix "t_int"
+    | Tm_fvar fv when fv_eq_lid fv C.bool_lid -> fstar_tc_common_prefix "t_bool"
     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> fstar_tc_common_prefix "t_unit"
     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> fstar_tc_common_prefix "t_string"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> fstar_refl_data_prefix "t_binder"
@@ -366,6 +368,8 @@ let rec mk_tac_param_type (t: term): mlexpr' =
    and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
+    | Tm_fvar fv when fv_eq_lid fv C.int_lid -> mk_embedding m "int"
+    | Tm_fvar fv when fv_eq_lid fv C.bool_lid -> mk_embedding m "bool"
     | Tm_fvar fv when fv_eq_lid fv C.unit_lid -> mk_embedding m "unit"
     | Tm_fvar fv when fv_eq_lid fv C.string_lid -> mk_embedding m "string"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> mk_embedding m "binder"
@@ -384,6 +388,7 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
                  | Tm_fvar fv when fv_eq_lid fv C.option_lid ->
                      let arg_term = fst (List.hd args) in
                      "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
+                 | Tm_fvar fv when fv_eq_lid fv C.tactic_lid -> failwith "Embedding for tactics not defined"
                  | _ -> failwith ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))) in
             let hargs =
                 match m with
