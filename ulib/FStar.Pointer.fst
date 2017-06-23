@@ -1371,10 +1371,6 @@ abstract let recall
 = HST.recall (Pointer?.content p)
 *)
 
-(* Equality predicate on struct contents, without quantifiers *)
-let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
-  live h b /\ live h' b' /\ gread h b == gread h' b'
-
 abstract let includes
   (#value1: typ)
   (#value2: typ)
@@ -1882,6 +1878,112 @@ let live_unused_in_disjoint
 = live_unused_in_disjoint_strong h p1 p2;
   disjoint_root p1 p2
 
+(** The readable permission.
+    We choose to implement it only abstractly, instead of explicitly
+    tracking the permission in the heap.
+*)
+
+abstract
+let readable
+  (#a: typ)
+  (h: HS.mem)
+  (b: pointer a)
+: GTot Type0
+= live h b
+
+abstract
+let readable_live
+  (#a: typ)
+  (h: HS.mem)
+  (b: pointer a)
+: Lemma
+  (requires (readable h b))
+  (ensures (live h b))
+  [SMTPatOr [
+    [SMTPat (readable h b)];
+    [SMTPat (live h b)];
+  ]]
+= ()
+
+abstract
+let readable_gfield
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+: Lemma
+  (requires (readable h p))
+  (ensures (readable h (gfield p fd)))
+  [SMTPat (readable h (gfield p fd))]
+= ()
+
+abstract
+let readable_struct
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (h: HS.mem)
+: Lemma
+  (requires (
+    live h p /\ ( // necessary if l is an empty struct
+    forall (f: struct_field l) .
+    readable h (gfield p f)
+  )))
+  (ensures (readable h p))
+//  [SMTPat (readable #(TStruct l) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
+= ()
+
+abstract
+let readable_struct_forall_mem
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+: Lemma (forall
+    (h: HS.mem)
+  . (  
+      live h p /\ ( // necessary if l is an empty struct
+      forall (f: struct_field l) .
+      readable h (gfield p f)
+    )) ==>
+    readable h p
+  )
+= Classical.forall_intro (Classical.move_requires (readable_struct p))
+
+abstract
+let readable_gcell
+  (#length: UInt32.t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+  (i: UInt32.t {UInt32.v i < UInt32.v length})
+: Lemma
+  (requires (readable h p))
+  (ensures (readable h (gcell p i)))
+  [SMTPat (readable h (gcell p i))]
+= ()
+
+abstract
+let readable_array
+  (#length: UInt32.t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+: Lemma
+  (requires (
+    live h p /\ ( // necessary if length = 0ul
+    forall (i: UInt32.t { UInt32.v i < UInt32.v length } ) .
+    readable h (gcell p i)
+  )))
+  (ensures (readable h p))
+  [SMTPat (readable #(TArray length value) h p)]
+= ()
+
+(* Equality predicate on struct contents, without quantifiers *)
+let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
+  live h b /\ live h' b' /\ (
+    readable h b ==> (
+      readable h' b' /\
+      gread h b == gread h' b'
+  ))
+
 (*** The modifies clause *)
 
 // private // in fact, we have to expose this type, otherwise unification problems will appear everywhere
@@ -2092,7 +2194,7 @@ let modifies
       forall (a: apointer { frameOf (APointer?.p a) == r /\ TSet.mem a (Set?.pointers s) } ) .
       disjoint (APointer?.p a) (APointer?.p a')
     ) ==> (
-    live h2 (APointer?.p a') /\ gread h1 (APointer?.p a') == gread h2 (APointer?.p a')
+    equal_values h1 (APointer?.p a') h2 (APointer?.p a')
   ))
 
 abstract
@@ -2128,8 +2230,7 @@ let modifies_elim
     disjoint (APointer?.p ap) p'
   )))
   (ensures (
-    live h2 p' /\
-    gread h1 p' == gread h2 p'
+    equal_values h1 p' h2 p'
   ))
 = let ap' = APointer a' p' in
   assert (p' == APointer?.p ap')
@@ -2152,8 +2253,7 @@ let modifies_intro
         forall (ap: apointer { frameOf (APointer?.p ap) == r /\ set_amem ap s } ) .
         disjoint (APointer?.p ap) p'
       ) ==> (
-        live h2 p' /\
-        gread h1 p' == gread h2 p'
+	equal_values h1 p' h2 p'
   ))))
   (ensures (modifies r s h1 h2))
 = Set.lemma_equal_elim rs (Ghost.reveal (Set?.addrs s))
@@ -2277,8 +2377,6 @@ let lemma_ststack_1 (#a:typ) (b:pointer a) h0 h1 h2 h3 : Lemma
   [SMTPatT (modifies_1 b h1 h2); SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3)]
 = ()
 
-//  assume (modifies_1 b h0 h3)
-
 (** Transitivity lemmas *)
 let modifies_0_trans h0 h1 h2 : Lemma
   (requires (modifies_0 h0 h1 /\ modifies_0 h1 h2))
@@ -2322,7 +2420,9 @@ abstract let screate
      /\ modifies_0 h0 h1
      /\ Map.domain h1.HS.h == Map.domain h0.HS.h
      /\ begin match s with
-       | Some s' -> gread h1 b == s'
+       | Some s' ->
+	 readable h1 b /\
+	 gread h1 b == s'
        | _ -> True
        end
   ))
@@ -2356,7 +2456,9 @@ abstract let ecreate
     /\ HS.modifies (Set.singleton r) h0 h1
     /\ HS.modifies_ref r Set.empty h0 h1
     /\ begin match s with
-      | Some s' -> gread h1 b == s'
+      | Some s' ->
+	readable h1 b /\
+	gread h1 b == s'
       | _ -> True
       end
     /\ ~(is_mm b)))
@@ -2394,17 +2496,20 @@ abstract let read
  (#value: typ)
  (p: pointer value)
 : HST.ST (type_of_typ value)
-  (requires (fun h -> live h p))
-  (ensures (fun h0 v h1 -> live h0 p /\ h0 == h1 /\ v == gread h0 p))
+  (requires (fun h -> readable h p))
+  (ensures (fun h0 v h1 -> readable h0 p /\ h0 == h1 /\ v == gread h0 p))
 = let h = HST.get () in
   let r = reference_of h p in
   let (| _ , c |) = !r in
   path_sel c (Pointer?.p p)
 
+#reset-options "--z3rlimit 64"
+
 abstract val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
   (requires (fun h -> live h b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b
     /\ modifies_1 b h0 h1
+    /\ readable h1 b
     /\ gread h1 b == z ))
 let write #a b z =
   let h0 = HST.get () in
@@ -2497,7 +2602,7 @@ let modifies_other_regions
   (p: pointer a)
 : Lemma
   (requires (HS.modifies rs h0 h1 /\ (~ (Set.mem (frameOf p) rs)) /\ live h0 p))
-  (ensures (live h1 p /\ gread h0 p == gread h1 p))
+  (ensures (equal_values h0 p h1 p))
 = ()
 
 abstract
@@ -2508,7 +2613,7 @@ let modifies_one_other_region
   (p: pointer a)
 : Lemma
   (requires (HS.modifies_one r h0 h1 /\ frameOf p <> r /\ live h0 p))
-  (ensures (live h1 p /\ gread h0 p == gread h1 p))
+  (ensures (equal_values h0 p h1 p))
 = ()
 
 (*** Semantics of buffers *)
@@ -2855,14 +2960,104 @@ abstract let gread_pointer_of_buffer_cell'
   [SMTPat (Seq.index (buffer_as_seq h b) (UInt32.v i))]
 = ()
 
+(* The readable permission lifted to buffers. *)
+
+abstract
+let buffer_readable
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: GTot Type0
+= buffer_live h b /\ (
+    forall (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b)} ) .
+    readable h (gpointer_of_buffer_cell b i)
+  )
+
+abstract
+let buffer_readable_buffer_live
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: Lemma
+  (requires (buffer_readable h b))
+  (ensures (buffer_live h b))
+  [SMTPatOr [
+    [SMTPat (buffer_readable h b)];
+    [SMTPat (buffer_live h b)];
+  ]]
+= ()
+
+abstract
+let buffer_readable_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer t)
+: Lemma
+  (ensures (buffer_readable h (gsingleton_buffer_of_pointer p) <==> readable h p))
+  [SMTPat (buffer_readable h (gsingleton_buffer_of_pointer p))]
+= ()
+
+abstract
+let buffer_readable_gbuffer_of_array_pointer
+  (#len: UInt32.t)
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer (TArray len t))
+: Lemma
+  (requires (UInt32.v len > 0))
+  (ensures (buffer_readable h (gbuffer_of_array_pointer p) <==> readable h p))
+  [SMTPat (buffer_readable h (gbuffer_of_array_pointer p))]
+= ()
+
+abstract
+let buffer_readable_gsub_buffer
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) } )
+: Lemma
+  (requires (buffer_readable h b /\ UInt32.v len > 0))
+  (ensures (buffer_readable h (gsub_buffer b i len)))
+  [SMTPat (buffer_readable h (gsub_buffer b i len))]
+= ()
+
+abstract
+let readable_gpointer_of_buffer_cell
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) })
+: Lemma
+  (requires (buffer_readable h b))
+  (ensures (readable h (gpointer_of_buffer_cell b i)))
+  [SMTPat (readable h (gpointer_of_buffer_cell b i))]
+= ()
+
+abstract
+let buffer_readable_intro
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: Lemma
+  (requires (
+    buffer_live h b /\ (
+     forall (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) } ) .
+     readable h (gpointer_of_buffer_cell b i)
+  )))
+  (ensures (buffer_readable h b))
+  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
+= ()
+
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
 
+abstract
 let read_buffer
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) } )
 : HST.Stack (type_of_typ t)
-  (requires (fun h -> buffer_live h b))
+  (requires (fun h -> buffer_readable h b))
   (ensures (fun h v h' -> h' == h /\ v == Seq.index (buffer_as_seq h b) (UInt32.v i)))
 = read (pointer_of_buffer_cell b i)
 
@@ -3042,6 +3237,7 @@ let write_buffer
   (ensures (fun h _ h' ->
     modifies_1 (gpointer_of_buffer_cell b i) h h' /\
     buffer_live h' b /\
+    readable h' (gpointer_of_buffer_cell b i) /\
     Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\ (
       forall (j: UInt32.t {UInt32.v j < UInt32.v (buffer_length b) /\ UInt32.v j <> UInt32.v i }) .
         Seq.index (buffer_as_seq h' b) (UInt32.v j) == Seq.index (buffer_as_seq h b) (UInt32.v j)
@@ -3059,7 +3255,12 @@ let modifies_1_disjoint_buffer_vs_pointer_live
     buffer_live h b /\
     modifies_1 p h h'
   ))
-  (ensures (buffer_live h' b /\ buffer_as_seq h b == buffer_as_seq h' b))
+  (ensures (
+    buffer_live h' b /\ (
+      buffer_readable h b ==> (
+	buffer_readable h' b /\
+	buffer_as_seq h b == buffer_as_seq h' b
+  ))))
   [SMTPat (modifies_1 p h h'); SMTPat (buffer_live h b)]
 = modifies_1_reveal p h h';
   let f
