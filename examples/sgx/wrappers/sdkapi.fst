@@ -35,7 +35,7 @@ type struct_for_wrapper1 =
   - Wrapper for non_enclave_entry_point_1 : int -> int-> int
   - manifest has the function type signature. so the wrapper knows how many bytes to read/write for args/ret 
 *)
-val callenclavehost_wrapper_1: emode: bool-> u_mem:HH.rid->v_mem:HH.rid -> uv_shared_buf:HH.rid -> non_enclave_regn: HH.rid->arg1: (rref uv_shared_buf int)-> arg2:(rref uv_shared_buf int) ->Heap unit
+val callenclavehost_wrapper_1: emode: bool-> u_mem:HH.rid->v_mem:HH.rid -> uv_shared_buf:HH.rid -> non_enclave_regn: HH.rid->arg1: (rref uv_shared_buf int)-> arg2:(rref uv_shared_buf int)->rret:(rref uv_shared_buf int)  ->Heap unit
 			(requires (fun m -> heap_only m /\ emode = true ))
 			(ensures (fun m0 r m1 -> modifies_transitively (Set.singleton non_enclave_regn) m0 m1 ))
 let callenclavehost_wrapper_1 emode u_mem v_mem uv_shared_buf non_enclave_regn arg1 arg2 =
@@ -56,14 +56,30 @@ let callenclavehost_wrapper_1 emode u_mem v_mem uv_shared_buf non_enclave_regn a
 	(* create a reference in non_enclave_regn and copy the arguments to non_enclave_regn *)
 	let non_enclave_arg = ralloc non_enclave_regn  struct_1 in
 
+	(* IMPORTANT: instead of using a struct, use a sequence of bytes like char [] and copy the arguments.
+	  Though this opens a plethora of endianness issues, this is probably the only way to access
+	  return value as callenclavehost() does not know where exactly return pointer is.
+	  Also this is compliant with SGX SDK API for callenclaveHost
+	*) 
+	let argv1_char = convert_to_bytes argv1 in
+	let argv2_char = convert_to_bytes argv1 in
+	let arg_char = List.concate argv1_char argv2_char in
+	let ret_char = List.concate arg_char (mklist nbytes_to_return) in
+	
+	let non_enclave_arg_as_char = ralloc non_enclave_regn ret_char in
+	 
+
 	(* Get the exit address from manifest *)
 	let exitaddress = get_exit_address () in
 
 	(* call eexit - should it just return? In the actual SGX implementation *)
-	let _ = eexit emode  u_mem v_mem uv_shared_buf non_enclave_regn exitaddress in
+	let _ = callenclavehost emode  u_mem v_mem uv_shared_buf non_enclave_regn exitaddress in
+	let ret_upd_char = op_Bang non_enclave_regn non_enclave_arg_as_char in
+	let ret_val = (nth ret_upd_char nbytes_to_read) in
+	
+	(* Copy the return value back to uv_shared_buf *)
+	let _ = op_Colon_Equals uv_shared_buf rret ret_val in 
 	()
-
-
 
 val init_sgx_memory_model : unit -> Heap (HH.rid * HH.rid * HH.rid * HH.rid) 
   (requires (fun m -> heap_only m))
