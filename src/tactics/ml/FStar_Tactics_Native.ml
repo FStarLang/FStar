@@ -5,7 +5,8 @@ open FStar_Range
 
 open FStar_Tactics
 open FStar_Tactics_Builtins
-
+open FStar_Tactics_Derived
+open FStar_Tactics_Logic
 
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
@@ -61,5 +62,5 @@ let from_tactic_2 (t: 'a -> 'b -> 'c E.tactic): ('a -> 'b -> 'c tac) =
             (fun (ps: proofstate) ->
                 print_string "In compiled code\n";
                 let m = t x y in
-                let (m2: proofstate -> 'b E.__result) = m () in
+                let (m2: proofstate -> 'c E.__result) = m () in
                 interpret_tactic ps m2) |> mk_tac
