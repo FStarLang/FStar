@@ -48,6 +48,18 @@ let get_file_last_modification_time filename =
   | Some (mtime, _contents) -> mtime
   | None -> U.get_file_last_modification_time filename
 
+let read_physical_file (filename: string) =
+  (* BatFile.with_file_in uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
+  try
+    let channel = open_in filename in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel -> really_input_string channel (in_channel_length channel))
+      channel
+  with e ->
+    raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
+
 let read_file (filename:string) =
   let debug = FStar_Options.debug_any () in
   match read_vfs_entry filename with
@@ -56,11 +68,8 @@ let read_file (filename:string) =
     filename, contents
   | None ->
     let filename = find_file filename in
-    try
-      if debug then U.print1 "Opening file %s\n" filename;
-      filename, BatFile.with_file_in filename BatIO.read_all
-    with e ->
-      raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
+    if debug then U.print1 "Opening file %s\n" filename;
+    filename, read_physical_file filename
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
