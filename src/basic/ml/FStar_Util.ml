@@ -812,20 +812,24 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out
-    fname
-    (fun f ->
-      BatPervasives.output_value f value)
+  (* BatFile.with_file_out uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_out, so we don't use it here. *)
+  let channel = open_out_bin fname in
+  BatPervasives.finally
+    (fun () -> close_out channel)
+    (fun channel -> output_value channel value)
+    channel
 
 let load_value_from_file (fname:string) =
+  (* BatFile.with_file_in uses Unix.openfile (which isn't available in
+     js_of_ocaml) instead of Pervasives.open_in, so we don't use it here. *)
   try
-    BatFile.with_file_in
-      fname
-      (fun f ->
-        Some (BatPervasives.input_value f))
-  with
-  | _ ->
-    None
+    let channel = open_in_bin fname in
+    BatPervasives.finally
+      (fun () -> close_in channel)
+      (fun channel -> Some (input_value channel))
+      channel
+  with | _ -> None
 
 let print_exn e =
   Printexc.to_string e
