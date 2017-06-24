@@ -1,0 +1,76 @@
+[
+  "K«\u0007Ì\u0005\u001d#­gÄ*ééœ*Ã",
+  [
+    [
+      "UInt16LE.of_bytes",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt8.t",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_UInt16LE_Tm_refine_54c03c78d7539eae7ee3b6a012705328"
+      ],
+      0
+    ],
+    [
+      "UInt16LE.of_bytes",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "UInt16LE.parse_bytes",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
+        "equation_FStar.UInt8.t", "equation_UInt16LE.of_bytes",
+        "fuel_guarded_inversion_FStar.HyperStack.mem",
+        "kinding_FStar.UInt8.t_@tok", "lemma_FStar.BufferNG.length_as_seq",
+        "proj_equation_FStar.UInt32.Mk_v",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.UInt32.Mk_v",
+        "refinement_interpretation_UInt16LE_Tm_refine_00bc0555bc4afec45856ef3aac0c169d"
+      ],
+      0
+    ],
+    [
+      "UInt16LE.parse_bytes",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.UInt32.t__haseq",
+        "equation_FStar.UInt32.t"
+      ],
+      0
+    ],
+    [
+      "UInt16LE.parse_bytes",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.UInt16.t__haseq",
+        "equation_FStar.UInt16.t"
+      ],
+      0
+    ],
+    [
+      "UInt16LE.parse_bytes",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.UInt16.t__haseq",
+        "equation_FStar.UInt16.t"
+      ],
+      0
+    ]
+  ]
+]
