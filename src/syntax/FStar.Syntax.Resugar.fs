@@ -35,6 +35,16 @@ module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module D = FStar.Parser.ToDocument
+module E = FStar.Errors
+
+
+(* Helpers to print/debug the resugaring phase *)
+let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
+let parser_term_to_string t = doc_to_string (D.term_to_document t)
+
+let map_opt (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
+  snd (BU.choose_map (fun () x -> (), f x) () l)
+
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
@@ -52,7 +62,7 @@ let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifie
   match q with
   | None -> Some None
   | Some (S.Implicit b) ->
-    (* TODO : set an option to print these inaccessible patterns *)
+    (* TODO : set an option to print these inaccessible patterns at least with a comment *)
     if b then None
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
@@ -61,19 +71,11 @@ let resugar_imp (q:option<S.arg_qualifier>) : A.imp =
   match q with
   | None -> A.Nothing
   | Some (S.Implicit false) -> A.Hash
-  | Some Equality
+  | Some S.Equality
   | Some (S.Implicit true) ->
     (* This should be a proper error rather than a failwith *)
     failwith "Not an imp"
 
-let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifier>)> =
-    match q with
-    | None -> Some None
-    | Some (S.Implicit b) ->
-        (* TODO : set an option to print these inaccessible patterns *)
-        if b then None
-        else Some (Some A.Implicit)
-    | Some S.Equality -> Some (Some A.Equality)
 
 let rec universe_to_int n u =
   match u with
@@ -339,7 +341,7 @@ let rec resugar_term (t : S.term) : A.term =
       let xs, body = SS.open_comp xs body in
       let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp body in
-      let xs = xs |> List.map (fun b -> resugar_binder b t.pos) |> List.rev in
+      let xs = xs |> map_opt (fun b -> resugar_binder b t.pos) |> List.rev in
       let rec aux body = function
         | [] -> body
         | hd::tl ->
@@ -350,7 +352,7 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_refine(x, phi) ->
       (* bv * term -> binder * term *)
       let x, phi = SS.open_term [S.mk_binder x] phi in
-      let b = resugar_binder (List.hd x) t.pos in
+      let b = BU.must (resugar_binder (List.hd x) t.pos) in
       mk (A.Refine(b, resugar_term phi))
 
     | Tm_app(e, args) ->
@@ -400,7 +402,7 @@ let rec resugar_term (t : S.term) : A.term =
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
-                let xs = xs |> List.map (fun b -> resugar_binder b t.pos) in
+                let xs = xs |> map_opt (fun b -> resugar_binder b t.pos) in
                 let body = resugar_term body in
                 mk (A.Sum(xs, body))
 
@@ -475,7 +477,7 @@ let rec resugar_term (t : S.term) : A.term =
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
-                let xs = xs |> List.map (fun b -> resugar_binder b t.pos) in
+                let xs = xs |> map_opt (fun b -> resugar_binder b t.pos) in
                 let pats, body = match (SS.compress body).n with
                   | Tm_meta(e, m) ->
                     let body = resugar_term e in
@@ -612,39 +614,36 @@ let rec resugar_term (t : S.term) : A.term =
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
           | Data_app ->
-              begin match (SS.compress e).n with
-                | Tm_app(head, args) ->
-                    let rec aux h = match ((SS.compress h).n) with
-                      | Tm_fvar fv -> lid_of_fv fv, []
-                      | Tm_uinst(h, u) ->
-                        let h, l = aux h in
-                        h, l@u
-                      | _ -> failwith "wrong Data_app head format"
-                    in
-                    let head, universes = aux head in
-                    let universes =
-                        List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes
-                    in
-                    let args = List.map (fun (t, q) -> (resugar_term t, resugar_imp q)) args in
-                    let args =
-                        // ToDocument doesn't expect uvar that is added by the
-                        // typechecker in tuple constructor
-                        // TODO: where should be store the universe information?
-                        if C.is_tuple_data_lid' head || not (Options.print_universes ()) then
-                            args
-                        else universes @ args
-                     in
-                     mk (A.Construct(head, args))
-                | Tm_meta(_, m) ->
-                  // the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker
-                  // applies monadic_application
-                  begin match m with
-                    | Meta_monadic (_, _) -> resugar_term e
-                    | _ -> failwith "wrong Tm_meta format in Meta_desugared"
-                  end
-                | _ ->
-                  failwith "wrong Data_app format"
-              end
+            let rec head_fv_universes_args h = match ((SS.compress h).n) with
+              | Tm_fvar fv -> lid_of_fv fv, [], []
+              | Tm_uinst(h, u) ->
+                let h, uvs, args = head_fv_universes_args h in
+                h, uvs@u, args
+              | Tm_app (head, args) ->
+                let h, uvs, args' = head_fv_universes_args head in
+                h, uvs, args' @ args
+              | _ ->
+                raise (E.Err (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h))))
+            in
+            let head, universes, args =
+              (* the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker *)
+              (* applies monadic_application *)
+              (* TODO : report this Meta_monadic if the right options are set *)
+              try head_fv_universes_args (U.unmeta e) with
+                | E.Err _ ->
+                  raise (E.Error ((BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e))), e.pos))
+            in
+            let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
+            let args = List.map (fun (t, q) -> (resugar_term t, resugar_imp q)) args in
+            let args =
+              // ToDocument doesn't expect uvar that is added by the
+              // typechecker in tuple constructor
+              // TODO: where should be store the universe information?
+              if C.is_tuple_data_lid' head || not (Options.print_universes ()) then
+                  args
+              else universes @ args
+            in
+            mk (A.Construct(head, args))
           | Sequence ->
               let term = resugar_term e in
               let rec resugar_seq t = match t.tm with
@@ -770,17 +769,19 @@ and resugar_comp (c:S.comp) : A.term =
     else
       mk (A.Construct(c.effect_name, [result]))
 
-and resugar_binder (b:S.binder) r: A.binder =
-  let (x, imp) = b in
-  let e = resugar_term x.sort in
-  match (e.tm) with
+and resugar_binder (b:S.binder) r : option<A.binder> =
+  let (x, aq) = b in
+  BU.map_opt (resugar_arg_qual aq) begin fun imp ->
+    let e = resugar_term x.sort in
+    match (e.tm) with
     | A.Wild ->
-        A.mk_binder (A.Variable(bv_as_unique_ident x)) r A.Type_level None
+      A.mk_binder (A.Variable(bv_as_unique_ident x)) r A.Type_level imp
     | _ ->
-        if (S.is_null_bv x) then
-          A.mk_binder (A.NoName(e)) r A.Type_level None
-        else
-          A.mk_binder (A.Annotated(bv_as_unique_ident x, e)) r A.Type_level None
+      if S.is_null_bv x then
+        A.mk_binder (A.NoName e) r A.Type_level imp
+      else
+        A.mk_binder (A.Annotated (bv_as_unique_ident x, e)) r A.Type_level imp
+  end
 
 and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
   let mk a = A.mk_pattern a (S.range_of_bv x) in
@@ -805,7 +806,10 @@ and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
 and resugar_pat (p:S.pat) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
-  let rec aux (p:S.pat) =
+  let to_arg_qual bopt =
+    BU.bind_opt bopt (fun b -> if true then Some A.Implicit else None)
+  in
+  let rec aux (p:S.pat) (imp_opt:option<bool>)=
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
@@ -813,11 +817,11 @@ and resugar_pat (p:S.pat) : A.pattern =
       mk (A.PatName fv.fv_name.v)
 
     | Pat_cons(fv, args) when lid_equals fv.fv_name.v C.cons_lid ->
-      let args = List.map(fun (p, b) -> aux p) args in
+      let args = List.map(fun (p, b) -> aux p (Some b)) args in
       mk (A.PatList(args))
 
     | Pat_cons(fv, args) when C.is_tuple_data_lid' fv.fv_name.v || C.is_dtuple_data_lid' fv.fv_name.v ->
-      let args = List.map(fun (p, b) -> aux p) args in
+      let args = List.map(fun (p, b) -> aux p (Some b)) args in
       if (C.is_dtuple_data_lid' fv.fv_name.v) then
         mk (A.PatTuple(args, true))
       else
@@ -827,7 +831,7 @@ and resugar_pat (p:S.pat) : A.pattern =
       // reverse the fields and args list to match them since the args added by the type checker
       // are inserted in the front of the args list.
       let fields = fields |> List.map (fun f -> FStar.Ident.lid_of_ids [f]) |> List.rev in
-      let args = args |> List.map (fun (p, b) -> aux p) |> List.rev in
+      let args = args |> List.map (fun (p, b) -> aux p (Some b)) |> List.rev in
       // make sure the fields and args are of the same length.
       let rec map2 l1 l2  = match (l1, l2) with
         | ([], []) -> []
@@ -841,7 +845,7 @@ and resugar_pat (p:S.pat) : A.pattern =
 
 
     | Pat_cons (fv, args) ->
-      let args = List.map (fun (p, b) -> aux p) args in
+      let args = List.map (fun (p, b) -> aux p (Some b)) args in
       mk (A.PatApp(mk (A.PatName fv.fv_name.v), args))
 
     | Pat_var v ->
@@ -850,20 +854,20 @@ and resugar_pat (p:S.pat) : A.pattern =
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op v.ppname.idText with
        | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
-       | None -> mk (A.PatVar (bv_as_unique_ident v, None))
+       | None -> mk (A.PatVar (bv_as_unique_ident v, to_arg_qual imp_opt))
       end
 
     | Pat_wild _ -> mk (A.PatWild)
 
     | Pat_dot_term (bv, term) ->
-      // no sure if this is correct resugar since the term is not generated from desugar
-      let pat = mk (A.PatVar(bv_as_unique_ident bv, None)) in
+      (* TODO : this should never be resugared unless in a comment *)
+      let pat = mk (A.PatVar(bv_as_unique_ident bv, Some A.Implicit)) in
       if Options.print_bound_var_types() then
         mk (A.PatAscribed(pat, resugar_term term))
       else
         pat
   in
-    aux p
+  aux p None
 
 let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   | S.Assumption -> Some A.Assumption
@@ -908,7 +912,7 @@ let resugar_typ datacon_ses se : sigelts * A.tycon =
       in
       assert (List.length current_datacons = List.length datacons) ;
       let bs = if (Options.print_implicits()) then bs else filter_imp bs in
-      let bs = bs |> List.map (fun b -> resugar_binder b t.pos) in
+      let bs = bs |> map_opt (fun b -> resugar_binder b t.pos) in
       let tyc =
         if se.sigquals |> BU.for_some (function | RecordType _ -> true | _ -> false)
         then
@@ -969,7 +973,7 @@ let resugar_eff_decl for_free r q ed =
     let bs, action_defn = SS.open_term action_params d.action_defn in
     let bs, action_typ = SS.open_term action_params d.action_typ in
     let action_params = if (Options.print_implicits()) then action_params else filter_imp action_params in
-    let action_params = action_params |> List.map (fun b -> resugar_binder b r) |> List.rev in
+    let action_params = action_params |> map_opt (fun b -> resugar_binder b r) |> List.rev in
     let action_defn = resugar_term action_defn in
     let action_typ = resugar_term action_typ in
     if for_free then
@@ -982,7 +986,7 @@ let resugar_eff_decl for_free r q ed =
   let eff_name = ed.mname.ident in
   let eff_binders, eff_typ = SS.open_term ed.binders ed.signature in
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
-  let eff_binders = eff_binders |> List.map (fun b -> resugar_binder b r) |> List.rev in
+  let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder b r) |> List.rev in
   let eff_typ = resugar_term eff_typ in
   let ret_wp = resugar_tscheme' "ret_wp" ed.ret_wp in
   let bind_wp = resugar_tscheme' "bind_wp" ed.ret_wp in
@@ -1086,7 +1090,7 @@ let resugar_sigelt se : option<A.decl> =
   | Sig_effect_abbrev (lid, vs, bs, c, flags) ->
     let bs, c = SS.open_comp bs c in
     let bs = if (Options.print_implicits()) then bs else filter_imp bs in
-    let bs = bs |> List.map (fun b -> resugar_binder b se.sigrng) in
+    let bs = bs |> map_opt (fun b -> resugar_binder b se.sigrng) in
     Some (decl'_to_decl se (A.Tycon(false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp c), None])))
 
   | Sig_pragma p ->
