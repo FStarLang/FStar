@@ -74,7 +74,8 @@ let parse_string specs others (str:string) =
     let split_spaces (str:string) =
         // F#'s str.Split will return empty strings when there's two spaces together
         // or at the boundaries. Filter them out, so we behave like OCaml
-        Array.filter (fun s -> s <> "") <| str.Split([|' ';'\t'|])
+        let seps = [' '; '\t'] in
+        Array.ofList <| (FStar.List.filter (fun s -> s <> "") <| FStar.String.split seps str)
     in
     let rec split_quoted_fragments (str:string) =
         let i = str.IndexOf '\'' in
