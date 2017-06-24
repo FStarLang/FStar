@@ -440,7 +440,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list<repl_task>) =
 (* Reading queries and writing responses *)
 (*****************************************)
 
-let json_to_str = function
+let json_debug = function
   | JsonNull -> "null"
   | JsonBool b -> Util.format1 "bool (%s)" (if b then "true" else "false")
   | JsonInt i -> Util.format1 "int (%s)" (Util.string_of_int i)
@@ -569,7 +569,7 @@ let try_assoc key a =
 let wrap_js_failure qid expected got =
   { qid = qid;
     qq = ProtocolViolation (Util.format2 "JSON decoding failed: expected %s, got %s"
-                            expected (json_to_str got)) }
+                            expected (json_debug got)) }
 
 let unpack_interactive_query json =
   let assoc errloc key a =
@@ -624,20 +624,22 @@ let unpack_interactive_query json =
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
-let read_interactive_query stream : query =
-  match Util.read_line stream with
-  | None -> exit 0
-  | Some line ->
-    match Util.json_of_string line with
-    | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-    | Some request -> safe_unpack_interactive_query request
-
-let safe_unpack_interactive_query js_query =
+let deserialize_interactive_query js_query =
   try
     unpack_interactive_query js_query
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
+
+let parse_interactive_query query_str : query =
+  match Util.json_of_string query_str with
+  | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
+  | Some request -> deserialize_interactive_query request
+
+let read_interactive_query stream : query =
+  match Util.read_line stream with
+  | None -> exit 0
+  | Some line -> parse_interactive_query line
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
@@ -775,8 +777,8 @@ let json_of_message level js_contents =
              ("level", JsonStr level);
              ("contents", js_contents)]
 
-let write_message level contents =
-  write_json (json_of_message level contents)
+let forward_message callback level contents =
+  callback (json_of_message level contents)
 
 let json_of_hello =
   let js_version = JsonInt interactive_protocol_vernum in
@@ -1356,17 +1358,38 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
+let validate_and_run_query st query =
+  run_query st (validate_query st query).qq
+
 (** This is the body of the JavaScript port's main loop. **)
-let single_repl_iteration js_query st =
-  let query = safe_unpack_interactive_query js_query |> validate_query st in
-  let (status, response), state_opt = run_query st query.qq in
+let js_repl_eval st query =
+  let (status, response), st_opt = validate_and_run_query st query in
   let js_response = json_of_response query.qid status response in
-  js_response, state_opt
+  js_response, st_opt
+
+let js_repl_eval_js st query_js =
+  js_repl_eval st (deserialize_interactive_query query_js)
+
+let js_repl_eval_str st query_str =
+  let js_response, st_opt =
+    js_repl_eval st (parse_interactive_query query_str) in
+  (Util.string_of_json js_response), st_opt
+
+(** This too is called from FStar.js **)
+let js_repl_init_opts () =
+  let res, fnames = Options.parse_cmd_line () in
+  match fnames with
+  | _ :: _ -> failwith "repl_init: Unexpected: file names in option list"
+  | [] ->
+     match res with
+     | Getopt.Help -> failwith "repl_init: --help unexpected"
+     | Getopt.Error msg -> failwith ("repl_init: " ^ msg)
+     | Getopt.Success -> () (* FIXME could do more validation here *)
 
 (** This is the main loop for the desktop version **)
 let rec go st : int =
-  let query = read_interactive_query st.repl_stdin |> validate_query st in
-  let (status, response), state_opt = run_query st query.qq in
+  let query = read_interactive_query st.repl_stdin in
+  let (status, response), state_opt = validate_and_run_query st query in
   write_response query.qid status response;
   match state_opt with
   | Inl st' -> go st'
@@ -1390,8 +1413,8 @@ let interactive_printer printer =
     printer_prgeneric = (fun label get_string get_json ->
                          forward_message printer label (get_json ())) }
 
-let install_ide_mode_hooks () =
-  FStar.Util.set_printer interactive_printer;
+let install_ide_mode_hooks printer =
+  FStar.Util.set_printer (interactive_printer printer);
   FStar.Errors.set_handler interactive_error_handler
 
 let initial_range =
