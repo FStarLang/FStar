@@ -38,32 +38,10 @@ let mk_cpoint (p : point_struct) (g : UInt16.t) : cpoint_struct =
 let point = Pointer.pointer point_struct
 let cpoint = Pointer.pointer cpoint_struct
 
-let parse_uint16_le_spec (s : S.seq UInt8.t { S.length s = 2 }) : Tot UInt16.t
-=
-  let x_lo = S.index s 0 in
-  let x_hi = S.index s 1 in
-  let x_lo_16 = FStar.Int.Cast.uint8_to_uint16 x_lo in
-  let x_hi_16 = FStar.Int.Cast.uint8_to_uint16 x_hi in
-  FStar.UInt16.(x_lo_16 |^ (x_hi_16 <<^ 8ul))
-
-let parse_uint16_le
-  (b : B.buffer UInt8.t { B.length b = 2ul }) : HST.Stack UInt16.t
-  (requires (fun h -> B.live h b))
-  (ensures (fun h x h' ->
-    h == h' /\
-    parse_uint16_le_spec (B.as_seq h' b) = x
-  ))
-=
-  let x_lo = B.read b 0ul in
-  let x_hi = B.read b 1ul in
-  let x_lo_16 = FStar.Int.Cast.uint8_to_uint16 x_lo in
-  let x_hi_16 = FStar.Int.Cast.uint8_to_uint16 x_hi in
-  FStar.UInt16.(x_lo_16 |^ (x_hi_16 <<^ 8ul))
-
 let parse_point_spec
   (s : S.seq UInt8.t { S.length s = 4 }) : Tot point_struct =
-  let x = parse_uint16_le_spec (Seq.slice s 0 2) in
-  let y = parse_uint16_le_spec (Seq.slice s 2 4) in
+  let x = UInt16LE.of_bytes (Seq.slice s 0 2) in
+  let y = UInt16LE.of_bytes (Seq.slice s 2 4) in
   mk_point x y
 
 let parse_point
@@ -80,8 +58,8 @@ let parse_point
   ))
   =
   let h0 = HST.get () in
-  let x = parse_uint16_le (B.sub b 0ul 2ul) in
-  let y = parse_uint16_le (B.sub b 2ul 2ul) in
+  let x = UInt16LE.parse_bytes (B.sub b 0ul 2ul) in
+  let y = UInt16LE.parse_bytes (B.sub b 2ul 2ul) in
   Pointer.write (Pointer.field p X) x;
   Pointer.write (Pointer.field p Y) y;
   let h1 = HST.get () in
@@ -90,7 +68,7 @@ let parse_point
 
 let parse_spec (s : S.seq UInt8.t { S.length s = 6 }) : Tot cpoint_struct =
   let p = parse_point_spec (Seq.slice s 0 4) in
-  let gray = parse_uint16_le_spec (Seq.slice s 4 6) in
+  let gray = UInt16LE.of_bytes (Seq.slice s 4 6) in
   mk_cpoint p gray
 
 #set-options "--z3rlimit 16"
@@ -107,7 +85,7 @@ let parse_impl (b : B.buffer UInt8.t { B.length b = 6ul }) (p : cpoint) : HST.St
   ))
 =
   let h0 = HST.get () in
-  let gray = parse_uint16_le (B.sub b 4ul 2ul) in
+  let gray = UInt16LE.parse_bytes (B.sub b 4ul 2ul) in
   let _ = parse_point (B.sub b 0ul 4ul) (Pointer.field p Point) in
   let _ = Pointer.write (Pointer.field p Gray) gray in
   let h2 = HST.get () in
