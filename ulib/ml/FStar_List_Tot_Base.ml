@@ -24,7 +24,10 @@ let mem = BatList.mem
 type ('a, 'b, 'c) memP = unit
 let contains x l = BatList.exists (fun y -> x = y) l
 let existsb f l = BatList.exists f l
-let find f l = try Some (BatList.find f l) with | Not_found -> None
+(** This is equivalent to [try Some (BatList.find f l) with ...], but it doesn't
+    use exceptions (this is useful when compiling with js_of_ocaml, as exceptions
+    are slow in Javascript). *)
+let rec find f l = match l with | [] -> None | h :: t -> if f h then Some h else find f t
 let filter = BatList.filter
 let for_all = BatList.for_all
 let collect f l = BatList.flatten (BatList.map f l)
