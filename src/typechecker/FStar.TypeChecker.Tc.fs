@@ -1466,8 +1466,16 @@ let tc_decls env ses =
 
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
   in
+  // A wrapper to (maybe) print the time taken for each sigelt
+  let process_one_decl_timed acc se =
+    let (_, _, env, _) = acc in
+    let r, ms_elapsed = BU.record_time (fun () -> process_one_decl acc se) in
+    if Env.debug env (Options.Other "TCDeclTime")
+    then BU.print2 "Checked %s in %s milliseconds\n" (Print.sigelt_to_string_short se) (string_of_int ms_elapsed);
+    r
+  in
 
-  let ses, exports, env, _ = BU.fold_flatten process_one_decl ([], [], env, []) ses in
+  let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
 let tc_partial_modul env modul =
