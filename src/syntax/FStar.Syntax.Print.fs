@@ -386,9 +386,11 @@ and imp_to_string s = function
 
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_binder b Range.dummyRange in
-    let d = ToDocument.binder_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
+    match Resugar.resugar_binder b Range.dummyRange with
+    | None -> ""
+    | Some e ->
+      let d = ToDocument.binder_to_document e in
+      Pp.pretty_string (float_of_string "1.0") 100 d
   else
     let (a, imp) = b in
     if is_null_binder b

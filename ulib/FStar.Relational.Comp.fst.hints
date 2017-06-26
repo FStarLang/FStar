@@ -1,1 +1,4 @@
-[ "¿-\\ñn|=\u001c2Üª\f‹…ÛN", [] ]
+[
+  "¿-\\ñn|=\u001c2Üª\f‹…ÛN",
+  [ [ "FStar.Relational.Comp.compose2_self", 1, 2, 1, [ "@query" ], 0 ] ]
+]

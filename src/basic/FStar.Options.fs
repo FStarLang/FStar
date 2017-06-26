@@ -655,8 +655,8 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "smt",
         OneArg (Path,
-                "[path]"),
-        "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
+                 "[path]"),
+        "Path to the Z3 SMT solver (we could eventually support other solvers)");
 
        (noshort,
         "smtencoding.elim_box",
