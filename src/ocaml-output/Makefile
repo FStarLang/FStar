@@ -221,7 +221,7 @@ endif
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
-	cp $(shell $$(dirname $$(which z3.exe)))/* $(PREFIX)/bin
+	cp $(shell dirname $$(which z3.exe))/* $(PREFIX)/bin
 	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
