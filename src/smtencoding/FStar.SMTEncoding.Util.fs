@@ -49,7 +49,6 @@ let mkSub = norng mkSub
 let mkDiv = norng mkDiv
 let mkMul = norng mkMul
 let mkMod = norng mkMod
-let mkBv_t sz = mkBv_t sz Range.dummyRange
 let mkNatToBv sz = norng (mkNatToBv sz)
 let mkBvAnd = norng mkBvAnd
 let mkBvXor = norng mkBvXor

@@ -129,7 +129,7 @@ let op_Negation        = pconst "op_Negation"
 let bvconst s = p2l ["FStar"; "BitVector"; s]
 
 (* BitVector constants *)
-let bv_t_lid = bvconst "bv_t"
+let bv_t_lid = bvconst "bv_t" //redundant
 let bv_zero_vec_lid = bvconst "zero_vec"
 let bv_ones_vec_lid = bvconst "ones_vec"
 

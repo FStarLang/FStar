@@ -623,7 +623,7 @@ and encode_arith_term env head args_e =
         let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
         Util.mkApp'(fname, fuel_args@arg_tms)
     in *)
-    //TODO need to do smth about operatos such as zero_vec
+    //TODO need to do smth about operators such as zero_vec
     let mk_bv : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts ->
              op (mk_args ts) |> Term.boxBitVec sz
@@ -640,7 +640,6 @@ and encode_arith_term env head args_e =
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.nat_to_bv_lid, bv_to)]
-         //(Const.bv_t_lid, fun x -> bv_t)]
     in
     printf "%s\n" (FStar.Util.format1 "%s\n" (lid_of_fv head_fv).str);
     let _, op =
