@@ -86,8 +86,8 @@ fi
 
 echo "*** Make the examples ***"
 cd fstar
-make -C examples/hello ocaml > HelloOcamlOutput.log
-make -j6 -C examples > AllExamples.log
+make -C examples/hello ocaml | tee HelloOcamlOutput.log
+make -j6 -C examples | tee AllExamples.log
 
 echo "-- Verify hello ocaml -- should output Hello F*! *"
 if ! egrep 'F*!' HelloOcamlOutput.log; then
