@@ -206,6 +206,7 @@ package: all
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
+	$(call fexport,bin/fstarlib)
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
@@ -221,12 +222,19 @@ endif
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
+	# Because we'll be building fstarlib in the resulting directory,
+	# somehow?
+	cp ../../_tags $(PREFIX)
+	mkdir -p $(PREFIX)/bin/fstarlib
+	cp ../../bin/fstarlib/META $(PREFIX)/bin/fstarlib/
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
 	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
+  	# Assuming here that the user has z3 installed system-wide; this will
+	# soon require us to copy the right version of z3 in there too.
 	tar czf $(NAME).tar.gz fstar
 endif
 
