@@ -125,6 +125,23 @@ let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
 
+
+let bvconst s = p2l ["FStar"; "BitVector"; s]
+
+(* BitVector constants *)
+let bv_t_lid = bvconst "bv_t"
+let bv_zero_vec_lid = bvconst "zero_vec"
+let bv_ones_vec_lid = bvconst "ones_vec"
+
+(* BitVector operators *)
+let nat_to_bv_lid      = bvconst "nat_to_bv"
+let bv_and_lid         = bvconst "logand_vec"
+let bv_xor_lid         = bvconst "logxor_vec"
+let bv_or_lid          = bvconst "logor_vec"
+let bv_shift_left_lid  = bvconst "shift_left_vec"
+let bv_shift_right_lid = bvconst "shift_right_vec"
+//TODO: add more once the bitvector library is finalized
+
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]
 let array_mk_array_lid = p2l ["FStar"; "Array"; "mk_array"]

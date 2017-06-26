@@ -31,6 +31,7 @@ type sort =
   | Ref_sort
   | Term_sort
   | Fuel_sort
+  | BitVec_sort of int
   | Array of sort * sort
   | Arrow of sort * sort
   | Sort of string
@@ -54,6 +55,12 @@ type op =
   | Mul
   | Minus
   | Mod
+  | BvAnd
+  | BvXor
+  | BvOr
+  | BvShl
+  | BvShr
+  | NatToBv of int
   | ITE
   | Var of string
 
@@ -145,6 +152,13 @@ val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
+val mkNatToBv: (int -> term -> Range.range -> term)
+val mkBvAnd  : ((term * term) -> Range.range -> term)
+val mkBvXor  : ((term * term) -> Range.range -> term)
+val mkBvOr   : ((term * term) -> Range.range -> term)
+val mkBvShl  : ((term * term) -> Range.range -> term)
+val mkBvShr  : ((term * term) -> Range.range -> term)
+
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term
 val mkForall: (list<list<pat>> * fvs * term) -> Range.range -> term
@@ -159,6 +173,7 @@ val injective_constructor : (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
+val mkBvConstructor: int -> decls_t
 val declToSmt: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
@@ -174,6 +189,8 @@ val boxString:   term -> term
 val unboxString: term -> term
 val boxRef:      term -> term
 val unboxRef:    term -> term
+val boxBitVec:   int -> term -> term
+val unboxBitVec: int -> term -> term
 
 val mk_Range_const:  term
 val mk_Term_unit:    term
