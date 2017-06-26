@@ -72,6 +72,8 @@ following commands. (On Windows this requires Cygwin and `make`)
 4. If you have F# installed the following command should print "Hello F\*!"
 
         $ make -C examples/hello fs
+   
+   Note: Currently this is [known to fail](https://github.com/FStarLang/FStar/issues/1087)
 
 5. You can verify all the examples, keeping in mind that this might
    take a long time.
