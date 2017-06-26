@@ -213,19 +213,16 @@ endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
-        # Copy Z3 binary
-	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
-	if [ -f "$(PREFIX)/bin/z3.exe" ]; then chmod 755 $(PREFIX)/bin/*z3*.*; fi
 
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
-#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
-#	cp ../../bin/msvc*.dll $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
-	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
+	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
+	cp $(wildcard $(shell $$(dirname $$(which z3.exe)))) $(PREFIX)/bin
+	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
 	tar czf $(NAME).tar.gz fstar
