@@ -2598,17 +2598,39 @@ let modifies_poppable_1 #t h0 h1 (b:pointer t) : Lemma
 
 (* `modifies` and the readable permission *)
 
-let modifies_1_readable
-  (#t1 t2: typ)
-  (p1: pointer t1)
-  (p2: pointer t2)
+(** NOTE: we historically used to have this lemma for arbitrary
+pointer inclusion, but it will become wrong for unions. *)
+
+let modifies_1_readable_struct
+  (#l: struct_typ)
+  (f: struct_field l)
+  (p: pointer (TStruct l))
   (h h' : HS.mem)
 : Lemma
-  (requires (readable h p1 /\ includes p1 p2 /\ modifies_1 p2 h h' /\ readable h' p2))
-  (ensures (readable h' p1))
+  (requires (readable h p /\ modifies_1 (gfield p f) h h' /\ readable h' (gfield p f)))
+  (ensures (readable h' p))
   [SMTPatOr [
-    [SMTPat (modifies_1 p2 h h'); SMTPat (readable h p1)];
-    [SMTPat (modifies_1 p2 h h'); SMTPat (readable h' p1)];
+    [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h p)];
+    [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h' p)];
+    [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
+    [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
+  ]]
+= ()
+
+let modifies_1_readable_array
+  (#t: typ)
+  (#len: UInt32.t)
+  (i: UInt32.t { UInt32.v i < UInt32.v len } )
+  (p: pointer (TArray len t))
+  (h h' : HS.mem)
+: Lemma
+  (requires (readable h p /\ modifies_1 (gcell p i) h h' /\ readable h' (gcell p i)))
+  (ensures (readable h' p))
+  [SMTPatOr [
+    [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h p)];
+    [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h' p)];
+    [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
+    [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
   ]]
 = ()
 
