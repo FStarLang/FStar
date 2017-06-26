@@ -2535,7 +2535,11 @@ let no_upd_lemma_0 #t h0 h1 b = ()
 val no_upd_lemma_1: #t:typ -> #t':typ -> h0:HS.mem -> h1:HS.mem -> a:pointer t -> b:pointer t' -> Lemma
   (requires (live h0 b /\ disjoint a b /\ modifies_1 a h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatOr [ [ SMTPatT (modifies_1 a h0 h1); SMTPatT (gread h1 b) ] ; [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ] ] ]
+  [SMTPatOr [
+    [ SMTPatT (modifies_1 a h0 h1); SMTPatT (gread h1 b) ] ;
+    [ SMTPatT (modifies_1 a h0 h1); SMTPat (readable h1 b) ] ;
+    [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ]
+  ] ]
 let no_upd_lemma_1 #t #t' h0 h1 a b =
   if frameOf a = frameOf b
   then modifies_elim (frameOf a) (set_singleton a) h0 h1 b
@@ -2591,6 +2595,22 @@ let modifies_poppable_1 #t h0 h1 (b:pointer t) : Lemma
   (ensures  (HS.poppable h1))
   [SMTPatT (modifies_1 b h0 h1)]
   = ()
+
+(* `modifies` and the readable permission *)
+
+let modifies_1_readable
+  (#t1 t2: typ)
+  (p1: pointer t1)
+  (p2: pointer t2)
+  (h h' : HS.mem)
+: Lemma
+  (requires (readable h p1 /\ includes p1 p2 /\ modifies_1 p2 h h' /\ readable h' p2))
+  (ensures (readable h' p1))
+  [SMTPatOr [
+    [SMTPat (modifies_1 p2 h h'); SMTPat (readable h p1)];
+    [SMTPat (modifies_1 p2 h h'); SMTPat (readable h' p1)];
+  ]]
+= ()
 
 (* What about other regions? *)
 
