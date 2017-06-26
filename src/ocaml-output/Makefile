@@ -220,7 +220,7 @@ endif
 	make -C ../VS install-packages
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
+	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
