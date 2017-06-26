@@ -98,6 +98,7 @@ let chk_v (u, v) =
                         (version_to_string v))
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v u)
+let from_id n  = PU.puf_fromid (get_term_graph()) n, get_version()
 let fresh ()   = PU.puf_fresh (get_term_graph()) None, get_version()
 let find u     = PU.puf_find (get_term_graph()) (chk_v u)
 let change u t = set_term_graph (PU.puf_change (get_term_graph()) (chk_v u) (Some t))
@@ -116,6 +117,7 @@ let set_univ_graph (ug:ugraph) =
   set ({get() with univ_graph = ug})
 
 let univ_uvar_id u  = PU.puf_id (get_univ_graph()) (chk_v u)
+let univ_from_id n  = PU.puf_fromid (get_univ_graph()) n, get_version()
 let univ_fresh ()   = PU.puf_fresh (get_univ_graph()) None, get_version()
 let univ_find u     = PU.puf_find (get_univ_graph()) (chk_v u)
 let univ_change u t = set_univ_graph (PU.puf_change (get_univ_graph()) (chk_v u) (Some t))

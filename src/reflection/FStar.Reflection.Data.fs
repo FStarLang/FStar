@@ -22,6 +22,7 @@ type term_view =
     | Tv_Type   of unit
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
+    | Tv_Uvar   of int * typ
     | Tv_Unknown
     
 // See ulib/FStar.Reflection.Syntax.fst for explanations of these two
@@ -68,6 +69,7 @@ let ref_Tv_Arrow_lid   = fstar_refl_syntax_lid "Tv_Arrow"
 let ref_Tv_Type_lid    = fstar_refl_syntax_lid "Tv_Type"
 let ref_Tv_Refine_lid  = fstar_refl_syntax_lid "Tv_Refine"
 let ref_Tv_Const_lid   = fstar_refl_syntax_lid "Tv_Const"
+let ref_Tv_Uvar_lid    = fstar_refl_syntax_lid "Tv_Uvar"
 let ref_Tv_Unknown_lid = fstar_refl_syntax_lid "Tv_Unknown"
 
 let ref_Tv_Var     = lid_as_data_tm ref_Tv_Var_lid
@@ -78,6 +80,7 @@ let ref_Tv_Arrow   = lid_as_data_tm ref_Tv_Arrow_lid
 let ref_Tv_Type    = lid_as_data_tm ref_Tv_Type_lid
 let ref_Tv_Refine  = lid_as_data_tm ref_Tv_Refine_lid
 let ref_Tv_Const   = lid_as_data_tm ref_Tv_Const_lid
+let ref_Tv_Uvar    = lid_as_data_tm ref_Tv_Uvar_lid
 let ref_Tv_Unknown = lid_as_data_tm ref_Tv_Unknown_lid
 
 (* const *)

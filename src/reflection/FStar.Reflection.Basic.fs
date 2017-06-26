@@ -11,6 +11,7 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Util
 module Range = FStar.Range
 module U = FStar.Syntax.Util
+module UF = FStar.Syntax.Unionfind
 module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
@@ -219,6 +220,10 @@ let embed_term_view (t:term_view) : term =
         S.mk_Tm_app ref_Tv_Const [S.as_arg (embed_const c)]
                     None Range.dummyRange
 
+    | Tv_Uvar (u, t) ->
+        S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int u); S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
     | Tv_Unknown ->
         ref_Tv_Unknown
 
@@ -268,6 +273,9 @@ let unembed_term_view (t:term) : term_view =
 
     | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine_lid ->
         Tv_Refine (unembed_binder b, unembed_term t)
+
+    | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar_lid ->
+        Tv_Uvar (unembed_int u, unembed_term t)
 
     | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const_lid ->
         Tv_Const (unembed_const c)
@@ -365,6 +373,9 @@ let inspect (t:term) : term_view =
         in
         Tv_Const c
 
+    | Tm_uvar (u, t) ->
+        Tv_Uvar (UF.uvar_id u, t)
+
     | _ ->
         BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
         Tv_Unknown
@@ -402,6 +413,9 @@ let pack (tv:term_view) : term =
 
     | Tv_Const c ->
         pack_const c
+
+    | Tv_Uvar (u, t) ->
+        U.uvar_from_id u t
 
     | _ ->
         failwith "pack: unexpected term view"

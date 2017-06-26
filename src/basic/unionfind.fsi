@@ -26,6 +26,7 @@ type p_uvar<'a>
 val puf_empty: unit -> puf<'a>
 val puf_fresh: puf<'a> -> 'a -> p_uvar<'a>
 val puf_id: puf<'a> -> p_uvar<'a> -> int
+val puf_fromid: puf<'a> -> int -> p_uvar<'a>
 val puf_find: puf<'a> -> p_uvar<'a> -> 'a
 val puf_union: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> puf<'a>
 val puf_equivalent: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> bool

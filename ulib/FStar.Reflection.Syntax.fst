@@ -26,8 +26,9 @@ type term_view =
   | Tv_Type   : unit -> term_view
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : const -> term_view
+  | Tv_Uvar   : int -> typ -> term_view
   | Tv_Unknown : term_view // Baked in "None"
-  (* TODO: complete, in particular, uvars! *)
+  (* TODO: complete, in particular, match! *)
 
 noeq
 type ctor =
