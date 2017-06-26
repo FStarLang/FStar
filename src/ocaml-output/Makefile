@@ -190,6 +190,8 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
+Z3_DIR=$(shell dirname $$(which z3.exe))
+
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
 package: all
@@ -221,7 +223,7 @@ endif
 	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
-	cp $(shell dirname $$(which z3.exe))/* $(PREFIX)/bin
+	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
 	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
