@@ -31,6 +31,11 @@ module Env = FStar.TypeChecker.Env
  * I'm not sure if that's an actual gain.
  *)
 
+ (*
+  * Most of this file is tedious and repetitive.
+  * We should really allow for some metaprogramming in F*. Oh wait....
+  *)
+
 let lid_as_tm l = S.lid_as_fv l Delta_constant None |> S.fv_to_tm
 let fstar_refl_embed = lid_as_tm PC.fstar_refl_embed_lid
 
@@ -470,6 +475,7 @@ let unembed_norm_step (t:term) : norm_step =
     | _ ->
         failwith "not an embedded norm_step"
 
+// Only for inductives, at the moment
 let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
     let lid = PC.p2l ns in
     let res = Env.lookup_qname env lid in
@@ -538,3 +544,33 @@ let unembed_sigelt_view (t:term) : sigelt_view =
         Unk
     | _ ->
         failwith "not an embedded sigelt_view"
+
+let rec embed_pattern (p : pattern) : term =
+    match p with
+    | Pat_Constant c ->
+        S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const c)] None Range.dummyRange
+    | Pat_Cons (fv, ps) ->
+        S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern ps)] None Range.dummyRange
+    | Pat_Var bv ->
+        S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
+    | Pat_Wild bv ->
+        S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
+
+let rec unembed_pattern (t : term) : pattern =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Pat_Constant_lid ->
+        Pat_Constant (unembed_const c)
+    | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons_lid ->
+        Pat_Cons (unembed_fvar f, unembed_list unembed_pattern ps)
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var_lid ->
+        Pat_Var (fst (unembed_binder b))
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild_lid ->
+        Pat_Wild (fst (unembed_binder b))
+    | _ ->
+        failwith "not an embedded pattern"
+
+
+let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
+let unembed_branch = unembed_pair unembed_pattern unembed_term

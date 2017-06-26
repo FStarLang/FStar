@@ -11,10 +11,20 @@ type binders = list binder
 noeq
 type const =
   | C_Unit : const
-  | C_Int : int -> const // Not exposing the details, I presume
+  | C_Int : int -> const // Not exposing the full details of our integer repr.
   | C_True : const
   | C_False : const
   (* TODO: complete *)
+
+// This is shadowing `pattern` from Prims (for smt_pats)
+noeq
+type pattern =
+    | Pat_Constant : const -> pattern                   // A built-in constant
+    | Pat_Cons     : fv -> list pattern -> pattern      // A fully applied constructor
+    | Pat_Var      : bv -> pattern                      // Pattern bound variable
+    | Pat_Wild     : bv -> pattern                      // Wildcard (GM: why is this not Pat_var too?)
+
+type branch = pattern * term  // | pattern -> term
 
 noeq
 type term_view =
@@ -27,8 +37,8 @@ type term_view =
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : const -> term_view
   | Tv_Uvar   : int -> typ -> term_view
+  | Tv_Match  : term -> list branch -> term_view
   | Tv_Unknown : term_view // Baked in "None"
-  (* TODO: complete, in particular, match! *)
 
 noeq
 type ctor =
