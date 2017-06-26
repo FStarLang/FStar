@@ -15,11 +15,12 @@ let obj = S.pointer struct_t
 let callee
    (pfrom pto: obj)
 : HST.Stack int
-  (requires (fun h -> S.live h pfrom /\ S.live h pto /\ S.disjoint pfrom pto))
+  (requires (fun h -> S.readable h pfrom /\ S.live h pto /\ S.disjoint pfrom pto))
   (ensures (fun h z h' ->
     S.live h pfrom /\ S.live h pto /\
     S.live h' pfrom /\ S.live h' pto /\
     S.modifies_1 (S.gfield pto "I") h h' /\
+    S.readable h' (S.gfield pto "I") /\
     S.gread h (S.gfield pfrom "I") == z /\
     S.gread h' (S.gfield pto "I") == z + 1))
 = S.write (S.field pto "I") (S.read (S.field pfrom "I") + 1);

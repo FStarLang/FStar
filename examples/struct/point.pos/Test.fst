@@ -16,10 +16,10 @@ let point = S.pointer point_struct_t
 let flip
   (p: point)
 : HST.Stack unit
-  (requires (fun h -> S.live h p))
+  (requires (fun h -> S.readable h p))
   (ensures (fun h0 _ h1 -> 
-      S.live h0 p
-    /\ S.live h1 p
+      S.readable h0 p
+    /\ S.readable h1 p
     /\ S.modifies_1 p h0 h1
     /\ S.gread h1 (S.gfield p "X") == S.gread h0 (S.gfield p "Y")
     /\ S.gread h1 (S.gfield p "Y") == S.gread h0 (S.gfield p "X")
@@ -35,10 +35,10 @@ let flip
 let flip'
   (p: point)
 : HST.Stack unit
-  (requires (fun h -> S.live h p))
+  (requires (fun h -> S.readable h p))
   (ensures (fun h0 _ h1 -> 
-      S.live h0 p
-    /\ S.live h1 p
+      S.readable h0 p
+    /\ S.readable h1 p
     /\ S.modifies_1 p h0 h1
     /\ S.gread h1 (S.gfield p "X") == S.gread h0 (S.gfield p "Y")
     /\ S.gread h1 (S.gfield p "Y") == S.gread h0 (S.gfield p "X")
