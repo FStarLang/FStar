@@ -13,6 +13,7 @@ module Range = FStar.Range
 module U = FStar.Syntax.Util
 module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
+module Env = FStar.TypeChecker.Env
 
 (* These file provides implementation for reflection primitives in F*.
  * 
@@ -76,7 +77,6 @@ let unembed_string (t:term) : string =
     | _ ->
       failwith ("Not an embedded string (" ^ Print.term_to_string t ^ ")")
 
-
 let lid_Mktuple2 = PC.mk_tuple_data_lid 2 Range.dummyRange
 let lid_tuple2   = PC.mk_tuple_lid 2 Range.dummyRange
 
@@ -116,6 +116,8 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
 
 let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
+let embed_string_list ss = embed_list embed_string FStar.TypeChecker.Common.t_string ss
+let unembed_string_list t = unembed_list unembed_string t
 
 let embed_term (t:term) : term =
     protect_embedded_term fstar_refl_term t
@@ -453,3 +455,53 @@ let unembed_norm_step (t:term) : norm_step =
         Delta
     | _ ->
         failwith "not an embedded norm_step"
+
+let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
+    let lid = PC.p2l ns in
+    let res = Env.lookup_qname env lid in
+    match res with
+    | None ->
+        Unk
+    | Some (BU.Inl _, rng) ->
+        Unk
+    | Some (BU.Inr (se, us), rng) ->
+        begin match se.sigel with
+        | Sig_inductive_typ (lid, us, bs, t, _, dc_lids) ->
+            let nm = Ident.path_of_lid lid in
+            let ctor1 dc_lid =
+                begin match Env.lookup_qname env dc_lid with
+                | Some (BU.Inr (se, us), rng) ->
+                    begin match se.sigel with
+                    | Sig_datacon (lid, us, t, _, n, _) ->
+                        Ctor (Ident.path_of_lid lid, t)
+                    | _ -> failwith "wat 1"
+                    end
+                | _ -> failwith "wat 2"
+                end
+            in
+            let ctors = List.map ctor1 dc_lids in
+            Sg_Inductive (nm, bs, t, ctors)
+        | _ ->
+            Unk
+        end
+
+let embed_ctor (c:ctor) : term =
+    match c with
+    | Ctor (nm, t) ->
+        S.mk_Tm_app ref_Ctor
+                    [S.as_arg (embed_string_list nm);
+                     S.as_arg (embed_term t)]
+                    None Range.dummyRange
+        
+
+let embed_sigelt_view (sev:sigelt_view) : term =
+    match sev with
+    | Sg_Inductive (nm, bs, t, dcs) ->
+        S.mk_Tm_app ref_Sg_Inductive
+                    [S.as_arg (embed_string_list nm);
+                        S.as_arg (embed_binders bs);
+                        S.as_arg (embed_term t);
+                        S.as_arg (embed_list embed_ctor fstar_refl_ctor dcs)]
+                    None Range.dummyRange
+    | Unk ->
+        ref_Unk

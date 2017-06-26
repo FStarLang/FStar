@@ -194,8 +194,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                                   (E.pair_typ RD.fstar_refl_term RD.fstar_refl_term);
 
       mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
-      mktac0 "__cur_goal"      cur_goal'   embed_term  RD.fstar_refl_term;
-      mktac0 "__cur_witness"   cur_witness embed_term  RD.fstar_refl_term;
+      mktac0 "__cur_goal"      cur_goal'   embed_term RD.fstar_refl_term;
+      mktac0 "__cur_witness"   cur_witness embed_term RD.fstar_refl_term;
     ]@reflection_primops @native_tactics_steps
 
 // Please note, there is some makefile magic to tweak this function in the OCaml output,

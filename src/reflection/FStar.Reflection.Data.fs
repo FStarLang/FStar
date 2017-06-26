@@ -5,6 +5,8 @@ open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
 
+type name = list<string>
+
 type vconst =
     | C_Unit
     | C_Int of int
@@ -21,6 +23,13 @@ type term_view =
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Unknown
+    
+// See ulib/FStar.Reflection.Syntax.fst for explanations of these two
+type ctor =
+    | Ctor of  name * typ
+type sigelt_view =
+    | Sg_Inductive of name * list<binder> * typ * list<ctor>
+    | Unk
 
 type norm_step =
     | Simpl
@@ -47,6 +56,8 @@ let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
 let fstar_refl_binders   = mk_refl_syntax_lid_as_term "binders"
 let fstar_refl_term_view = mk_refl_syntax_lid_as_term "term_view"
+let fstar_refl_sigelt    = mk_refl_syntax_lid_as_term "sigelt"
+let fstar_refl_ctor      = mk_refl_syntax_lid_as_term "ctor"
 
 (* term_view *)
 let ref_Tv_Var_lid     = fstar_refl_syntax_lid "Tv_Var"
@@ -80,7 +91,14 @@ let ref_C_True   = lid_as_data_tm ref_C_True_lid
 let ref_C_False  = lid_as_data_tm ref_C_False_lid
 let ref_C_Int    = lid_as_data_tm ref_C_Int_lid
 
-(* assumed functions *)
+(* inductives & sigelts *)
+let ref_Sg_Inductive_lid = fstar_refl_syntax_lid "Sg_Inductive"
+let ref_Unk_lid          = fstar_refl_syntax_lid "Unk"
+let ref_Ctor_lid         = fstar_refl_syntax_lid "Ctor"
+let ref_Sg_Inductive = lid_as_data_tm ref_Sg_Inductive_lid
+let ref_Unk          = lid_as_data_tm ref_Unk_lid
+let ref_Ctor         = lid_as_data_tm ref_Ctor_lid
+
 
 (* FStar.Order, probably a bad place for this *)
 type order = | Lt | Eq | Gt

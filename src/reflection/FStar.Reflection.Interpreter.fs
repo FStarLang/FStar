@@ -5,6 +5,7 @@ module N = FStar.TypeChecker.Normalize
 open FStar.Reflection.Data
 open FStar.Reflection.Basic
 open FStar.Ident
+open FStar.TypeChecker.Env
 module Range = FStar.Range
 open FStar.List
 open FStar.Syntax.Syntax
@@ -39,7 +40,7 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__inspect" inspect unembed_term embed_term_view;
         mk1 "__pack"    pack    unembed_term_view embed_term;
 
-        mk1 "__inspect_fv" inspect_fv unembed_fvar (embed_list embed_string FStar.TypeChecker.Common.t_string);
+        mk1 "__inspect_fv" inspect_fv unembed_fvar embed_string_list;
         mk1 "__pack_fv" pack_fv (unembed_list unembed_string) embed_fvar;
 
         mk1 "__inspect_bv" inspect_bv unembed_binder embed_string;
@@ -51,5 +52,6 @@ let reflection_primops : list<N.primitive_step> =
         mk2 "__term_eq" FStar.Syntax.Util.term_eq unembed_term unembed_term embed_bool;
 
         mk1 "__term_to_string" Print.term_to_string unembed_term embed_string;
-        mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
+        mk1 "__binders_of_env" all_binders unembed_env embed_binders;
+        mk2 "__lookup_typ" lookup_typ unembed_env unembed_string_list embed_sigelt_view;
     ]

@@ -27,7 +27,28 @@ type term_view =
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : const -> term_view
   | Tv_Unknown : term_view // Baked in "None"
-  (* TODO: complete *)
+  (* TODO: complete, in particular, uvars! *)
+
+noeq
+type ctor =
+  | Ctor :
+    (name:name) ->              // constructor name "C"
+    (typ:typ) ->                // type of the constructor "C : xn:tn -> I ps"
+    ctor
+
+noeq
+type sigelt_view =
+  // Sg_Inductive basically coallesces the Sig_bundle used internally,
+  // where the type definition and its constructors are split.
+  // While that might be better for typechecking, this is probably better for metaprogrammers
+  // (no mutually defined types for now)
+  | Sg_Inductive :
+      (name:name) ->            // name of the inductive type being defined
+      (params:binders) ->       // parameters
+      (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
+      list ctor ->              // constructors
+      sigelt_view
+  | Unk
 
 assume private val __type_of_binder: binder -> term
 let type_of_binder (b:binder) : term = __type_of_binder b
@@ -66,6 +87,9 @@ let inspect_fv (fv:fv) = __inspect_fv fv
 
 assume val __pack_fv : name -> fv
 let pack_fv (ns:name) = __pack_fv ns
+
+assume val __lookup_typ : env -> name -> sigelt_view
+let lookup_typ (e:env) (ns:name) = __lookup_typ e ns
 
 assume val __compare_binder : binder -> binder -> order
 let compare_binder (b1:binder) (b2:binder) = __compare_binder b1 b2
