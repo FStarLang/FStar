@@ -40,12 +40,6 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_z
                                       None
                                       Range.dummyRange
 
-let embed_env (ps:proofstate) (env:Env.env) : term =
-    U.mk_alien env "tactics_embed_env" None
-
-let unembed_env (ps:proofstate) (t:term) : Env.env =
-    U.un_alien t |> FStar.Dyn.undyn
-
 let embed_proofstate (ps:proofstate) : term =
     U.mk_alien ps "tactics.embed_proofstate" None
 

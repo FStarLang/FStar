@@ -157,11 +157,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                (e_f : 'f -> term) (tc : typ) : N.primitive_step =
         mk name 6 (mk_tactic_interpretation_5 ps f u_a u_b u_c u_d u_e e_f tc)
     in
-    let binders_of_env_int nm args : option<term> =
-        match args with
-        | [(e, _)] -> Some (embed_binders (Env.all_binders (E.unembed_env ps e)))
-        | _ -> failwith (Util.format2 "Unexpected application %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
-    in
     [
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) (fun t-> t) (unembed_tactic_0 (fun t -> t)) (embed_option (fun t -> t) t_unit) t_unit;
@@ -198,11 +193,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                                       embed_term RD.fstar_refl_term)
                                                   (E.pair_typ RD.fstar_refl_term RD.fstar_refl_term);
 
-      //TODO: this is more well-suited to be in FStar.Reflection
-      //mk1 "__binders_of_env" Env.all_binders unembed_env embed_binders;
-      mk_refl ["Syntax";"__binders_of_env"]  1 binders_of_env_int;
-
-      mktac0 "__cur_env"       cur_env     (E.embed_env ps) RD.fstar_refl_env;
+      mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   embed_term  RD.fstar_refl_term;
       mktac0 "__cur_witness"   cur_witness embed_term  RD.fstar_refl_term;
     ]@reflection_primops @native_tactics_steps

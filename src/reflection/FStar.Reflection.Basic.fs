@@ -167,6 +167,12 @@ let embed_fvar (fv:fv) : term =
 let unembed_fvar (t:term) : fv =
     U.un_alien t |> FStar.Dyn.undyn
 
+let embed_env (env:Env.env) : term =
+    U.mk_alien env "tactics_embed_env" None
+
+let unembed_env (t:term) : Env.env =
+    U.un_alien t |> FStar.Dyn.undyn
+
 let embed_const (c:vconst) : term =
     match c with
     | C_Unit    -> ref_C_Unit
