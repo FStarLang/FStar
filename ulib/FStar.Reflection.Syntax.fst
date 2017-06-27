@@ -188,7 +188,7 @@ let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreas
     match inspect t with
     | Tv_Arrow b r ->
         let t = type_of_binder b in
-        collect_app' (t::typs) r
+        collect_arr' (t::typs) r
     | _ -> (t, typs)
 
 val collect_arr : typ -> typ * list typ
