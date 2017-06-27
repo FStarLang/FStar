@@ -362,7 +362,7 @@ let type_attrs (attrs: tyattrs): attributes option =
 
 let add_deriving_const (attrs: tyattrs) (ptype_manifest: core_type option): core_type option =
   match attrs with
-  | [PpxDerivingConstant s] ->
+  | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, Exp.ident (mk_lident "fmt")); (Nolabel, Exp.constant (Const.string s))] in
       let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern ("fmt",Prims.parse_int "0")) (Exp.fun_ Nolabel None (Pat.any ()) e))]) in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
