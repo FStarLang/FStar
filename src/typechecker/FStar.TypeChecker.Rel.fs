@@ -20,6 +20,7 @@
 
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -37,6 +38,7 @@ module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
+module Const = FStar.Parser.Const
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -856,7 +858,6 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             rebuild, matches, tcs
 
         | Tm_arrow(bs, c) ->
-            let fail () = failwith "Bad reconstruction" in
             let bs, c = Subst.open_comp bs c in
 
             let rebuild tcs =
@@ -1846,6 +1847,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
+           let k = N.normalize [N.Beta] env k in
            let all_formals, _ = U.arrow_formals k in
            assert (List.length all_formals = List.length args);
 
@@ -2622,10 +2624,15 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
           in
           Some ret_g
 
+let discharge_guard_no_smt env g =
+  match discharge_guard' None env g false with
+  | Some g -> g
+  | None  -> raise (Error("Expected a trivial pre-condition", Env.get_range env))
+
 let discharge_guard env g =
   match discharge_guard' None env g true with
   | Some g -> g
-  | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+  | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
 let resolve_implicits g =
   let unresolved u = match Unionfind.find u with
@@ -2661,10 +2668,9 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           Errors.err r (BU.format3 "Failed to resolve implicit argument of type '%s' introduced in %s because %s"
+           Errors.err r (BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
                                     (Print.term_to_string t)
-                                    (Print.term_to_string e)
-                                    reason)
+                                    (Print.term_to_string e))
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

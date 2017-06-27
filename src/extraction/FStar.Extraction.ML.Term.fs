@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Term
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -34,7 +35,7 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
-module C  = FStar.Syntax.Const
+module C  = FStar.Parser.Const
 module TcEnv = FStar.TypeChecker.Env
 module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
@@ -193,7 +194,7 @@ let rec is_type_aux env t =
     | Tm_arrow _ ->
       true
 
-    | Tm_fvar fv when S.fv_eq_lid fv FStar.Syntax.Const.failwith_lid ->
+    | Tm_fvar fv when S.fv_eq_lid fv C.failwith_lid ->
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
 
     | Tm_fvar fv ->
@@ -570,7 +571,7 @@ let resugar_pat q p = match p with
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
 //     And turning F*'s curried pattern style to ML's fully applied ones
-let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlty>)
+let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlty>)
     : env * option<(mlpattern * list<mlexpr>)> * bool =
     let ok t =
         match expected_topt with
@@ -583,8 +584,6 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
             ok
     in
     match p.v with
-    | Pat_disj _ -> failwith "Impossible: Nested disjunctive pattern"
-
     | Pat_constant (Const_int (c, None))  ->
         // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
         // is not valid F# ?!!
@@ -601,19 +600,9 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
 
-    | Pat_wild x when disjunctive_pat ->
-        // JP: the reason why this is specialized is so that:
-        //     [] | _ :: [] ->
-        // doesn't get extracted as
-        //     [] | uu__1234 :: [] ->
-        // ("bound variable must appear on both sides of the pattern").
-        // JP: this makes no sense to me. How do we know that we won't need to
-        // refer to the variable?
-        g, Some (MLP_Wild, []), true
-
     | Pat_var x | Pat_wild x ->
-        // JP: Pat_wild turns into a binder in the internal syntax because the
-        // underlying type variable may unify and refine into something else.
+        // JP,NS: Pat_wild turns into a binder in the internal syntax because
+        // the types of other terms may depend on it
         let mlty = term_as_mlty g x.sort in
         let g, x = extend_bv g x ([], mlty) false false imp in
         g, (if imp then None else Some (MLP_Var x, [])), ok mlty
@@ -640,14 +629,14 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
                 with Un_extractable -> None in
 
         let g, tyMLPats = BU.fold_map (fun g (p, imp) ->
-            let g, p, _ = extract_one_pat disjunctive_pat true g p None in
+            let g, p, _ = extract_one_pat true g p None in
             g, p) g tysVarPats in (*not all of these were type vars in ML*)
 
         let (g, f_ty_opt), restMLPats = BU.fold_map (fun (g, f_ty_opt) (p, imp) ->
             let f_ty_opt, expected_ty = match f_ty_opt with
                 | Some (hd::rest, res) -> Some (rest, res), Some hd
                 | _ -> None, None in
-            let g, p, _ = extract_one_pat disjunctive_pat false g p expected_ty in
+            let g, p, _ = extract_one_pat false g p expected_ty in
             (g, f_ty_opt), p) (g, f_ty_opt) restPats in
 
         let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
@@ -657,38 +646,19 @@ let rec extract_one_pat (disjunctive_pat : bool) (imp : bool) (g:env) (p:S.pat) 
         g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
 
 let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<mlexpr>)> * bool) =
-    let extract_one_pat disj g p expected_t =
-        match extract_one_pat disj false g p expected_t with
-            | g, Some (x, v), b -> g, (x, v), b
-            | _ -> failwith "Impossible: Unable to translate pattern" in
-
+    let extract_one_pat g p expected_t =
+        match extract_one_pat false g p expected_t with
+        | g, Some (x, v), b -> g, (x, v), b
+        | _ -> failwith "Impossible: Unable to translate pattern"
+    in
     let mk_when_clause whens =
         match whens with
-            | [] -> None
-            | hd::tl -> Some (List.fold_left conjoin hd tl) in
-
-    match p.v with
-      | Pat_disj [] -> failwith "Impossible: Empty disjunctive pattern"
-
-      | Pat_disj (p::pats)      ->
-        let g', p, b = extract_one_pat true g p (Some expected_t) in
-        let b, ps = BU.fold_map (fun b p ->
-                    let _, p, b' = extract_one_pat true g p (Some expected_t) in
-                    b && b', p) b pats in
-        let ps = p :: ps in
-        let g = g' in
-        let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
-        let ps = ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)) in
-        //branches that contains a new when clause need to be split out
-        let res = match rest with
-            | [] -> g, ps, b
-            | rest -> g,  (MLP_Branch(List.map fst rest), None) :: ps, b in
-        res
-
-      | _ ->
-        let g, (p, whens), b = extract_one_pat false g p (Some expected_t) in
-        let when_clause = mk_when_clause whens in
-        g, [(p, when_clause)], b
+        | [] -> None
+        | hd::tl -> Some (List.fold_left conjoin hd tl)
+    in
+    let g, (p, whens), b = extract_one_pat g p (Some expected_t) in
+    let when_clause = mk_when_clause whens in
+    g, [(p, when_clause)], b
 
 (*
   maybe_lalloc_eta_data_and_project_record g qual residualType mlAppExpr:
@@ -882,7 +852,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_app(head, args) ->
           let is_total = function
             | Inl l -> FStar.Syntax.Util.is_total_lcomp l
-            | Inr (l, flags) -> Ident.lid_equals l FStar.Syntax.Const.effect_Tot_lid
+            | Inr (l, flags) -> Ident.lid_equals l C.effect_Tot_lid
                              || flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
           begin match head.n, (SS.compress head).n with
@@ -914,8 +884,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                           Util.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
-			                    S.fv_eq_lid fv Syntax.Const.op_And ||
-			                    S.fv_eq_lid fv Syntax.Const.op_Or
+			                    S.fv_eq_lid fv C.op_And ||
+			                    S.fv_eq_lid fv C.op_Or
                            | _ ->
                               false)
                         in
@@ -1232,7 +1202,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv FStar.Syntax.Const.failwith_lid Delta_constant None) in
+                    let _, fw, _, _ = BU.right <| UEnv.lookup_fv g (S.lid_as_fv C.failwith_lid Delta_constant None) in
                     with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_unit_ty

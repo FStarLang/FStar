@@ -1,13 +1,15 @@
 module FStar.Buffer
  
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
 open FStar.HyperStack
 open FStar.Ghost
 
+
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
@@ -64,7 +66,7 @@ val recall: #a:Type
 let recall #a b = recall b.content
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
-let as_seq #a h (b:buffer a{live h b}) : GTot (s:seq a{Seq.length s = length b}) = 
+let as_seq #a h (b:buffer a) : Ghost (s:seq a{Seq.length s = length b}) (requires (live h b)) (ensures (fun _ -> True)) = 
   Seq.slice (sel h b) (idx b) (idx b + length b)
 
 let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a =
@@ -81,6 +83,25 @@ let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
   x.content == y.content /\
   idx y >= idx x /\
   idx x + length x >= idx y + length y
+
+let includes_live #a h (x: buffer a) (y: buffer a)
+: Lemma
+  (requires (x `includes` y))
+  (ensures (live h x <==> live h y))
+= ()
+
+let includes_as_seq #a h1 h2 (x: buffer a) (y: buffer a)
+: Lemma
+  (requires (x `includes` y /\ live h1 x /\ live h2 x /\ as_seq h1 x == as_seq h2 x))
+  (ensures (live h1 y /\ live h2 y /\ as_seq h1 y == as_seq h2 y))
+= Seq.slice_slice (sel h1 x) (idx x) (idx x + length x) (idx y - idx x) (idx y  - idx x + length y);
+  Seq.slice_slice (sel h2 x) (idx x) (idx x + length x) (idx y - idx x) (idx y  - idx x + length y)
+
+let includes_trans #a (x y z: buffer a)
+: Lemma
+  (requires (x `includes` y /\ y `includes` z))
+  (ensures (x `includes` z))
+= ()
 
 (* Disjointness between two buffers *)
 let disjoint #a #a' (x:buffer a) (y:buffer a') : GTot Type0 =
@@ -908,18 +929,19 @@ let upd #a b n z =
   Seq.lemma_eq_intro (as_seq h b) (Seq.slice s (idx b) (idx b + length b));
   Seq.upd_slice s0 (idx b) (idx b + length b) (v n) z
 
-val sub: #a:Type -> b:buffer a -> i:UInt32.t{v i + v b.idx < pow2 n}
+val sub: #a:Type -> b:buffer a -> i:UInt32.t
   -> len:UInt32.t{v i + v len <= length b}
   -> Tot (b':buffer a{b `includes` b' /\ length b' = v len})
 let sub #a b i len =
+  assert (v i + v b.idx < pow2 n); // was formerly a precondition
   MkBuffer b.max_length b.content (i +^ b.idx) len
 
 let sub_sub
   (#a: Type)
   (b: buffer a)
-  (i1: UInt32.t{v i1 + (idx b) < pow2 n})
+  (i1: UInt32.t)
   (len1: UInt32.t{v i1 + v len1 <= length b})
-  (i2: UInt32.t {v i2 + (v i1 + (idx b)) < pow2 n})
+  (i2: UInt32.t)
   (len2: UInt32.t {v i2 + v len2 <= v len1})
 : Lemma
   (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
@@ -933,13 +955,22 @@ let sub_zero_length
 = ()
 
 let lemma_sub_spec (#a:Type) (b:buffer a)
-  (i:UInt32.t{v i + v b.idx < pow2 n})
+  (i:UInt32.t)
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
   h : Lemma
      (requires (live h b))
-     (ensures  (live h b /\ as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
-     [SMTPat (sub b i len); SMTPatT (live h b)]
+     (ensures  (live h b /\ live h (sub b i len) /\ as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
+  [SMTPat (sub b i len); SMTPatT (live h b)]
   = Seq.lemma_eq_intro (as_seq h (sub b i len)) (Seq.slice (as_seq h b) (v i) (v i + v len))
+
+let lemma_sub_spec' (#a:Type) (b:buffer a)
+  (i:UInt32.t)
+  (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
+  h : Lemma
+     (requires (live h b))
+     (ensures  (live h b /\ live h (sub b i len) /\ as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
+  [SMTPat (live h (sub b i len))]
+= lemma_sub_spec b i len h
 
 val offset: #a:Type -> b:buffer a
   -> i:UInt32.t{v i + v b.idx < pow2 n /\ v i <= v b.length}
@@ -1045,7 +1076,7 @@ assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b}
     /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z
     /\ Seq.slice (as_seq h1 b) (v len) (length b) == Seq.slice (as_seq h0 b) (v len) (length b) ))
 
-let split #t (b:buffer t) (i:UInt32.t{v i <= length b /\ v i + v b.idx < pow2 n}) : Tot (buffer t * buffer t)
+let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t * buffer t)
   = sub b 0ul i, offset b i
 
 let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content == b'.content /\ idx b + length b = idx b'}) : Tot (buffer t)

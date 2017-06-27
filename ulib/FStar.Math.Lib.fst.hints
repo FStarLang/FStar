@@ -1,5 +1,5 @@
 [
-  "!\u0017\u0014Ú¿Žœ\u0018l´Á3\fc©p",
+  "þM\u0012[cû\u0005\u0003žž`%ú,$\u0002",
   [
     [
       "FStar.Math.Lib.lemma_div_def",
@@ -57,7 +57,7 @@
       "FStar.Math.Lib.slash_decr_axiom",
       2,
       2,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
         "equation_Prims.nat", "equation_Prims.pos", "int_inversion",
@@ -468,7 +468,7 @@
     [
       "FStar.Math.Lib.powx_lemma2",
       3,
-      2,
+      1,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
@@ -480,7 +480,7 @@
         "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
         "equation_FStar.Mul.op_Star", "equation_Prims.nat",
         "equation_with_fuel_FStar.Math.Lib.powx.fuel_instrumented",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "int_inversion", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",

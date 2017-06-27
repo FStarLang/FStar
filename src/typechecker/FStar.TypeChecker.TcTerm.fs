@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -37,6 +38,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module Const = FStar.Parser.Const
 
 
 
@@ -630,7 +632,10 @@ and tc_value env (e:term) : term
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
-    then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
+    then raise (Error(BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+                                    (Print.fv_to_string fv)
+                                    (string_of_int (List.length us))
+                                    (string_of_int (List.length us')), Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
@@ -1137,8 +1142,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-			     S.fv_eq_lid fv Syntax.Const.op_And ||
-			     S.fv_eq_lid fv Syntax.Const.op_Or
+			     S.fv_eq_lid fv Parser.Const.op_And ||
+			     S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1362,47 +1367,72 @@ and tc_eqn scrutinee env branch
         pat                                (* the type-checked, fully decorated pattern                             *)
       * list<bv>                           (* all its bound variables, used for closing the type of the branch term *)
       * Env.env                            (* the environment extended with all the binders                         *)
-      * list<term>                         (* terms corresponding to each clause in the disjunctive pat             *)
-      * list<term>                         (* the same terms in normal form                                         *)
+      * term                               (* terms corresponding to the pattern                                    *)
+      * term                               (* the same term in normal form                                          *)
       =
-    let pat_bvs, exps, p = TcUtil.pat_as_exps allow_implicits env p0 in //an expression for each clause in a disjunctive pattern
+    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 in //an expression for each clause in a disjunctive pattern
     if Env.debug env Options.High
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
     let env1, _ = Env.clear_expected_typ pat_env in
-    let env1 = {env1 with Env.is_pattern=true} in  //just a flag for a better error message
+    //This is_pattern flag is crucial to check that every variable in the pattern
+    //has exactly its expected type, rather than just a sub-type. see #1062
+    let env1 = {env1 with Env.is_pattern=true} in
     let expected_pat_t = Rel.unrefine env pat_t in
-    let exps, norm_exps = exps |> List.map (fun e ->
-        if Env.debug env Options.High
-        then BU.print2 "Checking pattern expression %s against expected type %s\n" (Print.term_to_string e) (Print.term_to_string pat_t);
+    if Env.debug env Options.High
+    then BU.print2 "Checking pattern expression %s against expected type %s\n"
+                    (Print.term_to_string exp)
+                    (Print.term_to_string pat_t);
 
-        let e, lc, g =  tc_term env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
-                                          //Q: where is it being discarded? A: we only use lc.res_typ below, and forget abouts its WP
-        if Env.debug env Options.High
-        then BU.print2 "Pre-checked pattern expression %s at type %s\n" (N.term_to_string env e) (N.term_to_string env lc.res_typ);
+    let env1 = Env.set_expected_typ env1 expected_pat_t in
+    let exp, lc, g = tc_tot_or_gtot_term env1 exp in
+    //To support nested patterns, it's important to
+    //only keep the unification/subtyping constraints and to discard the logical guard for patterns
+    //Consider the following:
+    //   t = x:(int * int){fst x = snd x}
+    //   o : option t
+    //and
+    //   match o with Some #t (MkTuple2 #int #int a b)
+    //In this case, the guard_f will require (a = b), because of the refinement on t
+    //But, this is impossible to prove for two fresh ints a and b
+    //Instead, we check below that the inferred type for the entire pattern is unifiable
+    //with the expected type.
+    //This should guarantee that the equality assumption between the scrutinee and the pattern
+    //is at least well-typed and the branch gets to use any implied relations among the
+    //pattern-bound variables, e.g., a=b in this case
+    let g = {g with guard_f= Trivial} in
 
-        let g' = Rel.teq env lc.res_typ expected_pat_t in
+    let _ =
+        //But, it's really important to confirm that the inferred type of the pattern
+        //unifies with the expected pattern type.
+        //Otherwise, its easy to get inconsistent;
+        //e.g., if expected_pat_t is (option nat)
+        //and   lc.res_typ is (option int)
+        //Rel.teq below will produce a logical guard (int = nat)
+        //which will fail the discharge_guard_no_smt check
+        //Without out, we will be able to conclude in the branch of the pattern,
+        //with the equality Some #nat x = Some #int x
+        //that nat=int and hence False
+        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
         let g = Rel.conj_guard g g' in
-        let _ = Rel.discharge_guard env ({g with guard_f=Trivial}) |> Rel.resolve_implicits in
-        let e' = N.normalize [N.Beta] env e in
-        let uvars_to_string uvs = uvs |> BU.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
-        let uvs1 = Free.uvars e' in
-        let uvs2 = Free.uvars expected_pat_t in
-        if not <| BU.set_is_subset_of uvs1 uvs2
-        then (let unresolved = BU.set_difference uvs1 uvs2 |> BU.set_elements in
-              raise (Error(BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
-                                         Variables {%s} were unresolved; please bind them explicitly"
-                                    (N.term_to_string env e')
-                                    (N.term_to_string env expected_pat_t)
-                                    (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", "), p.p)));
+        let env1 = Env.set_range env1 exp.pos in
+        Rel.discharge_guard_no_smt env1 g |>
+        Rel.resolve_implicits in
+    let norm_exp = N.normalize [N.Beta] env1 exp in
+    let uvs1 = Free.uvars norm_exp in
+    let uvs2 = Free.uvars expected_pat_t in
+    if not <| BU.set_is_subset_of uvs1 uvs2
+    then (let unresolved = BU.set_difference uvs1 uvs2 |> BU.set_elements in
+            raise (Error(BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
+                                        Variables {%s} were unresolved; please bind them explicitly"
+                                (N.term_to_string env norm_exp)
+                                (N.term_to_string env expected_pat_t)
+                                (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", "), p.p)));
 
-        if Env.debug env Options.High
-        then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env e);
-
-        //explicitly return e here, not its normal form, since pattern decoration relies on it
-        e,e') |> List.unzip in
-    let p = TcUtil.decorate_pattern env p exps in
-    p, pat_bvs, pat_env, exps, norm_exps
+    if Env.debug env Options.High
+    then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
+    let p = TcUtil.decorate_pattern env p exp in
+    p, pat_bvs, pat_env, exp, norm_exp
   in
   (*</tc_pat>*)
 
@@ -1411,7 +1441,9 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, disj_exps, norm_disj_exps = tc_pat true pat_t pattern in //disj_exps, an exp for each arm of a disjunctive pattern
+  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp =
+    tc_pat true pat_t pattern
+  in
 
   (* 2. Check the when clause *)
   let when_clause, g_when = match when_clause with
@@ -1431,7 +1463,7 @@ and tc_eqn scrutinee env branch
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
   let when_condition = match when_clause with
         | None -> None
-        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w Const.exp_true_bool in
+        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
@@ -1442,17 +1474,14 @@ and tc_eqn scrutinee env branch
     let eqs =
         if not (Env.should_verify env)
         then None
-        else disj_exps |> List.fold_left (fun fopt e ->
-                let e = SS.compress e in
-                match e.n with
-                    | Tm_uvar _
-                    | Tm_constant _
-                    | Tm_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
-                    | _ ->
-                      let clause = U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e in
-                      match fopt with
-                        | None -> Some clause
-                        | Some f -> Some <| U.mk_disj clause f) None in
+        else let e = SS.compress pat_exp in
+             match e.n with
+             | Tm_uvar _
+             | Tm_constant _
+             | Tm_fvar _ -> None (* Equation for non-binding forms are handled with the discriminators below *)
+             | _ ->
+               Some (U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e)
+    in
 
     let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
     //g_branch is trivial, its logical content is now incorporated within c
@@ -1518,7 +1547,7 @@ and tc_eqn scrutinee env branch
                         | _ ->
                             let disc = S.fvar discriminator Delta_equational None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
-                            [U.mk_eq2 U_zero U.t_bool disc Const.exp_true_bool]
+                            [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
             in
 
@@ -1571,10 +1600,11 @@ and tc_eqn scrutinee env branch
                   t in
 
           (* 6 (c) *)
-         let branch_guard = norm_disj_exps |> List.map (build_and_check_branch_guard scrutinee_tm) |> U.mk_disj_l  in
+         let branch_guard = build_and_check_branch_guard scrutinee_tm norm_pat_exp in
 
           (* 6 (d) *)
-         let branch_guard = match when_condition with
+         let branch_guard =
+            match when_condition with
             | None -> branch_guard
             | Some w -> U.mk_conj branch_guard w in
 
@@ -1731,9 +1761,10 @@ and check_top_level_let_rec env top =
           let _ = e2.tk := Some Common.t_unit.n in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
+          Rel.discharge_guard env g_lbs |> Rel.force_trivial_guard env;
           mk (Tm_let((true, lbs), e2)) (Some Common.t_unit.n) top.pos,
           cres,
-          Rel.discharge_guard env g_lbs
+          Rel.trivial_guard
 
         | _ -> failwith "Impossible"
 

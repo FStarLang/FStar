@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.ST
 open FStar.All
 open FStar.Getopt
 
@@ -81,6 +82,7 @@ val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
+val hint_file                   : unit    -> option<string>
 val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool
@@ -100,7 +102,6 @@ val n_cores                     : unit    -> int
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
-val norm_then_print             : unit    -> bool
 val output_dir                  : unit    -> option<string>
 val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
@@ -108,6 +109,7 @@ val prims                       : unit    -> string
 val prims_basename              : unit    -> string
 val pervasives                  : unit    -> string
 val pervasives_basename         : unit    -> string
+val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
 val print_fuels                 : unit    -> bool

@@ -1,5 +1,6 @@
 type int32 = int
 type t = int32
+type t' = t
 
 let v (x:int32) : Prims.int = Prims.parse_int (string_of_int x)
 

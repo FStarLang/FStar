@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Util
+open FStar.ST
 open FStar.All
 open System.IO
 
@@ -297,6 +298,8 @@ val expand_environment_variable: string -> string
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
 
+val is_letter: char -> bool
+val is_digit: char -> bool
 val is_letter_or_digit: char -> bool
 val is_punctuation: char -> bool
 val is_symbol: char -> bool

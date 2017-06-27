@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -31,6 +32,7 @@ module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
+module C = FStar.Parser.Const
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -56,33 +58,33 @@ let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
-    (Const.op_Addition    , "+" );
-    (Const.op_Subtraction , "-" );
-    (Const.op_Multiply    , "*" );
-    (Const.op_Division    , "/" );
-    (Const.op_Eq          , "=" );
-    (Const.op_ColonEq     , ":=");
-    (Const.op_notEq       , "<>");
-    (Const.op_And         , "&&");
-    (Const.op_Or          , "||");
-    (Const.op_LTE         , "<=");
-    (Const.op_GTE         , ">=");
-    (Const.op_LT          , "<" );
-    (Const.op_GT          , ">" );
-    (Const.op_Modulus     , "mod");
-    (Const.and_lid     , "/\\");
-    (Const.or_lid      , "\\/");
-    (Const.imp_lid     , "==>");
-    (Const.iff_lid     , "<==>");
-    (Const.precedes_lid, "<<");
-    (Const.eq2_lid     , "==");
-    (Const.eq3_lid     , "===");
+    (C.op_Addition    , "+" );
+    (C.op_Subtraction , "-" );
+    (C.op_Multiply    , "*" );
+    (C.op_Division    , "/" );
+    (C.op_Eq          , "=" );
+    (C.op_ColonEq     , ":=");
+    (C.op_notEq       , "<>");
+    (C.op_And         , "&&");
+    (C.op_Or          , "||");
+    (C.op_LTE         , "<=");
+    (C.op_GTE         , ">=");
+    (C.op_LT          , "<" );
+    (C.op_GT          , ">" );
+    (C.op_Modulus     , "mod");
+    (C.and_lid     , "/\\");
+    (C.or_lid      , "\\/");
+    (C.imp_lid     , "==>");
+    (C.iff_lid     , "<==>");
+    (C.precedes_lid, "<<");
+    (C.eq2_lid     , "==");
+    (C.eq3_lid     , "===");
 ]
 
 let unary_prim_ops = [
-    (Const.op_Negation, "not");
-    (Const.op_Minus, "-");
-    (Const.not_lid, "~")
+    (C.op_Negation, "not");
+    (C.op_Minus, "-");
+    (C.not_lid, "~")
 ]
 
 let is_prim_op ps f = match f.n with
@@ -97,17 +99,17 @@ let is_infix_prim_op (e:term) = is_prim_op (fst (List.split infix_prim_ops)) e
 let is_unary_prim_op (e:term) = is_prim_op (fst (List.split unary_prim_ops)) e
 
 let quants = [
-  (Const.forall_lid, "forall");
-  (Const.exists_lid, "exists")
+  (C.forall_lid, "forall");
+  (C.exists_lid, "exists")
 ]
 type exp = term
 
-let is_b2t (t:typ)   = is_prim_op [Const.b2t_lid] t
+let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
 let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
-let is_ite (t:typ)   = is_prim_op [Const.ite_lid] t
+let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 
-let is_lex_cons (f:exp) = is_prim_op [Const.lexcons_lid] f
-let is_lex_top (f:exp) = is_prim_op [Const.lextop_lid] f
+let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
+let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
 let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
 let rec reconstruct_lex (e:exp) =
@@ -181,7 +183,7 @@ let rec int_of_univ n u = match Subst.compress_univ u with
     | U_succ u -> int_of_univ (n+1) u
     | _ -> n, Some u
 
-let rec univ_to_string u = 
+let rec univ_to_string u =
   if not (Options.ugly()) then
     let e = Resugar.resugar_universe u Range.dummyRange in
     let d = ToDocument.term_to_document e in
@@ -308,7 +310,7 @@ let rec term_to_string x =
       | _ -> tag_of_term x
   end
 
-and pat_to_string x = 
+and pat_to_string x =
   if not (Options.ugly()) then
     let e = Resugar.resugar_pat x in
     let d = ToDocument.pat_to_document e in
@@ -325,7 +327,6 @@ and pat_to_string x =
       else bv_to_string x
     | Pat_constant c -> const_to_string c
     | Pat_wild x -> if (Options.print_real_names()) then "Pat_wild " ^ (bv_to_string x) else "_"
-    | Pat_disj ps ->  U.concat_l " | " (List.map pat_to_string ps)
 
 
 and lbs_to_string quals lbs =
@@ -371,10 +372,12 @@ and imp_to_string s = function
 
 and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_binder b Range.dummyRange in
-    let d = ToDocument.binder_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
-  else 
+    match Resugar.resugar_binder b Range.dummyRange with
+    | None -> ""
+    | Some e ->
+      let d = ToDocument.binder_to_document e in
+      Pp.pretty_string (float_of_string "1.0") 100 d
+  else
     let (a, imp) = b in
     if is_null_binder b
     then ("_:" ^ term_to_string a.sort)
@@ -403,7 +406,7 @@ and comp_to_string c =
     let e = Resugar.resugar_comp c in
     let d = ToDocument.term_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
-  else 
+  else
     match c.n with
     | Total (t, _) ->
       begin match (compress t).n with
@@ -428,7 +431,7 @@ and comp_to_string c =
           then U.format1 "Tot %s" (term_to_string c.result_typ)
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name Const.effect_ML_lid
+                  && lid_equals c.effect_name C.effect_ML_lid
           then term_to_string c.result_typ
           else if not (Options.print_effect_args())
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
@@ -469,12 +472,12 @@ let enclose_universes s =
     then "<" ^ s ^ ">"
     else ""
 
-let tscheme_to_string s = 
+let tscheme_to_string s =
   if not (Options.ugly()) then
     let d = Resugar.resugar_tscheme s in
     let d = ToDocument.decl_to_document d in
     Pp.pretty_string (float_of_string "1.0") 100 d
-  else 
+  else
     let (us, t) = s in
     U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
@@ -529,13 +532,13 @@ let eff_decl_to_string' for_free r q ed =
          tscheme_to_string ed.return_repr;
          actions_to_string ed.actions]
 
-let eff_decl_to_string for_free ed = 
+let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
 
-let rec sigelt_to_string (x: sigelt) = 
+let rec sigelt_to_string (x: sigelt) =
  if not (Options.ugly()) then
     let e = Resugar.resugar_sigelt x in
-    begin match e with 
+    begin match e with
     | Some d ->
       let d = ToDocument.decl_to_document d in
       Pp.pretty_string (float_of_string "1.0") 100 d

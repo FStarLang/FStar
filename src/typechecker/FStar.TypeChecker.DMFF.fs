@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.DMFF
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -36,6 +37,7 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
+module C = FStar.Parser.Const
 
 
 type env = {
@@ -279,7 +281,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar Const.ite_lid (S.Delta_defined_at_level 2) None in
+      let l_ite = fvar C.ite_lid (S.Delta_defined_at_level 2) None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -296,7 +298,7 @@ let gen_wps_for_free
   let wp_assert =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_and = fvar Const.and_lid (S.Delta_defined_at_level 1) None in
+    let l_and = fvar C.and_lid (S.Delta_defined_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -314,7 +316,7 @@ let gen_wps_for_free
   let wp_assume =
     let q = S.gen_bv "q" None U.ktype in
     let wp = S.gen_bv "wp" None wp_a in
-    let l_imp = fvar Const.imp_lid (S.Delta_defined_at_level 1) None in
+    let l_imp = fvar C.imp_lid (S.Delta_defined_at_level 1) None in
     let body =
       U.mk_app c_app (List.map S.as_arg [
         U.mk_app c_pure (List.map S.as_arg [
@@ -415,7 +417,7 @@ let gen_wps_for_free
         | Tm_app (head, args) when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar (Env.lookup_projector env (U.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
+            let projector = S.fvar (Env.lookup_projector env (C.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_defined_at_level 1) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -452,7 +454,7 @@ let gen_wps_for_free
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_as_fv Const.guard_free Delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_as_fv C.guard_free Delta_constant None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body = mk (Tm_meta (body, Meta_pattern [[as_arg pat]])) in
           U.close_forall_no_univs binders pattern_guarded_body
@@ -522,7 +524,7 @@ let nm_of_comp = function
   | Total (t, _) ->
       N t
   | Comp c when c.flags |> BU.for_some (function CPS -> true | _ -> false) ->
-                //lid_equals c.effect_name Const.monadic_lid ->
+                //lid_equals c.effect_name C.monadic_lid ->
       M c.result_typ
   | Comp c ->
       failwith (BU.format1 "[nm_of_comp]: impossible (%s)" (Print.comp_to_string <| mk_Comp c))
@@ -645,9 +647,9 @@ and star_type' env t =
         match (SS.compress head).n with
         | Tm_fvar fv when (
           // TODO: implement a better check (non-dependent, user-defined data type)
-          fv_eq_lid fv Const.option_lid ||
-          fv_eq_lid fv Const.either_lid ||
-          fv_eq_lid fv Const.eq2_lid ||
+          fv_eq_lid fv C.option_lid ||
+          fv_eq_lid fv C.either_lid ||
+          fv_eq_lid fv C.eq2_lid ||
           is_tuple_constructor (SS.compress head)
         ) ->
             true
@@ -742,7 +744,7 @@ let is_monadic = function
   | None ->
       failwith "un-annotated lambda?!"
   | Some (Inl { cflags = flags }) | Some (Inr (_, flags)) ->
-      // lid_equals lid Const.monadic_lid
+      // lid_equals lid C.monadic_lid
       flags |> BU.for_some (function CPS -> true | _ -> false)
 
 // TODO: this function implements a (partial) check for the well-formedness of
@@ -803,7 +805,6 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // - the second is [_e_], the elaborated version of [e]
 let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
   // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
-  let mk x = mk x None e.pos in
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
@@ -954,7 +955,7 @@ and infer (env: env) (e: term): nm * term * term =
                       end  }))
         | Some (Inr (lid, flags)) ->
             Some (Inr (if flags |> BU.for_some (function CPS -> true | _ -> false)
-                       then (Const.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
+                       then (C.effect_Tot_lid, List.filter (function CPS -> false | _ -> true) flags)
                        else (lid, flags)))
       in
 
@@ -1170,7 +1171,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
 
   | M t1, s_e1, u_e1 ->
       // BU.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
-      let u_binding = { binding with lbeff = Const.effect_PURE_lid ; lbtyp = t1 } in
+      let u_binding = { binding with lbeff = C.effect_PURE_lid ; lbtyp = t1 } in
       let env = { env with env = push_bv env.env ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
       // Now, generate the bind.
@@ -1209,7 +1210,7 @@ and comp_of_nm (nm: nm_): comp =
 and mk_M (t: typ): comp =
   mk_Comp ({
     comp_univs=[U_unknown];
-    effect_name = Const.monadic_lid;
+    effect_name = C.monadic_lid;
     result_typ = t;
     effect_args = [];
     flags = [CPS ; TOTAL]
@@ -1227,7 +1228,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       // It's a product, the only form of [Tm_app] allowed.
       let wp_head, wp_args = head_and_args wp in
       if not (List.length wp_args = List.length args) ||
-         not (is_constructor wp_head (mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
+         not (is_constructor wp_head (C.mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
@@ -1258,11 +1259,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       failwith "impossible trans_F_"
 
 and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
-  let mk x = mk x None h.pos in
   if is_monadic then
     mk_Comp ({
       comp_univs = [U_unknown];
-      effect_name = Const.effect_PURE_lid;
+      effect_name = C.effect_PURE_lid;
       result_typ = star_type' env h;
       effect_args = [ wp, S.as_implicit false ];
       flags = []

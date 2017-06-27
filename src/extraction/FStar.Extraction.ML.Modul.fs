@@ -15,11 +15,13 @@
 *)
 #light "off"
 module FStar.Extraction.ML.Modul
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
 open FStar.Syntax.Syntax
 open FStar.Const
+open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 open FStar.Extraction.ML.Util
@@ -34,7 +36,7 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
-module C  = FStar.Syntax.Const
+module C  = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 
@@ -141,28 +143,40 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
 type env_t = UEnv.env
 
 let extract_bundle env se =
-    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (env:env_t) (ctor: data_constructor):  env_t * (mlsymbol * list<mlty>) =
+    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (env:env_t) (ctor: data_constructor):
+        env_t * (mlsymbol * list<(mlsymbol * mlty)>)
+        =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
+        let steps = [ N.Inlining; N.UnfoldUntil S.Delta_constant; N.EraseUniverses; N.AllowUnboundUniverses ] in
+        let names = match (SS.compress (N.normalize steps env.tcenv ctor.dtyp)).n with
+          | Tm_arrow (bs, _) ->
+              List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
+          | _ ->
+              []
+        in
         let tys = (ml_tyvars, mlt) in
         let fvv = mkFvvar ctor.dname ctor.dtyp in
         fst (extend_fv env fvv tys false false),
-        (lident_as_mlsymbol ctor.dname, argTypes mlt) in
+        (lident_as_mlsymbol ctor.dname, List.zip names (argTypes mlt)) in
 
     let extract_one_family env ind =
        let env, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
        let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i, 0)) in
-       let tbody = match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
-            | Some (RecordType (ns, ids)) ->
-              let _, c_ty = List.hd ctors in
-              assert (List.length ids = List.length c_ty);
-              let fields = List.map2 (fun id ty -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
-              MLTD_Record fields
-
-            | _ -> MLTD_DType ctors in
+       let tbody =
+         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         | Some (RecordType (ns, ids)) ->
+             // JP: why are the names in c_ty prefixed with ^fname^? Why do we
+             // have to do this voodoo dance to recover field names? Why don't
+             // we just drop the special ^fname^ prefix?
+             let _, c_ty = List.hd ctors in
+             assert (List.length ids = List.length c_ty);
+             let fields = List.map2 (fun id (_, ty) -> let lid = lid_of_ids (ns @ [id]) in (lident_as_mlsymbol lid), ty) ids c_ty in
+             MLTD_Record fields
+         | _ ->
+             MLTD_DType ctors in
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
-
 
     match se.sigel, se.sigquals with
         | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
@@ -226,7 +240,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
             let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
-            let action_lb = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None a.action_defn.pos in
+            let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
               BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
@@ -282,7 +296,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_let (lbs, _, attrs) ->
           let quals = se.sigquals in
-          let elet = mk (Tm_let(lbs, FStar.Syntax.Const.exp_false_bool)) None se.sigrng in
+          let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
             | MLE_Let((flavor, _, bindings), _) ->
@@ -330,7 +344,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
                                                       lbunivs=[];
                                                       lbtyp=t;
-                                                      lbeff=FStar.Syntax.Const.effect_ML_lid;
+                                                      lbeff=C.effect_ML_lid;
                                                       lbdef=imp}]), [], []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with

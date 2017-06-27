@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Normalize
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -35,7 +36,7 @@ module SS = FStar.Syntax.Subst
 //basic util
 module BU = FStar.Util
 module FC = FStar.Const
-module SC = FStar.Syntax.Const
+module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
@@ -152,12 +153,12 @@ let lookup_bvar env x =
     with _ -> failwith (BU.format1 "Failed to find %s\n" (Print.db_to_string x))
 
 let downgrade_ghost_effect_name l =
-    if Ident.lid_equals l Const.effect_Ghost_lid
-    then Some Const.effect_Pure_lid
-    else if Ident.lid_equals l Const.effect_GTot_lid
-    then Some Const.effect_Tot_lid
-    else if Ident.lid_equals l Const.effect_GHOST_lid
-    then Some Const.effect_PURE_lid
+    if Ident.lid_equals l PC.effect_Ghost_lid
+    then Some PC.effect_Pure_lid
+    else if Ident.lid_equals l PC.effect_GTot_lid
+    then Some PC.effect_Tot_lid
+    else if Ident.lid_equals l PC.effect_GHOST_lid
+    then Some PC.effect_PURE_lid
     else None
 
 (********************************************************************************************************************)
@@ -343,11 +344,6 @@ let rec closure_as_term cfg env t =
              let norm_one_branch env (pat, w_opt, tm) =
                 let rec norm_pat env p = match p.v with
                     | Pat_constant _ -> p, env
-                    | Pat_disj [] -> failwith "Impossible"
-                    | Pat_disj (hd::tl) ->
-                      let hd, env' = norm_pat env hd in
-                      let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-                      {p with v=Pat_disj(hd::tl)}, env'
                     | Pat_cons(fv, pats) ->
                       let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                             let p, env = norm_pat env p in
@@ -418,9 +414,9 @@ and close_lcomp_opt cfg env lopt = match lopt with
     | Some (Inl lc) -> //NS: Too expensive to close potentially huge VCs that are hardly read
       let flags = filter_out_lcomp_cflags lc in
       if U.is_total_lcomp lc
-      then Some (Inr (Const.effect_Tot_lid, flags))
+      then Some (Inr (PC.effect_Tot_lid, flags))
       else if U.is_tot_or_gtot_lcomp lc
-      then Some (Inr (Const.effect_GTot_lid, flags))
+      then Some (Inr (PC.effect_GTot_lid, flags))
       else Some (Inr (lc.eff_name, flags)) //retaining the effect name and flags is sufficient
     | _ -> lopt
 
@@ -540,13 +536,13 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
-        let char_t = name SC.char_lid in
+        let char_t = name PC.char_lid in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
     let string_of_list' rng (l:list<char>) : term =
         let s = string_of_list l in
-        SC.exp_string s
+        U.exp_string s
     in
     let string_of_int rng (i:int) : term =
         string_as_const rng (BU.string_of_int i)
@@ -561,25 +557,25 @@ let built_in_primitive_steps : list<primitive_step> =
         string_as_const rng (if b then "true" else "false")
     in
     let basic_ops : list<(Ident.lid * int * (Range.range -> args -> option<term>))> =
-            [(Const.op_Minus,       1, unary_int_op (fun x -> - x));
-             (Const.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
-             (Const.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
-             (Const.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
-             (Const.op_Division,    2, binary_int_op (fun x y -> (x / y)));
-             (Const.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
-             (Const.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
-             (Const.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
-             (Const.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
-             (Const.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
-             (Const.op_Negation,    1, unary_bool_op (fun x -> not x));
-             (Const.op_And,         2, binary_bool_op (fun x y -> x && y));
-             (Const.op_Or,          2, binary_bool_op (fun x y -> x || y));
-             (Const.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
-             (Const.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
-             (Const.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
-             (Const.p2l ["FStar"; "String"; "list_of_string"],
+            [(PC.op_Minus,       1, unary_int_op (fun x -> - x));
+             (PC.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
+             (PC.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
+             (PC.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
+             (PC.op_Division,    2, binary_int_op (fun x y -> (x / y)));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
+             (PC.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
+             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
+             (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
+             (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
+             (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
+             (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
+             (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
+             (PC.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
-             (Const.p2l ["FStar"; "String"; "string_of_list"],
+             (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list arg_as_char) string_of_list')]
     in
     let bounded_arith_ops =
@@ -592,9 +588,9 @@ let built_in_primitive_steps : list<primitive_step> =
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
         bounded_int_types |> List.collect (fun m ->
-        [(Const.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
-         (Const.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
-         (Const.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
+        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
+         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
+         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
@@ -621,19 +617,19 @@ let equality_ops : list<primitive_step> =
             failwith "Unexpected number of arguments"
     in
     let decidable_equality =
-        {name = Const.op_Eq;
+        {name = PC.op_Eq;
          arity = 3;
          strong_reduction_ok=true;
          interpretation=interp_bool}
     in
     let propositional_equality =
-        {name = Const.eq2_lid;
+        {name = PC.eq2_lid;
          arity = 3;
          strong_reduction_ok=true;
          interpretation = interp_prop}
     in
     let hetero_propositional_equality =
-        {name = Const.eq3_lid;
+        {name = PC.eq3_lid;
          arity = 4;
          strong_reduction_ok=true;
          interpretation = interp_prop}
@@ -671,8 +667,8 @@ let maybe_simplify cfg tm =
     let steps = cfg.steps in
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
-        | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid ->  Some true
-        | Tm_fvar fv when S.fv_eq_lid fv Const.false_lid -> Some false
+        | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
+        | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
     if not <| List.contains Simplify steps
@@ -680,32 +676,32 @@ let maybe_simplify cfg tm =
     else match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
-              if S.fv_eq_lid fv Const.and_lid
+              if S.fv_eq_lid fv PC.and_lid
               then match args |> List.map simplify with
                      | [(Some true, _); (_, (arg, _))]
                      | [(_, (arg, _)); (Some true, _)] -> arg
                      | [(Some false, _); _]
                      | [_; (Some false, _)] -> w U.t_false
                      | _ -> tm
-              else if S.fv_eq_lid fv Const.or_lid
+              else if S.fv_eq_lid fv PC.or_lid
               then match args |> List.map simplify with
                      | [(Some true, _); _]
                      | [_; (Some true, _)] -> w U.t_true
                      | [(Some false, _); (_, (arg, _))]
                      | [(_, (arg, _)); (Some false, _)] -> arg
                      | _ -> tm
-              else if S.fv_eq_lid fv Const.imp_lid
+              else if S.fv_eq_lid fv PC.imp_lid
               then match args |> List.map simplify with
                      | [_; (Some true, _)]
                      | [(Some false, _); _] -> w U.t_true
                      | [(Some true, _); (_, (arg, _))] -> arg
                      | _ -> tm
-              else if S.fv_eq_lid fv Const.not_lid
+              else if S.fv_eq_lid fv PC.not_lid
               then match args |> List.map simplify with
                      | [(Some true, _)] ->  w U.t_false
                      | [(Some false, _)] -> w U.t_true
                      | _ -> tm
-              else if S.fv_eq_lid fv Const.forall_lid
+              else if S.fv_eq_lid fv PC.forall_lid
               then match args with
                      | [(t, _)]
                      | [(_, Some (Implicit _)); (t, _)] ->
@@ -717,7 +713,7 @@ let maybe_simplify cfg tm =
                                 | _ -> tm
                        end
                     | _ -> tm
-              else if S.fv_eq_lid fv Const.exists_lid
+              else if S.fv_eq_lid fv PC.exists_lid
               then match args with
                      | [(t, _)]
                      | [(_, Some (Implicit _)); (t, _)] ->
@@ -738,10 +734,10 @@ let maybe_simplify cfg tm =
 let is_norm_request hd args =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_; _] ->
-      S.fv_eq_lid fv Const.normalize_term
+      S.fv_eq_lid fv PC.normalize_term
 
     | Tm_fvar fv, [_] ->
-      S.fv_eq_lid fv Const.normalize
+      S.fv_eq_lid fv PC.normalize
 
     | _ -> false
 
@@ -759,7 +755,7 @@ let is_reify_head = function
 
 let is_fstar_tactics_embed t =
     match (U.un_uinst t).n with
-    | Tm_fvar fv -> S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid
+    | Tm_fvar fv -> S.fv_eq_lid fv PC.fstar_tactics_embed_lid
     | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -785,7 +781,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
 
           | Tm_app({n=Tm_fvar fv}, _)
-            when S.fv_eq_lid fv FStar.Syntax.Const.fstar_tactics_embed_lid ->
+            when S.fv_eq_lid fv PC.fstar_tactics_embed_lid ->
             rebuild cfg env stack t //embedded terms should not be normalized
 
           | Tm_app(hd, args)
@@ -798,7 +794,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_app(hd, args)
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
-              && not (Ident.lid_equals cfg.tcenv.curmodule Const.prims_lid) ->
+              && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
             let tm = get_norm_request args in
             let s = [Reify; UnfoldUntil Delta_constant; Primops] in
             let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
@@ -939,8 +935,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                             | Some (Inr (l, cflags))
                             (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
-                                when (Ident.lid_equals l Const.effect_Tot_lid
-                                      || Ident.lid_equals l Const.effect_GTot_lid
+                                when (Ident.lid_equals l PC.effect_Tot_lid
+                                      || Ident.lid_equals l PC.effect_GTot_lid
                                       || cflags |> BU.for_some (function TOTAL -> true | _ -> false)) ->
                               log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
                               norm cfg (c :: env) stack_rest body
@@ -1164,7 +1160,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           (* We are in the case where [head] = [bind (return e) (fun x -> body)] *)
                           (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
                           | Some e ->
-                            let lb = {lb with lbeff=Const.effect_PURE_lid; lbdef=e} in
+                            let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
                             norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) None head.pos)
                           | None ->
                             if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
@@ -1425,7 +1421,7 @@ and ghost_to_pure_aux cfg env c =
                    {ct with effect_name=pure_eff}
                  | None ->
                     let ct = unfold_effect_abbrev cfg.tcenv c in //must be GHOST
-                    {ct with effect_name=Const.effect_PURE_lid} in
+                    {ct with effect_name=PC.effect_PURE_lid} in
              {c with n=Comp ct}
         else c
     | _ -> c
@@ -1559,11 +1555,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       in
       let rec norm_pat env p = match p.v with
         | Pat_constant _ -> p, env
-        | Pat_disj [] -> failwith "Impossible"
-        | Pat_disj (hd::tl) ->
-          let hd, env' = norm_pat env hd in
-          let tl = tl |> List.map (fun p -> fst (norm_pat env p)) in
-          {p with v=Pat_disj(hd::tl)}, env'
         | Pat_cons(fv, pats) ->
           let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
                 let p, env = norm_pat env p in
@@ -1621,28 +1612,16 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       = let scrutinee = U.unmeta scrutinee in
         let head, args = U.head_and_args scrutinee in
         match p.v with
-        | Pat_disj ps ->
-          let mopt = BU.find_map ps (fun p ->
-            let m = matches_pat scrutinee p in
-            match m with
-              | Inl _ -> Some m //definite match
-              | Inr true -> Some m //maybe match; stop considering other cases
-              | Inr false -> None (*definite mismatch*))
-          in
-          begin match mopt with
-            | None -> Inr false //all cases definitely do not match
-            | Some m -> m
-          end
         | Pat_var _
         | Pat_wild _ -> Inl [scrutinee]
         | Pat_dot_term _ -> Inl []
-        | Pat_constant s ->
-          begin match scrutinee.n with
+        | Pat_constant s -> begin
+          match scrutinee.n with
             | Tm_constant s' when (s=s') -> Inl []
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
           end
-        | Pat_cons(fv, arg_pats) ->
-          begin match (U.un_uinst head).n with
+        | Pat_cons(fv, arg_pats) -> begin
+          match (U.un_uinst head).n with
             | Tm_fvar fv' when fv_eq fv fv' ->
               matches_args [] args arg_pats
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Extraction.ML.UEnv
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -25,6 +26,7 @@ open FStar.Syntax.Syntax
 
 module U  = FStar.Syntax.Util
 module BU = FStar.Util
+module Const = FStar.Parser.Const
 
 // JP: my understanding of this is: we either bind a type (left injection) or a
 // term variable (right injection). In the latter case, the variable may need to
@@ -183,6 +185,7 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
 *)
 
 let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
+    (* TODO : the name of the type must avoid any ocaml keyword using avoid_keyword *)
     let ml_a =  bv_as_ml_tyvar a in
     let mapped_to = match mapped_to with
         | None -> MLTY_Var ml_a
@@ -190,6 +193,17 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
     let gamma = Bv(a, Inl (ml_a, mapped_to))::g.gamma in
     let tcenv = TypeChecker.Env.push_bv g.tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
+
+let sanitize (s:string) : string =
+  let cs = FStar.String.list_of_string s in
+  let valid c = BU.is_letter_or_digit c || c = '_' || c = '\'' in
+  let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
+  let cs' = match cs' with
+            | (c::cs) when BU.is_digit c || c = '\'' ->
+                  '_'::c::cs
+            | _ -> cs in
+  FStar.String.string_of_list cs'
+
 
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
 let find_uniq gamma mlident =
@@ -207,6 +221,7 @@ let find_uniq gamma mlident =
     else
       target_mlident
   in
+  let mlident = sanitize mlident in
   find_uniq mlident 0
 
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)

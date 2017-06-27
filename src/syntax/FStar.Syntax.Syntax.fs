@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Syntax.Syntax
+open FStar.ST
 open FStar.All
 (* Type definitions for the core AST *)
 
@@ -91,7 +92,6 @@ and branch = pat * option<term> * term                           (* optional whe
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
   | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
@@ -479,8 +479,7 @@ let pat_bvs (p:pat) : list<bv> =
         | Pat_wild x
         | Pat_var x -> x::b
         | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
-        | Pat_disj(p::_) -> aux b p
-        | Pat_disj [] -> failwith "impossible" in
+    in
   List.rev <| aux [] p
 
 (* Gen sym *)

@@ -13,7 +13,7 @@ open FStar_Range
 open FStar_Options
 (* TODO : these files should be deprecated and removed *)
 open FStar_Syntax_Syntax
-open FStar_Syntax_Const
+open FStar_Parser_Const
 open FStar_Syntax_Util
 open FStar_Parser_AST
 open FStar_Parser_Util

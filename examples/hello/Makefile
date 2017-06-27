@@ -26,9 +26,8 @@ testseq: out testseq.fst
 	$(OCAMLOPT) -I $(ULIB_ML)/native_int -I out/ out/FStar_Seq.ml out/TestSeq.ml -o testseq.exe
 	./testseq.exe
 
-LIB=../../ulib
-BIN=../../bin
-FSTAR=../../bin/fstar.exe
+LIB=$(FSTAR_HOME)/ulib
+BIN=$(FSTAR_HOME)/bin
 
 ifeq ($(OS),Windows_NT)
 FSC     = fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
