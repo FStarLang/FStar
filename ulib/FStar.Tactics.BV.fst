@@ -120,7 +120,7 @@ as is for now *)
 let bv_tac ()  =
 	   apply_lemma (quote eq_to_bv);;
 	   apply_lemma (quote trans);;
-	   arith_to_bv_tac;;
-	   arith_to_bv_tac;;
+	   arith_to_bv_tac ();;
+	   arith_to_bv_tac ();;
 	   smt ()
 
