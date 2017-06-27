@@ -75,6 +75,14 @@ let lemma_snoc_elementary (#n:nat) (p:prepath n) (e:fin n)
   count_zero_none e p;
   assert(forall (i0 : k:nat{k<S.length p}) . ~(p' @^ i0 == p' @^ (S.length p' - 1)))
 
+let lemma_snoc_elementary_without_count (#n:nat) (p:prepath n) (e:fin n)
+ : Lemma(requires (elementary p /\ (forall (i : _in p) . ~(p @^ i == e))))
+   (ensures (elementary (S.snoc p e)))
+= let p' = S.append p (S.create 1 e) in
+  assert(forall (i0 j0 : k:nat{k<S.length p}). p @^ i0 == p @^ j0 ==> i0 == j0);
+  assert(forall (i0 j0 : k:nat{k<S.length p}). p' @^ i0 == p' @^ j0 ==> i0 == j0);
+  assert(forall (i0 : k:nat{k<S.length p}) . ~(p' @^ i0 == p' @^ (S.length p' - 1)))
+
 
 (*TODO: Prove that this holds for any ordering *)
 val lemma_mutually_exclusive_elementary_append : (#n:nat) -> (p1:prepath n) -> (p2:prepath n) ->
@@ -90,43 +98,54 @@ let rec lemma_mutually_exclusive_elementary_append #n p1 p2 =
    assert(forall (j: k:_in p2{k>0}) . ~(p2 @^ j == p2 @^ 0));
    assert(forall (j:_in p2'). (p2' @^ j == p2 @^ (j + 1)));
    lemma_disjoint_append p1 (S.create 1 (S.head p2)) p2';
-   lemma_snoc_elementary p1 (S.head p2);
+   disjoint_not_eq_head p2 p1;
+   lemma_snoc_elementary_without_count p1 (S.head p2);
    S.lemma_eq_elim (S.append p1 p2) (S.append p1' p2');
    lemma_mutually_exclusive_elementary_append p1' p2'
 
-let rec to_elementary_path_aux (#n:nat) (g:graph0 n) (p:path g) (pn : path g) (i: k:nat{k<=S.length p})
+let lemma_valid_graph_snoc  (#n:nat) (g:graph0 n) (p:prepath n) (e:fin n)
+ : Lemma (requires (S.length p == 0 \/ (is_in_graph (S.last p) e g /\ valid_path g p)))
+   (ensures (valid_path g (S.snoc p e)))
+   = ()
+
+#set-options "--detail_errors"
+
+let rec to_elementary_path_aux (#n:nat) (g:graph0 n) (p:path g) (pn : prepath n)
  : Pure (path g)
- (requires (S.length p - i >= 1 /\ elementary pn /\ 
-  (disjoint pn (S.slice p i (S.length p))) /\
-  (S.length pn == 0 \/ is_in_graph (S.last pn) (S.head (S.slice p i (S.length p))) g)
-  ))
+ (requires (elementary pn /\ 
+  (disjoint p pn) /\
+  (S.length pn == 0 \/ (is_in_graph (S.last pn) (S.head p) g /\ valid_path g pn))))
  (ensures (fun p' -> elementary p'))
- (decreases (S.length p - i)) =
- let remaining = S.slice p i (S.length p) in
+ (decreases (S.length p )) =
+ let remaining = p in
  begin match S.length remaining with
  | 1 ->
    lemma_mutually_exclusive_elementary_append pn remaining;
    S.append pn remaining
  | x ->
-   begin match index_of (S.head remaining) (S.tail remaining) with
+   begin match index_of_l (fun ind -> ind = (S.head remaining)) (S.tail remaining) with
    | None ->
      let pn' = (S.snoc pn (S.head remaining)) in
      let remaining' = S.tail remaining in
      let head_seq = S.create 1 (S.head remaining) in
-     lemma_disjoint_slice pn remaining 0 1;
-     S.lemma_eq_elim (S.slice remaining 0 1) head_seq;
      lemma_mutually_exclusive_elementary_append pn head_seq;
-     count_zero_none (remaining @^ 0) remaining';
-     assert(forall (j:_in remaining'). (remaining' @^ j == remaining @^ (j + 1)));
+     index_of_l_spec (fun ind -> ind = (S.head remaining)) (S.tail remaining);
      lemma_disjoint_append pn head_seq remaining';
-     S.lemma_eq_elim remaining' (S.slice p (i + 1) (S.length p));
-     to_elementary_path_aux g p pn' (i + 1)
+     to_elementary_path_aux g remaining' pn'
    | Some v ->
-     let v' = (v+1) + i in
+     let v' = (v+1) in
+     let remaining' = S.slice p v' (S.length p) in
      lemma_disjoint_slice pn remaining (v+1) (S.length remaining);
-     S.lemma_eq_elim (S.slice p v' (S.length p)) (S.slice remaining (v+1) (S.length remaining));
-     assert(disjoint pn (S.slice p v' (S.length p)));
-     to_elementary_path_aux g p pn v'
+     index_of_l_spec (fun ind -> ind = (S.head remaining)) (S.tail remaining);
+     lemma_valid_subpath_is_valid g p v' (S.length p - 1);
+     to_elementary_path_aux g remaining' pn
    end
  end
+
+
+let to_elementary_path (#n:nat) (g:graph0 n) (p:path g)
+ : Pure (path g)
+ (requires (True))
+ (ensures (fun p' -> elementary p'))
+ = to_elementary_path_aux #n g p (S.createEmpty)
 
