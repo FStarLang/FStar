@@ -35,6 +35,6 @@ let non_enclave_entry_2_address = 1100
 let non_enclave_entry_2_size = 100
 
 (* helper function to get the exit address of function *)
-let get_exit_address (non_enclave_regn:HH.rid) = 
-	let exitref = ralloc non_enclave_regn 2000 in
+let get_exit_address (host_regn:HH.rid) = 
+	let exitref = ralloc host_regn 2000 in
 	exitref

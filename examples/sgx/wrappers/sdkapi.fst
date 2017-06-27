@@ -35,8 +35,8 @@ type uint32 = UInt32.t
  assume val convert_int_to_bytes: n:int-> Tot (list int8)
 assume val mknatlist : n:int -> Tot (list int8) 
  
-
-assume val callenclavehost:  uv_shared_buf:HH.rid -> host_regn:HH.rid-> exitaddress:(HS.reference int) -> Heap  unit 
+(* What about passing TCS address to host? *)
+assume val callenclavehost:  uv_shared_buf:HH.rid -> host_regn:HH.rid-> targetaddress:(HS.reference int) -> targetparam:(HS.reference (list int8)) -> Heap  unit 
 			(requires (fun m -> heap_only m ))
 			(ensures (fun m0 r m1 -> modifies_transitively (Set.singleton host_regn) m0 m1 
 				 /\ equal_domains m0 m1))
@@ -44,12 +44,8 @@ assume val callenclavehost:  uv_shared_buf:HH.rid -> host_regn:HH.rid-> exitaddr
 
 (* Design for Wrapper
 	 Copy the arguments from uv_shared_buf to host_regn and then invoke CallEnclaveHost which then is verified using Vale
-*)
-
-
-(* 
-  - modifies only host_regn and uv_shared_buf 
   - Wrapper for non_enclave_entry_point_1 : int -> int-> int
+  - modifies only host_regn and uv_shared_buf 
   - manifest has the function type signature. so the wrapper knows how many bytes to read/write for args/ret 
 *)
 val callenclavehost_wrapper_1: (uv_shared_buf:HH.rid) ->(host_regn: HH.rid)->arg1:(HS.reference int)-> arg2:(HS.reference int)->rret:(HS.reference int)  ->ST unit
@@ -71,11 +67,7 @@ let callenclavehost_wrapper_1  (uv_shared_buf:HH.rid) (host_regn:HH.rid) arg1 ar
 	let argv1 = op_Bang arg1 in
 	let argv2 = op_Bang arg2 in
 
-	(* create a reference in host_regn and copy the arguments to host_regn *)
-	// let struct_1 = Mk_struct_1 (argv1, argv2) in
-	//let non_enclave_arg = ralloc host_regn  struct_1 in
-
-	(* IMPORTANT: instead of using a struct, use a sequence of bytes like char [] and copy the arguments.
+	(* IMPORTANT: instead of using a struct, use a list of char( similar to char []) and copy the arguments.
 	  Though this opens a plethora of endianness issues, this is probably the only way to access
 	  return value as callenclavehost() does not know where exactly return pointer is.
 	  Also this is compliant with SGX SDK API for callenclaveHost
@@ -93,15 +85,15 @@ let callenclavehost_wrapper_1  (uv_shared_buf:HH.rid) (host_regn:HH.rid) arg1 ar
 	let ret_char = append arg_char (mknatlist nbytes_to_return) in
 	
 	(* Create a reference in host_regn *)
-	let non_enclave_arg_as_char = ralloc host_regn ret_char in
+	let host_arg_as_char = ralloc host_regn ret_char in
 	 
 
-	(* Get the exit address from manifest *)
-	let exitaddress = get_exit_address host_regn in
+	(* Get the exit address i.e., the address of the target function in the host,  from manifest *)
+	let targetaddress = get_exit_address host_regn in
 
 	(* Abstraction for eexit - just return like a function call.*)
-	let _ = callenclavehost uv_shared_buf host_regn exitaddress in
-	let ret_upd_char = op_Bang non_enclave_arg_as_char in
+	let _ = callenclavehost uv_shared_buf host_regn targetaddress host_arg_as_char in
+	let ret_upd_char = op_Bang host_arg_as_char in
 
 	(* FIXME: for now just reading 1 byte *)
 	let ret_val = (FStar.List.Tot.Base.nth ret_upd_char nbytes_to_read) in
