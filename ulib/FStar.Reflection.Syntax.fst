@@ -20,8 +20,8 @@ noeq
 type pattern =
     | Pat_Constant : const -> pattern                   // A built-in constant
     | Pat_Cons     : fv -> list pattern -> pattern      // A fully applied constructor
-    | Pat_Var      : bv -> pattern                      // Pattern bound variable
-    | Pat_Wild     : bv -> pattern                      // Wildcard (GM: why is this not Pat_var too?)
+    | Pat_Var      : binder -> pattern                  // Pattern bound variable
+    | Pat_Wild     : binder -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
 
 type branch = pattern * term  // | pattern -> term
 
@@ -80,6 +80,8 @@ let smaller tv t =
     | Tv_Const _
     | Tv_Unknown
     | Tv_Var _
+    | Tv_Uvar _ _
+    | Tv_Match _ _ // TODO
     | Tv_FVar _ -> True
 
 (* The main characters *)
@@ -238,6 +240,12 @@ let rec compare_term (s t : term) : order =
     | Tv_Const c1, Tv_Const c2 ->
         compare_const c1 c2
 
+    | Tv_Uvar u1 _, Tv_Uvar u2 _->
+        compare_int u1 u2
+
+    | Tv_Match _ _, Tv_Match _ _ ->
+        Eq // TODO
+
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
@@ -250,4 +258,6 @@ let rec compare_term (s t : term) : order =
     | Tv_Type (), _    -> Lt   | _, Tv_Type ()    -> Gt
     | Tv_Refine _ _, _ -> Lt   | _, Tv_Refine _ _ -> Gt
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
+    | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
+    | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt

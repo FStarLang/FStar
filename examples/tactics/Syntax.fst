@@ -40,6 +40,8 @@ let rec blah  (t : term) =
                                return (Tv_Refine b t)
             | Tv_Type u -> return (Tv_Type ())
             | Tv_Const c -> return (Tv_Const c)
+            | Tv_Uvar u t -> return (Tv_Uvar u t)
+            | Tv_Match t brs -> return (Tv_Match t brs)
             | Tv_Unknown -> return Tv_Unknown);
      return (pack tv)
 

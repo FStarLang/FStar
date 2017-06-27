@@ -19,6 +19,8 @@ type pattern =
     | Pat_Var      of bv
     | Pat_Wild     of bv
 
+type branch = pattern * term
+
 type term_view =
     | Tv_Var    of binder
     | Tv_FVar   of fv
@@ -29,6 +31,7 @@ type term_view =
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Uvar   of int * typ
+    | Tv_Match  of term * list<branch>
     | Tv_Unknown
 
 // See ulib/FStar.Reflection.Syntax.fst for explanations of these two

@@ -19,3 +19,17 @@ let rec fib (n : int) : tactic unit =
 let f8 : int = synth_by_tactic (fib 8)
 
 let _ = assert (f8 == 34)
+
+let iszero (x : int) : int =
+    synth_by_tactic (
+        x <-- quote x;
+        t_int <-- quote int;
+        let _f = fresh_binder t_int in
+        let t = Tv_Match x
+                    [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
+                     (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
+        exact (return (pack t)))
+
+let _ = assert (iszero 0 = 1)
+let _ = assert (iszero 1 = 0)
+let _ = assert (iszero 2 = 0)

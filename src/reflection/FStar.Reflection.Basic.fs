@@ -6,6 +6,7 @@ open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
+module C = FStar.Const
 module PC = FStar.Parser.Const
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
@@ -191,6 +192,57 @@ let embed_const (c:vconst) : term =
         S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (BU.string_of_int i))]
                     None Range.dummyRange
 
+let unembed_const (t:term) : vconst =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unit_lid ->
+        C_Unit
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_True_lid ->
+        C_True
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_False_lid ->
+        C_False
+
+    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
+        begin match (SS.compress i).n with
+        | Tm_constant (FStar.Const.Const_int (s, _)) -> C_Int (BU.int_of_string s)
+        | _ -> failwith "unembed_const: unexpected arg for C_Int"
+        end
+
+    | _ ->
+        failwith "not an embedded vconst"
+
+let rec embed_pattern (p : pattern) : term =
+    match p with
+    | Pat_Constant c ->
+        S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const c)] None Range.dummyRange
+    | Pat_Cons (fv, ps) ->
+        S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern ps)] None Range.dummyRange
+    | Pat_Var bv ->
+        S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
+    | Pat_Wild bv ->
+        S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
+
+let rec unembed_pattern (t : term) : pattern =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Pat_Constant_lid ->
+        Pat_Constant (unembed_const c)
+    | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons_lid ->
+        Pat_Cons (unembed_fvar f, unembed_list unembed_pattern ps)
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var_lid ->
+        Pat_Var (fst (unembed_binder b))
+    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild_lid ->
+        Pat_Wild (fst (unembed_binder b))
+    | _ ->
+        failwith "not an embedded pattern"
+
+let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
+let unembed_branch = unembed_pair unembed_pattern unembed_term
+
 let embed_term_view (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
@@ -229,30 +281,12 @@ let embed_term_view (t:term_view) : term =
         S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int u); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
+    | Tv_Match (t, brs) ->
+        S.mk_Tm_app ref_Tv_Match [S.as_arg (embed_term t); S.as_arg (embed_list embed_branch fstar_refl_branch brs)]
+                    None Range.dummyRange
+
     | Tv_Unknown ->
         ref_Tv_Unknown
-
-let unembed_const (t:term) : vconst =
-    let t = U.unascribe t in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unit_lid ->
-        C_Unit
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_True_lid ->
-        C_True
-
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_False_lid ->
-        C_False
-
-    | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
-        begin match (SS.compress i).n with
-        | Tm_constant (FStar.Const.Const_int (s, _)) -> C_Int (BU.int_of_string s)
-        | _ -> failwith "unembed_const: unexpected arg for C_Int"
-        end
-
-    | _ ->
-        failwith "not an embedded vconst"
 
 let unembed_term_view (t:term) : term_view =
     let t = U.unascribe t in
@@ -279,11 +313,14 @@ let unembed_term_view (t:term) : term_view =
     | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Refine_lid ->
         Tv_Refine (unembed_binder b, unembed_term t)
 
+    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const_lid ->
+        Tv_Const (unembed_const c)
+
     | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar_lid ->
         Tv_Uvar (unembed_int u, unembed_term t)
 
-    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Tv_Const_lid ->
-        Tv_Const (unembed_const c)
+    | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match_lid ->
+        Tv_Match (unembed_term t, unembed_list unembed_branch brs)
 
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Tv_Unknown_lid ->
         Tv_Unknown
@@ -315,6 +352,14 @@ let inspect_bv (b:binder) : string =
     Print.bv_to_string (fst b)
     // calling into Print, which really doesn't make guarantees
     // ... should be safe as we give no semantics to these names: they're just for debugging
+
+let inspect_const (c:sconst) : vconst =
+    match c with
+    | FStar.Const.Const_unit -> C_Unit
+    | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
+    | FStar.Const.Const_bool true  -> C_True
+    | FStar.Const.Const_bool false -> C_False
+    | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 // TODO: consider effects? probably not too useful, but something should be done
 let inspect (t:term) : term_view =
@@ -369,28 +414,33 @@ let inspect (t:term) : term_view =
         Tv_Refine (b, t)
 
     | Tm_constant c ->
-        let c = (match c with
-        | FStar.Const.Const_unit -> C_Unit
-        | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
-        | FStar.Const.Const_bool true  -> C_True
-        | FStar.Const.Const_bool false -> C_False
-        | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c)))
-        in
-        Tv_Const c
+        Tv_Const (inspect_const c)
 
     | Tm_uvar (u, t) ->
         Tv_Uvar (UF.uvar_id u, t)
+
+    | Tm_match (t, brs) ->
+        let rec inspect_pat p =
+            match p.v with
+            | Pat_constant c -> Pat_Constant (inspect_const c)
+            | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
+            | Pat_var bv -> Pat_Var bv
+            | Pat_wild bv -> Pat_Wild bv
+            | Pat_dot_term _ -> failwith "NYI: Pat_dot_term"
+        in
+        let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
+        Tv_Match (t, brs)
 
     | _ ->
         BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
         Tv_Unknown
 
-let pack_const (c:vconst) : term =
+let pack_const (c:vconst) : sconst =
     match c with
-    | C_Unit    -> U.exp_unit
-    | C_Int i   -> U.exp_int (BU.string_of_int i)
-    | C_True    -> U.exp_true_bool
-    | C_False   -> U.exp_false_bool
+    | C_Unit    -> C.Const_unit
+    | C_Int i   -> C.Const_int (BU.string_of_int i, None)
+    | C_True    -> C.Const_bool true
+    | C_False   -> C.Const_bool false
 
 // TODO: pass in range?
 let pack (tv:term_view) : term =
@@ -417,10 +467,22 @@ let pack (tv:term_view) : term =
         U.refine bv t
 
     | Tv_Const c ->
-        pack_const c
+        S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
     | Tv_Uvar (u, t) ->
         U.uvar_from_id u t
+
+    | Tv_Match (t, brs) ->
+        let wrap v = {v=v;p=Range.dummyRange} in
+        let rec pack_pat p : S.pat =
+            match p with
+            | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
+            | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
+            | Pat_Var bv -> wrap <| Pat_var bv
+            | Pat_Wild bv -> wrap <| Pat_wild bv
+        in
+        let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
+        S.mk (Tm_match (t, brs)) None Range.dummyRange
 
     | _ ->
         failwith "pack: unexpected term view"
@@ -544,33 +606,3 @@ let unembed_sigelt_view (t:term) : sigelt_view =
         Unk
     | _ ->
         failwith "not an embedded sigelt_view"
-
-let rec embed_pattern (p : pattern) : term =
-    match p with
-    | Pat_Constant c ->
-        S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const c)] None Range.dummyRange
-    | Pat_Cons (fv, ps) ->
-        S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern ps)] None Range.dummyRange
-    | Pat_Var bv ->
-        S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
-    | Pat_Wild bv ->
-        S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
-
-let rec unembed_pattern (t : term) : pattern =
-    let t = U.unascribe t in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [(c, _)] when S.fv_eq_lid fv ref_Pat_Constant_lid ->
-        Pat_Constant (unembed_const c)
-    | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons_lid ->
-        Pat_Cons (unembed_fvar f, unembed_list unembed_pattern ps)
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var_lid ->
-        Pat_Var (fst (unembed_binder b))
-    | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild_lid ->
-        Pat_Wild (fst (unembed_binder b))
-    | _ ->
-        failwith "not an embedded pattern"
-
-
-let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
-let unembed_branch = unembed_pair unembed_pattern unembed_term
