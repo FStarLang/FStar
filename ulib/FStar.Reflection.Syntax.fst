@@ -208,10 +208,12 @@ let rec compare_const (c1 c2 : const) : order =
     | C_Int i, C_Int j -> order_from_int (i - j)
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
-    | C_Unit,  _ -> Lt   | _, C_Unit  -> Gt
-    | C_Int _, _ -> Lt   | _, C_Int _ -> Gt
-    | C_True,  _ -> Lt   | _, C_True  -> Gt
-    | C_False, _ -> Lt   | _, C_False -> Gt
+    | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_Unit,  _ -> Lt    | _, C_Unit  -> Gt
+    | C_Int _, _ -> Lt    | _, C_Int _ -> Gt
+    | C_True,  _ -> Lt    | _, C_True  -> Gt
+    | C_False, _ -> Lt    | _, C_False -> Gt
+    | C_String _, _ -> Lt | _, C_String _ -> Gt
 
 let rec compare_term (s t : term) : order =
     match inspect s, inspect t with
