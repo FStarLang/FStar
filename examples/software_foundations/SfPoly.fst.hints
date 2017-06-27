@@ -330,10 +330,10 @@
         "binder_x_8e2b3e2e2d5822bdb0266bcb517fa74a_5",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
@@ -372,7 +372,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.option_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0
@@ -399,7 +399,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.option_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
         "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
         "function_token_typing_Prims.int", "kinding_Prims.list@tok"
       ],
@@ -437,7 +437,7 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.option_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
         "assumption_Prims.HasEq_bool", "function_token_typing_Prims.bool"
       ],
       0
@@ -510,12 +510,14 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Pervasives.fst",
-        "equation_FStar.Pervasives.snd", "equation_SfPoly.prod_uncurry",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2", "unit_typing"
+        "@query", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_SfPoly.prod_uncurry",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "unit_typing"
       ],
       0
     ],
@@ -533,13 +535,13 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Pervasives.fst",
-        "equation_FStar.Pervasives.snd", "equation_SfPoly.prod_curry",
+        "@query", "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_SfPoly.prod_curry",
         "equation_SfPoly.prod_uncurry",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_SfPoly.prod_uncurry", "unit_typing"
       ],
       0
@@ -550,12 +552,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.fst",
-        "equation_FStar.Pervasives.snd", "equation_SfPoly.prod_curry",
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_SfPoly.prod_curry",
         "equation_SfPoly.prod_uncurry",
-        "fuel_guarded_inversion_FStar.Pervasives.tuple2",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "token_correspondence_SfPoly.prod_curry", "unit_typing"
       ],
       0
@@ -891,11 +894,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],

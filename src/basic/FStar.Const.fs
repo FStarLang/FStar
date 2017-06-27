@@ -1,5 +1,6 @@
 ﻿#light "off"
 module FStar.Const
+open FStar.ST
 open FStar.All
 
 open FStar.BaseTypes

@@ -1244,7 +1244,7 @@ Let's try proving that reversing a list twice is the identity function.
 It's possible to
 *specify* this property in the type of `reverse` using a refinement type.
 
-    val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
+    val reverse: f:(list 'a -> Tot (list 'a)){forall l. l == f (f l)}
 
 ~CH
 This signature doesn't work:
@@ -1263,12 +1263,12 @@ it is:
 
     let snoc l h = append l [h]
 
-    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) = h::reverse l)
+    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) == h::reverse l)
     let rec snoc_cons l h = match l with
       | [] -> ()
       | hd::tl -> snoc_cons tl h
 
-    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) = l)
+    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) == l)
     let rec rev_involutive l = match l with
       | [] -> ()
       | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
@@ -5236,11 +5236,17 @@ let coerce r = r
 val length: plain -> Tot nat
 let length p = length p
 ```
+
+<!--
 We call $IP$ a secrecy interface for $P$.
 The representation of plaintexts is `bytes`, whereas the
 type plain is `abstract`, with functions `repr` and `coerce` converting between
 them. If `conf` is `true`, the function `repr` cannot be called, intuitively
 making the interface parametric in type `plain`, so that we can apply *Theorem 2*
+-->
+
+If `conf` is `true`, the function `repr` cannot be called, intuitively
+making the interface parametric in type `plain` except for the information leaked by `length`.
 
 When `auth` is true, the function `coerce` cannot be called, guaranteeing authenticity.
 The module $P$ does not hide the length of `plain`.
@@ -5261,6 +5267,7 @@ explaination of the formalism?
 
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
+<!--
 When `conf=true`, $C\cdot A$ is well typed with respect to interface "`conf=true`, $IP$" 
 which can be interpreted as
 the $I_\alpha$ interface of *Theorem 2*. Consequently for any module $P_0,P_1$ satisfying 
@@ -5269,8 +5276,9 @@ this interface, we have
 
 Using *interface-based secrecy* twice we get that 
 `conf=false`$\cdot P_0 \cdot C \cdot A \approx_{\epsilon_0(A,P_0)+\epsilon_1(A,P_1)}$ `conf=false`$\cdot P_1 \cdot C \cdot A$.
+-->
 
-To achieve this strong property `conf=true`$\cdot C$ must not be able to access the 
+To achieve its strong confidentiality strong property `conf=true`$\cdot C$ must not be able to access the 
 representation of `plain` and thus 
 needs to be idealized. For encryption modules this is typically done by encrypting a 
 value that is independent of the plaintext, such as a string of zeros. To make also the 

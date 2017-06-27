@@ -20,6 +20,7 @@
 
 #light "off"
 module FStar.TypeChecker.Rel
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -37,6 +38,7 @@ module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
+module Const = FStar.Parser.Const
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -1845,6 +1847,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
+           let k = N.normalize [N.Beta] env k in
            let all_formals, _ = U.arrow_formals k in
            assert (List.length all_formals = List.length args);
 

@@ -80,7 +80,7 @@ let permutation_app_lemma (#a:eqtype) (hd:a) (tl:list a)
                           (l1:list a) (l2:list a)
    : Lemma (requires (is_permutation a tl (l1 @ l2)))
            (ensures (is_permutation a (hd::tl) (l1 @ (hd::l2))))
-   = //NS: 05/15
+   = //NS: 05/15/2017
      //This proof required an interesting change following issue #1028
      //From append_count, we can automatically prove what the assert below says
      //However, what we get from append_count is

@@ -1,11 +1,6 @@
 module CoreCrypto
 
-open FStar.ST
 open Platform.Bytes
-
-effect EXT (a:Type) = ST a
-  (requires (fun _ -> True)) 
-  (ensures (fun h0 _ h -> modifies_none h0 h))
 
 (* ------------ Hashing ------------ *) 
 type hash_alg = 

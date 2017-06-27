@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.ErrorReporting
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.BaseTypes

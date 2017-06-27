@@ -37,8 +37,15 @@ let op_Colon_Equals r v = match r with
 let op_Bang r = match r with
   | MkRef (_, r) -> op_Bang r
 
+let read = op_Bang
+
+let write = op_Colon_Equals
+
 let get () = HS (FStar_Map.const FStar_Heap.emp, def_rid)
 
 let recall = (fun r -> ())
 
 let recall_region = (fun r -> ())
+
+type 'a ref = 'a FStar_HyperStack.reference
+let alloc = salloc

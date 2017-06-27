@@ -17,6 +17,7 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -112,6 +113,7 @@ let defaults =
       ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
+      ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
       ("include"                      , List []);
@@ -133,7 +135,6 @@ let defaults =
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
       ("prims_ref"                    , Unset);
-      ("print_before_norm"            , Bool false);
       ("print_bound_var_types"        , Bool false);
       ("print_effect_args"            , Bool false);
       ("print_fuels"                  , Bool false);
@@ -212,6 +213,7 @@ let get_fstar_home              ()      = lookup_opt "fstar_home"               
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
+let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
@@ -232,7 +234,6 @@ let get_no_location_info        ()      = lookup_opt "no_location_info"         
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
-let get_print_before_norm       ()      = lookup_opt "print_before_norm"        as_bool
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
 let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
@@ -456,6 +457,12 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs(fun () -> Bool true),
         "Print information regarding hints");
 
+        ( noshort,
+         "hint_file",
+         OneArg (Path,
+                 "[path]"),
+        "Read/write hints to <path> (instead of module-specific hints files)");
+
        ( noshort,
         "in",
         ZeroArgs (fun () -> Bool true),
@@ -567,11 +574,6 @@ let rec specs () : list<Getopt.opt> =
         "");
 
        ( noshort,
-        "print_before_norm",
-        ZeroArgs(fun () -> Bool true), // norm_then_print := false),
-        "Do not normalize types before printing (for debugging)");
-
-       ( noshort,
         "print_bound_var_types",
         ZeroArgs(fun () -> Bool true),
         "Print the types of bound variables");
@@ -641,7 +643,7 @@ let rec specs () : list<Getopt.opt> =
         "smt",
         OneArg (Path,
                  "[path]"),
-        "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
+        "Path to the Z3 SMT solver (we could eventually support other solvers)");
 
        (noshort,
         "smtencoding.elim_box",
@@ -823,6 +825,7 @@ let settable = function
     | "hide_genident_nums"
     | "hide_uvar_nums"
     | "hint_info"
+    | "hint_file"
     | "initial_fuel"
     | "initial_ifuel"
     | "inline_arith"
@@ -833,7 +836,6 @@ let settable = function
     | "max_ifuel"
     | "min_fuel"
     | "ugly"
-    | "print_before_norm"
     | "print_bound_var_types"
     | "print_effect_args"
     | "print_fuels"
@@ -972,10 +974,10 @@ let prims () =
   | None ->
     let filename = "prims.fst" in
     begin match find_file filename with
-          | Some result ->
-            result
-          | None ->
-            raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+      | Some result ->
+        result
+      | None ->
+        raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
     end
   | Some x -> x
 
@@ -988,6 +990,12 @@ let pervasives () =
   | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
 
 let pervasives_basename () = basename (pervasives ())
+let pervasives_native_basename () =
+  let filename = "FStar.Pervasives.Native.fst" in
+  match find_file filename with
+  | Some result -> basename result
+  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+
 
 let prepend_output_dir fname =
   match get_odir() with
@@ -1014,6 +1022,7 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
@@ -1032,7 +1041,6 @@ let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.contains s
 let no_location_info             () = get_no_location_info            ()
-let norm_then_print              () = get_print_before_norm()=false
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()

@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.TcTerm
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -37,6 +38,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module Const = FStar.Parser.Const
 
 
 
@@ -630,7 +632,10 @@ and tc_value env (e:term) : term
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
-    then raise (Error("Unexpected number of universe instantiations", Env.get_range env))
+    then raise (Error(BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+                                    (Print.fv_to_string fv)
+                                    (string_of_int (List.length us))
+                                    (string_of_int (List.length us')), Env.get_range env))
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
@@ -1137,8 +1142,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-			     S.fv_eq_lid fv Syntax.Const.op_And ||
-			     S.fv_eq_lid fv Syntax.Const.op_Or
+			     S.fv_eq_lid fv Parser.Const.op_And ||
+			     S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1379,13 +1384,38 @@ and tc_eqn scrutinee env branch
                     (Print.term_to_string exp)
                     (Print.term_to_string pat_t);
 
+    let env1 = Env.set_expected_typ env1 expected_pat_t in
     let exp, lc, g = tc_tot_or_gtot_term env1 exp in
+    //To support nested patterns, it's important to
+    //only keep the unification/subtyping constraints and to discard the logical guard for patterns
+    //Consider the following:
+    //   t = x:(int * int){fst x = snd x}
+    //   o : option t
+    //and
+    //   match o with Some #t (MkTuple2 #int #int a b)
+    //In this case, the guard_f will require (a = b), because of the refinement on t
+    //But, this is impossible to prove for two fresh ints a and b
+    //Instead, we check below that the inferred type for the entire pattern is unifiable
+    //with the expected type.
+    //This should guarantee that the equality assumption between the scrutinee and the pattern
+    //is at least well-typed and the branch gets to use any implied relations among the
+    //pattern-bound variables, e.g., a=b in this case
+    let g = {g with guard_f= Trivial} in
 
-    let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-    let g = Rel.conj_guard g g' in
     let _ =
+        //But, it's really important to confirm that the inferred type of the pattern
+        //unifies with the expected pattern type.
+        //Otherwise, its easy to get inconsistent;
+        //e.g., if expected_pat_t is (option nat)
+        //and   lc.res_typ is (option int)
+        //Rel.teq below will produce a logical guard (int = nat)
+        //which will fail the discharge_guard_no_smt check
+        //Without out, we will be able to conclude in the branch of the pattern,
+        //with the equality Some #nat x = Some #int x
+        //that nat=int and hence False
+        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
+        let g = Rel.conj_guard g g' in
         let env1 = Env.set_range env1 exp.pos in
-        let g = {g with guard_f=Trivial} in
         Rel.discharge_guard_no_smt env1 g |>
         Rel.resolve_implicits in
     let norm_exp = N.normalize [N.Beta] env1 exp in
@@ -1433,7 +1463,7 @@ and tc_eqn scrutinee env branch
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
   let when_condition = match when_clause with
         | None -> None
-        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w Const.exp_true_bool in
+        | Some w -> Some <| U.mk_eq2 U_zero U.t_bool w U.exp_true_bool in
 
   (* 5 (a). Build equality conditions between the pattern and the scrutinee                                   *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 5(a) and the when condition *)
@@ -1517,7 +1547,7 @@ and tc_eqn scrutinee env branch
                         | _ ->
                             let disc = S.fvar discriminator Delta_equational None in
                             let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
-                            [U.mk_eq2 U_zero U.t_bool disc Const.exp_true_bool]
+                            [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
                 else []
             in
 

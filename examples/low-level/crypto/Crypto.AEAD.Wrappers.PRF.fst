@@ -1,6 +1,7 @@
 module Crypto.AEAD.Wrappers.PRF
 open FStar.UInt32
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open Crypto.Indexing
@@ -15,6 +16,7 @@ open Crypto.AEAD.Invariant
 open Crypto.AEAD.Encrypt.Invariant
 
 module HS  = FStar.HyperStack
+module ST  = FStar.HyperStack.ST
 
 module MAC = Crypto.Symmetric.MAC
 module PRF = Crypto.Symmetric.PRF

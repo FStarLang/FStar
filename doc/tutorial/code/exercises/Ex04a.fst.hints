@@ -24,10 +24,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_462d5a5652aaa7e08c5813c01e88876c_0",
+        "binder_x_4c4eebd807575ba187e8d9a5e9f7d4ec_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0
     ]

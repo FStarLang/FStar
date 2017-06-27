@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.TypeChecker.Tc
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -40,7 +41,7 @@ module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module TcInductive = FStar.TypeChecker.TcInductive
-
+module Const = FStar.Parser.Const
 
 
 //set the name of the query so that we can correlate hints to source program fragments
@@ -264,7 +265,7 @@ let rec tc_eff_decl env0 (ed:Syntax.eff_decl) =
             | _ -> failwith "Unexpected repr type" in
 
         let bind_repr =
-            let r = S.lid_as_fv FStar.Syntax.Const.range_0 Delta_constant None |> S.fv_to_tm in
+            let r = S.lid_as_fv FStar.Parser.Const.range_0 Delta_constant None |> S.fv_to_tm in
             let b, wp_b = fresh_effect_signature () in
             let a_wp_b = U.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
             let wp_f = S.gen_bv "wp_f" None wp_a in
@@ -1049,7 +1050,6 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
       | _,  Tm_arrow(tps, c) -> tps, c
       | _ -> failwith "Impossible" in
     if List.length uvs <> 1
-    && not (Ident.lid_equals lid Const.effect_Lemma_lid)
     then (let _, t = Subst.open_univ_vars uvs t in
           raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                   (Print.lid_to_string lid)
@@ -1107,7 +1107,7 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     in
 
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
-          (b) Generalize the type of lb only if none of the lbs have val decls
+          (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
     let should_generalize, lbs', quals_opt =
        snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->

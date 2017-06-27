@@ -132,7 +132,7 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
   Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
   unsigned long long a,b,d1,d2;
-  FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
+  FStar_HyperHeap_rid mac_rgn = FStar_HyperStack_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
   memcpy(key_p, key, Crypto_Symmetric_PRF_keylen(i) * sizeof key[0]);
   Crypto_Symmetric_PRF_state____
@@ -143,21 +143,21 @@ void test_kremlin_aead(void *plain, void*cipher, int alg){
       .key = key_p,
       .table = (Crypto_Symmetric_PRF_no_table(i, FStar_HyperHeap_root, mac_rgn) , (void *)0)
     };
-  void *log = FStar_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
-  FStar_Pervasives_option__uint8_t_ ak;
+  void *log = FStar_HyperStack_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
+  FStar_Pervasives_Native_option__uint8_t_ ak;
   if (Crypto_Symmetric_UF1CMA_skeyed(i))
   {
     Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
     uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_skeylen(i), sizeof (uint8_t ));
     Crypto_Symmetric_PRF_getBlock(i, prf, x, Crypto_Symmetric_UF1CMA_skeylen(i), keyBuffer);
     ak =
-      (FStar_Pervasives_option__uint8_t_ ){
-        .tag = FStar_Pervasives_option__uint8_t__Some,
+      (FStar_Pervasives_Native_option__uint8_t_ ){
+        .tag = FStar_Pervasives_Native_option__uint8_t__Some,
         { .case_Some = { .v = keyBuffer } }
       };
   }
   else
-    ak = (FStar_Pervasives_option__uint8_t_ ){ .tag = FStar_Pervasives_option__uint8_t__None };
+    ak = (FStar_Pervasives_Native_option__uint8_t_ ){ .tag = FStar_Pervasives_Native_option__uint8_t__None };
   Crypto_AEAD_Invariant_aead_state_______
   st0 = { .log_region = FStar_HyperHeap_root, .log = log, .prf = prf, .ak = ak };
 
@@ -179,7 +179,7 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
   Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
   unsigned long long a,b,d1,d2;
-  FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
+  FStar_HyperHeap_rid mac_rgn = FStar_HyperStack_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
   memcpy(key_p, key, Crypto_Symmetric_PRF_keylen(i) * sizeof key[0]);
   Crypto_Symmetric_PRF_state____
@@ -190,21 +190,21 @@ void test_kremlin_prf(void *plain, void*cipher, int alg){
       .key = key_p,
       .table = (Crypto_Symmetric_PRF_no_table(i, FStar_HyperHeap_root, mac_rgn) , (void *)0)
     };
-  void *log = FStar_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
-  FStar_Pervasives_option__uint8_t_ ak;
+  void *log = FStar_HyperStack_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
+  FStar_Pervasives_Native_option__uint8_t_ ak;
   if (Crypto_Symmetric_UF1CMA_skeyed(i))
   {
     Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
     uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_skeylen(i), sizeof (uint8_t ));
     Crypto_Symmetric_PRF_getBlock(i, prf, x, Crypto_Symmetric_UF1CMA_skeylen(i), keyBuffer);
     ak =
-      (FStar_Pervasives_option__uint8_t_ ){
-        .tag = FStar_Pervasives_option__uint8_t__Some,
+      (FStar_Pervasives_Native_option__uint8_t_ ){
+        .tag = FStar_Pervasives_Native_option__uint8_t__Some,
         { .case_Some = { .v = keyBuffer } }
       };
   }
   else
-    ak = (FStar_Pervasives_option__uint8_t_ ){ .tag = FStar_Pervasives_option__uint8_t__None };
+    ak = (FStar_Pervasives_Native_option__uint8_t_ ){ .tag = FStar_Pervasives_Native_option__uint8_t__None };
   Crypto_AEAD_Invariant_aead_state_______
   st0 = { .log_region = FStar_HyperHeap_root, .log = log, .prf = prf, .ak = ak };
   FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
@@ -236,7 +236,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
   FStar_UInt128_t iv = Crypto_Symmetric_Bytes_load_uint128((uint32_t )12, ivBuffer);
   Crypto_Indexing_id i = alg == AES_GCM ? Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_AES_256_GCM) : Crypto_Indexing_testId(Crypto_Indexing_aeadAlg_CHACHA20_POLY1305);
   unsigned long long a,b,d1,d2;
-  FStar_HyperHeap_rid mac_rgn = FStar_ST_new_region(FStar_HyperHeap_root);
+  FStar_HyperHeap_rid mac_rgn = FStar_HyperStack_ST_new_region(FStar_HyperHeap_root);
   uint8_t *key_p = calloc(Crypto_Symmetric_PRF_keylen(i), sizeof (uint8_t ));
   memcpy(key_p, key, Crypto_Symmetric_PRF_keylen(i) * sizeof key[0]);
   Crypto_Symmetric_PRF_state____
@@ -247,21 +247,21 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
       .key = key_p,
       .table = (Crypto_Symmetric_PRF_no_table(i, FStar_HyperHeap_root, mac_rgn) , (void *)0)
     };
-  void *log = FStar_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
-  FStar_Pervasives_option__uint8_t_ ak;
+  void *log = FStar_HyperStack_ST_ralloc(FStar_HyperHeap_root, FStar_Seq_createEmpty((uint8_t )0));
+  FStar_Pervasives_Native_option__uint8_t_ ak;
   if (Crypto_Symmetric_UF1CMA_skeyed(i))
   {
     Crypto_Symmetric_PRF_domain____ x = { .iv = Crypto_Symmetric_PRF_iv_0, .ctr = (uint32_t )0 };
     uint8_t *keyBuffer = calloc(Crypto_Symmetric_UF1CMA_skeylen(i), sizeof (uint8_t ));
     Crypto_Symmetric_PRF_getBlock(i, prf, x, Crypto_Symmetric_UF1CMA_skeylen(i), keyBuffer);
     ak =
-      (FStar_Pervasives_option__uint8_t_ ){
-        .tag = FStar_Pervasives_option__uint8_t__Some,
+      (FStar_Pervasives_Native_option__uint8_t_ ){
+        .tag = FStar_Pervasives_Native_option__uint8_t__Some,
         { .case_Some = { .v = keyBuffer } }
       };
   }
   else
-    ak = (FStar_Pervasives_option__uint8_t_ ){ .tag = FStar_Pervasives_option__uint8_t__None };
+    ak = (FStar_Pervasives_Native_option__uint8_t_ ){ .tag = FStar_Pervasives_Native_option__uint8_t__None };
   Crypto_AEAD_Invariant_aead_state_______
   st0 = { .log_region = FStar_HyperHeap_root, .log = log, .prf = prf, .ak = ak };
   FStar_HyperStack_mem h1 = (void *)(uint8_t )0;
@@ -306,7 +306,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
       }
   }
   uint8_t *s = calloc((uint32_t )16, sizeof (uint8_t ));
-  bool scrut0 = Crypto_Symmetric_UF1CMA_skeyed(FStar_Pervasives_fst(macId));
+  bool scrut0 = Crypto_Symmetric_UF1CMA_skeyed(FStar_Pervasives_Native_fst(macId));
   K___uint8_t__uint8_t_ scrut;
   if (scrut0 == true)
     scrut =
@@ -315,7 +315,7 @@ void test_kremlin_mac(void *plain, void*cipher, int alg){
         =
         Crypto_Symmetric_UF1CMA_get_skey(Crypto_Symmetric_PRF___proj__State__item__mac_rgn(i,
             Crypto_AEAD_Invariant___proj__AEADState__item__prf(i, Crypto_Indexing_rw_Writer, st0)),
-          FStar_Pervasives_fst(macId),
+          FStar_Pervasives_Native_fst(macId),
           Crypto_AEAD_Invariant___proj__AEADState__item__ak(i, Crypto_Indexing_rw_Writer, st0)),
         .snd = keyBuffer
       };
