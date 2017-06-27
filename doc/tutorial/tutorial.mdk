@@ -3413,7 +3413,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
  The second-to-last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
- with the equality symbol, i.e., `$f`. Given an application
+ with the equality symbol, i.e., `#f`. Given an application
  `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
  instructs F\*'s type inference engine to unify the type of `g` with
  the expected type of `f`. Without this constraint, by default, F\*
