@@ -30,7 +30,7 @@ open FStar.Dyn
 
 (* Objects with metadata *)
 [@ PpxDeriving ]
-type withinfo_t<'a,'t> = {
+type withinfo_t<'a> = {
   v:  'a;
   p: Range.range;
 }

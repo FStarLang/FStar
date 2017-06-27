@@ -1915,7 +1915,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
       {s with sigel = Sig_declare_typ(lid, univ_names, typ)}
 
-    | Sig_let((b, lbs), lids, attrs) ->
+    | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
         let elim t = Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t)) in
@@ -1925,7 +1925,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                  lbtyp   = lbtyp;
                  lbdef   = lbdef})
       in
-      {s with sigel = Sig_let((b, lbs), lids, attrs)}
+      {s with sigel = Sig_let((b, lbs), lids)}
 
     | Sig_main t ->
       {s with sigel = Sig_main (remove_uvar_solutions env t)}
