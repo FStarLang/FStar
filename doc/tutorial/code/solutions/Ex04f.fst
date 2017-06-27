@@ -18,31 +18,27 @@ let rec fold_left f l a = match l with
   | Nil -> a
   | Cons hd tl -> fold_left f tl (f hd a)
 
-val append_cons: l:list 'a -> hd:'a -> tl:list 'a ->
-      Lemma (append l (Cons hd tl) == append (append l (Cons hd Nil)) (tl))
-let rec append_cons l hd tl = match l with
-  | Nil -> ()
-  | Cons hd' tl' ->
-    append_cons tl' hd tl
+val append_assoc : #a:Type -> l1:list a -> l2:list a -> l3: list a ->
+  Lemma (append l1 (append l2 l3) == append (append l1 l2) l3)
+let rec append_assoc #a l1 l2 l3 =
+  match l1 with
+  | [] -> ()
+  | h1 :: t1 -> append_assoc t1 l2 l3
 
-
-val snoc_append: l:list 'a -> h:'a -> Lemma (snoc l h == append l (Cons h Nil))
-let rec snoc_append l h = match l with
-  | Nil -> ()
-  | Cons hd tl ->
-    snoc_append tl h
-
-val reverse_append: tl:list 'a -> hd:'a ->
-                  Lemma (reverse (Cons hd tl) == append (reverse tl) (Cons hd Nil))
-let reverse_append tl hd = snoc_append (reverse tl) hd
-
-
-val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
-                             Lemma (fold_left Cons l l' == append (reverse l) l')
-let rec fold_left_cons_is_reverse l l' = match l with
-  | Nil -> ()
-  | Cons hd tl ->
-    fold_left_cons_is_reverse tl (Cons hd l');
-    append_cons (reverse tl) hd l';
-    reverse_append tl hd
+let rec fold_left_Cons_is_rev #a (l1 l2: list a) :
+  Lemma (fold_left Cons l1 l2 == append (reverse l1) l2) =
+  match l1 with
+  | [] -> ()
+  | h1 :: t1 ->
+    // (1) [append (append (reverse t1) [h1]) l2
+    //      == append (reverse t1) (append [h1] l2)]
+    append_assoc (reverse t1) [h1] l2;
+    // (2) [fold_left Cons t1 (h1 :: l2) = append (reverse t1) (h1 :: l2)]
+    fold_left_Cons_is_rev t1 (h1 :: l2)
+    // append (reverse l1) l2
+    // =def= append (append (reverse t1) [h1]) l2
+    // =(1)= append (reverse t1) (append [h1] l2)
+    // =def= append (reverse t1) (h1 :: l2)
+    // =(2)= fold_left Cons t1 (h1 :: l2)
+    // =def= fold_left Cons l1 l2
 // END: FoldLeftInteresting
