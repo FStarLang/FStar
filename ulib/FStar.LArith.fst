@@ -31,6 +31,20 @@ let logand_uint (#n:pos) (x:int) (y:int)
   = ()          
 
 abstract
+let logor (#n:pos) (x:int) (y:int) : res:nat{res < pow2 n} =
+  if FStar.UInt.fits x n
+  && FStar.UInt.fits y n
+  then FStar.UInt.logor #n x y
+  else 0
+
+let logor_uint (#n:pos) (x:int) (y:int)
+  : Lemma (ensures (FStar.UInt.fits x n /\
+                    FStar.UInt.fits y n) ==>
+                    logor #n x y = FStar.UInt.logor #n x y)
+          [SMTPat (logor #n x y)]
+  = ()
+
+abstract
 let shift_right (#n:pos) (x:int) (y:int) : res:nat{res < pow2 n} =
   if FStar.UInt.fits x n
   && y >= 0

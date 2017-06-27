@@ -144,7 +144,7 @@ let bv_zero_vec_lid = bvconst "zero_vec"
 let bv_ones_vec_lid = bvconst "ones_vec"
 
 (* BitVector operators *)
-let nat_to_bv_lid      = bvconst "nat_to_bv"
+let nat_to_bv_lid      = p2l ["FStar"; "UInt"; "to_vec"]
 let bv_and_lid         = bvconst "logand_vec"
 let bv_xor_lid         = bvconst "logxor_vec"
 let bv_or_lid          = bvconst "logor_vec"

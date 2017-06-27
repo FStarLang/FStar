@@ -589,7 +589,7 @@ and encode_arith_term env head args_e =
  and encode_BitVector_term env head args_e =
     (*first argument should be the implicit vector size
       we do not want to encode this*)
-    let (tm_sz, _) : arg = List.head args_e in
+    let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
     let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
     let sz_decls =  
@@ -618,10 +618,10 @@ and encode_arith_term env head args_e =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxBitVec sz (List.hd (List.tl arg_tms))
     in
-    (*let binary_arith arg_tms =
+    let binary_arith arg_tms =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
-    in*)
+    in
     let mk_bv : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts ->
              op (mk_args ts) |> Term.boxBitVec sz
@@ -629,8 +629,8 @@ and encode_arith_term env head args_e =
     let bv_and  = mk_bv Util.mkBvAnd binary in
     let bv_xor  = mk_bv Util.mkBvXor binary in
     let bv_or   = mk_bv Util.mkBvOr binary in
-    let bv_shl  = mk_bv Util.mkBvShl binary in
-    let bv_shr  = mk_bv Util.mkBvShr binary in
+    let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith in
+    let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith in
     let bv_udiv = mk_bv Util.mkBvUdiv binary in
     let bv_mod  = mk_bv Util.mkBvMod binary in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith in

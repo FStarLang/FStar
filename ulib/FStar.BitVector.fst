@@ -74,6 +74,7 @@ val lemma_xor_bounded: m:pos -> n:nat -> x:bv_t m -> y:bv_t m ->
 let lemma_xor_bounded m n x y = ()
 
 (* Shift operators *)
+(* Note: the shift amount is extracted as a bitvector*)
 val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 let shift_left_vec #n a s =
   if s >= n then zero_vec #n
@@ -85,20 +86,6 @@ let shift_right_vec #n a s =
   if s >= n then zero_vec #n
   else if s = 0 then a
   else append (zero_vec #s) (slice a 0 (n - s))
-
-(* was going to define this using the ones above and from_vec but
-   that creates a cyclic dep..*)
-// val shl_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
-// let shl_vec #n a b =
-//   if s >= n then zero_vec #n
-//   else if s = 0 then a
-//   else append (slice a s n) (zero_vec #s)
-  
-// val shr_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
-// let shr_vec #n a s =
-//   if s >= n then zero_vec #n
-//   else if s = 0 then a
-//   else append (zero_vec #s) (slice a 0 (n - s))
 
 (* Shift operators lemmas *)
 val shift_left_vec_lemma_1: #n:pos -> a:bv_t n -> s:nat -> i:nat{i < n && i >= n - s} ->

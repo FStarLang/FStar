@@ -167,11 +167,12 @@ let gt_qn        = ["Prims"; "op_GreaterThan"]
 let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn       = ["Prims"; "op_Modulus"]
 
-let land_qn    = ["FStar" ; "LArith" ; "logand"]
-let lxor_qn    = ["FStar" ; "LArith" ; "logxor"]
-let shiftl_qn  = ["FStar" ; "LArith" ; "shift_left"]
-let shiftr_qn  = ["FStar" ; "LArith" ; "shift_right"]
-let nat_bv_qn  = ["FStar" ; "UInt"   ; "to_vec"]
+let land_qn    = ["FStar" ; "UInt" ; "logand"]
+let lxor_qn    = ["FStar" ; "UInt" ; "logxor"]
+let lor_qn     = ["FStar" ; "UInt" ; "logor"]
+let shiftl_qn  = ["FStar" ; "UInt" ; "shift_left"]
+let shiftr_qn  = ["FStar" ; "UInt" ; "shift_right"]
+let nat_bv_qn  = ["FStar" ; "UInt" ; "to_vec"]
 
 (* Helpers for dealing with nested applications *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =

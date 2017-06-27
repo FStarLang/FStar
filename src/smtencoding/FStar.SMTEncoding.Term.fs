@@ -287,8 +287,8 @@ let mkNatToBv sz t r = mkApp'(NatToBv sz, [t]) r
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
-let mkBvShl = mk_bin_op BvShl
-let mkBvShr = mk_bin_op BvShr
+let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv = mk_bin_op BvUdiv
 let mkBvMod = mk_bin_op BvMod
 let mkIff = mk_bin_op Iff
@@ -737,11 +737,12 @@ let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
-let maybe_elim_box u v t =
+let elim_box cond u v t =
     match t.tm with
-    | App(Var v', [t])
-        when v=v' && Options.smtencoding_elim_box() -> t
+    | App(Var v', [t]) when v=v' && cond -> t
     | _ -> mkApp(u, [t]) t.rng
+let maybe_elim_box u v t =
+    elim_box (Options.smtencoding_elim_box()) u v t
 let boxInt t      = maybe_elim_box "BoxInt" "BoxInt_proj_0" t
 let unboxInt t    = maybe_elim_box "BoxInt_proj_0" "BoxInt" t
 let boxBool t     = maybe_elim_box "BoxBool" "BoxBool_proj_0" t
@@ -752,10 +753,10 @@ let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
 let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
 let boxBitVec (sz:int) t = 
     let boxOfSize = format1 "BoxBitVec%s" (string_of_int sz) in
-    maybe_elim_box boxOfSize (boxOfSize ^ "_proj_0") t
+    elim_box true boxOfSize (boxOfSize ^ "_proj_0") t
 let unboxBitVec (sz:int) t = 
     let boxOfSize = format1 "BoxBitVec%s" (string_of_int sz) in
-    maybe_elim_box (boxOfSize ^ "_proj_0") boxOfSize t
+    elim_box true (boxOfSize ^ "_proj_0") boxOfSize t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
