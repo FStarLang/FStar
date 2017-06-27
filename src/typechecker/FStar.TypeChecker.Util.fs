@@ -1435,7 +1435,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbeff = C.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
-  let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [])) in
+  let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
   mk (Tm_fvar fv) None Range.dummyRange
 
@@ -1522,7 +1522,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       if not (quals |> List.for_all (quals_combo_ok quals))
       then err "ill-formed combination";
       match se.sigel with
-      | Sig_let((is_rec, _), _, _) -> //let rec
+      | Sig_let((is_rec, _), _) -> //let rec
         if is_rec && quals |> List.contains Unfold_for_unification_and_vcgen
         then err "recursive definitions cannot be marked inline";
         if quals |> BU.for_some (fun x -> assumption x || has_eq x)
@@ -1636,7 +1636,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let decl = { sigel = Sig_declare_typ(discriminator_name, uvs, t);
                          sigquals = quals;
                          sigrng = range_of_lid discriminator_name;
-                         sigmeta = default_sigmeta  }  in
+                         sigmeta = default_sigmeta;
+                         sigattrs = [] } in
             if Env.debug env (Options.Other "LogTypes")
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
@@ -1673,10 +1674,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     lbeff=C.effect_Tot_lid;
                     lbdef=SS.close_univ_vars uvs imp
                 } in
-                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], []);
+                let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                              sigquals = quals;
                              sigrng = p;
-                             sigmeta = default_sigmeta  } in
+                             sigmeta = default_sigmeta;
+                             sigattrs = []  } in
                 if Env.debug env (Options.Other "LogTypes")
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
@@ -1723,7 +1725,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
                        sigquals = quals;
                        sigrng = range_of_lid field_name;
-                       sigmeta = default_sigmeta  } in
+                       sigmeta = default_sigmeta;
+                       sigattrs = [] } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1754,10 +1757,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbeff=C.effect_Tot_lid;
                   lbdef=SS.close_univ_vars uvs imp
               } in
-              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)], []);
+              let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
                            sigquals = quals;
                            sigrng = p;
-                           sigmeta = default_sigmeta  } in
+                           sigmeta = default_sigmeta;
+                           sigattrs = [] } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten

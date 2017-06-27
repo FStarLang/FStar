@@ -82,6 +82,12 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
              | "" -> Ldot(q, sym) |> mk_sym_lident
              | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
 
+let mk_top_mllb (e: mlexpr): mllb =
+  {mllb_name=("_", Prims.parse_int "0");
+   mllb_tysc=None;
+   mllb_add_unit=false;
+   mllb_def=e;
+   print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
 let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
@@ -347,14 +353,31 @@ let build_ty_manifest (b: mltybody): core_type option=
   | MLTD_DType l -> None
 
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, body): one_mltydecl): type_declaration =
+let skip_type_defn (current_module:string) (type_name:string) :bool =
+  current_module = "FStar_Pervasives" && type_name = "option"
+
+let type_attrs (attrs: tyattrs): attributes option =
+  let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
+  if BatList.is_empty attrs then None else (Some [deriving_show])
+
+let add_deriving_const (attrs: tyattrs) (ptype_manifest: core_type option): core_type option =
+  match attrs with
+  | [PpxDerivingConstant s] ->
+      let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, Exp.ident (mk_lident "fmt")); (Nolabel, Exp.constant (Const.string s))] in
+      let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern ("fmt",Prims.parse_int "0")) (Exp.fun_ Nolabel None (Pat.any ()) e))]) in
+      BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
+  | _ -> ptype_manifest
+
+let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration =
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
   let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
-  let (ptype_manifest: core_type option) = BatOption.map_default build_ty_manifest None body in
+  let (ptype_manifest: core_type option) =
+    BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
   let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-  Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ptype_name
+  let ptype_attrs = type_attrs attrs in
+  Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ?attrs:ptype_attrs ptype_name
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
   let recf = Recursive in
@@ -384,7 +407,10 @@ let build_module1 path (m1: mlmodule1): structure_item option =
      let bindings = map (build_binding true) mllbs in
      Some (Str.value recf bindings)
   | MLM_Exn exn -> Some (Str.exception_ (build_exn exn))
-  | MLM_Top expr -> None
+  | MLM_Top expr ->
+      let lb = mk_top_mllb expr in
+      let binding = build_binding true lb in
+      Some (Str.value Nonrecursive [binding])
   | MLM_Loc (p, f) -> None
 
 let build_m path (md: (mlsig * mlmodule) option) : structure =

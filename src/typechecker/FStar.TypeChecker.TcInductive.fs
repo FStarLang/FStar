@@ -847,5 +847,6 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
   let sig_bndle = { sigel = Sig_bundle(tcs@datas, lids);
                     sigquals = quals;
                     sigrng = Env.get_range env0;
-                    sigmeta = default_sigmeta  } in
+                    sigmeta = default_sigmeta;
+                    sigattrs = List.collect (fun s -> s.sigattrs) ses } in
   sig_bndle, tcs, datas

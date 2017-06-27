@@ -29,21 +29,27 @@ open FStar.Const
 open FStar.Dyn
 
 (* Objects with metadata *)
-type withinfo_t<'a> = {
+[@ PpxDeriving ]
+type withinfo_t<'a,'t> = {
   v:  'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
+[@ PpxDeriving ]
 type var = withinfo_t<lident>
+
 (* Term language *)
+[@ PpxDeriving ]
 type sconst = FStar.Const.sconst
 
+[@ PpxDeriving ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
   | LightOff
 
+[@ (PpxDerivingConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
 //versioning for unification variables
@@ -52,10 +58,15 @@ type version = {
     minor:int
 }
 
+[@ PpxDeriving ]
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
+
+[@ PpxDeriving ]
 type aqual = option<arg_qualifier>
+
+[@ PpxDeriving ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -67,14 +78,24 @@ type universe =
 and univ_name = ident
 and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
+
+[@ PpxDeriving ]
 type univ_names    = list<univ_name>
+
+[@ PpxDeriving ]
 type universes     = list<universe>
+
+[@ PpxDeriving ]
 type monad_name    = lident
+
+[@ PpxDeriving ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+[@ PpxDeriving ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -320,7 +341,6 @@ type sigelt' =
                        * typ
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
                        * univ_names
@@ -338,7 +358,8 @@ and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
     sigquals: list<qualifier>;
-    sigmeta:  sig_metadata
+    sigmeta:  sig_metadata;
+    sigattrs: list<attribute>
 }
 
 type sigelts = list<sigelt>
@@ -434,7 +455,7 @@ let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
