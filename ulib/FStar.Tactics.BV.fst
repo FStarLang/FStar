@@ -73,31 +73,34 @@ val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
 		  Lemma (x == y)
 let trans #n #x #y #z #w pf1 pf2 pf3 = ()
 
-let arith_to_bv_tac : unit -> Tac unit = fun () -> (
+(*
+ * This is being proven terminating.
+ * If that's not desirable, unfold `tactic` to go into a non-total effect
+ *)
+let rec arith_expr_to_bv e : tactic unit =
+    match e with
+    | NatToBv (Shl e1 _) | Shl e1 _ ->
+        apply_lemma (quote to_vec_shl);;
+        apply_lemma (quote cong_shift_left_vec);;
+        arith_expr_to_bv e1
+    | NatToBv (Shr e1 _) | Shr e1 _ ->
+        apply_lemma (quote to_vec_shr);;
+        apply_lemma (quote cong_shift_right_vec);;
+        arith_expr_to_bv e1
+    | NatToBv (Land e1 e2) | (Land e1 e2) ->
+        apply_lemma (quote to_vec_land);;
+        apply_lemma (quote cong_logand_vec);;
+        arith_expr_to_bv e1;;
+        arith_expr_to_bv e2
+    | NatToBv (Lxor e1 e2) | (Lxor e1 e2) ->
+        apply_lemma (quote to_vec_lxor);;
+        apply_lemma (quote cong_logxor_vec);;
+        arith_expr_to_bv e1;;
+        arith_expr_to_bv e2
+    | _ ->
+        trefl
 
-    let rec arith_expr_to_bv e =
-      match e with
-      | NatToBv (Shl e1 _) | Shl e1 _ ->
-	apply_lemma (quote to_vec_shl);;
-	apply_lemma (quote cong_shift_left_vec);;
-	arith_expr_to_bv e1
-      | NatToBv (Shr e1 _) | Shr e1 _ ->
-	apply_lemma (quote to_vec_shr);;
-	apply_lemma (quote cong_shift_right_vec);;
-	arith_expr_to_bv e1
-      | NatToBv (Land e1 e2) | (Land e1 e2) ->
-	apply_lemma (quote to_vec_land);;
-	apply_lemma (quote cong_logand_vec);;
-	arith_expr_to_bv e1;;
-	arith_expr_to_bv e2
-      | NatToBv (Lxor e1 e2) | (Lxor e1 e2) ->
-	apply_lemma (quote to_vec_lxor);;
-	apply_lemma (quote cong_logxor_vec);;
-	arith_expr_to_bv e1;;
-	arith_expr_to_bv e2
-      | _ -> trefl
-    in
-
+let arith_to_bv_tac : tactic unit =
     norm [Simpl];;
     g <-- cur_goal;
     let f = term_as_formula g in
@@ -112,7 +115,6 @@ let arith_to_bv_tac : unit -> Tac unit = fun () -> (
         end
     | _ ->
         fail ("impossible: ")
-    ) ()
 
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
