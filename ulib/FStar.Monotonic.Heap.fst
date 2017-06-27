@@ -4,15 +4,16 @@ open FStar.Preorder
 open FStar.Classical
 
 (*
- * AR: we now need to keep the preorder also in the heap
- * the reason is that, if we have two references of type a, say r1 and r2, and both the refs are contained in a heap h
+ * AR: we need to keep the preorder also in the heap
+ * the reason is that, if we have two references of type a and same addr, say r1 and r2, and both are contained in a heap h
  * then we would like to enforce that their preorders are the same
  * otherwise, when updating one, we won't be able to prove that the second one also evolves per its preorder
  * by keeping preorder in the heap, we will ensure in the defn of contains that preorder also matches
+ * moreover it's an option, for strongly typed refs (that are weakly contained in the heap), this woule be None
  *)
 private noeq type heap_rec = {
   next_addr: nat;
-  memory   : nat -> Tot (option (a:Type0 & rel:(preorder a) & a))
+  memory   : nat -> Tot (option (a:Type0 & rel:(option (preorder a)) & a))
 }
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
@@ -39,8 +40,14 @@ let compare_addrs #a #b #rel1 #rel2 r1 r2 = r1.addr = r2.addr
 let contains #a #rel h r =
   let _ = () in
   Some? (h.memory r.addr) /\
-  (let (| a1, rel1, _ |) = Some?.v (h.memory r.addr) in
-   a == a1 /\ rel === rel1)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+  (let Some (| a1, pre_opt, _ |) = h.memory r.addr in
+   a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
+
+let weak_contains h n =
+  let _ = () in
+  Some? (h.memory n) /\
+  (let Some (| _, pre_opt, _ |) = h.memory n in
+   None? pre_opt)
 
 let unused_in #a #rel r h = None? (h.memory r.addr)
 
@@ -55,7 +62,7 @@ let sel #a #rel h r =
 
 let upd_tot #a #rel h r x =
   { h with memory = (fun r' -> if r.addr = r'
-			    then Some (| a, rel, x |)
+			    then Some (| a, Some rel, x |)
                             else h.memory r') }
 
 let upd #a #rel h r x =
@@ -66,11 +73,11 @@ let upd #a #rel h r x =
     then
       { next_addr = r.addr + 1;
         memory    = (fun (r':nat) -> if r' = r.addr
-	   		         then Some (| a, rel, x |)
+	   		         then Some (| a, Some rel, x |)
                                  else h.memory r') }
     else
       { h with memory = (fun r' -> if r' = r.addr
-				then Some (| a, rel, x |)
+				then Some (| a, Some rel, x |)
                                 else h.memory r') }
 
 let alloc #a rel h x mm =
@@ -87,9 +94,11 @@ private let lemma_upd_contains_test
   (#a:Type) (#rel:preorder a) (h0:heap) (r:ref a rel) (x:a{valid_upd h0 r x})
   :Lemma (h0 `contains` r ==>
           (let h1 = upd h0 r x in
-           (forall (b:Type) (rel:preorder b) (r':ref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
-	   (forall (b:Type) (rel:preorder b) (r':ref b rel). h0 `contains` r' <==> h1 `contains` r')             /\
-	   (forall (b:Type) (rel:preorder b) (r':ref b rel). r' `unused_in` h0  <==> r' `unused_in` h1)))
+	   (forall (b:Type) (rel:preorder b) (r':ref b rel). (h0 `contains` r' /\ addr_of r' = addr_of r) ==> sel h1 r' == x /\
+           (forall (b:Type) (rel:preorder b) (r':ref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')             /\
+	   (forall (b:Type) (rel:preorder b) (r':ref b rel). h0 `contains` r' <==> h1 `contains` r')                         /\
+	   (forall (b:Type) (rel:preorder b) (r':ref b rel). r' `unused_in` h0  <==> r' `unused_in` h1)                      /\
+	   (forall (n:nat). h0 `weak_contains` n <==> h1 `weak_contains` n))))
   = ()
 
 (*
@@ -119,7 +128,8 @@ private let lemma_upd_unused_test
 	   h1 `contains` r /\
            (forall (b:Type) (rel:preorder b) (r':ref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
 	   (forall (b:Type) (rel:preorder b) (r':ref b rel). h0 `contains` r' ==> h1 `contains` r')             /\
-	   (forall (b:Type) (rel:preorder b) (r':ref b rel). ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1))))
+	   (forall (b:Type) (rel:preorder b) (r':ref b rel). ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1))   /\
+	   (forall (n:nat). h0 `weak_contains` n <==> h1 `weak_contains` n)))
   = ()
 
 (*
@@ -141,7 +151,8 @@ private let lemma_free_mm_test (#a:Type) (rel:preorder a) (h0:heap) (r:ref a rel
 	  (forall (b:Type) (rel:preorder b) (r':ref b rel). addr_of r' <> addr_of r ==>
 	                          ((sel h0 r' == sel h1 r'                 /\
 				   (h0 `contains` r' <==> h1 `contains` r') /\
-				   (r' `unused_in` h0 <==> r' `unused_in` h1)))))
+				   (r' `unused_in` h0 <==> r' `unused_in` h1)))) /\
+	  (forall (n:nat). h0 `weak_contains` n <==> h1 `weak_contains` n))
   = ()
 
 private let lemma_alloc_fresh_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (mm:bool)

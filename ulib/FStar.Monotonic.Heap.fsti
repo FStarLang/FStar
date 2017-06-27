@@ -24,6 +24,8 @@ val compare_addrs:
 
 val contains: #a:Type0 -> #rel:preorder a -> heap -> ref a rel -> Type0
 
+val weak_contains: heap -> nat -> Type0
+
 val unused_in: #a:Type0 -> #rel:preorder a -> ref a rel -> heap -> Type0
 
 let fresh (#a:Type) (#rel:preorder a) (r:ref a rel) (h0:heap) (h1:heap) =
@@ -62,7 +64,9 @@ let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (rel:preorder a) (r:ref a rel).{:pattern (contains h1 r)}
                                h0 `contains` r ==> h1 `contains` r) /\
   (forall (a:Type) (rel:preorder a) (r:ref a rel).{:pattern (r `unused_in` h0)}
-                               r `unused_in` h1 ==> r `unused_in` h0)
+                               r `unused_in` h1 ==> r `unused_in` h0) /\
+  (forall (n:nat).{:pattern (weak_contains h1 n)}
+                               h1 `weak_contains` n ==> h0 `weak_contains` n)
 
 let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 h1
 
