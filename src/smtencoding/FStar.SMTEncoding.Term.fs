@@ -33,6 +33,7 @@ type sort =
   | Ref_sort
   | Term_sort
   | Fuel_sort
+  | BitVec_sort of int // BitVectors parameterized by their size
   | Array of sort * sort
   | Arrow of sort * sort
   | Sort of string
@@ -44,6 +45,7 @@ let rec strSort x = match x with
   | String_sort -> "FString"
   | Ref_sort -> "Ref"
   | Fuel_sort -> "Fuel"
+  | BitVec_sort n -> format1 "(_ BitVec %s)" (string_of_int n)
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Sort s -> s
@@ -67,7 +69,15 @@ type op =
   | Mul
   | Minus
   | Mod
-  | ITE
+  | BvAnd
+  | BvXor
+  | BvOr
+  | BvShl
+  | BvShr  // unsigned shift right\
+  | BvUdiv
+  | BvMod
+  | NatToBv of Prims.int // need to explicitly define the size of the bitvector
+  | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
 
 type qop =
@@ -196,6 +206,14 @@ let op_to_string = function
   | Minus -> "-"
   | Mod  -> "mod"
   | ITE -> "ite"
+  | BvAnd -> "bvand"
+  | BvXor -> "bvxor"
+  | BvOr -> "bvor"
+  | BvShl -> "bvshl"
+  | BvShr -> "bvlshr"
+  | BvUdiv -> "bvudiv"
+  | BvMod -> "bvurem"
+  | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
 
 let weightToSmt = function
@@ -265,6 +283,14 @@ let mkImp (t1, t2) r = match t1.tm, t2.tm with
 
 let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
 let mkMinus t r = mkApp'(Minus, [t]) r
+let mkNatToBv sz t r = mkApp'(NatToBv sz, [t]) r
+let mkBvAnd = mk_bin_op BvAnd
+let mkBvXor = mk_bin_op BvXor
+let mkBvOr = mk_bin_op BvOr
+let mkBvShl = mk_bin_op BvShl
+let mkBvShr = mk_bin_op BvShr
+let mkBvUdiv = mk_bin_op BvUdiv
+let mkBvMod = mk_bin_op BvMod
 let mkIff = mk_bin_op Iff
 let mkEq  = mk_bin_op Eq
 let mkLT  = mk_bin_op LT
@@ -424,7 +450,7 @@ let injective_constructor (name, fields, sort) =
     |> List.flatten
 
 let constructor_to_decl (name, fields, sort, id, injective) =
-    let injective = injective || true in
+    let injective = injective || true in //DELETE: what?
     let field_sorts = fields |> List.map (fun (_, sort, _) -> sort) in
     let cdecl = DeclFun(name, field_sorts, sort, Some "Constructor") in
     let cid = fresh_constructor (name, field_sorts, sort, id) in
@@ -697,6 +723,15 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
+(* Generate boxing/unboxing functions for bitvectors of various sizes. *) 
+(* For ids, to avoid dealing with generation of fresh ids, 
+   I am computing them based on the size in this not very robust way. 
+   z3options are only used by the prelude so passing the empty string should be ok. *)
+let mkBvConstructor (sz : int) = 
+    (format1 "BoxBitVec%s" (string_of_int sz), 
+        [format1 "BoxBitVec%s_proj_0" (string_of_int sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
+    |> constructor_to_decl
+
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
@@ -715,17 +750,25 @@ let boxString t   = maybe_elim_box "BoxString" "BoxString_proj_0" t
 let unboxString t = maybe_elim_box "BoxString_proj_0" "BoxString" t
 let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
 let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
+let boxBitVec (sz:int) t = 
+    let boxOfSize = format1 "BoxBitVec%s" (string_of_int sz) in
+    maybe_elim_box boxOfSize (boxOfSize ^ "_proj_0") t
+let unboxBitVec (sz:int) t = 
+    let boxOfSize = format1 "BoxBitVec%s" (string_of_int sz) in
+    maybe_elim_box (boxOfSize ^ "_proj_0") boxOfSize t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
   | String_sort -> boxString t
   | Ref_sort -> boxRef t
+  | BitVec_sort sz -> boxBitVec sz t
   | _ -> raise Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
   | Ref_sort -> unboxRef t
+  | BitVec_sort sz -> unboxBitVec sz t  
   | _ -> raise Impos
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng

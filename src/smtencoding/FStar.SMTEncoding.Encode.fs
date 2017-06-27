@@ -462,6 +462,41 @@ let is_arithmetic_primitive head args =
 
     | _ -> false
 
+let isInteger (tm: Syntax.term') : bool =
+    match tm with
+    | Tm_constant (Const_int (n,None)) -> true
+    | _ -> false
+
+let getInteger (tm : Syntax.term') =
+    match tm with
+    | Tm_constant (Const_int (n,None)) -> FStar.Util.int_of_string n
+    | _ -> failwith "Expected an Integer term"
+
+(* We only want to encode a term as a bitvector term (not an uninterpreted function) 
+   if there is a concrete/constant size argument given*)
+let is_BitVector_primitive head args =
+    match head.n, args with
+    | Tm_fvar fv, [(sz_arg, _);_;_] ->
+      (S.fv_eq_lid fv Const.bv_and_lid
+      || S.fv_eq_lid fv Const.bv_xor_lid
+      || S.fv_eq_lid fv Const.bv_or_lid
+      || S.fv_eq_lid fv Const.bv_shift_left_lid
+      || S.fv_eq_lid fv Const.bv_shift_right_lid
+      || S.fv_eq_lid fv Const.bv_udiv_lid
+      || S.fv_eq_lid fv Const.bv_mod_lid) &&
+      (isInteger sz_arg.n)
+    | Tm_fvar fv, [(sz_arg, _); _] ->
+        (S.fv_eq_lid fv Const.nat_to_bv_lid) &&
+        (isInteger sz_arg.n)
+
+    | Tm_fvar fv, [(sz_arg, _)] ->
+      (S.fv_eq_lid fv Const.bv_zero_vec_lid ||
+      S.fv_eq_lid fv Const.bv_ones_vec_lid) &&
+      (isInteger sz_arg.n)
+
+    | _ -> false
+
+
 let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
@@ -550,6 +585,70 @@ and encode_arith_term env head args_e =
         BU.must
     in
     op arg_tms, decls
+
+ and encode_BitVector_term env head args_e =
+    (*first argument should be the implicit vector size
+      we do not want to encode this*)
+    let (tm_sz, _) : arg = List.head args_e in
+    let sz = getInteger tm_sz.n in
+    let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
+    let sz_decls =  
+         match BU.smap_try_find env.cache sz_key with
+            | Some cache_entry ->
+                []
+            | None ->
+                let t_decls = mkBvConstructor sz in
+                (* we never need to emit those t_decls again, so it is ok to store empty decls*)
+                BU.smap_add env.cache sz_key (mk_cache_entry env "" [] []);
+                t_decls
+    in
+    let arg_tms, decls = encode_args (List.tail args_e) env in
+    let head_fv =
+        match head.n with
+        | Tm_fvar fv -> fv
+        | _ -> failwith "Impossible"
+    in
+    let unary arg_tms =
+        Term.unboxBitVec sz (List.hd arg_tms)
+    in
+    let unary_arith arg_tms =
+        Term.unboxInt (List.hd arg_tms)
+    in
+    let binary arg_tms =
+        Term.unboxBitVec sz (List.hd arg_tms),
+        Term.unboxBitVec sz (List.hd (List.tl arg_tms))
+    in
+    (*let binary_arith arg_tms =
+        Term.unboxBitVec sz (List.hd arg_tms),
+        Term.unboxInt (List.hd (List.tl arg_tms))
+    in*)
+    let mk_bv : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
+      fun op mk_args ts ->
+             op (mk_args ts) |> Term.boxBitVec sz
+    in
+    let bv_and  = mk_bv Util.mkBvAnd binary in
+    let bv_xor  = mk_bv Util.mkBvXor binary in
+    let bv_or   = mk_bv Util.mkBvOr binary in
+    let bv_shl  = mk_bv Util.mkBvShl binary in
+    let bv_shr  = mk_bv Util.mkBvShr binary in
+    let bv_udiv = mk_bv Util.mkBvUdiv binary in
+    let bv_mod  = mk_bv Util.mkBvMod binary in
+    let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith in
+    let ops =
+        [(Const.bv_and_lid, bv_and);
+         (Const.bv_xor_lid, bv_xor);
+         (Const.bv_or_lid, bv_or);
+         (Const.bv_shift_left_lid, bv_shl);
+         (Const.bv_shift_right_lid, bv_shr);
+         (Const.bv_udiv_lid, bv_udiv);
+         (Const.bv_mod_lid, bv_mod);
+         (Const.nat_to_bv_lid, bv_to)]
+    in
+    let _, op =
+        List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
+        BU.must
+    in
+    op arg_tms, sz_decls @ decls
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
@@ -776,6 +875,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         | _ when is_arithmetic_primitive head args_e ->
             encode_arith_term env head args_e
+
+        | _ when is_BitVector_primitive head args_e ->
+            encode_BitVector_term env head args_e
 
         | Tm_uinst({n=Tm_fvar fv}, _), [_; (v1, _); (v2, _)]
         | Tm_fvar fv,  [_; (v1, _); (v2, _)]

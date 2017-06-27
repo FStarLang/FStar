@@ -1,7 +1,6 @@
 module FStar.Reflection.Syntax
 
 open FStar.Order
-
 open FStar.Reflection.Types
 
 type name    = list string
@@ -60,6 +59,7 @@ type sigelt_view =
       list ctor ->              // constructors
       sigelt_view
   | Unk
+
 
 assume private val __type_of_binder: binder -> term
 let type_of_binder (b:binder) : term = __type_of_binder b
@@ -164,6 +164,12 @@ let lte_qn       = ["Prims"; "op_LessThanOrEqual"]
 let gt_qn        = ["Prims"; "op_GreaterThan"]
 let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn       = ["Prims"; "op_Modulus"]
+
+let land_qn    = ["FStar" ; "LArith" ; "logand"]
+let lxor_qn    = ["FStar" ; "LArith" ; "logxor"]
+let shiftl_qn  = ["FStar" ; "LArith" ; "shift_left"]
+let shiftr_qn  = ["FStar" ; "LArith" ; "shift_right"]
+let nat_bv_qn  = ["FStar" ; "BitVector" ; "nat_to_bv"]
 
 (* Helpers for dealing with nested applications *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =

@@ -228,7 +228,15 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(Div, _)
         | App(Mul, _)
         | App(Minus, _)
-        | App(Mod, _) ->
+        | App(Mod, _)
+        | App(BvAnd, _)
+        | App(BvXor, _)
+        | App(BvOr, _)
+        | App(BvShl, _)
+        | App(BvShr, _)
+        | App(BvUdiv, _)
+        | App(BvMod, _)
+        | App(NatToBv _, _) ->
           failwith "Impossible: non-propositional term"
 
         | App(ITE, _)
