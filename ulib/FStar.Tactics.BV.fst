@@ -50,6 +50,12 @@ val cong_logxor_vec : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			       Lemma (logxor_vec w x == logxor_vec y z)
 let cong_logxor_vec #n #w #x #y #z pf1 pf2 = ()
 
+val cong_lor_vec : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+			       (#y:bv_t n) -> (#z:bv_t n) ->
+			       squash (w == y) -> squash (x == z) ->
+			       Lemma (logor_vec w x == logor_vec y z)
+let cong_lor_vec #n #w #x #y #z pf1 pf2 = ()
+
 assume val cong_shift_left_vec : #n:pos -> (#w:bv_t n) -> (#x:nat) -> 
 				 (#y:bv_t n) -> squash (w == y) ->
 				 Lemma (shift_left_vec w x == shift_left_vec y x)
@@ -122,7 +128,7 @@ as is for now *)
 let bv_tac ()  =
 	   apply_lemma (quote eq_to_bv);;
 	   apply_lemma (quote trans);;
-	   arith_to_bv_tac ();;
-	   arith_to_bv_tac ();;
+	   arith_to_bv_tac;;
+	   arith_to_bv_tac;;
 	   smt ()
 
