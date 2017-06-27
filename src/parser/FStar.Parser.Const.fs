@@ -150,7 +150,7 @@ let bv_xor_lid         = bvconst "logxor_vec"
 let bv_or_lid          = bvconst "logor_vec"
 let bv_shift_left_lid  = bvconst "shift_left_vec"
 let bv_shift_right_lid = bvconst "shift_right_vec"
-let bv_udiv_lid        = bvconst "udiv_vec"
+let bv_udiv_lid        = bvconst "div_vec"
 let bv_mod_lid         = bvconst "mod_vec"
 
 (* Array constants *)

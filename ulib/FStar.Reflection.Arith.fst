@@ -171,6 +171,13 @@ let rec expr_to_string (e:expr) : string =
     | Minus l r -> "(" ^ (expr_to_string l) ^ " - " ^ (expr_to_string r) ^ ")"
     | Mult l r -> "(" ^ (expr_to_string l) ^ " * " ^ (expr_to_string r) ^ ")"
     | Neg l -> "(- " ^ (expr_to_string l) ^ ")"
+    | Land _ l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
+    | Lor _ l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
+    | Lxor _ l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
+    | Shl _ l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
+    | Shr _ l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
+    | NatToBv _ l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
+
 
 let rec compare_expr (e1 e2 : expr) : O.order =
     match e1, e2 with
@@ -185,3 +192,4 @@ let rec compare_expr (e1 e2 : expr) : O.order =
     | Plus _ _, _ -> O.Lt    | _, Plus _ _ -> O.Gt
     | Mult _ _, _ -> O.Lt    | _, Mult _ _ -> O.Gt
     | Neg _,    _ -> O.Lt    | _, Neg _    -> O.Gt
+    | _ -> O.Gt // don't care about this for now

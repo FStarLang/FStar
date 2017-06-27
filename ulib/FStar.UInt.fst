@@ -170,6 +170,9 @@ abstract val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (
 let div_underspec #n a b =
   if fits (a / b) n then a / b else magic ()
 
+val div_vec :#n:nat -> a:bv_t n -> b:bv_t n{b <> to_vec #n 0} -> Pure (uint_t n)
+let div_vec #n a b = to_vec #n (div (from_vec #n a) (from_vec #n b))
+
 (* Modulo primitives *)
 val mod: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Tot (uint_t n)
 let mod #n a b = a - ((a/b) * b)
