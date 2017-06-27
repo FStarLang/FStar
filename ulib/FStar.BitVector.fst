@@ -2,13 +2,10 @@ module FStar.BitVector
 
 open FStar.Mul
 open FStar.Seq
-open FStar.LArith
 
 (* Define bitwise operators with new type BitVector. *)
-[@"opaque_to_smt"]
 type bv_t (n:nat) = vec:seq bool{length vec = n}
 
-[@"opaque_to_smt"]
 val nat_to_bv: #n:nat -> a:nat{a < pow2 n} -> Tot (bv_t n)
 let rec nat_to_bv #n a =
   if n = 0 then Seq.createEmpty #bool
@@ -23,25 +20,21 @@ val ones_vec: #n:pos -> Tot (bv_t n)
 let ones_vec #n = create n true
 
 (* Bitwise operators *)
-[@"opaque_to_smt"]
 val logand_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 let rec logand_vec #n a b = 
   if n = 1 then create 1 (index a 0 && index b 0)
   else append (create 1 (index a 0 && index b 0)) (logand_vec #(n - 1) (slice a 1 n) (slice b 1 n))
 
-[@"opaque_to_smt"]
 val logxor_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 let rec logxor_vec #n a b = 
   if n = 1 then create 1 (index a 0 <> index b 0)
   else append (create 1 (index a 0 <> index b 0)) (logxor_vec #(n - 1) (slice a 1 n) (slice b 1 n))
 
-[@"opaque_to_smt"]
 val logor_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 let rec logor_vec #n a b = 
   if n = 1 then create 1 (index a 0 || index b 0)
   else append (create 1 (index a 0 || index b 0)) (logor_vec #(n - 1) (slice a 1 n) (slice b 1 n))
 
-[@"opaque_to_smt"]
 val lognot_vec: #n:pos -> a:bv_t n -> Tot (bv_t n)
 let rec lognot_vec #n a = 
   if n = 1 then create 1 (not (index a 0))
@@ -49,8 +42,6 @@ let rec lognot_vec #n a =
 
 assume val udiv_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 assume val umod_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
-
-
 
 (* Bitwise operators definitions *)
 abstract val logand_vec_definition: #n:pos -> a:bv_t n -> b:bv_t n -> i:nat{i < n} ->
@@ -93,12 +84,6 @@ let lemma_xor_bounded m n x y = ()
 (* Shift operators *)
 assume val shift_left_vec: #n:pos -> a:bv_t n -> s:bv_t n -> Tot (bv_t n)
 assume val shift_right_vec: #n:pos -> a:bv_t n -> s:bv_t n -> Tot (bv_t n)
-
-
-val nat_to_bv_land : (#n:pos) -> (#x:int) -> (#y:int) -> (#z:bv_t n) ->
-			    squash (logand_vec (nat_to_bv x) (nat_to_bv y) == z) ->
-			    Lemma (nat_to_bv (logand #n x y) == z)
-let nat_to_bv_land #n #x #y #z = ()
 
 // val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 // let shift_left_vec #n a s =

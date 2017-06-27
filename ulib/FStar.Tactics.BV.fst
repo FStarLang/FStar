@@ -5,10 +5,12 @@ open FStar.Reflection.Syntax
 open FStar.Reflection.Int
 
 (* Lemmas transforming integer arithmetic to bitvector arithmetic *)
-assume val nat_to_bv_land : (#n:pos) -> (#x:int) -> (#y:int) -> (#z:bv_t n) ->
+val nat_to_bv_land : (#n:pos) -> (#x:int) -> (#y:int) -> (#z:bv_t n) ->
 			    squash (logand_vec (nat_to_bv x) (nat_to_bv y) == z) ->
 			    Lemma (nat_to_bv (logand #n x y) == z)
+let nat_to_bv_land #n #x #y #z = ()
 
+(*
 assume val nat_to_bv_lxor : (#x:Machine.nat64) -> (#y:Machine.nat64) -> (#z:bv64) ->
 			    squash (logxor_vec (nat_to_bv x) (nat_to_bv y) == z) ->
 			    Lemma (nat_to_bv (logxor64 x y) == z)
@@ -109,3 +111,4 @@ let bv_tac ()  =
 	   arith_to_bv_tac;;
 	   // norm [Delta; Simpl; Primops];; dump "final";;
 	   smt ()
+*)

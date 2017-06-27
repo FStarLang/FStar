@@ -23,7 +23,12 @@ type expr =
     | Plus  : expr -> expr -> expr
     | Mult  : expr -> expr -> expr
     | Minus : expr -> expr -> expr
-    | Neg   : expr -> expr
+    | Land    : expr -> expr -> expr
+    | Lxor    : expr -> expr -> expr
+    | Shl     : expr -> expr -> expr
+    | Shr     : expr -> expr -> expr
+    | Neg     : expr -> expr
+    | NatToBv : expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
 
 noeq
@@ -103,6 +108,10 @@ let rec is_arith_expr (t:term) =
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
+	else if qn = land_qn then liftM2 Land ll rr
+	else if qn = lxor_qn then liftM2 Lxor ll rr
+	else if qn = shiftr_qn then liftM2 Shr ll rr
+	else if qn = shiftl_qn then liftM2 Shl ll rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in

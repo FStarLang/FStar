@@ -1,4 +1,4 @@
-module LArith
+module FStar.LArith
 
 open FStar.BaseTypes
 

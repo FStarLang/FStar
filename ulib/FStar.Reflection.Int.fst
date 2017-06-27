@@ -2,7 +2,6 @@ module FStar.Reflection.Int
 
 open FStar.Reflection.Syntax
 open FStar.Tactics
-open Machine
 module O = FStar.Order
 
 (*
