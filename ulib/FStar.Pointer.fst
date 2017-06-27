@@ -25,6 +25,9 @@ type base_typ =
 | TBool
 | TUnit
 
+// C11, Sect. 6.2.5 al. 20: arrays must be nonempty
+type array_length_t = (length: UInt32.t { UInt32.v length > 0 } )
+
 type typ =
 | TBase:
   (b: base_typ) ->
@@ -33,7 +36,7 @@ type typ =
   (l: struct_typ) ->
   typ
 | TArray:
-  (length: UInt32.t) ->
+  (length: array_length_t ) ->
   (t: typ) ->
   typ
 | TPointer:
@@ -42,7 +45,10 @@ type typ =
 | TBuffer:
   (t: typ) ->
   typ
-and struct_typ = (l: list (string * typ) { List.Tot.noRepeats (List.Tot.map fst l) })
+and struct_typ = (l: list (string * typ) {
+  Cons? l /\ // C11, 6.2.5 al. 20: structs must have at least one field
+  List.Tot.noRepeats (List.Tot.map fst l)
+})
 
 let struct_field
   (l: struct_typ)
@@ -66,7 +72,7 @@ let rec typ_depth
   | TStruct l -> 1 + struct_typ_depth l
   | _ -> 0
 and struct_typ_depth
-  (l: struct_typ)
+  (l: list (string * typ))
 : GTot nat
 = match l with
   | [] -> 0
@@ -183,7 +189,7 @@ noeq private type buffer_root (t: typ) =
   (p: pointer t) ->
   buffer_root t
 | BufferRootArray:
-  (#max_length: UInt32.t) ->
+  (#max_length: array_length_t) ->
   (p: pointer (TArray max_length t)) ->
   buffer_root t
 
@@ -219,7 +225,7 @@ let type_of_base_typ
   | TBool -> bool
   | TUnit -> unit
 
-type array (length: UInt32.t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
+type array (length: array_length_t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
 let type_of_struct_field'
   (l: struct_typ)
@@ -262,7 +268,7 @@ let type_of_typ_struct
   [SMTPat (type_of_typ (TStruct l))]
 = assert_norm (type_of_typ (TStruct l) == struct l)
 
-let typ_of_type_type_of_struct_field
+let type_of_typ_type_of_struct_field
   (l: struct_typ)
   (f: struct_field l)
 : Lemma
@@ -308,55 +314,571 @@ let rec dummy_val
   | TPointer t -> Pointer t HS.dummy_aref PathBase
   | TBuffer t -> Buffer (BufferRootSingleton (Pointer t HS.dummy_aref PathBase)) 0ul 1ul
 
+(** To properly manage the `readable` permission, we store option values instead. *)
+
+private
+let rec otype_of_typ
+  (t: typ)
+: Tot Type0
+= match t with
+  | TBase b -> option (type_of_base_typ b)
+  | TStruct l ->
+    option (DM.t (struct_field l) (type_of_struct_field' l otype_of_typ))
+  | TArray length t ->
+    option (array length (otype_of_typ t))
+  | TPointer t ->
+    option (pointer t)
+  | TBuffer t ->
+    option (buffer t)
+
+private
+let otype_of_struct_field
+  (l: struct_typ)
+: Tot (struct_field l -> Tot Type0)
+= type_of_struct_field' l otype_of_typ
+
+private
+let otype_of_typ_otype_of_struct_field
+  (l: struct_typ)
+  (f: struct_field l)
+: Lemma
+  (otype_of_typ (typ_of_struct_field l f) == otype_of_struct_field l f)
+  [SMTPat (type_of_typ (typ_of_struct_field l f))]
+= ()
+
+private
+let otype_of_typ_base
+  (b: base_typ)
+: Lemma
+  (otype_of_typ (TBase b) == option (type_of_base_typ b))
+  [SMTPat (otype_of_typ (TBase b))]
+= ()
+
+private
+let otype_of_typ_array
+  (len: array_length_t )
+  (t: typ)
+: Lemma
+  (otype_of_typ (TArray len t) == option (array len (otype_of_typ t)))
+  [SMTPat (otype_of_typ (TArray len t))]
+= ()
+
+private
+let ostruct (l: struct_typ) = option (DM.t (struct_field l) (otype_of_struct_field l))
+
+private
+let ostruct_sel (#l: struct_typ) (s: ostruct l { Some? s }) (f: struct_field l) : Tot (otype_of_struct_field l f) =
+  DM.sel (Some?.v s) f
+
+private
+let ostruct_upd (#l: struct_typ) (s: ostruct l { Some? s }) (f: struct_field l) (v: otype_of_struct_field l f) : Tot (s': ostruct l { Some? s' } ) =
+  Some (DM.upd (Some?.v s) f v)
+
+private
+let ostruct_create (l: struct_typ) (f: ((fd: struct_field l) -> Tot (otype_of_struct_field l fd))) : Tot (s': ostruct l { Some? s' } ) =
+  Some (DM.create #(struct_field l) #(otype_of_struct_field l) f)
+
+private
+let otype_of_typ_struct
+  (l: struct_typ)
+: Lemma
+  (otype_of_typ (TStruct l) == ostruct l)
+  [SMTPat (otype_of_typ (TStruct l))]
+= assert_norm(otype_of_typ (TStruct l) == ostruct l)
+
+private
+let struct_field_is_readable
+  (l: struct_typ)
+  (ovalue_is_readable: (
+    (t: typ) ->
+    (v: otype_of_typ t) ->
+    Pure bool
+    (requires (t << l))
+    (ensures (fun _ -> True))
+  ))
+  (v: ostruct l { Some? v } )
+  (s: string)
+: Tot bool
+= if List.Tot.mem s (List.Tot.map fst l)
+  then ovalue_is_readable (typ_of_struct_field l s) (ostruct_sel v s)
+  else true
+
+private
+let rec ovalue_is_readable
+  (t: typ)
+  (v: otype_of_typ t)
+: Tot bool
+  (decreases t)
+= match t with
+  | TStruct l ->
+    let (v: ostruct l) = v in
+    Some? v && (    
+      let keys = List.Tot.map fst l in
+      let pred
+        (t': typ)
+        (v: otype_of_typ t')
+      : Pure bool
+        (requires (t' << l))
+        (ensures (fun _ -> True))
+      = ovalue_is_readable t' v
+      in
+      List.Tot.for_all (struct_field_is_readable l pred v) keys
+    )
+  | TArray len t ->
+    let (v: option (array len (otype_of_typ t))) = v in
+    Some? v &&
+    Seq.for_all (ovalue_is_readable t) (Some?.v v)
+  | TBase t -> 
+    let (v: option (type_of_base_typ t)) = v in
+    Some? v
+  | TPointer t ->
+    let (v: option (pointer t)) = v in
+    Some? v
+  | TBuffer t ->
+    let (v: option (buffer t)) = v in
+    Some? v
+
+private
+let ovalue_is_readable_struct_intro'
+  (l: struct_typ)
+  (v: otype_of_typ (TStruct l))
+: Lemma
+  (requires (
+    let (v: ostruct l) = v in (
+    Some? v /\
+    List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l)
+  )))
+  (ensures (ovalue_is_readable (TStruct l) v))
+= assert_norm (ovalue_is_readable (TStruct l) v == true)
+
+private
+let ovalue_is_readable_struct_intro
+  (l: struct_typ)
+  (v: otype_of_typ (TStruct l))
+: Lemma
+  (requires (
+    let (v: ostruct l) = v in (
+    Some? v /\ (
+    forall (f: struct_field l) .
+    ovalue_is_readable (typ_of_struct_field l f) (ostruct_sel v f)
+  ))))
+  (ensures (ovalue_is_readable (TStruct l) v))
+= List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l);
+  ovalue_is_readable_struct_intro' l v
+
+private
+let rec ovalue_is_readable_struct_elim
+  (l: struct_typ)
+  (v: otype_of_typ (TStruct l))
+  (fd: struct_field l)
+: Lemma
+  (requires (ovalue_is_readable (TStruct l) v))
+  (ensures (
+    let (v: ostruct l) = v in (
+    Some? v /\
+    ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd)
+  )))
+  [SMTPat (ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd))]
+= let (v: ostruct l) = v in
+  assert_norm (ovalue_is_readable (TStruct l) v == List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l));
+  assert (List.Tot.for_all (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l));
+  List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l);
+  assert (ovalue_is_readable (typ_of_struct_field l fd) (ostruct_sel v fd))
+
+private
+let ovalue_is_readable_array_elim
+  (#len: array_length_t )
+  (#t: typ)
+  (v: otype_of_typ (TArray len t))
+  (i: UInt32.t { UInt32.v i < UInt32.v len } )
+: Lemma
+  (requires (ovalue_is_readable (TArray len t) v))
+  (ensures (
+    let (v: option (array len (otype_of_typ t))) = v in (
+    Some? v /\
+    ovalue_is_readable t (Seq.index (Some?.v v) (UInt32.v i))
+  )))
+  [SMTPat (ovalue_is_readable t (Seq.index (Some?.v v) (UInt32.v i)))]
+= ()
+
+private
+let ovalue_is_readable_array_intro
+  (#len: array_length_t )
+  (#t: typ)
+  (v: otype_of_typ (TArray len t))
+: Lemma
+  (requires (
+    let (v: option (array len (otype_of_typ t))) = v in (
+    Some? v /\ (
+    forall (i: UInt32.t { UInt32.v i < UInt32.v len } ) .
+    ovalue_is_readable t (Seq.index (Some?.v v) (UInt32.v i))
+  ))))
+  (ensures (ovalue_is_readable (TArray len t) v))
+= let (v: option (array len (otype_of_typ t))) = v in
+  let (v: array len (otype_of_typ t)) = Some?.v v in
+  let f
+    (i: nat { i < UInt32.v len } )
+  : Lemma
+    (ovalue_is_readable t (Seq.index v i))
+  = let (j : UInt32.t { UInt32.v j < UInt32.v len } ) = UInt32.uint_to_t i in
+    assert (ovalue_is_readable t (Seq.index v (UInt32.v j)))
+  in
+  Classical.forall_intro f
+
+private
+let ostruct_field_of_struct_field
+  (l: struct_typ)
+  (ovalue_of_value: (
+    (t: typ) ->
+    (v: type_of_typ t) ->
+    Pure (otype_of_typ t)
+    (requires (t << l))
+    (ensures (fun _ -> True))
+  ))
+  (v: struct l)
+  (f: struct_field l)
+: Tot (otype_of_struct_field l f)
+= ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
+
+private
+let rec ovalue_of_value
+  (t: typ)
+  (v: type_of_typ t)
+: Tot (otype_of_typ t)
+  (decreases t)
+= match t with
+  | TStruct l ->
+    let oval
+      (t' : typ)
+      (v' : type_of_typ t')
+    : Pure (otype_of_typ t')
+      (requires (t' << l))
+      (ensures (fun _ -> True))
+    = ovalue_of_value t' v'
+    in
+    ostruct_create l (ostruct_field_of_struct_field l oval v)
+  | TArray len t ->
+    let (v: array len (type_of_typ t)) = v in
+    assert (UInt32.v len == Seq.length v);
+    let f
+      (i: nat {i < UInt32.v len})
+    : Tot (otype_of_typ t)
+    = ovalue_of_value t (Seq.index v i)
+    in
+    let (v': array len (otype_of_typ t)) = Seq.init (UInt32.v len) f in
+    Some v'
+  | _ -> Some v
+
+private
+let ovalue_is_readable_ostruct_field_of_struct_field
+  (l: struct_typ)
+  (ih: (
+    (t: typ) ->
+    (v: type_of_typ t) ->
+    Lemma
+    (requires (t << l))
+    (ensures (ovalue_is_readable t (ovalue_of_value t v)))
+  ))
+  (v: struct l)
+  (f: struct_field l)
+: Lemma
+  (ovalue_is_readable (typ_of_struct_field l f) (ostruct_field_of_struct_field l ovalue_of_value v f))
+= ih (typ_of_struct_field l f) (struct_sel #l v f)
+
+private
+let rec ovalue_is_readable_ovalue_of_value
+  (t: typ)
+  (v: type_of_typ t)
+: Lemma
+  (requires True)
+  (ensures (ovalue_is_readable t (ovalue_of_value t v)))
+  (decreases t)
+  [SMTPat (ovalue_is_readable t (ovalue_of_value t v))]
+= match t with
+  | TStruct l ->
+    let (v: struct l) = v in
+    let (v': ostruct l) = ovalue_of_value (TStruct l) v in
+    let phi
+      (t: typ)
+      (v: type_of_typ t)
+    : Lemma
+      (requires (t << l))
+      (ensures (ovalue_is_readable t (ovalue_of_value t v)))
+    = ovalue_is_readable_ovalue_of_value t v
+    in
+    Classical.forall_intro (ovalue_is_readable_ostruct_field_of_struct_field l phi v);
+    ovalue_is_readable_struct_intro l v'
+  | TArray len t ->
+    let (v: array len (type_of_typ t)) = v in
+    let (v': otype_of_typ (TArray len t)) = ovalue_of_value (TArray len t) v in
+    let (v': array len (otype_of_typ t)) = Some?.v v' in
+    let phi
+      (i: nat { i < Seq.length v' } )
+    : Lemma
+      (ovalue_is_readable t (Seq.index v' i))
+    = ovalue_is_readable_ovalue_of_value t (Seq.index v i)
+    in
+    Classical.forall_intro phi
+  | _ -> ()
+
+private
+let rec value_of_ovalue
+  (t: typ)
+  (v: otype_of_typ t)
+: Tot (type_of_typ t)
+  (decreases t)
+= match t with
+  | TStruct l ->
+    let (v: ostruct l) = v in
+    if Some? v
+    then
+      let phi
+        (f: struct_field l)
+      : Tot (type_of_struct_field l f)
+      = value_of_ovalue (typ_of_struct_field l f) (ostruct_sel v f)
+      in
+      struct_create l phi
+    else dummy_val t
+  | TArray len t' ->
+    let (v: option (array len (otype_of_typ t'))) = v in
+    begin match v with
+    | None -> dummy_val t
+    | Some v ->
+      let phi
+        (i: nat { i < UInt32.v len } )
+      : Tot (type_of_typ t')
+      = value_of_ovalue t' (Seq.index v i)
+      in
+      Seq.init (UInt32.v len) phi
+    end
+  | TBase b ->
+    let (v: option (type_of_base_typ b)) = v in
+    begin match v with
+    | None -> dummy_val t
+    | Some v -> v
+    end
+  | TPointer t' ->
+    let (v: option (pointer t')) = v in
+    begin match v with
+    | None -> dummy_val t
+    | Some v -> v
+    end
+  | TBuffer t' ->
+    let (v: option (buffer t')) = v in
+    begin match v with
+    | None -> dummy_val t
+    | Some v -> v
+    end
+
+private
+let rec value_of_ovalue_of_value
+  (t: typ)
+  (v: type_of_typ t)
+: Lemma
+  (value_of_ovalue t (ovalue_of_value t v) == v)
+  [SMTPat (value_of_ovalue t (ovalue_of_value t v))]
+= match t with
+  | TStruct l ->
+    let v : struct l = v in
+    let v' : struct l = value_of_ovalue t (ovalue_of_value t v) in
+    let phi
+      (f: struct_field l)
+    : Lemma
+      (struct_sel #l v' f == struct_sel #l v f)
+    = value_of_ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
+    in
+    Classical.forall_intro phi;
+    DM.equal_elim #(struct_field l) #(type_of_struct_field l) v' v
+  | TArray len t' ->
+    let (v: array len (type_of_typ t')) = v in
+    let phi
+      (i: nat { i < UInt32.v len } )
+    : Lemma
+      (value_of_ovalue t' (ovalue_of_value t' (Seq.index v i)) == Seq.index v i)
+    = value_of_ovalue_of_value t' (Seq.index v i)
+    in
+    Classical.forall_intro phi;
+    let v' = value_of_ovalue t (ovalue_of_value t v) in
+    Seq.lemma_eq_intro v' v;
+    Seq.lemma_eq_elim v' v
+  | _ -> ()
+
+private
+let none_ovalue
+  (t: typ)
+: Tot (otype_of_typ t)
+= match t with
+  | TStruct l -> (None <: ostruct l)
+  | TArray len t' -> (None <: option (array len (otype_of_typ t')))
+  | TBase b -> (None <: option (type_of_base_typ b))
+  | TPointer t' -> (None <: option (pointer t'))
+  | TBuffer t' -> (None <: option (buffer t'))
+
+private
+let not_ovalue_is_readable_none_ovalue
+  (t: typ)
+: Lemma
+  (ovalue_is_readable t (none_ovalue t) == false)
+= ()
+
 (*** Semantics of pointers *)
 
 (** Pointer paths *)
 
+private
+let step_sel
+  (#from: typ)
+  (#to: typ)
+  (m': otype_of_typ from)
+  (s: step from to)
+= match s with
+  | StepField l fd ->
+    let (m': ostruct l) = m' in
+    begin match m' with
+    | None -> none_ovalue to
+    | _ -> ostruct_sel m' fd
+    end
+  | StepCell length value i -> 
+    let (m': option (array length (otype_of_typ to))) = m' in
+    begin match m' with
+    | None -> none_ovalue to
+    | Some m' -> Seq.index m' (UInt32.v i)
+    end
+
+(* TODO: once we have unions, the following will need to be refined: *)
+private
+let ovalue_is_readable_step_sel
+  (#from: typ)
+  (#to: typ)
+  (m': otype_of_typ from)
+  (s: step from to)
+: Lemma
+  (requires (ovalue_is_readable from m'))
+  (ensures (ovalue_is_readable to (step_sel m' s)))
+  [SMTPat (ovalue_is_readable to (step_sel m' s))]
+= match s with
+  | StepField l fd -> ovalue_is_readable_struct_elim l m' fd
+  | _ -> ()
+
+private
+let step_sel_none_ovalue
+  (#from: typ)
+  (#to: typ)
+  (s: step from to)
+: Lemma
+  (step_sel (none_ovalue from) s == none_ovalue to)
+= ()
+
 private let rec path_sel
   (#from: typ)
   (#to: typ)
-  (m: type_of_typ from)
+  (m: otype_of_typ from)
   (p: path from to)
-: Tot (type_of_typ to)
+: Tot (otype_of_typ to)
   (decreases p)
 = match p with
   | PathBase -> m
   | PathStep through' to' p' s ->
-    let (m': type_of_typ through') = path_sel m p' in
-    begin match s with
-    | StepField l fd ->
-      let (m': struct l) = m' in
-      struct_sel m' fd
-    | StepCell length value i -> Seq.index m' (UInt32.v i)
+    let (m': otype_of_typ through') = path_sel m p' in
+    step_sel m' s
+
+private
+let rec path_sel_none_ovalue
+  (#from: typ)
+  (#to: typ)
+  (p: path from to)
+: Lemma
+  (requires True)
+  (ensures (path_sel (none_ovalue from) p == none_ovalue to))
+  (decreases p)
+= match p with
+  | PathBase -> ()
+  | PathStep through' to' p' s ->
+    path_sel_none_ovalue p'
+
+private
+let step_upd
+  (#from: typ)
+  (#to: typ)
+  (m: otype_of_typ from)
+  (s: step from to)
+  (v: otype_of_typ to)
+: Tot (otype_of_typ from)
+  (decreases s)
+= match s with
+  | StepField l fd ->
+    let (m: ostruct l) = m in
+    begin match m with
+    | None ->
+      (* whole structure does not exist yet,
+         so create one with only one field initialized,
+         and all others uninitialized *)
+      let phi
+        (fd' : struct_field l)
+      : Tot (otype_of_struct_field l fd')
+      = if fd' = fd
+        then v
+        else none_ovalue (typ_of_struct_field l fd')
+      in
+      ostruct_create l phi
+    | Some _ -> ostruct_upd m fd v
     end
+  | StepCell len _ i ->
+    let (m: option (array len (otype_of_typ to))) = m in
+    begin match m with
+    | None ->
+      (* whole array does not exist yet,
+         so create one with only one cell initialized,
+         and all others uninitialized *)
+      let phi
+        (j: nat { j < UInt32.v len } )
+      : Tot (otype_of_typ to)
+      = if j = UInt32.v i
+        then v
+        else none_ovalue to
+      in
+      let (m' : option (array len (otype_of_typ to))) =
+        Some (Seq.init (UInt32.v len) phi)
+      in
+      m'
+    | Some m ->
+      let (m' : option (array len (otype_of_typ to))) =
+        Some (Seq.upd m (UInt32.v i) v)
+      in
+      m'
+    end
+
+private
+let step_sel_upd_same
+  (#from: typ)
+  (#to: typ)
+  (m: otype_of_typ from)
+  (s: step from to)
+  (v: otype_of_typ to)
+: Lemma
+  (step_sel (step_upd m s v) s == v)
+= ()
 
 private let rec path_upd
   (#from: typ)
   (#to: typ)
-  (m: type_of_typ from)
+  (m: otype_of_typ from)
   (p: path from to)
-  (v: type_of_typ to)
-: Tot (type_of_typ from)
+  (v: otype_of_typ to)
+: Tot (otype_of_typ from)
   (decreases p)
 = match p with
   | PathBase -> v
   | PathStep through' to' p' st ->
-    let (s: type_of_typ through') = path_sel m p' in
-    let (s': type_of_typ through') = match st with
-    | StepField l fd ->
-      let (s: struct l) = s in
-      struct_upd s fd v
-    | StepCell length value i ->
-      Seq.upd s (UInt32.v i) v
-    in
-    path_upd m p' s'
+    let s = path_sel m p' in
+    path_upd m p' (step_upd s st v)
 
 private let rec path_sel_upd_same
   (#from: typ)
   (#to: typ)
-  (m: type_of_typ from)
+  (m: otype_of_typ from)
   (p: path from to)
-  (v: type_of_typ to)
+  (v: otype_of_typ to)
 : Lemma
   (requires True)
   (ensures (path_sel (path_upd m p v) p == v))
@@ -365,17 +887,9 @@ private let rec path_sel_upd_same
 = match p with
   | PathBase -> ()
   | PathStep through' to' p' st ->
-    let (s: type_of_typ through') = path_sel m p' in
-    let (s': type_of_typ through') = match st with
-    | StepField l fd ->
-      let (s: struct l) = s in
-      let _ = DM.sel_upd_same s fd v in
-      struct_upd s fd v
-    | StepCell length value i ->
-      let s' = Seq.upd s (UInt32.v i) v in
-      Seq.lemma_index_upd1 s (UInt32.v i) v;
-      s'
-    in
+    let s = path_sel m p' in
+    step_sel_upd_same s st v;
+    let s' = step_upd s st v in
     path_sel_upd_same m p' s'
 
 private let rec path_concat
@@ -430,7 +944,7 @@ private let rec path_sel_concat
   (#from: typ)
   (#through: typ)
   (#to: typ)
-  (m: type_of_typ from)
+  (m: otype_of_typ from)
   (p: path from through)
   (q: path through to)
 : Lemma
@@ -446,10 +960,10 @@ private let rec path_upd_concat
   (#from: typ)
   (#through: typ)
   (#to: typ)
-  (m: type_of_typ from)
+  (m: otype_of_typ from)
   (p: path from through)
   (q: path through to)
-  (v: type_of_typ to)
+  (v: otype_of_typ to)
 : Lemma
   (requires True)
   (ensures (path_upd m (path_concat p q) v == path_upd m p (path_upd (path_sel m p) q v)))
@@ -458,14 +972,8 @@ private let rec path_upd_concat
 = match q with
   | PathBase -> ()
   | PathStep through' to' q' st ->
-    let (s: type_of_typ through') = path_sel m (path_concat p q') in
-    let (s': type_of_typ through') = match st with
-    | StepField l fd ->
-      let (s: struct l) = s in
-      struct_upd s fd v
-    | StepCell length value i ->
-      Seq.upd s (UInt32.v i) v
-    in
+    let (s: otype_of_typ through') = path_sel m (path_concat p q') in
+    let (s': otype_of_typ through') = step_upd s st v in
     path_upd_concat m p q' s'
 
 // TODO: rename as: prefix_of; use infix notation (p1 `prefix_of` p2)
@@ -1150,34 +1658,57 @@ let rec not_path_equal_path_disjoint_same_type
       end
     end
 
+private
+let step_sel_upd_other
+  (#from: typ)
+  (#to1 #to2: typ)
+  (s1: step from to1)
+  (s2: step from to2 {step_disjoint s1 s2})
+  (m: otype_of_typ from)
+  (v: otype_of_typ to1)
+: Lemma
+  (step_sel (step_upd m s1 v) s2 == step_sel m s2)
+= match s1 with
+  | StepField l1 fd1 ->
+    let (m: ostruct l1) = m in
+    let (StepField _ fd2) = s2 in
+    begin match m with
+    | None -> ()
+    | Some m -> DM.sel_upd_other m fd1 v fd2
+    end
+  | StepCell length1 _ i1 ->
+    let (m: option (array length1 (otype_of_typ to1))) = m in
+    let (StepCell _ _ i2) = s2 in
+    begin match m with
+    | None -> ()
+    | Some m ->
+      Seq.lemma_index_upd2 m (UInt32.v i1) v (UInt32.v i2)
+    end
+
 private let path_sel_upd_other
   (#from: typ)
   (#to1 #to2: typ)
   (p1: path from to1)
   (p2: path from to2 {path_disjoint p1 p2})
 : Lemma
-  (ensures (forall (m: type_of_typ from) (v: type_of_typ to1) . path_sel (path_upd m p1 v) p2 == path_sel m p2))
+  (ensures (forall (m: otype_of_typ from) (v: otype_of_typ to1) . path_sel (path_upd m p1 v) p2 == path_sel m p2))
 = path_disjoint_ind
-  (fun #v1 #v2 p1_ p2_ -> forall (m: type_of_typ from) (v: type_of_typ v1) . path_sel (path_upd m p1_ v) p2_ == path_sel m p2_)
+  (fun #v1 #v2 p1_ p2_ -> forall (m: otype_of_typ from) (v: otype_of_typ v1) . path_sel (path_upd m p1_ v) p2_ == path_sel m p2_)
   (fun #through #to1_ #to2_ p s1 s2 ->
-      FStar.Classical.forall_intro' #_ #(fun m -> forall  (v: type_of_typ to1_) . path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun m ->
+      FStar.Classical.forall_intro' #_ #(fun m -> forall  (v: otype_of_typ to1_) . path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun m ->
 	  FStar.Classical.forall_intro' #_ #(fun v -> path_sel (path_upd m (PathStep through to1_ p s1) v) (PathStep through to2_ p s2) == path_sel m (PathStep through to2_ p s2)) (fun v ->
-	  match s1 with
-	  | StepField l1 fd1 ->
-	    let (StepField _ fd2) = s2 in
-	    let (s: struct l1) = path_sel m p in
-	    path_sel_upd_same m p (struct_upd s fd1 v);
-	    DM.sel_upd_other s fd1 v fd2
-	  | StepCell length1 value1 i1 ->
-	    let (StepCell _ _ i2) = s2 in
-	    path_sel_upd_same m p (Seq.upd (path_sel m p) (UInt32.v i1) v);
-	    Seq.lemma_index_upd2 (path_sel m p) (UInt32.v i1) v (UInt32.v i2)
+	  let m0 = path_sel m p in
+          let m1 = step_sel m0 s1 in
+          let m2 = step_sel m0 s2 in
+          let m0' = step_upd m0 s1 v in
+          path_sel_upd_same m p m0';
+          step_sel_upd_other s1 s2 m0 v
       )))
   (fun #v1 #v2 p1 p2 #v1' #v2' p1' p2' ->
     let h1: squash (exists r1 . p1' == path_concat p1 r1) = path_includes_exists_concat p1 p1' in
     let h2: squash (exists r2 . p2' == path_concat p2 r2) = path_includes_exists_concat p2 p2' in
-    FStar.Classical.forall_intro' #_ #(fun (m: type_of_typ from) -> forall v . path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (m: type_of_typ from) ->
-      FStar.Classical.forall_intro' #_ #(fun (v: type_of_typ v1') -> path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (v: type_of_typ v1') ->
+    FStar.Classical.forall_intro' #_ #(fun (m: otype_of_typ from) -> forall v . path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (m: otype_of_typ from) ->
+      FStar.Classical.forall_intro' #_ #(fun (v: otype_of_typ v1') -> path_sel (path_upd m p1' v) p2' == path_sel m p2') (fun (v: otype_of_typ v1') ->
       FStar.Classical.exists_elim (path_sel (path_upd m p1' v) p2' == path_sel m p2') h1 (fun r1 ->
 	FStar.Classical.exists_elim (path_sel (path_upd m p1' v) p2' == path_sel m p2') h2 (fun r2 ->
 	  path_upd_concat m p1 r1 v;
@@ -1190,8 +1721,8 @@ private let path_sel_upd_other'
   (#to1 #to2: typ)
   (p1: path from to1)
   (p2: path from to2 {path_disjoint p1 p2})
-  (m: type_of_typ from)
-  (v: type_of_typ to1)
+  (m: otype_of_typ from)
+  (v: otype_of_typ to1)
 : Lemma
   (requires True)
   (ensures (path_sel (path_upd m p1 v) p2 == path_sel m p2))
@@ -1225,7 +1756,7 @@ private let _field
   Pointer from contents p''
 
 private let _cell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -1244,7 +1775,7 @@ abstract let unused_in
   HS.aref_unused_in contents h
 
 private
-let pointer_ref_contents : Type0 = (t: typ & type_of_typ t)
+let pointer_ref_contents : Type0 = (t: typ & otype_of_typ t)
 
 abstract let live
   (#value: typ)
@@ -1313,7 +1844,7 @@ abstract let gread
   then
     let content = greference_of p in
     let (| _, c |) = HS.sel h content in
-    path_sel c p.p
+    value_of_ovalue value (path_sel c p.p)
   else
     dummy_val value
 
@@ -1464,7 +1995,7 @@ abstract let includes_gfield
 = ()
 
 abstract let gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -1472,7 +2003,7 @@ abstract let gcell
 = _cell p i
 
 abstract let as_addr_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -1483,7 +2014,7 @@ abstract let as_addr_gcell
 = ()
 
 abstract let unused_in_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
@@ -1495,7 +2026,7 @@ abstract let unused_in_gcell
 = ()
 
 abstract let live_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
@@ -1507,7 +2038,7 @@ abstract let live_gcell
 = ()
 
 abstract let gread_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
@@ -1519,7 +2050,7 @@ abstract let gread_gcell
 = ()
 
 abstract let frameOf_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -1530,7 +2061,7 @@ abstract let frameOf_gcell
 = ()
 
 abstract let is_mm_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -1541,7 +2072,7 @@ abstract let is_mm_gcell
 = ()
 
 abstract let includes_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -1583,7 +2114,7 @@ abstract let includes_ind
     (fd: struct_field l {includes p (gfield p fd)}) ->
     Lemma (x p (gfield p fd)))
   (h_cell:
-    (#length: UInt32.t) ->
+    (#length: array_length_t) ->
     (#value: typ) ->
     (p: pointer (TArray length value)) ->
     (i: UInt32.t {UInt32.v i < UInt32.v length /\ includes p (gcell p i)}) ->
@@ -1693,7 +2224,7 @@ abstract let disjoint_gfield
 = ()
 
 abstract let disjoint_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
   (i1: UInt32.t {UInt32.v i1 < UInt32.v length})
@@ -1744,7 +2275,7 @@ abstract let disjoint_ind
     (fd2: struct_field l { fd1 <> fd2 /\ disjoint (gfield p fd1) (gfield p fd2) } ) ->
     Lemma (x (gfield p fd1) (gfield p fd2)))
   (h_cell:
-    (#length: UInt32.t) ->
+    (#length: array_length_t) ->
     (#value: typ) ->
     (p: pointer (TArray length value)) ->
     (i1: UInt32.t {UInt32.v i1 < UInt32.v length}) ->
@@ -1889,7 +2420,11 @@ let readable
   (h: HS.mem)
   (b: pointer a)
 : GTot Type0
-= live h b
+= live h b /\ (
+    let content = greference_of b in
+    let (| _, c |) = HS.sel h content in
+    ovalue_is_readable a (path_sel c b.p)
+  )
 
 abstract
 let readable_live
@@ -1920,17 +2455,23 @@ let readable_gfield
 abstract
 let readable_struct
   (#l: struct_typ)
-  (p: pointer (TStruct l))
   (h: HS.mem)
+  (p: pointer (TStruct l))
 : Lemma
   (requires (
-    live h p /\ ( // necessary if l is an empty struct
     forall (f: struct_field l) .
     readable h (gfield p f)
-  )))
+  ))
   (ensures (readable h p))
 //  [SMTPat (readable #(TStruct l) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
-= ()
+= let dummy_field : struct_field l = fst (List.Tot.hd l) in // struct is nonempty
+  let dummy_field_ptr = gfield p dummy_field in
+  assert (readable h dummy_field_ptr);
+  let content = greference_of p in
+  let (| _, c |) = HS.sel h content in
+  let (v: otype_of_typ (TStruct l)) = path_sel c p.p in
+  let (v: ostruct l {Some? v}) = v in
+  ovalue_is_readable_struct_intro l v
 
 abstract
 let readable_struct_forall_mem
@@ -1939,17 +2480,26 @@ let readable_struct_forall_mem
 : Lemma (forall
     (h: HS.mem)
   . (  
-      live h p /\ ( // necessary if l is an empty struct
       forall (f: struct_field l) .
       readable h (gfield p f)
-    )) ==>
+    ) ==>
     readable h p
   )
-= Classical.forall_intro (Classical.move_requires (readable_struct p))
+= let f
+    (h: HS.mem)
+  : Lemma // FIXME: WHY WHY WHY do we need this explicit annotation?
+    (requires (
+      forall (f: struct_field l) .
+      readable h (gfield p f)
+    ))
+    (ensures (readable h p))
+  = readable_struct h p
+  in
+  Classical.forall_intro (Classical.move_requires f)
 
 abstract
 let readable_gcell
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
@@ -1962,19 +2512,23 @@ let readable_gcell
 
 abstract
 let readable_array
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
 : Lemma
   (requires (
-    live h p /\ ( // necessary if length = 0ul
     forall (i: UInt32.t { UInt32.v i < UInt32.v length } ) .
     readable h (gcell p i)
-  )))
+  ))
   (ensures (readable h p))
-  [SMTPat (readable #(TArray length value) h p)]
-= ()
+//  [SMTPat (readable #(TArray length value) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
+= assert (readable h (gcell p 0ul)); // for Some?
+  let content = greference_of p in
+  let (| _, c |) = HS.sel h content in
+  let (v0: otype_of_typ (TArray length value)) = path_sel c p.p in
+  ovalue_is_readable_array_intro v0
+
 
 (* Equality predicate on struct contents, without quantifiers *)
 let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
@@ -2427,8 +2981,8 @@ abstract let screate
        end
   ))
 = let s = match s with
-  | Some s -> s
-  | _ -> dummy_val value
+  | Some s -> ovalue_of_value value s
+  | _ -> none_ovalue value
   in
   let content: HS.reference pointer_ref_contents =
      HST.salloc (| value, s |)
@@ -2463,8 +3017,8 @@ abstract let ecreate
       end
     /\ ~(is_mm b)))
 = let s = match s with
-  | Some s -> s
-  | _ -> dummy_val t
+  | Some s -> ovalue_of_value t s
+  | _ -> none_ovalue t
   in
   let h0 = HST.get() in
   let content: HS.reference pointer_ref_contents =
@@ -2483,7 +3037,7 @@ abstract let field
 = _field p fd
 
 abstract let cell
- (#length: UInt32.t)
+ (#length: array_length_t)
  (#value: typ)
  (p: pointer (TArray length value))
  (i: UInt32.t {UInt32.v i < UInt32.v length})
@@ -2501,9 +3055,9 @@ abstract let read
 = let h = HST.get () in
   let r = reference_of h p in
   let (| _ , c |) = !r in
-  path_sel c (Pointer?.p p)
+  value_of_ovalue value (path_sel c (Pointer?.p p))
 
-#reset-options "--z3rlimit 64"
+#reset-options "--z3rlimit 128"
 
 abstract val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
   (requires (fun h -> live h b))
@@ -2515,7 +3069,7 @@ let write #a b z =
   let h0 = HST.get () in
   let r = reference_of h0 b in
   let (| t , c0 |) = !r in
-  let c1 = path_upd c0 (Pointer?.p b) z in
+  let c1 = path_upd c0 (Pointer?.p b) (ovalue_of_value a z) in
   r := (| t, c1 |)
 
 (** Lemmas and patterns *)
@@ -2615,7 +3169,7 @@ let modifies_1_readable_struct
     [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
     [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
   ]]
-= ()
+= readable_struct h' p
 
 let modifies_1_readable_array
   (#t: typ)
@@ -2632,7 +3186,7 @@ let modifies_1_readable_array
     [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
     [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
   ]]
-= ()
+= readable_array h' p
 
 (* What about other regions? *)
 
@@ -2678,14 +3232,14 @@ abstract let singleton_buffer_of_pointer
 
 abstract let gbuffer_of_array_pointer
   (#t: typ)
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (p: pointer (TArray length t))
 : GTot (buffer t)
 = Buffer (BufferRootArray p) 0ul length
 
 abstract let buffer_of_array_pointer
   (#t: typ)
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (p: pointer (TArray length t))
 : HST.Stack (buffer t)
   (requires (fun h -> live h p))
@@ -2709,7 +3263,7 @@ abstract let buffer_length_gsingleton_buffer_of_pointer
 
 abstract let buffer_length_gbuffer_of_array_pointer
   (#t: typ)
-  (#len: UInt32.t)
+  (#len: array_length_t)
   (p: pointer (TArray len t))
 : Lemma
   (requires True)
@@ -2739,11 +3293,11 @@ abstract let buffer_live_gsingleton_buffer_of_pointer
 
 abstract let buffer_live_gbuffer_of_array_pointer
   (#t: typ)
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (p: pointer (TArray length t))
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v length > 0))
+  (requires True)
   (ensures (buffer_live h (gbuffer_of_array_pointer p) <==> live h p))
   [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
 = ()
@@ -2766,7 +3320,7 @@ abstract let frameOf_buffer_gsingleton_buffer_of_pointer
 
 abstract let frameOf_buffer_gbuffer_of_array_pointer
   (#t: typ)
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (p: pointer (TArray length t))
 : Lemma
   (ensures (frameOf_buffer (gbuffer_of_array_pointer p) == frameOf p))
@@ -2884,7 +3438,7 @@ abstract let buffer_as_seq_gsingleton_buffer_of_pointer
 = Seq.slice_length (Seq.create 1 (gread h p))
 
 abstract let buffer_as_seq_gbuffer_of_array_pointer
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#t: typ)
   (h: HS.mem)
   (p: pointer (TArray length t))
@@ -2962,7 +3516,7 @@ abstract let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
 = ()
 
 abstract let gpointer_of_buffer_cell_gbuffer_of_array_pointer
-  (#length: UInt32.t)
+  (#length: array_length_t)
   (#t: typ)
   (p: pointer (TArray length t))
   (i: UInt32.t { UInt32.v i < UInt32.v length } )
@@ -3037,19 +3591,37 @@ let buffer_readable_gsingleton_buffer_of_pointer
 : Lemma
   (ensures (buffer_readable h (gsingleton_buffer_of_pointer p) <==> readable h p))
   [SMTPat (buffer_readable h (gsingleton_buffer_of_pointer p))]
-= ()
+= let phi () : Lemma
+      (requires (buffer_readable h (gsingleton_buffer_of_pointer p)))
+      (ensures (readable h p))
+  = assert (readable h (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) 0ul))
+  in
+  Classical.move_requires phi ()
 
 abstract
 let buffer_readable_gbuffer_of_array_pointer
-  (#len: UInt32.t)
+  (#len: array_length_t)
   (#t: typ)
   (h: HS.mem)
   (p: pointer (TArray len t))
 : Lemma
-  (requires (UInt32.v len > 0))
+  (requires True)
   (ensures (buffer_readable h (gbuffer_of_array_pointer p) <==> readable h p))
   [SMTPat (buffer_readable h (gbuffer_of_array_pointer p))]
-= ()
+= let phi ()
+  : Lemma
+    (requires (buffer_readable h (gbuffer_of_array_pointer p)))
+    (ensures (readable h p))
+  = let psi
+      (i: UInt32.t { UInt32.v i < UInt32.v len } )
+    : Lemma
+      (readable h (gcell p i))
+    = assert (readable h (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i))
+    in
+    Classical.forall_intro psi;
+    readable_array h p
+  in
+  Classical.move_requires phi ()
 
 abstract
 let buffer_readable_gsub_buffer
@@ -3088,7 +3660,7 @@ let buffer_readable_intro
      readable h (gpointer_of_buffer_cell b i)
   )))
   (ensures (buffer_readable h b))
-  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
+//  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
 = ()
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
@@ -3147,7 +3719,7 @@ let disjoint_buffer_vs_pointer_gsingleton_buffer_of_pointer
 
 abstract
 let disjoint_buffer_vs_pointer_gbuffer_of_array_pointer
-  (#len: UInt32.t)
+  (#len: array_length_t)
   (#t1 #t2: typ)
   (p1: pointer (TArray len t1))
   (p2: pointer t2)
@@ -3235,7 +3807,7 @@ let disjoint_buffer_vs_buffer_gsingleton_buffer_of_pointer
 abstract
 let disjoint_buffer_vs_buffer_gbuffer_of_array_pointer
   (#t1 #t2: typ)
-  (#len: UInt32.t)
+  (#len: array_length_t)
   (b1: buffer t1)
   (p2: pointer (TArray len t2))
 : Lemma
@@ -3282,8 +3854,10 @@ let write_buffer
     readable h' (gpointer_of_buffer_cell b i) /\
     Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\ (
       forall (j: UInt32.t {UInt32.v j < UInt32.v (buffer_length b) /\ UInt32.v j <> UInt32.v i }) .
+        readable h (gpointer_of_buffer_cell b j) ==> (
+        readable h' (gpointer_of_buffer_cell b j) /\
         Seq.index (buffer_as_seq h' b) (UInt32.v j) == Seq.index (buffer_as_seq h b) (UInt32.v j)
-  )))
+  ))))
 = write (pointer_of_buffer_cell b i) v
 
 let modifies_1_disjoint_buffer_vs_pointer_live
@@ -3307,8 +3881,12 @@ let modifies_1_disjoint_buffer_vs_pointer_live
 = modifies_1_reveal p h h';
   let f
     (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) } )
-  : Lemma
-    (live h' (gpointer_of_buffer_cell b i) /\ gread h (gpointer_of_buffer_cell b i) == gread h' (gpointer_of_buffer_cell b i))
+  : Lemma (
+      live h' (gpointer_of_buffer_cell b i) /\ (
+      readable h (gpointer_of_buffer_cell b i) ==> (
+      readable h' (gpointer_of_buffer_cell b i) /\
+      gread h (gpointer_of_buffer_cell b i) == gread h' (gpointer_of_buffer_cell b i)
+    )))
   = if frameOf_buffer b = frameOf p
     then
       let s = set_singleton p in
@@ -3320,14 +3898,20 @@ let modifies_1_disjoint_buffer_vs_pointer_live
   f 0ul; // for the liveness of the whole buffer
   buffer_length_buffer_as_seq h b;
   buffer_length_buffer_as_seq h' b;
-  let g
-    (i: nat { i < UInt32.v (buffer_length b) } )
+  let k ()
   : Lemma
-    (Seq.index (buffer_as_seq h b) i == Seq.index (buffer_as_seq h' b) i)
-  = let j = UInt32.uint_to_t i in
-    f j;
-    gread_gpointer_of_buffer_cell' h b j;
-    gread_gpointer_of_buffer_cell' h' b j
+    (requires (buffer_readable h b))
+    (ensures (buffer_readable h' b /\ buffer_as_seq h b == buffer_as_seq h' b))
+  = let g
+      (i: nat { i < UInt32.v (buffer_length b) } )
+    : Lemma
+      (Seq.index (buffer_as_seq h b) i == Seq.index (buffer_as_seq h' b) i)
+    = let j = UInt32.uint_to_t i in
+      f j;
+      gread_gpointer_of_buffer_cell' h b j;
+      gread_gpointer_of_buffer_cell' h' b j
+    in
+    Classical.forall_intro g;
+    Seq.lemma_eq_elim (buffer_as_seq h b) (buffer_as_seq h' b)
   in
-  Classical.forall_intro g;
-  Seq.lemma_eq_elim (buffer_as_seq h b) (buffer_as_seq h' b)
+  Classical.move_requires k ()
