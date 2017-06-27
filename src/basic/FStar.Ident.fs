@@ -5,17 +5,17 @@ open FStar.ST
 open FStar.All
 open FStar.Range
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type ident = {idText:string;
               idRange:Range.range}
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace
                str:string} // Cached version of string_of_lid
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}

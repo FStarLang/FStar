@@ -5,9 +5,9 @@ open FStar.All
 
 open FStar.BaseTypes
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type signedness = | Unsigned | Signed
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type width = | Int8 | Int16 | Int32 | Int64
 
 (* NB:
@@ -23,7 +23,7 @@ type width = | Int8 | Int16 | Int32 | Int64
     eq_const below does that for you
 *)
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type sconst =
   | Const_effect
   | Const_unit

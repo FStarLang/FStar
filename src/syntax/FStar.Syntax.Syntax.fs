@@ -29,27 +29,27 @@ open FStar.Const
 open FStar.Dyn
 
 (* Objects with metadata *)
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type withinfo_t<'a> = {
   v:  'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type var = withinfo_t<lident>
 
 (* Term language *)
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type sconst = FStar.Const.sconst
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
   | LightOff
 
-///[@ (PpxDerivingConstant "None") ]
+///[@ (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
 //versioning for unification variables
@@ -58,15 +58,15 @@ type version = {
     minor:int
 }
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type aqual = option<arg_qualifier>
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -79,23 +79,23 @@ and univ_name = ident
 and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type univ_names    = list<univ_name>
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type universes     = list<universe>
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type monad_name    = lident
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
   | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-///[@ PpxDeriving ]
+///[@ PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index

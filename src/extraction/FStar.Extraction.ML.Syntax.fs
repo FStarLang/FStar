@@ -129,8 +129,8 @@ type c_flag = // C backend only
 
 // JP: merge these two?
 type tyattr = // OCaml only
-  | PpxDeriving
-  | PpxDerivingConstant of string
+  | PpxDerivingShow
+  | PpxDerivingShowConstant of string
 
 type tyattrs = list<tyattr>
 
