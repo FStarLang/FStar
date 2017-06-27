@@ -1,6 +1,7 @@
 module Manifest
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack 

@@ -1,7 +1,7 @@
 
 module SdkAPI
 
-open FStar.ST
+open FStar.HyperStack.ST
 open Manifest
 open FStar.Int8
 open FStar.UInt32
