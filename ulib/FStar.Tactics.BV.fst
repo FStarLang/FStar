@@ -2,83 +2,96 @@ module FStar.Tactics.BV
 
 open FStar.Tactics
 open FStar.Reflection.Syntax
-open FStar.Reflection.Int
+open FStar.Reflection.Arith
+open FStar.BitVector
+open FStar.UInt
 
 (* Lemmas transforming integer arithmetic to bitvector arithmetic *)
-val nat_to_bv_land : (#n:pos) -> (#x:int) -> (#y:int) -> (#z:bv_t n) ->
-			    squash (logand_vec (nat_to_bv x) (nat_to_bv y) == z) ->
-			    Lemma (nat_to_bv (logand #n x y) == z)
-let nat_to_bv_land #n #x #y #z = ()
+val to_vec_land : (#n:pos) -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (logand_vec #n (to_vec #n x) (to_vec #n y) == z) ->
+			    Lemma (to_vec #n (logand #n x y) == z)
+let to_vec_land #n #x #y #z pf =
+  inverse_vec_lemma #n (logand_vec #n (to_vec x) (to_vec y));
+  ()
+  
 
-(*
-assume val nat_to_bv_lxor : (#x:Machine.nat64) -> (#y:Machine.nat64) -> (#z:bv64) ->
-			    squash (logxor_vec (nat_to_bv x) (nat_to_bv y) == z) ->
-			    Lemma (nat_to_bv (logxor64 x y) == z)
+val to_vec_lxor : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+		     squash (logxor_vec (to_vec x) (to_vec y) == z) ->
+		     Lemma (to_vec (logxor x y) == z)
+let to_vec_lxor #n #x #y #z pf =
+  inverse_vec_lemma #n (logxor_vec #n (to_vec x) (to_vec y));
+  ()
 
-assume val nat_to_bv_shl : (#x:Machine.nat64) -> (#y:Machine.nat64) -> (#z:bv64) ->
-			    squash (shift_left_vec (nat_to_bv x) y == z) ->
-			    Lemma (nat_to_bv (shift_left64 x y) == z)
+val to_vec_lor : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+		     squash (logor_vec (to_vec x) (to_vec y) == z) ->
+		     Lemma (to_vec (logor x y) == z)
+let to_vec_lor #n #x #y #z pf =
+  inverse_vec_lemma #n (logor_vec #n (to_vec x) (to_vec y));
+  ()
 
-assume val nat_to_bv_shr : (#x:Machine.nat64) -> (#y:Machine.nat64) -> (#z:bv64) ->
-			    squash (shift_right_vec (nat_to_bv x) y == z) ->
-			    Lemma (nat_to_bv (shift_right64 x y) == z)
+assume val to_vec_shl : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (shift_left_vec (to_vec x) y == z) ->
+			    Lemma (to_vec (shift_left x y) == z)
+
+assume val to_vec_shr : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (shift_right_vec (to_vec x) y == z) ->
+			    Lemma (to_vec (shift_right x y) == z)
 
 (* Congruence lemmas used to push integer to bitvector transformations through arguments of expressions *)
-assume val cong_logand_vec : (#w:bv64) -> (#x:bv64) -> 
-			     (#y:bv64) -> (#z:bv64) ->
-			     squash (w == y) -> squash (x == z) ->
-			     Lemma (logand_vec w x == logand_vec y z)
+val cong_logand_vec : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+			       (#y:bv_t n) -> (#z:bv_t n) ->
+			       squash (w == y) -> squash (x == z) ->
+			       Lemma (logand_vec w x == logand_vec y z)
+let cong_logand_vec #n #w #x #y #z pf1 pf2 = ()
 
-assume val cong_logxor_vec : (#w:bv64) -> (#x:bv64) -> 
-			     (#y:bv64) -> (#z:bv64) ->
-			     squash (w == y) -> squash (x == z) ->
-			     Lemma (logxor_vec w x == logxor_vec y z)
+val cong_logxor_vec : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+			       (#y:bv_t n) -> (#z:bv_t n) ->
+			       squash (w == y) -> squash (x == z) ->
+			       Lemma (logxor_vec w x == logxor_vec y z)
+let cong_logxor_vec #n #w #x #y #z pf1 pf2 = ()
 
-assume val cong_shift_left_vec : (#w:bv64) -> (#x:nat) -> 
-				 (#y:bv64) -> squash (w == y) ->
+assume val cong_shift_left_vec : #n:pos -> (#w:bv_t n) -> (#x:nat) -> 
+				 (#y:bv_t n) -> squash (w == y) ->
 				 Lemma (shift_left_vec w x == shift_left_vec y x)
 
-assume val cong_shift_right_vec : (#w:bv64) -> (#x:nat) -> 
-				  (#y:bv64) -> squash (w == y) ->
+assume val cong_shift_right_vec : #n:pos -> (#w:bv_t n) -> (#x:nat) -> 
+				  (#y:bv_t n) -> squash (w == y) ->
 				  Lemma (shift_right_vec w x == shift_right_vec y x)
 
 
 (* Used to reduce the initial equation to an equation on bitvectors*)
-assume val eq_to_bv: (#x:Machine.nat64) -> (#y:Machine.nat64) ->
-                    squash (nat_to_bv x == nat_to_bv y) -> Lemma (x == y)
+val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
+              squash (to_vec x == to_vec y) -> Lemma (x == y)
+let eq_to_bv #n #x #y pf = to_vec_lemma_2 x y
 
-(* Creates two fresh variables and two equations of the form nat_to_bv
-   x = z /\ nat_to_bv y = w. The above lemmas transform these two
+(* Creates two fresh variables and two equations of the form to_vec
+   x = z /\ to_vec y = w. The above lemmas transform these two
    equations before finally instantiating them through reflexivity,
    leaving Z3 to solve z = w *) 
-assume val trans: (#x:bv64) -> (#y:bv64) -> (#z:bv64) -> (#w:bv64) -> 
+val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
 		  squash (x == z) -> squash (y == w) -> squash (z == w) -> 
 		  Lemma (x == y)
+let trans #n #x #y #z #w pf1 pf2 pf3 = ()
 
-
-let rec arith_to_bv_tac : unit -> Tac unit = fun () -> (
+let arith_to_bv_tac : unit -> Tac unit = fun () -> (
 
     let rec arith_expr_to_bv e =
       match e with
-      // // | Land (Atom _ _) (Atom _ _)
-      // | Land (Lit _) (Lit _) ->
-      // 	apply_lemma (quote nat_to_bv_land) 
-
       | NatToBv (Shl e1 _) | Shl e1 _ ->
-	apply_lemma (quote nat_to_bv_shl);;
+	apply_lemma (quote to_vec_shl);;
 	apply_lemma (quote cong_shift_left_vec);;
 	arith_expr_to_bv e1
       | NatToBv (Shr e1 _) | Shr e1 _ ->
-	apply_lemma (quote nat_to_bv_shr);;
+	apply_lemma (quote to_vec_shr);;
 	apply_lemma (quote cong_shift_right_vec);;
 	arith_expr_to_bv e1
       | NatToBv (Land e1 e2) | (Land e1 e2) ->
-	apply_lemma (quote nat_to_bv_land);;
+	apply_lemma (quote to_vec_land);;
 	apply_lemma (quote cong_logand_vec);;
 	arith_expr_to_bv e1;;
 	arith_expr_to_bv e2
       | NatToBv (Lxor e1 e2) | (Lxor e1 e2) ->
-	apply_lemma (quote nat_to_bv_lxor);;
+	apply_lemma (quote to_vec_lxor);;
 	apply_lemma (quote cong_logxor_vec);;
 	arith_expr_to_bv e1;;
 	arith_expr_to_bv e2
@@ -109,6 +122,5 @@ let bv_tac ()  =
 	   apply_lemma (quote trans);;
 	   arith_to_bv_tac;;
 	   arith_to_bv_tac;;
-	   // norm [Delta; Simpl; Primops];; dump "final";;
 	   smt ()
-*)
+
