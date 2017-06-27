@@ -17,7 +17,7 @@ module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 
 (* These file provides implementation for reflection primitives in F*.
- * 
+ *
  * Users can be exposed to (mostly) raw syntax of terms when working in
  * a metaprogramming effect (such as TAC). These effects are irrelevant
  * for runtime and cannot, of course, be used for proof (where syntax
@@ -506,7 +506,15 @@ let embed_ctor (c:ctor) : term =
                     [S.as_arg (embed_string_list nm);
                      S.as_arg (embed_term t)]
                     None Range.dummyRange
-        
+
+let unembed_ctor (t:term) : ctor =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(nm, _); (t, _)] when S.fv_eq_lid fv ref_Ctor_lid ->
+        Ctor (unembed_string_list nm, unembed_term t)
+    | _ ->
+        failwith "not an embedded ctor"
 
 let embed_sigelt_view (sev:sigelt_view) : term =
     match sev with
@@ -519,3 +527,14 @@ let embed_sigelt_view (sev:sigelt_view) : term =
                     None Range.dummyRange
     | Unk ->
         ref_Unk
+
+let unembed_sigelt_view (t:term) : sigelt_view =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(nm, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive_lid ->
+        Sg_Inductive (unembed_string_list nm, unembed_binders bs, unembed_term t, unembed_list unembed_ctor dcs)
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk_lid ->
+        Unk
+    | _ ->
+        failwith "not an embedded sigelt_view"
