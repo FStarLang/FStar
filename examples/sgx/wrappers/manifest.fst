@@ -1,4 +1,9 @@
-open Manifest
+module Manifest
+open FStar.HyperHeap
+open FStar.HyperStack
+
+module HH = FStar.HyperHeap
+module HS = FStar.HyperStack 
 
 let u_start = 0
 let u_size = 100
@@ -29,4 +34,6 @@ let non_enclave_entry_2_address = 1100
 let non_enclave_entry_2_size = 100
 
 (* helper function to get the exit address of function *)
-let get_exit_address () = 2000
+let get_exit_address (non_enclave_regn:HH.rid) = 
+	let exitref = ralloc non_enclave_regn 2000 in
+	exitref
