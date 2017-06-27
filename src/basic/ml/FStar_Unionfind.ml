@@ -119,6 +119,9 @@ let puf_id' (h:'a puf) (x:'a p_uvar) : int =
 let puf_id (h: 'a puf) (x: 'a p_uvar): Prims.int =
     Z.of_int (puf_id' h x)
 
+let puf_fromid (_:'a puf) (id : Prims.int) : 'a p_uvar =
+    P (Z.to_int id)
+
 (* only return the rep *)
 let puf_find (h: 'a puf) (x: 'a p_uvar) =
     let v, _ = puf_find_i h x in
