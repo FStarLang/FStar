@@ -484,7 +484,9 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_xor_lid
       || S.fv_eq_lid fv Const.bv_or_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
-      || S.fv_eq_lid fv Const.bv_shift_right_lid) &&
+      || S.fv_eq_lid fv Const.bv_shift_right_lid
+      || S.fv_eq_lid fv Const.bv_udiv_lid
+      || S.fv_eq_lid fv Const.bv_mod_lid) &&
       (isInteger sz_arg.n)
     | Tm_fvar fv, [(sz_arg, _); _] ->
         (S.fv_eq_lid fv Const.nat_to_bv_lid) &&
@@ -600,7 +602,8 @@ and encode_arith_term env head args_e =
                 []
             | None ->
                 let t_decls = mkBvConstructor sz in
-                BU.smap_add env.cache sz_key (mk_cache_entry env "" [] t_decls);
+                (* we never need to emit those t_decls again, so it is ok to store empty decls*)
+                BU.smap_add env.cache sz_key (mk_cache_entry env "" [] []);
                 t_decls
     in
     let arg_tms, decls = encode_args (List.tail args_e) env in
@@ -614,16 +617,15 @@ and encode_arith_term env head args_e =
     in
     let unary_arith arg_tms =
         Term.unboxInt (List.hd arg_tms)
-        in
+    in
     let binary arg_tms =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxBitVec sz (List.hd (List.tl arg_tms))
     in
-(*    let mk_default () =
-        let fname, fuel_args = lookup_free_var_sym env head_fv.fv_name in
-        Util.mkApp'(fname, fuel_args@arg_tms)
-    in *)
-    //TODO need to do smth about operators such as zero_vec
+    (*let binary_arith arg_tms =
+        Term.unboxBitVec sz (List.hd arg_tms),
+        Term.unboxInt (List.hd (List.tl arg_tms))
+    in*)
     let mk_bv : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
       fun op mk_args ts ->
              op (mk_args ts) |> Term.boxBitVec sz
@@ -633,15 +635,19 @@ and encode_arith_term env head args_e =
     let bv_or   = mk_bv Util.mkBvOr binary in
     let bv_shl  = mk_bv Util.mkBvShl binary in
     let bv_shr  = mk_bv Util.mkBvShr binary in
+    let bv_udiv = mk_bv Util.mkBvUdiv binary in
+    let bv_mod  = mk_bv Util.mkBvMod binary in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith in
     let ops =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
+         (Const.bv_or_lid, bv_or);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
+         (Const.bv_udiv_lid, bv_udiv);
+         (Const.bv_mod_lid, bv_mod);
          (Const.nat_to_bv_lid, bv_to)]
     in
-    printf "%s\n" (FStar.Util.format1 "%s\n" (lid_of_fv head_fv).str);
     let _, op =
         List.tryFind (fun (l, _) -> S.fv_eq_lid head_fv l) ops |>
         BU.must

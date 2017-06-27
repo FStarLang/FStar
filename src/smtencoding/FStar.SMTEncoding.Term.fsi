@@ -60,6 +60,8 @@ type op =
   | BvOr
   | BvShl
   | BvShr
+  | BvUdiv
+  | BvMod
   | NatToBv of int
   | ITE
   | Var of string
@@ -158,6 +160,8 @@ val mkBvXor  : ((term * term) -> Range.range -> term)
 val mkBvOr   : ((term * term) -> Range.range -> term)
 val mkBvShl  : ((term * term) -> Range.range -> term)
 val mkBvShr  : ((term * term) -> Range.range -> term)
+val mkBvUdiv  : ((term * term) -> Range.range -> term)
+val mkBvMod  : ((term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term

@@ -73,7 +73,9 @@ type op =
   | BvXor
   | BvOr
   | BvShl
-  | BvShr  // unsigned shift right
+  | BvShr  // unsigned shift right\
+  | BvUdiv
+  | BvMod
   | NatToBv of Prims.int // need to explicitly define the size of the bitvector
   | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
@@ -209,6 +211,8 @@ let op_to_string = function
   | BvOr -> "bvor"
   | BvShl -> "bvshl"
   | BvShr -> "bvlshr"
+  | BvUdiv -> "bvudiv"
+  | BvMod -> "bvurem"
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
 
@@ -285,6 +289,8 @@ let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
 let mkBvShl = mk_bin_op BvShl
 let mkBvShr = mk_bin_op BvShr
+let mkBvUdiv = mk_bin_op BvUdiv
+let mkBvMod = mk_bin_op BvMod
 let mkIff = mk_bin_op Iff
 let mkEq  = mk_bin_op Eq
 let mkLT  = mk_bin_op LT
