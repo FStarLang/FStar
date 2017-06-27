@@ -496,7 +496,6 @@ let is_BitVector_primitive head args =
       (S.fv_eq_lid fv Const.bv_zero_vec_lid ||
       S.fv_eq_lid fv Const.bv_ones_vec_lid) &&
       (isInteger sz_arg.n)
-      //Q: Does bv_t need to be here as well? i think not
 
     | _ -> false
 

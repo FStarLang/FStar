@@ -2,6 +2,7 @@ module FStar.BitVector
 
 open FStar.Mul
 open FStar.Seq
+open FStar.LArith
 
 (* Define bitwise operators with new type BitVector. *)
 [@"opaque_to_smt"]
@@ -94,6 +95,11 @@ assume val shift_left_vec: #n:pos -> a:bv_t n -> s:bv_t n -> Tot (bv_t n)
 assume val shift_right_vec: #n:pos -> a:bv_t n -> s:bv_t n -> Tot (bv_t n)
 
 
+val nat_to_bv_land : (#n:pos) -> (#x:int) -> (#y:int) -> (#z:bv_t n) ->
+			    squash (logand_vec (nat_to_bv x) (nat_to_bv y) == z) ->
+			    Lemma (nat_to_bv (logand #n x y) == z)
+let nat_to_bv_land #n #x #y #z = ()
+
 // val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 // let shift_left_vec #n a s =
 //   if s >= n then zero_vec #n
@@ -130,3 +136,4 @@ assume val shift_right_vec: #n:pos -> a:bv_t n -> s:bv_t n -> Tot (bv_t n)
 //         (ensures index (shift_right_vec #n a s) i = index a (i - s))
 // 	[SMTPat (index (shift_right_vec #n a s) i)]
 // let shift_right_vec_lemma_2 #n a s i = ()
+
