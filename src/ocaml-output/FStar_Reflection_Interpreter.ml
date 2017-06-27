@@ -43,9 +43,7 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
       let uu____315 =
         mk11 "__inspect_fv" FStar_Reflection_Basic.inspect_fv
           FStar_Reflection_Basic.unembed_fvar
-          (FStar_Reflection_Basic.embed_list
-             FStar_Reflection_Basic.embed_string
-             FStar_TypeChecker_Common.t_string) in
+          FStar_Reflection_Basic.embed_string_list in
       let uu____317 =
         let uu____319 =
           mk11 "__pack_fv" FStar_Reflection_Basic.pack_fv
@@ -99,7 +97,22 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                           FStar_Syntax_Print.term_to_string
                           FStar_Reflection_Basic.unembed_term
                           FStar_Reflection_Basic.embed_string in
-                      [uu____367] in
+                      let uu____368 =
+                        let uu____370 =
+                          mk11 "__binders_of_env"
+                            FStar_TypeChecker_Env.all_binders
+                            FStar_Reflection_Basic.unembed_env
+                            FStar_Reflection_Basic.embed_binders in
+                        let uu____371 =
+                          let uu____373 =
+                            mk2 "__lookup_typ"
+                              FStar_Reflection_Basic.lookup_typ
+                              FStar_Reflection_Basic.unembed_env
+                              FStar_Reflection_Basic.unembed_string_list
+                              FStar_Reflection_Basic.embed_sigelt_view in
+                          [uu____373] in
+                        uu____370 :: uu____371 in
+                      uu____367 :: uu____368 in
                     uu____360 :: uu____365 in
                   uu____349 :: uu____358 in
                 uu____346 :: uu____347 in

@@ -15,6 +15,7 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Synthesis.uver		\
+	Printers.uver		\
 	Setopts.uver		\
 	Neg.uver		\
 	Caller.uver		\

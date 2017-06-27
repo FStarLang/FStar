@@ -12,6 +12,15 @@ type vconst =
     | C_Int of int
     | C_True
     | C_False
+    | C_String of string
+
+type pattern =
+    | Pat_Constant of vconst
+    | Pat_Cons     of fv * list<pattern>
+    | Pat_Var      of bv
+    | Pat_Wild     of bv
+
+type branch = pattern * term
 
 type term_view =
     | Tv_Var    of binder
@@ -22,8 +31,10 @@ type term_view =
     | Tv_Type   of unit
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
+    | Tv_Uvar   of int * typ
+    | Tv_Match  of term * list<branch>
     | Tv_Unknown
-    
+
 // See ulib/FStar.Reflection.Syntax.fst for explanations of these two
 type ctor =
     | Ctor of  name * typ
@@ -49,7 +60,7 @@ let mk_refl_types_lid_as_term (s:string) = lid_as_tm (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = lid_as_tm (fstar_refl_syntax_lid s)
 let fstar_refl_lid_as_data_tm s = lid_as_data_tm (fstar_refl_lid s)
 
-(* abstract types *)
+(* types *)
 let fstar_refl_term      = mk_refl_types_lid_as_term "term"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
@@ -58,6 +69,32 @@ let fstar_refl_binders   = mk_refl_syntax_lid_as_term "binders"
 let fstar_refl_term_view = mk_refl_syntax_lid_as_term "term_view"
 let fstar_refl_sigelt    = mk_refl_syntax_lid_as_term "sigelt"
 let fstar_refl_ctor      = mk_refl_syntax_lid_as_term "ctor"
+let fstar_refl_pattern   = mk_refl_syntax_lid_as_term "pattern"
+let fstar_refl_branch    = mk_refl_syntax_lid_as_term "branch"
+
+(* const *)
+let ref_C_Unit_lid  = fstar_refl_syntax_lid "C_Unit"
+let ref_C_True_lid  = fstar_refl_syntax_lid "C_True"
+let ref_C_False_lid = fstar_refl_syntax_lid "C_False"
+let ref_C_Int_lid   = fstar_refl_syntax_lid "C_Int"
+let ref_C_String_lid = fstar_refl_syntax_lid "C_String"
+
+let ref_C_Unit   = lid_as_data_tm ref_C_Unit_lid
+let ref_C_True   = lid_as_data_tm ref_C_True_lid
+let ref_C_False  = lid_as_data_tm ref_C_False_lid
+let ref_C_Int    = lid_as_data_tm ref_C_Int_lid
+let ref_C_String = lid_as_data_tm ref_C_String_lid
+
+(* pattern *)
+let ref_Pat_Constant_lid   = fstar_refl_syntax_lid "Pat_Constant"
+let ref_Pat_Cons_lid       = fstar_refl_syntax_lid "Pat_Cons"
+let ref_Pat_Var_lid        = fstar_refl_syntax_lid "Pat_Var"
+let ref_Pat_Wild_lid       = fstar_refl_syntax_lid "Pat_Wild"
+
+let ref_Pat_Constant   = lid_as_data_tm ref_Pat_Constant_lid
+let ref_Pat_Cons       = lid_as_data_tm ref_Pat_Cons_lid
+let ref_Pat_Var        = lid_as_data_tm ref_Pat_Var_lid
+let ref_Pat_Wild       = lid_as_data_tm ref_Pat_Wild_lid
 
 (* term_view *)
 let ref_Tv_Var_lid     = fstar_refl_syntax_lid "Tv_Var"
@@ -68,6 +105,8 @@ let ref_Tv_Arrow_lid   = fstar_refl_syntax_lid "Tv_Arrow"
 let ref_Tv_Type_lid    = fstar_refl_syntax_lid "Tv_Type"
 let ref_Tv_Refine_lid  = fstar_refl_syntax_lid "Tv_Refine"
 let ref_Tv_Const_lid   = fstar_refl_syntax_lid "Tv_Const"
+let ref_Tv_Uvar_lid    = fstar_refl_syntax_lid "Tv_Uvar"
+let ref_Tv_Match_lid   = fstar_refl_syntax_lid "Tv_Match"
 let ref_Tv_Unknown_lid = fstar_refl_syntax_lid "Tv_Unknown"
 
 let ref_Tv_Var     = lid_as_data_tm ref_Tv_Var_lid
@@ -78,18 +117,9 @@ let ref_Tv_Arrow   = lid_as_data_tm ref_Tv_Arrow_lid
 let ref_Tv_Type    = lid_as_data_tm ref_Tv_Type_lid
 let ref_Tv_Refine  = lid_as_data_tm ref_Tv_Refine_lid
 let ref_Tv_Const   = lid_as_data_tm ref_Tv_Const_lid
+let ref_Tv_Uvar    = lid_as_data_tm ref_Tv_Uvar_lid
+let ref_Tv_Match   = lid_as_data_tm ref_Tv_Match_lid
 let ref_Tv_Unknown = lid_as_data_tm ref_Tv_Unknown_lid
-
-(* const *)
-let ref_C_Unit_lid  = fstar_refl_syntax_lid "C_Unit"
-let ref_C_True_lid  = fstar_refl_syntax_lid "C_True"
-let ref_C_False_lid = fstar_refl_syntax_lid "C_False"
-let ref_C_Int_lid   = fstar_refl_syntax_lid "C_Int"
-
-let ref_C_Unit   = lid_as_data_tm ref_C_Unit_lid
-let ref_C_True   = lid_as_data_tm ref_C_True_lid
-let ref_C_False  = lid_as_data_tm ref_C_False_lid
-let ref_C_Int    = lid_as_data_tm ref_C_Int_lid
 
 (* inductives & sigelts *)
 let ref_Sg_Inductive_lid = fstar_refl_syntax_lid "Sg_Inductive"

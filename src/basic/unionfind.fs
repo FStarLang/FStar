@@ -136,6 +136,9 @@ let puf_id (h:puf<'a>) (x:p_uvar<'a>) : int =
     let _, i = puf_find_i h x in
     i
 
+let puf_fromid (_:puf<'a>) (id : int) : p_uvar<'a> =
+    P id
+
 (* only return the rep *)
 let puf_find (h: puf<'a>) (x: p_uvar<'a>) =
     let v, _ = puf_find_i h x in

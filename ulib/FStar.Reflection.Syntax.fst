@@ -11,10 +11,21 @@ type binders = list binder
 noeq
 type const =
   | C_Unit : const
-  | C_Int : int -> const // Not exposing the details, I presume
+  | C_Int : int -> const // Not exposing the full details of our integer repr.
   | C_True : const
   | C_False : const
+  | C_String : string -> const
   (* TODO: complete *)
+
+// This is shadowing `pattern` from Prims (for smt_pats)
+noeq
+type pattern =
+    | Pat_Constant : const -> pattern                   // A built-in constant
+    | Pat_Cons     : fv -> list pattern -> pattern      // A fully applied constructor
+    | Pat_Var      : binder -> pattern                  // Pattern bound variable
+    | Pat_Wild     : binder -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
+
+type branch = pattern * term  // | pattern -> term
 
 noeq
 type term_view =
@@ -26,8 +37,9 @@ type term_view =
   | Tv_Type   : unit -> term_view
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : const -> term_view
+  | Tv_Uvar   : int -> typ -> term_view
+  | Tv_Match  : term -> list branch -> term_view
   | Tv_Unknown : term_view // Baked in "None"
-  (* TODO: complete, in particular, uvars! *)
 
 noeq
 type ctor =
@@ -69,6 +81,8 @@ let smaller tv t =
     | Tv_Const _
     | Tv_Unknown
     | Tv_Var _
+    | Tv_Uvar _ _
+    | Tv_Match _ _ // TODO
     | Tv_FVar _ -> True
 
 (* The main characters *)
@@ -109,6 +123,7 @@ let term_eq t1 t2 : bool = __term_eq t1 t2
 assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t
 
+(* Shouldn't this be TAC??? *)
 assume val __fresh_binder : typ -> binder
 let fresh_binder t : binder = __fresh_binder t
 
@@ -154,7 +169,7 @@ let gt_qn        = ["Prims"; "op_GreaterThan"]
 let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn       = ["Prims"; "op_Modulus"]
 
-(* Helpers for dealing with nested applications *)
+(* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =
     match inspect t with
     | Tv_App l r ->
@@ -168,6 +183,16 @@ let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
     match args with
     | [] -> t
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
+
+let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
+    match inspect t with
+    | Tv_Arrow b r ->
+        let t = type_of_binder b in
+        collect_app' (t::typs) r
+    | _ -> (t, typs)
+
+val collect_arr : typ -> typ * list typ
+let collect_arr = collect_arr' []
 
 // TODO: move away
 let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
@@ -194,10 +219,12 @@ let rec compare_const (c1 c2 : const) : order =
     | C_Int i, C_Int j -> order_from_int (i - j)
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
-    | C_Unit,  _ -> Lt   | _, C_Unit  -> Gt
-    | C_Int _, _ -> Lt   | _, C_Int _ -> Gt
-    | C_True,  _ -> Lt   | _, C_True  -> Gt
-    | C_False, _ -> Lt   | _, C_False -> Gt
+    | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_Unit,  _ -> Lt    | _, C_Unit  -> Gt
+    | C_Int _, _ -> Lt    | _, C_Int _ -> Gt
+    | C_True,  _ -> Lt    | _, C_True  -> Gt
+    | C_False, _ -> Lt    | _, C_False -> Gt
+    | C_String _, _ -> Lt | _, C_String _ -> Gt
 
 let rec compare_term (s t : term) : order =
     match inspect s, inspect t with
@@ -221,6 +248,12 @@ let rec compare_term (s t : term) : order =
     | Tv_Const c1, Tv_Const c2 ->
         compare_const c1 c2
 
+    | Tv_Uvar u1 _, Tv_Uvar u2 _->
+        compare_int u1 u2
+
+    | Tv_Match _ _, Tv_Match _ _ ->
+        Eq // TODO
+
     | Tv_Unknown, Tv_Unknown ->
         Eq
 
@@ -233,4 +266,6 @@ let rec compare_term (s t : term) : order =
     | Tv_Type (), _    -> Lt   | _, Tv_Type ()    -> Gt
     | Tv_Refine _ _, _ -> Lt   | _, Tv_Refine _ _ -> Gt
     | Tv_Const _, _    -> Lt   | _, Tv_Const _    -> Gt
+    | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
+    | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
