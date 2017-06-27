@@ -14,6 +14,7 @@ type const =
   | C_Int : int -> const // Not exposing the full details of our integer repr.
   | C_True : const
   | C_False : const
+  | C_String : string -> const
   (* TODO: complete *)
 
 // This is shadowing `pattern` from Prims (for smt_pats)

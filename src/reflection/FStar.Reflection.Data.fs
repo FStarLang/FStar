@@ -12,6 +12,7 @@ type vconst =
     | C_Int of int
     | C_True
     | C_False
+    | C_String of string
 
 type pattern =
     | Pat_Constant of vconst
@@ -76,11 +77,13 @@ let ref_C_Unit_lid  = fstar_refl_syntax_lid "C_Unit"
 let ref_C_True_lid  = fstar_refl_syntax_lid "C_True"
 let ref_C_False_lid = fstar_refl_syntax_lid "C_False"
 let ref_C_Int_lid   = fstar_refl_syntax_lid "C_Int"
+let ref_C_String_lid = fstar_refl_syntax_lid "C_String"
 
 let ref_C_Unit   = lid_as_data_tm ref_C_Unit_lid
 let ref_C_True   = lid_as_data_tm ref_C_True_lid
 let ref_C_False  = lid_as_data_tm ref_C_False_lid
 let ref_C_Int    = lid_as_data_tm ref_C_Int_lid
+let ref_C_String = lid_as_data_tm ref_C_String_lid
 
 (* pattern *)
 let ref_Pat_Constant_lid   = fstar_refl_syntax_lid "Pat_Constant"
