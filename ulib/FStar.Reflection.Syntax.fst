@@ -168,7 +168,7 @@ let gt_qn        = ["Prims"; "op_GreaterThan"]
 let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn       = ["Prims"; "op_Modulus"]
 
-(* Helpers for dealing with nested applications *)
+(* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =
     match inspect t with
     | Tv_App l r ->
@@ -182,6 +182,16 @@ let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
     match args with
     | [] -> t
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
+
+let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
+    match inspect t with
+    | Tv_Arrow b r ->
+        let t = type_of_binder b in
+        collect_app' (t::typs) r
+    | _ -> (t, typs)
+
+val collect_arr : typ -> typ * list typ
+let collect_arr = collect_arr' []
 
 // TODO: move away
 let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
