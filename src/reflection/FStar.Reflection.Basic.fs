@@ -432,6 +432,7 @@ let inspect (t:term) : term_view =
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term _ -> failwith "NYI: Pat_dot_term"
         in
+        let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, brs)
 
@@ -487,6 +488,7 @@ let pack (tv:term_view) : term =
             | Pat_Wild bv -> wrap <| Pat_wild bv
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
+        let brs = List.map SS.close_branch brs in
         S.mk (Tm_match (t, brs)) None Range.dummyRange
 
     | _ ->

@@ -619,6 +619,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
+             (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare');
