@@ -44,7 +44,7 @@ let stable (p:heap_predicate) =
 
 assume type witnessed: (p:heap_predicate{stable p}) -> Type0
 
-assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ (witnessed p ==> post () h0))
+assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
 
 (***** ST effect *****)
@@ -64,36 +64,41 @@ effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
   STATE a (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1))
 effect St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 
-let contains_pred (#a:Type0) (r:ref a) = fun h -> h `contains` r
+let contains_pred (#a:Type0) (#rel:preorder a) (r:mref a rel) = fun h -> h `contains` r
 
-type ref (a:Type0) = r:Heap.ref a{witnessed (contains_pred r)}
+type mref (a:Type0) (rel:preorder a) = r:Heap.mref a rel{witnessed (contains_pred r)}
 
-abstract let recall (#a:Type) (r:ref a) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
+abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
   = gst_recall (contains_pred r)
 
-abstract let alloc (#a:Type) (init:a) :ST (ref a)
-                                          (fun h -> True)
-                                          (fun h0 r h1 ->
-					   let (r', h1') = alloc (trivial_preorder a) h0 init true in
-					   witnessed (contains_pred r') /\ r' == r /\ h1 == h1')
+abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
+  :ST (mref a rel)
+      (fun h -> True)
+      (fun h0 r h1 -> let (r', h1') = alloc rel h0 init true in
+	           witnessed (contains_pred r') /\ r' == r /\ h1 == h1')
   = let h0 = gst_get () in
-    let r, h1 = alloc (trivial_preorder a) h0 init true in
-    gst_witness (contains_pred r);
+    let r, h1 = alloc rel h0 init true in
     gst_put h1;
+    gst_witness (contains_pred r);
     r
 
-abstract let read (#a:Type) (r:ref a) :STATE a (fun p h -> p (sel h r) h)
+abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -> p (sel h r) h)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     sel_tot h0 r
 
-abstract let write (#a:Type) (r:ref a) (v:a) :ST unit (fun h -> True) (fun h0 x h1 -> h0 `contains` r /\ h1==upd h0 r v)
+abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
+  :ST unit (fun h -> rel (sel h r) v) (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
+
+let trivial_preorder (a:Type0) = fun x y -> True
+
+type ref (a:Type0) = mref a (trivial_preorder a)
 
 (* type ref (a:Type) = Heap.ref a *)
 (* // this intentionally does not preclude h' extending h with fresh refs *)
