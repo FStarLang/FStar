@@ -625,7 +625,7 @@ let caption_to_string = function
 let rec declToSmt decl =
   let escape (s:string) = BU.replace_char s '\'' '_' in
   match decl with
-  | DefPrelude -> prelude
+  | DefPrelude -> prelude()
   | Caption c ->
     if Options.log_queries ()
     then format1 "\n; %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
@@ -668,7 +668,7 @@ let rec declToSmt decl =
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
-and prelude =
+and prelude() =
   let basic =  "(set-option :produce-unsat-cores true)\n\
                 (set-logic ALL)\n\
                 (declare-sort Ref 0)\n\
