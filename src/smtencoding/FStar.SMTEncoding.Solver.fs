@@ -438,7 +438,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     | true, _ -> ()
     | false, None -> process_query query
     | false, Some id ->
-        let cur_id = "(" ^ query_name ^ "," ^ (BU.string_of_int query_index) ^ ")" in
+        let cur_id = "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")" in
         if cur_id = id then (process_query query)
 
 
