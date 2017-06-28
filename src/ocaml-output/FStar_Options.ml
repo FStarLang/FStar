@@ -788,7 +788,7 @@ let rec specs:
         (FStar_Getopt.ZeroArgs ((fun uu____1548  -> Bool true))), " ");
       (FStar_Getopt.noshort, "smt",
         (FStar_Getopt.OneArg (((fun _0_42  -> Path _0_42)), "[path]")),
-        "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
+        "Path to the Z3 SMT solver (we could eventually support other solvers)");
       (FStar_Getopt.noshort, "smtencoding.elim_box",
         (FStar_Getopt.OneArg
            ((string_as_bool "smtencoding.elim_box"), "true|false")),

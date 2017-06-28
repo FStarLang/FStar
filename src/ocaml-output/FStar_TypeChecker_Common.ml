@@ -210,7 +210,8 @@ type identifier_info =
   {
   identifier:
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either;
-  identifier_ty: FStar_Syntax_Syntax.typ;}
+  identifier_ty: FStar_Syntax_Syntax.typ;
+  identifier_range: FStar_Range.range;}
 let rec insert_col_info col info col_infos =
   match col_infos with
   | [] -> [(col, info)]
@@ -218,10 +219,10 @@ let rec insert_col_info col info col_infos =
       if col < c
       then (col, info) :: col_infos
       else
-        (let uu____505 = insert_col_info col info rest in (c, i) :: uu____505)
+        (let uu____513 = insert_col_info col info rest in (c, i) :: uu____513)
 let find_nearest_preceding_col_info col col_infos =
-  let rec aux out uu___97_541 =
-    match uu___97_541 with
+  let rec aux out uu___97_549 =
+    match uu___97_549 with
     | [] -> out
     | (c,i)::rest ->
         if c > col then out else aux (FStar_Pervasives_Native.Some i) rest in
@@ -232,8 +233,12 @@ type row_info = col_info FStar_ST.ref FStar_Util.imap
 type file_info = row_info FStar_Util.smap
 let mk_info:
   (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
-    FStar_Syntax_Syntax.typ -> identifier_info
-  = fun id  -> fun ty  -> { identifier = id; identifier_ty = ty }
+    FStar_Syntax_Syntax.typ -> FStar_Range.range -> identifier_info
+  =
+  fun id  ->
+    fun ty  ->
+      fun range  ->
+        { identifier = id; identifier_ty = ty; identifier_range = range }
 let file_info_table: row_info FStar_Util.smap =
   FStar_Util.smap_create (Prims.parse_int "50")
 let insert_identifier_info:
@@ -243,43 +248,43 @@ let insert_identifier_info:
   fun id  ->
     fun ty  ->
       fun range  ->
-        let info = mk_info id ty in
         let use_range =
-          let uu___98_591 = range in
+          let uu___98_601 = range in
           {
             FStar_Range.def_range = (range.FStar_Range.use_range);
-            FStar_Range.use_range = (uu___98_591.FStar_Range.use_range)
+            FStar_Range.use_range = (uu___98_601.FStar_Range.use_range)
           } in
+        let info = mk_info id ty use_range in
         let fn = FStar_Range.file_of_range use_range in
         let start = FStar_Range.start_of_range use_range in
-        let uu____594 =
-          let uu____597 = FStar_Range.line_of_pos start in
-          let uu____598 = FStar_Range.col_of_pos start in
-          (uu____597, uu____598) in
-        match uu____594 with
+        let uu____605 =
+          let uu____608 = FStar_Range.line_of_pos start in
+          let uu____609 = FStar_Range.col_of_pos start in
+          (uu____608, uu____609) in
+        match uu____605 with
         | (row,col) ->
-            let uu____601 = FStar_Util.smap_try_find file_info_table fn in
-            (match uu____601 with
+            let uu____612 = FStar_Util.smap_try_find file_info_table fn in
+            (match uu____612 with
              | FStar_Pervasives_Native.None  ->
                  let col_info =
-                   let uu____608 = insert_col_info col info [] in
-                   FStar_Util.mk_ref uu____608 in
+                   let uu____619 = insert_col_info col info [] in
+                   FStar_Util.mk_ref uu____619 in
                  let rows = FStar_Util.imap_create (Prims.parse_int "1000") in
                  (FStar_Util.imap_add rows row col_info;
                   FStar_Util.smap_add file_info_table fn rows)
              | FStar_Pervasives_Native.Some file_rows ->
-                 let uu____636 = FStar_Util.imap_try_find file_rows row in
-                 (match uu____636 with
+                 let uu____647 = FStar_Util.imap_try_find file_rows row in
+                 (match uu____647 with
                   | FStar_Pervasives_Native.None  ->
                       let col_info =
-                        let uu____646 = insert_col_info col info [] in
-                        FStar_Util.mk_ref uu____646 in
+                        let uu____657 = insert_col_info col info [] in
+                        FStar_Util.mk_ref uu____657 in
                       FStar_Util.imap_add file_rows row col_info
                   | FStar_Pervasives_Native.Some col_infos ->
-                      let uu____662 =
-                        let uu____663 = FStar_ST.read col_infos in
-                        insert_col_info col info uu____663 in
-                      FStar_ST.write col_infos uu____662))
+                      let uu____673 =
+                        let uu____674 = FStar_ST.read col_infos in
+                        insert_col_info col info uu____674 in
+                      FStar_ST.write col_infos uu____673))
 let info_at_pos:
   Prims.string ->
     Prims.int -> Prims.int -> identifier_info FStar_Pervasives_Native.option
@@ -287,31 +292,37 @@ let info_at_pos:
   fun fn  ->
     fun row  ->
       fun col  ->
-        let uu____682 = FStar_Util.smap_try_find file_info_table fn in
-        match uu____682 with
+        let uu____693 = FStar_Util.smap_try_find file_info_table fn in
+        match uu____693 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
         | FStar_Pervasives_Native.Some rows ->
-            let uu____686 = FStar_Util.imap_try_find rows row in
-            (match uu____686 with
+            let uu____697 = FStar_Util.imap_try_find rows row in
+            (match uu____697 with
              | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
              | FStar_Pervasives_Native.Some cols ->
-                 let uu____695 =
-                   let uu____697 = FStar_ST.read cols in
-                   find_nearest_preceding_col_info col uu____697 in
-                 (match uu____695 with
+                 let uu____706 =
+                   let uu____708 = FStar_ST.read cols in
+                   find_nearest_preceding_col_info col uu____708 in
+                 (match uu____706 with
                   | FStar_Pervasives_Native.None  ->
                       FStar_Pervasives_Native.None
                   | FStar_Pervasives_Native.Some ci ->
-                      FStar_Pervasives_Native.Some ci))
+                      let last_col =
+                        let uu____717 =
+                          FStar_Range.end_of_range ci.identifier_range in
+                        FStar_Range.col_of_pos uu____717 in
+                      if col <= last_col
+                      then FStar_Pervasives_Native.Some ci
+                      else FStar_Pervasives_Native.None))
 let insert_bv:
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> Prims.unit =
   fun bv  ->
     fun ty  ->
-      let uu____711 = FStar_Syntax_Syntax.range_of_bv bv in
-      insert_identifier_info (FStar_Util.Inl bv) ty uu____711
+      let uu____726 = FStar_Syntax_Syntax.range_of_bv bv in
+      insert_identifier_info (FStar_Util.Inl bv) ty uu____726
 let insert_fv:
   FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> Prims.unit =
   fun fv  ->
     fun ty  ->
-      let uu____718 = FStar_Syntax_Syntax.range_of_fv fv in
-      insert_identifier_info (FStar_Util.Inr fv) ty uu____718
+      let uu____733 = FStar_Syntax_Syntax.range_of_fv fv in
+      insert_identifier_info (FStar_Util.Inr fv) ty uu____733
