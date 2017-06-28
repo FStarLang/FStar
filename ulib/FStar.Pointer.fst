@@ -2865,8 +2865,8 @@ let readable_gufield
   (p: pointer (TUnion l))
   (fd: struct_field l)
 : Lemma
-  (requires (readable h p /\ union_get_key (gread h p) == fd))
-  (ensures (readable h (gufield p fd)))
+  (requires True)
+  (ensures (readable h (gufield p fd) <==> (readable h p /\ union_get_key (gread h p) == fd)))
   [SMTPat (readable h (gufield p fd))]
 = ()
 
