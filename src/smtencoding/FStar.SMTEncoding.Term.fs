@@ -622,11 +622,10 @@ let caption_to_string = function
             | hd::_ -> hd, "..." in
         format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
 
-let rec declToSmt z3options decl =
+let rec declToSmt decl =
   let escape (s:string) = BU.replace_char s '\'' '_' in
   match decl with
-  | DefPrelude ->
-    mkPrelude z3options
+  | DefPrelude -> prelude
   | Caption c ->
     if Options.log_queries ()
     then format1 "\n; %s" (BU.splitlines c |> (function [] -> "" | h::t -> h))
@@ -669,9 +668,13 @@ let rec declToSmt z3options decl =
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
 
-and mkPrelude z3options =
-  let basic = z3options ^
-                "(declare-sort FString)\n\
+and prelude =
+  let basic =  "(set-option :produce-unsat-cores true)\n\
+                (set-logic ALL)\n\
+                (declare-sort Ref)\n\
+                (declare-fun Ref_constr_id (Ref) Int)\n\
+                \n\
+                (declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
@@ -736,7 +739,7 @@ and mkPrelude z3options =
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
-   let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
+   let bcons = constrs |> List.collect constructor_to_decl |> List.map declToSmt |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
                        (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\

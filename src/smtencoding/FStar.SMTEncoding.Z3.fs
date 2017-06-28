@@ -80,7 +80,8 @@ let ini_params () =
   end;
   (String.concat " "
                 (List.append
-                 [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
+                 [ "-smt2"; "-in"; "auto_config=false"; "model=true";
+                   "smt.relevancy=2"; "smtlib2_compliant=true";
                    (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
                  (Options.z3_cliopt())))
 
@@ -366,12 +367,6 @@ let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status
   in
   parse (BU.trim_string stdout)
 
-let z3_options () =
-    "(set-option :global-decls false)\n\
-     (set-option :smt.mbqi false)\n\
-     (set-option :auto_config false)\n\
-     (set-option :produce-unsat-cores true)\n"
-
 type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
@@ -520,7 +515,7 @@ let commit_mark (msg:string) =
     end
 
 let mk_input theory =
-    let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
+    let r = List.map declToSmt theory |> String.concat "\n" in
     if Options.log_queries() then query_logging.write_to_log r ;
     r
 
