@@ -31,7 +31,7 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) []
+let log :ref (list entry) = ST.alloc #(list entry) []
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)
