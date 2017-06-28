@@ -22,9 +22,9 @@ F* standard library mutable arrays module.
 module FStar.Array
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.All
-open FStar.ST
 open FStar.Seq
 open FStar.Heap
+open FStar.ST
 
 abstract type array (t:Type) = ref (seq t)
 

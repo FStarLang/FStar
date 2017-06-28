@@ -14,43 +14,120 @@
    limitations under the License.
 *)
 module FStar.ST
+
 open FStar.TSet
 open FStar.Heap
-type ref (a:Type) = Heap.ref a
-// this intentionally does not preclude h' extending h with fresh refs
-(* type modifies (mods:set aref) (h:heap) (h':heap) = *)
-(*     b2t (Heap.equal h' (concat h' (restrict h (complement mods)))) *)
+open FStar.Preorder
 
-let modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1
+(***** Global ST (GST) effect with put, get, witness, and recall *****)
 
-let st_pre = st_pre_h heap
-let st_post a = st_post_h heap a
-let st_wp a = st_wp_h heap a
-new_effect STATE = STATE_h heap
-unfold let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (fun a -> p a h)
-sub_effect DIV ~> STATE = lift_div_state
+new_effect GST = STATE_h heap
 
-effect State (a:Type) (wp:st_wp a) =
-       STATE a wp
+let gst_pre           = st_pre_h heap
+let gst_post (a:Type) = st_post_h heap a
+let gst_wp (a:Type)   = st_wp_h heap a
+
+unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:heap) = wp (fun a -> p a h)
+sub_effect DIV ~> GST = lift_div_gst
+
+let heap_rel (h1:heap) (h2:heap) =
+  forall (a:Type0) (rel:preorder a) (r:mref a rel). h1 `contains` r ==>
+                                               (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))
+
+assume val gst_get: unit    -> GST heap (fun p h0 -> p h0 h0)
+assume val gst_put: h1:heap -> GST unit (fun p h0 -> heap_rel h0 h1 /\ p () h1)
+
+type heap_predicate = heap -> Type0
+
+let stable (p:heap_predicate) =
+  forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2
+
+assume type witnessed: (p:heap_predicate{stable p}) -> Type0
+
+assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ (witnessed p ==> post () h0))
+assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
+
+(***** ST effect *****)
+
+let st_pre  = gst_pre
+let st_post = gst_post
+let st_wp   = gst_wp
+
+new_effect STATE = GST
+
+unfold let lift_gst_state (a:Type0) (wp:gst_wp a) = wp
+sub_effect GST ~> STATE = lift_gst_state
+
+effect State (a:Type) (wp:st_wp a) = STATE a wp
+
 effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1))
-effect St (a:Type) =
-       ST a (fun h -> True) (fun h0 r h1 -> True)
+  STATE a (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1))
+effect St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 
-(* signatures WITHOUT permissions *)
-assume val recall: #a:Type -> r:ref a -> STATE unit
-                                         (fun 'p h -> Heap.contains h r ==> 'p () h)
+let contains_pred (#a:Type0) (r:ref a) = fun h -> h `contains` r
 
-assume val alloc:  #a:Type -> init:a -> ST (ref a)
-                                           (fun h -> True)
-                                           (fun h0 r h1 -> (r, h1) == alloc (trivial_preorder a) h0 init true)
+type ref (a:Type0) = r:Heap.ref a{witnessed (contains_pred r)}
 
-assume val read:  #a:Type -> r:ref a -> STATE a
-                                         (fun 'p h -> 'p (sel h r) h)
+abstract let recall (#a:Type) (r:ref a) :STATE unit (fun p h -> Heap.contains h r ==> p () h)
+  = gst_recall (contains_pred r)
 
-assume val write:  #a:Type -> r:ref a -> v:a -> ST unit
-                                                 (fun h -> True)
-                                                 (fun h0 x h1 -> h0 `contains` r /\ h1==upd h0 r v)
+abstract let alloc (#a:Type) (init:a) :ST (ref a)
+                                          (fun h -> True)
+                                          (fun h0 r h1 ->
+					   let (r', h1') = alloc (trivial_preorder a) h0 init true in
+					   witnessed (contains_pred r') /\ r' == r /\ h1 == h1')
+  = let h0 = gst_get () in
+    let r, h1 = alloc (trivial_preorder a) h0 init true in
+    gst_witness (contains_pred r);
+    gst_put h1;
+    r
 
-assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1)
+abstract let read (#a:Type) (r:ref a) :STATE a (fun p h -> p (sel h r) h)
+  = let h0 = gst_get () in
+    gst_recall (contains_pred r);
+    sel_tot h0 r
+
+abstract let write (#a:Type) (r:ref a) (v:a) :ST unit (fun h -> True) (fun h0 x h1 -> h0 `contains` r /\ h1==upd h0 r v)
+  = let h0 = gst_get () in
+    gst_recall (contains_pred r);
+    let h1 = upd_tot h0 r v in
+    gst_put h1
+
+abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
+
+(* type ref (a:Type) = Heap.ref a *)
+(* // this intentionally does not preclude h' extending h with fresh refs *)
+(* (\* type modifies (mods:set aref) (h:heap) (h':heap) = *\) *)
+(* (\*     b2t (Heap.equal h' (concat h' (restrict h (complement mods)))) *\) *)
+
+(* let modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1 *)
+
+(* let st_pre = st_pre_h heap *)
+(* let st_post a = st_post_h heap a *)
+(* let st_wp a = st_wp_h heap a *)
+(* new_effect STATE = STATE_h heap *)
+(* unfold let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (fun a -> p a h) *)
+(* sub_effect DIV ~> STATE = lift_div_state *)
+
+(* effect State (a:Type) (wp:st_wp a) = *)
+(*        STATE a wp *)
+(* effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) = *)
+(*        STATE a *)
+(*              (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) *)
+(* effect St (a:Type) = *)
+(*        ST a (fun h -> True) (fun h0 r h1 -> True) *)
+
+(* (\* signatures WITHOUT permissions *\) *)
+(* assume val recall: #a:Type -> r:ref a -> STATE unit *)
+(*                                          (fun 'p h -> Heap.contains h r ==> 'p () h) *)
+
+(* assume val alloc:  #a:Type -> init:a -> ST (ref a) *)
+(*                                            (fun h -> True) *)
+(*                                            (fun h0 r h1 -> (r, h1) == alloc (trivial_preorder a) h0 init true) *)
+
+
+(* assume val write:  #a:Type -> r:ref a -> v:a -> ST unit *)
+(*                                                  (fun h -> True) *)
+(*                                                  (fun h0 x h1 -> h0 `contains` r /\ h1==upd h0 r v) *)
+
+(* assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) *)

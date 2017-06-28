@@ -10,6 +10,13 @@ private noeq type heap_rec = {
 
 let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
 
+let equal h1 h2 =
+  let _ = () in
+  h1.next_addr = h2.next_addr /\
+  FStar.FunctionalExtensionality.feq h1.memory h2.memory
+
+let equal_extensional h1 h2 = ()
+
 let emp = {
   next_addr = 0;
   memory    = (fun (r:nat) -> None)
@@ -68,7 +75,10 @@ let upd #a #rel h r x =
 
 let alloc #a rel h x mm =
   let r = { addr = h.next_addr; init = x; mm = mm } in
-  r, upd #a #rel h r x
+  r, { next_addr = r.addr + 1;
+       memory    = (fun (r':nat) -> if r' = r.addr
+	   		        then Some (| a, Some rel, x |)
+                                else h.memory r') }
 
 let free_mm #a #rel h r =
   { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
@@ -147,7 +157,10 @@ let lemma_contains_implies_used #a #rel h r = ()
 let lemma_distinct_addrs_distinct_types #a #b #rel1 #rel2 h r1 r2 = ()
 let lemma_distinct_addrs_distinct_preorders #a #rel1 #rel2 h r1 r2 = ()
 let lemma_distinct_addrs_unused #a #b #rel1 #rel2 h r1 r2 = ()
-let lemma_alloc #a rel h0 x mm = ()
+let lemma_alloc #a rel h0 x mm =
+  let r, h1 = alloc rel h0 x mm in
+  let h1' = upd h0 r x in
+  assert (equal h1 h1')
 let lemma_free_mm_sel #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_contains #a #b #rel1 #rel2 h0 r1 r2 = ()
 let lemma_free_mm_unused #a #b #rel1 #rel2 h0 r1 r2 = ()
@@ -164,11 +177,6 @@ let lemma_upd_unused #a #b #rel1 #rel2 h r1 x r2 = ()
 let lemma_contains_upd_modifies #a #rel h r x = ()
 let lemma_unused_upd_modifies #a #rel h r x = ()
 
-let equal h1 h2 =
-  let _ = () in
-  h1.next_addr = h2.next_addr /\
-  FStar.FunctionalExtensionality.feq h1.memory h2.memory
-
-let equal_extensional h1 h2 = ()
-
 let upd_upd_same_mref #a #rel h r x y = assert (equal (upd (upd h r x) r y) (upd h r y))
+let lemma_sel_equals_sel_tot_for_contained_refs #a #rel h r = ()
+let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()

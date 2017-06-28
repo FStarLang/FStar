@@ -10,6 +10,12 @@ type tset = TSet.set
 
 val heap :Type u#1
 
+val equal: heap -> heap -> Type0
+
+val equal_extensional (h1:heap) (h2:heap)
+  :Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
+         [SMTPat (equal h1 h2)]
+
 val emp :heap
 
 val mref (a:Type0) (rel:preorder a) :Type0
@@ -50,7 +56,7 @@ val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` 
 
 val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel -> x:a{valid_upd h r x} -> GTot heap
 
-val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> GTot (mref a rel * heap)
+val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (mref a rel * heap)
 
 val free_mm: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r /\ is_mm r} -> GTot heap
 
@@ -193,15 +199,21 @@ val lemma_unused_upd_modifies (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a re
          (ensures  (modifies (Set.singleton (addr_of r)) h (upd h r x)))
          [SMTPat (upd h r x); SMTPatT (r `unused_in` h)]
 
-val equal: heap -> heap -> Type0
-
-val equal_extensional (h1:heap) (h2:heap)
-  :Lemma (requires True) (ensures (equal h1 h2 <==> h1 == h2))
-         [SMTPat (equal h1 h2)]
-
 val upd_upd_same_mref
   (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)
   (x:a{valid_upd h r x}) (y:a{valid_upd (upd h r x) r y})
   :Lemma (requires True)
          (ensures  (valid_upd h r y /\ (upd (upd h r x) r y == upd h r y)))
 	 [SMTPat (upd (upd h r x) r y)]
+
+val lemma_sel_equals_sel_tot_for_contained_refs
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r})
+  :Lemma (requires True)
+         (ensures  (sel_tot h r == sel h r))
+	 [SMTPat (sel_tot h r)]
+
+val lemma_upd_equals_upd_tot_for_contained_refs
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel{h `contains` r}) (x:a{valid_upd h r x})
+  :Lemma (requires True)
+         (ensures  (upd_tot h r x == upd h r x))
+	 [SMTPat (upd_tot h r x)]
