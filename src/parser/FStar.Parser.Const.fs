@@ -136,7 +136,7 @@ let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
 
 
-let bvconst s = p2l ["FStar"; "BitVector"; s]
+let bvconst s = p2l ["FStar"; "BV"; s]
 
 (* BitVector constants *)
 let bv_t_lid = bvconst "bv_t" //redundant
@@ -144,7 +144,7 @@ let bv_zero_vec_lid = bvconst "zero_vec"
 let bv_ones_vec_lid = bvconst "ones_vec"
 
 (* BitVector operators *)
-let nat_to_bv_lid      = p2l ["FStar"; "UInt"; "to_vec"]
+let nat_to_bv_lid      = bvconst "to_vec"
 let bv_and_lid         = bvconst "logand_vec"
 let bv_xor_lid         = bvconst "logxor_vec"
 let bv_or_lid          = bvconst "logor_vec"

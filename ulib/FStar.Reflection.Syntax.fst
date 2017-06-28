@@ -172,7 +172,7 @@ let lxor_qn    = ["FStar" ; "UInt" ; "logxor"]
 let lor_qn     = ["FStar" ; "UInt" ; "logor"]
 let shiftl_qn  = ["FStar" ; "UInt" ; "shift_left"]
 let shiftr_qn  = ["FStar" ; "UInt" ; "shift_right"]
-let nat_bv_qn  = ["FStar" ; "UInt" ; "to_vec"]
+let nat_bv_qn  = ["FStar" ; "BV"   ; "to_vec"]
 
 (* Helpers for dealing with nested applications *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =

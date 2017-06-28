@@ -3,8 +3,8 @@ module FStar.Tactics.BV
 open FStar.Tactics
 open FStar.Reflection.Syntax
 open FStar.Reflection.Arith
-open FStar.BitVector
 open FStar.UInt
+open FStar.BV
 
 (* Lemmas transforming integer arithmetic to bitvector arithmetic *)
 val to_vec_logand : (#n:pos) -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
@@ -74,8 +74,8 @@ let cong_shift_right_vec #n #w #x #y pf = ()
 
 (* Used to reduce the initial equation to an equation on bitvectors*)
 val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
-              squash (to_vec x == to_vec y) -> Lemma (x == y)
-let eq_to_bv #n #x #y pf = to_vec_lemma_2 x y
+              squash (to_vec #n x == to_vec #n y) -> Lemma (x == y)
+let eq_to_bv #n #x #y pf = to_vec_lemma_2 #n x y
 
 (* Creates two fresh variables and two equations of the form to_vec
    x = z /\ to_vec y = w. The above lemmas transform these two
@@ -102,9 +102,7 @@ let rec arith_expr_to_bv e : tactic unit =
         arith_expr_to_bv e1
     | NatToBv _ (Land _ e1 e2) | (Land _ e1 e2) ->
         apply_lemma (quote to_vec_logand);;
-	dump "after to_vec_logand";;
         apply_lemma (quote cong_logand_vec);;
-	dump "after cong";;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
     | NatToBv _ (Lxor _ e1 e2) | (Lxor _ e1 e2) ->
@@ -128,10 +126,8 @@ let arith_to_bv_tac : tactic unit =
     | Comp Eq t l r ->
      begin match run_tm (is_arith_expr l) with
       | Inl s ->
-        dump "in left";;
         trefl
       | Inr e ->
-	    dump "before seq";;
             seq (arith_expr_to_bv e) trefl
 	   //  arith_expr_to_bv e
         end
@@ -142,10 +138,10 @@ let arith_to_bv_tac : tactic unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 let bv_tac ()  =
-	   apply_lemma (quote eq_to_bv);;
-	   apply_lemma (quote trans);;
-	   arith_to_bv_tac;;
-	   arith_to_bv_tac;;
-	   dump "after arith_to_bv";;
-	   smt ()
+  apply_lemma (quote eq_to_bv);;
+  apply_lemma (quote trans);;
+  arith_to_bv_tac;;
+  arith_to_bv_tac;;
+  set_options "--smtencoding.elim_box true";;
+  smt ()
 
