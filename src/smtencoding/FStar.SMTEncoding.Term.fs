@@ -671,13 +671,13 @@ let rec declToSmt decl =
 and prelude =
   let basic =  "(set-option :produce-unsat-cores true)\n\
                 (set-logic ALL)\n\
-                (declare-sort Ref)\n\
+                (declare-sort Ref 0)\n\
                 (declare-fun Ref_constr_id (Ref) Int)\n\
                 \n\
-                (declare-sort FString)\n\
+                (declare-sort FString 0)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
-                (declare-sort Term)\n\
+                (declare-sort Term 0)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
                 (declare-datatypes () ((Fuel \n\
                                         (ZFuel) \n\
