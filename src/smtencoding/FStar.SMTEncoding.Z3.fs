@@ -58,7 +58,7 @@ let get_z3version () =
     match !_z3version with
     | Some version -> version
     | None ->
-        let _, out, _ = BU.run_proc (Options.z3_exe()) "-version" "" in
+        let _, out, _ = BU.run_proc (Options.solver_exe()) "-version" "" in
         let out =
             match splitlines out with
             | x :: _ when starts_with x prefix -> begin
@@ -115,7 +115,7 @@ let new_z3proc id =
     (let x = BU.trim_string s = "Done!" in
 //     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
      x) in
-   BU.start_process id ((Options.z3_exe())) (ini_params()) cond
+   BU.start_process id ((Options.solver_exe())) (ini_params()) cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -358,7 +358,7 @@ let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status
      x) in
   let stdout =
     if fresh then
-      BU.launch_process (tid()) ((Options.z3_exe())) (ini_params()) input cond
+      BU.launch_process (tid()) ((Options.solver_exe())) (ini_params()) input cond
     else
       let proc = bg_z3_proc.grab() in
       let stdout = BU.ask_process proc input in

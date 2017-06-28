@@ -134,12 +134,12 @@ val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
 val silent                      : unit    -> bool
-val smtencoding_elim_box        : unit -> bool
-val smtencoding_nl_arith_default: unit -> bool
-val smtencoding_nl_arith_wrapped: unit -> bool
-val smtencoding_nl_arith_native : unit -> bool
-val smtencoding_l_arith_default : unit -> bool
-val smtencoding_l_arith_native  : unit -> bool
+val smtencoding_elim_box        : unit    -> bool
+val smtencoding_nl_arith_default: unit    -> bool
+val smtencoding_nl_arith_wrapped: unit    -> bool
+val smtencoding_nl_arith_native : unit    -> bool
+val smtencoding_l_arith_default : unit    -> bool
+val smtencoding_l_arith_native  : unit    -> bool
 val split_cases                 : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
@@ -153,7 +153,7 @@ val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
-val z3_exe                      : unit    -> string
+val solver_exe                  : unit    -> string
 val z3_cliopt                   : unit    -> list<string>
 val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int

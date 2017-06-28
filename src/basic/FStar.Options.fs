@@ -1110,7 +1110,7 @@ let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_default_effects         () = get_warn_default_effects        ()
-let z3_exe                       () = match get_smt () with
+let solver_exe                   () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
