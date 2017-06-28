@@ -35,6 +35,9 @@ type typ =
 | TStruct:
   (l: struct_typ) ->
   typ
+| TUnion:
+  (l: union_typ) ->
+  typ
 | TArray:
   (length: array_length_t ) ->
   (t: typ) ->
@@ -46,9 +49,10 @@ type typ =
   (t: typ) ->
   typ
 and struct_typ = (l: list (string * typ) {
-  Cons? l /\ // C11, 6.2.5 al. 20: structs must have at least one field
+  Cons? l /\ // C11, 6.2.5 al. 20: structs and unions must have at least one field
   List.Tot.noRepeats (List.Tot.map fst l)
 })
+and union_typ = struct_typ
 
 let struct_field
   (l: struct_typ)
@@ -69,6 +73,7 @@ let rec typ_depth
 : GTot nat
 = match t with
   | TArray _ t -> 1 + typ_depth t
+  | TUnion l
   | TStruct l -> 1 + struct_typ_depth l
   | _ -> 0
 and struct_typ_depth
@@ -104,6 +109,10 @@ private type step: (from: typ) -> (to: typ) -> Tot Type0 =
     (l: struct_typ) ->
     (fd: struct_field l) ->
     step (TStruct l) (typ_of_struct_field l fd)
+  | StepUField:
+    (l: union_typ) ->
+    (fd: struct_field l) ->
+    step (TUnion l) (typ_of_struct_field l fd)
   | StepCell:
     (length: UInt32.t) ->
     (value: typ) ->
@@ -126,6 +135,7 @@ private let step_typ_depth
 : Lemma
   (typ_depth from > typ_depth to)
 = match s with
+  | StepUField l fd
   | StepField l fd ->
     typ_depth_typ_of_struct_field l fd
   | _ -> ()
@@ -240,6 +250,65 @@ let type_of_struct_field'
   List.Tot.assoc_precedes f l y;
   type_of_typ y
 
+abstract
+let gtdata (* ghostly-tagged data *)
+  (key: eqtype)
+  (value: (key -> Tot Type0))
+: Tot Type0
+= ( k: key & value k )
+
+private
+let _gtdata_get_key
+  (#key: eqtype)
+  (#value: (key -> Tot Type0))
+  (u: gtdata key value)
+: Tot key
+= dfst u
+
+abstract
+let gtdata_get_key
+  (#key: eqtype)
+  (#value: (key -> Tot Type0))
+  (u: gtdata key value)
+: GTot key // important: must be Ghost, the tag is not actually stored in memory
+= _gtdata_get_key u
+
+abstract
+let gtdata_get_value
+  (#key: eqtype)
+  (#value: (key -> Tot Type0))
+  (u: gtdata key value)
+  (k: key)
+: Pure (value k)
+  (requires (gtdata_get_key u == k))
+  (ensures (fun _ -> True))
+= let (| _, v |) = u in v
+
+abstract
+let gtdata_create
+  (#key: eqtype)
+  (#value: (key -> Tot Type0))
+  (k: key)
+  (v: value k)
+: Pure (gtdata key value)
+  (requires True)
+  (ensures (fun x -> gtdata_get_key x == k /\ gtdata_get_value x k == v))
+= (| k, v |)
+
+abstract
+let gtdata_extensionality
+  (#key: eqtype)
+  (#value: (key -> Tot Type0))
+  (u1 u2: gtdata key value)
+: Lemma
+  (requires (
+    let k = gtdata_get_key u1 in (
+    k == gtdata_get_key u2 /\
+    gtdata_get_value u1 k == gtdata_get_value u2 k
+  )))
+  (ensures (u1 == u2))
+= ()
+
 let rec type_of_typ
   (t: typ)
 : Tot Type0
@@ -247,6 +316,8 @@ let rec type_of_typ
   | TBase b -> type_of_base_typ b
   | TStruct l ->
     DM.t (struct_field l) (type_of_struct_field' l type_of_typ)
+  | TUnion l ->
+    gtdata (struct_field l) (type_of_struct_field' l type_of_typ)
   | TArray length t ->
     array length (type_of_typ t)
   | TPointer t ->
@@ -285,6 +356,35 @@ let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_st
 let struct_create (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
   DM.create #(struct_field l) #(type_of_struct_field l) f
 
+let union (l: struct_typ) = gtdata (struct_field l) (type_of_struct_field l)
+
+let type_of_typ_union
+  (l: union_typ)
+: Lemma
+  (type_of_typ (TUnion l) == union l)
+  [SMTPat (type_of_typ (TUnion l))]
+= assert_norm (type_of_typ (TUnion l) == union l)
+
+private let _union_get_key (#l: union_typ) (v: union l) : Tot (struct_field l) = _gtdata_get_key v
+
+let union_get_key (#l: union_typ) (v: union l) : GTot (struct_field l) = gtdata_get_key v
+
+let union_get_value
+  (#l: union_typ)
+  (v: union l)
+  (fd: struct_field l)
+: Pure (type_of_struct_field l fd)
+  (requires (union_get_key v == fd))
+  (ensures (fun _ -> True))
+= gtdata_get_value v fd
+
+let union_create
+  (l: union_typ)
+  (fd: struct_field l)
+  (v: type_of_struct_field l fd)
+: Tot (union l)
+= gtdata_create fd v
+
 private
 let rec dummy_val
   (t: typ)
@@ -310,6 +410,9 @@ let rec dummy_val
     struct_create l (fun f -> (
       dummy_val (typ_of_struct_field l f)
     ))
+  | TUnion l ->
+    let dummy_field : string = List.Tot.hd (List.Tot.map fst l) in
+    union_create l dummy_field (dummy_val (typ_of_struct_field l dummy_field))
   | TArray length t -> Seq.create (UInt32.v length) (dummy_val t)
   | TPointer t -> Pointer t HS.dummy_aref PathBase
   | TBuffer t -> Buffer (BufferRootSingleton (Pointer t HS.dummy_aref PathBase)) 0ul 1ul
@@ -324,6 +427,8 @@ let rec otype_of_typ
   | TBase b -> option (type_of_base_typ b)
   | TStruct l ->
     option (DM.t (struct_field l) (type_of_struct_field' l otype_of_typ))
+  | TUnion l ->
+    option (gtdata (struct_field l) (type_of_struct_field' l otype_of_typ))
   | TArray length t ->
     option (array length (otype_of_typ t))
   | TPointer t ->
@@ -387,6 +492,37 @@ let otype_of_typ_struct
 = assert_norm(otype_of_typ (TStruct l) == ostruct l)
 
 private
+let ounion (l: struct_typ) = option (gtdata (struct_field l) (otype_of_struct_field l))
+
+private let ounion_get_key (#l: union_typ) (v: ounion l { Some? v } ) : Tot (struct_field l) = _gtdata_get_key (Some?.v v)
+
+private
+let ounion_get_value
+  (#l: union_typ)
+  (v: ounion l { Some? v } )
+  (fd: struct_field l)
+: Pure (otype_of_struct_field l fd)
+  (requires (ounion_get_key v == fd))
+  (ensures (fun _ -> True))
+= gtdata_get_value (Some?.v v) fd
+
+private
+let ounion_create
+  (l: union_typ)
+  (fd: struct_field l)
+  (v: otype_of_struct_field l fd)
+: Tot (ounion l)
+= Some (gtdata_create fd v)
+
+private
+let otype_of_typ_union
+  (l: union_typ)
+: Lemma
+  (otype_of_typ (TUnion l) == ounion l)
+  [SMTPat (otype_of_typ (TUnion l))]
+= assert_norm (otype_of_typ (TUnion l) == ounion l)
+
+private
 let struct_field_is_readable
   (l: struct_typ)
   (ovalue_is_readable: (
@@ -423,6 +559,12 @@ let rec ovalue_is_readable
       = ovalue_is_readable t' v
       in
       List.Tot.for_all (struct_field_is_readable l pred v) keys
+    )
+  | TUnion l ->
+    let v : ounion l = v in
+    Some? v && (
+      let k = ounion_get_key v in
+      ovalue_is_readable (typ_of_struct_field l k) (ounion_get_value v k)
     )
   | TArray len t ->
     let (v: option (array len (otype_of_typ t))) = v in
@@ -567,6 +709,10 @@ let rec ovalue_of_value
     in
     let (v': array len (otype_of_typ t)) = Seq.init (UInt32.v len) f in
     Some v'
+  | TUnion l ->
+    let (v: union l) = v in
+    let k = _union_get_key v in
+    ounion_create l k (ovalue_of_value (typ_of_struct_field l k) (union_get_value v k))
   | _ -> Some v
 
 private
@@ -619,6 +765,10 @@ let rec ovalue_is_readable_ovalue_of_value
     = ovalue_is_readable_ovalue_of_value t (Seq.index v i)
     in
     Classical.forall_intro phi
+  | TUnion l ->
+    let (v: union l) = v in
+    let k = _union_get_key v in
+    ovalue_is_readable_ovalue_of_value (typ_of_struct_field l k) (union_get_value v k)
   | _ -> ()
 
 private
@@ -650,6 +800,14 @@ let rec value_of_ovalue
       = value_of_ovalue t' (Seq.index v i)
       in
       Seq.init (UInt32.v len) phi
+    end
+  | TUnion l ->
+    let (v: ounion l) = v in
+    begin match v with
+    | None -> dummy_val t
+    | _ ->
+      let k = ounion_get_key v in
+      union_create l k (value_of_ovalue (typ_of_struct_field l k) (ounion_get_value v k))
     end
   | TBase b ->
     let (v: option (type_of_base_typ b)) = v in
@@ -701,6 +859,10 @@ let rec value_of_ovalue_of_value
     let v' = value_of_ovalue t (ovalue_of_value t v) in
     Seq.lemma_eq_intro v' v;
     Seq.lemma_eq_elim v' v
+  | TUnion l ->
+    let v : union l = v in
+    let k = _union_get_key v in
+    value_of_ovalue_of_value (typ_of_struct_field l k) (union_get_value v k)
   | _ -> ()
 
 private
@@ -710,6 +872,7 @@ let none_ovalue
 = match t with
   | TStruct l -> (None <: ostruct l)
   | TArray len t' -> (None <: option (array len (otype_of_typ t')))
+  | TUnion l -> (None <: ounion l)
   | TBase b -> (None <: option (type_of_base_typ b))
   | TPointer t' -> (None <: option (pointer t'))
   | TBuffer t' -> (None <: option (buffer t'))
@@ -738,6 +901,15 @@ let step_sel
     | None -> none_ovalue to
     | _ -> ostruct_sel m' fd
     end
+  | StepUField l fd ->
+    let (m' : ounion l) = m' in
+    begin match m' with
+    | None -> none_ovalue to
+    | _ ->
+      if fd = ounion_get_key m'
+      then ounion_get_value m' fd
+      else none_ovalue to
+    end
   | StepCell length value i -> 
     let (m': option (array length (otype_of_typ to))) = m' in
     begin match m' with
@@ -745,7 +917,8 @@ let step_sel
     | Some m' -> Seq.index m' (UInt32.v i)
     end
 
-(* TODO: once we have unions, the following will need to be refined: *)
+(* TODO: we used to have this:
+<<<
 private
 let ovalue_is_readable_step_sel
   (#from: typ)
@@ -759,6 +932,45 @@ let ovalue_is_readable_step_sel
 = match s with
   | StepField l fd -> ovalue_is_readable_struct_elim l m' fd
   | _ -> ()
+>>>
+Which is, of course, wrong with unions. So we have to specialize this rule for each step:
+*)
+
+private
+let ovalue_is_readable_step_sel_cell
+  (#length: array_length_t)
+  (#value: typ)
+  (m': otype_of_typ (TArray length value))
+  (index: UInt32.t { UInt32.v index < UInt32.v length } )
+: Lemma
+  (requires (ovalue_is_readable (TArray length value) m'))
+  (ensures (ovalue_is_readable value (step_sel m' (StepCell length value index))))
+  [SMTPat (ovalue_is_readable value (step_sel m' (StepCell length value index)))]
+= ()
+
+private
+let ovalue_is_readable_step_sel_field
+  (#l: struct_typ)
+  (m: ostruct l)
+  (fd: struct_field l)
+: Lemma
+  (requires (ovalue_is_readable (TStruct l) m))
+  (ensures (ovalue_is_readable (typ_of_struct_field l fd) (step_sel m (StepField l fd))))
+  [SMTPat (ovalue_is_readable (typ_of_struct_field l fd) (step_sel m (StepField l fd)))]
+= ()
+
+private
+let ovalue_is_readable_step_sel_union_same
+  (#l: union_typ)
+  (m: ounion l)
+  (fd: struct_field l)
+: Lemma
+  (requires (
+    ovalue_is_readable (TUnion l) m /\
+    ounion_get_key m == fd
+  ))
+  (ensures (ovalue_is_readable (typ_of_struct_field l fd) (step_sel m (StepUField l fd))))
+= ()
 
 private
 let step_sel_none_ovalue
@@ -847,6 +1059,9 @@ let step_upd
       in
       m'
     end
+  | StepUField l fd ->
+    (* overwrite the whole union with the new field *)
+    ounion_create l fd v
 
 private
 let step_sel_upd_same
@@ -1182,6 +1397,9 @@ let step_disjoint
   | StepCell _ _ i1 ->
     let (StepCell _ _ i2) = s2 in
     UInt32.v i1 <> UInt32.v i2
+  | StepUField _ _ ->
+    (* two fields of the same union are never disjoint *)
+    false
 
 private
 let step_eq
@@ -1197,6 +1415,9 @@ let step_eq
   | StepCell _ _ i1 ->
     let (StepCell _ _ i2) = s2 in
     i1 = i2
+  | StepUField l1 fd1 ->
+    let (StepUField _ fd2) = s2 in
+    fd1 = fd2
 
 private
 let step_disjoint_not_eq
@@ -1205,8 +1426,9 @@ let step_disjoint_not_eq
   (s1: step from to1)
   (s2: step from to2)
 : Lemma
-  (ensures (step_disjoint s1 s2 = not (step_eq s1 s2)))
-= ()
+  (requires (step_disjoint s1 s2 == true))
+  (ensures (step_eq s1 s2 == false))
+= () (* Note: the converse is now wrong, due to unions *)
 
 private
 let step_disjoint_sym
@@ -1454,7 +1676,7 @@ private type path_disjoint_decomp_t
     (d_s2: step d_through d_v2) ->
     (d_p2': path d_v2 value2) ->
     squash (
-      step_eq d_s1 d_s2 == false /\
+      step_disjoint d_s1 d_s2 == true /\
       p1 == path_concat (PathStep _ _ d_p d_s1) d_p1' /\
       p2 == path_concat (PathStep _ _ d_p d_s2) d_p2'
     ) ->
@@ -1629,6 +1851,7 @@ let path_disjoint_concat
       path_disjoint_includes (path_concat p0 p1) (path_concat p0 p2) (path_concat p0 p1') (path_concat p0 p2'))
   p1 p2
 
+(* TODO: the following is now wrong due to unions, but should still hold if we restrict ourselves to readable paths
 private
 let rec not_path_equal_path_disjoint_same_type
   (#from: typ)
@@ -1657,6 +1880,7 @@ let rec not_path_equal_path_disjoint_same_type
 	path_disjoint_includes (PathStep _ _ PathBase s1) (PathStep _ _ PathBase s2) p1 p2
       end
     end
+*)
 
 private
 let step_sel_upd_other
@@ -1764,6 +1988,16 @@ private let _cell
 = let (Pointer from contents p') = p in
   let p' : path from (TArray length value) = p' in
   let p'' : path from value = PathStep _ _ p' (StepCell _ _ i) in
+  Pointer from contents p''
+
+private let _ufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Tot (pointer (typ_of_struct_field l fd))
+= let (Pointer from contents p') = p in
+  let p' : path from (TUnion l) = p' in
+  let p'' : path from (typ_of_struct_field l fd) = PathStep _ _ p' (StepUField _ fd) in
   Pointer from contents p''
 
 abstract let unused_in
@@ -1994,6 +2228,89 @@ abstract let includes_gfield
   [SMTPat (includes p (gfield p fd))]
 = ()
 
+abstract let gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: GTot (p' : pointer (typ_of_struct_field l fd) { includes p p' } )
+= _ufield p fd
+
+abstract let as_addr_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires True)
+  (ensures (as_addr (gufield p fd) == as_addr p))
+  [SMTPat (as_addr (gufield p fd))]
+= ()
+
+abstract let unused_in_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+  (h: HS.mem)
+: Lemma
+  (requires True)
+  (ensures (unused_in (gufield p fd) h <==> unused_in p h))
+  [SMTPat (unused_in (gufield p fd) h)]
+= ()
+
+abstract let live_gufield
+  (h: HS.mem)
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires True)
+  (ensures (live h (gufield p fd) <==> live h p))
+  [SMTPat (live h (gufield p fd))]
+= ()
+
+abstract let gread_gufield
+  (h: HS.mem)
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires (union_get_key (gread h p) == fd))
+  (ensures (
+    union_get_key (gread h p) == fd /\
+    gread h (gufield p fd) == union_get_value (gread h p) fd
+  ))
+  [SMTPatOr [[SMTPat (gread h (gufield p fd))]; [SMTPat (union_get_value (gread h p) fd)]]]
+= ()
+
+abstract let frameOf_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires True)
+  (ensures (frameOf (gufield p fd) == frameOf p))
+  [SMTPat (frameOf (gufield p fd))]
+= ()
+
+abstract let is_mm_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires True)
+  (ensures (is_mm (gufield p fd) <==> is_mm p))
+  [SMTPat (is_mm (gufield p fd))]
+= ()
+
+abstract let includes_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires True)
+  (ensures (includes p (gufield p fd)))
+  [SMTPat (includes p (gufield p fd))]
+= ()
+
 abstract let gcell
   (#length: array_length_t)
   (#value: typ)
@@ -2113,6 +2430,11 @@ abstract let includes_ind
     (p: pointer (TStruct l)) ->
     (fd: struct_field l {includes p (gfield p fd)}) ->
     Lemma (x p (gfield p fd)))
+  (h_ufield:
+    (l: union_typ) ->
+    (p: pointer (TUnion l)) ->
+    (fd: struct_field l {includes p (gufield p fd)}) ->
+    Lemma (x p (gufield p fd)))
   (h_cell:
     (#length: array_length_t) ->
     (#value: typ) ->
@@ -2142,6 +2464,7 @@ abstract let includes_ind
     (fun #through #to p s ->
       match s with
       | StepField l fd -> let (pt: pointer (TStruct l)) = (Pointer from contents p) in h_field l pt fd
+      | StepUField l fd -> let (pt: pointer (TUnion l)) = (Pointer from contents p) in h_ufield l pt fd
       | StepCell length value i -> let (pt: pointer (TArray length value)) = (Pointer from contents p) in h_cell pt i
     )
     (fun #to p -> h_refl (Pointer from contents p))
@@ -2163,6 +2486,7 @@ let unused_in_includes
 = includes_ind
   (fun #v1 #v2 p1 p2 -> unused_in p1 h <==> unused_in p2 h)
   (fun l p fd -> unused_in_gfield p fd h)
+  (fun l p fd -> unused_in_gufield p fd h)
   (fun #length #value p i -> unused_in_gcell h p i)
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
@@ -2182,6 +2506,7 @@ let live_includes
 = includes_ind
   (fun #v1 #v2 p1 p2 -> live h p1 <==> live h p2)
   (fun l p fd -> live_gfield h p fd)
+  (fun l p fd -> live_gufield h p fd)
   (fun #length #value p i -> live_gcell h p i)
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
@@ -2364,6 +2689,8 @@ let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:point
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
   = ()
 
+(* TODO: The following is now wrong, should be replaced with readable 
+
 abstract
 let live_not_equal_disjoint
   (#t: typ)
@@ -2382,6 +2709,7 @@ let live_not_equal_disjoint
     not_path_equal_path_disjoint_same_type p1.p p2.p
   end else
     disjoint_root p1 p2
+*)
 
 abstract
 let live_unused_in_disjoint_strong
@@ -2529,6 +2857,18 @@ let readable_array
   let (v0: otype_of_typ (TArray length value)) = path_sel c p.p in
   ovalue_is_readable_array_intro v0
 
+(* TODO: improve on the following interface *)
+abstract
+let readable_gufield
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires (readable h p /\ union_get_key (gread h p) == fd))
+  (ensures (readable h (gufield p fd)))
+  [SMTPat (readable h (gufield p fd))]
+= ()
 
 (* Equality predicate on struct contents, without quantifiers *)
 let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
@@ -3035,6 +3375,15 @@ abstract let field
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
 = _field p fd
+
+abstract let ufield
+ (#l: union_typ)
+ (p: pointer (TUnion l))
+ (fd: struct_field l)
+: HST.ST (pointer (typ_of_struct_field l fd))
+  (requires (fun h -> live h p))
+  (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gufield p fd))
+= _ufield p fd
 
 abstract let cell
  (#length: array_length_t)
