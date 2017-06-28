@@ -73,17 +73,22 @@ let get_z3version () =
             _z3version := Some out; out
 
 let ini_params () =
-  let z3_v = get_z3version () in
-  begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
-  else ()
-  end;
-  (String.concat " "
-                (List.append
-                 [ "-smt2"; "-in"; "auto_config=false"; "model=true";
-                   "smt.relevancy=2"; "smtlib2_compliant=true";
-                   (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
-                 (Options.z3_cliopt())))
+  match Options.smt_solver() with
+  | Options.Z3 ->
+    // FIXME Why is the version check even here?
+    let z3_v = get_z3version () in
+    begin if z3v_le (get_z3version ()) (4, 4, 0)
+    then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
+    else ()
+    end;
+    List.append [ "-smt2"; "-in"; "auto_config=false"; "model=true";
+                  "smt.relevancy=2"; "smtlib2_compliant=true";
+                  (Util.format1 "smt.random_seed=%s" (string_of_int (Options.z3_seed()))) ]
+                (Options.z3_cliopt())
+      |> String.concat " "
+  | Options.CVC4 ->
+    List.append ["--incremental";  "--mbqi=none"; "--lang smt2"] (Options.z3_cliopt()) |> String.concat " "
+    // TODO: Honor Options.z3_seed
 
 type label = string
 type unsat_core = option<list<string>>

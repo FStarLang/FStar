@@ -43,6 +43,8 @@ type options =
     | Reset
     | Restore
 
+type solver = | Z3 | CVC4
+
 val defaults                    : list<(string * option_val)>
 val docs                        : unit -> list<(string * string)>
 
@@ -140,6 +142,7 @@ val smtencoding_nl_arith_wrapped: unit    -> bool
 val smtencoding_nl_arith_native : unit    -> bool
 val smtencoding_l_arith_default : unit    -> bool
 val smtencoding_l_arith_native  : unit    -> bool
+val smt_solver                  : unit    -> solver
 val split_cases                 : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool

@@ -56,6 +56,8 @@ type options =
     | Reset
     | Restore
 
+type solver = | Z3 | CVC4
+
 
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
@@ -171,6 +173,7 @@ let defaults =
       ("smtencoding.elim_box"         , Bool false);
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
+      ("smt_solver"                   , String "z3");
       ("split_cases"                  , Int 0);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
@@ -272,6 +275,7 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
+let get_smtsolver               ()      = lookup_opt "smt_solver"               as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
@@ -705,6 +709,12 @@ let rec specs () : list<Getopt.opt> =
                if 'native', use '+, -, -'; \n\t\t\
                (default 'boxwrap')");
 
+      ( noshort,
+       "smt_solver",
+        OneArg ((fun s -> String (parse_solver s)),
+                 "[Z3|CVC4]"),
+        "SMT solver in use (usually Z3, but could be CVC4)");
+
        ( noshort,
         "split_cases",
         OneArg ((fun n -> mk_int (int_of_string n)),
@@ -832,6 +842,14 @@ and parse_codegen s =
   | "FSharp" -> s
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
+      display_usage_aux (specs ()); exit 1)
+
+and parse_solver s =
+  match s with
+  | "Z3" | "CVC4"
+  | "z3" | "cvc4" -> s
+  | _ ->
+     (Util.print_string "Wrong argument to 'smt_solver' flag\n";
       display_usage_aux (specs ()); exit 1)
 
 and string_as_bool option_name = function
@@ -1099,6 +1117,10 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
+let smt_solver                   () = match get_smtsolver() with
+                                    | "z3"   | "Z3"   -> Z3
+                                    | "cvc4" | "CVC4" -> CVC4
+                                    | _ -> failwith "Invalid SMT solver"
 let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
@@ -1111,7 +1133,10 @@ let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_default_effects         () = get_warn_default_effects        ()
 let solver_exe                   () = match get_smt () with
-                                    | None -> Platform.exe "z3"
+                                    | None -> begin match smt_solver() with
+                                              | Z3   -> "z3"
+                                              | CVC4 -> "cvc4"
+                                              end |> Platform.exe
                                     | Some s -> s
 let z3_cliopt                    () = get_z3cliopt                    ()
 let z3_refresh                   () = get_z3refresh                   ()
