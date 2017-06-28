@@ -160,8 +160,8 @@ val mkBvXor  : ((term * term) -> Range.range -> term)
 val mkBvOr   : ((term * term) -> Range.range -> term)
 val mkBvShl  : (int -> (term * term) -> Range.range -> term)
 val mkBvShr  : (int -> (term * term) -> Range.range -> term)
-val mkBvUdiv  : ((term * term) -> Range.range -> term)
-val mkBvMod  : ((term * term) -> Range.range -> term)
+val mkBvUdiv : (int -> (term * term) -> Range.range -> term)
+val mkBvMod  : (int -> (term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term

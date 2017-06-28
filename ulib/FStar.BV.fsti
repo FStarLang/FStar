@@ -1,6 +1,6 @@
 module FStar.BV
 
-val bv_t: (n : nat) -> Type0
+val bv_t: (n : nat) -> t:Type0{hasEq t}
 
 (* Redefining basic type from UInt to avoid importing UInt *)
 (* Reduces verification time by 50% in small examples *)
@@ -34,9 +34,9 @@ val to_vec_lemma_1: #n:nat -> a:uint_t' n -> b:uint_t' n ->
 val to_vec_lemma_2: #n:nat -> a:uint_t' n -> b:uint_t' n ->
   Lemma (requires (to_vec a = to_vec b)) (ensures a = b)
 
-val div_vec :#n:pos -> a:bv_t n -> b:bv_t n{from_vec #n b <> 0} -> Tot (bv_t n)
+val div_vec :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
   
-val mod_vec :#n:nat -> a:bv_t n -> b:bv_t n{from_vec #n b <> 0} -> Tot (bv_t n)
+val mod_vec :#n:nat -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
 
 val inverse_vec_lemma: #n:nat -> vec:bv_t n ->
   Lemma (requires True) (ensures vec = (to_vec (from_vec vec)))

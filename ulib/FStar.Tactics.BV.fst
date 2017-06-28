@@ -3,7 +3,7 @@ module FStar.Tactics.BV
 open FStar.Tactics
 open FStar.Reflection.Syntax
 open FStar.Reflection.Arith
-open FStar.UInt
+open FStar.UInt // replace that by some interface
 open FStar.BV
 
 (* Lemmas transforming integer arithmetic to bitvector arithmetic *)
@@ -67,8 +67,8 @@ val cong_shift_left_vec : #n:pos -> (#w:bv_t n) -> (#x:uint_t n) ->
 				 Lemma (shift_left_vec w x == shift_left_vec y x)
 let cong_shift_left_vec #n #w #x #y pf = ()
 
-val cong_shift_right_vec : #n:pos -> #w:bv_t n -> (#x:uint_t n) -> 
-			   #y:bv_t n -> squash (w == y) ->
+val cong_shift_right_vec : #n:pos -> #w:bv_t #n -> (#x:uint_t n) -> 
+			   #y:bv_t #n -> squash (w == y) ->
 			   Lemma (shift_right_vec w x == shift_right_vec y x)
 let cong_shift_right_vec #n #w #x #y pf = ()
 

@@ -631,8 +631,8 @@ and encode_arith_term env head args_e =
     let bv_or   = mk_bv Util.mkBvOr binary in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith in
-    let bv_udiv = mk_bv Util.mkBvUdiv binary in
-    let bv_mod  = mk_bv Util.mkBvMod binary in
+    let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith in
+    let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith in
     let ops =
         [(Const.bv_and_lid, bv_and);

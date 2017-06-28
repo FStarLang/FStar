@@ -21,11 +21,11 @@ let to_vec_lemma_1 = U.to_vec_lemma_1
 let to_vec_lemma_2 = U.to_vec_lemma_2
 
 let div_vec #n a b = 
-    U.div_size #n (from_vec #n a) (from_vec #n b);
-    to_vec #n (U.div #n (from_vec #n a) (from_vec #n b))    
+    U.div_size #n (from_vec #n a) b;
+    to_vec #n (U.div #n (from_vec #n a) b)    
 let mod_vec #n a b = 
-    U.div_size #n (from_vec #n a) (from_vec #n b);
-    to_vec #n (U.mod #n (from_vec #n a) (from_vec #n b))
+    U.div_size #n (from_vec #n a) b;
+    to_vec #n (U.mod #n (from_vec #n a) b)
 
 
 let inverse_vec_lemma = U.inverse_vec_lemma
