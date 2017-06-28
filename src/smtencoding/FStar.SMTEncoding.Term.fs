@@ -195,8 +195,8 @@ let op_to_string = function
   | Not -> "not"
   | And -> "and"
   | Or  -> "or"
-  | Imp -> "implies"
-  | Iff -> "iff"
+  | Imp -> "=>"
+  | Iff -> "="
   | Eq  -> "="
   | LT  -> "<"
   | LTE -> "<="
@@ -714,11 +714,11 @@ and prelude =
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
-                            (! (implies (exists ((e Term)) (HasType e t))\n\
+                            (! (=> (exists ((e Term)) (HasType e t))\n\
                                         (Valid t))\n\
                                 :pattern ((Valid t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
-                     (! (iff (Valid (Precedes t1 t2)) \n\
+                     (! (= (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
@@ -743,7 +743,7 @@ and prelude =
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
                        (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
-                                    (iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n\
+                                    (= (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n\
                                          (or (Valid (Precedes x1 y1))\n\
                                              (and (= x1 y1)\n\
                                                   (Valid (Precedes x2 y2)))))))\n" in
