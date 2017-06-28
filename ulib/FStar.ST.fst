@@ -96,9 +96,9 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
 
-let trivial_preorder (a:Type0) = fun x y -> True
-
 type ref (a:Type0) = mref a (trivial_preorder a)
+
+let modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1
 
 (* type ref (a:Type) = Heap.ref a *)
 (* // this intentionally does not preclude h' extending h with fresh refs *)
