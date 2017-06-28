@@ -589,7 +589,8 @@ let rec resugar_term (t : S.term) : A.term =
             mk_pat (A.PatVar (bv_as_unique_ident bv, None)), term
         in
         if is_pat_app then
-          let args = binders |> List.map (fun (bv, _) -> mk_pat(A.PatVar (bv_as_unique_ident bv, None))) in
+          let args = binders |> map_opt (fun (bv, q) ->
+            BU.map_opt (resugar_arg_qual q) (fun q -> mk_pat(A.PatVar (bv_as_unique_ident bv, q)))) in
           ((mk_pat (A.PatApp (pat, args)), resugar_term term), (universe_to_string univs))
         else
           ((pat, resugar_term term), (universe_to_string univs))
