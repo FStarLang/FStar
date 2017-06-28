@@ -19,17 +19,17 @@ let take_token #a #b m p =
   gst_recall (contains_pred m);
   gst_witness (p_pred m p)
 
-val recall_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Type){stable p b}
-                  -> ST unit (requires (fun _ ->  token m p))
-                            (ensures (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
+abstract val recall_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Type){stable p b}
+                           -> ST unit (requires (fun _ ->  token m p))
+                                     (ensures (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
 let recall_token #a #b m p = gst_recall (p_pred m p)
 
-val recall: p:(heap -> Type){ST.stable p}
-            -> ST unit (requires (fun _ ->  witnessed p))
-                      (ensures (fun h0 _ h1 -> p h1))
+abstract val recall: p:(heap -> Type){ST.stable p}
+                     -> ST unit (requires (fun _ ->  witnessed p))
+                               (ensures (fun h0 _ h1 -> p h1))
 let recall p = gst_recall p
 
-val witness: #a:Type -> #b:preorder a -> m:mref a b -> p:(heap -> Type){ST.stable p}
-             -> ST unit (requires (fun h0 -> p h0))
-                       (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
+abstract val witness: #a:Type -> #b:preorder a -> m:mref a b -> p:(heap -> Type){ST.stable p}
+                      -> ST unit (requires (fun h0 -> p h0))
+                                (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
 let witness #a #b m p = gst_witness p
