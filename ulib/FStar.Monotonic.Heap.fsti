@@ -24,8 +24,6 @@ val compare_addrs:
 
 val contains: #a:Type0 -> #rel:preorder a -> heap -> ref a rel -> Type0
 
-val weak_contains: heap -> nat -> Type0
-
 val unused_in: #a:Type0 -> #rel:preorder a -> ref a rel -> heap -> Type0
 
 let fresh (#a:Type) (#rel:preorder a) (r:ref a rel) (h0:heap) (h1:heap) =
@@ -48,10 +46,8 @@ val sel: #a:Type0 -> #rel:preorder a -> heap -> ref a rel -> GTot a
 
 let valid_upd (#a:Type0) (#rel:preorder a) (h:heap) (r:ref a rel) (x:a) = rel (sel h r) x
 
-val upd_tot:
-  #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r} -> x:a{valid_upd h r x} -> Tot heap
+val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel{h `contains` r} -> x:a{valid_upd h r x} -> Tot heap
 
-//if the reference is contained in the heap, it better evolve per the preorder
 val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:ref a rel -> x:a{valid_upd h r x} -> GTot heap
 
 val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> GTot (ref a rel * heap)
@@ -64,9 +60,7 @@ let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (rel:preorder a) (r:ref a rel).{:pattern (contains h1 r)}
                                h0 `contains` r ==> h1 `contains` r) /\
   (forall (a:Type) (rel:preorder a) (r:ref a rel).{:pattern (r `unused_in` h0)}
-                               r `unused_in` h1 ==> r `unused_in` h0) /\
-  (forall (n:nat).{:pattern (weak_contains h1 n)}
-                               h1 `weak_contains` n ==> h0 `weak_contains` n)
+                               r `unused_in` h1 ==> r `unused_in` h0)
 
 let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 h1
 
@@ -82,6 +76,12 @@ val lemma_contains_implies_used (#a:Type0) (#rel:preorder a) (h:heap) (r:ref a r
 val lemma_distinct_addrs_distinct_types
   (#a:Type0) (#b:Type0) (#rel1:preorder a) (#rel2:preorder b) (h:heap) (r1:ref a rel1) (r2:ref b rel2)
   :Lemma (requires (a =!= b /\ h `contains` r1 /\ h `contains` r2))
+         (ensures  (addr_of r1 <> addr_of r2))
+	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
+
+val lemma_distinct_addrs_distinct_preorders
+  (#a:Type0) (#rel1:preorder a) (#rel2:preorder a) (h:heap) (r1:ref a rel1) (r2:ref a rel2)
+  :Lemma (requires (rel1 =!= rel2 /\ h `contains` r1 /\ h `contains` r2))
          (ensures  (addr_of r1 <> addr_of r2))
 	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
 
@@ -124,10 +124,6 @@ val lemma_free_mm_unused
 
 (*
  * AR: we can prove this lemma only if both the references have same preorder
- * also note that `contains` enforces that the preorder contained in the heap is same as the ref index preorder
- * this is because if we have two a typed references r1 and r2, and both are contained in h,
- * we want their preorders to be same, if not, and suppose we update r1, how will we ensure that r2 also
- * evolves per its preorder
  *)
 val lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:heap) (r1:ref a rel) (r2:ref a rel)
   :Lemma (requires (h `contains` r1 /\ addr_of r1 = addr_of r2))
@@ -142,8 +138,7 @@ val lemma_sel_upd1 (#a:Type0) (#rel:preorder a) (h:heap) (r1:ref a rel) (x:a{val
          (ensures  (sel (upd h r1 x) r2 == x))
          [SMTPat (sel (upd h r1 x) r2)]
 
-val lemma_sel_upd2
-  (#a:Type0) (#b:Type0) (#rel1:preorder a) (#rel2:preorder b) (h:heap) (r1:ref a rel1) (r2:ref b rel2) (x:b{valid_upd h r2 x})
+val lemma_sel_upd2 (#a:Type0) (#b:Type0) (#rel1:preorder a) (#rel2:preorder b) (h:heap) (r1:ref a rel1) (r2:ref b rel2) (x:b{valid_upd h r2 x})
   :Lemma (requires (addr_of r1 <> addr_of r2))
          (ensures  (sel (upd h r2 x) r1 == sel h r1))
 	 [SMTPat (sel (upd h r2 x) r1)]
