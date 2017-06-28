@@ -88,7 +88,7 @@ def get_int_value(stats, column):
     return [(0 if t == "" else int(t)) for t in [get_value(stats, column)]][0]
 
 def get_string_value(stats, column):
-    return str(get_value(stats, column))
+    return str(get_value(stats, column)).strip("\"")
 
 
 def write_header(f, order_column, fstar_output_columns, columns):
@@ -111,7 +111,7 @@ def write_footer(f):
 def write_query_row(f, item, order_column, fstar_columns, columns):
     key  = "\"" + item[0] + "\""
     stats = item[1]
-    rng = "\"" + get_value(stats, "fstar_range").split(" ")[0] + "\""
+    rng = "\"" + get_value(stats, "fstar_range").strip("\"").split(" ")[0] + "\""
     n = stats[ec]
     order_value = str(cfmt(order_column, get_value(stats, order_column)))
 
