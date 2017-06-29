@@ -91,10 +91,15 @@ val lemma_distinct_addrs_distinct_preorders
          (ensures  (addr_of r1 <> addr_of r2))
 	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
 
+(*
+ * AR: this is a bit surprising. i had to add ~ (r1 === r2) postcondition to make the lemma
+ * lemma_live_1 in hyperstack to go through. if addr_of r1 <> addr_of r2, shouldn't we get ~ (r1 === r2)
+ * automatically? should dig into smt encoding to figure.
+ *)
 val lemma_distinct_addrs_unused
   (#a:Type0) (#b:Type0) (#rel1:preorder a) (#rel2:preorder b) (h:heap) (r1:mref a rel1) (r2:mref b rel2)
   :Lemma (requires (r1 `unused_in` h /\ ~ (r2 `unused_in` h)))
-         (ensures  (addr_of r1 <> addr_of r2))
+         (ensures  (addr_of r1 <> addr_of r2 /\ (~ (r1 === r2))))
          [SMTPat (r1 `unused_in` h); SMTPat (r2 `unused_in` h)]
 
 val lemma_alloc (#a:Type0) (rel:preorder a) (h0:heap) (x:a) (mm:bool)
