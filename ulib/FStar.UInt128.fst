@@ -34,10 +34,23 @@ let v_inj (x1 x2: t): Lemma (requires (v x1 == v x2))
  assert (uint_to_t (v x2) == x2);
  ()
 
+let constant_time_carry (a b: U64.t) : Tot U64.t =
+  let open U64 in
+  // CONSTANT_TIME_CARRY macro
+  // ((a ^ ((a ^ b) | ((a - b) ^ b))) >> (sizeof(a) * 8 - 1))
+  // 63 = sizeof(a) * 8 - 1
+  a ^^ ((a ^^ b) |^ ((a -%^ b) ^^ b)) >>^ U32.uint_to_t 63
+
+// TODO: eventually we should prove this equivalence
+assume val constant_time_carry_ok (a b:U64.t) :
+    Lemma (constant_time_carry a b ==
+           (if U64.lt a b then U64.uint_to_t 1 else U64.uint_to_t 0))
+
 let carry (a b: U64.t) : Pure U64.t
   (requires True)
   (ensures (fun r -> U64.v r == (if U64.v a < U64.v b then 1 else 0))) =
-  if U64.lt a b then U64.uint_to_t 1 else U64.uint_to_t 0
+  constant_time_carry_ok a b;
+  constant_time_carry a b
 
 let carry_sum_ok (a b:U64.t) :
   Lemma (U64.v (carry (U64.add_mod a b) b) == (U64.v a + U64.v b) / (pow2 64)) = ()
