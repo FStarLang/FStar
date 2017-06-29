@@ -158,7 +158,12 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (V? ra ==> wp2 (V?.v ra) p h1)) h0
+  all_ite_wp heap b
+    (fun p h0 -> wp1 (fun ra h1 -> match ra with
+                     | V ra -> wp2 (V?.v ra) p h1
+                     | Err msg -> p (Err msg) h1
+                     | E ex -> p (E ex) h1) h0)
+    p h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
