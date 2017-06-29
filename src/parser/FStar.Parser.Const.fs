@@ -140,18 +140,18 @@ let bvconst s = p2l ["FStar"; "BV"; s]
 
 (* BitVector constants *)
 let bv_t_lid = bvconst "bv_t" //redundant
-let bv_zero_vec_lid = bvconst "zero_vec"
+let bv_zero_vec_lid = bvconst "bv_zero"
 let bv_ones_vec_lid = bvconst "ones_vec"
 
 (* BitVector operators *)
-let nat_to_bv_lid      = bvconst "to_vec"
-let bv_and_lid         = bvconst "logand_vec"
-let bv_xor_lid         = bvconst "logxor_vec"
-let bv_or_lid          = bvconst "logor_vec"
-let bv_shift_left_lid  = bvconst "shift_left_vec"
-let bv_shift_right_lid = bvconst "shift_right_vec"
-let bv_udiv_lid        = bvconst "div_vec"
-let bv_mod_lid         = bvconst "mod_vec"
+let nat_to_bv_lid      = bvconst "int2bv"
+let bv_and_lid         = bvconst "bvand"
+let bv_xor_lid         = bvconst "bvxor"
+let bv_or_lid          = bvconst "bvor"
+let bv_shift_left_lid  = bvconst "bvshl"
+let bv_shift_right_lid = bvconst "bvshr"
+let bv_udiv_lid        = bvconst "bvdiv"
+let bv_mod_lid         = bvconst "bvmod"
 
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]

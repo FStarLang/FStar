@@ -10,38 +10,65 @@ let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
 let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
 type uint_t' (n:nat) = x:int{size x n}
 
-val logand_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
+val bvand: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 
-val logxor_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
+val bvxor: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 
-val logor_vec: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
+val bvor: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 
-val lognot_vec: #n:pos -> a:bv_t n -> Tot (bv_t n)
+val bvnot: #n:pos -> a:bv_t n -> Tot (bv_t n)
 
-val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
+val bvshl: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 
-val shift_right_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
+val bvshr: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 
-val to_vec: #n:nat -> num:uint_t' n -> Tot (bv_t n)
+val int2bv: #n:pos -> num:uint_t' n -> Tot (bv_t n)
 
-val from_vec: #n:nat -> vec:bv_t n -> Tot (uint_t' n)
+val bv2int: #n:pos -> vec:bv_t n -> Tot (uint_t' n)
 
-let zero_vec #n = to_vec #n 0
+let bv_zero #n = int2bv #n 0
 
-val to_vec_lemma_1: #n:nat -> a:uint_t' n -> b:uint_t' n ->
-  Lemma (requires a = b) (ensures (to_vec #n a = to_vec #n b))
+val int2bv_lemma_1: #n:pos -> a:uint_t' n -> b:uint_t' n ->
+  Lemma (requires a = b) (ensures (int2bv #n a = int2bv #n b))
 
-val to_vec_lemma_2: #n:nat -> a:uint_t' n -> b:uint_t' n ->
-  Lemma (requires (to_vec a = to_vec b)) (ensures a = b)
+val int2bv_lemma_2: #n:pos -> a:uint_t' n -> b:uint_t' n ->
+  Lemma (requires (int2bv a = int2bv b)) (ensures a = b)
 
-val div_vec :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
+val bvdiv :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
   
-val mod_vec :#n:nat -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
+val bvmod :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
 
-val inverse_vec_lemma: #n:nat -> vec:bv_t n ->
-  Lemma (requires True) (ensures vec = (to_vec (from_vec vec)))
-        [SMTPat (to_vec (from_vec vec))]
+val inverse_vec_lemma: #n:pos -> vec:bv_t n ->
+  Lemma (requires True) (ensures vec = (int2bv (bv2int vec)))
+        [SMTPat (int2bv (bv2int vec))]
 
-val inverse_num_lemma: #n:nat -> num:uint_t' n ->
-  Lemma (requires True) (ensures num = from_vec #n (to_vec #n num))
-        [SMTPat (from_vec #n (to_vec #n num))]
+val inverse_num_lemma: #n:pos -> num:uint_t' n ->
+  Lemma (requires True) (ensures num = bv2int #n (int2bv #n num))
+        [SMTPat (bv2int #n (int2bv #n num))]
+
+(* Lemmas connecting logical arithmetic and bitvectors *)
+module U = FStar.UInt // for now just opening this for logand, logxor, etc. but we need a better solution.
+val int2bv_logand : (#n:pos) -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+			    squash (bvand #n (int2bv #n x) (int2bv #n y) == z) ->
+			    Lemma (int2bv #n (U.logand #n x y) == z)
+
+val int2bv_logxor : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+		     squash (bvxor (int2bv x) (int2bv y) == z) ->
+		     Lemma (int2bv #n (U.logxor #n x y) == z)
+
+val int2bv_logor : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+		     squash (bvor (int2bv x) (int2bv y) == z) ->
+		     Lemma (int2bv #n (U.logor #n x y) == z)
+
+val int2bv_shl : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+			    squash (bvshl (int2bv x) y == z) ->
+			    Lemma (int2bv #n (U.shift_left #n x y) == z)
+
+val int2bv_shr : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+			    squash (bvshr #n (int2bv #n x) y == z) ->
+			    Lemma (int2bv #n (U.shift_right #n x y) == z)
+
+val int2bv_div : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n{y <> 0}) -> (#z:bv_t n) ->
+			    squash (bvdiv #n (int2bv #n x) y == z) ->
+			    Lemma (int2bv #n (U.udiv #n x y) == z)
+

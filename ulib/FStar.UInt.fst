@@ -175,6 +175,14 @@ val div_size: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
 let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom a b; ()
 
+val udiv: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
+  (requires (True))
+  (ensures (fun c -> b <> 0 ==> a / b = c))
+let udiv #n a b =
+  div_size #n a b;
+  a / b
+
+
 (* Modulo primitives *)
 val mod: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Tot (uint_t n)
 let mod #n a b = a - ((a/b) * b)

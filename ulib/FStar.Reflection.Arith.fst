@@ -29,6 +29,8 @@ type expr =
     | Shl   : expr -> expr -> expr -> expr
     | Shr   : expr -> expr -> expr -> expr
     | Neg   : expr -> expr
+    | Udiv  : expr -> expr -> expr -> expr
+    | Umod  : expr -> expr -> expr -> expr
     | NatToBv : expr -> expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
 
@@ -117,6 +119,8 @@ let rec is_arith_expr (t:term) =
       else if qn = lor_qn then liftM3 Lor e1' e2' e3'
       else if qn = shiftr_qn then liftM3 Shr e1' e2' e3'
       else if qn = shiftl_qn then liftM3 Shl e1' e2' e3'
+      else if qn = udiv_qn then liftM3 Udiv e1' e2' e3'
+      else if qn = umod_qn then liftM3 Umod e1' e2' e3'
       else fail ("triary: " ^ fv_to_string fv)
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in
