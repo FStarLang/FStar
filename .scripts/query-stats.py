@@ -150,11 +150,15 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
     # (.\FStar.UInt.fst(11,11-11,14))	Query-stats (FStar.UInt.pow2_values, 1)	succeeded (with hint) in 467 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280 statistics={added-eqs=2 binary-propagations=3629 conflicts=1 datatype-accessor-ax=3 max-memory=8.96 memory=8.96 mk-bool-var=7332 mk-clause=54 num-allocs=25468507 num-checks=1 propagations=3632 rlimit-count=378055 time=0.00}
     # From CI:
     # 2017-05-10T12:50:45.6397264Z (.\FStar.Int.fst(8,11-8,14))       Query-stats (FStar.Int.pow2_values, 1)  succeeded (with hint) in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280
+    # F* also reports:
+    # 2017-06-29T14:00:36.8084892Z STDERR: Verified module: Hacl.Spec.Bignum.Fsquare (576007 milliseconds)
 
     rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
     z3rx=re.compile("([^ =]+)=([^ =\"]+|\".*\")")
+    modrx=re.compile("^([ 0-9-TZ:.]+ STDERR: )?Verified module: (?P<module>[^ ]+) \((?P<module_time>[0-9]*) milliseconds\)[ \t\r]*$")
 
     queries = {}
+    modules = {}
     columns = set()
     columns.add(ec)
 
@@ -182,7 +186,12 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                     queries[id] = {}
                 queries[id] = merge_values(queries[id], stats)
             elif line.find("Query-stats") != -1:
-                print("Warning: unmatched query-stats line: %s" % line)    
+                print("Warning: unmatched query-stats line: %s" % line)
+            modrm=modrx.match(line)
+            if modrm is not None:
+                k = modrm.groupdict()["module"]
+                v = modrm.groupdict()["module_time"]
+                modules[k] = int(v);
 
     if stat == "ALPHA":
         oq = sorted(queries.items(), key=lambda row: row[0], reverse=reverse)
@@ -200,10 +209,10 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
             write_query_row(f, item, stat, fstar_output_columns, columns)
         write_footer(f)
         if global_stats:
-            process_global_stats(f, queries, collate)
+            process_global_stats(f, queries, modules, collate)
 
 
-def process_global_stats(f, queries, collate):
+def process_global_stats(f, queries, modules, collate):
     f.write("\"Name\",\"Value\",\"Unit\"\n")
     time = 0.0
     fstar_time = 0
@@ -298,6 +307,11 @@ def process_global_stats(f, queries, collate):
     f.write("\"rlimit/sec\",%s,%s\n" % (rlimit_per_sec, "\"\""))
 
     f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
+
+    f.write("\"# Modules\",%s,%s\n" % (len(modules), "\"\""))
+    f.write("\"# Sum(time modules)\",%s,%s\n" % (sum(modules.values()), "\"msec\""))
+    f.write("\"# Min(time modules)\",%s,%s\n" % (min(modules.values()), "\"msec\""))
+    f.write("\"# Max(time modules)\",%s,%s\n" % (max(modules.values()), "\"msec\""))
 
     f.write("\n")
 
