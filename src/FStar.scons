@@ -166,16 +166,17 @@ fsi_list = [ 'string.fsi', 'platform.fsi', 'range.fsi', 'version.fsi', 'getopt.f
 
 To_boot_fstis = [ ('boot_fstis/FStar.'+f.replace('.fs', '.fst'), 'basic/'+f) for f in fsi_list]
 To_boot_fstis += [
-              ('boot_fstis/FStar.Pprint.fsti', 'prettyprint/prettyprint.fsi'),
-              ('boot_fstis/FStar.bytes.fst', 'basic/bytes.fsti'),
-              ('u_boot_fsts/FStar.Parser.Parseit.fsti', 'parser/parseit.fsi')
+                ('boot_fstis/FStar.Pprint.fsti', 'prettyprint/prettyprint.fsi')
+              , ('boot_fstis/FStar.bytes.fst', 'basic/bytes.fsti')
+              , ('u_boot_fsts/FStar.Parser.Parseit.fsti', 'parser/parseit.fsi')
+              #, ('u_boot_fsts/FStar.Pervasives.fst', '../ulib/FStar.Pervasives.fst')
              ]
 
 Edits_to_boot_fstis = [
-              ('boot_fstis/FStar.list.fst', 'basic/list.fsi', generate_FStar_list_fst),
-              ('boot_fstis/FStar.util.fsti', 'basic/util.fsi', generate_FStar_util_fsti),
-              ('boot_fstis/FStar.unionfind.fsti', 'basic/unionfind.fsi', generate_FStar_unionfind_fsti),
-              ('boot_fstis/FStar.Parser.Parse.fsti', 'parser/parse.fsi', generate_parse_fsi), 
+                ('boot_fstis/FStar.list.fst', 'basic/list.fsi', generate_FStar_list_fst)
+              , ('boot_fstis/FStar.util.fsti', 'basic/util.fsi', generate_FStar_util_fsti)
+              , ('boot_fstis/FStar.unionfind.fsti', 'basic/unionfind.fsi', generate_FStar_unionfind_fsti)
+              , ('boot_fstis/FStar.Parser.Parse.fsti', 'parser/parse.fsi', generate_parse_fsi)
               ]
 
 # these are injected in the first round of group copy/rename since Scons balks at in-place edits  
@@ -242,35 +243,43 @@ class Extraction:
         self.command = command;             # string
         self.sources = Flatten(sources);    # flattened list of source .fs filenames
         self.targets = Flatten(targets);    # flattened list of target .fst filenames
+        self.multi = 0
 
 # Helper class for extracting a set of modules
 #  '$FSTARBOOT %prefix%%module%.Fst --extract_module %module%'
 class ExtractModules(Extraction):
-    def __init__(self, modules):
+    def __init__(self, modules, file = None):
+        self.multi = 0
         if type(modules)==type(''):
             self.command = '--extract_module ' + modules
-            self.sources = [u_boot_fsts+modules+'.fst']
-            self.targets = [u_ocaml_output+modules.replace('.','_')+'.ml']
+            self.sources = [u_boot_fsts + modules + '.fst']
+            self.targets = [u_ocaml_output + modules.replace('.','_') + '.ml']
         else:
             m = Flatten(modules)
             self.command = ' '.join(['--extract_module '+module for module in m])
-            self.sources = [u_boot_fsts+module+'.fst' for module in m]
-            self.targets = [u_ocaml_output+module.replace('.','_')+'.ml' for module in m]
+            if file :
+                self.sources = [u_boot_fsts + file]
+                self.multi = 1
+            else: 
+                self.sources = [u_boot_fsts+module + '.fst' for module in m]
+
+            self.targets = [u_ocaml_output+module.replace('.','_') + '.ml' for module in m]
 
 #  '$FSTARBOOT %prefix%%module%.Fst --extract_namespace %module%'
 class ExtractNamespaces(Extraction):
     def __init__(self, namespaces, files):
+        self.multi = 0
         if type(namespaces)==type(''):
-            self.command = '--extract_namespace '+namespaces
+            self.command = '--extract_namespace ' + namespaces
         else:
-            self.command = ['--extract_namespace '+namespace for namespace in namespaces]
+            self.command = ['--extract_namespace ' + namespace for namespace in namespaces]
         if type(files)==type(''):
             self.sources = [u_boot_fsts+files]
-            self.targets = [u_ocaml_output+files[:-4].replace('.','_')+'.ml']
+            self.targets = [u_ocaml_output+files[:-4].replace('.','_') + '.ml']
         else:
             flatfiles = Flatten(files)
             self.sources = [u_boot_fsts+file for file in flatfiles]
-            self.targets = [u_ocaml_output+file[:-4].replace('.','_')+'.ml' for file in flatfiles]
+            self.targets = [u_ocaml_output+file[:-4].replace('.','_') + '.ml' for file in flatfiles]
 
 # --------------------------------------------------------------------
 
@@ -279,6 +288,9 @@ class ExtractNamespaces(Extraction):
 # List of files to extract, and how to extract them them.
 # ExtractModules(modules), ExtracNamespaces(namespaces, files)
 fstar_extractions = {
+    # multi module extraction
+'u-extract_multi': ExtractModules(['FStar.Common', 'FStar.Pervasives'], 'FStar.Common.fst'),
+    # single module extraction
 'u_extract_misc':ExtractModules(['FStar.Options','FStar.Ident','FStar.Errors','FStar.Const','FStar.Format']),
 'u_extract_syntax':ExtractNamespaces(['FStar.Syntax','FStar.Fsdoc'],
     [addprefix('FStar.Syntax.', ['Syntax.fst','Const.fst','Subst.fst','Free.fst','InstFV.fst','Util.fst','Print.fst','MutRecTy.fst']), 'FStar.Fsdoc.Generator.fst']),
@@ -320,14 +332,20 @@ def register_extractions(env, extractions):
     extraction_targets = {}
     for name, e in extractions.iteritems():
         command = e.command if (type(e.command) == type('')) else ' '.join(e.command)
-        # Prepare fstar.exe launch for each target 
-        # The original makefile batched them together into one launch, which optimizes for full build 
-        # We optimize for the developer scenario of modifying a single source file and rebuilding.
-        for (target, source) in zip(e.targets, e.sources):
-            t_cmd = env.Command(target, source, '$FSTARBOOT $SOURCES '+command)
+        if e.multi :
+            t_cmd = env.Command(e.targets, e.sources, '$FSTARBOOT $SOURCES ' + command)
             env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
             env.Requires(t_cmd, boot_done)    # and boot_ files, they are includes for extraction
             env.Depends(extract_done, t_cmd)  # build anchor for the next stage or external use
+        else:
+            # Prepare fstar.exe launch for each target 
+            # The original makefile batched them together into one launch, which optimizes for full build 
+            # We optimize for the developer scenario of modifying a single source file and rebuilding.
+            for (target, source) in zip(e.targets, e.sources):
+                t_cmd = env.Command(target, source, '$FSTARBOOT $SOURCES ' + command)
+                env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
+                env.Requires(t_cmd, boot_done)    # and boot_ files, they are includes for extraction
+                env.Depends(extract_done, t_cmd)  # build anchor for the next stage or external use
     return extraction_targets
 
 register_extractions(env, fstar_extractions)
