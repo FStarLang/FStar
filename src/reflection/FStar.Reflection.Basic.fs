@@ -191,6 +191,9 @@ let embed_const (c:vconst) : term =
     | C_Int i ->
         S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (BU.string_of_int i))]
                     None Range.dummyRange
+    | C_String s ->
+        S.mk_Tm_app ref_C_String [S.as_arg (embed_string s)]
+                    None Range.dummyRange
 
 let unembed_const (t:term) : vconst =
     let t = U.unascribe t in
@@ -206,10 +209,10 @@ let unembed_const (t:term) : vconst =
         C_False
 
     | Tm_fvar fv, [(i, _)] when S.fv_eq_lid fv ref_C_Int_lid ->
-        begin match (SS.compress i).n with
-        | Tm_constant (FStar.Const.Const_int (s, _)) -> C_Int (BU.int_of_string s)
-        | _ -> failwith "unembed_const: unexpected arg for C_Int"
-        end
+        C_Int (unembed_int i)
+
+    | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv ref_C_String_lid ->
+        C_String (unembed_string s)
 
     | _ ->
         failwith "not an embedded vconst"
@@ -359,6 +362,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
+    | FStar.Const.Const_string (bs, _) -> C_String (BU.string_of_bytes bs)
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 // TODO: consider effects? probably not too useful, but something should be done
@@ -428,6 +432,7 @@ let inspect (t:term) : term_view =
             | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term _ -> failwith "NYI: Pat_dot_term"
         in
+        let brs = List.map SS.open_branch brs in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
         Tv_Match (t, brs)
 
@@ -441,6 +446,7 @@ let pack_const (c:vconst) : sconst =
     | C_Int i   -> C.Const_int (BU.string_of_int i, None)
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
+    | C_String s -> C.Const_string (BU.bytes_of_string s, Range.dummyRange)
 
 // TODO: pass in range?
 let pack (tv:term_view) : term =
@@ -482,6 +488,7 @@ let pack (tv:term_view) : term =
             | Pat_Wild bv -> wrap <| Pat_wild bv
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
+        let brs = List.map SS.close_branch brs in
         S.mk (Tm_match (t, brs)) None Range.dummyRange
 
     | _ ->

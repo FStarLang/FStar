@@ -687,8 +687,6 @@ let trefl : tac<unit> =
         let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
-            let l = N.normalize [N.UnfoldUntil Delta_constant; N.UnfoldTac] g.context l in
-            let r = N.normalize [N.UnfoldUntil Delta_constant; N.UnfoldTac] g.context r in
             if not (Rel.teq_nosmt g.context l r)
             then fail2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r)
             else

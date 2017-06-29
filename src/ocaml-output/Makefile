@@ -39,8 +39,7 @@ else
 endif
 
 # Final sanity check for the OCaml version
-_UNUSED=$(shell echo 'if Sys.ocaml_version < "4.02.3" then (print_endline "We need OCaml >= 4.02.3"; exit 0)' | ocaml -noinit -noprompt)
-OCAML_VERSION=$(shell echo 'print_endline Sys.ocaml_version' | ocaml -noprompt -noinit -stdin)
+OCAML_BRANCH=$(shell ocaml get_branch.ml)
 
 .PHONY: fstar.exe ../extraction/ml/FStar_Extraction_ML_PrintML.ml
 
@@ -51,7 +50,7 @@ all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.e
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
-	cp "../extraction/ml/FStar_Extraction_ML_PrintML_$(OCAML_VERSION).ml" ../extraction/ml/FStar_Extraction_ML_PrintML.ml
+	cp "../extraction/ml/FStar_Extraction_ML_PrintML_$(OCAML_BRANCH).ml" ../extraction/ml/FStar_Extraction_ML_PrintML.ml
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser

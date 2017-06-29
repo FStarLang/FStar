@@ -2190,9 +2190,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))] in
         decls@g, env
 
-     | Sig_let(lbs, _, attrs)
+     | Sig_let(lbs, _)
         when se.sigquals |> List.contains S.Irreducible
-          || attrs |> BU.for_some is_opaque_to_smt ->
+          || se.sigattrs |> BU.for_some is_opaque_to_smt ->
+       let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (BU.right lb.lbname).fv_name.v in
         if Option.isNone <| Env.try_lookup_val_decl env.tcenv lid
@@ -2203,7 +2204,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else env, []) env (snd lbs) in
        List.flatten decls, env
 
-     | Sig_let((_, [{lbname=BU.Inr b2t}]), _, _) when S.fv_eq_lid b2t Const.b2t_lid ->
+     | Sig_let((_, [{lbname=BU.Inr b2t}]), _) when S.fv_eq_lid b2t Const.b2t_lid ->
        let tname, ttok, env = new_term_constant_and_tok_from_lid env b2t.fv_name.v in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
@@ -2216,16 +2217,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 "b2t_def")] in
        decls, env
 
-    | Sig_let(_, _, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
+    | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
-    | Sig_let(_, lids, _) when (lids |> BU.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
+    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
 
-    | Sig_let((false, [lb]), _, _)
+    | Sig_let((false, [lb]), _)
          when (se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)) ->
      //Projectors are also are encoded directly via (our encoding of) theory of datatypes
      //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
@@ -2239,7 +2240,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           encode_sigelt env se
      end
 
-    | Sig_let((is_rec, bindings), _, _) ->
+    | Sig_let((is_rec, bindings), _) ->
       encode_top_level_let env (is_rec, bindings) se.sigquals
 
     | Sig_bundle(ses, _) ->

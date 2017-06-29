@@ -13,6 +13,7 @@ type const =
   | C_Int : int -> const // Not exposing the full details of our integer repr.
   | C_True : const
   | C_False : const
+  | C_String : string -> const
   (* TODO: complete *)
 
 // This is shadowing `pattern` from Prims (for smt_pats)
@@ -122,6 +123,7 @@ let term_eq t1 t2 : bool = __term_eq t1 t2
 assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t
 
+(* Shouldn't this be TAC??? *)
 assume val __fresh_binder : typ -> binder
 let fresh_binder t : binder = __fresh_binder t
 
@@ -176,7 +178,8 @@ let udiv_qn    = ["FStar" ; "UInt" ; "udiv"]
 let umod_qn    = ["FStar" ; "UInt" ; "mod"]
 let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
 
-(* Helpers for dealing with nested applications *)
+
+(* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =
     match inspect t with
     | Tv_App l r ->
@@ -190,6 +193,16 @@ let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
     match args with
     | [] -> t
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
+
+let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
+    match inspect t with
+    | Tv_Arrow b r ->
+        let t = type_of_binder b in
+        collect_arr' (t::typs) r
+    | _ -> (t, typs)
+
+val collect_arr : typ -> typ * list typ
+let collect_arr = collect_arr' []
 
 // TODO: move away
 let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
@@ -216,10 +229,12 @@ let rec compare_const (c1 c2 : const) : order =
     | C_Int i, C_Int j -> order_from_int (i - j)
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
-    | C_Unit,  _ -> Lt   | _, C_Unit  -> Gt
-    | C_Int _, _ -> Lt   | _, C_Int _ -> Gt
-    | C_True,  _ -> Lt   | _, C_True  -> Gt
-    | C_False, _ -> Lt   | _, C_False -> Gt
+    | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_Unit,  _ -> Lt    | _, C_Unit  -> Gt
+    | C_Int _, _ -> Lt    | _, C_Int _ -> Gt
+    | C_True,  _ -> Lt    | _, C_True  -> Gt
+    | C_False, _ -> Lt    | _, C_False -> Gt
+    | C_String _, _ -> Lt | _, C_String _ -> Gt
 
 let rec compare_term (s t : term) : order =
     match inspect s, inspect t with

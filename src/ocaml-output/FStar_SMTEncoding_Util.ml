@@ -101,10 +101,10 @@ let mkBvShl : Prims.int  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Te
 let mkBvShr : Prims.int  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (fun sz -> (norng (FStar_SMTEncoding_Term.mkBvShr sz)))
 
 
-let mkBvUdiv : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkBvUdiv)
+let mkBvUdiv : Prims.int  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (fun sz -> (norng (FStar_SMTEncoding_Term.mkBvUdiv sz)))
 
 
-let mkBvMod : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkBvMod)
+let mkBvMod : Prims.int  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (fun sz -> (norng (FStar_SMTEncoding_Term.mkBvMod sz)))
 
 
 let mkITE : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkITE)

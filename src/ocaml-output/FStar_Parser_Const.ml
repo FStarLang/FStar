@@ -221,6 +221,9 @@ let list_tot_append_lid : FStar_Ident.lident = (p2l (("FStar")::("List")::("Tot"
 let strcat_lid : FStar_Ident.lident = (p2l (("Prims")::("strcat")::[]))
 
 
+let strcat_lid' : FStar_Ident.lident = (p2l (("FStar")::("String")::("strcat")::[]))
+
+
 let let_in_typ : FStar_Ident.lident = (p2l (("Prims")::("Let")::[]))
 
 
@@ -284,34 +287,34 @@ let bvconst : Prims.string  ->  FStar_Ident.lident = (fun s -> (p2l (("FStar")::
 let bv_t_lid : FStar_Ident.lident = (bvconst "bv_t")
 
 
-let bv_zero_vec_lid : FStar_Ident.lident = (bvconst "zero_vec")
+let bv_zero_vec_lid : FStar_Ident.lident = (bvconst "bv_zero")
 
 
 let bv_ones_vec_lid : FStar_Ident.lident = (bvconst "ones_vec")
 
 
-let nat_to_bv_lid : FStar_Ident.lident = (bvconst "to_vec")
+let nat_to_bv_lid : FStar_Ident.lident = (bvconst "int2bv")
 
 
-let bv_and_lid : FStar_Ident.lident = (bvconst "logand_vec")
+let bv_and_lid : FStar_Ident.lident = (bvconst "bvand")
 
 
-let bv_xor_lid : FStar_Ident.lident = (bvconst "logxor_vec")
+let bv_xor_lid : FStar_Ident.lident = (bvconst "bvxor")
 
 
-let bv_or_lid : FStar_Ident.lident = (bvconst "logor_vec")
+let bv_or_lid : FStar_Ident.lident = (bvconst "bvor")
 
 
-let bv_shift_left_lid : FStar_Ident.lident = (bvconst "shift_left_vec")
+let bv_shift_left_lid : FStar_Ident.lident = (bvconst "bvshl")
 
 
-let bv_shift_right_lid : FStar_Ident.lident = (bvconst "shift_right_vec")
+let bv_shift_right_lid : FStar_Ident.lident = (bvconst "bvshr")
 
 
-let bv_udiv_lid : FStar_Ident.lident = (bvconst "div_vec")
+let bv_udiv_lid : FStar_Ident.lident = (bvconst "bvdiv")
 
 
-let bv_mod_lid : FStar_Ident.lident = (bvconst "mod_vec")
+let bv_mod_lid : FStar_Ident.lident = (bvconst "bvmod")
 
 
 let array_lid : FStar_Ident.lident = (p2l (("FStar")::("Array")::("array")::[]))

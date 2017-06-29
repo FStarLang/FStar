@@ -323,6 +323,34 @@ let ignore = (fun x -> ())
 
 let rec false_elim = (fun u -> (false_elim ()))
 
+type __internal_ocaml_attributes =
+| PpxDerivingShow
+| PpxDerivingShowConstant of Prims.string
+
+
+let uu___is_PpxDerivingShow : __internal_ocaml_attributes  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| PpxDerivingShow -> begin
+true
+end
+| uu____1554 -> begin
+false
+end))
+
+
+let uu___is_PpxDerivingShowConstant : __internal_ocaml_attributes  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| PpxDerivingShowConstant (_0) -> begin
+true
+end
+| uu____1560 -> begin
+false
+end))
+
+
+let __proj__PpxDerivingShowConstant__item___0 : __internal_ocaml_attributes  ->  Prims.string = (fun projectee -> (match (projectee) with
+| PpxDerivingShowConstant (_0) -> begin
+_0
+end))
+
 
 
 

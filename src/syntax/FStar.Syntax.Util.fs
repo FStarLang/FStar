@@ -526,7 +526,7 @@ let destruct typ lid =
     | _ -> None
 
 let lids_of_sigelt (se: sigelt) = match se.sigel with
-  | Sig_let(_, lids, _)
+  | Sig_let(_, lids)
   | Sig_bundle(_, lids) -> lids
   | Sig_inductive_typ (lid, _,  _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
@@ -1184,10 +1184,11 @@ let action_as_lb eff_lid a =
       PC.effect_Tot_lid
       (abs a.action_params a.action_defn None)
   in
-  { sigel = Sig_let((false, [lb]), [a.action_name], []);
+  { sigel = Sig_let((false, [lb]), [a.action_name]);
     sigrng = a.action_defn.pos;
     sigquals = [Visible_default ; Action eff_lid];
-    sigmeta = default_sigmeta }
+    sigmeta = default_sigmeta;
+    sigattrs = [] }
 
 (* Some reification utilities *)
 let mk_reify t =

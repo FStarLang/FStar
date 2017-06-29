@@ -619,6 +619,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
+             (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare');
@@ -1915,7 +1916,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
       {s with sigel = Sig_declare_typ(lid, univ_names, typ)}
 
-    | Sig_let((b, lbs), lids, attrs) ->
+    | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
         let elim t = Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t)) in
@@ -1925,7 +1926,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                  lbtyp   = lbtyp;
                  lbdef   = lbdef})
       in
-      {s with sigel = Sig_let((b, lbs), lids, attrs)}
+      {s with sigel = Sig_let((b, lbs), lids)}
 
     | Sig_main t ->
       {s with sigel = Sig_main (remove_uvar_solutions env t)}

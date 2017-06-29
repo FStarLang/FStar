@@ -593,7 +593,7 @@ let rec sigelt_to_string (x: sigelt) =
          else "")
         (term_to_string t)
   | Sig_assume(lid, _, f) -> U.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, _) -> lbs_to_string x.sigquals lbs
+  | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
   | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed) -> eff_decl_to_string' false x.sigrng x.sigquals ed
@@ -625,7 +625,7 @@ let rec sigelt_to_string (x: sigelt) =
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
 let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
-  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _, _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
+  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) =
