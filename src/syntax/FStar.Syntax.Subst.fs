@@ -513,10 +513,8 @@ let close_branch (p, wopt, e) =
 
 let univ_var_opening (us:univ_names) =
     let n = List.length us - 1 in
-    let s, us' = us |> List.mapi (fun i u ->
-        let u' = Syntax.new_univ_name (Some u.idRange) in
-        UN(n - i, U_name u'), u') |> List.unzip in
-    s, us'
+    let s = us |> List.mapi (fun i u -> UN(n - i, U_name u)) in
+    s, us
 
 let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term =
     let s, us' = univ_var_opening us in
@@ -562,7 +560,6 @@ let open_let_rec lbs (t:term) =
          let lbs = lbs |> List.map (fun lb ->
               let _, us, u_let_rec_opening =
                   List.fold_right (fun u (i, us, out) ->
-                    let u = Syntax.new_univ_name None in
                     i+1, u::us, UN(i, U_name u)::out)
                   lb.lbunivs (n_let_recs, [], let_rec_opening) in
              {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in

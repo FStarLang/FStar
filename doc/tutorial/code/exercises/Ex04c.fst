@@ -11,11 +11,11 @@ val mem: #a:eqtype -> a -> list a -> Tot bool
 let rec mem #a x xs =
   match xs with
   | [] -> false
-  | hd::tl -> hd=x || mem x tl
+  | hd :: tl -> hd = x || mem x tl
 // END: Mem
 
 // BEGIN: AppendMem
 val append_mem:  #a:eqtype -> l1:list a -> l2:list a -> x:a
-        -> Lemma (ensures (mem x (append l1 l2) <==>  mem x l1 || mem x l2))
+        -> Lemma (mem x (append l1 l2) <==> mem x l1 || mem x l2)
 // END: AppendMem
 let rec append_mem #a l1 l2 x = admit() //replace admit() by proof
