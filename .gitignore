@@ -25,6 +25,7 @@ cache/
 /lib/FStar.GetOpt.fsti
 /lib/FStar.Unionfind.fsti
 
+/ulib/.mgen
 /ulib/ml/extracted
 
 /bin/*.dll
@@ -58,6 +59,7 @@ dump
 *.cmi
 *.cmo
 *.cmx
+*.cma
 *.o
 
 .depend

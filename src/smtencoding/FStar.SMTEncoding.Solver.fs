@@ -430,11 +430,16 @@ let ask_and_report_errors env all_labels prefix query suffix =
                None
                (cb (Option.isSome unsat_core) initial_config p alt_configs (Z3.mk_fresh_scope())) in
 
-    let process_query (q:decl) :unit =
+    let process_query (q:decl) : unit =
         check q
     in
 
-    if Options.admit_smt_queries() then () else process_query query
+    match Options.admit_smt_queries(), Options.lax_except() with
+    | true, _ -> ()
+    | false, None -> process_query query
+    | false, Some id ->
+        let cur_id = "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")" in
+        if cur_id = id then (process_query query)
 
 
 let solve use_env_msg tcenv q : unit =
