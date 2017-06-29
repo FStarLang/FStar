@@ -308,10 +308,12 @@ def process_global_stats(f, queries, modules, collate):
 
     f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
 
+    min_mod = min(modules.keys(), key=(lambda key: modules[key]))
+    max_mod = max(modules.keys(), key=(lambda key: modules[key]))
     f.write("\"# Modules\",%s,%s\n" % (len(modules), "\"\""))
     f.write("\"# Sum(time modules)\",%s,%s\n" % (sum(modules.values()), "\"msec\""))
-    f.write("\"# Min(time modules)\",%s,%s\n" % (min(modules.values()), "\"msec\""))
-    f.write("\"# Max(time modules)\",%s,%s\n" % (max(modules.values()), "\"msec\""))
+    f.write("\"# Min(time modules)\",%s,%s,\"%s\"\n" % (min(modules.values()), "\"msec\"", min_mod))
+    f.write("\"# Max(time modules)\",%s,%s,\"%s\"\n" % (max(modules.values()), "\"msec\"", max_mod))
 
     f.write("\n")
 
