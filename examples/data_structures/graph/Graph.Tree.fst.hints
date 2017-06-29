@@ -1,7 +1,22 @@
 [
-  "≠˘ü˜˛Ω“,ôΩOU\u001d˘2o",
+  "ÊÅ“™3G\u0003B©\u001cMJº\u007f®\u0000",
   [
-    null,
+    [
+      "Graph.Tree.non_visited_nodes",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.fin",
+        "equation_Graph.Base.elementary", "equation_Graph.Base.length",
+        "equation_Prims.nat", "equation_Seq.Complements.injective",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Graph.Tree_Tm_refine_301960c04239d1da2520ab554f3ed13d",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
     [
       "Graph.Tree.extremal_node_or_cycle_from_aux",
       1,

@@ -15,7 +15,7 @@ let connected (#n:nat) (g:graph0 n) =
 (* let non_visited_nodes (#n:nat) (g:graph0 n) (p:path g{elementary p}) : nat *)
 (* = noRepeats_length_lemma (S.seq_to_list p)  ; n - length p *)
 let non_visited_nodes (#n:nat) (g:graph0 n) (p:path g{elementary p}) : nat
-= assume (n > length p)  ; n - length p
+= injective_length_lemma p  ; n - length p
 
 (* TODO : the basic structure of this lemma is set up but it still needs to be proven *)
 #set-options "--detail_errors"
