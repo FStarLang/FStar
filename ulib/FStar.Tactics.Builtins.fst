@@ -40,6 +40,9 @@ let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 assume private val __intro  : __tac binder
 let intro : tactic binder = fun () -> TAC?.reflect __intro
 
+assume private val __intro_rec  : __tac (binder * binder)
+let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
+
 assume private val __revert  : __tac unit
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 

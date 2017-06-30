@@ -161,6 +161,10 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) (fun t-> t) (unembed_tactic_0 (fun t -> t)) (embed_option (fun t -> t) t_unit) t_unit;
       mktac0 "__intro"         intro embed_binder RD.fstar_refl_binder;
+      mktac0 "__intro_rec"     intro_rec (embed_pair
+                                              embed_binder RD.fstar_refl_binder
+                                              embed_binder RD.fstar_refl_binder)
+                                         (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
