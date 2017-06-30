@@ -15,19 +15,20 @@ let rel (#a:Type) (#n:nat) : P.preorder (t a n) = rel_preorder #a #n ; rel0
 
 noeq
 type array_ (n:nat) (a:Type) : Type =
-  | Array: m:nat -> r:mref (t a m) rel -> offset:nat{offset + n <= m} -> array_ n a
+  | Array: #m:nat -> r:mref (t a m) rel -> offset:nat{offset + n <= m} -> array_ n a
 
 let array = array_
 
 let fresh (#a:Type) (#n:nat) (x:array n a) (h0 h1:heap) = fresh (Array?.r x) h0 h1
-let addr_of #a #n (Array _ r _) = addr_of r
+let addr_of #a #n (Array r _) = addr_of r
 
-let create a n = Array n (alloc (Seq.create n None)) 0
-let suffix #a #n (Array m r o) o' = Array m r (o + o')
-let op_String_Access #a #n h0 (Array _ r o) = Seq.slice (sel h0 r) o (o+n)
-let initialized0 #a #n (x:array n a) (i:nat{i < n}) h = h `contains` (Array?.r x) /\ Some? (Seq.index (sel h (Array?.r x)) (Array?.offset x + i))
+let create a n = Array #n #_ #n (alloc (Seq.create n None)) 0
+let suffix #a #n (Array r o) o' = Array r (o + o')
+let op_String_Access #a #n h0 (Array r o) = Seq.slice (sel h0 r) o (o+n)
+let initialized0 #a #n (x:array n a) (i:nat{i < n}) h =
+  h `contains` (Array?.r x) /\ Some? (Seq.index (sel h (Array?.r x)) (Array?.offset x + i))
 let initialized0_stable #a #n (x:array n a) (i:nat{i < n}) : Lemma (stable (initialized0 x i)) =
-    let Array m r o = x in
+    let Array #_ #_ #m r o = x in
     let i0 : k:nat{k < m} = o + i in
     assert (forall (h1 h2:heap). initialized0 x i h1 /\ heap_rel h1 h2 ==> rel0 (sel h1 r) (sel h2 r)) ;
     assert (forall (h1 h2:heap). initialized0 x i h1 /\ heap_rel h1 h2 ==>
@@ -41,8 +42,8 @@ let initialized #a #n (x:array n a) (i:nat{i < n}) : p:heap_predicate{stable p} 
 let init_at #a #n x i = witnessed (initialized x i)
 let all_init (#n:nat) (#a:Type) (x:array n a) = forall (i:index x). x `init_at` i
 let iarray n a = x:array n a {all_init x}
-let write #a #n (Array m r o) i v =
+let write #a #n (Array r o) i v =
   let s = !r in
   r := Seq.upd s (o + i) (Some v) ;
-  gst_witness (initialized #_ #n (Array m r o) i)
-let read #a #n (Array m r o) i = gst_recall (initialized #_ #n (Array m r o) i); let s = !r in Some?.v (Seq.index s (o + i))
+  gst_witness (initialized #_ #n (Array r o) i)
+let read #a #n (Array r o) i = gst_recall (initialized #_ #n (Array r o) i); let s = !r in Some?.v (Seq.index s (o + i))
