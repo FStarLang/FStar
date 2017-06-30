@@ -1153,8 +1153,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Eager_unfolding; N.NoFullNorm] env c
-                 else Normalize.normalize_comp [N.Beta; N.NoFullNorm] env c in
+                 then Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.Eager_unfolding; N.NoFullNorm] env c
+                 else Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
@@ -1205,7 +1205,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
               | Some ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some S.imp_tag
               | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
-                  let k = N.normalize [N.Beta] env k in
+                  let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
                   let bs, kres = U.arrow_formals k in
                   let a = S.new_bv (Some <| Env.get_range env) kres in
                   let t = U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres)) in
@@ -1222,7 +1222,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm] env c in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
               let e = N.reduce_uvar_solutions env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with

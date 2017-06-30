@@ -9,7 +9,7 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/tactics/ml -I src/prettyprint/ml  -I ulib/ml -use-ocamlfind
+  -I src/prettyprint/ml -I src/tactics/ml -I ulib/ml -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
@@ -189,6 +189,8 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
+Z3_DIR=$(shell dirname $$(which z3.exe))
+
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
 package: all
@@ -203,6 +205,7 @@ package: all
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
+	$(call fexport,bin/fstarlib)
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
@@ -212,21 +215,25 @@ endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
-        # Copy Z3 binary
-	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
-	if [ -f "$(PREFIX)/bin/z3.exe" ]; then chmod 755 $(PREFIX)/bin/*z3*.*; fi
 
         # Need this for running code extracted to F# (for instance hello)
 	make -C ../VS install-packages
-#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
+	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
+	# Because we'll be building fstarlib in the resulting directory,
+	# somehow?
+	cp ../../_tags $(PREFIX)
+	mkdir -p $(PREFIX)/bin/fstarlib
+	cp ../../bin/fstarlib/META $(PREFIX)/bin/fstarlib/
 ifeq ($(OS),Windows_NT)
-#	cp ../../bin/msvc*.dll $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
-	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
+	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
+	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
+	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
+  	# Assuming here that the user has z3 installed system-wide; this will
+	# soon require us to copy the right version of z3 in there too.
 	tar czf $(NAME).tar.gz fstar
 endif
 

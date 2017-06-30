@@ -264,8 +264,7 @@ ifeq ($(OS),Windows_NT)
 endif
 	+$(MAKE) -C ocaml-output
 	+$(MAKE) fstar-ocaml
-	+$(MAKE) -C ../examples/hello ocaml #a basic regression test for extraction
-	+$(MAKE) uregressions interactive-test
+	+$(MAKE) uregressions
 
 # Interactive mode regressions
 interactive-test:
@@ -275,8 +274,12 @@ interactive-test:
 fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
+#a basic regression test for extraction
+hello:
+	+$(MAKE) -C ../examples/hello ocaml
+
 # Getting parallelism from this target
-uregressions: ulib uexamples
+uregressions: hello ulib uexamples interactive-test
 
 ulib:
 	+$(MAKE) -C ../ulib
