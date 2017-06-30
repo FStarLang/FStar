@@ -11,7 +11,7 @@ assume val fragment_size:nat
 
 type byte
 
-type fragment = s:seq byte{length s = fragment_size}
+type fragment = s:seq byte{length s <= fragment_size}
 
 (* random bytes for ideal cipher? *)
 type randomness = nat -> fragment
@@ -42,11 +42,13 @@ noeq type connection =
   | C: rand:randomness -> ctr:mref nat counter_pre -> msgs:mref (entries rand) (entries_pre rand) -> connection
 
 (* for a valid connection, ctr is bounded by the length of msgs *)
-let valid_connection (c:connection) (h:heap) :GTot Type0
+let sender_connection_inv (c:connection) (h:heap) :GTot Type0
   = let C _ ctr msgs = c in
-    sel h ctr <= (length (sel h msgs))
+    sel h ctr = (length (sel h msgs))
 
-assume val seq_map: #a:Type -> #b:Type -> (a -> b) -> seq a -> seq b
+assume val seq_map:
+  #a:Type -> #b:Type -> f:(a -> b) -> s:seq a
+  -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> index r i == f (index s i))})
 
 (* seq of ciphers sent so far on this connection *)
 let raw (c:connection) (h:heap) :GTot (seq fragment) =
@@ -92,14 +94,68 @@ let snap (c:connection) :ST unit (requires (fun _ -> True))
 (* network send is called once log had been appended to etc. *)
 assume val network_send
   (c:connection) (f:fragment)
-  :ST unit (requires (fun h0 -> ctr c h0 < length (raw c h0) /\ f == index (raw c h0) (ctr c h0)))
+  :ST unit (requires (fun h0 -> sender_connection_inv c h0 /\ ctr c h0 >= 1 /\
+                             f == index (raw c h0) (ctr c h0 - 1)))
            (ensures  (fun h0 _ h1 -> h0 == h1))
 
+(* type of the buffer and sender and receiver operate on *)
+type iarray (n:nat) (a:Type) :Type
 
+(* these probably need some contains precondition? *)
+assume val as_seq_ghost:
+  #n:nat -> #a:Type -> iarray n a -> i:nat -> j:nat{j >= i /\ j <= n} -> h:heap
+  -> GTot (s:seq a{length s = j - i})
+assume val as_seq:
+  #n:nat -> #a:Type -> arr:iarray n a -> i:nat -> j:nat{j >= i /\ j <= n}
+  -> ST (s:seq a{length s = j - i})
+       (requires (fun h0 -> True))
+       (ensures  (fun h0 s h1 -> h0 == h1 /\ s == as_seq_ghost arr i j h0))
 
+assume val zeroes: n:nat -> (s:seq byte{length s = n})
 
+let modifies (c:connection) (h0:heap) (h1:heap) :Type0
+  = let C _ ctr_ref msgs_ref = c in
+    modifies (Set.union (Set.singleton (addr_of ctr_ref))
+                        (Set.singleton (addr_of msgs_ref))) h0 h1
 
+assume val lemma_snoc_log
+  (c:connection) (i:nat) (cipher:fragment) (msg:fragment{oplus msg ((C?.rand c) i) == cipher})
+  (h0 h1:heap)
+  :Lemma (requires (let C _ _ msgs_ref = c in
+                    sel h1 msgs_ref == snoc (sel h0 msgs_ref) (E i cipher msg)))
+	 (ensures  (log c h1 == snoc (log c h0) msg))
+  
+let send (#n:nat) (buf:iarray n byte) (c:connection)
+  :ST nat (requires (fun h0 -> sender_connection_inv c h0))
+        (ensures  (fun h0 sent h1 -> modifies c h0 h1           /\
+	                          sent <= min n fragment_size /\
+				  ctr c h1 = ctr c h0 + 1    /\
+                                  log c h1 == snoc (log c h0)
+				                   (append (as_seq_ghost buf 0 sent h0)
+						           (zeroes (fragment_size - sent)))))
+  = let h0 = ST.get () in
+    let C rand ctr_ref msgs_ref = c in
 
+    recall ctr_ref;
+    recall msgs_ref;  //AR: these are necessary for addr_of ctr_ref <> addr_of msgs_ref
+    
+    let msgs0 = read msgs_ref in
+    let i0 = read ctr_ref in
+    let len_msgs0 = length msgs0 in
 
+    let sent = min n fragment_size in
+    let msg = as_seq buf 0 sent in
+    let msg = append msg (zeroes (fragment_size - sent)) in
+    let cipher = oplus msg (rand len_msgs0) in
 
+    let msgs1 = snoc msgs0 (E len_msgs0 cipher msg) in
+    let i1 = i0 + 1 in
 
+    write msgs_ref msgs1;
+    write ctr_ref i1;
+    network_send c cipher;
+
+    let h1 = ST.get () in
+    lemma_snoc_log c len_msgs0 cipher msg h0 h1;
+
+    sent
