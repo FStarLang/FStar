@@ -476,6 +476,33 @@ let add_mod_small' (n:nat) (m:nat) (k:pos) :
   Math.modulo_lemma n k;
   mod_add n m k
 
+let shift_t_val (a: t) (s: nat) :
+    Lemma (v a * pow2 s == U64.v a.low * pow2 s + (U64.v a.high * pow2 64) * pow2 s) =
+    ()
+
+let mul_mod_bound (n:nat) (s1:nat) (s2:nat{s2>=s1}) :
+    Lemma (n * pow2 s1 % pow2 s2 <= pow2 s2 - pow2 s1) =
+    // n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1
+    // n % pow2 (s2-s1) <= pow2 (s2-s1) - 1
+    // n % pow2 (s2-s1) * pow2 s1 <= pow2 s2 - pow2 s1
+    pow2_sum (s2-s1) s1;
+    mod_mul n (pow2 s1) (pow2 (s2-s1));
+    assert (n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1);
+    Math.lemma_mod_lt n (pow2 (s2-s1));
+    Math.lemma_mult_le_right (pow2 s1) (n % pow2 (s2-s1)) (pow2 (s2-s1) - 1);
+    assert (pow2 (s2-s1) * pow2 s1 == pow2 s2)
+
+let shift_t_mod_val (a: t) (s: nat{s < 64}) :
+    Lemma ((v a * pow2 s) % pow2 128 ==
+          U64.v a.low * pow2 s + (U64.v a.high * pow2 64) * pow2 s % pow2 128) =
+    let a_l = U64.v a.low in
+    let a_h = U64.v a.high in
+    shift_t_val a s;
+    pow2_sum 64 s;
+    assert ((a_h * pow2 64) * pow2 s == a_h * pow2 (64+s));
+    mul_mod_bound a_h (64+s) 128;
+    add_mod_small' (a_l * pow2 s) ((a_h * pow2 64) * pow2 s) (pow2 128)
+
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -485,9 +512,7 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
   let a_l = U64.v a.low in
   let a_h = U64.v a.high in
   mod_spec_rew_n (a_l * pow2 s) (pow2 64);
-  assert (v r == a_l * pow2 s + (a_h * pow2 64) * pow2 s % pow2 128);
-  add_mod_small' (a_l * pow2 s) ((a_h * pow2 64) * pow2 s) (pow2 128);
-  //assert (v r == (a_l * pow2 s + (a_h * pow2 64) * pow2 s) % pow2 128);
+  shift_t_mod_val a s;
   r
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
@@ -934,14 +959,18 @@ let div_sum_combine1 (n m:nat) (k:pos) :
 let mod_0 (k:pos) :
   Lemma (0 % k == 0) = ()
 
+let n_minus_mod_exact (n:nat) (k:pos) :
+    Lemma ((n - n % k) % k == 0) =
+    mod_spec_mod n k;
+    mod_0 k
+
 let div_sum_combine (n m:nat) (k:pos) :
   Lemma (n / k + m / k == (n + m - n % k - m % k) / k) =
-  div_sum_combine1 n m k;
   mod_add (n - n % k) (m - m % k) k;
-  mod_spec_mod n k;
-  mod_spec_mod m k;
-  mod_0 k;
+  n_minus_mod_exact n k;
+  n_minus_mod_exact m k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k;
+  div_sum_combine1 n m k;
   mul_injective (n / k + m / k) (((n - n%k) + (m - m%k)) / k) k
 
 let sum_shift_carry (a b:nat) (k:pos) :
