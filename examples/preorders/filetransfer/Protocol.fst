@@ -141,14 +141,13 @@ let send (#n:nat) (buf:iarray n byte) (c:connection)
     
     let msgs0 = read msgs_ref in
     let i0 = read ctr_ref in
-    let len_msgs0 = length msgs0 in
 
     let sent = min n fragment_size in
     let msg = as_seq buf 0 sent in
     let msg = append msg (zeroes (fragment_size - sent)) in
-    let cipher = oplus msg (rand len_msgs0) in
+    let cipher = oplus msg (rand i0) in
 
-    let msgs1 = snoc msgs0 (E len_msgs0 cipher msg) in
+    let msgs1 = snoc msgs0 (E i0 cipher msg) in
     let i1 = i0 + 1 in
 
     write msgs_ref msgs1;
@@ -156,6 +155,6 @@ let send (#n:nat) (buf:iarray n byte) (c:connection)
     network_send c cipher;
 
     let h1 = ST.get () in
-    lemma_snoc_log c len_msgs0 cipher msg h0 h1;
+    lemma_snoc_log c i0 cipher msg h0 h1;
 
     sent
