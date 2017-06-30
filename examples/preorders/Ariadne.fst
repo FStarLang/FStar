@@ -11,12 +11,14 @@
 /// - an untrusted but reliable store on the host, to save encrypted counters & states
 
 open FStar.Preorder
+open FStar.List.Tot
 
 open FStar.All
 
 open FStar.Heap
 open FStar.ST 
 open FStar.MRef
+
 
 type index = nat // counter values (no overflow detection yet)
 type volatile = string // the type of the enclave state; reset on crash.
@@ -62,7 +64,13 @@ type enclave = mref counter pre
 
 let sealable_pred (e:enclave) (s:record) = fun h -> h `contains` e /\ sealable (sel h e) s
 type entry (e:enclave) = s:record{witnessed (sealable_pred e s)}
-type backup (e:enclave) = mref (list (entry e)) (fun _ _ -> True) // could be finer
+
+let prefix_of (#e:enclave) (l1:list (entry e)) (l2:list (entry e)) =
+  l1 == l2 \/ strict_prefix_of l1 l2
+let backup_pre' (e:enclave) :relation (list (entry e)) = fun l1 l2 -> l1 `prefix_of` l2
+let backup_pre (e:enclave) :preorder (list (entry e)) = backup_pre' e
+
+type backup (e:enclave) = mref (list (entry e)) (backup_pre e) // could be finer
 
 val create: v: volatile -> ST (e:enclave & backup e)
   (requires fun h0 -> True)
