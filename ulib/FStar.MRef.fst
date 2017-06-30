@@ -26,10 +26,10 @@ let recall_token #a #b m p = gst_recall (p_pred m p)
 
 abstract val recall: p:(heap -> Type){ST.stable p}
                      -> ST unit (requires (fun _ ->  witnessed p))
-                               (ensures (fun h0 _ h1 -> p h1))
+                               (ensures (fun h0 _ h1 -> h0 == h1 /\ p h1))
 let recall p = gst_recall p
 
-abstract val witness: #a:Type -> #b:preorder a -> m:mref a b -> p:(heap -> Type){ST.stable p}
+abstract val witness: p:(heap -> Type){ST.stable p}
                       -> ST unit (requires (fun h0 -> p h0))
                                 (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
-let witness #a #b m p = gst_witness p
+let witness p = gst_witness p

@@ -233,6 +233,4 @@ let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection)
       write ctr_ref (i0 + 1);  //AR: order of this write is important ... specifically, if we write ctr_ref after arr, we need a lemma to say arr remains unchanged, once this is hooked up to actual array implementation, it shouldn't matter
       fill len buf m;
       Some len
-      
-
 
