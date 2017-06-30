@@ -127,9 +127,10 @@ assume val lemma_snoc_log
   
 let send (#n:nat) (buf:iarray n byte) (c:connection)
   :ST nat (requires (fun h0 -> sender_connection_inv c h0))
-        (ensures  (fun h0 sent h1 -> modifies c h0 h1           /\
-	                          sent <= min n fragment_size /\
-				  ctr c h1 = ctr c h0 + 1    /\
+        (ensures  (fun h0 sent h1 -> sender_connection_inv c h1 /\ 
+	                          modifies c h0 h1            /\
+	                          sent <= min n fragment_size  /\
+				  ctr c h1 = ctr c h0 + 1     /\
                                   log c h1 == snoc (log c h0)
 				                   (append (as_seq_ghost buf 0 sent h0)
 						           (zeroes (fragment_size - sent)))))
