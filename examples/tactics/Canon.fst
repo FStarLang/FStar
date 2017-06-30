@@ -27,6 +27,9 @@ let lem2 (x : int) =
 let lem3 (a b c d e : int) =
     assert_by_tactic check_canon (c + (b + a) == b + (a + c))
 
+let lem3_nat (a b c d e : x:nat{0 <= x /\ x < 256}) =
+    assert_by_tactic check_canon (c + (b + a) == b + (a + c))
+
 let lem4 (a b c : int) =
     assert_by_tactic check_canon ((a+c+b)*(b+c+a) == a * a + (((b+c)*(c+b) + a * (b+c)) + c*a) + b*a)
 
