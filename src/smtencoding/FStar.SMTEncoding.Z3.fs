@@ -534,3 +534,14 @@ let ask
         ask_1_core filter label_messages qry cb
     else
         ask_n_cores filter label_messages qry scope cb
+
+let ask_offline
+    (filter:decls_t -> decls_t * bool)
+    (qry:decls_t)
+  = // This functions constructs the query, so that it can be
+    // written to the query log, but it doesn't solve it.
+    let theory = !bg_scope@[Push]@qry@[Pop] in
+    let theory, used_unsat_core = filter theory in
+    let input = mk_input theory in
+    bg_scope := [] ; // Now consumed.
+    ()

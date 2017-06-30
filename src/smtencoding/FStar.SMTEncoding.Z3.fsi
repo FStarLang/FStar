@@ -63,3 +63,5 @@ type query_log = {
     log_file_name:   unit -> string
 }
 val query_logging : query_log
+
+val ask_offline : filter:(decls_t -> decls_t * bool) -> qry:decls_t -> unit

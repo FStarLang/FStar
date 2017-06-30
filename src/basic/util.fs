@@ -321,6 +321,9 @@ let colorize (s:string) (colors:(string * string)) = s
 let colorize_bold (s:string) = s
 let colorize_red (s:string) = s
 let colorize_cyan (s:string) = s
+let colorize_green (s:string) = s
+let colorize_yellow (s:string) = s
+let colorize_blue (s:string) = s
 // END
 
 let pr  = Printf.printf
