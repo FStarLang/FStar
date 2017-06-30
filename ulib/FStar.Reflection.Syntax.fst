@@ -176,6 +176,7 @@ let shiftl_qn  = ["FStar" ; "UInt" ; "shift_left"]
 let shiftr_qn  = ["FStar" ; "UInt" ; "shift_right"]
 let udiv_qn    = ["FStar" ; "UInt" ; "udiv"]
 let umod_qn    = ["FStar" ; "UInt" ; "mod"]
+let mul_mod_qn = ["FStar" ; "UInt" ; "mul_mod"]
 let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
 
 

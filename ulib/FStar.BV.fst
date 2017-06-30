@@ -21,9 +21,13 @@ let int2bv_lemma_1 = U.to_vec_lemma_1
 let int2bv_lemma_2 = U.to_vec_lemma_2
 
 let bvdiv #n a b = 
-    int2bv #n (U.udiv #n (bv2int #n a) b)    
+  int2bv #n (U.udiv #n (bv2int #n a) b)    
 let bvmod #n a b = 
-    int2bv #n (U.mod #n (bv2int #n a) b)
+  int2bv #n (U.mod #n (bv2int #n a) b)
+
+// Z3's bvmul is also modulo
+let bvmul #n a b =
+  int2bv #n (U.mul_mod #n (bv2int #n a) b)
 
 let inverse_vec_lemma = U.inverse_vec_lemma
 let inverse_num_lemma = U.inverse_num_lemma
@@ -50,4 +54,12 @@ let int2bv_shr #n #x #y #z pf =
 
 let int2bv_div #n #x #y #z pf =
   inverse_vec_lemma #n (bvdiv #n (int2bv #n x) y);
+  ()
+
+let int2bv_mod #n #x #y #z pf =
+  inverse_vec_lemma #n (bvmod #n (int2bv #n x) y);
+  ()
+
+let int2bv_mul #n #x #y #z pf =
+  inverse_vec_lemma #n (bvmul #n (int2bv #n x) y);
   ()

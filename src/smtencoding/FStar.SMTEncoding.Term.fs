@@ -76,6 +76,7 @@ type op =
   | BvShr  // unsigned shift right\
   | BvUdiv
   | BvMod
+  | BvMul
   | NatToBv of Prims.int // need to explicitly define the size of the bitvector
   | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
@@ -213,6 +214,7 @@ let op_to_string = function
   | BvShr -> "bvlshr"
   | BvUdiv -> "bvudiv"
   | BvMod -> "bvurem"
+  | BvMul -> "bvmul"
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
 
@@ -291,6 +293,7 @@ let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
 let mkIff = mk_bin_op Iff
 let mkEq  = mk_bin_op Eq
 let mkLT  = mk_bin_op LT

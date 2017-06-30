@@ -4,6 +4,8 @@ open FStar.Tactics
 open FStar.Reflection.Syntax
 open FStar.Reflection.Arith
 open FStar.BV
+open FStar.UInt
+// using uint_t' instead of uint_t breaks the tactic (goes to inl).
 
 (* Congruence lemmas *)
 val cong_bvand : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
@@ -24,23 +26,33 @@ val cong_bvor : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			       Lemma (bvor w x == bvor y z)
 let cong_bvor #n #w #x #y #z pf1 pf2 = ()
 
-val cong_bvshl : #n:pos -> (#w:bv_t n) -> (#x:uint_t' n) -> 
+val cong_bvshl : #n:pos -> (#w:bv_t n) -> (#x:uint_t n) -> 
 				 (#y:bv_t n) -> squash (w == y) ->
 				 Lemma (bvshl w x == bvshl y x)
 let cong_bvshl #n #w #x #y pf = ()
 
-val cong_bvshr : #n:pos -> #w:bv_t n -> (#x:uint_t' n) -> 
+val cong_bvshr : #n:pos -> #w:bv_t n -> (#x:uint_t n) -> 
 			   #y:bv_t n -> squash (w == y) ->
 			   Lemma (bvshr #n w x == bvshr #n y x)
 let cong_bvshr #n #w #x #y pf = ()
 
-val cong_bvdiv : #n:pos -> #w:bv_t n -> (#x:uint_t' n{x <> 0}) -> 
+val cong_bvdiv : #n:pos -> #w:bv_t n -> (#x:uint_t n{x <> 0}) -> 
 			  #y:bv_t n -> squash (w == y) ->
 			   Lemma (bvdiv #n w x == bvdiv #n y x)
 let cong_bvdiv #n #w #x #y pf = ()
 
+val cong_bvmod : #n:pos -> #w:bv_t n -> (#x:uint_t n{x <> 0}) -> 
+			  #y:bv_t n -> squash (w == y) ->
+			   Lemma (bvmod #n w x == bvmod #n y x)
+let cong_bvmod #n #w #x #y pf = ()
+
+val cong_bvmul : #n:pos -> #w:bv_t n -> (#x:uint_t n) -> 
+			  #y:bv_t n -> squash (w == y) ->
+			   Lemma (bvmul #n w x == bvmul #n y x)
+let cong_bvmul #n #w #x #y pf = ()
+
 (* Used to reduce the initial equation to an equation on bitvectors*)
-val eq_to_bv: #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) ->
+val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
               squash (int2bv #n x == int2bv #n y) -> Lemma (x == y)
 let eq_to_bv #n #x #y pf = int2bv_lemma_2 #n x y
 
@@ -59,6 +71,14 @@ let trans #n #x #y #z #w pf1 pf2 pf3 = ()
  *)
 let rec arith_expr_to_bv e : tactic unit =
     match e with
+    | NatToBv _ (MulMod _ e1 _) | MulMod _ e1 _ ->
+        apply_lemma (quote int2bv_mul);;
+        apply_lemma (quote cong_bvmul);;
+        arith_expr_to_bv e1
+    | NatToBv _ (Umod _ e1 _) | Umod _ e1 _ ->
+        apply_lemma (quote int2bv_mod);;
+        apply_lemma (quote cong_bvmod);;
+        arith_expr_to_bv e1
     | NatToBv _ (Udiv _ e1 _) | Udiv _ e1 _ ->
         apply_lemma (quote int2bv_div);;
         apply_lemma (quote cong_bvdiv);;
@@ -69,9 +89,7 @@ let rec arith_expr_to_bv e : tactic unit =
         arith_expr_to_bv e1
     | NatToBv _ (Shr _ e1 _) | Shr _ e1 _ ->
         apply_lemma (quote int2bv_shr);;
-	dump "after int2bv_Shr";;
         apply_lemma (quote cong_bvshr);;
-	dump "after cong_bvshr";;
         arith_expr_to_bv e1
     | NatToBv _ (Land _ e1 e2) | (Land _ e1 e2) ->
         apply_lemma (quote int2bv_logand);;
@@ -99,10 +117,8 @@ let arith_to_bv_tac : tactic unit =
     | Comp Eq t l r ->
      begin match run_tm (is_arith_expr l) with
       | Inl s ->
-      dump "inl";;
         trefl
       | Inr e ->
-      dump "before seq";;
             seq (arith_expr_to_bv e) trefl
 	   //  arith_expr_to_bv e
         end
@@ -115,9 +131,9 @@ as is for now *)
 let bv_tac ()  =
   apply_lemma (quote eq_to_bv);;
   apply_lemma (quote trans);;
-  dump "after trans";;
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
+  dump "";;
   smt ()
 

@@ -18,19 +18,21 @@ module O = FStar.Order
 
 noeq
 type expr =
-    | Lit : int -> expr
-    | Atom : nat -> term -> expr // atom, contains both a numerical ID and the actual term encountered
-    | Plus  : expr -> expr -> expr
-    | Mult  : expr -> expr -> expr
-    | Minus : expr -> expr -> expr
-    | Land  : expr -> expr -> expr -> expr
-    | Lxor  : expr -> expr -> expr -> expr
-    | Lor   : expr -> expr -> expr -> expr
-    | Shl   : expr -> expr -> expr -> expr
-    | Shr   : expr -> expr -> expr -> expr
-    | Neg   : expr -> expr
-    | Udiv  : expr -> expr -> expr -> expr
-    | Umod  : expr -> expr -> expr -> expr
+    | Lit     : int -> expr
+    // atom, contains both a numerical ID and the actual term encountered
+    | Atom    : nat -> term -> expr 
+    | Plus    : expr -> expr -> expr
+    | Mult    : expr -> expr -> expr
+    | Minus   : expr -> expr -> expr
+    | Land    : expr -> expr -> expr -> expr
+    | Lxor    : expr -> expr -> expr -> expr
+    | Lor     : expr -> expr -> expr -> expr
+    | Shl     : expr -> expr -> expr -> expr
+    | Shr     : expr -> expr -> expr -> expr
+    | Neg     : expr -> expr
+    | Udiv    : expr -> expr -> expr -> expr
+    | Umod    : expr -> expr -> expr -> expr
+    | MulMod  : expr -> expr -> expr -> expr
     | NatToBv : expr -> expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
 
@@ -121,6 +123,7 @@ let rec is_arith_expr (t:term) =
       else if qn = shiftl_qn then liftM3 Shl e1' e2' e3'
       else if qn = udiv_qn then liftM3 Udiv e1' e2' e3'
       else if qn = umod_qn then liftM3 Umod e1' e2' e3'
+      else if qn = mul_mod_qn then liftM3 MulMod e1' e2' e3'
       else fail ("triary: " ^ fv_to_string fv)
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in

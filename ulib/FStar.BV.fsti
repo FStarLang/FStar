@@ -35,8 +35,8 @@ val int2bv_lemma_2: #n:pos -> a:uint_t' n -> b:uint_t' n ->
   Lemma (requires (int2bv a = int2bv b)) (ensures a = b)
 
 val bvdiv :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
-  
 val bvmod :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
+val bvmul :#n:pos -> a:bv_t n -> b:uint_t' n -> Tot (bv_t n)
 
 val inverse_vec_lemma: #n:pos -> vec:bv_t n ->
   Lemma (requires True) (ensures vec = (int2bv (bv2int vec)))
@@ -47,28 +47,36 @@ val inverse_num_lemma: #n:pos -> num:uint_t' n ->
         [SMTPat (bv2int #n (int2bv #n num))]
 
 (* Lemmas connecting logical arithmetic and bitvectors *)
-module U = FStar.UInt // for now just opening this for logand, logxor, etc. but we need a better solution.
-val int2bv_logand : (#n:pos) -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+
+open FStar.UInt // for now just opening this for logand, logxor, etc. but we need a better solution.
+ val int2bv_logand : (#n:pos) -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
 			    squash (bvand #n (int2bv #n x) (int2bv #n y) == z) ->
-			    Lemma (int2bv #n (U.logand #n x y) == z)
+			    Lemma (int2bv #n (logand #n x y) == z)
 
-val int2bv_logxor : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
-		     squash (bvxor (int2bv x) (int2bv y) == z) ->
-		     Lemma (int2bv #n (U.logxor #n x y) == z)
+ val int2bv_logxor : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+		     squash (bvxor #n (int2bv #n x) (int2bv #n y) == z) ->
+		     Lemma (int2bv #n (logxor #n x y) == z)
 
-val int2bv_logor : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
-		     squash (bvor (int2bv x) (int2bv y) == z) ->
-		     Lemma (int2bv #n (U.logor #n x y) == z)
+ val int2bv_logor : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+		     squash (bvor #n (int2bv #n x) (int2bv #n y) == z) ->
+		     Lemma (int2bv #n (logor #n x y) == z)
 
-val int2bv_shl : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
-			    squash (bvshl (int2bv x) y == z) ->
-			    Lemma (int2bv #n (U.shift_left #n x y) == z)
+ val int2bv_shl : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (bvshl #n (int2bv #n x) y == z) ->
+			    Lemma (int2bv #n (shift_left #n x y) == z)
 
-val int2bv_shr : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n) -> (#z:bv_t n) ->
+ val int2bv_shr : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
 			    squash (bvshr #n (int2bv #n x) y == z) ->
-			    Lemma (int2bv #n (U.shift_right #n x y) == z)
+			    Lemma (int2bv #n (shift_right #n x y) == z)
 
-val int2bv_div : #n:pos -> (#x:uint_t' n) -> (#y:uint_t' n{y <> 0}) -> (#z:bv_t n) ->
+ val int2bv_div : #n:pos -> (#x:uint_t n) -> (#y:uint_t n{y <> 0}) -> (#z:bv_t n) ->
 			    squash (bvdiv #n (int2bv #n x) y == z) ->
-			    Lemma (int2bv #n (U.udiv #n x y) == z)
+			    Lemma (int2bv #n (udiv #n x y) == z)
 
+ val int2bv_mod : #n:pos -> (#x:uint_t n) -> (#y:uint_t n{y <> 0}) -> (#z:bv_t n) ->
+			    squash (bvmod #n (int2bv #n x) y == z) ->
+			    Lemma (int2bv #n (mod #n x y) == z)
+			    
+ val int2bv_mul : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (bvmul #n (int2bv #n x) y == z) ->
+			    Lemma (int2bv #n (mul_mod #n x y) == z)
