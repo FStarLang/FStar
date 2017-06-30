@@ -18,6 +18,10 @@ type randomness = nat -> fragment
 
 assume val oplus: fragment -> fragment -> fragment
 
+assume val lemma_oplus (a:fragment) (b:fragment)
+  :Lemma (oplus (oplus a b) b == a)
+   [SMTPat (oplus (oplus a b) b)]
+
 (* an entry in the message log *)
 noeq type entry (rand:randomness) =
   | E: i:nat -> cipher:fragment -> msg:fragment{oplus msg (rand i) == cipher} -> entry rand
@@ -113,7 +117,7 @@ assume val as_seq:
 
 assume val zeroes: n:nat -> (s:seq byte{length s = n})
 
-let modifies (c:connection) (h0:heap) (h1:heap) :Type0
+let modifies_s (c:connection) (h0:heap) (h1:heap) :Type0
   = let C _ ctr_ref msgs_ref = c in
     modifies (Set.union (Set.singleton (addr_of ctr_ref))
                         (Set.singleton (addr_of msgs_ref))) h0 h1
@@ -128,7 +132,7 @@ assume val lemma_snoc_log
 let send (#n:nat) (buf:iarray n byte) (c:connection)
   :ST nat (requires (fun h0 -> sender_connection_inv c h0))
         (ensures  (fun h0 sent h1 -> sender_connection_inv c h1 /\ 
-	                          modifies c h0 h1            /\
+	                          modifies_s c h0 h1            /\
 	                          sent <= min n fragment_size  /\
 				  ctr c h1 = ctr c h0 + 1     /\
                                   log c h1 == snoc (log c h0)
@@ -159,3 +163,76 @@ let send (#n:nat) (buf:iarray n byte) (c:connection)
     lemma_snoc_log c i0 cipher msg h0 h1;
 
     sent
+
+let receiver_connection_inv (c:connection) (h:heap) :GTot Type0
+  = let C _ ctr_ref msgs_ref = c in
+    sel h ctr_ref <= length (sel h msgs_ref)
+
+assume val network_receive
+  (c:connection)
+  :ST (option fragment) (requires (fun h0          -> receiver_connection_inv c h0))
+                        (ensures  (fun h0 f_opt h1 -> receiver_connection_inv c h0                   /\
+			                           h0 == h1                                       /\
+						   (Some? f_opt <==> ctr c h0 < length (raw c h0)) /\
+						   (ctr c h0 < length (raw c h0) ==>
+						    f_opt == Some (index (raw c h0) (ctr c h0)))))
+
+type array (n:nat) (a:Type) :Type
+
+assume val arr_addr (#n:nat) (#a:Type) (arr:array n a) :GTot nat
+
+let modifies_r (#n:nat) (#a:Type) (c:connection) (arr:array n a) (h0 h1:heap) :Type0
+  = let C _ ctr_ref _ = c in
+    modifies (Set.union (Set.singleton (addr_of ctr_ref))
+                        (Set.singleton (arr_addr arr))) h0 h1
+
+assume val all_init (#n:nat) (#a:Type) (arr:array n a) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
+
+assume val as_seq_ghost_a:
+  #n:nat -> #a:Type -> array n a -> i:nat -> j:nat{j >= i /\ j <= n} -> h:heap
+  -> GTot (s:seq a{length s = j - i})
+
+assume val unpad (s:fragment)
+  :(r:(nat * seq byte){fst r <= fragment_size /\ length (snd r) = fst r /\
+                     s == append (snd r) (zeroes (fragment_size - fst r))})
+
+assume val fill
+  (#n:nat{fragment_size <= n}) (m_len:nat{m_len <= fragment_size})
+  (buf:array n byte) (msg:seq byte{length msg = m_len})
+  : ST unit (requires (fun h0      -> True))
+            (ensures  (fun h0 _ h1 -> modifies (Set.singleton (arr_addr buf)) h0 h1 /\ 
+	                           all_init buf 0 m_len                           /\
+	                           as_seq_ghost_a buf 0 m_len h1 == msg))
+
+let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection)
+  :ST (option nat) (requires (fun h0          -> receiver_connection_inv c h0))
+                 (ensures  (fun h0 r_opt h1 -> match r_opt with
+					    | None   -> h0 == h1
+					    | Some r ->
+					      receiver_connection_inv c h1 /\
+					      modifies_r c buf h0 h1       /\
+					      r <= fragment_size            /\
+					      all_init buf 0 r             /\
+					      ctr c h1 = ctr c h0 + 1      /\
+					      ctr c h0 < length (log c h0) /\
+					      index (log c h0) (ctr c h0) ==
+					      append (as_seq_ghost_a buf 0 r h1) (zeroes (fragment_size - r))))
+  = let h0 = ST.get () in
+    let C rand ctr_ref msgs_ref = c in
+    assume (arr_addr buf <> addr_of ctr_ref);
+    assume (arr_addr buf <> addr_of msgs_ref);  //AR: these two should be possible to prove once we hook it up to the actual array implementation
+    recall ctr_ref;
+    recall msgs_ref;
+
+    match network_receive c with
+    | None        -> None
+    | Some cipher ->
+      let i0 = read ctr_ref in
+      let msg = oplus cipher (rand i0) in
+      let len, m = unpad msg in
+      write ctr_ref (i0 + 1);  //AR: order of this write is important ... specifically, if we write ctr_ref after arr, we need a lemma to say arr remains unchanged, once this is hooked up to actual array implementation, it shouldn't matter
+      fill len buf m;
+      Some len
+      
+
+
