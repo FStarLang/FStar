@@ -90,7 +90,7 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 # Introduction
 
 F\* is a verification-oriented programming language developed at
-[Microsoft Research], [MSR-Inria], and [Inria].
+[Microsoft Research], MSR-Inria, and [Inria].
 It follows in
 the tradition of the [ML] family of languages in that it is a typed,
 strict, functional programming language. However, its type system is
@@ -115,14 +115,14 @@ resources freely available on the web, e.g., [TryF#],
 [F# for fun and profit], [Introduction to Caml], or the
 [Real World OCaml] book.
 
-[OCaml]: http://caml.inria.fr/ocaml/
+[OCaml]: https://ocaml.org
 [F#]: http://fsharp.org/
 [Standard ML]: http://sml-family.org/
 [Haskell]: https://www.haskell.org
 
 [F# for fun and profit]: http://fsharpforfunandprofit.com/
-[TryF#]: http://tryfsharp.org
-[Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
+[TryF#]: http://www.tryfsharp.org
+[Introduction to Caml]: https://pl.cs.jhu.edu/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
 
 ~KK
@@ -656,7 +656,7 @@ covers, F\* translates the definition of `max` and the asserted property
 to a theorem prover called [Z3], which then proves the property
 automatically.
 
-[Z3]: http://z3.codeplex.com/
+[Z3]: https://github.com/Z3Prover/z3/wiki
 
 We can assert and automatically check more general properties about `max`. For example:
 
@@ -1032,6 +1032,12 @@ The type '`==`' is the type constructor for the homogeneous equality
 predicate; it is different from '`=`', which is a boolean function
 comparing a pair of values (F\* also has a separate constructor for
 heterogeneous equality, '`===`').
+
+[equality on F\* wiki]: https://github.com/FStarLang/FStar/wiki/Deriving-hasEq-predicate-for-inductive-types,-and-types-of-equalities-in-F*#different-types-of-equalities-in-f
+
+~ Remark
+Equality is more complex than it looks! See also [equality on F\* wiki].
+~
 
 The propositional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
 disjunction and negations are type constructors. We also include `:==>`
@@ -1545,8 +1551,8 @@ eventually stops making recursive calls, i.e., it terminates.
    which is only a _partial_ order.
 
 2. **The subterm ordering on inductive types**: For any value
-    `D v1 ... vn` of an inductive type (where `D` is a constructor applied
-    to arguments `v1` to `vn`) we include `v_i << v`, for all `i`.
+    `v = D v1 ... vn` of an inductive type (where `D` is a constructor applied
+    to arguments `v1` to `vn`) we include `vi << v`, for all `i`.
     That is, the sub-terms of a well-typed constructed term
     precede the constructed term. (The exception to this rule is `lex_t` below).
 ~CH
@@ -1556,7 +1562,7 @@ I guess there is also an exception for types with negative occurrences, right?
 3. **The lexicographic ordering on lex_t**, as described below.
 
 
-### Lexically ordered pairs
+### Lexically ordered pairs and lists
 
 Take a look at the classic function, `ackermann`:
 
@@ -1582,16 +1588,19 @@ In its standard prelude, F\* defines the following inductive type:
       | LexCons : #a:Type -> a -> lex_t -> lex_t
 
 (The `#` sign marks the first argument as implicit, see [#sec-implicit-arguments].)
+This is a list of heterogenously typed elements.
 
 **The lexicographic ordering on `lex_t`** is the following:
 
 * `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
-  `v1 << v1'`; or `v1=v1'` and `v2 << v2'`.
+  `v1 << v1'`; or `v1===v1'` and `v2 << v2'`.
 
 * If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
 
 ~MK
 We could explain what that means, that longer `lex_t` are smaller?
+
+I changed v1=v2 to heterogenous equality?
 ~
 
 **We include the following syntactic sugar**:
