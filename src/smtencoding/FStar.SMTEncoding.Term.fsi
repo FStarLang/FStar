@@ -110,7 +110,7 @@ type decl =
   | DefineFun  of string * list<sort> * sort * term * caption
   | Assume     of assumption
   | Caption    of string
-  | Eval       of term
+  | Get_value  of fv
   | Echo       of string
   | RetainAssumptions of list<string>
   | Push

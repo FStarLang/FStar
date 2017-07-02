@@ -136,7 +136,7 @@ type decl =
   | DefineFun  of string * list<sort> * sort * term * caption
   | Assume     of assumption
   | Caption    of string
-  | Eval       of term
+  | Get_value  of fv
   | Echo       of string
   | RetainAssumptions of list<string>
   | Push
@@ -654,8 +654,8 @@ let rec declToSmt decl =
             fids
             (termToSmt n a.assumption_term)
             n
-  | Eval t ->
-    format1 "(eval %s)" (termToSmt "eval" t)
+  | Get_value (x, _) ->
+    format1 "(get-value %s)" x
   | Echo s ->
     format1 "(echo \"%s\")" s
   | RetainAssumptions _ ->

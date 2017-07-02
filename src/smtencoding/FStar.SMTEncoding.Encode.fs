@@ -2612,7 +2612,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
 let encode_labels labs =
     let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun(fst l, [], Bool_sort, None)) in
-    let suffix = labs |> List.collect (fun (l, _, _) -> [Echo <| fst l; Eval (mkFreeV l)]) in
+    let suffix = labs |> List.collect (fun (l, _, _) -> [Echo <| fst l; Get_value l]) in
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
