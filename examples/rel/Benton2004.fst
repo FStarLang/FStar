@@ -1181,57 +1181,75 @@ let d_lu1
   let fr = reify_computation (ifthenelse b (seq c (while b c)) skip) in
   let eb = reify_exp b in
   let prf1
-    (s0 s0' : heap)
+    (s0: heap)
     (fuel: nat)
   : Lemma
-    (requires (
-      holds phi s0 s0' /\
-      fst (fl fuel s0) == true
-    ))
-    (ensures (terminates_on fr s0'))
-  = assert (terminates_on fl s0');
-    let g
-      (fuel' : nat)
-    : Lemma
-      (requires (fst (fl fuel' s0') == true))
-      (ensures (terminates_on fr s0'))
-    = assert (fl fuel' s0' == (if fst (eb s0') then fl (fuel' - 1) (snd (fc fuel' s0')) else (true, s0')));
-      assert (fr fuel' s0' == (if fst (eb s0') then fl fuel' (snd (fc fuel' s0')) else (true, s0')))
-    in
-    Classical.forall_intro (Classical.move_requires g)
+    (requires (fst (fl fuel s0) == true))
+    (ensures (fr fuel s0 == fl fuel s0))
+  = if fst (eb s0)
+    then begin
+      let s1 = snd (fc fuel s0) in
+      assert (fl fuel s0 == fl (fuel - 1) s1);
+      assert (fr fuel s0 == fl fuel s1)
+    end else ()
   in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf1 x y));
-  let prf2
-    (s0 s0' : heap)
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
+  assert (forall s0 fuel . fst (fr fuel s0) == true ==> fl (fuel + 1) s0 == fr fuel s0)
+
+let d_lu2
+  (b: exp bool)
+  (c: computation)
+  (phi phi' : sttype)
+: Lemma
+  (requires (exec_equiv phi phi' (while b c) (while b c)))
+  (ensures (exec_equiv phi phi' (while b c) (while b (seq c (ifthenelse b c skip)))))
+= let fc = reify_computation c in
+  let fl = reify_computation (while b c) in
+  let fr = reify_computation (while b (seq c (ifthenelse b c skip))) in
+  let eb = reify_exp b in
+  let rec prf1
+    (s0: heap)
     (fuel: nat)
   : Lemma
-    (requires (
-      holds phi s0 s0' /\
-      fst (fr fuel s0') == true
-    ))
-    (ensures (terminates_on fl s0))
-  = assert (fr fuel s0' == (if fst (eb s0') then fl fuel (snd (fc fuel s0')) else (true, s0')));
-    assert (fl (fuel + 1) s0' == (if fst (eb s0') then fl fuel (snd (fc fuel s0')) else (true, s0')))
+    (requires (fst (fl fuel s0) == true))
+    (ensures (fr fuel s0 == fl fuel s0))
+    (decreases fuel)
+  = if fst (eb s0)
+    then begin
+      let s1 = snd (fc fuel s0) in
+      assert (fl fuel s0 == fl (fuel - 1) s1);
+      if fst (eb s1)
+      then begin
+        let s2 = snd (fc (fuel - 1) s1) in
+        assert (fl fuel s0 == fl (fuel - 2) s2);
+        assert (fc fuel s1 == fc (fuel - 1) s1);
+        assert (fr fuel s0 == fr (fuel - 1) s2);
+        prf1 s2 (fuel - 2);
+        assert (fr (fuel - 1) s2 == fr (fuel - 2) s2)
+      end else ()
+    end else ()
   in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y));
-  let prf3
-    (s0 s0' : heap)
+  let rec prf2
+    (s0: heap)
     (fuel: nat)
   : Lemma
-    (requires (
-      holds phi s0 s0' /\
-      fst (fl fuel s0) == true /\
-      fst (fr fuel s0') == true
-    ))
-    (ensures (holds phi' (snd (fl fuel s0)) (snd (fr fuel s0'))))
-  = assert (fr fuel s0' == (if fst (eb s0') then fl fuel (snd (fc fuel s0')) else (true, s0')));
-    assert (fl fuel s0 == fl (fuel + 1) s0);
-    assert (fst (fl (fuel + 1) s0') == true);
-    if fst (eb s0')
-    then assert (fc (fuel + 1) s0' == fc fuel s0')
-    else ()
+    (requires (fst (fr fuel s0) == true))
+    (ensures (fl (fuel + fuel) s0 == fr fuel s0))
+    (decreases fuel)
+  = if fst (eb s0)
+    then begin
+      let s1 = snd (fc fuel s0) in
+      if fst (eb s1)
+      then begin
+        let s2 = snd (fc fuel s1) in
+        assert (fr fuel s0 == fr (fuel - 1) s2);
+        prf2 s2 (fuel - 1);
+        assert (fl (fuel + fuel) s0 == fl (fuel - 1 + fuel - 1) s2)
+      end else ()
+    end else ()
   in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf3 x y))
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf2 x))
 
 let d_sas
   (x: var)
