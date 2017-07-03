@@ -217,7 +217,7 @@ val no_sens_trans : (pc:label) -> (pc2:label) -> (env1:label_fun) -> (h1:heap) -
 let no_sens_trans pc pc2 evn1 h1 env2 h2 env3 h3 = ()
 
 
-#set-options "--z3rlimit 200"
+#set-options "--z3rlimit 500"
 val high_pc : (c:com) -> (env:label_fun) -> (h:heap) -> (pc:label) -> 
   Lemma 
     (requires True)

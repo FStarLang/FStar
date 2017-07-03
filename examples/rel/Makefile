@@ -44,9 +44,6 @@ all:\
   OTP.uver \
   ElGamal.uver
 
-dynifc:\
-	DynamicIFC.uver
-
 %.fst-in:
 	@echo $(OTHERFLAGS)
 
