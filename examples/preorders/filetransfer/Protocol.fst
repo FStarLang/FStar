@@ -22,15 +22,15 @@ assume val lemma_oplus (a:fragment) (b:fragment)
   :Lemma (oplus (oplus a b) b == a)
    [SMTPat (oplus (oplus a b) b)]
 
+(* a message sent on the network cannot be unsent *)
+let sent_pre :preorder bool = fun (b1:bool) (b2:bool) -> b1 ==> b2
+
 (* an entry in the message log *)
 noeq type entry (rand:randomness) =
-  | E: i:nat -> cipher:fragment -> msg:fragment{oplus msg (rand i) == cipher} -> entry rand
+  | E: i:nat -> msg:fragment -> cipher:fragment{oplus msg (rand i) == cipher} -> sent:mref bool sent_pre -> entry rand
 
 (* sequence of messages *)
 type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (index s i) = i}
-
-(* counter increases monotonically *)
-let counter_pre :preorder nat = fun (n1:nat) (n2:nat) -> b2t (n1 <= n2)
 
 let is_prefix_of (#a:Type) (s1:seq a) (s2:seq a) :Type0
   = length s1 <= length s2 /\
@@ -42,58 +42,84 @@ let entries_rel (rand:randomness) :relation (entries rand) =
 
 let entries_pre (rand:randomness) :preorder (entries rand) = entries_rel rand
 
-noeq type connection =
-  | C: rand:randomness -> ctr:mref nat counter_pre -> msgs:mref (entries rand) (entries_pre rand) -> connection
+(* a single state stable predicate on the counter, saying that it is less than the length of the log *)
+let counter_pred (#rand:randomness) (n:nat) (es_ref:mref (entries rand) (entries_rel rand)) :(p:heap_predicate{stable p})
+  = fun h -> h `contains` es_ref /\ n <= length (sel h es_ref)
 
-(* for a valid connection, ctr is bounded by the length of msgs *)
-let sender_connection_inv (c:connection) (h:heap) :GTot Type0
-  = let C _ ctr msgs = c in
-    sel h ctr = (length (sel h msgs))
+(* counter type is a nat, witnessed with counter_pred *)
+type counter_t (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand))
+  = n:nat{witnessed (counter_pred n es_ref)}
+
+(* counter increases monotonically *)
+let counter_rel (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)) :relation (counter_t es_ref)
+  = fun n1 n2 -> b2t (n1 <= n2)
+
+let counter_pre (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)) :preorder (counter_t es_ref)
+  = counter_rel es_ref
+
+noeq type connection =
+  | S: rand:randomness -> entries:mref (entries rand) (entries_rel rand) -> connection
+  | R: rand:randomness -> entries:mref (entries rand) (entries_rel rand)
+       -> ctr:mref (counter_t entries) (counter_pre entries) -> connection
 
 assume val seq_map:
   #a:Type -> #b:Type -> f:(a -> b) -> s:seq a
   -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> index r i == f (index s i))})
 
+let rand_of (c:connection) :randomness =
+  match c with
+  | S r _
+  | R r _ _ -> r
+
+let entries_of (c:connection) :(mref (entries (rand_of c)) (entries_rel (rand_of c))) =
+  match c with
+  | S _ es   -> es
+  | R _ es _ -> es
+
 (* seq of ciphers sent so far on this connection *)
-let raw (c:connection) (h:heap) :GTot (seq fragment) =
-  let C _ _ msgs = c in
-  seq_map (fun (E _ c _) -> c) (sel h msgs)  //writing C?.msgs doesn't work, some unification error
+(* let raw (c:connection) (h:heap) :GTot (seq fragment) = *)
+(*   let C _ _ msgs = c in *)
+(*   seq_map (fun (E _ c _) -> c) (sel h msgs)  //writing C?.msgs doesn't work, some unification error *)
 
 (* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap) :GTot (seq fragment) =
-  let C _ _ msgs = c in
-  seq_map (fun (E _ _ m) -> m) (sel h msgs)
+  seq_map (fun (E _ m _ _) -> m) (sel h (entries_of c))
 
 assume val lemma_prefix_entries_implies_prefix_log
   (c:connection) (h1:heap) (h2:heap)
-  :Lemma (requires (let C _ _ msgs = c in
-                    sel h1 msgs `is_prefix_of` sel h2 msgs))
+  :Lemma (requires (sel h1 (entries_of c) `is_prefix_of` sel h2 (entries_of c)))
 	 (ensures  (log c h1 `is_prefix_of` log c h2))
 	 [SMTPat (log c h1); SMTPat (log c h2)]
 
 (* current counter for the connection, consider adding the valid refinement? *)
 let ctr (c:connection) (h:heap) :GTot nat =
-  let C _ ctr _ = c in
-  sel h ctr
+  match c with
+  | S _ es_ref    -> length (sel h es_ref)
+  | R _ _ ctr_ref -> sel h ctr_ref
+
+let contains_connection (h:heap) (c:connection) =
+  match c with
+  | S _ es_ref         -> h `contains` es_ref
+  | R _ es_ref ctr_ref -> h `contains` es_ref /\ h `contains` ctr_ref
+
+let recall_connection (c:connection) :ST unit (requires (fun h0 -> True)) (ensures (fun h0 _ h1 -> h0 == h1 /\ h0 `contains_connection` c))
+  = match c with
+    | S _ es_ref         -> recall es_ref
+    | R _ es_ref ctr_ref -> recall es_ref; recall ctr_ref
 
 (* stable predicate for counter *)
-let counter_pred (c:connection) (h0:heap) :(heap -> Type0) =
-  let C _ cref _ = c in
-  fun h -> h `contains` cref /\ ctr c h0 <= ctr c h
-
-(* stable predicate for log *)
-let log_pred (c:connection) (h0:heap) :(heap -> Type0) =
-  let C _ _ msgs_ref = c in
-  fun h -> h `contains` msgs_ref /\ log c h0 `is_prefix_of` log c h
+let connection_pred (c:connection) (h0:heap) :(p:heap_predicate{stable p}) =
+  fun h -> h `contains_connection` c /\
+        ctr c h0 <= ctr  c h /\ ctr c h0 <= length (log c h) /\ log c h0 `is_prefix_of` log c h
 
 let snap (c:connection) :ST unit (requires (fun _ -> True))
-                                 (ensures  (fun h0 _ h1 -> witnessed (counter_pred c h0) /\
-				                        witnessed (log_pred c h0)     /\
-							h0 == h1))
+                                 (ensures  (fun h0 _ h1 -> witnessed (connection_pred c h0) /\ h0 == h1))
   = let h0 = ST.get () in
-    let C _ ctr_ref msgs_ref = c in
-    recall ctr_ref; recall msgs_ref;
-    gst_witness (counter_pred c h0); gst_witness (log_pred c h0)
+    recall_connection c;
+    (match c with
+     | S _ _              -> ()
+     | R _ es_ref ctr_ref -> gst_recall (counter_pred (sel_tot h0 ctr_ref) es_ref));
+    gst_witness (connection_pred c h0)
 
 (* network send is called once log had been appended to etc. *)
 assume val network_send

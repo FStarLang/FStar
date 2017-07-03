@@ -23,7 +23,7 @@ let fresh (#a:Type) (#n:nat) (x:array n a) (h0 h1:heap) = fresh (Array?.r x) h0 
 let addr_of #a #n (Array r _) = addr_of r
 
 let create a n = Array #n #_ #n (alloc (Seq.create n None)) 0
-let suffix #a #n (Array r o) o' = Array r (o + o')
+let sub #a #n (Array r o) i len = Array r (o + i)
 let op_String_Access #a #n h0 (Array r o) = Seq.slice (sel h0 r) o (o+n)
 let initialized0 #a #n (x:array n a) (i:nat{i < n}) h =
   h `contains` (Array?.r x) /\ Some? (Seq.index (sel h (Array?.r x)) (Array?.offset x + i))

@@ -15,10 +15,16 @@ val addr_of: #a:Type0 -> #n:nat -> array n a -> GTot nat
 val create: a:Type -> n:nat -> ST (array n a)
     (requires (fun _ -> True))
     (ensures (fun h0 x h1 -> fresh x h0 h1 /\ modifies Set.empty h0 h1))
+
 (* [index x]: the type of a within--bounds index of x *)
 let index (#a:Type) (#n:nat) (x:array n a) = i:nat{i < n}
-(* [suffix x i]: obtain a reference to the array starting from offset `i` *)
-val suffix: #a:Type -> #n:nat -> x:array n a -> i:index x -> array (n - i) a
+
+val sub: #a:Type -> #n:nat -> x:array n a -> i:index x -> len:nat{i + len <= n} -> array len a
+
+let suffix (#a:Type) (#n:nat) (x:array n a) (i:index x) :array (n - i) a = sub x i (n - i)
+
+let prefix (#a:Type) (#n:nat) (x:array n a) (i:index x) :array i a = sub x 0 i
+
 (*  [h.[x]] : View a possibly uninitialized array `x` in state `h` as a sequence *)
 val op_String_Access : #a:Type -> #n:nat -> heap -> array n a -> GTot (s:Seq.seq (option a){Seq.length s == n})
 
