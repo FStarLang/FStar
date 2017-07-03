@@ -43,9 +43,9 @@ assume type pResponse : string -> string -> Type0
 (* the meaning of MACs, as used in RPC *)
 
 // BEGIN: MsgProperty
-type reqresp (msg:message) = 
-     (exists s.   msg = Formatting.request  s   /\ pRequest s)
-  \/ (exists s t. msg = Formatting.response s t /\ pResponse s t)
+type reqresp text = 
+     (exists s.   text = Formatting.request  s   /\ pRequest s)
+  \/ (exists s t. text = Formatting.response s t /\ pResponse s t)
 // END: MsgProperty
 
 (* FIXME: this type annotation is a workaround for #486 *)
