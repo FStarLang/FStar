@@ -76,11 +76,6 @@ let entries_of (c:connection) :(mref (entries (rand_of c)) (entries_rel (rand_of
   | S _ es   -> es
   | R _ es _ -> es
 
-(* seq of ciphers sent so far on this connection *)
-(* let raw (c:connection) (h:heap) :GTot (seq fragment) = *)
-(*   let C _ _ msgs = c in *)
-(*   seq_map (fun (E _ c _) -> c) (sel h msgs)  //writing C?.msgs doesn't work, some unification error *)
-
 (* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap) :GTot (seq fragment) =
   seq_map (fun (E _ m _ _) -> m) (sel h (entries_of c))
@@ -121,13 +116,6 @@ let snap (c:connection) :ST unit (requires (fun _ -> True))
      | R _ es_ref ctr_ref -> gst_recall (counter_pred (sel_tot h0 ctr_ref) es_ref));
     gst_witness (connection_pred c h0)
 
-(* network send is called once log had been appended to etc. *)
-assume val network_send
-  (c:connection) (f:fragment)
-  :ST unit (requires (fun h0 -> sender_connection_inv c h0 /\ ctr c h0 >= 1 /\
-                             f == index (raw c h0) (ctr c h0 - 1)))
-           (ensures  (fun h0 _ h1 -> h0 == h1))
-
 (* type of the buffer and sender and receiver operate on *)
 type iarray (n:nat) (a:Type) :Type
 
@@ -143,62 +131,67 @@ assume val as_seq:
 
 assume val zeroes: n:nat -> (s:seq byte{length s = n})
 
-let modifies_s (c:connection) (h0:heap) (h1:heap) :Type0
-  = let C _ ctr_ref msgs_ref = c in
-    modifies (Set.union (Set.singleton (addr_of ctr_ref))
-                        (Set.singleton (addr_of msgs_ref))) h0 h1
+let sender (c:connection) :Tot bool = S? c
+let receiver (c:connection) :Tot bool = R? c
+
+let modifies_s (c:connection{sender c}) (h0:heap) (h1:heap) :Type0
+  = let S _ es_ref = c in
+    modifies (Set.singleton (addr_of es_ref)) h0 h1
 
 assume val lemma_snoc_log
-  (c:connection) (i:nat) (cipher:fragment) (msg:fragment{oplus msg ((C?.rand c) i) == cipher})
+  (c:connection{sender c}) (i:nat) (cipher:fragment) (msg:fragment{oplus msg ((rand_of c) i) == cipher})
+  (sent_ref:mref bool sent_pre)
   (h0 h1:heap)
-  :Lemma (requires (let C _ _ msgs_ref = c in
-                    sel h1 msgs_ref == snoc (sel h0 msgs_ref) (E i cipher msg)))
+  :Lemma (requires (let S _ es_ref = c in
+                    sel h1 es_ref == snoc (sel h0 es_ref) (E i msg cipher sent_ref)))
 	 (ensures  (log c h1 == snoc (log c h0) msg))
-  
-let send (#n:nat) (buf:iarray n byte) (c:connection)
-  :ST nat (requires (fun h0 -> sender_connection_inv c h0))
-        (ensures  (fun h0 sent h1 -> sender_connection_inv c h1 /\ 
-	                          modifies_s c h0 h1            /\
+
+(* network send is called once log had been appended to etc. *)
+assume val network_send
+  (c:connection) (f:fragment)
+  :ST unit (requires (fun h0 -> True))
+           (ensures  (fun h0 _ h1 -> h0 == h1))  //TODO: this is wrong, it modifies the sent_ref
+
+(* TODO: we need to give some more precise type that talks about sent_refs, they are not being used currently at all *)
+let send (#n:nat) (buf:iarray n byte) (c:connection{sender c})
+  :ST nat (requires (fun h0 -> True))
+        (ensures  (fun h0 sent h1 -> modifies_s c h0 h1            /\
 	                          sent <= min n fragment_size  /\
 				  ctr c h1 = ctr c h0 + 1     /\
                                   log c h1 == snoc (log c h0)
 				                   (append (as_seq_ghost buf 0 sent h0)
 						           (zeroes (fragment_size - sent)))))
   = let h0 = ST.get () in
-    let C rand ctr_ref msgs_ref = c in
 
-    recall ctr_ref;
-    recall msgs_ref;  //AR: these are necessary for addr_of ctr_ref <> addr_of msgs_ref
-    
-    let msgs0 = read msgs_ref in
-    let i0 = read ctr_ref in
+    recall_connection c;
+    let S rand es_ref = c in
+
+    let msgs0 = read es_ref in
+    let i0 = length msgs0 in
 
     let sent = min n fragment_size in
     let msg = as_seq buf 0 sent in
     let msg = append msg (zeroes (fragment_size - sent)) in
     let cipher = oplus msg (rand i0) in
 
-    let msgs1 = snoc msgs0 (E i0 cipher msg) in
-    let i1 = i0 + 1 in
+    let sent_ref :mref bool sent_pre = alloc false in
+    let msgs1 = snoc msgs0 (E i0 msg cipher sent_ref) in
 
-    write msgs_ref msgs1;
-    write ctr_ref i1;
-    network_send c cipher;
+    write es_ref msgs1;    
 
     let h1 = ST.get () in
-    lemma_snoc_log c i0 cipher msg h0 h1;
+    lemma_snoc_log c i0 cipher msg sent_ref h0 h1;
 
     sent
 
-let receiver_connection_inv (c:connection) (h:heap) :GTot Type0
-  = let C _ ctr_ref msgs_ref = c in
-    sel h ctr_ref <= length (sel h msgs_ref)
+(* seq of ciphers sent so far on this connection *)
+let raw (c:connection) (h:heap) :GTot (seq fragment) =
+  seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
 
 assume val network_receive
-  (c:connection)
-  :ST (option fragment) (requires (fun h0          -> receiver_connection_inv c h0))
-                        (ensures  (fun h0 f_opt h1 -> receiver_connection_inv c h0                   /\
-			                           h0 == h1                                       /\
+  (c:connection{receiver c})
+  :ST (option fragment) (requires (fun h0          -> True))
+                        (ensures  (fun h0 f_opt h1 -> h0 == h1                                       /\
 						   (Some? f_opt <==> ctr c h0 < length (raw c h0)) /\
 						   (ctr c h0 < length (raw c h0) ==>
 						    f_opt == Some (index (raw c h0) (ctr c h0)))))
@@ -207,8 +200,8 @@ type array (n:nat) (a:Type) :Type
 
 assume val arr_addr (#n:nat) (#a:Type) (arr:array n a) :GTot nat
 
-let modifies_r (#n:nat) (#a:Type) (c:connection) (arr:array n a) (h0 h1:heap) :Type0
-  = let C _ ctr_ref _ = c in
+let modifies_r (#n:nat) (#a:Type) (c:connection{receiver c}) (arr:array n a) (h0 h1:heap) :Type0
+  = let R _ _ ctr_ref = c in
     modifies (Set.union (Set.singleton (addr_of ctr_ref))
                         (Set.singleton (arr_addr arr))) h0 h1
 
@@ -230,12 +223,11 @@ assume val fill
 	                           all_init buf 0 m_len                           /\
 	                           as_seq_ghost_a buf 0 m_len h1 == msg))
 
-let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection)
-  :ST (option nat) (requires (fun h0          -> receiver_connection_inv c h0))
+let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection{receiver c})
+  :ST (option nat) (requires (fun h0          -> True))
                  (ensures  (fun h0 r_opt h1 -> match r_opt with
 					    | None   -> h0 == h1
 					    | Some r ->
-					      receiver_connection_inv c h1 /\
 					      modifies_r c buf h0 h1       /\
 					      r <= fragment_size            /\
 					      all_init buf 0 r             /\
@@ -244,11 +236,10 @@ let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection)
 					      index (log c h0) (ctr c h0) ==
 					      append (as_seq_ghost_a buf 0 r h1) (zeroes (fragment_size - r))))
   = let h0 = ST.get () in
-    let C rand ctr_ref msgs_ref = c in
+    let R rand es_ref ctr_ref = c in
     assume (arr_addr buf <> addr_of ctr_ref);
-    assume (arr_addr buf <> addr_of msgs_ref);  //AR: these two should be possible to prove once we hook it up to the actual array implementation
-    recall ctr_ref;
-    recall msgs_ref;
+    assume (arr_addr buf <> addr_of es_ref);  //AR: these two should be possible to prove once we hook it up to the actual array implementation
+    recall_connection c;
 
     match network_receive c with
     | None        -> None
@@ -256,7 +247,8 @@ let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection)
       let i0 = read ctr_ref in
       let msg = oplus cipher (rand i0) in
       let len, m = unpad msg in
+      assert (i0 < length (sel_tot h0 es_ref));
+      gst_witness (counter_pred (i0 + 1) es_ref);
       write ctr_ref (i0 + 1);  //AR: order of this write is important ... specifically, if we write ctr_ref after arr, we need a lemma to say arr remains unchanged, once this is hooked up to actual array implementation, it shouldn't matter
       fill len buf m;
       Some len
-
