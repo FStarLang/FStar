@@ -8,6 +8,7 @@ uall: all
 all:\
   Benton2004.uver\
   Benton2004.Examples.uver\
+  Benton2004.SmithVolpano.uver\
   Bijection.uver\
   Equivalence.uver\
   IfcComposeReify.uver\
