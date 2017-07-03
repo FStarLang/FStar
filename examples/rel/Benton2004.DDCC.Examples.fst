@@ -1,5 +1,5 @@
-module Benton2004.Examples
-open Benton2004
+module Benton2004.DDCC.Examples
+open Benton2004.DDCC
 
 #reset-options "--z3rlimit 128"
 

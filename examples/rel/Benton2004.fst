@@ -1,7 +1,7 @@
 module Benton2004
 
-open FStar.DM4F.Heap.IntStoreFixed
-open FStar.DM4F.IntStoreFixed
+include FStar.DM4F.Heap.IntStoreFixed
+include FStar.DM4F.IntStoreFixed
 
 type reified_raw_computation =
   (f: (
@@ -40,7 +40,7 @@ let skip : computation = let f (fuel: nat) : ISNull bool = true in f
 
 type var = id
 
-#set-options "--z3rlimit 128 --max_fuel 32 --max_ifuel 32"
+#set-options "--z3rlimit 128 --max_fuel 8 --max_ifuel 8"
 
 type exp (t: Type0) : Type0 = unit -> IntStore t (requires (fun _ -> True)) (ensures (fun h _ h' -> h' == h))
 let reified_exp (t: Type0) : Tot Type0 = (h: heap) -> Ghost (t * heap) (requires True) (ensures (fun rh -> snd rh == h))
@@ -264,36 +264,6 @@ let while (b: exp bool) (c: computation) : Tot computation =
 let terminates_on (f: reified_computation) (h: heap) : GTot Type0 =
   exists fuel . fst (f fuel h) == true
 
-(*
-assume val terminates_on_equiv
-  (f: reified_computation) (h: heap)
-: Lemma
-  (terminates_on f h <==> (
-    exists fuel . fst (f fuel h) == true
-  ))
-//  [SMTPat (terminates_on f h)]
-
-let terminates_on_intro
-  (f: reified_computation)
-  (fuel: nat)
-  (h: heap)  
-  (h' : heap)
-: Lemma
-  (requires (f fuel h == (true, h')))
-  (ensures (f `terminates_on` h))
-= terminates_on_equiv  f h
-
-let terminates_on_intro_fst
-  (f: reified_computation)
-  (fuel: nat)
-  (h: heap)  
-: Lemma
-  (requires (fst (f fuel h) == true))
-  (ensures (f `terminates_on` h))
-= let (x, y) = f fuel h in
-  terminates_on_intro f fuel h y
-*)
-
 type rel (t: Type0) = t -> t -> GTot Type0
 
 (* NOTE: the following is necessary (and I cannot define it, I HAVE to axiomatize it like this), otherwise Z3 loops. *)
@@ -312,13 +282,12 @@ let is_per (#t: Type0) (f: rel t) : GTot Type0 =
   (forall x1 x2 . f x1 x2 <==> f x2 x1) /\
   (forall x1 x2 x3 . (f x1 x2 /\ f x2 x3) ==> f x1 x3)
 
-type per (t: Type0) = ( f: rel t { is_per f } )
-
-let per_holds_sym
+let is_per_holds_sym
   (#t: Type0)
-  (p: per t)
+  (p: rel t)
   (s s' : t)
 : Lemma
+  (requires (is_per p))
   (holds p s s' <==> holds p s' s)
   [SMTPat (holds p s s')]
 = holds_equiv p s s';
@@ -326,10 +295,10 @@ let per_holds_sym
 
 let per_holds_trans
   (#t: Type0)
-  (f: per t)
+  (f: rel t)
   (x1 x2 x3: t)
 : Lemma
-  (requires (holds f x1 x2 /\ holds f x2 x3))
+  (requires (is_per f /\ holds f x1 x2 /\ holds f x2 x3))
   (ensures (holds f x1 x3))
   [SMTPatOr [
     [SMTPat (holds f x1 x2); SMTPat (holds f x2 x3)];
@@ -340,64 +309,24 @@ let per_holds_trans
   holds_equiv f x2 x3;
   holds_equiv f x1 x3
 
-let per_intersect
+let intersect
   (#t: Type0)
-  (ns1 ns2: per t)
-: GTot (per t)
+  (ns1 ns2: rel t)
+: GTot (rel t)
 = let f x y = holds ns1 x y /\ holds ns2 x y in
   Classical.forall_intro_2 (holds_equiv f);
   f
 
-let holds_per_intersect
+let holds_intersect
   (#t: Type0)
-  (ns1 ns2: per t)
+  (ns1 ns2: rel t)
   (x y: t)
 : Lemma
-  (holds (per_intersect ns1 ns2) x y <==> (holds ns1 x y /\ holds ns2 x y))
-  [SMTPat (holds (per_intersect ns1 ns2) x y)]
-= holds_equiv (per_intersect ns1 ns2) x y
+  (holds (intersect ns1 ns2) x y <==> (holds ns1 x y /\ holds ns2 x y))
+  [SMTPat (holds (intersect ns1 ns2) x y)]
+= holds_equiv (intersect ns1 ns2) x y
 
-type nstype (t: Type0) = per t
-
-let ns_f (#t: Type0) : nstype t =
-  let f (x y: t) = False in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
-let holds_ns_f (#t: Type0) (x y: t): Lemma
-  (holds ns_f x y <==> False)
-  [SMTPat (holds ns_f x y)]
-= holds_equiv ns_f x y
-
-let ns_t (#t: Type0) : nstype t =
-  let f (x y: t) = True in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
-let holds_ns_t (#t: Type0) (x y: t): Lemma
-  (holds ns_t x y <==> True)
-  [SMTPat (holds ns_t x y)]
-= holds_equiv ns_t x y
-
-let ns_singl (#t: Type0) (c: t) : nstype t =
-  let f (x y: t) = (x == c /\ y == c) in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
-let holds_ns_singl (#t: Type0) (c: t) (x y: t) : Lemma
-  (holds (ns_singl c) x y <==> (x == c /\ y == c))
-  [SMTPat (holds (ns_singl c) x y)]
-= holds_equiv (ns_singl c) x y
-
-let ns_delta (#t: Type0) : nstype t =
-  let f (x y: t) = (x == y) in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
-let holds_ns_delta (#t: Type0) (x y : t) : Lemma
-  (holds ns_delta x y <==> x == y)
-  [SMTPat (holds ns_delta x y)]
-= holds_equiv ns_delta x y
+type nstype (t: Type0) = rel t
 
 let interpolable
   (#t: Type0)
@@ -414,162 +343,10 @@ let interpolable_elim
   (ensures (exists x2 . holds f x1 x2 /\ holds f x2 x3))
 = Classical.forall_intro_2 (holds_equiv f)
 
-let interpolable_ns_f #t : Lemma (interpolable #t ns_f) = ()
-let interpolable_ns_t #t : Lemma (interpolable #t ns_t) = ()
-let interpolable_ns_singl #t (c: t) : Lemma (interpolable (ns_singl c)) = ()
-let interpolable_ns_delta #t : Lemma (interpolable #t ns_delta) = ()
-
-type sttype = (f: per heap { interpolable f } )
-
-let st_nil: sttype =
-  let f (x y : heap) : GTot Type0 = True in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
-let holds_st_nil
-  (x y: heap)
-: Lemma
-  (holds st_nil x y <==> True)
-  [SMTPat (holds st_nil x y)]
-= holds_equiv st_nil x y
-
-let st_var
-  (x: var)
-  (v: nstype int)
-: GTot sttype
-= let f (s1 s2: heap) : GTot Type0 = holds v (sel s1 x) (sel s2 x) in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
-let holds_st_var
-  (x: var)
-  (v: nstype int)
-  (a b: heap)
-: Lemma
-  (holds (st_var x v) a b <==> holds v (sel a x) (sel b x))
-  [SMTPat (holds (st_var x v) a b)]
-= holds_equiv (st_var x v) a b
-
-let st_intersect
-  (p1 p2: sttype)
-: GTot sttype
-= per_intersect p1 p2
-
-let holds_st_intersect
-  (ns1 ns2: sttype)
-  (x y: heap)
-: Lemma
-  (holds (st_intersect ns1 ns2) x y <==> (holds ns1 x y /\ holds ns2 x y))
-  [SMTPat (holds (st_intersect ns1 ns2) x y)]
-= holds_equiv (st_intersect ns1 ns2) x y
-
-let st_fresh_in
-  (x: var)
-  (p: sttype)
-: GTot Type0
-= forall s1 s1' s2 s2' . 
-  (holds p s1 s2 /\ (
-    forall y . y <> x ==> (sel s1' y == sel s1 y /\ sel s2' y == sel s2 y)
-  )) ==>
-  holds p s1' s2'
-
-let st_fresh_in_nil
-  (x: var)
-: Lemma
-  (x `st_fresh_in` st_nil)
-= ()
-
-let st_cons
-  (p: sttype)
-  (x: var)
-  (v: nstype int)
-: Ghost sttype
-  (requires (x `st_fresh_in` p))
-  (ensures (fun _ -> True))
-= st_intersect p (st_var x v)
-
-let st_fresh_in_var
-  (x: var)
-  (v: nstype int)
-  (y: var)
-: Lemma
-  (requires (y <> x))
-  (ensures (y `st_fresh_in` (st_var x v)))
-= ()
-
-let st_fresh_in_intersect
-  (x: var)
-  (p1 p2: sttype)
-: Lemma
-  (requires (
-    x `st_fresh_in` p1 /\
-    x `st_fresh_in` p2
-  ))
-  (ensures (x `st_fresh_in` (st_intersect p1 p2)))
-= ()
-
-let st_fresh_in_cons
-  (p: sttype)
-  (x: var)
-  (v: nstype int)
-  (y: var)
-: Lemma
-  (requires (
-    x `st_fresh_in` p /\
-    y `st_fresh_in` p /\
-    x <> y
-  ))
-  (ensures (
-    x `st_fresh_in` p /\
-    y `st_fresh_in` (st_cons p x v)
-  ))
-= ()
-
-(* Subtyping *)
-
-let subtype_ns_f (#t: Type0) (phi: nstype t) : Lemma
-  (included ns_f phi)
-= ()
-
-let subtype_ns_singl_delta (#t: Type0) (c: t) : Lemma
-  (ns_singl c `included` ns_delta)
-= ()
-
-let subtype_ns_t (#t: Type0) (phi: nstype t) : Lemma
-  (included phi ns_t)
-= ()
-
-let subtype_st_nil (phi: sttype) : Lemma
-  (included phi st_nil)
-= ()
-
-let subtype_st_f (phi phi' : sttype) (x: var) : Lemma
-  (requires (x `st_fresh_in` phi))
-  (ensures (x `st_fresh_in` phi /\ included (st_cons phi x ns_f) phi'))
-= ()
-
-let subtype_st_t (phi phi' : sttype) (x: var) : Lemma
-  (requires (x `st_fresh_in` phi' /\ included phi phi'))
-  (ensures (x `st_fresh_in` phi' /\ included phi (st_cons phi' x ns_t)))
-= ()
-
-let subtype_st_cons (phi phi' : sttype) (f f' : nstype int) (x: var) : Lemma
-  (requires (
-    included phi phi' /\
-    included f f' /\
-    x `st_fresh_in` phi /\
-    x `st_fresh_in` phi'
-  ))
-  (ensures (
-    x `st_fresh_in` phi /\
-    x `st_fresh_in` phi' /\
-    included (st_cons phi x f) (st_cons phi' x f')
-  ))
-= ()
+type sttype = (f: rel heap)
 
 (* 3.1.3. Judgements *)
 
-abstract
 let eval_equiv_reified
   (#t: Type0)
   (p: sttype)
@@ -578,17 +355,6 @@ let eval_equiv_reified
 : GTot Type0
 = forall (s s' : heap) .
   holds p s s' ==> holds e (fst (f s)) (fst (f' s'))
-
-let eval_equiv_reified_elim
-  (#t: Type0)
-  (p: sttype)
-  (e: nstype t)
-  (f f': reified_exp t)
-  (s s' : heap)
-: Lemma
-  (requires (eval_equiv_reified p e f f' /\ holds p s s'))
-  (ensures (holds e (fst (f s)) (fst (f' s'))))
-= ()  
 
 let eval_equiv
   (#t: Type0)
@@ -600,31 +366,20 @@ let eval_equiv
   let f' = reify_exp f' in
   eval_equiv_reified p e f f'
 
-abstract
 let terminates_equiv_reified
   (p : sttype)
   (f f' : reified_computation)
 : GTot Type0
 = forall s s' . holds p s s' ==> (terminates_on f s <==> terminates_on f' s')
 
-let terminates_equiv_reified_elim
-  (p : sttype)
-  (f f' : reified_computation)
-  (s s' : heap)
-: Lemma
-  (requires (terminates_equiv_reified p f f' /\ holds p s s'))
-  (ensures (terminates_on f s <==> terminates_on f' s'))
-= ()
-
 let terminates_equiv_reified_sym
   (p : sttype)
   (f f' : reified_computation)
 : Lemma
-  (requires (terminates_equiv_reified p f f'))
+  (requires (terminates_equiv_reified p f f' /\ is_per p))
   (ensures (terminates_equiv_reified p f' f))
 = ()
 
-abstract
 let exec_equiv_reified
   (p p' : sttype)
   (f f' : reified_computation)
@@ -632,24 +387,6 @@ let exec_equiv_reified
 = terminates_equiv_reified p f f' /\
   (forall (s s' : heap) (fuel: nat) .
     (holds p s s' /\ fst (f fuel s) == true /\ fst (f' fuel s') == true) ==> holds p' (snd (f fuel s)) (snd (f' fuel s')))
-
-let exec_equiv_reified_terminates
-  (p p' : sttype)
-  (f f' : reified_computation)
-: Lemma
-  (requires (exec_equiv_reified p p' f f'))
-  (ensures (terminates_equiv_reified p f f'))
-= ()
-
-let exec_equiv_reified_elim
-  (p p' : sttype)
-  (f f' : reified_computation)
-  (s s' : heap)
-  (fuel: nat)
-: Lemma
-  (requires (exec_equiv_reified p p' f f' /\ holds p s s' /\ fst (f fuel s) == true /\ fst (f' fuel s') == true))
-  (ensures (holds p' (snd (f fuel s)) (snd (f' fuel s'))))
-= ()
 
 let exec_equiv
   (p p' : sttype)
@@ -667,7 +404,7 @@ let eval_equiv_sym
   (e: nstype t)
   (f f': exp t)
 : Lemma
-  (requires (eval_equiv p e f f'))
+  (requires (is_per p /\ is_per e /\ eval_equiv p e f f'))
   (ensures (eval_equiv p e f' f))
 = ()
 
@@ -675,6 +412,7 @@ let exec_equiv_sym
   (p p': sttype)
   (f f' : computation)
 : Lemma
+  (requires (is_per p /\ is_per p'))
   (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
   [SMTPat (exec_equiv p p' f f')]
 = ()
@@ -685,15 +423,15 @@ let eval_equiv_trans
   (e: nstype t)
   (f1 f2 f3 : exp t)
 : Lemma
-  (requires (eval_equiv p e f1 f2 /\ eval_equiv p e f2 f3))
+  (requires (is_per e /\ interpolable p /\ eval_equiv p e f1 f2 /\ eval_equiv p e f2 f3))
   (ensures (eval_equiv p e f1 f3))
-= ()
+= Classical.forall_intro_2 (fun x -> Classical.move_requires (interpolable_elim p x))
 
 let exec_equiv_reified_trans
   (p p': sttype)
   (f1 f2 f3 : reified_computation)
 : Lemma
-  (requires (exec_equiv_reified p p' f1 f2 /\ exec_equiv_reified p p' f2 f3))
+  (requires (is_per p' /\ interpolable p /\ exec_equiv_reified p p' f1 f2 /\ exec_equiv_reified p p' f2 f3))
   (ensures (exec_equiv_reified p p' f1 f3))
 = let prf1
     (s1 s3 : heap)
@@ -736,6 +474,8 @@ let exec_equiv_trans
   (c1 c2 c3 : computation)
 : Lemma
   (requires (
+    is_per p' /\
+    interpolable p /\
     exec_equiv p p' c1 c2 /\
     exec_equiv p p' c2 c3
   ))
@@ -751,53 +491,6 @@ let exec_equiv_trans
   exec_equiv_reified_trans p p' z1 z2 z3
 
 (* Figure 2. Theorem 1. *)
-
-(* Subtyping and structural *)
-
-(* The following, from the POPL paper, is wrong (because of divergence), and has been removed from the revised version available at:
-https://www.researchgate.net/publication/2928156_Simple_Relational_Correctness_Proofs_for_Static_Analyses_and_Program_Transformations_DRAFT_--_Revised_Long_Version_--_DRAFT
-<<
-let d_ct1
-  (c c' : computation)
-  (p: sttype)
-: Lemma
-  (exec_equiv p st_nil c c')
-= ()
->>
-*)
-
-let d_ct
-  (c c' : computation)
-  (p p' : sttype)
-  (x: var)
-: Lemma
-  (requires (x `st_fresh_in` p))
-  (ensures (x `st_fresh_in` p /\ exec_equiv (st_cons p x ns_f) p' c c'))
-  [SMTPat (exec_equiv (st_cons p x ns_f) p' c c')]
-= ()
-
-let d_et1
-  (#t: Type0)
-  (f f' : exp t)
-  (p: sttype)
-: Lemma
-  (eval_equiv p ns_t f f')
-  [SMTPat (eval_equiv p ns_t f f')]
-= ()
-
-let d_et2
-  (#t: Type0)
-  (f f' : exp t)
-  (p: sttype)
-  (x: var)
-  (p' : nstype t)
-: Lemma
-  (requires (x `st_fresh_in` p))
-  (ensures (x `st_fresh_in` p /\ eval_equiv (st_cons p x ns_f) p' f f'))
-  [SMTPat (eval_equiv (st_cons p x ns_f) p' f f')]
-= ()
-
-let d_esym = eval_equiv_sym
 
 let d_esub
   (#t: Type0)
@@ -827,35 +520,12 @@ let d_csub
   [SMTPat (exec_equiv p1' p2' f f'); SMTPat (exec_equiv p1 p2 f f')]
 = ()
 
-let d_etr = eval_equiv_trans
-
-let d_csym = exec_equiv_sym
-
-let d_ctr = exec_equiv_trans
-
-(* Expressions *)
-
-let d_v
-  (x: var)
-  (p: sttype)
-  (f: nstype int)
-: Lemma
-  (requires (x `st_fresh_in` p))
-  (ensures (x `st_fresh_in` p /\ eval_equiv (st_cons p x f) f (evar x) (evar x)))
-  [SMTPat (eval_equiv (st_cons p x f) f (evar x) (evar x))]
-= ()
-
-let eval_equiv_const
-  (#t: Type0)
-  (c: t)
-  (p: sttype)
-: Lemma
-  (eval_equiv p (ns_singl c) (const c) (const c))
-  [SMTPat (eval_equiv p (ns_singl c) (const c) (const c))]
-= ()
-
-let d_n = eval_equiv_const #int
-let d_b = eval_equiv_const #bool
+let eop
+  (#from #to: Type0)
+  (op: (from -> from -> Tot to))
+  (e1 e2: exp from)
+: Tot (exp to)
+= fun () -> (e1 ()) `op` (e2 ())
 
 (* Definition 1 *)
 
@@ -868,13 +538,6 @@ let op_abs
 = forall x x' y y' .
   (holds ns1 x x' /\ holds ns2 y y') ==>
   holds ns (op x y) (op x' y')
-
-let eop
-  (#from #to: Type0)
-  (op: (from -> from -> Tot to))
-  (e1 e2: exp from)
-: Tot (exp to)
-= fun () -> (e1 ()) `op` (e2 ())
 
 let d_op
   (#from #to: Type0)
@@ -902,23 +565,6 @@ let d_skip
 = ()
 
 #set-options "--z3rlimit 1024"
-
-let d_assign
-  (p: sttype)
-  (x: var)
-  (f f': nstype int)
-  (e e' : exp int)
-: Lemma
-  (requires (
-    x `st_fresh_in` p /\
-    eval_equiv (st_cons p x f) f' e e'
-  ))
-  (ensures (
-    x `st_fresh_in` p /\
-    exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e')
-  ))
-  [SMTPat (exec_equiv (st_cons p x f) (st_cons p x f') (assign x e) (assign x e'))]  
-= ()
 
 let d_seq_terminates
   (p0 p1 p2 : sttype)
@@ -965,6 +611,53 @@ let d_seq_terminates
   in
   Classical.forall_intro (Classical.move_requires g)
 
+(* We now need to prove the converse, too, because p is not necessarily a PER. *)
+
+let d_seq_terminates_recip
+  (p0 p1 p2 : sttype)
+  (c01 c01' c12 c12' : computation)
+  (s0 s0': heap)
+: Lemma
+  (requires (
+    exec_equiv p0 p1 c01 c01' /\
+    exec_equiv p1 p2 c12 c12' /\
+    holds p0 s0 s0' /\
+    terminates_on (reify_computation (seq c01' c12')) s0'
+  ))
+  (ensures (
+    terminates_on (reify_computation (seq c01 c12)) s0
+  ))
+= let f01 = reify_computation c01 in
+  let f01' = reify_computation c01' in
+  let f12 = reify_computation c12 in
+  let f12' = reify_computation c12' in
+  let f = reify_computation (seq c01 c12) in
+  let f' = reify_computation (seq c01' c12') in
+  let g
+    (fuel: nat)
+  : Lemma
+    (requires (fst (f01 fuel s0) == true /\ fst (f01' fuel s0') == true))
+    (ensures (terminates_on f s0))
+  = let k01 = f01 fuel s0 in
+    let k01' = f01' fuel s0' in
+    let s1 = snd k01 in
+    let s1' = snd k01' in
+    assert (holds p1 s1 s1');
+    assert (terminates_on f12' s1');
+    let g'
+      (fuel' : nat)
+    : Lemma
+      (requires (fst (f12' fuel' s1') == true))
+      (ensures (terminates_on f s0))
+    = assert (f01' (fuel + fuel') s0' == (true, s1'));
+      assert (f12' (fuel + fuel') s1' == f12' fuel' s1');
+      assert (f' (fuel + fuel') s0' == f12' (fuel + fuel') s1');
+      assert (fst (f' (fuel + fuel') s0') == true)
+    in
+    Classical.forall_intro (Classical.move_requires g')
+  in
+  Classical.forall_intro (Classical.move_requires g)
+
 let d_seq
   (p0 p1 p2 : sttype)
   (c01 c01' c12 c12' : computation)
@@ -988,10 +681,8 @@ let d_seq
   : Lemma
     (requires (holds p0 s0 s0'))
     (ensures (terminates_on f s0 <==> terminates_on f' s0'))
-  = exec_equiv_sym p0 p1 c01 c01';
-    exec_equiv_sym p1 p2 c12 c12';
-    Classical.move_requires (d_seq_terminates p0 p1 p2 c01 c01' c12 c12' s0) s0';
-    Classical.move_requires (d_seq_terminates p0 p1 p2 c01' c01 c12' c12 s0') s0
+  = Classical.move_requires (d_seq_terminates p0 p1 p2 c01 c01' c12 c12' s0) s0';
+    Classical.move_requires (d_seq_terminates_recip p0 p1 p2 c01 c01' c12 c12' s0) s0'
   in
   Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
   let prf2
@@ -1005,143 +696,6 @@ let d_seq
     let s1 = snd k01 in
     let s1' = snd k01' in
     assert (holds p1 s1 s1')
-  in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
-
-let d_ifthenelse
-  (b b' : exp bool)
-  (c1 c1' c2 c2' : computation)
-  (phi phi' : sttype)
-: Lemma
-  (requires (
-    eval_equiv phi ns_delta b b' /\
-    exec_equiv phi phi' c1 c1' /\
-    exec_equiv phi phi' c2 c2'
-  ))
-  (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2')))
-  [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2'))]
-= ()
-
-let rec d_whl_terminates
-  (b b' : exp bool)
-  (c c' : computation)
-  (phi : sttype)
-  (s0 s0' : heap)
-  (fuel: nat)
-: Lemma
-  (requires (
-    eval_equiv phi ns_delta b b' /\
-    exec_equiv phi phi c c' /\
-    holds phi s0 s0' /\
-    fst (reify_computation (while b c) fuel s0) == true
-  ))
-  (ensures (
-    terminates_on (reify_computation (while b' c')) s0'
-  ))
-  (decreases fuel)
-= let fc = reify_computation c in
-  let fc' = reify_computation c' in
-  let f = reify_computation (while b c) in
-  let f' = reify_computation (while b' c') in
-  let e = fst (reify_exp b s0) in
-  assert (e == fst (reify_exp b' s0'));
-  if e
-  then begin
-    assert (terminates_on fc' s0');
-    let g
-      (fuel0: nat)
-    : Lemma
-      (requires (fst (fc' fuel0 s0') == true))
-      (ensures (terminates_on f' s0'))
-    = let fuel1 = fuel + fuel0 in
-      assert (fc' fuel1 s0' == fc' fuel0 s0');
-      assert  (fc fuel1 s0 == fc fuel s0);
-      let s1 = snd (fc fuel1 s0) in
-      let s1' = snd (fc' fuel1 s0') in
-      assert (holds phi s1 s1');
-      assert (f fuel s0 == f (fuel - 1) s1);
-      assert (f' fuel1 s0' == f' (fuel1 - 1) s1');
-      d_whl_terminates b b' c c' phi s1 s1' (fuel - 1);
-      let g'
-        (fuel2 : nat)
-      : Lemma
-        (requires (fst (f' fuel2 s1') == true))
-        (ensures (terminates_on f' s0'))
-      = let fuel3 = fuel1 + fuel2 + 1 in
-        assert (fc' fuel3 s0' == fc' fuel1 s0');
-        assert (f' fuel3 s0' == f' (fuel3 - 1) s1')
-      in
-      Classical.forall_intro (Classical.move_requires g')
-    in
-    Classical.forall_intro (Classical.move_requires g)
-  end else
-    assert (f' fuel s0' == (true, s0'))
-
-let d_whl
-  (b b' : exp bool)
-  (c c' : computation)
-  (phi : sttype)
-: Lemma
-  (requires (
-    eval_equiv phi ns_delta b b' /\
-    exec_equiv phi phi c c'
-  ))
-  (ensures (exec_equiv phi phi (while b c) (while b' c')))
-  [SMTPat (exec_equiv phi phi (while b c) (while b' c'))]
-= let eb = reify_exp b in
-  let eb' = reify_exp b' in
-  let eb_rel : squash (eval_equiv_reified phi ns_delta eb eb') = () in
-  let fc = reify_computation c in
-  let fc' = reify_computation c' in
-  let c_rel : squash (exec_equiv_reified phi phi fc fc') = () in
-  let f = reify_computation (while b c) in
-  let f' = reify_computation (while b' c') in
-  let prf1
-    (s0 s0' : heap)
-  : Lemma
-    (requires (holds phi s0 s0'))
-    (ensures (terminates_on f s0 <==> terminates_on f' s0'))
-  = exec_equiv_sym phi phi c c' ;
-    eval_equiv_sym phi ns_delta b b' ;
-    Classical.forall_intro (Classical.move_requires (d_whl_terminates b b' c c' phi s0 s0'));
-    Classical.forall_intro (Classical.move_requires (d_whl_terminates b' b c' c phi s0' s0))
-  in
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
-  let rec prf2
-    (fuel: nat)
-    (s0 s0' : heap)
-  : Lemma
-    (requires (
-      holds phi s0 s0' /\
-      fst (f fuel s0) == true /\
-      fst (f' fuel s0') == true
-    ))
-    (ensures (
-      holds phi (snd (f fuel s0)) (snd (f' fuel s0'))
-    ))
-    (decreases fuel)
-  = let e = fst (eb s0) in
-    let e' = fst (eb' s0') in
-    assert (holds phi s0 s0');
-    let e_rel : squash (holds ns_delta e e') =
-      eb_rel;
-      ()
-    in
-    assert (e == fst (eb' s0'));
-    if e
-    then begin
-      let k = fc fuel s0 in
-      let k' = fc' fuel s0' in
-      let s1 = snd k in
-      let s1' = snd k' in
-      let s_rel : squash (holds phi s1 s1') =
-        c_rel;
-        ()
-      in
-      assert (f fuel s0 == f (fuel - 1) s1);
-      assert (f' fuel s0' == f' (fuel - 1) s1');
-      prf2 (fuel - 1) s1 s1'
-    end else ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
 
@@ -1292,40 +846,7 @@ let d_lu2
   Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
   Classical.forall_intro_2 (fun x -> Classical.move_requires (prf2 x))
 
-let d_sas
-  (x: var)
-  (phi: sttype)
-  (f: nstype int)
-: Lemma
-  (requires (
-    x `st_fresh_in` phi
-  ))
-  (ensures (
-    x `st_fresh_in` phi /\
-    exec_equiv (st_cons phi x f) (st_cons phi x f) (assign x (evar x)) skip
-  ))
-  [SMTPat (exec_equiv (st_cons phi x f) (st_cons phi x f) (assign x (evar x)) skip)]
-= ()
-
-
 (* 3.2 Optimizing Transformations *)
-
-(* Dead assignment elimination *)
-
-let d_das
-  (x: var)
-  (e: exp int)
-  (phi: sttype)
-  (f: nstype int)
-: Lemma
-  (requires (x `st_fresh_in` phi))
-  (ensures (
-    x `st_fresh_in` phi /\
-    exec_equiv (st_cons phi x f) (st_cons phi x ns_t) (assign x e) skip
-  ))
-  [SMTPat (exec_equiv (st_cons phi x f) (st_cons phi x ns_t) (assign x e) skip)]
-= let ec = reify_exp e in // TODO: WHY is this necessary?
-  ()
 
 (* Equivalent branches for conditional *)
 
@@ -1352,108 +873,3 @@ let d_bre
   [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c0)]
 = let ec = reify_exp b in // TODO: WHY is this necessary?
   ()
-
-(* Constant folding *)
-
-let d_cf
-  (t: Type0)
-  (f: exp t)
-  (c: t)
-  (phi: sttype)
-: Lemma
-  (requires (eval_equiv phi (ns_singl c) f f))
-  (ensures (eval_equiv phi (ns_singl c) f (const c)))
-  [SMTPat (eval_equiv phi (ns_singl c) f (const c))]
-= ()
-
-(* Known branch *)
-
-let d_kb
-  (v: bool)
-  (b: exp bool)
-  (phi: sttype)
-  (c1 c2 c' : computation)
-  (phi' : sttype)
-: Lemma
-  (requires (
-    eval_equiv phi (ns_singl v) b b /\
-    exec_equiv phi phi' (if v then c1 else c2) c'
-  ))
-  (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c'))
-  [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c')]  
-= ()
-
-let d_kbt = d_kb true
-let d_kbf = d_kb false
-
-(* Dead while *)
-
-let d_dwh
-  (b: exp bool)
-  (phi: sttype)
-  (c: computation)
-: Lemma
-  (requires (eval_equiv phi (ns_singl false) b b))
-  (ensures (exec_equiv phi phi (while b c) skip))
-  [SMTPat (exec_equiv phi phi (while b c) skip)]
-= ()
-
-(* Divergence *)
-
-let d_div
-  (b: exp bool)
-  (c: computation)
-  (phi phi' : sttype)
-: Lemma
-  (requires (
-    eval_equiv phi (ns_singl true) b b /\
-    exec_equiv phi phi c c
-  ))
-  (ensures (
-    exec_equiv phi phi' (while b c) (while b c)
-  ))
-= let f = reify_computation (while b c) in
-  let e = reify_exp b in
-  let e_rel : squash (eval_equiv phi (ns_singl true) b b) = () in
-  let fc = reify_computation c in
-  let f_rel : squash (exec_equiv_reified phi phi fc fc) = () in
-  let rec prf
-    (s0 s0' : heap)
-    (fuel: nat)
-  : Lemma
-    (requires (holds phi s0 s0'))
-    (ensures (fst (f fuel s0) == false))
-    (decreases fuel)
-  = let _ : squash (e s0 == (true, s0) /\ e s0' == (true, s0')) =
-      e_rel;
-      ()
-    in
-    let k = fc fuel s0 in
-    if fst k
-    then
-      let s1 = snd k in
-      if fuel = 0
-      then assert (fst (f fuel s0) == false)
-      else begin
-        assert (terminates_on fc s0);
-        assert (terminates_on fc s0');
-        let g
-          (fuel' : nat)
-        : Lemma
-          (requires (fst (fc fuel' s0') == true))
-          (ensures (fst (f fuel s0) == false))
-        = let s1' = snd (fc fuel' s0') in
-          assert (fc (fuel + fuel') s0 == fc fuel s0);
-          assert (fc (fuel + fuel') s0' == fc fuel' s0');
-          assert (f fuel s0 == f (fuel - 1) s1);
-          let _ : squash (holds phi s1 s1') =
-            f_rel;
-            ()
-          in
-          prf s1 s1' (fuel - 1)
-        in
-        Classical.forall_intro (Classical.move_requires g)
-    end else
-      assert (fst (f fuel s0) == false)
-  in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf x y))

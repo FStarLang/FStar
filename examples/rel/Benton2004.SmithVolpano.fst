@@ -1,5 +1,5 @@
 module Benton2004.SmithVolpano
-include Benton2004
+include Benton2004.DDCC
 
 type seclevel = | Low | High
 
@@ -26,7 +26,7 @@ let eval_equiv
   (f: exp t)
   (s: seclevel)
 : GTot Type0
-= Benton2004.eval_equiv (interp_context c) (interp_seclevel _ s) f f
+= Benton2004.DDCC.eval_equiv (interp_context c) (interp_seclevel _ s) f f
 
 let eval_equiv_def
   (#t: Type0)
@@ -34,7 +34,7 @@ let eval_equiv_def
   (f: exp t)
   (s: seclevel)
 : Lemma
-  (eval_equiv gamma f s <==> Benton2004.eval_equiv (interp_context gamma) (interp_seclevel _ s) f f)
+  (eval_equiv gamma f s <==> Benton2004.DDCC.eval_equiv (interp_context gamma) (interp_seclevel _ s) f f)
 = ()
 
 abstract
@@ -43,14 +43,14 @@ let exec_equiv
   (c: computation)
   (s: seclevel)
 : GTot Type0
-= Benton2004.exec_equiv (interp_context gamma) (interp_context gamma) c (match s with Low -> c | High -> skip)
+= Benton2004.DDCC.exec_equiv (interp_context gamma) (interp_context gamma) c (match s with Low -> c | High -> skip)
 
 let exec_equiv_def
   (gamma: context)
   (c: computation)
   (s: seclevel)
 : Lemma
-  (exec_equiv gamma c s <==> Benton2004.exec_equiv (interp_context gamma) (interp_context gamma) c (match s with Low -> c | High -> skip))
+  (exec_equiv gamma c s <==> Benton2004.DDCC.exec_equiv (interp_context gamma) (interp_context gamma) c (match s with Low -> c | High -> skip))
 = ()
 
 (* Figure 4 *)
@@ -96,7 +96,7 @@ let eval_equiv_const
 : Lemma
   (eval_equiv gamma (const c) s)
   [SMTPat (eval_equiv gamma (const c) s)]
-= Benton2004.eval_equiv_const c (interp_context gamma)
+= Benton2004.DDCC.eval_equiv_const c (interp_context gamma)
 
 let op_abs_interp_seclevel
   (#from #to: Type0)
