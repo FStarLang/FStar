@@ -945,3 +945,124 @@ let d_ifthenelse
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b' c1' c2')))
 = ()
 
+let rec d_whl_terminates
+  (b b' : exp bool)
+  (c c' : computation)
+  (phi : sttype)
+  (s0 s0' : heap)
+  (fuel: nat)
+: Lemma
+  (requires (
+    eval_equiv phi ns_delta b b' /\
+    exec_equiv phi phi c c' /\
+    holds phi s0 s0' /\
+    fst (reify_computation (while b c) fuel s0) == true
+  ))
+  (ensures (
+    terminates_on (reify_computation (while b' c')) s0'
+  ))
+  (decreases fuel)
+= let fc = reify_computation c in
+  let fc' = reify_computation c' in
+  let f = reify_computation (while b c) in
+  let f' = reify_computation (while b' c') in
+  let e = fst (reify_exp b s0) in
+  assert (e == fst (reify_exp b' s0'));
+  if e
+  then begin
+    assert (terminates_on fc' s0');
+    let g
+      (fuel0: nat)
+    : Lemma
+      (requires (fst (fc' fuel0 s0') == true))
+      (ensures (terminates_on f' s0'))
+    = let fuel1 = fuel + fuel0 in
+      assert (fc' fuel1 s0' == fc' fuel0 s0');
+      assert  (fc fuel1 s0 == fc fuel s0);
+      let s1 = snd (fc fuel1 s0) in
+      let s1' = snd (fc' fuel1 s0') in
+      assert (holds phi s1 s1');
+      assert (f fuel s0 == f (fuel - 1) s1);
+      assert (f' fuel1 s0' == f' (fuel1 - 1) s1');
+      d_whl_terminates b b' c c' phi s1 s1' (fuel - 1);
+      let g'
+        (fuel2 : nat)
+      : Lemma
+        (requires (fst (f' fuel2 s1') == true))
+        (ensures (terminates_on f' s0'))
+      = let fuel3 = fuel1 + fuel2 + 1 in
+        assert (fc' fuel3 s0' == fc' fuel1 s0');
+        assert (f' fuel3 s0' == f' (fuel3 - 1) s1')
+      in
+      Classical.forall_intro (Classical.move_requires g')
+    in
+    Classical.forall_intro (Classical.move_requires g)
+  end else
+    assert (f' fuel s0' == (true, s0'))
+
+let d_whl
+  (b b' : exp bool)
+  (c c' : computation)
+  (phi : sttype)
+: Lemma
+  (requires (
+    eval_equiv phi ns_delta b b' /\
+    exec_equiv phi phi c c'
+  ))
+  (ensures (exec_equiv phi phi (while b c) (while b' c')))
+= let eb = reify_exp b in
+  let eb' = reify_exp b' in
+  let eb_rel : squash (eval_equiv_reified phi ns_delta eb eb') = () in
+  let fc = reify_computation c in
+  let fc' = reify_computation c' in
+  let c_rel : squash (exec_equiv_reified phi phi fc fc') = () in
+  let f = reify_computation (while b c) in
+  let f' = reify_computation (while b' c') in
+  let prf1
+    (s0 s0' : heap)
+  : Lemma
+    (requires (holds phi s0 s0'))
+    (ensures (terminates_on f s0 <==> terminates_on f' s0'))
+  = exec_equiv_sym phi phi c c' ;
+    eval_equiv_sym phi ns_delta b b' ;
+    Classical.forall_intro (Classical.move_requires (d_whl_terminates b b' c c' phi s0 s0'));
+    Classical.forall_intro (Classical.move_requires (d_whl_terminates b' b c' c phi s0' s0))
+  in
+  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
+  let rec prf2
+    (fuel: nat)
+    (s0 s0' : heap)
+  : Lemma
+    (requires (
+      holds phi s0 s0' /\
+      fst (f fuel s0) == true /\
+      fst (f' fuel s0') == true
+    ))
+    (ensures (
+      holds phi (snd (f fuel s0)) (snd (f' fuel s0'))
+    ))
+    (decreases fuel)
+  = let e = fst (eb s0) in
+    let e' = fst (eb' s0') in
+    assert (holds phi s0 s0');
+    let e_rel : squash (holds ns_delta e e') =
+      eb_rel;
+      ()
+    in
+    assert (e == fst (eb' s0'));
+    if e
+    then begin
+      let k = fc fuel s0 in
+      let k' = fc' fuel s0' in
+      let s1 = snd k in
+      let s1' = snd k' in
+      let s_rel : squash (holds phi s1 s1') =
+        c_rel;
+        ()
+      in
+      assert (f fuel s0 == f (fuel - 1) s1);
+      assert (f' fuel s0' == f' (fuel - 1) s1');
+      prf2 (fuel - 1) s1 s1'
+    end else ()
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
