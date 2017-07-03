@@ -7,17 +7,17 @@ module Seq = FStar.Seq
 module P = FStar.Preorder
 
 type t (a:Type) (n:nat) = s:Seq.seq (option a){Seq.length s == n}
-let rel0 (#a:Type) (#n:nat) : P.relation (t a n) = fun (s1 s2 : t a n) ->
+let remains_init0 (#a:Type) (#n:nat) : P.relation (t a n) = fun (s1 s2 : t a n) ->
     forall (i:nat{i < n}). Some? (Seq.index s1 i) ==> Some? (Seq.index s2 i)
 
-let rel_preorder (#a:Type) (#n:nat) : Lemma (P.preorder_rel (rel0 #a #n)) = ()
-let rel (#a:Type) (#n:nat) : P.preorder (t a n) = rel_preorder #a #n ; rel0
+let remains_init_preorder (#a:Type) (#n:nat) : Lemma (P.preorder_rel (rel0 #a #n)) = ()
+let remains_init (#a:Type) (#n:nat) : P.preorder (t a n) = remains_init_preorder #a #n ; rel0
 
 noeq
-type array_ (n:nat) (a:Type) : Type =
-  | Array: #m:nat -> r:mref (t a m) rel -> offset:nat{offset + n <= m} -> array_ n a
+type array0 (n:nat) (a:Type) : Type =
+  | Array: #m:nat -> r:mref (t a m) remains_init -> offset:nat{offset + n <= m} -> array0 n a
 
-let array = array_
+let array = array0
 
 let fresh (#a:Type) (#n:nat) (x:array n a) (h0 h1:heap) = fresh (Array?.r x) h0 h1
 let addr_of #a #n (Array r _) = addr_of r
