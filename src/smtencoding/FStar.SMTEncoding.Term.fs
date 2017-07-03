@@ -229,7 +229,7 @@ let weightToSmt = function
 
 let rec hash_of_term' t = match t with
   | Integer i ->  i
-  | BoundV i  -> "@"^string_of_int i
+  | BoundV i  -> "__"^string_of_int i
   | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
   | App(op, tms) -> "("^(op_to_string op)^(List.map hash_of_term tms |> String.concat " ")^")"
   | Labeled(t, r1, r2) -> hash_of_term t ^ r1 ^ (Range.string_of_range r2)
@@ -516,8 +516,8 @@ let constructor_to_decl (name, fields, sort, id, injective) =
 let name_binders_inner prefix_opt outer_names start sorts =
     let names, binders, n = sorts |> List.fold_left (fun (names, binders, n) s ->
         let prefix = match s with
-            | Term_sort -> "@x"
-            | _ -> "@u" in
+            | Term_sort -> "__x"
+            | _ -> "__u" in
         let prefix =
             match prefix_opt with
             | None -> prefix
@@ -593,7 +593,7 @@ let termToSmt
           (* substitution should occur in parallel and order should not matter *)
           let names, binders, n =
             List.fold_left (fun (names0, binders, n0) e ->
-              let nm = "@lb" ^ string_of_int n0 in
+              let nm = "__lb" ^ string_of_int n0 in
               let names0 = (nm, Term_sort)::names0 in
               let b = BU.format2 "(%s %s)" nm (aux n names e) in
               names0, b::binders, n0+1)

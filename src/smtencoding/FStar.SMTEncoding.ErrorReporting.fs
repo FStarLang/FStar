@@ -299,7 +299,7 @@ let detail_errors hint_replay
         labs
         |> List.map (fun (l, _, _) ->
             let a = {
-                    assumption_name="@disable_label_"^fst l; //the "@" is important in the name; forces it to be retained when replaying a hint
+                    assumption_name="__disable_label_"^fst l; //the "__" is important in the name; forces it to be retained when replaying a hint
                     assumption_caption=Some "Disabling label";
                     assumption_term=mkEq(mkFreeV l, mkTrue);
                     assumption_fact_ids=[]

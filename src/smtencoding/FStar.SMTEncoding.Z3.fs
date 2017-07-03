@@ -232,7 +232,7 @@ let bg_z3_proc =
 
 let at_log_file () =
   if Options.log_queries()
-  then "@" ^ (query_logging.log_file_name())
+  then "__" ^ (query_logging.log_file_name())
   else ""
 
 type smt_output_section = list<string>

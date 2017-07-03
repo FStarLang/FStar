@@ -145,7 +145,7 @@ let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
             | Assume a ->
                 if List.contains a.assumption_name core
                 then d::theory, n_retained+1, n_pruned
-                else if BU.starts_with a.assumption_name "@"
+                else if BU.starts_with a.assumption_name "__"
                 then d::theory, n_retained, n_pruned
                 else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
@@ -222,8 +222,8 @@ let with_fuel_and_diagnostics settings label_assumptions =
         Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
                         (string_of_int n)
                         (string_of_int i));
-        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
-        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "__MaxFuel_assumption");
+        Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "__MaxIFuel_assumption");
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled

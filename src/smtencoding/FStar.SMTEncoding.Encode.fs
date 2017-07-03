@@ -189,7 +189,7 @@ let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 
 (* Bound term variables *)
 let gen_term_var (env:env_t) (x:bv) =
-    let ysym = "@x"^(string_of_int env.depth) in
+    let ysym = "__x"^(string_of_int env.depth) in
     let y = mkFreeV(ysym, Term_sort) in
     ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + 1}
 let new_term_constant (env:env_t) (x:bv) =
@@ -216,7 +216,7 @@ let lookup_term_var env a =
 (* Qualified term names *)
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
-    let ftok = fname^"@tok" in
+    let ftok = fname^"__tok" in
 //    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a =
@@ -1438,7 +1438,7 @@ let prims =
     let ysym, y = fresh_fvar "y" Term_sort in
     let quant vars body : string -> term * list<decl> = fun x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
-        let xtok = x ^ "@tok" in
+        let xtok = x ^ "__tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
         let xapp = mkApp(x, List.map mkFreeV vars) in
         let xtok = mkApp(xtok, []) in
@@ -2071,10 +2071,10 @@ let encode_top_level_let :
                                     ("equation_with_fuel_" ^g)) in
             let eqn_f = Util.mkAssume(mkForall([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
-                                    ("@fuel_correspondence_"^g)) in
+                                    ("__fuel_correspondence_"^g)) in
             let eqn_g' = Util.mkAssume(mkForall([[gsapp]], fuel::vars, mkEq(gsapp,  mkApp(g, Term.n_fuel 0::vars_tm))),
                                     Some "Fuel irrelevance",
-                                    ("@fuel_irrelevance_" ^g)) in
+                                    ("__fuel_irrelevance_" ^g)) in
             let aux_decls, g_typing =
               let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
               let vars_tm = List.map mkFreeV vars in
@@ -2766,7 +2766,7 @@ let encode_query use_env_msg tcenv q
         env_decls
         @label_prefix
         @qdecls in
-    let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
+    let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "__query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
 
