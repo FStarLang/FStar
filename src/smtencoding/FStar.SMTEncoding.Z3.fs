@@ -87,7 +87,7 @@ let ini_params () =
                 (Options.z3_cliopt())
       |> String.concat " "
   | Options.CVC4 ->
-    List.append ["--incremental";  "--mbqi=none"; "--lang smt2"] (Options.z3_cliopt()) |> String.concat " "
+    List.append ["--incremental";  "--mbqi=none"; "--lang smt2"; "--incremental"] (Options.z3_cliopt()) |> String.concat " "
     // TODO: Honor Options.z3_seed
 
 type label = string
