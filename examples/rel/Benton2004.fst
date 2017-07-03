@@ -1120,6 +1120,135 @@ let d_whl
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
 
+(* 3.1 Basic equations *)
+
+let d_su1
+  (c: computation)
+  (phi phi' : sttype)
+: Lemma
+  (requires (exec_equiv phi phi' c c))
+  (ensures (exec_equiv phi phi' (seq skip c) c))
+  [SMTPat (exec_equiv phi phi' (seq skip c) c)]
+= ()
+
+let d_su2
+  (c: computation)
+  (phi phi' : sttype)
+: Lemma
+  (requires (exec_equiv phi phi' c c))
+  (ensures (exec_equiv phi phi' (seq c skip) c))
+  [SMTPat (exec_equiv phi phi' (seq c skip) c)]
+= ()
+
+let d_assoc
+  (c1 c2 c3: computation)
+  (phi phi' : sttype)
+: Lemma
+  (requires (exec_equiv phi phi' (seq (seq c1 c2) c3) (seq (seq c1 c2) c3)))
+  (ensures (exec_equiv phi phi' (seq (seq c1 c2) c3) (seq c1 (seq c2 c3))))
+  [SMTPat (exec_equiv phi phi' (seq (seq c1 c2) c3) (seq c1 (seq c2 c3)))]
+= let fl = reify_computation (seq (seq c1 c2) c3) in
+  let fr = reify_computation (seq c1 (seq c2 c3)) in
+  assert (forall s0 fuel . fl s0 fuel == fr s0 fuel)
+
+let d_cc
+  (b: exp bool)
+  (c1 c2 c3: computation)
+  (phi phi' phi'' : sttype)
+: Lemma
+  (requires (
+    exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2) /\
+    exec_equiv phi' phi'' c3 c3
+  ))
+  (ensures (
+    exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))
+  ))
+  [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))]
+= let fl = reify_computation (seq (ifthenelse b c1 c2) c3) in
+  let fr = reify_computation (ifthenelse b (seq c1 c3) (seq c2 c3)) in
+  assert (forall s0 fuel . fl s0 fuel == fr s0 fuel);
+  assert (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (seq (ifthenelse b c1 c2) c3))
+
+let d_lu1
+  (b: exp bool)
+  (c: computation)
+  (phi phi' : sttype)
+: Lemma
+  (requires (exec_equiv phi phi' (while b c) (while b c)))
+  (ensures (exec_equiv phi phi' (while b c) (ifthenelse b (seq c (while b c)) skip)))
+= let fc = reify_computation c in
+  let fl = reify_computation (while b c) in
+  let fr = reify_computation (ifthenelse b (seq c (while b c)) skip) in
+  let eb = reify_exp b in
+  let prf1
+    (s0 s0' : heap)
+    (fuel: nat)
+  : Lemma
+    (requires (
+      holds phi s0 s0' /\
+      fst (fl fuel s0) == true
+    ))
+    (ensures (terminates_on fr s0'))
+  = assert (terminates_on fl s0');
+    let g
+      (fuel' : nat)
+    : Lemma
+      (requires (fst (fl fuel' s0') == true))
+      (ensures (terminates_on fr s0'))
+    = assert (fl fuel' s0' == (if fst (eb s0') then fl (fuel' - 1) (snd (fc fuel' s0')) else (true, s0')));
+      assert (fr fuel' s0' == (if fst (eb s0') then fl fuel' (snd (fc fuel' s0')) else (true, s0')))
+    in
+    Classical.forall_intro (Classical.move_requires g)
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf1 x y));
+  let prf2
+    (s0 s0' : heap)
+    (fuel: nat)
+  : Lemma
+    (requires (
+      holds phi s0 s0' /\
+      fst (fr fuel s0') == true
+    ))
+    (ensures (terminates_on fl s0))
+  = assert (fr fuel s0' == (if fst (eb s0') then fl fuel (snd (fc fuel s0')) else (true, s0')));
+    assert (fl (fuel + 1) s0' == (if fst (eb s0') then fl fuel (snd (fc fuel s0')) else (true, s0')))
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y));
+  let prf3
+    (s0 s0' : heap)
+    (fuel: nat)
+  : Lemma
+    (requires (
+      holds phi s0 s0' /\
+      fst (fl fuel s0) == true /\
+      fst (fr fuel s0') == true
+    ))
+    (ensures (holds phi' (snd (fl fuel s0)) (snd (fr fuel s0'))))
+  = assert (fr fuel s0' == (if fst (eb s0') then fl fuel (snd (fc fuel s0')) else (true, s0')));
+    assert (fl fuel s0 == fl (fuel + 1) s0);
+    assert (fst (fl (fuel + 1) s0') == true);
+    if fst (eb s0')
+    then assert (fc (fuel + 1) s0' == fc fuel s0')
+    else ()
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf3 x y))
+
+let d_sas
+  (x: var)
+  (phi: sttype)
+  (f: nstype int)
+: Lemma
+  (requires (
+    x `st_fresh_in` phi
+  ))
+  (ensures (
+    x `st_fresh_in` phi /\
+    exec_equiv (st_cons phi x f) (st_cons phi x f) (assign x (evar x)) skip
+  ))
+  [SMTPat (exec_equiv (st_cons phi x f) (st_cons phi x f) (assign x (evar x)) skip)]
+= ()
+
+
 (* 3.2 Optimizing Transformations *)
 
 (* Dead assignment elimination *)
