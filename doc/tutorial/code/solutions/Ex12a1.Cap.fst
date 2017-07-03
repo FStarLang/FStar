@@ -1,7 +1,10 @@
 (* to be used with Ex12.MAC.fst and Ex12a.ACLs.fst *)
 
-module Ex12a.Cap (* capabilities *) 
+module Ex12a1.Cap (* capabilities *) 
+open FStar.ST
+open FStar.All
 open Platform.Bytes
+
 
 
 module ACLs = Ex12a.ACLs
@@ -17,8 +20,8 @@ type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
 let k_read = MAC.keygen capRead
 
-val issue_read: f:string{ ACLs.canRead f } -> MAC.tag
-val redeem_read: f:string -> m:MAC.tag -> u:unit{ ACLs.canRead f }
+val issue_read: f:string{ ACLs.canRead f } -> ML MAC.tag
+val redeem_read: f:string -> m:MAC.tag -> ML (u:unit{ ACLs.canRead f })
 
 let issue_read f =
   assert(ACLs.canRead f);
@@ -28,7 +31,7 @@ let issue_read f =
 
 let redeem_read f t =
   let bs = (utf8 f) in
-  if MAC.verify k_write bs t then
+  if MAC.verify k_read bs t then
     ()
   else
     failwith "bad capability"
@@ -38,14 +41,15 @@ type capWrite (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canWrite f)
 
 let k_write = MAC.keygen capWrite
 
-val issue_write: f:string{ ACLs.canWrite f } -> MAC.tag
-val redeem_write: f:string -> m:MAC.tag -> u:unit{ ACLs.canWrite f }
+val issue_write: f:string{ ACLs.canWrite f } -> ML MAC.tag
+val redeem_write: f:string -> m:MAC.tag -> ML(u:unit{ ACLs.canWrite f })
 
 let issue_write f =
   assert(ACLs.canWrite f);
   let bs = (utf8 f) in
   assert(capWrite bs);
   MAC.mac k_write bs
+
 
 let redeem_write f t =
   let bs = (utf8 f) in
