@@ -6,6 +6,8 @@ include ../Makefile.include
 uall: all
 
 all:\
+  Benton2004.uver\
+  Benton2004.Examples.uver\
   Bijection.uver\
   Equivalence.uver\
   IfcComposeReify.uver\
