@@ -676,6 +676,7 @@ let exec_equiv_sym
   (f f' : computation)
 : Lemma
   (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
+  [SMTPat (exec_equiv p p' f f')]
 = ()
 
 let eval_equiv_trans
@@ -739,6 +740,11 @@ let exec_equiv_trans
     exec_equiv p p' c2 c3
   ))
   (ensures (exec_equiv p p' c1 c3))
+  [SMTPatOr [
+    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3)];
+    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3)];
+    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3)];
+  ]]
 = let z1 = reify_computation c1 in
   let z2 = reify_computation c2 in
   let z3 = reify_computation c3 in
@@ -1130,6 +1136,22 @@ let d_su1
   (ensures (exec_equiv phi phi' (seq skip c) c))
   [SMTPat (exec_equiv phi phi' (seq skip c) c)]
 = ()
+
+let d_su1'
+  (c c' c'' : computation)
+  (phi phi' phi'' : sttype)
+: Lemma
+  (requires (
+    exec_equiv phi phi' c skip /\
+    exec_equiv phi' phi'' c' c''
+  ))
+  (ensures (exec_equiv phi phi'' (seq c c') c''))
+  [SMTPat (exec_equiv phi phi'' (seq c c') c'')]
+= assert (exec_equiv phi phi'' (seq c c') (seq skip c'')) ;
+  let f1 = reify_computation (seq skip c'') in
+  let f2 = reify_computation c'' in
+  assert (forall fuel s0 . f1 fuel s0 == f2 fuel s0)
+  // NOTE: this rule is NOT a consequence of d_su1 + d_seq + d_ctr
 
 let d_su2
   (c: computation)
