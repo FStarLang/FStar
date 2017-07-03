@@ -1066,3 +1066,148 @@ let d_whl
     end else ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf2 x y))
+
+(* 3.2 Optimizing Transformations *)
+
+(* Dead assignment elimination *)
+
+let d_das
+  (x: var)
+  (e: exp int)
+  (phi: sttype)
+  (f: nstype int)
+: Lemma
+  (requires (x `st_fresh_in` phi))
+  (ensures (
+    x `st_fresh_in` phi /\
+    exec_equiv (st_cons phi x f) (st_cons phi x ns_t) (assign x e) skip
+  ))
+= let ec = reify_exp e in // TODO: WHY is this necessary?
+  ()
+
+(* Equivalent branches for conditional *)
+
+(* FIXME: the following rule is WRONG, because the relations are not necessarily reflexive.
+let d_bre
+  (c1 c2: computation)
+  (phi phi' : sttype)
+  (b: exp bool)
+: Lemma
+  (requires (exec_equiv phi phi' c1 c2))
+  (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c1))
+*)
+
+let d_bre
+  (c1 c2 c0: computation)
+  (phi phi' : sttype)
+  (b: exp bool)
+: Lemma
+  (requires (
+    exec_equiv phi phi' c1 c0 /\
+    exec_equiv phi phi' c2 c0
+  ))
+  (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c0))
+= let ec = reify_exp b in // TODO: WHY is this necessary?
+  ()
+
+(* Constant folding *)
+
+let d_cf
+  (t: Type0)
+  (f: exp t)
+  (c: t)
+  (phi: sttype)
+: Lemma
+  (requires (eval_equiv phi (ns_singl c) f f))
+  (ensures (eval_equiv phi (ns_singl c) f (const c)))
+= ()
+
+(* Known branch *)
+
+let d_kb
+  (v: bool)
+  (b: exp bool)
+  (phi: sttype)
+  (c1 c2 c' : computation)
+  (phi' : sttype)
+: Lemma
+  (requires (
+    eval_equiv phi (ns_singl v) b b /\
+    exec_equiv phi phi' (if v then c1 else c2) c'
+  ))
+  (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c'))
+= ()
+
+let d_kbt = d_kb true
+let d_kbf = d_kb false
+
+(* Dead while *)
+
+let d_dwh
+  (b: exp bool)
+  (phi: sttype)
+  (c: computation)
+: Lemma
+  (requires (eval_equiv phi (ns_singl false) b b))
+  (ensures (exec_equiv phi phi (while b c) skip))
+= ()
+
+(* Divergence *)
+
+let d_div
+  (b: exp bool)
+  (c: computation)
+  (phi phi' : sttype)
+: Lemma
+  (requires (
+    eval_equiv phi (ns_singl true) b b /\
+    exec_equiv phi phi c c
+  ))
+  (ensures (
+    exec_equiv phi phi' (while b c) (while b c)
+  ))
+= let f = reify_computation (while b c) in
+  let e = reify_exp b in
+  let e_rel : squash (eval_equiv phi (ns_singl true) b b) = () in
+  let fc = reify_computation c in
+  let f_rel : squash (exec_equiv_reified phi phi fc fc) = () in
+  let rec prf
+    (s0 s0' : heap)
+    (fuel: nat)
+  : Lemma
+    (requires (holds phi s0 s0'))
+    (ensures (fst (f fuel s0) == false))
+    (decreases fuel)
+  = let _ : squash (e s0 == (true, s0) /\ e s0' == (true, s0')) =
+      e_rel;
+      ()
+    in
+    let k = fc fuel s0 in
+    if fst k
+    then
+      let s1 = snd k in
+      if fuel = 0
+      then assert (fst (f fuel s0) == false)
+      else begin
+        assert (terminates_on fc s0);
+        assert (terminates_on fc s0');
+        let g
+          (fuel' : nat)
+        : Lemma
+          (requires (fst (fc fuel' s0') == true))
+          (ensures (fst (f fuel s0) == false))
+        = let s1' = snd (fc fuel' s0') in
+          assert (fc (fuel + fuel') s0 == fc fuel s0);
+          assert (fc (fuel + fuel') s0' == fc fuel' s0');
+          assert (f fuel s0 == f (fuel - 1) s1);
+          let _ : squash (holds phi s1 s1') =
+            f_rel;
+            ()
+          in
+          prf s1 s1' (fuel - 1)
+        in
+        Classical.forall_intro (Classical.move_requires g)
+    end else
+      assert (fst (f fuel s0) == false)
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf x y))
