@@ -3,6 +3,30 @@ open Benton2004
 
 #reset-options "--z3rlimit 128"
 
+let op_abs_singl
+  (#from #to: Type0)
+  (op: (from -> from -> Tot to))
+  (c1 c2: from)
+: Lemma
+  (op_abs op (ns_singl c1) (ns_singl c2) (ns_singl (op c1 c2)))
+= ()
+
+let d_op_singl
+  (#from #to: Type0)
+  (op: (from -> from -> Tot to))
+  (c1 c2: from)
+  (e1 e1' e2 e2': exp from)
+  (phi: sttype)
+: Lemma
+  (requires (
+    eval_equiv phi (ns_singl c1) e1 e1' /\
+    eval_equiv phi (ns_singl c2) e2 e2'
+  ))
+  (ensures (eval_equiv phi (ns_singl (op c1 c2)) (eop op e1 e2) (eop op e1' e2')))
+  [SMTPat  (eval_equiv phi (ns_singl (op c1 c2)) (eop op e1 e2) (eop op e1' e2'))]
+= op_abs_singl op c1 c2 ;
+  d_op op e1 e1' e2 e2' (ns_singl c1) (ns_singl c2) (ns_singl (op c1 c2)) phi
+
 let fig3_d1
   (x: var)
   (phi: sttype)

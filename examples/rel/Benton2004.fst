@@ -857,21 +857,40 @@ let eval_equiv_const
 let d_n = eval_equiv_const #int
 let d_b = eval_equiv_const #bool
 
-(*
+(* Definition 1 *)
+
+let op_abs
+  (#from #to: Type0)
+  (op: (from -> from -> Tot to))
+  (ns1 ns2: nstype from)
+  (ns: nstype to)
+: GTot Type0
+= forall x x' y y' .
+  (holds ns1 x x' /\ holds ns2 y y') ==>
+  holds ns (op x y) (op x' y')
+
+let eop
+  (#from #to: Type0)
+  (op: (from -> from -> Tot to))
+  (e1 e2: exp from)
+: Tot (exp to)
+= fun () -> (e1 ()) `op` (e2 ())
+
 let d_op
-  (#from #to: typ)
-  (o: op from to)
-  (e g e' g' : exp from)
-  (p: phi)
-  (f f' : nstype from)
+  (#from #to: Type0)
+  (op: (from -> from -> Tot to))
+  (e1 e1' e2 e2': exp from)
+  (ns1 ns2: nstype from)
+  (ns: nstype to)
+  (phi: sttype)
 : Lemma
   (requires (
-    eval_equiv p f e g /\
-    eval_equiv p f' e' g'
+    eval_equiv phi ns1 e1 e1' /\
+    eval_equiv phi ns2 e2 e2' /\
+    op_abs op ns1 ns2 ns
   ))
-  (ensures (eval_equiv p (abs_op o f f') (Op o e e') (Op o g g')))
+  (ensures (eval_equiv phi ns (eop op e1 e2) (eop op e1' e2')))
 = ()
-*)
 
 (* Commands *)
 
@@ -1438,27 +1457,3 @@ let d_div
       assert (fst (f fuel s0) == false)
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf x y))
-
-(* Figure 3 : examples *)
-
-let eop
-  (#from #to: Type0)
-  (op: (from -> from -> Tot to))
-  (e1 e2: exp from)
-: Tot (exp to)
-= fun () -> (e1 ()) `op` (e2 ())
-
-let d_op_singl
-  (#from #to: Type0)
-  (op: (from -> from -> Tot to))
-  (c1 c2: from)
-  (e1 e1' e2 e2': exp from)
-  (phi: sttype)
-: Lemma
-  (requires (
-    eval_equiv phi (ns_singl c1) e1 e1' /\
-    eval_equiv phi (ns_singl c2) e2 e2'
-  ))
-  (ensures (eval_equiv phi (ns_singl (op c1 c2)) (eop op e1 e2) (eop op e1' e2')))
-  [SMTPat  (eval_equiv phi (ns_singl (op c1 c2)) (eop op e1 e2) (eop op e1' e2'))]
-= ()
