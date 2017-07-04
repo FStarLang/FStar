@@ -1,4 +1,5 @@
-VERFILES=Ex01a.fst \
+VERFILES= \
+Ex01a.fst \
 Ex02a.fst \
 Ex03a.fst \
 Ex03b.fst \
@@ -32,7 +33,12 @@ Ex12b.RPC.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
-Ex12g.TMAC2.fst
+Ex12g.TMAC2.fst \
+EtM.Plain.fst \
+EtM.CPA.fst \
+EtM.MAC.fst \
+EtM.AE.fst 
+
 
 FSTAR_HOME=../../../../
 HINTS_ENABLED?=--use_hints

@@ -56,9 +56,8 @@ type log_entry =
   | Response: string -> string -> log_entry
   
 
-//type log_t (r:rid) = Monotonic.Seq.log_t r log_entry
-
-let log = alloc_mref_seq #log_entry root createEmpty
+type log_t (r:rid) = Monotonic.Seq.log_t r log_entry
+let log:log_t root = alloc_mref_seq #log_entry root createEmpty
 
 // BEGIN: RpcPredicates
 type pRequest s = exists n. witnessed (at_least n (Request s) log)
@@ -73,7 +72,6 @@ type reqresp text =
   \/ (exists s t. text = Formatting.response s t /\ pResponse s t)
 // END: MsgProperty
 
-(* FIXME: this type annotation is a workaround for #486 *)
 val k: k:key{key_prop k == reqresp}
 let k = ignore (debug_print_string "generating shared key...\n");
   keygen reqresp

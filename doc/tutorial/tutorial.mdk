@@ -4833,8 +4833,8 @@ In the protocol narration, each line indicates an intended communication of data
 from one principal to another.
 
 `utf8` marshalls strings such as `s` and `t` into byte arrays
-that can be send over the network. `|` written also `append`
-is a function concatenating `bytes` (In F\* we will use the operator `@|`). Functions `request` and `response` build
+that can be send over the network. Operator `|` written also `append`
+is a function concatenating `bytes` (In F\* we will use the infix operator `@|`). Functions `request` and `response` build
 message digests (the authenticated values). These functions may for
 instance be implemented as tagged concatenations of their utf8-encoded
 arguments. These functions will be detailed in the `Format` module.
@@ -4855,13 +4855,26 @@ Two events, record genuine requests and responses
 ```
 in the following protocol
 
-```
+~~ SolutionFragment {exname=Ex12b.RPC}
 [INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
-```
+~~
 
-For simplicity we initially elide the client code which is similar.
+For simplicity we initially elide the client code which is similar, but you can open the module in the online editor to look at the full protocol.
 
-The `assert` guarantee that messages that are received by a party have been sent by its peer.
+The `assert`s guarantee that messages that are received by a party have been sent by its peer.
+
+~ Remark
+One can imagine an extended protocol where we have a
+population of principals, represented as concrete strings ranged over
+by `a` and `b`, that intend to perform various remote procedure calls
+(RPCs) over a public network.
+The RPCs consist of requests and responses, both also represented as strings.
+The security goals of our RPC protocol are that (1) whenever a principal `b` accepts a
+request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
+(2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
+message in response to a matching request from `a`.
+~
+
 
 ### Formatting code
 
@@ -4908,28 +4921,23 @@ Prove these three lemmas.
 ~~
 ~
 
-<!--
-These lemmas rely on more powerful lemmas about the
+These lemmas rely on a lemma about the
 injectivity of append:
 
 ```
-val append_inj: #l:nat
-               -> b1:msg l -> b2:message
-               -> c1:msg l -> c2:message{append b1 b2==append c1 c2}
-               -> Lemma (ensures (equal b1 c1 /\ equal b2 c2))
-
-val append_inj_lemma: b1:message -> b2:message
-                   -> c1:message -> c2:message
-                   -> Lemma (requires (length b1==length c1 /\ append b1 b2==append c1 c2))
-                            (ensures (equal b1 c1 /\ equal b2 c2))
-                            (decreases (length b1))
-                            [SMTPat (append b1 b2); SMTPat (append c1 c2)]
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatAppend]
 ```
 
 ~ Exercise
-The proof of the second lemma currently contains an 'admit'.
-Try to fix this proof.
+Complete the proof of the lemma.
+
+~~ ExerciseFragment {exname=Ex12c.Format}
+[INCLUDE=code/exercises/Ex12c.Format.fst:FormatAppendEx]
+~~
 ~
+
+
+<!--
 
 ~~ Answer
 ```
@@ -4942,17 +4950,6 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 ~~
 -->
 
-~ Remark
-One can imagine an extended protocol where we have a
-population of principals, represented as concrete strings ranged over
-by `a` and `b`, that intend to perform various remote procedure calls
-(RPCs) over a public network.
-The RPCs consist of requests and responses, both also represented as strings.
-The security goals of our RPC protocol are that (1) whenever a principal `b` accepts a
-request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
-(2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
-message in response to a matching request from `a`.
-~
 
 <!--
 ## Signing Email
@@ -4977,22 +4974,24 @@ To this end, we use the following classic PKCS#7 padding scheme (used for instan
 ```
 
 The function `n2b` converts numbers less than 256 into a byte; `pad` 
-creates creates `bytes` consisting of `n` bytes encoding the number `n`;
+creates `bytes` consisting of `n` bytes encoding the number `n`;
 `encode` fills up `bytes` smaller than a block to a full block using such pads; and
 `decode` removes pads.
 
 ~ Exercise
 Write a typed specifications for these functions. In particular
 show that decoding cancels out encoding.
+~~ ExerciseFragment {exname=Ex12d.Pad}
+[INCLUDE=code/exercises/Ex12d.Pad.fst:PadEx]
+~~
 
 ~~ Answer
 
-```
+~~~ SolutionFragment {exname=Ex12d.Pad}
 [INCLUDE=code/solutions/Ex12d.Pad.fst:CreatePaddingT]
 [INCLUDE=code/solutions/Ex12d.Pad.fst:EncodePaddingT]
 [INCLUDE=code/solutions/Ex12d.Pad.fst:DecodePaddingT]
-
-```
+~~~
 ~~
 ~
 
@@ -5010,9 +5009,9 @@ A padding scheme should be invertible. For authentication properties,
 we require it to be injective, so that authenticating a padded text
 unambiguously authenticate the text before padding. For instance:
 
-```
+~~~ SolutionFragment {exname=Ex12e.Pad}
 [INCLUDE=code/solutions/Ex12e.Pad.fst:PaddingInj]
-```
+~~~
 
 In this context, another good padding scheme is to append a 1 then
 enough zeros to fill the block. One could also format the message by
@@ -5041,10 +5040,14 @@ first the implementations for `keygen`, `mac`, and `verify`,
 then type annotations to derive their authentication property
 (on `texts`) from the one of `BMAC` (on `blocks`).
 
+~~ ExerciseFragment {exname=Ex12f.TMAC}
+[INCLUDE=code/exercises/Ex12f.TMAC.fst:TMACEx
+~~
+
 ~~ Answer
-```
+~~~ SolutionFragment {exname=Ex12f.TMAC}
 [INCLUDE=code/solutions/Ex12f.TMAC.fst:TMAC]
-```
+~~~
 ~~
 ~
 
@@ -5059,37 +5062,9 @@ then type annotations to derive their authentication property
 
 2. Code:
 
-```
-module MAC2
-open Array
-open Pad
-
-type text2 = b:bytes { length b <=  blocksize }
-
-let keysize = 2 * BMAC.keysize
-let macsize = BMAC.macsize
-type key = | Keys: k0:BMAC.key -> k1:BMAC.key -> key
-type tag = BMAC.tag
-
-opaque type bspec0 (spec: (text2 -> Type)) (b:block) =
-  (forall (t:text). b = encode t ==> spec t)
-
-opaque type bspec1 (spec: (text2 -> Type)) (b:block) =
-  spec b
-
-opaque type key_prop : key -> text2 -> Type
-
-type pkey (p:(text2 -> Type)) =
-  k:key{ key_prop k == p
-      /\ BMAC.key_prop (Keys?.k0 k) == bspec0 p
-      /\ BMAC.key_prop (Keys?.k1 k) == bspec1 p }
-
-val keygen: p:(text2 -> Type) -> pkey p
-val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
-val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
-
+~~~ SolutionFragment {exname=Ex12g.TMAC2}
 [INCLUDE=code/solutions/Ex12g.TMAC2.fst:TMAC2]
-```
+~~~
 ~~
 
 ~
@@ -5234,6 +5209,10 @@ explaination of the formalism?
 
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
+~MK
+The following is not true because of the `length` function. Removing it until we have a better answer. Indexing by length might be it.
+~
+
 <!--
 When `conf=true`, $C\cdot A$ is well typed with respect to interface "`conf=true`, $IP$" 
 which can be interpreted as
@@ -5288,25 +5267,18 @@ of `MAC` guarantees that only message and tag pairs that were `mac`ed can `verif
 CPA secure encryption scheme, and  a `MAC` key `k.km`. The `AE` ciphertext is computed by 
 `encrypt`ing the plaintext and then `mac`ing the ciphertext: 
 
-```
-let encrypt k plain =
-  let c = CPA.encrypt k.ke plain in
-  let t = MAC.mac k.km c in
-  write_at_end k.log (plain, (c, t));
-  (c, t)
-```
-
+~ SolutionFragment {exname=EtM.AE}
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEEncrypt]
+~
 The monotonic log `k.log` is only used to model security properties and does not exist in
 concrete schemes.
 
 Before `decrypt`ing the `CPA` ciphertext, `AE` verifies the corresponding MAC tag:
 
-```
-let decrypt k (c,tag) =
-  if MAC.verify k.km c tag 
-  then Some (CPA.decrypt k.ke c)
-  else None
-```
+~ SolutionFragment {exname=EtM.AE}
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEDecrypt]
+~
+
 
 `AE` treats `CPA` and `MAC` keys abstractly, and never reveals them to an adversary $A$.
 This together with the fact that `AE` only ever `mac`s after `encrypt`ing, guarantees 
