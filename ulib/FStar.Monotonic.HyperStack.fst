@@ -19,14 +19,14 @@ let is_below r1 r2      = r2 `is_above` r1
 let is_strictly_below r1 r2 = r1 `is_below` r2 && r1<>r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
 
-let downward_closed (h:HH.t) = 
+let downward_closed (h:HH.t) =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=HH.root    //either is the root
 	    \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
 			  /\ s `is_in` h   //that is also in the memory
 		     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
 
-let is_tip (tip:HH.rid) (h:HH.t) = 
+let is_tip (tip:HH.rid) (h:HH.t) =
   (is_stack_region tip \/ tip=HH.root)                                  //the tip is a stack region, or the root
   /\ tip `is_in` h                                                      //the tip is active
   /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
@@ -38,24 +38,24 @@ noeq type mem =
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
 
-let empty_mem (m:HH.t) = 
-  let empty_map = Map.restrict (Set.empty) m in 
-  let h = Map.upd empty_map HH.root Heap.emp in 
-  let tip = HH.root in 
+let empty_mem (m:HH.t) =
+  let empty_map = Map.restrict (Set.empty) m in
+  let h = Map.upd empty_map HH.root Heap.emp in
+  let tip = HH.root in
   HS h tip
- 
-let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
+
+let test0 (m:mem) (r:rid{r `is_above` m.tip}) =
     assert (r `is_in` m.h)
 
-let test1 (m:mem) (r:rid{r `is_above` m.tip}) = 
+let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
     assert (r=HH.root \/ is_stack_region r)
 
-let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =  
+let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =
    assert (~ (r `is_in` m.h))
 
 let dc_elim (h:HH.t{downward_closed h}) (r:rid{r `is_in` h /\ r <> HH.root}) (s:rid)
   : Lemma (r `is_above` s /\ s `is_in` h ==> is_stack_region r = is_stack_region s)
-  = ()	  
+  = ()	
 
 let test3 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
   : Lemma (~ (r `is_in` m.h))
@@ -188,7 +188,7 @@ let heap_only (m0:mem) =
   m0.tip = HH.root
 
 let top_frame (m:mem) = Map.sel m.h m.tip
-  
+
 let fresh_frame (m0:mem) (m1:mem) =
   not (Map.contains m0.h m1.tip)
   /\ HH.parent m1.tip = m0.tip
@@ -196,7 +196,7 @@ let fresh_frame (m0:mem) (m1:mem) =
 
 let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
     : Lemma (fresh_frame m0 m1 /\
-	     modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==> 
+	     modifies_transitively (Set.union s (Set.singleton m1.tip)) m1 m2 ==>
 	     modifies_transitively s m0 (pop m2))
     = ()
 
@@ -259,7 +259,7 @@ noeq type some_ref =
 
 let some_refs = list some_ref
 
-let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) = 
+let rec regions_of_some_refs (rs:some_refs) : Tot (Set.set rid) =
   match rs with
   | [] -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton r.id) (regions_of_some_refs tl)
@@ -282,15 +282,15 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
 				     r `is_in` h.h})
    : Lemma (HH.disjoint h.tip r)
    = ()
-   
+
 ////////////////////////////////////////////////////////////////////////////////
 #set-options "--initial_fuel 0 --max_fuel 0 --log_queries"
 let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
-                          (x:mreference a rel_a) (x':mreference a rel_a) 
-			  (y:mreference b rel_b) (z:mreference nat rel_n) 
-			  (h0:mem) (h1:mem) = 
+                          (x:mreference a rel_a) (x':mreference a rel_a)
+			  (y:mreference b rel_b) (z:mreference nat rel_n)
+			  (h0:mem) (h1:mem) =
   assume (h0 `contains` x);
-  assume (h0 `contains` x');  
+  assume (h0 `contains` x');
   assume (as_addr x <> as_addr x');
   assume (x.id == x'.id);
   assume (x.id <> y.id);
