@@ -10,6 +10,7 @@ all:\
   Benton2004.DDCC.uver\
   Benton2004.DDCC.Examples.uver\
   Benton2004.SmithVolpano.uver\
+  Benton2004.RHL.uver\
   Bijection.uver\
   Equivalence.uver\
   IfcComposeReify.uver\
