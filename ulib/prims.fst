@@ -100,6 +100,9 @@ type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)
 (* prefix unary '~' *)
 type l_not (p:Type) = l_imp p False
 
+unfold
+let ( =!= ) (#a:Type) (x y:a) = ~(x == y)
+
 unfold type l_ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)

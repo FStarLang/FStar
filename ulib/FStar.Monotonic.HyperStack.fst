@@ -21,13 +21,13 @@ let is_strictly_above r1 r2 = r1 `is_above` r2 && r1<>r2
 
 let downward_closed (h:HH.t) =
   forall (r:rid). r `is_in` h  //for any region in the memory
-        ==> (r=HH.root    //either is the root
+        ==> (r==HH.root    //either is the root
 	    \/ (forall (s:rid). r `is_above` s  //or, any region beneath it
 			  /\ s `is_in` h   //that is also in the memory
-		     ==> (is_stack_region r = is_stack_region s))) //must be of the same flavor as itself
+		     ==> (is_stack_region r == is_stack_region s))) //must be of the same flavor as itself
 
 let is_tip (tip:HH.rid) (h:HH.t) =
-  (is_stack_region tip \/ tip=HH.root)                                  //the tip is a stack region, or the root
+  (is_stack_region tip \/ tip==HH.root)                                  //the tip is a stack region, or the root
   /\ tip `is_in` h                                                      //the tip is active
   /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
 
@@ -48,24 +48,24 @@ let test0 (m:mem) (r:rid{r `is_above` m.tip}) =
     assert (r `is_in` m.h)
 
 let test1 (m:mem) (r:rid{r `is_above` m.tip}) =
-    assert (r=HH.root \/ is_stack_region r)
+    assert (r==HH.root \/ is_stack_region r)
 
-let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip <> r}) =
+let test2 (m:mem) (r:sid{m.tip `is_above` r /\ m.tip =!= r}) =
    assert (~ (r `is_in` m.h))
 
-let dc_elim (h:HH.t{downward_closed h}) (r:rid{r `is_in` h /\ r <> HH.root}) (s:rid)
-  : Lemma (r `is_above` s /\ s `is_in` h ==> is_stack_region r = is_stack_region s)
-  = ()	
+let dc_elim (h:HH.t{downward_closed h}) (r:rid{r `is_in` h /\ r =!= HH.root}) (s:rid)
+  : Lemma (r `is_above` s /\ s `is_in` h ==> is_stack_region r == is_stack_region s)
+  = ()
 
-let test3 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
+let test3 (m:mem) (r:rid{r =!= HH.root /\ is_eternal_region r /\ m.tip `is_above` r /\ is_stack_region m.tip})
   : Lemma (~ (r `is_in` m.h))
   = root_has_color_zero()
 
-let test4 (m:mem) (r:rid{r <> HH.root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
+let test4 (m:mem) (r:rid{r =!= HH.root /\ is_eternal_region r /\ r `is_above` m.tip /\ is_stack_region m.tip})
   : Lemma (~ (r `is_in` m.h))
   = ()
 
-let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (HH.disjoint r m.tip) /\ r<>HH.root /\ is_stack_region m.tip})
+let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r /\ not (HH.disjoint r m.tip) /\ r=!=HH.root /\ is_stack_region m.tip})
   : Lemma (requires True)
 	  (ensures (~ (r `is_in` m.h)))
   = root_has_color_zero()
@@ -185,13 +185,13 @@ let modifies_transitively (s:Set.set rid) (m0:mem) (m1:mem) =
   /\ m0.tip=m1.tip
 
 let heap_only (m0:mem) =
-  m0.tip = HH.root
+  m0.tip == HH.root
 
 let top_frame (m:mem) = Map.sel m.h m.tip
 
 let fresh_frame (m0:mem) (m1:mem) =
   not (Map.contains m0.h m1.tip)
-  /\ HH.parent m1.tip = m0.tip
+  /\ HH.parent m1.tip == m0.tip
   /\ m1.h == Map.upd m0.h m1.tip Heap.emp
 
 let modifies_drop_tip (m0:mem) (m1:mem) (m2:mem) (s:Set.set rid)
@@ -236,7 +236,7 @@ let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{re
 val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
                   -> h:mem -> x:mreference a rel -> x':mreference a' rel' -> Lemma
   (requires (contains h x /\ x' `unused_in` h))
-  (ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x')))
+  (ensures  (x.id =!= x'.id \/ ~ (as_ref x === as_ref x')))
   [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
 let lemma_live_1 #a #a' #rel #rel' h x x' = ()
 
@@ -278,7 +278,7 @@ unfold let mods (rs:some_refs) h0 h1 =
 ////////////////////////////////////////////////////////////////////////////////
 let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
 			      (r:rid{is_eternal_region r /\
-				     r<>HH.root /\
+				     r=!=HH.root /\
 				     r `is_in` h.h})
    : Lemma (HH.disjoint h.tip r)
    = ()
@@ -291,10 +291,10 @@ let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder 
 			  (h0:mem) (h1:mem) =
   assume (h0 `contains` x);
   assume (h0 `contains` x');
-  assume (as_addr x <> as_addr x');
+  assume (as_addr x =!= as_addr x');
   assume (x.id == x'.id);
-  assume (x.id <> y.id);
-  assume (x.id <> z.id);
+  assume (x.id =!= y.id);
+  assume (x.id =!= z.id);
   //assert (Set.equal (normalize_term (refs_in_region x.id [Ref x])) (normalize_term (Set.singleton (as_addr x))))
   assume (mods [Ref x; Ref y; Ref z] h0 h1);
   //AR: TODO: this used to be an assert, but this no longer goers through

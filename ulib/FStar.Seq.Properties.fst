@@ -224,7 +224,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
 val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
-            ((length x = 5)
+            ((length x == 5)
              /\ (s == append (index x 0) (append (index x 1) (append (index x 2) (append (index x 3) (index x 4)))))
              /\ equal (index x 0) (slice s 0 i)
              /\ equal (index x 1) (slice s i (i+1))
