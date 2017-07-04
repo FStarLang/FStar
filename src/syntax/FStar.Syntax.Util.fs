@@ -724,7 +724,7 @@ let mk_letbinding lbname univ_vars typ eff def =
      lbdef=def}
 
 let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
-    let def2 = match recs, univ_vars with
+    let def = match recs, univ_vars with
         | None, _
         | _, [] -> def
         | Some fvs, _ ->

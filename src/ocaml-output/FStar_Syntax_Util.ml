@@ -1311,7 +1311,7 @@ let close_univs_and_mk_letbinding:
         fun typ  ->
           fun eff  ->
             fun def  ->
-              let def2 =
+              let def1 =
                 match (recs, univ_vars) with
                 | (FStar_Pervasives_Native.None ,uu____3246) -> def
                 | (uu____3252,[]) -> def
@@ -1328,8 +1328,8 @@ let close_univs_and_mk_letbinding:
                                 universes))) in
                     FStar_Syntax_InstFV.instantiate inst1 def in
               let typ1 = FStar_Syntax_Subst.close_univ_vars univ_vars typ in
-              let def1 = FStar_Syntax_Subst.close_univ_vars univ_vars def in
-              mk_letbinding lbname univ_vars typ1 eff def1
+              let def2 = FStar_Syntax_Subst.close_univ_vars univ_vars def1 in
+              mk_letbinding lbname univ_vars typ1 eff def2
 let open_univ_vars_binders_and_comp:
   FStar_Syntax_Syntax.univ_names ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)

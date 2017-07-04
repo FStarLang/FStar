@@ -190,6 +190,9 @@ u_extract_tcterm: u_boot_fsts/FStar.TypeChecker.TcTerm.fst
 u_extract_tcinductive: u_boot_fsts/FStar.TypeChecker.TcInductive.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.TcInductive
 
+u_extract_tcenv: u_boot_fsts/FStar.TypeChecker.Env.fst
+	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Env
+
 u_extract_tc: u_boot_fsts/FStar.TypeChecker.Tc.fst
 	$(FSTARBOOT) $^ --extract_module FStar.TypeChecker.Tc
 
@@ -228,7 +231,7 @@ u_extract_all: u_extract_tactics u_extract_reflection u_extract_misc u_extract_s
 
 uz:
 	$(MAKE) prep
-	+$(MAKE) u_extract_syntax
+	+$(MAKE) u_extract_tcterm
 	cp u_ocaml-output/*.ml ocaml-output/
 	+$(MAKE) -C ocaml-output
 

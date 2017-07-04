@@ -44,6 +44,7 @@ type binding =
   | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
 
 type delta_level =
+  | Always
   | NoDelta
   | Inlining
   | Eager_unfolding_only
@@ -561,7 +562,7 @@ let typ_of_datacon env lid =
 
 let lookup_definition delta_levels env lid =
   let visible quals =
-      delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
+    delta_levels = [Always] || delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
   in
   match lookup_qname env lid with
   | Some (Inr (se, None), _) ->
@@ -572,6 +573,7 @@ let lookup_definition delta_levels env lid =
               if fv_eq_lid fv lid
               then Some (lb.lbunivs, lb.lbdef)
               else None)
+      | Sig_declare_typ(_, uvs, t) when visible se.sigquals -> Some (uvs,t)
       | _ -> None
     end
   | _ -> None
