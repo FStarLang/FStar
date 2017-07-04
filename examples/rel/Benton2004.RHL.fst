@@ -320,6 +320,133 @@ let r_sub
   [SMTPat (exec_equiv p1' p2' f f'); SMTPat (exec_equiv p1 p2 f f')]
 = d_csub (interp p1) (interp p2) (interp p1') (interp p2') f f'
 
+let rec r_while_terminates'
+  (b b' : exp bool)
+  (c c' : computation)
+  (phi phi_c phi_c': gexp bool)
+  (s0 s0' : heap)
+  (fuel: nat)
+: Lemma
+  (requires (
+    included phi (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)) /\
+    included (gand phi (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))) phi_c /\
+    included phi_c' phi /\
+    exec_equiv phi_c phi_c' c c' /\
+    holds (interp phi) s0 s0' /\
+    fst (reify_computation (while b c) fuel s0) == true
+  ))
+  (ensures (
+    terminates_on (reify_computation (while b' c')) s0'
+  ))
+  (decreases fuel)
+= let f = reify_computation (while b c) in
+  let f' = reify_computation (while b' c') in
+  let fc = reify_computation c in
+  let fc' = reify_computation c' in
+  if fst (reify_exp b s0)
+  then begin
+//    let s1 = snd (reify_computation c fuel s0) in
+    assert (holds (interp (gand phi (gand (exp_to_gexp b Left) (exp_to_gexp b' Right)))) s0 s0');
+    assert (terminates_on (fc') s0');
+    let g
+      (fuel0 : nat)
+    : Lemma
+      (requires (fst (fc' fuel0 s0') == true))
+      (ensures (terminates_on (f') s0'))
+    = let s1 = snd (fc fuel s0) in
+      let s1' = snd (fc' fuel0 s0') in
+      let fuel1 = fuel + fuel0 in
+      assert (fc fuel1 s0 == fc fuel s0);
+      assert (fc' fuel1 s0' == fc' fuel0 s0');
+      r_while_terminates' b b' c c' phi phi_c phi_c' s1 s1' (fuel - 1);
+      let g'
+        (fuel2 : nat)
+      : Lemma
+        (requires (fst (f' fuel2 s1') == true))
+        (ensures (terminates_on (f') s0'))
+      = let fuel3 = fuel0 + fuel2 + 1 in
+        assert (f' (fuel3 - 1) s1' == f' fuel2 s1');
+        assert (fc' fuel3 s0' == fc' fuel0 s0');
+        assert (fst (f' fuel3 s0') == true)
+      in
+      Classical.forall_intro (Classical.move_requires g')
+    in
+    Classical.forall_intro (Classical.move_requires g)
+  end else ()
+
+let flip (phi: gexp bool) : Tot (gexp bool) =
+  let g s1 s2 = phi s2 s1 in
+  g
+
+let holds_interp_flip (phi: gexp bool) : Lemma
+  (forall s1 s2 . holds (interp (flip phi)) s1 s2 <==> holds (Benton2004.flip (interp phi)) s1 s2)
+  [SMTPat (holds (interp (flip phi)))]
+= ()
+
+let r_while_terminates
+  (b b' : exp bool)
+  (c c' : computation)
+  (p: gexp bool)
+  (s0 s0' : heap)
+: Lemma
+  (requires (
+    exec_equiv (gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) c c' /\
+    holds (interp (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)))) s0 s0'
+  ))
+  (ensures (
+    terminates_on (reify_computation (while b c)) s0 <==>
+    terminates_on (reify_computation (while b' c')) s0'
+  ))
+= let phi = gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)) in
+  let phi_c = gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right)) in
+  let phi_c' = gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)) in
+  Classical.forall_intro (Classical.move_requires (r_while_terminates' b b' c c' phi phi_c phi_c' s0 s0'));
+  exec_equiv_flip (interp phi_c) (interp phi_c') c c';
+  Classical.forall_intro (Classical.move_requires (r_while_terminates' b' b c' c (flip phi) (flip phi_c) (flip phi_c') s0' s0))
+
+let rec r_while_correct
+  (b b' : exp bool)
+  (c c' : computation)
+  (p: gexp bool)
+  (s0 s0' : heap)
+  (fuel: nat)
+: Lemma
+  (requires (
+    exec_equiv (gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) c c' /\
+    holds (interp (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)))) s0 s0' /\
+    fst (reify_computation (while b c) fuel s0) == true /\
+    fst (reify_computation (while b' c') fuel s0') == true
+  ))
+  (ensures (
+    holds (interp (gand p (gnot (gor (exp_to_gexp b Left) (exp_to_gexp b' Right))))) (snd (reify_computation (while b c) fuel s0)) (snd (reify_computation (while b' c') fuel s0'))
+  ))
+  (decreases fuel)
+= let f = reify_computation (while b c) in
+  let f' = reify_computation (while b' c') in
+  let fc = reify_computation c in
+  let fc' = reify_computation c' in
+  if fst (reify_exp b s0)
+  then
+    let s1 = snd (fc fuel s0) in
+    let s1' = snd (fc' fuel s0') in
+    r_while_correct b b' c c' p s1 s1' (fuel - 1)
+  else ()
+
+let rec r_while
+  (b b' : exp bool)
+  (c c' : computation)
+  (p: gexp bool)
+: Lemma
+  (requires (
+    exec_equiv (gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) c c'
+  ))
+  (ensures (
+    exec_equiv (gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right))) (gand p (gnot (gor (exp_to_gexp b Left) (exp_to_gexp b' Right)))) (while b c) (while b' c')
+  ))
+= Classical.forall_intro_2 (fun x -> Classical.move_requires (r_while_terminates b b' c c' p x));
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (r_while_correct b b' c c' p x y))
+
+
 let is_per (p: gexp bool) = Benton2004.is_per (interp p)
 
 (* Aparte: 4.4 How to prove is_per *)

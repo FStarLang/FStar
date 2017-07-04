@@ -396,6 +396,37 @@ let exec_equiv
   let f' = reify_computation f' in
   exec_equiv_reified p p' f f'
 
+(* Flipping a relation *)
+
+let flip (#t: Type0) (r: rel t) : Tot (rel t) =
+  let g x y = holds r y x in
+  g
+
+let holds_flip (#t: Type0) (r: rel t) : Lemma
+  (forall x y . holds (flip r) x y <==> holds r y x)
+  [SMTPat (holds (flip r))]
+= Classical.forall_intro_2 (holds_equiv (flip r))
+
+let eval_equiv_flip
+  (#t: Type0)
+  (p: sttype)
+  (e: nstype t)
+  (f f': exp t)
+: Lemma
+  (eval_equiv (flip p) (flip e) f' f <==> eval_equiv p e f f')
+  [SMTPat (eval_equiv (flip p) (flip e) f' f)]
+= holds_flip p;
+  holds_flip e
+
+let exec_equiv_flip
+  (p p': sttype)
+  (f f' : computation)
+: Lemma
+  (exec_equiv (flip p) (flip p') f f' <==> exec_equiv p p' f' f)
+  [SMTPat (exec_equiv (flip p) (flip p') f f')]
+= holds_flip p;
+  holds_flip p'
+
 (* Lemma 2 *)
 
 let eval_equiv_sym
