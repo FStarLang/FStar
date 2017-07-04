@@ -72,3 +72,12 @@ let lemma_valid_csubpath_is_valid #n g p a b =
   assert (forall (i:nat{0 <= i /\ i < b - a}). is_in_graph (p' @^ i) (p' @^ (i+1)) g)
 
 
+let adjacent (#n:nat) (g:graph0 n) (node1 node2:fin n) = L.mem node2 (g @^ node1)
+
+let reachable (#n:nat) (g:graph0 n) (node1 node2:fin n) = exists (p : path g) . from p == node1 /\ to p == node2
+
+let append (#n:nat) (g:graph0 n) (p1 p2:path g) 
+ : Pure (path g)
+ (requires (to p1 == from p2))
+ (ensures (fun p' -> from p1 == from p' /\ to p2 == to p'))
+ = S.append p1 (S.slice p2 1 (S.length p2))
