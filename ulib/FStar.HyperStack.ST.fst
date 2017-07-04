@@ -1,23 +1,46 @@
 module FStar.HyperStack.ST
+open FStar.Preorder
 open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-let st_pre = st_pre_h mem
-let st_post (a:Type) = st_post_h mem a
-let st_wp (a:Type) = st_wp_h mem a
+module Set = FStar.Set
 
-private new_effect STATE = STATE_h mem
+(***** Global ST (GST) effect with put, get, witness, and recall *****)
 
-(* effect State (a:Type) (wp:st_wp a) = *)
-(*        STATE a wp *)
+new_effect GST = STATE_h mem
+
+let gst_pre           = st_pre_h mem
+let gst_post (a:Type) = st_post_h mem a
+let gst_wp (a:Type)   = st_wp_h mem a
+
+unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
+sub_effect DIV ~> GST = lift_div_gst
+
+let mem_rel (h1:mem) (h2:mem) =
+  forall (a:Type0) (rel:preorder a) (r:mref a rel).
+    h1 `contains` r ==> (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))
+
+assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
+assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
+
+type mem_predicate = mem -> Type0
+
+let stable (p:mem_predicate) =
+  forall (h1:mem) (h2:mem). (p h1 /\ mem_rel h1 h2) ==> p h2
+
+assume type witnessed: (p:mem_predicate{stable p}) -> Type0
+
+assume val gst_witness: p:mem_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
+assume val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
+
 
 (**
     WARNING: this effect is unsafe, for C/C++ extraction it shall only be used by
     code that would later extract to OCaml or by library functions
     *)
-effect Unsafe (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
+effect Unsafe (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+  GST a
+    (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
 
 (**
    Effect of stacked based code: the 'equal_domains' clause enforces that
@@ -25,9 +48,9 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
    - both mem reference the same heaps (their map: rid -> heap have the same domain)
    - in each region id, the corresponding heaps contain the same references on both sides
  *)
-effect Stack (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
+effect Stack (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+  GST a
+    (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
 
 (**
    Effect of heap-based code.
@@ -36,28 +59,28 @@ effect Stack (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
    - can call to Stack and ST code freely
    - respects the stack invariant: the stack has to be empty when returning
 *)
-effect Heap (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
+effect Heap (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+  GST a
+    (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
 
 (**
   Effect of low-level code:
   - maintains the allocation invariant on the stack: no allocation unless in a new frame that has to be popped before returning
   - not constraints on heap allocation
 *)
-effect ST (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
+effect ST (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+  GST a
+    (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
 
 effect St (a:Type) = ST a (fun _ -> True) (fun _ _ _ -> True)
 
 let inline_stack_inv h h' : GTot Type0 =
   (* The frame invariant is enforced *)
-  h.tip = h'.tip
+  h.tip == h'.tip
   (* The heap structure is unchanged *)
   /\ Map.domain h.h == Map.domain h'.h
   (* Any region that is not the tip has no seen any allocation *)
-  /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r <> h.tip /\ Map.contains h.h r)
+  /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r =!= h.tip /\ Map.contains h.h r)
        ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
 
 (**
@@ -66,13 +89,13 @@ let inline_stack_inv h h' : GTot Type0 =
    This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
    function body as well as in a Heap effect function body
    *)
-effect StackInline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
+effect StackInline (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+  GST a
+    (fun (p:gst_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
 
 let inline_inv h h' : GTot Type0 =
   (* The stack invariant is enforced *)
-  h.tip = h'.tip
+  h.tip == h'.tip
   (* No frame may have received an allocation but the tip *)
   /\ (forall (r:HH.rid). {:pattern (is_stack_region r)}(is_stack_region r /\ r `is_strictly_above` h.tip)
        ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
@@ -85,60 +108,107 @@ let inline_inv h h' : GTot Type0 =
    Region allocation is not constrained.
    Heap allocation is not constrained.
    *)
-effect Inline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
-       STATE a
-             (fun (p:st_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_inv h h1) ==> p a h1)) (* WP *)
+effect Inline (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+  GST a
+    (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_inv h h1) ==> p a h1)) (* WP *)
 
 (**
     TODO:
     REMOVE AS SOON AS CONSENSUS IS REACHED ON NEW LOW EFFECT NAMES
   *)
-effect STL (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) = Stack a pre post
+effect STL (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) = Stack a pre post
 
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
+  DIV   ~> GST = fun (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) -> wp (fun a -> p a h)
+
+assume val fresh_child : r:HH.rid -> c:int ->
+  GST HH.rid
+    (fun (p:gst_post HH.rid) (m0:mem) ->
+      (forall r' m1. HH.parent r' == r /\ HH.color r' == c /\ equal_domains m0 m1 /\ HH.fresh_region r' m0.h m1.h ==> p r' m1))
 
 (**
    Pushes a new empty frame on the stack
    *)
-assume val push_frame: unit -> Unsafe unit
+#set-options "--detail_errors"
+val push_frame: unit -> Unsafe unit
   (requires (fun m -> True))
   (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
+let push_frame () =
+  let m0 = gst_get () in
+  let tip = fresh_child m0.tip 1 in
+  let h = Map.upd m0.h tip Heap.emp in
+  let m1 = HS h tip in
+  gst_put m1
 
 (**
    Removes old frame from the stack
    *)
-assume val pop_frame: unit -> Unsafe unit
+val pop_frame: unit -> Unsafe unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
+let pop_frame () =
+  let m0 = gst_get () in
+  let m1 = pop m0 in
+  assert (popped m0 m1) ;
+  assert (mem_rel m0 m1) ;
+  gst_put m1
 
 let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
       is_stack_region m0.tip
     /\ Map.domain m0.h == Map.domain m1.h
-    /\ m0.tip = m1.tip
-    /\ s.id   = m1.tip
+    /\ m0.tip == m1.tip
+    /\ s.id   == m1.tip
     /\ HH.fresh_rref s.ref m0.h m1.h         //it's a fresh reference in the top frame
     /\ m1==HyperStack.upd m0 s init          //and it's been initialized
 
 (**
      Allocates on the top-most stack frame
      *)
-assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
+private
+let lemma_upd_tip_idempotent (m:mem)
+  : Lemma (Map.domain m.h `Set.union` Set.singleton m.tip == Map.domain m.h)
+= Set.lemma_mem_idempotent_union (Map.domain m.h) m.tip
+
+private
+  val salloc_maybe_mm: #a:Type -> init:a -> mm:bool -> StackInline (s:reference a{is_stack_region s.id})
+  (requires (fun m -> is_stack_region m.tip))
+  (ensures (fun m0 s m1 -> salloc_post init m0 s m1 /\ is_mm s == mm))
+let salloc_maybe_mm #a init mm =
+  let m0 = gst_get () in
+  let r, h = HH.alloc m0.tip (Heap.trivial_preorder a) m0.h init mm in
+  HH.lemma_alloc m0.tip (Heap.trivial_preorder a) m0.h init mm ;
+  lemma_upd_tip_idempotent m0;
+  gst_put (HS h m0.tip) ;
+  let s = MkRef m0.tip r in
+  let m1 = HS h m0.tip in
+  MkRef m0.tip r
+
+val salloc: #a:Type -> init:a -> StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
+let salloc #a init =
+  salloc_maybe_mm #a init false
 
-assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
+val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
+let alloc_mm #a init =
+  salloc_maybe_mm #a init true
 
-let remove_reference (#a:Type) (r:reference a) (m:mem{m `contains` r /\ is_mm r}) :GTot mem =
+
+let remove_reference (#a:Type) (r:reference a) (m:mem{m `contains` r /\ is_mm r}) : Tot mem =
   let h_0 = Map.sel m.h r.id in
   let h_1 = Heap.free_mm h_0 (HH.as_ref r.ref) in
   HS (Map.upd m.h r.id h_1) m.tip
 
-assume val sfree: #a:Type -> r:mmstackref a -> StackInline unit
-    (requires (fun m0 -> r.id = m0.tip /\ m0 `contains` r))
-    (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
+val sfree: #a:Type -> r:mmstackref a -> StackInline unit
+  (requires (fun m0 -> r.id == m0.tip /\ m0 `contains` r))
+  (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
+let sfree #a r =
+  let m0 = gst_get () in
+  let m1 = remove_reference r m0 in
+  lemma_upd_tip_idempotent m0;
+  gst_put m1
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
   not (r `is_in` m0.h)
@@ -152,31 +222,39 @@ let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
    (forall j. HH.includes r j ==> not (j `is_in` m0.h))
    /\ r `is_in` m1.h
 
-assume val new_region: r0:HH.rid -> ST HH.rid
-      (requires (fun m -> is_eternal_region r0))
-      (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
-                           r1 `HH.extends` r0
-                        /\ HH.fresh_region r1 m0.h m1.h
-			/\ HH.color r1 = HH.color r0
+val new_region: r0:HH.rid ->
+  ST HH.rid
+    (requires (fun m -> is_eternal_region r0))
+    (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
+        r1 `HH.extends` r0
+      /\ HH.fresh_region r1 m0.h m1.h
+			/\ HH.color r1 == HH.color r0
 			/\ m1.h == Map.upd m0.h r1 Heap.emp
-			/\ m1.tip = m0.tip
+			/\ m1.tip == m0.tip
 			))
+let new_region r0 =
+  (* TODO : We need some way to access the color of the region here *)
+  (* if we really want/need to keep the same *)
+  let c :c:int{c == HH.color r0} = admit () in
+  fresh_child r0 c
 
 let is_eternal_color = HS.is_eternal_color
 
-assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
+val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
       (requires (fun m -> is_eternal_color c /\ is_eternal_region r0))
       (ensures (fun (m0:mem) (r1:HH.rid) (m1:mem) ->
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
-			/\ HH.color r1 = c
+			/\ HH.color r1 == c
 			/\ m1.h == Map.upd m0.h r1 Heap.emp
 			/\ m1.tip = m0.tip
 			))
+let new_colored_region r0 c =
+  fresh_child r0 c
 
 unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = Map.sel m0.h i in
-    (HH.as_ref x.ref) `Heap.unused_in` region_i 
+    (HH.as_ref x.ref) `Heap.unused_in` region_i
   /\ i `is_in` m0.h
   /\ i = x.id
   /\ m1 == upd m0 x init
@@ -227,9 +305,10 @@ module G = FStar.Ghost
 (**
     Returns the current stack of heaps --- it should be erased
     *)
-assume val get: unit -> Stack mem
+val get: unit -> Stack mem
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0==x /\ m1==m0))
+let get () = gst_get ()
 
 (**
    We can only recall refs with mm bit unset, not stack refs

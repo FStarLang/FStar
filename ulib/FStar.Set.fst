@@ -132,3 +132,10 @@ let rec as_set' #a l = match l with
 
 unfold val as_set:  #a:eqtype -> l:list a -> Tot (set a)
 let as_set (#a:eqtype) (l:list a) = normalize_term (as_set' l)
+
+let lemma_mem_idempotent_union (#a:eqtype) (s:set a) (x:a)
+  : Lemma (requires (x `mem` s))
+  (ensures (s `union` singleton x == s))
+= let s' = s `union` singleton x in
+  lemma_equal_intro s' s ;
+  lemma_equal_elim s' s

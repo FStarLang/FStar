@@ -80,7 +80,7 @@ let popped m0 m1 =
   /\ Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip)
   /\ Map.equal m1.h (Map.restrict (Map.domain m1.h) m0.h)
 
-let pop (m0:mem{poppable m0}) : GTot mem =
+let pop (m0:mem{poppable m0}) : Tot (m1:mem{popped m0 m1}) =
   root_has_color_zero();
   let dom = remove_elt (Map.domain m0.h) m0.tip in
   let h0 = m0.h in
@@ -89,7 +89,11 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   let tip1 = HH.parent tip0 in
   assert (forall (r:sid). Map.contains h1 r ==>
   	    (forall (s:sid). includes s r ==> Map.contains h1 s));
-  HS h1 tip1
+  let m1 = HS h1 tip1 in
+  assert (Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip)) ;
+  assert (Map.equal m1.h (Map.restrict (Map.domain m1.h) m0.h)) ;
+  m1
+
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
 noeq type mreference (a:Type) (rel:preorder a) =

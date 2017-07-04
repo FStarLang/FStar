@@ -17,6 +17,7 @@ module FStar.Monotonic.HyperHeap
 open FStar.Map
 open FStar.Preorder
 open FStar.Monotonic.Heap
+module Set = FStar.Set
 
 abstract let rid = list (int * int)
 
@@ -171,6 +172,9 @@ let upd (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) (v:a{rel (s
   = Map.upd m i (upd (Map.sel m i) (as_ref r) v)
 unfold let op_String_Assignment (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) v = upd m r v
 
+let alloc (id:rid) (#a:Type0) (rel:preorder a) (m:t) (init:a) (mm:bool) : Tot (mrref id a rel * t) =
+  let (r, h) : mref a rel * heap = alloc rel (Map.sel m id) init mm in
+  r, Map.upd m id h
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
@@ -252,6 +256,14 @@ let weak_contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:
 let fresh_rref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m0:t) (m1:t) =
   FStar.Monotonic.Heap.unused_in (as_ref r) (Map.sel m0 i) /\
   FStar.Monotonic.Heap.contains (Map.sel m1 i) (as_ref r)
+
+let lemma_alloc (id:rid) (#a:Type0) (rel:preorder a) (m0:t) (init:a) (mm:bool)
+  : Lemma (requires True)
+    (ensures (
+      let r, m1 = alloc id rel m0 init mm in
+      fresh_rref r m0 m1 /\ rel (sel m0 r) init /\ m1 == upd m0 r init /\ is_mm r == mm
+    ))
+= Heap.lemma_alloc rel (Map.sel m0 id) init mm
 
 let modifies_rref (r:rid) (s:Set.set nat) h0 h1 =
   Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
