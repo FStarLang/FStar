@@ -38,20 +38,20 @@ abstract let contains_array (#a:Type) (#n:nat) (h:heap) (arr:array a n)
   = let A #_ s_ref _ = arr in
     h `contains` s_ref
 
-abstract let initializable (#a:Type0) (#n:nat) (arr:array a n) (h:heap)
+abstract let is_mutable (#a:Type0) (#n:nat) (arr:array a n) (h:heap)
   = let A #_ s_ref _ = arr in
     not (snd (sel h s_ref))
 
 let fresh_arr (#a:Type0) (#n:nat) (arr:array a n) (h0 h1:heap)
   = h1 `contains_array` arr /\
-    initializable arr h1    /\
+    is_mutable arr h1    /\
     (forall (n:nat). Set.mem n (array_footprint arr) ==> n `addr_unused_in` h0)
     
 abstract let create (a:Type0) (n:nat)
   :ST (array a n) (requires (fun _         -> True))
                   (ensures  (fun h0 arr h1 -> fresh_arr arr h0 h1      /\
 		                           modifies Set.empty h0 h1 /\
-					   initializable arr h1     /\
+					   is_mutable arr h1     /\
 					   is_full_array arr))
   = A #a #n #n (alloc ((Seq.create n None), false)) 0
 
@@ -111,9 +111,9 @@ abstract let read (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i < n}) (es:erased 
     Some?.v (Seq.index s (o + i))
 
 abstract let write (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i < n}) (x:a)
-  :ST unit (requires (fun h0       -> initializable arr h0))
+  :ST unit (requires (fun h0       -> is_mutable arr h0))
            (ensures  (fun h0 () h1 -> modifies (array_footprint arr) h0 h1 /\
-	                           initializable arr h1                 /\
+	                           is_mutable arr h1                 /\
 				   Seq.index (as_seq arr h1) i == Some x))
   = let A #_ s_ref offset = arr in
     let (s, b) = !s_ref in
@@ -144,12 +144,12 @@ let lemma_sub_contains
          [SMTPat (h `contains_array` (sub arr i len))]
   = ()
 
-let lemma_sub_initializable
+let lemma_sub_is_mutable
   (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (len:nat{i + len <= n}) (h:heap)
   :Lemma (requires True)
          (ensures  (let arr' = sub arr i len in
-	            initializable arr h <==> initializable arr' h))
-         [SMTPat (initializable (sub arr i len) h)]
+	            is_mutable arr h <==> is_mutable arr' h))
+         [SMTPat (is_mutable (sub arr i len) h)]
   = ()
 
 let lemma_sub_frozen
