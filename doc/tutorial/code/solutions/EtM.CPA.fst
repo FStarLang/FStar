@@ -1,9 +1,12 @@
 module EtM.CPA
 
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
+open FStar.HyperStack
 open FStar.Monotonic.RRef
+
 open EtM.Ideal
 
 
@@ -37,7 +40,7 @@ noeq type key =
 let genPost parent m0 (k:key) m1 =
     modifies Set.empty m0 m1
   /\ extends k.region parent
-  /\ fresh_region k.region m0 m1
+  /\ fresh_region k.region m0.h m1.h
   /\ m_contains k.log m1
   /\ m_sel m1 k.log == createEmpty
 
@@ -63,7 +66,7 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
 
-let encrypt k m : cipher =
+let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cpa then createBytes (length m) 0z else repr m in
@@ -91,7 +94,7 @@ let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
-    Map.contains h0 k.region /\
+    Map.contains h0.h k.region /\
     (let log0 = m_sel h0 k.log in
       (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0))))
   (ensures  (fun h0 res h1 ->

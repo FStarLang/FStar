@@ -6,7 +6,7 @@ open EtM.Ideal
 
 abstract type plain = bytes
 
-//assume Plain_hasEq: hasEq plain
+assume Plain_hasEq: hasEq plain
 
 val repr: p:plain{not conf} -> Tot bytes
 let repr p = p
