@@ -25,6 +25,7 @@ Ex11a.fst \
 Ex12a1.Cap.fst \
 Ex12b1.Format.fst \
 Ex12b2.Format.fst \
+Ex12c.Format.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \

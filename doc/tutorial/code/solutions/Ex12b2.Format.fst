@@ -11,11 +11,13 @@ type msg (l:nat) = lbytes l
 // END: FormatMsg
 
 (* ----- a lemma on array append *)
+// BEGIN: FormatAppend
 val append_inj_lemma: b1:message -> b2:message
                    -> c1:message -> c2:message
                    -> Lemma (requires (length b1==length c1 /\ b2t (Seq.eq (b1 @| b2) (c1 @| c2))))
                             (ensures (b2t (Seq.eq b1 c1) /\ b2t (Seq.eq b2 c2)))
                             [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
+// END: FormatAppend
 let append_inj_lemma b1 b2 c1 c2 =
   lemma_append_len_disj b1 b2 c1 c2;
   Classical.forall_intro #_ #(fun (x:(i:nat{i < length b1})) -> index b1 x == index c1 x) (lemma_append_inj_l b1 b2 c1 c2); //sadly, the 2nd implicit argument has to be provided explicitly

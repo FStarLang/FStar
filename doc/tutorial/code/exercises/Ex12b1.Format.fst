@@ -85,7 +85,7 @@ let response s t =
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
-        (ensures True) //replace with actual lemma post-condition
+        (ensures  True) //replace with actual lemma post-condition
         [SMTPat (request s); SMTPat (response s' t')]
 
 val req_injective:
