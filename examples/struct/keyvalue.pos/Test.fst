@@ -4,6 +4,7 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 
 open FStar.Seq
+module List = FStar.List.Tot
 
 type byte = FStar.UInt8.byte
 type bytes = seq byte
@@ -46,7 +47,7 @@ type encoded_entry =
 type store =
   | Store :
     num_entries:U32.t ->
-    entries:seq encoded_entry{length entries = U32.v num_entries} ->
+    entries:list encoded_entry{List.length entries = U32.v num_entries} ->
     store
 
 (*! Spec-level parsing to values *)
@@ -118,16 +119,16 @@ let parse_entry = parse_u16_array `and_then`
 let parsing_done : parser unit =
   fun b -> if length b = 0 then Some ((), 0) else None
 
-val parse_many' : #t:Type -> p:parser t -> n:nat -> parser (seq t)
+val parse_many' : #t:Type -> p:parser t -> n:nat -> parser (list t)
 let rec parse_many' #t p n =
   match n with
-  | 0 -> parse_ret createEmpty
+  | 0 -> parse_ret []
   | _ -> p `and_then`
       (fun v -> parse_many' #t p (n-1) `and_then`
-      (fun l -> parse_ret (cons v l)))
+      (fun l -> parse_ret (v::l)))
 
 let rec parse_many'_length (#t:Type) (p:parser t) (n:nat) (b:bytes) :
-  Lemma (Some? (parse_many' p n b) ==> length (fst (Some?.v (parse_many' p n b))) == n) =
+  Lemma (Some? (parse_many' p n b) ==> List.length (fst (Some?.v (parse_many' p n b))) == n) =
   match n with
   | 0 -> ()
   | _ -> match p b with
@@ -144,7 +145,7 @@ let rec parse_many #t p n =
       (fun l -> parse_ret #(s:seq t{length s == n}) (cons v l)))
 *)
 
-val parse_many : #t:Type -> p:parser t -> n:nat -> parser (s:seq t{length s == n})
+val parse_many : #t:Type -> p:parser t -> n:nat -> parser (s:list t{List.length s == n})
 let parse_many #t p n b =
   match parse_many' p n b with
   | Some (v, l) -> parse_many'_length p n b; Some (v, l)
