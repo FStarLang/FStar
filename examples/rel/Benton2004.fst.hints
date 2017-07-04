@@ -1,5 +1,5 @@
 [
-  "¨\"'‰Ù“≥Î\u007f]çhÍì#\u0019",
+  "Ø/\n´¿~¿Ófÿ¡\"|Ö\u007fz",
   [
     [ "Benton2004.computation", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -391,6 +391,61 @@
         "lemma_Benton2004.is_per_holds_sym",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Benton2004.holds_flip",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Benton2004.flip",
+        "interpretation_Benton2004_Tm_abs_a3c20a9c2672e223710e11a8933f84d8",
+        "token_correspondence_Benton2004.flip"
+      ],
+      0
+    ],
+    [
+      "Benton2004.eval_equiv_flip",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Benton2004_interpretation_Tm_arrow_283149601dc5fbe8c7ba8138bf2615ea",
+        "equation_Benton2004.eval_equiv",
+        "equation_Benton2004.eval_equiv_reified", "equation_Benton2004.flip",
+        "equation_Benton2004.reified_exp", "equation_Benton2004.reify_exp",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "refinement_interpretation_Benton2004_Tm_refine_f7398afa07276a41388ff40a65b1c542",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Benton2004.reify_exp", "typing_FStar.Pervasives.Native.fst"
+      ],
+      0
+    ],
+    [
+      "Benton2004.exec_equiv_flip",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Benton2004_interpretation_Tm_arrow_d529593900c5e5ecc5fc0986b45b6cb5",
+        "equation_Benton2004.exec_equiv",
+        "equation_Benton2004.exec_equiv_reified", "equation_Benton2004.flip",
+        "equation_Benton2004.reified_computation",
+        "equation_Benton2004.reified_raw_computation",
+        "equation_Benton2004.reify_computation",
+        "equation_Benton2004.terminates_equiv_reified",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "function_token_typing_Prims.bool",
+        "refinement_interpretation_Benton2004_Tm_refine_19740681924b8e3f1389bc7c09e2f42c",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_Benton2004.reify_computation",
+        "typing_FStar.Pervasives.Native.snd"
       ],
       0
     ],
