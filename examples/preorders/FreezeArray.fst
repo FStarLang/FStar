@@ -127,3 +127,43 @@ abstract let sub (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (len:nat{i + 
 
 let suffix (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) = sub arr i (n - i)
 let prefix (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) = sub arr 0 i
+
+let lemma_sub_footprint
+  (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (len:nat{i + len <= n})
+  :Lemma (requires True)
+         (ensures (let arr' = sub arr i len in
+                   array_footprint arr == array_footprint arr'))
+	  [SMTPat (array_footprint (sub arr i len))]
+  = ()
+
+let lemma_sub_contains
+  (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (len:nat{i + len <= n}) (h:heap)
+  :Lemma (requires True)
+         (ensures  (let arr' = sub arr i len in
+	            h `contains_array` arr <==> h `contains_array` arr'))
+         [SMTPat (h `contains_array` (sub arr i len))]
+  = ()
+
+let lemma_sub_initializable
+  (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (len:nat{i + len <= n}) (h:heap)
+  :Lemma (requires True)
+         (ensures  (let arr' = sub arr i len in
+	            initializable arr h <==> initializable arr' h))
+         [SMTPat (initializable (sub arr i len) h)]
+  = ()
+
+let lemma_sub_frozen
+  (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (len:nat{i + len <= n}) (es:erased (Seq.seq a){frozen_with arr es})
+  :Lemma (requires True)
+         (ensures  (frozen_with (sub arr i len) (hide (Seq.slice (reveal es) i (i + len)))))
+	 [SMTPat (frozen_with arr es); SMTPat (sub arr i len)]
+  = let arr' = sub arr i len in
+    let es'  = hide (Seq.slice (reveal es) i (i + len)) in
+    lemma_functoriality (frozen_pred arr es) (frozen_pred arr' es')
+
+abstract let recall (#a:Type0) (#n:nat) (arr:array a n) (es:erased (Seq.seq a){frozen_with arr es})
+  :ST unit (requires (fun _       -> True))
+           (ensures  (fun h0 _ h1 -> h0 == h1 /\
+	                          h0 `contains_array` arr /\ equivalent_seqs (as_seq arr h0) (reveal es)))
+  = let h0 = ST.get () in
+    gst_recall (frozen_pred arr es)

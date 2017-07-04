@@ -47,6 +47,10 @@ assume type witnessed: (p:heap_predicate{stable p}) -> Type0
 assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
 
+assume val lemma_functoriality
+  (p:heap_predicate{stable p /\ witnessed p}) (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
+  :Lemma (ensures (witnessed q))
+
 (***** ST effect *****)
 
 let st_pre  = gst_pre
