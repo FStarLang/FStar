@@ -41,11 +41,11 @@ noeq type entry (rand:randomness) =
   | E: i:nat -> msg:message -> cipher:fragment{oplus (pad msg) (rand i) == cipher} -> sent:mref bool sent_pre -> entry rand
 
 (* sequence of messages *)
-type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (index s i) = i}
+type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (Seq.index s i) = i}
 
 let is_prefix_of (#a:Type) (s1:seq a) (s2:seq a) :Type0
   = length s1 <= length s2 /\
-    (forall (i:nat). i < length s1 ==> index s1 i == index s2 i)
+    (forall (i:nat). i < length s1 ==> Seq.index s1 i == Seq.index s2 i)
 
 (* entries are only appended to, typing entries_rel directly as `preorder (entries rand)` doesn't work *)
 let entries_rel (rand:randomness) :relation (entries rand) =
@@ -75,7 +75,7 @@ noeq type connection =
 
 assume val seq_map:
   #a:Type -> #b:Type -> f:(a -> b) -> s:seq a
-  -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> index r i == f (index s i))})
+  -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> Seq.index r i == f (Seq.index s i))})
 
 let rand_of (c:connection) :randomness =
   match c with
@@ -110,8 +110,8 @@ let contains_connection (h:heap) (c:connection) =
 
 let recall_connection (c:connection) :ST unit (requires (fun h0 -> True)) (ensures (fun h0 _ h1 -> h0 == h1 /\ h0 `contains_connection` c))
   = match c with
-    | S _ es_ref         -> recall es_ref
-    | R _ es_ref ctr_ref -> recall es_ref; recall ctr_ref
+    | S _ es_ref         -> ST.recall es_ref
+    | R _ es_ref ctr_ref -> ST.recall es_ref; ST.recall ctr_ref
 
 (* stable predicate for counter *)
 let connection_pred (c:connection) (h0:heap) :(p:heap_predicate{stable p}) =
