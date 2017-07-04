@@ -6,6 +6,8 @@ open FStar.Preorder
 open FStar.Heap
 open FStar.ST
 
+open FreezeArray
+
 (* size of each message fragment sent over the network *)
 assume val fragment_size:nat
 
@@ -257,18 +259,20 @@ let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection{receiv
 
 (***** sender and receiver *****)
 
-assume val flatten (log:seq message) :Tot (seq byte)
+(* assume val flatten (log:seq message) :Tot (seq byte) *)
 
-assume val all_init_lemma:
-  (#n:nat) (file:iarray n byte)
-  :Lemma (requires (all_init file))
-         (ensures  (forall (h1:heap) (h2:heap). heap_rel h1 h2 ==> 
+(* assume type all_initialized:  *)
 
-let sent_file (#n:nat) (file:iarray n byte) (c:connection) (from:nat) (num_chunks:nat) :heap_predicate
-  = fun h -> let frags, to = log c h, ctr c h in
-          h `contains_connection` c /\ from + num_chunks <= length frags /\ as_seq_ghost file 0 n h == flatten (slice frags from (from + num_chunks))
+(* assume val all_init_lemma: *)
+(*   (#n:nat) (file:iarray n byte) *)
+(*   :Lemma (requires (all_init file)) *)
+(*          (ensures  (forall (h1:heap) (h2:heap). heap_rel h1 h2 ==>  *)
 
-let sent_file' (#n:nat) (file:iarray n byte) (c:connection) (from:nat) (num_chunks:nat) :(p:heap_predicate{stable p})
-  = assume (forall (#a:Type) (#b:Type) (f:a -> b) (s1:seq a) (s2:seq a). s1 `is_prefix_of` s2 ==>
-                                                                   seq_map f s1 `is_prefix_of` seq_map f s2);
-    sent_file file c from num_chunks
+(* let sent_file (#n:nat) (file:iarray n byte) (c:connection) (from:nat) (num_chunks:nat) :heap_predicate *)
+(*   = fun h -> let frags, to = log c h, ctr c h in *)
+(*           h `contains_connection` c /\ from + num_chunks <= length frags /\ as_seq_ghost file 0 n h == flatten (slice frags from (from + num_chunks)) *)
+
+(* let sent_file' (#n:nat) (file:iarray n byte) (c:connection) (from:nat) (num_chunks:nat) :(p:heap_predicate{stable p}) *)
+(*   = assume (forall (#a:Type) (#b:Type) (f:a -> b) (s1:seq a) (s2:seq a). s1 `is_prefix_of` s2 ==> *)
+(*                                                                    seq_map f s1 `is_prefix_of` seq_map f s2); *)
+(*     sent_file file c from num_chunks *)

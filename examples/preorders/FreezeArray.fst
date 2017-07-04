@@ -76,8 +76,9 @@ abstract let init_at (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i < n}) (h:heap)
 assume val get_equivalent_seq (#a:Type0) (s:Seq.seq (option a){forall (i:nat). i < Seq.length s ==> Some? (Seq.index s i)})
   :Tot (r:Seq.seq a{equivalent_seqs s r})
 
-private let frozen_bit (#a:Type0) (#n:nat) (arr:array a n) (h:heap) :GTot bool
-  = let A #_ s_ref _ = arr in
+(* making it private blows up *)
+abstract let frozen_bit (#a:Type0) (#n:nat) (arr:array a n) (h:heap) :GTot bool
+  = let A s_ref _ = arr in
     snd (sel h s_ref)
 
 private type frozen_pred' (#a:Type0) (#n:nat) (arr:array a n) (s:Seq.seq a) :heap_predicate
