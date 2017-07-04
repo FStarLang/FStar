@@ -3,8 +3,16 @@
    computational assumption *)
 
 module Ex12.MAC
-open FStar.ST
-open FStar.All
+
+open FStar.HyperStack.ST
+open FStar.HyperStack.All
+open FStar.Seq
+open FStar.Monotonic.Seq
+open FStar.HyperHeap
+open FStar.HyperStack
+open FStar.Monotonic.RRef
+
+
 open Ex12.SHA1
 open FStar.IO
 
@@ -31,16 +39,16 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) []
+let log = FStar.HyperStack.ST.ralloc #(list entry) root []
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)
 val mac:    k:key -> t:text{key_prop k t} -> ST tag 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> Heap.modifies (Heap.only log) h h'))
+  (ensures (fun h x h' -> HyperStack.modifies_ref root (Set.singleton (as_addr log)) h h'))
 val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> Heap.modifies Set.empty h h'))
+  (ensures (fun h x h' -> HyperStack.modifies Set.empty h h'))
 // END: MacSpec
 
 (* ---- implementation *)
@@ -50,7 +58,9 @@ let keygen (p: (text -> Type)) =
   assume (key_prop k == p);
   k
 
+
 let mac k t =
+  recall log;
   let m = hmac_sha1 k t in
   log := Entry k t m :: !log;
   m
