@@ -72,7 +72,7 @@ def merge_values(s1, s2):
                         elif str2 == "":
                             s1[k] = str1
                         else: 
-                            s1[k] = str1 + " " + str2
+                            s1[k] = "\"" + str1.strip("\"") + " " + str2.strip("\"") + "\""
         for k, v in s2.items():
             if not k in s1:
                 s1[k] = v
@@ -88,7 +88,7 @@ def get_int_value(stats, column):
     return [(0 if t == "" else int(t)) for t in [get_value(stats, column)]][0]
 
 def get_string_value(stats, column):
-    return str(get_value(stats, column))
+    return str(get_value(stats, column)).strip("\"")
 
 
 def write_header(f, order_column, fstar_output_columns, columns):
@@ -111,7 +111,7 @@ def write_footer(f):
 def write_query_row(f, item, order_column, fstar_columns, columns):
     key  = "\"" + item[0] + "\""
     stats = item[1]
-    rng = "\"" + get_value(stats, "fstar_range").split(" ")[0] + "\""
+    rng = "\"" + get_value(stats, "fstar_range").strip("\"").split(" ")[0] + "\""
     n = stats[ec]
     order_value = str(cfmt(order_column, get_value(stats, order_column)))
 
@@ -152,7 +152,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
     # 2017-05-10T12:50:45.6397264Z (.\FStar.Int.fst(8,11-8,14))       Query-stats (FStar.Int.pow2_values, 1)  succeeded (with hint) in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280
 
     rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
-    z3rx=re.compile("([^ =]+)=([^ =]+)")
+    z3rx=re.compile("([^ =]+)=([^ =\"]+|\".*\")")
 
     queries = {}
     columns = set()
@@ -200,10 +200,10 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
             write_query_row(f, item, stat, fstar_output_columns, columns)
         write_footer(f)
         if global_stats:
-            process_global_stats(f, queries)
+            process_global_stats(f, queries, collate)
 
 
-def process_global_stats(f, queries):
+def process_global_stats(f, queries, collate):
     f.write("\"Name\",\"Value\",\"Unit\"\n")
     time = 0.0
     fstar_time = 0
@@ -219,6 +219,9 @@ def process_global_stats(f, queries):
     failed_without_hint = 0
     failed_with_hint = 0
     sum_num_checks = 0
+    sum_failed = 0
+    sum_failed_with_hint = 0
+    sum_failed_without_hint = 0
 
     for k, v in queries.items():
         kv_time = get_float_value(v, "time")
@@ -254,6 +257,14 @@ def process_global_stats(f, queries):
             else:
                 assert(t == "-" and u == "-")
                 failed_without_hint += 1
+            if not collate:
+                # (this don't make sense with query collation)
+                if t == "-":
+                    sum_failed += kv_time
+                    if u == "+":
+                        sum_failed_with_hint += kv_time
+                    elif u == "-":
+                        sum_failed_without_hint += kv_time
             
     f.write("\"# Queries\",%s,%s\n" % (len(queries), "\"\""))
     f.write("\"# succeeded\",%s,%s\n" % ((succeeded_with_hint + succeeded_without_hint), "\"\""))
@@ -272,7 +283,86 @@ def process_global_stats(f, queries):
     f.write("\"Sum(rlimit)\",%s,%s\n" % (sum_fstar_rlimit, "\"\""))
     f.write("\"Max(rlimit)\",%s,%s\n" % (max_fstar_rlimit, "\"\""))
 
+    if not collate:
+        f.write("\"Sum(time failed)\",%s,%s\n" % (sum_failed, "\"sec\""))
+        f.write("\"Sum(time failed with hint)\",%s,%s\n" % (sum_failed_with_hint, "\"sec\""))
+        f.write("\"Sum(time failed without hint)\",%s,%s\n" % (sum_failed_without_hint, "\"sec\""))
     
+    rlimit_cnst = float(544656)
+    rlimit_budget_used = float("inf") if (max_rlimit_count == 0.0) else 100.0 * (float(sum_rlimit_count)/(float(max_rlimit_count)*rlimit_cnst))
+    f.write("\"rlimit budget used\",%s,%s\n" % (rlimit_budget_used, "\"%\""))
+
+    time_per_rlimit = float("inf") if (sum_fstar_rlimit == 0) else float(time)/float(sum_fstar_rlimit)
+    rlimit_per_sec = float("inf") if (time == 0.0) else float(sum_fstar_rlimit)/float(time)
+    f.write("\"time/rlimit\",%s,%s\n" % (time_per_rlimit, "\"sec\""))
+    f.write("\"rlimit/sec\",%s,%s\n" % (rlimit_per_sec, "\"\""))
+
+    f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
+
+    f.write("\n")
+
+
+def main(argv):
+    infile = ""
+    outfile = ""
+    stat = "time"
+    n = 10
+    collate = False
+    append = False
+    reverse = False
+    global_stats = False
+
+    try:
+        opts, args = getopt.getopt(argv, SHORTOPTS, LONGOPTS)
+    except getopt.error as err:
+        print("Error: %s\n" % str(err))
+        show_help()
+        return 1
+
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            show_help()
+            return 1
+        elif o in ("-f", "--infile"):
+            infile = a
+        elif o in ("-o", "--outfile"):
+            outfile = a
+        elif o in ("-a", "--append"):
+            append = True
+        elif o in ("-s", "--stat"):
+            stat = a
+        elif o in ("-t", "-n", "--top"):
+            if a == "all":
+                n = sys.maxint
+            else:
+                n = int(a)
+                if n < 0:
+                    print("Error: -n/-t/--top must be >= 0.")
+                    return 1
+        elif o in ("-r", "--reverse"):
+            reverse = True
+        elif o in ("-c", "--collate"):
+            collate = True
+        elif o in ("-g", "--global"):
+            global_stats = True
+        else:
+            print("Unknown option `%s'" % o)
+            return 2
+    
+    process_file(infile, outfile, stat, int(n), collate, append, reverse, global_stats)
+    return 0
+
+
+# python query-stats.py -c -f demo.log --outfile=summary.csv --stat=fstar_time -n 10
+# python query-stats.py -c -f demo.log --outfile=summary.csv --stat=rlimit-count -n 10 -a
+# python query-stats.py -c -f demo.log --outfile=summary.csv --stat=num-checks -n 10 -a -g
+
+
+if __name__ == "__main__":    
+    argv = sys.argv[1:]
+    sys.exit(main(argv))
+
+
     rlimit_cnst = float(544656)
     rlimit_budget_used = float("inf") if (max_rlimit_count == 0.0) else 100.0 * (float(sum_rlimit_count)/(float(max_rlimit_count)*rlimit_cnst))
     f.write("\"rlimit budget used\",%s,%s\n" % (rlimit_budget_used, "\"%\""))

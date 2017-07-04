@@ -63,25 +63,31 @@ let format_hints_file_name src_filename =
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
-let initialize_hints_db src_filename force_record : unit =
+let initialize_hints_db src_filename format_filename : unit =
     hint_stats := [];
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
-         let val_filename = format_hints_file_name norm_src_filename in
+         let val_filename = match Options.hint_file() with
+                            | Some fn -> fn
+                            | None -> (format_hints_file_name norm_src_filename) in
          begin match BU.read_hints val_filename with
             | Some hints ->
                 let expected_digest = BU.digest_of_file norm_src_filename in
                 if Options.hint_info()
                 then begin
-                     if hints.module_digest = expected_digest
-                     then BU.print1 "(%s) digest is valid; using hints db.\n" norm_src_filename
-                     else BU.print1 "(%s) digest is invalid; using potentially stale hints\n" norm_src_filename
+                    BU.print3 "(%s) digest is %s%s.\n" norm_src_filename
+                        (if hints.module_digest = expected_digest
+                         then "valid; using hints"
+                         else "invalid; using potentially stale hints")
+                        (match Options.hint_file() with
+                         | Some fn -> " from '" ^ val_filename ^ "'"
+                         | _ -> "")
                 end;
                 replaying_hints := Some hints.hints
             | None ->
                 if Options.hint_info()
-                then BU.print1 "(%s) Unable to read hints db.\n" norm_src_filename
+                then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
          end
 
 let finalize_hints_db src_filename : unit =
@@ -91,20 +97,19 @@ let finalize_hints_db src_filename : unit =
                 module_digest = BU.digest_of_file src_filename;
                 hints = hints
               }  in
-          let hints_file_name = format_hints_file_name src_filename in
-          BU.write_hints hints_file_name hints_db
+          let norm_src_filename = BU.normalize_file_path src_filename in
+          let val_filename = match Options.hint_file() with
+                            | Some fn -> fn
+                            | None -> (format_hints_file_name norm_src_filename) in
+          BU.write_hints val_filename hints_db
     end;
     begin if Options.hint_info() then
         let stats = !hint_stats |> List.rev in
-        stats |> List.iter (fun s -> match s.replay_result with
-            | Inl _unsat_core ->
-              BU.print2 "Hint-info (%s): Replay succeeded in %s milliseconds\n"
-                (Range.string_of_range s.source_location)
-                (BU.string_of_int s.elapsed_time)
-            | Inr _error ->
-              BU.print2 "Hint-info (%s): Replay failed in %s milliseconds\n"
-                (Range.string_of_range s.source_location)
-                (BU.string_of_int s.elapsed_time))
+        stats |> List.iter (fun s ->
+            BU.print3 "Hint-info (%s): Replay %s in %s milliseconds.\n"
+            (Range.string_of_range s.source_location)
+            (match s.replay_result with | Inl _ -> "succeeded" | Inr _ -> "failed")
+            (BU.string_of_int s.elapsed_time))
     end;
     recorded_hints := None;
     replaying_hints := None;
@@ -247,8 +252,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         @[Term.SetOption ("rlimit", string_of_int rlimit)]
         @[Term.CheckSat]
         @(if Options.record_hints() then [Term.GetUnsatCore] else [])
-        @(if Options.print_z3_statistics() || Options.check_hints() then [Term.GetStatistics] else [])
-        @(if Options.check_hints() then [Term.GetReasonUnknown] else [])
+        @(if Options.print_z3_statistics() || Options.check_hints() then [Term.GetStatistics; Term.GetReasonUnknown] else [])
         @suffix in
 
     let check (p:decl) =
@@ -426,11 +430,16 @@ let ask_and_report_errors env all_labels prefix query suffix =
                None
                (cb (Option.isSome unsat_core) initial_config p alt_configs (Z3.mk_fresh_scope())) in
 
-    let process_query (q:decl) :unit =
+    let process_query (q:decl) : unit =
         check q
     in
 
-    if Options.admit_smt_queries() then () else process_query query
+    match Options.admit_smt_queries(), Options.lax_except() with
+    | true, _ -> ()
+    | false, None -> process_query query
+    | false, Some id ->
+        let cur_id = "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")" in
+        if cur_id = id then (process_query query)
 
 
 let solve use_env_msg tcenv q : unit =

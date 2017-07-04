@@ -2,10 +2,14 @@ module Seq.Complements
 
 open FStar.Seq
 open FStar.Classical
+open FStar.Fin
 
 let _in (s:seq 'a) = k:nat{k < length s}
 let ( @^ ) (s:seq 'a) (i:_in s) : 'a = index s i
 let snoc (s:seq 'a) (x:'a) = s `append` (create 1 x)
+
+
+(** Searching the index of an element in a seq **)
 
 let rec index_of_aux (#a:eqtype) (e:a) (s : seq a) (i : _in s)
  : Pure (option (_in s))
@@ -56,6 +60,8 @@ let rec index_of_l_spec (#a:Type) (f:a -> bool) (s:seq a) :
   else index_of_l_aux_spec f s 0
 
 
+(** Lemmas on count **)
+
 let rec none_count_zero (#a:eqtype) (e:a) (s:seq a)
   : Lemma (requires (forall (i:_in s). not (e = s @^ i))) (ensures (count e s == 0)) (decreases (length s))
 = if length s = 0 then ()
@@ -85,6 +91,9 @@ let index_of_l_count (#a:eqtype) (e:a) (s:seq a)
   | None -> none_count_zero e s
   | Some i0 -> ()
 
+
+(** Disjointness **)
+
 let disjoint (#a:Type) (s1:seq a) (s2:seq a) = forall (i:_in s1)(j:_in s2). ~(s1 @^ i == s2 @^ j)
 
 
@@ -101,7 +110,6 @@ let disjoint_implies_count_zero (#a:eqtype) (s1 s2:seq a)
   in
   forall_intro (disjoint_implies_count_zero_aux #a s1 s2
     (FStar.Squash.get_proof (disjoint s1 s2)))
-
 
 
 let lemma_disjoint_slice (#a:Type) (s1 s2:seq a) (i j : k:nat{k <= length s2})
@@ -123,3 +131,34 @@ let lemma_disjoint_append (#a:Type) (s1 s2 s3: seq a)
     (i < length s1 ==> ~(s1 @^ (i <: nat) == s3 @^ j)) /\
     (i >= length s1 ==> (let i' = i - length s1 in i' < length s2 /\ ~(s2 @^ i' == s3 @^ j)))
     )
+
+(* Mapping *)
+
+abstract
+let map (s:seq 'a) (f : 'a -> 'b) : seq 'b = init (length s) (fun i -> f (s @^ i))
+
+let map_lemma (s:seq 'a) (f:'a -> 'b) : Lemma (let s' = map #'a #'b s f in length s' == length s /\ (forall (i:_in s'). s' @^ i == f (s @^ (i <: nat)))) = ()
+
+
+
+let injective (p:seq 'a) = forall (i j : _in p) . p @^ i == p @^ j ==> i == j
+
+let injective_map (#a #b:Type) (f: a -> b) (s:seq a)
+  : Lemma (requires (injective s /\ (forall (i j:_in s). f (s @^ i) == f (s @^ j) ==> s @^ i == s@^ j)))
+    (ensures (injective (map s f)))
+= map_lemma s f
+
+let rec injective_length_lemma (#n:nat) (s:seq (fin n))
+  : Lemma (requires (injective s)) (ensures (length s <= n)) (decreases n)
+= if length s = 0 then ()
+  else if n = 1 then
+    assert (s @^ 0 == 0 /\ (length s > 1 ==> s @^ 1 == 0))
+  else
+    let x = head s in
+    let xs = tail s in
+    assert (forall (i:_in xs). ~(s @^ (i+1) == s @^ 0)) ;
+    assert (forall (i:_in xs). ~(xs @^ i == x)) ;
+    let f (k:fin n) : fin (n-1) = if k > x then k - 1 else if k < x then (k <: nat) else 0 <: fin (n-1) in
+    assert (forall (k1 k2:fin n). k1 <> x /\ k2 <> x /\ f k1 == f k2 ==> k1 == k2) ;
+    injective_map f xs ;
+    injective_length_lemma #(n-1) (map xs f)

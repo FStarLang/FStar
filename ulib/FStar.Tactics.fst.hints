@@ -603,11 +603,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],
@@ -678,7 +678,7 @@
         "data_typing_intro_FStar.Tactics.Success@tok",
         "equation_FStar.Tactics.goal", "equation_FStar.Tactics.goals",
         "equation_FStar.Tactics.state",
-        "kinding_FStar.Pervasives.option@tok",
+        "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_FStar.Tactics.formula@tok"
       ],
       0
@@ -691,14 +691,15 @@
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "data_typing_intro_FStar.Tactics.Success@tok",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some", "equation_FStar.Tactics.goal",
-        "equation_FStar.Tactics.goals", "equation_FStar.Tactics.state",
-        "fuel_guarded_inversion_FStar.Pervasives.tuple2",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.Tactics.goal", "equation_FStar.Tactics.goals",
+        "equation_FStar.Tactics.state",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "kinding_FStar.Tactics.term_view@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.uu___is_Some",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_FStar.Tactics.__inspect"
       ],
       0
@@ -808,8 +809,8 @@
         "constructor_distinct_FStar.Tactics.Eq",
         "constructor_distinct_FStar.Tactics.Implies",
         "data_typing_intro_FStar.Tactics.False_@tok",
-        "proj_equation_FStar.Pervasives.Some_v",
-        "projection_inverse_FStar.Pervasives.Some_v"
+        "proj_equation_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0
     ],
@@ -823,14 +824,14 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics_pretyping_7e7964e5936d3ba0e959ff5df03e0a89",
         "bool_inversion", "data_typing_intro_FStar.Tactics.False_@tok",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "function_token_typing_FStar.Tactics.term",
-        "kinding_FStar.Pervasives.tuple2@tok",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Tactics.formula@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],
@@ -875,14 +876,14 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Tactics_pretyping_7e7964e5936d3ba0e959ff5df03e0a89",
         "bool_inversion", "data_typing_intro_FStar.Tactics.False_@tok",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "function_token_typing_FStar.Tactics.term",
-        "kinding_FStar.Pervasives.tuple2@tok",
+        "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Tactics.formula@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],

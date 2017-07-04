@@ -15,6 +15,7 @@ NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
 FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(NOEXTRACT_MODULES))
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
 FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
+FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 # Left as an example if we were to add multiple versions of fstarlib
 # ifeq ($(MEM),HST)
