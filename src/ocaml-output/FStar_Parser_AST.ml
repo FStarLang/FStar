@@ -1107,23 +1107,23 @@ let mkRefSet: FStar_Range.range -> term Prims.list -> term =
           FStar_Parser_Const.tset_union) in
       match uu____3209 with
       | (empty_lid,singleton_lid,union_lid) ->
-          let empty1 =
+          let empty =
             mk_term (Var (FStar_Ident.set_lid_range empty_lid r)) r Expr in
           let ref_constr =
             mk_term
               (Var (FStar_Ident.set_lid_range FStar_Parser_Const.heap_ref r))
               r Expr in
-          let singleton1 =
+          let singleton =
             mk_term (Var (FStar_Ident.set_lid_range singleton_lid r)) r Expr in
-          let union1 =
+          let union =
             mk_term (Var (FStar_Ident.set_lid_range union_lid r)) r Expr in
           FStar_List.fold_right
             (fun e  ->
                fun tl1  ->
                  let e1 = mkApp ref_constr [(e, Nothing)] r in
-                 let single_e = mkApp singleton1 [(e1, Nothing)] r in
-                 mkApp union1 [(single_e, Nothing); (tl1, Nothing)] r) elts
-            empty1
+                 let single_e = mkApp singleton [(e1, Nothing)] r in
+                 mkApp union [(single_e, Nothing); (tl1, Nothing)] r) elts
+            empty
 let mkExplicitApp: term -> term Prims.list -> FStar_Range.range -> term =
   fun t  ->
     fun args  ->
