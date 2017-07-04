@@ -1,0 +1,117 @@
+[
+  "a5Üî\u0019Ê\ti2\u0004\u0012ëœVñæ",
+  [
+    [
+      "Ex12a1.Cap.capRead",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0
+    ],
+    [
+      "Ex12a1.Cap.issue_read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Ex12a1.Cap.UTF8_inj", "bool_inversion",
+        "equation_Ex12.MAC.pkey", "equation_Ex12.SHA1.key",
+        "equation_Ex12.SHA1.keysize", "equation_Ex12a.ACLs.canRead",
+        "equation_Ex12a.ACLs.filename", "equation_Ex12a1.Cap.capRead",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "function_token_typing_Ex12a1.Cap.k_read",
+        "primitive_Prims.op_Equality",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_0b607766ca6a829e168912ff886fe83d",
+        "refinement_interpretation_Ex12a1.Cap_Tm_refine_47fc00d9af5452fdc3a5434abc5c3970",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
+        "string_inversion", "token_correspondence_Ex12.MAC.key_prop",
+        "token_correspondence_Ex12a1.Cap.capRead",
+        "typing_Ex12a.ACLs.canRead", "typing_Platform.Bytes.equalBytes",
+        "typing_Platform.Bytes.utf8"
+      ],
+      0
+    ],
+    [
+      "Ex12a1.Cap.redeem_read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.V", "equation_Ex12.MAC.pkey",
+        "equation_Ex12.SHA1.key", "equation_Ex12.SHA1.keysize",
+        "equation_Ex12a1.Cap.capRead", "equation_Platform.Bytes.lbytes",
+        "function_token_typing_Ex12a1.Cap.k_read",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_0b607766ca6a829e168912ff886fe83d",
+        "refinement_interpretation_Ex12a1.Cap_Tm_refine_40b23c06210f10bc3c5257ef1ca5518a",
+        "string_inversion", "token_correspondence_Ex12.MAC.key_prop",
+        "token_correspondence_Ex12a1.Cap.capRead"
+      ],
+      0
+    ],
+    [
+      "Ex12a1.Cap.capWrite",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0
+    ],
+    [
+      "Ex12a1.Cap.issue_write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Ex12a1.Cap.UTF8_inj", "bool_inversion",
+        "equation_Ex12.MAC.pkey", "equation_Ex12.SHA1.key",
+        "equation_Ex12.SHA1.keysize", "equation_Ex12a.ACLs.canWrite",
+        "equation_Ex12a.ACLs.filename", "equation_Ex12a1.Cap.capWrite",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "function_token_typing_Ex12a1.Cap.k_write",
+        "primitive_Prims.op_Equality",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_0b607766ca6a829e168912ff886fe83d",
+        "refinement_interpretation_Ex12a1.Cap_Tm_refine_0ba285f5db2ebbbd14f4a10a0e23206e",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
+        "string_inversion", "token_correspondence_Ex12.MAC.key_prop",
+        "token_correspondence_Ex12a1.Cap.capWrite",
+        "typing_Ex12a.ACLs.canWrite", "typing_Platform.Bytes.equalBytes",
+        "typing_Platform.Bytes.utf8"
+      ],
+      0
+    ],
+    [
+      "Ex12a1.Cap.redeem_write",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.V", "equation_Ex12.MAC.pkey",
+        "equation_Ex12.SHA1.key", "equation_Ex12.SHA1.keysize",
+        "equation_Ex12a1.Cap.capWrite", "equation_Platform.Bytes.lbytes",
+        "function_token_typing_Ex12a1.Cap.k_write",
+        "proj_equation_FStar.Pervasives.V_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_0b607766ca6a829e168912ff886fe83d",
+        "refinement_interpretation_Ex12a1.Cap_Tm_refine_40b23c06210f10bc3c5257ef1ca5518a",
+        "string_inversion", "token_correspondence_Ex12.MAC.key_prop",
+        "token_correspondence_Ex12a1.Cap.capWrite"
+      ],
+      0
+    ]
+  ]
+]
