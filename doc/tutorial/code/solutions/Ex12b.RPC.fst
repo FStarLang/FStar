@@ -16,11 +16,11 @@ let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
 open Ex12.SHA1
-open Ex12b.Format
+open Ex12b2.Format
 open Ex12.MAC
 
 
-module Formatting = Ex12b.Format
+module Formatting = Ex12b2.Format
 
 (* some basic, untrusted network controlled by the adversary *)
 

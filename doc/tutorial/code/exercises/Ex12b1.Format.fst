@@ -1,14 +1,12 @@
-module Ex12b.Format
+module Ex12b1.Format
 
 open FStar.String
 open Platform.Bytes         //This shadows length, index etc. from FStar.Seq, for no good reason?
 open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq
 open FStar.Classical
 
-// BEGIN: FormatMsg
 type message = bytes
 type msg (l:nat) = lbytes l
-// END: FormatMsg
 
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
@@ -56,7 +54,7 @@ type string16 = s:string{uInt16 (length (utf8 s))} (* up to 65K *)
 
 (* =============== the formatting we use for authenticated RPCs *)
 
-// BEGIN: FormatReqRes
+
 val request : string -> Tot message
 val response: string16 -> string -> Tot message
 
@@ -71,48 +69,35 @@ let response s t =
   lemma_repr_bytes_values (length (utf8 s));
   let lb = uint16_to_bytes (length (utf8 s)) in
   tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
-// END: FormatReqRes
+
 
 (* ------- 3 lemmas on message formats:
 
+   - requests and responses are distinct
    - requests are injective on their argument
    - responses are injective on both their arguments
-   - requests and responses are distinct
 
    Note that we do not export a "spec" of the request and response
    functions---they just return messages---so these three lemmas are
    sufficient *)
 
-// BEGIN: FormatLemmas
+// BEGIN: FormatLemmasEx
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
-        (ensures (request s <> response s' t'))
+        (ensures True) //replace with actual lemma post-condition
         [SMTPat (request s); SMTPat (response s' t')]
 
-val req_components_corr:
+val req_injective:
   s0:string -> s1:string ->
-  Lemma (requires (b2t (Seq.eq (request s0) (request s1))))
-        (ensures  (s0==s1))
+  Lemma (requires True) //replace with actual lemma pre-condition
+        (ensures  True) //replace with actual lemma post-condition
         (*[SMTPat (request s0); SMTPat (request s1)]*)
 
-val resp_components_corr:
+val resp_injective:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
-  Lemma (requires (b2t (Seq.eq (response s0 t0) (response s1 t1))))
-        (ensures  (s0==s1 /\ t0==t1))
+  Lemma (requires True) //replace with actual lemma pre-condition
+        (ensures  True) //replace with actual lemma post-condition
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
-// END: FormatLemmas
+// END: FormatLemmasEx
 
-// BEGIN: FormatProofs
-let req_resp_distinct s s' t' = 
-  lemma_repr_bytes_values (length (utf8 s));
-  lemma_repr_bytes_values (length (utf8 s'));
-  assert (Seq.index (request s) 0 == Char.char_of_int 0);
-  assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
-
-let req_components_corr s0 s1 = ()
-
-let resp_components_corr s0 t0 s1 t1 =
-  lemma_repr_bytes_values (length (utf8 s0));
-  lemma_repr_bytes_values (length (utf8 s1))
-// END: FormatProofs

@@ -24,8 +24,10 @@ Ex07d.fst \
 Ex10a.fst \
 Ex10b.fst \
 Ex11a.fst \
-Ex12a.Cap.fst \
 Ex12a1.Cap.fst \
+Ex12a2.Cap.fst \
+Ex12b1.Format.fst \
+Ex12b2.Format.fst \
 Ex12b.RPC.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \

@@ -4699,9 +4699,9 @@ algorithm for generating the shared `key`,
 a `mac` function for generating a MAC `tag` on message `text` using `key`, and
 a `verify` function for verifying that `tag` is a valid MAC for `text` and `key`.
 
-We say that messages for which `verify key text tag=true` have been authenticated. But what does this mean formally? Does it mean that the owner of `key` endorsed the message `text`. But who is the owner of `key`, which after all is a bitstring that could be learned and copied. And for deployed MAC functionalities,  `verify` is pure function, so even if the key was kept perfectly secret, a randomly picked `tag` will verify with some probability.
+We say that messages for which `verify key text tag=true` have been authenticated. But what does this mean formally? Does it mean that the owner of `key` endorsed the message `text`. But who is the owner of `key`, which after all is a bitstring that could be learned and copied. And for deployed MAC functionalities,  `verify` is a pure function, so even if the key was kept perfectly secret, a randomly picked `tag` will verify with some probability.
 
-Cryptographers grappled with these problems and specify the properties of a MAC negatively by bounding the probability of realistic adversaries forging `tag`. This is typically done in the form of a random experiment:
+Cryptographers grappled with these problems and specify the properties of a MAC negatively by bounding the probability of realistic adversaries forging a `tag`. This is typically done in the form of a random experiment:
 
 ### The message authentication experiment { - }
 
@@ -4767,15 +4767,15 @@ Relying on `ACLs` and `MAC`, implement a pair of functions with
 the following specification, and verify them by typing under the
 security assumption that the MAC is UF-CMA. Use `failwith "bad capability"` in
 case the verification fails.
-~~ ExerciseFragment {exname=Ex12a.Cap}
-[INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
+~~ ExerciseFragment {exname=Ex12a1.Cap}
+[INCLUDE=code/exercises/Ex12a1.Cap.fst:CapType]
 ~~
 
 To this end, assume given a UTF8 encoding function from strings to
 bytes, with the following specification:
 
 ```
-[INCLUDE=code/exercises/Ex12a.Cap.fst:UTF8Inj]
+[INCLUDE=code/exercises/Ex12a1.Cap.fst:UTF8Inj]
 ```
 
 This says that if two `utf_8` encodings are equal, then so are the values that were encoded. 
@@ -4783,16 +4783,16 @@ The patterns instructs the SMT solver to associate the injectivity axiom only wi
 
 
 ~~ Answer
-~~~ SolutionFragment {exname=Ex12a.Cap}
-[INCLUDE=code/solutions/Ex12a.Cap.fst:CapImplementation]
+~~~ SolutionFragment {exname=Ex12a1.Cap}
+[INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation]
 ~~~
 ~~
 
 How would we extend it to also cover write access?
 
 ~~ Answer
-~~~ SolutionFragment {exname=Ex12a1.Cap}
-[INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation2]
+~~~ SolutionFragment {exname=Ex12a2.Cap}
+[INCLUDE=code/solutions/Ex12a2.Cap.fst:CapImplementation2]
 ~~~
 ~~
 
@@ -4834,7 +4834,7 @@ from one principal to another.
 
 `utf8` marshalls strings such as `s` and `t` into byte arrays
 that can be send over the network. `|` written also `append`
-is a function concatenating `bytes`. `request` and `response` build
+is a function concatenating `bytes` (In F\* we will use the operator `@|`). Functions `request` and `response` build
 message digests (the authenticated values). These functions may for
 instance be implemented as tagged concatenations of their utf8-encoded
 arguments. These functions will be detailed in the `Format` module.
@@ -4859,30 +4859,26 @@ in the following protocol
 [INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
 ```
 
-~KK
-Where "@|" is a macro for "append"?
-~
-
 For simplicity we initially elide the client code which is similar.
 
 The `assert` guarantee that messages that are received by a party have been sent by its peer.
 
 ### Formatting code
 
-The Format module used by the protocol implementation
+The `Format` module used by the protocol implementation
 exports among others the following types and functions.
 
 ```
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatMsg]
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatMsg]
 
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatReqRes]
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatReqRes]
 ```
 
 We require 3 lemmas on message formats:
 
+* requests and responses are distinct
 * requests are injective on their argument
 * responses are injective on both their arguments
-* requests and responses are distinct
 
 For authentication properties, we require both functions to be
 injective, so that authenticating the bytes unambiguously
@@ -4890,23 +4886,26 @@ authenticate the text before marshalling.
 
 ~Exercise
 Try to state this formally as three lemmas.
-
+~~ ExerciseFragment {exname=Ex12b1.Format}
+[INCLUDE=code/exercises/Ex12b1.Format.fst:FormatLemmasEx]
+~~
 
 ~~Answer
-```
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatLemmas]
-```
+~~~ SolutionFragment {exname=Ex12b1.Format}
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatLemmas]
+~~~
 ~~
-~
 
-~ Exercise
 Prove these three lemmas.
-~
+~~ ExerciseFragment {exname=Ex12b2.Format}
+[INCLUDE=code/exercises/Ex12b2.Format.fst:FormatProofsEx]
+~~
 
-~ Answer
-```
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatProofs]
-```
+~~ Answer
+~~~ SolutionFragment {exname=Ex12b2.Format}
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatProofs]
+~~~
+~~
 ~
 
 <!--
@@ -4928,7 +4927,7 @@ val append_inj_lemma: b1:message -> b2:message
 ```
 
 ~ Exercise
-The proof of the second lemma contain currently contains an 'admit'.
+The proof of the second lemma currently contains an 'admit'.
 Try to fix this proof.
 ~
 
@@ -4944,7 +4943,7 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 -->
 
 ~ Remark
-In the lecture we also saw an extended protocol where we have a
+One can imagine an extended protocol where we have a
 population of principals, represented as concrete strings ranged over
 by `a` and `b`, that intend to perform various remote procedure calls
 (RPCs) over a public network.
@@ -4953,10 +4952,6 @@ The security goals of our RPC protocol are that (1) whenever a principal `b` acc
 request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
 (2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
 message in response to a matching request from `a`.
-~
-
-~KK
-What lecture is this exactly?
 ~
 
 <!--
