@@ -408,3 +408,162 @@ let r_trans
     [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3)];
   ]]
 = exec_equiv_trans (interp p) (interp p') c1 c2 c3
+
+(* 4.2.1 Basic equations *)
+
+let d_su1
+  (c: computation)
+  (phi phi' : gexp bool)
+: Lemma
+  (requires (exec_equiv phi phi' c c))
+  (ensures (exec_equiv phi phi' (seq skip c) c))
+  [SMTPat (exec_equiv phi phi' (seq skip c) c)]
+= Benton2004.d_su1 c (interp phi) (interp phi')
+
+let d_su1'
+  (c c' c'' : computation)
+  (phi phi' phi'' : gexp bool)
+: Lemma
+  (requires (
+    exec_equiv phi phi' c skip /\
+    exec_equiv phi' phi'' c' c''
+  ))
+  (ensures (exec_equiv phi phi'' (seq c c') c''))
+  [SMTPat (exec_equiv phi phi'' (seq c c') c'')]
+= Benton2004.d_su1' c c' c'' (interp phi) (interp phi') (interp phi'')
+
+let d_su2
+  (c: computation)
+  (phi phi' : gexp bool)
+: Lemma
+  (requires (exec_equiv phi phi' c c))
+  (ensures (exec_equiv phi phi' (seq c skip) c))
+  [SMTPat (exec_equiv phi phi' (seq c skip) c)]
+= Benton2004.d_su2 c (interp phi) (interp phi')
+
+let d_assoc
+  (c1 c2 c3: computation)
+  (phi phi' : gexp bool)
+: Lemma
+  (requires (exec_equiv phi phi' (seq (seq c1 c2) c3) (seq (seq c1 c2) c3)))
+  (ensures (exec_equiv phi phi' (seq (seq c1 c2) c3) (seq c1 (seq c2 c3))))
+  [SMTPat (exec_equiv phi phi' (seq (seq c1 c2) c3) (seq c1 (seq c2 c3)))]
+= Benton2004.d_assoc c1 c2 c3 (interp phi) (interp phi')
+
+let d_cc
+  (b: exp bool)
+  (c1 c2 c3: computation)
+  (phi phi' phi'' : gexp bool)
+: Lemma
+  (requires (
+    exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2) /\
+    exec_equiv phi' phi'' c3 c3
+  ))
+  (ensures (
+    exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))
+  ))
+  [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))]
+= Benton2004.d_cc b c1 c2 c3 (interp phi) (interp phi') (interp phi'')
+
+let d_lu1
+  (b: exp bool)
+  (c: computation)
+  (phi phi' : gexp bool)
+: Lemma
+  (requires (exec_equiv phi phi' (while b c) (while b c)))
+  (ensures (exec_equiv phi phi' (while b c) (ifthenelse b (seq c (while b c)) skip)))
+= Benton2004.d_lu1 b c (interp phi) (interp phi')
+
+let d_lu2
+  (b: exp bool)
+  (c: computation)
+  (phi phi' : gexp bool)
+: Lemma
+  (requires (exec_equiv phi phi' (while b c) (while b c)))
+  (ensures (exec_equiv phi phi' (while b c) (while b (seq c (ifthenelse b c skip)))))
+= Benton2004.d_lu2 b c (interp phi) (interp phi')
+
+(* 4.2.2 Optimizing Transformations *)
+
+(* Falsity *)
+
+let r_f
+  (c c' : computation)
+  (phi: gexp bool)
+: Lemma
+  (ensures (
+    exec_equiv
+      (gconst false)
+      phi
+      c
+      c'
+  ))
+= ()
+
+(* Dead assignment *)
+
+let r_dassl
+  (x: var)
+  (e: exp int)
+  (phi: gexp bool)
+: Lemma
+  (ensures (
+    exec_equiv
+      (gsubst phi x Left (exp_to_gexp e Left))
+      phi
+      (assign x e)
+      skip
+  ))
+= ()
+
+(* Common branch *)
+
+let r_cbl
+  (b: exp bool)
+  (c c' d : computation)
+  (phi phi' : gexp bool)
+: Lemma
+  (requires (
+    exec_equiv
+      (gand phi (exp_to_gexp b Left))
+      phi'
+      c
+      d /\
+    exec_equiv
+      (gand phi (gnot (exp_to_gexp b Left)))
+      phi'
+      c'
+      d
+  ))
+  (ensures (
+    exec_equiv
+      phi
+      phi'
+      (ifthenelse b c c')
+      d
+  ))
+= (* NOTE: the following let _ are necessary, and must be stated in this form instead of asserts alone, the latter seeming ineffective *)
+  let _ : squash (forall s1 s2 . holds (interp (gand phi (exp_to_gexp b Left))) s1 s2 <==> holds (interp phi) s1 s2 /\ fst (reify_exp b s1) == true) =
+    assert (forall s1 s2 . holds (interp (gand phi (exp_to_gexp b Left))) s1 s2 <==> holds (interp phi) s1 s2 /\ fst (reify_exp b s1) == true)
+  in
+  let _ : squash (forall s1 s2 . holds (interp (gand phi (gnot (exp_to_gexp b Left)))) s1 s2 <==> holds (interp phi) s1 s2 /\ ~ (fst (reify_exp b s1) == true)) =
+    assert (forall s1 s2 . holds (interp (gand phi (gnot (exp_to_gexp b Left)))) s1 s2 <==> holds (interp phi) s1 s2 /\ ~ (fst (reify_exp b s1) == true))
+ 
+  in
+  ()
+
+(* Dead while *)
+
+let r_dwhll
+  (b: exp bool)
+  (c: computation)
+  (phi: gexp bool)
+: Lemma
+  (ensures (
+    exec_equiv
+      (gand phi (gnot (exp_to_gexp b Left)))
+      (gand phi (gnot (exp_to_gexp b Left)))
+      (while b c)
+      skip
+  ))
+= ()
