@@ -105,7 +105,7 @@ let sec43_right
     (assign i (eop op_Addition (evar i) (evar x)))
   )
 
-(* Proof becomes really intractable. Thus let's design a better rule for assignment. *)
+(* Proof becomes really intractable. Thus let's design some more convenient derived rules. *)
 
 let r_ass
   (x y: var)
@@ -154,7 +154,19 @@ let r_dassr
   (ensures (exec_equiv phi phi' skip (assign x e)))
 = r_dassl x e (flip phi) (flip phi')
 
-#set-options "--z3rlimit 64"
+let d_su1'_flip
+  (c'' c c' : computation)
+  (phi phi' phi'' : gexp bool)
+: Lemma
+  (requires (
+    exec_equiv phi phi' skip c /\
+    exec_equiv phi' phi'' c'' c' 
+  ))
+  (ensures (exec_equiv phi phi'' c'' (seq c c')))
+  [SMTPat (exec_equiv phi phi'' c'' (seq c c'))]
+= d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
+
+#set-options "--z3rlimit 128"
 
 let sec43
   (i n x y: var)
@@ -170,37 +182,21 @@ let sec43
 = let phi = sec43_phi i n x y in
   let l = sec43_left i n x y in
   let r = sec43_right i n x y in
-  let phi_per : squash (is_per phi) = () in
-  let phi_interp : squash (interpolable phi) = () in
   let cond = eop op_LessThan (evar i) (evar n) in
-  let lbody_phi = gand phi (gand (exp_to_gexp cond Left) (exp_to_gexp cond Right)) in
-  let lbody_phi' = gand phi (geq (exp_to_gexp cond Left) (exp_to_gexp cond Right)) in
   let asx_e = eop op_Addition (evar y) (const 1) in
   let asx = assign x asx_e in
-  let lbody_phi12 = gand lbody_phi' (geq (gvar x Left) (gvar x Right)) in
   let asi_e = eop op_Addition (evar i) (evar x) in
   let asi = assign i asi_e in
   let lbody = seq asx asi in
   let rloop = while cond asi in
-  let _ : squash (exec_equiv phi phi l (seq skip l)) =
-    r_ass x x asx_e asx_e lbody_phi lbody_phi12;
-    r_ass i i asi_e asi_e lbody_phi12 lbody_phi';
-    r_while cond cond lbody lbody phi;
-    d_su1 l phi phi;
-    phi_per;
-    phi_interp;
-    assert (exec_equiv phi phi l (seq skip l))
-  in
-  let _ : squash (exec_equiv phi phi (seq skip l) r) =
-    let gi () : Lemma (x <> i /\ x <> n /\ x <> y) =
-      diffs;
-      ()
-    in
-    gi ();
-    r_dassr x asx_e phi phi;
-    assume (exec_equiv phi phi l rloop);
-    r_seq phi phi phi skip asx l rloop
-  in
-  phi_per;
-  phi_interp;
-  ()
+  let phi1 = gand phi (geq (gvar x Right) (gop op_Addition (gvar y Right) (gconst 1))) in
+  let phi2 = gand phi1 (geq (gvar x Left) (gvar x Right)) in
+  assert (x <> i /\ x <> n /\ x <> y); // for the substitutions in phi, phi1
+  r_dassr x asx_e phi phi1;
+  r_dassl x asx_e phi1 phi2;
+  assert (i <> x /\ i <> n /\ i <> y); // for the substitutions in phi2
+  r_ass i i asi_e asi_e phi2 phi2;
+  assert (exec_equiv phi1 phi2 lbody asi); // by d_su1'
+  r_while cond cond lbody asi phi1;
+  assert (exec_equiv phi1 phi l rloop) // by d_sub
+  // d_su1'_flip applied implicitly
