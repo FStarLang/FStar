@@ -35,6 +35,7 @@ let get_cpa_log (m:mem) (k:key) =
   m_sel m (CPA.Key?.log k.ke)
 
 
+// BEGIN: EtMAEInvariant
 let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
@@ -51,6 +52,7 @@ let invariant (h:mem) (k:key) =
      Seq.index log i == (m2,(c,t))
     )
   )
+// END: EtMAEInvariant
 
 
 

@@ -4,6 +4,7 @@ open Platform.Bytes
 open CoreCrypto
 open EtM.Ideal
 
+// BEGIN: EtMPlain
 abstract type plain = bytes
 
 assume Plain_hasEq: hasEq plain
@@ -16,3 +17,4 @@ let coerce r = r
 
 val length: plain -> Tot nat
 let length p = length p
+// END: EtMPlain
