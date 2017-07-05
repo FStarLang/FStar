@@ -49,6 +49,7 @@ all:\
 
 
 benton2004:\
+  Benton2004.Aux.uver\
   Benton2004.uver\
   Benton2004.DDCC.uver\
   Benton2004.DDCC.Examples.uver\

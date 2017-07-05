@@ -1,5 +1,6 @@
 module Benton2004
 
+include Benton2004.Aux
 include FStar.DM4F.Heap.IntStoreFixed
 include FStar.DM4F.IntStoreFixed
 
@@ -263,14 +264,6 @@ let while (b: exp bool) (c: computation) : Tot computation =
 
 let terminates_on (f: reified_computation) (h: heap) : GTot Type0 =
   exists fuel . fst (f fuel h) == true
-
-type rel (t: Type0) = t -> t -> GTot Type0
-
-(* NOTE: the following is necessary (and I cannot define it, I HAVE to axiomatize it like this), otherwise Z3 loops. *)
-
-assume val holds (#t: Type0) (p: rel t) (s s' : t) : GTot Type0
-assume val holds_equiv (#t: Type0) (p: rel t) (s s' : t) : Lemma
-  (holds p s s' <==> p s s')
 
 let included
   (#t: Type0)
