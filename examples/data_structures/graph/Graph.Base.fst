@@ -23,6 +23,8 @@ let node_size (#n:nat) (g:graph0 n) = S.length g
 
 let edge_size (#n:nat) (g:graph0 n) =
   L.fold_left (+) 0 (L.map L.length (S.seq_to_list g))
+  
+let nodeset (n:nat) = l:list(fin n) {L.noRepeats l}
 
 let prepath (n:nat) = S.seq (fin n)
 
