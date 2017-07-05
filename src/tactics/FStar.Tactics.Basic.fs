@@ -735,6 +735,15 @@ let trefl : tac<unit> =
      | None ->
         fail "not an irrelevant goal")
 
+let dup : tac<unit> =
+    bind cur_goal (fun g ->
+    bind (new_uvar g.context g.goal_ty) (fun (u, u_g) ->
+    let g' = { g with witness = u } in
+    bind dismiss (fun _ ->
+    bind (add_irrelevant_goal g.context (U.mk_eq2 (TcTerm.universe_of g.context g.goal_ty) g.goal_ty u g.witness) g.opts) (fun _ ->
+    bind (add_goals [g']) (fun _ ->
+    ret ())))))
+
 let flip : tac<unit> =
     bind get (fun ps ->
     match ps.goals with

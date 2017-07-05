@@ -93,6 +93,9 @@ let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__poin
 assume private val __later : __tac unit
 let later : tactic unit = fun () -> TAC?.reflect __later
 
+assume private val __dup : __tac unit
+let dup : tactic unit = fun () -> TAC?.reflect __dup
+
 assume private val __flip : __tac unit
 let flip : tactic unit = fun () -> TAC?.reflect __flip
 
