@@ -20,6 +20,33 @@ let rec noRepeats_map (#a #b:eqtype) (f:a -> b) (l:list a)
     L.memP_map_elim f x' xs ;
     L.noRepeats_cons (f x)l'
 
+
+let noRepeats_tail (#a:eqtype) (l:list a{Cons? l})
+ : Lemma (requires (L.noRepeats l)) (ensures (L.noRepeats (L.tail l)))
+ = ()
+
+let rec filter_no_mem (#a :eqtype) (f:a -> bool) (l:list a) (e:a)
+  : Lemma (requires (L.mem e l = false))
+    (ensures (L.mem e (L.filter f l) = false))
+    (decreases l)
+= match l with
+ | [] -> ()
+ | x :: xs -> filter_no_mem f xs e
+
+let rec noRepeats_filter (#a :eqtype) (f:a -> bool) (l:list a)
+  : Lemma (requires (L.noRepeats l))
+    (ensures (L.noRepeats (L.filter f l)))
+    (decreases l)
+= match l with
+  | [] -> ()
+  | x :: xs -> 
+   if f x then
+   (
+    filter_no_mem f xs x;
+    noRepeats_filter f xs
+   )
+   else noRepeats_filter f xs
+
 let rec noRepeats_length_lemma (#n:nat) (l:list (fin n))
 : Lemma (requires (L.noRepeats l)) (ensures (L.length l <= n)) (decreases n)
 =
@@ -35,3 +62,4 @@ let rec noRepeats_length_lemma (#n:nat) (l:list (fin n))
       let l' = L.map f xs in
       noRepeats_map f xs ;
       noRepeats_length_lemma #(n-1) l'
+
