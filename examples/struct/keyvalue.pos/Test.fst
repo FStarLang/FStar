@@ -324,13 +324,58 @@ let validate =
   admit();
   parse_u32 `then_validate`
   (fun num_entries -> validate_many parse_entry (U32.v num_entries) validate_entry `seq`
-                   validate_done `seq`
-                   validate_accept)
+                   validate_done)
 
 (*! API using validated but unparsed key-value buffer *)
 
 // sufficient to expose iteration over the key-value pairs (specifically pointers to them)
 // TODO: write this in stateful F*; not clear what a useful pure model would be
+
+// spec: fold over fully parsed store
+val fold_left_store: f:('a -> encoded_entry -> 'a) -> 'a -> s:store -> 'a
+let fold_left_store f acc s =
+    let rec aux es acc =
+        match es with
+        | [] -> acc
+        | e::es -> aux es (f acc e) in
+    aux s.entries acc
+
+unfold let optbind (#t:Type) (#t':Type) (x:option t) (f:t -> option t') : option t' =
+  match x with
+  | Some v -> f v
+  | None -> None
+
+val fold_left_buffer: #t:Type -> f:(t -> encoded_entry -> t) -> t -> b:bytes -> t
+let fold_left_buffer #t f acc b =
+    match parse_u32 b with
+    | Some (num_entries, l) -> begin
+       // we only parse up to n more entries from the buffer b
+       let rec aux (n: nat) b acc : t =
+         match n with
+         | 0 -> acc
+         | _ -> begin
+           match parse_entry b with
+           | Some (e, l) ->
+             assert (n > 0);
+             aux (n-1) (slice b l (length b)) (f acc e)
+           | None -> acc
+           end in
+         aux (U32.v num_entries) (slice b l (length b)) acc
+      end
+    | None -> acc
+
+let parse_result (#t:Type) (#b:bytes) (r: option (t * n:nat{n <= length b}){Some? r}) : t = fst (Some?.v r)
+
+// TODO: this is actually a fairly difficult proof: parse_abstract_store does
+// several steps before finally storing the result of the original parse_u32 in
+// num_entries
+assume val parse_num_entries_valid : b:bytes{Some? (validate b)} ->
+  Lemma (parse_u32 b == Some ((parse_result (parse_abstract_store b)).num_entries, 4))
+
+val fold_left_buffer_ok: #t:Type -> f:(t -> encoded_entry -> t) -> acc:t -> b:bytes{Some? (validate b)} ->
+    Lemma (fold_left_buffer f acc b ==
+           fold_left_store f acc (parse_result (parse_abstract_store b)))
+let fold_left_buffer_ok #t f acc b
 
 (*! Parsing a cache *)
 
@@ -343,11 +388,6 @@ let validate =
 // and a proof that the parser + API is the same as the ghost parser (which
 // produces a complete struct) and a ghost API (which might just be field/array
 // accesses)
-
-unfold let optbind (#t:Type) (#t':Type) (x:option t) (f:t -> option t') : option t' =
-  match x with
-  | Some v -> f v
-  | None -> None
 
 let parse_value_offset (b:bytes) : option (n:nat{n <= length b}) =
  parse_u16_array b `optbind`
