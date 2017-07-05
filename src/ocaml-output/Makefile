@@ -189,7 +189,13 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
-Z3_DIR=$(shell dirname $$(which z3.exe))
+ifeq ($(OS),Windows_NT)
+  Z3_NAME=z3.exe
+else
+  Z3_NAME=z3
+endif
+Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
+Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
@@ -214,15 +220,12 @@ else
 endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
-	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
+	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 
-        # Need this for running code extracted to F# (for instance hello)
-	make -C ../VS install-packages
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
-	# Because we'll be building fstarlib in the resulting directory,
-	# somehow?
+        # Because we'll be building fstarlib in the resulting directory, somehow?
 	cp ../../_tags $(PREFIX)
 	mkdir -p $(PREFIX)/bin/fstarlib
 	cp ../../bin/fstarlib/META $(PREFIX)/bin/fstarlib/
@@ -232,8 +235,7 @@ ifeq ($(OS),Windows_NT)
 	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
-  	# Assuming here that the user has z3 installed system-wide; this will
-	# soon require us to copy the right version of z3 in there too.
+	cp $(Z3_DIR)/z3 $(PREFIX)/bin
 	tar czf $(NAME).tar.gz fstar
 endif
 

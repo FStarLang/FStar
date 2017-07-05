@@ -1,14 +1,16 @@
 module Ex12g.TMAC2
 
 open FStar.Seq
-open Ex12.Pad 
+open Ex12.Pad
+open FStar.Mul 
+//allows to use * for op_Multiply as long as it's not needed for tuples
 
 module BMAC = Ex12.BMAC
 
-
+// BEGIN: TMAC2
 type text2 = b:bytes { length b <=  blocksize } 
 
-let keysize = op_Multiply 2 BMAC.keysize
+let keysize = 2 * BMAC.keysize
 let macsize = BMAC.macsize
 noeq type key = | Keys: k0:BMAC.key -> k1:BMAC.key -> key
 type tag = BMAC.tag
@@ -30,7 +32,7 @@ val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
 val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
 
-// BEGIN: TMAC2
+
 let keygen (spec: text2 -> Type) = 
   let k0 = BMAC.keygen (bspec0 spec) in
   let k1 = BMAC.keygen (bspec1 spec) in
