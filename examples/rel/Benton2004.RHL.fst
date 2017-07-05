@@ -147,12 +147,22 @@ let holds_gand (b1 b2 : gexp bool) : Lemma
   [SMTPat (holds (interp (gand b1 b2)))]
 = ()
 
+let gsubst_gand (b1 b2: gexp bool) x side e : Lemma
+  (gsubst (gand b1 b2) x side e == gand (gsubst b1 x side e) (gsubst b2 x side e))
+  [SMTPat (gsubst (gand b1 b2) x side e)]
+= ()
+
 let gor (b1 b2 : gexp bool) : GTot (gexp bool) =
   gop op_BarBar b1 b2
 
 let holds_gor (b1 b2 : gexp bool) : Lemma
   (forall s1 s2 . holds (interp (gor b1 b2)) s1 s2 <==> holds (interp b1) s1 s2 \/ holds (interp b2) s1 s2)
   [SMTPat (holds (interp (gor b1 b2)))]
+= ()
+
+let gsubst_gor (b1 b2: gexp bool) x side e : Lemma
+  (gsubst (gor b1 b2) x side e == gor (gsubst b1 x side e) (gsubst b2 x side e))
+  [SMTPat (gsubst (gor b1 b2) x side e)]
 = ()
 
 let holds_gnot (b: gexp bool) : Lemma
@@ -169,6 +179,11 @@ let geq
 let holds_geq (#t: eqtype) (e1 e2 : gexp t) : Lemma
   (forall s1 s2 . holds (interp (geq e1 e2)) s1 s2 <==> e1 s1 s2 == e2 s1 s2)
   [SMTPat (holds (interp (geq e1 e2)))]
+= ()
+
+let gsubst_geq (#t: eqtype) (b1 b2: gexp t) x side e : Lemma
+  (gsubst (geq b1 b2) x side e == geq (gsubst b1 x side e) (gsubst b2 x side e))
+  [SMTPat (gsubst (geq b1 b2) x side e)]
 = ()
 
 let holds_exp_to_gexp_left
@@ -383,6 +398,14 @@ let holds_interp_flip (phi: gexp bool) : Lemma
   [SMTPat (holds (interp (flip phi)))]
 = ()
 
+let exec_equiv_flip
+  (p p': gexp bool)
+  (f f' : computation)
+: Lemma
+  (exec_equiv (flip p) (flip p') f f' <==> exec_equiv p p' f' f)
+  [SMTPat (exec_equiv (flip p) (flip p') f f')]
+= exec_equiv_flip (interp p) (interp p') f f'
+
 let r_while_terminates
   (b b' : exp bool)
   (c c' : computation)
@@ -401,7 +424,6 @@ let r_while_terminates
   let phi_c = gand p (gand (exp_to_gexp b Left) (exp_to_gexp b' Right)) in
   let phi_c' = gand p (geq (exp_to_gexp b Left) (exp_to_gexp b' Right)) in
   Classical.forall_intro (Classical.move_requires (r_while_terminates' b b' c c' phi phi_c phi_c' s0 s0'));
-  exec_equiv_flip (interp phi_c) (interp phi_c') c c';
   Classical.forall_intro (Classical.move_requires (r_while_terminates' b' b c' c (flip phi) (flip phi_c) (flip phi_c') s0' s0))
 
 let rec r_while_correct
@@ -484,7 +506,7 @@ let r_sym
 : Lemma
   (requires (is_per p /\ is_per p'))
   (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
-  [SMTPat (exec_equiv p p' f f')]
+  [SMTPat (exec_equiv p p' f f'); SMTPat (is_per p); SMTPat (is_per p')]
 = exec_equiv_sym (interp p) (interp p') f f'
 
 let interpolable (p: gexp bool) = Benton2004.interpolable (interp p)
@@ -530,9 +552,9 @@ let r_trans
   ))
   (ensures (exec_equiv p p' c1 c3))
   [SMTPatOr [
-    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3)];
-    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3)];
-    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3)];
+    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3); SMTPat (is_per p'); SMTPat (interpolable p) ];
+    [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3); SMTPat (is_per p'); SMTPat (interpolable p)];
+    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3); SMTPat (is_per p'); SMTPat (interpolable p)];
   ]]
 = exec_equiv_trans (interp p) (interp p') c1 c2 c3
 
