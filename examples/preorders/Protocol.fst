@@ -312,27 +312,6 @@ let fully_initialized_in #a #n (x:iarray a n) (h:heap) =
   (forall (k:nat). k < n ==> Some? (Seq.index (as_seq x h) k))
 
 #reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0"
-
-(* let extend_sent_file *)
-(*           (#n:nat)  *)
-(*           (file:iarray byte n)  *)
-(*           (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)}) *)
-(*           (h_init:heap{h_init `contains_connection` c /\ file `fully_initialized_in` h_init}) *)
-(*           (from:nat{from = ctr c h_init}) *)
-(*           (pos:nat{pos <= n}) *)
-(*           (h0:heap) *)
-(*           (h1:heap) *)
-(*    :  Lemma (requires            *)
-(*                       file `fully_initialized_in` h0 /\ *)
-(*                       h0 `contains_connection` c /\ *)
-(*                       from <= ctr c h0 /\ *)
-(*                       sent_file_pred (as_initialized_subseq file h0 0 pos) c from (ctr c h0) h0 /\ *)
-(*                       modifies (connection_footprint c) h0 h1         /\ *)
-(* 	              h1 `contains_connection` c /\ *)
-(*                       sent <= min n fragment_size /\ *)
-(* 				  ctr c h1 = ctr c h0 + 1    /\ *)
-				  
-                      
 let rec send_aux 
           (#n:nat) 
           (file:iarray byte n) 
@@ -352,7 +331,7 @@ let rec send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
-      = if pos = n then admit()
+      = if pos = n then ()
         else begin
           let sub_file = suffix file pos in
           lemma_all_init_i_j_sub file pos (n - pos);
@@ -384,7 +363,7 @@ let rec send_aux
         end
 
 
-let send (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
+let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
   : ST unit 
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->
@@ -407,6 +386,108 @@ let send (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (c
     assert (file_bytes0 == file_bytes1);
     gst_witness (sent_file_pred file_bytes0 c from (ctr c h1));
     assert (sent_file file_bytes0 c)
+
+
+let receiver c = not (sender c)
+
+let received (#n:nat) (file:iarray byte n) (c:connection) (h:heap) =
+    file `fully_initialized_in` h /\
+    sent_file (as_initialized_seq file h) c
+
+let rec receive_aux
+          (#n:nat)
+          (file:array byte n)
+          (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
+          (h_init:heap{h_init `contains_connection` c})
+          (from:nat{from = ctr c h_init})
+          (pos:index file{fragment_size < n - pos})
+    : ST (option (r:nat{r < n}))
+        (requires (fun h0 ->
+              let file_in = prefix file pos in
+              is_mutable file h0 /\
+              all_init_i_j file_in 0 pos /\
+              file_in `fully_initialized_in` h0 /\
+              h0 `contains_connection` c /\
+              from <= ctr c h0 /\
+              sent_file_pred (as_initialized_seq file_in h0) c from (ctr c h0) h0))
+        (ensures (fun h0 ropt h1 ->
+                   modifies_r c file h0 h1 /\
+                   h1 `contains_connection` c /\
+                   (match ropt with
+                    | None -> True
+                    | Some r ->
+                      let file_out = prefix file r in
+                      all_init_i_j file_out 0 r /\
+                      file_out `fully_initialized_in` h1 /\
+                      from <= ctr c h1 /\
+                      sent_file_pred (as_initialized_seq file_out h1) c from (ctr c h1) h1)))
+     = let sub_file = suffix file pos in
+       match receive sub_file c with
+       | None -> None
+       | Some k -> 
+         let filled = prefix file (pos + k) in
+         assert (all_init_i_j sub_file 0 k);
+         assume (all_init_i_j filled 0 (pos + k));
+         recall_all_init_i_j filled 0 (pos + k);
+         let filled_bytes = iarray_as_seq filled in
+         let h1 = ST.get () in
+         assume (filled `fully_initialized_in` h1);
+         assume (sent_file_pred filled_bytes c from (ctr c h1) h1);
+         if k < fragment_size then begin
+           Some (pos + k)
+         end
+         else if pos + k + fragment_size < n then receive_aux file c h_init from (pos + k)
+         else None
+
+val receive_file (#n:nat{fragment_size < n})
+            (file:array byte n)
+            (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
+    : ST (option nat)
+    (requires (fun h -> is_mutable file h))
+    (ensures (fun h0 ropt h1 -> 
+                modifies_r c file h0 h1 /\
+                (match ropt with 
+                 | None -> True 
+                 | Some r ->
+                   r < n /\
+                   all_init_i_j (prefix file r) 0 r /\
+                   received (prefix file r) c h1)))
+let receive_file #n file c = 
+  let h_init = ST.get () in
+  recall_contains file;
+  recall_connection c;
+  let R _ es ctr_ref = c in
+  let from = !ctr_ref in 
+  gst_recall (counter_pred from es);
+  assert (from <= Seq.length (log c h_init));
+  let file_in = prefix file 0 in
+  let file_bytes0 = iarray_as_seq file_in in
+  flatten_empty();
+  assert (Seq.equal (flatten (Seq.slice (log c h_init) from from)) file_bytes0);
+  match receive_aux file c h_init from 0 with
+  | None -> None
+  | Some r -> 
+    let file_bytes1 = iarray_as_seq (prefix file r) in
+    let h1 = ST.get() in
+    gst_witness (sent_file_pred file_bytes1 c from (ctr c h1));
+    assert (sent_file file_bytes1 c);
+    Some r
+  
+
+  
+  
+  (*       let file = prefix buf position in all_init file /\ sent_file file c from)) *)
+  (*       (ensures  (fun h0 p h1 -> modifies {c} h0 h1 /\ (Some? p ==> received buf (Some?.v popt) c))) *)
+  (*   = match Protocol.receive (suffix file position) c with *)
+  (*         | None -> None *)
+  (*         | Some k -> *)
+  (*           if k < max_fragment_size || position + k = n then *)
+  (*              let file = prefix buf (postition + k) in *)
+  (*              witness (sent_file file c from); *)
+  (*              Some (position + k) *)
+  (*           else if position + k + max_fragment_size < n then aux (postition + k) *)
+  (*           else None *)
+  (* in aux 0 *)
 
 
 
