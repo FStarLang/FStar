@@ -17,8 +17,23 @@ let rec fib (n : int) : tactic unit =
     )
 
 let f8 : int = synth_by_tactic (fib 8)
+let _ = assert (f8 == 34) // equal after normalization
 
-let _ = assert (f8 == 34)
+let rec fib_norm (n : int) : tactic unit =
+    if n < 2
+    then
+        exact (quote 1)
+    else (
+        dup;;
+        apply (quote op_Addition);;
+        fib_norm (n - 1);;
+        fib_norm (n - 2);;
+        norm [Primops];;
+        trefl
+    )
+
+let fn8 : int = synth_by_tactic (fib_norm 8)
+let _ = assert (fn8 == 34) // syntactically equal
 
 let iszero (x : int) : int =
     synth_by_tactic (
