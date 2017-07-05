@@ -106,6 +106,8 @@ can be found on the [F\* website].
 [IMDEA Software]: http://software.imdea.org/
 [ML]: https://en.wikipedia.org/wiki/ML_%28programming_language%29
 [F\* website]: http://www.fstar-lang.org
+[mailing list]: https://lists.gforge.inria.fr/mailman/listinfo/fstar-club
+[github issue]: https://github.com/FStarLang/FStar/issues
 
 It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
@@ -670,6 +672,10 @@ Let's take a look at the factorial function:
 
     let rec factorial n = 
       if n = 0 then 1 else n * (factorial (n - 1))
+
+~ Remark
+By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as typles. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
+~
 
 For a recursive function, without further annotation, F\* attempts to
 automatically prove that the recursion always terminates. In the case
@@ -4703,7 +4709,7 @@ We say that messages for which `verify key text tag=true` have been authenticate
 
 Cryptographers grappled with these problems and specify the properties of a MAC negatively by bounding the probability of realistic adversaries forging a `tag`. This is typically done in the form of a random experiment:
 
-### The message authentication experiment { - }
+### The message authentication experiment { #MAC-game }
 
 A MAC scheme implementing `keygen`, `mac`, `verify` is unforgeable against chosen message attacks (UF-CMA) 
 if the success probability of all 'realistic' adversaries 
@@ -5054,6 +5060,7 @@ then type annotations to derive their authentication property
 ~ Exercise
 1. Can we similarly construct a MAC scheme for texts
    with type `text:bytes {length text <= n}`?
+   
 2. Implement, then verify this construction.
 
 ~~ Answer
@@ -5167,16 +5174,7 @@ in this context?
 module $P$ that is typeable using an interface $IP$ of the form
 
 ```
-abstract type plain = bytes
-
-val repr: p:plain{not conf} -> Tot bytes
-let repr p = p
-
-val coerce: r:bytes{not auth} -> Tot plain
-let coerce r = r
-
-val length: plain -> Tot nat
-let length p = length p
+[INCLUDE=code/solutions/EtM.Plain.fst:EtMPlain]
 ```
 
 <!--
@@ -5194,12 +5192,16 @@ When `auth` is true, the function `coerce` cannot be called, guaranteeing authen
 The module $P$ does not hide the length of `plain`.
 as modelled by the function `length` returning its length.
 
+~MK
+The following is not true because of the `length` function. Removing it until we have a better answer. Indexing by length might be it.
+~
 
+<!--
 **Definition 1 (Interface-based secrecy):** Let $IP$ be the secrecy interface
 of $P$ and $IC$ be the interface of module $C$. $C$ protects the secrecy
 of `plain` , if `conf=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ with
 `conf=false`, $P \leadsto IP$ and `conf=true`, $P \leadsto IP$; and $A$ with $IP,IC \vdash A$ 
-we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `conf=true`, 
+we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(P,A)}$ `conf=true`, 
 $P \cdot C \cdot A$
 
 ~KK
@@ -5207,13 +5209,10 @@ I was not able to parse this definition. It might make sense to add a verbatim
 explaination of the formalism? 
 ~
 
+
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
-~MK
-The following is not true because of the `length` function. Removing it until we have a better answer. Indexing by length might be it.
-~
 
-<!--
 When `conf=true`, $C\cdot A$ is well typed with respect to interface "`conf=true`, $IP$" 
 which can be interpreted as
 the $I_\alpha$ interface of *Theorem 2*. Consequently for any module $P_0,P_1$ satisfying 
@@ -5248,17 +5247,17 @@ At the high level, we  define 5 modules:
 
 *1. the `Ideal` module* defines `auth` and `conf` flags and relates 
 them to assumptions that allow idealization of the underlying cryptographic building blocks. 
-Flag `ind_cpa` controls the idealization for chosen plaintext attack secure encyption, 
-and flag `uf_cma` controls the idealization for MAC unforgeability.
+Flag `ind_cpa` controls the idealization for an encryption module that is indistinguishable under chosen plaintext attack (IND-CPA), 
+and flag `uf_cma` controls the idealization for a UF-CMA secure MAC module. UF-CMA security was defined above using a cryptographic game ([#MAC-game]), we will se a similar game for IND-CPA below.
 
 *2. the `Plain` module* is a secrecy module defining a `plain` type. 
 Its representation is abstract and can only be accessed using the `repr` function 
 when `conf=false`.
 
-*3. the `CPA` module* models an IND-CPA secure encryption scheme. When the adversary is 
+*3. the `CPA` module* models an IND-CPA secure encryption scheme. Intuitively, when the adversary is 
 restricted to only query `decrypt` on ciphertexts resulting from `encrypt` 
 (under the same key), then the idealization of `CPA` can encrypt zeros and `CPA` 
-protects the secrecy of `plain`. We thus set `conf=ind_cpa`.
+protects the secrecy of `plain`. This is modelled by setting `conf=ind_cpa`.
 
 *4. the `MAC` module* models an UF-CMA secure message authentication scheme. The idealization
 of `MAC` guarantees that only message and tag pairs that were `mac`ed can `verify`.
@@ -5279,7 +5278,6 @@ Before `decrypt`ing the `CPA` ciphertext, `AE` verifies the corresponding MAC ta
 [INCLUDE=code/solutions/EtM.AE.fst:EtMAEDecrypt]
 ~
 
-
 `AE` treats `CPA` and `MAC` keys abstractly, and never reveals them to an adversary $A$.
 This together with the fact that `AE` only ever `mac`s after `encrypt`ing, guarantees 
 that `AE`$\cdot A$ is a restricted `CPA` adversary.
@@ -5295,12 +5293,7 @@ obtains a representation of the key using `k.raw` and the plaintext using `repr 
 and calls a library function implementing `AES_128_CBC`:
 
 ```
-let encrypt k m : cipher =
-  let iv = random ivsize in
-  let text = (* details intentionally omitted *) repr m in
-  let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
-  let c = iv@|c in
-  c
+[INCLUDE=code/solutions/EtM.CPA.fst:EtMCPAEncrypt]
 ```
 
 Calling the library function which expects bytes as input, requires breaking the 
@@ -5347,14 +5340,7 @@ to be '`write_at_end k.log (m,c); c`' to update the `log`
 of ciphertext. By `decrypt`ing using table lookup as follows we still 
 hide whether it was `m` or a string of `0z`s that was encrypted:
 ```
-let decrypt k c =
-  if ind_cpa_rest_adv then
-    let log = m_read k.log in
-    match seq_find (fun mc -> snd mc = c) log with
-    | Some mc -> fst mc
-  else
-    let iv,c' = split c ivsize in
-    coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
+[INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecrypt]
 ```
 
 Note that in the `match` statement, we did not define a '`| None`' branche. This is because the 
@@ -5363,22 +5349,26 @@ that table lookup in `log` always succeeds.
 
 This can be expressed as a stateful precondition for `decrypt`:
 
-```
-val decrypt: k:key -> c:cipher -> ST msg
-  (requires (fun h0 ->
-    ( (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) (get_log h0 k) ))))
-```
-where function `get_log` retrives `k.log` as stored in heap `h0`.
+~ SolutionFragment {exname=EtM.CPA}
+[INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecryptRequires]
+~
+where function `m_sel h0 k.log` retrives the content of `k.log` as stored in heap `h0`.
+
+~ Exercise
+Play with the type of `EtM.CPA.decrypt` above. What fails if you remove the precondition. What is the connection with chosen plaintext attacks?
+
+~~ Answer
+The type checker fails with a "Patterns are incomplete" error as it can no longer guarantee that it will find the ciphertext in the `log`. To preserve functionality one would have to use the `block_decrypt` functionality as in the else branch which could leak information to the attacker which might make the scheme insecure. The stronger security notion of indistinguishability against chosen ciphertext attacks (IND-CCA) guarantees security in such a setting.
+~~
+
+~
 
 ### Using authentication to achieve stronger confidentiality
 
 We already introduced the MAC unforgeabiltiy property in ([#MAC]). Here we model 
 MAC security using an idealization involving a log of `mac`ed messages and their tags:
 ```
-let mac k m =
-  let t = hmac_sha1 k.raw m in
-  write_at_end k.log (m,t);
-  t
+[INCLUDE=code/solutions/EtM.MAC.fst:EtMMACMac]
 ```
 
 Instead of modelling unforgeability using a predicate that is required upon 
@@ -5387,33 +5377,32 @@ directly on the log. In the idealization, only `(m,t)` pairs that are in the log
 
 
 ```
-val verify: k:key -> m:msg -> t:tag -> ST bool
-  (requires (fun h -> True ))
-  (ensures  (fun h0 res h1 ->
-     (( Ideal.uf_cma && res ) ==> mem (m,t) (get_log h0 k))))
+[INCLUDE=code/solutions/EtM.MAC.fst:EtMMACVerifyT]
 ```
 
 As for encryption, we also give an ideal functionality that is well typed 
 with respect to this specification:
 
-```
-let verify k m t =
-  let t' = hmac_sha1 k.raw m in
-  let verified = (t = t') in
-  let log = m_read k.log in
-  let found = CPA.mem (m,t) log in
-  if Ideal.uf_cma then
-    verified && found
-  else
-    verified
-```
+~ SolutionFragment {exname=EtM.MAC}
+[INCLUDE=code/solutions/EtM.MAC.fst:EtMMACVerify]
+~
 
 As any adversary that causes a difference between `verified` and `found` is also a successful UF-CMA adversary we have that
 `uf_cma=false`, `MAC`⋅$A$ $\approx_{\epsilon_{ufcma}}(A)$
 `uf_cma=true`, `MAC`⋅$A$. 
 
+Said otherwise, as long as the MAC construction is UF-CMA secure, the adversaries behaviour cannot differ substantially between the *ideal world* and the *real world*. 
+
+ - In the *ideal world* in which `uf_cma=true` all MAC forgeries are rejected, but we make the unrealistic assumption of maintaining the global `log`. 
+ 
+ - In the *real world*, in which `uf_cma=false` forgeries are in principle always possible but we use cryptography instead of the unrealistic global log.
+
 ~KK
 At this point maybe another verbatim explaination of the formal statement?
+~
+
+~MK
+Is this what you had in mind?
 ~
 
 For our Encrypt-then-MAC scheme we establish the invariant that all `mac`ed messages correspond to 
@@ -5423,22 +5412,10 @@ When the MAC is idealized, adversaries cannot compute ciphertexts that pass MAC 
 
 The invariant is expressed over logs and at first sight looks quite daunting:
 
-```
-  let invariant (h:t) (k:key) =
-  (* ignoring memory ant-aliasing details *)
-  let log = get_log h k in
-  let mac_log = get_mac_log h k in
-  let cpa_log = get_cpa_log h k in
-  Seq.length log = Seq.length mac_log /\
-  Seq.length mac_log = Seq.length cpa_log /\ (*logs have the same length *)
-  (forall (i:int). indexable log i ==>
-    (let m1,t = Seq.index mac_log i in
-     let m2,c = Seq.index cpa_log i in
-     m1 = c /\ (* all messages in the MAC log correspond to ciphertext created by encrypt *)
-     Seq.index log i == (m2,(c,t))
-    )
-  )
-```
+~ SolutionFragment {exname=EtM.AE}
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEInvariant
+~
+
 Crucially all messages in the MAC log correspond to ciphertexts that resulted from previous encryptions.
 This allows us to prove that `uf_cma=true` $\cdot$ `MAC` $\cdot$ `AE`$\cdot A$ is a restricted `CPA` adversary.
 We can thus set `ind_cpa_rest_adv=uf_cma`.
@@ -5552,32 +5529,6 @@ This results from failing to prove the pre-condition of `CPA.decrypt` in `AE.dec
 ~~
 ~
 
-# A note on this document 
-
-This document was created using Dan Leijen's <https://madoko.net> markdown processor. 
-
-If` you find any errors in it, or would like to improve it in any way,
-this is how you do it: 
-
-1. Point your browser at <https://madoko.net>
-2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
-3. Select the "GitHub" icon
-4. Authorize the Madoko application to access your GitHub repositories
-5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk, or your fork of the FStar repo
-   if you don't have access, and start editing.
-6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
-   commit and push this file to GitHub after merging with the latest changes there.
-
-     For included code snippets:
-     -- The snippets must be derived from files that are stored in the same subtree of the git repo
-        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
-
-     Note: in this mode (i.e., github instead of dropbox), the document will not live update
-           with the changes that anyone else may be making to the document concurrently. You
-           will only see others' changes when you synchronize with github.
-
-     If you use Emacs to edit this you can use the markdown-mode
-     <http://jblevins.org/projects/markdown-mode/> for syntax highlighting.
 
 
 
@@ -5909,6 +5860,40 @@ let test() =
 ```
 
 -->
+
+# A note on this document 
+
+This document was created using Dan Leijen's <https://madoko.net> markdown processor. 
+
+If` you find any errors in it, or would like to improve it in any way,
+this is how you do it: 
+
+1. Point your browser at <https://madoko.net>
+2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
+3. Select the "GitHub" icon
+4. Authorize the Madoko application to access your GitHub repositories
+5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk, or your fork of the FStar repo
+   if you don't have access, and start editing.
+6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
+   commit and push this file to GitHub after merging with the latest changes there.
+
+For included code snippets:
+
+The snippets must be derived from files that are stored in the same
+subtree of the git repo i.e, all the samples should be in
+sub-directories of FStarLang/FStar/doc/tutorial/code
+
+Note: in this mode (i.e., github instead of dropbox), the document
+will not live update with the changes that anyone else may be making
+to the document concurrently. You will only see others' changes when
+you synchronize with github.
+
+If you use Emacs to edit this you can use the
+markdown-mode <http://jblevins.org/projects/markdown-mode/> for syntax
+highlighting.
+
+If you experience problems with the online editor, e.g., many examples failing with strange error messages, please ring the bells at the [mailing list] or raise a [github issue] to investigate the problem further. Someone else might have filed one before, or an old bug crawled back in.
+
 
 [Title          A]: http://Title_A.com "Title          A title"
 
