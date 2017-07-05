@@ -445,7 +445,21 @@ abstract let fill (#a:Type0) (#n:nat) (arr:array a n) (buf:seq a{Seq.length buf 
     lemma_get_equivalent_sequence_slice s1 off (off + Seq.length buf) buf
     
 let lemma_framing_of_is_mutable (#a:Type0) (#n:nat) (arr:array a n) (h0:heap) (h1:heap) (r:Set.set nat)
-  :Lemma (requires (modifies r h0 h1 /\ Set.disjoint r (array_footprint arr) /\ h0 `contains_array` arr /\ is_mutable arr h0))
-         (ensures  (is_mutable arr h1))
+  :Lemma (requires (modifies r h0 h1 /\ Set.disjoint r (array_footprint arr) /\ h0 `contains_array` arr))
+         (ensures  ((is_mutable arr h0 <==> is_mutable arr h1) /\
+	            (as_seq arr h0 == as_seq arr h1)))
 	 [SMTPat (modifies r h0 h1); SMTPat (is_mutable arr h0)]
   = ()
+
+let lemma_framing_of_as_seq (#a:Type0) (#n:nat) (arr:array a n) (h0:heap) (h1:heap) (r:Set.set nat)
+  :Lemma (requires (modifies r h0 h1 /\ Set.disjoint r (array_footprint arr) /\ h0 `contains_array` arr))
+         (ensures  (as_seq arr h0 == as_seq arr h1))
+	 [SMTPat (modifies r h0 h1); SMTPat (as_seq arr h0)]
+  = ()
+
+let lemma_all_init_i_j_sub
+  (#a:Type0) (#n:nat) (arr:array a n{all_init arr}) (i:index arr) (len:nat{i + len <= n})
+  :Lemma (requires True)
+         (ensures  (all_init (sub arr i len)))
+	 [SMTPat (all_init arr); SMTPat (sub arr i len)]
+  = admit ()

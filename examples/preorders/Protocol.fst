@@ -87,22 +87,6 @@ let entries_of (c:connection) :(mref (entries (rand_of c)) (entries_rel (rand_of
   | S _ es   -> es
   | R _ es _ -> es
 
-(* seq of plain messages sent so far on this connection *)
-let log (c:connection) (h:heap) :GTot (seq message) =
-  seq_map (fun (E _ m _ _) -> m) (sel h (entries_of c))
-
-assume val lemma_prefix_entries_implies_prefix_log
-  (c:connection) (h1:heap) (h2:heap)
-  :Lemma (requires (sel h1 (entries_of c) `is_prefix_of` sel h2 (entries_of c)))
-	 (ensures  (log c h1 `is_prefix_of` log c h2))
-	 [SMTPat (log c h1); SMTPat (log c h2)]
-
-(* current counter for the connection, consider adding the valid refinement? *)
-let ctr (c:connection) (h:heap) :GTot nat =
-  match c with
-  | S _ es_ref    -> length (sel h es_ref)
-  | R _ _ ctr_ref -> sel h ctr_ref
-
 let contains_connection (h:heap) (c:connection) =
   match c with
   | S _ es_ref         -> h `contains` es_ref
@@ -113,13 +97,29 @@ let recall_connection (c:connection) :ST unit (requires (fun h0 -> True)) (ensur
     | S _ es_ref         -> ST.recall es_ref
     | R _ es_ref ctr_ref -> ST.recall es_ref; ST.recall ctr_ref
 
+(* seq of plain messages sent so far on this connection *)
+let log (c:connection) (h:heap{h `contains_connection` c}) :Tot (seq message) =
+  seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
+
+assume val lemma_prefix_entries_implies_prefix_log
+  (c:connection) (h1:heap) (h2:heap{h1 `contains_connection` c /\ h2 `contains_connection` c})
+  :Lemma (requires (sel h1 (entries_of c) `is_prefix_of` sel h2 (entries_of c)))
+	 (ensures  (log c h1 `is_prefix_of` log c h2))
+	 [SMTPat (log c h1); SMTPat (log c h2)]
+
+(* current counter for the connection, consider adding the valid refinement? *)
+let ctr (c:connection) (h:heap{h `contains_connection` c}) :Tot nat =
+  match c with
+  | S _ es_ref    -> length (sel_tot h es_ref)
+  | R _ _ ctr_ref -> sel_tot h ctr_ref
+
 (* stable predicate for counter *)
-let connection_pred (c:connection) (h0:heap) :(p:heap_predicate{stable p}) =
+let connection_pred (c:connection) (h0:heap{h0 `contains_connection` c}) :(p:heap_predicate{stable p}) =
   fun h -> h `contains_connection` c /\
         ctr c h0 <= ctr  c h /\ ctr c h0 <= length (log c h) /\ log c h0 `is_prefix_of` log c h
 
 let snap (c:connection) :ST unit (requires (fun _ -> True))
-                                 (ensures  (fun h0 _ h1 -> witnessed (connection_pred c h0) /\ h0 == h1))
+                                 (ensures  (fun h0 _ h1 -> h0 `contains_connection` c /\ witnessed (connection_pred c h0) /\ h0 == h1))
   = let h0 = ST.get () in
     recall_connection c;
     (match c with
@@ -143,14 +143,15 @@ type iarray (a:Type0) (n:nat) = FreezingArray.iarray a n
 let sender (c:connection) :Tot bool   = S? c
 let receiver (c:connection) :Tot bool = R? c
 
-let modifies_s (c:connection{sender c}) (h0:heap) (h1:heap) :Type0
-  = let S _ es_ref = c in
-    modifies (Set.singleton (addr_of es_ref)) h0 h1
+let connection_footprint (c:connection) :GTot (Set.set nat)
+  = match c with
+    | S _ es_ref         -> Set.singleton (addr_of es_ref)
+    | R _ es_ref ctr_ref -> Set.union (Set.singleton (addr_of es_ref)) (Set.singleton (addr_of ctr_ref))
 
 assume val lemma_snoc_log
   (c:connection{sender c}) (i:nat) (cipher:fragment) (msg:message{oplus (pad msg) ((rand_of c) i) == cipher})
   (sent_ref:mref bool sent_pre)
-  (h0 h1:heap)
+  (h0:heap) (h1:heap{h0 `contains_connection` c /\ h1 `contains_connection` c})
   :Lemma (requires (let S _ es_ref = c in
                     sel h1 es_ref == snoc (sel h0 es_ref) (E i msg cipher sent_ref)))
 	 (ensures  (log c h1 == snoc (log c h0) msg))
@@ -165,7 +166,9 @@ assume val network_send
 #set-options "--z3rlimit 50"
 let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
   :ST nat (requires (fun h0 -> True))
-        (ensures  (fun h0 sent h1 -> modifies_s c h0 h1         /\
+        (ensures  (fun h0 sent h1 -> modifies (connection_footprint c) h0 h1         /\
+	                          h0 `contains_connection` c /\
+				  h1 `contains_connection` c /\
 	                          sent <= min n fragment_size /\
 				  ctr c h1 = ctr c h0 + 1    /\
 				  (forall (i:nat). i < n ==> Some? (Seq.index (as_seq buf h0) i)) /\
@@ -201,15 +204,15 @@ let ciphers (c:connection) (h:heap) :GTot (seq fragment) =
 
 assume val network_receive
   (c:connection{receiver c})
-  :ST (option fragment) (requires (fun h0          -> True))
-                        (ensures  (fun h0 f_opt h1 -> h0 == h1                                       /\
+  :ST (option fragment) (requires (fun h0          -> h0 `contains_connection` c))
+                        (ensures  (fun h0 f_opt h1 -> h0 == h1                                           /\
+			                           h0 `contains_connection` c                         /\
 						   (Some? f_opt <==> ctr c h0 < length (ciphers c h0)) /\
 						   (ctr c h0 < length (ciphers c h0) ==>
 						    f_opt == Some (Seq.index (ciphers c h0) (ctr c h0)))))
 
 let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:heap) :Type0
-  = let R _ _ ctr_ref = c in
-    modifies (Set.union (Set.singleton (addr_of ctr_ref))
+  = modifies (Set.union (connection_footprint c)
                         (array_footprint arr)) h0 h1
 
 #set-options "--z3rlimit 50"
@@ -218,9 +221,12 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
                  (ensures  (fun h0 r_opt h1 -> match r_opt with
 					    | None   -> h0 == h1
 					    | Some r ->
+					      h0 `contains_connection` c   /\
+					      h1 `contains_connection` c   /\
+					      is_mutable buf h1            /\
 					      modifies_r c buf h0 h1       /\
 					      r <= fragment_size            /\
-					      all_init_i_j buf 0 r             /\
+					      all_init_i_j buf 0 r         /\
 					      ctr c h1 = ctr c h0 + 1      /\
 					      ctr c h0 < length (log c h0) /\
 					      (forall (i:nat). i < r ==> Some? (Seq.index (as_seq buf h1) i)) /\
@@ -251,20 +257,95 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
 
 (***** sender and receiver *****)
 
-(* assume val flatten (log:seq message) :Tot (seq byte) *)
+let lemma_is_prefix_of_slice
+  (#a:Type0) (s1:seq a) (s2:seq a{s1 `is_prefix_of` s2}) (i:nat) (j:nat{j >= i /\ j <= Seq.length s1})
+  :Lemma (requires True)
+         (ensures  (Seq.slice s1 i j == Seq.slice s2 i j))
+	 [SMTPat (s1 `is_prefix_of` s2); SMTPat (Seq.slice s1 i j); SMTPat (Seq.slice s2 i j)]
+  = admit ()
 
-(* assume type all_initialized:  *)
+assume val flatten (s:seq message) :Tot (seq byte)
 
-(* assume val all_init_lemma: *)
-(*   (#n:nat) (file:iarray n byte) *)
-(*   :Lemma (requires (all_init file)) *)
-(*          (ensures  (forall (h1:heap) (h2:heap). heap_rel h1 h2 ==>  *)
+assume val lemma_flatten_snoc (s:seq message) (m:message)
+  :Lemma (requires True)
+         (ensures  (flatten (snoc s m) == append (flatten s) m))
 
-(* let sent_file (#n:nat) (file:iarray n byte) (c:connection) (from:nat) (num_chunks:nat) :heap_predicate *)
-(*   = fun h -> let frags, to = log c h, ctr c h in *)
-(*           h `contains_connection` c /\ from + num_chunks <= length frags /\ as_seq_ghost file 0 n h == flatten (slice frags from (from + num_chunks)) *)
+let sent_file_pred' (file:seq byte) (c:connection) (from:nat) (num_chunks:nat) :heap_predicate
+  = fun h -> h `contains_connection` c /\ 
+          (let log   = log c h in
+           from + num_chunks <= Seq.length log /\ 
+	   file == flatten (Seq.slice log from (from + num_chunks)))
 
-(* let sent_file' (#n:nat) (file:iarray n byte) (c:connection) (from:nat) (num_chunks:nat) :(p:heap_predicate{stable p}) *)
-(*   = assume (forall (#a:Type) (#b:Type) (f:a -> b) (s1:seq a) (s2:seq a). s1 `is_prefix_of` s2 ==> *)
-(*                                                                    seq_map f s1 `is_prefix_of` seq_map f s2); *)
-(*     sent_file file c from num_chunks *)
+let sent_file_pred (file:seq byte) (c:connection) (from:nat) (num_chunks:nat) :(p:heap_predicate{stable p})
+  = sent_file_pred' file c from num_chunks
+
+let sent_file (file:seq byte) (c:connection) =
+  exists (from num_chunks:nat). witnessed (sent_file_pred file c from num_chunks)
+
+let lemma_get_equivalent_append
+  (#a:Type0) (s1:seq (option a){forall (i:nat). i < Seq.length s1 ==> Some? (Seq.index s1 i)})
+  (s2:seq (option a)) (s3:seq (option a))
+  :Lemma (requires (s1 == Seq.append s2 s3))
+         (ensures  ((forall (i:nat). i < Seq.length s2 ==> Some? (Seq.index s2 i)) /\
+	            (forall (i:nat). i < Seq.length s3 ==> Some? (Seq.index s3 i)) /\
+	            get_equivalent_seq s1 == Seq.append (get_equivalent_seq s2) (get_equivalent_seq s3)))
+  = admit ()
+
+#set-options "--z3rlimit 20"
+let send (#n:nat) (file:iarray byte n) (c:connection{sender c})
+  = let h0 = ST.get () in
+    let from = ctr c h0 in
+
+    recall_all_init file;
+    recall_contains file;
+    recall_connection c;
+
+    let rec aux (pos:nat{pos <= n}) (num_chunks:nat)
+      :ST nat (requires (fun h0                -> (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                                              sent_file_pred (as_initialized_subseq file h0 0 pos) c from num_chunks h0))
+             (ensures  (fun h0 num_chunks h1 -> modifies (connection_footprint c) h0 h1 /\
+	                                     (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+	                                     sent_file_pred (as_initialized_seq file h0) c from num_chunks h1))
+      = recall_all_init file;
+        recall_contains file;
+	recall_connection c;
+
+        assume (Set.disjoint (connection_footprint c) (array_footprint file));
+
+        if pos = n then num_chunks
+        else begin
+	  let sub_file = suffix file pos in
+	  lemma_all_init_i_j_sub file pos (n - pos);
+       
+          let h0 = ST.get () in
+	  let log0 = log c h0 in
+	  let sent = send sub_file c in
+	  let h1 = ST.get () in
+	  let log1 = log c h1 in
+
+          assume (log1 == snoc log0 (as_initialized_subseq file h0 pos (pos + sent)));
+
+	  admit ();
+	  aux (pos + sent) (num_chunks + 1)
+	end
+    in
+    
+    admit ()
+
+          (* assert (pos + num_sent <= n); *)
+          (* let num_chunks = num_chunks + 1 in *)
+
+          (* assert (from + num_chunks <= Seq.length log1); *)
+
+	  (* assume (Seq.slice (as_seq file h0) 0 (pos + num_sent) == *)
+	  (*         Seq.append (Seq.slice (as_seq file h0) 0 pos) (Seq.slice (as_seq file h0) pos (pos + num_sent))); *)
+	  (* lemma_get_equivalent_append (Seq.slice (as_seq file h0) 0 (pos + num_sent)) *)
+	  (*                             (Seq.slice (as_seq file h0) 0 pos) (Seq.slice (as_seq file h0) pos (pos + num_sent)); *)
+
+          (* assert (as_initialized_subseq file h0 0 (pos + num_sent) == *)
+	  (*         Seq.append (as_initialized_subseq file h0 0 pos) (as_initialized_subseq file h0 pos (pos + num_sent))); *)
+          
+
+          (* assert (log1 ==  *)
+
+
