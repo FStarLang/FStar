@@ -295,8 +295,6 @@ let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   assert (forall x. validator_checks v' (p' `and_then` (fun y -> parse_ret (f x y))));
   ()
 
-#reset-options
-
 let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
   Lemma (requires True)
         (ensures (validator_checks (validate_many' n v) (parse_many' p n))) =
@@ -306,6 +304,8 @@ let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator
         let p' = parse_many' p (n-1) in
         validate_liftA2 p p' (fun v l -> v::l) v (validate_many' (n-1) v <: (v:validator{validator_checks v p'}));
         ()
+
+#reset-options
 
 val validate_many:
   #t:Type -> p:parser t ->
@@ -318,6 +318,7 @@ let validate_done : v:validator{validator_checks v parsing_done} =
   fun b -> if length b = 0 then valid 0
         else invalid
 
+// TODO: tie together pieces to prove this overall correctness result
 val validate: v:validator{validator_checks v parse_abstract_store}
 let validate =
   admit();
