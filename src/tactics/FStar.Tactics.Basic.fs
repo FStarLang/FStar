@@ -524,6 +524,7 @@ let apply_lemma (tm:term) : tac<unit> =
                                  (Print.term_to_string (U.mk_squash post))
                                  (Print.term_to_string goal.goal_ty)
     | Some g ->
+        let _ = Rel.discharge_guard_no_smt goal.context g in
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
