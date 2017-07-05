@@ -396,7 +396,7 @@
         "function_token_typing_Benton2004.skip",
         "lemma_Benton2004.DDCC.d_seq", "lemma_Benton2004.DDCC.d_su1_",
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
-        "unit_typing"
+        "typing_Benton2004.seq", "unit_typing"
       ],
       0
     ],
