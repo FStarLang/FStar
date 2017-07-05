@@ -166,8 +166,6 @@ let d_su1'_flip
   [SMTPat (exec_equiv phi phi'' c'' (seq c c'))]
 = d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
 
-#set-options "--z3rlimit 128"
-
 let sec43
   (i n x y: var)
   (diffs: squash (List.Tot.noRepeats [i; n; x; y] == true))
@@ -200,3 +198,45 @@ let sec43
   r_while cond cond lbody asi phi1;
   assert (exec_equiv phi1 phi l rloop) // by d_sub
   // d_su1'_flip applied implicitly
+
+
+(* Sophisticated dead code *)
+
+let sec43'_postcond
+  (x y: var)
+: GTot (gexp bool)
+= gand
+    (gop op_GreaterThan (gvar y Left) (gconst 2))
+    (gop op_GreaterThan (gvar y Right) (gconst 2))
+
+let sec43'_precond
+  (x y: var)
+: GTot (gexp bool)
+= gand (geq (gvar x Left) (gvar x Right)) (sec43'_postcond x y)
+
+let sec43'
+  (x y: var)
+: Lemma
+  (ensures (
+    exec_equiv
+      (sec43'_precond x y)
+      (sec43'_postcond x y)
+      (ifthenelse
+        (eop op_GreaterThan (evar x) (const 3))
+        (assign y (evar x))
+        (assign y (const 7))
+      )
+      skip
+  ))
+= let ast_e = evar x in
+  let ast = assign y ast_e in
+  let asf_e = const 7 in
+  let asf = assign y asf_e in
+  let cond = eop op_GreaterThan (evar x) (const 3) in
+  let l = ifthenelse cond ast asf in
+  let phi = sec43'_precond x y in
+  let phi' = sec43'_postcond x y in
+  let gcond = exp_to_gexp cond Left in
+  r_dassl y ast_e (gand phi gcond) phi';
+  r_dassl y asf_e (gand phi (gnot gcond)) phi';
+  r_cbl cond ast asf skip phi phi'
