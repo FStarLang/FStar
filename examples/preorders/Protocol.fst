@@ -6,7 +6,7 @@ open FStar.Preorder
 open FStar.Heap
 open FStar.ST
 
-open FreezeArray
+open FreezingArray
 
 (* size of each message fragment sent over the network *)
 assume val fragment_size:nat
@@ -127,20 +127,20 @@ let snap (c:connection) :ST unit (requires (fun _ -> True))
      | R _ es_ref ctr_ref -> gst_recall (counter_pred (sel_tot h0 ctr_ref) es_ref));
     gst_witness (connection_pred c h0)
 
-(* type of the buffer and sender and receiver operate on *)
-type iarray (n:nat) (a:Type) :Type
+type array (a:Type0) (n:nat) = FreezingArray.array a n
+type iarray (a:Type0) (n:nat) = FreezingArray.iarray a n
 
-(* these probably need some contains precondition? *)
-assume val as_seq_ghost:
-  #n:nat -> #a:Type -> iarray n a -> i:nat -> j:nat{j >= i /\ j <= n} -> h:heap
-  -> GTot (s:seq a{length s = j - i})
-assume val as_seq:
-  #n:nat -> #a:Type -> arr:iarray n a -> i:nat -> j:nat{j >= i /\ j <= n}
-  -> ST (s:seq a{length s = j - i})
-       (requires (fun h0 -> True))
-       (ensures  (fun h0 s h1 -> h0 == h1 /\ s == as_seq_ghost arr i j h0))
+(* (\* these probably need some contains precondition? *\) *)
+(* assume val as_seq_ghost: *)
+(*   #n:nat -> #a:Type -> iarray n a -> i:nat -> j:nat{j >= i /\ j <= n} -> h:heap *)
+(*   -> GTot (s:seq a{length s = j - i}) *)
+(* assume val as_seq: *)
+(*   #n:nat -> #a:Type -> arr:iarray n a -> i:nat -> j:nat{j >= i /\ j <= n} *)
+(*   -> ST (s:seq a{length s = j - i}) *)
+(*        (requires (fun h0 -> True)) *)
+(*        (ensures  (fun h0 s h1 -> h0 == h1 /\ s == as_seq_ghost arr i j h0)) *)
 
-let sender (c:connection) :Tot bool = S? c
+let sender (c:connection) :Tot bool   = S? c
 let receiver (c:connection) :Tot bool = R? c
 
 let modifies_s (c:connection{sender c}) (h0:heap) (h1:heap) :Type0
@@ -162,33 +162,37 @@ assume val network_send
            (ensures  (fun h0 _ h1 -> h0 == h1))  //TODO: this is wrong, it modifies the sent_ref
 
 (* TODO: we need to give some more precise type that talks about sent_refs, they are not being used currently at all *)
-let send (#n:nat) (buf:iarray n byte) (c:connection{sender c})
+#set-options "--z3rlimit 50"
+let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
   :ST nat (requires (fun h0 -> True))
-        (ensures  (fun h0 sent h1 -> modifies_s c h0 h1            /\
-	                          sent <= min n fragment_size  /\
-				  ctr c h1 = ctr c h0 + 1     /\
-                                  log c h1 == snoc (log c h0) (as_seq_ghost buf 0 sent h0)))
+        (ensures  (fun h0 sent h1 -> modifies_s c h0 h1         /\
+	                          sent <= min n fragment_size /\
+				  ctr c h1 = ctr c h0 + 1    /\
+				  (forall (i:nat). i < n ==> Some? (Seq.index (as_seq buf h0) i)) /\
+                                  log c h1 == snoc (log c h0) (as_initialized_subseq buf h0 0 sent)))
   = let h0 = ST.get () in
 
     recall_connection c;
+    recall_all_init buf;
+
     let S rand es_ref = c in
 
-    let msgs0 = read es_ref in
+    let msgs0 = ST.read es_ref in
     let i0 = length msgs0 in
 
     let sent = min n fragment_size in
-    let msg = as_seq buf 0 sent in
+    let msg = read_subseq_i_j buf 0 sent in
     let frag = append msg (zeroes (fragment_size - sent)) in
     let cipher = oplus frag (rand i0) in
 
     let sent_ref :mref bool sent_pre = alloc false in
     let msgs1 = snoc msgs0 (E i0 msg cipher sent_ref) in
 
-    write es_ref msgs1;    
+    ST.write es_ref msgs1;
 
     let h1 = ST.get () in
     lemma_snoc_log c i0 cipher msg sent_ref h0 h1;
-
+    
     sent
 
 (* seq of ciphers sent so far on this connection *)
@@ -201,61 +205,49 @@ assume val network_receive
                         (ensures  (fun h0 f_opt h1 -> h0 == h1                                       /\
 						   (Some? f_opt <==> ctr c h0 < length (ciphers c h0)) /\
 						   (ctr c h0 < length (ciphers c h0) ==>
-						    f_opt == Some (index (ciphers c h0) (ctr c h0)))))
+						    f_opt == Some (Seq.index (ciphers c h0) (ctr c h0)))))
 
-type array (n:nat) (a:Type) :Type
-
-assume val arr_addr (#n:nat) (#a:Type) (arr:array n a) :GTot nat
-
-let modifies_r (#n:nat) (#a:Type) (c:connection{receiver c}) (arr:array n a) (h0 h1:heap) :Type0
+let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:heap) :Type0
   = let R _ _ ctr_ref = c in
     modifies (Set.union (Set.singleton (addr_of ctr_ref))
-                        (Set.singleton (arr_addr arr))) h0 h1
+                        (array_footprint arr)) h0 h1
 
-assume val all_init (#n:nat) (#a:Type) (arr:array n a) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
-
-assume val as_seq_ghost_a:
-  #n:nat -> #a:Type -> array n a -> i:nat -> j:nat{j >= i /\ j <= n} -> h:heap
-  -> GTot (s:seq a{length s = j - i})
-
-assume val fill
-  (#n:nat{fragment_size <= n}) (buf:array n byte) (msg:message)
-  : ST unit (requires (fun h0      -> True))
-            (ensures  (fun h0 _ h1 -> modifies (Set.singleton (arr_addr buf)) h0 h1 /\ 
-	                           all_init buf 0 (length msg)                    /\
-	                           as_seq_ghost_a buf 0 (length msg) h1 == msg))
-
-let receive (#n:nat{fragment_size <= n}) (buf:array n byte) (c:connection{receiver c})
-  :ST (option nat) (requires (fun h0          -> True))
+#set-options "--z3rlimit 50"
+let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiver c})
+  :ST (option nat) (requires (fun h0          -> is_mutable buf h0))
                  (ensures  (fun h0 r_opt h1 -> match r_opt with
 					    | None   -> h0 == h1
 					    | Some r ->
 					      modifies_r c buf h0 h1       /\
 					      r <= fragment_size            /\
-					      all_init buf 0 r             /\
+					      all_init_i_j buf 0 r             /\
 					      ctr c h1 = ctr c h0 + 1      /\
 					      ctr c h0 < length (log c h0) /\
-					      index (log c h0) (ctr c h0) == as_seq_ghost_a buf 0 r h1))
+					      (forall (i:nat). i < r ==> Some? (Seq.index (as_seq buf h1) i)) /\
+					      Seq.index (log c h0) (ctr c h0) == as_initialized_subseq buf h1 0 r))
   = let h0 = ST.get () in
     let R rand es_ref ctr_ref = c in
-    assume (arr_addr buf <> addr_of ctr_ref);
-    assume (arr_addr buf <> addr_of es_ref);  //AR: these two should be possible to prove once we hook it up to the actual array implementation
+
+    assume (Set.disjoint (Set.singleton (addr_of ctr_ref)) (array_footprint buf));
+    assume (Set.disjoint (Set.singleton (addr_of es_ref))  (array_footprint buf));
+
     recall_connection c;
 
     match network_receive c with
     | None        -> None
     | Some cipher ->
-      assert (index (ciphers c h0) (ctr c h0) == cipher);
-      assume (forall (i:nat). i < (length (sel h0 (entries_of c))) ==> index (ciphers c h0) i == oplus (pad (index (log c h0) i)) (rand i));
-      let i0 = read ctr_ref in
+      let i0 = ST.read ctr_ref in
       let msg = oplus cipher (rand i0) in
-      admit ();
       let len, m = unpad msg in
-      assert (i0 < length (sel_tot h0 es_ref));
+
+      assume (m == Seq.index (log c h0) (ctr c h0));
+
       gst_witness (counter_pred (i0 + 1) es_ref);
-      write ctr_ref (i0 + 1);  //AR: order of this write is important ... specifically, if we write ctr_ref after arr, we need a lemma to say arr remains unchanged, once this is hooked up to actual array implementation, it shouldn't matter
+      recall_contains buf;
+      ST.write ctr_ref (i0 + 1);
       fill buf m;
       Some len
+#reset-options
 
 (***** sender and receiver *****)
 
