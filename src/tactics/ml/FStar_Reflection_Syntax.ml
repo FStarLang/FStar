@@ -148,7 +148,7 @@ let __term_to_string: FStar_Reflection_Types.term -> Prims.string =
 let term_to_string: FStar_Reflection_Types.term -> Prims.string =
   fun t  -> __term_to_string t
 let __fresh_binder: typ -> FStar_Reflection_Types.binder =
-  Obj.magic (fun uu____535  -> failwith "Not yet implemented:__fresh_binder")
+  (fun t -> (FStar_Syntax_Syntax.gen_bv "__refl" None t, None))
 let fresh_binder: typ -> FStar_Reflection_Types.binder =
   fun t  -> __fresh_binder t
 let rec flatten_name: name -> Prims.string =
