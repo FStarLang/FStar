@@ -229,6 +229,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
 					      all_init_i_j buf 0 r         /\
 					      ctr c h1 = ctr c h0 + 1      /\
 					      ctr c h0 < length (log c h0) /\
+                                              log c h0 == log c h1 /\
 					      (forall (i:nat). i < r ==> Some? (Seq.index (as_seq buf h1) i)) /\
 					      Seq.index (log c h0) (ctr c h0) == as_initialized_subseq buf h1 0 r))
   = let h0 = ST.get () in
@@ -270,17 +271,23 @@ assume val lemma_flatten_snoc (s:seq message) (m:message)
   :Lemma (requires True)
          (ensures  (flatten (snoc s m) == append (flatten s) m))
 
-let sent_file_pred' (file:seq byte) (c:connection) (from:nat) (num_chunks:nat) :heap_predicate
+assume val flatten_empty (u:unit) : Lemma 
+  (flatten Seq.createEmpty == Seq.createEmpty)
+  
+let sent_file_pred' (file:seq byte) (c:connection) (from:nat) (to:nat{from <= to}) :heap_predicate
   = fun h -> h `contains_connection` c /\ 
           (let log   = log c h in
-           from + num_chunks <= Seq.length log /\ 
-	   file == flatten (Seq.slice log from (from + num_chunks)))
+           to <= Seq.length log /\ 
+	   file == flatten (Seq.slice log from to))
 
-let sent_file_pred (file:seq byte) (c:connection) (from:nat) (num_chunks:nat) :(p:heap_predicate{stable p})
-  = sent_file_pred' file c from num_chunks
+let sent_file_pred (file:seq byte) (c:connection) (from:nat) (to:nat{from <= to}) :(p:heap_predicate{stable p})
+  = sent_file_pred' file c from to
 
+(* let sent_file_pred_init (file:seq byte) (c:connnection) (from:nat) (h:heap{h `contains_connection` c)} *)
+(*   : Lemma (send_file_pred file c from from h) *)
+(*   = assert  *)
 let sent_file (file:seq byte) (c:connection) =
-  exists (from num_chunks:nat). witnessed (sent_file_pred file c from num_chunks)
+  exists (from:nat) (to:nat{from <= to}). witnessed (sent_file_pred file c from to)
 
 let lemma_get_equivalent_append
   (#a:Type0) (s1:seq (option a){forall (i:nat). i < Seq.length s1 ==> Some? (Seq.index s1 i)})
@@ -292,45 +299,80 @@ let lemma_get_equivalent_append
   = admit ()
 
 #set-options "--z3rlimit 20"
-let send (#n:nat) (file:iarray byte n) (c:connection{sender c})
+let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a) 
+  (requires (fun h -> True))
+  (ensures (fun h0 s h1 ->  
+              h0==h1 /\
+              (forall (k:nat). k < n ==> Some? (Seq.index (as_seq x h0) k)) /\
+              s == as_initialized_subseq x h0 0 n))
+  = admit()              
+  
+let send (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
+  : ST unit 
+       (requires (fun h -> True))
+       (ensures (fun h0 _ h1 ->
+                      modifies (connection_footprint c) h0 h1 /\
+                      h1 `contains_connection` c /\
+                      (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                      sent_file (as_initialized_seq file h0) c))
   = let h0 = ST.get () in
-    let from = ctr c h0 in
-
     recall_all_init file;
     recall_contains file;
     recall_connection c;
-
-    let rec aux (pos:nat{pos <= n}) (num_chunks:nat)
-      :ST nat (requires (fun h0                -> (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
-                                              sent_file_pred (as_initialized_subseq file h0 0 pos) c from num_chunks h0))
-             (ensures  (fun h0 num_chunks h1 -> modifies (connection_footprint c) h0 h1 /\
-	                                     (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
-	                                     sent_file_pred (as_initialized_seq file h0) c from num_chunks h1))
-      = recall_all_init file;
-        recall_contains file;
-	recall_connection c;
-
-        assume (Set.disjoint (connection_footprint c) (array_footprint file));
-
-        if pos = n then num_chunks
-        else begin
-	  let sub_file = suffix file pos in
-	  lemma_all_init_i_j_sub file pos (n - pos);
-       
-          let h0 = ST.get () in
-	  let log0 = log c h0 in
-	  let sent = send sub_file c in
-	  let h1 = ST.get () in
-	  let log1 = log c h1 in
-
-          assume (log1 == snoc log0 (as_initialized_subseq file h0 pos (pos + sent)));
-
-	  admit ();
-	  aux (pos + sent) (num_chunks + 1)
-	end
+    let file_bytes0 = iarray_as_seq file in
+    let from = ctr c h0 in
+    let rec aux (pos:nat{pos <= n}) // (num_chunks:nat)
+      :ST unit 
+            (requires (fun h0 -> 
+                      (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                      h0 `contains_connection` c /\
+                      from <= ctr c h0 /\
+                      sent_file_pred (as_initialized_subseq file h0 0 pos) c from (ctr c h0) h0))
+             (ensures  (fun h0 _ h1 -> 
+                      modifies (connection_footprint c) h0 h1 /\
+                      h1 `contains_connection` c /\
+                      from <= ctr c h1 /\
+                      (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                      sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
+      = admit()
     in
-    
-    admit ()
+    assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.createEmpty);
+    flatten_empty();
+    assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.createEmpty);
+    aux 0;
+    let h1 = ST.get () in
+    let file_bytes1 = iarray_as_seq file in
+    assert (file_bytes0 == file_bytes1);
+    gst_witness (sent_file_pred file_bytes0 c from (ctr c h1));
+    assert (sent_file file_bytes0 c)
+
+
+
+    (*   recall_all_init file; *)
+    (*     recall_contains file; *)
+    (*     recall_connection c; *)
+
+    (*     assume (Set.disjoint (connection_footprint c) (array_footprint file)); *)
+
+    (*     if pos = n then num_chunks *)
+    (*     else begin *)
+    (*       let sub_file = suffix file pos in *)
+    (*       lemma_all_init_i_j_sub file pos (n - pos); *)
+       
+    (*       let h0 = ST.get () in *)
+    (*       let log0 = log c h0 in *)
+    (*       let sent = send sub_file c in *)
+    (*       let h1 = ST.get () in *)
+    (*       let log1 = log c h1 in *)
+
+    (*       assume (log1 == snoc log0 (as_initialized_subseq file h0 pos (pos + sent))); *)
+
+    (*       admit (); *)
+    (*       aux (pos + sent) (num_chunks + 1) *)
+    (*     end *)
+    (* in *)
+
+
 
           (* assert (pos + num_sent <= n); *)
           (* let num_chunks = num_chunks + 1 in *)
