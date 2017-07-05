@@ -372,10 +372,9 @@ let parse_result (#t:Type) (#b:bytes) (r: option (t * n:nat{n <= length b}){Some
 assume val parse_num_entries_valid : b:bytes{Some? (validate b)} ->
   Lemma (parse_u32 b == Some ((parse_result (parse_abstract_store b)).num_entries, 4))
 
-val fold_left_buffer_ok: #t:Type -> f:(t -> encoded_entry -> t) -> acc:t -> b:bytes{Some? (validate b)} ->
+assume val fold_left_buffer_ok: #t:Type -> f:(t -> encoded_entry -> t) -> acc:t -> b:bytes{Some? (validate b)} ->
     Lemma (fold_left_buffer f acc b ==
            fold_left_store f acc (parse_result (parse_abstract_store b)))
-let fold_left_buffer_ok #t f acc b
 
 (*! Parsing a cache *)
 
