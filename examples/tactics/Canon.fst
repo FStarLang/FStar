@@ -4,6 +4,7 @@ open FStar.Tactics
 open FStar.Tactics.Canon
 open FStar.Mul
 
+assume val w : int
 assume val x : int
 assume val y : int
 assume val z : int
@@ -16,6 +17,7 @@ let check_canon =
              fail "")
 
 let lem0 = assert_by_tactic check_canon (x * (y * z) == (x * y) * z)
+let lem0' = assert_by_tactic check_canon (w * (x * (y * z)) == ((z * y) * x) * w)
 
 // TODO: for now, canon is not enough as we don't collect factors
 let lem1 =
@@ -32,6 +34,11 @@ let lem3_nat (a b c d e : x:nat{0 <= x /\ x < 256}) =
 
 let lem4 (a b c : int) =
     assert_by_tactic check_canon ((a+c+b)*(b+c+a) == a * a + (((b+c)*(c+b) + a * (b+c)) + c*a) + b*a)
+
+(* The following tests should pass, but it's too slow to run them on every regression build, *)
+(* and the previous ones are probably enough *)
+
+(*
 
 let lem5 (a b c d e : int) =
     assert_by_tactic check_canon
