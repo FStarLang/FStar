@@ -306,7 +306,84 @@ let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a)
               (forall (k:nat). k < n ==> Some? (Seq.index (as_seq x h0) k)) /\
               s == as_initialized_subseq x h0 0 n))
   = admit()              
-  
+
+let fully_initialized_in #a #n (x:iarray a n) (h:heap) = 
+  h `contains_array` x /\
+  (forall (k:nat). k < n ==> Some? (Seq.index (as_seq x h) k))
+
+#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0"
+
+(* let extend_sent_file *)
+(*           (#n:nat)  *)
+(*           (file:iarray byte n)  *)
+(*           (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)}) *)
+(*           (h_init:heap{h_init `contains_connection` c /\ file `fully_initialized_in` h_init}) *)
+(*           (from:nat{from = ctr c h_init}) *)
+(*           (pos:nat{pos <= n}) *)
+(*           (h0:heap) *)
+(*           (h1:heap) *)
+(*    :  Lemma (requires            *)
+(*                       file `fully_initialized_in` h0 /\ *)
+(*                       h0 `contains_connection` c /\ *)
+(*                       from <= ctr c h0 /\ *)
+(*                       sent_file_pred (as_initialized_subseq file h0 0 pos) c from (ctr c h0) h0 /\ *)
+(*                       modifies (connection_footprint c) h0 h1         /\ *)
+(* 	              h1 `contains_connection` c /\ *)
+(*                       sent <= min n fragment_size /\ *)
+(* 				  ctr c h1 = ctr c h0 + 1    /\ *)
+				  
+                      
+let rec send_aux 
+          (#n:nat) 
+          (file:iarray byte n) 
+          (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
+          (h_init:heap{h_init `contains_connection` c /\ file `fully_initialized_in` h_init})
+          (from:nat{from = ctr c h_init})
+          (pos:nat{pos <= n})
+      : ST unit 
+             (requires (fun h0 ->
+                      file `fully_initialized_in` h0 /\
+                      h0 `contains_connection` c /\
+                      from <= ctr c h0 /\
+                      sent_file_pred (as_initialized_subseq file h0 0 pos) c from (ctr c h0) h0))
+             (ensures  (fun h0 _ h1 -> 
+                      modifies (connection_footprint c) h0 h1 /\
+                      h1 `contains_connection` c /\
+                      from <= ctr c h1 /\
+                      (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                      sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
+      = if pos = n then admit()
+        else begin
+          let sub_file = suffix file pos in
+          lemma_all_init_i_j_sub file pos (n - pos);
+       
+          let h0 = ST.get () in
+          let file_bytes0 = iarray_as_seq file in
+          let log0 = log c h0 in
+          let sent = send sub_file c in
+          let h1 = ST.get () in
+          let log1 = log c h1 in
+          let file_bytes1 = iarray_as_seq file in          
+          assert (file_bytes0 == file_bytes1);
+          recall_contains file; //strange that this is needed
+          assert (from <= ctr c h1);
+          assert (file `fully_initialized_in` h1);
+          assert (h1 `contains_connection` c);
+          let _ = 
+            assert (log1 == snoc log0 (as_initialized_subseq sub_file h0 0 sent));
+            assume (log1 == snoc log0 (as_initialized_subseq file h0 pos (pos + sent)));
+            assert (ctr c h0 + 1 = ctr c h1);
+            assert (ctr c h1 <= Seq.length log1);
+            let f0 = as_initialized_subseq file h1 0 pos in
+            let f1 = as_initialized_subseq file h1 0 (pos + sent) in
+            assert (f0 == flatten (Seq.slice log0 from (ctr c h0)));
+            assume (f0 == flatten (Seq.slice log1 from (ctr c h0)));
+            assume (f1 == flatten (Seq.slice log1 from (ctr c h1)));
+            assert (sent_file_pred f1 c from (ctr c h1) h1) in
+          send_aux file c h_init from (pos + sent)
+        end
+
+
 let send (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
   : ST unit 
        (requires (fun h -> True))
@@ -321,25 +398,10 @@ let send (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (c
     recall_connection c;
     let file_bytes0 = iarray_as_seq file in
     let from = ctr c h0 in
-    let rec aux (pos:nat{pos <= n}) // (num_chunks:nat)
-      :ST unit 
-            (requires (fun h0 -> 
-                      (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
-                      h0 `contains_connection` c /\
-                      from <= ctr c h0 /\
-                      sent_file_pred (as_initialized_subseq file h0 0 pos) c from (ctr c h0) h0))
-             (ensures  (fun h0 _ h1 -> 
-                      modifies (connection_footprint c) h0 h1 /\
-                      h1 `contains_connection` c /\
-                      from <= ctr c h1 /\
-                      (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
-                      sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
-      = admit()
-    in
     assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.createEmpty);
     flatten_empty();
     assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.createEmpty);
-    aux 0;
+    send_aux file c h0 from 0;
     let h1 = ST.get () in
     let file_bytes1 = iarray_as_seq file in
     assert (file_bytes0 == file_bytes1);
@@ -354,23 +416,6 @@ let send (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (c
 
     (*     assume (Set.disjoint (connection_footprint c) (array_footprint file)); *)
 
-    (*     if pos = n then num_chunks *)
-    (*     else begin *)
-    (*       let sub_file = suffix file pos in *)
-    (*       lemma_all_init_i_j_sub file pos (n - pos); *)
-       
-    (*       let h0 = ST.get () in *)
-    (*       let log0 = log c h0 in *)
-    (*       let sent = send sub_file c in *)
-    (*       let h1 = ST.get () in *)
-    (*       let log1 = log c h1 in *)
-
-    (*       assume (log1 == snoc log0 (as_initialized_subseq file h0 pos (pos + sent))); *)
-
-    (*       admit (); *)
-    (*       aux (pos + sent) (num_chunks + 1) *)
-    (*     end *)
-    (* in *)
 
 
 
