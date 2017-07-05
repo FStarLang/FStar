@@ -12,8 +12,7 @@ let rec fib (n : int) : tactic unit =
         exact (quote 1)
     else (
         apply (quote op_Addition);;
-        fib (n - 1);;
-        fib (n - 2)
+        iseq [fib (n - 1); fib (n - 2)]
     )
 
 let f8 : int = synth_by_tactic (fib 8)
@@ -26,8 +25,7 @@ let rec fib_norm (n : int) : tactic unit =
     else (
         dup;;
         apply (quote op_Addition);;
-        fib_norm (n - 1);;
-        fib_norm (n - 2);;
+        iseq [fib_norm (n - 1); fib_norm (n - 2)];;
         norm [Primops];;
         trefl
     )
