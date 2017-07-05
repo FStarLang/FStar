@@ -220,37 +220,36 @@ let encode s = u32_to_be s.num_entries `append`
 
 (*! Validating input buffer *)
 
-(** like a parser, a validator returns the number of bytes consumed *)
-let validator = b:bytes -> bool * n:nat{n <= length b}
+let validator = parser unit
 // let parse_validator #t (p:parser t) = b:bytes -> (ok:bool{ok <==> Some? (p b)} * n:nat{n <= length b})
 
-val seq_check: validator -> validator -> validator
-let seq_check v1 v2 b =
-  let (ok, l) = v1 b in
-  if ok = false then (false, l)
-  else
-  let (ok, l') = v2 (slice b l (length b)) in
-  (ok, l + l')
+unfold let seq (#t:Type) (#t':Type) (p:parser t) (p': parser t') : parser t' =
+  fun b -> match p b with
+        | Some (_, l) -> begin
+            match p' (slice b l (length b)) with
+            | Some (v, l') -> Some (v, l + l')
+            | None -> None
+          end
+        | None -> None
 
-val then_validate : #t:Type -> parser t -> (t -> validator) -> validator
-let then_validate #t p v b =
-  match p b with
-  | Some (r, l) -> begin
-      let (ok, l') = v r (slice b l (length b)) in
-      (ok, l + l')
-    end
-  | None -> (false, 0)
+let invalid (#b:bytes): option (unit * n:nat{n <= length b}) = None
+let valid (#b:bytes) (n:nat{n <= length b}) : option (unit * n:nat{n <= length b}) = Some ((), n)
 
 let skip_bytes (n:nat) : validator =
-  fun b -> if length b < n then (false, length b)
-        else (true, n)
+  fun b -> if length b < n then invalid
+        else valid n
 
 // NOTE: this proof about the whole validator works better than a function with
 // built-in correctness proof (despite the universal quantifier)
 (** a correctness condition for a validator, stating that it correctly reports
    when a parser will succeed (the implication only needs to be validated ==>
    will parse, but this has worked so far) *)
-let validator_checks (v:validator) #t (p: parser t) = forall b. fst (v b) == true <==> Some? (p b)
+unfold let validator_checks (v:validator) #t (p: parser t) = forall b. Some? (v b) ==> (Some? (p b) /\ snd (Some?.v (v b)) == snd (Some?.v (p b)))
+
+// this definitions assists type inference by forcing t'=unit; it also makes the
+// code read a bit better
+unfold let then_validate (#t:Type) (p:parser t) (v:t -> validator) : validator =
+    and_then p v
 
 val validate_u16_array: v:validator{validator_checks v parse_u16_array}
 let validate_u16_array =
@@ -263,13 +262,13 @@ let validate_u32_array =
   (fun array_len -> skip_bytes (U32.v array_len))
 
 let validate_entry: v:validator{validator_checks v parse_entry} =
-  validate_u16_array `seq_check`
+  validate_u16_array `seq`
   validate_u32_array
 
 let validate_accept : validator =
-  fun b -> (true, 0)
+  fun b -> valid 0
 let validate_reject : validator =
-  fun b -> (false, 0)
+  fun b -> invalid
 
 val validate_many':
   n:nat ->
@@ -278,14 +277,33 @@ val validate_many':
 let rec validate_many' n v =
   match n with
   | 0 -> validate_accept
-  | _ -> v `seq_check` validate_many' (n-1) v `seq_check` validate_accept
+  | _ -> v `seq` validate_many' (n-1) v
 
-let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator) :
-  Lemma (requires (validator_checks v p))
+let validate_seq (#t:Type) (#t':Type)
+  (p: parser t) (p': parser t')
+  (v: validator{validator_checks v p})
+  (v': validator{validator_checks v' p'}) :
+  Lemma (validator_checks (v `seq` v') (p `seq` p')) = ()
+
+let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
+  (p: parser t) (p': parser t') (f: t -> t' -> t'')
+  (v: validator{validator_checks v p})
+  (v': validator{validator_checks v' p'}) :
+  Lemma (validator_checks (v `seq` v') (p `and_then` (fun (x:t) -> p' `and_then` (fun (y:t') -> parse_ret (f x y))))) =
+  assert (forall x. validator_checks v' (p' `and_then` (fun y -> parse_ret (f x y))));
+  ()
+
+// #set-options "--z3rlimit 10"
+
+let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
+  Lemma (requires True)
         (ensures (validator_checks (validate_many' n v) (parse_many' p n))) =
   match n with
   | 0 -> ()
-  | _ -> admit(); validate_many'_ok (n-1) p v
+  | _ -> validate_many'_ok (n-1) p v;
+        let p' = parse_many' p (n-1) in
+        validate_liftA2 p p' (fun v l -> v::l) v (validate_many' (n-1) v <: (v:validator{validator_checks v p'}));
+        ()
 
 val validate_many:
   #t:Type -> p:parser t ->
@@ -295,15 +313,15 @@ val validate_many:
 let validate_many #t p n v = validate_many'_ok n p v; validate_many' n v
 
 let validate_done : v:validator{validator_checks v parsing_done} =
-  fun b -> if length b = 0 then (true, 0)
-        else (false, 0)
+  fun b -> if length b = 0 then valid 0
+        else invalid
 
 val validate: v:validator{validator_checks v parse_abstract_store}
 let validate =
   admit();
   parse_u32 `then_validate`
-  (fun num_entries -> validate_many parse_entry (U32.v num_entries) validate_entry `seq_check`
-                   validate_done `seq_check`
+  (fun num_entries -> validate_many parse_entry (U32.v num_entries) validate_entry `seq`
+                   validate_done `seq`
                    validate_accept)
 
 (*! API using validated but unparsed key-value buffer *)
@@ -335,11 +353,8 @@ let parse_value_offset (b:bytes) : option (n:nat{n <= length b}) =
     // length (so that b is parseable as an entry); the slice of the remaining
     // input should become part of the parser incrementing a current position
     // pointer into the input buffer
-    match validate_u32_array (slice b l (length b)) with
-    | (true, _) -> Some l
-    | (false, _) -> None)
-
-#reset-options "--z3rlimit 10"
+    validate_u32_array (slice b l (length b)) `optbind`
+    (fun _ -> Some l))
 
 let parse_value_offset_ok (b:bytes) :
   Lemma (parse_value_offset b `optbind`
