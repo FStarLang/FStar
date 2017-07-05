@@ -285,6 +285,8 @@ let validate_seq (#t:Type) (#t':Type)
   (v': validator{validator_checks v' p'}) :
   Lemma (validator_checks (v `seq` v') (p `seq` p')) = ()
 
+#set-options "--max_fuel 0 --z3rlimit 30"
+
 let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   (p: parser t) (p': parser t') (f: t -> t' -> t'')
   (v: validator{validator_checks v p})
@@ -293,7 +295,7 @@ let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   assert (forall x. validator_checks v' (p' `and_then` (fun y -> parse_ret (f x y))));
   ()
 
-// #set-options "--z3rlimit 10"
+#reset-options
 
 let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
   Lemma (requires True)
