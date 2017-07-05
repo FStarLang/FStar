@@ -66,9 +66,6 @@ let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
 assume private val __exact : term -> __tac unit
 let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
 
-assume private val __exact_lemma : term -> __tac unit
-let exact_lemma (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact_lemma tt)
-
 assume private val __apply : term -> __tac unit
 let apply (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply tt)
 
