@@ -458,6 +458,17 @@ val receive_aux
                       file_out `fully_initialized_in` h1 /\
                       from <= ctr c h1 /\
                       sent_file_pred (as_initialized_seq file_out h1) c from (ctr c h1) h1)))
+
+let append_filled #a #n (f:array a n) (pos:nat{pos < n}) (next:nat{pos + next < n}) (h:heap)
+  : Lemma (let f0 = prefix f pos in
+           let f1 = prefix f (pos + next) in
+           f1 `fully_initialized_in` h ==> (
+           let b0 = as_initialized_seq f0 h in
+           let b1 = as_initialized_seq f1 h in
+           let received_frag = as_initialized_subseq (suffix f pos) h 0 next in
+           Seq.equal b1 (append b0 received_frag)))
+   = ()            
+
 let rec receive_aux #n file c h_init from pos
    = let h0 = ST.get() in
      let filled0 = prefix file pos in
@@ -480,7 +491,7 @@ let rec receive_aux #n file c h_init from pos
            assert (log c h0 == log c h1);
            assert (sent_file_pred filled_bytes0 c from (ctr c h0) h0);
            assert (filled_bytes0 == flatten (Seq.slice (log c h0) from (ctr c h0)));
-           assume (filled_bytes1 == append filled_bytes0 received_frag);
+           append_filled file pos k h1; //(filled_bytes1 == append filled_bytes0 received_frag);
            assert (Seq.index (log c h0) (ctr c h0) == received_frag);
            lemma_flatten_snoc (Seq.slice (log c h0) from (ctr c h0)) received_frag;
            assert (filled_bytes1 == flatten (Seq.slice (log c h0) from (ctr c h1)));
