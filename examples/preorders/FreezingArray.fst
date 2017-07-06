@@ -328,26 +328,26 @@ abstract let fwrite (#a:Type0) (#n:nat) (arr:farray a n) (i:nat{i < n}) (x:a)
 (*
  * subarray
  *)
-abstract let sub (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n}) :t a len
+abstract let sub (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) :t a len
   = let A #m s_ref o = arr in
     A #m s_ref (o + i)
 
-let suffix (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) = sub arr i (n - i)
-let prefix (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) = sub arr 0 i
+let suffix (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i <= n}) = sub arr i (n - i)
+let prefix (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i <= n}) = sub arr 0 i
 
-let lemma_sub_preserves_array_mutable_flag (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n})
+let lemma_sub_preserves_array_mutable_flag (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n})
   :Lemma (requires (witnessed (mutable_pred arr)))
          (ensures  (witnessed (mutable_pred (sub arr i len))))
 	 [SMTPat (witnessed (mutable_pred (sub arr i len)))]
   = lemma_functoriality (mutable_pred arr) (mutable_pred (sub arr i len))
 
-let lemma_sub_preserves_array_freezable_flag (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n})
+let lemma_sub_preserves_array_freezable_flag (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n})
   :Lemma (requires (witnessed (freezable_pred arr)))
          (ensures  (witnessed (freezable_pred (sub arr i len))))
 	 [SMTPat (witnessed (freezable_pred (sub arr i len)))]
   = lemma_functoriality (freezable_pred arr) (freezable_pred (sub arr i len))
 
-let lemma_sub_is_slice (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n}) (h:heap)
+let lemma_sub_is_slice (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) (h:heap)
   :Lemma (requires True)
          (ensures  (as_seq (sub arr i len) h == Seq.slice (as_seq arr h) i (i + len)))
 	 [SMTPat (as_seq (sub arr i len) h)]
@@ -357,7 +357,7 @@ let lemma_sub_is_slice (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i 
  * footprint of a subarray is same as the footprint of the array
  *)
 let lemma_sub_footprint
-  (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n})
+  (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n})
   :Lemma (requires True)
          (ensures (let arr' = sub arr i len in
                    array_footprint arr == array_footprint arr'))
@@ -368,7 +368,7 @@ let lemma_sub_footprint
  * a subarray is live iff the array is live
  *)
 let lemma_sub_contains
-  (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n}) (h:heap)
+  (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) (h:heap)
   :Lemma (requires True)
          (ensures  (let arr' = sub arr i len in
 	            h `contains_array` arr <==> h `contains_array` arr'))
@@ -379,7 +379,7 @@ let lemma_sub_contains
  * a subarray is mutable iff the array is mutable
  *)
 let lemma_sub_is_mutable
-  (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n}) (h:heap)
+  (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) (h:heap)
   :Lemma (requires True)
          (ensures  (let arr' = sub arr i len in
 	            is_mutable arr h <==> is_mutable arr' h))
@@ -390,7 +390,7 @@ let lemma_sub_is_mutable
  * subarray of a frozen array is frozen on a subsequence of the original sequence
  *)
 let lemma_sub_frozen
-  (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (len:nat{i + len <= n}) (es:erased (Seq.seq a){frozen_with arr es})
+  (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n}) (es:erased (Seq.seq a){frozen_with arr es})
   :Lemma (requires True)
          (ensures  (frozen_with (sub arr i len) (hide (Seq.slice (reveal es) i (i + len)))))
 	 [SMTPat (frozen_with arr es); SMTPat (sub arr i len)]
@@ -559,7 +559,7 @@ let lemma_framing_of_as_seq (#a:Type0) (#n:nat) (arr:t a n) (h0:heap) (h1:heap) 
   = ()
 
 let lemma_all_init_i_j_sub
-  (#a:Type0) (#n:nat) (arr:t a n{all_init arr}) (i:index arr) (len:nat{i + len <= n})
+  (#a:Type0) (#n:nat) (arr:t a n{all_init arr}) (i:nat) (len:nat{i + len <= n})
   :Lemma (requires True)
          (ensures  (all_init (sub arr i len)))
 	 [SMTPat (all_init arr); SMTPat (sub arr i len)]
