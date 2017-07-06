@@ -2590,7 +2590,7 @@ and desugar_term_maybe_top:
                                   FStar_Syntax_Syntax.Tm_match uu____5004 in
                                 FStar_Syntax_Syntax.mk uu____5003 in
                               uu____5000 FStar_Pervasives_Native.None
-                                body1.FStar_Syntax_Syntax.pos in
+                                top.FStar_Parser_AST.range in
                         let uu____5034 =
                           let uu____5035 =
                             let uu____5043 =

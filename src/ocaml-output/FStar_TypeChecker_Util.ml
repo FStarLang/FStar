@@ -3259,11 +3259,15 @@ let gen:
               then
                 FStar_TypeChecker_Normalize.normalize_comp
                   [FStar_TypeChecker_Normalize.Beta;
+                  FStar_TypeChecker_Normalize.Exclude
+                    FStar_TypeChecker_Normalize.Zeta;
                   FStar_TypeChecker_Normalize.Eager_unfolding;
                   FStar_TypeChecker_Normalize.NoFullNorm] env c
               else
                 FStar_TypeChecker_Normalize.normalize_comp
                   [FStar_TypeChecker_Normalize.Beta;
+                  FStar_TypeChecker_Normalize.Exclude
+                    FStar_TypeChecker_Normalize.Zeta;
                   FStar_TypeChecker_Normalize.NoFullNorm] env c in
             (let uu____5657 =
                FStar_TypeChecker_Env.debug env FStar_Options.Medium in
@@ -3375,7 +3379,9 @@ let gen:
                                             | uu____6153 ->
                                                 let k1 =
                                                   FStar_TypeChecker_Normalize.normalize
-                                                    [FStar_TypeChecker_Normalize.Beta]
+                                                    [FStar_TypeChecker_Normalize.Beta;
+                                                    FStar_TypeChecker_Normalize.Exclude
+                                                      FStar_TypeChecker_Normalize.Zeta]
                                                     env k in
                                                 let uu____6158 =
                                                   FStar_Syntax_Util.arrow_formals
@@ -3430,7 +3436,9 @@ let gen:
                                      FStar_TypeChecker_Normalize.normalize_comp
                                        [FStar_TypeChecker_Normalize.Beta;
                                        FStar_TypeChecker_Normalize.NoDeltaSteps;
-                                       FStar_TypeChecker_Normalize.NoFullNorm]
+                                       FStar_TypeChecker_Normalize.NoFullNorm;
+                                       FStar_TypeChecker_Normalize.Exclude
+                                         FStar_TypeChecker_Normalize.Zeta]
                                        env c in
                                    let e1 =
                                      FStar_TypeChecker_Normalize.reduce_uvar_solutions
@@ -3445,7 +3453,9 @@ let gen:
                                             [FStar_TypeChecker_Normalize.Beta;
                                             FStar_TypeChecker_Normalize.NoDeltaSteps;
                                             FStar_TypeChecker_Normalize.CompressUvars;
-                                            FStar_TypeChecker_Normalize.NoFullNorm]
+                                            FStar_TypeChecker_Normalize.NoFullNorm;
+                                            FStar_TypeChecker_Normalize.Exclude
+                                              FStar_TypeChecker_Normalize.Zeta]
                                             env c in
                                         let e1 =
                                           FStar_TypeChecker_Normalize.reduce_uvar_solutions
