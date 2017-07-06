@@ -5,6 +5,7 @@ module U32 = FStar.UInt32
 
 open FStar.Seq
 module List = FStar.List.Tot
+module B = FStar.Buffer
 
 type byte = FStar.UInt8.byte
 type bytes = seq byte
@@ -243,12 +244,49 @@ let skip_bytes (n:nat) : validator =
   fun b -> if length b < n then invalid
         else valid n
 
+(*! Stateful validation *)
+
+open FStar.HyperStack
+open FStar.HyperStack.ST
+
+type validation (b:bytes) = option U32.t
+
+unfold let validation_checks_parse #t (b: bytes)
+  (v: validation b)
+  (p: option (t * n:nat{n <= length b})) : Type0 =
+  Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
+
+type lbuffer len = b:B.buffer byte{B.length b == len}
+
+noeq type bslice =
+  | BSlice : len:U32.t -> p:lbuffer (U32.v len) -> bslice
+
+val validate_u16_array_st (input: bslice) : ST (option (U32.t))
+  (requires (fun h0 -> B.live h0 input.p))
+  (ensures (fun h0 r h1 -> B.live h1 input.p /\
+                        h0 == h1 /\
+                        (let bs = B.as_seq h1 input.p in
+                          validation_checks_parse bs r (parse_u16_array bs))))
+let validate_u16_array_st input =
+  // TODO: implement this (see validator.c for a rough sketch using C-like code)
+  admit()
+
+(*! Pure validation *)
+
+// this is analogous to the stateful version, validation_check_parse, but pure
+// validators are a special case of parsers and don't return quite the same
+// thing
+unfold let parser_validation_checks_parse #t (b: bytes)
+  (v: option (unit * n:nat{n <= length b}))
+  (p: option (t * n:nat{n <= length b})) : Type0 =
+  Some? v ==> (Some? p /\ snd (Some?.v v) == snd (Some?.v p))
+
 // NOTE: this proof about the whole validator works better than a function with
 // built-in correctness proof (despite the universal quantifier)
 (** a correctness condition for a validator, stating that it correctly reports
-   when a parser will succeed (the implication only needs to be validated ==>
-   will parse, but this has worked so far) *)
-unfold let validator_checks (v:validator) #t (p: parser t) = forall b. Some? (v b) ==> (Some? (p b) /\ snd (Some?.v (v b)) == snd (Some?.v (p b)))
+    when a parser will succeed (the implication only needs to be validated ==>
+    will parse, but this has worked so far) *)
+unfold let validator_checks (v:validator) #t (p: parser t) = forall b. validation_checks_parse b (v b) (p b)
 
 // this definitions assists type inference by forcing t'=unit; it also makes the
 // code read a bit better
