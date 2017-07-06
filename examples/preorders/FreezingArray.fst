@@ -77,10 +77,12 @@ assume val copy_seq (#a:Type0) (s1:seq (option a)) (i:nat) (j:nat) (s2:seq a)
         (requires (j >= i /\ j <= Seq.length s1 /\ Seq.length s2 = j - i))
 	(ensures  (fun r -> j >= i /\ j <= Seq.length s1 /\ Seq.length s2 = j - i /\
 	                 Seq.length r == Seq.length s1                      /\
+			 (forall (off:nat) (n:nat). (off + n <= Seq.length s1 /\ (off + n <= i \/ j <= off)) ==>
+			                    Seq.slice s1 off (off + n) == Seq.slice r off (off + n))  /\
                          (forall (k:nat).
 			    (k < i ==> (Seq.index r k == Seq.index s1 k)) /\
 			    ((k >= i /\ k < j) ==> (Seq.index r k == Some (Seq.index s2 (k - i)))) /\
-		            ((k >= j /\ k < Seq.length s1) ==> (Seq.index r k == Seq.index s1 k)))))
+		            ((k >= j /\ k < Seq.length s1) ==> (Seq.index r k == Seq.index s1 k))))) 
 
 (*****)
 
@@ -332,8 +334,8 @@ abstract let sub (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n})
   = let A #m s_ref o = arr in
     A #m s_ref (o + i)
 
-let suffix (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i <= n}) = sub arr i (n - i)
-let prefix (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i <= n}) = sub arr 0 i
+let suffix (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i <= n}) = sub arr i (n - i)
+let prefix (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i <= n}) = sub arr 0 i
 
 let lemma_sub_preserves_array_mutable_flag (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (len:nat{i + len <= n})
   :Lemma (requires (witnessed (mutable_pred arr)))
@@ -511,39 +513,6 @@ abstract let read_subseq_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >=
     let s = Seq.slice s i j in
     let s = get_some_equivalent s in
     s
-
-private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
-  :ST unit (requires (fun h0      -> is_mutable arr h0))
-           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
-	                          all_init_i_j arr 0 (Seq.length buf)                    /\
-				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
-				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
-				  is_mutable arr h1))
-  = let A #_ #_ #m s_ref off = arr in
-    let (s, b) = !s_ref in
-    let s1 = copy_seq s off (off + Seq.length buf) buf in
-    s_ref := (s1, b);
-    witness_all_init_i_j arr 0 (Seq.length buf);
-    lemma_get_equivalent_sequence_slice s1 off (off + Seq.length buf) buf
-
-abstract let fill (#a:Type0) (#n:nat) (arr:array a n) (buf:seq a{Seq.length buf <= n})
-  :ST unit (requires (fun h0      -> True))
-           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
-	                          all_init_i_j arr 0 (Seq.length buf)                    /\
-				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
-				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
-				  is_mutable arr h1))
-  = gst_recall (mutable_pred arr);
-    fill_common arr buf
-
-abstract let ffill (#a:Type0) (#n:nat) (arr:farray a n) (buf:seq a{Seq.length buf <= n})
-  :ST unit (requires (fun h0      -> is_mutable arr h0))
-           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
-	                          all_init_i_j arr 0 (Seq.length buf)                    /\
-				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
-				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
-				  is_mutable arr h1))
-  = fill_common arr buf
     
 let lemma_framing_of_is_mutable (#a:Type0) (#n:nat) (arr:t a n) (h0:heap) (h1:heap) (r:Set.set nat)
   :Lemma (requires (modifies r h0 h1 /\ Set.disjoint r (array_footprint arr) /\ h0 `contains_array` arr))
@@ -569,3 +538,67 @@ let lemma_all_init_i_j_sub
       = lemma_sub_init_at arr (k + i) i len
     in
     FStar.Classical.forall_intro aux
+
+(***** disjointness *****)
+
+abstract let disjoint_sibling (#a:Type0) (#n1:nat) (#n2:nat) (arr1:t a n1) (arr2:t a n2) :Type0
+  = let A #_ #_ #m1 s_ref1 off1 = arr1 in
+    let A #_ #_ #m2 s_ref2 off2 = arr2 in
+
+    m1 == m2 /\ s_ref1 === s_ref2  /\
+    ((off1 + n1 <= off2) \/
+     (off2 + n2 <= off1))
+
+let lemma_disjoint_sibling_suffix_prefix (#a:Type0) (#n:nat) (arr:t a n) (pos:nat{pos <= n})
+  :Lemma (disjoint_sibling (prefix arr pos) (suffix arr pos))
+  = ()
+
+let disjoint_siblings_remain_same (#a:Type0) (#n:nat) (arr:t a n) (h0 h1:heap)
+  = forall (m:nat) (arr':t a m). disjoint_sibling arr arr' ==> (as_seq arr' h0 == as_seq arr' h1)
+
+#set-options "--z3rlimit 100"
+private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
+  :ST unit (requires (fun h0      -> is_mutable arr h0))
+           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
+	                          all_init_i_j arr 0 (Seq.length buf)                    /\
+				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
+				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
+				  is_mutable arr h1                                      /\
+				  disjoint_siblings_remain_same arr h0 h1))
+  = let h0 = get () in
+    let A #_ #_ #m s_ref off = arr in
+    let (s, b) = !s_ref in
+    let s1 = copy_seq s off (off + Seq.length buf) buf in
+    assert (forall (off1:nat) (n1:nat). ((off1 + n1 <= m) /\ (off1 + n1 <= off \/ off + n <= off1)) ==>
+                                Seq.slice s off1 (off1 + n1) == Seq.slice s1 off1 (off1 + n1));
+    s_ref := (s1, b);
+    let h1 = ST.get () in
+    witness_all_init_i_j arr 0 (Seq.length buf);
+    lemma_get_equivalent_sequence_slice s1 off (off + Seq.length buf) buf;
+    assert (forall (n1:nat) (arr1:t a n1). disjoint_sibling arr arr1 ==>
+                                   (let A #_ #_ #m1 s_ref1 off1 = arr1 in
+				    m1 == m /\ s_ref1 === s_ref /\ (off1 + n1 <= off \/ off + n <= off1) /\
+				    as_seq arr1 h0 == Seq.slice s off1 (off1 + n1) /\
+				    as_seq arr1 h1 == Seq.slice s1 off1 (off1 + n1)));
+    ()
+
+abstract let fill (#a:Type0) (#n:nat) (arr:array a n) (buf:seq a{Seq.length buf <= n})
+  :ST unit (requires (fun h0      -> True))
+           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
+	                          all_init_i_j arr 0 (Seq.length buf)                    /\
+				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
+				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
+				  is_mutable arr h1                                      /\
+				  disjoint_siblings_remain_same arr h0 h1))
+  = gst_recall (mutable_pred arr);
+    fill_common arr buf
+
+abstract let ffill (#a:Type0) (#n:nat) (arr:farray a n) (buf:seq a{Seq.length buf <= n})
+  :ST unit (requires (fun h0      -> is_mutable arr h0))
+           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
+	                          all_init_i_j arr 0 (Seq.length buf)                    /\
+				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
+				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
+				  is_mutable arr h1                                      /\
+				  disjoint_siblings_remain_same arr h0 h1))
+  = fill_common arr buf
