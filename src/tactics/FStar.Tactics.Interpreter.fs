@@ -265,12 +265,13 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv PC.by_tactic_lid && pol = Neg ->
-        (assertion, []) // Peel away tactics in negative positions, they're assumptions!
-
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv PC.by_tactic_lid && pol = Pos ->
-        let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
-        (FStar.Syntax.Util.t_true, gs)
+    | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
+            when S.fv_eq_lid fv PC.by_tactic_lid ->
+        if pol = Pos then
+            let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
+            (FStar.Syntax.Util.t_true, gs)
+        else
+            (assertion, []) // Peel away tactics in negative positions, they're assumptions!
 
     | _ ->
         (t, [])
