@@ -421,21 +421,26 @@ let rec receive_aux
                       file_out `fully_initialized_in` h1 /\
                       from <= ctr c h1 /\
                       sent_file_pred (as_initialized_seq file_out h1) c from (ctr c h1) h1)))
-     = let sub_file = suffix file pos in
-       match receive sub_file c with
+  =  let h0 = ST.get() in
+     let filled0 = prefix file pos in
+     let filled_bytes0 = iarray_as_seq filled0 in
+     let sub_file = suffix file pos in
+     match receive sub_file c with
        | None -> None
        | Some k -> 
          let filled = prefix file (pos + k) in
          assert (all_init_i_j sub_file 0 k);
          assume (all_init_i_j filled 0 (pos + k));
          recall_all_init_i_j filled 0 (pos + k);
-         let filled_bytes = iarray_as_seq filled in
+         recall_contains filled;
+         let filled_bytes1 = iarray_as_seq filled in
          let h1 = ST.get () in
-         assume (filled `fully_initialized_in` h1);
-         assume (sent_file_pred filled_bytes c from (ctr c h1) h1);
-         if k < fragment_size then begin
-           Some (pos + k)
-         end
+         assert (log c h0 == log c h1);
+         assert (sent_file_pred filled_bytes0 c from (ctr c h0) h0);
+         assert (Seq.index (log c h0) (ctr c h0) == as_initialized_subseq sub_file h1 0 k);
+         assume (filled_bytes1 == flatten (Seq.slice (log c h0) from (ctr c h1)));
+         assert (sent_file_pred filled_bytes1 c from (ctr c h1) h1); 
+         if k < fragment_size then Some (pos + k)
          else if pos + k + fragment_size < n then receive_aux file c h_init from (pos + k)
          else None
 
@@ -472,33 +477,6 @@ let receive_file #n file c =
     gst_witness (sent_file_pred file_bytes1 c from (ctr c h1));
     assert (sent_file file_bytes1 c);
     Some r
-  
-
-  
-  
-  (*       let file = prefix buf position in all_init file /\ sent_file file c from)) *)
-  (*       (ensures  (fun h0 p h1 -> modifies {c} h0 h1 /\ (Some? p ==> received buf (Some?.v popt) c))) *)
-  (*   = match Protocol.receive (suffix file position) c with *)
-  (*         | None -> None *)
-  (*         | Some k -> *)
-  (*           if k < max_fragment_size || position + k = n then *)
-  (*              let file = prefix buf (postition + k) in *)
-  (*              witness (sent_file file c from); *)
-  (*              Some (position + k) *)
-  (*           else if position + k + max_fragment_size < n then aux (postition + k) *)
-  (*           else None *)
-  (* in aux 0 *)
-
-
-
-    (*   recall_all_init file; *)
-    (*     recall_contains file; *)
-    (*     recall_connection c; *)
-
-    (*     assume (Set.disjoint (connection_footprint c) (array_footprint file)); *)
-
-
-
 
           (* assert (pos + num_sent <= n); *)
           (* let num_chunks = num_chunks + 1 in *)
