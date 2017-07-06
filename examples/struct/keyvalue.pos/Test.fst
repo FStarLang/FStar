@@ -277,11 +277,8 @@ let parse_u16_st : parser_st (parse_u16) = fun input ->
   else let b0 = B.index input.p (U32.uint_to_t 0) in
        let b1 = B.index input.p (U32.uint_to_t 1) in
        let twobytes = append (create 1 b0) (create 1 b1) in
-       // TODO: need to get the current heap ghostly in order to assert that
-       // twobytes is actually a slice of the input buffer, viewed as a seq
-       let h: mem = admit() in
+       let h = get() in
        lemma_eq_intro twobytes (slice (as_seq h input) 0 2);
-       assert (twobytes == slice (as_seq h input) 0 2);
        let n = u16_from_be twobytes in
        Some (n, U32.uint_to_t 2)
 
