@@ -33,7 +33,7 @@ type computation =
     fuel_monotonic g
   })
 
-let reify_computation (c: computation) : Tot reified_computation =
+let reify_computation (c: computation) : GTot reified_computation =
   let f n = reify (c n) in
   f
 
@@ -62,94 +62,36 @@ let assign (r: var) (n: exp int) : Tot computation =
   in
   g
 
-(* FIXME: WHY WHY WHY does this NOT work?
-<<
 let ifthenelse (b: exp bool) (c1 c2: computation) : Tot computation =
   let g (fuel: nat) : ISNull bool =
     if b () then c1 fuel else c2 fuel
   in
+  assert (
+    let f : reified_raw_computation =
+      let h fuel = reify (g fuel) in h
+    in
+    let f1 = reify_computation c1 in
+    let f2 = reify_computation c2 in
+    let e = reify_exp b in (
+    (forall fuel h . fst (e h) == true ==> f fuel h == f1 fuel h) /\
+    (forall fuel h . fst (e h) == false ==> f fuel h == f2 fuel h)
+  ));
   g
->>
-*)
-
-let ifthenelse_raw (b: exp bool) (c1 c2: computation) (fuel: nat) : ISNull bool =
-  if b () then c1 fuel else c2 fuel
-
-let reified_ifthenelse_raw
-  (b: exp bool)
-  (c1 c2: computation)
-  (fuel: nat)
-  (h: heap)
-: GTot (bool * heap)
-= reify (ifthenelse_raw b c1 c2 fuel) h
-
-let fuel_monotonic_ifthenelse
-  (b: exp bool)
-  (c1 c2: computation)
-  (f: reified_raw_computation)
-: Lemma
-  (requires (forall fuel h . f fuel h == reified_ifthenelse_raw b c1 c2 fuel h))
-  (ensures (
-    fuel_monotonic f
-  ))
-= let fb = reify (b ()) in
-  let fc1 fuel = reify (c1 fuel) in
-  let fc2 fuel = reify (c2 fuel) in
-  let g
-    (fuel: nat)
-    (h: heap)
-  : Lemma (
-      f fuel h == (
-      if fst (fb h) then fc1 fuel h else fc2 fuel h
-    ))
-  = assert (
-      f fuel h == (
-      if fst (fb h) then fc1 fuel h else fc2 fuel h
-    ))
-  in
-  Classical.forall_intro_2 g
-
-let ifthenelse (b: exp bool) (c1 c2: computation) : Tot computation =
-  let f : raw_computation = ifthenelse_raw b c1 c2 in
-  let g (fuel: nat) (h: heap) : GTot (bool * heap) = reify (f fuel) h in
-  fuel_monotonic_ifthenelse b c1 c2 g;
-  f
-
-let seq_raw (c1 c2: computation) (fuel: nat) : ISNull bool =
-  if c1 fuel then c2 fuel else false
-
-let reified_seq_raw
-  (c1 c2: computation)
-  (fuel: nat)
-  (h: heap)
-: GTot (bool * heap)
-= reify (seq_raw c1 c2 fuel) h
-
-let fuel_monotonic_seq
-  (c1 c2: computation)
-  (f: reified_raw_computation)
-: Lemma
-  (requires (forall fuel h . f fuel h == reified_seq_raw c1 c2 fuel h))
-  (ensures (fuel_monotonic f))
-= let prf
-    (fuel fuel' : nat)
-    (h : heap)
-  : Lemma
-    (requires (
-      fuel <= fuel' /\
-      fst (f fuel h) == true
-    ))
-    (ensures (f fuel' h == f fuel h))
-  = let z1 = reify (c1 fuel) in
-    assert (fst (z1 h) == true)
-  in
-  Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf x y))
 
 let seq (c1 c2: computation) : Tot computation =
-  let f : raw_computation = seq_raw c1 c2 in
-  let g (fuel: nat) (h: heap) : GTot (bool * heap) = reify (f fuel) h in
-  fuel_monotonic_seq c1 c2 g;
-  f
+  let g (fuel: nat) : ISNull bool =
+    if c1 fuel then c2 fuel else false
+  in
+  assert (
+    let f : reified_raw_computation =
+      let h fuel = reify (g fuel) in h
+    in
+    let f1 = reify_computation c1 in
+    let f2 = reify_computation c2 in
+    (forall fuel h . fst (f fuel h) == true <==> (fst (f1 fuel h) == true /\ fst (f2 fuel (snd (f1 fuel h))) == true)) /\
+    (forall fuel h . fst (f fuel h) == true ==> f fuel h == f2 fuel (snd (f1 fuel h)))
+  );
+  g
 
 let rec while_raw (b: exp bool) (c: computation) (fuel: nat) : ISNull bool (decreases fuel) =
   if b ()
@@ -162,71 +104,18 @@ let rec while_raw (b: exp bool) (c: computation) (fuel: nat) : ISNull bool (decr
     else false
   else true
 
-let reify_while_raw_intro_true
-  (b: exp bool)
-  (c: computation)
-  (f: reified_raw_computation)
-  (fuel: nat)
-  (h: heap)
-  (h1: heap)
-: Lemma
-  (requires (
-    (forall fuel h . f fuel h == reify (while_raw b c fuel) h) /\
-    fst (reify (b ()) h) == true /\
-    reify (c fuel) h == (true, h1) /\
-    fuel > 0
-  ))
-  (ensures (
-    fuel > 0 /\
-    f fuel h == f (fuel - 1) h1
-  ))
-= let (b0, h0) = reify (b ()) h in // WHY is this needed?
-  ()
-
-let reify_while_raw_intro_false
-  (b: exp bool)
-  (c: computation)
-  (f: reified_raw_computation)
-  (fuel: nat)
-  (h: heap)
-: Lemma
-  (requires (
-    (forall fuel h . f fuel h == reify (while_raw b c fuel) h) /\
-    fst (reify (b ()) h) == false
-  ))
-  (ensures (
-    f fuel h == (true, h)
-  ))
-= let (b0, h0) = reify (b ()) h in // WHY is this needed?
-  ()
-
-let reify_while_raw_elim_true
-  (b: exp bool)
-  (c: computation)
-  (f: reified_raw_computation)
-  (fuel: nat)
-  (h: heap)
-: Lemma
-  (requires (
-    (forall fuel h . f fuel h == reify (while_raw b c fuel) h) /\
-    fst (reify (b ()) h) == true /\
-    fst (f fuel h) == true
-  ))
-  (ensures (
-    fuel > 0 /\
-    fst (reify (c fuel) h) == true
-  ))
-= let (b0, h0) = reify (b ()) h in // WHY is this needed?
-  ()
-
 let fuel_monotonic_while
   (b: exp bool)
   (c: computation)
   (f: reified_raw_computation)
 : Lemma
   (requires (forall fuel h . f fuel h == reify (while_raw b c fuel) h))
-  (ensures (fuel_monotonic f))
-= let _ : squash (forall fuel h . f fuel h == reify (while_raw b c fuel) h) = () in // WHY is this needed?
+  (ensures (
+    fuel_monotonic f
+  ))
+= let f (fuel: nat) = reify (while_raw b c fuel) in
+  let fb = reify_exp b in
+  let fc = reify_computation c in
   let rec prf
     (fuel fuel' : nat)
     (h: heap)
@@ -239,24 +128,18 @@ let fuel_monotonic_while
     (decreases fuel)
   = let (_, h1) = f fuel h in
     let (_, h1') = f fuel' h in
-    let (b0, _) = reify (b ()) h in
+    let (b0, _) = fb h in
     if b0
     then begin
-      reify_while_raw_elim_true b c f fuel h;
-      let (_, h') = reify (c fuel) h in
-      reify_while_raw_intro_true b c f fuel h h';
-      reify_while_raw_intro_true b c f fuel' h h';
+      let (_, h') = fc fuel h in
       prf (fuel - 1) (fuel' - 1) h'
-    end else begin
-      reify_while_raw_intro_false b c f fuel h;
-      reify_while_raw_intro_false b c f fuel' h
-    end
+    end else ()
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (prf x y))
 
 let while (b: exp bool) (c: computation) : Tot computation =
   let f : raw_computation = while_raw b c in
-  let g (fuel: nat) (h: heap) : GTot (bool * heap) = reify (f fuel) h in
+  let g (fuel: nat) = reify (f fuel) in
   fuel_monotonic_while b c g;
   f
 
@@ -651,36 +534,7 @@ let d_seq_terminates_recip
   (ensures (
     terminates_on (reify_computation (seq c01 c12)) s0
   ))
-= let f01 = reify_computation c01 in
-  let f01' = reify_computation c01' in
-  let f12 = reify_computation c12 in
-  let f12' = reify_computation c12' in
-  let f = reify_computation (seq c01 c12) in
-  let f' = reify_computation (seq c01' c12') in
-  let g
-    (fuel: nat)
-  : Lemma
-    (requires (fst (f01 fuel s0) == true /\ fst (f01' fuel s0') == true))
-    (ensures (terminates_on f s0))
-  = let k01 = f01 fuel s0 in
-    let k01' = f01' fuel s0' in
-    let s1 = snd k01 in
-    let s1' = snd k01' in
-    assert (holds p1 s1 s1');
-    assert (terminates_on f12' s1');
-    let g'
-      (fuel' : nat)
-    : Lemma
-      (requires (fst (f12' fuel' s1') == true))
-      (ensures (terminates_on f s0))
-    = assert (f01' (fuel + fuel') s0' == (true, s1'));
-      assert (f12' (fuel + fuel') s1' == f12' fuel' s1');
-      assert (f' (fuel + fuel') s0' == f12' (fuel + fuel') s1');
-      assert (fst (f' (fuel + fuel') s0') == true)
-    in
-    Classical.forall_intro (Classical.move_requires g')
-  in
-  Classical.forall_intro (Classical.move_requires g)
+= d_seq_terminates (flip p0) (flip p1) (flip p2) c01' c01 c12' c12 s0' s0
 
 let d_seq
   (p0 p1 p2 : sttype)
