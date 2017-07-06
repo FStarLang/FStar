@@ -1,5 +1,5 @@
 [
-  "ByiáOŽƒ‚Õ\u0007\rˆª¤\u0001–",
+  "\t´\u0007ŒRH?0à·†ÓÎºîí",
   [
     [ "FreezingArray.init_at_seq", 1, 2, 1, [ "@query" ], 0 ],
     [ "FreezingArray.all_some", 1, 2, 1, [ "@query" ], 0 ],
@@ -2082,6 +2082,76 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
+      ],
+      0
+    ],
+    [
+      "FreezingArray.lemma_disjoint_sibling_suffix_prefix",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
+      ],
+      0
+    ],
+    [
+      "FreezingArray.lemma_disjoint_sibling_suffix_prefix",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
+      ],
+      0
+    ],
+    [
+      "FreezingArray.lemma_disjoint_sibling_remain_same_for_unrelated_mods",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "eq2-interp", "eq3-interp",
+        "equation_FStar.ST.mref", "equation_FreezingArray.array_footprint",
+        "equation_FreezingArray.contains_array",
+        "equation_FreezingArray.disjoint_sibling",
+        "equation_FreezingArray.disjoint_siblings_remain_same",
+        "equation_Prims.nat", "fuel_guarded_inversion_FreezingArray.t",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "l_and-interp", "lemma_FreezingArray.lemma_framing_of_as_seq",
+        "refinement_interpretation_FreezingArray_Tm_refine_2c416b08b7f1b7a132ec752993db60ed",
+        "refinement_interpretation_FreezingArray_Tm_refine_8925174e563830f49d5167af2ec946be",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FreezingArray.lemma_disjoint_sibling_remain_same_for_unrelated_mods",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FreezingArray.lemma_disjoint_sibling_remain_same_transitive",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FreezingArray.disjoint_siblings_remain_same",
+        "fuel_guarded_inversion_FreezingArray.t", "unit_typing"
       ],
       0
     ],
