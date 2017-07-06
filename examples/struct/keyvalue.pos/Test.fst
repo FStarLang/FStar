@@ -331,7 +331,14 @@ let validate =
 (*! API using validated but unparsed key-value buffer *)
 
 // sufficient to expose iteration over the key-value pairs (specifically pointers to them)
-// TODO: write this in stateful F*; not clear what a useful pure model would be
+
+// TODO: write this in stateful F*; it might actually be easier to talk about
+// the stack variables of a partially run parser being correct than to write proofs
+// about pure functions.
+
+// TODO: Another aspect to verify is that the bounds checks can be skipped. This
+// can be done even in pure F*, but is more obvious in effectful F* where we
+// prove safety of pointer arithmetic.
 
 // spec: fold over fully parsed store
 val fold_left_store: f:('a -> encoded_entry -> 'a) -> 'a -> s:store -> 'a
