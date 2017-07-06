@@ -431,7 +431,7 @@ let received (#n:nat) (file:iarray byte n) (c:connection) (h:heap) =
     file `fully_initialized_in` h /\
     sent_file (as_initialized_seq file h) c
 
-let rec receive_aux
+val receive_aux
           (#n:nat)
           (file:array byte n)
           (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
@@ -458,13 +458,16 @@ let rec receive_aux
                       file_out `fully_initialized_in` h1 /\
                       from <= ctr c h1 /\
                       sent_file_pred (as_initialized_seq file_out h1) c from (ctr c h1) h1)))
-  =  let h0 = ST.get() in
+let rec receive_aux #n file c h_init from pos
+   = let h0 = ST.get() in
      let filled0 = prefix file pos in
      let filled_bytes0 = iarray_as_seq filled0 in
      let sub_file = suffix file pos in
      match receive sub_file c with
        | None -> None
        | Some k -> 
+         let filled_bytes0' = iarray_as_seq filled0 in
+         assume (filled_bytes0 == filled_bytes0');
          let filled = prefix file (pos + k) in
          assert (all_init_i_j sub_file 0 k);
          assume (all_init_i_j filled 0 (pos + k));
@@ -472,11 +475,17 @@ let rec receive_aux
          recall_contains filled;
          let filled_bytes1 = iarray_as_seq filled in
          let h1 = ST.get () in
-         assert (log c h0 == log c h1);
-         assert (sent_file_pred filled_bytes0 c from (ctr c h0) h0);
-         assert (Seq.index (log c h0) (ctr c h0) == as_initialized_subseq sub_file h1 0 k);
-         assume (filled_bytes1 == flatten (Seq.slice (log c h0) from (ctr c h1)));
-         assert (sent_file_pred filled_bytes1 c from (ctr c h1) h1); 
+         let _ : unit = 
+           let received_frag = as_initialized_subseq sub_file h1 0 k in
+           assert (log c h0 == log c h1);
+           assert (sent_file_pred filled_bytes0 c from (ctr c h0) h0);
+           assert (filled_bytes0 == flatten (Seq.slice (log c h0) from (ctr c h0)));
+           assume (filled_bytes1 == append filled_bytes0 received_frag);
+           assert (Seq.index (log c h0) (ctr c h0) == received_frag);
+           lemma_flatten_snoc (Seq.slice (log c h0) from (ctr c h0)) received_frag;
+           assert (filled_bytes1 == flatten (Seq.slice (log c h0) from (ctr c h1)));
+           assert (sent_file_pred filled_bytes1 c from (ctr c h1) h1)
+         in
          if k < fragment_size then Some (pos + k)
          else if pos + k + fragment_size < n then receive_aux file c h_init from (pos + k)
          else None
