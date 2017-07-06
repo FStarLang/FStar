@@ -469,6 +469,22 @@ let append_filled #a #n (f:array a n) (pos:nat{pos < n}) (next:nat{pos + next < 
            Seq.equal b1 (append b0 received_frag)))
    = ()            
 
+let extend_initialization #a #n (f:array a n) (pos:nat{pos<n}) (next:nat{pos+next < n}) (h:heap)
+  : Lemma (requires (let f0 = prefix f pos in
+                     let f_next = prefix (suffix f pos) next in
+                     f0 `fully_initialized_in` h /\
+                     f_next `fully_initialized_in` h))
+          (ensures (prefix f (pos + next) `fully_initialized_in` h))
+  = let f0 = as_seq (prefix f pos) h in
+    let f_next = as_seq (prefix (suffix f pos) next) h in
+    let f1 = as_seq (prefix f (pos + next)) h in
+    let aux (i:nat{i < pos + next}) : Lemma (Some? (Seq.index (as_seq (prefix f (pos + next)) h) i)) =
+        if i < pos then assert (Seq.index f1 i == Seq.index f0 i)
+        else assert (Seq.index f1 i == Seq.index f_next (i - pos))
+    in
+    FStar.Classical.forall_intro aux
+
+
 let rec receive_aux #n file c h_init from pos
    = let h0 = ST.get() in
      let filled0 = prefix file pos in
@@ -477,15 +493,15 @@ let rec receive_aux #n file c h_init from pos
      match receive sub_file c with
        | None -> None
        | Some k -> 
-         let filled_bytes0' = iarray_as_seq filled0 in
-         assume (filled_bytes0 == filled_bytes0');
-         let filled = prefix file (pos + k) in
-         assert (all_init_i_j sub_file 0 k);
-         assume (all_init_i_j filled 0 (pos + k));
-         recall_all_init_i_j filled 0 (pos + k);
-         recall_contains filled;
-         let filled_bytes1 = iarray_as_seq filled in
          let h1 = ST.get () in
+         let filled_bytes0' = iarray_as_seq filled0 in
+         assume (filled_bytes0 == filled_bytes0'); //NS: This property requires a stronger postconditino from receive; we need to know that anything outside sub_file isn't modified
+         let filled = prefix file (pos + k) in
+         recall_all_init_i_j sub_file 0 k;
+         recall_contains filled;
+         extend_initialization file pos k h1;
+         witness_all_init filled;
+         let filled_bytes1 = iarray_as_seq filled in
          let _ : unit = 
            let received_frag = as_initialized_subseq sub_file h1 0 k in
            assert (log c h0 == log c h1);
@@ -534,21 +550,3 @@ let receive_file #n file c =
     gst_witness (sent_file_pred file_bytes1 c from (ctr c h1));
     assert (sent_file file_bytes1 c);
     Some r
-
-          (* assert (pos + num_sent <= n); *)
-          (* let num_chunks = num_chunks + 1 in *)
-
-          (* assert (from + num_chunks <= Seq.length log1); *)
-
-	  (* assume (Seq.slice (as_seq file h0) 0 (pos + num_sent) == *)
-	  (*         Seq.append (Seq.slice (as_seq file h0) 0 pos) (Seq.slice (as_seq file h0) pos (pos + num_sent))); *)
-	  (* lemma_get_equivalent_append (Seq.slice (as_seq file h0) 0 (pos + num_sent)) *)
-	  (*                             (Seq.slice (as_seq file h0) 0 pos) (Seq.slice (as_seq file h0) pos (pos + num_sent)); *)
-
-          (* assert (as_initialized_subseq file h0 0 (pos + num_sent) == *)
-	  (*         Seq.append (as_initialized_subseq file h0 0 pos) (as_initialized_subseq file h0 pos (pos + num_sent))); *)
-          
-
-          (* assert (log1 ==  *)
-
-
