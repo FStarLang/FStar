@@ -223,6 +223,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
 					      h0 `contains_connection` c   /\
 					      h1 `contains_connection` c   /\
 					      modifies_r c buf h0 h1       /\
+					      disjoint_siblings_remain_same buf h0 h1 /\
 					      r <= fragment_size            /\
 					      all_init_i_j buf 0 r         /\
 					      ctr c h1 = ctr c h0 + 1      /\
@@ -250,7 +251,11 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
       gst_witness (counter_pred (i0 + 1) es_ref);
       recall_contains buf;
       ST.write ctr_ref (i0 + 1);
+      let h1 = ST.get () in
+      lemma_disjoint_sibling_remain_same_for_unrelated_mods buf (Set.singleton (addr_of (ctr_ref))) h0 h1;
       fill buf m;
+      let h2 = ST.get () in
+      lemma_disjoint_sibling_remain_same_transitive buf h0 h1 h2;
       Some len
 #reset-options
 
@@ -499,7 +504,8 @@ let rec receive_aux #n file c h_init from pos
        | Some k -> 
          let h1 = ST.get () in
          let filled_bytes0' = iarray_as_seq filled0 in
-         assume (filled_bytes0 == filled_bytes0'); //NS: This property requires a stronger postconditino from receive; we need to know that anything outside sub_file isn't modified
+	 lemma_disjoint_sibling_suffix_prefix file pos;
+         assert (filled_bytes0 == filled_bytes0');
          let filled = prefix file (pos + k) in
          recall_all_init_i_j sub_file 0 k;
          recall_contains filled;

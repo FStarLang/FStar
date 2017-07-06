@@ -550,11 +550,24 @@ abstract let disjoint_sibling (#a:Type0) (#n1:nat) (#n2:nat) (arr1:t a n1) (arr2
      (off2 + n2 <= off1))
 
 let lemma_disjoint_sibling_suffix_prefix (#a:Type0) (#n:nat) (arr:t a n) (pos:nat{pos <= n})
-  :Lemma (disjoint_sibling (prefix arr pos) (suffix arr pos))
+  :Lemma (disjoint_sibling (prefix arr pos) (suffix arr pos) /\
+          disjoint_sibling (suffix arr pos) (prefix arr pos))
   = ()
 
 let disjoint_siblings_remain_same (#a:Type0) (#n:nat) (arr:t a n) (h0 h1:heap)
   = forall (m:nat) (arr':t a m). disjoint_sibling arr arr' ==> (as_seq arr' h0 == as_seq arr' h1)
+
+let lemma_disjoint_sibling_remain_same_for_unrelated_mods
+  (#a:Type0) (#n:nat) (arr:t a n) (r:Set.set nat{Set.disjoint r (array_footprint arr)}) (h0:heap) (h1:heap{modifies r h0 h1})
+  :Lemma (requires (h0 `contains_array` arr))
+         (ensures (disjoint_siblings_remain_same arr h0 h1))
+  = ()
+
+let lemma_disjoint_sibling_remain_same_transitive
+  (#a:Type0) (#n:nat) (arr:t a n) (h0 h1 h2:heap)
+  :Lemma (requires (disjoint_siblings_remain_same arr h0 h1 /\ disjoint_siblings_remain_same arr h1 h2))
+         (ensures  (disjoint_siblings_remain_same arr h0 h2))
+  = ()
 
 #set-options "--z3rlimit 100"
 private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
