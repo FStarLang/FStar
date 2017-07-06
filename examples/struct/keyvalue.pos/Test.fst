@@ -282,6 +282,19 @@ let parse_u16_st : parser_st (parse_u16) = fun input ->
        let n = u16_from_be twobytes in
        Some (n, U32.uint_to_t 2)
 
+let parse_u32_st : parser_st (parse_u32) = fun input ->
+  if U32.lt input.len (U32.uint_to_t 4)
+    then None
+  else let b0 = B.index input.p (U32.uint_to_t 0) in
+       let b1 = B.index input.p (U32.uint_to_t 1) in
+       let b2 = B.index input.p (U32.uint_to_t 2) in
+       let b3 = B.index input.p (U32.uint_to_t 3) in
+       let fourbytes = create 1 b0 `append` create 1 b1 `append` create 1 b2 `append` create 1 b3 in
+       let h = get() in
+       lemma_eq_intro fourbytes (slice (as_seq h input) 0 4);
+       let n = u32_from_be fourbytes in
+       Some (n, U32.uint_to_t 4)
+
 module Cast = FStar.Int.Cast
 
 val validate_u16_array_st (input: bslice) : ST (option U32.t)
@@ -294,7 +307,26 @@ let validate_u16_array_st input =
   match parse_u16_st input with
   | Some (n, off) -> begin
       let n: U32.t = Cast.uint16_to_uint32 n in
-      let total_len = U32.add n (U32.uint_to_t 2) in
+      let total_len = U32.add n off in
+      if U32.lt input.len total_len then None
+      else Some total_len
+    end
+  | None -> None
+
+val validate_u32_array_st (input: bslice) : ST (option U32.t)
+  (requires (fun h0 -> B.live h0 input.p))
+  (ensures (fun h0 r h1 -> B.live h1 input.p /\
+                        h0 == h1 /\
+                        (let bs = B.as_seq h1 input.p in
+                          validation_checks_parse bs r (parse_u32_array bs))))
+let validate_u32_array_st input =
+  match parse_u32_st input with
+  | Some (n, off) -> begin
+      assert (U32.v off == 4);
+      // TODO: how did we know the addition doesn't overflow in
+      // validate_u16_array?
+      assume (U32.v n + U32.v off < pow2 32);
+      let total_len = U32.add n off in
       if U32.lt input.len total_len then None
       else Some total_len
     end
