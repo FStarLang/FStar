@@ -425,8 +425,6 @@ let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoi
     assert (sent_file file_bytes0 c)
 
 
-let receiver c = not (sender c)
-
 let received (#n:nat) (file:iarray byte n) (c:connection) (h:heap) =
     file `fully_initialized_in` h /\
     sent_file (as_initialized_seq file h) c
