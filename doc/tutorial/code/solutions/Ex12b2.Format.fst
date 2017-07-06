@@ -1,4 +1,4 @@
-module Ex12b.Format
+module Ex12b2.Format
 
 open FStar.String
 open Platform.Bytes         //This shadows length, index etc. from FStar.Seq, for no good reason?
@@ -11,11 +11,13 @@ type msg (l:nat) = lbytes l
 // END: FormatMsg
 
 (* ----- a lemma on array append *)
+// BEGIN: FormatAppend
 val append_inj_lemma: b1:message -> b2:message
                    -> c1:message -> c2:message
                    -> Lemma (requires (length b1==length c1 /\ b2t (Seq.eq (b1 @| b2) (c1 @| c2))))
                             (ensures (b2t (Seq.eq b1 c1) /\ b2t (Seq.eq b2 c2)))
                             [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
+// END: FormatAppend
 let append_inj_lemma b1 b2 c1 c2 =
   lemma_append_len_disj b1 b2 c1 c2;
   Classical.forall_intro #_ #(fun (x:(i:nat{i < length b1})) -> index b1 x == index c1 x) (lemma_append_inj_l b1 b2 c1 c2); //sadly, the 2nd implicit argument has to be provided explicitly
@@ -75,9 +77,9 @@ let response s t =
 
 (* ------- 3 lemmas on message formats:
 
+   - requests and responses are distinct
    - requests are injective on their argument
    - responses are injective on both their arguments
-   - requests and responses are distinct
 
    Note that we do not export a "spec" of the request and response
    functions---they just return messages---so these three lemmas are
@@ -90,13 +92,13 @@ val req_resp_distinct:
         (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
 
-val req_components_corr:
+val req_injective:
   s0:string -> s1:string ->
   Lemma (requires (b2t (Seq.eq (request s0) (request s1))))
         (ensures  (s0==s1))
         (*[SMTPat (request s0); SMTPat (request s1)]*)
 
-val resp_components_corr:
+val resp_injective:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
   Lemma (requires (b2t (Seq.eq (response s0 t0) (response s1 t1))))
         (ensures  (s0==s1 /\ t0==t1))
@@ -110,9 +112,9 @@ let req_resp_distinct s s' t' =
   assert (Seq.index (request s) 0 == Char.char_of_int 0);
   assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
 
-let req_components_corr s0 s1 = ()
+let req_injctive s0 s1 = ()
 
-let resp_components_corr s0 t0 s1 t1 =
+let resp_injective s0 t0 s1 t1 =
   lemma_repr_bytes_values (length (utf8 s0));
   lemma_repr_bytes_values (length (utf8 s1))
 // END: FormatProofs
