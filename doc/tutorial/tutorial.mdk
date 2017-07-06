@@ -5029,8 +5029,8 @@ ending with 0s.
 ~
 
 ~ Exercise
-Relying on that specification, implement and verify a MAC interface
-for messages of type `text`, i.e., of less than `blocksize` bytes,
+Relying on that specification of `encode`, implement and verify a MAC interface
+for messages of type `text` of less than `blocksize` bytes,
 using the MAC interface below, which only supports messages of type
 `block`.
 
@@ -5041,13 +5041,14 @@ To this end, we assume given an implementation of the following module
 [INCLUDE=code/exercises/Ex12.BMAC.fst]
 ```
 
-Write a similar module that accepts texts instead of blocks:
-first the implementations for `keygen`, `mac`, and `verify`,
-then type annotations to derive their authentication property
+Write a similar module that accepts texts shorter than `blocksize` instead of blocks:
+
+Write the implementations for `keygen`, `mac`, and `verify`, first
+then devise type annotations to derive their authentication property
 (on `texts`) from the one of `BMAC` (on `blocks`).
 
 ~~ ExerciseFragment {exname=Ex12f.TMAC}
-[INCLUDE=code/exercises/Ex12f.TMAC.fst:TMACEx
+[INCLUDE=code/exercises/Ex12f.TMAC.fst:TMACEx]
 ~~
 
 ~~ Answer
