@@ -164,9 +164,39 @@ let fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))
  /\ Map.contains m1 i
 
+(* KM : surprisingly, using the Tot version makes an assert fail in HyperStack... to be investigated *)
+let contains_ref_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) : Type0 =
+  Map.contains m i /\ Map.sel m i `Heap.contains` r
+
+let contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) :GTot bool  =
+  Map.contains m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
+
+let unused_in_tot (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :Tot Type0 =
+  ~(Map.contains m i) \/ Heap.unused_in (as_ref r) (Map.sel m i)
+
+let unused_in (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool =
+not (Map.contains m i) ||
+FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
+
+let weak_contains_ref_tot (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : Tot Type0 =
+Heap.contains (Map.sel m i) r
+
+let weak_contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : GTot bool =
+FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
+
+
+let sel_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{m `contains_ref` r})
+  : Tot a
+= sel_tot (Map.sel m i) (as_ref r)
+
 let sel (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) : GTot a
   = sel (Map.sel m i) (as_ref r)
 unfold let op_String_Access (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) = sel m r
+
+
+let upd_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{m `contains_ref` r}) (v:a{rel (sel m r) v})
+  : Tot t
+= Map.upd m i (upd_tot (Map.sel m i) (as_ref r) v)
 
 let upd (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) (v:a{rel (sel m r) v}) :GTot t
   = Map.upd m i (upd (Map.sel m i) (as_ref r) v)
@@ -175,6 +205,19 @@ unfold let op_String_Assignment (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mr
 let alloc (id:rid) (#a:Type0) (rel:preorder a) (m:t) (init:a) (mm:bool) : Tot (mrref id a rel * t) =
   let (r, h) : mref a rel * heap = alloc rel (Map.sel m id) init mm in
   r, Map.upd m id h
+
+let free_mm (#a:Type0) (#id:rid) (#rel:preorder a) (m:t) (r:mrref id a rel{m `contains_ref` r /\ is_mm r}) : GTot t =
+  let h0 = Map.sel m id in
+  let h1 = Heap.free_mm h0 (as_ref r) in
+  Map.upd m id h1
+
+abstract
+let free_mm_tot (#a:Type0) (#id:rid) (#rel:preorder a) (m:t) (r:mrref id a rel{m `contains_ref` r /\ is_mm r}) : Tot t =
+  let h0 = Map.sel m id in
+  let h1 = Heap.free_mm h0 r in
+  Map.upd m id h1
+
+let lemma_free_mm_coincides (#a:Type0) (#id:rid) (#rel:preorder a) (m:t) (r:mrref id a rel{m `contains_ref` r /\ is_mm r}) : Lemma (free_mm m r == free_mm_tot m r) = ()
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
@@ -242,17 +285,6 @@ let lemma_disjoint_parents pr r ps s =
     assert (pr `includes` r);
     assert (ps `includes` s)
 
-(* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
-let contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool  =
-  Map.contains m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
-
-let unused_in (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool =
-  not (Map.contains m i) ||
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
-
-let weak_contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : GTot bool =
-  FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
-
 let fresh_rref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m0:t) (m1:t) =
   FStar.Monotonic.Heap.unused_in (as_ref r) (Map.sel m0 i) /\
   FStar.Monotonic.Heap.contains (Map.sel m1 i) (as_ref r)
@@ -313,3 +345,13 @@ let root_is_root (s:rid)
           (ensures (s == root))
           [SMTPat (includes s root)]
   = ()
+
+let lemma_sel_equals_sel_tot_for_contained_refs
+  (#a:Type) (#i:rid) (#rel:preorder a) (m:t) (r:mrref i a rel{m `contains_ref` r})
+  : Lemma (ensures (sel_tot m r == sel m r))
+= ()
+
+let lemma_upd_equals_upd_tot_for_contained_refs
+  (#a:Type) (#i:rid) (#rel:preorder a) (m:t) (r:mrref i a rel{m `contains_ref` r}) (v:a{rel (sel m r) v})
+  : Lemma (ensures (upd_tot m r v == upd m r v))
+= ()

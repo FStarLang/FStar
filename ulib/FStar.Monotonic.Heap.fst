@@ -1,4 +1,4 @@
-mvalidodule FStar.Monotonic.Heap
+module FStar.Monotonic.Heap
 
 open FStar.Preorder
 open FStar.Classical

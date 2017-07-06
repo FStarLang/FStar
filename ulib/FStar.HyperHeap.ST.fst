@@ -49,7 +49,7 @@ assume val new_colored_region: r0:rid -> c:int -> ST rid
 			/\ color r1 = c
                         /\ m1==Map.upd m0 r1 Heap.emp))
 
-unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) =
     let region_i = Map.sel m0 i in
     ~ (Heap.contains region_i (as_ref x))
   /\ m1==(m0.[x]<-init)

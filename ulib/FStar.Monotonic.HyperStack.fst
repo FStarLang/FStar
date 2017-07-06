@@ -70,13 +70,13 @@ let eternal_region_does_not_overlap_with_tip (m:mem) (r:rid{is_eternal_region r 
 	  (ensures (~ (r `is_in` m.h)))
   = root_has_color_zero()
 
-let poppable m = m.tip <> HH.root
+let poppable m = m.tip =!= HH.root
 
 let remove_elt (#a:eqtype) (s:Set.set a) (x:a) = Set.intersect s (Set.complement (Set.singleton x))
 
 let popped m0 m1 =
   poppable m0
-  /\ HH.parent m0.tip = m1.tip
+  /\ HH.parent m0.tip == m1.tip
   /\ Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip)
   /\ Map.equal m1.h (Map.restrict (Map.domain m1.h) m0.h)
 
@@ -127,7 +127,7 @@ let weak_live_region (m:mem) (i:rid) =
 
 let contains (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel) =
   live_region m s.id
-  /\ HH.contains_ref s.ref m.h
+  /\ HH.contains_ref m.h s.ref
 
 let unused_in (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
   ~ (live_region h r.id) \/
@@ -160,7 +160,7 @@ let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.
   = HS (m.h.[s.ref] <- v) m.tip
 
 let equal_domains (m0:mem) (m1:mem) =
-  m0.tip = m1.tip
+  m0.tip == m1.tip
   /\ Set.equal (Map.domain m0.h) (Map.domain m1.h)
   /\ (forall r. Map.contains m0.h r ==> Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r))
 
@@ -209,15 +209,15 @@ let lemma_pop_is_popped (m0:mem{poppable m0})
   = let m1 = pop m0 in
     assert (Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip))
 
-type s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{s.id = i}
+type s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{s.id == i}
 
 let frameOf #a #rel (s:mreference a rel) = s.id
 
-let as_ref #a #rel (x:mreference a rel)  : GTot (Heap.mref a rel) = HH.as_ref #a #x.id x.ref
+let as_ref #a #rel (x:mreference a rel)  : Tot (Heap.mref a rel) = HH.as_ref #a #x.id x.ref
 let as_addr #a #rel (x:mreference a rel) : GTot nat = Heap.addr_of (HH.as_ref #a #x.id x.ref)
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
-  HH.modifies_rref id s h0.h h1.h /\ h1.tip=h0.tip
+  HH.modifies_rref id s h0.h h1.h /\ h1.tip == h0.tip
 
 let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
   (requires (contains h x))
