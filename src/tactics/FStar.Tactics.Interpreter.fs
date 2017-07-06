@@ -316,14 +316,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
 
 let getprop (e:env) (t:term) : option<term> =
     let tn = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant] e t in
-    match U.un_squash tn with
-    | Some t' -> Some t'
-    | None ->
-        // Check for an equality, since the delta depth is wrong... (TODO: fix that)
-        let hd, _ = U.head_and_args tn in
-        match (U.un_uinst hd).n with
-        | Tm_fvar fv when S.fv_eq_lid fv PC.eq2_lid -> Some t
-        | _ -> None
+    U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
     tacdbg := Env.debug env (Options.Other "Tac");
