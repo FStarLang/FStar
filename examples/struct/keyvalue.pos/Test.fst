@@ -91,30 +91,34 @@ let parse_u32: parser U32.t =
   fun b -> if length b < 4 then None
         else Some (u32_from_be (slice b 0 4), 4)
 
-val parse_u16_array: parser (a:(U16.t * bytes){length (snd a) == U16.v (fst a)})
+type u16_array =
+  | U16Array : len16:U16.t -> a16:bytes{length a16 == U16.v len16} -> u16_array
+
+val parse_u16_array: parser u16_array
 let parse_u16_array =
-  and_then #(U16.t) #(a:(U16.t * bytes){length (snd a) == U16.v (fst a)}) parse_u16
+  parse_u16 `and_then`
   (fun array_len b' ->
     if length b' < U16.v array_len then None
     else let data = slice b' 0 (U16.v array_len) in
-          Some ((array_len, data), U16.v array_len))
+    Some (U16Array array_len data, U16.v array_len))
 
-val parse_u32_array: parser (a:(U32.t * bytes){length (snd a) == U32.v (fst a)})
+type u32_array =
+  | U32Array : len32:U32.t -> a32:bytes{length a32 == U32.v len32} -> u32_array
+
+val parse_u32_array: parser u32_array
 let parse_u32_array =
-  and_then #(U32.t) #(a:(U32.t * bytes){length (snd a) == U32.v (fst a)}) parse_u32
+  parse_u32 `and_then`
   (fun array_len b' ->
     if length b' < U32.v array_len then None
     else let data = slice b' 0 (U32.v array_len) in
-        Some ((array_len, data), U32.v array_len))
+    Some (U32Array array_len data, U32.v array_len))
 
 val parse_entry : parser encoded_entry
-let parse_entry = parse_u16_array `and_then`
-  (fun key_and_len -> parse_u32_array `and_then`
-  (fun val_and_len ->
-  let (key_len, key) = key_and_len in
-  let (val_len, value) = val_and_len in
-  parse_ret (EncodedEntry key_len key val_len value)
-  ))
+let parse_entry =
+  parse_u16_array `and_then`
+  (fun key -> parse_u32_array `and_then`
+  (fun value ->
+  parse_ret (EncodedEntry key.len16 key.a16 value.len32 value.a32)))
 
 let parsing_done : parser unit =
   fun b -> if length b = 0 then Some ((), 0) else None
@@ -192,14 +196,14 @@ let slice_append_prefix #a s1 s2 n1 =
   lemma_eq_intro (slice (append s1 s2) 0 n1) s1
 
 let parse_u16_array_inv (len:U16.t) (b:bytes{length b == U16.v len}) :
-    Lemma (parse_u16_array (encode_u16_array len b) == Some ((len, b), 2 + U16.v len))
+    Lemma (parse_u16_array (encode_u16_array len b) == Some (U16Array len b, 2 + U16.v len))
     [SMTPat (parse_u16_array (encode_u16_array len b))] =
   assert (length (encode_u16_array len b) == 2 + U16.v len);
   assert (Some? (parse_u16_array (encode_u16_array len b)));
   ()
 
 let parse_u32_array_inv (len:U32.t) (b:bytes{length b == U32.v len}) :
-    Lemma (parse_u32_array (encode_u32_array len b) == Some ((len, b), 4 + U32.v len))
+    Lemma (parse_u32_array (encode_u32_array len b) == Some (U32Array len b, 4 + U32.v len))
     [SMTPat (parse_u32_array (encode_u32_array len b))] =
     assert (length (encode_u32_array len b) == 4 + U32.v len);
     assert (Some? (parse_u32_array (encode_u32_array len b)));
@@ -410,6 +414,6 @@ let parse_value_offset (b:bytes) : option (n:nat{n <= length b}) =
 let parse_value_offset_ok (b:bytes) :
   Lemma (parse_value_offset b `optbind`
     (fun n -> parse_u32_array (slice b n (length b)) `optbind`
-    (fun ((_, a), _) -> Some (a <: bytes))) ==
+    (fun (a, _) -> Some (a.a32 <: bytes))) ==
       parse_entry b `optbind`
       (fun (e, _) -> Some e.value)) = ()
