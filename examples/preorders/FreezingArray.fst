@@ -4,10 +4,85 @@ open FStar.Preorder
 open FStar.Heap
 open FStar.ST
 
-module Seq = FStar.Seq
 module Set = FStar.Set
 
-type seq = Seq.seq
+open FStar.Seq
+
+(***** some sequence properties *****)
+
+let init_at_seq (#a:Type0) (s:seq (option a)) (i:nat{i < length s}) :Type0
+  = Some? (index s i)
+
+let all_some (#a:Type0) (s:seq (option a)) :Type0
+  = forall (i:nat). i < length s ==> Some? (index s i)
+
+(*
+ * a sequence of option a is equivalent to a sequence of a, if all are Some and contained values match
+ *)
+let some_equivalent_seqs (#a:Type0) (s1:Seq.seq (option a)) (s2:Seq.seq a) :Type0
+  = (Seq.length s1 == Seq.length s2) /\
+    (forall (i:nat). i < Seq.length s1 ==> Some (Seq.index s2 i) == Seq.index s1 i)
+
+(* assuming this function, quite straightforward, just strip out the Some *)
+assume val get_some_equivalent (#a:Type0) (s:Seq.seq (option a))
+  : Pure (seq a)
+         (requires (all_some s))
+	 (ensures  (fun r -> some_equivalent_seqs s r))
+
+assume val lemma_get_some_equivalent_length (#a:Type0) (s:seq (option a))
+  :Lemma (requires (all_some s))
+         (ensures  (all_some s /\
+	            length (get_some_equivalent s) == length s))
+	 [SMTPat (length (get_some_equivalent s))]
+
+assume val lemma_get_some_equivalent_index (#a:Type0) (s:seq (option a)) (i:nat)
+  :Lemma (requires (all_some s /\ i < length s))
+         (ensures  (all_some s /\ i < length s /\
+	            Some? (index s i) /\ Some (index (get_some_equivalent s) i) == index s i))
+	 [SMTPat (index (get_some_equivalent s) i)]
+
+assume val lemma_get_some_equivalent_snoc (#a:Type0) (s:seq (option a)) (x:option a)
+  :Lemma (requires (all_some s /\ Some? x))
+         (ensures  (all_some s /\ Some? x /\
+	            get_some_equivalent (snoc s x) == snoc (get_some_equivalent s) (Some?.v x)))
+	 [SMTPatOr [[SMTPat (get_some_equivalent (snoc s x))]; [SMTPat (snoc (get_some_equivalent s) (Some?.v x))]]]
+
+assume val lemma_get_some_equivalent_append (#a:Type0) (s1:seq (option a)) (s2:seq (option a))
+  :Lemma (requires (all_some s1 /\ all_some s2))
+         (ensures  (all_some s1 /\ all_some s2 /\
+	            get_some_equivalent (append s1 s2) == append (get_some_equivalent s1) (get_some_equivalent s2)))
+	 [SMTPatOr [[SMTPat (get_some_equivalent (append s1 s2))]; [SMTPat (append (get_some_equivalent s1) (get_some_equivalent s2))]]]
+
+assume val lemma_get_some_equivalent_slice (#a:Type0) (s:seq (option a)) (i:nat) (j:nat)
+  :Lemma (requires (all_some s /\ j >= i /\ j < Seq.length s))
+         (ensures  (all_some s /\ j >= i /\ j < Seq.length s /\
+	            get_some_equivalent (slice s i j) == slice (get_some_equivalent s) i j))
+
+	 [SMTPatOr [[SMTPat (get_some_equivalent (slice s i j))]; [SMTPat (slice (get_some_equivalent s) i j)]]]
+
+let lemma_get_equivalent_sequence_slice
+  (#a:Type0) (s:seq (option a)) (i:nat) (j:nat)
+  (s':seq a)
+  :Lemma (requires (j >= i /\ j <= Seq.length s /\
+                    Seq.length s' = j - i    /\
+		    (forall (k:nat). (k >= i /\ k < j) ==> Seq.index s k == Some (Seq.index s' (k - i)))))
+         (ensures  (j >= i /\ j <= Seq.length s /\
+                    Seq.length s' = j - i    /\
+		    (forall (k:nat). (k >= i /\ k < j) ==> Seq.index s k == Some (Seq.index s' (k - i))) /\
+	            get_some_equivalent (Seq.slice s i j) == s'))
+  = admit ()
+
+assume val copy_seq (#a:Type0) (s1:seq (option a)) (i:nat) (j:nat) (s2:seq a)
+  :Pure (seq (option a))
+        (requires (j >= i /\ j <= Seq.length s1 /\ Seq.length s2 = j - i))
+	(ensures  (fun r -> j >= i /\ j <= Seq.length s1 /\ Seq.length s2 = j - i /\
+	                 Seq.length r == Seq.length s1                      /\
+                         (forall (k:nat).
+			    (k < i ==> (Seq.index r k == Seq.index s1 k)) /\
+			    ((k >= i /\ k < j) ==> (Seq.index r k == Some (Seq.index s2 (k - i)))) /\
+		            ((k >= j /\ k < Seq.length s1) ==> (Seq.index r k == Seq.index s1 k)))))
+
+(*****)
 
 (*
  * representation of an array, a sequence of options and a bool, with an invariant that
@@ -60,7 +135,7 @@ abstract let array_footprint (#a:Type0) (#n:nat) (arr:array a n) :GTot (Set.set 
  *)
 abstract let contains_array (#a:Type) (#n:nat) (h:heap) (arr:array a n)
   = let A #_ #_ #_ s_ref _ = arr in
-    h `contains` s_ref
+    h `Heap.contains` s_ref
 
 (*
  * this is a precondition for writing, essentially, it will be false once you freeze the array
@@ -104,23 +179,7 @@ let lemma_as_seq_length (#a:Type0) (#n:nat) (arr:array a n) (h:heap)
 	 [SMTPat (Seq.length (as_seq arr h))]
   = ()
 
-(*
- * a sequence of option a is equivalent to a sequence of a, if all are Some and contained values match
- *)
-let equivalent_seqs (#a:Type0) (s1:Seq.seq (option a)) (s2:Seq.seq a) :Type0
-  = (Seq.length s1 == Seq.length s2) /\
-    (forall (i:nat). i < Seq.length s1 ==> Some (Seq.index s2 i) == Seq.index s1 i)
-
-let equivalent_seqs_lemma (#a:Type0) (s1:Seq.seq (option a)) (s2:Seq.seq a)
-  :Lemma (requires (equivalent_seqs s1 s2))
-         (ensures  (forall (i:nat). i < Seq.length s1 ==> Some? (Seq.index s1 i)))
-	 [SMTPat (equivalent_seqs s1 s2)]
-  = ()
-
 (* scaffolding for init_at *)
-let init_at_seq (#a:Type0) (s:Seq.seq (option a)) (i:nat{i < Seq.length s}) :Type0
-  = Some? (Seq.index s i)
-
 abstract let init_at_arr (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) (h:heap) :Type0
   = let s = as_seq arr h in
     init_at_seq s i
@@ -145,36 +204,13 @@ abstract let init_at_pred (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) :(p:
 abstract let init_at (#a:Type0) (#n:nat) (arr:array a n) (i:index arr) :Type0
   = witnessed (init_at_pred arr i)
 
-(* assuming this function, quite straightforward, just strip out the Some *)
-assume val get_equivalent_seq (#a:Type0) (s:Seq.seq (option a){forall (i:nat). i < Seq.length s ==> Some? (Seq.index s i)})
-  :Tot (r:Seq.seq a{equivalent_seqs s r})
-
-assume val lemma_equivalent_implies_slice_equivalent
-  (#a:Type0) (s1:seq (option a)) (s2:seq a{equivalent_seqs s1 s2})
-  (i:nat) (j:nat{j >= i /\ j < Seq.length s1})
-  :Lemma (requires True)
-         (ensures  (equivalent_seqs (Seq.slice s1 i j) (Seq.slice s2 i j)))
-	 [SMTPat (equivalent_seqs (Seq.slice s1 i j) (Seq.slice s2 i j))]
-
-assume val lemma_get_equivalent_commutes_with_slice
-  (#a:Type0) (s:seq (option a){forall (i:nat). i < Seq.length s ==> Some? (Seq.index s i)}) (i:nat) (j:nat{j >= i /\ j < Seq.length s})
-  :Lemma (requires True)
-         (ensures  (Seq.slice (get_equivalent_seq s) i j == get_equivalent_seq (Seq.slice s i j)))
-	 [SMTPatOr [[SMTPat (Seq.slice (get_equivalent_seq s) i j)]; [SMTPat (get_equivalent_seq (Seq.slice s i j))]]]
-
-assume val lemma_get_equivalent_sequence_slice
-  (#a:Type0) (s:seq (option a)) (i:nat) (j:nat{j >= i /\ j <= Seq.length s})
-  (s':seq a{Seq.length s' = j - i /\ (forall (k:nat). (k >= i /\ k < j) ==> Seq.index s k == Some (Seq.index s' (k - i)))})
-  :Lemma (requires True)
-         (ensures  (get_equivalent_seq (Seq.slice s i j) == s'))
-
 (* scaffolding for frozen predicate *)
 abstract let frozen_bit (#a:Type0) (#n:nat) (arr:array a n) (h:heap) :GTot bool
   = let A s_ref _ = arr in
     snd (sel h s_ref)
 
 private type frozen_pred' (#a:Type0) (#n:nat) (arr:array a n) (s:Seq.seq a) :heap_predicate
-  = fun h -> h `contains_array` arr /\ equivalent_seqs (as_seq arr h) s /\ frozen_bit arr h
+  = fun h -> h `contains_array` arr /\ some_equivalent_seqs (as_seq arr h) s /\ frozen_bit arr h
 
 open FStar.Ghost
 
@@ -195,15 +231,15 @@ abstract let freeze (#a:Type0) (#n:nat) (arr:array a n)
   :ST (s:erased (Seq.seq a))
       (requires (fun h0       -> is_full_array arr /\  //can only freeze full arrays
                               (forall (i:nat). i < n ==> init_at_arr arr i h0)))  //all elements must be init_at
-      (ensures  (fun h0 es h1 -> equivalent_seqs (as_seq arr h0) (reveal es) /\  //the returned ghost sequence is the current view of array in the heap
+      (ensures  (fun h0 es h1 -> some_equivalent_seqs (as_seq arr h0) (reveal es) /\  //the returned ghost sequence is the current view of array in the heap
                               frozen_with arr es                          /\  //witnessing the stable predicate
                               (~ (is_mutable arr h1))                     /\  //the array is no longer mutable
 			      modifies (array_footprint arr) h0 h1))  //only array footprint is changed
   = let A #_ s_ref _ = arr in
     let s, b = !s_ref in
     s_ref := (s, true);
-    gst_witness (frozen_pred arr (hide (get_equivalent_seq s)));
-    hide (get_equivalent_seq s)
+    gst_witness (frozen_pred arr (hide (get_some_equivalent s)));
+    hide (get_some_equivalent s)
 
 (*
  * read from an array
@@ -314,7 +350,7 @@ abstract let recall_init (#a:Type0) (#n:nat) (arr:array a n) (i:index arr{arr `i
 
 abstract let recall_frozen (#a:Type0) (#n:nat) (arr:array a n) (es:erased (Seq.seq a){frozen_with arr es})
   :ST unit (requires (fun _       -> True))
-           (ensures  (fun h0 _ h1 -> h0 == h1 /\ equivalent_seqs (as_seq arr h0) (reveal es)))
+           (ensures  (fun h0 _ h1 -> h0 == h1 /\ some_equivalent_seqs (as_seq arr h0) (reveal es)))
   = let h0 = ST.get () in
     gst_recall (frozen_pred arr es)
 
@@ -344,12 +380,18 @@ type iarray_i_j (a:Type0) (n:nat) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
 
 type iarray (a:Type0) (n:nat) :Type0 = iarray_i_j a n 0 n
 
+let init_arr_in_heap_i_j (#a:Type0) (#n:nat) (arr:array a n) (h:heap) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
+  = forall (k:nat). (k >= i /\ k < j) ==> init_at_seq (as_seq arr h) k
+
+let init_arr_in_heap (#a:Type0) (#n:nat) (arr:array a n) (h:heap) :Type0
+  = init_arr_in_heap_i_j arr h 0 n
+
 abstract let recall_all_init_i_j (#a:Type0) (#n:nat) (arr:array a n) (i:nat) (j:nat{j >= i /\ j <= n /\ all_init_i_j arr i j})
   :ST unit (requires (fun _ -> True))
-           (ensures  (fun h0 _ h1 -> h0 == h1 /\ (forall (k:nat). k >= i /\ k < j ==> Some? (Seq.index (as_seq arr h0) k))))
+           (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap_i_j arr h0 i j))
   = let rec aux (curr:nat{curr >= i /\ curr < j})
-      :ST unit (requires (fun h0      -> forall (k:nat). k >= i /\ k < curr ==> Some? (Seq.index (as_seq arr h0) k)))
-               (ensures  (fun h0 _ h1 -> h0 == h1 /\ (forall (k:nat). k >= i /\ k < j ==> Some? (Seq.index (as_seq arr h0) k))))
+      :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i curr))
+               (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap_i_j arr h0 i j))
       = gst_recall (init_at_pred arr curr);
         if curr = j - 1 then () else aux (curr + 1)
     in
@@ -358,14 +400,14 @@ abstract let recall_all_init_i_j (#a:Type0) (#n:nat) (arr:array a n) (i:nat) (j:
 
 abstract let recall_all_init (#a:Type0) (#n:nat) (arr:array a n{all_init arr})
   :ST unit (requires (fun _ -> True))
-           (ensures  (fun h0 _ h1 -> h0 == h1 /\ (forall (i:nat). i < n ==> Some? (Seq.index (as_seq arr h0) i))))
+           (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap arr h0))
   = recall_all_init_i_j arr 0 n
 
 abstract let witness_all_init_i_j (#a:Type0) (#n:nat) (arr:array a n) (i:nat) (j:nat{j >= i /\ j <= n})
-  :ST unit (requires (fun h0      -> forall (k:nat). k >= i /\ k < j ==> Some? (Seq.index (as_seq arr h0) k)))
+  :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i j))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init_i_j arr i j))
   = let rec aux (curr:nat{curr >= i /\ curr < j})
-      :ST unit (requires (fun h0      -> (forall (k:nat). k >= i /\ k < j ==> Some? (Seq.index (as_seq arr h0) k)) /\ all_init_i_j arr i curr))
+      :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i j /\ all_init_i_j arr i curr))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init_i_j arr i j))
       = recall_contains arr;
         gst_witness (init_at_pred arr curr);
@@ -375,67 +417,43 @@ abstract let witness_all_init_i_j (#a:Type0) (#n:nat) (arr:array a n) (i:nat) (j
     else aux i
 
 abstract let witness_all_init (#a:Type0) (#n:nat) (arr:array a n)
-  :ST unit (requires (fun h0 -> forall (k:nat). k < n ==> Some? (Seq.index (as_seq arr h0) k)))
+  :ST unit (requires (fun h0 -> init_arr_in_heap arr h0))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init arr))
   = witness_all_init_i_j arr 0 n
 
-let as_initialized_seq (#a:Type0) (#n:nat) (arr:array a n) (h:heap{forall (i:nat). i < n ==> Some? (Seq.index (as_seq arr h) i)})
+let as_initialized_seq
+  (#a:Type0) (#n:nat) (arr:array a n) (h:heap{init_arr_in_heap arr h})
   :GTot (seq a)
   = let s = as_seq arr h in
-    get_equivalent_seq s
-
-let lemma_as_initialized_seq_gives_equivalent_seq
-  (#a:Type0) (#n:nat) (arr:array a n) (h:heap{forall (i:nat). i < n ==> Some? (Seq.index (as_seq arr h) i)})
-  :Lemma (requires True)
-         (ensures  (equivalent_seqs (as_seq arr h) (as_initialized_seq arr h)))
-	 [SMTPat (as_initialized_seq arr h)]
-  = ()
+    get_some_equivalent s
 
 let as_initialized_subseq (#a:Type0) (#n:nat) (arr:array a n) (h:heap)
-  (i:nat) (j:nat{j >= i /\ j <= n /\ (forall (k:nat). k >= i /\ k < j ==> Some? (Seq.index (as_seq arr h) k))})
+  (i:nat) (j:nat{j >= i /\ j <= n /\ init_arr_in_heap_i_j arr h i j})
   :GTot (seq a)
   = let s = as_seq arr h in
     let s = Seq.slice s i j in
-    get_equivalent_seq s
-
-(* let lemma_as_initialized_subseq (#a:Type0) (#n:nat) (arr:array a n) (h:heap{forall (i:nat). i < n ==> Some? (Seq.index (as_seq arr h) i)}) *)
-(*   (i:nat) (j:nat{j >= i /\ j <= n}) *)
-(*   :Lemma (requires True) *)
-(*          (ensures  (let s = as_initialized_subseq arr h i j in *)
-(* 	            Seq.length s = j - i /\ s == Seq.slice (as_initialized_seq arr h) i j)) *)
-(* 	 [SMTPat (as_initialized_subseq arr h i j)] *)
-(*   = () *)
+    get_some_equivalent s
 
 abstract let read_subseq_i_j (#a:Type0) (#n:nat) (arr:array a n) (i:nat) (j:nat{j >= i /\ j <= n})
   :ST (seq a)
       (requires (fun h0      -> all_init_i_j arr i j))
-      (ensures  (fun h0 s h1 -> h0 == h1                                                          /\
-                             (forall (k:nat). k >= i /\ k < j ==> Some? (Seq.index (as_seq arr h0) k)) /\
+      (ensures  (fun h0 s h1 -> h0 == h1                        /\
+                             init_arr_in_heap_i_j arr h0 i j /\
                              s == as_initialized_subseq arr h0 i j))
   = let A #_ #_ #_ s_ref off = arr in
     let (s, _) = !s_ref in
     let s = Seq.slice s off (off + n) in
     recall_all_init_i_j arr i j;
     let s = Seq.slice s i j in
-    let s = get_equivalent_seq s in
+    let s = get_some_equivalent s in
     s
-
-assume val copy_seq (#a:Type0) (s1:seq (option a)) (i:nat) (j:nat) (s2:seq a)
-  :Pure (seq (option a))
-        (requires (j >= i /\ j <= Seq.length s1 /\ Seq.length s2 = j - i))
-	(ensures  (fun r -> j >= i /\ j <= Seq.length s1 /\ Seq.length s2 = j - i /\
-	                 Seq.length r == Seq.length s1 /\
-                         (forall (k:nat). (k < i ==> (Seq.index r k == Seq.index s1 k)) /\
-			            ((k >= i /\ k < j) ==> (Seq.index r k == Some (Seq.index s2 (k - i)))) /\
-				    ((k >= j /\ k < Seq.length s1) ==> (Seq.index r k == Seq.index s1 k)))))
-	                 //get_equivalent_seq (Seq.slice r i j) == s2))
 
 abstract let fill (#a:Type0) (#n:nat) (arr:array a n) (buf:seq a{Seq.length buf <= n})
   :ST unit (requires (fun h0      -> is_mutable arr h0))
-           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                                  /\
-	                          all_init_i_j arr 0 (Seq.length buf)                                   /\
-				  (forall (k:nat). k < Seq.length buf ==> Some? (Seq.index (as_seq arr h1) k)) /\
-				  buf == as_initialized_subseq arr h1 0 (Seq.length buf)                /\
+           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
+	                          all_init_i_j arr 0 (Seq.length buf)                    /\
+				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
+				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
 				  is_mutable arr h1))
   = let A #_ #_ #m s_ref off = arr in
     let (s, b) = !s_ref in
@@ -462,4 +480,9 @@ let lemma_all_init_i_j_sub
   :Lemma (requires True)
          (ensures  (all_init (sub arr i len)))
 	 [SMTPat (all_init arr); SMTPat (sub arr i len)]
-  = admit ()
+  = let arr' = sub arr i len in
+
+    let aux (k:nat{k < len /\ arr `init_at` (k + i)}) :Lemma (arr' `init_at` k)
+      = lemma_sub_init_at arr (k + i) i len
+    in
+    FStar.Classical.forall_intro aux
