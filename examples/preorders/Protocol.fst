@@ -307,12 +307,27 @@ let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a)
               s == as_initialized_subseq x h0 0 n))
   = admit()              
 
-let fully_initialized_in #a #n (x:iarray a n) (h:heap) = 
+let fully_initialized_in #a #n (x:array a n) (h:heap) = 
   h `contains_array` x /\
   (forall (k:nat). k < n ==> Some? (Seq.index (as_seq x h) k))
 
-#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0"
-let rec send_aux 
+let subseq_suffix #a #n (f:iarray a n) (pos:nat{pos<n}) (until:nat{pos+until <= n}) 
+    (h:heap{f `fully_initialized_in` h})
+  : Lemma  (as_initialized_subseq (suffix f pos) h 0 until ==
+            as_initialized_subseq f h pos (pos + until))
+  = assert (as_initialized_subseq (suffix f pos) h 0 until `Seq.equal`
+            as_initialized_subseq f h pos (pos + until))        
+
+let slice_snoc #a (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=Seq.length s})
+  : Lemma (slice s from to == slice (snoc s x) from to)
+  = assert (slice s from to `Seq.equal` slice (snoc s x) from to)
+
+let slice_snoc2 #a (s:seq a) (x:a) (from:nat{from <= Seq.length s})
+  : Lemma (slice (snoc s x) from (Seq.length s + 1) == snoc (slice s from (Seq.length s)) x)
+  = assert (slice (snoc s x) from (Seq.length s + 1) `Seq.equal` snoc (slice s from (Seq.length s)) x)
+
+#reset-options "--z3rlimit 200 --max_fuel 0 --max_ifuel 0"
+val send_aux 
           (#n:nat) 
           (file:iarray byte n) 
           (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
@@ -331,8 +346,9 @@ let rec send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
+let rec send_aux #n file c h_init from pos
       = if pos = n then ()
-        else begin
+        else
           let sub_file = suffix file pos in
           lemma_all_init_i_j_sub file pos (n - pos);
        
@@ -348,20 +364,32 @@ let rec send_aux
           assert (from <= ctr c h1);
           assert (file `fully_initialized_in` h1);
           assert (h1 `contains_connection` c);
-          let _ = 
-            assert (log1 == snoc log0 (as_initialized_subseq sub_file h0 0 sent));
-            assume (log1 == snoc log0 (as_initialized_subseq file h0 pos (pos + sent)));
+          let _ : unit = 
+            let sent_frag = as_initialized_subseq sub_file h0 0 sent in
+            let sent_frag' = as_initialized_subseq file h0 pos (pos + sent) in
+            assert (log1 == snoc log0 sent_frag);
+            subseq_suffix file pos sent h0; //sent_frag == sent_frag'
+            slice_snoc log0 sent_frag from (ctr c h0); //slice log0 from (ctr c h0) == slice log1 from (ctr c h0)
+            slice_snoc2 log0 sent_frag from; //Seq.slice log1 from (ctr c h1) == snoc (Seq.slice log0 from (ctr c h0)) sent_frag
             assert (ctr c h0 + 1 = ctr c h1);
-            assert (ctr c h1 <= Seq.length log1);
+            assert (ctr c h1 = Seq.length log1);
             let f0 = as_initialized_subseq file h1 0 pos in
             let f1 = as_initialized_subseq file h1 0 (pos + sent) in
-            assert (f0 == flatten (Seq.slice log0 from (ctr c h0)));
-            assume (f0 == flatten (Seq.slice log1 from (ctr c h0)));
+            assume (f1 == append f0 sent_frag);
+            assert (f0 == flatten (Seq.slice log1 from (ctr c h0)));
+            //lemma_flatten_snoc f0 sent_frag;
             assume (f1 == flatten (Seq.slice log1 from (ctr c h1)));
+            // assert (f0 == flatten (Seq.slice log0 from (ctr c h0)));
+            // assert (f0 == flatten (Seq.slice log1 from (ctr c h0)));
+            // assume (f1 == flatten (Seq.slice log1 from (ctr c h1)));
             assert (sent_file_pred f1 c from (ctr c h1) h1) in
-          send_aux file c h_init from (pos + sent)
-        end
+            send_aux file c h_init from (pos + sent)
 
+
+let extend_sent_file #a #n (file:iarray a n) (h:heap{file `fully_initialized_in` h}) (pos:nat{pos < n}) (next:nat{pos + next <= n})
+  : Lemma (let f0 = as_initialized_subseq file h 0 pos in
+           let f1 = as_initialized_subseq file h 0 (pos + next) in
+           
 
 let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
   : ST unit 
