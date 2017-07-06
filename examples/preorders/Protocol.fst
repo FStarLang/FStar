@@ -435,7 +435,7 @@ val receive_aux
           (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
           (h_init:heap{h_init `contains_connection` c})
           (from:nat{from = ctr c h_init})
-          (pos:index file{fragment_size < n - pos})
+          (pos:index file{fragment_size < n - pos}) //NS: this one can become <= with a change to prefix/suffix
     : ST (option (r:nat{r < n}))
         (requires (fun h0 ->
               let file_in = prefix file pos in
@@ -511,11 +511,14 @@ let rec receive_aux #n file c h_init from pos
            assert (filled_bytes1 == flatten (Seq.slice (log c h0) from (ctr c h1)));
            assert (sent_file_pred filled_bytes1 c from (ctr c h1) h1)
          in
-         if k < fragment_size then Some (pos + k)
-         else if pos + k + fragment_size < n then receive_aux file c h_init from (pos + k)
+         if k < fragment_size 
+         //|| pos + k = n  //NS: We should be able to include this case after changing the types of prefix/suffix
+         then Some (pos + k)
+         else if pos + k + fragment_size < n  //NS:and this one can become a <= too
+         then receive_aux file c h_init from (pos + k)
          else None
 
-val receive_file (#n:nat{fragment_size < n})
+val receive_file (#n:nat{fragment_size < n}) //NS:this < can turn into a <= if we change prefix/suffix also
             (file:array byte n)
             (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
     : ST (option nat)
