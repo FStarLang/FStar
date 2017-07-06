@@ -127,8 +127,7 @@ let snap (c:connection) :ST unit (requires (fun _ -> True))
      | R _ es_ref ctr_ref -> gst_recall (counter_pred (sel_tot h0 ctr_ref) es_ref));
     gst_witness (connection_pred c h0)
 
-type array (a:Type0) (n:nat) = FreezingArray.array a n
-type iarray (a:Type0) (n:nat) = FreezingArray.iarray a n
+type iarray (a:Type0) (n:nat) = x:array a n{all_init x}
 
 (* (\* these probably need some contains precondition? *\) *)
 (* assume val as_seq_ghost: *)
@@ -217,13 +216,12 @@ let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:hea
 
 #set-options "--z3rlimit 50"
 let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiver c})
-  :ST (option nat) (requires (fun h0          -> is_mutable buf h0))
+  :ST (option nat) (requires (fun h0          -> True))
                  (ensures  (fun h0 r_opt h1 -> match r_opt with
 					    | None   -> h0 == h1
 					    | Some r ->
 					      h0 `contains_connection` c   /\
 					      h1 `contains_connection` c   /\
-					      is_mutable buf h1            /\
 					      modifies_r c buf h0 h1       /\
 					      r <= fragment_size            /\
 					      all_init_i_j buf 0 r         /\
@@ -295,7 +293,7 @@ let lemma_get_equivalent_append
   :Lemma (requires (s1 == Seq.append s2 s3))
          (ensures  ((forall (i:nat). i < Seq.length s2 ==> Some? (Seq.index s2 i)) /\
 	            (forall (i:nat). i < Seq.length s3 ==> Some? (Seq.index s3 i)) /\
-	            get_equivalent_seq s1 == Seq.append (get_equivalent_seq s2) (get_equivalent_seq s3)))
+	            get_some_equivalent s1 == Seq.append (get_some_equivalent s2) (get_some_equivalent s3)))
   = admit ()
 
 #set-options "--z3rlimit 20"
@@ -332,7 +330,8 @@ let append_subseq #a #n (f:iarray a n) (pos:nat{pos<n}) (sent:nat{pos + sent <= 
              let sub_file = suffix f pos in
              let sent_frag = as_initialized_subseq sub_file h 0 sent in
              f1 == append f0 sent_frag)
-    = let f0 = as_initialized_subseq f h 0 pos in
+    = admit ();
+      let f0 = as_initialized_subseq f h 0 pos in
       let f1 = as_initialized_subseq f h 0 (pos + sent) in
       let sub_file = suffix f pos in
       let sent_frag = as_initialized_subseq sub_file h 0 sent in
@@ -358,7 +357,7 @@ val send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
-#reset-options "--z3rlimit 400 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0"
 let rec send_aux #n file c h_init from pos
       = if pos = n then ()
         else
@@ -439,7 +438,6 @@ val receive_aux
     : ST (option (r:nat{r < n}))
         (requires (fun h0 ->
               let file_in = prefix file pos in
-              is_mutable file h0 /\
               all_init_i_j file_in 0 pos /\
               file_in `fully_initialized_in` h0 /\
               h0 `contains_connection` c /\
@@ -522,7 +520,7 @@ val receive_file (#n:nat{fragment_size < n}) //NS:this < can turn into a <= if w
             (file:array byte n)
             (c:connection{receiver c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
     : ST (option nat)
-    (requires (fun h -> is_mutable file h))
+    (requires (fun h -> True))
     (ensures (fun h0 ropt h1 -> 
                 modifies_r c file h0 h1 /\
                 (match ropt with 
