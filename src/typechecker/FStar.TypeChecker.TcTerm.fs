@@ -998,10 +998,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 //                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let (unames,_) = match (Env.lookup_definition [Always] env
+                        let unames = match (Env.lookup_definition [Always] env
                           (match l with | (Inr fvar) -> S.lid_of_fv fvar | _ -> failwith "impossible" )) with
-                          | Some x -> x
-                          | _ -> failwith "impossible" in
+                          | Some (x,_) -> x
+                          | _ -> [] in
                         let env = Env.push_let_binding env l (unames, t) in
                         let lb = match l with
                             | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
