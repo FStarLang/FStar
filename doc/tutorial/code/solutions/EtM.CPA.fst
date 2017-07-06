@@ -66,6 +66,7 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
 
+// BEGIN: EtMCPAEncrypt
 let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
@@ -74,7 +75,7 @@ let encrypt k m =
   let c = iv@|c in
   write_at_end k.log (m,c);
   c
-
+// END: EtMCPAEncrypt
 
 (* CH*MK: If we wanted to also prove correctness of the EtM.AE
           we would additionally need this
@@ -92,11 +93,17 @@ let encryption_injective k iv t1 t2 = correctness k iv t1; correctness k iv t2
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
 let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
+// BEGIN: EtMCPADecryptRequires
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
     Map.contains h0.h k.region /\
     (let log0 = m_sel h0 k.log in
-      (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0))))
+      (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) log0 )
+    )
+  ))
+// END: EtMCPADecryptRequires
+  (* Replace the line containing ==> with True to learn more about why CPA security 
+     requires a stronger precondition *)
   (ensures  (fun h0 res h1 ->
     modifies_none h0 h1 /\
     ( (b2t ind_cpa_rest_adv) ==> mem (res,c) (m_sel h0 k.log)
@@ -104,9 +111,9 @@ val decrypt: k:key -> c:cipher -> ST msg
      (*  let found = seq_find (fun mc -> snd mc = c) log0 in *)
      (*  Some? found /\ fst (Some.v found) = res) *)
     )
-  )
-  )
+  ))
 
+// BEGIN: EtMCPADecrypt
 let decrypt k c =
   if ind_cpa_rest_adv then
     let log = m_read k.log in
@@ -115,3 +122,4 @@ let decrypt k c =
   else
     let iv,c' = split c ivsize in
     coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
+// END: EtMCPADecrypt
