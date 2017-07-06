@@ -74,7 +74,7 @@ let and_then #t #t' p p' b =
   | None -> None
 
 // the monadic return for parsers
-let parse_ret (#t:Type) (v:t) : parser t =
+unfold let parse_ret (#t:Type) (v:t) : parser t =
   fun _ -> Some (v, 0)
 
 let fail_parser #t : parser t = fun b -> None
@@ -232,8 +232,8 @@ unfold let seq (#t:Type) (#t':Type) (p:parser t) (p': parser t') : parser t' =
           end
         | None -> None
 
-let invalid (#b:bytes): option (unit * n:nat{n <= length b}) = None
-let valid (#b:bytes) (n:nat{n <= length b}) : option (unit * n:nat{n <= length b}) = Some ((), n)
+unfold let invalid (#b:bytes): option (unit * n:nat{n <= length b}) = None
+unfold let valid (#b:bytes) (n:nat{n <= length b}) : option (unit * n:nat{n <= length b}) = Some ((), n)
 
 let skip_bytes (n:nat) : validator =
   fun b -> if length b < n then invalid
@@ -265,9 +265,9 @@ let validate_entry: v:validator{validator_checks v parse_entry} =
   validate_u16_array `seq`
   validate_u32_array
 
-let validate_accept : validator =
+unfold let validate_accept : validator =
   fun b -> valid 0
-let validate_reject : validator =
+unfold let validate_reject : validator =
   fun b -> invalid
 
 val validate_many':
@@ -295,14 +295,16 @@ let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   assert (forall x. validator_checks v' (p' `and_then` (fun y -> parse_ret (f x y))));
   ()
 
+#reset-options "--z3rlimit 30"
+
 let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
-  Lemma (requires True)
-        (ensures (validator_checks (validate_many' n v) (parse_many' p n))) =
+  Lemma (validator_checks (validate_many' n v) (parse_many' p n)) =
   match n with
   | 0 -> ()
   | _ -> validate_many'_ok (n-1) p v;
         let p' = parse_many' p (n-1) in
-        validate_liftA2 p p' (fun v l -> v::l) v (validate_many' (n-1) v <: (v:validator{validator_checks v p'}));
+        let v': v:validator{validator_checks v p'} = validate_many' (n-1) v in
+        validate_liftA2 p p' (fun v l -> v::l) v v';
         ()
 
 #reset-options
