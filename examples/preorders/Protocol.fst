@@ -216,7 +216,7 @@ let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:hea
 
 #set-options "--z3rlimit 50"
 let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiver c})
-  :ST (option nat) (requires (fun h0          -> True))
+  :ST (option nat) (requires (fun h0          -> Set.disjoint (connection_footprint c) (array_footprint buf)))
                  (ensures  (fun h0 r_opt h1 -> match r_opt with
 					    | None   -> h0 == h1
 					    | Some r ->
@@ -234,8 +234,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
   = let h0 = ST.get () in
     let R rand es_ref ctr_ref = c in
 
-    assume (Set.disjoint (Set.singleton (addr_of ctr_ref)) (array_footprint buf));
-    assume (Set.disjoint (Set.singleton (addr_of es_ref))  (array_footprint buf));
+    Set.lemma_disjoint_subset (connection_footprint c) (array_footprint buf) (Set.singleton (addr_of ctr_ref));
 
     recall_connection c;
 
@@ -499,6 +498,8 @@ let rec receive_aux #n file c h_init from pos
      let filled0 = prefix file pos in
      let filled_bytes0 = iarray_as_seq filled0 in
      let sub_file = suffix file pos in
+     lemma_sub_footprint file pos (n - pos);
+     assert (array_footprint sub_file == array_footprint file);
      match receive sub_file c with
        | None -> None
        | Some k -> 
