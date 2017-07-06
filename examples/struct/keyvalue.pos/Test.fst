@@ -237,20 +237,71 @@ unfold let validation_checks_parse #t (b: bytes)
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
-type lbuffer len = b:B.buffer byte{B.length b == len}
+// a byte buffer type indexed by size
+type lbuffer (len: nat) = b:B.buffer byte{B.length b == len}
 
+// augment a buffer with a runtime length
 noeq type bslice =
   | BSlice : len:U32.t -> p:lbuffer (U32.v len) -> bslice
 
-val validate_u16_array_st (input: bslice) : ST (option (U32.t))
+let live h (b: bslice) = B.live h b.p
+let as_seq h (b: bslice) : Ghost (s:bytes{length s == U32.v b.len})
+  (requires (live h b))
+  (ensures (fun _ -> True)) = B.as_seq h b.p
+
+let advance_slice (b:bslice) (off:U32.t{U32.v off <= U32.v b.len}) : bslice =
+  BSlice (U32.sub b.len off) (B.sub b.p off (U32.sub b.len off))
+
+let advance_slice_spec (b:bslice) (off:U32.t{U32.v off <= U32.v b.len}) h :
+  Lemma (requires (live h b))
+        (ensures (live h (advance_slice b off) /\
+                 as_seq h (advance_slice b off) == slice (as_seq h b) (U32.v off) (length (as_seq h b))))
+  = ()
+
+let parser_st #t (p: parser t) = input:bslice -> ST (option (t * U32.t))
+  (requires (fun h0 -> B.live h0 input.p))
+  (ensures (fun h0 r h1 -> B.live h1 input.p /\
+                  h0 == h1 /\
+                  (let bs = B.as_seq h1 input.p in
+                    match p bs with
+                    | Some (v, n) -> Some? r /\
+                      begin
+                        let (rv, off) = Some?.v r in
+                          v == rv /\ n == U32.v off
+                      end
+                    | None -> r == None)))
+
+let parse_u16_st : parser_st (parse_u16) = fun input ->
+  if U32.lt input.len (U32.uint_to_t 2)
+    then None
+  else let b0 = B.index input.p (U32.uint_to_t 0) in
+       let b1 = B.index input.p (U32.uint_to_t 1) in
+       let twobytes = append (create 1 b0) (create 1 b1) in
+       // TODO: need to get the current heap ghostly in order to assert that
+       // twobytes is actually a slice of the input buffer, viewed as a seq
+       let h: mem = admit() in
+       lemma_eq_intro twobytes (slice (as_seq h input) 0 2);
+       assert (twobytes == slice (as_seq h input) 0 2);
+       let n = u16_from_be twobytes in
+       Some (n, U32.uint_to_t 2)
+
+module Cast = FStar.Int.Cast
+
+val validate_u16_array_st (input: bslice) : ST (option U32.t)
   (requires (fun h0 -> B.live h0 input.p))
   (ensures (fun h0 r h1 -> B.live h1 input.p /\
                         h0 == h1 /\
                         (let bs = B.as_seq h1 input.p in
                           validation_checks_parse bs r (parse_u16_array bs))))
 let validate_u16_array_st input =
-  // TODO: implement this (see validator.c for a rough sketch using C-like code)
-  admit()
+  match parse_u16_st input with
+  | Some (n, off) -> begin
+      let n: U32.t = Cast.uint16_to_uint32 n in
+      let total_len = U32.add n (U32.uint_to_t 2) in
+      if U32.lt input.len total_len then None
+      else Some total_len
+    end
+  | None -> None
 
 (*! Pure validation *)
 
