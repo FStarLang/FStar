@@ -19,13 +19,15 @@ sub_effect DIV ~> GST = lift_div_gst
 let ref_requires (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
   is_eternal_region r.id && not(is_mm r) \/
   (is_eternal_region r.id && is_mm r /\ h `contains` r) \/
-  (is_stack_region r.id && is_mm r /\ h `contains` r) \/
-  (is_stack_region r.id && not (is_mm r) /\ r.id `is_above` h.tip)
+  (is_stack_region r.id && is_mm r /\ h `contains` r) (* \/ *)
+  (* (is_stack_region r.id && not (is_mm r) /\ r.id `is_above` h.tip) *)
 
-let mem_rel (h1:mem) (h2:mem) =
+let mem_rel0 (h1:mem) (h2:mem) =
   (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
     h1 `contains` r /\ ref_requires r h2 ==> (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))) /\
   (forall (i:HH.rid). is_eternal_region i /\ i `is_in` h1.h ==> i `is_in` h2.h)
+
+let mem_rel : preorder mem = mem_rel0
 
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
@@ -136,8 +138,14 @@ let recall_eternal_region (r:rid)
   : GST unit (fun (p:gst_post unit) (m:mem) -> is_eternal_region r /\ (r `is_in` m.h ==> p () m))
 = gst_witness (eternal_is_in_pred HH.root) ; gst_recall (eternal_is_in_pred r)
 
-let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} = fun (m:mem) ->
+let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate = fun (m:mem) ->
+  Map.contains m.h r.id /\
   (is_stack_region r.id && not (is_mm r) /\ r.id `is_above` m.tip ==> HH.contains_ref m.h r.ref)
+
+let valid_ref_stable (#a:Type) (#rel:preorder a) (r:mreference a rel) (h1 h2:mem) : Lemma (requires (valid_ref r h1 /\ mem_rel h1 h2 /\ is_stack_region r.id && not (is_mm r) /\ r.id `is_above` h2.tip)) (ensures (HH.contains_ref h2.h r.ref)) =
+    assert (is_stack_region r.id) ;
+    assert (h1 `contains` r ==> r.id `is_above` h1.tip) ;
+    assert (h1 `contains` r ==> h2 `contains` r)
 
 let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} = fun (m:mem) ->
   eternal_is_in_pred r.id m /\
