@@ -113,6 +113,13 @@ let ctr (c:connection) (h:heap{h `contains_connection` c}) :Tot nat =
   | S _ es_ref    -> length (sel_tot h es_ref)
   | R _ _ ctr_ref -> sel_tot h ctr_ref
 
+let recall_counter (c:connection) :ST unit (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1 /\ h0 `contains_connection` c /\ ctr c h0 <= Seq.length (log c h0)))
+  = recall_connection c;
+    match c with
+    | S _ _              -> ()
+    | R _ es_ref ctr_ref -> let n = !ctr_ref in gst_recall (counter_pred n es_ref)
+
+
 (* stable predicate for counter *)
 let connection_pred (c:connection) (h0:heap{h0 `contains_connection` c}) :(p:heap_predicate{stable p}) =
   fun h -> h `contains_connection` c /\
@@ -186,6 +193,8 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
     let msg = read_subseq_i_j buf 0 sent in
     let frag = append msg (zeroes (fragment_size - sent)) in
     let cipher = oplus frag (rand i0) in
+
+    //TODO: call network send!
 
     let sent_ref :mref bool sent_pre = alloc false in
     let msgs1 = snoc msgs0 (E i0 msg cipher sent_ref) in
