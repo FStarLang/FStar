@@ -265,6 +265,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
+    // by_tactic marker
     | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         if pol = Pos then
@@ -272,6 +273,16 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
             (FStar.Syntax.Util.t_true, gs)
         else
             (assertion, []) // Peel away tactics in negative positions, they're assumptions!
+
+    // spinoff marker: simply spin off a query independently.
+    // So, equivalent to `by_tactic idtac` without importing the (somewhat heavy) tactics module
+    | Tm_fvar fv, [(assertion, None)]
+            when S.fv_eq_lid fv PC.spinoff_lid ->
+        if pol = Pos then
+            let gs, _ = run_tactic_on_typ idtac e assertion in
+            (FStar.Syntax.Util.t_true, gs)
+        else
+            (assertion, [])
 
     | _ ->
         (t, [])
