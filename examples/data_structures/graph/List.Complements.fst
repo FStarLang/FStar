@@ -4,6 +4,7 @@ open FStar.Fin
 module L = FStar.List.Tot
 module C = FStar.Classical
 
+let disjoint (#a:eqtype) (n1: list a) (n2:list a) = forall x . L.mem x n1 ==> not (L.mem x  n2)
 
 let rec noRepeats_map (#a #b:eqtype) (f:a -> b) (l:list a)
   : Lemma (requires (L.noRepeats l /\
