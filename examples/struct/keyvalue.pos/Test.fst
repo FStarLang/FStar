@@ -297,13 +297,14 @@ let parse_u32_st : parser_st (parse_u32) = fun input ->
 
 module Cast = FStar.Int.Cast
 
-val validate_u16_array_st (input: bslice) : ST (option U32.t)
-  (requires (fun h0 -> B.live h0 input.p))
-  (ensures (fun h0 r h1 -> B.live h1 input.p /\
-                        h0 == h1 /\
-                        (let bs = B.as_seq h1 input.p in
-                          validation_checks_parse bs r (parse_u16_array bs))))
-let validate_u16_array_st input =
+let stateful_validator #t (p: parser t) = input:bslice -> ST (option U32.t)
+    (requires (fun h0 -> live h0 input))
+    (ensures (fun h0 r h1 -> live h1 input /\
+                          h0 == h1 /\
+                          (let bs = B.as_seq h1 input.p in
+                            validation_checks_parse bs r (p bs))))
+
+let validate_u16_array_st : stateful_validator parse_u16_array = fun input ->
   match parse_u16_st input with
   | Some (n, off) -> begin
       let n: U32.t = Cast.uint16_to_uint32 n in
@@ -315,13 +316,7 @@ let validate_u16_array_st input =
     end
   | None -> None
 
-val validate_u32_array_st (input: bslice) : ST (option U32.t)
-  (requires (fun h0 -> B.live h0 input.p))
-  (ensures (fun h0 r h1 -> B.live h1 input.p /\
-                        h0 == h1 /\
-                        (let bs = B.as_seq h1 input.p in
-                          validation_checks_parse bs r (parse_u32_array bs))))
-let validate_u32_array_st input =
+let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
   match parse_u32_st input with
   | Some (n, off) -> begin
       // we have to make sure that the total length we compute doesn't overflow
@@ -333,6 +328,66 @@ let validate_u32_array_st input =
         if U32.lt input.len total_len then None
         else Some total_len
       end
+    end
+  | None -> None
+
+let u32_add_overflows (a b:U32.t) : overflow:bool{not overflow <==> U32.v a + U32.v b < pow2 32} =
+  U32.lt (U32.add_mod a b) a
+
+let then_check #t (p: parser t) (v: stateful_validator p)
+               #t' (p': parser t') (v': stateful_validator p')
+               #t'' (f: t -> t' -> t'') :
+               stateful_validator (p `and_then` (fun x -> p' `and_then` (fun y -> parse_ret (f x y)))) =
+fun input ->
+  match v input with
+  | Some off -> begin
+      match v' (advance_slice input off) with
+      | Some off' -> (if u32_add_overflows off off' then None
+                   else Some (U32.add off off'))
+      | None -> None
+    end
+  | None -> None
+
+// eta expansion is necessary to get the right subtyping check
+let validate_entry_st : stateful_validator parse_entry = fun input ->
+  then_check parse_u16_array validate_u16_array_st
+             parse_u32_array validate_u32_array_st
+             (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
+
+val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:nat) : stateful_validator (parse_many p n)
+let rec validate_many_st #t p v (n:nat) : stateful_validator (parse_many p n) = fun input ->
+  match n with
+  | 0 -> Some (U32.uint_to_t 0)
+  | _ -> let n':nat = n - 1 in
+        then_check p v
+                   (parse_many p n') (validate_many_st p v n')
+                   (fun e es -> e::es) input
+
+let validate_done_st : stateful_validator parsing_done = fun input ->
+  if U32.eq input.len (U32.uint_to_t 0) then Some (U32.uint_to_t 0) else None
+
+let parse_entries (num_entries:U32.t) : parser store =
+  parse_many parse_entry (U32.v num_entries) `and_then`
+  (fun entries -> parsing_done `and_then`
+  (fun _ -> parse_ret (Store num_entries entries)))
+
+let validate_entries (num_entries:U32.t) : stateful_validator (parse_entries num_entries) =
+  fun input ->
+  let n = U32.v num_entries in
+  then_check (parse_many parse_entry n)
+  (validate_many_st parse_entry validate_entry_st n)
+  parsing_done validate_done_st
+  (fun entries _ -> Store num_entries entries) input
+
+let validate_store : stateful_validator parse_abstract_store = fun input ->
+  match parse_u32_st input with
+  | Some (num_entries, off) ->
+    begin
+      let input = advance_slice input off in
+      match validate_entries num_entries input with
+      | Some off' -> if u32_add_overflows off off' then None
+                    else Some (U32.add off off')
+      | None -> None
     end
   | None -> None
 
