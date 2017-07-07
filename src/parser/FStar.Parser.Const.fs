@@ -154,6 +154,7 @@ let bv_shift_right_lid = bvconst "bvshr"
 let bv_udiv_lid        = bvconst "bvdiv"
 let bv_mod_lid         = bvconst "bvmod"
 let bv_mul_lid         = bvconst "bvmul"
+let bv_ult_lid         = bvconst "bvult"
 
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]

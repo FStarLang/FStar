@@ -77,6 +77,7 @@ type op =
   | BvUdiv
   | BvMod
   | BvMul
+  | BvUlt
   | NatToBv of Prims.int // need to explicitly define the size of the bitvector
   | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
@@ -215,6 +216,7 @@ let op_to_string = function
   | BvUdiv -> "bvudiv"
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
+  | BvUlt -> "bvult"
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
 
@@ -294,6 +296,7 @@ let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvUlt = mk_bin_op BvUlt
 let mkIff = mk_bin_op Iff
 let mkEq  = mk_bin_op Eq
 let mkLT  = mk_bin_op LT
@@ -687,6 +690,7 @@ and mkPrelude z3options =
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Term)\n\
+                (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
                             (! (implies (exists ((e Term)) (HasType e t))\n\
@@ -709,7 +713,6 @@ and mkPrelude z3options =
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
-                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort, true)],  Term_sort, 5, true);
                                  ("Tm_unit",  [], Term_sort, 6, true);
                                  ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);

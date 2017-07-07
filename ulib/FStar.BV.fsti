@@ -28,11 +28,14 @@ val bv2int: #n:pos -> vec:bv_t n -> Tot (uint_t' n)
 
 let bv_zero #n = int2bv #n 0
 
+val bvult: #n:pos -> a: bv_t n -> b: bv_t n -> Tot (bool)
+
 val int2bv_lemma_1: #n:pos -> a:uint_t' n -> b:uint_t' n ->
   Lemma (requires a = b) (ensures (int2bv #n a = int2bv #n b))
 
 val int2bv_lemma_2: #n:pos -> a:uint_t' n -> b:uint_t' n ->
   Lemma (requires (int2bv a = int2bv b)) (ensures a = b)
+
 
 val bvdiv :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
 val bvmod :#n:pos -> a:bv_t n -> b:uint_t' n{b <> 0} -> Tot (bv_t n)
@@ -47,6 +50,12 @@ val inverse_num_lemma: #n:pos -> num:uint_t' n ->
         [SMTPat (bv2int #n (int2bv #n num))]
 
 (* Lemmas connecting logical arithmetic and bitvectors *)
+
+val int2bv_lemma_ult_1: #n:pos -> a:uint_t' n -> b:uint_t' n ->
+  Lemma (requires a < b) (ensures (bvult #n (int2bv #n a) (int2bv #n b)))
+
+val int2bv_lemma_ult_2: #n:pos -> a:uint_t' n -> b:uint_t' n ->
+  Lemma (requires (bvult #n (int2bv #n a) (int2bv #n b))) (ensures a < b)
 
 open FStar.UInt // for now just opening this for logand, logxor, etc. but we need a better solution.
  val int2bv_logand : (#n:pos) -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->

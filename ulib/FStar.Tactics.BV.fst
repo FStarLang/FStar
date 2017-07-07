@@ -11,7 +11,7 @@ open FStar.UInt
 val cong_bvand : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
 			       (#y:bv_t n) -> (#z:bv_t n) ->
 			       squash (w == y) -> squash (x == z) ->
-			       Lemma (bvand w x == bvand y z)
+			       Lemma (bvand #n w x == bvand #n y z)
 let cong_bvand #n #w #x #y #z pf1 pf2 = ()
 
 val cong_bvxor : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
@@ -56,6 +56,10 @@ val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
               squash (int2bv #n x == int2bv #n y) -> Lemma (x == y)
 let eq_to_bv #n #x #y pf = int2bv_lemma_2 #n x y
 
+val lt_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
+              squash (bvult #n (int2bv #n x) (int2bv #n y)) -> Lemma (x < y)
+let lt_to_bv #n #x #y pf = int2bv_lemma_ult_2 #n x y
+
 (* Creates two fresh variables and two equations of the form int2bv
    x = z /\ int2bv y = w. The above lemmas transform these two
    equations before finally instantiating them through reflexivity,
@@ -64,6 +68,16 @@ val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
 		  squash (x == z) -> squash (y == w) -> squash (z == w) -> 
 		  Lemma (x == y)
 let trans #n #x #y #z #w pf1 pf2 pf3 = ()
+
+val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
+		  squash (x == z) -> squash (y == w) -> squash (bvult #n z w) -> 
+		  Lemma (bvult #n x y)
+let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
+
+assume val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
+		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> squash (bvult #n z w) -> 
+		  Lemma (squash (x < y))
+// let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = ()
 
 (*
  * This is being proven terminating.
@@ -117,10 +131,11 @@ let arith_to_bv_tac : tactic unit =
     | Comp Eq t l r ->
      begin match run_tm (is_arith_expr l) with
       | Inl s ->
-        trefl
+    	  dump s;;
+          trefl
       | Inr e ->
+    	    dump "inr arith_to_bv";;
             seq (arith_expr_to_bv e) trefl
-	   //  arith_expr_to_bv e
         end
     | _ ->
         fail ("impossible: ")
@@ -134,6 +149,22 @@ let bv_tac ()  =
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
-  dump "";;
   smt ()
 
+let bv_tac_lt () =
+  apply_lemma (quote lt_to_bv);;
+  // dump "after lt_to_bv";;
+  apply_lemma (quote trans_lt);;
+  // apply_lemma (quote trans_lt2);;
+  dump "after trans";;
+  arith_to_bv_tac;;
+  dump "after first arith_to_bv";;
+  arith_to_bv_tac;;
+  set_options "--smtencoding.elim_box true";;
+  smt ()
+
+let to_bv_tac ()  =
+  apply_lemma (quote eq_to_bv);;
+  apply_lemma (quote trans);;
+  arith_to_bv_tac;;
+  arith_to_bv_tac

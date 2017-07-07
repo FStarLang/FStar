@@ -28,10 +28,11 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>test.fst --debug Test --debug_level SMTQuery --dump_module Test --print_implicits</StartArguments>
+    <StartArguments>--smt C:\dev\z3-vs-debug\z3\Debug\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics --log_queries foo.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -44,6 +45,8 @@
     <DocumentationFile>bin\Release\fstar.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
+    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
+    <StartArguments>--smt c:\dev\z3\bld_rel\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics foo.fst</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

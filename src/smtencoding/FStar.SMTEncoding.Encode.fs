@@ -484,6 +484,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
+      || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
     | Tm_fvar fv, [(sz_arg, _); _] ->
@@ -635,6 +636,7 @@ and encode_arith_term env head args_e =
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith in
     let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith in
     let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith in
+    let bv_ult  = mk_bv Util.mkBvUlt binary in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith in
     let ops =
         [(Const.bv_and_lid, bv_and);
@@ -645,6 +647,7 @@ and encode_arith_term env head args_e =
          (Const.bv_udiv_lid, bv_udiv);
          (Const.bv_mod_lid, bv_mod);
          (Const.bv_mul_lid, bv_mul);
+         (Const.bv_ult_lid, bv_ult);
          (Const.nat_to_bv_lid, bv_to)]
     in
     let _, op =

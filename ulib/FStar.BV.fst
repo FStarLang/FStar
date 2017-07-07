@@ -16,6 +16,7 @@ let bvshr = B.shift_right_vec
 
 let int2bv = U.to_vec
 let bv2int = U.from_vec
+let bvult #n a b = (bv2int #n a) < (bv2int #n b)
 
 let int2bv_lemma_1 = U.to_vec_lemma_1
 let int2bv_lemma_2 = U.to_vec_lemma_2
@@ -31,6 +32,15 @@ let bvmul #n a b =
 
 let inverse_vec_lemma = U.inverse_vec_lemma
 let inverse_num_lemma = U.inverse_num_lemma
+
+let int2bv_lemma_ult_1 #n a b =
+  inverse_num_lemma #n a;
+  inverse_num_lemma #n b;
+  ()
+let int2bv_lemma_ult_2 #n a b = 
+  inverse_num_lemma #n a;
+  inverse_num_lemma #n b;
+  ()
 
 let int2bv_logand #n #x #y #z pf =
   inverse_vec_lemma #n (bvand #n (int2bv #n x) (int2bv #n y));

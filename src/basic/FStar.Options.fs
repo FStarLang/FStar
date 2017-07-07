@@ -129,6 +129,7 @@ let defaults =
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
       ("load"                         , List []);
+      ("lax_except"                   , Unset);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -229,6 +230,7 @@ let get_initial_fuel            ()      = lookup_opt "initial_fuel"             
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
+let get_lax_except              ()      = lookup_opt "lax_except"               (as_option as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -464,7 +466,7 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs(fun () -> Bool true),
         "Print information regarding hints");
 
-        ( noshort,
+       ( noshort,
          "hint_file",
          OneArg (Path,
                  "[path]"),
@@ -518,6 +520,11 @@ let rec specs () : list<Getopt.opt> =
         OneArg ((fun s -> List (List.map String (get_load()) @ [Path s])),
                 "[module]"),
         "Load compiled module");
+
+       ( noshort,
+        "lax_except",
+         OneArg (String, "[id]"),
+        "Run the lax-type checker only (admit all verification conditions), except on the query labelled <id>");
 
        ( noshort,
         "log_types",
@@ -837,6 +844,7 @@ let settable = function
     | "initial_ifuel"
     | "inline_arith"
     | "lax"
+    | "lax_except"
     | "log_types"
     | "log_queries"
     | "max_fuel"
@@ -1037,6 +1045,7 @@ let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel 
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
+let lax_except                   () = get_lax_except                  ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()

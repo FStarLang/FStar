@@ -350,6 +350,7 @@ let reify_tactic (a : term) : term =
     mk_Tm_app r [S.iarg t_unit; S.as_arg a] None a.pos
 
 let synth (env:Env.env) (typ:typ) (tau:term) : term =
+    tacdbg := Env.debug env (Options.Other "Tac");
     let gs, w = run_tactic_on_typ (unembed_tactic_0 unembed_unit (reify_tactic tau)) env typ in
     match gs with
     | [] -> w

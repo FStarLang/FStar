@@ -98,6 +98,7 @@ val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
+val lax_except                  : unit    -> option<string>
 val legacy_interactive          : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
