@@ -47,6 +47,8 @@ let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
 
 (* ops *)
 type subset (#a:eqtype) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
+let add_elt (#a:eqtype) (s:set a) (x:a) = s `union` singleton x
+let remove_elt (#a:eqtype) (s:set a) (x:a) =  s `intersect` complement (singleton x)
 
 (* Properties *)
 abstract val mem_empty: #a:eqtype -> x:a -> Lemma
@@ -135,7 +137,28 @@ let as_set (#a:eqtype) (l:list a) = normalize_term (as_set' l)
 
 let lemma_mem_idempotent_union (#a:eqtype) (s:set a) (x:a)
   : Lemma (requires (x `mem` s))
-  (ensures (s `union` singleton x == s))
+  (ensures (s `add_elt` x == s))
 = let s' = s `union` singleton x in
   lemma_equal_intro s' s ;
   lemma_equal_elim s' s
+
+let lemma_remove_elt_idempotent (#a:eqtype) (s:set a) (x:a) :
+  Lemma ((s `remove_elt` x) `remove_elt` x == s `remove_elt` x)
+= let s' = s `remove_elt` x in
+  let s'' = s' `remove_elt` x in
+  lemma_equal_intro s'' s' ;
+  lemma_equal_elim s'' s'
+
+let lemma_add_remove_elt (#a:eqtype) (s:set a) (x:a) :
+  Lemma ((s `add_elt` x) `remove_elt` x == s `remove_elt` x)
+= let s1 = (s `add_elt` x) `remove_elt` x in
+  let s2 = s `remove_elt` x in
+  lemma_equal_intro s1 s2 ;
+  lemma_equal_elim s1 s2
+
+let lemma_intersect_remove_elt (#a:eqtype) (s:set a) (x:a) :
+    Lemma ((s `remove_elt` x) `intersect` s == s `remove_elt` x)
+= let s' = s `remove_elt` x in
+  let s'' = s' `intersect` s in
+  lemma_equal_intro s'' s' ;
+  lemma_equal_elim s'' s'

@@ -17,17 +17,18 @@ unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fu
 sub_effect DIV ~> GST = lift_div_gst
 
 let ref_requires (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
-  is_eternal_region r.id && not(is_mm r) \/
-  (is_eternal_region r.id && is_mm r /\ h `contains` r) \/
-  (is_stack_region r.id && is_mm r /\ h `contains` r) (* \/ *)
-  (* (is_stack_region r.id && not (is_mm r) /\ r.id `is_above` h.tip) *)
+  is_eternal_region r.id /\ ~(is_mm r) \/
+  (is_eternal_region r.id /\ is_mm r /\ h `contains` r) \/
+  (is_stack_region r.id /\ is_mm r /\ h `contains` r) \/
+  (is_stack_region r.id /\ ~ (is_mm r) /\ r.id `is_above` h.tip)
 
 let mem_rel0 (h1:mem) (h2:mem) =
   (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
     h1 `contains` r /\ ref_requires r h2 ==> (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))) /\
-  (forall (i:HH.rid). is_eternal_region i /\ i `is_in` h1.h ==> i `is_in` h2.h)
+  (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
+  (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2))
 
-let mem_rel : preorder mem = mem_rel0
+let mem_rel (* : preorder mem *) = mem_rel0
 
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
@@ -89,8 +90,8 @@ let inline_stack_inv h h' : GTot Type0 =
   (* The heap structure is unchanged *)
   /\ Map.domain h.h == Map.domain h'.h
   (* Any region that is not the tip has no seen any allocation *)
-  /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r =!= h.tip /\ Map.contains h.h r)
-       ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
+  /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r =!= h.tip /\ r `is_in` h.h)
+       ==> Heap.equal_dom (h `at` r) (h' `at` r))
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
@@ -107,7 +108,7 @@ let inline_inv h h' : GTot Type0 =
   h.tip == h'.tip
   (* No frame may have received an allocation but the tip *)
   /\ (forall (r:HH.rid). {:pattern (is_stack_region r)}(is_stack_region r /\ r `is_strictly_above` h.tip)
-       ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
+       ==> Heap.equal_dom (h `at` r) (h' `at` r))
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
@@ -130,27 +131,18 @@ effect STL (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) = Stack a pr
 sub_effect
   DIV   ~> GST = fun (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) -> wp (fun a -> p a h)
 
+let region_allocated_pred (i:HH.rid) : p:mem_predicate{stable p} =
+  fun (m:mem) -> Map.contains m.h i
 
-let eternal_is_in_pred (i:HH.rid) : p:mem_predicate{stable p} = fun (m:mem) -> is_eternal_region i ==> i `is_in ` m.h
+let rid = i:HH.rid{witnessed (region_allocated_pred i)}
+let recall_weak_live_region (r:rid)
+  : GST unit (fun (p:gst_post unit) (m:mem) -> weak_live_region m r /\ (r `is_in` m.h ==> p () m))
+= gst_witness (region_allocated_pred HH.root) ; gst_recall (region_allocated_pred r)
 
-let rid = i:HH.rid{witnessed (eternal_is_in_pred i)}
-let recall_eternal_region (r:rid)
-  : GST unit (fun (p:gst_post unit) (m:mem) -> is_eternal_region r /\ (r `is_in` m.h ==> p () m))
-= gst_witness (eternal_is_in_pred HH.root) ; gst_recall (eternal_is_in_pred r)
-
-let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate = fun (m:mem) ->
-  Map.contains m.h r.id /\
-  (is_stack_region r.id && not (is_mm r) /\ r.id `is_above` m.tip ==> HH.contains_ref m.h r.ref)
-
-let valid_ref_stable (#a:Type) (#rel:preorder a) (r:mreference a rel) (h1 h2:mem) : Lemma (requires (valid_ref r h1 /\ mem_rel h1 h2 /\ is_stack_region r.id && not (is_mm r) /\ r.id `is_above` h2.tip)) (ensures (HH.contains_ref h2.h r.ref)) =
-    assert (is_stack_region r.id) ;
-    assert (h1 `contains` r ==> r.id `is_above` h1.tip) ;
-    assert (h1 `contains` r ==> h2 `contains` r)
-
-let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} = fun (m:mem) ->
-  eternal_is_in_pred r.id m /\
-  (is_eternal_region r.id && not (is_mm r) ==> HH.contains_ref m.h r.ref) /\
-  (is_stack_region r.id && not (is_mm r) /\ r.id `is_above` m.tip ==> HH.contains_ref m.h r.ref)
+let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} =
+  fun (m:mem) ->
+    region_allocated_pred r.id m /\
+    (not (is_mm r) /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
 
 type reference (a:Type) = r:reference a{witnessed(valid_ref r)}
 
@@ -162,11 +154,15 @@ let mmref (a:Type) = r:mmref a{witnessed(valid_ref r)}
 
 type s_ref (i:rid) (a:Type) = s:s_ref i a{witnessed(valid_ref s)}
 
+(* TODO : let's try to have this HH.rid be a rid *)
 assume val fresh_child : r:HH.rid -> c:int ->
   GST rid
     (fun (p:gst_post rid) (m0:mem) ->
       r `is_in` m0.h /\
-      (forall r' m1. r `is_in` m0.h /\ HH.parent r' == r /\ HH.color r' == c /\ equal_domains m0 m1 /\ HH.fresh_region r' m0.h m1.h ==> p r' m1))
+      (forall (r':rid) m1. r' =!= HH.root /\ r `is_in` m0.h /\ HH.parent r' == r /\ HH.color r' == c /\
+        m1.h == Map.upd m0.h r' (HH.H true Heap.emp)
+      /\ m1.tip == m0.tip
+      /\ HH.fresh_region r' m0.h m1.h ==> p r' m1))
 
 (**
    Pushes a new empty frame on the stack
@@ -177,9 +173,8 @@ val push_frame: unit -> Unsafe unit
   (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
 let push_frame () =
   let m0 = gst_get () in
-  gst_witness (eternal_is_in_pred HH.root) ;
   let tip = fresh_child m0.tip 1 in
-  let h = Map.upd m0.h tip Heap.emp in
+  let h = Map.upd m0.h tip (HH.H true Heap.emp) in
   let m1 = HS h tip in
   gst_put m1
 
@@ -247,9 +242,18 @@ let salloc_mm #a init =
 
 
 let remove_reference (#a:Type) (r:reference a) (m:mem{m `contains` r /\ is_mm r}) : Tot mem =
-  let h0 = Map.sel m.h r.id in
-  let h1 = Heap.free_mm h0 (as_ref r) in
-  HS (Map.upd m.h r.id h1) m.tip
+  HS (HH.free_mm m.h r.ref) m.tip
+
+let ref_requiresminusmmstackref (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
+  is_eternal_region r.id /\ ~(is_mm r) \/
+  (is_eternal_region r.id /\ is_mm r /\ h `contains` r) \/
+  (is_stack_region r.id /\ is_mm r /\ h `contains` r)
+
+(* TODO : eliminate the assume below using this *)
+(* let bidule (#a #b:Type) (m0:mem) (r:mmstackref a{m0.h `HH.contains_ref` r.ref}) (#rel:preorder a) (r':mstackref a rel) : *)
+(*   Lemma (requires (m0.h `HH.contains_ref` r'.ref /\ r.id == r'.id)) *)
+(*     (ensures (HH.addr_of r.ref =!= HH.addr_of r'.ref)) *)
+(* = Heap.lemma_distinct_addrs_distinct_mm (m0 `at` r.id) (as_ref r) (as_ref r') *)
 
 val sfree: #a:Type -> r:mmstackref a -> StackInline unit
   (requires (fun m0 -> r.id == m0.tip /\ m0 `contains` r))
@@ -258,6 +262,15 @@ let sfree #a r =
   let m0 = gst_get () in
   let m1 = remove_reference r m0 in
   lemma_upd_tip_idempotent m0;
+  assert (is_mm r) ;
+  assume (forall (a:Type0) (rel:preorder a) (r0:mstackref a rel).
+    m0.h `HH.contains_ref` r0.ref ==> (r0.id =!= r.id \/ HH.addr_of r0.ref =!= HH.addr_of r.ref)
+  );
+  assert (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
+        m0 `contains` r /\ ref_requires r m1 ==> (m1 `contains` r /\ rel (sel m0 r) (sel m1 r))) ;
+  assert (forall (i:HH.rid). Map.contains m0.h i ==> Map.contains m1.h i) ;
+  assert (forall (i:HH.rid). ~(i `is_alive` m0) ==> ~(i `is_alive` m1)) ;
+  assert (m0 `mem_rel` m1) ;
   gst_put m1
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
@@ -279,7 +292,7 @@ val new_region: r0:rid ->
         r1 `HH.extends` r0
       /\ HH.fresh_region r1 m0.h m1.h
 			/\ HH.color r1 == HH.color r0
-			/\ m1.h == Map.upd m0.h r1 Heap.emp
+			/\ m1.h == Map.upd m0.h r1 (HH.H true Heap.emp)
 			/\ m1.tip == m0.tip
 			))
 let new_region r0 =
@@ -296,15 +309,15 @@ val new_colored_region: r0:rid -> c:int -> ST rid
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
 			/\ HH.color r1 == c
-			/\ m1.h == Map.upd m0.h r1 Heap.emp
-			/\ m1.tip = m0.tip
+			/\ m1.h == Map.upd m0.h r1 (HH.H true Heap.emp)
+			/\ m1.tip == m0.tip
 			))
 let new_colored_region r0 c =
-  recall_eternal_region r0 ;
+  recall_weak_live_region r0 ;
   fresh_child r0 c
 
 unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
-    let region_i = Map.sel m0.h i in
+    let region_i = (Map.sel m0.h i).HH.m in
     (HH.as_ref x.ref) `Heap.unused_in` region_i
   /\ i `is_in` m0.h
   /\ i = x.id
@@ -315,7 +328,7 @@ val ralloc_maybe_mm: #a:Type -> i:rid -> init:a -> mm:bool -> ST (x:reference a{
   (requires (fun m -> is_eternal_region i))
   (ensures (fun m0 x m1 -> ralloc_post i init m0 x m1 /\ is_mm x == mm))
 let ralloc_maybe_mm #a i init mm =
-  recall_eternal_region i ;
+  recall_weak_live_region i ;
   let m0 = gst_get () in
   let r, h = HH.alloc i (Heap.trivial_preorder a) m0.h init mm in
   HH.lemma_alloc i (Heap.trivial_preorder a) m0.h init mm ;
@@ -339,8 +352,8 @@ let ralloc_mm #a i init = ralloc_maybe_mm #a i init true
 val rfree: #a:Type -> r:mmref a -> ST unit
   (requires (fun m0 -> m0 `contains` r))
   (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
-let sfree #a r =
-  recall_eternal_region r.id ;
+let rfree #a r =
+  gst_recall (valid_ref r) ;
   let m0 = gst_get () in
   let m1 = remove_reference r m0 in
   lemma_upd_existing_rid_idempotent r.id m0;
@@ -379,8 +392,6 @@ val op_Bang: #a:Type -> r:reference a -> Stack a
 let op_Bang #a r =
   let m0 = gst_get () in
   gst_recall (valid_ref r) ;
-  assert (Map.contains m0.h r.id) ;
-  assert (Heap.contains (Map.sel m i))
   HH.sel_tot m0.h r.ref
 
 let modifies_none (h0:mem) (h1:mem) = modifies Set.empty h0 h1
@@ -400,16 +411,23 @@ let get () = gst_get ()
 (**
    We can only recall refs with mm bit unset, not stack refs
    *)
-assume val recall: #a:Type -> r:ref a -> Stack unit
+val recall: #a:Type -> r:ref a -> Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0==m1 /\ m1 `contains` r))
+let recall #a r = gst_recall (valid_ref r)
 
 (**
    We can only recall eternal regions, not stack regions
    *)
-assume val recall_region: i:HH.rid{is_eternal_region i} -> Stack unit
+val recall_region: i:rid{is_eternal_region i} -> Stack unit
   (requires (fun m -> True))
   (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
+let recall_region i = gst_recall (region_allocated_pred i)
+
+val recall_region': i:rid -> Stack unit
+  (requires (fun m -> weak_live_region m i))
+  (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
+let recall_region' i = gst_recall (region_allocated_pred i)
 
 (* Tests *)
 val test_do_nothing: int -> Stack int
@@ -482,6 +500,8 @@ let test_heap_code_with_stack_calls () =
   let h = get () in
   // How is the following not known ?
   HH.root_has_color_zero ();
+  (* TODO : the tip is always a valid rid, we should package that up *)
+  gst_witness (region_allocated_pred h.tip) ;
   let s = ralloc h.tip 0 in
   test_stack_with_long_lived s;
   s := 1;
@@ -494,6 +514,7 @@ let test_heap_code_with_stack_calls_and_regions () =
   let h = get() in
   let color = 0 in
   HH.root_has_color_zero ();
+  gst_witness (region_allocated_pred h.tip) ;
   let new_region = new_colored_region h.tip color in
   let s = ralloc new_region 1 in
   test_stack_with_long_lived s; // STStack call
@@ -507,6 +528,7 @@ let test_lax_code_with_stack_calls_and_regions () =
   push_frame();
   let color = 0 in
   HH.root_has_color_zero ();
+  gst_witness (region_allocated_pred HH.root) ;
   let new_region = new_colored_region HH.root color in
   let s = ralloc new_region 1 in
   test_stack_with_long_lived s; // Stack call
@@ -519,6 +541,7 @@ let test_lax_code_with_stack_calls_and_regions_2 () =
   push_frame();
   let color = 0 in
   HH.root_has_color_zero ();
+  gst_witness (region_allocated_pred HH.root) ;
   let new_region = new_colored_region HH.root color in
   let s = ralloc new_region 1 in
   test_stack_with_long_lived s; // Stack call
@@ -559,6 +582,7 @@ val test_to_be_inlined: unit -> Inline (reference int * reference int)
 let test_to_be_inlined () =
   let r = salloc 0 in
   HH.root_has_color_zero ();
+  gst_witness (region_allocated_pred HH.root) ;
   let region = new_region HH.root in
   let r' = ralloc region 1 in
   r := 2;
@@ -575,7 +599,7 @@ let test_st_function_with_inline_2 () =
   pop_frame();
   ()
 
-val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> Stack a pre post)
+val with_frame: #a:Type -> #pre:gst_pre -> #post:(mem -> Tot (gst_post a)) -> $f:(unit -> Stack a pre post)
 	     -> Stack a (fun s0 -> forall s1. fresh_frame s0 s1 ==> pre s1)
 		     (fun s0 x s1 ->
 			exists s0' s1'. fresh_frame s0 s0'
@@ -592,27 +616,33 @@ let with_frame #a #pre #post f =
 let test_with_frame (x:stackref int) (v:int)
   : Stack unit (requires (fun m -> contains m x))
 	     (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
- = with_frame (fun _ -> x := v)
+= let f _ : Stack unit (requires (fun m -> contains m x))
+	      (ensures (fun m0 _ m1 -> modifies (Set.singleton x.id) m0 m1 /\ sel m1 x = v))
+        = x := v
+    in
+  (* TODO : investigate why the lambda was not valid anymore *)
+  with_frame f
 
 
-let as_requires (#a:Type) (wp:st_wp a) = wp (fun x s -> True)
-let as_ensures (#a:Type) (wp:st_wp a) = fun s0 x s1 -> wp (fun y s1' -> y=!=x \/ s1=!=s1') s0
+let as_requires (#a:Type) (wp:gst_wp a) = wp (fun x s -> True)
+let as_ensures (#a:Type) (wp:gst_wp a) = fun s0 x s1 -> wp (fun y s1' -> y=!=x \/ s1=!=s1') s0
 
-assume val as_stack: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) ->
-	   Pure (unit -> Stack a (as_requires wp)
-			      (as_ensures wp))
-	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
- 	        (ensures (fun x -> True))
+(* assume val as_stack: #a:Type -> #wp:gst_wp a -> $f:(unit -> FStar.ST.STATE a wp) -> *)
+(* 	   Pure (unit -> Stack a (as_requires wp) *)
+(* 			      (as_ensures wp)) *)
+(* 	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1)) *)
+(*  	        (ensures (fun x -> True)) *)
 
 val mm_tests: unit -> Unsafe unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
 let mm_tests _ =
+  let m0 = gst_get () in
   let _ = push_frame () in
 
   let r1 = salloc_mm 2 in
 
   //check that the heap contains the reference
   let m = get () in
-  let h = Map.sel m.h m.tip in
+  let h = m `at` m.tip in
   let _ = assert (Heap.contains h (HH.as_ref r1.ref)) in
 
   let _ = !r1 in
@@ -624,7 +654,7 @@ let mm_tests _ =
 
   //check that the heap does not contain the reference
   let m = get () in
-  let h = Map.sel m.h m.tip in
+  let h = m `at` m.tip in
   let _ = assert (~ (Heap.contains h (HH.as_ref r1.ref))) in
 
   let r2 = salloc_mm 2 in
@@ -632,7 +662,7 @@ let mm_tests _ =
 
   //this fails because the reference is no longer live
   //let _ = sfree r2 in
-
+  gst_witness (region_allocated_pred HH.root) ;
   let id = new_region HH.root in
 
   let r3 = ralloc_mm id 2 in
@@ -641,7 +671,7 @@ let mm_tests _ =
 
   //check that the heap does not contain the reference
   let m = get () in
-  let h = Map.sel m.h id in
+  let h = m `at` id in
   let _ = assert (~ (Heap.contains h (HH.as_ref r3.ref))) in
 
   //this fails because the reference is no longer live

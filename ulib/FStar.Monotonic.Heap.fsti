@@ -91,6 +91,12 @@ val lemma_distinct_addrs_distinct_preorders
          (ensures  (addr_of r1 <> addr_of r2))
 	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
 
+val lemma_distinct_addrs_distinct_mm
+  (#a #b:Type0) (#rel1 #rel2:preorder a) (h:heap) (r1:mref a rel1) (r2:mref b rel2)
+  :Lemma (requires (is_mm r1 =!= is_mm r2 /\ h `contains` r1 /\ h `contains` r2))
+          (ensures  (addr_of r1 <> addr_of r2))
+  [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
+
 (*
  * AR: this is a bit surprising. i had to add ~ (r1 === r2) postcondition to make the lemma
  * lemma_live_1 in hyperstack to go through. if addr_of r1 <> addr_of r2, shouldn't we get ~ (r1 === r2)

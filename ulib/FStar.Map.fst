@@ -1,7 +1,7 @@
 (**
-F* standard library Map module. 
+F* standard library Map module.
 
-@summary F* stdlib Map module. 
+@summary F* stdlib Map module.
 *)
 module FStar.Map
 open FStar.Set
@@ -85,15 +85,15 @@ abstract val lemma_InDomRestrict: #key:eqtype -> #value:Type -> m:t key value ->
                          Lemma (requires True) (ensures (contains (restrict ks m) k == (mem k ks && contains m k)))
                          [SMTPat (contains (restrict ks m) k)]
 
-abstract val lemma_ContainsDom: #key:eqtype -> #value:Type -> m:t key value -> k:key -> 
+abstract val lemma_ContainsDom: #key:eqtype -> #value:Type -> m:t key value -> k:key ->
   Lemma (requires True) (ensures (contains m k = mem k (domain m)))
                       [SMTPat (contains m k)]
 
 abstract val lemma_UpdDomain : #key:eqtype -> #value:Type -> m:t key value -> k:key -> v:value ->
-  Lemma (requires True) 
-	(ensures (equal (domain (upd m k v)) (union (domain m) (singleton k))))
+  Lemma (requires True)
+	(ensures (equal (domain (upd m k v)) (domain m `add_elt` k)))
 	[SMTPat (domain (upd m k v))]
-  
+
 let lemma_SelUpd1 #key #value m k v        = ()
 let lemma_SelUpd2 #key #value m k1 k2 v    = ()
 let lemma_SelConst #key #value v k         = ()
@@ -112,23 +112,25 @@ abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value
     feq m1.mappings m2.mappings /\ equal m1.domain m2.domain
 
 
-abstract val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                       Lemma (requires (forall k. sel m1 k == sel m2 k /\
-                                                  contains m1 k = contains m2 k))
-                       (ensures (equal m1 m2))
-                       [SMTPatT (equal m1 m2)]
+abstract
+val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
+  Lemma (requires (
+    (forall (k:key). contains m1 k == contains m2 k /\ sel m1 k == sel m2 k)))
+    (ensures (equal m1 m2))
+    [SMTPatT (equal m1 m2)]
 
-abstract val lemma_equal_elim: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                      Lemma (requires (equal m1 m2)) (ensures  (m1 == m2))
-                      [SMTPatT (equal m1 m2)]
+abstract
+val lemma_equal_elim: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
+  Lemma (requires (equal m1 m2)) (ensures  (m1 == m2))
+  [SMTPatT (equal m1 m2)]
 
-abstract val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                      Lemma  (requires (m1 == m2)) (ensures  (equal m1 m2))
-		      [SMTPatT (equal m1 m2)]
-
+abstract
+val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
+  Lemma  (requires (m1 == m2)) (ensures  (equal m1 m2))
+    [SMTPatT (equal m1 m2)]
 
 let lemma_equal_intro #key #value m1 m2 = ()
-let lemma_equal_elim #key #value m1 m2  = ()
+let lemma_equal_elim #key #value m1 m2 = ()
 let lemma_equal_refl #key #value m1 m2  = ()
 
 let const_on (#key:eqtype) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)
