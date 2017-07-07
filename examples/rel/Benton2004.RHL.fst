@@ -677,7 +677,7 @@ let r_dassr
       skip
       (assign x e)
   ))
-= ()
+= r_dassl x e (flip phi)
 
 (* Common branch *)
 
