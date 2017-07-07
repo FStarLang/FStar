@@ -119,6 +119,7 @@ let exp_to_gexp_const
 = gfeq2 (exp_to_gexp (const c) side) (gconst c)
 
 let exp_to_gexp_evar
+  (#t: Type0)
   (x: var)
   (side: pos)
 : Lemma
@@ -296,11 +297,7 @@ let r_seq
   (ensures (
     exec_equiv p0 p2 (seq c01 c12) (seq c01' c12')
   ))
-  [SMTPatOr [
-    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))];
-    [SMTPat (exec_equiv p1 p2 c12 c12'); SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))];
-    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p1 p2 c12 c12')];
-  ]]
+  [SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))]
 = d_seq (interp p0) (interp p1) (interp p2) c01 c01' c12 c12'
 
 let r_ass
@@ -581,11 +578,7 @@ let d_su1'
     exec_equiv phi' phi'' c' c''
   ))
   (ensures (exec_equiv phi phi'' (seq c c') c''))
-  [SMTPatOr [
-    [SMTPat (exec_equiv phi phi' c skip); SMTPat (exec_equiv phi phi'' (seq c c') c'')];
-    [SMTPat (exec_equiv phi' phi'' c' c''); SMTPat (exec_equiv phi phi'' (seq c c') c'')];
-    [SMTPat (exec_equiv phi phi' c skip); SMTPat (exec_equiv phi' phi'' c' c'')];
-  ]]
+  [SMTPat (exec_equiv phi phi'' (seq c c') c'')]
 = Benton2004.d_su1' c c' c'' (interp phi) (interp phi') (interp phi'')
 
 let d_su2
@@ -618,11 +611,7 @@ let d_cc
   (ensures (
     exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))
   ))
-  [SMTPatOr [
-    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))];
-    [SMTPat (exec_equiv phi' phi'' c3 c3); SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))];
-    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi' phi'' c3 c3)];
-  ]]
+  [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))]
 = Benton2004.d_cc b c1 c2 c3 (interp phi) (interp phi') (interp phi'')
 
 let d_lu1

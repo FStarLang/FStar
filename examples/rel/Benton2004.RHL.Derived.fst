@@ -62,11 +62,7 @@ let d_su1'_flip
     exec_equiv phi' phi'' c'' c' 
   ))
   (ensures (exec_equiv phi phi'' c'' (seq c c')))
-  [SMTPatOr [
-    [SMTPat (exec_equiv phi phi' skip c); SMTPat (exec_equiv phi phi'' c'' (seq c c'))];
-    [SMTPat (exec_equiv phi' phi'' c'' c'); SMTPat (exec_equiv phi phi'' c'' (seq c c'))];
-    [SMTPat (exec_equiv phi phi' skip c); SMTPat (exec_equiv phi' phi'' c'' c')];
-  ]]
+  [SMTPat (exec_equiv phi phi'' c'' (seq c c'))]
 = d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
 
 unfold
