@@ -1,5 +1,5 @@
 [
-  "\u007f'KMi\u0001µ;‰î/u$QUP",
+  "`÷'FÖdç{‰,?\\ÇGî ",
   [
     [
       "Protocol.fragment",
@@ -1684,17 +1684,6 @@
       0,
       0,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "Protocol.send_aux",
-      3,
-      0,
-      0,
-      [
         "@MaxIFuel_assumption", "@query", "b2t_def",
         "equation_FreezingArray.array",
         "equation_FreezingArray.init_arr_in_heap",
@@ -1712,14 +1701,13 @@
     ],
     [
       "Protocol.send_aux",
-      4,
+      3,
       0,
       0,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Protocol.S", "eq2-interp",
+        "bool_inversion", "disc_equation_Protocol.S", "eq2-interp",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FreezingArray.all_some", "equation_FreezingArray.array",
@@ -1728,8 +1716,9 @@
         "equation_FreezingArray.init_arr_in_heap_i_j",
         "equation_FreezingArray.init_at_seq",
         "equation_FreezingArray.some_equivalent_seqs",
-        "equation_FreezingArray.suffix", "equation_Prims.min",
-        "equation_Prims.nat", "equation_Protocol.connection_footprint",
+        "equation_FreezingArray.suffix", "equation_Prims.eq2",
+        "equation_Prims.min", "equation_Prims.nat",
+        "equation_Protocol.connection_footprint",
         "equation_Protocol.contains_connection", "equation_Protocol.ctr",
         "equation_Protocol.fully_initialized_in", "equation_Protocol.iarray",
         "equation_Protocol.message", "equation_Protocol.sender",
@@ -1740,12 +1729,12 @@
         "int_typing",
         "interpretation_Protocol_Tm_abs_5b8626f53514ffb134317a14f1166005",
         "kinding_FStar.Pervasives.Native.option@tok", "l_and-interp",
-        "lemma_FStar.Seq.Base.lemma_index_slice",
         "lemma_FStar.Seq.Base.lemma_len_slice",
         "lemma_FStar.Seq.Properties.slice_length",
         "lemma_FStar.Seq.Properties.slice_slice",
         "lemma_FreezingArray.lemma_as_seq_length",
         "lemma_FreezingArray.lemma_framing_of_as_seq",
+        "lemma_FreezingArray.lemma_get_some_equivalent_slice",
         "lemma_FreezingArray.lemma_sub_contains",
         "lemma_FreezingArray.lemma_sub_footprint",
         "lemma_FreezingArray.lemma_sub_is_slice",
@@ -1757,7 +1746,6 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5542011d20872a6178aad9a072f1b686",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
         "refinement_interpretation_FreezingArray_Tm_refine_3cf34fe66b635d50f7dee478f7024be4",
@@ -1766,9 +1754,7 @@
         "refinement_interpretation_FreezingArray_Tm_refine_b00042e260bf0ef7fc253501131297cb",
         "refinement_interpretation_FreezingArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Protocol_Tm_refine_27f2e60867d5675955885d1026dc4f5a",
         "refinement_interpretation_Protocol_Tm_refine_2a24d0816c0db70a1ab29b9e2b134bd7",
-        "refinement_interpretation_Protocol_Tm_refine_410c1f619e4e5c3e034bc09fcd230e17",
         "refinement_interpretation_Protocol_Tm_refine_99de6483049c3bdf40b4a7eec626b1c3",
         "token_correspondence_Protocol.sent_file_pred",
         "typing_FStar.Seq.Base.slice", "typing_FreezingArray.as_seq",
@@ -1780,12 +1766,24 @@
     ],
     [
       "Protocol.send_aux",
-      5,
+      4,
       0,
       0,
       [
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Protocol.send_aux",
+      5,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
       ],
       0
     ],
@@ -1806,24 +1804,12 @@
       7,
       0,
       0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
-      ],
-      0
-    ],
-    [
-      "Protocol.send_aux",
-      8,
-      0,
-      0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [
       "Protocol.send_aux",
-      9,
+      8,
       0,
       0,
       [
@@ -1834,7 +1820,7 @@
     ],
     [
       "Protocol.send_aux",
-      10,
+      9,
       0,
       0,
       [
@@ -1903,15 +1889,15 @@
         "refinement_interpretation_Protocol_Tm_refine_2a24d0816c0db70a1ab29b9e2b134bd7",
         "refinement_interpretation_Protocol_Tm_refine_46f08a99bb3521bb89400ae6ad3f6d4e",
         "refinement_interpretation_Protocol_Tm_refine_99de6483049c3bdf40b4a7eec626b1c3",
+        "refinement_kinding_Protocol_Tm_refine_2244126fa9e3f73aca320e63eaeaee37",
         "token_correspondence_Protocol.sent_file_pred",
         "typing_FStar.Monotonic.Heap.sel_tot",
         "typing_FStar.Seq.Base.createEmpty", "typing_FStar.Seq.Base.length",
         "typing_FreezingArray.as_seq",
         "typing_FreezingArray.get_some_equivalent",
-        "typing_Protocol.connection_footprint", "typing_Protocol.entries",
-        "typing_Protocol.entries_of", "typing_Protocol.entries_rel",
-        "typing_Protocol.rand_of", "typing_Protocol.sender",
-        "typing_Protocol.seq_map",
+        "typing_Protocol.connection_footprint", "typing_Protocol.entries_of",
+        "typing_Protocol.entries_rel", "typing_Protocol.rand_of",
+        "typing_Protocol.sender", "typing_Protocol.seq_map",
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0
@@ -1983,7 +1969,6 @@
         "int_typing", "lemma_FStar.Pervasives.invertOption",
         "lemma_FreezingArray.lemma_sub_preserves_array_mutable_flag",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
         "refinement_interpretation_FreezingArray_Tm_refine_b00042e260bf0ef7fc253501131297cb",
@@ -1991,7 +1976,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Protocol_Tm_refine_30410201f562422d8c7462f7ae8a84f3",
         "refinement_kinding_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],
@@ -2003,6 +1989,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
@@ -2025,10 +2012,10 @@
         "lemma_FStar.Seq.Base.lemma_index_slice",
         "lemma_FStar.Seq.Base.lemma_len_append",
         "lemma_FStar.Seq.Base.lemma_len_slice",
+        "lemma_FStar.Seq.Properties.slice_length",
         "lemma_FStar.Seq.Properties.slice_slice",
         "lemma_FreezingArray.lemma_as_seq_length",
         "lemma_FreezingArray.lemma_get_some_equivalent_append",
-        "lemma_FreezingArray.lemma_get_some_equivalent_index",
         "lemma_FreezingArray.lemma_get_some_equivalent_length",
         "lemma_FreezingArray.lemma_sub_is_slice",
         "lemma_FreezingArray.lemma_sub_preserves_array_mutable_flag",
@@ -2036,6 +2023,7 @@
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_03127b5d59ee3055620018693b4264e8",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9",
@@ -2051,8 +2039,9 @@
         "refinement_interpretation_FreezingArray_Tm_refine_b00042e260bf0ef7fc253501131297cb",
         "refinement_interpretation_FreezingArray_Tm_refine_e9c270e74b09a745564fcd74dbca4997",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.index",
-        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice",
+        "typing_FStar.Seq.Base.slice",
         "typing_FreezingArray.as_initialized_seq",
         "typing_FreezingArray.as_initialized_subseq",
         "typing_FreezingArray.as_seq",
@@ -2158,6 +2147,7 @@
         "function_token_typing_Protocol.fragment_size", "int_inversion",
         "int_typing", "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Seq.Base.lemma_index_slice",
+        "lemma_FStar.Seq.Properties.slice_slice",
         "lemma_FreezingArray.lemma_as_seq_length",
         "lemma_FreezingArray.lemma_sub_contains",
         "lemma_FreezingArray.lemma_sub_is_slice",
@@ -2171,6 +2161,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5542011d20872a6178aad9a072f1b686",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
         "refinement_interpretation_FreezingArray_Tm_refine_21a921eda03ee9d9d9ef65aae2828926",
         "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
         "refinement_interpretation_FreezingArray_Tm_refine_b00042e260bf0ef7fc253501131297cb",
@@ -2178,8 +2169,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Protocol_Tm_refine_c96dacf268ffee31ff6caa8cad464bdb",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FStar.Seq.Base.slice", "typing_FreezingArray.as_seq",
-        "unit_typing"
+        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice",
+        "typing_FreezingArray.as_seq", "unit_typing"
       ],
       0
     ],
@@ -2341,8 +2332,10 @@
         "int_typing",
         "interpretation_Protocol_Tm_abs_5b8626f53514ffb134317a14f1166005",
         "kinding_FStar.Pervasives.Native.option@tok", "l_and-interp",
+        "lemma_FStar.Pervasives.invertOption",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_index_slice",
+        "lemma_FStar.Seq.Properties.slice_slice",
         "lemma_FStar.Seq.Properties.snoc_slice_index",
         "lemma_FreezingArray.lemma_as_seq_length",
         "lemma_FreezingArray.lemma_get_some_equivalent_length",
@@ -2361,6 +2354,7 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5542011d20872a6178aad9a072f1b686",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_559c261b1c3777929ea329abfe70ab33",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
+        "refinement_interpretation_FStar.Seq.Properties_Tm_refine_528d1ac7a4a801fe55aa0f436f85ad2a",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
         "refinement_interpretation_FreezingArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2",
         "refinement_interpretation_FreezingArray_Tm_refine_b00042e260bf0ef7fc253501131297cb",
@@ -2373,9 +2367,9 @@
         "refinement_interpretation_Protocol_Tm_refine_d872c5fb83c0bb7ff4e5b2fa63b8aca0",
         "token_correspondence_Protocol.sent_file_pred",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.index",
-        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.slice",
-        "typing_FreezingArray.as_seq", "typing_Protocol.ctr",
-        "typing_Protocol.log", "typing_Protocol.receiver"
+        "typing_FStar.Seq.Base.slice", "typing_FreezingArray.as_seq",
+        "typing_Protocol.ctr", "typing_Protocol.log",
+        "typing_Protocol.receiver"
       ],
       0
     ],
@@ -2549,7 +2543,6 @@
         "equation_FreezingArray.all_init_i_j",
         "equation_FreezingArray.all_some", "equation_FreezingArray.array",
         "equation_FreezingArray.as_initialized_seq",
-        "equation_FreezingArray.as_initialized_subseq",
         "equation_FreezingArray.prefix",
         "equation_FreezingArray.some_equivalent_seqs", "equation_Prims.nat",
         "equation_Protocol.contains_connection",
@@ -2570,16 +2563,13 @@
         "interpretation_Protocol_Tm_abs_5b8626f53514ffb134317a14f1166005",
         "interpretation_Protocol_Tm_abs_e1d3594b51d4a2eb8169049e2a8030c7",
         "interpretation_Protocol_Tm_abs_f1a436d1dc429cc9ff1e397979d18316",
-        "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_Protocol.entry@tok", "l_and-interp",
         "lemma_FStar.Monotonic.Heap.lemma_sel_equals_sel_tot_for_contained_refs",
         "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "lemma_FStar.Seq.Properties.slice_is_empty",
-        "lemma_FStar.Seq.Properties.slice_length",
         "lemma_FreezingArray.lemma_as_seq_length",
         "lemma_FreezingArray.lemma_sub_contains",
-        "lemma_FreezingArray.lemma_sub_is_slice",
         "lemma_FreezingArray.lemma_sub_preserves_array_mutable_flag",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
@@ -2605,7 +2595,6 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Protocol_Tm_refine_2244126fa9e3f73aca320e63eaeaee37",
         "refinement_interpretation_Protocol_Tm_refine_46f08a99bb3521bb89400ae6ad3f6d4e",
-        "refinement_interpretation_Protocol_Tm_refine_48a8cbaad18b937b838b1a37f3b3285a",
         "refinement_interpretation_Protocol_Tm_refine_5b9d4afb00631771b470453395549e99",
         "refinement_interpretation_Protocol_Tm_refine_5bb7c1a9c503c599e3266923a269f946",
         "refinement_interpretation_Protocol_Tm_refine_5d68b4aedab07e9543c96792e76744c9",
@@ -2615,10 +2604,9 @@
         "typing_FStar.Seq.Base.createEmpty", "typing_FreezingArray.as_seq",
         "typing_FreezingArray.get_some_equivalent",
         "typing_Protocol.counter_pre", "typing_Protocol.counter_pred",
-        "typing_Protocol.counter_t", "typing_Protocol.ctr",
-        "typing_Protocol.entries", "typing_Protocol.entries_rel",
-        "typing_Protocol.rand_of", "typing_Protocol.receiver",
-        "typing_Protocol.seq_map",
+        "typing_Protocol.counter_t", "typing_Protocol.entries",
+        "typing_Protocol.entries_rel", "typing_Protocol.rand_of",
+        "typing_Protocol.receiver", "typing_Protocol.seq_map",
         "typing_Protocol_Tm_abs_dfb3058735a6289ff45f50bcc1e2644c"
       ],
       0
