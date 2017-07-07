@@ -10,6 +10,6 @@ Makefile eol=lf
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf
 
-# Don't show diffs for generated ocaml-output files
+# Don't show diffs for generated ocaml-output and hints files
 /src/ocaml-output/*.ml -diff
 *.hints -diff
