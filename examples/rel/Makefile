@@ -59,6 +59,15 @@ benton2004:\
   Benton2004.RHL.Derived.uver\
   Benton2004.RHL.Examples2.uver\
 
+test :\
+  Loops.uver \
+  Memo.uver\
+  NetKat.uver\
+  OneTimePad.uver\
+  Point.uver\
+  ProgramEquivalence.uver\
+  ProgramOptimizations.uver\
+  RandomTapes.uver
 
 
 %.fst-in:
@@ -66,3 +75,27 @@ benton2004:\
 
 pack:
 	cd ../..; zip -r relational.zip examples/rel examples/dm4free
+
+FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
+SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
+
+timings.csv:
+	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k test > results_without_hints || :
+	+make -k test > results_with_hints || :
+	$(SED) -n results_without_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
+		| sort -t , -k 2,1 > timings_without_hints.csv
+	$(SED) -n results_with_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
+		| sort -t , -k 2,1 > timings_with_hints.csv
+	$(FIND) . -name '*fst' \
+		-exec sh -c 'sed -n -e "/^\((\*.*\*)\| \|\/\/.*\)*$$/!p" {} | wc -l ' \; \
+		-print | tr '\n' ' ' \
+		| sed -e 's; \.\/;,;g' -e 's;\.fst ;\n;g' \
+		| sort -t , -k 2,2 > loc.csv
+	join -t , -1 1 -2 1 timings_without_hints.csv timings_with_hints.csv > timings0.csv
+	echo 'filename,timings (no hints),timings (with hints),loc' > timings.csv
+	join -t , -1 1 -2 2 timings0.csv loc.csv >> timings.csv
+	#rm timings_without_hints.csv timings_wit_hints.csv loc.csv timings0.csv
+
+# strip all white lines and comments lines : sed -n '/^\((\*.*\*)\| \|\/\/.*\)*$/!p'
+#	$(FIND) -name '*.fst' -print '%f\n' \
+#		| $(SED) -e 's/\.fst//' -e 's/\<./\u&/' \

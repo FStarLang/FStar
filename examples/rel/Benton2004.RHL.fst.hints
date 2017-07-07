@@ -1294,7 +1294,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
-        "bool_inversion", "eq2-interp", "equation_Benton2004.RHL.gand",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing", "eq2-interp", "equation_Benton2004.RHL.gand",
         "equation_Benton2004.RHL.gexp", "equation_Benton2004.RHL.gop",
         "equation_Benton2004.RHL.interp", "equation_Benton2004.RHL.is_per",
         "equation_Benton2004.is_per", "equation_Benton2004.sttype",
