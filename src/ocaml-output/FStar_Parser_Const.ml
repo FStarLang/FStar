@@ -27,6 +27,7 @@ let lextop_lid: FStar_Ident.lident = pconst "LexTop"
 let smtpat_lid: FStar_Ident.lident = pconst "smt_pat"
 let smtpatOr_lid: FStar_Ident.lident = pconst "smt_pat_or"
 let monadic_lid: FStar_Ident.lident = pconst "M"
+let spinoff_lid: FStar_Ident.lident = pconst "spinoff"
 let int8_lid: FStar_Ident.lident = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid: FStar_Ident.lident = p2l ["FStar"; "UInt8"; "t"]
 let int16_lid: FStar_Ident.lident = p2l ["FStar"; "Int16"; "t"]
