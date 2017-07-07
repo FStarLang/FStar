@@ -14,10 +14,10 @@ open CoreCrypto
 
 abstract type cipher = (CPA.cipher * MAC.tag)
 
-type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
+abstract type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
 
 
-noeq type key =
+abstract noeq type key =
   | Key:  #region:rid ->
                ke:CPA.key { extends (CPA.Key?.region ke) region  } ->
                km:MAC.key { extends (MAC.Key?.region km) region /\

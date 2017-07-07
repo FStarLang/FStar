@@ -4257,7 +4257,9 @@ region ids `rid` to `heap`s.
 
 ### The type of region identifiers, `rid`
 
-The type `rid` is abstract to clients, with a few operations on it
+[abstract]: https://github.com/FStarLang/FStar/wiki/Qualifiers-for-definitions-and-declarations#abstract
+
+The type `rid` is [abstract] to clients, with a few operations on it
 revealing its hierarchical structure. Specifically, we have three functions:
 
 ```
@@ -4724,7 +4726,7 @@ We refer to the success probability of `A` in this experiment as its UF-CMA adva
 
 Does the appearance of *probabilities* in this section make you suspicious? It should, as nowhere in this tutorial have we so far discussed the use of F\* for probabilistic reasoning. The F\* type checker is a deductive reasoning tool, and trades in certainties and not in probabilities. While we will see that there are ways to extend F\* semantics with probabilities to express probabilistic experiments in the language of F\*, we will now provide an abstraction or idealization of the guarantees of the MAC functionality. We will discuss below, how one can formally establish the soundness of this idealization. 
 
-### The MAC type interface { - } 
+### The MAC type interface 
 We define an interface that models perfect authentication guarantees. We will get back to how it can be (approximately) implemented by an F* module later.
 
 ~~ SolutionFragment {exname=Ex12.MAC}
@@ -5084,7 +5086,7 @@ Hint: have a look e.g. at the HMAC construction.
 
 # Cryptography examples for confidentiality
 
-##  Theoretical background on crypto verification in F\*
+##  Theoretical background on cryptographic verification in F\*
 Those unfamiliar with functional programming may appreciate the
 following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
 and an imperative programming style.
@@ -5121,7 +5123,7 @@ models a perfect source of random bits. In this probabilistic interpretation,
 two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
 when they return the same probability distribution of values.
 
-An interface or module can declare a type as abstract, e.g. `abstract type key = bytes`, 
+An interface or module can declare a type as [abstract], e.g. `abstract type key = bytes`, 
 and keep its representation hidden. The 
 [qualified](https://github.com/FStarLang/FStar/wiki/Qualifiers-for-definitions-and-declarations) name is bound outside the scope of 
 the module, but its definition is hidden. 

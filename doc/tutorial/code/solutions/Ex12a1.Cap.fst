@@ -8,6 +8,7 @@ open Platform.Bytes
 
 module ACLs = Ex12a.ACLs
 module MAC = Ex12.MAC
+module SHA1 = Ex12.SHA1
 
 // In Platform.Bytes: val utf8: s:string  -> Tot bytes
 
@@ -27,6 +28,7 @@ let issue f =
   assert(ACLs.canRead f);
   let bs = (utf8 f) in
   assert(capRead bs);
+  ignore (SHA1.hmac_sha1 k f);
   MAC.mac k bs
 
 let redeem f t =
