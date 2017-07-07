@@ -365,13 +365,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Swap.cond", "equation_Swap.equiv",
-        "equation_Swap.equiv_on_h", "equation_Swap.guard_is_readonly",
+        "equation_FStar.Pervasives.Native.snd", "equation_Swap.cond",
+        "equation_Swap.equiv", "equation_Swap.equiv_on_h",
+        "equation_Swap.guard", "equation_Swap.guard_is_readonly",
         "equation_Swap.heap_eq",
         "interpretation_Swap_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
-        "l_and-interp",
+        "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Swap_Tm_refine_dd48d34dcce4e2117244fdb4b08131e0",
         "token_correspondence_Swap.cond", "unit_typing"
       ],
       0

@@ -80,8 +80,8 @@ FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
 
 timings.csv:
-	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k test > results_without_hints || :
-	+make -k test > results_with_hints || :
+	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k all > results_without_hints || :
+	+make -k all > results_with_hints || :
 	$(SED) -n results_without_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
 		| sort -t , -k 2,1 > timings_without_hints.csv
 	$(SED) -n results_with_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
@@ -94,8 +94,4 @@ timings.csv:
 	join -t , -1 1 -2 1 timings_without_hints.csv timings_with_hints.csv > timings0.csv
 	echo 'filename,timings (no hints),timings (with hints),loc' > timings.csv
 	join -t , -1 1 -2 2 timings0.csv loc.csv >> timings.csv
-	#rm timings_without_hints.csv timings_wit_hints.csv loc.csv timings0.csv
-
-# strip all white lines and comments lines : sed -n '/^\((\*.*\*)\| \|\/\/.*\)*$/!p'
-#	$(FIND) -name '*.fst' -print '%f\n' \
-#		| $(SED) -e 's/\.fst//' -e 's/\<./\u&/' \
+	#rm results_without_hints results_with_hints timings_without_hints.csv timings_with_hints.csv loc.csv timings0.csv
