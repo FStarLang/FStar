@@ -362,8 +362,7 @@ val send_aux
           (#n:nat) 
           (file:iarray byte n) 
           (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
-          (h_init:heap{h_init `contains_connection` c /\ file `fully_initialized_in` h_init})
-          (from:nat{from = ctr c h_init})
+          (from:nat)
           (pos:nat{pos <= n})
       : ST unit 
              (requires (fun h0 ->
@@ -378,7 +377,7 @@ val send_aux
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_file_pred (as_initialized_seq file h0) c from (ctr c h1) h1))
 #reset-options "--z3rlimit 500 --max_fuel 0 --max_ifuel 0"
-let rec send_aux #n file c h_init from pos
+let rec send_aux #n file c from pos
       = if pos = n then ()
         else
           let sub_file = suffix file pos in
@@ -419,7 +418,7 @@ let rec send_aux #n file c h_init from pos
             // assume (f1 == flatten (Seq.slice log1 from (ctr c h1)));
             assert (sent_file_pred f1 c from (ctr c h1) h1) 
          in
-         send_aux file c h_init from (pos + sent)
+         send_aux file c from (pos + sent)
 
 let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoint (connection_footprint c) (array_footprint file)})
   : ST unit 
@@ -438,13 +437,12 @@ let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoi
     assert (Seq.equal (as_initialized_subseq file h0 0 0) Seq.createEmpty);
     flatten_empty();
     assert (Seq.equal (flatten (Seq.slice (log c h0) from from)) Seq.createEmpty);
-    send_aux file c h0 from 0;
+    send_aux file c from 0;
     let h1 = ST.get () in
     let file_bytes1 = iarray_as_seq file in
     assert (file_bytes0 == file_bytes1);
     gst_witness (sent_file_pred file_bytes0 c from (ctr c h1));
     assert (sent_file file_bytes0 c)
-
 
 let received (#n:nat) (file:iarray byte n) (c:connection) (h:heap) =
     file `fully_initialized_in` h /\
