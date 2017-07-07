@@ -25,10 +25,6 @@ assume val lemma_oplus (a:fragment) (b:fragment)
   :Lemma (oplus (oplus a b) b == a)
    [SMTPat (oplus (oplus a b) b)]
 
-(* a message sent on the network cannot be unsent *)
-(* every fragment has a ref bool, that is initialized to false, and sending the fragment over the network sets it to true *)
-let sent_pre :preorder bool = fun (b1:bool) (b2:bool) -> b1 ==> b2
-
 assume val zeroes: n:nat -> (s:seq byte{length s = n})
 
 let pad (m:message) :fragment = append m (zeroes (fragment_size - (length m)))
@@ -36,9 +32,11 @@ let pad (m:message) :fragment = append m (zeroes (fragment_size - (length m)))
 assume val unpad (s:fragment)
   :(r:(nat * message){length (snd r) = fst r /\ s == pad (snd r)})
 
+assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message). snd (unpad (pad m)) == m))
+
 (* an entry in the message log *)
 noeq type entry (rand:randomness) =
-  | E: i:nat -> msg:message -> cipher:fragment{oplus (pad msg) (rand i) == cipher} -> sent:mref bool sent_pre -> entry rand
+  | E: i:nat -> msg:message -> cipher:fragment{oplus (pad msg) (rand i) == cipher} -> tag:seq byte -> entry rand
 
 (* sequence of messages *)
 type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (Seq.index s i) = i}
@@ -156,19 +154,25 @@ let connection_footprint (c:connection) :GTot (Set.set nat)
 
 assume val lemma_snoc_log
   (c:connection{sender c}) (i:nat) (cipher:fragment) (msg:message{oplus (pad msg) ((rand_of c) i) == cipher})
-  (sent_ref:mref bool sent_pre)
+  (tag:seq byte)
   (h0:heap) (h1:heap{h0 `contains_connection` c /\ h1 `contains_connection` c})
   :Lemma (requires (let S _ es_ref = c in
-                    sel h1 es_ref == snoc (sel h0 es_ref) (E i msg cipher sent_ref)))
+                    sel h1 es_ref == snoc (sel h0 es_ref) (E i msg cipher tag)))
 	 (ensures  (log c h1 == snoc (log c h0) msg))
 
 (* network send is called once log had been appended to etc. *)
 assume val network_send
-  (c:connection) (f:fragment)
-  :ST unit (requires (fun h0 -> True))
-           (ensures  (fun h0 _ h1 -> h0 == h1))  //TODO: this is wrong, it modifies the sent_ref
+  (c:connection{sender c}) (f:fragment) (tag:seq byte)
+  :ST unit (requires (fun h0 -> h0 `contains_connection` c /\ 
+                             (let S _ es_ref = c in
+                              let es = sel h0 es_ref in
+			      Seq.length es > 0 /\
+                              (let E _ _ c t = Seq.index es (Seq.length es - 1) in
+			       c == f /\ t == tag))))
+           (ensures  (fun h0 _ h1 -> h0 == h1))
 
-(* TODO: we need to give some more precise type that talks about sent_refs, they are not being used currently at all *)
+assume val mac: cipher:fragment -> i:nat -> seq byte
+
 #set-options "--z3rlimit 50"
 let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
   :ST nat (requires (fun h0 -> True))
@@ -194,15 +198,13 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
     let frag = append msg (zeroes (fragment_size - sent)) in
     let cipher = oplus frag (rand i0) in
 
-    //TODO: call network send!
-
-    let sent_ref :mref bool sent_pre = alloc false in
-    let msgs1 = snoc msgs0 (E i0 msg cipher sent_ref) in
+    let msgs1 = snoc msgs0 (E i0 msg cipher (mac cipher i0)) in
 
     ST.write es_ref msgs1;
 
+    network_send c cipher (mac cipher i0);
     let h1 = ST.get () in
-    lemma_snoc_log c i0 cipher msg sent_ref h0 h1;
+    lemma_snoc_log c i0 cipher msg (mac cipher i0) h0 h1;
     
     sent
 
@@ -210,18 +212,32 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
 let ciphers (c:connection) (h:heap) :GTot (seq fragment) =
   seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
 
-assume val network_receive
-  (c:connection{receiver c})
-  :ST (option fragment) (requires (fun h0          -> h0 `contains_connection` c))
-                        (ensures  (fun h0 f_opt h1 -> h0 == h1                                           /\
-			                           h0 `contains_connection` c                         /\
-						   (Some? f_opt <==> ctr c h0 < length (ciphers c h0)) /\
-						   (ctr c h0 < length (ciphers c h0) ==>
-						    f_opt == Some (Seq.index (ciphers c h0) (ctr c h0)))))
+assume val network_receive (c:connection)
+  :ST (option (fragment * seq byte)) (requires (fun h0 -> h0 `contains_connection` c))
+                                     (ensures  (fun h0 _ h1 -> h0 == h1))
+
+(* assume val network_receive *)
+(*   (c:connection{receiver c}) *)
+(*   :ST (option fragment) (requires (fun h0          -> h0 `contains_connection` c)) *)
+(*                         (ensures  (fun h0 f_opt h1 -> h0 == h1                                           /\ *)
+(* 			                           h0 `contains_connection` c                         /\ *)
+(* 						   (Some? f_opt <==> ctr c h0 < length (ciphers c h0)) /\ *)
+(* 						   (ctr c h0 < length (ciphers c h0) ==> *)
+(* 						    f_opt == Some (Seq.index (ciphers c h0) (ctr c h0))))) *)
 
 let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:heap) :Type0
   = modifies (Set.union (connection_footprint c)
                         (array_footprint arr)) h0 h1
+
+assume val verify (c:connection{receiver c}) (cipher:fragment) (tag:seq byte) (i:nat)
+  :ST bool (requires (fun h0 -> h0 `contains_connection` c))
+           (ensures  (fun h0 r h1 -> h0 == h1 /\
+	              (r ==>
+	               (let R _ es_ref _ = c in
+		        let es = sel h0 es_ref in
+			i < Seq.length es /\
+			(let E _ _ c t = Seq.index es i in
+			 c == cipher /\ t == tag)))))
 
 #set-options "--z3rlimit 50"
 let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiver c})
@@ -248,23 +264,26 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
     recall_connection c;
 
     match network_receive c with
-    | None        -> None
-    | Some cipher ->
+    | None               -> None
+    | Some (cipher, tag) ->
       let i0 = ST.read ctr_ref in
-      let msg = oplus cipher (rand i0) in
-      let len, m = unpad msg in
 
-      assume (m == Seq.index (log c h0) (ctr c h0));
+      if not (verify c cipher tag i0) then None
+      else
+        let msg = oplus cipher (rand i0) in
+        let len, m = unpad msg in
 
-      gst_witness (counter_pred (i0 + 1) es_ref);
-      recall_contains buf;
-      ST.write ctr_ref (i0 + 1);
-      let h1 = ST.get () in
-      lemma_disjoint_sibling_remain_same_for_unrelated_mods buf (Set.singleton (addr_of (ctr_ref))) h0 h1;
-      fill buf m;
-      let h2 = ST.get () in
-      lemma_disjoint_sibling_remain_same_transitive buf h0 h1 h2;
-      Some len
+	lemma_pad_unpad ();
+        assert (m == Seq.index (log c h0) (ctr c h0));
+        gst_witness (counter_pred (i0 + 1) es_ref);
+        recall_contains buf;
+        ST.write ctr_ref (i0 + 1);
+        let h1 = ST.get () in
+        lemma_disjoint_sibling_remain_same_for_unrelated_mods buf (Set.singleton (addr_of (ctr_ref))) h0 h1;
+        fill buf m;
+        let h2 = ST.get () in
+        lemma_disjoint_sibling_remain_same_transitive buf h0 h1 h2;
+        Some len
 #reset-options
 
 (***** sender and receiver *****)
