@@ -590,3 +590,26 @@ let receive_file #n file c =
     gst_witness (sent_file_pred file_bytes1 c from (ctr c h1));
     assert (sent_file file_bytes1 c);
     Some r
+
+#reset-options
+let lemma_partial_length_hiding
+  (#n:nat) (#m:nat)
+  (c0:connection{sender c0}) (c1:connection{sender c1})
+  (h:heap{h `contains_connection` c0 /\ h `contains_connection` c1})
+  (file0:iarray byte n) (file1:iarray byte m)
+  (from0:nat) (to0:nat{from0 <= to0 /\ to0 <= Seq.length (log c0 h)})
+  (from1:nat) (to1:nat{from1 <= to1 /\ to1 <= Seq.length (log c1 h) /\ to0 - from0 = to1 - from1})
+  :Lemma (let S rand0 _ = c0 in
+          let S rand1 _ = c1 in
+	  (file0 `fully_initialized_in` h /\
+	   file1 `fully_initialized_in` h /\
+	   (let f0 = as_initialized_seq file0 h in
+	    let f1 = as_initialized_seq file1 h in
+	    sent_file_pred f0 c0 from0 to0 h /\
+	    sent_file_pred f1 c1 from1 to1 h /\
+	    (forall (i:nat). i < to0 - from0 ==> rand1 i == oplus (oplus (rand0 i) (Seq.index (log c0 h) i))
+	                                                  (Seq.index (log c1 h) i)) 
+	   )
+	  ) ==> (Seq.slice (ciphers c0 h) from0 to0 == Seq.slice (ciphers c1 h) from1 to1))
+
+  = admit ()
