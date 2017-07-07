@@ -26,6 +26,8 @@ all:\
   IfcRules.uver\
   IfcRulesReify.uver\
   IfcTypechecker.uver\
+	IfcMonitor.uver\
+	IfcMonitorTest.uver\
   Loops.uver\
   Memo.uver\
   NetKat.uver\
