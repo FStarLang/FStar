@@ -106,7 +106,7 @@ val resp_injective:
 // BEGIN: FormatProofsEx
 let req_resp_distinct s s' t' = admit()
 
-let req_injctive s0 s1 = admit()
+let req_injective s0 s1 = admit()
 
 let resp_injective s0 t0 s1 t1 = admit()
 // END: FormatProofsEx

@@ -8,6 +8,7 @@ open Platform.Bytes
 
 module ACLs = Ex12a.ACLs
 module MAC = Ex12.MAC
+module SHA1 = Ex12.SHA1
 
 // In Platform.Bytes: val utf8: s:string  -> Tot bytes
 
