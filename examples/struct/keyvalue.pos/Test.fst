@@ -371,7 +371,7 @@ let parse_entries (num_entries:U32.t) : parser store =
   (fun entries -> parsing_done `and_then`
   (fun _ -> parse_ret (Store num_entries entries)))
 
-let validate_entries (num_entries:U32.t) : stateful_validator (parse_entries num_entries) =
+let validate_entries_st (num_entries:U32.t) : stateful_validator (parse_entries num_entries) =
   fun input ->
   let n = U32.v num_entries in
   then_check (parse_many parse_entry n)
@@ -379,12 +379,12 @@ let validate_entries (num_entries:U32.t) : stateful_validator (parse_entries num
   parsing_done validate_done_st
   (fun entries _ -> Store num_entries entries) input
 
-let validate_store : stateful_validator parse_abstract_store = fun input ->
+let validate_store_st : stateful_validator parse_abstract_store = fun input ->
   match parse_u32_st input with
   | Some (num_entries, off) ->
     begin
       let input = advance_slice input off in
-      match validate_entries num_entries input with
+      match validate_entries_st num_entries input with
       | Some off' -> if u32_add_overflows off off' then None
                     else Some (U32.add off off')
       | None -> None
