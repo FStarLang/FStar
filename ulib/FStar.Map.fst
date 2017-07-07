@@ -1,7 +1,7 @@
 (**
-F* standard library Map module. 
+F* standard library Map module.
 
-@summary F* stdlib Map module. 
+@summary F* stdlib Map module.
 *)
 module FStar.Map
 open FStar.Set
@@ -85,15 +85,15 @@ abstract val lemma_InDomRestrict: #key:eqtype -> #value:Type -> m:t key value ->
                          Lemma (requires True) (ensures (contains (restrict ks m) k == (mem k ks && contains m k)))
                          [SMTPat (contains (restrict ks m) k)]
 
-abstract val lemma_ContainsDom: #key:eqtype -> #value:Type -> m:t key value -> k:key -> 
+abstract val lemma_ContainsDom: #key:eqtype -> #value:Type -> m:t key value -> k:key ->
   Lemma (requires True) (ensures (contains m k = mem k (domain m)))
                       [SMTPat (contains m k)]
 
 abstract val lemma_UpdDomain : #key:eqtype -> #value:Type -> m:t key value -> k:key -> v:value ->
-  Lemma (requires True) 
-	(ensures (equal (domain (upd m k v)) (union (domain m) (singleton k))))
+  Lemma (requires True)
+	(ensures (equal (domain (upd m k v)) (domain m `add_elt` k)))
 	[SMTPat (domain (upd m k v))]
-  
+
 let lemma_SelUpd1 #key #value m k v        = ()
 let lemma_SelUpd2 #key #value m k1 k2 v    = ()
 let lemma_SelConst #key #value v k         = ()
@@ -108,28 +108,38 @@ let lemma_InDomRestrict #key #value m ks k = ()
 let lemma_ContainsDom #key #value m k      = ()
 let lemma_UpdDomain #key #value m k v      = ()
 
-abstract type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) =
-    feq m1.mappings m2.mappings /\ equal m1.domain m2.domain
+abstract
+type equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) =
+  equal m1.domain m2.domain /\ (forall (x:key). x `mem` m1.domain ==> m1.mappings x == m2.mappings x)
 
 
-abstract val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                       Lemma (requires (forall k. sel m1 k == sel m2 k /\
-                                                  contains m1 k = contains m2 k))
-                       (ensures (equal m1 m2))
-                       [SMTPatT (equal m1 m2)]
+abstract
+val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
+  Lemma (requires (
+    (forall (k:key). contains m1 k == contains m2 k) /\
+    (forall (k:key). k `mem` m1.domain ==> sel m1 k == sel m2 k)))
+    (ensures (equal m1 m2))
+    [SMTPatT (equal m1 m2)]
 
-abstract val lemma_equal_elim: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                      Lemma (requires (equal m1 m2)) (ensures  (m1 == m2))
-                      [SMTPatT (equal m1 m2)]
+abstract
+val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
+  Lemma  (requires (m1 == m2)) (ensures  (equal m1 m2))
+    [SMTPatT (equal m1 m2)]
 
-abstract val lemma_equal_refl: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                      Lemma  (requires (m1 == m2)) (ensures  (equal m1 m2))
-		      [SMTPatT (equal m1 m2)]
+abstract
+val lemma_equal_symm : #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
+  Lemma (requires (equal m1 m2)) (ensures (equal m2 m1))
+    [SMTPat (equal m1 m2)]
 
+abstract
+val lemma_equal_trans : #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value -> m3:t key value ->
+  Lemma (requires (m1 `equal` m2 /\ m2 `equal` m3)) (ensures (m1 `equal` m3))
+    [SMTPat (equal m1 m2) ; SMTPat (equal m2 m3)]
 
 let lemma_equal_intro #key #value m1 m2 = ()
-let lemma_equal_elim #key #value m1 m2  = ()
 let lemma_equal_refl #key #value m1 m2  = ()
+let lemma_equal_symm #key #value m1 m2  = ()
+let lemma_equal_trans #key #value m1 m2 m3 = ()
 
 let const_on (#key:eqtype) (#value:Type) (dom:set key) (v:value) = restrict dom (const v)
 
@@ -138,3 +148,28 @@ type disjoint_dom (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) 
 
 type has_dom (#key:eqtype) (#value:Type) (m:t key value) (dom:set key) =
   (forall x. contains m x <==> mem x dom)
+
+let lemma_DomRestrUpd_equal (#key:eqtype) (#value:Type) (m1:t key value) (k:key) (v:value) :
+  Lemma (
+    let m2 = upd m1 k v in
+    let dom = domain m2 `remove_elt` k in
+    restrict dom m1 `equal` restrict dom m2
+  )
+=
+  let m2 = upd m1 k v in
+  let dom2 = domain m2 `remove_elt` k in
+  let m1' = restrict dom2 m1 in
+  let m2' = restrict dom2 m2 in
+  lemma_equal_intro m1' m2'
+
+let lemma_equal_elim_contains (#key:eqtype) (#value:Type) (m1 m2:t key value) (k:key)
+  : Lemma (requires (m1 `equal` m2))
+    (ensures (contains m1 k == contains m2 k))
+    [SMTPat (m1 `equal` m2) ; SMTPat (contains m1 k)]
+= ()
+
+let lemma_equal_elim_sel (#key:eqtype) (#value:Type) (m1 m2:t key value) (k:key)
+  : Lemma (requires (m1 `equal` m2 /\  m1 `contains` k))
+    (ensures (sel m1 k == sel m2 k))
+    [SMTPat (m1 `equal` m2) ; SMTPat (m1 `contains` k)]
+= ()

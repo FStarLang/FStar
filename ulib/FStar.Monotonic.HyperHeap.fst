@@ -334,11 +334,33 @@ let equal_on (s:Set.set rid) (m0:t) (m1:t) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
  /\ Map.equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
+abstract
+val lemma_modifies_just_subset : m1:t -> m2:t -> s1:Set.set rid -> s2:Set.set rid ->
+  Lemma (requires (s1 `Set.subset` s2 /\ modifies_just s1 m1 m2))
+    (ensures (modifies_just s2 m1 m2))
+let lemma_modifies_just_subset m1 m2 s1 s2 =
+  let m = Map.concat m2 (Map.restrict (Set.complement s1) m1) in
+  let m' = Map.concat m2 (Map.restrict (Set.complement s2) m1) in
+  assert (forall k. Map.contains m2 k == Map.contains m k) ;
+  assert (forall k. Map.contains m2 k == Map.contains m' k) ;
+  assert (forall k. Map.contains m2 k ==> Map.sel m2 k == Map.sel m k) ;
+  assert (forall k. Map.contains m2 k ==> Map.sel m2 k == Map.sel m' k) ;
+  Map.lemma_equal_intro m2 m'
+
 abstract val lemma_modifies_just_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies_just s1 m1 m2 /\ modifies_just s2 m2 m3))
                                (ensures (modifies_just (Set.union s1 s2) m1 m3))
-let lemma_modifies_just_trans m1 m2 m3 s1 s2 = ()
+let lemma_modifies_just_trans m1 m2 m3 s1 s2 =
+  let s = s1 `Set.union` s2 in
+  assert (s1 `Set.subset` s) ;
+  assert (s2 `Set.subset` s) ;
+  lemma_modifies_just_subset m1 m2 s1 s ;
+  lemma_modifies_just_subset m2 m3 s2 s 
+  (* Map.lemma_equal_trans m1 m2 m3 ; *)
+  (* admit () *)
+  
+  Map.lemma_equal_trans
 
 abstract val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
@@ -363,9 +385,9 @@ abstract val lemma_modifies_includes2: m1:t -> m2:t
                                 (ensures (modifies s2 m1 m2))
 let lemma_modifies_includes2 m1 m2 s1 s2 = ()
 
-
-let modifies_rref (r:rid) (s:Set.set nat) h0 h1 =
-  Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
+(* KM : should this modifies clause really ask for containment of reference ? *)
+let modifies_rref (r:rid) (s:Set.set nat) (h0 h1:h:t{h `contains` r}) =
+  Heap.modifies s (h0 `at` r) (h1 `at` r)
 
 (*+ Upward closedness of the map and related lemmas +*)
 let map_invariant (m:t) =
