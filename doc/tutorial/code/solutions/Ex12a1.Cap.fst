@@ -28,7 +28,6 @@ let issue f =
   assert(ACLs.canRead f);
   let bs = (utf8 f) in
   assert(capRead bs);
-  ignore (SHA1.hmac_sha1 k f);
   MAC.mac k bs
 
 let redeem f t =

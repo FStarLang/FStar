@@ -12,9 +12,9 @@ open EtM
 open Platform.Bytes
 open CoreCrypto
 
-abstract type cipher = (CPA.cipher * MAC.tag)
+type cipher = (CPA.cipher * MAC.tag)
 
-abstract type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
+type log_t (r:rid) = Monotonic.Seq.log_t r (CPA.msg * cipher)
 
 
 abstract noeq type key =
