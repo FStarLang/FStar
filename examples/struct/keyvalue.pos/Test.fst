@@ -307,6 +307,8 @@ let validate_u16_array_st input =
   match parse_u16_st input with
   | Some (n, off) -> begin
       let n: U32.t = Cast.uint16_to_uint32 n in
+      // overflow is not possible here, since n < pow2 16 and off == 2
+      // (any encodable length would fit in a U32)
       let total_len = U32.add n off in
       if U32.lt input.len total_len then None
       else Some total_len
@@ -322,13 +324,15 @@ val validate_u32_array_st (input: bslice) : ST (option U32.t)
 let validate_u32_array_st input =
   match parse_u32_st input with
   | Some (n, off) -> begin
-      assert (U32.v off == 4);
-      // TODO: how did we know the addition doesn't overflow in
-      // validate_u16_array?
-      assume (U32.v n + U32.v off < pow2 32);
-      let total_len = U32.add n off in
-      if U32.lt input.len total_len then None
-      else Some total_len
+      // we have to make sure that the total length we compute doesn't overflow
+      // a U32.t to correctly check if the input is long enough
+      if U32.gte n (U32.uint_to_t (pow2 32 - 4 - 1)) then None
+      else begin
+        assert (U32.v n + U32.v off < pow2 32);
+        let total_len = U32.add n off in
+        if U32.lt input.len total_len then None
+        else Some total_len
+      end
     end
   | None -> None
 
