@@ -8,7 +8,9 @@ uall: all
 all:\
   Bijection.uver\
   Equivalence.uver\
-	DynamicIFC2_pure.uver\
+	DynamicIFC.uver\
+	DynamicIFC_pure.uver\
+	DynamicIFC_test.uver\
   IfcComposeReify.uver\
   IfcDeclassify.uver\
   IfcDelimitedRelease.uver\

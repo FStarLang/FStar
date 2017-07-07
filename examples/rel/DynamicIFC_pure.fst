@@ -1,4 +1,4 @@
-module DynamicIFC2_pure
+module DynamicIFC_pure
 
 open Rel
 open Label
@@ -251,7 +251,6 @@ let interpret_com (h0:heap) (c:com) (pc:label) : Tot (option heap)
 
 let h0 = upd (upd (create (5,Low)) (to_id 3) (5, High)) (to_id 4) (5, High)
 
-#set-options "--z3rlimit 60 --max_fuel 16 --max_ifuel 16"
 (* l1 := h1 *)
 let p1 = Assign (to_id 1) (AVar (to_id 3))
 let test1 = assert_norm (None? (interpret_com h0 p1 Low))
@@ -302,7 +301,7 @@ let high_pc_assign x e h pc = ()
 #reset-options
 
 
-#set-options "--z3rlimit 500 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
 val high_pc_while : (e:exp) -> (body:com) -> (v:exp) -> (h:heap) -> (pc:label) -> 
   Lemma 
     (requires 
@@ -373,7 +372,7 @@ let high_pc_while e body v h pc =
 
 #reset-options
     
-#set-options "--z3rlimit 1000 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1"
 val high_pc : (c:com) -> (h:heap) -> (pc:label) ->
   Lemma
     (requires True)
@@ -469,7 +468,7 @@ let dyn_ifc_assign x e pc h = dyn_ifc_exp e h
 #reset-options
 
 
-#set-options "--z3rlimit 1000 --initial_fuel 1 --max_fuel 2 "
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 2 "
 val dyn_ifc_while : (e:exp) -> (body:com) -> (v:exp) -> (pc:label) -> (h:rel heap) -> 
    Lemma
       (requires (low_equiv h /\ env_eq h /\ 
@@ -590,7 +589,7 @@ let dyn_ifc_while e body v pc h =
 #reset-options
 
 
-#set-options "--z3rlimit 1000 --initial_fuel 1 --max_fuel 1" 
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 1" 
 val dyn_ifc' : (c:com) -> (pc:label) -> (h:(rel heap)) ->
     Lemma
       (requires (low_equiv h /\ env_eq h))
