@@ -196,11 +196,10 @@ let intersect
 let holds_intersect
   (#t: Type0)
   (ns1 ns2: rel t)
-  (x y: t)
 : Lemma
-  (holds (intersect ns1 ns2) x y <==> (holds ns1 x y /\ holds ns2 x y))
-  [SMTPat (holds (intersect ns1 ns2) x y)]
-= holds_equiv (intersect ns1 ns2) x y
+  (forall x y . holds (intersect ns1 ns2) x y <==> (holds ns1 x y /\ holds ns2 x y))
+  [SMTPat (holds (intersect ns1 ns2))]
+= Classical.forall_intro_2 (holds_equiv (intersect ns1 ns2))
 
 type nstype (t: Type0) = rel t
 
@@ -390,7 +389,7 @@ let exec_equiv_trans
   [SMTPatOr [
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c2 c3)];
     [SMTPat (exec_equiv p p' c1 c2); SMTPat (exec_equiv p p' c1 c3)];
-    [SMTPat (exec_equiv p p' c2 c3); SMTPat (exec_equiv p p' c2 c3)];
+    [SMTPat (exec_equiv p p' c1 c3); SMTPat (exec_equiv p p' c2 c3)];
   ]]
 = let z1 = reify_computation c1 in
   let z2 = reify_computation c2 in
@@ -547,7 +546,11 @@ let d_seq
   (ensures (
     exec_equiv p0 p2 (seq c01 c12) (seq c01' c12')
   ))
-  [SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))]
+  [SMTPatOr [
+    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))];
+    [SMTPat (exec_equiv p1 p2 c12 c12'); SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))];
+    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p1 p2 c12 c12')];
+  ]]
 = let f01 = reify_computation c01 in
   let f01' = reify_computation c01' in
   let f12 = reify_computation c12 in
@@ -597,7 +600,11 @@ let d_su1'
     exec_equiv phi' phi'' c' c''
   ))
   (ensures (exec_equiv phi phi'' (seq c c') c''))
-  [SMTPat (exec_equiv phi phi'' (seq c c') c'')]
+  [SMTPatOr [
+    [SMTPat (exec_equiv phi phi' c skip); SMTPat (exec_equiv phi phi'' (seq c c') c'')];
+    [SMTPat (exec_equiv phi' phi'' c' c''); SMTPat (exec_equiv phi phi'' (seq c c') c'')];
+    [SMTPat (exec_equiv phi phi' c skip); SMTPat (exec_equiv phi' phi'' c' c'')];
+  ]]
 = assert (exec_equiv phi phi'' (seq c c') (seq skip c'')) ;
   let f1 = reify_computation (seq skip c'') in
   let f2 = reify_computation c'' in
@@ -636,7 +643,11 @@ let d_cc
   (ensures (
     exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))
   ))
-  [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))]
+  [SMTPatOr [
+    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))];
+    [SMTPat (exec_equiv phi' phi'' c3 c3); SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))];
+    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi' phi'' c3 c3)];
+  ]]
 = let fl = reify_computation (seq (ifthenelse b c1 c2) c3) in
   let fr = reify_computation (ifthenelse b (seq c1 c3) (seq c2 c3)) in
   assert (forall s0 fuel . fl s0 fuel == fr s0 fuel);
