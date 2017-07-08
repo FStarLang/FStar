@@ -97,4 +97,15 @@ let lemma_is_prefix_of_slice
 	 [SMTPat (s1 `is_prefix_of` s2); SMTPat (Seq.slice s1 i j); SMTPat (Seq.slice s2 i j)]
   = admit ()
 
+assume val seq_map:
+  #a:Type -> #b:Type -> f:(a -> b) -> s:seq a
+  -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> Seq.index r i == f (Seq.index s i))})
 
+assume val lemma_map_commutes_with_prefix:
+  #a:Type -> #b:Type -> f:(a -> b) -> s1:seq a -> s2:seq a
+  -> Lemma (requires (s1 `is_prefix_of` s2))
+          (ensures  (seq_map f s1 `is_prefix_of` seq_map f s2))
+ 
+assume val lemma_map_commutes_with_snoc:
+  #a:Type -> #b:Type -> f:(a -> b) -> s:seq a -> x:a
+  -> Lemma (seq_map f (snoc s x) == snoc (seq_map f s) (f x))

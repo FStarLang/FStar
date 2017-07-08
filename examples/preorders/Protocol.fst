@@ -74,10 +74,6 @@ noeq type connection =
   | R: rand:randomness -> entries:mref (entries rand) (entries_rel rand)
        -> ctr:mref (counter_t entries) (counter_pre entries) -> connection
 
-assume val seq_map:
-  #a:Type -> #b:Type -> f:(a -> b) -> s:seq a
-  -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> Seq.index r i == f (Seq.index s i))})
-
 let rand_of (c:connection) :randomness =
   match c with
   | S r _
@@ -100,13 +96,14 @@ let recall_connection (c:connection) :ST unit (requires (fun h0 -> True)) (ensur
 
 (* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap{h `contains_connection` c}) :Tot (seq message) =
-  seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
+  ArrayUtils.seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
 
-assume val lemma_prefix_entries_implies_prefix_log
+let lemma_prefix_entries_implies_prefix_log
   (c:connection) (h1:heap) (h2:heap{h1 `contains_connection` c /\ h2 `contains_connection` c})
   :Lemma (requires (sel h1 (entries_of c) `is_prefix_of` sel h2 (entries_of c)))
 	 (ensures  (log c h1 `is_prefix_of` log c h2))
 	 [SMTPat (log c h1); SMTPat (log c h2)]
+  = ArrayUtils.lemma_map_commutes_with_prefix (fun (E _ m _ _) -> m) (sel h1 (entries_of c)) (sel h2 (entries_of c))
 
 (* current counter for the connection, consider adding the valid refinement? *)
 let ctr (c:connection) (h:heap{h `contains_connection` c}) :Tot nat =
@@ -145,13 +142,13 @@ let connection_footprint (c:connection) :GTot (Set.set nat)
     | S _ es_ref         -> Set.singleton (addr_of es_ref)
     | R _ es_ref ctr_ref -> Set.union (Set.singleton (addr_of es_ref)) (Set.singleton (addr_of ctr_ref))
 
-assume val lemma_snoc_log
+let lemma_snoc_log
   (c:connection{sender c}) (i:nat) (cipher:fragment) (msg:message{oplus (pad msg) ((rand_of c) i) == cipher})
   (tag:seq byte{tag == mac cipher i})
   (h0:heap) (h1:heap{h0 `contains_connection` c /\ h1 `contains_connection` c})
-  :Lemma (requires (let S _ es_ref = c in
-                    sel h1 es_ref == snoc (sel h0 es_ref) (E i msg cipher tag)))
+  :Lemma (requires (sel h1 (entries_of c) == snoc (sel h0 (entries_of c)) (E i msg cipher tag)))
 	 (ensures  (log c h1 == snoc (log c h0) msg))
+  = ArrayUtils.lemma_map_commutes_with_snoc (fun (E _ m _ _) -> m) (sel h0 (entries_of c)) (E i msg cipher tag)
 
 (* network send is called once log had been appended to etc. *)
 assume val network_send
@@ -201,7 +198,7 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
 
 (* seq of ciphers sent so far on this connection *)
 let ciphers (c:connection) (h:heap) :GTot (seq fragment) =
-  seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
+  ArrayUtils.seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
 
 assume val network_receive (c:connection)
   :ST (option (fragment * seq byte)) (requires (fun h0 -> h0 `contains_connection` c))
@@ -562,7 +559,7 @@ let receive_file #n file c =
 
 (* seq of tags sent so far on this connection *)
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
-  seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
+  ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
 
 #reset-options "--z3rlimit 50"
 let lemma_partial_length_hiding
