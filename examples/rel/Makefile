@@ -79,26 +79,28 @@ pack:
 FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
 
+MODULES=$(shell $(SED) -e 's!^\([^,]*\).*$$!\1!' < sections.csv | xargs echo)
+
 results_without_hints:
-	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k all > results_without_hints || :
+	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k $(addsuffix .uver,$(MODULES)) > results_without_hints || :
 
 results_with_hints:
-	+make -k all > results_with_hints || :
+	+make -k $(addsuffix .uver,$(MODULES)) > results_with_hints || :
 
 timings_without_hints.csv: results_without_hints
 	$(SED) -n results_without_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
-		| sort -t , -k 1,1 > timings_without_hints.csv
+		 > timings_without_hints.csv
 
 timings_with_hints.csv: results_with_hints
 	$(SED) -n results_with_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
-		| sort -t , -k 1,1 > timings_with_hints.csv
+		 > timings_with_hints.csv
 
 loc.csv:
-	$(FIND) . -name '*fst' \
-		-exec sh -c 'sed -n -e "/^\((\*.*\*)\| \|\/\/.*\)*$$/!p" {} | wc -l ' \; \
+	echo $(addsuffix .fst,$(MODULES)) | \
+		sh -c '$(SED) -n -e "/^\((\*.*\*)\| \|\/\/.*\)*$$/!p" {} | wc -l ' \; \
 		-print | tr '\n' ' ' \
-		| sed -e 's; \.\/;,;g' -e 's;\.fst ;\n;g' \
-		| sort -t , -k 2,2 > loc.csv
+		| $(SED) -e 's; \.\/;,;g' -e 's;\.fst ;\n;g' \
+		 > loc.csv
 
 timings0.csv: timings_without_hints.csv timings_with_hints.csv
 	join -t , -1 1 -2 1 timings_without_hints.csv timings_with_hints.csv > timings0.csv
