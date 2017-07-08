@@ -154,7 +154,7 @@ let mmref (a:Type) = r:mmref a{witnessed(valid_ref r)}
 
 type s_ref (i:rid) (a:Type) = s:s_ref i a{witnessed(valid_ref s)}
 
-(* TODO : let's try to have this HH.rid be a rid *)
+(* TODO : We need to provide access to the internal representation of HH.rid in order to implement this fnction... *)
 assume val fresh_child : r:HH.rid -> c:int ->
   GST rid
     (fun (p:gst_post rid) (m0:mem) ->
@@ -167,7 +167,6 @@ assume val fresh_child : r:HH.rid -> c:int ->
 (**
    Pushes a new empty frame on the stack
    *)
-#set-options "--detail_errors"
 val push_frame: unit -> Unsafe unit
   (requires (fun m -> True))
   (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
@@ -249,11 +248,12 @@ let ref_requiresminusmmstackref (#a:Type) (#rel:preorder a) (r:mreference a rel)
   (is_eternal_region r.id /\ is_mm r /\ h `contains` r) \/
   (is_stack_region r.id /\ is_mm r /\ h `contains` r)
 
-(* TODO : eliminate the assume below using this *)
-(* let bidule (#a #b:Type) (m0:mem) (r:mmstackref a{m0.h `HH.contains_ref` r.ref}) (#rel:preorder a) (r':mstackref a rel) : *)
-(*   Lemma (requires (m0.h `HH.contains_ref` r'.ref /\ r.id == r'.id)) *)
-(*     (ensures (HH.addr_of r.ref =!= HH.addr_of r'.ref)) *)
-(* = Heap.lemma_distinct_addrs_distinct_mm (m0 `at` r.id) (as_ref r) (as_ref r') *)
+val lemma_distinct_addrs_distinct_mm
+    (#a #b:Type0) (#rel1:preorder a) (#rel2: preorder b) (m:mem) (r1:mreference a rel1) (r2:mreference b rel2)
+    :Lemma (requires (is_mm r1 =!= is_mm r2 /\ r1.id == r2.id /\ m.h `HH.contains_ref` r1.ref /\ m.h `HH.contains_ref` r2.ref))
+            (ensures (HH.addr_of r1.ref =!= HH.addr_of r2.ref))
+let lemma_distinct_addrs_distinct_mm #a #b #rel1 #rel2 m r1 r2 =
+  Heap.lemma_distinct_addrs_distinct_mm (m `at` r1.id) (as_ref r1) (as_ref r2)
 
 val sfree: #a:Type -> r:mmstackref a -> StackInline unit
   (requires (fun m0 -> r.id == m0.tip /\ m0 `contains` r))
@@ -263,9 +263,10 @@ let sfree #a r =
   let m1 = remove_reference r m0 in
   lemma_upd_tip_idempotent m0;
   assert (is_mm r) ;
-  assume (forall (a:Type0) (rel:preorder a) (r0:mstackref a rel).
-    m0.h `HH.contains_ref` r0.ref ==> (r0.id =!= r.id \/ HH.addr_of r0.ref =!= HH.addr_of r.ref)
-  );
+  let aux (a:Type0) (rel:preorder a) (r0:mstackref a rel) : Lemma (requires (m0.h `HH.contains_ref` r0.ref /\ r0.id == r.id)) (ensures (HH.addr_of r0.ref =!= HH.addr_of r.ref)) =
+    lemma_distinct_addrs_distinct_mm m0 r r0
+  in
+  FStar.Classical.(forall_intro_3 (fun a rel -> move_requires (aux a rel))) ;
   assert (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
         m0 `contains` r /\ ref_requires r m1 ==> (m1 `contains` r /\ rel (sel m0 r) (sel m1 r))) ;
   assert (forall (i:HH.rid). Map.contains m0.h i ==> Map.contains m1.h i) ;
