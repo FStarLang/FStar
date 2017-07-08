@@ -7,8 +7,8 @@ OneTimePad,{\ref{sec:crypto}}
 IfcRulesReify,{\ref{sec:ifc-while}}
 IfcTypechecker,{\ref{sec:ifc-while}}
 IfcExampleReify2,{\ref{sec:ifc-while}}
-IFCMonitor,{\ref{sec:ifc-monitor}}
-IFCMonitorTest,{\ref{sec:ifc-monitor}}
+IfcMonitor,{\ref{sec:ifc-monitor}}
+IfcMonitorTest,{\ref{sec:ifc-monitor}}
 IfcDelimitedRelease,{\ref{sec:declassification}}
 IfcDeclassify,{\ref{sec:declassification}}
 Memo,{\ref{sec:memo}}
