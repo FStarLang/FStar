@@ -3,7 +3,12 @@ Swap,{\ref{sec:transformations-spec};\ref{sec:transformations-proofs}}
 Benton2004,{\ref{sec:benton2004-rhl}}
 Benton2004.RHL,{\ref{sec:benton2004-rhl}}
 Benton2004.RHL.Examples2,{\ref{sec:benton2004-rhl}}
-OneTimePad,{\ref{sec:crypto}}
+OTP,{\ref{sec:crypto}}
+ElGamal,{\ref{sec:crypto}}
+RandomTapes,{\ref{sec:crypto}}
+Bijection,{\ref{sec:crypto}}
+While,{\ref{sec:ifc-while}}
+WhileReify,{\ref{sec:ifc-while}}
 IfcRulesReify,{\ref{sec:ifc-while}}
 IfcTypechecker,{\ref{sec:ifc-while}}
 IfcExampleReify2,{\ref{sec:ifc-while}}
