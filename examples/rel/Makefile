@@ -119,7 +119,7 @@ timings2.csv: timings1.csv sections-sorted.csv
 	join --check-order -t , -1 1 -2 1 sections-sorted.csv timings1.csv | sort -t , -k 1,1 > timings2.csv
 
 timings.csv: timings2.csv modules-sorted.csv
-	echo 'filename,section,timings (no hints),timings (with hints),loc' > timings.csv
+	echo 'filename,section,1st run (ms),proof replay (ms),loc' > timings.csv
 	join --check-order -t , -1 1 -2 2 timings2.csv modules-sorted.csv | sort -n -t , -k 6,6 | $(SED) 's!,[0-9]*$$!!' >> timings.csv
 
 clean:
