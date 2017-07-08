@@ -1,4 +1,4 @@
- module AriadneM 
+ module Ariadne
 
 /// CF: We model the Ariadne protocol for state continuity.
 /// https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_strackx.pdf
