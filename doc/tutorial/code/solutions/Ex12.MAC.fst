@@ -45,7 +45,7 @@ type entry =
          -> m:tag
          -> entry
 
-(* the log needs to be private to the adversary cannot 
+(* the log needs to be private so the adversary cannot 
    add or remove entries *)
 
 private type log_t = ref (list entry)
