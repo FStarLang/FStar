@@ -4,6 +4,8 @@
 All the examples are in the `rel` subdir, but some use things in
 `dm4free` internally. This is known to work with the
 `c_relational-ci_r3` branch of F*, commit bc4d52178 in particular.
+This requires Z3 version 4.5.1 to verify
+(in particular `IfcMonitor` is known to fail with Z3 4.5.0).
 
 ## Section 1
 
