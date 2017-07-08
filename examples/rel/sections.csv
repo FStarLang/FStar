@@ -3,10 +3,6 @@ Swap,{\ref{sec:transformations-spec};\ref{sec:transformations-proofs}}
 Benton2004,{\ref{sec:benton2004-rhl}}
 Benton2004.RHL,{\ref{sec:benton2004-rhl}}
 Benton2004.RHL.Examples2,{\ref{sec:benton2004-rhl}}
-OTP,{\ref{sec:crypto}}
-ElGamal,{\ref{sec:crypto}}
-RandomTapes,{\ref{sec:crypto}}
-Bijection,{\ref{sec:crypto}}
 While,{\ref{sec:ifc-while}}
 WhileReify,{\ref{sec:ifc-while}}
 IfcRulesReify,{\ref{sec:ifc-while}}
@@ -16,5 +12,9 @@ IfcMonitorTest,{\ref{sec:ifc-monitor}}
 IfcExampleReify2,{\ref{sec:ifc-combining}}
 IfcDelimitedRelease,{\ref{sec:declassification}}
 IfcDeclassify,{\ref{sec:declassification}}
+OTP,{\ref{sec:crypto}}
+ElGamal,{\ref{sec:crypto}}
+RandomTapes,{\ref{sec:crypto}}
+Bijection,{\ref{sec:crypto}}
 Memo,{\ref{sec:memo}}
 UnionFind,{\ref{sec:unionfind}}
