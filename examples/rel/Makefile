@@ -20,6 +20,8 @@ all:\
   IfcExampleReify1.uver\
   IfcExampleReify2.uver\
   IfcExampleReify3.uver\
+  IfcMonitor.uver\
+  IfcMonitorTest.uver\
   IfcRecursiveHeapReify.uver\
   IfcRecursiveReify.uver\
   IfcReificationRegressionTest.uver\
