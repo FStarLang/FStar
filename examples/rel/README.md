@@ -3,7 +3,7 @@
 
 All the examples are in the `rel` subdir, but some use things in
 `dm4free` internally. This is known to work with the
-`c_relational-ci_r3` branch of F*, commit bc4d52178 in particular.
+`c_relational-ci_r3` branch of F*, commit e307569e in particular.
 This requires Z3 version 4.5.1 to verify
 (in particular `IfcMonitor` is known to fail with Z3 4.5.0).
 
@@ -26,7 +26,12 @@ This requires Z3 version 4.5.1 to verify
 
 ## Section 4
 
-- `OneTimePad.fst`: the RANDOM monad from 4.1 and one-time pad from 4.2
+- `../dm4free/FStar.DM4F.Heap.Random.fst`,`../dm4free/FStar.DM4F.Random.fst`:
+  definition of the RAND effect in 4.1 and proof of `mass_leq` lemma in 4.2
+- `OTP.fst`: proof of perfect secrecy of one-time pad in 4.2
+- `../dm4free/FStar.DM4F.OTP.Heap.fst`,`../dm4free/FStar.DM4F.OTP.Random.fst`:
+  the variant of the RAND effect in 4.1 used in the proof in 4.3
+- `ElGamal.fst`: the proof of the secrecy lemma in 4.3
 
 ## Section 5
 
