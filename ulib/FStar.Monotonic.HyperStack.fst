@@ -188,8 +188,8 @@ let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip == m1.tip
-  /\ Set.subset (Map.domain m0.h) (Map.domain m1.h)
-  /\ (forall r. Map.contains m0.h r ==> (Map.sel m0.h r).live == (Map.sel m1.h r).live)
+  (* TODO : can we find a better reformulation of equality of live domains ? *)
+  /\ (forall r. (Map.contains m0.h r /\ (Map.sel m0.h r).live) <==> (Map.contains m1.h r /\ (Map.sel m1.h r).live))
   /\ (forall r. r `is_in` m0.h ==> Heap.equal_dom (m0.h `HH.at` r) (m1.h `HH.at` r))
 
 let lemma_equal_domains_trans (m0:mem) (m1:mem) (m2:mem) : Lemma
