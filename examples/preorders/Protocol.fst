@@ -6,7 +6,7 @@ open FStar.Preorder
 open FStar.Heap
 open FStar.ST
 
-open FreezingArray
+open MonotonicArray
 
 (* size of each message fragment sent over the network *)
 assume val fragment_size:nat
@@ -137,16 +137,6 @@ let snap (c:connection) :ST unit (requires (fun _ -> True))
 
 type iarray (a:Type0) (n:nat) = x:array a n{all_init x}
 
-(* (\* these probably need some contains precondition? *\) *)
-(* assume val as_seq_ghost: *)
-(*   #n:nat -> #a:Type -> iarray n a -> i:nat -> j:nat{j >= i /\ j <= n} -> h:heap *)
-(*   -> GTot (s:seq a{length s = j - i}) *)
-(* assume val as_seq: *)
-(*   #n:nat -> #a:Type -> arr:iarray n a -> i:nat -> j:nat{j >= i /\ j <= n} *)
-(*   -> ST (s:seq a{length s = j - i}) *)
-(*        (requires (fun h0 -> True)) *)
-(*        (ensures  (fun h0 s h1 -> h0 == h1 /\ s == as_seq_ghost arr i j h0)) *)
-
 let sender (c:connection) :Tot bool   = S? c
 let receiver (c:connection) :Tot bool = R? c
 
@@ -217,15 +207,6 @@ assume val network_receive (c:connection)
   :ST (option (fragment * seq byte)) (requires (fun h0 -> h0 `contains_connection` c))
                                      (ensures  (fun h0 _ h1 -> h0 == h1))
 
-(* assume val network_receive *)
-(*   (c:connection{receiver c}) *)
-(*   :ST (option fragment) (requires (fun h0          -> h0 `contains_connection` c)) *)
-(*                         (ensures  (fun h0 f_opt h1 -> h0 == h1                                           /\ *)
-(* 			                           h0 `contains_connection` c                         /\ *)
-(* 						   (Some? f_opt <==> ctr c h0 < length (ciphers c h0)) /\ *)
-(* 						   (ctr c h0 < length (ciphers c h0) ==> *)
-(* 						    f_opt == Some (Seq.index (ciphers c h0) (ctr c h0))))) *)
-
 let modifies_r (#n:nat) (c:connection{receiver c}) (arr:array byte n) (h0 h1:heap) :Type0
   = modifies (Set.union (connection_footprint c)
                         (array_footprint arr)) h0 h1
@@ -294,7 +275,7 @@ let lemma_is_prefix_of_slice
   :Lemma (requires True)
          (ensures  (Seq.slice s1 i j == Seq.slice s2 i j))
 	 [SMTPat (s1 `is_prefix_of` s2); SMTPat (Seq.slice s1 i j); SMTPat (Seq.slice s2 i j)]
-  = admit ()
+  = ArrayUtils.lemma_is_prefix_of_slice s1 s2 i j
 
 assume val flatten (s:seq message) :Tot (seq byte)
 
@@ -314,20 +295,8 @@ let sent_file_pred' (file:seq byte) (c:connection) (from:nat) (to:nat{from <= to
 let sent_file_pred (file:seq byte) (c:connection) (from:nat) (to:nat{from <= to}) :(p:heap_predicate{stable p})
   = sent_file_pred' file c from to
 
-(* let sent_file_pred_init (file:seq byte) (c:connnection) (from:nat) (h:heap{h `contains_connection` c)} *)
-(*   : Lemma (send_file_pred file c from from h) *)
-(*   = assert  *)
 let sent_file (file:seq byte) (c:connection) =
   exists (from:nat) (to:nat{from <= to}). witnessed (sent_file_pred file c from to)
-
-let lemma_get_equivalent_append
-  (#a:Type0) (s1:seq (option a){forall (i:nat). i < Seq.length s1 ==> Some? (Seq.index s1 i)})
-  (s2:seq (option a)) (s3:seq (option a))
-  :Lemma (requires (s1 == Seq.append s2 s3))
-         (ensures  ((forall (i:nat). i < Seq.length s2 ==> Some? (Seq.index s2 i)) /\
-	            (forall (i:nat). i < Seq.length s3 ==> Some? (Seq.index s3 i)) /\
-	            get_some_equivalent s1 == Seq.append (get_some_equivalent s2) (get_some_equivalent s3)))
-  = admit ()
 
 #set-options "--z3rlimit 20"
 let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a) 
@@ -337,7 +306,7 @@ let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a)
               (forall (k:nat). k < n ==> Some? (Seq.index (as_seq x h0) k)) /\
               s == as_initialized_subseq x h0 0 n                    /\
 	      s == as_initialized_seq x h0))
-  = admit()              
+  = read_subseq_i_j x 0 n           
 
 let fully_initialized_in #a #n (x:array a n) (h:heap) = 
   h `contains_array` x /\
