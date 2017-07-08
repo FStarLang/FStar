@@ -340,7 +340,7 @@ let dyn_ifc_assign x e env pc h = dyn_ifc_exp e h env
 #reset-options
 
 
-#set-options "--z3rlimit 500 --initial_fuel 1 --max_fuel 2 "
+#set-options "--z3rlimit 50 --initial_fuel 1 --max_fuel 2 "
 val dyn_ifc_while : (e:exp) -> (body:com) -> (v:exp) -> (env:label_fun) -> (pc:label) -> (h:rel heap) -> 
    Lemma
       (requires (low_equiv env h /\
