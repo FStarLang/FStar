@@ -17,6 +17,11 @@ All the examples are in the `rel` subdir, but some use things in
 
 - `Swap.fst`: all the program transformations on commands from 3.2
 
+- `Benton2004.fst`, `Benton2004.RHL.fst` and
+  `Benton2004.RHL.Examples2.fst`: relational Hoare logic by Benton
+  (2004), model, soundness proofs and examples as described in 3.3
+  (other files `Benton2004.*` model the rest of Benton's paper)
+
 ## Section 4
 
 - `OneTimePad.fst`: the RANDOM monad from 4.1 and one-time pad from 4.2
