@@ -76,7 +76,9 @@ test :\
 	@echo $(OTHERFLAGS)
 
 pack:
-	cd ../..; zip -r relational.zip examples/rel examples/dm4free
+	cp README.md ..
+	cd ../..; zip -r relational.zip examples/rel examples/dm4free examples/README.md examples/Makefile.include
+	rm ../README.md
 
 FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
