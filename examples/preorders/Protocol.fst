@@ -34,9 +34,12 @@ assume val unpad (s:fragment)
 
 assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message). snd (unpad (pad m)) == m))
 
+assume val mac: cipher:fragment -> i:nat -> seq byte
+
 (* an entry in the message log *)
 noeq type entry (rand:randomness) =
-  | E: i:nat -> msg:message -> cipher:fragment{oplus (pad msg) (rand i) == cipher} -> tag:seq byte -> entry rand
+  | E: i:nat -> msg:message -> cipher:fragment{oplus (pad msg) (rand i) == cipher} -> tag:seq byte{tag == mac cipher i}
+       -> entry rand
 
 (* sequence of messages *)
 type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (Seq.index s i) = i}
@@ -154,7 +157,7 @@ let connection_footprint (c:connection) :GTot (Set.set nat)
 
 assume val lemma_snoc_log
   (c:connection{sender c}) (i:nat) (cipher:fragment) (msg:message{oplus (pad msg) ((rand_of c) i) == cipher})
-  (tag:seq byte)
+  (tag:seq byte{tag == mac cipher i})
   (h0:heap) (h1:heap{h0 `contains_connection` c /\ h1 `contains_connection` c})
   :Lemma (requires (let S _ es_ref = c in
                     sel h1 es_ref == snoc (sel h0 es_ref) (E i msg cipher tag)))
@@ -170,8 +173,6 @@ assume val network_send
                               (let E _ _ c t = Seq.index es (Seq.length es - 1) in
 			       c == f /\ t == tag))))
            (ensures  (fun h0 _ h1 -> h0 == h1))
-
-assume val mac: cipher:fragment -> i:nat -> seq byte
 
 #set-options "--z3rlimit 50"
 let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
@@ -591,7 +592,11 @@ let receive_file #n file c =
     assert (sent_file file_bytes1 c);
     Some r
 
-#reset-options
+(* seq of tags sent so far on this connection *)
+let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
+  seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
+
+#reset-options "--z3rlimit 50"
 let lemma_partial_length_hiding
   (#n:nat) (#m:nat)
   (c0:connection{sender c0}) (c1:connection{sender c1})
@@ -609,10 +614,15 @@ let lemma_partial_length_hiding
 	              (forall (i:nat). (i >= from /\ i < to) ==>
 		                 oplus (pad (Seq.index (log c0 h) i)) (rand0 i) ==
 	                         oplus (pad (Seq.index (log c1 h) i)) (rand1 i))))))
-	 (ensures  (forall (i:nat). (i >= from /\ i < to) ==> Seq.index (ciphers c0 h) i == Seq.index (ciphers c1 h) i))
+	 (ensures  (forall (i:nat). (i >= from /\ i < to) ==> (Seq.index (ciphers c0 h) i == Seq.index (ciphers c1 h) i) /\
+	                                              Seq.index (tags c0 h) i == Seq.index (tags c1 h) i))
   = let S rand0 _ = c0 in
     let S rand1 _ = c1 in
     let ciphers0 = ciphers c0 h in
     let ciphers1 = ciphers c1 h in
+    let tags0 = tags c0 h in
+    let tags1 = tags c1 h in
     assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers0 i == oplus (pad (Seq.index (log c0 h) i)) (rand0 i));
-    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers1 i == oplus (pad (Seq.index (log c1 h) i)) (rand1 i))
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers1 i == oplus (pad (Seq.index (log c1 h) i)) (rand1 i));
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index tags0 i == mac (Seq.index ciphers0 i) i);
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index tags1 i == mac (Seq.index ciphers1 i) i)
