@@ -1,8 +1,9 @@
 
 # Examples for Recalling a Witness: Foundations and Applications of Monotonic State
 
-The examples and supporting library code can be found on the current
-branch. Here are the relevant files to look at:
+The metatheory development is available in `examples/preorders/metatheory`
+
+The examples and supporting library code are found in the following files:
 
 # Section 2 of the paper
 
