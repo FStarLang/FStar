@@ -27,10 +27,11 @@ This requires Z3 version 4.5.1 to verify
 ## Section 4
 
 - `IfcRulesReify.fst`: the IFC type system from 4.1
-- `IfcTypechecker.fst`: the IFC typecheckers from 4.1 and 4.2
-- `IfcExampleReify2.fst`: the simple program from 4.2 and its hybrid proof
-- `IfcDelimitedRelease.fst`: the delimited release definition from 4.3
-- `IfcDeclassify.fst`: the simple definition of when declassification from 4.3
+- `IfcMonitor.fst` and `IfcMonitorTest.fst`: the dynamic IFC monitor from 4.2
+- `IfcTypechecker.fst`: the IFC typecheckers from 4.1 and 4.3
+- `IfcExampleReify2.fst`: the simple program from 4.3 and its hybrid proof
+- `IfcDelimitedRelease.fst`: the delimited release definition from 4.4
+- `IfcDeclassify.fst`: the simple definition of when declassification from 4.4
 
 ## Section 5
 
