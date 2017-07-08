@@ -26,20 +26,20 @@ This requires Z3 version 4.5.1 to verify
 
 ## Section 4
 
-- `../dm4free/FStar.DM4F.Heap.Random.fst`,`../dm4free/FStar.DM4F.Random.fst`:
-  definition of the RAND effect in 4.1 and proof of `mass_leq` lemma in 4.2
-- `OTP.fst`: proof of perfect secrecy of one-time pad in 4.2
-- `../dm4free/FStar.DM4F.OTP.Heap.fst`,`../dm4free/FStar.DM4F.OTP.Random.fst`:
-  the variant of the RAND effect in 4.1 used in the proof in 4.3
-- `ElGamal.fst`: the proof of the secrecy lemma in 4.3
+- `IfcRulesReify.fst`: the IFC type system from 4.1
+- `IfcTypechecker.fst`: the IFC typecheckers from 4.1 and 4.2
+- `IfcExampleReify2.fst`: the simple program from 4.2 and its hybrid proof
+- `IfcDelimitedRelease.fst`: the delimited release definition from 4.3
+- `IfcDeclassify.fst`: the simple definition of when declassification from 4.3
 
 ## Section 5
 
-- `IfcRulesReify.fst`: the IFC type system from 5.1
-- `IfcTypechecker.fst`: the IFC typecheckers from 5.1 and 5.2
-- `IfcExampleReify2.fst`: the simple program from 5.2 and its hybrid proof
-- `IfcDelimitedRelease.fst`: the delimited release definition from 5.3
-- `IfcDeclassify.fst`: the simple definition of when declassification from 5.3
+- `../dm4free/FStar.DM4F.Heap.Random.fst`,`../dm4free/FStar.DM4F.Random.fst`:
+  definition of the RAND effect in 5.1 and proof of `mass_leq` lemma in 5.2
+- `OTP.fst`: proof of perfect secrecy of one-time pad in 5.2
+- `../dm4free/FStar.DM4F.OTP.Heap.fst`,`../dm4free/FStar.DM4F.OTP.Random.fst`:
+  the variant of the RAND effect in 5.1 used in the proof in 5.3
+- `ElGamal.fst`: the proof of the secrecy lemma in 5.3
 
 ## Section 6
 
