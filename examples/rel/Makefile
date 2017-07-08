@@ -79,35 +79,48 @@ pack:
 FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
 SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
 
+MODULES=$(shell $(SED) -e 's!^\([^,]*\).*$$!\1!' < sections.csv | xargs echo)
+
+sections-sorted.csv:
+	sort -t , -k 1,1 < sections.csv > sections-sorted.csv
+
+modules-sorted.csv:
+	i=0; for f in $(MODULES) ; do echo $$i,$$f ; i=$$(($$i + 1)) ; done | sort -t , -k 2,2 > modules-sorted.csv
+
 results_without_hints:
-	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k all > results_without_hints || :
+	+HINTS_ENABLED='' OTHERFLAGS='--record_hints' make -k $(addsuffix .uver,$(MODULES)) > results_without_hints || :
 
 results_with_hints:
-	+make -k all > results_with_hints || :
+	+make -k $(addsuffix .uver,$(MODULES)) > results_with_hints || :
 
 timings_without_hints.csv: results_without_hints
 	$(SED) -n results_without_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
-		| sort -t , -k 1,1 > timings_without_hints.csv
+		| sort -t , -k 1,1 \
+		 > timings_without_hints.csv
 
 timings_with_hints.csv: results_with_hints
 	$(SED) -n results_with_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
-		| sort -t , -k 1,1 > timings_with_hints.csv
+		| sort -t , -k 1,1 \
+		 > timings_with_hints.csv
 
 loc.csv:
-	$(FIND) . -name '*fst' \
-		-exec sh -c 'sed -n -e "/^\((\*.*\*)\| \|\/\/.*\)*$$/!p" {} | wc -l ' \; \
-		-print | tr '\n' ' ' \
-		| sed -e 's; \.\/;,;g' -e 's;\.fst ;\n;g' \
-		| sort -t , -k 2,2 > loc.csv
+	for f in $(MODULES) ; do echo -n $$f, ; wc -l < $$f.fst ; done \
+		| sort -t , -k 1,1 \
+		 > loc.csv
 
 timings0.csv: timings_without_hints.csv timings_with_hints.csv
-	join -t , -1 1 -2 1 timings_without_hints.csv timings_with_hints.csv > timings0.csv
+	join --check-order -t , -1 1 -2 1 timings_without_hints.csv timings_with_hints.csv > timings0.csv
 
-timings.csv: timings0.csv loc.csv
-	echo 'filename,timings (no hints),timings (with hints),loc' > timings.csv
-	join -t , -1 1 -2 2 timings0.csv loc.csv >> timings.csv
+timings1.csv: timings0.csv loc.csv
+	join --check-order -t , -1 1 -2 1 timings0.csv loc.csv > timings1.csv
 	#rm results_without_hints results_with_hints timings_without_hints.csv timings_with_hints.csv loc.csv timings0.csv
 
+timings2.csv: timings1.csv sections-sorted.csv
+	join --check-order -t , -1 1 -2 1 sections-sorted.csv timings1.csv | sort -t , -k 1,1 > timings2.csv
+
+timings.csv: timings2.csv modules-sorted.csv
+	echo 'filename,section,timings (no hints),timings (with hints),loc' > timings.csv
+	join --check-order -t , -1 1 -2 2 timings2.csv modules-sorted.csv | sort -n -t , -k 6,6 | $(SED) 's!,[0-9]*$$!!' >> timings.csv
 
 clean:
-	rm -f results_without_hints results_with_hints timings_without_hints.csv timings_with_hints.csv loc.csv timings0.csv timings.csv
+	rm -f sections-sorted.csv modules-sorted.csv results_without_hints results_with_hints timings_without_hints.csv timings_with_hints.csv loc.csv timings0.csv timings1.csv timings2.csv timings.csv
