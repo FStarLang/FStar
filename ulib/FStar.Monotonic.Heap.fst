@@ -136,7 +136,10 @@ private let lemma_alloc_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (mm:bool
           is_mm r = mm     /\
           (forall (b:Type) (rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
           (forall (b:Type) (rel:preorder b) (r':mref b rel). h0 `contains` r' ==> h1 `contains` r')             /\
-	  (forall (b:Type) (rel:preorder b) (r':ree_mm_test (#a:Type) (rel:preorder a) (h0:heap) (r:mref a rel{h0 `contains` r /\ is_mm r})
+  	  (forall (b:Type) (rel:preorder b) (r':mref b rel). ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1)))
+    = ()
+
+private let lemma_free_mm_test (#a:Type) (rel:preorder a) (h0:heap) (r:mref a rel{h0 `contains` r /\ is_mm r})
   :Lemma (let h1 = free_mm h0 r in
           r `unused_in` h1 /\
 	  (forall (b:Type) (rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==>
@@ -153,6 +156,10 @@ private let lemma_alloc_fresh_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (m
 let lemma_contains_implies_used #a #rel h r = ()
 let lemma_distinct_addrs_distinct_types #a #b #rel1 #rel2 h r1 r2 = ()
 let lemma_distinct_addrs_distinct_preorders #a #rel1 #rel2 h r1 r2 = ()
+let lemma_distinct_addrs_distinct_mm #a #b #rel1 #rel2 h r1 r2 =
+  (* TODO : contains should be aware of the manual management of a cell *)
+  (* In order to do so, we need to extend the heap to keep track of the mm flag *)
+  admit ()
 let lemma_distinct_addrs_unused #a #b #rel1 #rel2 h r1 r2 = ()
 let lemma_alloc #a rel h0 x mm =
   let r, h1 = alloc rel h0 x mm in

@@ -39,7 +39,7 @@ assume val new_region: r0:rid -> ST rid
                            extends r1 r0
                         /\ fresh_region r1 m0 m1
 			/\ color r1 = color r0
-                        /\ m1==Map.upd m0 r1 Heap.emp))
+                        /\ m1==Map.upd m0 r1 emp))
 
 assume val new_colored_region: r0:rid -> c:int -> ST rid
       (requires (fun m -> True))
@@ -47,18 +47,18 @@ assume val new_colored_region: r0:rid -> c:int -> ST rid
                            extends r1 r0
                         /\ fresh_region r1 m0 m1
 			/\ color r1 = c
-                        /\ m1==Map.upd m0 r1 Heap.emp))
+                        /\ m1==Map.upd m0 r1 emp))
 
 unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) =
     let region_i = Map.sel m0 i in
-    ~ (Heap.contains region_i (as_ref x))
+    ~ (Heap.contains region_i.m (as_ref x))
   /\ m1==(m0.[x]<-init)
 
 assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-unfold let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
+unfold let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 =
    let region_i = Map.sel m0 root in
    ~ (Heap.contains region_i (as_ref x))
  /\ m1==(m0.[x]<-init)
@@ -67,7 +67,7 @@ assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-unfold let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
+unfold let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type =
   m1==(m0.[r] <- v)
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit

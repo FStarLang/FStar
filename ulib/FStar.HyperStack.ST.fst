@@ -160,7 +160,7 @@ assume val fresh_child : r:HH.rid -> c:int ->
     (fun (p:gst_post rid) (m0:mem) ->
       r `is_in` m0.h /\
       (forall (r':rid) m1. r' =!= HH.root /\ r `is_in` m0.h /\ HH.parent r' == r /\ HH.color r' == c /\
-        m1.h == Map.upd m0.h r' (HH.H true Heap.emp)
+        m1.h == Map.upd m0.h r' HH.emp
       /\ m1.tip == m0.tip
       /\ HH.fresh_region r' m0.h m1.h ==> p r' m1))
 
@@ -173,7 +173,7 @@ val push_frame: unit -> Unsafe unit
 let push_frame () =
   let m0 = gst_get () in
   let tip = fresh_child m0.tip 1 in
-  let h = Map.upd m0.h tip (HH.H true Heap.emp) in
+  let h = Map.upd m0.h tip HH.emp in
   let m1 = HS h tip in
   gst_put m1
 
@@ -293,7 +293,7 @@ val new_region: r0:rid ->
         r1 `HH.extends` r0
       /\ HH.fresh_region r1 m0.h m1.h
 			/\ HH.color r1 == HH.color r0
-			/\ m1.h == Map.upd m0.h r1 (HH.H true Heap.emp)
+			/\ m1.h == Map.upd m0.h r1 HH.emp
 			/\ m1.tip == m0.tip
 			))
 let new_region r0 =
@@ -310,7 +310,7 @@ val new_colored_region: r0:rid -> c:int -> ST rid
                            r1 `HH.extends` r0
                         /\ HH.fresh_region r1 m0.h m1.h
 			/\ HH.color r1 == c
-			/\ m1.h == Map.upd m0.h r1 (HH.H true Heap.emp)
+			/\ m1.h == Map.upd m0.h r1 HH.emp
 			/\ m1.tip == m0.tip
 			))
 let new_colored_region r0 c =

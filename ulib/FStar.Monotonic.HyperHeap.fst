@@ -233,6 +233,8 @@ type maybe_live_heap = | H : live:bool -> m:heap -> maybe_live_heap
 
 type t = Map.t rid maybe_live_heap
 
+let emp = H true Heap.emp
+
 let contains (m:t) (i:rid) : Tot bool = Map.contains m i && (Map.sel m i).live
 let at (m:t) (i:rid{ m `contains` i}) : Tot heap = (Map.sel m i).m
 
