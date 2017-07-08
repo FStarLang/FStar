@@ -97,18 +97,18 @@ results_with_hints:
 
 timings_without_hints.csv: results_without_hints
 	$(SED) -n results_without_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
-# 		| sort -t , -k 1,1 \
-# 		 > timings_without_hints.csv
+		| sort -t , -k 1,1 \
+		 > timings_without_hints.csv
 
 timings_with_hints.csv: results_with_hints
 	$(SED) -n results_with_hints -e '/Verified/s/.*: \([^ ]*\) (\([0-9]*\) .*/\1,\2/p' \
-# 		| sort -t , -k 1,1 \
-# 		 > timings_with_hints.csv
+		| sort -t , -k 1,1 \
+		 > timings_with_hints.csv
 
 loc.csv:
 	for f in $(MODULES) ; do echo -n $$f, ; wc -l < $$f.fst ; done \
-# 		| sort -t , -k 1,1 \
-# 		 > loc.csv
+		| sort -t , -k 1,1 \
+		 > loc.csv
 
 timings0.csv: timings_without_hints.csv timings_with_hints.csv
 	join --check-order -t , -1 1 -2 1 timings_without_hints.csv timings_with_hints.csv > timings0.csv
