@@ -1,5 +1,5 @@
 
-# Examples for A Monadic Framework for Relational Verification (Functional Pearl)
+# Examples for A Monadic Framework for Relational Verification
 
 All the examples are in the `rel` subdir, but some use things in
 `dm4free` internally. This is known to work with the
