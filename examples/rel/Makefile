@@ -56,6 +56,9 @@ benton2004:\
   Benton2004.SmithVolpano.uver\
   Benton2004.RHL.uver\
   Benton2004.RHL.Examples.uver\
+  Benton2004.RHL.Derived.uver\
+  Benton2004.RHL.Examples2.uver\
+
 
 
 %.fst-in:

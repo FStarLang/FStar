@@ -29,15 +29,13 @@ val msg_buffer: FStar.HyperStack.ref message
 let msg_buffer = FStar.HyperStack.ST.ralloc root (empty_bytes)
 
 // BEGIN: Network
-val send: message -> ML unit
-val recv: (message -> ML unit) -> ML unit
+private val send: message -> ML unit
+private val recv: (message -> ML unit) -> ML unit
 // END: Network
-
 
 let send m = 
   recall msg_buffer;
   msg_buffer := m
-
 
 let rec recv call = 
   recall msg_buffer;
@@ -56,7 +54,7 @@ type log_entry =
   | Response: string -> string -> log_entry
   
 
-type log_t (r:rid) = Monotonic.Seq.log_t r log_entry
+private type log_t (r:rid) = Monotonic.Seq.log_t r log_entry
 let log:log_t root = alloc_mref_seq #log_entry root createEmpty
 
 // BEGIN: RpcPredicates
@@ -136,7 +134,7 @@ let server () =
         else failwith "Invalid MAC" )
 // END: RpcProtocol
 
-val test : unit -> ML unit
+private val test : unit -> ML unit
 let test () =
   let query = "4 + 2" in
   if length (utf8 query) > 65535 then failwith "Too long"

@@ -20,6 +20,12 @@ module SHA1 = Ex12.SHA1
 
 (* ---- specification *)
 
+
+(* We make the MAC.key abstract so that it cannot be accessed by 
+   the adversary *)
+
+abstract type key=SHA1.key 
+
 (* we attach an authenticated properties to each key,
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
@@ -39,7 +45,11 @@ type entry =
          -> m:tag
          -> entry
 
-let log = FStar.HyperStack.ST.ralloc #(list entry) root []
+(* the log needs to be private to the adversary cannot 
+   add or remove entries *)
+
+private type log_t = ref (list entry)
+let log:log_t = FStar.HyperStack.ST.ralloc #(list entry) root []
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)
@@ -54,7 +64,7 @@ val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t})
 (* ---- implementation *)
 
 let keygen (p: (text -> Type)) =
-  let k = sample keysize in
+  let k:key = sample keysize in
   assume (key_prop k == p);
   k
 
