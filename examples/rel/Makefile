@@ -121,17 +121,11 @@ timings2.csv: timings1.csv sections-sorted.csv
 	join --check-order -t , -1 1 -2 1 sections-sorted.csv timings1.csv | sort -t , -k 1,1 > timings2.csv
 
 timings.csv: timings2.csv modules-sorted.csv
-	echo 'filename,section,1st run (ms),proof replay (ms),loc' > timings.csv
+	echo 'Subject,Section,1st run (ms),Proof replay (ms),Loc' > timings.csv
 	join --check-order -t , -1 1 -2 2 timings2.csv modules-sorted.csv | sort -n -t , -k 6,6 | $(SED) 's!,[0-9]*$$!!' >> timings.csv
 
 clean:
 	rm -f sections-sorted.csv modules-sorted.csv results_without_hints results_with_hints timings_without_hints.csv timings_with_hints.csv loc.csv timings0.csv timings1.csv timings2.csv timings.csv
 
 timings.tex: timings.csv
-	echo '\\begin{tabular}{|l|l|l|l|l|}' > timings.tex
-	echo '\\hline' >> timings.tex
-	head -n 1 < timings.csv | sed 's!,!\&!g' | sed 's!$$!\\\\!' >> timings.tex
-	echo '\\hline' >> timings.tex
-	tail -n +2 < timings.csv | sed 's!,!\&!g' | sed 's!$$!\\\\!' >> timings.tex
-	echo '\\hline' >> timings.tex
-	echo '\\end{tabular}' >> timings.tex
+	./setup_timings.py
