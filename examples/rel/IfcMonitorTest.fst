@@ -22,8 +22,8 @@ let test2 = assert_norm (Some? (interpret_com h0 p2 env Low))
 let p3 = If (AOp Plus (AVar (to_id 3)) (AInt 2)) (Assign (to_id 1) (AInt 0)) Skip
 let test3 = assert_norm (None? (interpret_com h0 p3 env Low))
 
-(* This is example shows the "weak" semantic of the monitor's security *)
-(* If (h1 - 5  <> 0 then {l1 := 9}  [env0(h1) = 5] *)
+(* This is example shows a difference to the type system*)
+(* If (h1 - 5  <> 0 then {l1 := 0}  [env0(h1) = 5] *)
 let p4 = If (AOp Plus (AVar (to_id 3)) (AInt (- 5))) (Assign (to_id 1) (AInt 0)) Skip
 let test4 = assert_norm (Some? (interpret_com h0 p4 env Low))
 
@@ -31,10 +31,9 @@ let test4 = assert_norm (Some? (interpret_com h0 p4 env Low))
 let p5 = Seq (Assign (to_id 3) (AVar (to_id 4))) (Assign (to_id 2) (AVar (to_id 3)))
 let test5 = assert_norm (None? (interpret_com h0 p5 env Low))
 
-(*
+(* This falis, as expected 
 (* h1 := l1; l2 := h1 *)
 let p6 = Seq (Assign (to_id 3) (AVar (to_id 1))) (Assign (to_id 2) (AVar (to_id 3)))
 let test6 = assert_norm (Some? ((interpret_com h0 p6 Low)))
 #reset-options
 *)
-
