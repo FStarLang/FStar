@@ -334,8 +334,7 @@ let append_subseq #a #n (f:iarray a n) (pos:nat) (sent:nat{pos + sent <= n}) (h:
              let sub_file = suffix f pos in
              let sent_frag = as_initialized_subseq sub_file h 0 sent in
              f1 == append f0 sent_frag)
-    = admit ();
-      let f0 = as_initialized_subseq f h 0 pos in
+    = let f0 = as_initialized_subseq f h 0 pos in
       let f1 = as_initialized_subseq f h 0 (pos + sent) in
       let sub_file = suffix f pos in
       let sent_frag = as_initialized_subseq sub_file h 0 sent in
