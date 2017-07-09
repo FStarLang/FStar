@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.TypeChecker.Util
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Util
@@ -40,7 +41,7 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module N = FStar.TypeChecker.Normalize
 module P = FStar.Syntax.Print
-module C = FStar.Syntax.Const
+module C = FStar.Parser.Const
 
 //Reporting errors
 let report env errs =
@@ -60,7 +61,7 @@ let t_binders env =
 //new unification variable
 let new_uvar_aux env k =
     let bs = if (Options.full_context_dependency())
-             || Ident.lid_equals Const.prims_lid (Env.current_module env)
+             || Ident.lid_equals C.prims_lid (Env.current_module env)
              then Env.all_binders env
              else t_binders env in
     Rel.new_uvar (Env.get_range env) bs k
@@ -72,7 +73,7 @@ let as_uvar : typ -> uvar = function
     | _ -> failwith "Impossible"
 
 let new_implicit_var reason r env k =
-    match U.destruct k Const.range_of_lid with
+    match U.destruct k C.range_of_lid with
      | Some [_; (tm, _)] ->
        let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
        t, [], Rel.trivial_guard
@@ -409,7 +410,7 @@ let join_effects env l1 l2 =
 let join_lcomp env c1 c2 =
   if U.is_total_lcomp c1
   && U.is_total_lcomp c2
-  then Const.effect_Tot_lid
+  then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
 let lift_and_destruct env c1 c2 =
@@ -424,12 +425,12 @@ let lift_and_destruct env c1 c2 =
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in
-  lid_equals l Const.effect_PURE_lid
+  lid_equals l C.effect_PURE_lid
 
 let is_pure_or_ghost_effect env l =
   let l = norm_eff_name env l in
-  lid_equals l Const.effect_PURE_lid
-  || lid_equals l Const.effect_GHOST_lid
+  lid_equals l C.effect_PURE_lid
+  || lid_equals l C.effect_GHOST_lid
 
 let mk_comp_l mname u_result result wp flags =
   mk_Comp ({ comp_univs=[u_result];
@@ -441,7 +442,7 @@ let mk_comp_l mname u_result result wp flags =
 let mk_comp md = mk_comp_l md.mname
 
 let lax_mk_tot_or_comp_l mname u_result result flags =
-    if Ident.lid_equals mname Const.effect_Tot_lid
+    if Ident.lid_equals mname C.effect_Tot_lid
     then S.mk_Total' result (Some u_result)
     else mk_comp_l mname u_result result S.tun flags
 
@@ -463,7 +464,7 @@ let close_comp env bvs (c:comp) =
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env x.sort] in
-                  let wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
+                  let wp = U.abs bs wp (Some (Inr (C.effect_Tot_lid, [TOTAL]))) in
                   mk_Tm_app (inst_effect_fun_with us env md md.close_wp) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
               bvs wp0 in
             let c = Env.unfold_effect_abbrev env c in
@@ -479,15 +480,15 @@ let close_lcomp env bvs (lc:lcomp) =
 
 let return_value env t v =
   let c =
-    if not <| Env.lid_exists env Const.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
+    if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
     then mk_Total t
-    else let m = Env.get_effect_decl env Const.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
+    else let m = Env.get_effect_decl env C.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
          let wp =
             if env.lax
             && Options.ml_ish() //NS: Disabling this optimization temporarily
             then S.tun
-            else let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
+            else let a, kwp = Env.wp_signature env C.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
                  N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
          mk_comp m u_t t wp [RETURN] in
@@ -555,11 +556,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | Tm_refine(y, _) ->
                   maybe_close y.sort x c
                 | Tm_fvar fv
-                    when S.fv_eq_lid fv Const.unit_lid ->
+                    when S.fv_eq_lid fv C.unit_lid ->
                   close_comp env [x] c
                 | _ -> c
             in
-            if Option.isNone (Env.try_lookup_effect_lid env Const.effect_GTot_lid) //if we're very early in prims
+            if Option.isNone (Env.try_lookup_effect_lid env C.effect_GTot_lid) //if we're very early in prims
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
                  then Inl (c2, "Early in prims; we don't have bind yet")
@@ -598,7 +599,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | None -> [null_binder t1]
                 | Some x -> [S.mk_binder x]
             in
-            let mk_lam wp = U.abs bs wp (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in //we know it's total; let the normalizer reduce it
+            let mk_lam wp = U.abs bs wp (Some (Inr (C.effect_Tot_lid, [TOTAL]))) in //we know it's total; let the normalizer reduce it
             let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
             let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
             let k = SS.subst [NT(a, t2)] kwp in
@@ -702,7 +703,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
        {g0 with guard_f=Trivial}
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
-    let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
+    let md_pure = Env.get_effect_decl env C.effect_PURE_lid in
     let x = S.new_bv None res_t in
     let y = S.new_bv None res_t in
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
@@ -719,7 +720,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
         mk_Tm_app (inst_effect_fun_with [u_res_t;u_res_t] env md_pure md_pure.close_wp)
                   [S.as_arg res_t;
                    S.as_arg res_t;
-                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr (Const.effect_Tot_lid, [TOTAL])))] //mark it as Tot for the normalizer
+                   S.as_arg <| U.abs [mk_binder y] x_eq_y_yret (Some (Inr (C.effect_Tot_lid, [TOTAL])))] //mark it as Tot for the normalizer
                    None res_t.pos in
     let lc2 = mk_comp md_pure u_res_t res_t forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind (Env.get_range env) env None (U.lcomp_of_comp comp) (Some x, U.lcomp_of_comp lc2) in
@@ -752,7 +753,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
 let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) Delta_constant None
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
-    let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) Const.effect_PURE_lid lcases in
+    let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) C.effect_PURE_lid lcases in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
         if env.lax
@@ -767,9 +768,9 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
                 let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
                 let post   = S.new_bv None post_k in
                 let wp     = U.abs [mk_binder post]
-                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env Const.false_lid)
-                                   (Some (Inr (Const.effect_Tot_lid, [TOTAL]))) in
-                let md     = Env.get_effect_decl env Const.effect_PURE_lid in
+                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env C.false_lid)
+                                   (Some (Inr (C.effect_Tot_lid, [TOTAL]))) in
+                let md     = Env.get_effect_decl env C.effect_PURE_lid in
                 mk_comp md u_res_t res_t wp [] in
             let comp = List.fold_right (fun (g, cthen) celse ->
                 let (md, _, _), (_, _, wp_then), (_, _, wp_else) = lift_and_destruct env (cthen.comp()) celse in
@@ -805,12 +806,12 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
       then c
       else if U.is_tot_or_gtot_comp c
       then begin //insert a return
-           if not (Env.lid_exists env Const.effect_GTot_lid)
+           if not (Env.lid_exists env C.effect_GTot_lid)
            then failwith (BU.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
            else let retc = return_value env (U.comp_result c) e in
                 if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
                 then let retc = U.comp_to_comp_typ retc in
-                     let retc = {retc with effect_name=Const.effect_GHOST_lid; flags=flags} in
+                     let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
                      S.mk_Comp retc
                 else U.comp_set_flags retc flags
       end
@@ -842,10 +843,10 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
     in
     match (SS.compress lc.res_typ).n with
     | Tm_fvar fv
-        when S.fv_eq_lid fv Const.bool_lid
+        when S.fv_eq_lid fv C.bool_lid
           && is_type t ->
-      let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
-      let b2t = S.fvar (Ident.set_lid_range Const.b2t_lid e.pos) (Delta_defined_at_level 1) None in
+      let _ = Env.lookup_lid env C.b2t_lid in  //check that we have Prims.b2t in the context
+      let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_defined_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
       let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
       e, lc
@@ -882,7 +883,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify] env f in
                   match (SS.compress f).n with
-                      | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv Const.true_lid ->
+                      | Tm_abs(_, {n=Tm_fvar fv}, _) when S.fv_eq_lid fv C.true_lid ->
                         //it's trivial
                         let lc = {lc with res_typ=t} in
                         lc.comp()
@@ -897,7 +898,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                   (N.term_to_string env f);
 
                           let ct = Env.unfold_effect_abbrev env c in
-                          let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
+                          let a, kwp = Env.wp_signature env C.effect_PURE_lid in
                           let k = SS.subst [NT(a, t)] kwp in
                           let md = Env.get_effect_decl env ct.effect_name in
                           let x = S.new_bv (Some t.pos) t in
@@ -945,8 +946,8 @@ let pure_or_ghost_pre_and_post env comp =
             | GTotal _
             | Total _ -> failwith "Impossible"
             | Comp ct ->
-              if lid_equals ct.effect_name Const.effect_Pure_lid
-              || lid_equals ct.effect_name Const.effect_Ghost_lid
+              if lid_equals ct.effect_name C.effect_Pure_lid
+              || lid_equals ct.effect_name C.effect_Ghost_lid
               then begin match ct.effect_args with
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
@@ -956,11 +957,11 @@ let pure_or_ghost_pre_and_post env comp =
               else let ct = Env.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with
                             | (wp, _)::_ ->
-                              let us_r, _ = fst <| Env.lookup_lid env Const.as_requires in
-                              let us_e, _ = fst <| Env.lookup_lid env Const.as_ensures in
+                              let us_r, _ = fst <| Env.lookup_lid env C.as_requires in
+                              let us_e, _ = fst <| Env.lookup_lid env C.as_ensures in
                               let r = ct.result_typ.pos in
-                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_requires r) Delta_equational None) us_r in
-                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range Const.as_ensures r) Delta_equational None) us_e in
+                              let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) Delta_equational None) us_r in
+                              let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) Delta_equational None) us_e in
                               let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] (Some U.ktype0.n) ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
@@ -1148,8 +1149,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
         if debug env Options.Medium
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
          let c = if Env.should_verify env
-                 then Normalize.normalize_comp [N.Beta; N.Eager_unfolding; N.NoFullNorm] env c
-                 else Normalize.normalize_comp [N.Beta; N.NoFullNorm] env c in
+                 then Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.Eager_unfolding; N.NoFullNorm] env c
+                 else Normalize.normalize_comp [N.Beta; N.Exclude N.Zeta; N.NoFullNorm] env c in
          if debug env Options.Medium then
             BU.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
@@ -1175,7 +1176,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
               | Fixed ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some S.imp_tag
               | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
-                  let k = N.normalize [N.Beta] env k in
+                  let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
                   let bs, kres = U.arrow_formals k in
                   let a = S.new_bv (Some <| Env.get_range env) kres in
                   let t = U.abs bs (S.bv_to_name a) (Some (Inl (U.lcomp_of_comp (S.mk_Total kres)))) in
@@ -1190,14 +1191,14 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
             | [], _ ->
               //nothing generalized, or
               //only universes generalized, still need to compress out invariant-broken uvars
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm] env c in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.NoFullNorm; N.Exclude N.Zeta] env c in
               let e = N.reduce_uvar_solutions env e in
               e, c
 
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
               let e0, c0 = e, c in
-              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm] env c in
+              let c = N.normalize_comp [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env c in
               let e = N.reduce_uvar_solutions env e in
               //now, with the uvars gone, we can close over the newly introduced type names
               let t = match (SS.compress (U.comp_result c)).n with
@@ -1308,12 +1309,12 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
         | [_then;(guard, _)] -> U.mk_neg guard |> NonTrivial
         | _ -> failwith "Unexpected args to ITE" in
     let table =
-        [(Const.op_And,  short_bin_op op_and_e);
-         (Const.op_Or,   short_bin_op op_or_e);
-         (Const.and_lid, short_bin_op op_and_t);
-         (Const.or_lid,  short_bin_op op_or_t);
-         (Const.imp_lid, short_bin_op op_imp_t);
-         (Const.ite_lid, short_op_ite);] in
+        [(C.op_And,  short_bin_op op_and_e);
+         (C.op_Or,   short_bin_op op_or_e);
+         (C.and_lid, short_bin_op op_and_t);
+         (C.or_lid,  short_bin_op op_or_t);
+         (C.imp_lid, short_bin_op op_imp_t);
+         (C.ite_lid, short_op_ite);] in
 
      match head.n with
         | Tm_fvar fv ->
@@ -1328,12 +1329,12 @@ let short_circuit_head l =
     match (U.un_uinst l).n with
         | Tm_fvar fv ->
            BU.for_some (S.fv_eq_lid fv)
-                   [Const.op_And;
-                    Const.op_Or;
-                    Const.and_lid;
-                    Const.or_lid;
-                    Const.imp_lid;
-                    Const.ite_lid]
+                   [C.op_And;
+                    C.op_Or;
+                    C.and_lid;
+                    C.or_lid;
+                    C.imp_lid;
+                    C.ite_lid]
         | _ -> false
 
 
@@ -1384,8 +1385,8 @@ let maybe_lift env e c1 c2 t =
 let maybe_monadic env e c t =
     let m = Env.norm_eff_name env c in
     if is_pure_or_ghost_effect env m
-    || Ident.lid_equals m Const.effect_Tot_lid
-    || Ident.lid_equals m Const.effect_GTot_lid //for the cases in prims where Pure is not yet defined
+    || Ident.lid_equals m C.effect_Tot_lid
+    || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
     else mk (Tm_meta(e, Meta_monadic (m, t))) !e.tk e.pos
 
@@ -1407,7 +1408,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
      lbunivs = [];
      lbtyp = S.tun;
      lbdef = def;
-     lbeff = Const.effect_Tot_lid; //this will be recomputed correctly
+     lbeff = C.effect_Tot_lid; //this will be recomputed correctly
   }] in
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ], [])) in
@@ -1621,7 +1622,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 (* Term of the discriminator *)
                 let body =
                     if not refine_domain
-                    then C.exp_true_bool   // If we have at most one constructor
+                    then U.exp_true_bool   // If we have at most one constructor
                     else
                         let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                             let b = S.is_implicit imp in
@@ -1629,8 +1630,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                             then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
                             else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
                         in
-                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, C.exp_true_bool in
-                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, C.exp_false_bool in
+                        let pat_true = pos (S.Pat_cons (S.lid_as_fv lid Delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
+                        let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
                         mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
                 in
@@ -1761,7 +1762,7 @@ let mk_data_operations iquals env tcs se =
         match tps_opt with
             | Some x -> x
             | None ->
-                if lid_equals typ_lid Const.exn_lid
+                if lid_equals typ_lid C.exn_lid
                 then [], U.ktype0, true
                 else raise (Error("Unexpected data constructor", se.sigrng))
     in

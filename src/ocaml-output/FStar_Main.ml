@@ -1,13 +1,15 @@
 open Prims
 let uu___228: Prims.unit = FStar_Version.dummy ()
 let process_args:
-  Prims.unit -> (FStar_Getopt.parse_cmdline_res* Prims.string Prims.list) =
-  fun uu____6  -> FStar_Options.parse_cmd_line ()
+  Prims.unit ->
+    (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
+      FStar_Pervasives_Native.tuple2
+  = fun uu____6  -> FStar_Options.parse_cmd_line ()
 let cleanup: Prims.unit -> Prims.unit =
   fun uu____12  -> FStar_Util.kill_all ()
 let finished_message:
-  ((Prims.bool* FStar_Ident.lident)* Prims.int) Prims.list ->
-    Prims.int -> Prims.unit
+  ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
+    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int -> Prims.unit
   =
   fun fmods  ->
     fun errs  ->
@@ -62,7 +64,9 @@ let finished_message:
             FStar_Util.print_string uu____68))
       else ()
 let report_errors:
-  ((Prims.bool* FStar_Ident.lident)* Prims.int) Prims.list -> Prims.unit =
+  ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
+    FStar_Pervasives_Native.tuple2 Prims.list -> Prims.unit
+  =
   fun fmods  ->
     (let uu____85 = FStar_Errors.report_all () in
      FStar_All.pipe_right uu____85 FStar_Pervasives.ignore);
@@ -72,38 +76,38 @@ let report_errors:
        (finished_message fmods nerrs; FStar_All.exit (Prims.parse_int "1"))
      else ())
 let codegen:
-  (FStar_Syntax_Syntax.modul Prims.list* FStar_TypeChecker_Env.env) ->
-    Prims.unit
+  (FStar_Syntax_Syntax.modul Prims.list,FStar_TypeChecker_Env.env)
+    FStar_Pervasives_Native.tuple2 -> Prims.unit
   =
   fun uu____97  ->
     match uu____97 with
     | (umods,env) ->
         let opt = FStar_Options.codegen () in
-        if opt <> None
+        if opt <> FStar_Pervasives_Native.None
         then
           let mllibs =
             let uu____111 =
               let uu____116 = FStar_Extraction_ML_UEnv.mkContext env in
               FStar_Util.fold_map FStar_Extraction_ML_Modul.extract uu____116
                 umods in
-            FStar_All.pipe_left FStar_Pervasives.snd uu____111 in
+            FStar_All.pipe_left FStar_Pervasives_Native.snd uu____111 in
           let mllibs1 = FStar_List.flatten mllibs in
           let ext =
             match opt with
-            | Some "FSharp" -> ".fs"
-            | Some "OCaml" -> ".ml"
-            | Some "Kremlin" -> ".krml"
+            | FStar_Pervasives_Native.Some "FSharp" -> ".fs"
+            | FStar_Pervasives_Native.Some "OCaml" -> ".ml"
+            | FStar_Pervasives_Native.Some "Kremlin" -> ".krml"
             | uu____129 -> failwith "Unrecognized option" in
           (match opt with
-           | Some "FSharp" ->
+           | FStar_Pervasives_Native.Some "FSharp" ->
                let outdir = FStar_Options.output_dir () in
                FStar_List.iter (FStar_Extraction_ML_PrintML.print outdir ext)
                  mllibs1
-           | Some "OCaml" ->
+           | FStar_Pervasives_Native.Some "OCaml" ->
                let outdir = FStar_Options.output_dir () in
                FStar_List.iter (FStar_Extraction_ML_PrintML.print outdir ext)
                  mllibs1
-           | Some "Kremlin" ->
+           | FStar_Pervasives_Native.Some "Kremlin" ->
                let programs =
                  let uu____137 =
                    FStar_List.map FStar_Extraction_Kremlin.translate mllibs1 in
@@ -124,7 +128,8 @@ let go uu____153 =
        | FStar_Getopt.Error msg -> FStar_Util.print_string msg
        | FStar_Getopt.Success  ->
            let uu____164 =
-             let uu____165 = FStar_Options.dep () in uu____165 <> None in
+             let uu____165 = FStar_Options.dep () in
+             uu____165 <> FStar_Pervasives_Native.None in
            if uu____164
            then
              let uu____168 =
@@ -220,7 +225,8 @@ let go uu____153 =
                               (let uu____277 =
                                  let uu____281 =
                                    FStar_All.pipe_right fmods
-                                     (FStar_List.map FStar_Pervasives.fst) in
+                                     (FStar_List.map
+                                        FStar_Pervasives_Native.fst) in
                                  (uu____281, env) in
                                codegen uu____277);
                               finished_message module_names_and_times

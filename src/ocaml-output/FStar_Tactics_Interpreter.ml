@@ -3,19 +3,21 @@ type name = FStar_Syntax_Syntax.bv
 let remove_unit f x = f x ()
 let quote:
   FStar_Ident.lid ->
-    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
+    FStar_Syntax_Syntax.args ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun nm  ->
     fun args  ->
       match args with
       | uu____33::(y,uu____35)::[] ->
           let uu____56 = FStar_Tactics_Embedding.embed_term y in
-          Some uu____56
-      | uu____57 -> None
+          FStar_Pervasives_Native.Some uu____56
+      | uu____57 -> FStar_Pervasives_Native.None
 let binders_of_env:
   FStar_Tactics_Basic.proofstate ->
     FStar_Ident.lid ->
-      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
+      FStar_Syntax_Syntax.args ->
+        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun ps  ->
     fun nm  ->
@@ -28,11 +30,12 @@ let binders_of_env:
             let uu____84 =
               let uu____85 = FStar_TypeChecker_Env.all_binders env in
               FStar_Tactics_Embedding.embed_binders uu____85 in
-            Some uu____84
-        | uu____87 -> None
+            FStar_Pervasives_Native.Some uu____84
+        | uu____87 -> FStar_Pervasives_Native.None
 let type_of_binder:
   FStar_Ident.lid ->
-    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
+    FStar_Syntax_Syntax.args ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun nm  ->
     fun args  ->
@@ -45,11 +48,12 @@ let type_of_binder:
                let uu____114 =
                  FStar_Tactics_Embedding.embed_term
                    b.FStar_Syntax_Syntax.sort in
-               Some uu____114)
-      | uu____115 -> None
+               FStar_Pervasives_Native.Some uu____114)
+      | uu____115 -> FStar_Pervasives_Native.None
 let term_eq:
   FStar_Ident.lid ->
-    FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
+    FStar_Syntax_Syntax.args ->
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun nm  ->
     fun args  ->
@@ -59,8 +63,8 @@ let term_eq:
           let t2 = FStar_Tactics_Embedding.unembed_term embedded_t2 in
           let b = FStar_Syntax_Util.term_eq t1 t2 in
           let uu____151 = FStar_Tactics_Embedding.embed_bool b in
-          Some uu____151
-      | uu____152 -> None
+          FStar_Pervasives_Native.Some uu____151
+      | uu____152 -> FStar_Pervasives_Native.None
 let mk_pure_interpretation_2 f unembed_a unembed_b embed_c nm args =
   (let uu____216 = FStar_ST.read FStar_Tactics_Basic.tacdbg in
    if uu____216
@@ -76,7 +80,7 @@ let mk_pure_interpretation_2 f unembed_a unembed_b embed_c nm args =
            let uu____249 = unembed_a a in
            let uu____250 = unembed_b b in f uu____249 uu____250 in
          embed_c uu____248 in
-       Some uu____247
+       FStar_Pervasives_Native.Some uu____247
    | uu____251 -> failwith "Unexpected interpretation of pure primitive")
 let mk_pure_interpretation_1 f unembed_a embed_b nm args =
   (let uu____299 = FStar_ST.read FStar_Tactics_Basic.tacdbg in
@@ -89,9 +93,11 @@ let mk_pure_interpretation_1 f unembed_a embed_b nm args =
   (match args with
    | a::[] ->
        let uu____319 =
-         let uu____320 = let uu____321 = unembed_a (fst a) in f uu____321 in
+         let uu____320 =
+           let uu____321 = unembed_a (FStar_Pervasives_Native.fst a) in
+           f uu____321 in
          embed_b uu____320 in
-       Some uu____319
+       FStar_Pervasives_Native.Some uu____319
    | uu____324 -> failwith "Unexpected interpretation of pure primitive")
 let mk_tactic_interpretation_0 ps t embed_a t_a nm args =
   match args with
@@ -125,7 +131,7 @@ let mk_tactic_interpretation_0 ps t embed_a t_a nm args =
             let res = FStar_Tactics_Basic.run t ps1 in
             let uu____399 =
               FStar_Tactics_Embedding.embed_result res embed_a t_a in
-            Some uu____399))
+            FStar_Pervasives_Native.Some uu____399))
   | uu____400 -> failwith "Unexpected application of tactic primitive"
 let mk_tactic_interpretation_1 ps t unembed_b embed_a t_a nm args =
   match args with
@@ -161,7 +167,7 @@ let mk_tactic_interpretation_1 ps t unembed_b embed_a t_a nm args =
               FStar_Tactics_Basic.run uu____502 ps1 in
             let uu____505 =
               FStar_Tactics_Embedding.embed_result res embed_a t_a in
-            Some uu____505))
+            FStar_Pervasives_Native.Some uu____505))
   | uu____506 ->
       let uu____507 =
         let uu____508 = FStar_Ident.string_of_lid nm in
@@ -205,7 +211,7 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
               FStar_Tactics_Basic.run uu____638 ps1 in
             let uu____642 =
               FStar_Tactics_Embedding.embed_result res embed_c t_c in
-            Some uu____642))
+            FStar_Pervasives_Native.Some uu____642))
   | uu____643 ->
       let uu____644 =
         let uu____645 = FStar_Ident.string_of_lid nm in
@@ -216,7 +222,8 @@ let mk_tactic_interpretation_2 ps t unembed_a unembed_b embed_c t_c nm args =
 let grewrite_interpretation:
   FStar_Tactics_Basic.proofstate ->
     FStar_Ident.lid ->
-      FStar_Syntax_Syntax.args -> FStar_Syntax_Syntax.term option
+      FStar_Syntax_Syntax.args ->
+        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun ps  ->
     fun nm  ->
@@ -257,7 +264,7 @@ let grewrite_interpretation:
                    FStar_Tactics_Embedding.embed_result res
                      FStar_Tactics_Embedding.embed_unit
                      FStar_TypeChecker_Common.t_unit in
-                 Some uu____712)
+                 FStar_Pervasives_Native.Some uu____712)
         | uu____713 ->
             let uu____714 =
               let uu____715 = FStar_Ident.string_of_lid nm in
@@ -544,7 +551,7 @@ and unembed_tactic_0 unembed_b embedded_tac_b =
                FStar_Syntax_Syntax.as_arg uu____865 in
              [uu____864] in
            FStar_Syntax_Syntax.mk_Tm_app embedded_tac_b uu____863 in
-         uu____862 None FStar_Range.dummyRange in
+         uu____862 FStar_Pervasives_Native.None FStar_Range.dummyRange in
        let steps =
          [FStar_TypeChecker_Normalize.Reify;
          FStar_TypeChecker_Normalize.Beta;
@@ -640,7 +647,8 @@ let evaluate_user_tactic: Prims.unit FStar_Tactics_Basic.tac =
 let by_tactic_interp:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term* FStar_Tactics_Basic.goal Prims.list)
+      (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+        FStar_Pervasives_Native.tuple2
   =
   fun e  ->
     fun t  ->
@@ -680,11 +688,13 @@ let by_tactic_interp:
 let rec traverse:
   (FStar_TypeChecker_Env.env ->
      FStar_Syntax_Syntax.term ->
-       (FStar_Syntax_Syntax.term* FStar_Tactics_Basic.goal Prims.list))
+       (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+         FStar_Pervasives_Native.tuple2)
     ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term* FStar_Tactics_Basic.goal Prims.list)
+        (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+          FStar_Pervasives_Native.tuple2
   =
   fun f  ->
     fun e  ->
@@ -709,8 +719,9 @@ let rec traverse:
                  FStar_Syntax_Syntax.vars = uu____1242;_},(p,uu____1244)::
                (q,uu____1246)::[])
               when
-              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Syntax_Const.imp_lid ->
-              let x = FStar_Syntax_Syntax.new_bv None p in
+              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.imp_lid ->
+              let x =
+                FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None p in
               let uu____1277 =
                 let uu____1281 = FStar_TypeChecker_Env.push_bv e x in
                 traverse f uu____1281 q in
@@ -772,7 +783,8 @@ let rec traverse:
 let preprocess:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_TypeChecker_Env.env* FStar_Syntax_Syntax.term) Prims.list
+      (FStar_TypeChecker_Env.env,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun env  ->
     fun goal  ->

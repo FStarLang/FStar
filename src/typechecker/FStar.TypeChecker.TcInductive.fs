@@ -17,6 +17,7 @@ o
 *)
 #light "off"
 module FStar.TypeChecker.TcInductive
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -94,7 +95,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
            match tps_u_opt with
             | Some x -> x
             | None ->
-              if lid_equals tc_lid Const.exn_lid
+              if lid_equals tc_lid FStar.Parser.Const.exn_lid
               then env, [], U_zero
               else raise (Error("Unexpected data constructor", se.sigrng)) in
 

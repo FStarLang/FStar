@@ -1,5 +1,7 @@
 open Prims
-type inst_t = (FStar_Ident.lident* FStar_Syntax_Syntax.universes) Prims.list
+type inst_t =
+  (FStar_Ident.lident,FStar_Syntax_Syntax.universes)
+    FStar_Pervasives_Native.tuple2 Prims.list
 let mk t s =
   let uu____26 = FStar_ST.read t.FStar_Syntax_Syntax.tk in
   FStar_Syntax_Syntax.mk s uu____26 t.FStar_Syntax_Syntax.pos
@@ -64,9 +66,11 @@ let rec inst:
                     | (p,wopt,t3) ->
                         let wopt1 =
                           match wopt with
-                          | None  -> None
-                          | Some w ->
-                              let uu____389 = inst s w in Some uu____389 in
+                          | FStar_Pervasives_Native.None  ->
+                              FStar_Pervasives_Native.None
+                          | FStar_Pervasives_Native.Some w ->
+                              let uu____389 = inst s w in
+                              FStar_Pervasives_Native.Some uu____389 in
                         let t4 = inst s t3 in (p, wopt1, t4))) in
           let uu____394 =
             let uu____395 = let uu____411 = inst s t2 in (uu____411, pats1) in
@@ -94,7 +98,7 @@ let rec inst:
       | FStar_Syntax_Syntax.Tm_let (lbs,t2) ->
           let lbs1 =
             let uu____578 =
-              FStar_All.pipe_right (snd lbs)
+              FStar_All.pipe_right (FStar_Pervasives_Native.snd lbs)
                 (FStar_List.map
                    (fun lb  ->
                       let uu___147_584 = lb in
@@ -110,7 +114,7 @@ let rec inst:
                           (uu___147_584.FStar_Syntax_Syntax.lbeff);
                         FStar_Syntax_Syntax.lbdef = uu____588
                       })) in
-            ((fst lbs), uu____578) in
+            ((FStar_Pervasives_Native.fst lbs), uu____578) in
           let uu____593 =
             let uu____594 = let uu____602 = inst s t2 in (lbs1, uu____602) in
             FStar_Syntax_Syntax.Tm_let uu____594 in
@@ -148,7 +152,8 @@ and inst_binders:
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     ->
     FStar_Syntax_Syntax.binders ->
-      (FStar_Syntax_Syntax.bv* FStar_Syntax_Syntax.aqual) Prims.list
+      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
+        FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun s  ->
     fun bs  ->
@@ -173,8 +178,10 @@ and inst_args:
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     ->
     ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax* FStar_Syntax_Syntax.aqual) Prims.list ->
-      (FStar_Syntax_Syntax.term* FStar_Syntax_Syntax.aqual) Prims.list
+       FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
+      FStar_Pervasives_Native.tuple2 Prims.list ->
+      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual)
+        FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun s  ->
     fun args  ->
@@ -227,19 +234,21 @@ and inst_lcomp_opt:
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     ->
-    (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
-                                 FStar_Syntax_Syntax.cflags Prims.list))
-      FStar_Util.either option ->
-      (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident*
-                                   FStar_Syntax_Syntax.cflags Prims.list))
-        FStar_Util.either option
+    (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident,FStar_Syntax_Syntax.cflags
+                                                     Prims.list)
+                                 FStar_Pervasives_Native.tuple2)
+      FStar_Util.either FStar_Pervasives_Native.option ->
+      (FStar_Syntax_Syntax.lcomp,(FStar_Ident.lident,FStar_Syntax_Syntax.cflags
+                                                       Prims.list)
+                                   FStar_Pervasives_Native.tuple2)
+        FStar_Util.either FStar_Pervasives_Native.option
   =
   fun s  ->
     fun l  ->
       match l with
-      | None  -> l
-      | Some (FStar_Util.Inr uu____824) -> l
-      | Some (FStar_Util.Inl lc) ->
+      | FStar_Pervasives_Native.None  -> l
+      | FStar_Pervasives_Native.Some (FStar_Util.Inr uu____824) -> l
+      | FStar_Pervasives_Native.Some (FStar_Util.Inl lc) ->
           let uu____845 =
             let uu____851 =
               let uu___150_852 = lc in
@@ -256,7 +265,7 @@ and inst_lcomp_opt:
                      inst_comp s uu____857)
               } in
             FStar_Util.Inl uu____851 in
-          Some uu____845
+          FStar_Pervasives_Native.Some uu____845
 let instantiate:
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun i  ->
@@ -274,7 +283,7 @@ let instantiate:
                          (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                 i in
             match uu____884 with
-            | None  -> t1
-            | Some (uu____901,us) ->
+            | FStar_Pervasives_Native.None  -> t1
+            | FStar_Pervasives_Native.Some (uu____901,us) ->
                 mk t1 (FStar_Syntax_Syntax.Tm_uinst (t1, us)) in
           inst inst_fv t

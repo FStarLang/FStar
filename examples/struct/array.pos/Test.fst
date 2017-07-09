@@ -4,7 +4,7 @@ module Test
 module DM = FStar.DependentMap
 module S  = FStar.Pointer
 module B  = FStar.BufferNG
-module HST = FStar.ST
+module HST = FStar.HyperStack.ST
 
 type fields =
 | I

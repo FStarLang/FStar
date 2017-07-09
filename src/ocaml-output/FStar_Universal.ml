@@ -1,13 +1,16 @@
 open Prims
 let module_or_interface_name:
-  FStar_Syntax_Syntax.modul -> (Prims.bool* FStar_Ident.lident) =
+  FStar_Syntax_Syntax.modul ->
+    (Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2
+  =
   fun m  ->
     ((m.FStar_Syntax_Syntax.is_interface), (m.FStar_Syntax_Syntax.name))
 let parse:
   FStar_ToSyntax_Env.env ->
-    Prims.string option ->
+    Prims.string FStar_Pervasives_Native.option ->
       Prims.string ->
-        (FStar_ToSyntax_Env.env* FStar_Syntax_Syntax.modul Prims.list)
+        (FStar_ToSyntax_Env.env,FStar_Syntax_Syntax.modul Prims.list)
+          FStar_Pervasives_Native.tuple2
   =
   fun env  ->
     fun pre_fn  ->
@@ -17,8 +20,8 @@ let parse:
         | (ast,uu____33) ->
             let uu____40 =
               match pre_fn with
-              | None  -> (env, ast)
-              | Some pre_fn1 ->
+              | FStar_Pervasives_Native.None  -> (env, ast)
+              | FStar_Pervasives_Native.Some pre_fn1 ->
                   let uu____46 = FStar_Parser_Driver.parse_file pre_fn1 in
                   (match uu____46 with
                    | (pre_ast,uu____55) ->
@@ -44,8 +47,9 @@ let parse:
              | (env1,ast1) -> FStar_ToSyntax_ToSyntax.desugar_file env1 ast1)
 let tc_prims:
   Prims.unit ->
-    ((FStar_Syntax_Syntax.modul* Prims.int)* FStar_ToSyntax_Env.env*
-      FStar_TypeChecker_Env.env)
+    ((FStar_Syntax_Syntax.modul,Prims.int) FStar_Pervasives_Native.tuple2,
+      FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+      FStar_Pervasives_Native.tuple3
   =
   fun uu____102  ->
     let solver1 =
@@ -86,12 +90,12 @@ let tc_prims:
       FStar_TypeChecker_Env.initial_env
         FStar_TypeChecker_TcTerm.type_of_tot_term
         FStar_TypeChecker_TcTerm.universe_of solver1
-        FStar_Syntax_Const.prims_lid in
+        FStar_Parser_Const.prims_lid in
     (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env;
     (let prims_filename = FStar_Options.prims () in
      let uu____115 =
        let uu____119 = FStar_ToSyntax_Env.empty_env () in
-       parse uu____119 None prims_filename in
+       parse uu____119 FStar_Pervasives_Native.None prims_filename in
      match uu____115 with
      | (dsenv,prims_mod) ->
          let uu____129 =
@@ -103,12 +107,14 @@ let tc_prims:
           | ((prims_mod1,env1),elapsed_time) ->
               ((prims_mod1, elapsed_time), dsenv, env1)))
 let tc_one_fragment:
-  FStar_Syntax_Syntax.modul option ->
+  FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStar_ToSyntax_Env.env ->
       FStar_TypeChecker_Env.env ->
-        (FStar_Parser_ParseIt.input_frag* Prims.bool) ->
-          (FStar_Syntax_Syntax.modul option* FStar_ToSyntax_Env.env*
-            FStar_TypeChecker_Env.env) option
+        (FStar_Parser_ParseIt.input_frag,Prims.bool)
+          FStar_Pervasives_Native.tuple2 ->
+          (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option,FStar_ToSyntax_Env.env,
+            FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3
+            FStar_Pervasives_Native.option
   =
   fun curmod  ->
     fun dsenv  ->
@@ -119,7 +125,8 @@ let tc_one_fragment:
               (try
                  let uu____191 = FStar_Parser_Driver.parse_fragment frag in
                  match uu____191 with
-                 | FStar_Parser_Driver.Empty  -> Some (curmod, dsenv, env)
+                 | FStar_Parser_Driver.Empty  ->
+                     FStar_Pervasives_Native.Some (curmod, dsenv, env)
                  | FStar_Parser_Driver.Modul ast_modul ->
                      let uu____203 =
                        FStar_ToSyntax_Interleave.interleave_module dsenv
@@ -138,7 +145,7 @@ let tc_one_fragment:
                                  else dsenv1 in
                                let env1 =
                                  match curmod with
-                                 | Some modul1 ->
+                                 | FStar_Pervasives_Native.Some modul1 ->
                                      let uu____227 =
                                        let uu____228 =
                                          let uu____229 =
@@ -159,7 +166,7 @@ let tc_one_fragment:
                                          (FStar_Errors.Err
                                             "Interactive mode only supports a single module at the top-level")
                                      else env
-                                 | None  -> env in
+                                 | FStar_Pervasives_Native.None  -> env in
                                let uu____235 =
                                  let uu____240 =
                                    FStar_ToSyntax_Env.syntax_only dsenv2 in
@@ -170,7 +177,9 @@ let tc_one_fragment:
                                      modul in
                                (match uu____235 with
                                 | (modul1,uu____253,env2) ->
-                                    Some ((Some modul1), dsenv2, env2))))
+                                    FStar_Pervasives_Native.Some
+                                      ((FStar_Pervasives_Native.Some modul1),
+                                        dsenv2, env2))))
                  | FStar_Parser_Driver.Decls ast_decls ->
                      let uu____264 =
                        FStar_Util.fold_map
@@ -184,11 +193,11 @@ let tc_one_fragment:
                           (match uu____281 with
                            | (dsenv2,decls) ->
                                (match curmod with
-                                | None  ->
+                                | FStar_Pervasives_Native.None  ->
                                     (FStar_Util.print_error
                                        "fragment without an enclosing module";
                                      FStar_All.exit (Prims.parse_int "1"))
-                                | Some modul ->
+                                | FStar_Pervasives_Native.Some modul ->
                                     let uu____303 =
                                       let uu____308 =
                                         FStar_ToSyntax_Env.syntax_only dsenv2 in
@@ -199,25 +208,30 @@ let tc_one_fragment:
                                           env modul decls in
                                     (match uu____303 with
                                      | (modul1,uu____321,env1) ->
-                                         Some ((Some modul1), dsenv2, env1)))))
+                                         FStar_Pervasives_Native.Some
+                                           ((FStar_Pervasives_Native.Some
+                                               modul1), dsenv2, env1)))))
                with
                | FStar_Errors.Error (msg,r) when
                    let uu____338 = FStar_Options.trace_error () in
                    Prims.op_Negation uu____338 ->
-                   (FStar_TypeChecker_Err.add_errors env [(msg, r)]; None)
+                   (FStar_TypeChecker_Err.add_errors env [(msg, r)];
+                    FStar_Pervasives_Native.None)
                | FStar_Errors.Err msg when
                    let uu____349 = FStar_Options.trace_error () in
                    Prims.op_Negation uu____349 ->
                    (FStar_TypeChecker_Err.add_errors env
                       [(msg, FStar_Range.dummyRange)];
-                    None)
+                    FStar_Pervasives_Native.None)
                | e when
                    let uu____360 = FStar_Options.trace_error () in
                    Prims.op_Negation uu____360 -> raise e)
 let load_interface_decls:
-  (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
+  (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+    FStar_Pervasives_Native.tuple2 ->
     FStar_Parser_ParseIt.filename ->
-      (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
+      (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+        FStar_Pervasives_Native.tuple2
   =
   fun uu____374  ->
     fun interface_file_name  ->
@@ -263,10 +277,11 @@ let load_interface_decls:
 let tc_one_file:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->
-      Prims.string option ->
+      Prims.string FStar_Pervasives_Native.option ->
         Prims.string ->
-          ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list*
-            FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
+          ((FStar_Syntax_Syntax.modul,Prims.int)
+             FStar_Pervasives_Native.tuple2 Prims.list,FStar_ToSyntax_Env.env,
+            FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple3
   =
   fun dsenv  ->
     fun env  ->
@@ -327,8 +342,11 @@ let pop_context: FStar_TypeChecker_Env.env -> Prims.string -> Prims.unit =
        FStar_All.pipe_right uu____650 FStar_Pervasives.ignore);
       (env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh ()
 let push_context:
-  (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env) ->
-    Prims.string -> (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
+  (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+    FStar_Pervasives_Native.tuple2 ->
+    Prims.string ->
+      (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+        FStar_Pervasives_Native.tuple2
   =
   fun uu____659  ->
     fun msg  ->
@@ -336,12 +354,17 @@ let push_context:
       | (dsenv,env) ->
           let dsenv1 = FStar_ToSyntax_Env.push dsenv in
           let env1 = FStar_TypeChecker_Env.push env msg in (dsenv1, env1)
-type uenv = (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
+type uenv =
+  (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+    FStar_Pervasives_Native.tuple2
 let tc_one_file_from_remaining:
   Prims.string Prims.list ->
     uenv ->
-      (Prims.string Prims.list* (FStar_Syntax_Syntax.modul* Prims.int)
-        Prims.list* (FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env))
+      (Prims.string Prims.list,(FStar_Syntax_Syntax.modul,Prims.int)
+                                 FStar_Pervasives_Native.tuple2 Prims.list,
+        (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+          FStar_Pervasives_Native.tuple2)
+        FStar_Pervasives_Native.tuple3
   =
   fun remaining  ->
     fun uenv  ->
@@ -351,19 +374,27 @@ let tc_one_file_from_remaining:
           let uu____700 =
             match remaining with
             | intf::impl::remaining1 when needs_interleaving intf impl ->
-                let uu____723 = tc_one_file dsenv env (Some intf) impl in
+                let uu____723 =
+                  tc_one_file dsenv env (FStar_Pervasives_Native.Some intf)
+                    impl in
                 (remaining1, uu____723)
             | intf_or_impl::remaining1 ->
-                let uu____740 = tc_one_file dsenv env None intf_or_impl in
+                let uu____740 =
+                  tc_one_file dsenv env FStar_Pervasives_Native.None
+                    intf_or_impl in
                 (remaining1, uu____740)
             | [] -> ([], ([], dsenv, env)) in
           (match uu____700 with
            | (remaining1,(nmods,dsenv1,env1)) ->
                (remaining1, nmods, (dsenv1, env1)))
 let rec tc_fold_interleave:
-  ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list* uenv) ->
+  ((FStar_Syntax_Syntax.modul,Prims.int) FStar_Pervasives_Native.tuple2
+     Prims.list,uenv)
+    FStar_Pervasives_Native.tuple2 ->
     Prims.string Prims.list ->
-      ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list* uenv)
+      ((FStar_Syntax_Syntax.modul,Prims.int) FStar_Pervasives_Native.tuple2
+         Prims.list,uenv)
+        FStar_Pervasives_Native.tuple2
   =
   fun acc  ->
     fun remaining  ->
@@ -383,8 +414,9 @@ let batch_mode_tc_no_prims:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->
       Prims.string Prims.list ->
-        ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list*
-          FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
+        ((FStar_Syntax_Syntax.modul,Prims.int) FStar_Pervasives_Native.tuple2
+           Prims.list,FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+          FStar_Pervasives_Native.tuple3
   =
   fun dsenv  ->
     fun env  ->
@@ -406,8 +438,9 @@ let batch_mode_tc_no_prims:
              (all_mods, dsenv1, env1))
 let batch_mode_tc:
   Prims.string Prims.list ->
-    ((FStar_Syntax_Syntax.modul* Prims.int) Prims.list*
-      FStar_ToSyntax_Env.env* FStar_TypeChecker_Env.env)
+    ((FStar_Syntax_Syntax.modul,Prims.int) FStar_Pervasives_Native.tuple2
+       Prims.list,FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+      FStar_Pervasives_Native.tuple3
   =
   fun filenames  ->
     let uu____949 = tc_prims () in

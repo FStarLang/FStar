@@ -12,6 +12,7 @@ module Crypto.Symmetric.MAC
 open Crypto.Symmetric.Bytes
 open Crypto.Indexing
 open Flag
+open FStar.HyperStack.ST
 
 module GS = Crypto.Symmetric.GF128.Spec
 module GF = Crypto.Symmetric.GF128
@@ -20,6 +21,7 @@ module PL = Crypto.Symmetric.Poly1305
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 type id = id * UInt128.t //NS: why not this definition : i:id & iv (alg i)
 let alg (i:id) = macAlg_of_id (fst i) 

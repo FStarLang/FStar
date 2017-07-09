@@ -208,8 +208,7 @@ val preservation : #e:exp -> #e':exp -> #g:env -> #t:typ ->
        ht:(typing g e t) ->
        hs:step e e' ->
        Tot (typing g e' t) (decreases ht)
-let rec preservation #e #e' #g #t ht hs =
-  let TyApp h1 h2 = ht in
+let rec preservation #e #e' #g #t (TyApp h1 h2) hs =
   match hs with
   | SBeta tx e1' e2' -> substitution_beta #e1' #_ #_ #t #_ h2 (TyLam?.hbody h1)
   | SApp1 e2' hs1   -> TyApp (preservation h1 hs1) h2

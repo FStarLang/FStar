@@ -115,7 +115,7 @@ boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
-	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/open System.IO/open FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
@@ -128,7 +128,7 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
-	$(SED) -i 's/type pa_t.*/module ALL_TMP = FStar.All/g' $@
+	$(SED) -i 's/type pa_t.*/open FStar.All/g' $@
 	$(SED) -i 's/and data.*//g' $@
 	$(SED) -i 's/.*| PArray.*//g' $@
 	$(SED) -i 's/.*| PDiff.*//g' $@
@@ -164,7 +164,7 @@ u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FSta
 					 FStar.Format.fst)
 	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
-u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Const.fst Subst.fst Free.fst \
+u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst) \
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
@@ -259,8 +259,7 @@ ifeq ($(OS),Windows_NT)
 endif
 	+$(MAKE) -C ocaml-output
 	+$(MAKE) fstar-ocaml
-	+$(MAKE) -C ../examples/hello ocaml #a basic regression test for extraction
-	+$(MAKE) uregressions interactive-test
+	+$(MAKE) uregressions
 
 # Interactive mode regressions
 interactive-test:
@@ -270,8 +269,12 @@ interactive-test:
 fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
+#a basic regression test for extraction
+hello:
+	+$(MAKE) -C ../examples/hello ocaml
+
 # Getting parallelism from this target
-uregressions: ulib uexamples
+uregressions: hello ulib uexamples interactive-test
 
 ulib:
 	+$(MAKE) -C ../ulib

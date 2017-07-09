@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.SMTEncoding.Z3
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.SMTEncoding.Term
@@ -263,7 +264,7 @@ let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
                     | _ :: txt :: _ :: [] -> txt
                     | _ -> line in
                     if rsn <> "unknown" then
-                        BU.smap_add statistics "reason-unknown" rsn in
+                        BU.smap_add statistics "reason-unknown" ("\"" ^ rsn ^ "\"") in
         List.iter (fun line -> parse line) lines ;
         !core, statistics, !reason_unknown
     in
@@ -429,12 +430,12 @@ let bg_scope : ref<list<decl>> = BU.mk_ref []
 // then, givez3 modifies the reference so that within the new list at the front,
 // new queries are pushed
 let push msg    =
-    fresh_scope := [Term.Caption msg; Term.Push]::!fresh_scope;
-    bg_scope := !bg_scope @ [Term.Push; Term.Caption msg]
+    fresh_scope := [Caption msg; Push]::!fresh_scope;
+    bg_scope := !bg_scope @ [Push; Caption msg]
 
 let pop msg      =
     fresh_scope := List.tl !fresh_scope;
-    bg_scope := !bg_scope @ [Term.Caption msg; Term.Pop]
+    bg_scope := !bg_scope @ [Caption msg; Pop]
 
 //giveZ3 decls: adds decls to the stack of declarations
 //              to be actually given to Z3 only when the next
@@ -500,7 +501,7 @@ let ask_1_core
     (label_messages:error_labels)
     (qry:decls_t)
     (cb: cb)
-  = let theory = !bg_scope@[Term.Push]@qry@[Term.Pop] in
+  = let theory = !bg_scope@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
@@ -517,7 +518,7 @@ let ask_n_cores
         | Some s -> (List.rev s)
         | None   -> bg_scope := [] ; // Not needed; discard.
                     (List.rev !fresh_scope)) in
-    let theory = theory@[Term.Push]@qry@[Term.Pop] in
+    let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
     let cb = mk_cb used_unsat_core cb in
     let input = mk_input theory in
