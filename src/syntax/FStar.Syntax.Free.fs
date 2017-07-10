@@ -32,7 +32,6 @@ module UF = FStar.Syntax.Unionfind
 (************************* Free names and unif variables ************************)
 (********************************************************************************)
 
-type uvars     = set<(uvar*typ)>
 type free_vars = {
     free_names:set<bv>;
     free_uvars:uvars;

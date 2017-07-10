@@ -202,15 +202,8 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
+type uvars     = set<(uvar*typ)>
 type freenames = set<bv>
-//type uvars     = set<(uvar*typ)>
-//type free_vars = {
-//    free_names:set<bv>;
-//    free_uvars:uvars;
-//    free_univs:set<universe_uvar>;
-//    free_univ_names:fifo_set<univ_name>;
-//}
-
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
 type formula = typ
