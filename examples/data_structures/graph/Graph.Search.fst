@@ -10,6 +10,8 @@ module LC = List.Complements
 module N = Graph.NodeSet
 module M = FStar.Map
 module MC = Map.Complements
+module SE = FStar.Set
+module SEC = Set.Complements
 
 let lemma_reachable_trans (#n:nat) (g:graph0 n) (n1 n2 n3:fin n)
  : Lemma (requires (reachable g n1 n2) /\ (reachable g n2 n3))
@@ -56,6 +58,10 @@ let neither_in (#n0:nat) (l1 l2: nodeset n0) n = not (L.mem n l1) && not (L.mem 
 let fill_map #a #b (m:M.t a b) (l:list a) (v:b) =
   L.fold_left (fun acc i -> M.upd acc i v) m l
 
+let fill_map_eq_lemma #a #b (m:M.t a b) (l:list a) (v:b)
+ : Lemma (requires True) (ensures (fill_map m l v == L.fold_left (fun acc i -> M.upd acc i v) m l))
+ = ()
+
 let rec bfs_map_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (seen:nodeset n) (frntr:nodeset n) (parents:M.t (fin n) (fin n))
  : Pure (nodeset n * M.t (fin n) (fin n))
  (requires  N.disjoint seen frntr)
@@ -79,7 +85,6 @@ let rec bfs_map_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (seen:nodeset n) (
 let parent_map_valid (#n:nat) (g:graph0 n) (parents:M.t (fin n) (fin n)) =
   forall (x : fin n) . M.contains parents x ==>  is_in_graph (M.sel parents x) x g
 
-#set-options "--detail_errors"
 
 let rec lemma_bfs_map_pairing_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (seen:nodeset n) (frntr:nodeset n) (parents:M.t (fin n) (fin n))
  : Lemma
@@ -92,7 +97,7 @@ let rec lemma_bfs_map_pairing_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (see
      (let s', p' = bfs_map_aux g seen frntr parents in parent_map_valid g p'))
    (decreases (decrease_clause n seen))
 = match frntr with
-  | [] -> admit()
+  | [] -> ()
   | hd :: tl ->
     let adj = g @^ hd in
     let neither_in_s_nor_f = neither_in seen frntr in
@@ -102,56 +107,15 @@ let rec lemma_bfs_map_pairing_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (see
     let s' = hd :: seen in
     let f' = N.append tl adj_unscene in
     let p' = fill_map parents adj_unscene hd in
-    assume((forall (x: fin n) . L.mem x s' || L.mem x f'  <==> M.contains p' x));
-    assume(N.disjoint s' f');
-    assume((forall (x : fin n) . M.contains p' x ==>  is_in_graph (M.sel p' x) x g));
-    assert (bfs_map_aux g seen frntr parents == bfs_map_aux g s' f' p') ;
 
+    N.lemma_disjoint_append tl adj_unscene s';
+    LC.filter_sublist neither_in_s_nor_f adj;
+    L.append_mem_forall tl adj_unscene;
+    
+    fill_map_eq_lemma parents adj_unscene hd;
+    MC.lemma_fold_upd1 parents adj_unscene (fun _ -> hd);
+    MC.lemma_fold_upd2 parents adj_unscene (fun _ -> hd);
+    MC.domain_lemma parents adj_unscene (fun _ -> hd);
+
+    SEC.as_set_mem_in_forall adj_unscene;
     lemma_bfs_map_pairing_aux g s' f' p'
-
-
-let rec lemma_bfs_map_pairing_aux2 (#n:nat) (g:graph0 n{no_parallel_edge g}) (seen:nodeset n) (frntr:nodeset n) (parents:M.t (fin n) (fin n)) (si : nodeset n) (fi : nodeset n) (pi:M.t (fin n) (fin n))
- : Lemma
-   (requires N.disjoint seen frntr /\ N.disjoint si fi /\
-   (forall (x : fin n) . M.contains parents x ==>  is_in_graph (M.sel parents x) x g) /\
-   (forall (x: fin n) . L.mem x seen || L.mem x frntr <==> M.contains parents x))
-   (ensures N.disjoint si fi /\
-   (let s', p' = bfs_map_aux g si fi pi in s' == seen /\ p' == parents /\(forall (x : fin n) . M.contains p' x ==>  is_in_graph (M.sel p' x) x g)))
-   (decreases (decrease_clause n seen))
- = match frntr with
- | [] -> admit()
- | hd :: tl ->
-
-  let adj = g @^ hd in
-  let neither_in_s_nor_f n = not (L.mem n seen) && not (L.mem n frntr) in
-  let adj_unscene = L.filter neither_in_s_nor_f adj in
-  LC.noRepeats_filter neither_in_s_nor_f adj;
-
-  let s' = hd :: seen in
-  let f' = N.append tl adj_unscene in
-  let p' = L.fold_left (fun acc i -> M.upd acc i hd) parents adj_unscene in
-(*
-  N.lemma_disjoint_append tl adj_unscene s';
-  MC.lemma_fold_upd1 parents adj_unscene (fun _ -> hd);
-
-  assert(forall (x : fin n) . L.mem x seen ==>  M.sel parents x == M.sel p' x);
-  assert(forall (x : fin n) . L.mem x seen ==>  is_in_graph (M.sel parents x) x g);
-  MC.lemma_fold_upd2 parents adj_unscene (fun _ -> hd);
-  MC.domain_lemma parents adj_unscene (fun _ -> hd);
-  assert(forall (x:fin n) . L.mem x adj ==> is_in_graph hd x g);
-  LC.filter_sublist neither_in_s_nor_f adj;
-  assert(forall (x:fin n) . L.mem x adj_unscene ==>  L.mem x adj);
-  assert(forall (x:fin n) . L.mem x adj_unscene ==> is_in_graph hd x g);
-  assert(forall (x : fin n) . L.mem x adj_unscene ==>  is_in_graph (M.sel p' x) x g);
-  assert(forall (x : fin n) . L.mem x seen ==>  is_in_graph (M.sel p' x) x g);
-
-  MC.domain_lemma2 parents adj_unscene (fun _ -> hd);
-  assert(forall (x : fin n) . L.mem x seen || L.mem x adj_unscene ==> M.contains p' x);
-
-  assert(forall (x : fin n) . M.contains p' x ==>  is_in_graph (M.sel p' x) x g);
-*)
-  assume((forall (x: fin n) . L.mem x s' || L.mem x f'  <==> M.contains p' x));
-  assume(N.disjoint s' f');
-  assume((forall (x : fin n) . M.contains p' x ==>  is_in_graph (M.sel p' x) x g));
-
-  lemma_bfs_map_pairing_aux2 g s' f' p' si fi pi
