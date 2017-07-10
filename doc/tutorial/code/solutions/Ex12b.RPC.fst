@@ -1,6 +1,13 @@
 module Ex12b.RPC
-open FStar.ST
-open FStar.All
+
+open FStar.HyperStack.ST
+open FStar.HyperStack.All
+open FStar.Seq
+open FStar.Monotonic.Seq
+open FStar.HyperHeap
+open FStar.HyperStack
+open FStar.Monotonic.RRef
+
 open FStar.String
 open FStar.IO
 
@@ -9,61 +16,78 @@ let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
 open Ex12.SHA1
-open Ex12b.Format
+open Ex12b2.Format
 open Ex12.MAC
 
-module Formatting = Ex12b.Format
+
+module Formatting = Ex12b2.Format
 
 (* some basic, untrusted network controlled by the adversary *)
 
 
-val msg_buffer: ref message
-let msg_buffer = ST.alloc (empty_bytes)
+val msg_buffer: FStar.HyperStack.ref message
+let msg_buffer = FStar.HyperStack.ST.ralloc root (empty_bytes)
 
 // BEGIN: Network
-val send: message -> ML unit
-val recv: (message -> ML unit) -> ML unit
+private val send: message -> ML unit
+private val recv: (message -> ML unit) -> ML unit
 // END: Network
 
-let send m = msg_buffer := m
-let rec recv call = if length !msg_buffer > 0
-                then (
-                  let msg = !msg_buffer in
-                  msg_buffer := empty_bytes;
-                  call msg)
-                else recv call
+let send m = 
+  recall msg_buffer;
+  msg_buffer := m
+
+let rec recv call = 
+  recall msg_buffer;
+  if length !msg_buffer > 0
+  then (
+    let msg = !msg_buffer in
+    msg_buffer := empty_bytes;
+    call msg)
+  else recv call
 
 (* two events, recording genuine requests and responses *)
 
+
+type log_entry = 
+  | Request: string -> log_entry
+  | Response: string -> string -> log_entry
+  
+
+private type log_t (r:rid) = Monotonic.Seq.log_t r log_entry
+let log:log_t root = alloc_mref_seq #log_entry root createEmpty
+
 // BEGIN: RpcPredicates
-assume type pRequest : string -> Type0
-assume type pResponse : string -> string -> Type0
+type pRequest s = exists n. witnessed (at_least n (Request s) log)
+type pResponse s t = exists n. witnessed (at_least n (Response s t) log)
 // END: RpcPredicates
 
 (* the meaning of MACs, as used in RPC *)
 
 // BEGIN: MsgProperty
 type reqresp text = 
-     (exists s.   text = Formatting.request  s   /\ pRequest s)
+     (exists s.   text = Formatting.request  s   /\ pRequest s )
   \/ (exists s t. text = Formatting.response s t /\ pResponse s t)
 // END: MsgProperty
 
-(* FIXME: this type annotation is a workaround for #486 *)
 val k: k:key{key_prop k == reqresp}
-let k = print_string "generating shared key...\n";
+let k = ignore (debug_print_string "generating shared key...\n");
   keygen reqresp
 
 
-val client_send : string16 -> ML unit
-let client_send (s:string16) =
-  assume (pRequest s);
-  print_string "\nclient send:";
-  print_string s;
 
+val client_send : s:string16 -> ML (u:unit)
+let client_send (s:string16) =
+  m_recall log;
+  ignore (debug_print_string "\nclient send:");
+  ignore (debug_print_string s);
+  write_at_end log (Request s);
+  
   assert(reqresp (Formatting.request s)); (* this works *)
   assert(key_prop k == reqresp);          (* this also works *)
   assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
   (*assert(key_prop k (Formatting.request s)); -- this fails *)
+  m_recall log;
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
 
@@ -77,8 +101,9 @@ let client_recv (s:string16) =
       if verify k (Formatting.response s t) m'
       then (
         assert (pResponse s t);
-        print_string "\nclient verified:";
-        print_string t ))
+        ignore (debug_print_string "\nclient verified:");
+        ignore (debug_print_string t) ))
+
 
 // BEGIN: RpcProtocol
 val client : string16 -> ML unit
@@ -99,17 +124,17 @@ let server () =
         then
           ( 
             assert (pRequest s);
-            print_string "\nserver verified:";
-            print_string s;
+            ignore (debug_print_string "\nserver verified:");
+            ignore (debug_print_string s);
             let t = "42" in
-            assume (pResponse s t);
-            print_string "\nserver sent:";
-            print_string t;
+            write_at_end log (Response s t);
+            ignore (debug_print_string "\nserver sent:");
+            ignore (debug_print_string t);
             send ( (utf8 t) @| (mac k (Formatting.response s t))))
         else failwith "Invalid MAC" )
 // END: RpcProtocol
 
-val test : unit -> ML unit
+private val test : unit -> ML unit
 let test () =
   let query = "4 + 2" in
   if length (utf8 query) > 65535 then failwith "Too long"
@@ -117,7 +142,7 @@ let test () =
     client_send query;
     server();
     client_recv query;
-    print_string "\n\n"
+    ignore (debug_print_string "\n\n")
 
 val run : unit
 let run = test ()
