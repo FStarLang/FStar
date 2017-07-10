@@ -436,19 +436,25 @@ assume val fold_left_empty (#t:Type) (f:(t -> encoded_entry -> t)) (acc:t) (s:st
   Lemma (requires (s.entries == []))
         (ensures (fold_left_store f acc s == acc))
 
-let rec fold_left_store_n (f:('a -> encoded_entry -> 'a)) (acc:'a) (s:store) (n:nat{U32.v s.num_entries >= n}) :
-  Pure 'a
-  (requires True)
-  (ensures (fun r -> n == U32.v s.num_entries ==> r == fold_left_store f acc s))
-  (decreases n) =
+let rec fold_left_store_n (f:('a -> encoded_entry -> 'a)) (acc:'a)
+  (es:list encoded_entry)
+  (n:nat{n <= List.length es}) : Tot 'a (decreases n) =
   match n with
-  | 0 -> (match U32.v s.num_entries with
-        | 0 -> fold_left_empty f acc s
-        | _ -> ());
-        acc
-  | _ -> let acc' = f acc (List.hd s.entries) in
-        let s' = Store (U32.uint_to_t ((U32.v s.num_entries) - 1)) (List.tail s.entries) in
-        fold_left_store_n f acc' s' (n-1)
+  | 0 -> acc
+  | _ -> let acc' = f acc (List.hd es) in
+        fold_left_store_n f acc' (List.tail es) (n-1)
+
+val fold_left_store_n_spec (f:('a -> encoded_entry -> 'a)) (acc:'a) (s:store) :
+  Ghost unit
+  (requires True)
+  (ensures (fun _ -> fold_left_store_n f acc s.entries (U32.v s.num_entries) == fold_left_store f acc s))
+  (decreases (List.length s.entries))
+let rec fold_left_store_n_spec f acc s =
+  match U32.v s.num_entries with
+  | 0 -> fold_left_empty f acc s
+  | _ ->
+    let n' = U32.sub s.num_entries (U32.uint_to_t 1) in
+    fold_left_store_n_spec f (f acc (List.hd s.entries)) (Store n' (List.tail s.entries))
 
 // this is an old experiment with doing a fold_left over a buffer of bytes (pure
 // validation); we now have a complete prototype of validators in ST
@@ -487,9 +493,17 @@ val parse_num_entries_valid : input:bslice -> ST (U32.t * off:U32.t{U32.v off <=
                         // due to the function being read-only
                         live h1 input /\
                         h0 == h1 /\
-                        (let bs = as_seq h1 input in
-                        Some? (parse_abstract_store bs) /\
-                        fst r = (parse_result (parse_abstract_store bs)).num_entries)))
+                        begin
+                          let bs = as_seq h1 input in
+                          Some? (parse_abstract_store bs) /\
+                          (let (s, _) = Some?.v (parse_abstract_store bs) in
+                           let (rv, r_off) = r in
+                           let bs' = slice bs (U32.v r_off) (length bs) in
+                           rv == s.num_entries /\
+                          (let parse_rest = parse_many parse_entry (U32.v rv) bs' in
+                           Some? parse_rest /\
+                           s.entries == parse_result parse_rest))
+                        end))
 let parse_num_entries_valid input =
   let (len, off) = parse_u32_st_nochk input in
   (len, off)
@@ -614,25 +628,79 @@ let parse_entry_st_nochk : input:bslice -> ST (entry_st * off:U32.t{U32.v off <=
 
 #reset-options "--z3rlimit 10"
 
+let parse_many_next (#t:Type) (p:parser t) (n:nat{n>0}) (bs:bytes) :
+  Lemma (requires (Some? (parse_many p n bs)))
+        (ensures (Some? (parse_many p n bs) /\
+                  (let (v, off) = Some?.v (p bs) in
+                    let rest_parse = parse_many p (n-1) (slice bs off (length bs)) in
+                    Some? rest_parse /\
+                    (let (vs', off') = Some?.v rest_parse in
+                     let (vs, off_total) = Some?.v (parse_many p n bs) in
+                     vs' == List.tail vs)))) =
+  ()
+
 val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                      Some? (parse_many parse_entry n bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
                         h0 == h1 /\
+                        begin
+                          let bs = as_seq h1 input in
+                          Some? (parse_many parse_entry n bs) /\
+                          begin
+                            let (v, off) = Some?.v (parse_entry bs) in
+                            let (rv, r_off) = r in
+                            entry_live h1 rv /\
+                            as_entry h1 rv == v /\
+                            off == U32.v r_off /\
+                            begin
+                              let bs' = slice bs off (length bs) in
+                              let parse_rest = parse_many parse_entry (n-1) bs' in
+                              Some? parse_rest /\
+                                (let (vs', off') = Some?.v parse_rest in
+                                 let (vs, _) = Some?.v (parse_many parse_entry n bs) in
+                                 vs' == List.tail vs)
+                            end
+                          end
+                        end))
+let parse_one_entry n input =
+  (let h = get() in
+   let bs = as_seq h input in
+   parse_many_next parse_entry n bs);
+  parse_entry_st_nochk input
+
+val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
+  f:(acc:t -> e:entry_st -> ST t
+    (requires (fun h0 -> entry_live h0 e))
+    (ensures (fun h0 r h1 -> entry_live h1 e /\
+                          h0 == h1 /\
+                          r == f_spec acc (as_entry h1 e)))) ->
+  acc:t -> input:bslice -> n:nat -> ST t
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_many parse_entry n bs))))
+  (ensures (fun h0 r h1 -> live h1 input /\
+                        h0 == h1 /\
                         (let bs = as_seq h1 input in
                         Some? (parse_many parse_entry n bs) /\
-                        (let (v, n) = Some?.v (parse_entry bs) in
-                         let (rv, off) = r in
-                        entry_live h1 rv /\
-                        as_entry h1 rv == v /\
-                        n == U32.v off))))
-let parse_one_entry _ input = parse_entry_st_nochk input
+                        r == fold_left_store_n f_spec acc (parse_result (parse_many parse_entry n bs)) n)))
+let rec fold_left_buffer_n_st #t f_spec f acc input n =
+    match n with
+    | 0 -> acc
+    | _ -> begin
+      let (e, off) = parse_one_entry n input in
+      let input = advance_slice input off in
+      let n':nat = n-1 in
+      let h = get() in
+      assert (let bs = as_seq h input in
+              Some? (parse_many parse_entry n' bs));
+      let acc' = f acc e in
+      // TODO: finish this proof
+      admit();
+      fold_left_buffer_n_st f_spec f acc' input n'
+    end
 
-// TODO: break this proof down into a recursive function that takes tne number
-// of entries to fold over, with a more general spec relating to
-// [fold_left_store_n], and then use it to easily prove this spec where we also
-// parse the number of entries.
 val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
     (requires (fun h0 -> entry_live h0 e))
@@ -650,19 +718,13 @@ val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
                         r == fold_left_store f_spec acc (parse_result (parse_abstract_store bs)))))
 let fold_left_buffer_st #t f_spec f acc input =
   let (num_entries, off) = parse_num_entries_valid input in
+  (let h = get() in
+   let bs = as_seq h input in
+   let (s, _) = Some?.v (parse_abstract_store bs) in
+   fold_left_store_n_spec f_spec acc s;
+   assert (num_entries == s.num_entries));
   let input = advance_slice input off in
-  let rec aux (n:nat) (acc:t) input : ST t
-      (requires (fun h0 -> True))
-      (ensures (fun h0 r h1 -> h0 == h1)) =
-    match n with
-    | 0 -> acc
-    | _ -> begin
-        let (e, off) = parse_one_entry n input in
-        let input = advance_slice input off in
-        let acc' = f e acc in
-        aux (n-1) acc' input
-      end in
-  aux (U32.v num_entries) acc input
+  fold_left_buffer_n_st f_spec f acc input (U32.v num_entries)
 
 (*! Pure validation *)
 
