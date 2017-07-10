@@ -1216,7 +1216,7 @@ as an abbreviation of `a: Type{hasEq a}`.
 ```
 
 ~ Exercise
-Prove that mem satisfies the
+Prove that `mem` satisfies the
 following property:
 ~~ ExerciseFragment {exname=Ex04c}
 [INCLUDE=code/exercises/Ex04c.fst:AppendMem]
