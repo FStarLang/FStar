@@ -12,13 +12,14 @@ open FStar.IO
 open Preorder
 open Heapx
 open STx
+open Allx
 open MRefx
 
 open FStar.List.Tot
 open FStar.String
 
 
-let init_print = debug_print_string "\ninitializing...\n\n"
+let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
 open Ex12.SHA1
@@ -36,7 +37,7 @@ let msg_buffer = alloc _ (empty_bytes)
 
 // BEGIN: Network
 private val send: message -> St unit
-private val recv: (message -> St unit) -> St unit
+private val recv: (message -> ML unit) -> ML unit
 // END: Network
 
 let send m = 
@@ -94,15 +95,15 @@ type reqresp text =
 // END: MsgProperty
 
 val k: k:key{key_prop k == reqresp}
-let k = ignore (debug_print_string "generating shared key...\n");
+let k = print_string "generating shared key...\n";
   keygen reqresp
 
 
 
-val client_send : s:string16 -> St unit
+val client_send : s:string16 -> ML unit
 let client_send (s:string16) =
-  ignore (debug_print_string "\nclient send:");
-  ignore (debug_print_string s);
+  print_string "\nclient send:";
+  print_string s;
   add_to_log log (Request s);
   witness log (req s);
   
@@ -113,10 +114,10 @@ let client_send (s:string16) =
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
 
-val client_recv : string16 -> St unit
+val client_recv : string16 -> ML unit
 let client_recv (s:string16) =
   recv (fun msg ->
-    if length msg < macsize then ignore (debug_print_string "Too short")
+    if length msg < macsize then failwith "Too short"
     else
       let (v, m') = split msg (length msg - macsize) in
       let t = iutf8 v in
@@ -126,22 +127,22 @@ let client_recv (s:string16) =
         recall log (resp s t);
         let xs = !log in
         assert (Response s t `mem` xs);
-        ignore (debug_print_string "\nclient verified:");
-        ignore (debug_print_string t) ))
+        print_string "\nclient verified:";
+        print_string t) )
 
 // BEGIN: RpcProtocol
-val client : string16 -> St unit
+val client : string16 -> ML unit
 let client (s:string16) =
   client_send s;
   client_recv s
 
-val server : unit -> St unit
+val server : unit -> ML unit
 let server () =
   recv (fun msg ->
-    if length msg < macsize then ignore (debug_print_string "Too short")
+    if length msg < macsize then failwith "Too short"
     else
       let (v,m) = split msg (length msg - macsize) in
-      if length v > 65535 then ignore (debug_print_string "Too long")
+      if length v > 65535 then failwith "Too long"
       else
         let s = iutf8 v in
         if verify k (Formatting.request s) m
@@ -151,28 +152,27 @@ let server () =
             recall log (req s);
             let xs = !log in
             assert (Request s `mem` xs);
-            ignore (debug_print_string "\nserver verified:");
-            ignore (debug_print_string s);
+            print_string "\nserver verified:";
+            print_string s;
             let t = "42" in
             add_to_log log (Response s t);
             witness log (resp s t);
-            ignore (debug_print_string "\nserver sent:");
-            ignore (debug_print_string t);
+            print_string "\nserver sent:";
+            print_string t;
             send ( (utf8 t) @| (mac k (Formatting.response s t)))
             )
-        else ignore (debug_print_string "Invalid MAC" ))
+        else failwith "Invalid MAC" )
 // END: RpcProtocol
 
-private val test : unit -> St unit
+private val test : unit -> ML unit
 let test () =
   let query = "4 + 2" in
-  if length (utf8 query) > 65535 then ignore (debug_print_string "Too long")
+  if length (utf8 query) > 65535 then failwith "Too long"
   else
-    let query : string16 = query in
     client_send query;
     server();
     client_recv query;
-    ignore (debug_print_string "\n\n")
+    print_string "\n\n"
 
 val run : unit
 let run = test ()
