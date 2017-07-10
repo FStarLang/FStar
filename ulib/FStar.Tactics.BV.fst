@@ -57,7 +57,7 @@ val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
 let eq_to_bv #n #x #y pf = int2bv_lemma_2 #n x y
 
 val lt_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
-              squash (bvult #n (int2bv #n x) (int2bv #n y)) -> Lemma (x < y)
+              (b2t (bvult #n (int2bv #n x) (int2bv #n y))) -> Lemma (x < y)
 let lt_to_bv #n #x #y pf = int2bv_lemma_ult_2 #n x y
 
 (* Creates two fresh variables and two equations of the form int2bv
@@ -70,13 +70,13 @@ val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
 let trans #n #x #y #z #w pf1 pf2 pf3 = ()
 
 val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  squash (x == z) -> squash (y == w) -> squash (bvult #n z w) -> 
+		  (eq2 #(bv_t n) x z) -> (eq2 #(bv_t n) y w) -> squash (bvult #n z w) -> 
 		  Lemma (bvult #n x y)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
 assume val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> squash (bvult #n z w) -> 
-		  Lemma (squash (x < y))
+		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) -> 
+		  Lemma (x < y)
 // let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = ()
 
 (*
@@ -85,37 +85,37 @@ assume val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
  *)
 let rec arith_expr_to_bv e : tactic unit =
     match e with
-    | NatToBv _ (MulMod _ e1 _) | MulMod _ e1 _ ->
+    | NatToBv (MulMod e1 _) | MulMod e1 _ ->
         apply_lemma (quote int2bv_mul);;
         apply_lemma (quote cong_bvmul);;
         arith_expr_to_bv e1
-    | NatToBv _ (Umod _ e1 _) | Umod _ e1 _ ->
+    | NatToBv (Umod e1 _) | Umod e1 _ ->
         apply_lemma (quote int2bv_mod);;
         apply_lemma (quote cong_bvmod);;
         arith_expr_to_bv e1
-    | NatToBv _ (Udiv _ e1 _) | Udiv _ e1 _ ->
+    | NatToBv (Udiv e1 _) | Udiv e1 _ ->
         apply_lemma (quote int2bv_div);;
         apply_lemma (quote cong_bvdiv);;
         arith_expr_to_bv e1
-    | NatToBv _ (Shl _ e1 _) | Shl _ e1 _ ->
+    | NatToBv (Shl e1 _) | Shl e1 _ ->
         apply_lemma (quote int2bv_shl);;
         apply_lemma (quote cong_bvshl);;
         arith_expr_to_bv e1
-    | NatToBv _ (Shr _ e1 _) | Shr _ e1 _ ->
+    | NatToBv (Shr e1 _) | Shr e1 _ ->
         apply_lemma (quote int2bv_shr);;
         apply_lemma (quote cong_bvshr);;
         arith_expr_to_bv e1
-    | NatToBv _ (Land _ e1 e2) | (Land _ e1 e2) ->
+    | NatToBv (Land e1 e2) | (Land e1 e2) ->
         apply_lemma (quote int2bv_logand);;
         apply_lemma (quote cong_bvand);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
-    | NatToBv _ (Lxor _ e1 e2) | (Lxor _ e1 e2) ->
+    | NatToBv (Lxor e1 e2) | (Lxor e1 e2) ->
         apply_lemma (quote int2bv_logxor);;
         apply_lemma (quote cong_bvxor);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
-    | NatToBv _ (Lor _ e1 e2) | (Lor _ e1 e2) ->
+    | NatToBv (Lor e1 e2) | (Lor e1 e2) ->
         apply_lemma (quote int2bv_logor);;
         apply_lemma (quote cong_bvor);;
         arith_expr_to_bv e1;;
@@ -140,6 +140,22 @@ let arith_to_bv_tac : tactic unit =
     | _ ->
         fail ("impossible: ")
 
+// let get_field_size_prop () : tactic int =
+//   g <-- cur_goal;
+//   let f = term_as_formula g in
+//   match f with
+//   | Comp Eq t l r | Comp Lt t l r ->
+//   begin match run_tm (get_field_size l) with
+//     | Inl s -> 
+//       begin
+//       match run_tm (get_field_size r) with
+//       | Inl s' -> fail ("could not infer field size")
+//       | Inr n -> n
+//       end
+//     | Inr n -> n
+//   end
+//   | _ -> fail ("impossible: ")
+
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
@@ -151,15 +167,15 @@ let bv_tac ()  =
   set_options "--smtencoding.elim_box true";;
   smt ()
 
-let bv_tac_lt () =
-  apply_lemma (quote lt_to_bv);;
+let bv_tac_lt n =
+  // apply_lemma (quote (lt_to_bv #n));;
   // dump "after lt_to_bv";;
-  apply_lemma (quote trans_lt);;
-  // apply_lemma (quote trans_lt2);;
+  apply_lemma (quote (trans_lt2 #n));;  
   dump "after trans";;
   arith_to_bv_tac;;
   dump "after first arith_to_bv";;
   arith_to_bv_tac;;
+  dump "after second";;
   set_options "--smtencoding.elim_box true";;
   smt ()
 

@@ -10,6 +10,8 @@ let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
 let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
 type uint_t' (n:nat) = x:int{size x n}
 
+val bv_uext: #n:pos -> #m:pos -> a:bv_t n -> Tot (bv_t (m + n))
+
 val bvand: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 
 val bvxor: #n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)

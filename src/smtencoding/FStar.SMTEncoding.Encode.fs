@@ -485,6 +485,7 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_udiv_lid
       || S.fv_eq_lid fv Const.bv_mod_lid
       || S.fv_eq_lid fv Const.bv_ult_lid
+      || S.fv_eq_lid fv Const.bv_uext_lid
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
     | Tm_fvar fv, [(sz_arg, _); _] ->
@@ -604,7 +605,22 @@ and encode_arith_term env head args_e =
                 BU.smap_add env.cache sz_key (mk_cache_entry env "" [] []);
                 t_decls
     in
-    let arg_tms, decls = encode_args (List.tail args_e) env in
+    (* we need to treat the size argument for zero_extend specially*)
+    let arg_tms, ext_sz = 
+        match head.n, args_e with
+        | Tm_fvar fv, [_;(sz_arg, _);_] when 
+            (S.fv_eq_lid fv Const.bv_uext_lid &&
+                (isInteger sz_arg.n)) ->
+                (List.tail (List.tail args_e), Some (getInteger sz_arg.n))
+        | Tm_fvar fv, [_;(sz_arg, _);_] when    
+            (S.fv_eq_lid fv Const.bv_uext_lid) ->
+            (*fail if extension size is not a constant*)
+            failwith (FStar.Util.format1 "Not a constant bitvector extend size: %s" 
+                            (FStar.Syntax.Print.term_to_string sz_arg))
+        | _  -> (List.tail args_e, None)
+    in
+                
+    let arg_tms, decls = encode_args arg_tms env in
     let head_fv =
         match head.n with
         | Tm_fvar fv -> fv
@@ -624,20 +640,23 @@ and encode_arith_term env head args_e =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
-    let mk_bv : ('a -> term) -> (list<term> -> 'a) -> list<term> -> term =
-      fun op mk_args ts ->
-             op (mk_args ts) |> Term.boxBitVec sz
+    let mk_bv : ('a -> term) -> (list<term> -> 'a) -> (term -> term) -> list<term> -> term =
+      fun op mk_args resBox ts ->
+             op (mk_args ts) |> resBox
     in
-    let bv_and  = mk_bv Util.mkBvAnd binary in
-    let bv_xor  = mk_bv Util.mkBvXor binary in
-    let bv_or   = mk_bv Util.mkBvOr binary in
-    let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith in
-    let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith in
-    let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith in
-    let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith in
-    let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith in
-    let bv_ult  = mk_bv Util.mkBvUlt binary in
-    let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith in
+    let bv_and  = mk_bv Util.mkBvAnd binary (Term.boxBitVec sz) in
+    let bv_xor  = mk_bv Util.mkBvXor binary (Term.boxBitVec sz) in
+    let bv_or   = mk_bv Util.mkBvOr binary (Term.boxBitVec sz) in
+    let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
+    let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
+    let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
+    let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith (Term.boxBitVec sz) in
+    let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
+    let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
+    let bv_uext arg_tms = 
+           mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible") unary
+                         (Term.boxBitVec (sz +  (match ext_sz with | Some x -> x | None -> failwith "impossible"))) arg_tms in
+    let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith (Term.boxBitVec sz) in
     let ops =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
@@ -648,6 +667,7 @@ and encode_arith_term env head args_e =
          (Const.bv_mod_lid, bv_mod);
          (Const.bv_mul_lid, bv_mul);
          (Const.bv_ult_lid, bv_ult);
+         (Const.bv_uext_lid, bv_uext);
          (Const.nat_to_bv_lid, bv_to)]
     in
     let _, op =

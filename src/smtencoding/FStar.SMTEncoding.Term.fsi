@@ -64,6 +64,7 @@ type op =
   | BvMod
   | BvMul
   | BvUlt
+  | BvUext of int
   | NatToBv of int
   | ITE
   | Var of string
@@ -161,6 +162,7 @@ val mkBvAnd  : ((term * term) -> Range.range -> term)
 val mkBvXor  : ((term * term) -> Range.range -> term)
 val mkBvOr   : ((term * term) -> Range.range -> term)
 val mkBvUlt  : ((term * term) -> Range.range -> term)
+val mkBvUext : (int -> term -> Range.range -> term)
 val mkBvShl  : (int -> (term * term) -> Range.range -> term)
 val mkBvShr  : (int -> (term * term) -> Range.range -> term)
 val mkBvUdiv : (int -> (term * term) -> Range.range -> term)
@@ -227,4 +229,4 @@ val mk_haseq: term -> term
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string
-
+val getEncodedInteger: term -> Prims.int

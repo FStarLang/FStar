@@ -5,6 +5,9 @@ module B = FStar.BitVector
 
 let bv_t (n : nat) = B.bv_t n
 
+let bv_uext #n #i a =
+  Seq.append (Seq.create i false) a
+  
 let bvand = B.logand_vec
 let bvxor = B.logxor_vec
 let bvor = B.logor_vec

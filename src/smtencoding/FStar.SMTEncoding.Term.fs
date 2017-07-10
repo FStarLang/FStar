@@ -78,6 +78,7 @@ type op =
   | BvMod
   | BvMul
   | BvUlt
+  | BvUext of Prims.int
   | NatToBv of Prims.int // need to explicitly define the size of the bitvector
   | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
@@ -217,6 +218,7 @@ let op_to_string = function
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
+  | BvUext n -> format1 "(_ zero_extend %s)" (string_of_int n)
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
 
@@ -288,6 +290,7 @@ let mkImp (t1, t2) r = match t1.tm, t2.tm with
 let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
 let mkMinus t r = mkApp'(Minus, [t]) r
 let mkNatToBv sz t r = mkApp'(NatToBv sz, [t]) r
+let mkBvUext sz t r = mkApp'(BvUext sz, [t]) r
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
@@ -845,3 +848,8 @@ and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> St
 
 and print_smt_term_list_list (l:list<list<term>>) :string =
     List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
+
+let getEncodedInteger (t:term) =
+  match t.tm with
+  | Integer n -> int_of_string n
+  | _ -> failwith (print_smt_term t)

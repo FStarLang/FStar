@@ -24,16 +24,16 @@ type expr =
     | Plus    : expr -> expr -> expr
     | Mult    : expr -> expr -> expr
     | Minus   : expr -> expr -> expr
-    | Land    : expr -> expr -> expr -> expr
-    | Lxor    : expr -> expr -> expr -> expr
-    | Lor     : expr -> expr -> expr -> expr
-    | Shl     : expr -> expr -> expr -> expr
-    | Shr     : expr -> expr -> expr -> expr
+    | Land    : expr -> expr -> expr
+    | Lxor    : expr -> expr -> expr
+    | Lor     : expr -> expr -> expr
+    | Shl     : expr -> expr -> expr
+    | Shr     : expr -> expr -> expr
     | Neg     : expr -> expr
-    | Udiv    : expr -> expr -> expr -> expr
-    | Umod    : expr -> expr -> expr -> expr
-    | MulMod  : expr -> expr -> expr -> expr
-    | NatToBv : expr -> expr -> expr
+    | Udiv    : expr -> expr -> expr
+    | Umod    : expr -> expr -> expr
+    | MulMod  : expr -> expr -> expr
+    | NatToBv : expr -> expr
     // | Div   : expr -> expr -> expr // Add this one?
 
 noeq
@@ -113,18 +113,21 @@ let rec is_arith_expr (t:term) =
     | Tv_FVar fv, [e1; e2 ;e3] ->
       let qn = inspect_fv fv in
       collect_app_order t;
-      let e1' = is_arith_expr (e1 <: x:term{x << t}) in
       let e2' = is_arith_expr (e2 <: x:term{x << t}) in
       let e3' = is_arith_expr (e3 <: x:term{x << t}) in
-      if qn = land_qn then liftM3 Land e1' e2' e3'
-      else if qn = lxor_qn then liftM3 Lxor e1' e2' e3'
-      else if qn = lor_qn then liftM3 Lor e1' e2' e3'
-      else if qn = shiftr_qn then liftM3 Shr e1' e2' e3'
-      else if qn = shiftl_qn then liftM3 Shl e1' e2' e3'
-      else if qn = udiv_qn then liftM3 Udiv e1' e2' e3'
-      else if qn = umod_qn then liftM3 Umod e1' e2' e3'
-      else if qn = mul_mod_qn then liftM3 MulMod e1' e2' e3'
+      if qn = land_qn then liftM2 Land e2' e3'
+      else if qn = lxor_qn then liftM2 Lxor e2' e3'
+      else if qn = lor_qn then liftM2 Lor e2' e3'
+      else if qn = shiftr_qn then liftM2 Shr e2' e3'
+      else if qn = shiftl_qn then liftM2 Shl e2' e3'
+      else if qn = udiv_qn then liftM2 Udiv e2' e3'
+      else if qn = umod_qn then liftM2 Umod e2' e3'
+      else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
       else fail ("triary: " ^ fv_to_string fv)
+    | Tv_FVar fv, [l; r] when (inspect_fv fv = nat_bv_qn) ->
+      collect_app_order t;
+      let rr = is_arith_expr (r <: x:term{x << t}) in
+      liftM NatToBv rr
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in
         collect_app_order t;
@@ -136,7 +139,6 @@ let rec is_arith_expr (t:term) =
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
-	else if qn = nat_bv_qn then liftM2 NatToBv ll rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in
@@ -178,12 +180,12 @@ let rec expr_to_string (e:expr) : string =
     | Minus l r -> "(" ^ (expr_to_string l) ^ " - " ^ (expr_to_string r) ^ ")"
     | Mult l r -> "(" ^ (expr_to_string l) ^ " * " ^ (expr_to_string r) ^ ")"
     | Neg l -> "(- " ^ (expr_to_string l) ^ ")"
-    | Land _ l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
-    | Lor _ l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
-    | Lxor _ l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
-    | Shl _ l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
-    | Shr _ l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
-    | NatToBv _ l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
+    | Land l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
+    | Lor l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
+    | Lxor l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
+    | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
+    | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
+    | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
 
 
 let rec compare_expr (e1 e2 : expr) : O.order =
