@@ -86,6 +86,8 @@ let parent_map_valid (#n:nat) (g:graph0 n) (parents:M.t (fin n) (fin n)) =
   forall (x : fin n) . M.contains parents x ==>  is_in_graph (M.sel parents x) x g
 
 
+(*Depending on how bfs_map initialized, may need to add statement saying that starting location is not in map*)
+
 let rec lemma_bfs_map_pairing_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (seen:nodeset n) (frntr:nodeset n) (parents:M.t (fin n) (fin n))
  : Lemma
    (requires
@@ -94,7 +96,8 @@ let rec lemma_bfs_map_pairing_aux (#n:nat) (g:graph0 n{no_parallel_edge g}) (see
      (forall (x: fin n) . L.mem x seen || L.mem x frntr <==> M.contains parents x))
 
    (ensures N.disjoint seen frntr /\
-     (let s', p' = bfs_map_aux g seen frntr parents in parent_map_valid g p'))
+     (let s', p' = bfs_map_aux g seen frntr parents in parent_map_valid g p' /\
+      (forall (x:fin n) . M.contains p' x <==>  L.mem x s')))
    (decreases (decrease_clause n seen))
 = match frntr with
   | [] -> ()
