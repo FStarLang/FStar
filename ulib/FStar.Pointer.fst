@@ -45,6 +45,9 @@ type typ =
 | TPointer:
   (t: typ) ->
   typ
+| TNPointer:
+  (t: typ) ->
+  typ
 | TBuffer:
   (t: typ) ->
   typ
@@ -342,6 +345,8 @@ let rec type_of_typ
     array length (type_of_typ t)
   | TPointer t ->
     pointer t
+  | TNPointer t ->
+    npointer t
   | TBuffer t ->
     buffer t
 
@@ -435,6 +440,7 @@ let rec dummy_val
     union_create l dummy_field (dummy_val (typ_of_struct_field l dummy_field))
   | TArray length t -> Seq.create (UInt32.v length) (dummy_val t)
   | TPointer t -> Pointer t HS.dummy_aref PathBase
+  | TNPointer t -> NullPtr #t
   | TBuffer t -> Buffer (BufferRootSingleton (Pointer t HS.dummy_aref PathBase)) 0ul 1ul
 
 (** To properly manage the `readable` permission, we store option values instead. *)
@@ -453,6 +459,8 @@ let rec otype_of_typ
     option (array length (otype_of_typ t))
   | TPointer t ->
     option (pointer t)
+  | TNPointer t ->
+    option (npointer t)
   | TBuffer t ->
     option (buffer t)
 
@@ -595,6 +603,9 @@ let rec ovalue_is_readable
     Some? v
   | TPointer t ->
     let (v: option (pointer t)) = v in
+    Some? v
+  | TNPointer t ->
+    let (v: option (npointer t)) = v in
     Some? v
   | TBuffer t ->
     let (v: option (buffer t)) = v in
@@ -841,6 +852,12 @@ let rec value_of_ovalue
     | None -> dummy_val t
     | Some v -> v
     end
+  | TNPointer t' ->
+    let (v: option (npointer t')) = v in
+    begin match v with
+    | None -> dummy_val t
+    | Some v -> v
+    end
   | TBuffer t' ->
     let (v: option (buffer t')) = v in
     begin match v with
@@ -895,6 +912,7 @@ let none_ovalue
   | TUnion l -> (None <: ounion l)
   | TBase b -> (None <: option (type_of_base_typ b))
   | TPointer t' -> (None <: option (pointer t'))
+  | TNPointer t' -> (None <: option (npointer t'))
   | TBuffer t' -> (None <: option (buffer t'))
 
 private
