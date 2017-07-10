@@ -173,13 +173,10 @@ and subst_elt =
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
-and freenames = set<bv>
-and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
-    pos:Range.range;
-    vars:memo<free_vars>;
+    pos:Range.range
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing
@@ -190,12 +187,6 @@ and fv = {
     fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
-}
-and free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
 }
 and lcomp = {
     eff_name: lident;
@@ -210,6 +201,15 @@ and residual_comp = {
     residual_typ   :option<typ>;           (* second component: result type *)
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
+
+type freenames = set<bv>
+//type uvars     = set<(uvar*typ)>
+//type free_vars = {
+//    free_names:set<bv>;
+//    free_uvars:uvars;
+//    free_univs:set<universe_uvar>;
+//    free_univ_names:fifo_set<univ_name>;
+//}
 
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>

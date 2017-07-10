@@ -24,6 +24,7 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 
+type uvars     = set<(uvar*typ)>
 val new_uv_set : unit -> uvars
 val new_universe_uvar_set : unit -> set<universe_uvar>
 
