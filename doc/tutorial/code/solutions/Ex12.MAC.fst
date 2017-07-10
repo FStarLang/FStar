@@ -22,14 +22,34 @@ open STx
 open MRefx
 
 module SHA1 = Ex12.SHA1
+(* open FStar.List.Tot *)
+
+(* (\* key log *\) *)
+(* let subset' (#a:Type) (l1:list a) (l2:list a) *)
+(*   = (forall x. x `memP` l1 ==> x `memP` l2) *)
+(* let subset (#a:Type) : Tot (preorder (list a)) = subset' *)
+
+(* type key_entry = key * (string -> GTot bool) *)
+(* type key_lref = mref (list key_entry) subset *)
+
+(* let key_log : key_lref = alloc _ [] *)
+
+(* let associated_to' (k:key) (p:string -> GTot bool)  = *)
+(*   fun keys -> (k,p) `memP` keys *)
+
+(* let associated_to k p :  Tot (p:(list key_entry -> Type0){Preorder.stable p subset}) = *)
+(*   associated_to' k p *)
+
+(* type pkey (p:string -> GTot bool) = k:key{token key_log (associated_to k p)} *)
+
 
 (* ---- specification *)
 
 
-(* We make the MAC.key abstract so that it cannot be accessed by 
+(* We make the MAC.key abstract so that it cannot be accessed by
    the adversary *)
 
-abstract type key=SHA1.key 
+abstract type key=SHA1.key
 
 (* we attach an authenticated properties to each key,
    used as a pre-condition for MACing and
@@ -52,6 +72,8 @@ type entry =
 
 (* the log needs to be private so the adversary cannot 
    add or remove entries *)
+
+(* let key_prop k t =  exists p. token key_log (associated_to k p) /\ p t *)
 
 private type log_t = ref (list entry)
 let log:log_t = STx.alloc _ []

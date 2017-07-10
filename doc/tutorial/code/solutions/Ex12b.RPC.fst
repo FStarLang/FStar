@@ -1,14 +1,7 @@
 module Ex12b.RPC
 
-(* open FStar.HyperStack.ST *)
-(* open FStar.Seq *)
-(* open FStar.Monotonic.Seq *)
-(* open FStar.HyperHeap *)
-(* open FStar.HyperStack *)
-(* open FStar.Monotonic.RRef *)
-
 open FStar.IO
-
+(* TODO : revert *x to FStar* once aseem_monotonicity landed in master *)
 open Preorder
 open Heapx
 open STx
@@ -54,13 +47,10 @@ let rec recv call =
 (* two events, recording genuine requests and responses *)
 
 
-type log_entry = 
+type log_entry =
   | Request: string -> log_entry
   | Response: string -> string -> log_entry
-  
 
-(* private type log_t (r:rid) = Monotonic.Seq.log_t r log_entry *)
-(* let log:log_t root = alloc_mref_seq #log_entry root createEmpty *)
 
 let subset' (#a:eqtype) (l1:list a) (l2:list a)
   = (forall x. x `mem` l1 ==> x `mem` l2)
@@ -76,15 +66,17 @@ let add_to_log (r:lref) (v:log_entry) :
   r := (v :: !r)
 
 // BEGIN: RpcPredicates
+val pRequest : string -> Type0
+val pResponse : string -> string -> Type0
+// END: RpcPredicates
 
 let req s : Tot (p:(list log_entry -> Type0){Preorder.stable p subset})
   = fun xs -> mem (Request s) xs
 let resp s t : Tot (p:(list log_entry -> Type0){Preorder.stable p subset})
   = fun xs -> mem (Response s t) xs
 
-type pRequest s = token log (req s)
-type pResponse s t = token log (resp s t)
-// END: RpcPredicates
+let pRequest s = token log (req s)
+let pResponse s t = token log (resp s t)
 
 (* the meaning of MACs, as used in RPC *)
 
@@ -106,7 +98,7 @@ let client_send (s:string16) =
   print_string s;
   add_to_log log (Request s);
   witness log (req s);
-  
+
   assert(reqresp (Formatting.request s)); (* this works *)
   assert(key_prop k == reqresp);          (* this also works *)
   assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
