@@ -186,15 +186,22 @@ let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
           // Check that `col` is in `ci.identifier_range`
           let last_col = Range.col_of_pos (Range.end_of_range ci.identifier_range) in
           if col <= last_col then Some ci else None
-let id_info_set_get =
-    let x = ref false in
-    (fun b -> x := b),
-    (fun () -> !x)
-let id_info_set = fst id_info_set_get
-let id_info = snd id_info_set_get
-let insert_bv bv ty =
-    if FStar.Options.ide() && id_info ()
-    then ignore <| insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
-let insert_fv fv ty =
-    if FStar.Options.ide() && id_info ()
-    then ignore <| insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)
+type insert_id_info_ops = {
+    enable:bool -> unit;
+    bv:bv -> typ -> unit;
+    fv:fv -> typ -> unit;
+    promote:(typ -> typ) -> unit;
+}
+let insert_id_info =
+    let enabled = Util.mk_ref false in
+    let id_info_buffer : ref<(list<(either<bv,fv>*typ*Range.range)>)> = Util.mk_ref [] in
+    let enable b = enabled := FStar.Options.ide() && b in
+    let bv x t = if !enabled then id_info_buffer := (Inl x, t, range_of_bv x)::!id_info_buffer in
+    let fv x t = if !enabled then id_info_buffer := (Inr x, t, range_of_fv x)::!id_info_buffer in
+    let promote cb =
+        !id_info_buffer |> List.iter (fun (i, t, r) -> ignore <| insert_identifier_info i (cb t) r);
+        id_info_buffer := [] in
+    {enable=enable;
+     bv=bv;
+     fv=fv;
+     promote=promote}
