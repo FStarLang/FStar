@@ -4,17 +4,22 @@
 
 module Ex12.MAC
 
-open FStar.HyperStack.ST
-open FStar.HyperStack.All
-open FStar.Seq
-open FStar.Monotonic.Seq
-open FStar.HyperHeap
-open FStar.HyperStack
-open FStar.Monotonic.RRef
+(* open FStar.HyperStack.ST *)
+(* open FStar.HyperStack.All *)
+(* open FStar.Seq *)
+(* open FStar.Monotonic.Seq *)
+(* open FStar.HyperHeap *)
+(* open FStar.HyperStack *)
+(* open FStar.Monotonic.RRef *)
 
 
 open Ex12.SHA1
 open FStar.IO
+
+open Preorder
+open Heapx
+open STx
+open MRefx
 
 module SHA1 = Ex12.SHA1
 
@@ -49,16 +54,16 @@ type entry =
    add or remove entries *)
 
 private type log_t = ref (list entry)
-let log:log_t = FStar.HyperStack.ST.ralloc #(list entry) root []
+let log:log_t = STx.alloc _ []
 
 // BEGIN: MacSpec
-val keygen: p:(text -> Type) -> ML (pkey p)
+val keygen: p:(text -> Type) -> St (pkey p)
 val mac:    k:key -> t:text{key_prop k t} -> ST tag 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> HyperStack.modifies_ref root (Set.singleton (as_addr log)) h h'))
+  (ensures (fun h x h' -> modifies (Set.singleton (addr_of log)) h h'))
 val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> HyperStack.modifies Set.empty h h'))
+  (ensures (fun h x h' -> modifies Set.empty h h'))
 // END: MacSpec
 
 (* ---- implementation *)
@@ -70,7 +75,6 @@ let keygen (p: (text -> Type)) =
 
 
 let mac k t =
-  recall log;
   let m = hmac_sha1 k t in
   log := Entry k t m :: !log;
   m
