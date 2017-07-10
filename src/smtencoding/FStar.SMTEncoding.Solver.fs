@@ -295,7 +295,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                      | _ -> errs in
             record_hint None;
             if Options.print_fuels()
-            then BU.print3 ("(%s) Query " ^ (colorize_red " failed ") ^ " with maximum fuel %s and ifuel %s\n")
+            then BU.print3 ("(%s) Query " ^ (BU.colorize_red "failed") ^ " with maximum fuel %s and ifuel %s\n")
                     (Range.string_of_range (Env.get_range env))
                     (Options.max_fuel()  |> BU.string_of_int)
                     (Options.max_ifuel() |> BU.string_of_int);
@@ -325,7 +325,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                     BU.print "%s\t%s %s\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
                         ([(match env with | Some e -> ("(" ^ (Range.string_of_range (Env.get_range e)) ^ at_log_file() ^ ")") | None -> "") ;
                          name;
-                         (colorize_bold "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")");
+                         (BU.colorize_bold "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")");
                          (match tag with | "failed" -> (BU.colorize_red tag) | "succeeded" -> (BU.colorize_green tag) | _ -> (BU.colorize_bold tag));
                          (match env with | Some e -> if used_hint then " (with hint)" else "" | None -> "");
                          BU.string_of_int elapsed_time;
@@ -424,18 +424,21 @@ let ask_and_report_errors env all_labels prefix query suffix =
         let fcore = (filter_assertions unsat_core) in
         let wf = (with_fuel [] p initial_config) in
         if Option.isSome unsat_core || Options.z3_refresh() then Z3.refresh();
-        if Options.admit_smt_queries() then
-            if Options.log_queries() then (Z3.ask_offline fcore wf)
-        else
+        if Options.admit_smt_queries() then (
+            if Options.log_queries()
+            then (Z3.ask_offline fcore wf)
+            else ()
+        ) else (
             Z3.ask fcore all_labels wf None
-                   (cb (Option.isSome unsat_core) initial_config p alt_configs (Z3.mk_fresh_scope())) in
+                   (cb (Option.isSome unsat_core) initial_config p alt_configs (Z3.mk_fresh_scope()))
+        ) in
 
     match Options.lax_except() with
     | None -> check query
-    | Some id ->
+    | Some id -> (
         let cur_id = "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")" in
         if cur_id = id then (check query)
-
+        )
 
 let solve use_env_msg tcenv q : unit =
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
