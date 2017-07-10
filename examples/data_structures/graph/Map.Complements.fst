@@ -43,6 +43,11 @@ let domain_lemma (#key:eqtype) ( #value:Type) (m: t key value) (l1:list key) (fv
    =    
    domain_lemma_aux m l1 fv [] l1 m
 
+let domain_lemma2 (#key:eqtype) ( #value:Type) (m: t key value) (l1:list key) (fv:key->value)
+ : Lemma (requires (True))
+   (ensures (forall (x:key) . L.mem x l1 || contains m x <==> contains (L.fold_left (fun acc i -> upd acc i (fv i)) m l1) x))
+   = domain_lemma m l1 fv; SC.as_set_mem_in_forall l1
+
 let rec lemma_fold_upd1_aux (#key:eqtype) ( #value:Type) (m: t key value) (l1:list key)
  (fv: key -> value) (pre:list key) (post:list key) (m':t key value)
  : Lemma (requires m' == L.fold_left (fun acc i -> upd acc i (fv i)) m pre /\ L.append pre post == l1

@@ -34,6 +34,13 @@ let rec filter_no_mem (#a :eqtype) (f:a -> bool) (l:list a) (e:a)
  | [] -> ()
  | x :: xs -> filter_no_mem f xs e
 
+let rec filter_sublist (#a:eqtype) (f:a->bool) (l:list a)
+ : Lemma(requires (True))
+   (ensures (forall (x:a) . L.mem x (L.filter f l) ==> L.mem x l))
+   = match l with
+   | [] -> ()
+   | x :: xs -> filter_sublist f xs
+
 let rec noRepeats_filter (#a :eqtype) (f:a -> bool) (l:list a)
   : Lemma (requires (L.noRepeats l))
     (ensures (L.noRepeats (L.filter f l)))
