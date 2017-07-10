@@ -654,7 +654,7 @@ and encode_arith_term env head args_e =
     let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
     let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
     let bv_uext arg_tms = 
-           mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible") unary
+           mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible")) unary
                          (Term.boxBitVec (sz +  (match ext_sz with | Some x -> x | None -> failwith "impossible"))) arg_tms in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith (Term.boxBitVec sz) in
     let ops =
