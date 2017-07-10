@@ -418,10 +418,6 @@ let validate_store_st : stateful_validator parse_abstract_store = fun input ->
 
 // sufficient to expose iteration over the key-value pairs (specifically pointers to them)
 
-// TODO: write this in stateful F*; it might actually be easier to talk about
-// the stack variables of a partially run parser being correct than to write proofs
-// about pure functions.
-
 // spec: fold over fully parsed store
 val fold_left_store: #t:Type -> f:(t -> encoded_entry -> t) -> t -> s:store -> t
 let fold_left_store #t f acc s =
@@ -626,17 +622,16 @@ let parse_entry_st_nochk : input:bslice -> ST (entry_st * off:U32.t{U32.v off <=
   let (value, off') = parse_u32_array_nochk input in
   (EntrySt key value, U32.add off off')
 
-#reset-options "--z3rlimit 10"
-
 let parse_many_next (#t:Type) (p:parser t) (n:nat{n>0}) (bs:bytes) :
   Lemma (requires (Some? (parse_many p n bs)))
         (ensures (Some? (parse_many p n bs) /\
-                  (let (v, off) = Some?.v (p bs) in
-                    let rest_parse = parse_many p (n-1) (slice bs off (length bs)) in
-                    Some? rest_parse /\
-                    (let (vs', off') = Some?.v rest_parse in
-                     let (vs, off_total) = Some?.v (parse_many p n bs) in
-                     vs' == List.tail vs)))) =
+                  (let (vs, _) = Some?.v (parse_many p n bs) in
+                   let (v, off) = Some?.v (p bs) in
+                   let rest_parse = parse_many p (n-1) (slice bs off (length bs)) in
+                   v == List.hd vs /\
+                   Some? rest_parse /\
+                   (let (vs', off') = Some?.v rest_parse in
+                    vs' == List.tail vs)))) =
   ()
 
 val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32.v off <= U32.v input.len})
@@ -649,17 +644,16 @@ val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32
                           let bs = as_seq h1 input in
                           Some? (parse_many parse_entry n bs) /\
                           begin
-                            let (v, off) = Some?.v (parse_entry bs) in
+                            let (vs, _) = Some?.v (parse_many parse_entry n bs) in
                             let (rv, r_off) = r in
                             entry_live h1 rv /\
-                            as_entry h1 rv == v /\
-                            off == U32.v r_off /\
+                            // as_entry h1 rv == parse_result (parse_entry bs) /\
+                            as_entry h1 rv == List.hd vs /\
                             begin
-                              let bs' = slice bs off (length bs) in
+                              let bs' = slice bs (U32.v r_off) (length bs) in
                               let parse_rest = parse_many parse_entry (n-1) bs' in
                               Some? parse_rest /\
                                 (let (vs', off') = Some?.v parse_rest in
-                                 let (vs, _) = Some?.v (parse_many parse_entry n bs) in
                                  vs' == List.tail vs)
                             end
                           end
@@ -669,6 +663,8 @@ let parse_one_entry n input =
    let bs = as_seq h input in
    parse_many_next parse_entry n bs);
   parse_entry_st_nochk input
+
+#reset-options
 
 val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
@@ -692,13 +688,12 @@ let rec fold_left_buffer_n_st #t f_spec f acc input n =
       let (e, off) = parse_one_entry n input in
       let input = advance_slice input off in
       let n':nat = n-1 in
+      let acc' = f acc e in
       let h = get() in
       assert (let bs = as_seq h input in
               Some? (parse_many parse_entry n' bs));
-      let acc' = f acc e in
-      // TODO: finish this proof
-      admit();
-      fold_left_buffer_n_st f_spec f acc' input n'
+      let r = fold_left_buffer_n_st f_spec f acc' input n' in
+      r
     end
 
 val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
