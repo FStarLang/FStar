@@ -1,3 +1,6 @@
+(*
+  This module contains a few string operations and a few functions to create a uri, CSP directive, headers etc. from a string 
+*)
 module Browser.StringFunctions
 
 open Web.Origin
@@ -217,9 +220,9 @@ let getDirectiveFromStringAll s =
       match f with
       | None -> None
       | Some (n,v) -> Some ({dir_name=n;dir_value=v})
-
+      
 (* Rather than checking for isOriginSec, do it statically *)
-val hstring_to_curi_ml : l:secLevel -> string -> Tot (option (origin * a_uri l))
+val hstring_to_curi_ml : l:secLevel -> string -> Tot (option (torigin * a_uri l))
 let hstring_to_curi_ml l s = 
   match stringContains s "://" 0 with 
   | None -> None 
@@ -259,6 +262,10 @@ let hstring_to_curi_ml l s =
 			      Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=p;c_querystring=qs;c_fragment=frag}))
 			    else None)
 	))
+
+val stringLemma : l:secLevel -> s:string -> Lemma (requires (True)) 
+		  (ensures (match hstring_to_curi_ml l s with | None -> true | Some (o, u) -> o = u.c_origin)) [SMTPat (hstring_to_curi_ml l s)]
+let stringLemma l s = ()
 
 private val getSubStrHead : #l:secLevel -> s:(secString l) -> c:string -> n:nat -> Tot (p:(option (secString l * secString l)){splitStr (declassify s) p}) 
 					(decreases (length s - n))

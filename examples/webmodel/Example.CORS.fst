@@ -30,10 +30,10 @@ let requri = mk_uri requrl
 (* Assume response as getResp *)
 let getResp =
     (* FAILS CORS CHECK *)
-    let ipResp = ({resptype="default";respcode=200;respurl=[];resphead=[];respbody=(emptyString (SecretVal [reqori]));resptrail=[];respHTTPS="modern";respCSP=[];respCORS=[];resploc=None}) in
+    let ipResp = ({resptype="default";respcode=200;respurl=[];resphead=[];respbody=(emptyString (SecretVal [reqori]));resptrail=[];respHTTPS="modern";respCSP=[];respCORS=[];resploc=None;respRedSec=PublicVal}) in
     (* INCLUDES CREDENTIALS - SET INCLUDE TO FAIL THIS *)
-    (* let ipResp = ({resptype="default";respcode=200;respurl=[];resphead=[("Access-Control-Allow-Origin", (mk_headerval (SecretVal [reqori]) (classify #PublicVal (origin_to_string (ori)) (SecretVal [reqori]))))];respbody=(emptyString (SecretVal [reqori]));resptrail=[];respHTTPS="modern";respCSP=[];respCORS=[];resploc=None}) in *)
-    (* let ipResp = ({resptype="default";respcode=200;respurl=[];resphead=[("Access-Control-Allow-Origin", (mk_headerval (SecretVal [reqori]) (classify #PublicVal (origin_to_string (ori)) (SecretVal [reqori])))); ("Access-Control-Allow-Credentials", (mk_headerval (SecretVal [reqori]) (classify #PublicVal ("true") (SecretVal [reqori]))))];respbody=(emptyString (SecretVal [reqori]));resptrail=[];respHTTPS="modern";respCSP=[];respCORS=[];resploc=None}) in *) 
+    (* let ipResp = ({resptype="default";respcode=200;respurl=[];resphead=[("Access-Control-Allow-Origin", (mk_headerval (SecretVal [reqori]) (classify #PublicVal (origin_to_string (ori)) (SecretVal [reqori]))))];respbody=(emptyString (SecretVal [reqori]));resptrail=[];respHTTPS="modern";respCSP=[];respCORS=[];resploc=None;respRedSec=PublicVal}) in *)
+    (* let ipResp = ({resptype="default";respcode=200;respurl=[];resphead=[("Access-Control-Allow-Origin", (mk_headerval (SecretVal [reqori]) (classify #PublicVal (origin_to_string (ori)) (SecretVal [reqori])))); ("Access-Control-Allow-Credentials", (mk_headerval (SecretVal [reqori]) (classify #PublicVal ("true") (SecretVal [reqori]))))];respbody=(emptyString (SecretVal [reqori]));resptrail=[];respHTTPS="modern";respCSP=[];respCORS=[];resploc=None;respRedSec=PublicVal}) in *) 
     ActResponse (SecretVal [reqori]) ipResp
 
 let main =

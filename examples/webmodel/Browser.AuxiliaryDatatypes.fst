@@ -228,15 +228,56 @@ type header = list (f:headerfield * v:headervalue)
 val isHeaderFieldPublic : headerfield -> GTot bool
 let isHeaderFieldPublic hf = (hf = "Origin" || hf = "Referer")
 
+(* CORS safelisted request header *)
+val isCORSSafeReqHeader : headerfield -> Tot bool
+let isCORSSafeReqHeader h =
+  (h="Accept" || h="Accept-Language" || h="Content-Language" || h="Content-Type" || h="DPR" || h="Downlink" || h="Save-Data" || h="Viewport-Width" || h="Width")
+
+(* is header name a forbidden header name - request *)
+val isForbiddenHeader : headerfield -> Tot bool
+let isForbiddenHeader h =
+  (h="Accept-Charset" || h="Accept-Encoding" || h="Access-Control-Request-Headers" || h="Access-Control-Request-Method" || h="Connection" || h="Content-Length" || h="Cookie" || h="Cookie2" || h="Date" || h="DNT" || h="Expect" || h="Host" || h="Keep-Alive" || h="Origin" || h="Referer" || h="TE" || h="Trailer" || h="Transfer-Encoding" || h="Upgrade" || h="Via")
+
+(* Is a forbidden response header name *)
+val isForbiddenRespHeader : headerfield -> Tot bool
+let isForbiddenRespHeader n = (n="Set-Cookie" || n="Set-Cookie2")
+
+val notForbiddenHeaderfieldInReqHeader : header -> Tot bool
+let rec notForbiddenHeaderfieldInReqHeader h =
+  match h with 
+  | [] -> true
+  | (f,v)::tl -> (not (isForbiddenHeader f)) && (not (isForbiddenRespHeader f)) && notForbiddenHeaderfieldInReqHeader tl
+
+(* Are all headers CORS safelisted request headers? *)
+val isCORSSafelistedHeaders : header -> Tot bool
+let isCORSSafelistedHeaders h = List.for_all (fun (hf, v) -> isCORSSafeReqHeader hf) h
+
+(* Allow only forbidden request headers to be secret --- Is it too strict? *)
+(* The headers in the initial request object are all considered *)
+val checkHeaderSecLevel : h:header -> GTot bool
+let rec checkHeaderSecLevel h =
+  match h with 
+  | [] -> true
+  | (f,v)::tl -> if (not (isForbiddenHeader f)) && (not (isForbiddenRespHeader f)) then 
+		       if (Headervalue?.hvs v = PublicVal) then checkHeaderSecLevel tl else false
+	       else checkHeaderSecLevel tl
+
+(* Return the headers that shall be used with redirect *)
+val redirectHeaders : h:header{checkHeaderSecLevel h} -> Tot (nh:header{notForbiddenHeaderfieldInReqHeader nh /\ checkHeaderSecLevel nh})
+let rec redirectHeaders h = 
+  match h with 
+  | [] -> []
+  | (f,v)::tl -> if (not (isForbiddenHeader f)) && (not (isForbiddenRespHeader f)) then (f,v)::(redirectHeaders tl) else (redirectHeaders tl)
+
 (* If at least one of the origin in the index list is the current origin, then the origin must have access to the header? *)
-val isHeaderValVisible : headervalue -> list torigin -> GTot bool
+val isHeaderValVisible : headervalue -> list torigin -> Tot bool
 let isHeaderValVisible h s =
   match (Headervalue?.hvs h) with
   | PublicVal -> true
-  | SecretVal sec -> (if (isSublist s sec) then true else false)
+  | SecretVal sec -> (if (Some? (List.tryFind (fun o -> List.mem o s) sec)) then true else false)
 
 (* If the headerfield can be publicly available, allow it *)
-val isHeaderVisible : header -> list torigin -> GTot bool
+val isHeaderVisible : header -> list torigin -> Tot bool
 let rec isHeaderVisible h s =
   match h with 
   | [] -> true
@@ -251,25 +292,54 @@ let rec headerLemma h t = match h with
 val emptyHeaderLemma : h:header -> t:list torigin -> Lemma (requires (h = [])) (ensures (isHeaderVisible h t)) [SMTPat (isHeaderVisible h t)]
 let emptyHeaderLemma h t = ()
 
-val canReclHeader : header -> secLevel -> secretOriginList -> GTot bool
-let rec canReclHeader h l ls = 
+val canReclHeader : h:header{checkHeaderSecLevel h} -> secLevel -> GTot bool
+let rec canReclHeader h l = 
   match h with 
   | [] -> true
-  | (f,v)::tl -> (canReclassify #(Headervalue?.hvs v) (Headervalue?.hv v) l ls) && (canReclHeader tl l ls)
+  | (f,v)::tl -> if (isForbiddenHeader f) || (isForbiddenRespHeader f) then (canReclassify #(Headervalue?.hvs v) (Headervalue?.hv v) l) && (canReclHeader tl l)
+	       else (canReclHeader tl l)
 
-val reclassifyHeader : h:header -> l:secLevel -> ls:secretOriginList{canReclHeader h l ls} -> Tot header
-let rec reclassifyHeader h l ls =
+val reclassifyHeader : h:header{checkHeaderSecLevel h} -> l:secLevel{canReclHeader h l} -> Tot (nh:header{checkHeaderSecLevel nh})
+let rec reclassifyHeader h l =
   match h with 
   | [] -> []
-  | (f,v)::tl -> (f, Headervalue l (reclassify #(Headervalue?.hvs v) (Headervalue?.hv v) l ls))::(reclassifyHeader tl l ls)
-
-val reclassifyHeaderLemma : h:header -> l:secLevel -> ls:secretOriginList{canReclHeader h l ls} -> Lemma (requires (True))
-	(ensures (match l with | SecretVal [o] -> isHeaderVisible (reclassifyHeader h l ls) [o] | _ -> true))
-	[SMTPat (reclassifyHeader h l ls)]
-let rec reclassifyHeaderLemma h l ls = 
+  | (f,v)::tl -> if (isForbiddenHeader f) || (isForbiddenRespHeader f) then 
+		  (f, Headervalue l (reclassify #(Headervalue?.hvs v) (Headervalue?.hv v) l))::(reclassifyHeader tl l)
+	       else 
+		  (f, v)::(reclassifyHeader tl l)
+		  
+val reclassifyHeaderLemma : h:header{checkHeaderSecLevel h} -> l:secLevel{canReclHeader h l} -> Lemma (requires (True))
+	(ensures (match l with | SecretVal [o] -> isHeaderVisible (reclassifyHeader h l) [o] | _ -> true))
+	[SMTPat (reclassifyHeader h l)]
+let rec reclassifyHeaderLemma h l = 
   match h with
   | [] -> ()
-  | hd::tl -> (reclassifyHeaderLemma tl l ls)
+  | (f,v)::tl -> (reclassifyHeaderLemma tl l)
+
+val reclForbiddenLemma : h:header{checkHeaderSecLevel h} -> l:secLevel{canReclHeader h l} -> Lemma (requires (notForbiddenHeaderfieldInReqHeader h)) 
+			       (ensures (notForbiddenHeaderfieldInReqHeader (reclassifyHeader h l))) [SMTPat (reclassifyHeader h l)]
+let rec reclForbiddenLemma h l = 
+  match h with 
+  | [] -> ()
+  | (f,v)::tl -> reclForbiddenLemma tl l
+
+val reclHeaderRedLemma : h:header{checkHeaderSecLevel h} -> l:secLevel -> Lemma (requires (notForbiddenHeaderfieldInReqHeader h))
+			 (ensures (canReclHeader h l)) [SMTPat (canReclHeader h l)]
+let rec reclHeaderRedLemma h l = 
+  match h with
+  | [] -> ()
+  | hd::tl -> reclHeaderRedLemma tl l
+
+val redirectHeadersLemma : h:header{checkHeaderSecLevel h} -> l:secLevel ->
+			   Lemma (requires (True)) (ensures (canReclHeader (redirectHeaders h) l)) [SMTPat (canReclHeader (redirectHeaders h) l)]
+let rec redirectHeadersLemma h l = 
+  match h with 
+  | [] -> ()
+  | hd::tl -> (redirectHeadersLemma tl l)
+
+val reclassifyHeaderVisibleLemma : h:header{checkHeaderSecLevel h} -> o:torigin{canReclHeader h (SecretVal [o])} -> 
+	Lemma (requires (True)) (ensures (isHeaderVisible (reclassifyHeader h (SecretVal [o])) [o])) [SMTPat (reclassifyHeader h (SecretVal [o]))]
+let rec reclassifyHeaderVisibleLemma h o = ()
 
 (* *** Some functions for printing and logging *** *)
 val getOriginList : list torigin -> Tot string
@@ -289,4 +359,5 @@ let rec getHeaderOrigins h =
   match h with 
   | [] -> ""
   | (h,v)::tl -> (h ^ " : " ^ (getValOrigin v)) ^ "\n" ^ (getHeaderOrigins tl)
+
 

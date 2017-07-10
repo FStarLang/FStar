@@ -52,9 +52,14 @@ let get_referrer r rp =
 (* Referrer Policy --- 8.2. Set request’s referrer policy on redirect *)
 val setRefPolRedirect : req:request -> resp:actResponse{requestResponseValid req resp} -> Tot (nreq:request{requestResponseValid nreq resp})
 let setRefPolRedirect req resp =
-  let refPol = parseRefPol (firstElement (Request?.rf req).requrl) resp in
+  let refPol = parseRefPol resp in
   if refPol = RP_EmptyPolicy then req 
   else Request (Request?.rsl req) ({(Request?.rf req) with reqrefPolicy=refPol})
+
+val refPolRedForbiddenHeaderLemma : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resp:actResponse{requestResponseValid req resp} -> 
+				    Lemma (requires (notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead)) 
+				    (ensures (notForbiddenHeaderfieldInReqHeader (Request?.rf (setRefPolRedirect req resp)).reqhead)) 
+let refPolRedForbiddenHeaderLemma h l = ()
 
 (* Is request's method cors-safelisted method *)
 val isCORSSafelistedMethod : reqMethod -> Tot bool

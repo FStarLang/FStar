@@ -12,15 +12,6 @@ open Web.Origin
 
 module List = FStar.List.Tot
 
-(* is header name a forbidden header name - request *)
-val isForbiddenHeader : headerfield -> Tot bool
-let isForbiddenHeader h =
-  (h="Accept-Charset" || h="Accept-Encoding" || h="Access-Control-Request-Headers" || h="Access-Control-Request-Method" || h="Connection" || h="Content-Length" || h="Cookie" || h="Cookie2" || h="Date" || h="DNT" || h="Expect" || h="Host" || h="Keep-Alive" || h="Origin" || h="Referer" || h="TE" || h="Trailer" || h="Transfer-Encoding" || h="Upgrade" || h="Via")
-
-(* Are all headers CORS safelisted request headers? *)
-val isCORSSafelistedHeaders : header -> Tot bool
-let isCORSSafelistedHeaders h = List.for_all (fun (hf, v) -> isCORSSafeReqHeader hf) h
-
 (* append a name/value to header list *)
 val appendName : header -> headerfield -> headervalue -> Tot header 
 let appendName h hf v = (hf,v)::h
@@ -29,6 +20,11 @@ val appendLemma : #s:secLevel -> r:requestFormat s -> hf:headerfield -> hv:heade
 		  Lemma (requires (isValidRequest r)) 
 		  (ensures (isValidRequest ({r with reqhead = (appendName r.reqhead hf hv)}))) [SMTPat (appendName r.reqhead hf hv)]
 let appendLemma #s r hf hv = ()
+
+val appendSecLevelLemma : h:header -> hf:headerfield -> hv:headervalue -> Lemma (requires (checkHeaderSecLevel h /\ 
+			  ((not (isForbiddenHeader hf)) && (not (isForbiddenRespHeader hf)) ==> Headervalue?.hvs hv = PublicVal) )) 
+			  (ensures (checkHeaderSecLevel (appendName h hf hv))) [SMTPat (appendName h hf hv)]
+let appendSecLevelLemma h hf hv = ()
 
 (* delete all headers with name/value from header list *)
 val removeName : header -> headerfield -> Tot header
@@ -116,11 +112,11 @@ let getDirName s = match s with
   | "frame-ancestors" -> Some CSP_frame_ancestors
   | "navigate-to" -> Some CSP_navigate_to
   | _ -> None 
-
+  
 (* CSP Level 3 - 4.1.1. Set response’s CSP list *)
-val setRespCSPList : req:request -> resp:actResponse{requestResponseValid req resp} -> Tot actResponse
-let setRespCSPList req resp = 
-  let csp = getCSPDirectives req resp in
+val setRespCSPList : actResponse -> Tot actResponse
+let setRespCSPList resp = 
+  let csp = getCSPDirectives resp in
   ActResponse (ActResponse?.arl resp) ({(ActResponse?.ar resp) with respCSP=csp})
 
 (* set the response's https state *)
@@ -129,4 +125,5 @@ let setRespHTTPS resp =
   let httpsString = (if (not (emptyList (ActResponse?.ar resp).respurl)) && (getScheme (firstElement (ActResponse?.ar resp).respurl) = "https") then "modern" 
 		    else (ActResponse?.ar resp).respHTTPS) in
   ActResponse (ActResponse?.arl resp) ({(ActResponse?.ar resp) with respHTTPS=httpsString})
+
 

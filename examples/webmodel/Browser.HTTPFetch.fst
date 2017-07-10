@@ -16,12 +16,12 @@ open Browser.HTTPFetch.Auxiliary
 
 module List = FStar.List.Tot
 
-(* Section 5.6 - HTTP Network fetch *) 
+(* Section 4.6 - HTTP Network fetch *) 
 (* can return network error at some points *)
-val httpNetworkFetch : browser -> request -> bool -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val httpNetworkFetch : browser -> request -> bool -> (cowindow * cowindow * navType) -> Tot (result * browser)
 let httpNetworkFetch b r cflag einfo = sendRequest b r cflag einfo
 
-private val getFetchHeader : browser -> req:request -> bool -> Tot (bool * header)
+private val getFetchHeader : browser -> req:request -> bool -> Tot (bool * h:header{checkHeaderSecLevel h})
 let getFetchHeader b req cors =
     let r = Request?.rf req in 
     let cf = (r.reqcredm = "include" || (r.reqcredm = "same-origin" && r.reqtaint = "basic")) in
@@ -39,22 +39,33 @@ let getFetchHeader b req cors =
 
 (* Section 4.5 - HTTP Network or Cache fetch - omitting the cache part *) 
 (* For cache access, process response in the same function *)
-val httpNetworkOrCacheFetch : browser -> req:request -> bool -> bool -> 
-			      (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val httpNetworkOrCacheFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
+			      Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let httpNetworkOrCacheFetch b req cors af einfo =
     let r = Request?.rf req in 
     let (cflag, nh) = getFetchHeader b req cors in 
     let nr = Request (Request?.rsl req) ({r with reqhead=nh;corsflag=cors;corspfflag=false;authflag=af}) in
-    httpNetworkFetch b nr cflag einfo
+    let (re, nb) = (httpNetworkFetch b nr cflag einfo) in
+    (re, req, nb)
 
-val preflight_request : r:request -> h:header{List.for_all (fun (hf,hv) -> Headervalue?.hvs hv = PublicVal) h} -> Tot request
+(* A version of httpNetworkOrCacheFetch to handle preflight fetches as they already contain headers with forbidden name - 
+   these are never redirected as it ultimately uses httpNetworkOrCacheFetch 
+*)
+val httpNetworkOrCachePreflightFetch : browser -> request -> bool -> bool -> (cowindow * cowindow * navType) -> Tot (result * browser)
+let httpNetworkOrCachePreflightFetch b req cors af einfo =
+    let r = Request?.rf req in 
+    let (cflag, nh) = getFetchHeader b req cors in 
+    let nr = Request (Request?.rsl req) ({r with reqhead=nh;corsflag=cors;corspfflag=false;authflag=af}) in
+    (httpNetworkFetch b nr cflag einfo) 
+
+val preflight_request : r:request -> h:header{checkHeaderSecLevel h /\ List.for_all (fun (hf,hv) -> Headervalue?.hvs hv = PublicVal) h} -> Tot request
 let preflight_request req h =
   let r = (Request?.rf req) in
   let rs = (Request?.rsl req) in
   Request rs ({reqm="OPTIONS";requrl=r.requrl;reqhead=h;reqo=r.reqo;reqw=None;reqinit=r.reqinit;reqtype=r.reqtype;reqdest=r.reqdest;reqtarget=None;reqredirect=0;reqredmode="follow";reqref=r.reqref;reqrefPolicy=r.reqrefPolicy;reqnonce="";reqparser="";requnsafe=false;reqpreflight=false;reqsync=false;reqmode=NoCORS;reqtaint="basic";reqcredm="omit";reqcredflag=false;reqbody=(emptyString rs);corsflag=r.corsflag;corspfflag=true;authflag=r.authflag;recflag=r.recflag})
 
 (* Section 4.7 - CORS-Preflight Fetch *)
-val corsPreflightFetch : browser -> request -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val corsPreflightFetch : browser -> req:request -> (cowindow * cowindow * navType) -> Tot (result * browser)
 let corsPreflightFetch b req einfo =
   let r = (Request?.rf req) in
   let u = (firstElement r.requrl) in
@@ -62,47 +73,55 @@ let corsPreflightFetch b req einfo =
   let pr = (let r = (Request?.rf req) in
 	   let rs = (Request?.rsl req) in
 	   Request rs ({reqm="OPTIONS";requrl=r.requrl;reqhead=nh;reqo=r.reqo;reqw=None;reqinit=r.reqinit;reqtype=r.reqtype;reqdest=r.reqdest;reqtarget=None;reqredirect=0;reqredmode="follow";reqref=r.reqref;reqrefPolicy=r.reqrefPolicy;reqnonce="";reqparser="";requnsafe=false;reqpreflight=false;reqsync=false;reqmode=NoCORS;reqtaint="basic";reqcredm="omit";reqcredflag=false;reqbody=(emptyString rs);corsflag=r.corsflag;corspfflag=true;authflag=r.authflag;recflag=r.recflag})) in
-  httpNetworkOrCacheFetch b pr false false einfo
+  httpNetworkOrCachePreflightFetch b pr false false einfo
 
-(* Section 5.3 - HTTP Fetch *)
-val httpFetch : browser -> request -> bool -> bool -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+(* Section 4.3 - HTTP Fetch *)
+val httpFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
+		Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let httpFetch b r cors pf einfo = (* check for skip-service-worker. define service workers. for now assuming that the page doesnt use service workers *)
   if (pf) then
-      let req = Request (Request?.rsl r) ({(Request?.rf r) with corsflag=cors;corspfflag=true}) in
-      corsPreflightFetch b req einfo
+      let nreq = Request (Request?.rsl r) ({(Request?.rf r) with corsflag=cors;corspfflag=true}) in
+      let (re, nb) = corsPreflightFetch b nreq einfo in
+      (re, r, nb)  (*Send the original request here - not the one created as part preflightFetch *)
   else
       httpNetworkOrCacheFetch b r cors false einfo
 
-(* Section 4.2 - Basic Fetch *)
+(* Section 4.2 - Scheme Fetch *)
 (* case analyse the protocol to determine what to do. Considering only http(s) cases, calls into httpFetch *)
-val basicFetch : browser -> request -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
-let basicFetch b r einfo =
+val schemeFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> (cowindow * cowindow * navType) -> 
+		  Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
+let schemeFetch b r einfo =
   let rurl = (firstElement (Request?.rf r).requrl) in
   if getScheme (rurl) = "http" || getScheme (rurl) = "https" then
      httpFetch b r false false einfo
   else (Error "basic fetch error", r, b) (* return an error ? *)
     
 (* 4.1 case analysis (11) *)
-val response_for_fetch : browser -> request -> bool -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val response_for_fetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> 
+			 (cowindow * cowindow * navType) -> Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let response_for_fetch b nreq cors einfo =
     let r = (Request?.rf nreq) in
     let nurl = (firstElement r.requrl) in
     let no = getAOrigin nurl in
     if (isSameOriginRR no r.reqo && cors = false) || (r.reqmode = Navigate) || (r.reqmode = WebSocket) then
     	let req = Request (Request?.rsl nreq) ({r with reqtaint="basic"}) in
-    	basicFetch b req einfo (* perform basic fetch *)
+    	schemeFetch b req einfo (* perform basic fetch *)
     else if r.reqmode = SameOrigin then (Error "same origin error", nreq, b) (* Network error *)
     else if r.reqmode = NoCORS then
     	let req = Request (Request?.rsl nreq) ({r with reqtaint="opaque"}) in
-    	basicFetch b req einfo (* perform basic fetch *)
+    	schemeFetch b req einfo (* perform basic fetch *)
     else if (getScheme nurl) <> "http" && (getScheme nurl) <> "https" then (Error "scheme not HTTP", nreq, b) (* Network error *)
     else if r.reqpreflight || (r.requnsafe && (not (isCORSSafelistedMethod r.reqm) || not (isCORSSafelistedHeaders r.reqhead))) then
 	(* Other checks, and HTTP fetch *)
 	let req = Request (Request?.rsl nreq) ({r with reqtaint="cors";corsflag=true;corspfflag=true}) in
 	httpFetch b req true true einfo
     else
-	let req = Request (Request?.rsl nreq) ({r with reqtaint="cors";corsflag=true}) in
+	let req = Request (Request?.rsl nreq) ({r with reqtaint="cors";corsflag=true;}) in
 	httpFetch b req true false einfo
+
+private val upReferRequest : r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> referer -> refPolicy -> bool -> bool -> 
+			     Tot (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead})
+let upReferRequest r refer rP cors rf = Request (Request?.rsl r) ({(Request?.rf r) with reqref=refer;reqrefPolicy=rP;corsflag=cors;recflag=rf})
 
 (* Fetch a resource from the network; over CORS*)
 (* Main fetch -Section 4.1 fetch.spec.whatwg.org *)
@@ -110,7 +129,8 @@ let response_for_fetch b nreq cors einfo =
 (* Or if we consider this to be async always, then this would always queue the request and handle the response later *)
 (* Algorithm main fetch using request, optionally with a CORS flag and recursive flag *)
 (* Fetch calls response_for_fetch which calls basic fetch which calls http fetch which calls http redirect fetch which calls Fetch! *)
-val fetch_resource : browser -> request -> bool -> bool -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val fetch_resource : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
+		     Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let fetch_resource b r cors rf einfo =
   let req = (Request?.rf r) in
   if (block_port r || reqBlockedCSP r) then (Error "request blocked by CSP", r, b)
@@ -121,16 +141,15 @@ let fetch_resource b r cors rf einfo =
     	      else req.reqrefPolicy) in
     let refer = (if (req.reqref <> NoReferrer && not (is_opaqueReq r)) then get_referrer r rP else req.reqref) in
     let ruri = (firstElement req.requrl) in 
-    let nreq = Request (Request?.rsl r) ({req with reqref=refer;reqrefPolicy=rP;corsflag=cors;recflag=rf}) in
+    let nreq = upReferRequest r refer rP cors rf in
     let nr = (if (getScheme ruri = "http") && (isSecureHost b ruri) then makeRequestHTTPS nreq else nreq) in
     response_for_fetch b nr cors einfo    (* Queue it as a pending request and process the above steps separately as if waiting for a response in the queue *)
-    (* else *)
-    (*   (Error "fetch_resource", b) *)
-  
+
 (* Section 4.4 - HTTP-redirect Fetch *)
 (* The specification requires a response and not an actResponse and then uses the actResponse accordingly *)
-val httpRedirectFetch : browser -> req:request -> resp:actResponse{requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp)} ->
-			bool -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val httpRedirectFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead /\ checkHeaderSecLevel (Request?.rf req).reqhead} -> 
+			resp:actResponse{requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp)} ->
+			bool -> (cowindow * cowindow * navType) -> Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let httpRedirectFetch b req resp cors einfo =
   let r = Request?.rf req in
   if (ActResponse?.ar resp).resploc = None then (Success "no url", req, b) (* NO URL to redirect to *)
@@ -145,22 +164,22 @@ let httpRedirectFetch b req resp cors einfo =
       let nreq = setRefPolRedirect req resp in
       let nr = Request?.rf nreq in
       let rf = (nr.reqredmode <> "manual") in
-      (reqRespLocLemma nreq resp;
-      let nh = reclassifyHeader nr.reqhead (URI?.usl u) secList in
+      let nh = reclassifyHeader (nr.reqhead) (URI?.usl u) in
       if ((((ActResponse?.ar resp).respcode = 301 || (ActResponse?.ar resp).respcode = 302) && r.reqm = "POST") || ((ActResponse?.ar resp).respcode = 303)) then
       	  let newr = Request (URI?.usl u) ({nr with requrl=u::nr.requrl;reqm="GET";reqo=ro;reqhead=nh;reqredirect=(nr.reqredirect + 1);reqbody=(emptyString (URI?.usl u));corsflag=cors;recflag=rf}) in
           fetch_resource nb newr cors true einfo
-      else if (isRedResponse (ActResponse?.ar resp)) then
-  	  let newr = Request (URI?.usl u) ({nr with requrl=u::nr.requrl;reqm=r.reqm;reqo=ro;reqhead=nh;reqredirect=(nr.reqredirect + 1);reqbody=(reclassify nr.reqbody (URI?.usl u) secList);corsflag=cors;recflag=rf}) in
+      else if ((isRedResponse (ActResponse?.ar resp)) && r.reqm = "POST") then (* redirect for 307/308 with POST *)
+      	  let newr = Request (URI?.usl u) ({nr with requrl=u::nr.requrl;reqm=r.reqm;reqo=ro;reqhead=nh;reqredirect=(nr.reqredirect + 1);reqbody=(reclassify nr.reqbody (URI?.usl u));corsflag=cors;recflag=rf}) in
           fetch_resource nb newr cors true einfo
-      else (Error "HTTP redirect code invalid", req, nb)
-      )
+      else  (* other cases - mostly GET for 301/2/7/8 *)	  
+	  let newr = Request (URI?.usl u) ({nr with requrl=u::nr.requrl;reqm=r.reqm;reqo=ro;reqhead=nh;reqredirect=(nr.reqredirect + 1);reqbody=(emptyString (URI?.usl u));corsflag=cors;recflag=rf}) in
+          fetch_resource nb newr cors true einfo
 
 (* ******************************************************* *)
 (* the browser receives the response on a given connection *)
 (* return the request, response, credentials flag and the browser with modified connection pool *)
 (* Taking the request as input to allow static checking *)
-val getResponse : browser -> connection -> actResponse -> 
+val getResponse : browser -> connection -> actResponse ->
 		  Tot (option ((request * cowindow * cowindow * navType) * actResponse * bool) * browser)
 let getResponse b c resp =
   let rcl = (getResponseConn b.conn c) in
@@ -185,7 +204,7 @@ let processFetchResponse b req resp cf =
       | TotResponse r -> (
 	     let nl = (
 	       if (nreq.reqtaint = "cors") then
-		   let hfn = getExposeHeaders (firstElement nreq.requrl) r in
+		   let hfn = getExposeHeaders r in
 		   match hfn with
 		   | ["*"] -> if (nreq.reqcredm <> "include") then (getUniqueRespHeader (ActResponse?.ar r).resphead) else (ActResponse?.ar r).respCORS
 			     (*13.2 - ??*)
@@ -230,7 +249,8 @@ let processHttpRedirectResponse b req resp cf =
   
 (* Process http response *)
 (* The fetch functions return the request but do not pass over to the callee *)
-val processHttpResponse : browser -> req:request -> resp:actResponse{requestResponseValid req resp} -> bool -> (cowindow * cowindow * navType) -> Tot (response * browser)
+val processHttpResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resp:actResponse{requestResponseValid req resp} -> bool ->
+			  (cowindow * cowindow * navType) -> Tot (response * browser)
 let processHttpResponse b req resp cf einfo =
   let reqf = (Request?.rf req) in
   if (reqf.corspfflag) then
@@ -242,13 +262,14 @@ let processHttpResponse b req resp cf einfo =
 		| Success s -> (RespSuccess s, nb)
   else
     if (reqf.corsflag) && (not (corsCheck req resp)) then (NetworkError "CORS check failure", b)
-    else if (ActResponse?.ar resp).respcode = 301 || (ActResponse?.ar resp).respcode = 302 || (ActResponse?.ar resp).respcode = 303 ||
-	    (ActResponse?.ar resp).respcode = 307 || (ActResponse?.ar resp).respcode = 308 then (
-	 let loc = getLocationURI (firstElement reqf.requrl) resp in
-	 let ares = ActResponse (ActResponse?.arl resp) ({(ActResponse?.ar resp) with resploc=loc}) in
+    else if isRedirectResponse (ActResponse?.ar resp) then (
+	    (* (ActResponse?.ar resp).respcode = 301 || (ActResponse?.ar resp).respcode = 302 || (ActResponse?.ar resp).respcode = 303 || *)
+	    (* (ActResponse?.ar resp).respcode = 307 || (ActResponse?.ar resp).respcode = 308 then ( *)
 	 if reqf.reqredmode = "error" then
 	   (NetworkError "redirect mode error", b) (* network error *)
 	 else if reqf.reqredmode = "manual" then
+	   let loc = getLocationURI resp in
+	   let ares = ActResponse (ActResponse?.arl resp) ({(ActResponse?.ar resp) with resploc=loc}) in
 	   ((processFetchResponse b req (FilteredResponse (OpaqRedFiltered ({ir=ares;fr=(opRedResponse ares)}))) cf), b)
 	 else if reqf.reqredmode = "follow" then
 	   let (redirect, res) = processHttpRedirectResponse b req (TotResponse resp) cf in
@@ -268,7 +289,8 @@ let processHttpResponse b req resp cf einfo =
 	((processFetchResponse b req (TotResponse resp) cf), b)
 
 (* Process network-or-cache response *)
-val processNOCResponse : browser -> req:request -> resp:actResponse{requestResponseValid req resp} -> bool -> (cowindow * cowindow * navType) -> Tot (response * browser)
+val processNOCResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resp:actResponse{requestResponseValid req resp} -> bool ->
+			 (cowindow * cowindow * navType) -> Tot (response * browser)
 let processNOCResponse b req resp cf einfo =
   if ((ActResponse?.ar resp).respcode = 401 && cf = true && (Request?.rf req).corsflag = false && Some? (Request?.rf req).reqw) then (
      if ((Request?.rf req).reqcredflag = false || (Request?.rf req).authflag = true) then
@@ -290,20 +312,20 @@ let processNOCResponse b req resp cf einfo =
       processHttpResponse b req resp cf einfo
 
 (* Processing response for network fetch *)
-val processNetworkResponse : browser -> connection -> r:request -> resp:actResponse{requestResponseValid r resp} -> 
+val processNetworkResponse : browser -> connection -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> resp:actResponse{requestResponseValid r resp} ->
 			     Tot (response * browser * option (request * cowindow * cowindow * navType))
 let processNetworkResponse b c r resp =
   let (rr,nb) = (getResponse b c resp) in (* remove the first request from the connection list in the browser *)
   match rr with
   | None -> (NetworkError "process network response error", nb, None)
   | Some ((req, sw, tw, ty), resp, cf) ->
-	 if (req = r) then (* the request changes quite a bit while processing -- this might not be the same. *)
- 	   let nresp = setRespHTTPS (setRespCSPList req resp) in
-	   let nbr = if cf then (setCookie nb req nresp) else nb in
+	 (* if (req = r) then (\* the request changes quite a bit while processing -- this might not be the same. *\) *)
+ 	   let nresp = setRespHTTPS (setRespCSPList resp) in
+	   let nbr = if cf then (setCookie nb r nresp) else nb in
 	   let einfo = (sw, tw, ty) in
 	   (* based on the response code here, recall this function with authentication details. cannot prove termination and some precondition failure above *)
-	   let (res, br) = processNOCResponse nbr req nresp cf einfo in
-	   (res, br, Some (req, sw, tw, ty))
-	 else
-	   (NetworkError "incorrect request access error", nb, None) (* some other request accessed from the connection pool *)
+	   let (res, br) = processNOCResponse nbr r nresp cf einfo in
+	   (res, br, Some (r, sw, tw, ty))
+	 (* else *)
+	   (* (NetworkError "incorrect request access error", nb, None) (\* some other request accessed from the connection pool *\) *)
 

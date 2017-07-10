@@ -129,39 +129,30 @@ type requestFormat (s:secLevel) = {
 private val getOrigin : uri -> Tot torigin
 let getOrigin u = (URI?.u u).c_origin
 
-val uriReqSecLevel : s:secLevel -> uri -> GTot bool
-let uriReqSecLevel s u =
-  match s with 
-  | PublicVal -> (URI?.usl u = PublicVal)
-  | SecretVal [o] -> (match URI?.usl u with | PublicVal -> false | SecretVal ol -> isSublist [o] ol)
-  | _ -> false
+(* val uriReqSecLevel : s:secLevel -> uri -> GTot bool *)
+(* let uriReqSecLevel s u = *)
+(*   match s with  *)
+(*   | PublicVal -> (URI?.usl u = PublicVal) *)
+(*   | SecretVal [o] -> (match URI?.usl u with | PublicVal -> false | SecretVal ol -> isSublist [o] ol) *)
+(*   | _ -> false *)
 
-val isValidRequest : #s:secLevel -> rf:requestFormat s -> GTot bool
-let isValidRequest #s rf =
+(* construct a valid request to be sent on the network *)
+val isValidRequest : #s:secLevel -> rf:requestFormat s -> Tot bool
+let isValidRequest #s rf = 
   if (emptyList rf.requrl) then false
   else 
     let u = (firstElement rf.requrl) in 
     match s with 
-    | PublicVal -> (URI?.usl u = PublicVal)
-    | SecretVal [o] -> (URI?.usl u = SecretVal [o]) && (isHeaderVisible rf.reqhead [o])
-		      (* (match URI?.usl u with | PublicVal -> false | SecretVal ol -> isSublist [o] ol &&  *)
-		      (* (isHeaderVisible rf.reqhead [o]) && (isHeaderVisible rf.reqhead [getOrigin u])) *)
+    | PublicVal -> (URI?.usl u = s)
+    | SecretVal [o] -> (URI?.usl u = s) && (isHeaderVisible rf.reqhead [o])
     | _ -> false
     
-    (* if (containsOrigin [(getOrigin u)] (SecretVal?.seco s)) && (isHeaderVisibleURI rf.reqhead u) then true *)
-    (* else false *)
-    (* match (URI?.usl u) with *)
-    (* | PublicVal -> false (\* a public url getting a private request *\) *)
-    (* | SecretVal sec -> (\* URI should contain the origin of uri in the index (isValidURI) *\) *)
-    (* 	if (containsOrigin [(getOrigin u)] (SecretVal?.seco s)) && (isHeaderVisibleURI rf.reqhead u) then true *)
-    (* 	else false *)
-
-val validRequestLemma : #s:secLevel -> rf:(requestFormat s){isValidRequest #s rf} -> 
+val validRequestLemma : #s:secLevel -> rf:(requestFormat s){isValidRequest #s rf /\ checkHeaderSecLevel rf.reqhead} -> 
 			Lemma (requires (True)) (ensures (s = URI?.usl (firstElement rf.requrl))) [SMTPat (isValidRequest #s rf)]
 let validRequestLemma #s rf = match s with | PublicVal -> () | SecretVal [o] -> () | _ -> ()
 
 type request = 
-| Request : (rsl:secLevel) -> rf:(requestFormat rsl){isValidRequest rf} -> request
+| Request : (rsl:secLevel) -> rf:(requestFormat rsl){isValidRequest rf /\ checkHeaderSecLevel rf.reqhead} -> request
 
 val default_request : cowindow -> u:uri{URI?.usl u = PublicVal} -> Tot (request)
 let default_request w u = Request (PublicVal) ({reqm = "GET"; requrl = [(u)]; reqhead = []; reqo = (getOrigin (CWindow?.cwloc w)); reqw = (Some w); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client w); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = ""; corsflag = false; corspfflag = false; authflag = false; recflag = false})
@@ -198,6 +189,7 @@ type browser = {
   conn:connectionPool;
   next_u_id:wid;
 }
+
 
 
 
@@ -351,8 +343,7 @@ let setUserPwd #s u user pd = URI (URI?.usl u) ({(URI?.u u) with c_uname=user;c_
 (* in ({req with requrl=(replace_elem_list req.requrl 1 nurl);reqref=refer;reqrefPolicy=rP;corsflag=cors;recflag=rf})  *)
 
 private val isValidURIRequest : uri -> GTot bool
-let isValidURIRequest u = 
-  match (URI?.usl u) with | PublicVal -> true | SecretVal [o] -> true | _ -> false
+let isValidURIRequest u = validSingleSecLevel (URI?.usl u)
 
 private val setURIScheme : uri -> p:scheme{p = "https"} -> Tot (u:uri{isValidURIRequest u})
 let setURIScheme u p =
@@ -366,26 +357,21 @@ let setURIScheme u p =
 private val mk_stringHeader : #s:secLevel -> headervalue' s -> Tot (secString s)
 let mk_stringHeader #s hv = hv
 
-private val reclassifyHeader : header -> uri -> Tot header 
-let rec reclassifyHeader h u =
+private val reclassifySchemeHeader : h:header{checkHeaderSecLevel h} -> uri -> Tot (nh:header{checkHeaderSecLevel nh})
+let rec reclassifySchemeHeader h u =
   let s = (URI?.usl u) in
   match h with
   | [] -> []
-  | (f,v)::tl -> (f, Headervalue s (reclassifyVal (mk_stringHeader (Headervalue?.hv v)) s))::(reclassifyHeader tl u)
+  | (f,v)::tl -> (match (Headervalue?.hvs v) with
+		| PublicVal -> (reclassifySchemeHeader tl u)
+		| SecretVal ol -> (f, Headervalue s (reclassifyVal (mk_stringHeader (Headervalue?.hv v)) s))::(reclassifySchemeHeader tl u))
 
-val recHeaderLemma : h:header -> u:uri -> Lemma (requires (SecretVal? (URI?.usl u))) 
-		     (ensures (match URI?.usl u with | SecretVal [o] -> isHeaderVisible (reclassifyHeader h u) [o] | _ -> true))
-		     [SMTPat (reclassifyHeader h u)]
-let rec recHeaderLemma h u = match h with 
+val recSchemeHeaderLemma : h:header{checkHeaderSecLevel h} -> u:uri -> Lemma (requires (SecretVal? (URI?.usl u))) 
+		     (ensures (match URI?.usl u with | SecretVal [o] -> isHeaderVisible (reclassifySchemeHeader h u) [o] | _ -> true))
+		     [SMTPat (reclassifySchemeHeader h u)]
+let rec recSchemeHeaderLemma h u = match h with 
     | [] -> ()
-    | hd::tl -> recHeaderLemma tl u
-
-val makeRequestHTTPS : request -> Tot (request) 
-let makeRequestHTTPS r =
-  let req = Request?.rf r in
-  let u = setURIScheme (firstElement req.requrl) "https" in
-  let h = reclassifyHeader req.reqhead u in 
-  Request (URI?.usl u) ({req with requrl=[u];reqhead=h;reqbody=reclassifyVal req.reqbody (URI?.usl u)})
+    | hd::tl -> recSchemeHeaderLemma tl u
 
 (* URL includes credentials if username is not empty or password is not null *)
 val includesCredentials : uri -> Tot bool
@@ -407,14 +393,6 @@ let isSameOriginWin cw0 cw1 = isSameOriginDom (getOrigin (CWindow?.cwloc cw0)) (
 val isSameOriginDoc: a_document -> a_document -> Tot bool
 let isSameOriginDoc d0 d1 = isSameOriginDom (URI?.u d0.dloc).c_origin (URI?.u d1.dloc).c_origin
 
-(* val sameOriginLem : cw0:cowindow -> cw1:cowindow -> *)
-(* 	Lemma (requires ((CWin?.wsl cw0) <> PublicVal && (CWin?.wsl cw1) <> PublicVal && isSameOriginWin cw0 cw1)) *)
-(* 	      (ensures (eqSecLevel (CWin?.wsl cw0) (CWin?.wsl cw1))(\* (eqSecLevel (CWin?.wsl cw0) (CWin?.wsl cw1)) *\)) *)
-(* 	      [SMTPat (isSameOriginWin cw0 cw1)] *)
-(* let sameOriginLem cw0 cw1 = match (CWin?.wsl cw0) with *)
-(*   | PublicVal -> () *)
-(*   | SecretVal sec -> admit() *)
-
 val mk_origin : a_origin -> Tot origin
 let mk_origin ao = ao
 
@@ -432,22 +410,22 @@ private val uri_to_hstring : #s:secLevel -> u:uri{URI?.usl u = s} -> Tot (secStr
 let uri_to_hstring #s u = (curi_to_hstring (u_curi u))
 
 (* Implemented in ExtractURI as an ML function *)
-private val hstring_to_curi : l:secLevel -> s:string -> Tot (option (origin * a_uri l))
+private val hstring_to_curi : l:secLevel -> s:string -> Tot (option (torigin * a_uri l))
 let hstring_to_curi l s = hstring_to_curi_ml l s
 
-val secstring_to_uri: #l:secLevel -> secString l -> Tot (option uri)
+val secstring_to_uri: #l:secLevel -> secString l -> Tot (option (u:uri{equalSubLevels (URI?.usl u) l}))
 let secstring_to_uri #l s =
   match (hstring_to_curi l (declassify s)) with
   | None -> None
   | Some (o, u) -> 
       let os = (SecretVal [o]) in
-      Some (URI os ({c_origin=u.c_origin;c_uname=classify u.c_uname os;c_pwd=classify u.c_pwd os;c_path=classifyPath u.c_path os;c_querystring=classifyQS u.c_querystring os;c_fragment=classify #l u.c_fragment os}))
-  
+      Some (URI os ({c_origin=u.c_origin;c_uname=classify u.c_uname os;c_pwd=classify u.c_pwd os;c_path=classifyPath u.c_path os;c_querystring=classifyQS u.c_querystring os;c_fragment=classify #l u.c_fragment os})) 
+      
 
 
 
 
-(* *** DOCUMENT & HEADER *** *)
+(* *** DOCUMENT *** *)
 val getDocFlag : a_document -> sandboxFlags -> Tot bool
 let getDocFlag d sbf =
   if (List.tryFind (fun w -> w = sbf) d.dsbox <> None) then true
@@ -817,15 +795,15 @@ let isSecureHost b u = hostMatch (TOrigin?.host (URI?.u u).c_origin) b.sts
 (* *** CONNECTION *** *)
 (* send request over one of the connections, and wait for response *)
 (* Section 5.6 of RFC 7230 - response on a connection is sent to the first outstanding/pending request on that connection *)
-val sendRequest : browser -> request -> bool -> (cowindow * cowindow * navType) -> Tot (result * request * browser)
+val sendRequest : browser -> request -> bool -> (cowindow * cowindow * navType) -> Tot (result * browser)
 let sendRequest b r cflag einfo =
   let c = {cori=getOrigin (firstElement (Request?.rf r).requrl); ccred=cflag} in
   let (sw, tw, ty) = einfo in
   match (List.tryFind (fun {connect=x;creq=rl} -> x.cori=c.cori && x.ccred = c.ccred) b.conn) with
-  | None -> (Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (Request?.rf r).requrl)) ^ "\n"), r, {b with conn=({connect=c;creq=[(r, sw, tw, ty)]}::b.conn)})
+  | None -> (Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (Request?.rf r).requrl)) ^ "\n"), {b with conn=({connect=c;creq=[(r, sw, tw, ty)]}::b.conn)})
   | Some {connect=oconn;creq=oreq} ->
 	let ncl = (({connect=oconn;creq=(List.append oreq [(r, sw, tw, ty)])})::(remove_elem_list b.conn ({connect=oconn;creq=oreq}))) in
-	(Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (Request?.rf r).requrl)) ^ "\n"), r, {b with conn=ncl})
+	(Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (Request?.rf r).requrl)) ^ "\n"), {b with conn=ncl})
 
 val getConnection : browser -> connection' -> Tot (option (connReq'))
 let getConnection b c = 
@@ -884,47 +862,22 @@ let getCookieFromString l s =
 val emptyHeaderVal : headervalue -> Tot bool
 let emptyHeaderVal h = (Headervalue?.hv h = emptyString (Headervalue?.hvs h))
 
-(* Header value from secString *)
-(* val mk_headervalue : #s:secLevel -> u:uri{eqSecLevel (SecretVal [(getOrigin u)]) s} -> secString s -> Tot (headervalue) *)
-(* let mk_headervalue #s u t = Headervalue s t *)
+val mk_headerval : #s:secLevel -> secString s -> Tot (headervalue)
+let mk_headerval #s t = Headervalue s t
 
-val mk_headerval : s:secLevel -> secString s -> Tot (headervalue)
-let mk_headerval s t = Headervalue s t
-
-(* Might not be required with the "publicly allowable" headers *)
-(* private val getOriginList : r:request -> Tot (ls:list torigin{containsOrigin [(getOrigin (firstElement (Request?.rf r).requrl))] ls}) *)
-(* let getOriginList r =  *)
-(*   match (Request?.rsl r) with *)
-(*   | PublicVal -> [(getOrigin (firstElement (Request?.rf r).requrl))] *)
-(*   | SecretVal so -> so *)
-
-(* private val getOriginListURI : r:request -> u':uri -> Tot (ls:list torigin{containsOrigin [(getOrigin (firstElement (Request?.rf r).requrl))] ls}) *)
-(* let getOriginListURI r u' =  *)
-(*   let s' = (match (URI?.usl u') with | PublicVal -> [] | SecretVal ol' -> ol') in *)
-(*   match (Request?.rsl r) with *)
-(*   | PublicVal -> (getOrigin (firstElement (Request?.rf r).requrl))::s' *)
-(*   | SecretVal so -> origin_append_lemma so s' (getOrigin (firstElement (Request?.rf r).requrl)); s'@so *)
-  
 (* Check if the request url is in the secLevel of the URI (or) should we add the origin to the secLevel *)
 (* {match (URI?.usl u) with | PublicVal -> true | SecretVal sec -> List.mem (getOrigin (firstElement (Request?.rf r).requrl)) sec} *)
-val getHeaderValueURI : r:request -> u:uri -> Tot (h:headervalue) (* {isHeaderValVisible h [(getOrigin (firstElement (Request?.rf r).requrl))]} *)
+val getHeaderValueURI : r:request -> u:uri -> Tot (h:headervalue) 
 let getHeaderValueURI r u = 
   let s = Request?.rsl r in
   let str = declassify (uri_to_hstring #(URI?.usl u) u) in
   Headervalue s (reclassifyVal #PublicVal str s) (* need to reclassify the header value for the URI that will receive it *)
 
-val getHeaderValueOrigin : r:request -> Tot (h:headervalue(* {isHeaderValVisible h [(getOrigin (firstElement (Request?.rf r).requrl))]} *))
+val getHeaderValueOrigin : r:request -> Tot (h:headervalue)
 let getHeaderValueOrigin r =
   let s = Request?.rsl r in
   if (TOrigin? (mk_origin (Request?.rf r).reqo)) then Headervalue s (classify #PublicVal (origin_to_string (Request?.rf r).reqo) s)
   else Headervalue s (emptyString s)
-
-(* private val getHeaderOrigin : header -> headerfield -> Tot (secLevel) *)
-(* let rec getHeaderOrigin h hf = *)
-(*   match h with *)
-(*   | [] -> PublicVal *)
-(*   | (f,v)::tl -> if (f=hf) then (Headervalue?.hvs v) *)
-(* 	       else (getHeaderOrigin tl hf) *)
 
 private val parseCookieHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (list (secString s))
 let parseCookieHeaderVal #s h = parseSerialCookie (Headervalue?.hv h)
@@ -932,20 +885,19 @@ let parseCookieHeaderVal #s h = parseSerialCookie (Headervalue?.hv h)
 private val parseHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (list (secString s))
 let parseHeaderVal #s h = parseSerial (Headervalue?.hv h)
 
+private val parseLocHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (secString s)
+let parseLocHeaderVal #s h = (Headervalue?.hv h)
+
 (* Check the ABNF to determine how many header field values are allowed for each header *)
 (* For multiple values, we assume that the list of origin is empty {List.find (fun (f,v) -> f = hf) h <> None} *) 
 (* Also, assume that there are no duplicate field-names (they are probably combined before parsing) *)
-private val parseHeader : u:uri -> h:header{isHeaderVisible h [(getOrigin u)]} -> headerfield -> Tot (option headervalue)
-let rec parseHeader u h hf = 
+private val parseHeader : h:header -> headerfield -> Tot (option headervalue)
+let rec parseHeader h hf = 
   match h with
   | [] -> None
   | (f,v)::tl -> if (f=hf) then (Some v)
-		  (* if (hf="Set-Cookie") then (parseCookieHeaderVal v) *)
-		  (* else if (hf = "Location") then (parseHeaderVal v) *)
-		  (* else (parseHeaderVal v) *)
-		  (* ) *)
-	       else (parseHeader u tl hf)
-
+	       else (parseHeader tl hf)
+	       
 (* get cookie header from list string*)
 private val getCookieFromHeaderList : #s:secLevel -> list (secString s) -> Tot (list (cookieHeader s))
 let rec getCookieFromHeaderList #s ls =
@@ -972,15 +924,25 @@ let rec getAllHeadersNotIn #s h ls =
   | (n,_)::tl -> if (List.tryFind (fun x -> eqString x n) ls = None) then n::(getAllHeadersNotIn tl ls)
 	       else getAllHeadersNotIn tl ls
 
+val reclassifyForbiddenLemma : h:header{checkHeaderSecLevel h} -> u:uri -> Lemma (requires (notForbiddenHeaderfieldInReqHeader h)) 
+			       (ensures (notForbiddenHeaderfieldInReqHeader (reclassifySchemeHeader h u))) [SMTPat (reclassifySchemeHeader h u)]
+let rec reclassifyForbiddenLemma h u = 
+  match h with 
+  | [] -> ()
+  | (f,v)::tl -> reclassifyForbiddenLemma tl u
+
+(* make the scheme of the request https *)
+val makeRequestHTTPS : r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> 
+		       Tot (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) 
+let makeRequestHTTPS r =
+  let req = Request?.rf r in
+  let u = setURIScheme (firstElement req.requrl) "https" in
+  let h = reclassifySchemeHeader req.reqhead u in 
+  Request (URI?.usl u) ({req with requrl=[u];reqhead=h;reqbody=reclassifyVal req.reqbody (URI?.usl u)})
+
 (* convert method to string *)
 private val toStringMethod : reqMethod -> Tot string
 let toStringMethod m = m
-
-(* CORS safelisted request header *)
-val isCORSSafeReqHeader : headerfield -> Tot bool
-let isCORSSafeReqHeader h =
-  (h="Accept" || h="Accept-Language" || h="Content-Language" || h="Content-Type" || h="DPR" || h="Downlink" || h="Save-Data" || h="Viewport-Width" || h="Width")
-
 
 
 
@@ -995,7 +957,7 @@ private val uriSecLevel : respuri -> GTot bool
 let uriSecLevel r = 
   match r with
   | Failure -> true
-  | URL u -> match (URI?.usl u) with | PublicVal -> true | SecretVal [o] -> true | _ -> false
+  | URL u -> validSingleSecLevel (URI?.usl u) 
 
 // RFC 7231 for details of HTTP semantics
 // Resp_code 3XX indicates that it is a redirection
@@ -1016,6 +978,7 @@ type actResponse' (s:secLevel) = {
   respCSP:csp_policy;
   respCORS:list headerfield;
   resploc:(option (r:respuri{uriSecLevel r}));
+  respRedSec:secLevel;
 }
 
 val isRedirectResponse : #s:secLevel -> actResponse' s -> Tot bool
@@ -1024,38 +987,30 @@ let isRedirectResponse #s resp =
   if (resp.respcode >= 300 && resp.respcode <= 399) then true
   else false
 
-(* The location header in response should be in the index of response *)
-private val isValidLocationHeaderVal : headervalue -> GTot bool
-let isValidLocationHeaderVal hv = 
-  match parseHeaderVal #(Headervalue?.hvs hv) hv with
-  | [] -> false (* location header present without any value? *)
-  | h::_ -> (secstring_to_uri h <> None) (* check for origin in conversion - ExtFunctionsImpl -- should we add it here? *)
-
-private val isValidLocationHeader : header -> GTot bool
-let rec isValidLocationHeader h = 
-  match h with
-  | [] -> true
-  | (f,v)::tl -> if (f="Location") then isValidLocationHeaderVal v
-	       else (isValidLocationHeader tl)
-
 private val isValidHeader : s:secLevel -> header -> GTot bool
 let isValidHeader s h =
   match s with 
   | PublicVal -> (List.for_all (fun (f,v) -> (Headervalue?.hvs v) = PublicVal) h)  
-  | SecretVal sec -> isHeaderVisible h sec && isValidLocationHeader h
+  | SecretVal sec -> isHeaderVisible h sec 
 
 val isValidResponse : #s:secLevel -> actResponse' s -> GTot bool
-let isValidResponse #s r = isValidHeader s r.resphead
-  (* match s with  *)
-  (* | PublicVal -> true  *)
-  (* | SecretVal sec -> isHeaderVisible r.resphead sec && isValidLocationHeader r.resphead  *)
-  (* (List.for_all (fun (h,v) -> isHeaderValVisible v sec) r.resphead)  *) 
-  (* Check the number of origins in the response - redirect should have at least 2 for the redirect-loc and the browser; normal response should have just 1 *)
-  (* (if isRedirectResponse r then List.length sec > 1 else List.length sec <= 1) &&  *)
-  (* Check if the header values are visible to at least one of the origins in the list *)
+let isValidResponse #s r = isValidHeader s r.resphead 
 	      
 type actResponse =
 | ActResponse : arl:secLevel -> ar:actResponse' arl{isValidResponse ar} -> actResponse
+
+(* Use this function to check if the secLevel of the redirect uri is what was expected by the response server *)
+private val checkRespSecLevel : resp:(actResponse){(ActResponse?.ar resp).resploc <> None /\ (ActResponse?.ar resp).resploc <> Some Failure} -> GTot bool
+let checkRespSecLevel resp =
+  match (ActResponse?.ar resp).resploc with
+  | Some (URL u) -> equalSubLevels (URI?.usl u) (ActResponse?.ar resp).respRedSec
+
+private val checkLocationURISecLevel : resp:actResponse -> GTot (bool)
+let checkLocationURISecLevel resp =
+  let (hl) = parseHeader (ActResponse?.ar resp).resphead "Location" in
+  match hl with
+  | None -> true
+  | Some hv -> Headervalue?.hvs hv = (ActResponse?.ar resp).respRedSec
 
 (* Refer to 4.4. URL parsing of url.spec.whatwg.org *)
 (* TODO - Do parsing of serialized value with base value as first element in u *)
@@ -1063,17 +1018,14 @@ private val getLocURL : #s:secLevel -> secString s -> list uri -> Tot (option (r
 let getLocURL #s l u = match secstring_to_uri l with | None -> Some Failure | Some v -> Some (URL v)
 
 (* Check if the location header's secLevel is included in the response's secLevel *)
-val getLocationURI : u:uri -> resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [(getOrigin u)]} -> Tot (option (r:respuri{uriSecLevel r}))
-let getLocationURI u resp =
-  let (hl) = parseHeader u (ActResponse?.ar resp).resphead "Location" in
+val getLocationURI : resp:actResponse -> Tot (option (r:respuri{uriSecLevel r}))
+let getLocationURI resp =
+  let (hl) = parseHeader (ActResponse?.ar resp).resphead "Location" in
   match hl with
   | None -> None 
-  | Some hv -> (
-	 let ho = Headervalue?.hvs hv in
-	 let hloc = parseHeaderVal #(ho) hv in
-	 match hloc with
-	 | [] -> None (* TODO - when location header is not present, should we set it to none? *)
-	 | h::_ -> (getLocURL h ((ActResponse?.ar resp).respurl)))
+  | Some hv -> match parseHeaderVal #(Headervalue?.hvs hv) hv with
+	      | [] -> None (* TODO - when location header is not present, should we set it to none? *)
+	      | h::_ -> (getLocURL h ((ActResponse?.ar resp).respurl))
 
 val isRedResponse : #s:secLevel -> resp:(actResponse' s){isRedirectResponse resp} -> Tot bool
 let isRedResponse #s resp =
@@ -1082,53 +1034,33 @@ let isRedResponse #s resp =
 
 (* returns whether the redirect response (307/308) is valid or not -- 
    assume that all redirect responses with code 307/308 should have public requests *)
-private val isValidRedirectResp : req:request -> 
-				  resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [(getOrigin (firstElement (Request?.rf req).requrl))]} -> 
-				  GTot bool
+private val isValidRedirectResp : req:request -> resp:actResponse -> GTot bool
 let isValidRedirectResp req resp = 
   if isRedirectResponse (ActResponse?.ar resp) then 
-    (match getLocationURI (firstElement (Request?.rf req).requrl) resp with
-    | None -> true 
-    | Some Failure -> false
-    | Some (URL u) -> (canReclHeader (Request?.rf req).reqhead (URI?.usl u) secList) &&
-		     (if isRedResponse (ActResponse?.ar resp) then canReclassify (Request?.rf req).reqbody (URI?.usl u) secList else true))
-  else true
+    (checkLocationURISecLevel resp) &&
+    (canReclHeader (redirectHeaders (Request?.rf req).reqhead) (ActResponse?.ar resp).respRedSec) &&
+    (if isRedResponse (ActResponse?.ar resp) then canReclassify (Request?.rf req).reqbody (ActResponse?.ar resp).respRedSec else true)
+  else (ActResponse?.ar resp).resploc = None (* if it is not a redirect response, the resploc field should not be populated *)
 
-val isValidLocResp : req:request -> resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [(getOrigin (firstElement (Request?.rf req).requrl))]} -> GTot bool
-let isValidLocResp req resp = 
+private val isValidLocResp : resp:actResponse -> GTot bool
+let isValidLocResp resp = 
   match (ActResponse?.ar resp).resploc with 
   | None -> true
-  | Some r -> (uriSecLevel r) && (getLocationURI (firstElement (Request?.rf req).requrl) resp = Some r)
-
+  | Some Failure -> true
+  | Some (URL u) -> (uriSecLevel (URL u)) && (checkRespSecLevel resp) && (getLocationURI resp = Some (URL u))
+		   
 (* A response to request is valid ---
-   Check if the response's seclevel is a subset of the request's seclevel and
-   Check if the response's header is visible to the request's level and if the location header is valid and
    Check if the redirect response is valid and can be reclassified appropriately and
    Check if the resploc of response is valid (populated by browser using the location header)
 *)
 val requestResponseValid : request -> actResponse -> GTot bool
-let requestResponseValid req resp = 
-    equalSubLevels (Request?.rsl req) (ActResponse?.arl resp) && 
-    (isValidHeader (Request?.rsl req) (ActResponse?.ar resp).resphead) && 
-    (isValidRedirectResp req resp) && (isValidLocResp req resp)
+let requestResponseValid req resp = (isValidRedirectResp req resp) && (isValidLocResp resp)
 
-(* Shows that a valid response will have a valid header visible to the request *)
-val reqRespHSLemma : req:request -> resp:actResponse -> Lemma (requires (requestResponseValid req resp)) 
-		(ensures ((isValidHeader (URI?.usl (firstElement (Request?.rf req).requrl)) (ActResponse?.ar resp).resphead))) [SMTPat (requestResponseValid req resp)]
-let reqRespHSLemma req resp = match (Request?.rsl req) with | PublicVal -> ()  | SecretVal s -> ()
+private val isValidRedReclURI : req:request -> resp:actResponse -> GTot bool
+let isValidRedReclURI req resp = (canReclHeader (redirectHeaders (Request?.rf req).reqhead) (ActResponse?.ar resp).respRedSec)
 
-(* Shows that a valid response's header is visible to the request *)
-val reqRespHeaderCor : req:request -> resp:actResponse -> Lemma (requires (requestResponseValid req resp)) 
-		(ensures (isHeaderVisible (ActResponse?.ar resp).resphead [getOrigin (firstElement (Request?.rf req).requrl)])) [SMTPat (requestResponseValid req resp)]
-let reqRespHeaderCor req resp = reqRespHSLemma req resp  
-
-val isValidRedReclURI : req:request -> resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [getOrigin (firstElement (Request?.rf req).requrl)]} -> GTot bool
-let isValidRedReclURI req resp = 
-  match getLocationURI (firstElement (Request?.rf req).requrl) resp with 
-  | None -> true | Some Failure -> true
-  | Some (URL u) -> (canReclHeader (Request?.rf req).reqhead (URI?.usl u) secList)
-
-val validRedLemma : req:request -> resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [getOrigin (firstElement (Request?.rf req).requrl)]} -> 
+(* If a response to request is valid then headers can be reclassified *)
+val validRedLemma : req:request -> resp:actResponse -> 
 		    Lemma (requires (requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp)))
 			  (ensures (isValidRedReclURI req resp))
 		    [SMTPat (requestResponseValid req resp)]
@@ -1137,13 +1069,15 @@ let validRedLemma req resp = ()
 val reqRespLocLemma : req:request -> resp:actResponse -> 
 		      Lemma (requires (requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp))) 
 			    (ensures (match (ActResponse?.ar resp).resploc with | None -> true | Some Failure -> true 
-				     | Some (URL u) -> (canReclHeader (Request?.rf req).reqhead (URI?.usl u) secList)))
+				     | Some (URL u) -> (canReclHeader (redirectHeaders (Request?.rf req).reqhead) (URI?.usl u))))
 		      [SMTPat (requestResponseValid req resp)]
 let reqRespLocLemma req resp = ()
 
-(* Is a forbidden response header name *)
-val isForbiddenRespHeader : headerfield -> Tot bool
-let isForbiddenRespHeader n = (n="Set-Cookie" || n="Set-Cookie2")
+val validRedReqLemma : #s:secLevel -> req:(requestFormat s){not (emptyList req.requrl)} -> 
+		       Lemma (requires (let u = (firstElement req.requrl) in (URI?.usl u) = s /\
+				       (uriSecLevel (URL u)) /\ (match (URI?.usl u) with | SecretVal [o] -> (isHeaderVisible req.reqhead [o]) | _ -> true)))
+		       (ensures (isValidRequest req))
+let validRedReqLemma #s req = ()
 
 (* safelisted response header names *)
 val isSafelistHeader : hf:headerfield -> Tot (b:bool{b = true ==> hf <> "Location"})
@@ -1174,11 +1108,6 @@ val filteredPublicLemma : h:header -> Lemma (requires (List.for_all (fun (f,v) -
 			  (ensures (List.for_all (fun (f,v) -> (Headervalue?.hvs v) = PublicVal) (getFilteredHeader h))) [SMTPat (getFilteredHeader h)]
 let rec filteredPublicLemma h = match h with | [] -> () | hd::tl -> filteredPublicLemma tl
 
-val filteredLocLemma : h:header -> Lemma (requires (True)) (ensures ((isValidLocationHeader h) ==> isValidLocationHeader (getFilteredHeader h))) 
-		       [SMTPat (getFilteredHeader h)]
-let rec filteredLocLemma h = 
-  match h with | [] -> () | hd::tl -> filteredLocLemma tl
-
 (* CORS-safelisted response-header name, given a header, CORS-exposed header-name list(ch) *)
 val getSafelistedHeader : h:header -> list headerfield -> Tot (fh:header{forall x. List.mem x fh ==> List.mem x h})
 let rec getSafelistedHeader h ch =
@@ -1200,12 +1129,6 @@ let rec headerListValue h hf =
   | [] -> None
   | (f,v)::tl -> if f = hf then Some v else headerListValue tl hf
 
-val validLemma : h:header -> Lemma (requires (emptyList h)) (ensures (isValidLocationHeader h /\ (headerListValue h "Location") = None)) 
-let rec validLemma h = 
-  match h with
-  | [] -> ()
-  | hd::tl -> validLemma tl
-
 val validSLemma : h:header -> l:list headerfield -> Lemma (requires (emptyList (getSafelistedHeader h l))) 
 		  (ensures (headerListValue (getSafelistedHeader h l) "Location" = None)) [SMTPat (getSafelistedHeader h l)]
 let rec validSLemma h l = 
@@ -1213,34 +1136,12 @@ let rec validSLemma h l =
   | [] -> ()
   | hd::tl -> validSLemma tl l
 
-val safeLocNoneLemma : h:header -> l:list headerfield -> Lemma (requires (headerListValue h "Location" = None)) 
-			  (ensures (isValidLocationHeader (getSafelistedHeader h l))) [SMTPat (getSafelistedHeader h l)]
-let rec safeLocNoneLemma h l = 
-  match h with
-  | [] -> validLemma h
-  | (f,v)::tl -> safeLocNoneLemma tl l
-
-val safeLocNoneListLemma : h:header -> l:list headerfield -> Lemma (requires (headerListValue (getSafelistedHeader h l) "Location" = None)) 
-			  (ensures (isValidLocationHeader (getSafelistedHeader h l))) [SMTPat (getSafelistedHeader h l)]
-let rec safeLocNoneListLemma h l = 
-  match h with
-  | [] -> validLemma h
-  | (f,v)::tl -> safeLocNoneListLemma tl l
-
 val subLocLemma : h:header -> l:list headerfield -> Lemma (requires (not (List.mem "Location" l))) 
 			  (ensures (headerListValue (getSafelistedHeader h l) "Location" = None)) [SMTPat (getSafelistedHeader h l)]
 let rec subLocLemma h l = 
   match h with
   | [] -> ()
   | (f,v)::tl -> subLocLemma tl l 
-
-val safeLocLemma : h:header -> l:list headerfield -> Lemma (requires (headerListValue h "Location" <> None)) 
-			  (ensures ((isValidLocationHeader h) ==> isValidLocationHeader (getSafelistedHeader h l))) [SMTPat (getSafelistedHeader h l)]
-let rec safeLocLemma h l = 
-  match h with
-  | [] -> ()
-  | (f,v)::tl -> if (f = "Location") then ()
-	       else safeLocLemma tl l
 
 val safePublicLemma : h:header -> l:list headerfield -> Lemma (requires (List.for_all (fun (f,v) -> (Headervalue?.hvs v) = PublicVal) h)) 
 			  (ensures (List.for_all (fun (f,v) -> (Headervalue?.hvs v) = PublicVal) (getSafelistedHeader h l))) [SMTPat (getSafelistedHeader h l)]
@@ -1318,7 +1219,7 @@ let validReqResp req res =
   | _ -> true
   
 type resource =
-| RequestResource : request -> resource (*For urls, use default_request using the current window and url*)
+| RequestResource : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resource (*For urls, use default_request using the current window and url*)
 | ResponseResource : req:request -> resp:response{validReqResp req resp} -> resource
 
 
@@ -1326,17 +1227,17 @@ type resource =
 
 
 (* *** Response-header parsing *** *)
-val getCSPDirectives : req:request -> resp:actResponse{requestResponseValid req resp} -> Tot csp_policy
-let getCSPDirectives req resp =
-  let l = (parseHeader (firstElement (Request?.rf req).requrl) (ActResponse?.ar resp).resphead "Content-Security-Policy") in
+val getCSPDirectives : resp:actResponse -> Tot csp_policy
+let getCSPDirectives resp =
+  let l = (parseHeader (ActResponse?.ar resp).resphead "Content-Security-Policy") in
   (match l with | None -> [] | Some v -> getCSPDirectivesList #(Headervalue?.hvs v) (parseHeaderVal v))
   
 (* Section 5.9 - CORS check *)
 (* missing check for "null" -- not defined in the spec *)
-val corsCheck : req:request -> resp:actResponse{requestResponseValid req resp} -> Tot bool
+val corsCheck : req:request -> resp:actResponse -> Tot bool
 let corsCheck req resp =
   let nreq = (Request?.rf req) in
-  let l = parseHeader (firstElement nreq.requrl) (ActResponse?.ar resp).resphead "Access-Control-Allow-Origin" in
+  let l = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Origin" in
   match l with 
   | None -> false (* origin is null *)
   | Some v -> 
@@ -1345,7 +1246,7 @@ let corsCheck req resp =
       else if (singleValue hvorigin && (classify #PublicVal (origin_to_string nreq.reqo) (Headervalue?.hvs v) <> firstElement hvorigin)) then false
       else if (nreq.reqcredm <> "include") then true
       else (
-	let lc = parseHeader (firstElement nreq.requrl) (ActResponse?.ar resp).resphead "Access-Control-Allow-Credentials" in 
+	let lc = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Credentials" in 
 	match lc with 
 	| None -> false
 	| Some cv -> (
@@ -1353,11 +1254,11 @@ let corsCheck req resp =
 	    if (singleValue cred && firstElement cred = classify #PublicVal "true" (Headervalue?.hvs cv)) then true else false))
 
 (* Step 7 of Section 5.7 *)
-val corsOKResponse : req:request -> resp:actResponse{requestResponseValid req resp} -> Tot (option actResponse)
+val corsOKResponse : req:request -> resp:actResponse -> Tot (option actResponse)
 let corsOKResponse req resp =
   let nreq = (Request?.rf req) in
-  let lm = parseHeader (firstElement nreq.requrl) (ActResponse?.ar resp).resphead "Access-Control-Allow-Methods" in
-  let lh = parseHeader (firstElement nreq.requrl) (ActResponse?.ar resp).resphead "Access-Control-Allow-Headers" in
+  let lm = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Methods" in
+  let lh = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Headers" in
   match lm with
   | None ->  
       let hmeth = if (nreq.reqpreflight) then [(toStringMethod nreq.reqm)] else [] in
@@ -1423,9 +1324,9 @@ let rec getRefPolicyToken #s hp fs =
 	 else getRefPolicyToken t fs
 
 (* Referrer Policy --- 8.1. Parse a referrer policy from a Referrer-Policy header *)
-val parseRefPol : u:uri -> resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [(getOrigin u)]} -> Tot refPolicy
-let parseRefPol u resp =
-  let (hrpl) = parseHeader u (ActResponse?.ar resp).resphead "Referrer-Policy" in (* ABNF : 1#policy-token - assuming # to mean at least 1? *)
+val parseRefPol : actResponse -> Tot refPolicy
+let parseRefPol resp =
+  let (hrpl) = parseHeader (ActResponse?.ar resp).resphead "Referrer-Policy" in (* ABNF : 1#policy-token - assuming # to mean at least 1? *)
   match hrpl with
   | None -> RP_EmptyPolicy
   | Some hv -> 
@@ -1441,9 +1342,9 @@ let parseRefPol u resp =
       else if pol = "unsafe-url" then RP_UnsafeURL
       else RP_EmptyPolicy
 
-val getExposeHeaders : u:uri -> resp:actResponse{isHeaderVisible (ActResponse?.ar resp).resphead [(getOrigin u)]} -> Tot (list (headerfield))
-let getExposeHeaders u r = 
-    let s = parseHeader u (ActResponse?.ar r).resphead "Access-Control-Expose-Headers" in 
+val getExposeHeaders : actResponse -> Tot (list (headerfield))
+let getExposeHeaders r = 
+    let s = parseHeader (ActResponse?.ar r).resphead "Access-Control-Expose-Headers" in 
     match s with
     | None -> []
     | Some v -> declassify_list (parseHeaderVal #(Headervalue?.hvs v) v) 
@@ -1640,7 +1541,7 @@ let rec setCookieBrowser #s lc b u =
 val setCookie : browser -> req:request -> resp:actResponse{requestResponseValid req resp} -> Tot browser
 let setCookie b req resp =
   let u = (firstElement (Request?.rf req).requrl) in
-  let l = (parseHeader u (ActResponse?.ar resp).resphead "Set-Cookie") in  (* s is the list of string and o is the list of origin*)
+  let l = (parseHeader (ActResponse?.ar resp).resphead "Set-Cookie") in  (* s is the list of string and o is the list of origin*)
   match l with
   | None -> b
   | Some v -> let c = getCookieFromHeaderList (parseCookieHeaderVal #(Headervalue?.hvs v) v) in
@@ -1686,8 +1587,8 @@ let rec origin_match_expr_source_list r ls origU redir =
    redir is the redirection count
 *)
 private val uri_match_expr_source : uri -> dirValue -> torigin -> nat -> Tot bool
-let uri_match_expr_source r dv orig redir =
-  let ro = getOrigin r in
+let uri_match_expr_source u dv orig redir =
+  let ro = getOrigin u in
   match dv with
   | DV_Any -> if TOrigin?.protocol ro = "http" || TOrigin?.protocol ro = "https" || TOrigin?.protocol ro = TOrigin?.protocol orig then true else false
   | DV_Self -> if (orig = ro) || (TOrigin?.host orig = TOrigin?.host ro && (TOrigin?.protocol orig = "http" && TOrigin?.protocol ro = "https")) (* check for ports *) then true
@@ -1699,8 +1600,8 @@ let uri_match_expr_source r dv orig redir =
 		  else if (not (domainMatch o.op_host (TOrigin?.host ro))) then false
 		  (* else if  --- check for ports here *)
 		  else if (o.op_path <> [] && redir = 0) then
-		      (if (o.op_em = true && getPath r <> (mk_list_string #(URI?.usl r) o.op_path)) then false
-		      else if (not (pathMatch (getPath r) (mk_list_string #(URI?.usl r) o.op_path))) then false
+		      (if (o.op_em = true && getPath u <> (mk_list_string #(URI?.usl u) o.op_path)) then false
+		      else if (not (pathMatch (getPath u) (mk_list_string #(URI?.usl u) o.op_path))) then false
 		      else true)
 		  else true
   | _ -> false
@@ -1752,43 +1653,6 @@ let getWindow b cw tw = if isSameOriginWin cw tw then Some (cowin_to_win tw) els
 private val getHeaderVal : #s:secLevel -> hv:headervalue{(Headervalue?.hvs hv) = s} -> Tot (secString s)
 let getHeaderVal #s hv = (Headervalue?.hv hv)
 
-(* private val getReqHeaderValue : #s:secLevel -> browser -> cowindow -> r:request -> hv:headervalue{(Headervalue?.hvs hv) = s} -> Tot (secString s) *)
-(* let getReqHeaderValue #s b cw req hv = *)
-(*   let requrl = (firstElement (Request?.rf req).requrl) in *)
-(*   let reqo = (mk_origin (Request?.rf req).reqo) in *)
-(*   if (isHeaderValVisibleURI hv (CWindow?.cwloc cw)) && (\* The headervalue must be accessible by the window *\) *)
-(* 		 ((eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (URI?.usl requrl)) || *)
-(* 		 ((TOrigin? reqo) && (eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (SecretVal [reqo]))) || *)
-(* 		 (Request?.rsl req = PublicVal)) then getHeaderVal hv *)
-(*   else (emptyString s) *)
-
-(* private val getRequestURI : #s:secLevel -> browser -> cowindow -> r:request -> Tot (option (c_uri s)) *)
-(* let getRequestURI #s b cw req = *)
-(*   let requrl = (firstElement (Request?.rf req).requrl) in *)
-(*   let reqo = (mk_origin (Request?.rf req).reqo) in *)
-(*   if (URI?.usl requrl = s) && ((eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (URI?.usl requrl)) || *)
-(*      ((TOrigin? reqo) && (eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (SecretVal [reqo]))) || *)
-(*      (Request?.rsl req = PublicVal)) then (get_c_uri b cw requrl) *)
-(*   else None *)
-
-(* private val getRequestOrigin : browser -> cowindow -> request -> Tot origin *)
-(* let getRequestOrigin b cw req = *)
-(*   let requrl = (firstElement (Request?.rf req).requrl) in *)
-(*   let reqo = (mk_origin (Request?.rf req).reqo) in *)
-(*   if ((eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (URI?.usl requrl)) || *)
-(*      ((TOrigin? reqo) && (eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (SecretVal [reqo]))) || *)
-(*      (Request?.rsl req = PublicVal)) then reqo *)
-(*   else blank_origin *)
-
-(* private val getRequestBody : #s:secLevel -> browser -> cowindow -> r:request{Request?.rsl r = s} -> Tot (secString s) *)
-(* let getRequestBody #s b cw req = *)
-(*   let requrl = (firstElement (Request?.rf req).requrl) in *)
-(*   let reqo = (mk_origin (Request?.rf req).reqo) in *)
-(*   if ((eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (URI?.usl requrl)) || *)
-(*      ((TOrigin? reqo) && (eqSecLevel (URI?.usl (CWindow?.cwloc cw)) (SecretVal [reqo]))) || *)
-(*      (Request?.rsl req = PublicVal)) then (Request?.rf req).reqbody *)
-(*   else emptyString s *)
-
 (* Server functions *)
 private val parseReqHeader : h:header -> hf:headerfield -> Tot (option headervalue)
 let rec parseReqHeader h hf = 
@@ -1825,5 +1689,5 @@ let s_getReqURISecLevel req = (URI?.usl (firstElement (Request?.rf req).requrl))
 val s_getRequestBody : #s:secLevel -> req:request{Request?.rsl req = s} -> Tot (secString s)
 let s_getRequestBody #s req = (Request?.rf req).reqbody
 
-val s_secstring_uri: #l:secLevel -> secString l -> Tot (option (origin * a_uri l))
+val s_secstring_uri: #l:secLevel -> secString l -> Tot (option (torigin * a_uri l))
 let s_secstring_uri #l s = (hstring_to_curi_ml l (declassify s)) 

@@ -232,7 +232,7 @@ let processNavigateResponseSub b req oresp ir sw tw ty =
 		  | None -> join_flags (get_sandbox_from_CSP (ActResponse?.ar oresp).respCSP) (CWindow?.cwsbox tw)
 		  | Some p -> join_flags (join_flags (get_sandbox_from_CSP (ActResponse?.ar oresp).respCSP) (CWindow?.cwsbox tw)) (getSBox (CWindow?.cwdoc p))) in
       let rurl = (firstElement (Request?.rf req).requrl) in (* Original fetch url is the document's url *)
-      let rP = (parseRefPol rurl oresp) in
+      let rP = (parseRefPol oresp) in
       let newdoc = mk_adoc ({dloc=rurl; dori=getAOrigin rurl; dref=referrer; dHTTPS=(ActResponse?.ar oresp).respHTTPS; drefPol=rP; dCSP=(ActResponse?.ar oresp).respCSP; dsbox=(flags)}) in
       let nw = add_doc_hist (save_cur_doc_win tw) newdoc in
       (Success "Response processed", Some nw, ({b with windows=(replacewin b.windows tw nw)})) (* Add to STS state here?*)
@@ -253,7 +253,8 @@ let processNavigateResponse b req resp ir sw tw ty =
 	processNavigateResponseSub b req oresp ir sw tw ty
 
 (* 7.8.1 -- Process a navigate fetch *)
-private val processNavigateFetch : browser -> request -> cowindow -> cowindow -> navType -> Tot (result * option request * option cowindow * browser)
+private val processNavigateFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> cowindow -> cowindow -> navType -> 
+				   Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let processNavigateFetch b req sw tw ty =
   let r = (Request?.rf req) in 
   let ruri = (firstElement r.requrl) in 
@@ -274,7 +275,8 @@ let processNavigateFetch b req sw tw ty =
 
 (* 7.8.1 -- Navigate a browsing context *)
 (* TODO - update the windows details to the request url *)
-val navigateWindow: browser -> cowindow -> cowindow -> resource -> navType -> Tot (result * option request * option cowindow * browser)
+val navigateWindow: browser -> cowindow -> cowindow -> resource -> navType -> 
+		    Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let navigateWindow b sw tw r nType =
   if (allowed_navigation sw tw = false) then ((Error "navigation not allowed"), None, None, b)
   else 
@@ -283,8 +285,9 @@ let navigateWindow b sw tw r nType =
     | ResponseResource req resp -> (match (processNavigateResponse b req resp false sw tw nType) with | (res, w, nb) -> (res, None, w, nb))
       
 (* 7.8.1 -- Process a navigate fetch's response *)
-private val processNavigateFetchRespSub : browser -> req:request -> resp:actResponse{requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp)} -> 
-					  cowindow -> cowindow -> navType -> Tot (result * option request * option cowindow * browser)
+private val processNavigateFetchRespSub : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> 
+					  resp:actResponse{requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp)} -> cowindow -> cowindow -> navType -> 
+					  Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let processNavigateFetchRespSub b req resp sw tw ty =
   match (ActResponse?.ar resp).resploc with
   | Some (Failure) -> let (re, nr, sb) = httpRedirectFetch b req resp false (sw, tw, ty) in (* processNavigateFetchResp after getting back new response *)
@@ -301,8 +304,9 @@ let processNavigateFetchRespSub b req resp sw tw ty =
 		   else (Success "not navigation resource", None, Some tw, b) (*process resource appropriately*)
   | None -> (match (processNavigateResponse b req (TotResponse resp) true sw tw ty) with | (res, w, nb) -> (res, None, w, nb))
 	
-private val processNavigateFetchResp : browser -> req:request -> r:response{validReqResp req r /\ (not (NetworkError? r) /\ not (RespSuccess? r))} ->
-				       cowindow -> cowindow -> navType -> Tot (result * option request * option cowindow * browser)
+private val processNavigateFetchResp : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> 
+				       r:response{validReqResp req r /\ (not (NetworkError? r) /\ not (RespSuccess? r))} ->cowindow -> cowindow -> navType -> 
+				       Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let processNavigateFetchResp b req resp sw tw ty =
   match resp with
   | TotResponse tr -> 
@@ -328,7 +332,8 @@ let processNavigateFetchResp b req resp sw tw ty =
 (*     processNavigateFetchRespSub b req resp sw tw ty *)
 (*   else (processNavigateResponse b req (TotResponse resp) true sw tw ty)  *)
 
-val processResponse : browser -> connection -> r:request -> resp:actResponse{requestResponseValid r resp} -> Tot (result * option request * option cowindow * browser)
+val processResponse : browser -> connection -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> resp:actResponse{requestResponseValid r resp} -> 
+		      Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let processResponse b c r resp =
   let (rr, nb, ei) = processNetworkResponse b c r resp in
   match ei with
@@ -339,9 +344,9 @@ let processResponse b c r resp =
   | Some (req, sw, tw, ty) -> match rr with
 			| RespSuccess s -> (Success s, None, Some tw, nb)
 			| NetworkError e -> (Error e, None, None, nb) (* Error - document's origin is set to an opaque origin *)
-			| oresp -> if (r = req) then (* The request is not the same as req is changed quite a bit before being queued up *)
-				     processNavigateFetchResp nb req oresp sw tw ty 
-				  else (Error "Incorrect request accessed", None, None, nb)
+			| oresp -> (* if (r = req) then *) (* The request is not the same as req is changed quite a bit before being queued up *)
+				     processNavigateFetchResp nb r oresp sw tw ty 
+				  (* else (Error "Incorrect request accessed", None, None, nb) *)
 
 (* val create_frame_window : rid:wid -> cw:window -> sb:list sandboxFlags -> Tot iframe *)
 (* let create_frame_window rid cw sb = *)
@@ -401,7 +406,8 @@ let get_window_from_name b w n =
    window.opener should be the current window for windows opened using scripts
    TODO - "replace" replaces the current window with new window and places current in history - session history is not yet included
 *)
-val open_window: b:browser -> cw:cowindow -> h:string -> name:string -> Tot (result * (option request) * cowindow * browser)
+val open_window: b:browser -> cw:cowindow -> h:string -> name:string -> 
+		 Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * cowindow * browser)
 let open_window b cw h name =
   let wname = if name = "" then "_blank" else name in
   let twres = (get_window_from_name b cw wname) in 
@@ -456,7 +462,7 @@ let back_window b cw tw =
 
 (* Set window location *)
 val set_win_location : browser -> c:cowindow -> f:cowindow -> u:uri{match (URI?.usl u) with | SecretVal [o] -> true | _ -> false} -> 
-		       Tot (result * option request * option cowindow * browser)
+		       Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let set_win_location b c f u = navigateWindow b c f (RequestResource (default_req_uri f u)) "other"
 
 (* 4.10.22.3 Form submission algorithm - form data is serialized string fd *)
@@ -464,7 +470,7 @@ let set_win_location b c f u = navigateWindow b c f (RequestResource (default_re
 (* For similar schemes, the spec proposes using the suitable descriptions *)
 val form_submission : #l:secLevel{match l with | SecretVal [o] -> true | _ -> false} -> browser -> window -> string -> m:reqMethod{m="GET" \/ m="POST"} -> 
 		      u:uri{(URI?.usl u) = l /\ (match (URI?.usl u) with | SecretVal [o] -> true | _ -> false)} -> fd:list (secString l * secString l) -> 
-		      Tot (result * option request * option cowindow * browser)
+		      Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let form_submission #l b sw tn m u fd =
   if (List.find (fun w -> w = SB_Forms) sw.wdoc.dsbox <> None) then ((Error ""), None, None, b)
   else 
@@ -492,7 +498,9 @@ let form_submission #l b sw tn m u fd =
 (* xhr.spec.whatwg.org - open and send only *)
 (* require the request and response to have similar secLevels; so return the request that contains this information *)
 val xmlHttpRequest : browser -> window -> u:uri -> reqMethod -> string -> 
-		     h:header{(match (URI?.usl u) with | SecretVal [o] -> isHeaderVisible h [o] | _ -> false)} -> Tot (result * request * option window * browser)
+		     h:header{checkHeaderSecLevel h /\ notForbiddenHeaderfieldInReqHeader (h) /\ 
+						     (match (URI?.usl u) with | SecretVal [o] -> isHeaderVisible h [o] | _ -> false)} -> 
+		     Tot (result * (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option window * browser)
 let xmlHttpRequest b w u m rb h =
 	let body = (if (m="GET" || m="HEAD") then "" else rb) in
 	let urisl = (URI?.usl u) in
