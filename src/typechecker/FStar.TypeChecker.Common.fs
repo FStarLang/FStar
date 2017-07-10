@@ -193,8 +193,8 @@ type insert_id_info_ops = {
     promote:(typ -> typ) -> unit;
 }
 let insert_id_info =
-    let enabled = Util.mk_ref false in
-    let id_info_buffer : ref<(list<(either<bv,fv>*typ*Range.range)>)> = Util.mk_ref [] in
+    let enabled = BU.mk_ref false in
+    let id_info_buffer : ref<(list<(either<bv,fv>*typ*Range.range)>)> = BU.mk_ref [] in
     let enable b = enabled := FStar.Options.ide() && b in
     let bv x t = if !enabled then id_info_buffer := (Inl x, t, range_of_bv x)::!id_info_buffer in
     let fv x t = if !enabled then id_info_buffer := (Inr x, t, range_of_fv x)::!id_info_buffer in

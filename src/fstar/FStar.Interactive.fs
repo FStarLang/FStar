@@ -950,6 +950,7 @@ let interactive_printer =
     printer_prwarning = write_message "warning";
     printer_prerror = write_message "error" }
 
+open FStar.TypeChecker.Common
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
   write_hello ();

@@ -2058,7 +2058,8 @@ and tc_value:
                         (uu___99_3838.FStar_Syntax_Syntax.index);
                       FStar_Syntax_Syntax.sort = t
                     }) rng in
-               (FStar_TypeChecker_Common.insert_bv x1 t;
+               (FStar_TypeChecker_Common.insert_id_info.FStar_TypeChecker_Common.bv
+                  x1 t;
                 (let e1 = FStar_Syntax_Syntax.bv_to_name x1 in
                  let uu____3841 =
                    FStar_TypeChecker_Util.maybe_instantiate env1 e1 t in
@@ -2135,7 +2136,8 @@ and tc_value:
                              FStar_Syntax_Unionfind.univ_change u'' u
                          | uu____3955 -> failwith "Impossible") us' us1;
                 (let fv' = FStar_Syntax_Syntax.set_range_of_fv fv range in
-                 FStar_TypeChecker_Common.insert_fv fv' t;
+                 FStar_TypeChecker_Common.insert_id_info.FStar_TypeChecker_Common.fv
+                   fv' t;
                  (let e1 =
                     let uu____3959 =
                       FStar_Syntax_Syntax.mk
@@ -2171,7 +2173,8 @@ and tc_value:
                      uu____3980 uu____3982 uu____3983 uu____3984 uu____3985
                  else ());
                 (let fv' = FStar_Syntax_Syntax.set_range_of_fv fv range in
-                 FStar_TypeChecker_Common.insert_fv fv' t;
+                 FStar_TypeChecker_Common.insert_id_info.FStar_TypeChecker_Common.fv
+                   fv' t;
                  (let e1 =
                     let uu____3990 =
                       FStar_Syntax_Syntax.mk

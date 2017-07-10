@@ -1273,8 +1273,7 @@ let run_lookup st symbol pos_opt requested_info =
             let typ_str =
               if FStar_List.mem "type" requested_info
               then
-                let uu____3019 =
-                  FStar_TypeChecker_Normalize.term_to_string tcenv typ in
+                let uu____3019 = FStar_Syntax_Print.term_to_string typ in
                 FStar_Pervasives_Native.Some uu____3019
               else FStar_Pervasives_Native.None in
             let doc_str =
@@ -1907,25 +1906,27 @@ let interactive_mode': Prims.string -> Prims.unit =
                   repl_ts = ts;
                   repl_stdin = uu____4624
                 } in
-              let uu____4625 =
-                (FStar_Options.record_hints ()) ||
-                  (FStar_Options.use_hints ()) in
-              if uu____4625
-              then
-                let uu____4626 =
-                  let uu____4627 = FStar_Options.file_list () in
-                  FStar_List.hd uu____4627 in
-                FStar_SMTEncoding_Solver.with_hints_db uu____4626
-                  (fun uu____4630  -> go init_st)
-              else go init_st))
+              (FStar_TypeChecker_Common.insert_id_info.FStar_TypeChecker_Common.enable
+                 true;
+               (let uu____4626 =
+                  (FStar_Options.record_hints ()) ||
+                    (FStar_Options.use_hints ()) in
+                if uu____4626
+                then
+                  let uu____4627 =
+                    let uu____4628 = FStar_Options.file_list () in
+                    FStar_List.hd uu____4628 in
+                  FStar_SMTEncoding_Solver.with_hints_db uu____4627
+                    (fun uu____4631  -> go init_st)
+                else go init_st))))
 let interactive_mode: Prims.string -> Prims.unit =
   fun filename  ->
     FStar_Util.set_printer interactive_printer;
     FStar_Errors.set_handler interactive_error_handler;
-    (let uu____4639 =
-       let uu____4640 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____4640 in
-     if uu____4639
+    (let uu____4640 =
+       let uu____4641 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____4641 in
+     if uu____4640
      then
        FStar_Util.print_warning
          "code-generation is not supported in interactive mode, ignoring the codegen flag"
