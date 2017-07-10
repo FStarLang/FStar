@@ -1,8 +1,15 @@
 (* to be used with Ex12.MAC.fst and Ex12a.ACLs.fst *)
 
 module Ex12a.Cap (* capabilities *) 
-open FStar.ST
-open FStar.All
+
+open FStar.HyperStack.ST
+open FStar.HyperStack.All
+open FStar.Seq
+open FStar.Monotonic.Seq
+open FStar.HyperHeap
+open FStar.HyperStack
+open FStar.Monotonic.RRef
+
 open Platform.Bytes
 
 

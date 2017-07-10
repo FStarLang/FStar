@@ -73,7 +73,7 @@ let rec copy_to_bigint' output b idx len ctr =
   if U32.eq len ctr then ()
   else begin
     let bi = index b (idx+|ctr) in
-    let cast = Int.Cast.uint128_to_uint64 bi in
+    let cast = U128.uint128_to_uint64 bi in
     cast_lemma_1 bi;
     cut (v cast = vv bi /\ True); 
     upd output (idx+|ctr) cast; 
