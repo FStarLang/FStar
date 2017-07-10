@@ -182,15 +182,35 @@ private let path' (from: typ) (to: typ) : Tot Type0 =
   else path from to
 *)
 
-noeq private type _pointer (to : typ): Type0 =
+noeq private type _npointer (to : typ): Type0 =
   | Pointer:
     (from: typ) ->
     (contents: HS.aref) ->
     (p: path from to) ->
-    _pointer to
+    _npointer to
+  | NullPtr
 
-abstract let pointer (t: typ): Tot Type0 =
-  _pointer t
+abstract let npointer (t: typ): Tot Type0 =
+  _npointer t
+
+(** The null pointer *)
+
+abstract let nullptr (#t: typ): Tot (npointer t) = NullPtr
+
+abstract let g_is_null (#t: typ) (p: npointer t) : GTot bool =
+  match p with
+  | NullPtr -> true
+  | _ -> false
+
+abstract let g_is_null_intro
+  (t: typ)
+: Lemma
+  (g_is_null (nullptr #t) == true)
+  [SMTPat (g_is_null (nullptr #t))]
+= ()
+
+// concrete, for subtyping
+let pointer (t: typ) : Tot Type0 = (p: npointer t { g_is_null p == false } )
 
 (** Buffers *)
 
@@ -1964,7 +1984,7 @@ abstract let equal
   (ensures (fun b -> b == true <==> t1 == t2 /\ p1 == p2 ))
 = Pointer?.from p1 = Pointer?.from p2 &&
   HS.aref_equal (Pointer?.contents p1) (Pointer?.contents p2) &&
-  path_equal p1.p p2.p
+  path_equal (Pointer?.p p1) (Pointer?.p p2)
 
 abstract let as_addr (#t: typ) (p: pointer t): GTot nat =
   HS.aref_as_addr (Pointer?.contents p)
@@ -2022,6 +2042,37 @@ abstract let live
       dfst (HS.sel h untyped_contents) == from
   )))
 
+abstract
+let nlive
+  (#value: typ)
+  (h: HS.mem)
+  (p: npointer value)
+: GTot Type0
+= if g_is_null p
+  then True
+  else live h p
+
+abstract
+let live_nlive
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer value)
+: Lemma
+  (nlive h p <==> live h p)
+  [SMTPat (nlive h p)]
+= ()
+
+abstract
+let g_is_null_nlive
+  (#t: typ)
+  (h: HS.mem)
+  (p: npointer t)
+: Lemma
+  (requires (g_is_null p))
+  (ensures (nlive h p))
+  [SMTPat (g_is_null p); SMTPat (nlive h p)]
+= ()
+
 private let greference_of
   (#value: typ)
   (p: pointer value)
@@ -2078,7 +2129,7 @@ abstract let gread
   then
     let content = greference_of p in
     let (| _, c |) = HS.sel h content in
-    value_of_ovalue value (path_sel c p.p)
+    value_of_ovalue value (path_sel c (Pointer?.p p))
   else
     dummy_val value
 
@@ -2751,7 +2802,7 @@ let readable
 = live h b /\ (
     let content = greference_of b in
     let (| _, c |) = HS.sel h content in
-    ovalue_is_readable a (path_sel c b.p)
+    ovalue_is_readable a (path_sel c (Pointer?.p b))
   )
 
 abstract
@@ -2797,7 +2848,7 @@ let readable_struct
   assert (readable h dummy_field_ptr);
   let content = greference_of p in
   let (| _, c |) = HS.sel h content in
-  let (v: otype_of_typ (TStruct l)) = path_sel c p.p in
+  let (v: otype_of_typ (TStruct l)) = path_sel c (Pointer?.p p) in
   let (v: ostruct l {Some? v}) = v in
   ovalue_is_readable_struct_intro l v
 
@@ -2854,7 +2905,7 @@ let readable_array
 = assert (readable h (gcell p 0ul)); // for Some?
   let content = greference_of p in
   let (| _, c |) = HS.sel h content in
-  let (v0: otype_of_typ (TArray length value)) = path_sel c p.p in
+  let (v0: otype_of_typ (TArray length value)) = path_sel c (Pointer?.p p) in
   ovalue_is_readable_array_intro v0
 
 (* TODO: improve on the following interface *)
@@ -3300,7 +3351,7 @@ let modifies_0_1 (#a:typ) (b:pointer a) h0 h1 h2 : Lemma
 
 (** Concrete allocators, getters and setters *)
 
-#reset-options "--z3rlimit 32"
+#reset-options "--z3rlimit 64"
 
 abstract let screate
   (value:typ)
@@ -3405,6 +3456,17 @@ abstract let read
   let r = reference_of h p in
   let (| _ , c |) = !r in
   value_of_ovalue value (path_sel c (Pointer?.p p))
+
+abstract
+let is_null
+  (#t: typ)
+  (p: npointer t)
+: HST.ST bool
+  (requires (fun h -> nlive h p))
+  (ensures (fun h b h' -> h' == h /\ b == g_is_null p))
+= match p with
+  | NullPtr -> true
+  | _ -> false
 
 #reset-options "--z3rlimit 128"
 
