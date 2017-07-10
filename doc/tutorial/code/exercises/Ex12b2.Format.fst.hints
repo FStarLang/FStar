@@ -1,5 +1,5 @@
 [
-  "7ïC+i\u0001ƒŞN%Öïö©\t",
+  "Œa.Õá\u0006ò\nùZ\\ÿRÖ×",
   [
     [
       "Ex12b2.Format.append_inj_lemma",
@@ -209,7 +209,6 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0
-    ],
-    [ "Ex12b2.Format.req_injctive", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]
