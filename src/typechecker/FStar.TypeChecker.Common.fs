@@ -122,15 +122,15 @@ let insert_col_info col info col_infos =
     let rec __insert aux rest =
         match rest with
         | [] -> (aux, [col, info])
-        | (c,i)::rest ->
+        | (c,i)::rest' ->
           if col < c
           then (aux, (col, info)::rest)
-          else __insert ((c,i)::aux) rest
+          else __insert ((c,i)::aux) rest'
      in
      let l, r = __insert [] col_infos
      in (List.rev l) @ r
 
-let find_nearest_preceding_col_info col col_infos = 
+let find_nearest_preceding_col_info col col_infos =
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->
@@ -157,7 +157,7 @@ let insert_identifier_info id ty range =
     let fn = Range.file_of_range use_range in
     let start = Range.start_of_range use_range in
     let row, col = Range.line_of_pos start, Range.col_of_pos start in
-    match BU.smap_try_find file_info_table fn with
+    begin match BU.smap_try_find file_info_table fn with
     | None ->
       let col_info = BU.mk_ref (insert_col_info col info []) in
       let rows = BU.imap_create 1000 in //1000 rows per file
@@ -171,6 +171,8 @@ let insert_identifier_info id ty range =
       | Some col_infos ->
         col_infos := insert_col_info col info !col_infos
       end
+    end;
+    fn, row, col
 let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
     match BU.smap_try_find file_info_table fn with
     | None -> None
@@ -184,5 +186,15 @@ let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
           // Check that `col` is in `ci.identifier_range`
           let last_col = Range.col_of_pos (Range.end_of_range ci.identifier_range) in
           if col <= last_col then Some ci else None
-let insert_bv bv ty = insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
-let insert_fv fv ty = insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)
+let id_info_set_get =
+    let x = ref false in
+    (fun b -> x := b),
+    (fun () -> !x)
+let id_info_set = fst id_info_set_get
+let id_info = snd id_info_set_get
+let insert_bv bv ty =
+    if FStar.Options.ide() && id_info ()
+    then ignore <| insert_identifier_info (Inl bv) ty (FStar.Syntax.Syntax.range_of_bv bv)
+let insert_fv fv ty =
+    if FStar.Options.ide() && id_info ()
+    then ignore <| insert_identifier_info (Inr fv) ty (FStar.Syntax.Syntax.range_of_fv fv)

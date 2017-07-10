@@ -972,7 +972,7 @@ let interactive_mode' (filename:string): unit =
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
-
+  FStar.TypeChecker.Common.id_info_set true; //enable recording identifier information in a table for the ide to query
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else
