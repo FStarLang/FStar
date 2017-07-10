@@ -123,7 +123,9 @@ val colorize: string -> (string * string) -> string
 val colorize_bold: string -> string
 val colorize_red: string -> string
 val colorize_cyan: string -> string
-
+val colorize_green: string -> string
+val colorize_yellow: string -> string
+val colorize_blue: string -> string
 
 (* Clients of this module should *NOT* rely on this representation *)
 type out_channel = TextWriter
