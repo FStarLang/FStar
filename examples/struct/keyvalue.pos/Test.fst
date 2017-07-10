@@ -258,42 +258,65 @@ let advance_slice_spec (b:bslice) (off:U32.t{U32.v off <= U32.v b.len}) h :
                  as_seq h (advance_slice b off) == slice (as_seq h b) (U32.v off) (length (as_seq h b))))
   = ()
 
-let parser_st #t (p: parser t) = input:bslice -> ST (option (t * U32.t))
-  (requires (fun h0 -> B.live h0 input.p))
-  (ensures (fun h0 r h1 -> B.live h1 input.p /\
+let parser_st_nochk #t (p: parser t) =
+  input:bslice -> ST (t * U32.t)
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                     Some? (p bs))))
+  (ensures (fun h0 r h1 -> live h1 input /\
                   h0 == h1 /\
                   (let bs = B.as_seq h1 input.p in
-                    match p bs with
-                    | Some (v, n) -> Some? r /\
-                      begin
-                        let (rv, off) = Some?.v r in
-                          v == rv /\ n == U32.v off
-                      end
-                    | None -> r == None)))
+                    Some? (p bs) /\
+                    (let (v, n) = Some?.v (p bs) in
+                     let (rv, off) = r in
+                       v == rv /\
+                       n == U32.v off))))
+
+let parser_st #t (p: parser t) =
+  input:bslice -> ST (option (t * U32.t))
+  (requires (fun h0 -> live h0 input))
+  (ensures (fun h0 r h1 -> live h1 input /\
+          h0 == h1 /\
+          (let bs = B.as_seq h1 input.p in
+            match p bs with
+            | Some (v, n) -> Some? r /\
+              begin
+                let (rv, off) = Some?.v r in
+                  v == rv /\ n == U32.v off
+              end
+            | None -> r == None)))
+
+let parse_u16_st_nochk :
+  parser_st_nochk (parse_u16) = fun input ->
+  let b0 = B.index input.p (U32.uint_to_t 0) in
+      let b1 = B.index input.p (U32.uint_to_t 1) in
+      let twobytes = append (create 1 b0) (create 1 b1) in
+      let h = get() in
+      lemma_eq_intro twobytes (slice (as_seq h input) 0 2);
+      let n = u16_from_be twobytes in
+      (n, U32.uint_to_t 2)
 
 let parse_u16_st : parser_st (parse_u16) = fun input ->
   if U32.lt input.len (U32.uint_to_t 2)
     then None
-  else let b0 = B.index input.p (U32.uint_to_t 0) in
-       let b1 = B.index input.p (U32.uint_to_t 1) in
-       let twobytes = append (create 1 b0) (create 1 b1) in
-       let h = get() in
-       lemma_eq_intro twobytes (slice (as_seq h input) 0 2);
-       let n = u16_from_be twobytes in
-       Some (n, U32.uint_to_t 2)
+  else Some (parse_u16_st_nochk input)
+
+let parse_u32_st_nochk :
+  parser_st_nochk (parse_u32) = fun input ->
+  let b0 = B.index input.p (U32.uint_to_t 0) in
+  let b1 = B.index input.p (U32.uint_to_t 1) in
+  let b2 = B.index input.p (U32.uint_to_t 2) in
+  let b3 = B.index input.p (U32.uint_to_t 3) in
+  let fourbytes = create 1 b0 `append` create 1 b1 `append` create 1 b2 `append` create 1 b3 in
+  let h = get() in
+  lemma_eq_intro fourbytes (slice (as_seq h input) 0 4);
+  let n = u32_from_be fourbytes in
+  (n, U32.uint_to_t 4)
 
 let parse_u32_st : parser_st (parse_u32) = fun input ->
   if U32.lt input.len (U32.uint_to_t 4)
     then None
-  else let b0 = B.index input.p (U32.uint_to_t 0) in
-       let b1 = B.index input.p (U32.uint_to_t 1) in
-       let b2 = B.index input.p (U32.uint_to_t 2) in
-       let b3 = B.index input.p (U32.uint_to_t 3) in
-       let fourbytes = create 1 b0 `append` create 1 b1 `append` create 1 b2 `append` create 1 b3 in
-       let h = get() in
-       lemma_eq_intro fourbytes (slice (as_seq h input) 0 4);
-       let n = u32_from_be fourbytes in
-       Some (n, U32.uint_to_t 4)
+    else Some (parse_u32_st_nochk input)
 
 module Cast = FStar.Int.Cast
 
@@ -301,7 +324,7 @@ let stateful_validator #t (p: parser t) = input:bslice -> ST (option U32.t)
     (requires (fun h0 -> live h0 input))
     (ensures (fun h0 r h1 -> live h1 input /\
                           h0 == h1 /\
-                          (let bs = B.as_seq h1 input.p in
+                          (let bs = as_seq h1 input in
                             validation_checks_parse bs r (p bs))))
 
 let validate_u16_array_st : stateful_validator parse_u16_array = fun input ->
@@ -390,6 +413,256 @@ let validate_store_st : stateful_validator parse_abstract_store = fun input ->
       | None -> None
     end
   | None -> None
+
+(*! API using validated but unparsed key-value buffer *)
+
+// sufficient to expose iteration over the key-value pairs (specifically pointers to them)
+
+// TODO: write this in stateful F*; it might actually be easier to talk about
+// the stack variables of a partially run parser being correct than to write proofs
+// about pure functions.
+
+// spec: fold over fully parsed store
+val fold_left_store: #t:Type -> f:(t -> encoded_entry -> t) -> t -> s:store -> t
+let fold_left_store #t f acc s =
+    let rec aux (es: list encoded_entry) (acc:t) : t =
+        match es with
+        | [] -> acc
+        | e::es -> aux es (f acc e) in
+    aux s.entries acc
+
+// TODO: this is just computation, right?
+assume val fold_left_empty (#t:Type) (f:(t -> encoded_entry -> t)) (acc:t) (s:store) :
+  Lemma (requires (s.entries == []))
+        (ensures (fold_left_store f acc s == acc))
+
+let rec fold_left_store_n (f:('a -> encoded_entry -> 'a)) (acc:'a) (s:store) (n:nat{U32.v s.num_entries >= n}) :
+  Pure 'a
+  (requires True)
+  (ensures (fun r -> n == U32.v s.num_entries ==> r == fold_left_store f acc s))
+  (decreases n) =
+  match n with
+  | 0 -> (match U32.v s.num_entries with
+        | 0 -> fold_left_empty f acc s
+        | _ -> ());
+        acc
+  | _ -> let acc' = f acc (List.hd s.entries) in
+        let s' = Store (U32.uint_to_t ((U32.v s.num_entries) - 1)) (List.tail s.entries) in
+        fold_left_store_n f acc' s' (n-1)
+
+// this is an old experiment with doing a fold_left over a buffer of bytes (pure
+// validation); we now have a complete prototype of validators in ST
+val fold_left_buffer: #t:Type -> f:(t -> encoded_entry -> t) -> t -> b:bytes -> t
+let fold_left_buffer #t f acc b =
+    match parse_u32 b with
+    | Some (num_entries, l) -> begin
+       // we only parse up to n more entries from the buffer b
+       let rec aux (n: nat) b acc : t =
+         match n with
+         | 0 -> acc
+         | _ -> begin
+           match parse_entry b with
+           | Some (e, l) ->
+             assert (n > 0);
+             aux (n-1) (slice b l (length b)) (f acc e)
+           | None -> acc
+           end in
+         aux (U32.v num_entries) (slice b l (length b)) acc
+      end
+    | None -> acc
+
+let parse_result (#t:Type) (#b:bytes)
+  (r: option (t * n:nat{n <= length b}){Some? r}) : t =
+  fst (Some?.v r)
+
+val parse_num_entries_valid : input:bslice -> ST (U32.t * off:U32.t{U32.v off <= U32.v input.len})
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_abstract_store bs))))
+  (ensures (fun h0 r h1 -> // note that live and Some? (parse_abstract_store bs)
+                        // come for free due to h0 == h1, but the postcondition
+                        // must typecheck without assuming the precondition, so
+                        // we re-assert them to discharge obligations within
+                        // this postcondition; their proofs should be trivial
+                        // due to the function being read-only
+                        live h1 input /\
+                        h0 == h1 /\
+                        (let bs = as_seq h1 input in
+                        Some? (parse_abstract_store bs) /\
+                        fst r = (parse_result (parse_abstract_store bs)).num_entries)))
+let parse_num_entries_valid input =
+  let (len, off) = parse_u32_st_nochk input in
+  (len, off)
+
+// NOTE: we have variants of each function (spec, stateful validator, stateful
+// parser); unfortunately the types also vary since specifications use bytes
+// while we only statefully parse buffers. Maybe we should make the byte type a
+// parameter? This would work best with a typeclass, since we need a length
+// method to encode dependencies (luckily the length of a bslice can be accessed
+// without a heap).
+
+noeq type u16_array_st =
+  | U16ArraySt : len16_st:U16.t -> a16_st:bslice{U32.v a16_st.len == U16.v len16_st} -> u16_array_st
+
+val truncate_slice : b:bslice -> len:U32.t{U32.v len <= U32.v b.len} -> ST bslice
+  (requires (fun h0 -> live h0 b))
+  (ensures (fun h0 r h1 -> live h1 b /\
+                        live h1 r /\
+                        h0 == h1 /\
+                        as_seq h1 r == slice (as_seq h1 b) 0 (U32.v len)))
+let truncate_slice b len = BSlice len (B.sub b.p (U32.uint_to_t 0) len)
+
+let as_u16_array h (a:u16_array_st) : Ghost u16_array
+  (requires (live h a.a16_st))
+  (ensures (fun _ -> True)) =
+  U16Array a.len16_st (as_seq h a.a16_st)
+
+// TODO: this isn't a parser_st_nochk because its output isn't exactly the same
+// as the parser; the relationship requires converting the return value to bytes
+let parse_u16_array_nochk : input:bslice -> ST (u16_array_st * off:U32.t{U32.v off <= U32.v input.len})
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_u16_array bs))))
+  (ensures (fun h0 r h1 ->
+              live h1 input /\
+              h0 == h1 /\
+              (let bs = B.as_seq h1 input.p in
+                Some? (parse_u16_array bs) /\
+                (let (v, n) = Some?.v (parse_u16_array bs) in
+                  let (rv, off) = r in
+                  // BUG: ommitting this live assertion causes failure in the
+                  // precondition to as_u16_array, but the error reported is
+                  // simply "ill-kinded type" on as_u16_array
+                  live h1 rv.a16_st /\
+                  as_u16_array h1 rv == v /\
+                  n == U32.v off)))) = fun input ->
+  let (len, off) = parse_u16_st_nochk input in
+  let input = advance_slice input off in
+  let a = U16ArraySt len (truncate_slice input (Cast.uint16_to_uint32 len)) in
+  (a, U32.add off (Cast.uint16_to_uint32 len))
+
+noeq type u32_array_st =
+  | U32ArraySt : len32_st:U32.t -> a32_st:bslice{U32.v a32_st.len == U32.v len32_st} -> u32_array_st
+
+let as_u32_array h (a:u32_array_st) : Ghost u32_array
+  (requires (live h a.a32_st))
+  (ensures (fun _ -> True)) =
+  U32Array a.len32_st (as_seq h a.a32_st)
+
+let parse_u32_array_nochk : input:bslice -> ST (u32_array_st * off:U32.t)
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_u32_array bs))))
+  (ensures (fun h0 r h1 ->
+              live h1 input /\
+              h0 == h1 /\
+              (let bs = B.as_seq h1 input.p in
+                Some? (parse_u32_array bs) /\
+                (let (v, n) = Some?.v (parse_u32_array bs) in
+                  let (rv, off) = r in
+                  live h1 rv.a32_st /\
+                  as_u32_array h1 rv == v /\
+                  n == U32.v off)))) = fun input ->
+  let (len, off) = parse_u32_st_nochk input in
+  let input = advance_slice input off in
+  let a = U32ArraySt len (truncate_slice input len) in
+  (a, U32.add off len)
+
+// an entry with buffers instead of bytes
+noeq type entry_st =
+  | EntrySt: key_st:u16_array_st ->
+             val_st:u32_array_st ->
+             entry_st
+
+// TODO: clearly encoded_entry should have a u16_array and a u32_array
+
+// TODO: all of these things that embed buffers need a live method on top
+// (really begs for a typeclass..)
+
+let entry_live h (e:entry_st) =
+    live h e.key_st.a16_st /\
+    live h e.val_st.a32_st
+
+let as_entry h (e:entry_st) : Ghost encoded_entry
+  (requires (entry_live h e))
+  (ensures (fun _ -> True)) =
+  let key = as_u16_array h e.key_st in
+  let value = as_u32_array h e.val_st in
+  EncodedEntry key.len16 key.a16
+               value.len32 value.a32
+
+#reset-options "--z3rlimit 20"
+
+let parse_entry_st_nochk : input:bslice -> ST (entry_st * off:U32.t{U32.v off <= U32.v input.len})
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_entry bs))))
+  (ensures (fun h0 r h1 ->
+                live h1 input /\
+                h0 == h1 /\
+                (let bs = B.as_seq h1 input.p in
+                Some? (parse_entry bs) /\
+                (let (v, n) = Some?.v (parse_entry bs) in
+                  let (rv, off) = r in
+                  entry_live h1 rv /\
+                  as_entry h1 rv == v /\
+                  n == U32.v off)))) = fun input ->
+  let (key, off) = parse_u16_array_nochk input in
+  let input = advance_slice input off in
+  let (value, off') = parse_u32_array_nochk input in
+  (EntrySt key value, U32.add off off')
+
+#reset-options "--z3rlimit 10"
+
+val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32.v off <= U32.v input.len})
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                     Some? (parse_many parse_entry n bs))))
+  (ensures (fun h0 r h1 -> live h1 input /\
+                        h0 == h1 /\
+                        (let bs = as_seq h1 input in
+                        Some? (parse_many parse_entry n bs) /\
+                        (let (v, n) = Some?.v (parse_entry bs) in
+                         let (rv, off) = r in
+                        entry_live h1 rv /\
+                        as_entry h1 rv == v /\
+                        n == U32.v off))))
+let parse_one_entry _ input = parse_entry_st_nochk input
+
+// TODO: break this proof down into a recursive function that takes tne number
+// of entries to fold over, with a more general spec relating to
+// [fold_left_store_n], and then use it to easily prove this spec where we also
+// parse the number of entries.
+val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
+  f:(acc:t -> e:entry_st -> ST t
+    (requires (fun h0 -> entry_live h0 e))
+    (ensures (fun h0 r h1 -> entry_live h1 e /\
+                          h0 == h1 /\
+                          r == f_spec acc (as_entry h1 e)))) ->
+  acc:t -> input:bslice -> ST t
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_abstract_store bs))))
+  (ensures (fun h0 r h1 -> live h1 input /\
+                        h0 == h1 /\
+                        (let bs = as_seq h1 input in
+                        Some? (parse_abstract_store bs) /\
+                        r == fold_left_store f_spec acc (parse_result (parse_abstract_store bs)))))
+let fold_left_buffer_st #t f_spec f acc input =
+  let (num_entries, off) = parse_num_entries_valid input in
+  let input = advance_slice input off in
+  let rec aux (n:nat) (acc:t) input : ST t
+      (requires (fun h0 -> True))
+      (ensures (fun h0 r h1 -> h0 == h1)) =
+    match n with
+    | 0 -> acc
+    | _ -> begin
+        let (e, off) = parse_one_entry n input in
+        let input = advance_slice input off in
+        let acc' = f e acc in
+        aux (n-1) acc' input
+      end in
+  aux (U32.v num_entries) acc input
 
 (*! Pure validation *)
 
@@ -514,60 +787,6 @@ let validate =
   (fun num_entries -> validate_many parse_entry (U32.v num_entries) validate_entry `seq`
                    validate_done)
 
-(*! API using validated but unparsed key-value buffer *)
-
-// sufficient to expose iteration over the key-value pairs (specifically pointers to them)
-
-// TODO: write this in stateful F*; it might actually be easier to talk about
-// the stack variables of a partially run parser being correct than to write proofs
-// about pure functions.
-
-// spec: fold over fully parsed store
-val fold_left_store: f:('a -> encoded_entry -> 'a) -> 'a -> s:store -> 'a
-let fold_left_store f acc s =
-    let rec aux es acc =
-        match es with
-        | [] -> acc
-        | e::es -> aux es (f acc e) in
-    aux s.entries acc
-
-unfold let optbind (#t:Type) (#t':Type) (x:option t) (f:t -> option t') : option t' =
-  match x with
-  | Some v -> f v
-  | None -> None
-
-val fold_left_buffer: #t:Type -> f:(t -> encoded_entry -> t) -> t -> b:bytes -> t
-let fold_left_buffer #t f acc b =
-    match parse_u32 b with
-    | Some (num_entries, l) -> begin
-       // we only parse up to n more entries from the buffer b
-       let rec aux (n: nat) b acc : t =
-         match n with
-         | 0 -> acc
-         | _ -> begin
-           match parse_entry b with
-           | Some (e, l) ->
-             assert (n > 0);
-             aux (n-1) (slice b l (length b)) (f acc e)
-           | None -> acc
-           end in
-         aux (U32.v num_entries) (slice b l (length b)) acc
-      end
-    | None -> acc
-
-let parse_result (#t:Type) (#b:bytes) (r: option (t * n:nat{n <= length b}){Some? r}) : t = fst (Some?.v r)
-
-// TODO: this is actually a fairly difficult proof: parse_abstract_store does
-// several steps before finally storing the result of the original parse_u32 in
-// num_entries
-assume val parse_num_entries_valid : b:bytes{Some? (validate b)} ->
-  Lemma (parse_u32 b == Some ((parse_result (parse_abstract_store b)).num_entries, 4))
-
-assume val fold_left_buffer_ok: #t:Type -> f:(t -> encoded_entry -> t) -> acc:t -> b:bytes{Some? (validate b)} ->
-    Lemma (fold_left_buffer f acc b ==
-           fold_left_store f acc (parse_result (parse_abstract_store b)))
-
-
 (*! Skipping bounds checks due to validation *)
 
 // Another aspect to verify is that the bounds checks can be skipped. This
@@ -610,6 +829,11 @@ assume val parse_valid_entry (b:bytes{Some? (validate_entry b)}) : e:encoded_ent
 // and a proof that the parser + API is the same as the ghost parser (which
 // produces a complete struct) and a ghost API (which might just be field/array
 // accesses)
+
+unfold let optbind (#t:Type) (#t':Type) (x:option t) (f:t -> option t') : option t' =
+  match x with
+  | Some v -> f v
+  | None -> None
 
 let parse_value_offset (b:bytes) : option (n:nat{n <= length b}) =
  parse_u16_array b `optbind`
