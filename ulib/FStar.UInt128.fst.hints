@@ -5552,7 +5552,7 @@
       "FStar.UInt128.div_sum_combine",
       1,
       0,
-      0,
+      2,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
