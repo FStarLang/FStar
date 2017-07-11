@@ -300,7 +300,7 @@ let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     let p' = {p with goals=lp'.goals@rp'.goals; smt_goals=lp'.smt_goals@rp'.smt_goals@p.smt_goals} in
     bind (set p') (fun _ ->
     ret (a, b))))))))))
-    
+
 (* focus: runs f on the current goal only, and then restores all the goals *)
 (* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
 let focus (f:tac<'a>) : tac<'a> =
@@ -586,7 +586,7 @@ let clear : tac<unit> =
     | None -> fail "Cannot clear; empty context"
     | Some (x, env') ->
         let fns_ty = FStar.Syntax.Free.names goal.goal_ty in
-        let fns_tm = FStar.Syntax.Free.names goal.witness in
+//        let fns_tm = FStar.Syntax.Free.names goal.witness in
         if Util.set_mem x fns_ty
         then fail "Cannot clear; variable appears in goal"
         else bind (new_uvar env' goal.goal_ty) (fun (u, g) ->
