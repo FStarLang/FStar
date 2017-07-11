@@ -309,33 +309,18 @@ let ref_Simpl: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Simpl_lid
 let ref_WHNF: FStar_Syntax_Syntax.term = lid_as_data_tm ref_WHNF_lid
 let ref_Primops: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Primops_lid
 let ref_Delta: FStar_Syntax_Syntax.term = lid_as_data_tm ref_Delta_lid
-let t_binder:
-  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-    FStar_Syntax_Syntax.syntax
-  =
-  let uu____544 = fstar_refl_types_lid "binder" in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____544
-let t_term:
-  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-    FStar_Syntax_Syntax.syntax
-  =
-  let uu____549 = fstar_refl_types_lid "term" in
+let t_binder: FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
+  let uu____543 = fstar_refl_types_lid "binder" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____543
+let t_term: FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
+  let uu____546 = fstar_refl_types_lid "term" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____546
+let t_fv: FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
+  let uu____549 = fstar_refl_types_lid "fv" in
   FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____549
-let t_fv:
-  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-    FStar_Syntax_Syntax.syntax
-  =
-  let uu____554 = fstar_refl_types_lid "fv" in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____554
-let t_binders:
-  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-    FStar_Syntax_Syntax.syntax
-  =
-  let uu____559 = fstar_refl_syntax_lid "binders" in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____559
-let t_norm_step:
-  (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-    FStar_Syntax_Syntax.syntax
-  =
-  let uu____564 = fstar_refl_syntax_lid "norm_step" in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____564
+let t_binders: FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
+  let uu____552 = fstar_refl_syntax_lid "binders" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____552
+let t_norm_step: FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
+  let uu____555 = fstar_refl_syntax_lid "norm_step" in
+  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____555
