@@ -306,18 +306,16 @@ let decorate_pattern env p exp =
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
               if Env.debug env <| Options.Other "Pat"
               then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
-              pkg p.v
-//              let s = Normalize.normalize [Normalize.Beta] env y.sort in
-//              let x = {x with sort=s} in
-//              pkg (Pat_var x)
+              let s = Normalize.normalize [Normalize.Beta] env y.sort in
+              let x = {x with sort=s} in
+              pkg (Pat_var x)
 
             | Pat_wild x, Tm_name y ->
               if bv_eq x y |> not
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              pkg p.v
-//              let s = Normalize.normalize [Normalize.Beta] env y.sort in
-//              let x = {x with sort=s} in
-//              pkg (Pat_wild x)
+              let s = Normalize.normalize [Normalize.Beta] env y.sort in
+              let x = {x with sort=s} in
+              pkg (Pat_wild x)
 
             | Pat_dot_term(x, _), _ ->
 //              let s = force_sort e in
