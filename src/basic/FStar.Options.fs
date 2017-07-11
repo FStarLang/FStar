@@ -93,6 +93,7 @@ let defaults =
       ("_fstar_home"                  , String "");
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
+      ("admit_except"                 , Unset);
       ("check_hints"                  , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
@@ -121,7 +122,6 @@ let defaults =
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
-      ("lax_except"                   , Unset);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -195,6 +195,7 @@ let lookup_opt s c =
   c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
+let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
@@ -222,7 +223,6 @@ let get_indent                  ()      = lookup_opt "indent"                   
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
-let get_lax_except              ()      = lookup_opt "lax_except"               (as_option as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -365,7 +365,13 @@ let rec specs () : list<Getopt.opt> =
        "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
-       "codegen",
+        "admit_except",
+         OneArg (String, "[id]"),
+        "Admit all verification conditions, except those with query label <id>");
+
+
+      ( noshort,
+        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
@@ -507,11 +513,6 @@ let rec specs () : list<Getopt.opt> =
         "lax",
         ZeroArgs (fun () -> Bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
-
-       ( noshort,
-        "lax_except",
-         OneArg (String, "[id]"),
-        "Run the lax-type checker only (admit all verification conditions), except on the query labelled <id>");
 
        ( noshort,
         "log_types",
@@ -825,6 +826,7 @@ let docs () =
 //Additionaly, the --smt option is a security concern
 let settable = function
     | "admit_smt_queries"
+    | "admit_except"
     | "debug"
     | "debug_level"
     | "detail_errors"
@@ -837,7 +839,6 @@ let settable = function
     | "initial_ifuel"
     | "inline_arith"
     | "lax"
-    | "lax_except"
     | "log_types"
     | "log_queries"
     | "max_fuel"
@@ -1013,6 +1014,7 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
+let admit_except                 () = get_admit_except                  ()
 let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
@@ -1037,7 +1039,6 @@ let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ()
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
-let lax_except                   () = get_lax_except                  ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
