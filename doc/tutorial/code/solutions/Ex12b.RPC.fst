@@ -86,7 +86,7 @@ type reqresp text =
   \/ (exists s t. text = Formatting.response s t /\ pResponse s t)
 // END: MsgProperty
 
-val k: k:key{key_prop k == reqresp}
+val k: k:key{forall x. key_prop k x <==> reqresp x}
 let k = print_string "generating shared key...\n";
   keygen reqresp
 
@@ -100,8 +100,8 @@ let client_send (s:string16) =
   witness log (req s);
 
   assert(reqresp (Formatting.request s)); (* this works *)
-  assert(key_prop k == reqresp);          (* this also works *)
-  assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
+  assert(forall x. key_prop k x <==> reqresp x); (* this also works *)
+  assert(key_prop k (Formatting.request s) <==> reqresp (Formatting.request s));
   (*assert(key_prop k (Formatting.request s)); -- this fails *)
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
