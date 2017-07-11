@@ -318,8 +318,6 @@ let decorate_pattern env p exp =
               pkg (Pat_wild x)
 
             | Pat_dot_term(x, _), _ ->
-//              let s = force_sort e in
-//              let x = {x with sort=s} in
               pkg (Pat_dot_term(x, e))
 
             | Pat_cons(fv, []), Tm_fvar fv' ->
@@ -339,7 +337,7 @@ let decorate_pattern env p exp =
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
                         | (e, Some (Implicit true)), Pat_dot_term _ ->
-                          let x = Syntax.new_bv (Some p.p) S.tun in //(force_sort e) in
+                          let x = Syntax.new_bv (Some p.p) S.tun in
                           let q = withinfo (Pat_dot_term(x, e)) p.p in
                           match_args ((q, true)::matched_pats) args argpats
 
@@ -489,7 +487,7 @@ let return_value env t v =
             then S.tun
             else let a, kwp = Env.wp_signature env C.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
-                 N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp) [S.as_arg t; S.as_arg v] (Some k.n) v.pos) in
+                 N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp) [S.as_arg t; S.as_arg v] None v.pos) in
          mk_comp m u_t t wp [RETURN] in
   if debug env <| Options.Other "Return"
   then BU.print3 "(%s) returning %s at comp type %s\n"
@@ -848,7 +846,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
       let _ = Env.lookup_lid env C.b2t_lid in  //check that we have Prims.b2t in the context
       let b2t = S.fvar (Ident.set_lid_range C.b2t_lid e.pos) (Delta_defined_at_level 1) None in
       let lc = bind e.pos env (Some e) lc (None, U.lcomp_of_comp <| S.mk_Total (U.ktype0)) in
-      let e = mk_Tm_app b2t [S.as_arg e] (Some U.ktype0.n) e.pos in
+      let e = mk_Tm_app b2t [S.as_arg e] None e.pos in
       e, lc
     | _ ->
       e, lc
@@ -906,11 +904,11 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                           let u_t, _, _ = destruct_comp ct in
                           let wp = mk_Tm_app (inst_effect_fun_with [u_t] env md md.ret_wp)
                                              [S.as_arg t; S.as_arg xexp]
-                                             (Some k.n) xexp.pos
+                                             None xexp.pos
                           in
                           let cret = U.lcomp_of_comp <| mk_comp md u_t t wp [RETURN] in
                           let guard = if apply_guard
-                                      then mk_Tm_app f [S.as_arg xexp] (Some U.ktype0.n) f.pos
+                                      then mk_Tm_app f [S.as_arg xexp] None f.pos
                                       else f
                           in
                           let eq_ret, _trivial_so_ok_to_discard =
@@ -962,7 +960,7 @@ let pure_or_ghost_pre_and_post env comp =
                               let r = ct.result_typ.pos in
                               let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) Delta_equational None) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) Delta_equational None) us_e in
-                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] (Some U.ktype0.n) ct.result_typ.pos in
+                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
@@ -1068,7 +1066,7 @@ let maybe_instantiate (env:Env.env) e t =
                     | [] -> U.comp_result c
                     | _ -> U.arrow bs c in
                   let t = SS.subst subst t in
-                  let e = S.mk_Tm_app e args (Some t.n) e.pos in
+                  let e = S.mk_Tm_app e args None e.pos in
                   e, t, guard
               end
 
@@ -1110,15 +1108,6 @@ let gather_free_univnames env t : list<univ_name> =
     //     (Print.list_to_string Ident.text_of_id univnames);
     univnames
 
-
-let maybe_set_tk ts = function
-    | None -> ts
-    | Some t ->
-      let t = S.mk t None Range.dummyRange in
-      let t = SS.close_univ_vars (fst ts) t in
-      (snd ts).tk := Some t.n;
-      ts
-
 let check_universe_generalization
   (explicit_univ_names : list<univ_name>)
   (generalized_univ_names : list<univ_name>)
@@ -1143,7 +1132,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in
-    maybe_set_tk (univs, ts) (!t0.tk)
+    univs, ts
 
 let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
   if not <| (BU.for_all (fun (_, c) -> U.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
@@ -1280,8 +1269,9 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
   let decorate e t =
     let e = compress e in
     match e.n with
-        | Tm_name x -> mk (Tm_name ({x with sort=t2})) (Some t2.n) e.pos
-        | _ -> {e with tk=BU.mk_ref (Some t2.n)} in
+    | Tm_name x -> mk (Tm_name ({x with sort=t2})) None e.pos
+    | _ -> e
+  in
   let env = {env with use_eq=env.use_eq || (env.is_pattern && is_var e)} in
   match check env t1 t2 with
     | None -> raise (Error(Err.expected_expression_of_type env t2 e t1, Env.get_range env))
@@ -1306,7 +1296,7 @@ let check_top_level env g lc : (bool * comp) =
               |> Env.comp_to_comp_typ env in
        let md = Env.get_effect_decl env c.effect_name in
        let u_t, t, wp = destruct_comp c in
-       let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] (Some U.ktype0.n) (Env.get_range env) in
+       let vc = mk_Tm_app (inst_effect_fun_with [u_t] env md md.trivial) [S.as_arg t; S.as_arg wp] None (Env.get_range env) in
        if Env.debug env <| Options.Other "Simplification"
        then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| NonTrivial vc) in
@@ -1404,7 +1394,7 @@ let maybe_lift env e c1 c2 t =
     || (U.is_pure_effect c1 && U.is_ghost_effect c2)
     || (U.is_pure_effect c2 && U.is_ghost_effect c1)
     then e
-    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) !e.tk e.pos
+    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) None e.pos
 
 let maybe_monadic env e c t =
     let m = Env.norm_eff_name env c in
@@ -1412,7 +1402,7 @@ let maybe_monadic env e c t =
     || Ident.lid_equals m C.effect_Tot_lid
     || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
-    else mk (Tm_meta(e, Meta_monadic (m, t))) !e.tk e.pos
+    else mk (Tm_meta(e, Meta_monadic (m, t))) None e.pos
 
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 

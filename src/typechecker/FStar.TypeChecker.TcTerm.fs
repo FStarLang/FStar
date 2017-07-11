@@ -47,7 +47,7 @@ let no_inst env = {env with Env.instantiate_imp=false}
 let mk_lex_list vs =
     List.fold_right (fun v tl ->
         let r = if tl.pos = Range.dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Tm_app lex_pair [as_arg v; as_arg tl] (Some lex_t.n) r)
+        mk_Tm_app lex_pair [as_arg v; as_arg tl] None r)
     vs lex_top
 let is_eq = function
     | Some Equality -> true
@@ -89,7 +89,7 @@ let maybe_extend_subst s b v : subst_t =
 let set_lcomp_result lc t =
     {lc with res_typ=t; comp=fun () -> U.set_result_typ (lc.comp()) t}
 
-let memo_tk (e:term) (t:typ) = e.tk := Some t.n; e
+let memo_tk (e:term) (t:typ) = e
 
 //Interface to FStar.TypeChecker.Rel:
 
@@ -310,7 +310,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let env, _ = Env.clear_expected_typ env in
         tc_pats env pats in
     let g' = {g' with guard_f=Trivial} in //The pattern may have some VCs associated with it, but these are irrelevant.
-    mk (Tm_meta(e, Meta_pattern pats)) (Some t.n) top.pos,
+    mk (Tm_meta(e, Meta_pattern pats)) None top.pos,
     c,
     Rel.conj_guard g g' //but don't drop g' altogether, since it also contains unification constraints
 
@@ -322,13 +322,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
           let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
           let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) (Some c.res_typ.n) e.pos in
+          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) None e.pos in
           let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
-          let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
+          let e = mk (Tm_meta(e, Meta_desugared Sequence)) None top.pos in
           e, c, Rel.conj_guard g1 g2
         | _ ->
           let e, c, g = tc_term env e in
-          let e = mk (Tm_meta(e, Meta_desugared Sequence)) (Some c.res_typ.n) top.pos in
+          let e = mk (Tm_meta(e, Meta_desugared Sequence)) None top.pos in
           e, c, g
     end
 
@@ -339,7 +339,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_meta(e, m) ->
     let e, c, g = tc_term env e in
-    let e = mk (Tm_meta(e, m)) (Some c.res_typ.n) top.pos in
+    let e = mk (Tm_meta(e, m)) None top.pos in
     e, c, g
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
@@ -348,7 +348,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c'.comp()) in
-    let e = mk (Tm_ascribed(e, (Inl t_res, None), Some (U.comp_effect_name expected_c))) (Some t_res.n) top.pos in
+    let e = mk (Tm_ascribed(e, (Inl t_res, None), Some (U.comp_effect_name expected_c))) None top.pos in
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
     let topt = tc_tactic_opt env0 topt in
@@ -363,7 +363,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t, _, f = tc_check_tot_or_gtot_term env t k in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) (Some t.n) top.pos) c in
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
   | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
@@ -408,7 +408,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             u
     in
     let repr = Env.reify_comp env (c.comp()) u_c in
-    let e = mk (Tm_app(reify_op, [(e, aqual)])) (Some repr.n) top.pos in
+    let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
     let c = S.mk_Total repr |> U.lcomp_of_comp in
     let e, c, g' = comp_check_expected_typ env e c in
     e, c, Rel.conj_guard g g'
@@ -451,7 +451,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
               flags=[]
             }) |> U.lcomp_of_comp
         in
-        let e = mk (Tm_app(reflect_op, [(e, aqual)])) (Some res_typ.n) top.pos in
+        let e = mk (Tm_app(reflect_op, [(e, aqual)])) None top.pos in
         let e, c, g' = comp_check_expected_typ env e c in
         e, c, Rel.conj_guard g' g
     end
@@ -532,7 +532,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let branches = t_eqns |> List.map (fun ((pat, wopt, br), _, lc, _) ->
               (pat, wopt, TcUtil.maybe_lift env br lc.eff_name cres.eff_name lc.res_typ ))
         in
-        let e = mk (Tm_match(scrutinee, branches)) (Some cres.res_typ.n) top.pos in
+        let e = mk (Tm_match(scrutinee, branches)) None top.pos in
         let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         mk (Tm_ascribed(e, (Inl cres.res_typ, None), Some cres.eff_name)) None e.pos
@@ -551,7 +551,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           lbeff=Env.norm_eff_name env c1.eff_name;
           lbdef=e1;
         } in
-        let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) (Some cres.res_typ.n) top.pos in
+        let e = mk (Tm_let((false, [lb]), SS.close [S.mk_binder guard_x] e_match)) None top.pos in
         TcUtil.maybe_monadic env e cres.eff_name cres.res_typ
     in
     if debug env Options.Extreme
@@ -696,7 +696,7 @@ and tc_value env (e:term) : term
             | _ -> failwith "Impossible") us' us;
     let fv' = S.set_range_of_fv fv range in
     FStar.TypeChecker.Common.insert_id_info.fv fv' t;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') None e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_fvar fv ->
@@ -710,12 +710,12 @@ and tc_value env (e:term) : term
             (Print.term_to_string t);
     let fv' = S.set_range_of_fv fv range in
     FStar.TypeChecker.Common.insert_id_info.fv fv' t;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') (Some t.n) e.pos) us in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') None e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_constant c ->
     let t = tc_constant top.pos c in
-    let e = mk (Tm_constant c) (Some t.n) e.pos in
+    let e = mk (Tm_constant c) None e.pos in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
   | Tm_arrow(bs, c) ->
@@ -739,7 +739,7 @@ and tc_value env (e:term) : term
   | Tm_type u ->
     let u = tc_universe env u in
     let t = mk (Tm_type(S.U_succ u)) None top.pos in
-    let e = mk (Tm_type u) (Some t.n) top.pos in
+    let e = mk (Tm_type u) None top.pos in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
   | Tm_refine(x, phi) ->
@@ -1209,7 +1209,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           (* If the head is shortcutting we cannot hoist its arguments *)
           (* Leaving it `as is` is a little dubious, it would fail whenever we try to reify it *)
           let args = List.fold_left (fun args (arg, _, _) -> arg::args) [] arg_comps_rev in
-          let app = mk_Tm_app head args (Some comp.res_typ.n) r in
+          let app = mk_Tm_app head args None r in
           let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
           TcUtil.maybe_monadic env app comp.eff_name comp.res_typ
 
@@ -1233,7 +1233,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
           (* 3. We apply the (non-monadic) head to the non-monadic arguments, lift the *)
           (*    result to comp and then bind each monadic arguments to close over the *)
           (*    variables introduces at step 2. *)
-          let app = mk_Tm_app head args (Some comp.res_typ.n) r in
+          let app = mk_Tm_app head args None r in
           let app = TcUtil.maybe_lift env app cres.eff_name comp.eff_name comp.res_typ in
           let app = TcUtil.maybe_monadic env app comp.eff_name comp.res_typ in
           let bind_lifted_args e = function
@@ -1351,7 +1351,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                        TcUtil.bind r1 env None c (None, out))
                   ((head.pos, chead)::comps)
                   (U.lcomp_of_comp <| cres) in
-            mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard ghead g_args
+            mk_Tm_app head args None r, comp, Rel.conj_guard ghead g_args
 
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
@@ -1390,7 +1390,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
                           || (not (U.is_total_lcomp c)
                               && not (TcUtil.is_pure_effect env c.eff_name)) in
                 seen@[as_arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
-          let e = mk_Tm_app head args (Some res_t.n) r  in
+          let e = mk_Tm_app head args None r  in
           let c = if ghost then S.mk_GTotal res_t |> U.lcomp_of_comp else U.lcomp_of_comp c in
           let c, g = TcUtil.strengthen_precondition None env e c guard in
           e, c, g
@@ -1716,11 +1716,9 @@ and check_top_level_let env e =
          (* the result has the same effect as c1, except it returns unit *)
          let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero Common.t_unit in
 
-         e2.tk := Some (Common.t_unit.n);
-
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
-            (Some (Common.t_unit.n))
+            None
             e.pos,
          U.lcomp_of_comp cres,
          Rel.trivial_guard
@@ -1749,7 +1747,7 @@ and check_inner_let env e =
        let e1 = TcUtil.maybe_lift env e1 c1.eff_name cres.eff_name c1.res_typ in
        let e2 = TcUtil.maybe_lift env e2 c2.eff_name cres.eff_name c2.res_typ in
        let lb = U.mk_letbinding (Inl x) [] c1.res_typ c1.eff_name e1 in
-       let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
+       let e = mk (Tm_let((false, [lb]), SS.close xb e2)) None e.pos in
        let e = TcUtil.maybe_monadic env e cres.eff_name cres.res_typ in
        let x_eq_e1 = NonTrivial <| U.mk_eq2 (env.universe_of env c1.res_typ) c1.res_typ (S.bv_to_name x) e1 in
        let g2 = Rel.close_guard env xb
@@ -1811,11 +1809,10 @@ and check_top_level_let_rec env top =
                       U.close_univs_and_mk_letbinding all_lb_names x uvs (U.comp_result c) (U.comp_effect_name c) e) in
 
           let cres = U.lcomp_of_comp <| S.mk_Total Common.t_unit in
-          let _ = e2.tk := Some Common.t_unit.n in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
           Rel.discharge_guard env g_lbs |> Rel.force_trivial_guard env;
-          mk (Tm_let((true, lbs), e2)) (Some Common.t_unit.n) top.pos,
+          mk (Tm_let((true, lbs), e2)) None top.pos,
           cres,
           Rel.trivial_guard
 
@@ -1849,7 +1846,7 @@ and check_inner_let_rec env top =
           let cres = {cres with res_typ=tres} in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
-          let e = mk (Tm_let((true, lbs), e2)) (Some tres.n) top.pos in
+          let e = mk (Tm_let((true, lbs), e2)) None top.pos in
 
           begin match topt with
               | Some _ -> e, cres, guard //we have an annotation

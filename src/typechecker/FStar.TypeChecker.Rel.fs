@@ -65,7 +65,7 @@ let abstract_guard x g = match g with
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) (Some U.ktype0.n) f.pos}
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g
@@ -133,13 +133,13 @@ let new_uvar r binders k =
   let uv = UF.fresh () in
   match binders with
     | [] ->
-      let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
+      let uv = mk (Tm_uvar(uv,k)) None r in
       uv, uv
     | _ ->
       let args = binders |> List.map U.arg_of_non_null_binder in
       let k' = U.arrow binders (mk_Total k) in
       let uv = mk (Tm_uvar(uv,k')) None r in
-      mk (Tm_app(uv, args)) (Some k.n) r, uv
+      mk (Tm_app(uv, args)) None r, uv
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)
@@ -1660,7 +1660,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let k_a = SS.subst subst a.sort in
                     let gi_xs, gi = new_uvar r xs k_a in
                     let gi_xs = N.eta_expand env gi_xs in
-                    let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
+                    let gi_ps = mk_Tm_app gi ps None r in
                     let subst = NT(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
                     as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
@@ -2305,10 +2305,10 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                          then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
                               mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
                                         [as_arg c1.result_typ; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
-                                 (Some U.ktype0.n) r
+                                 None r
                          else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
                                         [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
-                                 (Some U.ktype0.n) r in
+                                 None r in
                       let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob |> fst) g) [] wl in
                       solve env (attempt [base_prob] wl)

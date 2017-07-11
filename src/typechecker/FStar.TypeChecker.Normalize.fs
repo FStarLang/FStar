@@ -262,7 +262,7 @@ let rec closure_as_term cfg env t =
             | Tm_unknown
             | Tm_constant _
             | Tm_name _
-            | Tm_fvar _ -> t.tk := None; t
+            | Tm_fvar _ -> t
 
             | Tm_uvar _ ->
               if cfg.steps |> List.contains CheckNoUvars
@@ -820,7 +820,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
-            t.tk := None;
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -829,7 +828,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in
             let t = {t with n=Tm_app(hd, args)} in
-            t.tk := None;
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
@@ -1035,7 +1033,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        let lopt = match lopt with
                         | Some rc ->
-                          let rct = 
+                          let rct =
                             if cfg.steps |> List.contains CheckNoUvars
                             then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
                             else BU.map_opt rc.residual_typ (SS.subst opening) in
@@ -1127,7 +1125,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         @ List.map (fun _ -> Dummy) xs
                         @ env in
                 let def_body = norm cfg env [] def_body in
-                let lopt = 
+                let lopt =
                   match lopt with
                   | Some rc -> Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
                   | _ -> lopt in
@@ -1845,10 +1843,8 @@ let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
                        (Some (U.residual_comp_of_comp c))
 
 let eta_expand (env:Env.env) (t:term) : term =
-  match !t.tk, t.n with
-  | Some sort, _ ->
-      eta_expand_with_type env t (mk sort t.pos)
-  | _, Tm_name x ->
+  match t.n with
+  | Tm_name x ->
       eta_expand_with_type env t x.sort
   | _ ->
       let head, args = U.head_and_args t in

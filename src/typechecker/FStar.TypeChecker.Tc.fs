@@ -74,7 +74,6 @@ let is_native_tactic env (tac_lid: lident) (h: term) =
 
 let tc_check_trivial_guard env t k =
   let t, c, g = tc_check_tot_or_gtot_term env t k in
-  t.tk := Some c.res_typ.n;
   Rel.force_trivial_guard env g;
   t
 

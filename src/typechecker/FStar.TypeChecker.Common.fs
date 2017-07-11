@@ -63,8 +63,8 @@ type univ_ineq = universe * universe
 
 module C = FStar.Parser.Const
 
-let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) (Some Util.ktype0.n) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) (Some Util.ktype0.n) Range.dummyRange
+let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) None Range.dummyRange
+let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
 let t_unit   = tconst C.unit_lid
 let t_bool   = tconst C.bool_lid
 let t_int    = tconst C.int_lid
@@ -72,19 +72,19 @@ let t_string = tconst C.string_lid
 let t_float  = tconst C.float_lid
 let t_char   = tabbrev C.char_lid
 let t_range  = tconst C.range_lid
-let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [S.as_arg t_unit] (Some Util.ktype0.n) Range.dummyRange
+let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [S.as_arg t_unit] None Range.dummyRange
 
 
-let t_list_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [S.as_arg t] (Some Util.ktype0.n) Range.dummyRange
-let t_option_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [S.as_arg t] (Some Util.ktype0.n) Range.dummyRange
+let t_list_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [S.as_arg t] None Range.dummyRange
+let t_option_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [S.as_arg t] None Range.dummyRange
 
-let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) (Some t_unit.n) Range.dummyRange
+let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) None Range.dummyRange
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
     let t_reify_tactic = S.mk_Tm_uinst (tabbrev C.reify_tactic_lid) [U_zero] in
     let tac = S.mk_Tm_app t_reify_tactic [S.iarg t_unit; S.as_arg tac]
                            None Range.dummyRange in
-    S.mk_Tm_app t_by_tactic [S.iarg t_unit; S.as_arg tac; S.as_arg f] (Some Util.ktype0.n) Range.dummyRange
+    S.mk_Tm_app t_by_tactic [S.iarg t_unit; S.as_arg tac; S.as_arg f] None Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_constant, _ -> false
