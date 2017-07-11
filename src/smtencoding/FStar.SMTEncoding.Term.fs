@@ -80,6 +80,7 @@ type op =
   | BvUlt
   | BvUext of Prims.int
   | NatToBv of Prims.int // need to explicitly define the size of the bitvector
+  | BvToNat
   | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
 
@@ -218,6 +219,7 @@ let op_to_string = function
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
+  | BvToNat -> "bv2int"
   | BvUext n -> format1 "(_ zero_extend %s)" (string_of_int n)
   | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
@@ -291,6 +293,7 @@ let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
 let mkMinus t r = mkApp'(Minus, [t]) r
 let mkNatToBv sz t r = mkApp'(NatToBv sz, [t]) r
 let mkBvUext sz t r = mkApp'(BvUext sz, [t]) r
+let mkBvToNat t r = mkApp'(BvToNat, [t]) r
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
@@ -792,6 +795,7 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
+  //  | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [_; t1;t2])}]) -> mkBvUlt (unboxBitVec 16 t1, unboxBitVec 16 t2) t.rng
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ -> mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng

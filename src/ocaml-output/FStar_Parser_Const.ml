@@ -99,9 +99,8 @@ let op_Negation: FStar_Ident.lident = pconst "op_Negation"
 let bvconst: Prims.string -> FStar_Ident.lident =
   fun s  -> p2l ["FStar"; "BV"; s]
 let bv_t_lid: FStar_Ident.lident = bvconst "bv_t"
-let bv_zero_vec_lid: FStar_Ident.lident = bvconst "bv_zero"
-let bv_ones_vec_lid: FStar_Ident.lident = bvconst "ones_vec"
 let nat_to_bv_lid: FStar_Ident.lident = bvconst "int2bv"
+let bv_to_nat_lid: FStar_Ident.lident = bvconst "bv2int"
 let bv_and_lid: FStar_Ident.lident = bvconst "bvand"
 let bv_xor_lid: FStar_Ident.lident = bvconst "bvxor"
 let bv_or_lid: FStar_Ident.lident = bvconst "bvor"

@@ -66,6 +66,7 @@ type op =
   | BvUlt
   | BvUext of int
   | NatToBv of int
+  | BvToNat
   | ITE
   | Var of string
 
@@ -157,17 +158,18 @@ val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
-val mkNatToBv: (int -> term -> Range.range -> term)
-val mkBvAnd  : ((term * term) -> Range.range -> term)
-val mkBvXor  : ((term * term) -> Range.range -> term)
-val mkBvOr   : ((term * term) -> Range.range -> term)
-val mkBvUlt  : ((term * term) -> Range.range -> term)
-val mkBvUext : (int -> term -> Range.range -> term)
-val mkBvShl  : (int -> (term * term) -> Range.range -> term)
-val mkBvShr  : (int -> (term * term) -> Range.range -> term)
-val mkBvUdiv : (int -> (term * term) -> Range.range -> term)
-val mkBvMod  : (int -> (term * term) -> Range.range -> term)
-val mkBvMul  : (int -> (term * term) -> Range.range -> term)
+val mkNatToBv : (int -> term -> Range.range -> term)
+val mkBvToNat : (term -> Range.range -> term)
+val mkBvAnd   : ((term * term) -> Range.range -> term)
+val mkBvXor   : ((term * term) -> Range.range -> term)
+val mkBvOr    : ((term * term) -> Range.range -> term)
+val mkBvUlt   : ((term * term) -> Range.range -> term)
+val mkBvUext  : (int -> term -> Range.range -> term)
+val mkBvShl   : (int -> (term * term) -> Range.range -> term)
+val mkBvShr   : (int -> (term * term) -> Range.range -> term)
+val mkBvUdiv  : (int -> (term * term) -> Range.range -> term)
+val mkBvMod   : (int -> (term * term) -> Range.range -> term)
+val mkBvMul   : (int -> (term * term) -> Range.range -> term)
 
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term

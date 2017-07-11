@@ -60,6 +60,7 @@ let mkBvMod sz = norng (mkBvMod sz)
 let mkBvMul sz = norng (mkBvMul sz)
 let mkBvUlt = norng mkBvUlt
 let mkBvUext sz = norng (mkBvUext sz)
+let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkCases = norng mkCases
 let mkForall = norng mkForall

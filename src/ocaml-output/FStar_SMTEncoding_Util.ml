@@ -143,6 +143,8 @@ let mkBvUlt:
 let mkBvUext:
   Prims.int -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
   fun sz  -> norng (FStar_SMTEncoding_Term.mkBvUext sz)
+let mkBvToNat: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+  norng FStar_SMTEncoding_Term.mkBvToNat
 let mkITE:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
     FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.term

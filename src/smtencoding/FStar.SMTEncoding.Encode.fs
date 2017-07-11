@@ -489,13 +489,9 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_mul_lid) &&
       (isInteger sz_arg.n)
     | Tm_fvar fv, [(sz_arg, _); _] ->
-        (S.fv_eq_lid fv Const.nat_to_bv_lid) &&
+        (S.fv_eq_lid fv Const.nat_to_bv_lid
+         || S.fv_eq_lid fv Const.bv_to_nat_lid) &&
         (isInteger sz_arg.n)
-
-    | Tm_fvar fv, [(sz_arg, _)] ->
-      (S.fv_eq_lid fv Const.bv_zero_vec_lid ||
-      S.fv_eq_lid fv Const.bv_ones_vec_lid) &&
-      (isInteger sz_arg.n)
 
     | _ -> false
 
@@ -656,6 +652,7 @@ and encode_arith_term env head args_e =
     let bv_uext arg_tms = 
            mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible")) unary
                          (Term.boxBitVec (sz +  (match ext_sz with | Some x -> x | None -> failwith "impossible"))) arg_tms in
+    let to_int  = mk_bv Util.mkBvToNat unary Term.boxInt in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith (Term.boxBitVec sz) in
     let ops =
         [(Const.bv_and_lid, bv_and);
@@ -668,6 +665,7 @@ and encode_arith_term env head args_e =
          (Const.bv_mul_lid, bv_mul);
          (Const.bv_ult_lid, bv_ult);
          (Const.bv_uext_lid, bv_uext);
+         (Const.bv_to_nat_lid, to_int);
          (Const.nat_to_bv_lid, bv_to)]
     in
     let _, op =
