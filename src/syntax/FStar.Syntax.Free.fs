@@ -32,14 +32,7 @@ module UF = FStar.Syntax.Unionfind
 (************************* Free names and unif variables ************************)
 (********************************************************************************)
 
-type uvars     = set<(uvar*typ)>
-type free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
-    free_fvars:set<Ident.lident>
-}
+type free_vars_and_fvars = free_vars * set<Ident.lident>
 
 let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> UF.uvar_id x - UF.uvar_id y)
                                            (fun (x, _) -> UF.uvar_id x)
@@ -55,31 +48,50 @@ let no_free_vars = {
     free_uvars=no_uvs;
     free_univs=no_universe_uvars;
     free_univ_names=no_universe_names;
-    free_fvars=new_fv_set()
-}
+}, new_fv_set ()
 
-let singleton_bv x   = { no_free_vars with
-    free_names=Util.set_add x no_free_vars.free_names
-}
-let singleton_uv x   = { no_free_vars with
-    free_uvars=Util.set_add x no_free_vars.free_uvars
-}
-let singleton_univ x = { no_free_vars with
-    free_univs=Util.set_add x no_free_vars.free_univs
-}
-let singleton_univ_name x = { no_free_vars with
-    free_univ_names=Util.fifo_set_add x no_free_vars.free_univ_names
-}
-let singleton_fvar fv = { no_free_vars with
-    free_fvars=Util.set_add fv.fv_name.v no_free_vars.free_fvars
-}
+let singleton_fvar fv = {
+    free_names=no_names;
+    free_uvars=no_uvs;
+    free_univs=no_universe_uvars;
+    free_univ_names=no_universe_names;
+}, Util.set_add fv.fv_name.v (new_fv_set ())
+
+let singleton_bv x   = {
+    free_names=Util.set_add x (new_bv_set());
+    free_uvars=no_uvs;
+    free_univs=no_universe_uvars;
+    free_univ_names=no_universe_names;
+}, new_fv_set ()
+
+let singleton_uv x   = {
+    free_names=no_names;
+    free_uvars=Util.set_add x (new_uv_set());
+    free_univs=no_universe_uvars;
+    free_univ_names=no_universe_names;
+}, new_fv_set ()
+
+let singleton_univ x = {
+    free_names=no_names;
+    free_uvars=no_uvs;
+    free_univs=Util.set_add x (new_universe_uvar_set());
+    free_univ_names=no_universe_names;
+}, new_fv_set ()
+
+
+let singleton_univ_name x = {
+    free_names=no_names;
+    free_uvars=no_uvs;
+    free_univs=no_universe_uvars;
+    free_univ_names=Util.fifo_set_add x (new_universe_names_fifo_set ());
+}, new_fv_set ()
+
 let union f1 f2 = {
-    free_names=Util.set_union f1.free_names f2.free_names;
-    free_uvars=Util.set_union f1.free_uvars f2.free_uvars;
-    free_univs=Util.set_union f1.free_univs f2.free_univs;
-    free_univ_names=Util.fifo_set_union f1.free_univ_names f2.free_univ_names;
-    free_fvars=Util.set_union f1.free_fvars f2.free_fvars
-}
+    free_names=Util.set_union (fst f1).free_names (fst f2).free_names;
+    free_uvars=Util.set_union (fst f1).free_uvars (fst f2).free_uvars;
+    free_univs=Util.set_union (fst f1).free_univs (fst f2).free_univs;
+    free_univ_names=Util.fifo_set_union (fst f1).free_univ_names (fst f2).free_univ_names;
+}, Util.set_union (snd f1) (snd f2)
 
 let rec free_univs u = match Subst.compress_univ u with
   | U_zero
@@ -90,9 +102,17 @@ let rec free_univs u = match Subst.compress_univ u with
   | U_max us -> List.fold_left (fun out x -> union out (free_univs x)) no_free_vars us
   | U_unif u -> singleton_univ u
 
-let rec free_names_and_uvs' tm : free_vars =
+//the interface of Syntax.Free now supports getting fvars in a term also
+//however, fvars are added unlike free names, free uvars, etc. which are part of a record free_vars, that is memoized at **every** AST node
+//if we added fvars also to the record, it would affect every AST node
+//instead of doing that, the functions below compute a tuple, free_vars * set<lident>, where the second component is the fvars lids
+//but this raises a compilication, what should happen when the functions below just return from the cache from the AST nodes
+//to handle that, use_cache flag is UNSET when asking for free_fvars, so that all the terms are traversed completely
+//on the other hand, for earlier interface use_cache is true
+//this flag is propagated, and is used in the function should_invalidate_cache below
+let rec free_names_and_uvs' tm use_cache : free_vars_and_fvars =
     let aux_binders bs from_body =
-        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) no_free_vars in
+        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) no_free_vars in
         union from_binders from_body
     in
     let t = Subst.compress tm in
@@ -115,84 +135,110 @@ let rec free_names_and_uvs' tm : free_vars =
         no_free_vars
 
       | Tm_uinst(t, us) ->
-        let f = free_names_and_uvars t in
+        let f = free_names_and_uvars t use_cache in
         List.fold_left (fun out u -> union out (free_univs u)) f us
 
       | Tm_abs(bs, t, _) ->
-        aux_binders bs (free_names_and_uvars t)
+        aux_binders bs (free_names_and_uvars t use_cache)
 
       | Tm_arrow (bs, c) ->
-        aux_binders bs (free_names_and_uvars_comp c)
+        aux_binders bs (free_names_and_uvars_comp c use_cache)
 
       | Tm_refine(bv, t) ->
-        aux_binders [bv, None] (free_names_and_uvars t)
+        aux_binders [bv, None] (free_names_and_uvars t use_cache)
 
       | Tm_app(t, args) ->
-        free_names_and_uvars_args args (free_names_and_uvars t)
+        free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
 
       | Tm_match(t, pats) ->
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars
-                | Some w -> free_names_and_uvars w
+                | Some w -> free_names_and_uvars w use_cache
             in
-            let n2 = free_names_and_uvars t in
+            let n2 = free_names_and_uvars t use_cache in
             let n =
-              pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort)) n
+              pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort use_cache)) n
             in
             union n (union n1 n2) )
-            (free_names_and_uvars t)
+            (free_names_and_uvars t use_cache)
 
       | Tm_ascribed(t1, asc, _) ->
-        let u1 = free_names_and_uvars t1 in
+        let u1 = free_names_and_uvars t1 use_cache in
         let u2 = match fst asc with
-         | Inl t2 -> free_names_and_uvars t2
-         | Inr c2 -> free_names_and_uvars_comp c2 in
+         | Inl t2 -> free_names_and_uvars t2 use_cache
+         | Inr c2 -> free_names_and_uvars_comp c2 use_cache in
         (match snd asc with
          | None -> union u1 u2
-         | Some tac -> union (union u1 u2) (free_names_and_uvars tac))
+         | Some tac -> union (union u1 u2) (free_names_and_uvars tac use_cache))
 
       | Tm_let(lbs, t) ->
         snd lbs |> List.fold_left (fun n lb ->
-          union n (union (free_names_and_uvars lb.lbtyp) (free_names_and_uvars lb.lbdef)))
-          (free_names_and_uvars t)
+          union n (union (free_names_and_uvars lb.lbtyp use_cache) (free_names_and_uvars lb.lbdef use_cache)))
+          (free_names_and_uvars t use_cache)
 
       | Tm_meta(t, Meta_pattern args) ->
-        List.fold_right (fun a acc -> free_names_and_uvars_args a acc) args (free_names_and_uvars t)
+        List.fold_right (fun a acc -> free_names_and_uvars_args a acc use_cache) args (free_names_and_uvars t use_cache)
 
       | Tm_meta(t, Meta_monadic(_, t')) ->
-        union (free_names_and_uvars t) (free_names_and_uvars t')
+        union (free_names_and_uvars t use_cache) (free_names_and_uvars t' use_cache)
 
       | Tm_meta(t, _) ->
-        free_names_and_uvars t
+        free_names_and_uvars t use_cache
 
-and free_names_and_uvars t =
+and free_names_and_uvars t use_cache =
   let t = Subst.compress t in
-  free_names_and_uvs' t
+  match !t.vars with
+  | Some n when not (should_invalidate_cache n use_cache) -> n, new_fv_set ()
+  | _ ->
+      t.vars := None;
+      let n = free_names_and_uvs' t use_cache in
+      t.vars := Some (fst n);
+      n
 
-and free_names_and_uvars_args args (acc:free_vars) =
-        args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x)) acc
+and free_names_and_uvars_args args (acc:free_vars * set<Ident.lident>) use_cache =
+        args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
 
-and free_names_and_uvars_binders (bs:binders) acc =
-        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) acc
+and free_names_and_uvars_binders (bs:binders) acc use_cache =
+        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort use_cache)) acc
 
-and free_names_and_uvars_comp c =
-    match c.n with
-    | GTotal (t, None)
-    | Total (t, None) ->
-        free_names_and_uvars t
+and free_names_and_uvars_comp c use_cache =
+    match !c.vars with
+        | Some n ->
+          if should_invalidate_cache n use_cache
+          then (c.vars := None; free_names_and_uvars_comp c use_cache)
+          else n, new_fv_set ()
+        | _ ->
+         let n = match c.n with
+            | GTotal (t, None)
+            | Total (t, None) ->
+              free_names_and_uvars t use_cache
 
-    | GTotal (t, Some u)
-    | Total (t, Some u) ->
-        union (free_univs u) (free_names_and_uvars t)
+            | GTotal (t, Some u)
+            | Total (t, Some u) ->
+              union (free_univs u) (free_names_and_uvars t use_cache)
 
-    | Comp ct ->
-        let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ) in
-        List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs
+            | Comp ct ->
+              let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ use_cache) use_cache in
+              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
+         c.vars := Some (fst n);
+         n
 
-let names t = (free_names_and_uvars t).free_names
-let uvars t = (free_names_and_uvars t).free_uvars
-let univs t = (free_names_and_uvars t).free_univs
-let univnames t = (free_names_and_uvars t).free_univ_names
-let fvars t = (free_names_and_uvars t).free_fvars
-let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars).free_names
+and should_invalidate_cache n use_cache =
+    not use_cache ||
+      (n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match UF.find u with
+         | Some _ -> true
+         | _ -> false)
+       || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match UF.univ_find u with
+           | Some _ -> true
+           | None -> false)
+      )
+
+//note use_cache is set false ONLY for fvars, which is not maintained at each AST node
+//see the comment above
+let names t = (fst (free_names_and_uvars t true)).free_names
+let uvars t = (fst (free_names_and_uvars t true)).free_uvars
+let univs t = (fst (free_names_and_uvars t true)).free_univs
+let univnames t = (fst (free_names_and_uvars t true)).free_univ_names
+let fvars t = snd (free_names_and_uvars t false)
+let names_of_binders (bs:binders) = (fst (free_names_and_uvars_binders bs no_free_vars true)).free_names

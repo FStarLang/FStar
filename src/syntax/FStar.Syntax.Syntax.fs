@@ -191,10 +191,13 @@ and subst_elt =
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
+and freenames = set<bv>
+and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
-    pos:Range.range
+    pos:Range.range;
+    vars:memo<free_vars>;
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing
@@ -205,6 +208,12 @@ and fv = {
     fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
+}
+and free_vars = {
+    free_names:set<bv>;
+    free_uvars:uvars;
+    free_univs:set<universe_uvar>;
+    free_univ_names:fifo_set<univ_name>;
 }
 and lcomp = {
     eff_name: lident;
@@ -220,7 +229,6 @@ and residual_comp = {
     residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
 }
 
-type freenames = set<bv>
 type tscheme = list<univ_name> * typ
 
 type freenames_l = list<bv>
@@ -419,7 +427,8 @@ let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 let mk (t:'a) = fun (topt:option<'b>) r -> {
     n=t;
     pos=r;
-    tk=Util.mk_ref topt
+    tk=Util.mk_ref topt;
+    vars=Util.mk_ref None;
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
