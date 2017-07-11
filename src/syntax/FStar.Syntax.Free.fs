@@ -89,130 +89,109 @@ let rec free_univs u = match Subst.compress_univ u with
   | U_max us -> List.fold_left (fun out x -> union out (free_univs x)) no_free_vars us
   | U_unif u -> singleton_univ u
 
-let rec collect_k (l:list<'a>) (f:'a -> ('b -> 'c) -> 'c) (acc:'b) (sum:'b -> 'b -> 'b) (k:'b -> 'c) : 'c =
-    match l with
-    | [] -> k acc
-    | hd::tl -> f hd (fun next -> collect_k tl f (sum acc next) sum k)
-
-let rec free_names_and_uvars tm (k:free_vars -> 'z) : 'z =
-    let aux_binders bs from_body k =
-        collect_k bs (fun (x, _) -> free_names_and_uvars x.sort) from_body union k
+let rec free_names_and_uvs' tm : free_vars =
+    let aux_binders bs from_body =
+        let from_binders = bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) no_free_vars in
+        union from_binders from_body
     in
     let t = Subst.compress tm in
     match t.n with
-      | Tm_delayed _ ->
-        failwith "Impossible"
+      | Tm_delayed _ -> failwith "Impossible"
 
       | Tm_name x ->
-        k (singleton_bv x)
+        singleton_bv x
 
       | Tm_uvar (x, t) ->
-        k (singleton_uv (x,t))
+        singleton_uv (x,t)
 
       | Tm_type u ->
-        k (free_univs u)
+        free_univs u
 
-      | Tm_bvar _ ->
-        k no_free_vars
-
-      | Tm_fvar fv ->
-        k (singleton_fvar fv)
-
+      | Tm_bvar _ -> no_free_vars
+      | Tm_fvar fv -> singleton_fvar fv
       | Tm_constant _
       | Tm_unknown ->
-        k no_free_vars
+        no_free_vars
 
       | Tm_uinst(t, us) ->
-        free_names_and_uvars t (fun f ->
-        k (List.fold_left (fun out u -> union out (free_univs u)) f us))
+        let f = free_names_and_uvars t in
+        List.fold_left (fun out u -> union out (free_univs u)) f us
 
       | Tm_abs(bs, t, _) ->
-        free_names_and_uvars t (fun f ->
-        aux_binders bs f k)
+        aux_binders bs (free_names_and_uvars t)
 
       | Tm_arrow (bs, c) ->
-        free_names_and_uvars_comp c (fun f ->
-        aux_binders bs f k)
+        aux_binders bs (free_names_and_uvars_comp c)
 
       | Tm_refine(bv, t) ->
-        free_names_and_uvars t (fun f ->
-        aux_binders [bv, None] f k)
+        aux_binders [bv, None] (free_names_and_uvars t)
 
       | Tm_app(t, args) ->
-        free_names_and_uvars t (fun f ->
-        free_names_and_uvars_args args f k)
+        free_names_and_uvars_args args (free_names_and_uvars t)
 
       | Tm_match(t, pats) ->
-        let free_pat (p, wopt, t) k =
-             (match wopt with
-              | None ->   (fun k -> k no_free_vars)
-              | Some w -> free_names_and_uvars w)
-             (fun n1 ->
-               free_names_and_uvars t
-             (fun n2 ->
-               collect_k (pat_bvs p) (fun x -> free_names_and_uvars x.sort) (union n1 n2) union k))
-        in
-        free_names_and_uvars t (fun n ->
-        collect_k pats free_pat n union k)
+        pats |> List.fold_left (fun n (p, wopt, t) ->
+            let n1 = match wopt with
+                | None ->   no_free_vars
+                | Some w -> free_names_and_uvars w
+            in
+            let n2 = free_names_and_uvars t in
+            let n =
+              pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort)) n
+            in
+            union n (union n1 n2) )
+            (free_names_and_uvars t)
 
       | Tm_ascribed(t1, asc, _) ->
-        free_names_and_uvars t1
-        (fun u1 ->
-            (match fst asc with
-             | Inl t2 -> free_names_and_uvars t2
-             | Inr c2 -> free_names_and_uvars_comp c2)
-        (fun u2 ->
-            let u12 = union u1 u2 in
-            (match snd asc with
-            | None -> k u12
-            | Some tac -> free_names_and_uvars tac (fun u3 ->
-                          k (union u12 u3)))))
+        let u1 = free_names_and_uvars t1 in
+        let u2 = match fst asc with
+         | Inl t2 -> free_names_and_uvars t2
+         | Inr c2 -> free_names_and_uvars_comp c2 in
+        (match snd asc with
+         | None -> union u1 u2
+         | Some tac -> union (union u1 u2) (free_names_and_uvars tac))
 
       | Tm_let(lbs, t) ->
-        let free_lb lb k =
-            free_names_and_uvars lb.lbtyp (fun n1 ->
-            free_names_and_uvars lb.lbdef (fun n2 ->
-            k (union n1 n2)))
-        in
-        free_names_and_uvars t (fun n ->
-        collect_k (snd lbs) free_lb n union k)
+        snd lbs |> List.fold_left (fun n lb ->
+          union n (union (free_names_and_uvars lb.lbtyp) (free_names_and_uvars lb.lbdef)))
+          (free_names_and_uvars t)
 
-      | Tm_meta(t, Meta_pattern args_l) ->
-        free_names_and_uvars t (fun f ->
-        free_names_and_uvars_args (List.flatten args_l) f k)
+      | Tm_meta(t, Meta_pattern args) ->
+        List.fold_right (fun a acc -> free_names_and_uvars_args a acc) args (free_names_and_uvars t)
 
       | Tm_meta(t, Meta_monadic(_, t')) ->
-        free_names_and_uvars t (fun f ->
-        free_names_and_uvars t' (fun g -> k (union f g)))
+        union (free_names_and_uvars t) (free_names_and_uvars t')
 
       | Tm_meta(t, _) ->
-        free_names_and_uvars t k
+        free_names_and_uvars t
 
-and free_names_and_uvars_args args (acc:free_vars) (k:free_vars -> 'z) : 'z =
-    collect_k args (fun (x, _) -> free_names_and_uvars x) acc union k
+and free_names_and_uvars t =
+  let t = Subst.compress t in
+  free_names_and_uvs' t
 
-and free_names_and_uvars_binders (bs:binders) acc k =
-    collect_k bs (fun (x, _) -> free_names_and_uvars x.sort) acc union k
+and free_names_and_uvars_args args (acc:free_vars) =
+        args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x)) acc
 
-and free_names_and_uvars_comp c k =
+and free_names_and_uvars_binders (bs:binders) acc =
+        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) acc
+
+and free_names_and_uvars_comp c =
     match c.n with
     | GTotal (t, None)
     | Total (t, None) ->
-      free_names_and_uvars t k
+        free_names_and_uvars t
 
     | GTotal (t, Some u)
     | Total (t, Some u) ->
-      free_names_and_uvars t (fun f -> k (union (free_univs u) f))
+        union (free_univs u) (free_names_and_uvars t)
 
     | Comp ct ->
-      let free_univs = List.fold_left (fun us u -> union us (free_univs u)) no_free_vars ct.comp_univs in
-      free_names_and_uvars_args ct.effect_args free_univs (fun f ->
-      free_names_and_uvars ct.result_typ (fun g -> k (union f g)))
+        let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ) in
+        List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs
 
-let free t = free_names_and_uvars t (fun x -> x)
-let names t = (free t).free_names
-let uvars t = (free t).free_uvars
-let univs t = (free t).free_univs
-let univnames t = (free t).free_univ_names
-let fvars t = (free t).free_fvars
-let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars (fun x -> x)).free_names
+let names t = (free_names_and_uvars t).free_names
+let uvars t = (free_names_and_uvars t).free_uvars
+let univs t = (free_names_and_uvars t).free_univs
+let univnames t = (free_names_and_uvars t).free_univ_names
+let fvars t = (free_names_and_uvars t).free_fvars
+let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars).free_names
