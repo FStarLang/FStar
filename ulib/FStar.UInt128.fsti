@@ -112,14 +112,8 @@ val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> 
 val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
 
 (* Casts *)
-
-val uint64_to_uint128: a:U64.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v a))
-
-val uint128_to_uint64: a:t -> Pure U64.t
-  (requires (v a < pow2 64))
-  (ensures (fun r -> U64.v r == v a))
+val uint64_to_uint128: a:U64.t -> b:t{v b == U64.v a}
+val uint128_to_uint64: a:t -> b:U64.t{U64.v b == v a % pow2 64}
 
 (* To input / output constants *)
 (* TODO: assume these without implementations *)
