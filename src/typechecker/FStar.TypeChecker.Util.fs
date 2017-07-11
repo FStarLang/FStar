@@ -100,11 +100,11 @@ let check_uvars r t =
 (************************************************************************)
 (* Extracting annotations from a term *)
 (************************************************************************)
-let force_sort' s = match !s.tk with
-    | None -> failwith (BU.format2 "(%s) Impossible: Forced tk not present on %s" (Range.string_of_range s.pos) (Print.term_to_string s))
-    | Some tk -> tk
-
-let force_sort s = mk (force_sort' s) None s.pos
+//let force_sort' s = match !s.tk with
+//    | None -> failwith (BU.format2 "(%s) Impossible: Forced tk not present on %s" (Range.string_of_range s.pos) (Print.term_to_string s))
+//    | Some tk -> tk
+//
+//let force_sort s = mk (force_sort' s) None s.pos
 
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list<univ_name>
@@ -306,20 +306,22 @@ let decorate_pattern env p exp =
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
               if Env.debug env <| Options.Other "Pat"
               then BU.print2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
-              let s = Normalize.normalize [Normalize.Beta] env y.sort in
-              let x = {x with sort=s} in
-              pkg (Pat_var x)
+              pkg p.v
+//              let s = Normalize.normalize [Normalize.Beta] env y.sort in
+//              let x = {x with sort=s} in
+//              pkg (Pat_var x)
 
             | Pat_wild x, Tm_name y ->
               if bv_eq x y |> not
               then failwith (BU.format2 "Expected pattern variable %s; got %s" (Print.bv_to_string x) (Print.bv_to_string y));
-              let s = Normalize.normalize [Normalize.Beta] env y.sort in
-              let x = {x with sort=s} in
-              pkg (Pat_wild x)
+              pkg p.v
+//              let s = Normalize.normalize [Normalize.Beta] env y.sort in
+//              let x = {x with sort=s} in
+//              pkg (Pat_wild x)
 
             | Pat_dot_term(x, _), _ ->
-              let s = force_sort e in
-              let x = {x with sort=s} in
+//              let s = force_sort e in
+//              let x = {x with sort=s} in
               pkg (Pat_dot_term(x, e))
 
             | Pat_cons(fv, []), Tm_fvar fv' ->
@@ -339,7 +341,7 @@ let decorate_pattern env p exp =
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
                         | (e, Some (Implicit true)), Pat_dot_term _ ->
-                          let x = Syntax.new_bv (Some p.p) (force_sort e) in
+                          let x = Syntax.new_bv (Some p.p) S.tun in //(force_sort e) in
                           let q = withinfo (Pat_dot_term(x, e)) p.p in
                           match_args ((q, true)::matched_pats) args argpats
 
