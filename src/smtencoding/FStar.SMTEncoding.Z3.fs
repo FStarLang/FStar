@@ -116,12 +116,13 @@ let status_string_and_errors s =
     | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
 
 let tid () = BU.current_tid() |> BU.string_of_int
+
+let smt_cond _ (s:string) =
+   let s = BU.trim_string s in
+   s = "Done!" || s = "\"Done!\""
+
 let new_z3proc id =
-   let cond pid (s:string) =
-    (let x = BU.trim_string s = "Done!" in
-//     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
-     x) in
-   BU.start_process id ((Options.solver_exe())) (ini_params()) cond
+   BU.start_process id ((Options.solver_exe())) (ini_params()) smt_cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -245,13 +246,17 @@ type smt_output = {
 }
 
 let smt_output_sections (lines:list<string>) : smt_output =
-    let rec until tag lines =
+    let until tag lines =
+      let tag' = "\"" ^ tag ^ "\"" in
+      let rec aux lines =
         match lines with
         | [] -> None
         | l::lines ->
-          if tag = l then Some ([], lines)
-          else BU.map_opt (until tag lines) (fun (until_tag, rest) ->
+          if tag = l || tag' = l then Some ([], lines)
+          else BU.map_opt (aux lines) (fun (until_tag, rest) ->
                           (l::until_tag, rest))
+      in
+      aux lines
     in
     let start_tag tag = "<" ^ tag ^ ">" in
     let end_tag tag = "</" ^ tag ^ ">" in
@@ -358,13 +363,9 @@ let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status
     in
     status, statistics
   in
-  let cond pid (s:string) =
-    (let x = BU.trim_string s = "Done!" in
-      //     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
-     x) in
   let stdout =
     if fresh then
-      BU.launch_process (tid()) ((Options.solver_exe())) (ini_params()) input cond
+      BU.launch_process (tid()) ((Options.solver_exe())) (ini_params()) input smt_cond
     else
       let proc = bg_z3_proc.grab() in
       let stdout = BU.ask_process proc input in

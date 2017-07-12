@@ -115,7 +115,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
                   with End_of_file ->
                     Buffer.add_string out ("\nkilled\n") ; "", true) in
     if not eof then
-      if s = "Done!" then ()
+      if s = "Done!" or s = "\"Done!\"" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
@@ -144,7 +144,7 @@ let ask_process (p:proc) (stdin:string) : string =
                   with End_of_file ->
                     Buffer.add_string out ("\nkilled\n") ; "", true) in
     if not eof then
-      if s = "Done!" then ()
+      if s = "Done!" or s = "\"Done!\"" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
   in
 
