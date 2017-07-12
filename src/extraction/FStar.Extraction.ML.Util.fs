@@ -292,10 +292,16 @@ let mlloc_of_range (r: Range.range) =
     let line = Range.line_of_pos pos in
     line, Range.file_of_range r
 
-let rec argTypes  (t: mlty) : list<mlty> =
+let rec doms_and_cod (t:mlty) : list<mlty> * mlty =
     match t with
-      | MLTY_Fun (a,_,b) -> a::(argTypes b)
-      | _ -> []
+      | MLTY_Fun (a,_,b) ->
+        let ds, c = doms_and_cod b in
+        a::ds, c
+      | _ ->
+          [], t
+
+let argTypes  (t: mlty) : list<mlty> =
+    fst (doms_and_cod t)
 
 let rec uncurry_mlty_fun t =
     match t with
