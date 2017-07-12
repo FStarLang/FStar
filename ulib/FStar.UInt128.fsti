@@ -62,7 +62,6 @@ val lognot: a:t -> Pure t
   (requires True)
   (ensures (fun r -> v r == lognot (v a)))
 
-#set-options "--lax"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -72,9 +71,9 @@ val lognot: a:t -> Pure t
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+let __uint_to_t (x:int) : Tot t =
+      assume (fits x 128);
+      uint_to_t x
 
 
 (* Shift operators *)
