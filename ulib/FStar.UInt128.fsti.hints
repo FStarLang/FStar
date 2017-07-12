@@ -1,5 +1,5 @@
 [
-  "»ôV@´ÜŽ\u001b2üÇBï¢2\u001d",
+  "n@\u0007Ã\u0002&¼Ñ?\u0007Ó\u0017Á\u0001\u0016y",
   [
     [
       "FStar.UInt128.v",
@@ -465,14 +465,6 @@
         "@query", "equation_FStar.UInt128.n", "equation_FStar.UInt64.n",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
-    ],
-    [
-      "FStar.UInt128.uint128_to_uint64",
-      2,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ]
   ]
