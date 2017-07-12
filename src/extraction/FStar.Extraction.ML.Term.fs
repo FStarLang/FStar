@@ -294,6 +294,11 @@ let rec is_ml_value e =
     | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
+
+(*copied from ocaml-asttrans.fs*)
+let fresh = let c = mk_ref 0 in
+            fun (x:string) -> (incr c; (x ^ string_of_int (!c), !c))
+
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
 let normalize_abs (t0:term) : term =
@@ -366,6 +371,16 @@ let erase (g:env) e ty (f:e_tag) : (mlexpr * e_tag * mlty) =
             else e in
     (e, f, ty)
 
+(* eta-expand `e` according to its type `t` *)
+let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
+    let ts, r = doms_and_cod t in
+    if ts = [] then e else // just quit if this is not a function type
+    let vs = List.map (fun _ -> fresh "a") ts in
+    let vs_ts = List.zip vs ts in
+    let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) (List.zip vs ts) in
+    let body = with_ty r <| MLE_App (e, vs_es) in
+    with_ty t <| MLE_Fun (vs_ts, body)
+
 //maybe_coerce g e ty expect:
 //     Inserts an Obj.magic around e if ty </: expect
 let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
@@ -377,7 +392,7 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
                              (Code.string_of_mlexpr g.currentModule e)
                              (Code.string_of_mlty g.currentModule ty)
                              (Code.string_of_mlty g.currentModule expect));
-          with_ty expect <| MLE_Coerce (e, ty, expect)
+          eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -1272,11 +1287,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         | Some t -> t in
                    with_ty t_match <| MLE_Match(e, mlbranches), f_match, t_match
             end
-
-
-(*copied from ocaml-asttrans.fs*)
-let fresh = let c = mk_ref 0 in
-            fun (x:string) -> (incr c; (x ^ string_of_int (!c), !c))
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
