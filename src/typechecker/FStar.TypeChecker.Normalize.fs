@@ -592,6 +592,36 @@ let built_in_primitive_steps : list<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         string_as_const rng (if b then "true" else "false")
     in
+    let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
+    let range_of _ args : option<term> =
+      match args with
+      | [_; (t, _)] ->
+        Some (term_of_range t.pos)
+      | _ -> None
+    in
+    let set_range_of _ args : option<term> =
+      match args with
+      | [_; (t, _); ({n=Tm_constant (FStar.Const.Const_range r)}, _)] ->
+        Some ({t with pos=r})
+      | _ -> None
+    in
+    let mk_range _ args : option<term> =
+      match args with
+      | [fn; from_line; from_col; to_line; to_col] -> begin
+        match arg_as_string fn,
+              arg_as_int from_line,
+              arg_as_int from_col,
+              arg_as_int to_line,
+              arg_as_int to_col with
+        | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
+          let r = FStar.Range.mk_range fn
+                              (FStar.Range.mk_pos from_l from_c)
+                              (FStar.Range.mk_pos to_l to_c) in
+          Some (term_of_range r)
+        | _ -> None
+        end
+      | _ -> None
+    in
     let decidable_eq (neg:bool) (rng:Range.range) (args:args) : option<term> =
         let tru = mk (Tm_constant (FC.Const_bool true)) rng in
         let fal = mk (Tm_constant (FC.Const_bool false)) rng in
@@ -629,7 +659,10 @@ let built_in_primitive_steps : list<primitive_step> =
                                     1, unary_op arg_as_string list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list arg_as_char) string_of_list');
-             (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat')]
+             (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
+             (PC.p2l ["Prims"; "range_of"], 2, range_of);
+             (PC.p2l ["Prims"; "set_range_of"], 3, range_of);
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
     in
     let bounded_arith_ops =
         let bounded_int_types =
