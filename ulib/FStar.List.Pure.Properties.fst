@@ -4,15 +4,15 @@ open FStar.List.Tot.Base
 open FStar.List.Pure.Base
 open FStar.List.Tot.Properties
 
-(** Properties of first_N *)
+(** Properties of splitAt *)
 
-let rec first_N_length
+let rec splitAt_length
   (#a:Type)
   (n:nat)
   (l:list a)
   : Lemma (requires True)
     (ensures begin
-      let l_1, l_2 = first_N n l in
+      let l_1, l_2 = splitAt n l in
       if length l < n then
         length l_1 == length l /\ length l_2 == 0
       else
@@ -24,17 +24,17 @@ let rec first_N_length
   else
     match l with
     | [] -> ()
-    | _::xs -> first_N_length (n-1) xs
+    | _::xs -> splitAt_length (n-1) xs
 
-let rec first_N_assoc
+let rec splitAt_assoc
   (#a:Type)
   (n1 n2:nat)
   (l:list a)
   : Lemma (requires True)
     (ensures begin
-      let l1, l2 = first_N n1 l in
-      let l2, l3 = first_N n2 l2 in
-      let l1', l2' = first_N (n1+n2) l in
+      let l1, l2 = splitAt n1 l in
+      let l2, l3 = splitAt n2 l2 in
+      let l1', l2' = splitAt (n1+n2) l in
       l1' ==  l1 @ l2 /\ l2' == l3
     end)
     (decreases n1)
@@ -43,12 +43,12 @@ let rec first_N_assoc
   else
     match l with
     | [] -> ()
-    | x :: xs -> first_N_assoc (n1-1) n2 xs
+    | x :: xs -> splitAt_assoc (n1-1) n2 xs
 
 
-let rec first_N_length_total (#a:Type) (l:list a)
-  : Lemma (requires True) (ensures (first_N (length l) l == (l, []))) (decreases l)
+let rec splitAt_length_total (#a:Type) (l:list a)
+  : Lemma (requires True) (ensures (splitAt (length l) l == (l, []))) (decreases l)
 =
   match l with
   | [] -> ()
-  | x :: xs -> first_N_length_total xs
+  | x :: xs -> splitAt_length_total xs
