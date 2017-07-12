@@ -2,6 +2,7 @@ module Crypto.AEAD.Wrappers.CMA
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open Crypto.Indexing
@@ -19,6 +20,7 @@ module Plain = Crypto.Plain
 module Invariant = Crypto.AEAD.Invariant
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 module CMA = Crypto.Symmetric.UF1CMA
 module Seq = FStar.Seq
 module MAC = Crypto.Symmetric.MAC
@@ -359,8 +361,8 @@ let acc_inv_weak (#i:CMA.id) (ak:CMA.state i) (acc:CMA.accBuffer i) h : Type0 =
   Buffer.disjoint (MAC.as_buffer ak.r) (MAC.as_buffer (abuf acc)) /\
   (mac_log ==> (
     HS.contains h (alog acc) /\
-    Buffer.disjoint_ref_1 (MAC.as_buffer (CMA.abuf acc)) (HS.as_aref (CMA.alog acc)) /\
-    Buffer.disjoint_ref_1 (MAC.as_buffer ak.r)  (HS.as_aref (CMA.alog acc))))
+    Buffer.disjoint_ref_1 (MAC.as_buffer (CMA.abuf acc)) (CMA.alog acc) /\
+    Buffer.disjoint_ref_1 (MAC.as_buffer ak.r)  (CMA.alog acc)))
 
 let acc_ensures_weak (#i: MAC.id) (ak: CMA.state i) 
 		     (#aadlen:aadlen_32) (aad:lbuffer (v aadlen))

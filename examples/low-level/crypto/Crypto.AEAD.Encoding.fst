@@ -14,9 +14,11 @@ open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Crypto.Plain
 open Flag
+open FStar.HyperStack.ST
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 module MAC = Crypto.Symmetric.MAC
 module CMA = Crypto.Symmetric.UF1CMA
@@ -155,7 +157,7 @@ open FStar.HyperStack
 
 let modifies_nothing (h:mem) (h':mem) : GTot Type0 =
   (forall rid. Set.mem rid (Map.domain h.h) ==>
-    HH.modifies_rref rid !{} h.h h'.h
+    HH.modifies_rref rid Set.empty h.h h'.h
     /\ (forall (#a:Type) (b:Buffer.buffer a). 
       (Buffer.frameOf b == rid /\ Buffer.live h b ==> Buffer.equal h b h' b)))
 
@@ -172,7 +174,7 @@ private val add_bytes:
     CMA.acc_inv st acc h0 /\
     Buffer.disjoint (MAC.as_buffer (CMA.abuf acc)) txt /\
     Buffer.disjoint CMA.(MAC.as_buffer st.r) txt /\
-    (mac_log ==> Buffer.frameOf txt <> (CMA.alog acc).id  \/  Buffer.disjoint_ref_1 txt CMA.(HS.as_aref (alog acc))) ))
+    (mac_log ==> Buffer.frameOf txt <> (CMA.alog acc).id  \/  Buffer.disjoint_ref_1 txt CMA.(alog acc)) ))
   (ensures (fun h0 () h1 -> 
     let b = CMA.(MAC.as_buffer (CMA.abuf acc)) in
     Buffer.live h1 txt /\ 

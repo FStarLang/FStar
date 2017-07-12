@@ -16,7 +16,6 @@ cache/
 /src/parser/lex.fs
 /src/parser/parse.ml
 /src/parser/parse.mli
-src/ocaml-output/
 
 /src/boot_fstis
 /src/boot_fsts
@@ -26,6 +25,7 @@ src/ocaml-output/
 /lib/FStar.GetOpt.fsti
 /lib/FStar.Unionfind.fsti
 
+/ulib/.mgen
 /ulib/ml/extracted
 
 /bin/*.dll
@@ -58,6 +58,7 @@ dump
 *.cmi
 *.cmo
 *.cmx
+*.cma
 *.o
 
 .depend
@@ -77,3 +78,6 @@ tags
 /nuobj/
 nubuild.log
 nubuild.progress
+
+# Z3/F* nightly/weekly files
+/nightly

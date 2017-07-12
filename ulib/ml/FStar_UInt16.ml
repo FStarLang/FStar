@@ -1,5 +1,6 @@
 type uint16 = int
 type t = uint16
+type t' = t
            
 let (%) x y = if x < 0 then (x mod y) + y else x mod y
 

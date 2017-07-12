@@ -5,7 +5,7 @@ CORECRYPTO = $(FSTAR_HOME)/$(CONTRIB)/CoreCrypto/ml
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(CORECRYPTO)
 MARCH?=x86_64
 
-KREMLIN_HOME=../../../../kremlin
+KREMLIN_HOME?=../../../../kremlin
 KRML_INCLUDES=$(addprefix -I ,.. $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
 KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)

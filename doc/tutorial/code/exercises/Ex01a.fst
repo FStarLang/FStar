@@ -5,16 +5,16 @@ open FStar.All
 // BEGIN: ACLs
 type filename = string
 
-(* canWrite is a function specifying whether or not a file f can be written *)
+(** [canWrite] is a function specifying whether a file [f] can be written *)
 let canWrite (f:filename) = 
   match f with 
     | "demo/tempfile" -> true
     | _ -> false
 
-(* canRead is also a function ... *)
+(** [canRead] is also a function ... *)
 let canRead (f:filename) = 
   canWrite f               (* writeable files are also readable *)
-  || f="demo/README"       (* and so is this file *)
+  || f="demo/README"       (* and so is demo/README *)
 // END: ACLs
 
 // BEGIN: FileIO
@@ -26,9 +26,9 @@ let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file 
 // END: FileIO
 
 // BEGIN: UntrustedClientCode
-let passwd  = "demo/password"
-let readme  = "demo/README"
-let tmp     = "demo/tempfile"
+let passwd : filename = "demo/password"
+let readme : filename = "demo/README"
+let tmp    : filename = "demo/tempfile"
 // END: UntrustedClientCode
 
 // BEGIN: StaticChecking
@@ -36,9 +36,9 @@ val staticChecking : unit -> ML unit
 let staticChecking () =
   let v1 = read tmp in
   let v2 = read readme in
-  (* let v3 = read passwd in -- invalid read, fails type-checking *)
+  (* let v3 = read passwd in // invalid read, fails type-checking *)
   write tmp "hello!"
-  (* ; write passwd "junk" -- invalid write , fails type-checking *)
+  (* ; write passwd "junk" // invalid write , fails type-checking *)
 // END: StaticChecking
 
 // BEGIN: CheckedRead

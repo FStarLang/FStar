@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -24,6 +25,7 @@ open FStar.Util
 
 val db_to_string      : bv -> string
 val bv_to_string      : bv -> string
+val fv_to_string      : fv -> string
 val nm_to_string      : bv -> string
 val lid_to_string     : lid -> string
 val term_to_string    : term -> string
@@ -36,6 +38,7 @@ val modul_to_string   : modul -> string
 val lcomp_to_string   : lcomp -> string
 val univ_to_string    : universe -> string
 val sigelt_to_string  : sigelt -> string
+val binder_to_string  : binder -> string
 val binders_to_string : string -> binders ->string
 val args_to_string    : args -> string
 val eff_decl_to_string: bool -> eff_decl -> string

@@ -16,7 +16,7 @@
 // Using light syntax in this file because of object-oriented F# constructs
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Util
-
+open FSharp.Compatibility.OCaml
 open System
 open System.Text
 open System.Diagnostics
@@ -45,7 +45,7 @@ let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 exception Impos
 exception NYI of string
 exception Failure of string
-let max_int: int = System.Int32.MaxValue
+let max_int = System.Int32.MaxValue
 
 type proc = {m:Object;
              outbuf:StringBuilder;
@@ -277,6 +277,7 @@ let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
+let smap_size (m:smap<'value>) = m.Count
 
 type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
 let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
@@ -299,12 +300,50 @@ let imap_copy (m:imap<'value>) =
     imap_fold m (fun k v () -> imap_add n k v) ();
     n
 
+let format (fmt:string) (args:list<string>) =
+    let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
+    if frags.Length <> List.length args + 1
+    then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
+    else let args = Array.ofList (args@[""]) in
+         Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
+
+let format1 f a = format f [a]
+let format2 f a b = format f [a;b]
+let format3 f a b c = format f [a;b;c]
+let format4 f a b c d = format f [a;b;c;d]
+let format5 f a b c d e = format f [a;b;c;d;e]
+let format6 f a b c d e g = format f [a;b;c;d;e;g]
+
+let stdout_isatty () = None:option<bool>
+
+// These functions have no effect in F#
+let colorize (s:string) (colors:(string * string)) = s
+let colorize_bold (s:string) = s
+let colorize_red (s:string) = s
+let colorize_cyan (s:string) = s
+// END
+
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
-let print_string s = pr "%s" s
-let print_any s = pr "%A" s
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+let default_printer =
+  { printer_prinfo = fun s -> pr "%s" s;
+    printer_prwarning = fun s -> fpr stderr "%s" (colorize_cyan s);
+    printer_prerror = fun s -> fpr stderr "%s" (colorize_red s); }
+
+let current_printer = ref default_printer
+let set_printer printer = current_printer := printer
+
+let print_raw s = pr "%s" s
+let print_string s = (!current_printer).printer_prinfo s
+let print_any s = print_string (spr "%A" s)
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:list<string>) = String.concat sep l
 
@@ -340,11 +379,13 @@ let hex_string_of_byte  (i:byte) =
     else hs
 let string_of_char  (i:char) = spr "%c" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
+let bytes_of_string (s:string) = unicode_of_string s
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let trim_string (s:string) = s.Trim()
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
 let char_at (s:string) (i:int) : char = s.[i]
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let contains (s1:string) (s2:string) = s1.IndexOf(s2) >= 0
 let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
@@ -357,21 +398,6 @@ let split (s1:string) (s2:string) = Array.toList (s1.Split([|s2|], StringSplitOp
 let iof = int_of_float
 let foi = float_of_int
 
-let format (fmt:string) (args:list<string>) =
-    let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
-    if frags.Length <> List.length args + 1
-    then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
-    else let args = Array.ofList (args@[""]) in
-         Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
-
-let format1 f a = format f [a]
-let format2 f a b = format f [a;b]
-let format3 f a b c = format f [a;b;c]
-let format4 f a b c d = format f [a;b;c;d]
-let format5 f a b c d e = format f [a;b;c;d;e]
-let format6 f a b c d e g = format f [a;b;c;d;e;g]
-
-
 let print1 a b = print_string <| format1 a b
 let print2 a b c = print_string <| format2 a b c
 let print3 a b c d = print_string <| format3 a b c d
@@ -381,21 +407,12 @@ let print6 a b c d e f g = print_string <| format6 a b c d e f g
 
 let print s args = print_string <| format s args
 
-let stdout_isatty () = None:option<bool>
-
-// These functions have no effect in F#
-let colorize (s:string) (colors:(string * string)) = s
-let colorize_bold (s:string) = s
-let colorize_red (s:string) = s
-let colorize_cyan (s:string) = s
-// END
-
-let print_error s = fpr stderr "%s" (colorize_red s)
+let print_error s = (!current_printer).printer_prerror s
 let print1_error a b = print_error <| format1 a b
 let print2_error a b c = print_error <| format2 a b c
 let print3_error a b c d = print_error <| format3 a b c d
 
-let print_warning s = fpr stderr "%s" (colorize_cyan s)
+let print_warning s = (!current_printer).printer_prwarning s
 let print1_warning a b = print_warning <| format1 a b
 let print2_warning a b c = print_warning <| format2 a b c
 let print3_warning a b c d = print_warning <| format3 a b c d
@@ -462,6 +479,8 @@ let find_opt f l =
     | [] -> None
     | hd::tl -> if f hd then Some hd else aux tl in
     aux l
+
+let try_find f l = List.tryFind f l
 
 let try_find_index f l = List.tryFindIndex f l
 
@@ -631,11 +650,12 @@ let write_file (fn:string) s =
 let flush_file (fh:file_handle) = fh.Flush()
 let file_get_contents f =
   File.ReadAllText f
-let mkdir_clean dname =
+let mkdir clean dname =
   if System.IO.Directory.Exists(dname) then
     let srcDir = new System.IO.DirectoryInfo(dname)
-    for file in srcDir.GetFiles() do
-      System.IO.File.Delete file.FullName
+    if clean then
+        for file in srcDir.GetFiles() do
+        System.IO.File.Delete file.FullName
   else
     System.IO.Directory.CreateDirectory(dname) |> ignore
 let concat_dir_filename dname fname =
@@ -660,6 +680,8 @@ let expand_environment_variable s =
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
 let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
+let is_letter = Char.IsLetter
+let is_digit  = Char.IsDigit
 let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
 let is_symbol = Char.IsSymbol
@@ -748,10 +770,16 @@ let save_value_to_file (fname:string) value =
   output_value writer value
 
 let load_value_from_file (fname:string) =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`.
+  // this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
   try
-    use reader = new System.IO.StreamReader(fname) in
-    Some <| input_value reader
+    use reader = new System.IO.FileStream(fname,
+                                          FileMode.Open,
+                                          FileAccess.Read,
+                                          FileShare.Read) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    let result = formatter.Deserialize(reader) :?> 'a in
+    Some result
   with
   | _ ->
     None
@@ -779,7 +807,7 @@ let digest_of_string (s:string) =
 
 let ensure_decimal (s: string) =
   if s.StartsWith "0x" then
-    sprintf "%A" (System.Numerics.BigInteger.Parse (s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
+    sprintf "%A" (System.Numerics.BigInteger.Parse ("0"+s.[2..], System.Globalization.NumberStyles.AllowHexSpecifier))
   else
     s
 
@@ -835,19 +863,23 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
         if (List.length core_list) = 0 then None else
         Some (List.map (fun e -> (e : System.Object) :?> System.String) core_list) in
     let hint_from_json_hint (h : System.Object) =
-        let ha = h :?> System.Object [] in
-        if (Array.length ha) = 0 then None else
-            if (Array.length ha) <> 6 then failwith "malformed hint" else
-            Some {
-                hint_name=ha.[0] :?> System.String;
-                hint_index=ha.[1] :?> int;
-                fuel=ha.[2] :?> int;
-                ifuel=ha.[3] :?> int;
-                unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                query_elapsed_time=ha.[5] :?> int
-            } in
+        if  h = null then None
+        else let ha = h :?> System.Object [] in
+             if (Array.length ha) = 0 then None else
+                if (Array.length ha) <> 6 then failwith "malformed hint" else
+                Some {
+                    hint_name=ha.[0] :?> System.String;
+                    hint_index=ha.[1] :?> int;
+                    fuel=ha.[2] :?> int;
+                    ifuel=ha.[3] :?> int;
+                    unsat_core=unsat_core_from_json_unsat_core ha.[4];
+                    query_elapsed_time=ha.[5] :?> int
+                } in
     let hints_from_json_hints (hs : System.Object) =
-        let hint_list = (hs :?> System.Object []) |> Array.toList in
+        let hint_list =
+            if hs = null
+            then []
+            else (hs :?> System.Object []) |> Array.toList in
         List.map (fun e -> (hint_from_json_hint e)) hint_list  in
     if (Array.length jdb) <> 2 then failwith "malformed hints_db" else
     {
@@ -893,3 +925,53 @@ let read_hints (filename : string) : option<hints_db> =
     | :? System.IO.IOException ->
         Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
         None
+
+(** Interactive protocol **)
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
+exception UnsupportedJson
+
+let rec json_to_obj js =
+  match js with
+  | JsonNull -> null :> obj
+  | JsonBool b -> b :> obj
+  | JsonInt i -> i :> obj
+  | JsonStr s -> s :> obj
+  | JsonList l -> List.map json_to_obj l :> obj
+  | JsonAssoc a -> dict [ for (k, v) in a -> (k, json_to_obj v) ] :> obj
+
+let rec obj_to_json (o: obj) : option<json> =
+  let rec aux (o : obj) : json =
+    match o with
+    | null -> JsonNull
+    | :? bool as b -> JsonBool b
+    | :? int as i -> JsonInt i
+    | :? string as s -> JsonStr s
+    | :? (obj[]) as l -> JsonList (List.map aux (Array.toList l))
+    | :? System.Collections.Generic.IDictionary<string, obj> as a ->
+      JsonAssoc [ for KeyValue(k, v) in a -> (k, aux v) ]
+    | _ -> raise UnsupportedJson in
+  try Some (aux o) with UnsupportedJson -> None
+
+let json_of_string str : option<json> =
+  try
+    let deserializer = new System.Web.Script.Serialization.JavaScriptSerializer() in
+    obj_to_json (deserializer.DeserializeObject str : obj)
+  with
+  | :? ArgumentNullException
+  | :? ArgumentException
+  | :? InvalidOperationException -> None
+
+let string_of_json json : string =
+  let serializer = new System.Web.Script.Serialization.JavaScriptSerializer() in
+  serializer.Serialize (json_to_obj json)
+
+let read r = !r
+let write r x = r := x

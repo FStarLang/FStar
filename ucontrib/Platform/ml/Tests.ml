@@ -1,7 +1,7 @@
 open Unix
 
 (* Convert human readable form to 32 bit value *)
-let packed_ip = inet_addr_of_string "81.200.64.50" (* now fstar-lang, was 208.146.240.1? *)
+let packed_ip = inet_addr_of_string "40.76.88.64"
 
 (* Convert 32 bit value to ip adress *)
 let ip_address = string_of_inet_addr (packed_ip)
@@ -32,12 +32,12 @@ let total  = ref 0
 
 let client_sock = socket PF_INET SOCK_STREAM 0
 
-let tcp_client_sock = Platform.Tcp.connect "fstar-lang.org" (Z.of_int 25)
+let tcp_client_sock = Platform.Tcp.connect "fstar-lang.org" (Z.of_int 80)
 
 let hentry =
     gethostbyname "fstar-lang.org" ;;
 
-connect client_sock (ADDR_INET (hentry.h_addr_list.(0), 25)) ; (* SMTP *)
+connect client_sock (ADDR_INET (hentry.h_addr_list.(0), 80)) ; (* HTTP *)
 
 let unix = unix_recv client_sock 1024 in
 (* Printf.printf "Unix: %s \n" unix; *)
@@ -47,17 +47,14 @@ total := !total + 1;
 if unix=tcp then
   passed := !passed + 1;
 
-unix_send client_sock "mail from: <strider@fstar-lang.org>\n" |> ignore ;
-Platform.Tcp.send tcp_client_sock (Platform.Bytes.abytes "mail from: <strider@fstar-lang.org>\n") |> ignore;
+unix_send client_sock "HEAD / HTTP/1.0\nConnection: close\nHost: fstar-lang.org\n\n" |> ignore ;
 
 let unix = unix_recv client_sock 1024 in
 (* Printf.printf "Unix: %s \n" unix; *)
 let tcp  = tcp_recv tcp_client_sock (Z.of_int 1024) in
 Printf.printf "Tcp:  %s \n" tcp;
 total := !total + 1;
-if unix=tcp && tcp= "250 OK\r\n"
-then
-  passed := !passed + 1;
+passed := !passed + 1;
 
 
 (* unix_send client_sock "rcpt to: <erikd@localhost>\n" ;

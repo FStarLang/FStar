@@ -10,6 +10,7 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module I = FStar.Ident
+module Const = FStar.Parser.Const
 open FStar.Ident
 open FStar.Range
 

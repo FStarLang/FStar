@@ -179,6 +179,27 @@ let rec append_inv_tail l l1 l2 = match l1, l2 with
        (* Idem *)
        )
 
+let rec append_length_inv_head
+  (#a: Type)
+  (left1 right1 left2 right2: list a)
+: Lemma
+  (requires (append left1 right1 == append left2 right2 /\ length left1 == length left2))
+  (ensures (left1 == left2 /\ right1 == right2))
+  (decreases left1)
+= match left1 with
+  | [] -> ()
+  | _ :: left1' ->    
+    append_length_inv_head left1' right1 (tl left2) right2
+
+let append_length_inv_tail
+  (#a: Type)
+  (left1 right1 left2 right2: list a)
+: Lemma
+  (requires (append left1 right1 == append left2 right2 /\ length right1 == length right2))
+  (ensures (left1 == left2 /\ right1 == right2))
+= append_length left1 right1;
+  append_length left2 right2;
+  append_length_inv_head left1 right1 left2 right2
 
 (** Properties mixing rev and append **)
 

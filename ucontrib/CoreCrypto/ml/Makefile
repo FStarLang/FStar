@@ -8,7 +8,7 @@ MARCH?=x86_64
 OCAMLC = ocamlfind c $(INCLUDE) -g -annot
 OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
 OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
-OCAMLDEP = ocamlfind dep
+OCAMLDEP = ocamlfind dep -slash
 
 CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO -Lopenssl -Iopenssl/include)
 CCLIBS = $(addprefix -cclib ,-lcrypto)
@@ -70,22 +70,17 @@ $(DB)/DB.cmx: $(DB)/DB.ml
 	$(MAKE) -C $(DB)
 
 openssl/Configure:
-	echo "openssl folder is empty, running git submodule update..."
-	git submodule update --init --recursive
+	echo "openssl folder is empty, running git submodule update... no recursion"
+	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
-	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
+	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
 
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
 
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
-CoreCrypto.cmxa: #explicitly sequentialize
-	make $(PLATFORM)/platform.cmx
-	make CoreCrypto.cmx
-	make openssl_stub.o
-	make $(DB)/DB.cmx
-	make DHDB.cmx
+CoreCrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o CoreCrypto $(DLL_OBJ)
 
 DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
@@ -103,10 +98,10 @@ test: Tests.exe
 clean:
 	$(MAKE) -C $(DB) clean
 	$(MAKE) -C $(PLATFORM) clean
-	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
+	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
 depend:
-	$(OCAMLDEP) *.ml *.mli > .depend
+	$(OCAMLDEP) -I $(PLATFORM) -I $(DB) *.ml *.mli > .depend
 
 include .depend
 

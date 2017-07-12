@@ -1,4 +1,5 @@
 module FStar.Platform
+open FStar.ST
 open FStar.All
 type sys =
 | Windows

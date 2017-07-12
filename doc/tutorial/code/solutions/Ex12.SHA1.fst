@@ -1,5 +1,18 @@
 module Ex12.SHA1
-open FStar.All
+
+(* open FStar.HyperStack.ST *)
+(* open FStar.Seq *)
+(* open FStar.Monotonic.Seq *)
+(* open FStar.HyperHeap *)
+(* open FStar.HyperStack *)
+(* open FStar.Monotonic.RRef *)
+
+open Preorder
+open Heapx
+open STx
+open MRefx
+
+//open FStar.All
 open FStar.Seq
 open Platform.Bytes
 open CoreCrypto
@@ -16,7 +29,7 @@ let macsize = 20
 type key = lbytes keysize
 type tag = bytes //lbytes macsize
 
-val sample: n:nat -> ML (lbytes n)
+val sample: n:nat -> St (lbytes n)
 let sample n = random n 
 
 val sha1 : bytes -> Tot (h:bytes{length h = 20})

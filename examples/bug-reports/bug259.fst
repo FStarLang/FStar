@@ -4,7 +4,7 @@ module Bug259
 type env value = nat -> Tot value
 
 // defining a value datatype
-type value =
+noeq type value =
   | C: nat -> value
   | F: env value -> value
 
@@ -33,4 +33,4 @@ assume val en:env value
 assume val n:nat
 
 // this should succeed
-let t = assert (tr_v (F en) = F (tr_en en))
+let t = assert (tr_v (F en) == F (tr_en en))

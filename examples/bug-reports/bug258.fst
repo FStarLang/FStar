@@ -1,6 +1,6 @@
 module Bug258
 
-type value : Type0 =
+noeq type value : Type0 =
   | V_clos : env -> nat -> value
 and env = | E: f:(nat -> Tot value) -> env
 

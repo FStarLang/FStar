@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Parser.Interleave
+open FStar.ST
 open FStar.All
 //Reorders the top-level definitions/declarations in a file 
 //in a proper order for consistent type-checking
@@ -22,7 +23,6 @@ open FStar.All
 open FStar
 open FStar.Ident
 open FStar.Errors
-open FStar.Syntax.Syntax
 open FStar.Parser.AST
 
 (* The basic idea of interleaving is governed by the following:

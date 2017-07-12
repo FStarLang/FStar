@@ -3,11 +3,19 @@
    computational assumption *)
 
 module Ex12.MAC
+open FStar.ST
 open FStar.All
 open Ex12.SHA1
 open FStar.IO
 
+module SHA1 = Ex12.SHA1
+
 (* ---- specification *)
+
+(* We make the MAC.key abstract so that it cannot be accessed by 
+   the adversary *)
+
+abstract type key=SHA1.key 
 
 (* we attach an authenticated properties to each key,
    used as a pre-condition for MACing and
@@ -28,16 +36,21 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) []
+(* the log needs to be private so the adversary cannot 
+   add or remove entries *)
+
+private type log_t = ref (list entry)
+let log:log_t = ST.alloc #(list entry) []
+
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)
 val mac:    k:key -> t:text{key_prop k t} -> ST tag 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> modifies !{ log } h h'))
+  (ensures (fun h x h' -> Heap.modifies (Heap.only log) h h'))
 val verify: k:key -> t:text -> tag -> ST (b:bool{b ==> key_prop k t}) 
   (requires (fun h -> True)) 
-  (ensures (fun h x h' -> modifies !{} h h'))
+  (ensures (fun h x h' -> Heap.modifies Set.empty h h'))
 // END: MacSpec
 
 (* ---- implementation *)

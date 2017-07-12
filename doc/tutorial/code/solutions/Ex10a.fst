@@ -1,5 +1,6 @@
 module Ex10a
 open FStar.All
+open FStar.ST
 //acls-variant
 
 open FStar.List.Tot
@@ -24,7 +25,7 @@ let canRead db file =
 
 (* The acls reference stores the current access-control list, initially empty *)
 val acls: ref db
-let acls = alloc []
+let acls = ST.alloc []
 
 (*
    Here are two stateful functions which alter the access control list.
@@ -37,13 +38,14 @@ let acls = alloc []
 
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls == e::sel h acls))
-let grant e = ST.write acls (e::ST.read acls)
+let grant e =  acls := (e:: !acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(mem e (sel h' acls))))
 let revoke e =
-  let db = filter (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+  let db = filter (fun e' -> e<>e') !acls in
+  acls := db
+
 
 (* Next, we model two primitives that provide access to files *)
 
@@ -69,7 +71,7 @@ assume val delete: file:string -> ST unit
    As such, it is defined to have effect `All`, which combines
    both state and exceptions.
 
-   Regardless, the specification proves that `checkedDelete`
+   Regardless, the specification proves that `safe_delete`
    does not change the heap.
  *)
 val safe_delete: file -> All unit 

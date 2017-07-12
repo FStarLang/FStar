@@ -4,6 +4,7 @@ module Bug237
    The others only appear in tinyfstar-new.fst *)
 
 open FStar.Classical
+open FStar.StrongExcludedMiddle
 
 type var = nat
 
@@ -21,11 +22,11 @@ type knd =
   | KTArr : targ:typ -> kres:knd -> knd
 
 type tsub = var -> Tot typ
-opaque type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
+type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
 
 val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
                                          (~(trenaming s) ==> n=1)})
-let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
+let is_trenaming s = (if strong_excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
 let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
@@ -68,17 +69,17 @@ assume type esub
 assume val esub_id : esub 
 assume val esub_inc : esub
 
-type sub = 
+noeq type sub = 
 | Sub : es:esub -> ts:tsub -> sub
 
 assume val esub_tlam: s:sub -> Tot esub
 assume val esub_elam: s:sub -> Tot esub
 
-opaque type renaming (s:sub) = (trenaming (Sub.ts s))
+type renaming (s:sub) = (trenaming (Sub?.ts s))
 
 val is_renaming : s:sub -> GTot (n:int{(  renaming s  ==> n=0) /\
                                        (~(renaming s) ==> n=1)})
-let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
+let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
 
 val tsubst : s:sub -> t:typ -> Pure typ (requires True)
       (ensures (fun t' -> renaming s /\ TVar? t ==> TVar? t'))
@@ -93,19 +94,19 @@ val tsub_elam2 : s:sub -> a:var -> Tot(t:typ{renaming s ==> TVar? t})
       (decreases %[1; is_renaming s; 0; TVar 0])
 
 let rec tsub_elam s =
-fun a -> tsubst (Sub esub_inc tsub_id) (Sub.ts s a) 
+fun a -> tsubst (Sub esub_inc tsub_id) (Sub?.ts s a) 
 
 and tsub_tlam s =
 fun a -> if a = 0 then TVar a
-         else tsubst (Sub esub_id tsub_inc) (Sub.ts s a)
+         else tsubst (Sub esub_id tsub_inc) (Sub?.ts s a)
 
 and tsub_elam2 s =
-fun a -> tsubst (Sub esub_inc tsub_id) (tsubst (Sub esub_inc tsub_id) (Sub.ts s a))
+fun a -> tsubst (Sub esub_inc tsub_id) (tsubst (Sub esub_inc tsub_id) (Sub?.ts s a))
 
 (*Substitution inside types*)
 and tsubst s t =
   match t with
-  | TVar a -> (Sub.ts s a)
+  | TVar a -> (Sub?.ts s a)
   | TConst c -> TConst c
   | TTApp t1 t2 -> TTApp (tsubst s t1) (tsubst s t2)
 
@@ -136,7 +137,7 @@ let ktsubst_beta = ktsubst_beta_gen 0
 type eenv = var -> Tot (option typ)
 type tenv = var -> Tot (option knd)
 
-type env =
+noeq type env =
 | Env : e:eenv -> t:tenv -> env
 
 val tconsts : tconst -> Tot knd
@@ -144,22 +145,22 @@ let tconsts tc =
   match tc with
   | TcForallE   -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
 
-type kinding : g:env -> t:typ -> k:knd -> Type =
+noeq type kinding : g:env -> t:typ -> k:knd -> Type =
 | KConst : g:env -> c:tconst ->
     kinding g (TConst c) (tconsts c)
 
 | KTApp : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> #k':knd ->
-          =hk1:kinding g t1 (KKArr k k') ->
-          =hk2:kinding g t2 k ->
+          $hk1:kinding g t1 (KKArr k k') ->
+          $hk2:kinding g t2 k ->
                (* kinding g (TTApp t1 t2) k' *)
                kinding g (TTApp t1 t2) (ktsubst_beta t2 k')
 
 val k_foralle : #g:env -> #t1:typ -> #t2:typ ->
-                =hk1:kinding g t1 KType ->
+                $hk1:kinding g t1 KType ->
                 Tot (kinding g (TTApp (TConst TcForallE) t1)
                                (KKArr (KTArr t1 KType) KType))
-let k_foralle g t1 t2 hk1 =
-  (* assert(KKArr (KTArr t1 KType) KType =  *)
+let k_foralle #g #t1 #t2 hk1 =
+  (* assert(KKArr (KTArr t1 KType) KType = *)
   (*        ktsubst_beta t1 (KKArr (KTArr (TVar 0) KType) KType)); *)
   KTApp (*KKArr (KTArr (TVar 0) KType) KType*) (KConst g TcForallE) hk1
 (* Problem: without the annotation and the explicit k' in KTApp

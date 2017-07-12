@@ -1,5 +1,5 @@
 [
-  "3Yw\u001bÛÂZþêx¦1ÂŠäÄ",
+  "zx\rïQÑ\f¹ã>\u0018%Ã3¡L",
   [
     [
       "Ex04f.append",
@@ -26,18 +26,6 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
-      ],
-      0
-    ],
-    [
-      "Ex04f.fold_left_cons_is_reverse",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.list_haseq",
-        "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0
     ]

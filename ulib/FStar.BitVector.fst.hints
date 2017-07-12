@@ -20,7 +20,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_typing",
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_Prims.bool",
         "lemma_FStar.Seq.Base.lemma_create_len",
@@ -38,7 +38,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_Prims.bool", "int_inversion",
         "lemma_FStar.Seq.Base.lemma_create_len",
@@ -58,7 +58,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_typing",
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_Prims.bool",
         "lemma_FStar.Seq.Base.lemma_create_len",

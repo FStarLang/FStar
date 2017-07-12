@@ -1,0 +1,29 @@
+[
+  "ùâ\u0014§KŠ3˜çº\u0018ëGÖ\u001f!",
+  [
+    [ "Syntax.test2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.test2", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Syntax.blah'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Tv_Abs",
+        "disc_equation_FStar.Tactics.Tv_App",
+        "disc_equation_FStar.Tactics.Tv_Arrow",
+        "disc_equation_FStar.Tactics.Tv_Const",
+        "disc_equation_FStar.Tactics.Tv_FVar",
+        "disc_equation_FStar.Tactics.Tv_Refine",
+        "disc_equation_FStar.Tactics.Tv_Type",
+        "disc_equation_FStar.Tactics.Tv_Var",
+        "fuel_guarded_inversion_FStar.Tactics.term_view"
+      ],
+      0
+    ],
+    [ "Syntax.blah", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___30", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___30", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]

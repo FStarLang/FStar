@@ -2,9 +2,9 @@ module Test
 
 
 module DM = FStar.DependentMap
-module S  = FStar.Struct
-module HST = FStar.ST
-module B = FStar.Buffer
+module S  = FStar.Pointer
+module B  = FStar.BufferNG
+module HST = FStar.HyperStack.ST
 
 type fields =
 | I
@@ -16,7 +16,7 @@ let fields_def (x: fields) : Tot Type = match x with
 
 let struct = DM.t _ fields_def
 
-let obj = S.struct_ptr struct
+let obj = S.pointer struct
 
 let callee
    (pfrom pto: obj)
@@ -26,8 +26,8 @@ let callee
     S.live h pfrom /\ S.live h pto /\
     S.live h' pfrom /\ S.live h' pto /\
     S.modifies_1 (S.gfield pto I) h h' /\
-    S.as_value h (S.gfield pfrom I) == z /\
-    S.as_value h' (S.gfield pto I) == z + 1))
+    S.gread h (S.gfield pfrom I) == z /\
+    S.gread h' (S.gfield pto I) == z + 1))
 = S.write (S.field pto I) (S.read (S.field pfrom I) + 1);
   S.read (S.field pfrom I)
 
@@ -38,9 +38,9 @@ let caller
   (ensures (fun _ z _ -> z == 18))
 = HST.push_frame();
   let dm = DM.create #fields #fields_def (function | I -> 18 | B -> true) in
-  let b = B.create dm (UInt32.uint_to_t 2) in
-  let pfrom : obj = S.from_buffer_index b (UInt32.uint_to_t 0) in
-  let pto : obj = S.from_buffer_index b (UInt32.uint_to_t 1) in
+  let b = B.buffer_of_array_pointer (S.screate #(S.array 2ul struct) (Seq.create 2 dm)) in
+  let pfrom : obj = B.pointer_of_buffer_cell b (UInt32.uint_to_t 0) in
+  let pto : obj = B.pointer_of_buffer_cell b (UInt32.uint_to_t 1) in
   let z = callee pfrom pto in
   HST.pop_frame ();
   z
