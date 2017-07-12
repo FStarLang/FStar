@@ -132,10 +132,11 @@ type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 *)
 assume new type range : Type0
 
-irreducible let labeled (r:range) (msg:string) (b:Type) = b
-
 assume new type string : Type0
 assume HasEq_string: hasEq string
+
+irreducible let labeled (r:range) (msg:string) (b:Type) = b
+
 
 (* PURE effect *)
 let pure_pre = Type0
