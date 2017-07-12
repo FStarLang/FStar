@@ -274,10 +274,13 @@ hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
 # Getting parallelism from this target
-uregressions: hello ulib uexamples interactive-test
+uregressions: hello ulib tutorial uexamples interactive-test
 
 ulib:
 	+$(MAKE) -C ../ulib
+
+tutorial: ulib
+	+$(MAKE) -C ../tutorial/code regressions
 
 uexamples:
 	+$(MAKE) -C ../examples all
