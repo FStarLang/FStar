@@ -571,10 +571,13 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
             then match tys with
                     | None ->
                       text ""
+                    | Some ([], ty) ->
+                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
+                      reduce1 [text ":"; ty]
                     | Some (vs, ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
-//                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
-                      reduce1 [text ":"; ty]
+                      let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
+                      reduce1 [text ":"; vars; text "."; ty]
             else text "" in
         reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
 

@@ -158,7 +158,8 @@ and build_constructor_pat ((path, sym), p) =
      let inner = Pat.tuple (map build_pattern pats) in
      Ppat_construct (path_to_ident(path', name), Some inner)
 
-let rec build_core_type (ty: mlty): core_type =
+let rec build_core_type ?(annots = []) (ty: mlty): core_type =
+  let t =
   match ty with
   | MLTY_Var (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym))
   | MLTY_Fun (ty1, tag, ty2) ->
@@ -171,6 +172,10 @@ let rec build_core_type (ty: mlty): core_type =
      Typ.mk (Ptyp_constr (p, c_tys))
   | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
   | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
+  in
+  if annots = []
+  then t
+  else Typ.mk (Ptyp_poly (annots, t))
 
 let build_binding_pattern ((sym, _): mlident) : pattern =
   Pat.mk (Ppat_var (mk_sym sym))
@@ -206,7 +211,7 @@ let resugar_if_stmts ep cases =
   else
     Exp.match_ ep cases
 
-let rec build_expr ?print_ty (e: mlexpr): expression =
+let rec build_expr ?annot (e: mlexpr): expression =
   let e' = (match e.expr with
   | MLE_Const c -> build_constant_expr c
   | MLE_Var (sym, _) -> Exp.ident (mk_lident sym)
@@ -250,12 +255,13 @@ let rec build_expr ?print_ty (e: mlexpr): expression =
       Exp.apply r args
    | MLE_Try (e, cs) ->
       Exp.try_ (build_expr e) (map build_case cs)) in
-  match e.mlty with
-  | MLTY_Top -> e'
-  | t ->
-     (match print_ty with
-     | Some true -> Exp.constraint_ e' (build_core_type t)
-     | _ -> e')
+  match annot with
+  | None -> e'
+  | Some ts ->
+          (* Remove the leading tick *)
+          let vars = List.map (fun (s, _) -> String.sub s 1 (String.length s - 1)) (fst ts) in
+          let ty = snd ts in
+          Exp.constraint_ e' (build_core_type ~annots:vars ty)
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
@@ -323,12 +329,11 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
   (* replicating the rules for whether to print type ascriptions
      from the old printer *)
-  let print_ty = if (lb.print_typ && toplevel) then
-    (match lb.mllb_tysc with
-     | Some _ -> true
-     | _ -> false)
-                 else false in
-  let e = build_expr ?print_ty:(Some print_ty) lb.mllb_def in
+  let annot = if (lb.print_typ && toplevel)
+                 then lb.mllb_tysc
+                 else None
+  in
+  let e = build_expr ?annot:annot lb.mllb_def in
   let p = build_binding_pattern lb.mllb_name in
   (Vb.mk p e)
 
