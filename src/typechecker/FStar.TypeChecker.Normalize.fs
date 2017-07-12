@@ -599,14 +599,14 @@ let built_in_primitive_steps : list<primitive_step> =
         Some (term_of_range t.pos)
       | _ -> None
     in
-    let set_range_of _ args : option<term> =
+    let set_range_of (r:Range.range) args : option<term> =
       match args with
       | [_; (t, _); ({n=Tm_constant (FStar.Const.Const_range r)}, _)] ->
         Some ({t with pos=r})
       | _ -> None
     in
-    let mk_range _ args : option<term> =
-      match args with
+    let mk_range (r:Range.range) args : option<term> =
+        match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
         match arg_as_string fn,
               arg_as_int from_line,
@@ -661,7 +661,7 @@ let built_in_primitive_steps : list<primitive_step> =
                                     1, unary_op (arg_as_list arg_as_char) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "range_of"], 2, range_of);
-             (PC.p2l ["Prims"; "set_range_of"], 3, range_of);
+             (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
     in
     let bounded_arith_ops =

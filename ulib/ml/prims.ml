@@ -81,6 +81,11 @@ let magic () = failwith "no magic"
 let unsafe_coerce x = Obj.magic x
 let op_Negation x = not x
 
+let range_0 = ()
+let range_of _ = ()
+let mk_range _ _ _ _ _ = ()
+let set_range_of x = x
+
 (* for partially variants of the operators *)
 let op_Multiply x y = x * y
 let op_Subtraction x y = x - y

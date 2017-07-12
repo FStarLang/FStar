@@ -125,18 +125,12 @@ unopteq type dtuple2 (a:Type)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
 (* range is a type for the internal representations of source ranges
-         The functions that follow allow manipulating ranges abstractly.
-         Importantly, while we allow constructing ranges,
+         The functions that follow below allow manipulating ranges
+         abstractly.  Importantly, while we allow constructing ranges,
          we do not allow destructing them, since that would reveal
          that internally, set_range_of is not an identity function.
 *)
 assume new type range : Type0
-(* A total function to obtain the range of a term x *)
-assume val range_of : #a:Type -> x:a -> range
-(* Building a range constant *)
-assume val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to_col:int -> range
-(* Tagging a term x with the range r *)
-let set_range_of (#a:Type) (x:a) (r:range) = x
 
 irreducible let labeled (r:range) (msg:string) (b:Type) = b
 
@@ -213,6 +207,14 @@ effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
 assume new type int : Type0
 
 assume HasEq_int: hasEq int
+
+assume val range_0 : range
+(* A total function to obtain the range of a term x *)
+assume val range_of : #a:Type -> x:a -> Tot range
+(* Building a range constant *)
+assume val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to_col:int -> Tot range
+(* Tagging a term x with the range r *)
+let set_range_of (#a:Type) (x:a) (r:range) = x
 
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool
