@@ -219,6 +219,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(LTE, _)
         | App(GT, _)
         | App(GTE, _)
+        | App(BvUlt, _)
         | App(Var _, _) -> //atomic goals
           let lab, q = fresh_label default_msg ropt q.rng q in
           lab::labels, q
@@ -237,13 +238,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(BvUdiv, _)
         | App(BvMod, _)
         | App(BvMul, _)
-
         | App(BvUext _, _)
         | App(BvToNat, _)
         | App(NatToBv _, _) ->
           failwith "Impossible: non-propositional term"
-        | App(BvUlt, t)  ->
-          failwith (print_smt_term_list t)
 
         | App(ITE, _)
         | App(Imp, _) ->

@@ -231,4 +231,3 @@ val mk_haseq: term -> term
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string
-val getEncodedInteger: term -> Prims.int

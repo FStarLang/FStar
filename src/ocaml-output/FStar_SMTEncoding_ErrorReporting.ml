@@ -542,94 +542,95 @@ let label_goals:
                       q1.FStar_SMTEncoding_Term.rng q1 in
                   (match uu____999 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Var uu____1008,uu____1009) ->
-                  let uu____1012 =
+                  (FStar_SMTEncoding_Term.BvUlt ,uu____1008) ->
+                  let uu____1011 =
                     fresh_label1 default_msg ropt
                       q1.FStar_SMTEncoding_Term.rng q1 in
-                  (match uu____1012 with | (lab,q2) -> ((lab :: labels), q2))
+                  (match uu____1011 with | (lab,q2) -> ((lab :: labels), q2))
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Add ,uu____1021) ->
+                  (FStar_SMTEncoding_Term.Var uu____1020,uu____1021) ->
+                  let uu____1024 =
+                    fresh_label1 default_msg ropt
+                      q1.FStar_SMTEncoding_Term.rng q1 in
+                  (match uu____1024 with | (lab,q2) -> ((lab :: labels), q2))
+              | FStar_SMTEncoding_Term.App
+                  (FStar_SMTEncoding_Term.Add ,uu____1033) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Sub ,uu____1027) ->
+                  (FStar_SMTEncoding_Term.Sub ,uu____1039) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Div ,uu____1033) ->
+                  (FStar_SMTEncoding_Term.Div ,uu____1045) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Mul ,uu____1039) ->
+                  (FStar_SMTEncoding_Term.Mul ,uu____1051) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Minus ,uu____1045) ->
+                  (FStar_SMTEncoding_Term.Minus ,uu____1057) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Mod ,uu____1051) ->
+                  (FStar_SMTEncoding_Term.Mod ,uu____1063) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvAnd ,uu____1057) ->
+                  (FStar_SMTEncoding_Term.BvAnd ,uu____1069) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvXor ,uu____1063) ->
+                  (FStar_SMTEncoding_Term.BvXor ,uu____1075) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvOr ,uu____1069) ->
+                  (FStar_SMTEncoding_Term.BvOr ,uu____1081) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvShl ,uu____1075) ->
+                  (FStar_SMTEncoding_Term.BvShl ,uu____1087) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvShr ,uu____1081) ->
+                  (FStar_SMTEncoding_Term.BvShr ,uu____1093) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvUdiv ,uu____1087) ->
+                  (FStar_SMTEncoding_Term.BvUdiv ,uu____1099) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvMod ,uu____1093) ->
+                  (FStar_SMTEncoding_Term.BvMod ,uu____1105) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvMul ,uu____1099) ->
+                  (FStar_SMTEncoding_Term.BvMul ,uu____1111) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvUext uu____1105,uu____1106) ->
+                  (FStar_SMTEncoding_Term.BvUext uu____1117,uu____1118) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.BvToNat ,uu____1112) ->
+                  (FStar_SMTEncoding_Term.BvToNat ,uu____1124) ->
                   failwith "Impossible: non-propositional term"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.NatToBv uu____1118,uu____1119) ->
+                  (FStar_SMTEncoding_Term.NatToBv uu____1130,uu____1131) ->
                   failwith "Impossible: non-propositional term"
-              | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.BvUlt ,t)
-                  ->
-                  let uu____1128 =
-                    FStar_SMTEncoding_Term.print_smt_term_list t in
-                  failwith uu____1128
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.ITE ,uu____1132) ->
+                  (FStar_SMTEncoding_Term.ITE ,uu____1137) ->
                   failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.App
-                  (FStar_SMTEncoding_Term.Imp ,uu____1138) ->
+                  (FStar_SMTEncoding_Term.Imp ,uu____1143) ->
                   failwith "Impossible: arity mismatch"
               | FStar_SMTEncoding_Term.Quant
                   (FStar_SMTEncoding_Term.Forall ,pats,iopt,sorts,body) ->
-                  let uu____1156 =
+                  let uu____1161 =
                     aux default_msg ropt post_name_opt labels body in
-                  (match uu____1156 with
+                  (match uu____1161 with
                    | (labels1,body1) ->
-                       let uu____1167 =
+                       let uu____1172 =
                          FStar_SMTEncoding_Term.mk
                            (FStar_SMTEncoding_Term.Quant
                               (FStar_SMTEncoding_Term.Forall, pats, iopt,
                                 sorts, body1)) q1.FStar_SMTEncoding_Term.rng in
-                       (labels1, uu____1167))
+                       (labels1, uu____1172))
               | FStar_SMTEncoding_Term.Let (es,body) ->
-                  let uu____1177 =
+                  let uu____1182 =
                     aux default_msg ropt post_name_opt labels body in
-                  (match uu____1177 with
+                  (match uu____1182 with
                    | (labels1,body1) ->
-                       let uu____1188 =
+                       let uu____1193 =
                          FStar_SMTEncoding_Term.mkLet (es, body1)
                            q1.FStar_SMTEncoding_Term.rng in
-                       (labels1, uu____1188)) in
+                       (labels1, uu____1193)) in
             aux "assertion failed" FStar_Pervasives_Native.None
               FStar_Pervasives_Native.None [] q
 let detail_errors:
@@ -646,39 +647,39 @@ let detail_errors:
   fun env  ->
     fun all_labels  ->
       fun askZ3  ->
-        let print_banner uu____1225 =
-          let uu____1226 =
-            let uu____1227 = FStar_TypeChecker_Env.get_range env in
-            FStar_Range.string_of_range uu____1227 in
-          let uu____1228 = FStar_Util.string_of_int (Prims.parse_int "5") in
-          let uu____1229 =
+        let print_banner uu____1230 =
+          let uu____1231 =
+            let uu____1232 = FStar_TypeChecker_Env.get_range env in
+            FStar_Range.string_of_range uu____1232 in
+          let uu____1233 = FStar_Util.string_of_int (Prims.parse_int "5") in
+          let uu____1234 =
             FStar_Util.string_of_int (FStar_List.length all_labels) in
           FStar_Util.print3_error
             "Detailed error report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
-            uu____1226 uu____1228 uu____1229 in
-        let print_result uu____1244 =
-          match uu____1244 with
-          | ((uu____1250,msg,r),success) ->
+            uu____1231 uu____1233 uu____1234 in
+        let print_result uu____1249 =
+          match uu____1249 with
+          | ((uu____1255,msg,r),success) ->
               if success
               then
-                let uu____1257 = FStar_Range.string_of_range r in
+                let uu____1262 = FStar_Range.string_of_range r in
                 FStar_Util.print1_error
-                  "OK: proof obligation at %s was proven\n" uu____1257
+                  "OK: proof obligation at %s was proven\n" uu____1262
               else FStar_Errors.err r msg in
         let elim labs =
           FStar_All.pipe_right labs
             (FStar_List.map
-               (fun uu____1293  ->
-                  match uu____1293 with
-                  | (l,uu____1300,uu____1301) ->
+               (fun uu____1298  ->
+                  match uu____1298 with
+                  | (l,uu____1305,uu____1306) ->
                       let a =
-                        let uu____1307 =
-                          let uu____1308 =
-                            let uu____1311 = FStar_SMTEncoding_Util.mkFreeV l in
-                            (uu____1311, FStar_SMTEncoding_Util.mkTrue) in
-                          FStar_SMTEncoding_Util.mkEq uu____1308 in
+                        let uu____1312 =
+                          let uu____1313 =
+                            let uu____1316 = FStar_SMTEncoding_Util.mkFreeV l in
+                            (uu____1316, FStar_SMTEncoding_Util.mkTrue) in
+                          FStar_SMTEncoding_Util.mkEq uu____1313 in
                         {
-                          FStar_SMTEncoding_Term.assumption_term = uu____1307;
+                          FStar_SMTEncoding_Term.assumption_term = uu____1312;
                           FStar_SMTEncoding_Term.assumption_caption =
                             (FStar_Pervasives_Native.Some "Disabling label");
                           FStar_SMTEncoding_Term.assumption_name =
@@ -691,26 +692,26 @@ let detail_errors:
           match active with
           | [] ->
               let results =
-                let uu____1344 =
+                let uu____1349 =
                   FStar_List.map (fun x  -> (x, true)) eliminated in
-                let uu____1352 = FStar_List.map (fun x  -> (x, false)) errors in
-                FStar_List.append uu____1344 uu____1352 in
+                let uu____1357 = FStar_List.map (fun x  -> (x, false)) errors in
+                FStar_List.append uu____1349 uu____1357 in
               sort_labels results
           | hd1::tl1 ->
-              ((let uu____1366 =
+              ((let uu____1371 =
                   FStar_Util.string_of_int (FStar_List.length active) in
-                FStar_Util.print1 "%s, " uu____1366);
+                FStar_Util.print1 "%s, " uu____1371);
                FStar_SMTEncoding_Z3.refresh ();
-               (let uu____1374 =
-                  let uu____1382 =
+               (let uu____1379 =
+                  let uu____1387 =
                     FStar_All.pipe_left elim
                       (FStar_List.append eliminated
                          (FStar_List.append errors tl1)) in
-                  askZ3 uu____1382 in
-                match uu____1374 with
-                | (result,uu____1397,uu____1398) ->
-                    let uu____1407 = FStar_Util.is_left result in
-                    if uu____1407
+                  askZ3 uu____1387 in
+                match uu____1379 with
+                | (result,uu____1402,uu____1403) ->
+                    let uu____1412 = FStar_Util.is_left result in
+                    if uu____1412
                     then linear_check (hd1 :: eliminated) errors tl1
                     else linear_check eliminated (hd1 :: errors) tl1)) in
         print_banner ();

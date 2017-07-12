@@ -134,7 +134,7 @@ let arith_to_bv_tac : tactic unit =
     	  dump s;;
           trefl
       | Inr e ->
-    	    dump "inr arith_to_bv";;
+    	    // dump "inr arith_to_bv";;
             seq (arith_expr_to_bv e) trefl
         end
     | _ ->
@@ -171,11 +171,11 @@ let bv_tac_lt n =
   // apply_lemma (quote (lt_to_bv #n));;
   // dump "after lt_to_bv";;
   apply_lemma (quote (trans_lt2 #n));;  
-  dump "after trans";;
+  // dump "after trans";;
   arith_to_bv_tac;;
-  dump "after first arith_to_bv";;
+  // dump "after first arith_to_bv";;
   arith_to_bv_tac;;
-  dump "after second";;
+  // dump "after second";;
   set_options "--smtencoding.elim_box true";;
   smt ()
 
