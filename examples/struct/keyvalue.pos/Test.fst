@@ -162,67 +162,6 @@ let parse_abstract_store : parser store =
   (fun entries -> parsing_done `and_then`
   (fun _ -> parse_ret (Store num_entries entries))))
 
-(*! Serialization *)
-
-assume val u16_to_be: U16.t -> b:bytes{length b == 2}
-assume val u32_to_be: U32.t -> b:bytes{length b == 4}
-
-let encode_u16_array (len:U16.t) (b:bytes{length b == U16.v len}) : bytes =
-  u16_to_be len `append` b
-
-let encode_u32_array (len:U32.t) (b:bytes{length b == U32.v len}) : bytes =
-  u32_to_be len `append` b
-
-val encode_entry: encoded_entry -> bytes
-let encode_entry e = encode_u16_array e.key_len e.key `append` encode_u32_array e.val_len e.value
-
-assume val u16_be_inv: n:U16.t -> Lemma (u16_from_be (u16_to_be n) == n)
-                                 [SMTPat (u16_from_be (u16_to_be n))]
-assume val u32_be_inv: n:U32.t -> Lemma (u32_from_be (u32_to_be n) == n)
-                                 [SMTPat (u32_from_be (u32_to_be n))]
-
-
-val slice_append_suffix: #a:Type -> s1:seq a -> s2:seq a ->
-  n1:nat{n1 == length s1} -> n2:nat{n2 == length (append s1 s2)} ->
-  Lemma (slice (append s1 s2) n1 n2 == s2)
-  [SMTPat (slice (append s1 s2) n1 n2)]
-let slice_append_suffix #a s1 s2 n1 n2 =
-  lemma_eq_intro (slice (append s1 s2) n1 n2) s2
-
-val slice_append_prefix: #a:Type -> s1:seq a -> s2:seq a ->
-  n1:nat{n1 == length s1} ->
-  Lemma (slice (append s1 s2) 0 n1 == s1)
-  [SMTPat (slice (append s1 s2) 0 n1)]
-let slice_append_prefix #a s1 s2 n1 =
-  lemma_eq_intro (slice (append s1 s2) 0 n1) s1
-
-let parse_u16_array_inv (len:U16.t) (b:bytes{length b == U16.v len}) :
-    Lemma (parse_u16_array (encode_u16_array len b) == Some (U16Array len b, 2 + U16.v len))
-    [SMTPat (parse_u16_array (encode_u16_array len b))] =
-  assert (length (encode_u16_array len b) == 2 + U16.v len);
-  assert (Some? (parse_u16_array (encode_u16_array len b)));
-  ()
-
-let parse_u32_array_inv (len:U32.t) (b:bytes{length b == U32.v len}) :
-    Lemma (parse_u32_array (encode_u32_array len b) == Some (U32Array len b, 4 + U32.v len))
-    [SMTPat (parse_u32_array (encode_u32_array len b))] =
-    assert (length (encode_u32_array len b) == 4 + U32.v len);
-    assert (Some? (parse_u32_array (encode_u32_array len b)));
-    ()
-
-// TODO: we're in trouble here - we have to argue that the sequential parsing
-// can be broken down into parsing appends (which is where the lack of lookahead
-// is important)
-let encode_entry_inverse (e:encoded_entry) :
-  Lemma (parse_entry (encode_entry e) == Some (e, length (encode_entry e))) =
-  // assert (Some? (parse_entry (encode_entry e)));
-  admit()
-
-val encode: store -> bytes
-let encode s = u32_to_be s.num_entries `append`
-               (List.fold_left (fun b e -> b `append` encode_entry e)
-               createEmpty s.entries)
-
 (*! Validating input buffer *)
 
 (*! Stateful validation *)
@@ -908,3 +847,33 @@ let parse_value_offset_ok (b:bytes) :
     (fun (a, _) -> Some (a.a32 <: bytes))) ==
       parse_entry b `optbind`
       (fun (e, _) -> Some e.value)) = ()
+
+(*! Serializing a key-value store *)
+
+(* TODO: somewhat minor, but standardize on a name for these (writer, encoder,
+serializer, emitter) *)
+
+assume val u16_to_be: U16.t -> b:bytes{length b == 2}
+assume val u32_to_be: U32.t -> b:bytes{length b == 4}
+
+let encode_u16_array (len:U16.t) (b:bytes{length b == U16.v len}) : bytes =
+  u16_to_be len `append` b
+
+let encode_u32_array (len:U32.t) (b:bytes{length b == U32.v len}) : bytes =
+  u32_to_be len `append` b
+
+val encode_entry: encoded_entry -> bytes
+let encode_entry e = encode_u16_array e.key_len e.key `append`
+                     encode_u32_array e.val_len e.value
+
+val encode_many : #t:Type -> l:list t -> enc:(t -> bytes) -> n:nat{n <= List.length l} -> bytes
+let rec encode_many #t l enc n =
+  match n with
+  | 0 -> Seq.createEmpty
+  | _ -> enc (List.hd l) `append`
+        encode_many (List.tail l) enc (n-1)
+
+val encode_store : s:store -> bytes
+let encode_store s =
+  u32_to_be (s.num_entries) `append`
+  encode_many s.entries encode_entry (U32.v s.num_entries)
