@@ -7,13 +7,20 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Gho
 	HyperStack.All HyperStack.ST Int16 Int32 Int63 Int64 Int8 Int.Cast IO \
 	List List.Tot.Base Mul Option Pervasives.Native Set ST String \
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
-        Pointer BufferNG
+         Pointer BufferNG
 	# prims is realized by default hence not included in this list
 
 NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
 
+ifeq ($(OS), Windows_NT)
+  ULIB_ML=$(shell cygpath -m $(FSTAR_HOME)/ulib/ml)
+  OCAMLPATH=$(shell cygpath -m $(FSTAR_HOME)/bin)
+else
+  ULIB_ML=$(FSTAR_HOME)/ulib/ml
+  OCAMLPATH=$(FSTAR_HOME)/bin
+endif
+
 FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(NOEXTRACT_MODULES))
-ULIB_ML=$(FSTAR_HOME)/ulib/ml
 FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
 FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 
@@ -22,8 +29,8 @@ FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 # 	OCAML_DEFAULT_FLAGS=-predicates hyperstack
 # endif
 
-OCAMLOPT_BARE=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind opt
+OCAMLOPT_BARE=OCAMLPATH="$(OCAMLPATH)" ocamlfind opt
 OCAMLOPT_=$(OCAMLOPT_BARE) -package fstarlib -linkpkg -g
 OCAMLOPT=$(OCAMLOPT_) $(OCAML_DEFAULT_FLAGS)
-OCAMLC_=OCAMLPATH="$(FSTAR_HOME)/bin" ocamlfind c -package fstarlib -linkpkg -g
+OCAMLC_=OCAMLPATH="$(OCAMLPATH)" ocamlfind c -package fstarlib -linkpkg -g
 OCAMLC=$(OCAMLC_) $(OCAML_DEFAULT_FLAGS)
