@@ -47,6 +47,8 @@ val alloc: #a:Type0 -> heap -> a -> mm:bool -> GTot (ref a * heap)
 
 val free_mm: #a:Type0 -> h:heap -> r:ref a{h `contains` r /\ is_mm r} -> GTot heap
 
+val restrict: h:heap -> s:set nat -> GTot heap
+
 let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
                          ((~ (TS.mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
@@ -172,3 +174,21 @@ val upd_upd_same_ref (#a:Type) (h:heap) (r:ref a) (x:a) (y:a)
   :Lemma (requires True)
          (ensures  (upd (upd h r x) r y == upd h r y))
 	 [SMTPat (upd (upd h r x) r y)]
+	 
+val lemma_restrict_contains (#a:Type0) (h:heap) (s:set nat) (r:ref a)
+  :Lemma (requires True)
+	 (ensures (let h1 = restrict h s in 
+		   h1 `contains` r <==> h `contains` r /\ Set.mem (addr_of r) s))
+         [SMTPat ((restrict h s) `contains` r)]
+
+val lemma_restrict_unused (#a:Type0) (h:heap) (s:set nat) (r:ref a)
+  :Lemma (requires True)
+         (ensures (let h1 = restrict h s in
+	           r `unused_in` h1 <==> r `unused_in` h \/ ~(Set.mem (addr_of r) s)))
+         [SMTPat (r `unused_in` (restrict h s))]
+
+val lemma_restrict_sel (#a:Type0) (h:heap) (s:set nat) (r:ref a)
+  :Lemma (requires Set.mem (addr_of r) s)
+         (ensures (let h1 = restrict h s in
+	           sel h1 r == sel h r))
+         [SMTPat (sel (restrict h s) r)]
