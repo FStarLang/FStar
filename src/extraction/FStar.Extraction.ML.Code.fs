@@ -567,8 +567,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 //                      end
             else if top_level
             then match tys with
-                    | None | Some (_::_, _) -> text ""
-                    | Some ([], ty) ->
+                    | None ->
+                      text ""
+                    | Some (vs, ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
 //                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; ty]

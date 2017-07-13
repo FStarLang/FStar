@@ -323,7 +323,7 @@ and build_binding (toplevel: bool) (lb: mllb): value_binding =
      from the old printer *)
   let print_ty = if (lb.print_typ && toplevel) then
     (match lb.mllb_tysc with
-     | Some ([], ty) -> true
+     | Some _ -> true
      | _ -> false)
                  else false in 
   let e = build_expr ?print_ty:(Some print_ty) lb.mllb_def in
