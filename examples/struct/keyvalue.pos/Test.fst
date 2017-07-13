@@ -877,3 +877,215 @@ val encode_store : s:store -> bytes
 let encode_store s =
   u32_to_be (s.num_entries) `append`
   encode_many s.entries encode_entry (U32.v s.num_entries)
+
+(*! Efficient serializing *)
+
+// pure version of truncate_slice (which is in ST)
+val truncated_slice : b:bslice -> len:U32.t{U32.v len <= U32.v b.len} -> bslice
+let truncated_slice b len = BSlice len (B.sub b.p (U32.uint_to_t 0) len)
+
+(* NOTE: I'm using ser out of laziness, but they should NOT be abbreviated, we
+can serialize everywhere *)
+
+val modifies_slice : b:bslice -> h:mem -> h':mem -> GTot Type0
+let modifies_slice b h h' =
+  B.modifies_1 b.p h h'
+
+let modifies_prefix (b:bslice) (len:U32.t{U32.v len <= U32.v b.len}) =
+  modifies_slice (truncated_slice b len)
+
+let u32_max (a b:U32.t) : max:U32.t{U32.lte a max /\ U32.lte b max} =
+  if U32.gt a b then a else b
+
+let modifies_prefix_plus (b:bslice) (len1 len2: off:U32.t{U32.v off <= U32.v b.len}) h h' h''
+  : Lemma (requires (modifies_prefix b len1 h h' /\
+                     modifies_prefix b len2 h' h''))
+          (ensures (modifies_prefix b (u32_max len1 len2) h h'')) =
+  B.lemma_reveal_modifies_1 (truncated_slice b len1).p h h';
+  B.lemma_reveal_modifies_1 (truncated_slice b len2).p h' h'';
+  B.lemma_intro_modifies_1 (truncated_slice b (u32_max len1 len2)).p h h'';
+  ()
+
+let modifies_prefix_times (b:bslice) (len1: U32.t) (len2: U32.t{U32.v len1 + U32.v len2 <= U32.v b.len}) h h' h''
+  : Lemma (requires (U32.v len1 + U32.v len2 < pow2 32 /\
+                     modifies_prefix b len1 h h' /\
+                     modifies_prefix (advance_slice b len1) len2 h' h''))
+          (ensures (modifies_prefix b (U32.add len1 len2) h h'')) =
+  B.lemma_reveal_modifies_1 (truncated_slice b len1).p h h';
+  B.lemma_reveal_modifies_1 (truncated_slice (advance_slice b len1) len2).p h' h'';
+  B.lemma_intro_modifies_1 (truncated_slice b (U32.add len1 len2)).p h h'';
+  ()
+
+// TODO: this proof is somewhat tricky; it boils down to any buffer disjoint to
+// truncated_slice is either some other underlying storage or a subset of
+// advance_slice, and we've assumed that the advance slices are equal
+let modifies_prefix_seq_intro (b:bslice) (len: U32.t{U32.v len <= U32.v b.len}) h0 h1 :
+  Lemma (requires (modifies_slice b h0 h1 /\
+                   live h0 b /\
+                   live h1 b /\
+                   begin
+                    let len = U32.v len in
+                    let s0 = as_seq h0 b in
+                    let s1 = as_seq h1 b in
+                    forall (i:nat{len <= i /\ i < U32.v b.len}).{:pattern (index s0 i); (index s1 i)}
+                                                                 (index s0 i == index s1 i)
+                   end))
+        (ensures (modifies_prefix b len h0 h1)) =
+  B.lemma_reveal_modifies_1 b.p h0 h1;
+  admit();
+  B.lemma_intro_modifies_1 (truncated_slice b len).p h0 h1
+
+let serializer (enc:bytes) = buf:bslice ->
+  ST (option (off:U32.t{U32.v off <= U32.v buf.len}))
+     (requires (fun h0 -> live h0 buf))
+     (ensures (fun h0 r h1 ->
+        live h1 buf /\
+        (match r with
+         | Some off -> modifies_prefix buf off h0 h1 /\
+                      as_seq h1 (truncated_slice buf off) == enc
+         | None -> modifies_slice buf h0 h1)))
+
+let lemma_index_upd_gt (#a:Type) (s:Seq.seq a) (n:nat{n < length s}) (i:nat{n < i /\ i < length s}) (v:a) :
+  Lemma (index (Seq.upd s n v) i == index s i)
+  [SMTPat (index (Seq.upd s n v) i)] = ()
+
+#reset-options "--z3rlimit 10"
+
+let slice_upd (#a:Type) (s:Seq.seq a) (n:nat) (len:nat{n < len /\ len <= length s}) (v:a) :
+  Lemma (slice (Seq.upd s n v) 0 len == Seq.upd (slice s 0 len) n v) =
+  lemma_eq_intro (slice (Seq.upd s n v) 0 len) (Seq.upd (slice s 0 len) n v)
+
+let slice_len_1 (#a:Type) (s:Seq.seq a{length s >= 1}) (v:a) :
+  Lemma (slice (Seq.upd s 0 v) 0 1 == Seq.create 1 v) =
+  lemma_eq_intro (slice (Seq.upd s 0 v) 0 1) (Seq.create 1 v)
+
+val ser_byte: v:byte -> serializer (Seq.create 1 v)
+let ser_byte v = fun buf ->
+  if U32.lt buf.len 1ul then None
+  else
+    let h0 = get() in
+    B.upd buf.p 0ul v;
+    begin
+      let h1 = get() in
+      let s0 = as_seq h0 buf in
+      let s1 = as_seq h1 buf in
+      assert (s1 == Seq.upd s0 0 v);
+      slice_len_1 s0 v;
+      modifies_prefix_seq_intro buf 1ul h0 h1;
+      ()
+    end;
+    Some 1ul
+
+let slice_len_2 (#a:Type) (s:Seq.seq a{length s >= 2}) (vs:Seq.seq a{length vs == 2}) :
+  Lemma (slice (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) 0 2 == vs) =
+  let upd2 = Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) in
+  let upd2_sliced = slice upd2 0 2 in
+  assert (index upd2_sliced 0 == index vs 0);
+  // why is this intermediate assertion needed? (specifically, why do hints not
+  // trigger?)
+  assert (index upd2 1 == index vs 1);
+  lemma_eq_intro upd2_sliced vs
+
+val ser_u16: v:U16.t -> serializer (u16_to_be v)
+let ser_u16 v = fun buf ->
+  if U32.lt buf.len 2ul then None
+  else
+    let bs = u16_to_be v in
+    let h0 = get() in
+    B.upd buf.p 0ul (index bs 0);
+    B.upd buf.p 1ul (index bs 1);
+    begin
+      let h1 = get() in
+      let s0 = as_seq h0 buf in
+      let s1 = as_seq h1 buf in
+      slice_len_2 s0 bs;
+      modifies_prefix_seq_intro buf 2ul h0 h1
+    end;
+    Some 2ul
+
+let ser_append (#b1 #b2:bytes) (s1:serializer b1) (s2:serializer b2) : serializer (append b1 b2) =
+  fun buf ->
+  let h0 = get() in
+  match s1 buf with
+  | Some off ->
+    begin
+      let h1 = get() in
+      match s2 (advance_slice buf off) with
+      | Some off' -> (if u32_add_overflows off off' then None
+                     else begin
+                      let h2 = get() in
+                      modifies_prefix_times buf off off' h0 h1 h2;
+                      // TODO: this isn't easy to derive; need to get first off
+                      // bytes from first modification + disjointness in h1 ->
+                      // h2 transition, and then get off' bytes and relate them
+                      // to un-advanced buffer
+                      assume (as_seq h2 (truncated_slice buf (U32.add off off')) == append b1 b2);
+                      Some (U32.add off off')
+                     end)
+      | None -> None
+    end
+  | None -> None
+
+val ser_u32: v:U32.t -> serializer (u32_to_be v)
+let ser_u32 v = fun buf ->
+  if U32.lt buf.len 4ul then None
+  else
+    let bs = u32_to_be v in
+    admit();
+    Some 4ul
+
+let frameOf (b:bslice) = B.frameOf b.p
+
+val ser_copy :
+  data:bslice ->
+  buf:bslice ->
+  ST (option (off:U32.t{U32.v off <= U32.v buf.len}))
+     (requires (fun h0 -> live h0 buf /\
+                       live h0 data /\
+                       // this is a very strong disjointness requirement
+                       // (B.disjoint would be good enough, but then it has to
+                       // be proven stable wrt truncating buffers)
+                       frameOf data <> frameOf buf))
+     (ensures (fun h0 r h1 -> live h1 buf /\
+                 live h1 data /\
+                 (match r with
+                   | Some off -> modifies_prefix buf off h0 h1 /\
+                                as_seq h1 (truncated_slice buf off) ==
+                                as_seq h1 data
+                   | None -> modifies_slice buf h0 h1)))
+let ser_copy data buf =
+  if U32.lt buf.len data.len then None
+  else begin
+    let h0 = get() in
+    B.blit data.p 0ul buf.p 0ul data.len;
+    let h1 = get() in
+    B.lemma_reveal_modifies_1 buf.p h0 h1;
+    admit();
+    modifies_prefix_seq_intro buf data.len h0 h1;
+    Some data.len
+  end
+
+val ser_u16_array:
+  a:u16_array_st ->
+  buf:bslice ->
+  ST (option (off:U32.t{U32.v off <= U32.v buf.len}))
+     (requires (fun h0 -> live h0 buf /\
+                       live h0 a.a16_st /\
+                       // this is a very strong disjointness requirement
+                       // (B.disjoint would be good enough, but then it has to
+                       // be proven stable wrt truncating buffers)
+                       frameOf a.a16_st <> frameOf buf))
+     (ensures (fun h0 r h1 -> live h1 buf /\
+                 live h1 a.a16_st /\
+                 (match r with
+                  | Some off -> modifies_prefix buf off h0 h1 /\
+                               as_seq h1 (truncated_slice buf off) ==
+                               encode_u16_array a.len16_st (as_seq h1 a.a16_st)
+                  | None -> modifies_slice buf h0 h1)))
+
+// TODO: this can't actually use ser_append because these functions aren't
+// serializers, due to the extra handling of buffers rather than pure values
+
+//let ser_u16_array a buf =
+//  ser_u16 a.len16_st `ser_append`
+//  (fun buf -> ser_copy a.a16_st buf)

@@ -914,7 +914,7 @@ private val lemma_aux: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> z:
   [SMTPat (HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z))]
 let lemma_aux #a b n z h0 = lemma_aux_2 b n z h0
 
-val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
+abstract val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
