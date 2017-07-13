@@ -11,7 +11,7 @@ module U64 = FStar.UInt64
 
 module Math = FStar.Math.Lemmas
 
-#set-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
+#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
