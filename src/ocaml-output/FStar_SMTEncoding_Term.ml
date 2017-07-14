@@ -1785,8 +1785,16 @@ let getBoxedInteger: term -> Prims.int =
     | App (Var "BoxInt",t2::[]) ->
         (match t2.tm with
          | Integer n1 -> FStar_Util.int_of_string n1
-         | uu____4150 -> failwith "Not a boxed integer")
-    | uu____4151 -> let uu____4152 = print_smt_term t in failwith uu____4152
+         | uu____4150 ->
+             let uu____4151 =
+               let uu____4152 = print_smt_term t in
+               FStar_Util.format1 "Not a boxed integer: %s" uu____4152 in
+             failwith uu____4151)
+    | uu____4153 ->
+        let uu____4154 =
+          let uu____4155 = print_smt_term t in
+          FStar_Util.format1 "Not a boxed integer: %s" uu____4155 in
+        failwith uu____4154
 let mk_PreType: term -> term = fun t  -> mkApp ("PreType", [t]) t.rng
 let mk_Valid: term -> term =
   fun t  ->
@@ -1795,112 +1803,112 @@ let mk_Valid: term -> term =
         (Var
          "Prims.b2t",{
                        tm = App
-                         (Var "Prims.op_Equality",uu____4162::t1::t2::[]);
-                       freevars = uu____4165; rng = uu____4166;_}::[])
+                         (Var "Prims.op_Equality",uu____4165::t1::t2::[]);
+                       freevars = uu____4168; rng = uu____4169;_}::[])
         -> mkEq (t1, t2) t.rng
     | App
         (Var
          "Prims.b2t",{
                        tm = App
-                         (Var "Prims.op_disEquality",uu____4173::t1::t2::[]);
-                       freevars = uu____4176; rng = uu____4177;_}::[])
-        -> let uu____4184 = mkEq (t1, t2) norng in mkNot uu____4184 t.rng
+                         (Var "Prims.op_disEquality",uu____4176::t1::t2::[]);
+                       freevars = uu____4179; rng = uu____4180;_}::[])
+        -> let uu____4187 = mkEq (t1, t2) norng in mkNot uu____4187 t.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "Prims.op_LessThanOrEqual",t1::t2::[]);
-                       freevars = uu____4187; rng = uu____4188;_}::[])
+                       freevars = uu____4190; rng = uu____4191;_}::[])
         ->
-        let uu____4195 =
-          let uu____4198 = unboxInt t1 in
-          let uu____4199 = unboxInt t2 in (uu____4198, uu____4199) in
-        mkLTE uu____4195 t.rng
+        let uu____4198 =
+          let uu____4201 = unboxInt t1 in
+          let uu____4202 = unboxInt t2 in (uu____4201, uu____4202) in
+        mkLTE uu____4198 t.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "Prims.op_LessThan",t1::t2::[]);
-                       freevars = uu____4202; rng = uu____4203;_}::[])
+                       freevars = uu____4205; rng = uu____4206;_}::[])
         ->
-        let uu____4210 =
-          let uu____4213 = unboxInt t1 in
-          let uu____4214 = unboxInt t2 in (uu____4213, uu____4214) in
-        mkLT uu____4210 t.rng
+        let uu____4213 =
+          let uu____4216 = unboxInt t1 in
+          let uu____4217 = unboxInt t2 in (uu____4216, uu____4217) in
+        mkLT uu____4213 t.rng
     | App
         (Var
          "Prims.b2t",{
                        tm = App
                          (Var "Prims.op_GreaterThanOrEqual",t1::t2::[]);
-                       freevars = uu____4217; rng = uu____4218;_}::[])
+                       freevars = uu____4220; rng = uu____4221;_}::[])
         ->
-        let uu____4225 =
-          let uu____4228 = unboxInt t1 in
-          let uu____4229 = unboxInt t2 in (uu____4228, uu____4229) in
-        mkGTE uu____4225 t.rng
+        let uu____4228 =
+          let uu____4231 = unboxInt t1 in
+          let uu____4232 = unboxInt t2 in (uu____4231, uu____4232) in
+        mkGTE uu____4228 t.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "Prims.op_GreaterThan",t1::t2::[]);
-                       freevars = uu____4232; rng = uu____4233;_}::[])
+                       freevars = uu____4235; rng = uu____4236;_}::[])
         ->
-        let uu____4240 =
-          let uu____4243 = unboxInt t1 in
-          let uu____4244 = unboxInt t2 in (uu____4243, uu____4244) in
-        mkGT uu____4240 t.rng
+        let uu____4243 =
+          let uu____4246 = unboxInt t1 in
+          let uu____4247 = unboxInt t2 in (uu____4246, uu____4247) in
+        mkGT uu____4243 t.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "Prims.op_AmpAmp",t1::t2::[]);
-                       freevars = uu____4247; rng = uu____4248;_}::[])
+                       freevars = uu____4250; rng = uu____4251;_}::[])
         ->
-        let uu____4255 =
-          let uu____4258 = unboxBool t1 in
-          let uu____4259 = unboxBool t2 in (uu____4258, uu____4259) in
-        mkAnd uu____4255 t.rng
+        let uu____4258 =
+          let uu____4261 = unboxBool t1 in
+          let uu____4262 = unboxBool t2 in (uu____4261, uu____4262) in
+        mkAnd uu____4258 t.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "Prims.op_BarBar",t1::t2::[]);
-                       freevars = uu____4262; rng = uu____4263;_}::[])
+                       freevars = uu____4265; rng = uu____4266;_}::[])
         ->
-        let uu____4270 =
-          let uu____4273 = unboxBool t1 in
-          let uu____4274 = unboxBool t2 in (uu____4273, uu____4274) in
-        mkOr uu____4270 t.rng
+        let uu____4273 =
+          let uu____4276 = unboxBool t1 in
+          let uu____4277 = unboxBool t2 in (uu____4276, uu____4277) in
+        mkOr uu____4273 t.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "Prims.op_Negation",t1::[]);
-                       freevars = uu____4276; rng = uu____4277;_}::[])
-        -> let uu____4284 = unboxBool t1 in mkNot uu____4284 t1.rng
+                       freevars = uu____4279; rng = uu____4280;_}::[])
+        -> let uu____4287 = unboxBool t1 in mkNot uu____4287 t1.rng
     | App
         (Var
          "Prims.b2t",{ tm = App (Var "FStar.BV.bvult",t0::t1::t2::[]);
-                       freevars = uu____4288; rng = uu____4289;_}::[])
+                       freevars = uu____4291; rng = uu____4292;_}::[])
         ->
-        let uu____4296 =
-          let uu____4299 =
-            let uu____4300 = getBoxedInteger t0 in unboxBitVec uu____4300 t1 in
-          let uu____4301 =
-            let uu____4302 = getBoxedInteger t0 in unboxBitVec uu____4302 t2 in
-          (uu____4299, uu____4301) in
-        mkBvUlt uu____4296 t.rng
+        let uu____4299 =
+          let uu____4302 =
+            let uu____4303 = getBoxedInteger t0 in unboxBitVec uu____4303 t1 in
+          let uu____4304 =
+            let uu____4305 = getBoxedInteger t0 in unboxBitVec uu____4305 t2 in
+          (uu____4302, uu____4304) in
+        mkBvUlt uu____4299 t.rng
     | App
         (Var
-         "Prims.equals",uu____4303::{
+         "Prims.equals",uu____4306::{
                                       tm = App
                                         (Var "FStar.BV.bvult",t0::t1::t2::[]);
-                                      freevars = uu____4307;
-                                      rng = uu____4308;_}::uu____4309::[])
+                                      freevars = uu____4310;
+                                      rng = uu____4311;_}::uu____4312::[])
         ->
-        let uu____4316 =
-          let uu____4319 =
-            let uu____4320 = getBoxedInteger t0 in unboxBitVec uu____4320 t1 in
-          let uu____4321 =
-            let uu____4322 = getBoxedInteger t0 in unboxBitVec uu____4322 t2 in
-          (uu____4319, uu____4321) in
-        mkBvUlt uu____4316 t.rng
+        let uu____4319 =
+          let uu____4322 =
+            let uu____4323 = getBoxedInteger t0 in unboxBitVec uu____4323 t1 in
+          let uu____4324 =
+            let uu____4325 = getBoxedInteger t0 in unboxBitVec uu____4325 t2 in
+          (uu____4322, uu____4324) in
+        mkBvUlt uu____4319 t.rng
     | App (Var "Prims.b2t",t1::[]) ->
-        let uu___95_4325 = unboxBool t1 in
+        let uu___95_4328 = unboxBool t1 in
         {
-          tm = (uu___95_4325.tm);
-          freevars = (uu___95_4325.freevars);
+          tm = (uu___95_4328.tm);
+          freevars = (uu___95_4328.freevars);
           rng = (t.rng)
         }
-    | uu____4328 -> mkApp ("Valid", [t]) t.rng
+    | uu____4331 -> mkApp ("Valid", [t]) t.rng
 let mk_HasType: term -> term -> term =
   fun v1  -> fun t  -> mkApp ("HasType", [v1; t]) t.rng
 let mk_HasTypeZ: term -> term -> term =
@@ -1910,8 +1918,8 @@ let mk_HasTypeFuel: term -> term -> term -> term =
   fun f  ->
     fun v1  ->
       fun t  ->
-        let uu____4365 = FStar_Options.unthrottle_inductives () in
-        if uu____4365
+        let uu____4368 = FStar_Options.unthrottle_inductives () in
+        if uu____4368
         then mk_HasType v1 t
         else mkApp ("HasTypeFuel", [f; v1; t]) t.rng
 let mk_HasTypeWithFuel:
@@ -1937,16 +1945,16 @@ let mk_ApplyTT: term -> term -> FStar_Range.range -> term =
 let mk_String_const: Prims.int -> FStar_Range.range -> term =
   fun i  ->
     fun r  ->
-      let uu____4447 =
-        let uu____4451 = let uu____4453 = mkInteger' i norng in [uu____4453] in
-        ("FString_const", uu____4451) in
-      mkApp uu____4447 r
+      let uu____4450 =
+        let uu____4454 = let uu____4456 = mkInteger' i norng in [uu____4456] in
+        ("FString_const", uu____4454) in
+      mkApp uu____4450 r
 let mk_Precedes: term -> term -> FStar_Range.range -> term =
   fun x1  ->
     fun x2  ->
       fun r  ->
-        let uu____4467 = mkApp ("Precedes", [x1; x2]) r in
-        FStar_All.pipe_right uu____4467 mk_Valid
+        let uu____4470 = mkApp ("Precedes", [x1; x2]) r in
+        FStar_All.pipe_right uu____4470 mk_Valid
 let mk_LexCons: term -> term -> FStar_Range.range -> term =
   fun x1  -> fun x2  -> fun r  -> mkApp ("LexCons", [x1; x2]) r
 let rec n_fuel: Prims.int -> term =
@@ -1954,12 +1962,12 @@ let rec n_fuel: Prims.int -> term =
     if n1 = (Prims.parse_int "0")
     then mkApp ("ZFuel", []) norng
     else
-      (let uu____4488 =
-         let uu____4492 =
-           let uu____4494 = n_fuel (n1 - (Prims.parse_int "1")) in
-           [uu____4494] in
-         ("SFuel", uu____4492) in
-       mkApp uu____4488 norng)
+      (let uu____4491 =
+         let uu____4495 =
+           let uu____4497 = n_fuel (n1 - (Prims.parse_int "1")) in
+           [uu____4497] in
+         ("SFuel", uu____4495) in
+       mkApp uu____4491 norng)
 let fuel_2: term = n_fuel (Prims.parse_int "2")
 let fuel_100: term = n_fuel (Prims.parse_int "100")
 let mk_and_opt:
@@ -1973,8 +1981,8 @@ let mk_and_opt:
         match (p1, p2) with
         | (FStar_Pervasives_Native.Some p11,FStar_Pervasives_Native.Some p21)
             ->
-            let uu____4520 = mkAnd (p11, p21) r in
-            FStar_Pervasives_Native.Some uu____4520
+            let uu____4523 = mkAnd (p11, p21) r in
+            FStar_Pervasives_Native.Some uu____4523
         | (FStar_Pervasives_Native.Some p,FStar_Pervasives_Native.None ) ->
             FStar_Pervasives_Native.Some p
         | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some p) ->
@@ -1992,15 +2000,15 @@ let mk_and_opt_l:
 let mk_and_l: term Prims.list -> FStar_Range.range -> term =
   fun l  ->
     fun r  ->
-      let uu____4560 = mkTrue r in
+      let uu____4563 = mkTrue r in
       FStar_List.fold_right (fun p1  -> fun p2  -> mkAnd (p1, p2) r) l
-        uu____4560
+        uu____4563
 let mk_or_l: term Prims.list -> FStar_Range.range -> term =
   fun l  ->
     fun r  ->
-      let uu____4575 = mkFalse r in
+      let uu____4578 = mkFalse r in
       FStar_List.fold_right (fun p1  -> fun p2  -> mkOr (p1, p2) r) l
-        uu____4575
+        uu____4578
 let mk_haseq: term -> term =
   fun t  ->
-    let uu____4584 = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu____4584
+    let uu____4587 = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu____4587

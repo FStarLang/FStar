@@ -784,15 +784,31 @@ let unboxTerm sort t = match sort with
   | BitVec_sort sz -> unboxBitVec sz t  
   | _ -> raise Impos
 
+
+ let rec print_smt_term (t:term) :string = match t.tm with
+  | Integer n               -> BU.format1 "(Integer %s)" n
+  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
+  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
+  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
+  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
+  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
+  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
+
+and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
+
+and print_smt_term_list_list (l:list<list<term>>) :string =
+    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
+
 let getBoxedInteger (t:term) =
   match t.tm with
   | App(Var "BoxInt", [t2]) ->
     begin 
     match t2.tm with
     | Integer n -> int_of_string n
-    | _ -> failwith "Not a boxed integer"
+    | _ -> failwith (FStar.Util.format1 "Not a boxed integer: %s" (print_smt_term t))
     end
-  | _ -> failwith (print_smt_term t)
+  | _ -> failwith (FStar.Util.format1 "Not a boxed integer: %s" (print_smt_term t))
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng
 let mk_Valid t        = match t.tm with
@@ -852,18 +868,3 @@ let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
-
-let rec print_smt_term (t:term) :string = match t.tm with
-  | Integer n               -> BU.format1 "(Integer %s)" n
-  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
-  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
-  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
-  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
-  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
-  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
-  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
-
-and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
-
-and print_smt_term_list_list (l:list<list<term>>) :string =
-    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
