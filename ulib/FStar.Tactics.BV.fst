@@ -160,6 +160,7 @@ let arith_to_bv_tac : tactic unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 let bv_tac ()  =
+  dump "before eq_to_bv";;
   apply_lemma (quote eq_to_bv);;
   apply_lemma (quote trans);;
   arith_to_bv_tac;;
