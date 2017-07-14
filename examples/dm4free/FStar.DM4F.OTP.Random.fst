@@ -1,9 +1,9 @@
-module FStar.DM4F.Random
+module FStar.DM4F.OTP.Random
 
-open FStar.DM4F.Heap.Random
+open FStar.DM4F.OTP.Heap
 
 (* for some reason this `unfold` makes everything 25% faster *)
-unfold type store = id * tape
+unfold type store = (id * tape)
 
 (** Read-only tape with a pointer to the next unread position *)
 type rand (a:Type) = (id * tape) -> M (option a * id)
@@ -12,20 +12,10 @@ let return (a:Type) (x:a) : rand a = fun (next,_) -> Some x, next
 
 let bind (a b:Type) (c:rand a) (f:a -> rand b) : rand b =
   fun s ->
-    let r, next' = c s in
+    let r, next = c s in
     match r with
-    | None   -> None, next'
-    | Some x -> f x (next', snd s)
-
-(*
-// Tm_refine is outside of the definition language: ...
-let sample () : rand elem = fun store ->
-  let next, t = store in
-  if incrementable next then
-    (Some (index t next), incr next)
-  else
-    (None, next)
-*)
+    | None   -> None, next
+    | Some x -> f x (next, snd s)
 
 (** Get store *)
 let get () : rand store = fun s -> Some s, fst s
@@ -143,6 +133,7 @@ let pr_leq #a #b c1 c2 p1 p2 bij =
   sum_extensional (fun h -> let r2,_ = c2 (to_id 0,bij.f (bij'.f h)) in p2 r2) f2
 
 (** Corollary *)
+
 val pr_eq: #a:Type -> #b:Type ->
   c1:(store -> M (a * id)) ->
   c2:(store -> M (b * id)) ->

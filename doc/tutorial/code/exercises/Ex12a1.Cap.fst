@@ -1,15 +1,9 @@
 (* to be used with Ex12.MAC.fst and Ex12a.ACLs.fst *)
 
-module Ex12a.Cap (* capabilities *) 
+module Ex12a1.Cap (* capabilities *)
 
-open FStar.HyperStack.ST
-open FStar.HyperStack.All
-open FStar.Seq
-open FStar.Monotonic.Seq
-open FStar.HyperHeap
-open FStar.HyperStack
-open FStar.Monotonic.RRef
-
+open STx
+open Allx
 open Platform.Bytes
 
 
@@ -17,7 +11,7 @@ module ACLs = Ex12a.ACLs
 module MAC = Ex12.MAC
 
 // BEGIN: UTF8Inj
-assume val utf8: s:string  -> Tot bytes 
+assume val utf8: s:string  -> Tot bytes
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
