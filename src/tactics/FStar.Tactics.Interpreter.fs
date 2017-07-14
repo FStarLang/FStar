@@ -253,6 +253,7 @@ let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remainin
         let _ = TcRel.force_trivial_guard env g in
         (ps.goals@ps.smt_goals, w)
     | Failed (s, ps) ->
+        dump_proofstate ps "at the time of failure";
         raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 
