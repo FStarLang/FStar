@@ -916,10 +916,74 @@ let modifies_prefix_times (b:bslice) (len1: U32.t) (len2: U32.t{U32.v len1 + U32
   B.lemma_intro_modifies_1 (truncated_slice b (U32.add len1 len2)).p h h'';
   ()
 
+// similar to B.includes, but no restriction on indices (and thus an
+// equivalence)
+let same_ref (#a:Type) (b1 b2:B.buffer a) =
+    B.frameOf b1 == B.frameOf b2 /\
+    B.max_length b1 == B.max_length b2 /\
+    B.content b1 == B.content b2
+
+// TODO: why is this not in the standard library?
+let same_ref_equivalence (#a:Type) =
+    (forall b. same_ref #a b b) /\
+    (forall b1 b2. same_ref #a b1 b2 ==> same_ref b2 b1) /\
+    (forall b1 b2 b3. same_ref #a b1 b2 ==> same_ref b2 b3 ==> same_ref b1 b3)
+
+let is_concat_of (#a:Type) (b b1 b2:B.buffer a) : Type0 =
+    same_ref b b1 /\
+    same_ref b b2 /\
+    B.idx b2 == B.idx b1 + B.length b1 /\
+    B.idx b1 == B.idx b /\
+    B.length b1 + B.length b2 == B.length b
+
+let is_concat_liveness (#a:Type) (b b1 b2:B.buffer a) h :
+    Lemma (requires (is_concat_of b b1 b2 /\ B.live h b))
+          (ensures (B.live h b <==> B.live h b1 /\ B.live h b2)) = ()
+
+let is_concat_disjoint (#a:Type) (b b1 b2:B.buffer a) :
+    Lemma (requires (is_concat_of b b1 b2))
+          (ensures (B.disjoint b1 b2)) = ()
+
+let is_concat_append (#a:Type) (b b1 b2:B.buffer a) h :
+    Lemma (requires (is_concat_of b b1 b2 /\
+                     B.live h b))
+          (ensures (B.live h b /\
+                    B.live h b1 /\
+                    B.live h b2 /\
+                    B.as_seq h b == B.as_seq h b1 `append` B.as_seq h b2)) =
+    lemma_eq_intro (B.as_seq h b) (B.as_seq h b1 `append` B.as_seq h b2)
+
+// general split_at primitive (think of Rust's slice::split_at_mut)
+val buffer_split_at: #a:Type -> b:B.buffer a ->
+    off:U32.t{U32.v off <= B.length b} ->
+    // TODO: this shouldn't be necessary, but Buffer provides no way to advance
+    // a pointer without specifying a new length
+    len:U32.t{U32.v len == B.length b} ->
+    Pure (B.buffer a * B.buffer a)
+         (requires True)
+         (ensures (fun r ->
+                     let (b1, b2) = r in
+                     is_concat_of b b1 b2 /\
+                     B.length b1 == U32.v off))
+let buffer_split_at #a b off len =
+    (B.sub b 0ul off, B.sub b off (U32.sub len off))
+
+val bslice_split_at: b:bslice -> off:U32.t{U32.v off <= U32.v b.len} ->
+    Pure (bslice * bslice)
+         (requires True)
+         (ensures (fun r->
+                     let (b1, b2) = r in
+                     is_concat_of b.p b1.p b2.p /\
+                     b1.len == off /\
+                     U32.v b2.len == U32.v b.len - U32.v off))
+let bslice_split_at b off =
+    let (b1, b2) = buffer_split_at b.p off b.len in
+    (BSlice off b1, BSlice (U32.sub b.len off) b2)
+
 // TODO: this proof is somewhat tricky; it boils down to any buffer disjoint to
 // truncated_slice is either some other underlying storage or a subset of
 // advance_slice, and we've assumed that the advance slices are equal
-let modifies_prefix_seq_intro (b:bslice) (len: U32.t{U32.v len <= U32.v b.len}) h0 h1 :
+val modifies_prefix_seq_intro (b:bslice) (len: U32.t{U32.v len <= U32.v b.len}) (h0 h1:mem) :
   Lemma (requires (modifies_slice b h0 h1 /\
                    live h0 b /\
                    live h1 b /\
@@ -930,20 +994,47 @@ let modifies_prefix_seq_intro (b:bslice) (len: U32.t{U32.v len <= U32.v b.len}) 
                     forall (i:nat{len <= i /\ i < U32.v b.len}).{:pattern (index s0 i); (index s1 i)}
                                                                  (index s0 i == index s1 i)
                    end))
-        (ensures (modifies_prefix b len h0 h1)) =
+        (ensures (modifies_prefix b len h0 h1))
+let modifies_prefix_seq_intro b len h0 h1 =
   B.lemma_reveal_modifies_1 b.p h0 h1;
   admit();
   B.lemma_intro_modifies_1 (truncated_slice b len).p h0 h1
 
+val modifies_prefix_split (b b1 b2:bslice) (len: U32.t{U32.v len <= U32.v b.len}) (h0 h1:mem) :
+    Lemma (requires (live h0 b /\
+                     live h1 b /\
+                     is_concat_of b.p b1.p b2.p /\
+                     modifies_slice b1 h0 h1))
+          (ensures (is_concat_of b.p b1.p b2.p /\
+                    modifies_prefix b b1.len h0 h1))
+let modifies_prefix_split b b1 b2 len h0 h1 =
+  is_concat_append b.p b1.p b2.p h1;
+  admit();
+  // TODO: this is probably the right proof strategy, but maybe can do a
+  // lower-level proof
+  modifies_prefix_seq_intro b b1.len h0 h1;
+  ()
+
+let offset_into (buf:bslice) = off:U32.t{U32.v off <= U32.v buf.len}
+
+let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem) =
+    live h1 buf /\
+    begin
+      match r with
+      | Some off ->
+        let (b1, b2) = bslice_split_at buf off in
+        modifies_slice b1 h0 h1 /\
+        as_seq h1 b1 == enc
+      | None ->
+        modifies_slice buf h0 h1
+    end
+
 let serializer (enc:bytes) = buf:bslice ->
-  ST (option (off:U32.t{U32.v off <= U32.v buf.len}))
+  ST (option (off:offset_into buf))
      (requires (fun h0 -> live h0 buf))
      (ensures (fun h0 r h1 ->
         live h1 buf /\
-        (match r with
-         | Some off -> modifies_prefix buf off h0 h1 /\
-                      as_seq h1 (truncated_slice buf off) == enc
-         | None -> modifies_slice buf h0 h1)))
+        serialized enc buf r h0 h1))
 
 let lemma_index_upd_gt (#a:Type) (s:Seq.seq a) (n:nat{n < length s}) (i:nat{n < i /\ i < length s}) (v:a) :
   Lemma (index (Seq.upd s n v) i == index s i)
@@ -951,57 +1042,49 @@ let lemma_index_upd_gt (#a:Type) (s:Seq.seq a) (n:nat{n < length s}) (i:nat{n < 
 
 #reset-options "--z3rlimit 10"
 
-let slice_upd (#a:Type) (s:Seq.seq a) (n:nat) (len:nat{n < len /\ len <= length s}) (v:a) :
-  Lemma (slice (Seq.upd s n v) 0 len == Seq.upd (slice s 0 len) n v) =
-  lemma_eq_intro (slice (Seq.upd s n v) 0 len) (Seq.upd (slice s 0 len) n v)
-
-let slice_len_1 (#a:Type) (s:Seq.seq a{length s >= 1}) (v:a) :
-  Lemma (slice (Seq.upd s 0 v) 0 1 == Seq.create 1 v) =
-  lemma_eq_intro (slice (Seq.upd s 0 v) 0 1) (Seq.create 1 v)
+val upd_len_1 : #a:Type -> s:Seq.seq a{length s == 1} -> v:a ->
+  Lemma (Seq.upd s 0 v == Seq.create 1 v)
+let upd_len_1 #a s v =
+  lemma_eq_intro (Seq.upd s 0 v) (Seq.create 1 v)
 
 val ser_byte: v:byte -> serializer (Seq.create 1 v)
 let ser_byte v = fun buf ->
   if U32.lt buf.len 1ul then None
   else
+    let (buf, _) = bslice_split_at buf 1ul in
     let h0 = get() in
     B.upd buf.p 0ul v;
     begin
-      let h1 = get() in
       let s0 = as_seq h0 buf in
-      let s1 = as_seq h1 buf in
-      assert (s1 == Seq.upd s0 0 v);
-      slice_len_1 s0 v;
-      modifies_prefix_seq_intro buf 1ul h0 h1;
-      ()
+      upd_len_1 s0 v
     end;
     Some 1ul
 
-let slice_len_2 (#a:Type) (s:Seq.seq a{length s >= 2}) (vs:Seq.seq a{length vs == 2}) :
-  Lemma (slice (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) 0 2 == vs) =
-  let upd2 = Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) in
-  let upd2_sliced = slice upd2 0 2 in
-  assert (index upd2_sliced 0 == index vs 0);
-  // why is this intermediate assertion needed? (specifically, why do hints not
-  // trigger?)
-  assert (index upd2 1 == index vs 1);
-  lemma_eq_intro upd2_sliced vs
+let upd_len_2 (#a:Type) (s:Seq.seq a{length s == 2}) (vs:Seq.seq a{length vs == 2}) :
+  Lemma (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) == vs) =
+  lemma_eq_intro (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) vs
 
 val ser_u16: v:U16.t -> serializer (u16_to_be v)
 let ser_u16 v = fun buf ->
   if U32.lt buf.len 2ul then None
   else
     let bs = u16_to_be v in
+    let (buf, _) = bslice_split_at buf 2ul in
     let h0 = get() in
     B.upd buf.p 0ul (index bs 0);
     B.upd buf.p 1ul (index bs 1);
     begin
-      let h1 = get() in
       let s0 = as_seq h0 buf in
-      let s1 = as_seq h1 buf in
-      slice_len_2 s0 bs;
-      modifies_prefix_seq_intro buf 2ul h0 h1
+      upd_len_2 s0 bs
     end;
     Some 2ul
+
+let modifies_grow (b b1 b2:bslice) (h0 h1:mem) : Lemma
+    (requires (live h0 b /\ live h1 b /\
+               is_concat_of b.p b1.p b2.p /\
+               modifies_slice b1 h0 h1))
+    (ensures (modifies_slice b h0 h1)) =
+    B.modifies_subbuffer_1 h0 h1 b1.p b.p
 
 let ser_append (#b1 #b2:bytes) (s1:serializer b1) (s2:serializer b2) : serializer (append b1 b2) =
   fun buf ->
@@ -1010,16 +1093,24 @@ let ser_append (#b1 #b2:bytes) (s1:serializer b1) (s2:serializer b2) : serialize
   | Some off ->
     begin
       let h1 = get() in
-      match s2 (advance_slice buf off) with
+      let buf0 = buf in
+      let (buf1, buf) = bslice_split_at buf off in
+      match s2 buf with
       | Some off' -> (if u32_add_overflows off off' then None
                      else begin
                       let h2 = get() in
-                      modifies_prefix_times buf off off' h0 h1 h2;
-                      // TODO: this isn't easy to derive; need to get first off
-                      // bytes from first modification + disjointness in h1 ->
-                      // h2 transition, and then get off' bytes and relate them
-                      // to un-advanced buffer
-                      assume (as_seq h2 (truncated_slice buf (U32.add off off')) == append b1 b2);
+                      let (buf2, buf3) = bslice_split_at buf off' in
+                      assert (as_seq h2 buf2 == b2);
+                      assert (modifies_slice buf1 h0 h1);
+                      assert (modifies_slice buf2 h1 h2);
+                      assert (as_seq h2 buf1 == b1);
+                      let (buf12, buf3') = bslice_split_at buf0 (U32.add off off') in
+                      // TODO: need to call a lemma to prove this
+                      assume (as_seq h2 buf12 == append b1 b2);
+                      // TODO: expand modifies_slice h0 -> h1 to buf1+buf2
+                      //       expand modifies_slice h1 -> h2 to buf1+buf2
+                      //       apply transitivity
+                      admit();
                       Some (U32.add off off')
                      end)
       | None -> None
