@@ -70,7 +70,7 @@ let alloc #a h x mm =
 let free_mm #a h r =
   { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
 
-let restrict #a h s =
+let restrict h s =
   { h with memory = (fun r' -> if Set.mem r' s
 			    then h.memory r'
 			    else None) }
@@ -162,9 +162,6 @@ let lemma_upd_contains_different_addr #a #b h r1 x r2 = ()
 let lemma_upd_unused #a #b h r1 x r2 = ()
 let lemma_contains_upd_modifies #a h r x = ()
 let lemma_unused_upd_modifies #a h r x = ()
-let lemma_restrict_contains #a h s r = ()
-let lemma_restrict_unused #a h s r = ()
-let lemma_restrict_sel #a h s r = ()
 
 let equal h1 h2 =
   let _ = () in
@@ -174,3 +171,7 @@ let equal h1 h2 =
 let equal_extensional h1 h2 = ()
 
 let upd_upd_same_ref #a h r x y = assert (equal (upd (upd h r x) r y) (upd h r y))  
+
+let lemma_restrict_contains #a h s r = ()
+let lemma_restrict_unused #a h s r = ()
+let lemma_restrict_sel #a h s r = ()
