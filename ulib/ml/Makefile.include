@@ -12,11 +12,13 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Gho
 
 NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
 
+ULIB_ML=$(FSTAR_HOME)/ulib/ml
+
 ifeq ($(OS), Windows_NT)
-  ULIB_ML=$(shell cygpath -m $(FSTAR_HOME)/ulib/ml)
+  ULIB_ML_NATIVE=$(shell cygpath -m $(FSTAR_HOME)/ulib/ml)
   OCAMLPATH=$(shell cygpath -m $(FSTAR_HOME)/bin)
 else
-  ULIB_ML=$(FSTAR_HOME)/ulib/ml
+  ULIB_ML_NATIVE=$(FSTAR_HOME)/ulib/ml
   OCAMLPATH=$(FSTAR_HOME)/bin
 endif
 
