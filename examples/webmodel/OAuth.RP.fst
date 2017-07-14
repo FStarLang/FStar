@@ -43,7 +43,7 @@ let rpLoginIPAuth r =
   let ruri = mk_uri (s_getRequestURI #urisl r) in (* get the request url *)
   let qs = getQS ruri in
   let ip = getQSVal #urisl qs "IP" in
-  if s_equal #urisl #PublicVal ip "ip.com" then 
+  if s_equal #urisl #PublicVal ip "ip" then 
   (
     let sl = (SecretVal [rpori;ipori]) in 
     let sid = (genSecret sl) in
@@ -52,12 +52,12 @@ let rpLoginIPAuth r =
     (
       (let logsession:loginSession = [(ipori, sid, state)] in
       rpLS := List.append logsession (!rpLS));
-      let respuri = ({c_origin=ipori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[classify #PublicVal "authEP" sl];c_querystring=[(classify #PublicVal "client_id" sl,classify #PublicVal cid sl);(classify #PublicVal "redirect_uri" sl, classify #PublicVal "https://rp.com:443/codeEP/" sl);(classify #PublicVal "origin" sl, classify #PublicVal "https://rp.com/" sl);(classify #PublicVal "csrftoken" sl,getSecret state)];c_fragment=emptyString sl}) in
+      let respuri = ({c_origin=ipori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[classify #PublicVal "authEP" sl];c_querystring=[(classify #PublicVal "client_id" sl,classify #PublicVal cid sl);(classify #PublicVal "redirect_uri" sl, classify #PublicVal "https://rp.com:443/codeEP/" sl);(classify #PublicVal "origin" sl, classify #PublicVal "https://rp.com:443/" sl);(classify #PublicVal "csrftoken" sl,getSecret state)];c_fragment=emptyString sl}) in
       let rpREP = curi_to_hstring respuri in 
       let rpResp = ActResponse sl ({resptype="default";respcode=301;respurl=[]; resphead=[("Set-Cookie", (mk_svheaderval sid));("Location", (mk_headerval rpREP))]; respbody=(emptyString sl);resptrail=[];respHTTPS="modern";respCSP=cspPol;respCORS=[];resploc=None;respRedSec=sl}) in
       (rpResp)
       ))
-  else if s_equal #urisl #PublicVal ip "badip.com" then
+  else if s_equal #urisl #PublicVal ip "badip" then
   (
     let sl = (SecretVal [rpori;badipori]) in
     let sid = (genSecret sl) in
@@ -79,19 +79,21 @@ val getRPLoginIPAuth : r:request -> ML (ret:retReqResp{isValidRetResp r ret})
 let getRPLoginIPAuth r = (let resp = rpLoginIPAuth r in RetResponse resp)
 
 (* Compact authcode resend method for the RP *)
-(* the indexed origins defeat the idp mix-up attack here - as for the request with code to be sent, the index must include badipori *)
 val rpReqCodeEP : request -> ML (option (r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead}))
 let rpReqCodeEP r =
   let urisl = s_getReqURISecLevel r in
   let ruri = mk_uri (s_getRequestURI #urisl r) in (* get the request url *)
   let qs = getQS #urisl (ruri) in
-  let token = mk_secretval (getQSVal #urisl qs "csrftoken") in
-  let ip = getIPLogin !rpLS token in (* determine the IP based on the state-token *)
-  let urisl = SecretVal [ip] in
-  let code = declassify (getQSVal #(URI?.usl ruri) qs "authcode") in
-  let cid = (getRPClientID ip) in
-  (match (getCDSecret (!rpCD) ip) with
-  | None -> (* get client data secret is none for the ip -- may be the client_secret was not established *)
+  let csrftoken = mk_secretval (getQSVal #urisl qs "csrftoken") in
+  let ip = getIPLogin !rpLS csrftoken in (* determine the IP based on the state-token *)
+  if (ip = blank_origin) then 
+    (None)
+  else
+    let urisl = SecretVal [ip] in
+    let code = declassify (getQSVal #(URI?.usl ruri) qs "authcode") in
+    let cid = (getRPClientID ip) in
+    (match (getCDSecret (!rpCD) ip) with
+    | None -> (* get client data secret is none for the ip -- may be the client_secret was not established *)
 	   (
 	   (* The port is required to pass isOriginSec in StringFunctions *)
 	   let rturi = ({c_origin=ip;c_uname=emptyString urisl;c_pwd=emptyString urisl;c_path=[(classify #PublicVal "tokenEP" urisl)];c_querystring=[((classify #PublicVal "client_id" urisl), classify #PublicVal cid urisl);((classify #PublicVal "redirect_uri" urisl),(classify #PublicVal "https://rp.com:443/codeEP/" urisl));((classify #PublicVal "authcode" urisl),(classify #PublicVal code urisl))];c_fragment=emptyString urisl}) in
@@ -99,7 +101,7 @@ let rpReqCodeEP r =
 	   let (r, req, tw, nb) = navigateWindow !rpb rpsw rpsw (RequestResource nreq) "other" in
 	   rpb := nb; (req)
 	   )
-  | Some sec ->
+    | Some sec ->
 	   (
 	   secretOriginLemma ip (Secret?.s sec);
 	   let cs = classify #(Secret?.s sec) (getSecret #(Secret?.s sec) (sec)) urisl in
@@ -112,48 +114,6 @@ let rpReqCodeEP r =
 val getRPReqCodeEP : r:request -> ML (ret:retReqResp{isValidRetResp r ret})
 let getRPReqCodeEP r = (match rpReqCodeEP r with | None -> RetResponse defErrResponse | Some req -> RetRequest req)
 
-(* val rpReqCodeEP : uri -> ML actResponse  *)
-(* let rpReqCodeEP ruri = *)
-(*   let urisl = URI?.usl ruri in  *)
-(*   let qs = getQS (ruri) in *)
-(*   let token = mk_secretval (getQSVal #urisl qs "csrftoken") in *)
-(*   let ip = getIPLogin !rpLS token in *)
-(*   if (ip = ipori) && (urisl = SecretVal [rpori;ipori]) then ( (\* the request must have come from IP to RP and indexed by RPORI and IPORI to allow further communication *\) *)
-(*      ( *)
-(* 	let code = getQSVal #urisl qs "authcode" in  *)
-(* 	let cid = (getRPClientID ipori) in  *)
-(*      match (getCDSecret !rpCD ipori) with *)
-(*        | None -> (\* get client data secret is none for the ip -- may be the client_secret was not established *\) *)
-(* 	    ( *)
-(* 	    (\* The port is required to pass isOriginSec in ExtFunctionsImpl *\) *)
-(* 	    let rturi = ({c_origin=ipori;c_uname=emptyString urisl;c_pwd=emptyString urisl;c_path=[(classify #PublicVal "tokenEP" urisl)];c_querystring=[((classify #PublicVal "client_id" urisl), classify #PublicVal cid urisl);((classify #PublicVal "redirect_uri" urisl),(classify #PublicVal "https://rp.com:443/codeEP/" urisl));((classify #PublicVal "authcode" urisl),code)];c_fragment=emptyString urisl}) in *)
-(* 	    let nreq = Request urisl ({reqm = "POST"; requrl = [(mk_uri rturi)]; reqhead = []; reqo = mk_aorigin ((URI?.u (CWindow?.cwloc rpsw)).c_origin); reqw = (Some rpsw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client rpsw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (emptyString urisl); corsflag = false; corspfflag = false; authflag = false; recflag = false}) in *)
-(* 	    let (r, tw, nb) = navigateWindow !rpb rpsw rpsw (RequestResource nreq) "other" in 	     *)
-(* 	    rpb := nb *)
-(* 	    ) *)
-(*        | Some sec -> *)
-(* 	    ( *)
-(* 	    let cs = classify #(Secret?.s sec) (getSecret #(Secret?.s sec) (sec)) urisl in  *)
-(* 	    (\* The port is required to pass isOriginSec in ExtFunctionsImpl *\) *)
-(* 	    let rturi = ({c_origin=ipori;c_uname=emptyString urisl;c_pwd=emptyString urisl;c_path=[(classify #PublicVal "tokenEP" urisl)];c_querystring=[((classify #PublicVal "client_id" urisl), classify #PublicVal cid urisl);((classify #PublicVal "redirect_uri" urisl),(classify #PublicVal "https://rp.com:443/codeEP/" urisl));((classify #PublicVal "authcode" urisl),code);((classify #PublicVal "client_secret" urisl),cs)];c_fragment=emptyString urisl}) in *)
-(* 	    let nreq = Request urisl ({reqm = "POST"; requrl = [(mk_uri rturi)]; reqhead = []; reqo = mk_aorigin ((URI?.u (CWindow?.cwloc rpsw)).c_origin); reqw = (Some rpsw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client rpsw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (emptyString urisl); corsflag = false; corspfflag = false; authflag = false; recflag = false}) in *)
-(* 	    let (r, tw, nb) = navigateWindow !rpb rpsw rpsw (RequestResource nreq) "other" in 	     *)
-(* 	    rpb := nb *)
-(* 	    )); *)
-(* 	    defResponse) *)
-(*   (\* the indexed origins  defeat the idp mix-up attack here - as for the request with code to be sent, the index must include badipori *\)	     *)
-(*   else if (ip = badipori) && (urisl = SecretVal [rpori;badipori]) then (\* the request must have come from BadIP to RP - no client data secret is none for the RP *\) *)
-(* 	  (( *)
-(* 	    let code = (getQSVal #urisl qs "authcode") in  *)
-(* 	    let cid = (getRPClientID badipori) in  *)
-(* 	    let rturi = ({c_origin=badipori;c_uname=emptyString urisl;c_pwd=emptyString urisl;c_path=[(classify #PublicVal "tokenEP" urisl)];c_querystring=[((classify #PublicVal "client_id" urisl), classify #PublicVal cid urisl);((classify #PublicVal "redirect_uri" urisl),(classify #PublicVal "https://rp.com:443/codeEP/" urisl));((classify #PublicVal "authcode" urisl),code)];c_fragment=emptyString urisl}) in *)
-(* 	    let nreq = Request urisl ({reqm = "POST"; requrl = [(mk_uri rturi)]; reqhead = []; reqo = mk_aorigin ((URI?.u (CWindow?.cwloc rpsw)).c_origin); reqw = (Some rpsw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client rpsw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (emptyString urisl); corsflag = false; corspfflag = false; authflag = false; recflag = false}) in *)
-(* 	    let (r, tw, nb) = navigateWindow !rpb rpsw rpsw (RequestResource nreq) "other" in 	     *)
-(* 	    rpb := nb *)
-(* 	    ); *)
-(* 	    defResponse) *)
-(*   else defResponse *)
-
 (* For different requests, return different responses *)
 val rpReqResp : r:request -> ML (ret:retReqResp{isValidRetResp r ret})
 let rpReqResp r =
@@ -162,9 +122,9 @@ let rpReqResp r =
     if checkRPReq r && (getPort ruri) = (Some 443) then (* Only accept secure connections (HTTPS) *)
     (
     if (checkEP r "login-ipauth") then (* if the end-point is login with IP *)
-      getRPLoginIPAuth r
+      (getRPLoginIPAuth r)
     else if (checkEP r "codeEP") then (* auth-code end-point *)
-      getRPReqCodeEP r
+      (getRPReqCodeEP r)
     else (RetResponse defErrResponse)
     )
     else (print_string ("IP is not ip.com:" ^ (declassify (curi_to_hstring (s_getRequestURI #urisl r))) ^ "\n" ); (RetResponse defErrResponse))

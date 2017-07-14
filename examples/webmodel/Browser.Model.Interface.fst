@@ -468,10 +468,9 @@ let set_win_location b c f u = navigateWindow b c f (RequestResource (default_re
 (* 4.10.22.3 Form submission algorithm - form data is serialized string fd *)
 (* can also have dialog method that does separate processing *)
 (* For similar schemes, the spec proposes using the suitable descriptions *)
-val form_submission : #l:secLevel{match l with | SecretVal [o] -> true | _ -> false} -> browser -> window -> string -> m:reqMethod{m="GET" \/ m="POST"} -> 
-		      u:uri{(URI?.usl u) = l /\ (match (URI?.usl u) with | SecretVal [o] -> true | _ -> false)} -> fd:list (secString l * secString l) -> 
+val form_submission : browser -> window -> string -> m:reqMethod{m="GET" \/ m="POST"} -> u:uri{validSingleSecLevel (URI?.usl u)} -> fd:list (pubString * pubString) -> 
 		      Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
-let form_submission #l b sw tn m u fd =
+let form_submission b sw tn m u fd =
   if (List.find (fun w -> w = SB_Forms) sw.wdoc.dsbox <> None) then ((Error ""), None, None, b)
   else 
     match (get_window_from_name b (win_to_cowin sw) tn) with
@@ -481,16 +480,14 @@ let form_submission #l b sw tn m u fd =
 	(* let sl = (URI?.usl u) in (\* Form submission requests should be indexed by the server alone *\) *)
 	if (sch = "http" || sch = "https") then (
 	  if (m = "GET") then 
-	    let nuri = URI l ({c_origin=(URI?.u u).c_origin;c_uname=(URI?.u u).c_uname;c_pwd=(URI?.u u).c_pwd;c_path=(URI?.u u).c_path;c_querystring=fd;c_fragment=emptyString l}) in
+	    let nuri = URI (URI?.usl u) ({c_origin=(URI?.u u).c_origin;c_uname=(URI?.u u).c_uname;c_pwd=(URI?.u u).c_pwd;c_path=(URI?.u u).c_path;c_querystring=(classifyQS #PublicVal fd (URI?.usl u));c_fragment=emptyString (URI?.usl u)}) in
 	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_req_uri (win_to_cowin sw) (nuri))) "form-submission") 
 	  else 
-	    let nreq = (match (URI?.usl u) with
-		       | SecretVal [o] -> Request (URI?.usl u) ({reqm = "POST"; requrl = [u]; reqhead = []; reqo = (mk_aorigin (URI?.u sw.wloc).c_origin); reqw = (Some (win_to_cowin sw)); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = Some tw; reqredirect = 0; reqredmode = "follow"; reqref = (Client (win_to_cowin sw)); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (serializeQueryString fd); corsflag = false; corspfflag = false; authflag = false; recflag = false}))
-		       in
+	    let nreq = (Request (URI?.usl u) ({reqm = "POST"; requrl = [u]; reqhead = []; reqo = (mk_aorigin (URI?.u sw.wloc).c_origin); reqw = (Some (win_to_cowin sw)); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = Some tw; reqredirect = 0; reqredmode = "follow"; reqref = (Client (win_to_cowin sw)); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (classify #PublicVal (serializeQueryString fd) (URI?.usl u)); corsflag = false; corspfflag = false; authflag = false; recflag = false})) in
 	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource nreq) "form-submission") 
 	  )
 	else if ((sch = "data") && (m = "GET")) then
-	  let nuri = URI l ({c_origin=(URI?.u u).c_origin;c_uname=(URI?.u u).c_uname;c_pwd=(URI?.u u).c_pwd;c_path=(URI?.u u).c_path;c_querystring=fd;c_fragment=emptyString l}) in
+	  let nuri = URI (URI?.usl u) ({c_origin=(URI?.u u).c_origin;c_uname=(URI?.u u).c_uname;c_pwd=(URI?.u u).c_pwd;c_path=(URI?.u u).c_path;c_querystring=(classifyQS #PublicVal fd (URI?.usl u));c_fragment=emptyString (URI?.usl u)}) in
 	  (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_req_uri (win_to_cowin sw) (nuri))) "form-submission") 
 	else (* For ftp, javascript no data is sent *)
 	  (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_req_uri (win_to_cowin sw) (u))) "form-submission") 

@@ -75,7 +75,7 @@ let getIPAuthResp r =
 	 let authcode = genSecret urisl in
 	 let ipREP = curi_to_hstring ({c_origin=red.c_origin;c_uname=classify red.c_uname urisl;c_pwd=classify red.c_pwd urisl;c_path=classifyPath red.c_path urisl;c_querystring=[(classify #PublicVal "authcode" urisl, getSecret (authcode));(classify #PublicVal "csrftoken" urisl, token);(classify #PublicVal "IP" urisl,classify #PublicVal (origin_to_string ipori) urisl)];c_fragment=emptyString urisl}) in
 	 let stateToken = Secret urisl token in 
-	 let rduri = mk_uri red in
+	 let rduri = mk_uri red in 
 	 ipCL := (o, stateToken, authcode, rduri)::(!ipCL);
 	 (
 	 (* ******* For redirect-attack, change the respcode here to 307 or 308 ******* *)
@@ -125,7 +125,7 @@ let getIPTokenResp r =
 	   else
 	      defErrResponse)
 
-val ipReqResp : req:request -> ML (ret:retReqResp{isValidRetResp req ret})
+val ipReqResp : req:request -> ML (ret:retReqResp{isValidRetResp req ret /\ (RetResponse? ret)})
 let ipReqResp r =
     let urisl = s_getReqURISecLevel r in
     let ruri = s_getRequestURI #urisl r in (* get the request url *)

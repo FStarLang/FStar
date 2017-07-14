@@ -45,10 +45,10 @@ let (sw, cb) =
 
 let sl = (SecretVal [rpori])
 (* Request's URL - RP's server *)
-let rurl = {c_origin=rpori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[(classify #PublicVal "login-ipauth" sl)];c_querystring=[(classify #PublicVal "IP" sl),(classify #PublicVal "ip.com" sl)];c_fragment=emptyString sl}
+let rurl = {c_origin=rpori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[(classify #PublicVal "login-ipauth" sl)];c_querystring=[(classify #PublicVal "IP" sl),(classify #PublicVal "ip" sl)];c_fragment=emptyString sl}
 let ruri = mk_uri rurl
 (* Request to start OAuth authentication *)
-let newreq = Request sl ({reqm = "POST"; requrl = [ruri]; reqhead = []; reqo = (mk_aorigin (URI?.u (CWindow?.cwloc sw)).c_origin); reqw = (Some sw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client sw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = emptyString sl; corsflag = false; corspfflag = false; authflag = false; recflag = false})
+let newreq = Request sl ({reqm = "POST"; requrl = [ruri]; reqhead = []; reqo = (mk_aorigin (URI?.u (CWindow?.cwloc sw)).c_origin); reqw = (Some sw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "manual"; reqref = (Client sw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = emptyString sl; corsflag = false; corspfflag = false; authflag = false; recflag = false})
 
 (* Username and password for IP *)
 let uname = classify #PublicVal "usernameU" (SecretVal [ipori])
@@ -60,20 +60,21 @@ let print_result r =
   | Error e -> print_string ("Error: " ^ e ^ "\n")
   | Success s -> print_string ("Success: " ^ s ^ "\n")
 
-val processRPResponse : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> ML (result * browser) 
+(* Process the RP response at codeEP and send a request to get access-token -- process the response to that request *)
+val processRPResponse : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> ML (result) 
 let processRPResponse req = 
   let pr' = (getProcResponse rpori) req in
   match pr' with
   | RetRequest nreq -> (let co = {cori=ipori;ccred=true} in
 		      match (getConnection !rpb co) with (* the rp creates a new request here - sent to the ip *)
-		      | None -> (Error ("No connections available!"), !rpb)
+		      | None -> (Error ("No connections available at the RP!"))
 	   	      | Some ({connect=oconn;creq=oreq}) -> 
 			     let pr'' = (getProcResponse ipori) nreq in
 			     (match pr'' with 
-			     | RetRequest _ -> (Error ("No response from ipori!"), !rpb) 
+			     | RetRequest _ -> (Error ("FATAL ERROR AGAIN!")) 
 			     | RetResponse pr -> let (res, _, _, nb) = processResponse !rpb oconn nreq pr in 
-						(res,nb)))
-  | RetResponse _ -> (Error ("No request made from RP to IP!"), !rpb) 
+						rpb := nb; (res)))
+  | RetResponse _ -> (Error ("No request made from RP to IP!")) 
 
 (* Process the response from the IP after authentication *)
 val processIPResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> ML (result * browser) 
@@ -84,58 +85,51 @@ let processIPResponse ib req =
     | Some ({connect=oconn;creq=oreq}) ->
 	let pr' = (getProcResponse ipori) req in
 	match pr' with
-	| RetRequest _ -> (Error ("No connections available!"), ib)
+	| RetRequest _ -> (Error ("FATAL ERROR RETURNS!"), ib)
 	| RetResponse pr ->
-	    let (res, nr, _, nb) = processResponse ib oconn req pr in 
+	    let (res, nr, _, nb) = processResponse ib oconn req pr in (* process the IP response containing the authcode and send it to RP *)
 	    (
 	    print_result res; 
 	    match nr with
 	    | None -> (Success ("No more requests!"), nb)
-	    | Some nreq -> processRPResponse nreq)
-			  (* (let pr = (getProcResponse rpori) nreq in *)
-			  (* match (getConnection !rpb co) with (\* the rp creates a new request here - sent to the ip *\) *)
-			  (* | None -> (Error ("No connections available!"), !rpb) *)
-			  (* | Some ({connect=oconn;creq=oreq}) -> ( *)
-			  (* 	 match (oreq) with  *)
-			  (* 	 | [] -> (Error ("No requests on connection for IP!"), !rpb) *)
-			  (* 	 | (rq,_,_,_)::_ -> ((\* remove the headers that should not be a part of request (redirect) *\) *)
-			  (* 	     let nrq = (Request (Request?.rsl rq) ({(Request?.rf rq) with reqhead=(redirectHeaders (Request?.rf rq).reqhead)})) in *)
-			  (* 	     let pr = (getProcResponse ipori) nrq in *)
-			  (* 	     let (res, _, _, nb) = processResponse !rpb oconn nrq pr in  *)
-			  (* 	     (res, !rpb))))) *)
+	    | Some nreq -> ((processRPResponse nreq), nb)) (* process the new RP request to obtain the access-token *)
 
-let ipsl = SecretVal [ipori]
-let formurl = {c_origin=ipori;c_uname=emptyString ipsl;c_pwd=emptyString ipsl;c_path=[(classify #PublicVal "authEP" ipsl)];c_querystring=[];c_fragment=emptyString ipsl}
-let formuri = mk_uri formurl
-
-val processIPFormResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> connection -> ML (result * browser)
+(* Process the response from IP to send credentials and complete a form submission *)
+(* TODO - if session cookie is present, do not perform form_submission *)
+(* Currently, distinguishing this based on the respcode *)
+val processIPFormResponse : browser -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> connection -> ML (result * browser)
 let processIPFormResponse br r oconn =
   let pr'' = (getProcResponse ipori) r in
   match pr'' with 
-  | RetRequest _ -> (Error ("Request should not occur."), br)
-  | RetResponse pr -> let (res, nr', w, nbr) = processResponse br oconn r pr in (* response from ip processed - requires submission of form*)
+  | RetRequest _ -> (Error ("FATAL ERROR!"), br)
+  | RetResponse pr -> 
+      if (isRedirectResponse (ActResponse?.ar pr)) then
+	processIPResponse br r (* redirect to RP as the response contains authcode *)
+      else
+	let (res, nr', w, nbr) = processResponse br oconn r pr in (* response from ip processed - requires submission of form sent using the same req uri *)
 	(print_result res;
 	match w with
 	| None ->  (Error ("No executable window!\n"), nbr)
-	| Some sw -> 
-	    (let qsfd = [(classify #PublicVal "user" ipsl, classify #PublicVal "usernameU" ipsl);(classify #PublicVal "pwd" ipsl, classify #PublicVal "passwordP" ipsl)] in
-	    let (_, nr', _, nb) = form_submission nbr (cowin_to_win sw) "" "POST" formuri qsfd in
+	| Some sw -> (
+	    let qsfd = [("user", "usernameU");("pwd", "passwordP")] in
+	    let (_, nr', _, nb) = form_submission nbr (cowin_to_win sw) "" "POST" (firstElement (Request?.rf r).requrl) qsfd in
 	    match nr' with 
 	    | None -> (Error ("No proper request!\n"), nbr)
-	    | Some req -> processIPResponse nb req))
+	    | Some req -> processIPResponse nb req)) (* the IP processes the form data and returns the relevant cookie and authcode *)
 
 let browserOAuth () : ML (result * browser) =
   let (r, _, nw, nb) = open_window cb sw "https://rp.com/" "" in
   let (re, nr, win, sb) = navigateWindow (nb) sw nw (RequestResource newreq) "other" in
+  print_result re;
   match sb.conn with (*the response arrives on the connection - assume connection is the first available here*)
   | [] -> (Error ("No connections"), sb)
   | hd::_ ->
       let pr' = (getProcResponse rpori) newreq in
       match pr' with
-      | RetRequest _ -> (Error ("No proper response!"), sb)
-      | RetResponse pr -> let (r1, nr, _, br) = processResponse sb (getConn hd).connect newreq pr in (* Processes response from RP that redirects to IP *)
+      | RetRequest _ -> (Error ("QUITE A FATAL ERROR!"), sb)
+      | RetResponse pr -> let (r1, nr, _, br) = processResponse sb (getConn hd).connect newreq pr in (* Processes response from RP that redirects to IP for initial auth *)
 	  (print_result r1;
-	  let co = {cori=ipori; ccred=true} in
+	  let co = {cori=ipori; ccred=false} in
 	  match (getConnection br co) with
 	  | None -> (Error ("No connections after response from RP to IP"), br)
 	  | Some ({connect=oconn;creq=oreq}) -> (

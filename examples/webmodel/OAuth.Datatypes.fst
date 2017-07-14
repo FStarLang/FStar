@@ -1,5 +1,6 @@
 module OAuth.Datatypes
 
+open FStar.All
 open FStar.IO
 open Web.Origin
 open Web.URI
@@ -106,10 +107,10 @@ let rec getCDSecret cd t = match cd with
   | (o,v,sv)::tl -> if o = t then Some sv else getCDSecret tl t
 
 (* retrieve the IP origin for which the token (state) was generated *)
-val getIPLogin : loginSession -> secretVal -> Tot torigin
+val getIPLogin : loginSession -> secretVal -> ML torigin
 let rec getIPLogin ls s = match ls with
   | [] -> blank_origin
-  | (o,_,t)::tl -> if s = t then o else getIPLogin tl s
+  | (o,_,t)::tl -> if compareSecret s t then o else getIPLogin tl s
 		 
 (* retrieve the authcode from the codelist for the given origin *)
 val getCLRedURI : codeList -> torigin -> Tot (option uri)
@@ -127,7 +128,7 @@ let rec getCLCode cd t = match cd with
 val getNewCodeList : codeList -> t:torigin -> ac:secretVal -> ru:uri -> Tot (codeList)
 let rec getNewCodeList cd t ac ru = match cd with  
   | [] -> []
-  | (o,v,sv,u)::tl -> if o = t && sv = ac && u = ru then tl else (o,v,sv,u)::(getNewCodeList  tl t ac ru)
+  | (o,v,sv,u)::tl -> if o = t && compareSecret sv ac && u = ru then tl else (o,v,sv,u)::(getNewCodeList  tl t ac ru)
 
 (* retrieve the access token from the list for the origin *)
 val getTLToken : tokenList -> t:torigin -> Tot (option (s:secretVal))

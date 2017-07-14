@@ -157,9 +157,10 @@ type request =
 val default_request : cowindow -> u:uri{URI?.usl u = PublicVal} -> Tot (request)
 let default_request w u = Request (PublicVal) ({reqm = "GET"; requrl = [(u)]; reqhead = []; reqo = (getOrigin (CWindow?.cwloc w)); reqw = (Some w); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client w); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = ""; corsflag = false; corspfflag = false; authflag = false; recflag = false})
 
-val default_req_uri : cowindow -> u:uri{match (URI?.usl u) with | SecretVal [o] -> true | _ -> false} -> Tot (request)
+val default_req_uri : cowindow -> u:uri{match (URI?.usl u) with | PublicVal -> true | SecretVal [o] -> true | _ -> false} -> Tot (request)
 let default_req_uri w u = 
     match (URI?.usl u) with 
+    | PublicVal -> default_request w u
     | SecretVal [o] -> let req = ({reqm = "GET"; requrl = [(u)]; reqhead = []; reqo = (getOrigin (CWindow?.cwloc w)); reqw = (Some w); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client w); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (emptyString (URI?.usl u)); corsflag = false; corspfflag = false; authflag = false; recflag = false}) in
 		      Request (URI?.usl u) req
 
