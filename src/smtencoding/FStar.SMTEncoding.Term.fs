@@ -251,6 +251,18 @@ let rec hash_of_term' t = match t with
     "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
 and hash_of_term tm = hash_of_term' tm.tm
 
+let mkBoxFunctions s = (FStar.Ident.reserved_prefix ^ s, FStar.Ident.reserved_prefix ^ s ^ "_proj_0")
+let boxIntFun        = mkBoxFunctions "BoxInt"
+let boxBoolFun       = mkBoxFunctions "BoxBool"
+let boxStringFun     = mkBoxFunctions "BoxString"
+let boxRefFun        = mkBoxFunctions "BoxRef"
+let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
+
+// Assume the Box/Unbox functions to be injective
+let isInjective s =
+String.substring s 0 (String.length (FStar.Ident.reserved_prefix) + 3) = 
+FStar.Ident.reserved_prefix ^ "Box"
+
 let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
@@ -304,7 +316,10 @@ let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUlt = mk_bin_op BvUlt
 let mkIff = mk_bin_op Iff
-let mkEq  = mk_bin_op Eq
+let mkEq (t1, t2) r = match t1.tm, t2.tm with
+    | App (Var f1, [s1]), App (Var f2, [s2]) when f1 = f2 && isInjective f1 ->
+        mk_bin_op Eq (s1, s2) r
+    | _ -> mk_bin_op Eq (t1, t2) r
 let mkLT  = mk_bin_op LT
 let mkLTE = mk_bin_op LTE
 let mkGT  = mk_bin_op GT
@@ -462,7 +477,7 @@ let injective_constructor (name, fields, sort) =
     |> List.flatten
 
 let constructor_to_decl (name, fields, sort, id, injective) =
-    let injective = injective || true in //DELETE: what?
+    let injective = injective || true in
     let field_sorts = fields |> List.map (fun (_, sort, _) -> sort) in
     let cdecl = DeclFun(name, field_sorts, sort, Some "Constructor") in
     let cid = fresh_constructor (name, field_sorts, sort, id) in
@@ -720,10 +735,10 @@ and mkPrelude z3options =
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
                                  ("Tm_unit",  [], Term_sort, 6, true);
-                                 ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
-                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);
-                                 ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, 9, true);
-                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, 10, true);
+                                 (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
+                                 (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
+                                 (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
+                                 (fst boxRefFun,     [snd boxRefFun, Ref_sort, true],    Term_sort, 10, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
@@ -740,8 +755,8 @@ and mkPrelude z3options =
    I am computing them based on the size in this not very robust way. 
    z3options are only used by the prelude so passing the empty string should be ok. *)
 let mkBvConstructor (sz : int) = 
-    (format1 "BoxBitVec%s" (string_of_int sz), 
-        [format1 "BoxBitVec%s_proj_0" (string_of_int sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
+    (fst (boxBitVecFun sz), 
+        [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
     |> constructor_to_decl
 
 let mk_Range_const      = mkApp("Range_const", []) norng
@@ -755,20 +770,18 @@ let elim_box cond u v t =
     | _ -> mkApp(u, [t]) t.rng
 let maybe_elim_box u v t =
     elim_box (Options.smtencoding_elim_box()) u v t
-let boxInt t      = maybe_elim_box "BoxInt" "BoxInt_proj_0" t
-let unboxInt t    = maybe_elim_box "BoxInt_proj_0" "BoxInt" t
-let boxBool t     = maybe_elim_box "BoxBool" "BoxBool_proj_0" t
-let unboxBool t   = maybe_elim_box "BoxBool_proj_0" "BoxBool" t
-let boxString t   = maybe_elim_box "BoxString" "BoxString_proj_0" t
-let unboxString t = maybe_elim_box "BoxString_proj_0" "BoxString" t
-let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
-let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
+let boxInt t      = maybe_elim_box (fst boxIntFun) (snd boxIntFun) t
+let unboxInt t    = maybe_elim_box (snd boxIntFun) (fst boxIntFun) t
+let boxBool t     = maybe_elim_box (fst boxBoolFun) (snd boxBoolFun) t
+let unboxBool t   = maybe_elim_box (snd boxBoolFun) (fst boxBoolFun) t
+let boxString t   = maybe_elim_box (fst boxStringFun) (snd boxStringFun) t
+let unboxString t = maybe_elim_box (snd boxStringFun) (fst boxStringFun) t
+let boxRef t      = maybe_elim_box (fst boxRefFun) (snd boxRefFun) t
+let unboxRef t    = maybe_elim_box (snd boxRefFun) (fst boxRefFun) t
 let boxBitVec (sz:int) t = 
-    let boxOfSize = format1 "BoxBitVec%s" (string_of_int sz) in
-    elim_box true boxOfSize (boxOfSize ^ "_proj_0") t
+    elim_box true (fst (boxBitVecFun sz)) (snd (boxBitVecFun sz)) t
 let unboxBitVec (sz:int) t = 
-    let boxOfSize = format1 "BoxBitVec%s" (string_of_int sz) in
-    elim_box true (boxOfSize ^ "_proj_0") boxOfSize t
+    elim_box true (snd (boxBitVecFun sz)) (fst (boxBitVecFun sz)) t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
@@ -802,7 +815,7 @@ and print_smt_term_list_list (l:list<list<term>>) :string =
 
 let getBoxedInteger (t:term) =
   match t.tm with
-  | App(Var "BoxInt", [t2]) ->
+  | App(Var s, [t2]) when s = fst boxIntFun ->
     begin 
     match t2.tm with
     | Integer n -> int_of_string n

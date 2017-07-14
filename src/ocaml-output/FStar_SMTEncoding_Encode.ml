@@ -4290,7 +4290,9 @@ let primitive_type_axioms:
               let uu____10041 =
                 let uu____10042 =
                   let uu____10045 =
-                    FStar_SMTEncoding_Term.mk_tester "BoxBool" x in
+                    FStar_SMTEncoding_Term.mk_tester
+                      (FStar_Pervasives_Native.fst
+                         FStar_SMTEncoding_Term.boxBoolFun) x in
                   (typing_pred, uu____10045) in
                 FStar_SMTEncoding_Util.mkImp uu____10042 in
               ([[typing_pred]], [xx], uu____10041) in
@@ -4351,7 +4353,9 @@ let primitive_type_axioms:
               let uu____10144 =
                 let uu____10145 =
                   let uu____10148 =
-                    FStar_SMTEncoding_Term.mk_tester "BoxInt" x in
+                    FStar_SMTEncoding_Term.mk_tester
+                      (FStar_Pervasives_Native.fst
+                         FStar_SMTEncoding_Term.boxIntFun) x in
                   (typing_pred, uu____10148) in
                 FStar_SMTEncoding_Util.mkImp uu____10145 in
               ([[typing_pred]], [xx], uu____10144) in
@@ -4446,7 +4450,9 @@ let primitive_type_axioms:
               let uu____10283 =
                 let uu____10284 =
                   let uu____10287 =
-                    FStar_SMTEncoding_Term.mk_tester "BoxString" x in
+                    FStar_SMTEncoding_Term.mk_tester
+                      (FStar_Pervasives_Native.fst
+                         FStar_SMTEncoding_Term.boxStringFun) x in
                   (typing_pred, uu____10287) in
                 FStar_SMTEncoding_Util.mkImp uu____10284 in
               ([[typing_pred]], [xx], uu____10283) in
@@ -4482,7 +4488,10 @@ let primitive_type_axioms:
           let uu____10345 =
             let uu____10351 =
               let uu____10352 =
-                let uu____10355 = FStar_SMTEncoding_Term.mk_tester "BoxRef" x in
+                let uu____10355 =
+                  FStar_SMTEncoding_Term.mk_tester
+                    (FStar_Pervasives_Native.fst
+                       FStar_SMTEncoding_Term.boxRefFun) x in
                 (typing_pred, uu____10355) in
               FStar_SMTEncoding_Util.mkImp uu____10352 in
             ([[typing_pred]], [xx; aa], uu____10351) in
@@ -6802,7 +6811,9 @@ and encode_sigelt':
                              let uu____14946 =
                                let uu____14949 =
                                  FStar_SMTEncoding_Util.mkApp
-                                   ("BoxBool_proj_0", [x]) in
+                                   ((FStar_Pervasives_Native.snd
+                                       FStar_SMTEncoding_Term.boxBoolFun),
+                                     [x]) in
                                (valid_b2t_x, uu____14949) in
                              FStar_SMTEncoding_Util.mkEq uu____14946 in
                            ([[b2t_x]], [xx], uu____14945) in

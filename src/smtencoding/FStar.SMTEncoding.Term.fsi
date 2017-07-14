@@ -131,6 +131,10 @@ val inst: list<term> -> term -> term
 val subst: term -> fv -> term -> term
 val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
+val boxIntFun : string * string
+val boxBoolFun : string * string
+val boxStringFun : string * string
+val boxRefFun : string * string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs

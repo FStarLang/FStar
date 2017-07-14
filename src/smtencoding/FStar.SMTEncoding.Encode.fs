@@ -1508,7 +1508,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let bb = ("b", Bool_sort) in
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
-         Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester "BoxBool" x)), Some "bool inversion", "bool_inversion")] in
+         Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
     let mk_int : env -> string -> term -> decls_t  = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
@@ -1519,7 +1519,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let precedes = mk_Valid <| mkApp("Prims.Precedes", [tt;tt;Term.boxInt a; Term.boxInt b]) in
         let precedes_y_x = mk_Valid <| mkApp("Precedes", [y; x]) in
         [Util.mkAssume(mkForall([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
-         Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester "BoxInt" x)), Some "int inversion", "int_inversion");
+         Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
          Util.mkAssume(mkForall_fuel([[typing_pred; typing_pred_y;precedes_y_x]],
                                    [xx;yy],
                                    mkImp(mk_and_l [typing_pred;
@@ -1534,7 +1534,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let bb = ("b", String_sort) in
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
-         Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester "BoxString" x)),  Some "string inversion", "string_inversion")] in
+         Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
     let mk_ref : env -> string -> term -> decls_t = fun env reft_name _ ->
         let r = ("r", Ref_sort) in
         let aa = ("a", Term_sort) in
@@ -1543,7 +1543,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let refb = mkApp(reft_name, [mkFreeV bb]) in
         let typing_pred = mk_HasType x refa in
         let typing_pred_b = mk_HasType x refb in
-        [Util.mkAssume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, mk_tester "BoxRef" x)), Some "ref inversion", "ref_inversion");
+        [Util.mkAssume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, mk_tester (fst boxRefFun) x)), Some "ref inversion", "ref_inversion");
 //         Util.mkAssume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
 //                     Some "ref typing is injective",
 //                     "ref_injectivity")
@@ -2236,7 +2236,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
                     Util.mkAssume(mkForall([[b2t_x]], [xx],
-                                           mkEq(valid_b2t_x, mkApp("BoxBool_proj_0", [x]))),
+                                           mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
                                 Some "b2t def",
                                 "b2t_def")] in
        decls, env
