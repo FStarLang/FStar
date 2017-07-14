@@ -1,28 +1,43 @@
 open Prims
-let info_at_pos env file row col =
-  let uu____29 = FStar_TypeChecker_Common.info_at_pos file row col in
-  match uu____29 with
-  | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some info ->
-      (match info.FStar_TypeChecker_Common.identifier with
-       | FStar_Util.Inl bv ->
-           let uu____50 =
-             let uu____56 =
-               let uu____59 = FStar_Syntax_Print.nm_to_string bv in
-               FStar_Util.Inl uu____59 in
-             let uu____60 = FStar_Syntax_Syntax.range_of_bv bv in
-             (uu____56, (info.FStar_TypeChecker_Common.identifier_ty),
-               uu____60) in
-           FStar_Pervasives_Native.Some uu____50
-       | FStar_Util.Inr fv ->
-           let uu____69 =
-             let uu____75 =
-               let uu____78 = FStar_Syntax_Syntax.lid_of_fv fv in
-               FStar_Util.Inr uu____78 in
-             let uu____79 = FStar_Syntax_Syntax.range_of_fv fv in
-             (uu____75, (info.FStar_TypeChecker_Common.identifier_ty),
-               uu____79) in
-           FStar_Pervasives_Native.Some uu____69)
+let info_at_pos:
+  'Auu____6 .
+    'Auu____6 ->
+      Prims.string ->
+        Prims.int ->
+          Prims.int ->
+            ((Prims.string,FStar_Ident.lid) FStar_Util.either,FStar_Syntax_Syntax.typ,
+              FStar_Range.range) FStar_Pervasives_Native.tuple3
+              FStar_Pervasives_Native.option
+  =
+  fun env  ->
+    fun file  ->
+      fun row  ->
+        fun col  ->
+          let uu____29 = FStar_TypeChecker_Common.info_at_pos file row col in
+          match uu____29 with
+          | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+          | FStar_Pervasives_Native.Some info ->
+              (match info.FStar_TypeChecker_Common.identifier with
+               | FStar_Util.Inl bv ->
+                   let uu____50 =
+                     let uu____56 =
+                       let uu____59 = FStar_Syntax_Print.nm_to_string bv in
+                       FStar_Util.Inl uu____59 in
+                     let uu____60 = FStar_Syntax_Syntax.range_of_bv bv in
+                     (uu____56,
+                       (info.FStar_TypeChecker_Common.identifier_ty),
+                       uu____60) in
+                   FStar_Pervasives_Native.Some uu____50
+               | FStar_Util.Inr fv ->
+                   let uu____69 =
+                     let uu____75 =
+                       let uu____78 = FStar_Syntax_Syntax.lid_of_fv fv in
+                       FStar_Util.Inr uu____78 in
+                     let uu____79 = FStar_Syntax_Syntax.range_of_fv fv in
+                     (uu____75,
+                       (info.FStar_TypeChecker_Common.identifier_ty),
+                       uu____79) in
+                   FStar_Pervasives_Native.Some uu____69)
 let add_errors:
   FStar_TypeChecker_Env.env ->
     (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
@@ -235,12 +250,19 @@ let constructor_builds_the_wrong_type:
           FStar_Util.format3
             "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\""
             uu____302 uu____303 uu____304
-let constructor_fails_the_positivity_check env d l =
-  let uu____322 = FStar_Syntax_Print.term_to_string d in
-  let uu____323 = FStar_Syntax_Print.lid_to_string l in
-  FStar_Util.format2
-    "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
-    uu____322 uu____323
+let constructor_fails_the_positivity_check:
+  'Auu____309 .
+    'Auu____309 ->
+      FStar_Syntax_Syntax.term -> FStar_Ident.lid -> Prims.string
+  =
+  fun env  ->
+    fun d  ->
+      fun l  ->
+        let uu____322 = FStar_Syntax_Print.term_to_string d in
+        let uu____323 = FStar_Syntax_Print.lid_to_string l in
+        FStar_Util.format2
+          "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
+          uu____322 uu____323
 let inline_type_annotation_and_val_decl: FStar_Ident.lid -> Prims.string =
   fun l  ->
     let uu____327 = FStar_Syntax_Print.lid_to_string l in
@@ -302,27 +324,45 @@ let disjunctive_pattern_vars:
       FStar_Util.format2
         "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
         uu____386 uu____387
-let name_and_result c =
-  match c.FStar_Syntax_Syntax.n with
-  | FStar_Syntax_Syntax.Total (t,uu____404) -> ("Tot", t)
-  | FStar_Syntax_Syntax.GTotal (t,uu____414) -> ("GTot", t)
-  | FStar_Syntax_Syntax.Comp ct ->
-      let uu____424 =
-        FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name in
-      (uu____424, (ct.FStar_Syntax_Syntax.result_typ))
-let computed_computation_type_does_not_match_annotation env e c c' =
-  let uu____461 = name_and_result c in
-  match uu____461 with
-  | (f1,r1) ->
-      let uu____472 = name_and_result c' in
-      (match uu____472 with
-       | (f2,r2) ->
-           let uu____483 = err_msg_type_strings env r1 r2 in
-           (match uu____483 with
-            | (s1,s2) ->
-                FStar_Util.format4
-                  "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-                  s1 f1 s2 f2))
+let name_and_result:
+  'Auu____390 .
+    (FStar_Syntax_Syntax.comp','Auu____390) FStar_Syntax_Syntax.syntax ->
+      (Prims.string,(FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+                      FStar_Syntax_Syntax.syntax)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun c  ->
+    match c.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Total (t,uu____404) -> ("Tot", t)
+    | FStar_Syntax_Syntax.GTotal (t,uu____414) -> ("GTot", t)
+    | FStar_Syntax_Syntax.Comp ct ->
+        let uu____424 =
+          FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name in
+        (uu____424, (ct.FStar_Syntax_Syntax.result_typ))
+let computed_computation_type_does_not_match_annotation:
+  'Auu____434 'Auu____435 'Auu____436 .
+    FStar_TypeChecker_Env.env ->
+      'Auu____436 ->
+        (FStar_Syntax_Syntax.comp','Auu____435) FStar_Syntax_Syntax.syntax ->
+          (FStar_Syntax_Syntax.comp','Auu____434) FStar_Syntax_Syntax.syntax
+            -> Prims.string
+  =
+  fun env  ->
+    fun e  ->
+      fun c  ->
+        fun c'  ->
+          let uu____461 = name_and_result c in
+          match uu____461 with
+          | (f1,r1) ->
+              let uu____472 = name_and_result c' in
+              (match uu____472 with
+               | (f2,r2) ->
+                   let uu____483 = err_msg_type_strings env r1 r2 in
+                   (match uu____483 with
+                    | (s1,s2) ->
+                        FStar_Util.format4
+                          "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
+                          s1 f1 s2 f2))
 let unexpected_non_trivial_precondition_on_term:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string =
   fun env  ->
@@ -330,22 +370,36 @@ let unexpected_non_trivial_precondition_on_term:
       let uu____494 = FStar_TypeChecker_Normalize.term_to_string env f in
       FStar_Util.format1
         "Term has an unexpected non-trivial pre-condition: %s" uu____494
-let expected_pure_expression e c =
-  let uu____511 = FStar_Syntax_Print.term_to_string e in
-  let uu____512 =
-    let uu____513 = name_and_result c in
-    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____513 in
-  FStar_Util.format2
-    "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
-    uu____511 uu____512
-let expected_ghost_expression e c =
-  let uu____540 = FStar_Syntax_Print.term_to_string e in
-  let uu____541 =
-    let uu____542 = name_and_result c in
-    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____542 in
-  FStar_Util.format2
-    "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
-    uu____540 uu____541
+let expected_pure_expression:
+  'Auu____498 .
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.comp','Auu____498) FStar_Syntax_Syntax.syntax ->
+        Prims.string
+  =
+  fun e  ->
+    fun c  ->
+      let uu____511 = FStar_Syntax_Print.term_to_string e in
+      let uu____512 =
+        let uu____513 = name_and_result c in
+        FStar_All.pipe_left FStar_Pervasives_Native.fst uu____513 in
+      FStar_Util.format2
+        "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
+        uu____511 uu____512
+let expected_ghost_expression:
+  'Auu____527 .
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.comp','Auu____527) FStar_Syntax_Syntax.syntax ->
+        Prims.string
+  =
+  fun e  ->
+    fun c  ->
+      let uu____540 = FStar_Syntax_Print.term_to_string e in
+      let uu____541 =
+        let uu____542 = name_and_result c in
+        FStar_All.pipe_left FStar_Pervasives_Native.fst uu____542 in
+      FStar_Util.format2
+        "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
+        uu____540 uu____541
 let expected_effect_1_got_effect_2:
   FStar_Ident.lident -> FStar_Ident.lident -> Prims.string =
   fun c1  ->
@@ -376,9 +430,16 @@ let failed_to_prove_specification: Prims.string Prims.list -> Prims.string =
           uu____579
 let top_level_effect: Prims.string =
   "Top-level let-bindings must be total; this term may have effects"
-let cardinality_constraint_violated l a =
-  let uu____597 = FStar_Syntax_Print.lid_to_string l in
-  let uu____598 = FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v in
-  FStar_Util.format2
-    "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
-    uu____597 uu____598
+let cardinality_constraint_violated:
+  'Auu____584 .
+    FStar_Ident.lid ->
+      (FStar_Syntax_Syntax.bv,'Auu____584) FStar_Syntax_Syntax.withinfo_t ->
+        Prims.string
+  =
+  fun l  ->
+    fun a  ->
+      let uu____597 = FStar_Syntax_Print.lid_to_string l in
+      let uu____598 = FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v in
+      FStar_Util.format2
+        "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
+        uu____597 uu____598

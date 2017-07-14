@@ -6,10 +6,15 @@ type z3_result = (FStar_SMTEncoding_Z3.unsat_core,z3_err) FStar_Util.either
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
-let z3_result_as_replay_result uu___83_23 =
-  match uu___83_23 with
-  | FStar_Util.Inl l -> FStar_Util.Inl l
-  | FStar_Util.Inr (r,uu____32) -> FStar_Util.Inr r
+let z3_result_as_replay_result:
+  'Auu____11 'Auu____12 'Auu____13 .
+    ('Auu____13,('Auu____12,'Auu____11) FStar_Pervasives_Native.tuple2)
+      FStar_Util.either -> ('Auu____13,'Auu____12) FStar_Util.either
+  =
+  fun uu___83_23  ->
+    match uu___83_23 with
+    | FStar_Util.Inl l -> FStar_Util.Inl l
+    | FStar_Util.Inr (r,uu____32) -> FStar_Util.Inr r
 type hint_stat =
   {
   hint: FStar_Util.hint FStar_Pervasives_Native.option;
@@ -26,50 +31,54 @@ let replaying_hints:
 let hint_stats: hint_stat Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let format_hints_file_name: Prims.string -> Prims.string =
   fun src_filename  -> FStar_Util.format1 "%s.hints" src_filename
-let initialize_hints_db src_filename format_filename =
-  FStar_ST.write hint_stats [];
-  (let uu____106 = FStar_Options.record_hints () in
-   if uu____106
-   then FStar_ST.write recorded_hints (FStar_Pervasives_Native.Some [])
-   else ());
-  (let uu____114 = FStar_Options.use_hints () in
-   if uu____114
-   then
-     let norm_src_filename = FStar_Util.normalize_file_path src_filename in
-     let val_filename =
-       let uu____117 = FStar_Options.hint_file () in
-       match uu____117 with
-       | FStar_Pervasives_Native.Some fn -> fn
-       | FStar_Pervasives_Native.None  ->
-           format_hints_file_name norm_src_filename in
-     let uu____120 = FStar_Util.read_hints val_filename in
-     match uu____120 with
-     | FStar_Pervasives_Native.Some hints ->
-         let expected_digest = FStar_Util.digest_of_file norm_src_filename in
-         ((let uu____125 = FStar_Options.hint_info () in
-           if uu____125
-           then
-             let uu____126 =
-               let uu____127 = FStar_Options.hint_file () in
-               match uu____127 with
-               | FStar_Pervasives_Native.Some fn ->
-                   Prims.strcat " from '" (Prims.strcat val_filename "'")
-               | uu____130 -> "" in
-             FStar_Util.print3 "(%s) digest is %s%s.\n" norm_src_filename
-               (if hints.FStar_Util.module_digest = expected_digest
-                then "valid; using hints"
-                else "invalid; using potentially stale hints") uu____126
-           else ());
-          FStar_ST.write replaying_hints
-            (FStar_Pervasives_Native.Some (hints.FStar_Util.hints)))
-     | FStar_Pervasives_Native.None  ->
-         let uu____137 = FStar_Options.hint_info () in
-         (if uu____137
-          then
-            FStar_Util.print1 "(%s) Unable to read hint file.\n"
-              norm_src_filename
-          else ())
-   else ())
+let initialize_hints_db:
+  'Auu____92 . Prims.string -> 'Auu____92 -> Prims.unit =
+  fun src_filename  ->
+    fun format_filename  ->
+      FStar_ST.write hint_stats [];
+      (let uu____106 = FStar_Options.record_hints () in
+       if uu____106
+       then FStar_ST.write recorded_hints (FStar_Pervasives_Native.Some [])
+       else ());
+      (let uu____114 = FStar_Options.use_hints () in
+       if uu____114
+       then
+         let norm_src_filename = FStar_Util.normalize_file_path src_filename in
+         let val_filename =
+           let uu____117 = FStar_Options.hint_file () in
+           match uu____117 with
+           | FStar_Pervasives_Native.Some fn -> fn
+           | FStar_Pervasives_Native.None  ->
+               format_hints_file_name norm_src_filename in
+         let uu____120 = FStar_Util.read_hints val_filename in
+         match uu____120 with
+         | FStar_Pervasives_Native.Some hints ->
+             let expected_digest =
+               FStar_Util.digest_of_file norm_src_filename in
+             ((let uu____125 = FStar_Options.hint_info () in
+               if uu____125
+               then
+                 let uu____126 =
+                   let uu____127 = FStar_Options.hint_file () in
+                   match uu____127 with
+                   | FStar_Pervasives_Native.Some fn ->
+                       Prims.strcat " from '" (Prims.strcat val_filename "'")
+                   | uu____130 -> "" in
+                 FStar_Util.print3 "(%s) digest is %s%s.\n" norm_src_filename
+                   (if hints.FStar_Util.module_digest = expected_digest
+                    then "valid; using hints"
+                    else "invalid; using potentially stale hints") uu____126
+               else ());
+              FStar_ST.write replaying_hints
+                (FStar_Pervasives_Native.Some (hints.FStar_Util.hints)))
+         | FStar_Pervasives_Native.None  ->
+             let uu____137 = FStar_Options.hint_info () in
+             (if uu____137
+              then
+                FStar_Util.print1 "(%s) Unable to read hint file.\n"
+                  norm_src_filename
+              else ())
+       else ())
 let finalize_hints_db: Prims.string -> Prims.unit =
   fun src_filename  ->
     (let uu____144 = FStar_Options.record_hints () in
@@ -110,9 +119,11 @@ let finalize_hints_db: Prims.string -> Prims.unit =
     FStar_ST.write recorded_hints FStar_Pervasives_Native.None;
     FStar_ST.write replaying_hints FStar_Pervasives_Native.None;
     FStar_ST.write hint_stats []
-let with_hints_db fname f =
-  initialize_hints_db fname false;
-  (let result = f () in finalize_hints_db fname; result)
+let with_hints_db: 'a . Prims.string -> (Prims.unit -> 'a) -> 'a =
+  fun fname  ->
+    fun f  ->
+      initialize_hints_db fname false;
+      (let result = f () in finalize_hints_db fname; result)
 let next_hint:
   Prims.string -> Prims.int -> FStar_Util.hint FStar_Pervasives_Native.option
   =
@@ -1054,7 +1065,7 @@ let ask_and_report_errors:
                  let process_query q = check q in
                  let uu____1752 =
                    let uu____1756 = FStar_Options.admit_smt_queries () in
-                   let uu____1757 = FStar_Options.lax_except () in
+                   let uu____1757 = FStar_Options.admit_except () in
                    (uu____1756, uu____1757) in
                  (match uu____1752 with
                   | (true ,uu____1760) -> ()

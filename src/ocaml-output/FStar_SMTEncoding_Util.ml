@@ -13,7 +13,11 @@ let mkAssume:
             FStar_SMTEncoding_Term.assumption_name = nm;
             FStar_SMTEncoding_Term.assumption_fact_ids = []
           }
-let norng f x = f x FStar_Range.dummyRange
+let norng:
+  'Auu____17 'Auu____18 .
+    ('Auu____18 -> FStar_Range.range -> 'Auu____17) ->
+      'Auu____18 -> 'Auu____17
+  = fun f  -> fun x  -> f x FStar_Range.dummyRange
 let mkTrue: FStar_SMTEncoding_Term.term =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange
 let mkFalse: FStar_SMTEncoding_Term.term =
@@ -125,7 +129,11 @@ let mkExists:
     FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
     FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkExists
-let norng2 f x y = f x y FStar_Range.dummyRange
+let norng2:
+  'Auu____229 'Auu____230 'Auu____231 .
+    ('Auu____231 -> 'Auu____230 -> FStar_Range.range -> 'Auu____229) ->
+      'Auu____231 -> 'Auu____230 -> 'Auu____229
+  = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange
 let mk_Term_app:
   FStar_SMTEncoding_Term.term ->
     FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term

@@ -186,12 +186,22 @@ let check_and_gen:
       fun k  ->
         let uu____86 = tc_check_trivial_guard env t k in
         FStar_TypeChecker_Util.generalize_universes env uu____86
-let check_nogen env t k =
-  let t1 = tc_check_trivial_guard env t k in
-  let uu____108 =
-    FStar_TypeChecker_Normalize.normalize [FStar_TypeChecker_Normalize.Beta]
-      env t1 in
-  ([], uu____108)
+let check_nogen:
+  'Auu____91 .
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.typ ->
+          ('Auu____91 Prims.list,FStar_Syntax_Syntax.term)
+            FStar_Pervasives_Native.tuple2
+  =
+  fun env  ->
+    fun t  ->
+      fun k  ->
+        let t1 = tc_check_trivial_guard env t k in
+        let uu____108 =
+          FStar_TypeChecker_Normalize.normalize
+            [FStar_TypeChecker_Normalize.Beta] env t1 in
+        ([], uu____108)
 let monad_signature:
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->

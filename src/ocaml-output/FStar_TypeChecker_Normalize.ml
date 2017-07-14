@@ -231,14 +231,26 @@ let uu___is_Debug: stack_elt -> Prims.bool =
 let __proj__Debug__item___0: stack_elt -> FStar_Syntax_Syntax.term =
   fun projectee  -> match projectee with | Debug _0 -> _0
 type stack = stack_elt Prims.list
-let mk t r = FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None r
-let set_memo r t =
-  let uu____663 = FStar_ST.read r in
-  match uu____663 with
-  | FStar_Pervasives_Native.Some uu____668 ->
-      failwith "Unexpected set_memo: thunk already evaluated"
-  | FStar_Pervasives_Native.None  ->
-      FStar_ST.write r (FStar_Pervasives_Native.Some t)
+let mk:
+  'Auu____628 'Auu____629 .
+    'Auu____629 ->
+      FStar_Range.range ->
+        ('Auu____629,'Auu____628) FStar_Syntax_Syntax.syntax
+  =
+  fun t  -> fun r  -> FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None r
+let set_memo:
+  'Auu____648 .
+    'Auu____648 FStar_Pervasives_Native.option FStar_ST.ref ->
+      'Auu____648 -> Prims.unit
+  =
+  fun r  ->
+    fun t  ->
+      let uu____663 = FStar_ST.read r in
+      match uu____663 with
+      | FStar_Pervasives_Native.Some uu____668 ->
+          failwith "Unexpected set_memo: thunk already evaluated"
+      | FStar_Pervasives_Native.None  ->
+          FStar_ST.write r (FStar_Pervasives_Native.Some t)
 let env_to_string: closure Prims.list -> Prims.string =
   fun env  ->
     let uu____677 = FStar_List.map closure_to_string env in
@@ -275,16 +287,22 @@ let log: cfg -> (Prims.unit -> Prims.unit) -> Prims.unit =
       let uu____754 =
         FStar_TypeChecker_Env.debug cfg.tcenv (FStar_Options.Other "Norm") in
       if uu____754 then f () else ()
-let is_empty uu___132_763 =
-  match uu___132_763 with | [] -> true | uu____765 -> false
-let lookup_bvar env x =
-  try FStar_List.nth env x.FStar_Syntax_Syntax.index
-  with
-  | uu____783 ->
-      let uu____784 =
-        let uu____785 = FStar_Syntax_Print.db_to_string x in
-        FStar_Util.format1 "Failed to find %s\n" uu____785 in
-      failwith uu____784
+let is_empty: 'Auu____758 . 'Auu____758 Prims.list -> Prims.bool =
+  fun uu___132_763  ->
+    match uu___132_763 with | [] -> true | uu____765 -> false
+let lookup_bvar:
+  'Auu____770 .
+    'Auu____770 Prims.list -> FStar_Syntax_Syntax.bv -> 'Auu____770
+  =
+  fun env  ->
+    fun x  ->
+      try FStar_List.nth env x.FStar_Syntax_Syntax.index
+      with
+      | uu____783 ->
+          let uu____784 =
+            let uu____785 = FStar_Syntax_Print.db_to_string x in
+            FStar_Util.format1 "Failed to find %s\n" uu____785 in
+          failwith uu____784
 let downgrade_ghost_effect_name:
   FStar_Ident.lident -> FStar_Ident.lident FStar_Pervasives_Native.option =
   fun l  ->
@@ -741,7 +759,9 @@ and closure_as_term_delayed:
   cfg ->
     closure Prims.list ->
       (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-        FStar_Syntax_Syntax.syntax -> FStar_Syntax_Syntax.term
+        FStar_Syntax_Syntax.syntax ->
+        (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+          FStar_Syntax_Syntax.syntax
   =
   fun cfg  ->
     fun env  ->
@@ -1725,23 +1745,33 @@ let maybe_simplify:
                               | uu____5963 -> tm
                             else reduce_equality cfg tm)))))
          | uu____5970 -> tm)
-let is_norm_request hd1 args =
-  let uu____5985 =
-    let uu____5989 =
-      let uu____5990 = FStar_Syntax_Util.un_uinst hd1 in
-      uu____5990.FStar_Syntax_Syntax.n in
-    (uu____5989, args) in
-  match uu____5985 with
-  | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5995::uu____5996::[]) ->
-      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize_term
-  | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5999::[]) ->
-      FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize
-  | uu____6001 -> false
-let get_norm_request args =
-  match args with
-  | uu____6020::(tm,uu____6022)::[] -> tm
-  | (tm,uu____6032)::[] -> tm
-  | uu____6037 -> failwith "Impossible"
+let is_norm_request:
+  'Auu____5974 .
+    FStar_Syntax_Syntax.term -> 'Auu____5974 Prims.list -> Prims.bool
+  =
+  fun hd1  ->
+    fun args  ->
+      let uu____5985 =
+        let uu____5989 =
+          let uu____5990 = FStar_Syntax_Util.un_uinst hd1 in
+          uu____5990.FStar_Syntax_Syntax.n in
+        (uu____5989, args) in
+      match uu____5985 with
+      | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5995::uu____5996::[]) ->
+          FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize_term
+      | (FStar_Syntax_Syntax.Tm_fvar fv,uu____5999::[]) ->
+          FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.normalize
+      | uu____6001 -> false
+let get_norm_request:
+  'Auu____6008 'Auu____6009 .
+    ('Auu____6009,'Auu____6008) FStar_Pervasives_Native.tuple2 Prims.list ->
+      'Auu____6009
+  =
+  fun args  ->
+    match args with
+    | uu____6020::(tm,uu____6022)::[] -> tm
+    | (tm,uu____6032)::[] -> tm
+    | uu____6037 -> failwith "Impossible"
 let is_reify_head: stack_elt Prims.list -> Prims.bool =
   fun uu___135_6044  ->
     match uu___135_6044 with
@@ -3446,7 +3476,8 @@ and norm_pattern_args:
       ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
          FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.tuple2 Prims.list Prims.list ->
-        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual)
+        ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+           FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
           FStar_Pervasives_Native.tuple2 Prims.list Prims.list
   =
   fun cfg  ->
@@ -3637,12 +3668,7 @@ and ghost_to_pure_aux:
             else c
         | uu____9238 -> c
 and norm_binder:
-  cfg ->
-    env ->
-      FStar_Syntax_Syntax.binder ->
-        (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
-          FStar_Pervasives_Native.tuple2
-  =
+  cfg -> env -> FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder =
   fun cfg  ->
     fun env  ->
       fun uu____9241  ->
@@ -4192,8 +4218,7 @@ let normalize_universe:
       let uu____10364 = config [] env in norm_universe uu____10364 [] u
 let ghost_to_pure:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.comp ->
-      (FStar_Syntax_Syntax.comp',Prims.unit) FStar_Syntax_Syntax.syntax
+    FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp
   =
   fun env  ->
     fun c  ->
@@ -4266,9 +4291,7 @@ let comp_to_string:
 let normalize_refinement:
   steps ->
     FStar_TypeChecker_Env.env ->
-      FStar_Syntax_Syntax.typ ->
-        (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-          FStar_Syntax_Syntax.syntax
+      FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ
   =
   fun steps  ->
     fun env  ->

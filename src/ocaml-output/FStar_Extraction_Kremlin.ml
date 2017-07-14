@@ -593,12 +593,24 @@ type var = Prims.int
 type lident =
   (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
 type version = Prims.int
-let current_version: Prims.int = Prims.parse_int "20"
+let current_version: version = Prims.parse_int "20"
 type file = (Prims.string,program) FStar_Pervasives_Native.tuple2
 type binary_format = (version,file Prims.list) FStar_Pervasives_Native.tuple2
-let fst3 uu____1722 = match uu____1722 with | (x,uu____1727,uu____1728) -> x
-let snd3 uu____1742 = match uu____1742 with | (uu____1746,x,uu____1748) -> x
-let thd3 uu____1762 = match uu____1762 with | (uu____1766,uu____1767,x) -> x
+let fst3:
+  'Auu____1713 'Auu____1714 'Auu____1715 .
+    ('Auu____1715,'Auu____1714,'Auu____1713) FStar_Pervasives_Native.tuple3
+      -> 'Auu____1715
+  = fun uu____1722  -> match uu____1722 with | (x,uu____1727,uu____1728) -> x
+let snd3:
+  'Auu____1733 'Auu____1734 'Auu____1735 .
+    ('Auu____1735,'Auu____1734,'Auu____1733) FStar_Pervasives_Native.tuple3
+      -> 'Auu____1734
+  = fun uu____1742  -> match uu____1742 with | (uu____1746,x,uu____1748) -> x
+let thd3:
+  'Auu____1753 'Auu____1754 'Auu____1755 .
+    ('Auu____1755,'Auu____1754,'Auu____1753) FStar_Pervasives_Native.tuple3
+      -> 'Auu____1753
+  = fun uu____1762  -> match uu____1762 with | (uu____1766,uu____1767,x) -> x
 let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
   fun uu___118_1772  ->
     match uu___118_1772 with
@@ -727,13 +739,20 @@ let find_t: env -> Prims.string -> Prims.int =
           let uu____1908 =
             FStar_Util.format1 "Internal error: name not found %s\n" x in
           failwith uu____1908
-let add_binders env binders =
-  FStar_List.fold_left
-    (fun env1  ->
-       fun uu____1938  ->
-         match uu____1938 with
-         | ((name,uu____1944),uu____1945) -> extend env1 name false) env
-    binders
+let add_binders:
+  'Auu____1913 'Auu____1914 .
+    env ->
+      ((Prims.string,'Auu____1914) FStar_Pervasives_Native.tuple2,'Auu____1913)
+        FStar_Pervasives_Native.tuple2 Prims.list -> env
+  =
+  fun env  ->
+    fun binders  ->
+      FStar_List.fold_left
+        (fun env1  ->
+           fun uu____1938  ->
+             match uu____1938 with
+             | ((name,uu____1944),uu____1945) -> extend env1 name false) env
+        binders
 let rec translate: FStar_Extraction_ML_Syntax.mllib -> file Prims.list =
   fun uu____2036  ->
     match uu____2036 with

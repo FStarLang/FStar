@@ -157,15 +157,21 @@ let force_sort':
             uu____295 uu____296 in
         failwith uu____294
     | FStar_Pervasives_Native.Some tk -> tk
-let force_sort s =
-  let uu____311 =
-    let uu____314 = force_sort' s in FStar_Syntax_Syntax.mk uu____314 in
-  uu____311 FStar_Pervasives_Native.None s.FStar_Syntax_Syntax.pos
+let force_sort:
+  'Auu____300 .
+    (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+      FStar_Syntax_Syntax.syntax ->
+      (FStar_Syntax_Syntax.term','Auu____300) FStar_Syntax_Syntax.syntax
+  =
+  fun s  ->
+    let uu____311 =
+      let uu____314 = force_sort' s in FStar_Syntax_Syntax.mk uu____314 in
+    uu____311 FStar_Pervasives_Native.None s.FStar_Syntax_Syntax.pos
 let extract_let_rec_annotation:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.letbinding ->
-      (FStar_Syntax_Syntax.univ_name Prims.list,FStar_Syntax_Syntax.typ,
-        Prims.bool) FStar_Pervasives_Native.tuple3
+      (FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.typ,Prims.bool)
+        FStar_Pervasives_Native.tuple3
   =
   fun env  ->
     fun uu____331  ->
@@ -902,10 +908,7 @@ let rec decorated_pattern_as_term:
     | FStar_Syntax_Syntax.Pat_dot_term (x,e) -> ([], e)
 let destruct_comp:
   FStar_Syntax_Syntax.comp_typ ->
-    (FStar_Syntax_Syntax.universe,(FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-                                    FStar_Syntax_Syntax.syntax,(FStar_Syntax_Syntax.term',
-                                                                 FStar_Syntax_Syntax.term')
-                                                                 FStar_Syntax_Syntax.syntax)
+    (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.typ)
       FStar_Pervasives_Native.tuple3
   =
   fun c  ->
@@ -1564,10 +1567,7 @@ let bind:
                   }))
 let label:
   Prims.string ->
-    FStar_Range.range ->
-      FStar_Syntax_Syntax.typ ->
-        (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-          FStar_Syntax_Syntax.syntax
+    FStar_Range.range -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ
   =
   fun reason  ->
     fun r  ->
@@ -2068,7 +2068,7 @@ let fvar_const:
 let bind_cases:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      (FStar_Syntax_Syntax.formula,FStar_Syntax_Syntax.lcomp)
+      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.lcomp)
         FStar_Pervasives_Native.tuple2 Prims.list ->
         FStar_Syntax_Syntax.lcomp
   =
@@ -2349,7 +2349,7 @@ let maybe_coerce_bool_to_type:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.lcomp ->
-        FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.typ ->
           (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp)
             FStar_Pervasives_Native.tuple2
   =
@@ -3073,15 +3073,19 @@ let maybe_instantiate:
                                   e.FStar_Syntax_Syntax.pos in
                               (e1, t2, guard))))
            | uu____5380 -> (e, t, FStar_TypeChecker_Rel.trivial_guard))
-let string_of_univs univs1 =
-  let uu____5392 =
-    let uu____5394 = FStar_Util.set_elements univs1 in
-    FStar_All.pipe_right uu____5394
-      (FStar_List.map
-         (fun u  ->
-            let uu____5404 = FStar_Unionfind.uvar_id u in
-            FStar_All.pipe_right uu____5404 FStar_Util.string_of_int)) in
-  FStar_All.pipe_right uu____5392 (FStar_String.concat ", ")
+let string_of_univs:
+  'Auu____5383 .
+    'Auu____5383 FStar_Unionfind.uvar FStar_Util.set -> Prims.string
+  =
+  fun univs1  ->
+    let uu____5392 =
+      let uu____5394 = FStar_Util.set_elements univs1 in
+      FStar_All.pipe_right uu____5394
+        (FStar_List.map
+           (fun u  ->
+              let uu____5404 = FStar_Unionfind.uvar_id u in
+              FStar_All.pipe_right uu____5404 FStar_Util.string_of_int)) in
+    FStar_All.pipe_right uu____5392 (FStar_String.concat ", ")
 let gen_univs:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.universe_uvar FStar_Util.set ->
@@ -3152,19 +3156,31 @@ let gather_free_univnames:
           FStar_Util.fifo_set_difference tm_univnames ctx_univnames in
         FStar_All.pipe_right uu____5473 FStar_Util.fifo_set_elements in
       univnames1
-let maybe_set_tk ts uu___101_5500 =
-  match uu___101_5500 with
-  | FStar_Pervasives_Native.None  -> ts
-  | FStar_Pervasives_Native.Some t ->
-      let t1 =
-        FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
-          FStar_Range.dummyRange in
-      let t2 =
-        FStar_Syntax_Subst.close_univ_vars (FStar_Pervasives_Native.fst ts)
-          t1 in
-      (FStar_ST.write (FStar_Pervasives_Native.snd ts).FStar_Syntax_Syntax.tk
-         (FStar_Pervasives_Native.Some (t2.FStar_Syntax_Syntax.n));
-       ts)
+let maybe_set_tk:
+  'Auu____5483 .
+    (FStar_Syntax_Syntax.univ_names,('Auu____5483,FStar_Syntax_Syntax.term')
+                                      FStar_Syntax_Syntax.syntax)
+      FStar_Pervasives_Native.tuple2 ->
+      FStar_Syntax_Syntax.term' FStar_Pervasives_Native.option ->
+        (FStar_Syntax_Syntax.univ_names,('Auu____5483,FStar_Syntax_Syntax.term')
+                                          FStar_Syntax_Syntax.syntax)
+          FStar_Pervasives_Native.tuple2
+  =
+  fun ts  ->
+    fun uu___101_5500  ->
+      match uu___101_5500 with
+      | FStar_Pervasives_Native.None  -> ts
+      | FStar_Pervasives_Native.Some t ->
+          let t1 =
+            FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
+              FStar_Range.dummyRange in
+          let t2 =
+            FStar_Syntax_Subst.close_univ_vars
+              (FStar_Pervasives_Native.fst ts) t1 in
+          (FStar_ST.write
+             (FStar_Pervasives_Native.snd ts).FStar_Syntax_Syntax.tk
+             (FStar_Pervasives_Native.Some (t2.FStar_Syntax_Syntax.n));
+           ts)
 let check_universe_generalization:
   FStar_Syntax_Syntax.univ_name Prims.list ->
     FStar_Syntax_Syntax.univ_name Prims.list ->
@@ -3189,10 +3205,7 @@ let check_universe_generalization:
             raise uu____5554
 let generalize_universes:
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.univ_names,(FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-                                        FStar_Syntax_Syntax.syntax)
-        FStar_Pervasives_Native.tuple2
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.tscheme
   =
   fun env  ->
     fun t0  ->
@@ -3497,9 +3510,8 @@ let generalize:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.comp)
       FStar_Pervasives_Native.tuple3 Prims.list ->
-      (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.univ_name Prims.list,
-        FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.comp)
-        FStar_Pervasives_Native.tuple4 Prims.list
+      (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term,
+        FStar_Syntax_Syntax.comp) FStar_Pervasives_Native.tuple4 Prims.list
   =
   fun env  ->
     fun lecs  ->
@@ -4000,11 +4012,10 @@ let maybe_monadic:
 let d: Prims.string -> Prims.unit =
   fun s  -> FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s
 let mk_toplevel_definition:
-  FStar_TypeChecker_Env.env_t ->
+  FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.sigelt,(FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-                                      FStar_Syntax_Syntax.syntax)
+        (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.term)
           FStar_Pervasives_Native.tuple2
   =
   fun env  ->

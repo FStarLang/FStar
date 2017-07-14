@@ -66,14 +66,24 @@ let is_interface: Prims.string -> Prims.bool =
     uu____92 = 'i'
 let is_implementation: Prims.string -> Prims.bool =
   fun f  -> let uu____99 = is_interface f in Prims.op_Negation uu____99
-let list_of_option uu___84_108 =
-  match uu___84_108 with
-  | FStar_Pervasives_Native.Some x -> [x]
-  | FStar_Pervasives_Native.None  -> []
-let list_of_pair uu____122 =
-  match uu____122 with
-  | (intf,impl) ->
-      FStar_List.append (list_of_option intf) (list_of_option impl)
+let list_of_option:
+  'Auu____102 .
+    'Auu____102 FStar_Pervasives_Native.option -> 'Auu____102 Prims.list
+  =
+  fun uu___84_108  ->
+    match uu___84_108 with
+    | FStar_Pervasives_Native.Some x -> [x]
+    | FStar_Pervasives_Native.None  -> []
+let list_of_pair:
+  'Auu____113 .
+    ('Auu____113 FStar_Pervasives_Native.option,'Auu____113
+                                                  FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.tuple2 -> 'Auu____113 Prims.list
+  =
+  fun uu____122  ->
+    match uu____122 with
+    | (intf,impl) ->
+        FStar_List.append (list_of_option intf) (list_of_option impl)
 let lowercase_module_name: Prims.string -> Prims.string =
   fun f  ->
     let uu____136 =
@@ -87,12 +97,7 @@ let lowercase_module_name: Prims.string -> Prims.string =
           let uu____141 = FStar_Util.format1 "not a valid FStar file: %s\n" f in
           FStar_Errors.Err uu____141 in
         raise uu____140
-let build_map:
-  Prims.string Prims.list ->
-    (Prims.string FStar_Pervasives_Native.option,Prims.string
-                                                   FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 FStar_Util.smap
-  =
+let build_map: Prims.string Prims.list -> map =
   fun filenames  ->
     let include_directories = FStar_Options.include_path () in
     let include_directories1 =
@@ -721,35 +726,41 @@ let collect_one:
              let uu____1251 = FStar_Parser_Driver.parse_file filename in
              match uu____1251 with
              | (ast,uu____1259) -> (collect_file ast; FStar_ST.read deps))
-let print_graph graph =
-  FStar_Util.print_endline
-    "A DOT-format graph has been dumped in the current directory as dep.graph";
-  FStar_Util.print_endline
-    "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
-  FStar_Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
-  (let uu____1288 =
-     let uu____1289 =
-       let uu____1290 =
-         let uu____1291 =
-           let uu____1293 =
-             let uu____1295 = FStar_Util.smap_keys graph in
-             FStar_List.unique uu____1295 in
-           FStar_List.collect
-             (fun k  ->
-                let deps =
-                  let uu____1303 =
-                    let uu____1307 = FStar_Util.smap_try_find graph k in
-                    FStar_Util.must uu____1307 in
-                  FStar_Pervasives_Native.fst uu____1303 in
-                let r s = FStar_Util.replace_char s '.' '_' in
-                FStar_List.map
-                  (fun dep1  ->
-                     FStar_Util.format2 "  %s -> %s" (r k) (r dep1)) deps)
-             uu____1293 in
-         FStar_String.concat "\n" uu____1291 in
-       Prims.strcat uu____1290 "\n}\n" in
-     Prims.strcat "digraph {\n" uu____1289 in
-   FStar_Util.write_file "dep.graph" uu____1288)
+let print_graph:
+  'Auu____1272 .
+    (Prims.string Prims.list,'Auu____1272) FStar_Pervasives_Native.tuple2
+      FStar_Util.smap -> Prims.unit
+  =
+  fun graph  ->
+    FStar_Util.print_endline
+      "A DOT-format graph has been dumped in the current directory as dep.graph";
+    FStar_Util.print_endline
+      "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
+    FStar_Util.print_endline
+      "Hint: cat dep.graph | grep -v _ | grep -v prims";
+    (let uu____1288 =
+       let uu____1289 =
+         let uu____1290 =
+           let uu____1291 =
+             let uu____1293 =
+               let uu____1295 = FStar_Util.smap_keys graph in
+               FStar_List.unique uu____1295 in
+             FStar_List.collect
+               (fun k  ->
+                  let deps =
+                    let uu____1303 =
+                      let uu____1307 = FStar_Util.smap_try_find graph k in
+                      FStar_Util.must uu____1307 in
+                    FStar_Pervasives_Native.fst uu____1303 in
+                  let r s = FStar_Util.replace_char s '.' '_' in
+                  FStar_List.map
+                    (fun dep1  ->
+                       FStar_Util.format2 "  %s -> %s" (r k) (r dep1)) deps)
+               uu____1293 in
+           FStar_String.concat "\n" uu____1291 in
+         Prims.strcat uu____1290 "\n}\n" in
+       Prims.strcat "digraph {\n" uu____1289 in
+     FStar_Util.write_file "dep.graph" uu____1288)
 let collect:
   verify_mode ->
     Prims.string Prims.list ->
@@ -986,13 +997,20 @@ let print_make:
                  (fun s  -> FStar_Util.replace_chars s ' ' "\\ ") deps1 in
              FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps2))
       deps
-let print uu____1841 =
-  match uu____1841 with
-  | (make_deps,uu____1854,graph) ->
-      let uu____1872 = FStar_Options.dep () in
-      (match uu____1872 with
-       | FStar_Pervasives_Native.Some "make" -> print_make make_deps
-       | FStar_Pervasives_Native.Some "graph" -> print_graph graph
-       | FStar_Pervasives_Native.Some uu____1874 ->
-           raise (FStar_Errors.Err "unknown tool for --dep\n")
-       | FStar_Pervasives_Native.None  -> ())
+let print:
+  'a 'b .
+    ((Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
+       Prims.list,'a,(Prims.string Prims.list,'b)
+                       FStar_Pervasives_Native.tuple2 FStar_Util.smap)
+      FStar_Pervasives_Native.tuple3 -> Prims.unit
+  =
+  fun uu____1841  ->
+    match uu____1841 with
+    | (make_deps,uu____1854,graph) ->
+        let uu____1872 = FStar_Options.dep () in
+        (match uu____1872 with
+         | FStar_Pervasives_Native.Some "make" -> print_make make_deps
+         | FStar_Pervasives_Native.Some "graph" -> print_graph graph
+         | FStar_Pervasives_Native.Some uu____1874 ->
+             raise (FStar_Errors.Err "unknown tool for --dep\n")
+         | FStar_Pervasives_Native.None  -> ())

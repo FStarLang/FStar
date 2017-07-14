@@ -44,10 +44,7 @@ let fresh_label:
   Prims.string ->
     FStar_Range.range ->
       FStar_SMTEncoding_Term.term ->
-        (((Prims.string,FStar_SMTEncoding_Term.sort)
-            FStar_Pervasives_Native.tuple2,Prims.string,FStar_Range.range)
-           FStar_Pervasives_Native.tuple3,FStar_SMTEncoding_Term.term)
-          FStar_Pervasives_Native.tuple2
+        (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
   =
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
   fun message  ->
@@ -598,12 +595,11 @@ let detail_errors:
   FStar_TypeChecker_Env.env ->
     labels ->
       (FStar_SMTEncoding_Term.decls_t ->
-         ((FStar_SMTEncoding_Z3.unsat_core,(FStar_SMTEncoding_Term.error_labels,
-                                             FStar_SMTEncoding_Z3.error_kind)
+         ((FStar_SMTEncoding_Z3.unsat_core,(labels,FStar_SMTEncoding_Z3.error_kind)
                                              FStar_Pervasives_Native.tuple2)
             FStar_Util.either,Prims.int,FStar_SMTEncoding_Z3.z3statistics)
            FStar_Pervasives_Native.tuple3)
-        -> FStar_SMTEncoding_Term.error_label Prims.list
+        -> labels
   =
   fun env  ->
     fun all_labels  ->
