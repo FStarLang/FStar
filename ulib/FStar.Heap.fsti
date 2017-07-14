@@ -178,13 +178,13 @@ val upd_upd_same_ref (#a:Type) (h:heap) (r:ref a) (x:a) (y:a)
 val lemma_restrict_contains (#a:Type0) (h:heap) (s:set nat) (r:ref a)
   :Lemma (requires True)
 	 (ensures (let h1 = restrict h s in 
-		   h1 `contains` r <==> h `contains` r /\ Set.mem (addr_of r) s))
+		   (h1 `contains` r) <==> (h `contains` r /\ Set.mem (addr_of r) s)))
          [SMTPat ((restrict h s) `contains` r)]
 
 val lemma_restrict_unused (#a:Type0) (h:heap) (s:set nat) (r:ref a)
   :Lemma (requires True)
          (ensures (let h1 = restrict h s in
-	           r `unused_in` h1 <==> r `unused_in` h \/ ~(Set.mem (addr_of r) s)))
+	           (r `unused_in` h1) <==> (r `unused_in` h \/ ~(Set.mem (addr_of r) s))))
          [SMTPat (r `unused_in` (restrict h s))]
 
 val lemma_restrict_sel (#a:Type0) (h:heap) (s:set nat) (r:ref a)
