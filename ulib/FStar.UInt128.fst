@@ -404,7 +404,7 @@ let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Math.lemma_div_lt n b s
 
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
   let high = U64.shift_left hi s in
   let low = U64.shift_right lo (U32.sub u32_64 s) in
@@ -454,7 +454,7 @@ let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2
 #set-options "--z3rlimit 30 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr native"
 
 let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r ->
               U64.v r * pow2 64 ==
               (U64.v hi * pow2 64) * pow2 (U32.v s) % pow2 128 +
@@ -506,14 +506,16 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
-  let r = { low = U64.shift_left a.low s;
-            high = add_u64_shift_left_respec a.high a.low s; } in
-  let s = U32.v s in
-  let a_l = U64.v a.low in
-  let a_h = U64.v a.high in
-  mod_spec_rew_n (a_l * pow2 s) (pow2 64);
-  shift_t_mod_val a s;
-  r
+  if U32.eq s 0ul then a
+  else
+    let r = { low = U64.shift_left a.low s;
+              high = add_u64_shift_left_respec a.high a.low s; } in
+    let s = U32.v s in
+    let a_l = U64.v a.low in
+    let a_h = U64.v a.high in
+    mod_spec_rew_n (a_l * pow2 s) (pow2 64);
+    shift_t_mod_val a s;
+    r
 
 #reset-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
 
@@ -537,7 +539,7 @@ let shift_left (a: t) (s: U32.t) : Pure t
   else shift_left_large a s
 
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
                              U64.v hi * pow2 (64 - U32.v s) % pow2 64)) =
   let low = U64.shift_right lo s in
@@ -558,7 +560,7 @@ let mul_pow2_diff (a:nat) (n1:nat) (n2:nat{n2 <= n1}) :
     mul_div_cancel (a * pow2 (n1 - n2)) (pow2 n2)
 
 let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
                              U64.v hi * pow2 64 / pow2 (U32.v s) % pow2 64)) =
   let r = add_u64_shift_right hi lo s in
@@ -592,6 +594,8 @@ let u128_div_pow2 (a: t) (s:nat{s < 64}) :
 let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
+  if U32.eq s 0ul then a
+  else
   let r = { low = add_u64_shift_right_respec a.high a.low s;
             high = U64.shift_right a.high s; } in
   let a_h = U64.v a.high in
