@@ -56,8 +56,14 @@ let lem_false_imp_p #p = ()
 val lem_fa_true : #a:Type -> Lemma ((forall (x:a). True) <==> True)
 let lem_fa_true #a = ()
 
+val lem_fa_false : #a:Type -> (x:a) -> Lemma ((forall (x:a). False) <==> False)
+let lem_fa_false #a x = ()
+
 val lem_ex_false : #a:Type -> Lemma ((exists (x:a). False) <==> False)
 let lem_ex_false #a = ()
+
+val lem_ex_true : #a:Type -> (x:a) -> Lemma ((exists (x:a). True) <==> True)
+let lem_ex_true #a x = ()
 
 val lem_neg_false : unit -> Lemma (~False <==> True)
 let lem_neg_false () = ()
@@ -145,6 +151,18 @@ let is_false t =
            end
     end
 
+val inhabit : tactic unit
+let inhabit =
+    t <-- cur_goal;
+    match inspect t with
+    | Tv_FVar fv ->
+        let qn = inspect_fv fv in
+             if qn = int_lid then exact (quote 42)
+        else if qn = bool_lid then exact (quote true)
+        else if qn = unit_lid then exact (quote ())
+        else fail ""
+    | _ -> fail ""
+
 val simplify_point : unit -> Tac unit
 val recurse : unit -> Tac unit
 
@@ -181,10 +199,12 @@ let rec simplify_point = fun () -> (
 
         | Forall b p ->
                  if is_true p then apply_lemma (quote lem_fa_true)
+            else if is_false p then or_else (apply_lemma (quote lem_fa_false);; inhabit) tiff
             else tiff
 
         | Exists b p ->
                  if is_false p then apply_lemma (quote lem_ex_false)
+            else if is_true  p then or_else (apply_lemma (quote lem_ex_true);; inhabit) tiff
             else tiff
 
         | Not p ->

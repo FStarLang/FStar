@@ -1,5 +1,5 @@
 [
-  "—Jd`úU@ñ\u001aÇR“\u000f&Ñ®",
+  "ˆÍ§)¨–G\u000fî(½YEÁº",
   [
     [ "FStar.Integers.uu___is_Signed", 1, 0, 1, [ "@query" ], 0 ],
     [ "FStar.Integers.uu___is_Unsigned", 1, 0, 1, [ "@query" ], 0 ],
@@ -885,14 +885,6 @@
     ],
     [
       "FStar.Integers.uint_64",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0
-    ],
-    [
-      "FStar.Integers.uint_128",
       1,
       2,
       1,

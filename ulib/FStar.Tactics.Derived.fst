@@ -173,3 +173,10 @@ let grewrite (t1 t2 : term) : tactic unit =
 let focus (f : tactic 'a) : tactic 'a =
     res <-- divide 1 f idtac;
     return (fst res)
+
+let rec iseq (ts : list (tactic unit)) : tactic unit =
+    match ts with
+    | t::ts ->
+        divide 1 t (iseq ts);;
+        return ()
+    | [] -> return ()

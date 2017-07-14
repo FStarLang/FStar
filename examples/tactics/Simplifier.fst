@@ -44,3 +44,6 @@ let _ = assert_by_tactic test_simplify (~(exists (x:int). ((True ==> True) ==> (
 let _ = assert_by_tactic test_simplify (False <==> False)
 let _ = assert_by_tactic test_simplify ((False <==> False) <==> True)
 let _ = assert_by_tactic test_simplify (False <==> (False <==> True))
+
+let _ = assert_by_tactic test_simplify ((exists (x:int). True) <==> True)
+let _ = assert_by_tactic test_simplify ((forall (x:int). False) <==> False)

@@ -161,6 +161,10 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) (fun t-> t) (unembed_tactic_0 (fun t -> t)) (embed_option (fun t -> t) t_unit) t_unit;
       mktac0 "__intro"         intro embed_binder RD.fstar_refl_binder;
+      mktac0 "__intro_rec"     intro_rec (embed_pair
+                                              embed_binder RD.fstar_refl_binder
+                                              embed_binder RD.fstar_refl_binder)
+                                         (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
@@ -186,6 +190,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__pointwise"     pointwise (unembed_tactic_0 unembed_unit) embed_unit t_unit;
       mktac0 "__trefl"         trefl embed_unit t_unit;
       mktac0 "__later"         later embed_unit t_unit;
+      mktac0 "__dup"           dup embed_unit t_unit;
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
       mktac1 "__cases"         cases unembed_term (embed_pair
@@ -260,12 +265,24 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv PC.by_tactic_lid && pol = Neg ->
-        (assertion, []) // Peel away tactics in negative positions, they're assumptions!
+    // by_tactic marker
+    | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
+            when S.fv_eq_lid fv PC.by_tactic_lid ->
+        if pol = Pos then
+            let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
+            (FStar.Syntax.Util.t_true, gs)
+        else
+            (assertion, []) // Peel away tactics in negative positions, they're assumptions!
 
-    | Tm_fvar fv, [(rett, _); (tactic, _); (assertion, _)] when S.fv_eq_lid fv PC.by_tactic_lid && pol = Pos ->
-        let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
-        (FStar.Syntax.Util.t_true, gs)
+    // spinoff marker: simply spin off a query independently.
+    // So, equivalent to `by_tactic idtac` without importing the (somewhat heavy) tactics module
+    | Tm_fvar fv, [(assertion, None)]
+            when S.fv_eq_lid fv PC.spinoff_lid ->
+        if pol = Pos then
+            let gs, _ = run_tactic_on_typ idtac e assertion in
+            (FStar.Syntax.Util.t_true, gs)
+        else
+            (assertion, [])
 
     | _ ->
         (t, [])
@@ -280,7 +297,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
 
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
                let x = S.new_bv None p in
-               let (p', gs1) = traverse f (flip pol) (Env.push_bv e x) p in
+               let (p', gs1) = traverse f (flip pol)  e                p in
                let (q', gs2) = traverse f       pol  (Env.push_bv e x) q in
                ((U.mk_imp p' q').n, gs1@gs2)
 
@@ -310,14 +327,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
 
 let getprop (e:env) (t:term) : option<term> =
     let tn = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant] e t in
-    match U.un_squash tn with
-    | Some t' -> Some t'
-    | None ->
-        // Check for an equality, since the delta depth is wrong... (TODO: fix that)
-        let hd, _ = U.head_and_args tn in
-        match (U.un_uinst hd).n with
-        | Tm_fvar fv when S.fv_eq_lid fv PC.eq2_lid -> Some t
-        | _ -> None
+    U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
     tacdbg := Env.debug env (Options.Other "Tac");

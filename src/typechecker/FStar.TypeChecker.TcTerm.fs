@@ -354,7 +354,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let topt = tc_tactic_opt env0 topt in
     let f = match topt with
             | None -> f
-            | Some tactic -> Rel.map_guard f (Common.mk_by_tactic tactic) in
+            | Some tactic -> Rel.map_guard f (fun f -> Common.mk_by_tactic tactic (U.mk_squash f)) in
     let e, c, f2 = comp_check_expected_typ env e lc in
     e, c, Rel.conj_guard f f2
 
@@ -456,16 +456,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         e, c, Rel.conj_guard g' g
     end
 
-  | Tm_app(head, [(tau, _)]) when U.is_synth_by_tactic head ->
-    begin match env.expected_typ with
-    | Some typ -> tc_synth env typ tau
-    | None ->
-        raise (Error("synth_by_tactic: need a type annotation when no expected type is present", Env.get_range env))
-    end
-
-  | Tm_app(head, [(a, _); (tau, _)])
-  | Tm_app(head, [(a, _); _; (tau, _)]) when U.is_synth_by_tactic head ->
-    tc_synth env a tau
+  | Tm_app(head, args) when U.is_synth_by_tactic head ->
+      tc_synth env args top.pos
 
   | Tm_app(head, args) ->
     let env0 = env in
@@ -582,8 +574,29 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
 
-and tc_synth env typ tau =
+and tc_synth env args rng =
+    let tau, atyp, rest =
+    match args with
+    | (tau, None)::rest ->
+        tau, None, rest
+    | (a, Some (Implicit _)) :: (tau, None) :: rest
+    | (a, Some (Implicit _)) :: (_, Some (Implicit _)) :: (tau, None) :: rest ->
+        tau, Some a, rest
+    | _ ->
+        raise (Error ("synth_by_tactic: bad application", rng))
+    in
+
+    let typ =
+        match atyp with
+        | Some t -> t
+        | None -> begin match Env.expected_typ env with
+                  | Some t -> t
+                  | None -> raise (Error("synth_by_tactic: need a type annotation when no expected type is present", Env.get_range env))
+                  end
+    in
+
     let env', _ = Env.clear_expected_typ env in
+
 
     // Check the result type
     let typ, _, g1 = tc_term env' typ in
@@ -601,7 +614,7 @@ and tc_synth env typ tau =
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;
-    tc_term env t
+    tc_term env (mk_Tm_app t rest None rng)
 
 and tc_tactic_opt env topt =
     match topt with

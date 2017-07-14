@@ -40,6 +40,9 @@ let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 assume private val __intro  : __tac binder
 let intro : tactic binder = fun () -> TAC?.reflect __intro
 
+assume private val __intro_rec  : __tac (binder * binder)
+let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
+
 assume private val __revert  : __tac unit
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
@@ -62,9 +65,6 @@ let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
 
 assume private val __exact : term -> __tac unit
 let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
-
-assume private val __exact_lemma : term -> __tac unit
-let exact_lemma (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact_lemma tt)
 
 assume private val __apply : term -> __tac unit
 let apply (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply tt)
@@ -89,6 +89,9 @@ let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__poin
 
 assume private val __later : __tac unit
 let later : tactic unit = fun () -> TAC?.reflect __later
+
+assume private val __dup : __tac unit
+let dup : tactic unit = fun () -> TAC?.reflect __dup
 
 assume private val __flip : __tac unit
 let flip : tactic unit = fun () -> TAC?.reflect __flip

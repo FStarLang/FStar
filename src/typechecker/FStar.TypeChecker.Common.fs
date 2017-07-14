@@ -81,10 +81,10 @@ let t_option_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) 
 let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) (Some t_unit.n) Range.dummyRange
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
-    let tac = S.mk_Tm_app (tabbrev C.reify_tactic_lid)
-                           [S.as_arg tac]
+    let t_reify_tactic = S.mk_Tm_uinst (tabbrev C.reify_tactic_lid) [U_zero] in
+    let tac = S.mk_Tm_app t_reify_tactic [S.iarg t_unit; S.as_arg tac]
                            None Range.dummyRange in
-    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] (Some Util.ktype0.n) Range.dummyRange
+    S.mk_Tm_app t_by_tactic [S.iarg t_unit; S.as_arg tac; S.as_arg f] (Some Util.ktype0.n) Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_constant, _ -> false

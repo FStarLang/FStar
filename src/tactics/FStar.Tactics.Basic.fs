@@ -353,6 +353,41 @@ let intro : tac<binder> =
         fail1 "intro: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
     )
 
+// TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
+let intro_rec : tac<(binder * binder)> =
+    bind cur_goal (fun goal ->
+    BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";
+    BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
+    match U.arrow_one goal.goal_ty with
+    | Some (b, c) ->
+        let bs, c = SS.open_comp [b] c in
+        let b = match bs with
+                | [b] -> b
+                | _ -> failwith "impossible: open_comp returned different amount of binders"
+        in
+        if not (U.is_total_comp c)
+        then fail "Codomain is effectful"
+        else let bv = gen_bv "__recf" None goal.goal_ty in
+             let bs = [S.mk_binder bv; b] in // recursively bound name and argument we're introducing
+             let env' = Env.push_binders goal.context bs in
+             bind (new_uvar env' (comp_to_typ c)) (fun (u, g) ->
+             let lb = U.mk_letbinding (Inl bv) [] goal.goal_ty PC.effect_Tot_lid (U.abs [b] u None) in
+             let body = S.bv_to_name bv in
+             let lbs, body = SS.close_let_rec [lb] body in
+             let tm = mk (Tm_let ((true, lbs), body)) None goal.witness.pos in
+             BU.print_string "calling teq_nosmt\n";
+             let res = Rel.teq_nosmt goal.context goal.witness tm in
+             if res
+             then bind (replace_cur ({ goal with context = env';
+                                                 goal_ty = bnorm env' (comp_to_typ c);
+                                                 witness = bnorm env' u})) (fun _ ->
+                  ret (S.mk_binder bv, b))
+             else fail "intro_rec: unification failed"
+             )
+    | None ->
+        fail1 "intro_rec: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
+    )
+
 let norm (s : list<RD.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
     // Translate to actual normalizer steps
@@ -489,6 +524,7 @@ let apply_lemma (tm:term) : tac<unit> =
                                  (Print.term_to_string (U.mk_squash post))
                                  (Print.term_to_string goal.goal_ty)
     | Some g ->
+        let _ = Rel.discharge_guard_no_smt goal.context g in
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
@@ -699,6 +735,15 @@ let trefl : tac<unit> =
         end
      | None ->
         fail "not an irrelevant goal")
+
+let dup : tac<unit> =
+    bind cur_goal (fun g ->
+    bind (new_uvar g.context g.goal_ty) (fun (u, u_g) ->
+    let g' = { g with witness = u } in
+    bind dismiss (fun _ ->
+    bind (add_irrelevant_goal g.context (U.mk_eq2 (TcTerm.universe_of g.context g.goal_ty) g.goal_ty u g.witness) g.opts) (fun _ ->
+    bind (add_goals [g']) (fun _ ->
+    ret ())))))
 
 let flip : tac<unit> =
     bind get (fun ps ->

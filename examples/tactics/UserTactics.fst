@@ -86,11 +86,10 @@ let mul_commute_ascription : tactic unit =
 let test_apply_ascription' (x:nat) (y:nat) =
   assert_by_tactic (visit (return ())) (op_Multiply x y == op_Multiply y x)
 
-//TODO: doesn't work. "missing universe instantiation on reify_tactic" (??)
-// let test_apply_ascription (x:nat) (y:nat) =
-//   assert (op_Multiply x y == op_Multiply y x)
-//   <: Tot unit
-//   by (visit (return ()))
+let test_apply_ascription (x:nat) (y:nat) =
+  assert (op_Multiply x y == op_Multiply y x)
+  <: Tot unit
+  by idtac
 
 (* this fails, rightfully, since the top-level goal is not *)
 (* let test_apply_ascription_fail (x:nat) (y:nat) = *)
