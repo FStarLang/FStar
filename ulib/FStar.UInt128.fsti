@@ -8,7 +8,7 @@ module U64 = FStar.UInt64
 
 let n = 128
 
-val t:Type0
+val t: (x:Type0{hasEq x})
 
 val v (x:t) : Tot (uint_t n)
 
