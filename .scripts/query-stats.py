@@ -19,8 +19,8 @@ def show_help():
     print("  -h, --help  \t\t\tdisplay this message")
     print("  -f x, --infile=x\t\tprocess file <x> (instead of stdin)")
     print("  -o x, --outfile=x\t\twrite output to file <x> (instead of stdout)")
-    print("  -s x, --stat=x\t\trank entries by <x> (instead of time)")
-    print("  -n n, -t n, --top=n\t\tshow the <n> highest ranked queries (default 10)")
+    print("  -s x, --stat=x\t\trank entries by <x> (instead of time; use 'ALPHA' for alphabetical)")
+    print("  -n n, -t n, --top=n\t\tshow the <n> highest ranked queries (default 10, 'all' and '*' mean unlimited)")
     print("  -a, --append\t\t\tappend to output (instead of overwriting it)")
     print("  -r, --reverse\t\t\treverse sort order")
     print("  -c, --collate\t\t\tcollate queries of the same name (instead of adding ticks)")
@@ -155,7 +155,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
 
     rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
     z3rx=re.compile("([^ =]+)=([^ =\"]+|\".*\")")
-    modrx=re.compile("^([ 0-9-TZ:.]+ STDERR: )?Verified module: (?P<module>[^ ]+) \((?P<module_time>[0-9]*) milliseconds\)[ \t\r]*$")
+    modrx=re.compile("^([ 0-9-TZ:.]+( STDERR:)? )?Verified module: (?P<module>[^ ]+) \((?P<module_time>[0-9]*) milliseconds\)[ \t\r]*$")
 
     queries = {}
     modules = {}
@@ -178,7 +178,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                         add_query(stats, k, v)
                         columns.add(k)
                 stats[ec] = 1
-                id = str(get_value(stats, "fstar_name")) + ", " + str(get_value(stats, "fstar_index"))
+                id = "(%s, %d)" % (get_value(stats, "fstar_name"), get_value(stats, "fstar_index"))
                 if not collate:
                     while id in queries:
                         id = id + "'"
@@ -308,12 +308,13 @@ def process_global_stats(f, queries, modules, collate):
 
     f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
 
-    min_mod = min(modules.keys(), key=(lambda key: modules[key]))
-    max_mod = max(modules.keys(), key=(lambda key: modules[key]))
     f.write("\"# Modules\",%s,%s\n" % (len(modules), "\"\""))
-    f.write("\"# Sum(time modules)\",%s,%s\n" % (sum(modules.values()), "\"msec\""))
-    f.write("\"# Min(time modules)\",%s,%s,\"%s\"\n" % (min(modules.values()), "\"msec\"", min_mod))
-    f.write("\"# Max(time modules)\",%s,%s,\"%s\"\n" % (max(modules.values()), "\"msec\"", max_mod))
+    if len(modules) > 0:
+        min_mod = min(modules.keys(), key=(lambda key: modules[key]))
+        max_mod = max(modules.keys(), key=(lambda key: modules[key]))
+        f.write("\"# Sum(time modules)\",%s,%s\n" % (sum(modules.values()), "\"msec\""))
+        f.write("\"# Min(time modules)\",%s,%s,\"%s\"\n" % (min(modules.values()), "\"msec\"", min_mod))
+        f.write("\"# Max(time modules)\",%s,%s,\"%s\"\n" % (max(modules.values()), "\"msec\"", max_mod))
 
     f.write("\n")
 
@@ -348,82 +349,7 @@ def main(argv):
         elif o in ("-s", "--stat"):
             stat = a
         elif o in ("-t", "-n", "--top"):
-            if a == "all":
-                n = sys.maxint
-            else:
-                n = int(a)
-                if n < 0:
-                    print("Error: -n/-t/--top must be >= 0.")
-                    return 1
-        elif o in ("-r", "--reverse"):
-            reverse = True
-        elif o in ("-c", "--collate"):
-            collate = True
-        elif o in ("-g", "--global"):
-            global_stats = True
-        else:
-            print("Unknown option `%s'" % o)
-            return 2
-    
-    process_file(infile, outfile, stat, int(n), collate, append, reverse, global_stats)
-    return 0
-
-
-# python query-stats.py -c -f demo.log --outfile=summary.csv --stat=fstar_time -n 10
-# python query-stats.py -c -f demo.log --outfile=summary.csv --stat=rlimit-count -n 10 -a
-# python query-stats.py -c -f demo.log --outfile=summary.csv --stat=num-checks -n 10 -a -g
-
-
-if __name__ == "__main__":    
-    argv = sys.argv[1:]
-    sys.exit(main(argv))
-
-
-    rlimit_cnst = float(544656)
-    rlimit_budget_used = float("inf") if (max_rlimit_count == 0.0) else 100.0 * (float(sum_rlimit_count)/(float(max_rlimit_count)*rlimit_cnst))
-    f.write("\"rlimit budget used\",%s,%s\n" % (rlimit_budget_used, "\"%\""))
-
-    time_per_rlimit = float("inf") if (sum_fstar_rlimit == 0) else float(time)/float(sum_fstar_rlimit)
-    rlimit_per_sec = float("inf") if (time == 0.0) else float(sum_fstar_rlimit)/float(time)
-    f.write("\"time/rlimit\",%s,%s\n" % (time_per_rlimit, "\"sec\""))
-    f.write("\"rlimit/sec\",%s,%s\n" % (rlimit_per_sec, "\"\""))
-
-    f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
-
-    f.write("\n")
-
-
-def main(argv):
-    infile = ""
-    outfile = ""
-    stat = "time"
-    n = 10
-    collate = False
-    append = False
-    reverse = False
-    global_stats = False
-
-    try:
-        opts, args = getopt.getopt(argv, SHORTOPTS, LONGOPTS)
-    except getopt.error as err:
-        print("Error: %s\n" % str(err))
-        show_help()
-        return 1
-
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            show_help()
-            return 1
-        elif o in ("-f", "--infile"):
-            infile = a
-        elif o in ("-o", "--outfile"):
-            outfile = a
-        elif o in ("-a", "--append"):
-            append = True
-        elif o in ("-s", "--stat"):
-            stat = a
-        elif o in ("-t", "-n", "--top"):
-            if a == "all":
+            if a == "all" or a == "*":
                 n = sys.maxint
             else:
                 n = int(a)
