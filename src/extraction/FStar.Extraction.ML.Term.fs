@@ -33,7 +33,6 @@ module BU = FStar.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
-module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module TcEnv = FStar.TypeChecker.Env
