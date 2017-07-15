@@ -280,7 +280,7 @@ ulib:
 	+$(MAKE) -C ../ulib
 
 tutorial: ulib
-	+$(MAKE) -C ../tutorial/code regressions
+	+$(MAKE) -C ../doc/tutorial regressions
 
 uexamples:
 	+$(MAKE) -C ../examples all
