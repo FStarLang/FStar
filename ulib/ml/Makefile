@@ -1,4 +1,4 @@
-FSTAR_HOME?=../..
+FSTAR_HOME=../..
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
