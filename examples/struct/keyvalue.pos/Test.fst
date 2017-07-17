@@ -924,10 +924,10 @@ let same_ref (#a:Type) (b1 b2:B.buffer a) =
     B.content b1 == B.content b2
 
 // TODO: why is this not in the standard library?
-let same_ref_equivalence (#a:Type) =
-    (forall b. same_ref #a b b) /\
-    (forall b1 b2. same_ref #a b1 b2 ==> same_ref b2 b1) /\
-    (forall b1 b2 b3. same_ref #a b1 b2 ==> same_ref b2 b3 ==> same_ref b1 b3)
+let same_ref_equivalence (#a:Type) :
+    Lemma ((forall b. same_ref #a b b) /\
+           (forall b1 b2. same_ref #a b1 b2 ==> same_ref b2 b1) /\
+           (forall b1 b2 b3. same_ref #a b1 b2 ==> same_ref b2 b3 ==> same_ref b1 b3)) = ()
 
 let is_concat_of (#a:Type) (b b1 b2:B.buffer a) : Type0 =
     same_ref b b1 /\
@@ -1017,17 +1017,17 @@ let modifies_prefix_split b b1 b2 len h0 h1 =
 
 let offset_into (buf:bslice) = off:U32.t{U32.v off <= U32.v buf.len}
 
-let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem) =
-    live h1 buf /\
-    begin
-      match r with
-      | Some off ->
-        let (b1, b2) = bslice_split_at buf off in
-        modifies_slice b1 h0 h1 /\
-        as_seq h1 b1 == enc
-      | None ->
-        modifies_slice buf h0 h1
-    end
+let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem) :
+    Pure Type0
+    (requires (live h1 buf))
+    (ensures (fun _ -> True)) =
+    match r with
+    | Some off ->
+      let (b1, b2) = bslice_split_at buf off in
+      modifies_slice b1 h0 h1 /\
+      as_seq h1 b1 == enc
+    | None ->
+      modifies_slice buf h0 h1
 
 let serializer (enc:bytes) = buf:bslice ->
   ST (option (off:offset_into buf))
@@ -1079,12 +1079,56 @@ let ser_u16 v = fun buf ->
     end;
     Some 2ul
 
-let modifies_grow (b b1 b2:bslice) (h0 h1:mem) : Lemma
+let upd_len_4 (#a:Type) (s:Seq.seq a{length s == 4}) (vs:Seq.seq a{length vs == 4}) :
+  Lemma (Seq.upd
+          (Seq.upd
+            (Seq.upd
+              (Seq.upd s 0 (index vs 0))
+            1 (index vs 1))
+          2 (index vs 2))
+        3 (index vs 3) == vs) =
+  lemma_eq_intro (Seq.upd
+  (Seq.upd
+  (Seq.upd
+  (Seq.upd s 0 (index vs 0))
+  1 (index vs 1))
+  2 (index vs 2))
+  3 (index vs 3)) vs
+
+val ser_u32: v:U32.t -> serializer (u32_to_be v)
+let ser_u32 v = fun buf ->
+  if U32.lt buf.len 4ul then None
+  else
+    let bs = u32_to_be v in
+    let (buf, _) = bslice_split_at buf 4ul in
+    let h0 = get() in
+    B.upd buf.p 0ul (index bs 0);
+    B.upd buf.p 1ul (index bs 1);
+    B.upd buf.p 2ul (index bs 2);
+    B.upd buf.p 3ul (index bs 3);
+    begin
+      let s0 = as_seq h0 buf in
+      upd_len_4 s0 bs
+    end;
+    Some 4ul
+
+// modifies_slice b1 ==> modifies_slice (b1+b2)
+let modifies_grow_from_b1 (b b1 b2:bslice) (h0 h1:mem) : Lemma
     (requires (live h0 b /\ live h1 b /\
                is_concat_of b.p b1.p b2.p /\
                modifies_slice b1 h0 h1))
     (ensures (modifies_slice b h0 h1)) =
     B.modifies_subbuffer_1 h0 h1 b1.p b.p
+
+// modifies_slice b2 ==> modifies_slice (b1+b2)
+let modifies_grow_from_b2 (b b1 b2:bslice) (h0 h1:mem) : Lemma
+    (requires (live h0 b /\ live h1 b /\
+               is_concat_of b.p b1.p b2.p /\
+               modifies_slice b2 h0 h1))
+    (ensures (modifies_slice b h0 h1)) =
+    B.modifies_subbuffer_1 h0 h1 b2.p b.p
+
+#reset-options "--z3rlimit 15"
 
 let ser_append (#b1 #b2:bytes) (s1:serializer b1) (s2:serializer b2) : serializer (append b1 b2) =
   fun buf ->
@@ -1100,30 +1144,22 @@ let ser_append (#b1 #b2:bytes) (s1:serializer b1) (s2:serializer b2) : serialize
                      else begin
                       let h2 = get() in
                       let (buf2, buf3) = bslice_split_at buf off' in
-                      assert (as_seq h2 buf2 == b2);
-                      assert (modifies_slice buf1 h0 h1);
-                      assert (modifies_slice buf2 h1 h2);
-                      assert (as_seq h2 buf1 == b1);
                       let (buf12, buf3') = bslice_split_at buf0 (U32.add off off') in
-                      // TODO: need to call a lemma to prove this
-                      assume (as_seq h2 buf12 == append b1 b2);
-                      // TODO: expand modifies_slice h0 -> h1 to buf1+buf2
-                      //       expand modifies_slice h1 -> h2 to buf1+buf2
-                      //       apply transitivity
-                      admit();
+                      assert (live h2 buf12);
+                      assert (as_seq h2 buf2 == b2);
+                      assert (as_seq h2 buf1 == b1);
+                      is_concat_append buf12.p buf1.p buf2.p h2;
+                      assert (as_seq h2 buf12 == append b1 b2);
+                      //assert (modifies_slice buf1 h0 h1);
+                      //assert (modifies_slice buf2 h1 h2);
+                      modifies_grow_from_b1 buf12 buf1 buf2 h0 h1;
+                      modifies_grow_from_b2 buf12 buf1 buf2 h1 h2;
+                      assert (modifies_slice buf12 h0 h2);
                       Some (U32.add off off')
                      end)
       | None -> None
     end
   | None -> None
-
-val ser_u32: v:U32.t -> serializer (u32_to_be v)
-let ser_u32 v = fun buf ->
-  if U32.lt buf.len 4ul then None
-  else
-    let bs = u32_to_be v in
-    admit();
-    Some 4ul
 
 let frameOf (b:bslice) = B.frameOf b.p
 
@@ -1148,31 +1184,11 @@ let ser_copy data buf =
   if U32.lt buf.len data.len then None
   else begin
     let h0 = get() in
-    B.blit data.p 0ul buf.p 0ul data.len;
+    let (buf1, buf2) = bslice_split_at buf data.len in
+    B.blit data.p 0ul buf1.p 0ul data.len;
     let h1 = get() in
-    B.lemma_reveal_modifies_1 buf.p h0 h1;
-    admit();
-    modifies_prefix_seq_intro buf data.len h0 h1;
     Some data.len
   end
-
-val ser_u16_array:
-  a:u16_array_st ->
-  buf:bslice ->
-  ST (option (off:U32.t{U32.v off <= U32.v buf.len}))
-     (requires (fun h0 -> live h0 buf /\
-                       live h0 a.a16_st /\
-                       // this is a very strong disjointness requirement
-                       // (B.disjoint would be good enough, but then it has to
-                       // be proven stable wrt truncating buffers)
-                       frameOf a.a16_st <> frameOf buf))
-     (ensures (fun h0 r h1 -> live h1 buf /\
-                 live h1 a.a16_st /\
-                 (match r with
-                  | Some off -> modifies_prefix buf off h0 h1 /\
-                               as_seq h1 (truncated_slice buf off) ==
-                               encode_u16_array a.len16_st (as_seq h1 a.a16_st)
-                  | None -> modifies_slice buf h0 h1)))
 
 // TODO: this can't actually use ser_append because these functions aren't
 // serializers, due to the extra handling of buffers rather than pure values
