@@ -127,18 +127,6 @@ abstract val div_underspec: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (in
 let div_underspec #n a b =
   if fits (a / b) n then a / b else magic ()
 
-val div_size: #n:pos -> a:int_t n -> b:int_t n{b <> 0} ->
-  Lemma (requires (size a n)) (ensures (size (a / b) n))
-let div_size #n a b =
-  FStar.Math.Lib.slash_decr_axiom a b; ()
-
-val udiv: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
-  (requires (True))
-  (ensures (fun c -> b <> 0 ==> a / b = c))
-let udiv #n a b =
-  div_size #n a b;
-  a / b
-
 (* Modulo primitives *)
 // JK: takes time
 val mod: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Tot (int_t n)
