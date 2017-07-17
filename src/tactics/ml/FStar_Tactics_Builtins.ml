@@ -157,3 +157,6 @@ let addns: string -> unit -> unit __tac = fun ns  -> fun () -> __addns ns
 
 let __cases (t: RT.term): (RT.term * RT.term) __tac = from_tac_1 B.cases t
 let cases: RT.term -> unit -> (RT.term * RT.term) __tac = fun t  -> fun () -> __cases t
+
+let __set_options (s: string) : unit __tac = from_tac_1 B.set_options s
+let set_options : string -> unit -> unit __tac = fun s -> fun () -> __set_options s
