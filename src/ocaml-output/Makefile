@@ -171,7 +171,7 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
         # Install the binary
-	$(INSTALL_EXEC) -m 755 -D -T _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)

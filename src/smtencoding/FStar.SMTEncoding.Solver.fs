@@ -432,7 +432,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
         check q
     in
 
-    match Options.admit_smt_queries(), Options.lax_except() with
+    match Options.admit_smt_queries(), Options.admit_except() with
     | true, _ -> ()
     | false, None -> process_query query
     | false, Some id ->

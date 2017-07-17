@@ -1,5 +1,5 @@
 [
-  "¼\tv5\b~\u0001v\u001dï\u0007 dT*\u0013",
+  "~¼\u0000]And~\u0014ìŠµÁÄ1\u000b",
   [
     [
       "Ex12b2.Format.append_inj_lemma",
@@ -251,6 +251,24 @@
         "typing_FStar.Char.char_of_int", "typing_FStar.Seq.Base.append",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.op_At_Bar",
         "typing_Platform.Bytes.length", "typing_Platform.Bytes.utf8"
+      ],
+      0
+    ],
+    [
+      "Ex12b2.Format.req_injective",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_Ex12b2.Format.UTF8_inj",
+        "equation_Ex12b2.Format.message", "equation_Ex12b2.Format.request",
+        "equation_Ex12b2.Format.tag0", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "function_token_typing_Ex12b2.Format.tag0",
+        "lemma_Ex12b2.Format.append_inj_lemma",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0
     ],

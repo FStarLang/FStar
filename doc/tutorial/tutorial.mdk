@@ -1216,7 +1216,7 @@ as an abbreviation of `a: Type{hasEq a}`.
 ```
 
 ~ Exercise
-Prove that mem satisfies the
+Prove that `mem` satisfies the
 following property:
 ~~ ExerciseFragment {exname=Ex04c}
 [INCLUDE=code/exercises/Ex04c.fst:AppendMem]
@@ -4257,7 +4257,9 @@ region ids `rid` to `heap`s.
 
 ### The type of region identifiers, `rid`
 
-The type `rid` is abstract to clients, with a few operations on it
+[abstract]: https://github.com/FStarLang/FStar/wiki/Qualifiers-for-definitions-and-declarations#abstract
+
+The type `rid` is [abstract] to clients, with a few operations on it
 revealing its hierarchical structure. Specifically, we have three functions:
 
 ```
@@ -4724,7 +4726,7 @@ We refer to the success probability of `A` in this experiment as its UF-CMA adva
 
 Does the appearance of *probabilities* in this section make you suspicious? It should, as nowhere in this tutorial have we so far discussed the use of F\* for probabilistic reasoning. The F\* type checker is a deductive reasoning tool, and trades in certainties and not in probabilities. While we will see that there are ways to extend F\* semantics with probabilities to express probabilistic experiments in the language of F\*, we will now provide an abstraction or idealization of the guarantees of the MAC functionality. We will discuss below, how one can formally establish the soundness of this idealization. 
 
-### The MAC type interface { - } 
+### The MAC type interface 
 We define an interface that models perfect authentication guarantees. We will get back to how it can be (approximately) implemented by an F* module later.
 
 ~~ SolutionFragment {exname=Ex12.MAC}
@@ -5029,8 +5031,8 @@ ending with 0s.
 ~
 
 ~ Exercise
-Relying on that specification, implement and verify a MAC interface
-for messages of type `text`, i.e., of less than `blocksize` bytes,
+Relying on that specification of `encode`, implement and verify a MAC interface
+for messages of type `text` of less than `blocksize` bytes,
 using the MAC interface below, which only supports messages of type
 `block`.
 
@@ -5041,13 +5043,14 @@ To this end, we assume given an implementation of the following module
 [INCLUDE=code/exercises/Ex12.BMAC.fst]
 ```
 
-Write a similar module that accepts texts instead of blocks:
-first the implementations for `keygen`, `mac`, and `verify`,
-then type annotations to derive their authentication property
+Write a similar module that accepts texts shorter than `blocksize` instead of blocks:
+
+Write the implementations for `keygen`, `mac`, and `verify`, first
+then devise type annotations to derive their authentication property
 (on `texts`) from the one of `BMAC` (on `blocks`).
 
 ~~ ExerciseFragment {exname=Ex12f.TMAC}
-[INCLUDE=code/exercises/Ex12f.TMAC.fst:TMACEx
+[INCLUDE=code/exercises/Ex12f.TMAC.fst:TMACEx]
 ~~
 
 ~~ Answer
@@ -5083,7 +5086,7 @@ Hint: have a look e.g. at the HMAC construction.
 
 # Cryptography examples for confidentiality
 
-##  Theoretical background on crypto verification in F\*
+##  Theoretical background on cryptographic verification in F\*
 Those unfamiliar with functional programming may appreciate the
 following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
 and an imperative programming style.
@@ -5120,7 +5123,7 @@ models a perfect source of random bits. In this probabilistic interpretation,
 two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
 when they return the same probability distribution of values.
 
-An interface or module can declare a type as abstract, e.g. `abstract type key = bytes`, 
+An interface or module can declare a type as [abstract], e.g. `abstract type key = bytes`, 
 and keep its representation hidden. The 
 [qualified](https://github.com/FStarLang/FStar/wiki/Qualifiers-for-definitions-and-declarations) name is bound outside the scope of 
 the module, but its definition is hidden. 
@@ -5413,7 +5416,7 @@ When the MAC is idealized, adversaries cannot compute ciphertexts that pass MAC 
 The invariant is expressed over logs and at first sight looks quite daunting:
 
 ~ SolutionFragment {exname=EtM.AE}
-[INCLUDE=code/solutions/EtM.AE.fst:EtMAEInvariant
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEInvariant]
 ~
 
 Crucially all messages in the MAC log correspond to ciphertexts that resulted from previous encryptions.
@@ -5423,44 +5426,42 @@ We can thus set `ind_cpa_rest_adv=uf_cma`.
 ### The computational security proof
 
 We want to prove that:
-For all 𝐴 such that well typed with respect to an unrestricted Plain and AE
+For all `𝐴` that are well typed with respect to an unrestricted `Plain` and `AE`
 interface, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
 the following computational equivalence holds:
 
-> (1) `conf=false, auth=false, Plain` ⋅ `CPA` ⋅ `MAC` ⋅ `AE` ⋅
-$𝐴$
+> (1) `conf=auth=ind_cpa_rest_adv=uf_cma=ind_cpa=false, Plain` ⋅ `CPA` ⋅ `MAC` ⋅ `AE` ⋅ `A`
 
 >&emsp;&emsp;$\approx_{\epsilon_{indcpa}(B_1)+\epsilon_{ufcma}(B_2)}$
 
-> (2)`conf=true, auth=true, Plain` ⋅ `CPA` ⋅ `MAC`⋅ `AE`⋅
-$𝐴$.
+> (2) `conf=auth=ind_cpa_rest_adv=uf_cma=ind_cpa=true, Plain` ⋅ `CPA` ⋅ `MAC`⋅ `AE` ⋅ `A`.
 
-In other words, the distinguishing advantage of an adversary $A$ between the concrete implementation
+In other words, the distinguishing advantage of an adversary `A` between the concrete implementation
 and the idealized implementation of Encrypt-then-MAC is bounded by $\epsilon_{indcpa}(B_1)+\epsilon_{ufcma}(B_2)$.
 
 To see this we reason about several game transformations.
 
 *Game 1* is the same as program (1), except that we swap the order of `MAC` and `Plain`⋅`CPA` with 
-the goal of clearly separating out a `MAC` adversary. This change does not affect the 
-distribution output of $A$ and we thus have
+the goal of moving all modules to the right of the `MAC` module. This change does not affect the 
+distribution output of `A` and we thus have
 
-(1) ≈ `conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅$A$
+(1) ≈ `conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅ `A`
 
 *Game 2* is the same as *Game 1*, except that we activate the idealizations of the `MAC` module by
 setting `uf_cma=true`. 
 
->`conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅$A$ 
+> `conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅ `A` 
 
 > &emsp;&emsp; $\approx_{\epsilon_{ufcma}}(B_1)$
 
-> `conf=false, auth=false, uf_cma=true`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅$A$
+> `conf=false, auth=false, uf_cma=true`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅ `A`
 
-$B_1$ corresponds to `Plain`⋅`CPA`⋅`AE`⋅$A$, and can be interpreted as a reduction to UF-CMA security.
+$B_1$ corresponds to `Plain`⋅`CPA`⋅`AE`⋅ `A`, and can be interpreted as a reduction to UF-CMA security.
 
 *Game 3* is the same as *Game 2*, except that we swap the order of `MAC` and `Plain`⋅`CPA` back and
 also set `auth` and `ind_cpa_rest_adv` to `true`. These changes have no effect on the distribution of the program.
 
-> ≈ `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$
+> ≈ `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅ `A`
 
 Because of the MAC guarantees we can establish the main invariant 
 which is sufficient to prove that we never call `CPA.decrypt` on ciphertexts that are not in the log.
@@ -5469,17 +5470,17 @@ This allows us type the program with `auth` and `ind_cpa_rest_adv` set to true.
 *Game 4* is the same as *Game 3*, except that we activate the idealizations of the `CPA` module by
 setting `ind_cpa=true`.
 
-> `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$
+> `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅ `A`
 
 > &emsp;&emsp; $\approx_{\epsilon_{indcpa}}(B_2)$ 
 
->`conf=false, auth=ind_cpa_rest_adv=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$ ≈ (2)
+> `conf=false, auth=ind_cpa_rest_adv=uf_cma=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅ `A` ≈ (2)
 
-$B_2$ corresponds to `MAC`⋅`AE`⋅$A$, and can be interpreted as a reduction to IND-CPA security.
+$B_2$ corresponds to `MAC`⋅`AE`⋅ `A`, and can be interpreted as a reduction to IND-CPA security.
 
-Finally, `CPA`⋅`MAC`⋅`AE`⋅$A$ does not make use of `Plain.repr` and we can thus type it as
+Finally, `CPA`⋅`MAC`⋅`AE`⋅`A` does not make use of `Plain.repr` and we can thus type it as
 
->`conf=auth=ind_cpa_rest_adv=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$ = (2) 
+>`conf=auth=ind_cpa_rest_adv=uf_cma=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅`A` = (2) 
 
 ~ Align-Right
 $\qed$
