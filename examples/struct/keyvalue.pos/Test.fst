@@ -1029,29 +1029,31 @@ let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem)
     | None ->
       modifies_slice buf h0 h1
 
-let serializer_any (input:option (B.buffer byte))
-                   (enc: h:mem{Some? input ==> B.live h (Some?.v input)} -> GTot bytes) =
+let buffer_fun (inputs:TSet.set bslice) =
+    f:(h:mem{forall b. TSet.mem b inputs ==> live h b} -> GTot bytes){
+      forall (h0 h1: h:mem{forall b. TSet.mem b inputs ==> live h b}).
+      (forall b. TSet.mem b inputs ==> as_seq h0 b == as_seq h1 b) ==>
+      f h0 == f h1}
+
+let serializer_any (inputs:TSet.set bslice)
+                   (enc: buffer_fun inputs) =
   buf:bslice ->
   ST (option (off:offset_into buf))
      (requires (fun h0 -> live h0 buf /\
-                       begin
-                        match input with
-                        | Some b -> B.live h0 b /\ B.disjoint b buf.p
-                        | None -> True
-                       end))
+                       (forall b. TSet.mem b inputs ==> live h0 b /\ B.disjoint b.p buf.p)))
      (ensures (fun h0 r h1 ->
+        live h0 buf /\
         live h1 buf /\
-        begin
-          match input with
-          | Some b -> B.live h1 b
-          | None -> True
-        end /\
+        (forall b. TSet.mem b inputs ==>
+           live h0 b /\
+           live h1 b /\
+           as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
-let serializer (enc:bytes) = serializer_any None (fun _ -> enc)
+let serializer (enc:bytes) = serializer_any TSet.empty (fun _ -> enc)
 
-let serializer_b (input:bslice) (enc: s:bytes{length s == U32.v input.len} -> bytes) =
-    serializer_any (Some input.p) (fun h -> enc (as_seq h input))
+let serializer_1 (input:bslice) (enc: buffer_fun (TSet.singleton input)) =
+    serializer_any (TSet.singleton input) (fun h -> enc h)
 
 let lemma_index_upd_gt (#a:Type) (s:Seq.seq a) (n:nat{n < length s}) (i:nat{n < i /\ i < length s}) (v:a) :
   Lemma (index (Seq.upd s n v) i == index s i)
@@ -1147,14 +1149,22 @@ let modifies_grow_from_b2 (b b1 b2:bslice) (h0 h1:mem) : Lemma
 
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
-let ser_input (input:bslice) (#b:bytes) (s:serializer b) : serializer_b input (fun _ -> b) =
+let ser_input (input:bslice) (#b:bytes) (s:serializer b) : serializer_1 input (fun _ -> b) =
+    fun buf -> s buf
+
+// coercion to increase the size of the inputs set
+let ser_inputs (#inputs1:TSet.set bslice)
+               (inputs2:TSet.set bslice{TSet.subset inputs1 inputs2})
+               (#b: buffer_fun inputs1)
+               (s:serializer_any inputs1 b) : serializer_any inputs2 (fun h -> b h) =
     fun buf -> s buf
 
 #reset-options "--z3rlimit 15"
 
-let ser_append (#input:bslice) (#b1 #b2: s:bytes{length s == U32.v input.len} -> bytes)
-               (s1:serializer_b input b1) (s2:serializer_b input b2) :
-               serializer_b input (fun bs -> append (b1 bs) (b2 bs)) =
+let ser_append (#inputs1 #inputs2:TSet.set bslice)
+               (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
+               (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
+               serializer_any (TSet.union inputs1 inputs2) (fun h -> append (b1 h) (b2 h)) =
   fun buf ->
   let h0 = get() in
   match s1 buf with
@@ -1168,14 +1178,13 @@ let ser_append (#input:bslice) (#b1 #b2: s:bytes{length s == U32.v input.len} ->
                      else begin
                       begin
                         let h2 = get() in
-                        let input_b = as_seq h2 input in
                         let (buf2, buf3) = bslice_split_at buf off' in
                         let (buf12, buf3') = bslice_split_at buf0 (U32.add off off') in
                         assert (live h2 buf12);
-                        assert (as_seq h2 buf2 == b2 input_b);
-                        assert (as_seq h2 buf1 == b1 input_b);
+                        assert (as_seq h2 buf2 == b2 h2);
+                        assert (as_seq h2 buf1 == b1 h2);
                         is_concat_append buf12.p buf1.p buf2.p h2;
-                        assert (as_seq h2 buf12 == append (b1 input_b) (b2 input_b));
+                        assert (as_seq h2 buf12 == append (b1 h2) (b2 h2));
                         //assert (modifies_slice buf1 h0 h1);
                         //assert (modifies_slice buf2 h1 h2);
                         modifies_grow_from_b1 buf12 buf1 buf2 h0 h1;
@@ -1188,7 +1197,7 @@ let ser_append (#input:bslice) (#b1 #b2: s:bytes{length s == U32.v input.len} ->
     end
   | None -> None
 
-val ser_copy : data:bslice -> serializer_b data (fun bs -> bs)
+val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
   else begin
@@ -1197,12 +1206,12 @@ let ser_copy data = fun buf ->
     Some data.len
   end
 
-let ser_u16_array (a: u16_array_st) :
-    serializer_b a.a16_st (fun bs -> encode_u16_array a.len16_st bs) =
+let ser_u16_array (a: u16_array_st) =
   ser_input a.a16_st (ser_u16 a.len16_st) `ser_append`
   ser_copy a.a16_st
 
 let ser_u32_array (a: u32_array_st) :
-  serializer_b a.a32_st (fun bs -> encode_u32_array a.len32_st bs) =
-  ser_input a.a32_st (ser_u32 a.len32_st) `ser_append`
-  ser_copy a.a32_st
+  serializer_any (TSet.singleton a.a32_st) (fun h -> u32_to_be a.len32_st `append` as_seq h a.a32_st) =
+  ser_inputs (TSet.singleton a.a32_st)
+  (ser_u32 a.len32_st `ser_append`
+   ser_copy a.a32_st)
