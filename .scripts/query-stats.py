@@ -2,6 +2,7 @@
 
 # (C) Microsoft Research, CM Wintersteiger, 2017
 
+import os
 import sys
 import getopt
 import re
@@ -11,7 +12,7 @@ fstar_output_columns = [ "fstar_tag", "fstar_usedhints", "fstar_time", "fstar_fu
 column_separator = ","
 
 SHORTOPTS="harcgf:o:s:t:n:"
-LONGOPTS=["help", "infile=", "outfile=", "stat=", "top=", "collate", "append", "reverse", "global"]
+LONGOPTS=["help", "infile=", "outfile=", "stat=", "top=", "collate", "append", "reverse", "global", "filter=" ]
 
 def show_help():
     print("Usage: query-stats <options>")
@@ -25,6 +26,7 @@ def show_help():
     print("  -r, --reverse\t\t\treverse sort order")
     print("  -c, --collate\t\t\tcollate queries of the same name (instead of adding ticks)")
     print("  -g, --global\t\t\tadd global statistics table")
+    print("      --filter=s=v\t\t\tfilter queries; only include queries for which variable s is equal to v.")
 
 
 def cfmt_tag(value):
@@ -145,7 +147,24 @@ def add_query(stats, k, v):
                 assert(False) # unreachable
 
 
-def process_file(infile, outfile, stat, n, collate = False, append = False, reverse = False, global_stats = False):
+def filter(queries, filters):
+    if filters is None:
+        return queries
+    else:
+        filtered = {}
+        for id, stats in queries.items():
+            matches_all_filters = True
+            for s, fltrv in filters:
+                if s in stats:
+                    statsv = cfmt(s, stats[s])
+                    if not statsv == fltrv:
+                        matches_all_filters = False
+            if matches_all_filters:
+                filtered[id] = stats
+    return filtered
+    
+
+def process_file(infile, outfile, stat, n, collate = False, append = False, reverse = False, global_stats = False, filters = None):
     # "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s"
     # (.\FStar.UInt.fst(11,11-11,14))	Query-stats (FStar.UInt.pow2_values, 1)	succeeded (with hint) in 467 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280 statistics={added-eqs=2 binary-propagations=3629 conflicts=1 datatype-accessor-ax=3 max-memory=8.96 memory=8.96 mk-bool-var=7332 mk-clause=54 num-allocs=25468507 num-checks=1 propagations=3632 rlimit-count=378055 time=0.00}
     # From CI:
@@ -192,6 +211,8 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                 k = modrm.groupdict()["module"]
                 v = modrm.groupdict()["module_time"]
                 modules[k] = int(v);
+
+    queries = filter(queries, filters)
 
     if stat == "ALPHA":
         oq = sorted(queries.items(), key=lambda row: row[0], reverse=reverse)
@@ -328,6 +349,7 @@ def main(argv):
     append = False
     reverse = False
     global_stats = False
+    filters = None
 
     try:
         opts, args = getopt.getopt(argv, SHORTOPTS, LONGOPTS)
@@ -341,7 +363,11 @@ def main(argv):
             show_help()
             return 1
         elif o in ("-f", "--infile"):
-            infile = a
+            if not os.path.exists(a):
+                print("Error: file '%s' does not exists." % a)
+                return 2
+            else:
+                infile = a
         elif o in ("-o", "--outfile"):
             outfile = a
         elif o in ("-a", "--append"):
@@ -362,11 +388,20 @@ def main(argv):
             collate = True
         elif o in ("-g", "--global"):
             global_stats = True
+        elif o in ("--filter"):
+            if a.count("=") != 1:
+                print("Error: filter not in s=v format.")
+                return 2
+            s, v = a.split("=")
+            f = [ s, v ]
+            if filters is None:
+                filters = [ ]
+            filters += [ f ]
         else:
             print("Unknown option `%s'" % o)
             return 2
     
-    process_file(infile, outfile, stat, int(n), collate, append, reverse, global_stats)
+    process_file(infile, outfile, stat, int(n), collate, append, reverse, global_stats, filters)
     return 0
 
 
