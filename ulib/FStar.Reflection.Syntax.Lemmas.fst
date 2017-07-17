@@ -49,3 +49,19 @@ let collect_app_order t =
     match inspect t with
     | Tv_App l r -> collect_app_order' [r] t l
     | _ -> ()
+
+// A glorified `id`
+val list_ref : (#a:Type) -> (#p:(a -> Type)) -> (l:list a) ->
+                    Pure (list (x:a{p x}))
+                         (requires (forall_list p l))
+                         (ensures (fun _ -> True))
+let rec list_ref #a #p l =
+    match l with
+    | [] -> []
+    | x::xs -> x :: list_ref #a #p xs
+
+val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:term{a << t})
+let collect_app_ref t =
+    let h, a = collect_app t in
+    collect_app_order t;
+    h, list_ref a
