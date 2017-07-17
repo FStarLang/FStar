@@ -1206,12 +1206,37 @@ let ser_copy data = fun buf ->
     Some data.len
   end
 
-let ser_u16_array (a: u16_array_st) =
-  ser_input a.a16_st (ser_u16 a.len16_st) `ser_append`
-  ser_copy a.a16_st
+let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
+    u16_to_be a.len16_st `append` as_seq h a.a16_st
 
-let ser_u32_array (a: u32_array_st) :
-  serializer_any (TSet.singleton a.a32_st) (fun h -> u32_to_be a.len32_st `append` as_seq h a.a32_st) =
+val ser_u16_array : a:u16_array_st ->
+  serializer_any (TSet.singleton a.a16_st) (fun h -> enc_u16_array_st a h)
+let ser_u16_array a =
+  ser_inputs (TSet.singleton a.a16_st)
+  (ser_input a.a16_st (ser_u16 a.len16_st) `ser_append`
+   ser_copy a.a16_st)
+
+let enc_u32_array_st (a: u32_array_st) (h:mem{live h a.a32_st}) : GTot bytes =
+  u32_to_be a.len32_st `append` as_seq h a.a32_st
+
+val ser_u32_array : a:u32_array_st ->
+  serializer_any (TSet.singleton a.a32_st) (fun h -> enc_u32_array_st a h)
+let ser_u32_array a =
   ser_inputs (TSet.singleton a.a32_st)
   (ser_u32 a.len32_st `ser_append`
    ser_copy a.a32_st)
+
+val entry_st_bufs : e:entry_st -> TSet.set bslice
+let entry_st_bufs (e: entry_st) = TSet.union (TSet.singleton e.key_st.a16_st) (TSet.singleton e.val_st.a32_st)
+
+val enc_entry_st : e:entry_st -> h:mem{forall b. TSet.mem b (entry_st_bufs e) ==> live h b} -> GTot bytes
+let enc_entry_st (e:entry_st) h =
+    enc_u16_array_st e.key_st h `append` enc_u32_array_st e.val_st h
+
+let ser_entry (e:entry_st) : serializer_any (entry_st_bufs e) (fun h -> enc_entry_st e h) =
+    ser_inputs (entry_st_bufs e)
+    (ser_u16_array e.key_st `ser_append` ser_u32_array e.val_st)
+
+// TODO: will create a complete key-value store by allocating a length field,
+// repeatedly calling ser_entry (advancing the output each time), then filling
+// in the length
