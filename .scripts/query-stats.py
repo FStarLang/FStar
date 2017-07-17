@@ -147,22 +147,14 @@ def add_query(stats, k, v):
                 assert(False) # unreachable
 
 
-def filter(queries, filters):
-    if filters is None:
-        return queries
-    else:
-        filtered = {}
-        for id, stats in queries.items():
-            matches_all_filters = True
-            for s, fltrv in filters:
-                if s in stats:
-                    statsv = cfmt(s, stats[s])
-                    if not statsv == fltrv:
-                        matches_all_filters = False
-            if matches_all_filters:
-                filtered[id] = stats
-    return filtered
-    
+def is_filtered(stats, filters):
+    for s, fltrv in filters:
+        if s in stats:
+            statsv = cfmt(s, stats[s])
+            if not statsv == fltrv:
+                return False
+    return True
+
 
 def process_file(infile, outfile, stat, n, collate = False, append = False, reverse = False, global_stats = False, filters = None):
     # "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s"
@@ -179,6 +171,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
     queries = {}
     modules = {}
     columns = set()
+    seen_vars = set()
     columns.add(ec)
 
     with (open(infile, "r") if infile != "" else sys.stdin) as f:
@@ -204,15 +197,20 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
                 if id not in queries:
                     queries[id] = {}
                 queries[id] = merge_values(queries[id], stats)
+                seen_vars = seen_vars.union(stats.keys())
             elif line.find("Query-stats") != -1:
                 print("Warning: unmatched query-stats line: %s" % line)
             modrm=modrx.match(line)
             if modrm is not None:
                 k = modrm.groupdict()["module"]
                 v = modrm.groupdict()["module_time"]
-                modules[k] = int(v);
+                modules[k] = int(v);        
 
-    queries = filter(queries, filters)
+    if filters is not None:
+        for s, v in filters:
+            if s not in seen_vars:
+                print("Warning: unknown variable '%s'." % s)
+        queries = { k:v for k,v in queries.iteritems() if is_filtered(v, filters) }
 
     if stat == "ALPHA":
         oq = sorted(queries.items(), key=lambda row: row[0], reverse=reverse)
