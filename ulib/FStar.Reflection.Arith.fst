@@ -112,10 +112,8 @@ let rec is_arith_expr (t:term) =
     match inspect hd, tl with
     | Tv_FVar fv, [e1; e2 ; e3] ->
       let qn = inspect_fv fv in
-      collect_app_order t;
-      // let e1' = is_arith_expr (e1 <: x:term{x << t}) in
-      let e2' = is_arith_expr (e2 <: x:term{x << t}) in
-      let e3' = is_arith_expr (e3 <: x:term{x << t}) in
+      let e2' = is_arith_expr e2 in
+      let e3' = is_arith_expr e3 in
       if qn = land_qn then liftM2 Land e2' e3'
       else if qn = lxor_qn then liftM2 Lxor e2' e3'
       else if qn = lor_qn then liftM2 Lor e2' e3'
