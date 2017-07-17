@@ -1023,7 +1023,7 @@ let apply_lemma: FStar_Syntax_Syntax.term -> Prims.unit tac =
                                        uu____2233 uu____2235
                                  | FStar_Pervasives_Native.Some g ->
                                      let uu____2237 =
-                                       FStar_TypeChecker_Rel.discharge_guard_no_smt
+                                       FStar_TypeChecker_Rel.discharge_guard
                                          goal.context g in
                                      let solution =
                                        FStar_Syntax_Syntax.mk_Tm_app tm1 uvs1
