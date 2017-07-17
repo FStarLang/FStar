@@ -110,9 +110,10 @@ val is_arith_expr : term -> tm expr
 let rec is_arith_expr (t:term) =
     let hd, tl = collect_app t in
     match inspect hd, tl with
-    | Tv_FVar fv, [e1; e2 ;e3] ->
+    | Tv_FVar fv, [e1; e2 ; e3] ->
       let qn = inspect_fv fv in
       collect_app_order t;
+      // let e1' = is_arith_expr (e1 <: x:term{x << t}) in
       let e2' = is_arith_expr (e2 <: x:term{x << t}) in
       let e3' = is_arith_expr (e3 <: x:term{x << t}) in
       if qn = land_qn then liftM2 Land e2' e3'
@@ -124,10 +125,6 @@ let rec is_arith_expr (t:term) =
       else if qn = umod_qn then liftM2 Umod e2' e3'
       else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
       else fail ("triary: " ^ fv_to_string fv)
-    | Tv_FVar fv, [l; r] when (inspect_fv fv = nat_bv_qn) ->
-      collect_app_order t;
-      let rr = is_arith_expr (r <: x:term{x << t}) in
-      liftM NatToBv rr
     | Tv_FVar fv, [l; r] ->
         let qn = inspect_fv fv in
         collect_app_order t;
@@ -139,6 +136,7 @@ let rec is_arith_expr (t:term) =
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
+	else if qn = nat_bv_qn then liftM NatToBv rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [a] ->
         let qn = inspect_fv fv in
@@ -186,7 +184,10 @@ let rec expr_to_string (e:expr) : string =
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"
-
+    | Neg l -> "~ " ^ (expr_to_string l)
+    | Udiv l r -> "(" ^ (expr_to_string l) ^ " / " ^ (expr_to_string r) ^ ")"
+    | Umod l r -> "(" ^ (expr_to_string l) ^ " % " ^ (expr_to_string r) ^ ")"
+    | MulMod l r -> "(" ^ (expr_to_string l) ^ " ** " ^ (expr_to_string r) ^ ")"
 
 let rec compare_expr (e1 e2 : expr) : O.order =
     match e1, e2 with

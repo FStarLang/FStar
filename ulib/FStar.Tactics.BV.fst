@@ -160,7 +160,6 @@ let arith_to_bv_tac : tactic unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 let bv_tac ()  =
-  dump "before eq_to_bv";;
   apply_lemma (quote eq_to_bv);;
   apply_lemma (quote trans);;
   arith_to_bv_tac;;
@@ -172,11 +171,8 @@ let bv_tac_lt n =
   // apply_lemma (quote (lt_to_bv #n));;
   // dump "after lt_to_bv";;
   apply_lemma (quote (trans_lt2 #n));;  
-  // dump "after trans";;
   arith_to_bv_tac;;
-  // dump "after first arith_to_bv";;
   arith_to_bv_tac;;
-  // dump "after second";;
   set_options "--smtencoding.elim_box true";;
   smt ()
 

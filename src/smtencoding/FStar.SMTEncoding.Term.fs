@@ -818,10 +818,10 @@ let getBoxedInteger (t:term) =
   | App(Var s, [t2]) when s = fst boxIntFun ->
     begin 
     match t2.tm with
-    | Integer n -> int_of_string n
-    | _ -> failwith (FStar.Util.format1 "Not a boxed integer: %s" (print_smt_term t))
+    | Integer n -> Some (int_of_string n)
+    | _ -> None
     end
-  | _ -> failwith (FStar.Util.format1 "Not a boxed integer: %s" (print_smt_term t))
+  | _ -> None
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng
 let mk_Valid t        = match t.tm with
@@ -834,11 +834,12 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
-    | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}]) -> 
-        mkBvUlt (unboxBitVec (getBoxedInteger t0) t1, unboxBitVec (getBoxedInteger t0) t2) t.rng
-    | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _]) ->
+    | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
+    | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _]) 
+            when (FStar.Util.is_some (getBoxedInteger t0))->
         // sometimes b2t gets needlessly normalized...
-        mkBvUlt (unboxBitVec (getBoxedInteger t0) t1, unboxBitVec (getBoxedInteger t0) t2) t.rng
+        let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
+        mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
     | _ -> 
         mkApp("Valid",  [t]) t.rng
