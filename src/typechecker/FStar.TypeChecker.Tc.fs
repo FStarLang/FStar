@@ -1066,7 +1066,12 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_declare_typ(lid, uvs, t) -> //NS: No checks on the qualifiers?
     let env = Env.set_range env r in
-    //assert (uvs = []);
+
+    if lid_exists env lid
+    then raise (Error (BU.format1 "The toplevel declaration %s is shadowing \
+                                   an already defined declaration"
+                                   (Ident.text_of_lid lid), r)) ;
+
     let uvs, t =
         if uvs = []
         then check_and_gen env t (fst (U.type_u()))
