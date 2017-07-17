@@ -263,10 +263,11 @@ assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
 
+// Can be used to mark a query for a separate SMT invocation
 abstract let spinoff (p:Type) : Type = p
 
 // Logically equivalent to assert, but spins off separate query
-val cut : p:Type -> Pure unit (requires (spinoff (squash p))) (fun x -> p)
+val cut : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
 type nat = i:int{i >= 0}
