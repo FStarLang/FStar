@@ -1147,12 +1147,12 @@ let modifies_grow_from_b2 (b b1 b2:bslice) (h0 h1:mem) : Lemma
 
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
-let serializer_add_input (b:bytes) (input:bslice) (s:serializer b) : serializer_b input (fun _ -> b) =
+let ser_input (input:bslice) (#b:bytes) (s:serializer b) : serializer_b input (fun _ -> b) =
     fun buf -> s buf
 
 #reset-options "--z3rlimit 15"
 
-let ser_append (input:bslice) (#b1 #b2: s:bytes{length s == U32.v input.len} -> bytes)
+let ser_append (#input:bslice) (#b1 #b2: s:bytes{length s == U32.v input.len} -> bytes)
                (s1:serializer_b input b1) (s2:serializer_b input b2) :
                serializer_b input (fun bs -> append (b1 bs) (b2 bs)) =
   fun buf ->
@@ -1188,8 +1188,6 @@ let ser_append (input:bslice) (#b1 #b2: s:bytes{length s == U32.v input.len} -> 
     end
   | None -> None
 
-let frameOf (b:bslice) = B.frameOf b.p
-
 val ser_copy : data:bslice -> serializer_b data (fun bs -> bs)
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
@@ -1199,9 +1197,12 @@ let ser_copy data = fun buf ->
     Some data.len
   end
 
-// TODO: this can't actually use ser_append because these functions aren't
-// serializers, due to the extra handling of buffers rather than pure values
+let ser_u16_array (a: u16_array_st) :
+    serializer_b a.a16_st (fun bs -> encode_u16_array a.len16_st bs) =
+  ser_input a.a16_st (ser_u16 a.len16_st) `ser_append`
+  ser_copy a.a16_st
 
-//let ser_u16_array a buf =
-//  ser_u16 a.len16_st `ser_append`
-//  (fun buf -> ser_copy a.a16_st buf)
+let ser_u32_array (a: u32_array_st) :
+  serializer_b a.a32_st (fun bs -> encode_u32_array a.len32_st bs) =
+  ser_input a.a32_st (ser_u32 a.len32_st) `ser_append`
+  ser_copy a.a32_st
