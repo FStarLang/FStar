@@ -1088,7 +1088,7 @@ let ask_and_report_errors:
                  let process_query q = check q in
                  let uu____1872 =
                    let uu____1876 = FStar_Options.admit_smt_queries () in
-                   let uu____1877 = FStar_Options.lax_except () in
+                   let uu____1877 = FStar_Options.admit_except () in
                    (uu____1876, uu____1877) in
                  (match uu____1872 with
                   | (true ,uu____1880) -> ()
