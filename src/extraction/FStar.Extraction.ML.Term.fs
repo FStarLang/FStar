@@ -1276,7 +1276,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
 (*copied from ocaml-asttrans.fs*)
 let fresh = let c = mk_ref 0 in
-            fun (x:string) -> (incr c; (x, !c))
+            fun (x:string) -> (incr c; (x ^ string_of_int (!c), !c))
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
