@@ -21,7 +21,6 @@ let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
 
-val uint_to_t: n:nat{n < pow2 128} -> x:t{v x == n}
 let uint_to_t n =
     div_mod n (pow2 64);
     { low = U64.uint_to_t (n % (pow2 64));
