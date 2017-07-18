@@ -903,7 +903,7 @@ let preprocess:
                                 Prims.strcat "Could not prove goal #"
                                   uu____2269 in
                               FStar_TypeChecker_Util.label uu____2268
-                                FStar_Range.dummyRange phi in
+                                goal.pos phi in
                             ((n1 + (Prims.parse_int "1")),
                               (((g.FStar_Tactics_Basic.context), gt',
                                  (g.FStar_Tactics_Basic.opts)) :: gs1))))) s

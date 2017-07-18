@@ -350,7 +350,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.
                  in
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (string_of_int n) (goal_to_string g);
-                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) dummyRange phi in
+                 let gt' = TcUtil.label ("Could not prove goal #" ^ string_of_int n) goal.pos phi in
                  (n+1, (g.context, gt', g.opts)::gs)) s gs in
     let (_, gs) = s in
     // Use default opts for main goal
