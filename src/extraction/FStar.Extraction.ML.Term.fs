@@ -486,7 +486,10 @@ and arg_as_mlty (g:env) (a, _) : mlty =
     else erasedContent
 
 and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
-    let formals, t = U.arrow_formals fv.fv_name.ty in
+    let formals, _ =
+        let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid g.tcenv fv.fv_name.v in
+        let fvty = N.normalize [N.UnfoldUntil Delta_constant] g.tcenv fvty in
+        U.arrow_formals fvty in
     let mlargs = List.map (arg_as_mlty g) args in
     let mlargs =
         let n_args = List.length args in
