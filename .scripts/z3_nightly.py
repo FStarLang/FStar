@@ -113,7 +113,7 @@ def update_git(url, branch, dir, subdir, log, quiet=False):
         os.chdir(dir)
         call_logged("git reset %s --hard %s" % (q, branch), log)
         call_logged("git clean %s -f" % (q), log)
-        call_logged("git pull %s -s recursive -Xtheirs" % (v), log)
+        call_logged("git pull %s -s recursive -Xtheirs" % (q), log)
         call_logged("git reset %s --hard %s" % (q, branch), log)
         os.chdir(prev_wd)
     sp = os.path.join(dir, subdir)
@@ -164,7 +164,7 @@ def wipe_old_pkgs(to_repo, to_subdir, pattern, log):
     os.chdir(to_repo)
     for f in os.listdir(to_subdir):
         if pattern.match(f) is not None:
-            call_logged('git filter-branch -f --prune-empty --tree-filter "rm -f %s/%s" HEAD' % (to_subdir, f), log)
+            call_logged('git rm "%s/%s"' % (to_subdir, f), log)
     os.chdir(prev_dir)
 
 def add_new_pkgs(files, to_repo, to_subdir, pattern, log):
@@ -174,7 +174,7 @@ def add_new_pkgs(files, to_repo, to_subdir, pattern, log):
         f_to_path = os.path.join(to_subdir, os.path.basename(f))
         shutil.copy2(os.path.join(prev_dir, f), f_to_path)
         call_logged('git add -v %s' % f_to_path, log)
-    call_logged('git commit -v -m "Automatic update of Z3 nightly packages."', log)
+    call_logged('git commit -v --amend -m "Automatic update of Z3 nightly packages."', log)
     call_logged('git gc --aggressive --auto --prune=all', log)
     call_logged('git push -v --force', log)
     os.chdir(prev_dir)

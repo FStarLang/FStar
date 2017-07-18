@@ -38,13 +38,14 @@ let acls = ST.alloc []
 
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls == e::sel h acls))
-let grant e = ST.write acls (e::ST.read acls)
+let grant e =  acls := (e:: !acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(mem e (sel h' acls))))
 let revoke e =
-  let db = filter (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+  let db = filter (fun e' -> e<>e') !acls in
+  acls := db
+
 
 (* Next, we model two primitives that provide access to files *)
 
