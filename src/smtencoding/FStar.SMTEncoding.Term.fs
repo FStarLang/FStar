@@ -30,7 +30,6 @@ type sort =
   | Bool_sort
   | Int_sort
   | String_sort
-  | Ref_sort
   | Term_sort
   | Fuel_sort
   | Array of sort * sort
@@ -42,7 +41,6 @@ let rec strSort x = match x with
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
   | String_sort -> "FString"
-  | Ref_sort -> "Ref"
   | Fuel_sort -> "Fuel"
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
@@ -618,10 +616,7 @@ let rec declToSmt z3options decl =
 
 and mkPrelude z3options =
   let basic = z3options ^
-                "(declare-sort Ref)\n\
-                (declare-fun Ref_constr_id (Ref) Int)\n\
-                \n\
-                (declare-sort FString)\n\
+                "(declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
@@ -685,7 +680,6 @@ and mkPrelude z3options =
                                  ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);
                                  ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, 9, true);
-                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, 10, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
@@ -713,19 +707,15 @@ let boxBool t     = maybe_elim_box "BoxBool" "BoxBool_proj_0" t
 let unboxBool t   = maybe_elim_box "BoxBool_proj_0" "BoxBool" t
 let boxString t   = maybe_elim_box "BoxString" "BoxString_proj_0" t
 let unboxString t = maybe_elim_box "BoxString_proj_0" "BoxString" t
-let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
-let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
   | String_sort -> boxString t
-  | Ref_sort -> boxRef t
   | _ -> raise Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
-  | Ref_sort -> unboxRef t
   | _ -> raise Impos
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng

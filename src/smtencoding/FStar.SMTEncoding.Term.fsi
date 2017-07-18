@@ -28,7 +28,6 @@ type sort =
   | Bool_sort
   | Int_sort
   | String_sort
-  | Ref_sort
   | Term_sort
   | Fuel_sort
   | Array of sort * sort
@@ -172,8 +171,6 @@ val boxBool:     term -> term
 val unboxBool:   term -> term
 val boxString:   term -> term
 val unboxString: term -> term
-val boxRef:      term -> term
-val unboxRef:    term -> term
 
 val mk_Range_const:  term
 val mk_Term_unit:    term
