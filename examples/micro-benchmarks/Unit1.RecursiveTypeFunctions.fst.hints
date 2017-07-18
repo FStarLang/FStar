@@ -172,11 +172,11 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.l_False", "equation_Prims.l_True",
         "fuel_guarded_inversion_Prims.list",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -209,11 +209,11 @@
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
         "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
         "unit_typing"
       ],

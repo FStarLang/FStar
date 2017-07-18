@@ -1,8 +1,8 @@
 [
-  "¦6™ĞõÛÓ\u0001CÉû\fIdS0",
+  "aï`\u0006Ë©Â»\u0011»\u001dşØÄ“",
   [
     [
-      "UnitTests.uu___80",
+      "UnitTests.uu___100",
       1,
       2,
       1,
@@ -10,7 +10,7 @@
       0
     ],
     [
-      "UnitTests.uu___82",
+      "UnitTests.uu___102",
       1,
       2,
       1,
@@ -32,7 +32,7 @@
       0
     ],
     [
-      "UnitTests.uu___85",
+      "UnitTests.uu___105",
       1,
       2,
       1,
@@ -72,7 +72,7 @@
       0
     ],
     [
-      "UnitTests.uu___92",
+      "UnitTests.uu___112",
       1,
       2,
       1,
@@ -83,6 +83,16 @@
       ],
       0
     ],
-    [ "UnitTests.l2", 1, 2, 1, [ "@query" ], 0 ]
+    [ "UnitTests.l2", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UnitTests.r", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [ "UnitTests.__proj__Mkr__item__x", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "UnitTests.uu___115",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
   ]
 ]

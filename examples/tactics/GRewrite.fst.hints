@@ -37,39 +37,6 @@
       0
     ],
     [
-      "GRewrite.test_grewrite3",
-      1,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
-      "GRewrite.test_grewrite3",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
-      "GRewrite.test_grewrite3",
-      3,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
       "GRewrite.test_grewrite4",
       1,
       2,

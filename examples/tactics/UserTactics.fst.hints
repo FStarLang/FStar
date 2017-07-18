@@ -1,5 +1,5 @@
 [
-  "%c…Çƒ\u0015±7 ¡YY \\™Z",
+  "·\u001c¿Œú-Ý8¾R0±å§Üð",
   [
     [ "UserTactics.test_print_goal", 1, 2, 1, [ "@query" ], 0 ],
     [ "UserTactics.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
@@ -57,6 +57,14 @@
     ],
     [
       "UserTactics.test_apply_ascription'",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0
+    ],
+    [
+      "UserTactics.test_apply_ascription",
       1,
       2,
       1,

@@ -1,5 +1,5 @@
 [
-  "b\u001bÎ,Y[X”²kÙ]²Ýª3",
+  "\u0011K>jj$g{ÞÛs[e¥L ",
   [
     [ "FStar.Tactics.Effect.uu___is_Success", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -130,10 +130,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "equation_FStar.Tactics.Effect.goal",
-        "equation_FStar.Tactics.Effect.goals",
-        "equation_FStar.Tactics.Effect.state",
-        "function_token_typing_FStar.Tactics.Effect.state"
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],

@@ -66,8 +66,8 @@
       [
         "@MaxIFuel_assumption", "@query", "assumption_FStar.UInt8.t__haseq",
         "constructor_distinct_FStar.Pervasives.V",
-        "data_elim_FStar.Pervasives.Some", "data_elim_MAC.Entry",
-        "disc_equation_FStar.Pervasives.Some",
+        "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.V", "equation_FStar.UInt8.byte",
         "equation_FStar.UInt8.t", "equation_MAC.bytes", "equation_MAC.key",
         "equation_MAC.keysize", "equation_MAC.nbytes", "equation_MAC.text",

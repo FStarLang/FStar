@@ -1,5 +1,5 @@
 [
-  "’\u0003I\u0006\u000ech…¸~õÛç7$Ç",
+  "\u0006^\u0012ÑP€«◊ÓZE£mŸCé",
   [
     [
       "Arith.lem0",
@@ -13,7 +13,6 @@
       ],
       0
     ],
-    [ "Arith.tau1", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Arith.lem1",
       1,
@@ -89,43 +88,25 @@
     [
       "Arith.lem3",
       2,
+      4,
       2,
-      1,
       [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "projection_inverse_BoxBool_proj_0",
+        "constructor_distinct_Prims.Nil",
+        "equation_FStar.List.Tot.Base.tail",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0
     ],
     [
       "Arith.lem3",
       3,
-      4,
-      2,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok",
-        "equation_FStar.List.Tot.Base.tail", "equation_Prims.nat",
-        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "function_token_typing_Prims.int", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.List.Tot.Base.length"
-      ],
-      0
-    ],
-    [
-      "Arith.lem3",
-      4,
       2,
       1,
       [
@@ -155,75 +136,7 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
-      ],
-      0
-    ],
-    [
-      "Arith.lem4",
-      3,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
-      ],
-      0
-    ],
-    [
-      "Arith.lem4",
-      4,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
-      ],
-      0
-    ],
-    [
-      "Arith.lem4",
-      5,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
-      ],
-      0
-    ],
-    [
-      "Arith.lem4",
-      6,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
-      "Arith.lem4",
-      7,
-      2,
-      1,
-      [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
         "bool_inversion", "bool_typing", "equation_Prims.l_and",
@@ -244,7 +157,7 @@
     ],
     [
       "Arith.lem4",
-      8,
+      3,
       2,
       1,
       [
@@ -257,13 +170,12 @@
     ],
     [
       "Arith.lem4",
-      9,
+      4,
       4,
       2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
@@ -281,7 +193,7 @@
     ],
     [
       "Arith.lem4",
-      10,
+      5,
       2,
       1,
       [

@@ -40,6 +40,8 @@
       ],
       0
     ],
+    [ "Unit1.Projectors1.__proj__Mku__item__x", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Unit1.Projectors1.__proj__Mku__item__y", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Projectors1.v",
       1,

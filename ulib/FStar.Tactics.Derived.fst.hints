@@ -1,8 +1,19 @@
 [
-  "Åº√ä6Ãµ0\u0002Ù•Øß·?-",
+  "\u0002≠góòîoÎ’°UÅF\u0004Aÿ",
   [
-    [ "FStar.Tactics.Derived.fix", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Tactics.Derived.fix1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.mapM",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_3dddec8ced2db740e4e8aaf70542be7a_5",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
     [
       "FStar.Tactics.Derived.or_else",
       1,
@@ -10,11 +21,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.uu___is_None",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0
     ],
@@ -25,15 +36,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],
     [ "FStar.Tactics.Derived.repeatseq", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Tactics.Derived.tcut", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Derived.revert_all",
       1,
@@ -45,21 +57,6 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.Reflection.Syntax.binders",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0
-    ],
-    [
-      "FStar.Tactics.Derived.cur_goal",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equation_FStar.Tactics.Derived.fail",
-        "equation_FStar.Tactics.Effect.goal",
-        "equation_FStar.Tactics.Effect.goals",
-        "equation_FStar.Tactics.Effect.return",
-        "fuel_guarded_inversion_Prims.list"
       ],
       0
     ],
@@ -116,15 +113,6 @@
       0
     ],
     [
-      "FStar.Tactics.Derived.rewrite_eqs_from_context",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [ "FStar.Tactics.Derived.rewrite_equality", 1, 2, 1, [ "@query" ], 0 ],
-    [
       "FStar.Tactics.Derived.unfold_point",
       1,
       2,
@@ -150,6 +138,20 @@
       ],
       0
     ],
-    [ "FStar.Tactics.Derived.mk_sq_eq", 1, 2, 1, [ "@query" ], 0 ]
+    [ "FStar.Tactics.Derived.mk_sq_eq", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.iseq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_0c0a128bea8e19dcf90afd1fffbda74e_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_FStar.Tactics.Effect.tactic",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ]
   ]
 ]

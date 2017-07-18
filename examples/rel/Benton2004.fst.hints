@@ -233,14 +233,7 @@
       ],
       0
     ],
-    [
-      "Benton2004.while",
-      1,
-      2,
-      1,
-      [ "@query", "token_correspondence_Benton2004.while_raw" ],
-      0
-    ],
+    null,
     [
       "Benton2004.is_per_holds_sym",
       1,

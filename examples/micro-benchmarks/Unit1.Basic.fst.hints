@@ -1,5 +1,5 @@
 [
-  ")\u0005D∞>muﬂpÚFñùâ\u001dï",
+  "7\u0003s\u001e\u0017\u001f\u0017»\u0003±g«9üOI",
   [
     [ "Unit1.Basic.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit1.Basic.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
@@ -233,10 +233,10 @@
       2,
       1,
       [
-        "@query", "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2"
+        "@query", "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0
     ],
@@ -300,11 +300,12 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Pervasives.option_haseq",
+        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0
     ],
+    [ "Unit1.Basic.__proj__Mkrecord__item__f", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.record_f_exhaustive",
       1,
@@ -313,8 +314,9 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
-        "bool_typing", "disc_equation_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.Some", "equation_FStar.UInt32.n",
+        "bool_typing", "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.UInt32.n",
         "fuel_guarded_inversion_Unit1.Basic.record",
         "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.int",
@@ -366,13 +368,13 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_5b11c30dd020aab06ae68a87da8b6bab_0",
         "binder_x_5b11c30dd020aab06ae68a87da8b6bab_1",
-        "disc_equation_Unit1.Basic.O", "disc_equation_Unit1.Basic.S",
-        "equality_tok_Unit1.Basic.O@tok",
+        "constructor_distinct_Unit1.Basic.S", "disc_equation_Unit1.Basic.O",
+        "disc_equation_Unit1.Basic.S", "equality_tok_Unit1.Basic.O@tok",
         "fuel_guarded_inversion_Unit1.Basic.inat",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Unit1.Basic.S__0",
         "subterm_ordering_Unit1.Basic.S"
       ],
@@ -484,7 +486,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_FStar.Pervasives.tuple2_haseq",
+        "assumption_FStar.Pervasives.Native.tuple2_haseq",
         "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
         "equation_Prims.nat", "function_token_typing_FStar.UInt32.n",
         "function_token_typing_Prims.nat",
@@ -519,7 +521,7 @@
         "data_elim_Unit1.Basic.C", "disc_equation_Unit1.Basic.C",
         "disc_equation_Unit1.Basic.N", "equality_tok_Unit1.Basic.N@tok",
         "equation_Prims.nat", "fuel_guarded_inversion_Unit1.Basic.mlist",
-        "subterm_ordering_FStar.Pervasives.Mktuple2",
+        "subterm_ordering_FStar.Pervasives.Native.Mktuple2",
         "subterm_ordering_Unit1.Basic.C", "typing_tok_Unit1.Basic.N@tok"
       ],
       0
@@ -585,10 +587,9 @@
         "fuel_guarded_inversion_Unit1.Basic.mlist",
         "function_token_typing_FStar.UInt32.n", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Unit1.Basic.C__0",
-        "token_correspondence_Unit1.Basic.zero_list.fuel_instrumented",
         "typing_Unit1.Basic.zero_list", "typing_tok_Unit1.Basic.N@tok"
       ],
       0
@@ -617,7 +618,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Unit1.Basic_Tm_refine_0cace662ddbbb4ae9eb8a1ecc5f8370d"
+        "refinement_interpretation_Unit1.Basic_Tm_refine_214f835beccad32d5a8c324d7d306af9"
       ],
       0
     ],
@@ -708,22 +709,20 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Unit1.Basic.find.fuel_instrumented", "@query",
+        "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "constructor_distinct_FStar.Pervasives.None",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "disc_equation_FStar.Pervasives.Some", "equation_Unit1.Basic._T",
-        "equation_Unit1.Basic.apply",
-        "equation_with_fuel_Unit1.Basic.find.fuel_instrumented",
+        "data_elim_FStar.Pervasives.Native.Some",
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Unit1.Basic._T", "function_token_typing_Prims.int",
         "function_token_typing_Unit1.Basic._T",
         "interpretation_Unit1.Basic_Tm_abs_27513552ced7a5d60a267f588d436e11",
         "interpretation_Unit1.Basic_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
+        "typing_Unit1.Basic.find",
+        "typing_Unit1.Basic_Tm_abs_27513552ced7a5d60a267f588d436e11"
       ],
       0
     ],

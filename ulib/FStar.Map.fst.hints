@@ -1,6 +1,8 @@
 [
   "\u0005\"”Iµ\f•\u0017ç¨\u0000ŒŒ‡˚j",
   [
+    [ "FStar.Map.__proj__Mkt__item__mappings", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Map.__proj__Mkt__item__domain", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Map.upd", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Map.upd",

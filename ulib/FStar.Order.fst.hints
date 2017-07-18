@@ -23,9 +23,8 @@
         "disc_equation_FStar.Order.Lt", "equality_tok_FStar.Order.Gt@tok",
         "equality_tok_FStar.Order.Lt@tok",
         "fuel_guarded_inversion_FStar.Order.order",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1"
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0
     ],
@@ -61,11 +60,10 @@
         "equality_tok_FStar.Order.Eq@tok", "equality_tok_FStar.Order.Gt@tok",
         "equality_tok_FStar.Order.Lt@tok",
         "fuel_guarded_inversion_Prims.list",
-        "proj_equation_FStar.Pervasives.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_Prims.Cons_hd",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
