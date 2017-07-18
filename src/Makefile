@@ -119,6 +119,8 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type psmap.*/assume new type psmap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type pimap.*/assume new type pimap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@
 	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@
 	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@
