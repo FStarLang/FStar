@@ -1421,6 +1421,30 @@ private let path_includes_exists_concat
     )
     p q
 
+private let path_concat_includes
+  (#from #through: typ)
+  (p: path from through)
+  (phi: (
+    (#to: typ) ->
+    (p': path from to) ->
+    Ghost Type0
+    (requires (path_includes p p'))
+    (ensures (fun _ -> True))
+  ))
+  (f: (
+    (to: typ) ->
+    (p': path through to) ->
+    Lemma
+    (ensures (phi (path_concat p p')))
+  ))
+  (#to: typ)
+  (q: path from to)
+: Lemma
+  (requires (path_includes p q))
+  (ensures (path_includes p q /\ phi q))
+= Classical.forall_intro_2 f;
+  path_includes_exists_concat p q
+
 private
 let step_disjoint
   (#from: typ)
@@ -2938,6 +2962,82 @@ let readable_gufield
   (ensures (readable h (gufield p fd) <==> (readable h p /\ union_get_key (gread h p) == fd)))
   [SMTPat (readable h (gufield p fd))]
 = ()
+
+(** The active field of a union *)
+
+abstract
+let is_active_union_field
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: GTot Type0
+= live h (gufield p fd) /\ (
+    let content = greference_of p in
+    let (| _ , c |) = HS.sel h content in
+    let t = typ_of_struct_field l fd in
+    let (v0 : otype_of_typ t) = path_sel c (PathStep _ _ (Pointer?.p p) (StepUField l fd)) in (
+    ~ (v0 == none_ovalue t)
+  ))
+
+abstract
+let is_active_union_field_live
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires (is_active_union_field h p fd))
+  (ensures (live h (gufield p fd)))
+= ()
+
+abstract
+let is_active_union_field_eq
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd1 fd2: struct_field l)
+: Lemma
+  (requires (is_active_union_field h p fd1 /\ is_active_union_field h p fd2))
+  (ensures (fd1 == fd2))
+= ()
+
+abstract
+let is_active_union_field_intro
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+  (#t': typ)
+  (p' : pointer t')
+: Lemma
+  (requires (includes (gufield p fd) p' /\ readable h p'))
+  (ensures (is_active_union_field h p fd))
+= let content = greference_of p in
+  let (| _ , c |) = HS.sel h content in
+  let t = typ_of_struct_field l fd in
+  let (Pointer from cts p0) = p in
+  let pf = PathStep _ _ p0 (StepUField l fd) in
+  let (v0 : otype_of_typ t) = path_sel c pf in
+  let phi
+    (#t': typ)
+    (pt': path from t')
+  : Ghost Type0
+    (requires (path_includes pf pt'))
+    (ensures (fun _ -> True))
+  = (~ (path_sel c pt' == none_ovalue t')) ==> is_active_union_field h p fd
+  in
+  let f
+    (t' : typ)
+    (pt' : path t t')
+  : Lemma
+    (ensures (phi (path_concat pf pt')))
+  = path_sel_concat c pf pt';
+    path_sel_none_ovalue pf;
+    path_sel_none_ovalue pt'
+  in
+  path_concat_includes pf phi f (Pointer?.p p')
+
 
 (* Equality predicate on struct contents, without quantifiers *)
 let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
