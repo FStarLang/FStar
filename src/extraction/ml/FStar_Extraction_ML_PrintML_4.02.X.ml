@@ -85,7 +85,7 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
              | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
 
 let mk_top_mllb (e: mlexpr): mllb =
-  {mllb_name=("_", Prims.parse_int "0");
+  {mllb_name=("_");
    mllb_tysc=None;
    mllb_add_unit=false;
    mllb_def=e;
@@ -126,7 +126,7 @@ let rec build_pattern (p: mlpattern): pattern =
   match p with
   | MLP_Wild -> Pat.any ()
   | MLP_Const c -> build_constant_pat c |> Pat.mk
-  | MLP_Var (sym, _) -> Pat.var (mk_sym sym)
+  | MLP_Var sym -> Pat.var (mk_sym sym)
   | MLP_CTor args -> build_constructor_pat args |> Pat.mk
   | MLP_Branch l ->
      (match l with
@@ -160,7 +160,7 @@ and build_constructor_pat ((path, sym), p) =
 let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   let t =
   match ty with
-  | MLTY_Var (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym))
+  | MLTY_Var sym -> Typ.mk (Ptyp_var (mk_typ_name sym))
   | MLTY_Fun (ty1, tag, ty2) ->
      let c_ty1 = build_core_type ty1 in
      let c_ty2 = build_core_type ty2 in
@@ -176,7 +176,7 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   then t
   else Typ.mk (Ptyp_poly (annots, t))
 
-let build_binding_pattern ((sym, _): mlident) : pattern =
+let build_binding_pattern (sym: mlident) : pattern =
   Pat.mk (Ppat_var (mk_sym sym))
 
 let resugar_prims_ops path: expression =
@@ -213,7 +213,7 @@ let resugar_if_stmts ep cases =
 let rec build_expr ?annot (e: mlexpr): expression =
   let e' = (match e.expr with
   | MLE_Const c -> build_constant_expr c
-  | MLE_Var (sym, _) -> Exp.ident (mk_lident sym)
+  | MLE_Var sym -> Exp.ident (mk_lident sym)
   | MLE_Name path ->
      (match path with
       | (["Prims"], op) -> resugar_prims_ops path
@@ -366,7 +366,7 @@ let add_deriving_const (attrs: tyattrs) (ptype_manifest: core_type option): core
   match attrs with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(no_label, Exp.ident (mk_lident "fmt")); (no_label, Exp.constant (Const_string(s, None)))] in
-      let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ "" None (build_binding_pattern ("fmt",Prims.parse_int "0")) (Exp.fun_ "" None (Pat.any ()) e))]) in
+      let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ "" None (build_binding_pattern "fmt") (Exp.fun_ "" None (Pat.any ()) e))]) in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
@@ -376,7 +376,7 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): t
     let ptype_name = match mangle_opt with
       | Some y -> mk_sym y
       | None -> mk_sym x in
-    let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
+    let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
     let (ptype_manifest: core_type option) =
       BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
     let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in

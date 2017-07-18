@@ -28,7 +28,7 @@ open FStar.BaseTypes
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
-type mlident  = mlsymbol * int //what is the second component? Why do we need it?
+type mlident  = mlsymbol
 type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
@@ -48,7 +48,8 @@ let ocamlkeywords = [
 let is_reserved k =
   List.existsb (fun k' -> k' = k) ocamlkeywords
 
-let idsym ((s, _) : mlident) : mlsymbol =
+//remove me
+let idsym (s : mlident) : mlsymbol =
     s
 
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
@@ -62,7 +63,7 @@ type gensym_t = {
 let gs =
   let ctr = Util.mk_ref 0 in
   let n_resets = Util.mk_ref 0 in
-  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)), 0);
+  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)));
    reset = (fun () -> ctr := 0; incr n_resets)}
 
 let gensym () = gs.gensym()
@@ -260,8 +261,8 @@ open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv): mlident =
   if Util.starts_with x.ppname.idText Ident.reserved_prefix
   || is_null_bv x || is_reserved x.ppname.idText
-  then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
-  else x.ppname.idText, 0
+  then x.ppname.idText ^ "_" ^ (string_of_int x.index)
+  else x.ppname.idText
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in

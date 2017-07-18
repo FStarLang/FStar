@@ -80,7 +80,7 @@ let fail r msg =
 let err_uninst env (t:term) (vars, ty) (app:term) =
     fail t.pos (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     (Print.term_to_string t)
-                    (vars |> List.map fst |> String.concat ", ")
+                    (vars |> String.concat ", ")
                     (Code.string_of_mlty env.currentModule ty)
                     (Print.term_to_string app))
 
@@ -376,7 +376,7 @@ let erase (g:env) e ty (f:e_tag) : (mlexpr * e_tag * mlty) =
 let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     let ts, r = doms_and_cod t in
     if ts = [] then e else // just quit if this is not a function type
-    let vs = List.map (fun _ -> fresh "a") ts in
+    let vs = List.map (fun _ -> "a") ts in
     let vs_ts = List.zip vs ts in
     let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) (List.zip vs ts) in
     let body = with_ty r <| MLE_App (e, vs_es) in
@@ -1300,14 +1300,15 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | Tm_arrow (binders, _) ->
             binders
             |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
-            |> List.map (fun _ -> fresh "_", MLTY_Top)
+            |> List.map (fun _ -> (*fresh*) "_", MLTY_Top)
         | _ ->
             failwith "Discriminator must be a function"
     in
     // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
     // So, we don't bother popping arrows until we find the return type of the constructor.
     // We just use Top.
-    let mlid = fresh "_discr_" in
+    // let mlid = fresh "_discr_" in
+    let mlid = "_discr_" in
     let targ = MLTY_Top in
     // Ugly hack: we don't know what to put in there, so we just write a dummy
     // polymorphic value to make sure that the type is not printed.
