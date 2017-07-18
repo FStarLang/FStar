@@ -1246,7 +1246,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_id_info.fv fv lb.lbtyp);
+        Env.insert_fv_info env fv lb.lbtyp);
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
@@ -1493,7 +1493,7 @@ let tc_decls env ses =
         (* then printfn "About to elim vars from %s" (Print.sigelt_to_string se); *)
         N.elim_uvars env se) in
 
-    Common.insert_id_info.promote (fun t ->
+    Env.promote_id_info env (fun t ->
         N.normalize
                [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 N.CheckNoUvars;
