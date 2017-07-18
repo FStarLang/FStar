@@ -391,6 +391,19 @@ let rec fold_left_store_n_spec f acc s =
     let n' = U32.sub s.num_entries (U32.uint_to_t 1) in
     fold_left_store_n_spec f (f acc (List.hd s.entries)) (Store n' (List.tail s.entries))
 
+// This is a stateful fold over pure entries - intended to be used as a
+// specification, since we will not materialized [encoded_entry]s at runtime
+val fold_left_entries_st : f:('a -> encoded_entry -> St 'a) -> acc:'a -> es:list encoded_entry -> St 'a
+let rec fold_left_entries_st (f:('a -> encoded_entry -> St 'a)) (acc:'a)
+    (es:list encoded_entry) : St 'a =
+    match es with
+    | [] -> acc
+    | e::es -> let acc = f acc e in
+             fold_left_entries_st f acc es
+
+val fold_left_store_st : f:('a -> encoded_entry -> St 'a) -> acc:'a -> s:store -> St 'a
+let fold_left_store_st f acc s = fold_left_entries_st f acc s.entries
+
 // this is an old experiment with doing a fold_left over a buffer of bytes (pure
 // validation); we now have a complete prototype of validators in ST
 val fold_left_buffer: #t:Type -> f:(t -> encoded_entry -> t) -> t -> b:bytes -> t
@@ -592,8 +605,7 @@ val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32
                               let bs' = slice bs (U32.v r_off) (length bs) in
                               let parse_rest = parse_many parse_entry (n-1) bs' in
                               Some? parse_rest /\
-                                (let (vs', off') = Some?.v parse_rest in
-                                 vs' == List.tail vs)
+                              parse_result parse_rest == List.tail vs
                             end
                           end
                         end))
@@ -604,6 +616,103 @@ let parse_one_entry n input =
   parse_entry_st_nochk input
 
 #reset-options
+
+let preorder (rel: 'a -> 'a -> Type0) =
+    (forall x. rel x x) /\
+    (forall x y z. rel x y /\ rel y x ==> rel x z)
+
+let bslice_prefix (b b':bslice) : GTot Type0 =
+    // B.includes x y means x is the larger buffer
+    B.includes b'.p b.p /\
+    B.idx b.p + B.length b.p == B.idx b'.p + B.length b'.p
+
+val bslice_prefix_equals (b b': bslice) (h0 h1:mem) :
+    Lemma (requires (live h0 b' /\
+                     live h1 b' /\
+                     as_seq h0 b' == as_seq h1 b' /\
+                     bslice_prefix b b'))
+          (ensures (live h0 b /\
+                    live h1 b /\
+                    as_seq h0 b = as_seq h1 b))
+          [SMTPat (bslice_prefix b b'); SMTPat (as_seq h0 b'); SMTPat (as_seq h1 b')]
+let bslice_prefix_equals b b' h0 h1 =
+    B.includes_as_seq h0 h1 b'.p b.p
+
+let bslice_prefix_trans (x y z: bslice) :
+    Lemma (requires (bslice_prefix x y /\ bslice_prefix y z))
+          (ensures (bslice_prefix x z)) = ()
+
+#reset-options "--z3rlimit 20"
+
+val fold_left_store_n_unfold1 (#t:Type) (f: (t -> encoded_entry -> t))
+    (acc:t) (es:list encoded_entry) (n:nat{0 < n /\ n <= List.length es})
+    : Lemma (fold_left_store_n f acc es n ==
+             fold_left_store_n f (f acc (List.hd es)) (List.tail es) (n-1))
+let fold_left_store_n_unfold1 #t f acc es n = ()
+
+val fold_left_buffer_n_mut_st: #t:Type ->
+  f_spec:(t -> encoded_entry -> t) ->
+  rel:(mem -> mem -> Type0){preorder rel} ->
+  full_input:(unit -> GTot bslice) ->
+  f:(acc:t -> e:entry_st -> ST t
+    (requires (fun h0 -> entry_live h0 e /\
+                      live h0 (full_input ())))
+    (ensures (fun h0 r h1 -> entry_live h1 e /\
+                          rel h0 h1 /\
+                          (let input = full_input () in
+                          live h0 input /\
+                          live h1 input /\
+                          as_seq h0 input == as_seq h1 input /\
+                          r == f_spec acc (as_entry h1 e))))) ->
+  input:bslice{bslice_prefix input (full_input ())} ->
+  acc:t -> n:nat -> ST t
+  (requires (fun h0 -> live h0 (full_input ()) /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_many parse_entry n bs))))
+  (ensures (fun h0 r h1 -> rel h0 h1 /\
+                        live h0 (full_input ()) /\
+                        live h1 (full_input ()) /\
+                        as_seq h0 (full_input ()) == as_seq h1 (full_input ()) /\
+                        (let bs = as_seq h1 input in
+                        Some? (parse_many parse_entry n bs) /\
+                        r == fold_left_store_n f_spec acc (parse_result (parse_many parse_entry n bs)) n)))
+let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
+    match n with
+    | 0 -> acc
+    | _ -> begin
+      let h0 = get() in
+      let (e, off) = parse_one_entry n input in
+      let input' = advance_slice input off in
+      let n':nat = n-1 in
+      let acc' = f acc e in
+      let h1 = get() in
+      (let bs1 = as_seq h1 input in
+        let bs1' = as_seq h1 input' in
+        assert (Some? (parse_many parse_entry n' bs1') /\
+                parse_result (parse_many parse_entry n' bs1') ==
+                List.tail (parse_result (parse_many parse_entry n bs1))));
+      bslice_prefix_trans input' input (full_input ());
+      let r = fold_left_buffer_n_mut_st f_spec rel full_input f input' acc' n' in
+      (let h2 = get() in
+      let bs0 = as_seq h0 input in
+      let bs2 = as_seq h2 input in
+      let bs2' = as_seq h2 input' in
+      assert (rel h0 h2);
+      assert (bs0 == bs2);
+      assert (live h1 (full_input ()));
+      assert (as_seq h0 (full_input ()) == as_seq h2 (full_input ()));
+      assert (Some? (parse_many parse_entry n' bs2') /\
+              parse_result (parse_many parse_entry n' bs2') ==
+              List.tail (parse_result (parse_many parse_entry n bs2)));
+      // TODO: this call doesn't work
+      //fold_left_store_n_unfold1 f_spec acc (parse_result (parse_many parse_entry n' bs2')) n';
+
+      // XXX: why doesn't the proof go through at this point? do we need more
+      // rlimit/unfoldings, or is there something left to prove?
+      admit();
+      ());
+      r
+    end
 
 val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
@@ -659,6 +768,8 @@ let fold_left_buffer_st #t f_spec f acc input =
    assert (num_entries == s.num_entries));
   let input = advance_slice input off in
   fold_left_buffer_n_st f_spec f acc input (U32.v num_entries)
+
+#reset-options
 
 (*! Pure validation *)
 
@@ -737,7 +848,7 @@ let validate_seq (#t:Type) (#t':Type)
   (v': validator{validator_checks v' p'}) :
   Lemma (validator_checks (v `seq` v') (p `seq` p')) = ()
 
-#set-options "--max_fuel 0 --z3rlimit 30"
+#set-options "--max_fuel 0 --z3rlimit 50"
 
 let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   (p: parser t) (p': parser t') (f: t -> t' -> t'')
@@ -749,8 +860,6 @@ let validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
                | Some (_, l) -> Some? (p b) /\ snd (Some?.v (p b)) == l
                | None -> true);
   ()
-
-#reset-options "--z3rlimit 50"
 
 let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
   Lemma (validator_checks (validate_many' n v) (parse_many' p n)) =
@@ -958,6 +1067,8 @@ val buffer_split_at: #a:Type -> b:B.buffer a ->
     off:U32.t{U32.v off <= B.length b} ->
     // TODO: this shouldn't be necessary, but Buffer provides no way to advance
     // a pointer without specifying a new length
+    // TODO: the above is wrong, there's B.offset to do exactly what we want for
+    // the second buffer
     len:U32.t{U32.v len == B.length b} ->
     Pure (B.buffer a * B.buffer a)
          (requires True)
@@ -1159,7 +1270,7 @@ let ser_inputs (#inputs1:TSet.set bslice)
                (s:serializer_any inputs1 b) : serializer_any inputs2 (fun h -> b h) =
     fun buf -> s buf
 
-#reset-options "--z3rlimit 15"
+#reset-options "--z3rlimit 30"
 
 let ser_append (#inputs1 #inputs2:TSet.set bslice)
                (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
@@ -1196,6 +1307,8 @@ let ser_append (#inputs1 #inputs2:TSet.set bslice)
       | None -> None
     end
   | None -> None
+
+#reset-options
 
 val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
 let ser_copy data = fun buf ->
