@@ -136,6 +136,7 @@ let defaults:
   ("_fstar_home", (String ""));
   ("_include_path", (List []));
   ("admit_smt_queries", (Bool false));
+  ("admit_except", Unset);
   ("check_hints", (Bool false));
   ("codegen", Unset);
   ("codegen-lib", (List []));
@@ -164,7 +165,6 @@ let defaults:
   ("initial_fuel", (Int (Prims.parse_int "2")));
   ("initial_ifuel", (Int (Prims.parse_int "1")));
   ("lax", (Bool false));
-  ("lax_except", Unset);
   ("log_queries", (Bool false));
   ("log_types", (Bool false));
   ("max_fuel", (Int (Prims.parse_int "8")));
@@ -239,62 +239,63 @@ let get_option: Prims.string -> option_val =
 let lookup_opt s c = c (get_option s)
 let get_admit_smt_queries: Prims.unit -> Prims.bool =
   fun uu____554  -> lookup_opt "admit_smt_queries" as_bool
+let get_admit_except:
+  Prims.unit -> Prims.string FStar_Pervasives_Native.option =
+  fun uu____558  -> lookup_opt "admit_except" (as_option as_string)
 let get_check_hints: Prims.unit -> Prims.bool =
-  fun uu____557  -> lookup_opt "check_hints" as_bool
+  fun uu____562  -> lookup_opt "check_hints" as_bool
 let get_codegen: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
-  fun uu____561  -> lookup_opt "codegen" (as_option as_string)
+  fun uu____566  -> lookup_opt "codegen" (as_option as_string)
 let get_codegen_lib: Prims.unit -> Prims.string Prims.list =
-  fun uu____566  -> lookup_opt "codegen-lib" (as_list as_string)
+  fun uu____571  -> lookup_opt "codegen-lib" (as_list as_string)
 let get_debug: Prims.unit -> Prims.string Prims.list =
-  fun uu____571  -> lookup_opt "debug" (as_list as_string)
+  fun uu____576  -> lookup_opt "debug" (as_list as_string)
 let get_debug_level: Prims.unit -> Prims.string Prims.list =
-  fun uu____576  -> lookup_opt "debug_level" (as_list as_string)
+  fun uu____581  -> lookup_opt "debug_level" (as_list as_string)
 let get_dep: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
-  fun uu____581  -> lookup_opt "dep" (as_option as_string)
+  fun uu____586  -> lookup_opt "dep" (as_option as_string)
 let get_detail_errors: Prims.unit -> Prims.bool =
-  fun uu____585  -> lookup_opt "detail_errors" as_bool
+  fun uu____590  -> lookup_opt "detail_errors" as_bool
 let get_doc: Prims.unit -> Prims.bool =
-  fun uu____588  -> lookup_opt "doc" as_bool
+  fun uu____593  -> lookup_opt "doc" as_bool
 let get_dump_module: Prims.unit -> Prims.string Prims.list =
-  fun uu____592  -> lookup_opt "dump_module" (as_list as_string)
+  fun uu____597  -> lookup_opt "dump_module" (as_list as_string)
 let get_eager_inference: Prims.unit -> Prims.bool =
-  fun uu____596  -> lookup_opt "eager_inference" as_bool
+  fun uu____601  -> lookup_opt "eager_inference" as_bool
 let get_explicit_deps: Prims.unit -> Prims.bool =
-  fun uu____599  -> lookup_opt "explicit_deps" as_bool
+  fun uu____604  -> lookup_opt "explicit_deps" as_bool
 let get_extract_all: Prims.unit -> Prims.bool =
-  fun uu____602  -> lookup_opt "extract_all" as_bool
+  fun uu____607  -> lookup_opt "extract_all" as_bool
 let get_extract_module: Prims.unit -> Prims.string Prims.list =
-  fun uu____606  -> lookup_opt "extract_module" (as_list as_string)
+  fun uu____611  -> lookup_opt "extract_module" (as_list as_string)
 let get_extract_namespace: Prims.unit -> Prims.string Prims.list =
-  fun uu____611  -> lookup_opt "extract_namespace" (as_list as_string)
+  fun uu____616  -> lookup_opt "extract_namespace" (as_list as_string)
 let get_fs_typ_app: Prims.unit -> Prims.bool =
-  fun uu____615  -> lookup_opt "fs_typ_app" as_bool
+  fun uu____620  -> lookup_opt "fs_typ_app" as_bool
 let get_fstar_home: Prims.unit -> Prims.string FStar_Pervasives_Native.option
-  = fun uu____619  -> lookup_opt "fstar_home" (as_option as_string)
+  = fun uu____624  -> lookup_opt "fstar_home" (as_option as_string)
 let get_hide_genident_nums: Prims.unit -> Prims.bool =
-  fun uu____623  -> lookup_opt "hide_genident_nums" as_bool
+  fun uu____628  -> lookup_opt "hide_genident_nums" as_bool
 let get_hide_uvar_nums: Prims.unit -> Prims.bool =
-  fun uu____626  -> lookup_opt "hide_uvar_nums" as_bool
+  fun uu____631  -> lookup_opt "hide_uvar_nums" as_bool
 let get_hint_info: Prims.unit -> Prims.bool =
-  fun uu____629  -> lookup_opt "hint_info" as_bool
+  fun uu____634  -> lookup_opt "hint_info" as_bool
 let get_hint_file: Prims.unit -> Prims.string FStar_Pervasives_Native.option
-  = fun uu____633  -> lookup_opt "hint_file" (as_option as_string)
+  = fun uu____638  -> lookup_opt "hint_file" (as_option as_string)
 let get_in: Prims.unit -> Prims.bool =
-  fun uu____637  -> lookup_opt "in" as_bool
+  fun uu____642  -> lookup_opt "in" as_bool
 let get_ide: Prims.unit -> Prims.bool =
-  fun uu____640  -> lookup_opt "ide" as_bool
+  fun uu____645  -> lookup_opt "ide" as_bool
 let get_include: Prims.unit -> Prims.string Prims.list =
-  fun uu____644  -> lookup_opt "include" (as_list as_string)
+  fun uu____649  -> lookup_opt "include" (as_list as_string)
 let get_indent: Prims.unit -> Prims.bool =
-  fun uu____648  -> lookup_opt "indent" as_bool
+  fun uu____653  -> lookup_opt "indent" as_bool
 let get_initial_fuel: Prims.unit -> Prims.int =
-  fun uu____651  -> lookup_opt "initial_fuel" as_int
+  fun uu____656  -> lookup_opt "initial_fuel" as_int
 let get_initial_ifuel: Prims.unit -> Prims.int =
-  fun uu____654  -> lookup_opt "initial_ifuel" as_int
+  fun uu____659  -> lookup_opt "initial_ifuel" as_int
 let get_lax: Prims.unit -> Prims.bool =
-  fun uu____657  -> lookup_opt "lax" as_bool
-let get_lax_except: Prims.unit -> Prims.string FStar_Pervasives_Native.option
-  = fun uu____661  -> lookup_opt "lax_except" (as_option as_string)
+  fun uu____662  -> lookup_opt "lax" as_bool
 let get_log_queries: Prims.unit -> Prims.bool =
   fun uu____665  -> lookup_opt "log_queries" as_bool
 let get_log_types: Prims.unit -> Prims.bool =
@@ -562,39 +563,42 @@ let rec specs:
                    else failwith "Invalid argument to --admit_smt_queries")),
               "[true|false]")),
          "Admit SMT queries, unsafe! (default 'false')");
+      (FStar_Getopt.noshort, "admit_except",
+        (FStar_Getopt.OneArg (((fun _0_30  -> String _0_30)), "[id]")),
+        "Admit all verification conditions, except those with query label <id>");
       (FStar_Getopt.noshort, "codegen",
         (FStar_Getopt.OneArg
-           (((fun s  -> let uu____1106 = parse_codegen s in String uu____1106)),
+           (((fun s  -> let uu____1114 = parse_codegen s in String uu____1114)),
              "[OCaml|FSharp|Kremlin]")), "Generate code for execution");
       (FStar_Getopt.noshort, "codegen-lib",
         (FStar_Getopt.OneArg
            (((fun s  ->
-                let uu____1116 =
-                  let uu____1118 =
-                    let uu____1120 = get_codegen_lib () in s :: uu____1120 in
-                  FStar_All.pipe_right uu____1118
-                    (FStar_List.map (fun _0_30  -> String _0_30)) in
-                List uu____1116)), "[namespace]")),
+                let uu____1124 =
+                  let uu____1126 =
+                    let uu____1128 = get_codegen_lib () in s :: uu____1128 in
+                  FStar_All.pipe_right uu____1126
+                    (FStar_List.map (fun _0_31  -> String _0_31)) in
+                List uu____1124)), "[namespace]")),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
       (FStar_Getopt.noshort, "debug",
         (FStar_Getopt.OneArg
            (((fun x  ->
-                let uu____1133 =
-                  let uu____1135 =
-                    let uu____1137 = get_debug () in x :: uu____1137 in
-                  FStar_All.pipe_right uu____1135
-                    (FStar_List.map (fun _0_31  -> String _0_31)) in
-                List uu____1133)), "[module name]")),
+                let uu____1141 =
+                  let uu____1143 =
+                    let uu____1145 = get_debug () in x :: uu____1145 in
+                  FStar_All.pipe_right uu____1143
+                    (FStar_List.map (fun _0_32  -> String _0_32)) in
+                List uu____1141)), "[module name]")),
         "Print lots of debugging information while checking module");
       (FStar_Getopt.noshort, "debug_level",
         (FStar_Getopt.OneArg
            (((fun x  ->
-                let uu____1150 =
-                  let uu____1152 =
-                    let uu____1154 = get_debug_level () in x :: uu____1154 in
-                  FStar_All.pipe_right uu____1152
-                    (FStar_List.map (fun _0_32  -> String _0_32)) in
-                List uu____1150)), "[Low|Medium|High|Extreme|...]")),
+                let uu____1158 =
+                  let uu____1160 =
+                    let uu____1162 = get_debug_level () in x :: uu____1162 in
+                  FStar_All.pipe_right uu____1160
+                    (FStar_List.map (fun _0_33  -> String _0_33)) in
+                List uu____1158)), "[Low|Medium|High|Extreme|...]")),
         "Control the verbosity of debugging info");
       (FStar_Getopt.noshort, "dep",
         (FStar_Getopt.OneArg
@@ -604,29 +608,29 @@ let rec specs:
                 else failwith "invalid argument to 'dep'")), "[make|graph]")),
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
       (FStar_Getopt.noshort, "detail_errors",
-        (FStar_Getopt.ZeroArgs ((fun uu____1174  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1182  -> Bool true))),
         "Emit a detailed error report by asking the SMT solver many queries; will take longer;\n         implies n_cores=1");
       (FStar_Getopt.noshort, "doc",
-        (FStar_Getopt.ZeroArgs ((fun uu____1181  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1189  -> Bool true))),
         "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
       (FStar_Getopt.noshort, "dump_module",
         (FStar_Getopt.OneArg
            (((fun x  ->
-                let uu____1191 =
-                  let uu____1193 =
-                    let uu____1195 = get_dump_module () in x :: uu____1195 in
-                  FStar_All.pipe_right uu____1193
-                    (FStar_List.map (fun _0_33  -> String _0_33)) in
-                FStar_All.pipe_right uu____1191 (fun _0_34  -> List _0_34))),
+                let uu____1199 =
+                  let uu____1201 =
+                    let uu____1203 = get_dump_module () in x :: uu____1203 in
+                  FStar_All.pipe_right uu____1201
+                    (FStar_List.map (fun _0_34  -> String _0_34)) in
+                FStar_All.pipe_right uu____1199 (fun _0_35  -> List _0_35))),
              "[module name]")), "");
       (FStar_Getopt.noshort, "eager_inference",
-        (FStar_Getopt.ZeroArgs ((fun uu____1206  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1214  -> Bool true))),
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
       (FStar_Getopt.noshort, "explicit_deps",
-        (FStar_Getopt.ZeroArgs ((fun uu____1213  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1221  -> Bool true))),
         "Do not find dependencies automatically, the user provides them on the command-line");
       (FStar_Getopt.noshort, "extract_all",
-        (FStar_Getopt.ZeroArgs ((fun uu____1220  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1228  -> Bool true))),
         "Discover the complete dependency graph and do not stop at interface boundaries");
       (FStar_Getopt.noshort, "extract_module",
         (FStar_Getopt.OneArg (cons_extract_module, "[module name]")),
@@ -635,60 +639,57 @@ let rec specs:
         (FStar_Getopt.OneArg (cons_extract_namespace, "[namespace name]")),
         "Only extract modules in the specified namespace");
       (FStar_Getopt.noshort, "fstar_home",
-        (FStar_Getopt.OneArg (((fun _0_35  -> Path _0_35)), "[dir]")),
+        (FStar_Getopt.OneArg (((fun _0_36  -> Path _0_36)), "[dir]")),
         "Set the FSTAR_HOME variable to [dir]");
       (FStar_Getopt.noshort, "hide_genident_nums",
-        (FStar_Getopt.ZeroArgs ((fun uu____1251  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1259  -> Bool true))),
         "Don't print generated identifier numbers");
       (FStar_Getopt.noshort, "hide_uvar_nums",
-        (FStar_Getopt.ZeroArgs ((fun uu____1258  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1266  -> Bool true))),
         "Don't print unification variable numbers");
       (FStar_Getopt.noshort, "hint_info",
-        (FStar_Getopt.ZeroArgs ((fun uu____1265  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1273  -> Bool true))),
         "Print information regarding hints");
       (FStar_Getopt.noshort, "hint_file",
-        (FStar_Getopt.OneArg (((fun _0_36  -> Path _0_36)), "[path]")),
+        (FStar_Getopt.OneArg (((fun _0_37  -> Path _0_37)), "[path]")),
         "Read/write hints to <path> (instead of module-specific hints files)");
       (FStar_Getopt.noshort, "in",
-        (FStar_Getopt.ZeroArgs ((fun uu____1280  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1288  -> Bool true))),
         "Legacy interactive mode; reads input from stdin");
       (FStar_Getopt.noshort, "ide",
-        (FStar_Getopt.ZeroArgs ((fun uu____1287  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1295  -> Bool true))),
         "JSON-based interactive mode for IDEs");
       (FStar_Getopt.noshort, "include",
         (FStar_Getopt.OneArg
            (((fun s  ->
-                let uu____1297 =
-                  let uu____1299 =
-                    let uu____1301 = get_include () in
-                    FStar_List.map (fun _0_37  -> String _0_37) uu____1301 in
-                  FStar_List.append uu____1299 [Path s] in
-                List uu____1297)), "[path]")),
+                let uu____1305 =
+                  let uu____1307 =
+                    let uu____1309 = get_include () in
+                    FStar_List.map (fun _0_38  -> String _0_38) uu____1309 in
+                  FStar_List.append uu____1307 [Path s] in
+                List uu____1305)), "[path]")),
         "A directory in which to search for files included on the command line");
       (FStar_Getopt.noshort, "indent",
-        (FStar_Getopt.ZeroArgs ((fun uu____1309  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1317  -> Bool true))),
         "Parses and outputs the files on the command line");
       (FStar_Getopt.noshort, "initial_fuel",
         (FStar_Getopt.OneArg
            (((fun x  ->
-                let uu____1319 = FStar_Util.int_of_string x in Int uu____1319)),
+                let uu____1327 = FStar_Util.int_of_string x in Int uu____1327)),
              "[non-negative integer]")),
         "Number of unrolling of recursive functions to try initially (default 2)");
       (FStar_Getopt.noshort, "initial_ifuel",
         (FStar_Getopt.OneArg
            (((fun x  ->
-                let uu____1329 = FStar_Util.int_of_string x in Int uu____1329)),
+                let uu____1337 = FStar_Util.int_of_string x in Int uu____1337)),
              "[non-negative integer]")),
         "Number of unrolling of inductive datatypes to try at first (default 1)");
       (FStar_Getopt.noshort, "inline_arith",
-        (FStar_Getopt.ZeroArgs ((fun uu____1336  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1344  -> Bool true))),
         "Inline definitions of arithmetic functions in the SMT encoding");
       (FStar_Getopt.noshort, "lax",
-        (FStar_Getopt.ZeroArgs ((fun uu____1343  -> Bool true))),
+        (FStar_Getopt.ZeroArgs ((fun uu____1351  -> Bool true))),
         "Run the lax-type checker only (admit all verification conditions)");
-      (FStar_Getopt.noshort, "lax_except",
-        (FStar_Getopt.OneArg (((fun _0_38  -> String _0_38)), "[id]")),
-        "Run the lax-type checker only (admit all verification conditions), except on the query labelled <id>");
       (FStar_Getopt.noshort, "log_types",
         (FStar_Getopt.ZeroArgs ((fun uu____1358  -> Bool true))),
         "Print types computed for data/val/let-bindings");
@@ -944,6 +945,7 @@ let settable: Prims.string -> Prims.bool =
   fun uu___56_1868  ->
     match uu___56_1868 with
     | "admit_smt_queries" -> true
+    | "admit_except" -> true
     | "debug" -> true
     | "debug_level" -> true
     | "detail_errors" -> true
@@ -956,7 +958,6 @@ let settable: Prims.string -> Prims.bool =
     | "initial_ifuel" -> true
     | "inline_arith" -> true
     | "lax" -> true
-    | "lax_except" -> true
     | "log_types" -> true
     | "log_queries" -> true
     | "max_fuel" -> true
@@ -1225,67 +1226,67 @@ let __temp_no_proj: Prims.string -> Prims.bool =
     FStar_All.pipe_right uu____2173 (FStar_List.contains s)
 let admit_smt_queries: Prims.unit -> Prims.bool =
   fun uu____2178  -> get_admit_smt_queries ()
+let admit_except: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
+  fun uu____2182  -> get_admit_except ()
 let check_hints: Prims.unit -> Prims.bool =
-  fun uu____2181  -> get_check_hints ()
+  fun uu____2185  -> get_check_hints ()
 let codegen: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
-  fun uu____2185  -> get_codegen ()
+  fun uu____2189  -> get_codegen ()
 let codegen_libs: Prims.unit -> Prims.string Prims.list Prims.list =
-  fun uu____2190  ->
-    let uu____2191 = get_codegen_lib () in
-    FStar_All.pipe_right uu____2191
+  fun uu____2194  ->
+    let uu____2195 = get_codegen_lib () in
+    FStar_All.pipe_right uu____2195
       (FStar_List.map (fun x  -> FStar_Util.split x "."))
 let debug_any: Prims.unit -> Prims.bool =
-  fun uu____2200  -> let uu____2201 = get_debug () in uu____2201 <> []
+  fun uu____2204  -> let uu____2205 = get_debug () in uu____2205 <> []
 let debug_at_level: Prims.string -> debug_level_t -> Prims.bool =
   fun modul  ->
     fun level  ->
       ((modul = "") ||
-         (let uu____2210 = get_debug () in
-          FStar_All.pipe_right uu____2210 (FStar_List.contains modul)))
+         (let uu____2214 = get_debug () in
+          FStar_All.pipe_right uu____2214 (FStar_List.contains modul)))
         && (debug_level_geq level)
 let dep: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
-  fun uu____2216  -> get_dep ()
+  fun uu____2220  -> get_dep ()
 let detail_errors: Prims.unit -> Prims.bool =
-  fun uu____2219  -> get_detail_errors ()
-let doc: Prims.unit -> Prims.bool = fun uu____2222  -> get_doc ()
+  fun uu____2223  -> get_detail_errors ()
+let doc: Prims.unit -> Prims.bool = fun uu____2226  -> get_doc ()
 let dump_module: Prims.string -> Prims.bool =
   fun s  ->
-    let uu____2226 = get_dump_module () in
-    FStar_All.pipe_right uu____2226 (FStar_List.contains s)
+    let uu____2230 = get_dump_module () in
+    FStar_All.pipe_right uu____2230 (FStar_List.contains s)
 let eager_inference: Prims.unit -> Prims.bool =
-  fun uu____2231  -> get_eager_inference ()
+  fun uu____2235  -> get_eager_inference ()
 let explicit_deps: Prims.unit -> Prims.bool =
-  fun uu____2234  -> get_explicit_deps ()
+  fun uu____2238  -> get_explicit_deps ()
 let extract_all: Prims.unit -> Prims.bool =
-  fun uu____2237  -> get_extract_all ()
+  fun uu____2241  -> get_extract_all ()
 let fs_typ_app: Prims.string -> Prims.bool =
   fun filename  ->
-    let uu____2241 = FStar_ST.read light_off_files in
-    FStar_List.contains filename uu____2241
+    let uu____2245 = FStar_ST.read light_off_files in
+    FStar_List.contains filename uu____2245
 let full_context_dependency: Prims.unit -> Prims.bool =
-  fun uu____2248  -> true
+  fun uu____2252  -> true
 let hide_genident_nums: Prims.unit -> Prims.bool =
-  fun uu____2251  -> get_hide_genident_nums ()
+  fun uu____2255  -> get_hide_genident_nums ()
 let hide_uvar_nums: Prims.unit -> Prims.bool =
-  fun uu____2254  -> get_hide_uvar_nums ()
-let hint_info: Prims.unit -> Prims.bool = fun uu____2257  -> get_hint_info ()
+  fun uu____2258  -> get_hide_uvar_nums ()
+let hint_info: Prims.unit -> Prims.bool = fun uu____2261  -> get_hint_info ()
 let hint_file: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
-  fun uu____2261  -> get_hint_file ()
-let ide: Prims.unit -> Prims.bool = fun uu____2264  -> get_ide ()
-let indent: Prims.unit -> Prims.bool = fun uu____2267  -> get_indent ()
+  fun uu____2265  -> get_hint_file ()
+let ide: Prims.unit -> Prims.bool = fun uu____2268  -> get_ide ()
+let indent: Prims.unit -> Prims.bool = fun uu____2271  -> get_indent ()
 let initial_fuel: Prims.unit -> Prims.int =
-  fun uu____2270  ->
-    let uu____2271 = get_initial_fuel () in
-    let uu____2272 = get_max_fuel () in Prims.min uu____2271 uu____2272
+  fun uu____2274  ->
+    let uu____2275 = get_initial_fuel () in
+    let uu____2276 = get_max_fuel () in Prims.min uu____2275 uu____2276
 let initial_ifuel: Prims.unit -> Prims.int =
-  fun uu____2275  ->
-    let uu____2276 = get_initial_ifuel () in
-    let uu____2277 = get_max_ifuel () in Prims.min uu____2276 uu____2277
+  fun uu____2279  ->
+    let uu____2280 = get_initial_ifuel () in
+    let uu____2281 = get_max_ifuel () in Prims.min uu____2280 uu____2281
 let interactive: Prims.unit -> Prims.bool =
-  fun uu____2280  -> (get_in ()) || (get_ide ())
-let lax: Prims.unit -> Prims.bool = fun uu____2283  -> get_lax ()
-let lax_except: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
-  fun uu____2287  -> get_lax_except ()
+  fun uu____2284  -> (get_in ()) || (get_ide ())
+let lax: Prims.unit -> Prims.bool = fun uu____2287  -> get_lax ()
 let legacy_interactive: Prims.unit -> Prims.bool =
   fun uu____2290  -> get_in ()
 let log_queries: Prims.unit -> Prims.bool =
