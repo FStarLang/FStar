@@ -289,7 +289,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
             tcenv, as_pair def_typ in
-          let lbtyp = FStar.TypeChecker.Normalize.unfold_whnf tcenv lbtyp in
+          let lbtyp = FStar.TypeChecker.Normalize.normalize [FStar.TypeChecker.Normalize.Beta;FStar.TypeChecker.Normalize.UnfoldUntil Delta_constant] tcenv lbtyp in
           let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
           //eta expansion is important; see issue #490
           extract_typ_abbrev g (right lb.lbname) quals lbdef
@@ -385,7 +385,8 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
-  let g = {g with currentModule = name}  in
+  let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
+                  currentModule = name} in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in

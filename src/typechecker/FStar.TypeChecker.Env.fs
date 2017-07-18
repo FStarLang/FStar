@@ -71,10 +71,10 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :BU.smap<cached_elt>;        (* Memo table for the local environment *)
+  gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :BU.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
+  sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -354,11 +354,9 @@ let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * 
   in
   if is_some found
   then found
-  else if cur_mod <> Yes || has_interface env env.curmodule
-  then match find_in_sigtab env lid with
+  else match find_in_sigtab env lid with
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
-  else None
 
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
