@@ -251,7 +251,7 @@ let rec hash_of_term' t = match t with
     "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
 and hash_of_term tm = hash_of_term' tm.tm
 
-let mkBoxFunctions s = (FStar.Ident.reserved_prefix ^ s, FStar.Ident.reserved_prefix ^ s ^ "_proj_0")
+let mkBoxFunctions s = (s, s ^ "_proj_0")
 let boxIntFun        = mkBoxFunctions "BoxInt"
 let boxBoolFun       = mkBoxFunctions "BoxBool"
 let boxStringFun     = mkBoxFunctions "BoxString"
@@ -259,9 +259,11 @@ let boxRefFun        = mkBoxFunctions "BoxRef"
 let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
 
 // Assume the Box/Unbox functions to be injective
-let isInjective s =
-String.substring s 0 (String.length (FStar.Ident.reserved_prefix) + 3) = 
-FStar.Ident.reserved_prefix ^ "Box"
+let isInjective s = 
+    if (FStar.String.length s >= 3) then
+        String.substring s 0 3 = "Box" && 
+        not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
+    else false
 
 let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
