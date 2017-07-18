@@ -1054,7 +1054,7 @@ let ask_and_report_errors:
                  let process_query q = check q in
                  let uu____1752 =
                    let uu____1756 = FStar_Options.admit_smt_queries () in
-                   let uu____1757 = FStar_Options.lax_except () in
+                   let uu____1757 = FStar_Options.admit_except () in
                    (uu____1756, uu____1757) in
                  (match uu____1752 with
                   | (true ,uu____1760) -> ()
