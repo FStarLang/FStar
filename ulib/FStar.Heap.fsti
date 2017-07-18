@@ -199,13 +199,16 @@ val lemma_join_contains (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
   :Lemma (requires True)
          (ensures (let h = join h1 h2 in
                    (h `contains` r) <==> ((h1 `contains` r) \/ (h2 `contains` r))))	   
+         [SMTPat ((join h1 h2) `contains` r)]
 
 val lemma_join_unused (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
   :Lemma (requires True)
          (ensures (let h = join h1 h2 in
 	           (r `unused_in` h) <==> ((r `unused_in` h1) /\ (r `unused_in` h2))))
+	 [SMTPat (r `unused_in` (join h1 h2))]
 
 val lemma_join_sel (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
   :Lemma (requires True)
          (ensures (let h = join h1 h2 in
 	           ((h1 `contains` r) /\ (sel h r == sel h1 r)) \/ ((h2 `contains` r) /\ (sel h r == sel h2 r))))
+	 [SMTPat (sel (join h1 h2) r)]
