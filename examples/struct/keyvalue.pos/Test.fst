@@ -1038,10 +1038,15 @@ let same_ref_equivalence (#a:Type) :
            (forall b1 b2. same_ref #a b1 b2 ==> same_ref b2 b1) /\
            (forall b1 b2 b3. same_ref #a b1 b2 ==> same_ref b2 b3 ==> same_ref b1 b3)) = ()
 
+// b2 starts exactly after b1 ends (for the same underlying ref)
+let buffers_adjacent (#a:Type) (b1 b2:B.buffer a) : Type0 =
+    same_ref b1 b2 /\
+    B.idx b2 == B.idx b1 + B.length b1
+
 let is_concat_of (#a:Type) (b b1 b2:B.buffer a) : Type0 =
     same_ref b b1 /\
     same_ref b b2 /\
-    B.idx b2 == B.idx b1 + B.length b1 /\
+    buffers_adjacent b1 b2 /\
     B.idx b1 == B.idx b /\
     B.length b1 + B.length b2 == B.length b
 
@@ -1350,6 +1355,91 @@ let ser_entry (e:entry_st) : serializer_any (entry_st_bufs e) (fun h -> enc_entr
     ser_inputs (entry_st_bufs e)
     (ser_u16_array e.key_st `ser_append` ser_u32_array e.val_st)
 
+(*! Incremental key-value store writer *)
+
 // TODO: will create a complete key-value store by allocating a length field,
 // repeatedly calling ser_entry (advancing the output each time), then filling
 // in the length
+
+let adjacent_entries_disjoint (#t:Type) (b1 b2:B.buffer t) :
+    Lemma (requires (buffers_adjacent b1 b2))
+          (ensures (B.disjoint b1 b2)) = ()
+
+// TODO: the writer is tracking a few more pointers than strictly necessary; we
+// really only need a pointer to the beginning and a bslice at the current write
+// position
+noeq type writer =
+     { length_field: b:lbuffer 2;
+       entries_written_buf: bslice;
+       entries_written_list: unit -> GTot (list encoded_entry);
+       num_entries_written: U32.t;
+       entries_scratch: bslice; }
+
+let writer_valid (w:writer) : Type0 =
+    buffers_adjacent w.length_field w.entries_written_buf.p /\
+    buffers_adjacent w.entries_written_buf.p w.entries_scratch.p
+
+let writer_inv (h:mem) (w:writer) : Type0 =
+    writer_valid w /\
+    B.live h w.length_field /\
+    B.live h w.entries_scratch.p /\
+    (let entries_buf = w.entries_written_buf in
+     let enc_entries = as_seq h entries_buf in
+     let parsed_entries = parse_many parse_entry (U32.v w.num_entries_written) enc_entries in
+     live h entries_buf /\
+     Some? parsed_entries /\
+     (let Some (entries, _) = parsed_entries in
+      w.entries_written_list () == entries))
+
+val adjacent_advance (b:bslice) (off:U32.t{U32.v off <= U32.v b.len}) :
+  Lemma (buffers_adjacent (truncated_slice b off).p (advance_slice b off).p)
+  [SMTPat (buffers_adjacent (truncated_slice b off).p (advance_slice b off).p)]
+let adjacent_advance b off = ()
+
+val adjacent_truncate (b b':bslice) (len:U32.t{U32.v len <= U32.v b'.len}) :
+  Lemma (requires (buffers_adjacent b.p b'.p))
+        (ensures (buffers_adjacent b.p (truncated_slice b' len).p))
+  [SMTPat (buffers_adjacent b.p (truncated_slice b' len).p)]
+let adjacent_truncate b b' len = ()
+
+val adjacent_0len (b:bslice) :
+    Lemma (buffers_adjacent (truncated_slice b 0ul).p b.p)
+    [SMTPat (buffers_adjacent (truncated_slice b 0ul).p b.p)]
+let adjacent_0len b = ()
+
+let writer_init (b:bslice) : ST (option writer)
+    (requires (fun h0 -> live h0 b))
+    (ensures (fun h0 r h1 ->
+             h0 == h1 /\
+             Some? r ==>
+             writer_inv h1 (Some?.v r))) =
+    if U32.lt b.len 2ul then None
+    else
+    let w = { length_field = (truncated_slice b 2ul).p;
+              entries_written_buf = truncated_slice (advance_slice b 2ul) 0ul;
+              entries_written_list = (fun _ -> []);
+              num_entries_written = 0ul;
+              entries_scratch = advance_slice b 2ul } in
+    assert (writer_valid w);
+    Some w
+
+
+// TODO: implement this API
+
+assume val writer_append (w:writer) (e:entry_st) : ST writer
+       (requires (fun h0 -> writer_inv h0 w /\
+                         entry_live h0 e))
+       (ensures (fun h0 w' h1 ->
+                writer_inv h1 w' /\
+                entry_live h1 e /\
+                (let ee = as_entry h1 e in
+                 w'.entries_written_list () == w.entries_written_list () `List.append` [ee])))
+
+assume val writer_finish (w:writer) : ST bslice
+    (requires (fun h0 -> writer_inv h0 w))
+    (ensures (fun h0 b h1 ->
+                live h1 b /\
+                (let bs = as_seq h1 b in
+                 let entries = w.entries_written_list () in
+                 List.length entries == U32.v w.num_entries_written /\
+                 bs == encode_store (Store w.num_entries_written entries))))
