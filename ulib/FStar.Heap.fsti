@@ -49,6 +49,8 @@ val free_mm: #a:Type0 -> h:heap -> r:ref a{h `contains` r /\ is_mm r} -> GTot he
 
 val restrict: h:heap -> s:set nat -> GTot heap
 
+val join: h1:heap -> h2:heap -> GTot heap
+
 let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (r:ref a).{:pattern (sel h1 r)}
                          ((~ (TS.mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
@@ -192,3 +194,18 @@ val lemma_restrict_sel (#a:Type0) (h:heap) (s:set nat) (r:ref a)
          (ensures (let h1 = restrict h s in
 	           sel h1 r == sel h r))
          [SMTPat (sel (restrict h s) r)]
+
+val lemma_join_contains (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
+  :Lemma (requires True)
+         (ensures (let h = join h1 h2 in
+                   (h `contains` r) <==> ((h1 `contains` r) \/ (h2 `contains` r))))	   
+
+val lemma_join_unused (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
+  :Lemma (requires True)
+         (ensures (let h = join h1 h2 in
+	           (r `unused_in` h) <==> ((r `unused_in` h1) /\ (r `unused_in` h2))))
+
+val lemma_join_sel (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
+  :Lemma (requires True)
+         (ensures (let h = join h1 h2 in
+	           ((h1 `contains` r) /\ (sel h r == sel h1 r)) \/ ((h2 `contains` r) /\ (sel h r == sel h2 r))))

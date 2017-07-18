@@ -74,6 +74,17 @@ let restrict h s =
   { h with memory = (fun r' -> if Set.mem r' s
 			    then h.memory r'
 			    else None) }
+			    
+let join h1 h2 =
+  let heap_memory = (fun n -> match (h1.memory n) with
+                              | Some v -> h1.memory n
+			      | None -> h2.memory n ) in
+  if h1.next_addr < h2.next_addr 
+  then 
+    { h2 with memory = heap_memory }
+  else
+    { h1 with memory = heap_memory }
+			      
 (*
  * update of a well-typed reference
  *)
@@ -175,3 +186,6 @@ let upd_upd_same_ref #a h r x y = assert (equal (upd (upd h r x) r y) (upd h r y
 let lemma_restrict_contains #a h s r = ()
 let lemma_restrict_unused #a h s r = ()
 let lemma_restrict_sel #a h s r = ()
+let lemma_join_contains #a h1 h2 r = ()
+let lemma_join_unused #a h1 h2 r = ()
+let lemma_join_sel #a h1 h2 r = ()
