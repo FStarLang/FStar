@@ -2,8 +2,6 @@ module FStar.Math.Lib
 
 open FStar.Mul
 
-#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --smtencoding.l_arith_repr native"
-
 (* Definition of the diviion operator *)
 val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a/b) + a % b)
 let lemma_div_def a b = ()
@@ -13,10 +11,12 @@ private let mul_lemma (a:nat) (b:nat) (c:pos) : Lemma (requires (a < b))
   = ()
 
 val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
+#reset-options "--z3rlimit 100"
 let slash_decr_axiom a b =
   lemma_div_def a b;
-  assert (a - a % b == (a / b) * b);
   if (a / b > a) then mul_lemma a (a/b) b
+
+#reset-options
 
 private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c) = a * b - a * c)
   = ()
@@ -55,11 +55,12 @@ let min x y = if x >= y then y else x
 (* Function: standard euclidean division, the rest is always positive *)
 val div: a:int -> b:pos -> Tot (c:int{(a < 0 ==> c < 0) /\ (a >= 0 ==> c >= 0)})
 let div a b =
+  admit(); // Because Prims.op_Division is only defined when a:nat
   if a < 0 then
     begin
     slash_decr_axiom (0 - a) b;
-    if a % b = 0 then 0 - (0 + (- a) / b)
-    else 0 - (0 + (- a) / b) - 1
+    if a % b = 0 then 0 - (0 - a / b)
+    else 0 - (0 - a / b) - 1
     end
   else a / b
 
@@ -95,17 +96,15 @@ let op_Plus_Percent a p = signed_modulo a p
 
 (* Lemmas of x^n *)
 val powx_lemma1: a:int -> Lemma (powx a 1 = a)
-let powx_lemma1 a = assert_norm (powx a 1 = a)
+let powx_lemma1 a = ()
 
-#set-options "--initial_fuel 1 --max_fuel 1"
 val powx_lemma2: x:int -> n:nat -> m:nat -> Lemma
   (powx x n * powx x m = powx x (n + m))
 let rec powx_lemma2 x n m =
+  let ass (x y z : int) : Lemma ((x*y)*z == x*(y*z)) = () in
   match n with
   | 0 -> ()
-  | _ ->
-    powx_lemma2 x (n-1) m
-#set-options "--initial_fuel 0 --max_fuel 0"
+  | _ -> powx_lemma2 x (n-1) m; ass x (powx x (n-1)) (powx x m)
 
 (* Lemma: absolute value of product is the product of the absolute values *)
 val abs_mul_lemma: a:int -> b:int -> Lemma (abs (a * b) = abs a * abs b)

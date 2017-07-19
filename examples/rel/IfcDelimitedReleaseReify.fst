@@ -129,6 +129,7 @@ let verify_sum x1 x2 x3 x4 x5 y = ()
 val length6 (x1 x2 x3 x4 x5 x6 : id) : Lemma (List.length[x1;x2;x3;x4;x5;x6] = 6)
 let length6 _ _ _ _ _ _ = ()
 
+#set-options "--initial_fuel 8 --max_fuel 8 --initial_ifuel 2"
 val sum_swap_help (x1 x2 x3 x4 x5 : id) (y:id{List.noRepeats [y;x1;x2;x3;x4;x5]}) (h:heap):
   Lemma
   (forall z. (z <> x1 /\ z <> x2 /\ z <> x3 /\ z <> x4 /\ z <> x5 /\ z <> y ==>

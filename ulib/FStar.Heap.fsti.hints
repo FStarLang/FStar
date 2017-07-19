@@ -150,7 +150,6 @@
       ],
       0
     ],
-    [ "FStar.Heap.lemma_free_mm_sel", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Heap.lemma_free_mm_contains",
       1,
@@ -162,7 +161,6 @@
       ],
       0
     ],
-    [ "FStar.Heap.lemma_free_mm_contains", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Heap.lemma_free_mm_unused",
       1,
@@ -185,7 +183,6 @@
       ],
       0
     ],
-    [ "FStar.Heap.lemma_free_mm_unused", 3, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Heap.lemma_sel_same_addr",
       1,

@@ -327,46 +327,12 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.HyperStack.is_eternal_color",
-        "equation_FStar.HyperStack.is_eternal_region",
-        "function_token_typing_FStar.HyperHeap.root",
-        "lemma_FStar.HyperHeap.lemma_root_has_color_zero",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.HyperHeap_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.pRequest",
-      2,
-      2,
-      1,
       [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
       0
     ],
     [
       "Ex12b.RPC.pResponse",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.HyperStack.is_eternal_color",
-        "equation_FStar.HyperStack.is_eternal_region",
-        "function_token_typing_FStar.HyperHeap.root",
-        "lemma_FStar.HyperHeap.lemma_root_has_color_zero",
-        "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.HyperHeap_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.pResponse",
-      2,
       2,
       1,
       [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],

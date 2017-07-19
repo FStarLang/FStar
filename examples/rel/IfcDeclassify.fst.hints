@@ -11,6 +11,30 @@
       ],
       0
     ],
+    [
+      "IfcDeclassify.__proj__Mkstate__item__secret",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "IfcDeclassify.__proj__Mkstate__item__public",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "IfcDeclassify.__proj__Mkstate__item__release",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [ "IfcDeclassify._dm4f_STATE_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "IfcDeclassify._dm4f_STATE___proj__STATE__item__get_elab",
@@ -28,9 +52,6 @@
       [ "@query" ],
       0
     ],
-    [ "IfcDeclassify.STATE", 1, 2, 1, [ "@query" ], 0 ],
-    [ "IfcDeclassify.STATE", 2, 2, 1, [ "@query" ], 0 ],
-    [ "IfcDeclassify.STATE", 3, 2, 1, [ "@query" ], 0 ],
     [
       "IfcDeclassify.p1",
       1,
@@ -38,7 +59,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "function_token_typing_Prims.unit",
         "kinding_IfcDeclassify.state@tok", "unit_typing"
@@ -74,7 +94,6 @@
       ],
       0
     ],
-    [ "IfcDeclassify.ni_p1", 2, 2, 1, [ "@query" ], 0 ],
     [
       "IfcDeclassify.p2",
       1,
@@ -82,7 +101,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_IfcDeclassify.Mkstate@tok",
         "function_token_typing_Prims.unit",
@@ -123,7 +141,6 @@
       ],
       0
     ],
-    [ "IfcDeclassify.ni_p2", 2, 2, 1, [ "@query" ], 0 ],
     [
       "IfcDeclassify.p3",
       1,
@@ -131,7 +148,6 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_IfcDeclassify.Mkstate@tok",
         "function_token_typing_Prims.unit",
@@ -147,8 +163,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
+        "@MaxIFuel_assumption", "@query", "bool_typing",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_IfcDeclassify.Mkstate@tok",
         "function_token_typing_Prims.unit",
@@ -179,7 +194,6 @@
         "projection_inverse_IfcDeclassify.Mkstate_release", "unit_typing"
       ],
       0
-    ],
-    [ "IfcDeclassify.ni_p4", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

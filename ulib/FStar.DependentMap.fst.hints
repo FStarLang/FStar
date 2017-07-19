@@ -1,7 +1,14 @@
 [
   "Fp]tï÷Åπç1∞I|V[q",
   [
-    [ "FStar.DependentMap.create", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DependentMap.__proj__Mkt__item__mappings",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
     [
       "FStar.DependentMap.sel_create",
       1,
@@ -23,8 +30,9 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0"
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.DependentMap.t",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
@@ -210,11 +218,16 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_a26b6f0ab7c6505137c6de4ce0011041",
         "constructor_distinct_FStar.Pervasives.Inl",
+        "constructor_distinct_FStar.Pervasives.Inr",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
         "equation_FStar.DependentMap.concat_value",
         "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_FStar.Pervasives.Inl__a",
+        "projection_inverse_FStar.Pervasives.Inl__b",
         "projection_inverse_FStar.Pervasives.Inl_v",
+        "projection_inverse_FStar.Pervasives.Inr__a",
+        "projection_inverse_FStar.Pervasives.Inr__b",
         "projection_inverse_FStar.Pervasives.Inr_v"
       ],
       0

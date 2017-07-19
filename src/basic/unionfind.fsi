@@ -21,47 +21,14 @@ module FStar.Unionfind
 open FStar.ST
 open FStar.Util
 
-type pa_t<'a> = ref<data<'a>>
-and data<'a> =
-    | PArray of array<'a>
-    | PDiff of int * 'a * pa_t<'a>
-
-type puf_t<'a when 'a : not struct> = { mutable parent: pa_t<(either<int, 'a>)>; ranks: pa_t<int> ; count: ref<int>}
-type puf<'a when 'a : not struct> = puf_t<'a>
-type p_uvar<'a> = P of int
-
+type puf<'a>
+type p_uvar<'a>
 val puf_empty: unit -> puf<'a>
 val puf_fresh: puf<'a> -> 'a -> p_uvar<'a>
+val puf_id: puf<'a> -> p_uvar<'a> -> int
+val puf_fromid: puf<'a> -> int -> p_uvar<'a>
 val puf_find: puf<'a> -> p_uvar<'a> -> 'a
 val puf_union: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> puf<'a>
-
+val puf_equivalent: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> bool
+val puf_change: puf<'a> -> p_uvar<'a> -> 'a -> puf<'a>
 val puf_test: unit -> unit
-
-// type uf_t<'a> = ref<puf_t<'a>>
-// type p_uvar<'a> = { elem: 'a; id: int }
-
-// val p_uvar_id : p_uvar<'a> -> int
-// val p_fresh : uf_t<'a> -> 'a -> p_uvar<'a>
-// val p_find : p_uvar<'a> -> 'a
-// val p_change: p_uvar<'a> -> 'a -> unit
-// val p_equivalent: p_uvar<'a> -> p_uvar<'a> -> bool
-// val p_union : p_uvar<'a> -> p_uvar<'a> -> unit
-
-type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
-and contents<'a when 'a : not struct> =
-  | Data of list<'a> * int
-  | Fwd of cell<'a>
-type uvar<'a when 'a : not struct> = 'a cell
-
-val uvar_id: uvar<'a> -> int
-val fresh : 'a -> uvar<'a>
-val find : uvar<'a> -> 'a
-val change : uvar<'a> -> 'a -> unit
-val equivalent : uvar<'a> -> uvar<'a> -> bool
-val union : uvar<'a> -> uvar<'a> -> unit
-
-type tx = int //don't rely on representation
-val new_transaction: (unit -> tx)
-val rollback: tx -> unit
-val commit: tx -> unit
-val update_in_tx: ref<'a> -> 'a -> unit

@@ -13,14 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-// (c) Microsoft Corporation. All rights reserved
+module FStar.Dyn
 
-module FStar.Unionfind
+type dyn = | Dyn of obj
 
-type uvar 'a
-assume val uvar_id: uvar<'a> -> int
-assume val fresh : 'a -> uvar<'a>
-assume val find : uvar<'a> -> 'a
-assume val change : uvar<'a> -> 'a -> unit
-assume val equivalent : uvar<'a> -> uvar<'a> -> Tot bool (* Cheating a bit? *)
-assume val union : uvar<'a> -> uvar<'a> -> unit
+let mkdyn (x:'a) : dyn = Dyn x
+let undyn (d:dyn) : 'a =
+    match d with
+    | Dyn o -> o :?> 'a
