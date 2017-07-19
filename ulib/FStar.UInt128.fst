@@ -246,10 +246,12 @@ let sub_mod (a b: t) : Pure t
 
 val append_uint : #n1:nat -> #n2:nat -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 -> UInt.uint_t (n1+n2)
 let append_uint #n1 #n2 num1 num2 =
-  Math.pow2_plus n1 n2;
-  Math.pow2_plus n2 n1;
   Math.lemma_mult_le_right (pow2 n1) num2 (pow2 n2 - 1);
-  // assert (num2 * pow2 n1 <= pow2 n2 * pow2 n1 - pow2 n1);
+//  assert (num1 + num2 * pow2 n1 <= (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1);
+  Math.distributivity_sub_left (pow2 n2) 1 (pow2 n1);
+//  assert ( (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1 == (pow2 n1 - 1) + pow2 n2 * pow2 n1 - pow2 n1);
+  Math.pow2_plus n2 n1;
+ // assert ((pow2 n1 - 1) + pow2 (n2 + n1) - pow2 n1 == pow2 (n2 + n1) - 1);
   num1 + num2 * pow2 n1
 
 val to_vec_append : #n1:nat{n1 > 0} -> #n2:nat{n2 > 0} -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 ->
@@ -431,7 +433,7 @@ let div_plus_multiple (a:nat) (b:nat) (k:pos) :
   Lemma (requires (a < k))
         (ensures ((a + b * k) / k == b)) =
   Math.lemma_mod_plus a b k;
-  assert ((a + b*k) % k == a)
+  Math.small_division_lemma_1 a k
 
 val div_add_small: n:nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
@@ -495,15 +497,14 @@ let shift_t_val (a: t) (s: nat) :
 val mul_mod_bound : n:nat -> s1:nat -> s2:nat{s2>=s1} ->
   Lemma (n * pow2 s1 % pow2 s2 <= pow2 s2 - pow2 s1)
 let mul_mod_bound n s1 s2 =
-    // n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1
-    // n % pow2 (s2-s1) <= pow2 (s2-s1) - 1
-    // n % pow2 (s2-s1) * pow2 s1 <= pow2 s2 - pow2 s1
-    mod_mul n (pow2 s1) (pow2 (s2-s1));
-    // assert (n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1);
-    Math.lemma_mod_lt n (pow2 (s2-s1));
-    Math.lemma_mult_le_right (pow2 s1) (n % pow2 (s2-s1)) (pow2 (s2-s1) - 1);
-    assert (pow2 (s2-s1) * pow2 s1 == pow2 s2);
-    ()
+  // n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1
+  // n % pow2 (s2-s1) <= pow2 (s2-s1) - 1
+  // n % pow2 (s2-s1) * pow2 s1 <= pow2 s2 - pow2 s1
+  mod_mul n (pow2 s1) (pow2 (s2-s1));
+  // assert (n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1);
+  Math.lemma_mod_lt n (pow2 (s2-s1));
+  Math.lemma_mult_le_right (pow2 s1) (n % pow2 (s2-s1)) (pow2 (s2-s1) - 1);
+  Math.pow2_plus (s2-s1) s1
 
 let add_lt_le (a a' b b': int) :
   Lemma (requires (a < a' /\ b <= b'))
@@ -591,11 +592,9 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
 let mul_pow2_diff a n1 n2 =
-  Math.pow2_plus (n1 - n2) n2;
-  assert (pow2 (n1 - n2) * pow2 n2 == pow2 n1);
   Math.paren_mul_right a (pow2 (n1-n2)) (pow2 n2);
   mul_div_cancel (a * pow2 (n1 - n2)) (pow2 n2);
-  ()
+  Math.pow2_plus (n1 - n2) n2
 
 let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
@@ -1025,8 +1024,7 @@ let sum_rounded_mod_exact n m k =
   sub_mod_gt_0 n k;
   sub_mod_gt_0 m k;
   mod_add (n - n%k) (m - m%k) k;
-  Math.div_exact_r ((n - n%k) + (m - m % k)) k;
-  ()
+  Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + m - n % k - m % k) / k)
@@ -1034,8 +1032,7 @@ let div_sum_combine n m k =
   sum_rounded_mod_exact n m k;
   div_sum_combine1 n m k;
   mul_injective (n / k + m / k) (((n - n%k) + (m - m%k)) / k) k;
-  assert (n + m - n % k - m % k == (n - n%k) + (m - m%k));
-  ()
+  assert (n + m - n % k - m % k == (n - n%k) + (m - m%k))
 
 val sum_shift_carry : a:nat -> b:nat -> k:pos ->
   Lemma (a / k + (b + a%k) / k == (a + b) / k)
