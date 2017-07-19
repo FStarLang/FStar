@@ -2,6 +2,8 @@ module FStar.Math.Lib
 
 open FStar.Mul
 
+#reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --smtencoding.l_arith_repr native"
+
 (* Definition of the diviion operator *)
 val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a/b) + a % b)
 let lemma_div_def a b = ()
@@ -11,12 +13,10 @@ private let mul_lemma (a:nat) (b:nat) (c:pos) : Lemma (requires (a < b))
   = ()
 
 val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
-#reset-options "--z3rlimit 100"
 let slash_decr_axiom a b =
   lemma_div_def a b;
+  assert (a - a % b == (a / b) * b);
   if (a / b > a) then mul_lemma a (a/b) b
-
-#reset-options
 
 private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c) = a * b - a * c)
   = ()
@@ -96,14 +96,17 @@ let op_Plus_Percent a p = signed_modulo a p
 
 (* Lemmas of x^n *)
 val powx_lemma1: a:int -> Lemma (powx a 1 = a)
-let powx_lemma1 a = ()
+let powx_lemma1 a = assert_norm (powx a 1 = a)
 
+#set-options "--initial_fuel 1 --max_fuel 1"
 val powx_lemma2: x:int -> n:nat -> m:nat -> Lemma
   (powx x n * powx x m = powx x (n + m))
 let rec powx_lemma2 x n m =
   match n with
   | 0 -> ()
-  | _ -> powx_lemma2 x (n-1) m
+  | _ ->
+    powx_lemma2 x (n-1) m
+#set-options "--initial_fuel 0 --max_fuel 0"
 
 (* Lemma: absolute value of product is the product of the absolute values *)
 val abs_mul_lemma: a:int -> b:int -> Lemma (abs (a * b) = abs a * abs b)
