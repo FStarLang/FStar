@@ -800,9 +800,6 @@ val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
 let u32_product_bound a b =
   uint_product_bound #32 a b
 
-val mul32 : x:U64.t -> y:U32.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v x * U32.v y))
 let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
