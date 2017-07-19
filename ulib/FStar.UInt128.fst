@@ -21,7 +21,6 @@ let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
 
-val uint_to_t: n:nat{n < pow2 128} -> x:t{v x == n}
 let uint_to_t n =
     div_mod n (pow2 64);
     { low = U64.uint_to_t (n % (pow2 64));
@@ -571,6 +570,7 @@ let shift_left (a: t) (s: U32.t) : Pure t
   if (U32.lt s u32_64) then shift_left_small a s
   else shift_left_large a s
 
+#set-options "--z3rlimit 100"
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -585,6 +585,7 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
   U64.add low high
+#set-options "--z3rlimit 40"
 
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
@@ -799,9 +800,6 @@ val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
 let u32_product_bound a b =
   uint_product_bound #32 a b
 
-val mul32 : x:U64.t -> y:U32.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v x * U32.v y))
 let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
