@@ -37,7 +37,7 @@ Ex12g.TMAC2.fst \
 EtM.Plain.fst \
 EtM.CPA.fst \
 EtM.MAC.fst \
-EtM.AE.fst 
+EtM.AE.fst
 
 
 FSTAR_HOME=../../../../
@@ -68,7 +68,7 @@ Ex01a-ocaml: out Ex01a.fst
 	-./Ex01a.exe 2>&1
 
 # # Parameter for interactive mode
-# %.fst-in: 
+# %.fst-in:
 # 	@echo $(OPTIONS) \
 #  	--include $(FSTAR_HOME)/ulib/hyperstack \
 #  	--verify_module $(basename $(notdir $@))

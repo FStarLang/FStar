@@ -79,7 +79,7 @@ type string16 = s:string{Bytes.repr_bytes (length (Bytes.utf8 s)) <= 2} (* up to
 (* =============== the formatting we use for authenticated RPCs *)
 
 val request : string -> Tot message
-val response: string16 -> string -> Tot message
+val response: s:string{ Bytes.repr_bytes (length (Bytes.utf8 s)) <= 2} -> string -> Tot message
 
 (* -------- implementation *)
 
@@ -89,7 +89,6 @@ let tag2 = Bytes.createBytes 1 (Char.char_of_int 2)
 
 let request s = tag0 @| (Bytes.utf8 s)
 
-val response: s:string{ Bytes.repr_bytes (length (Bytes.utf8 s)) <= 2} -> string -> Tot message
 let response s t =
   let lb = uint16_to_bytes (length (Bytes.utf8 s)) in
   tag1 @| (lb @| ( (Bytes.utf8 s) @| (Bytes.utf8 t)))
