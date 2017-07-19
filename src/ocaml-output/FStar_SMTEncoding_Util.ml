@@ -3,8 +3,8 @@ let mkAssume:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.caption,Prims.string)
     FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.decl
   =
-  fun uu____6  ->
-    match uu____6 with
+  fun uu____9  ->
+    match uu____9 with
     | (tm,cap,nm) ->
         FStar_SMTEncoding_Term.Assume
           {

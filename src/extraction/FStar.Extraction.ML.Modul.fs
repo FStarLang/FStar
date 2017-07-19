@@ -119,7 +119,7 @@ let print_ifamily i =
         (Print.term_to_string i.ityp)
         (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals : env * list<inductive_family> =
+let bundle_as_inductive_families env ses quals : UEnv.env * list<inductive_family> =
     let env, ifams =
         BU.fold_map
         (fun env se -> match se.sigel with
