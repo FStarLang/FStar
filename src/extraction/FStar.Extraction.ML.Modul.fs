@@ -119,9 +119,10 @@ let print_ifamily i =
         (Print.term_to_string i.ityp)
         (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals : list<inductive_family> =
-    ses |> List.collect
-        (fun se -> match se.sigel with
+let bundle_as_inductive_families env ses quals : env * list<inductive_family> =
+    let env, ifams =
+        BU.fold_map
+        (fun env se -> match se.sigel with
             | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
@@ -132,13 +133,16 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                [{  iname=l
-                  ; iparams=bs
-                  ; ityp=t
-                  ; idatas=datas
-                  ; iquals=se.sigquals  }]
+                let env = UEnv.extend_type_name env (S.lid_as_fv l Delta_constant None) in
+                env, [{   iname=l
+                        ; iparams=bs
+                        ; ityp=t
+                        ; idatas=datas
+                        ; iquals=se.sigquals  }]
 
-            | _ -> [])
+            | _ -> env, [])
+        env ses in
+    env, List.flatten ifams
 
 type env_t = UEnv.env
 
@@ -176,7 +180,6 @@ let extract_bundle env se =
              MLTD_Record fields
          | _ ->
              MLTD_DType ctors in
-        let env = UEnv.extend_type_name env (S.lid_as_fv ind.iname Delta_constant None) in
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
 
     match se.sigel, se.sigquals with
@@ -185,7 +188,7 @@ let extract_bundle env se =
           env, [MLM_Exn ctor]
 
         | Sig_bundle(ses, _), quals ->
-          let ifams = bundle_as_inductive_families env ses quals in
+          let env, ifams = bundle_as_inductive_families env ses quals in
 //          ifams |> List.iter print_ifamily;
           let env, td = BU.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
