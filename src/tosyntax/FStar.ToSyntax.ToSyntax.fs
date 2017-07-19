@@ -667,7 +667,9 @@ and desugar_machine_integer env repr (signedness, width) range =
         | _ ->
           failwith ("Unexpected non-fvar for " ^ intro_nm)
       end
-    | None -> failwith (BU.format1 "%s not in scope\n" tnm) in
+    | None ->
+      raise (Error (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm,
+                    range)) in
   let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
   S.mk (Tm_app (lid, [repr, as_implicit false])) None range
 

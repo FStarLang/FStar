@@ -374,7 +374,7 @@ let rec specs () : list<Getopt.opt> =
       ( noshort,
         "admit_except",
          OneArg (String, "[id]"),
-        "Admit all verification conditions, except those with query label <id>");
+        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
 
       ( noshort,

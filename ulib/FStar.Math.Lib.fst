@@ -11,7 +11,7 @@ private let mul_lemma (a:nat) (b:nat) (c:pos) : Lemma (requires (a < b))
   = ()
 
 val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
-#reset-options "--z3rlimit 60"
+#reset-options "--z3rlimit 100"
 let slash_decr_axiom a b =
   lemma_div_def a b;
   if (a / b > a) then mul_lemma a (a/b) b
