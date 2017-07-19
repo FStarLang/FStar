@@ -312,7 +312,7 @@ private let lemma_mod_plus_injective_1 (p:pos) (a:nat) (b:nat) (c:nat) : Lemma
   = lemma_mod_spec2 (a + b) p;
     lemma_mod_spec2 (a + c) p
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 50"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 
 val lemma_mod_plus_injective: p:pos -> a:nat -> b:nat -> c:nat -> Lemma
   (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
