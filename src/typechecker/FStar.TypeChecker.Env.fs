@@ -118,8 +118,6 @@ type env_t = env
 
 type sigtable = BU.smap<sigelt>
 
-
-
 let should_verify env =
     not env.lax
     && not env.admit

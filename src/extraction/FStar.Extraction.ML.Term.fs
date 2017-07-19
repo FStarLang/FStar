@@ -198,10 +198,7 @@ let rec is_type_aux env t =
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
 
     | Tm_fvar fv ->
-      if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
-      then true
-      else let (_, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
-           is_arity env t
+      UEnv.is_type_name env fv
 
     | Tm_uvar (_, t)
     | Tm_bvar ({sort=t})

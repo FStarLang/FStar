@@ -45,8 +45,7 @@ type env = {
     tcenv: TypeChecker.Env.env;
     gamma:list<binding>;
     tydefs:list<(list<mlsymbol> * mltydecl)>;
-    //erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
-    //if so, just convert them to type abbreviations returning unit.
+    type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -296,13 +295,17 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
 
 let extend_tydef (g:env) (fv:fv) (td:mltydecl) : env =
     let m = module_name_of_fv fv in
-    {g with tydefs=(m,td)::g.tydefs}
+    {g with tydefs=(m,td)::g.tydefs; type_names=fv::g.type_names}
 
+let extend_type_name (g:env) (fv:fv) : env =
+    {g with type_names=fv::g.type_names}
+
+let is_type_name g fv = g.type_names |> BU.for_some (fv_eq fv)
 
 let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:TypeChecker.Env.env) : env =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
+   let env = { tcenv = e; gamma =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst

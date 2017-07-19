@@ -176,6 +176,7 @@ let extract_bundle env se =
              MLTD_Record fields
          | _ ->
              MLTD_DType ctors in
+        let env = UEnv.extend_type_name env (S.lid_as_fv ind.iname Delta_constant None) in
         env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
 
     match se.sigel, se.sigquals with
