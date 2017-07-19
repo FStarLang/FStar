@@ -524,21 +524,25 @@ let run_describe_repl st =
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
 
+let nothing_left_to_pop st =
+  (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
+     entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
+     (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
+     indicates that there's nothing left to pop. *)
+  List.length st.repl_stack <= List.length st.repl_ts
+
 let run_pop st = // This shrinks all internal stacks by 1
-  match st.repl_stack with
-  | [] -> // FIXME this isn't strict enough: the initial dependency checks create
-         // multiple entries in the stack (so an error should be raised when
-         // length <= length_after_deps_check, not when length = 0.
+  if nothing_left_to_pop st then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
-
-  | (env, curmod) :: stack ->
-    pop st.repl_env "#pop";
-
-    // Clean up if all the fragments from the current buffer have been popped
-    if List.length stack = List.length st.repl_ts then cleanup env;
-
-    ((QueryOK, JsonNull),
-      Inl ({ st with repl_env = env; repl_curmod = curmod; repl_stack = stack }))
+  else
+    match st.repl_stack with
+    | [] -> failwith "impossible"
+    | (env, curmod) :: stack ->
+      pop st.repl_env "#pop";
+      let st' = { st with repl_env = env; repl_curmod = curmod; repl_stack = stack } in
+      // Clean up if all the fragments from the current buffer have been popped
+      if nothing_left_to_pop st' then cleanup env;
+      ((QueryOK, JsonNull), Inl st')
 
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
@@ -547,7 +551,7 @@ let run_push st kind text line column peek_only =
   // current buffer, see if some dependency is stale. If so, update it. Also
   // if this is the first chunk, we need to restore the command line options.
   let restore_cmd_line_options, (stack, env, ts) =
-    if List.length stack = List.length ts
+    if nothing_left_to_pop st
     then true, update_deps st.repl_fname st.repl_curmod stack env ts
     else false, (stack, env, ts) in
 
