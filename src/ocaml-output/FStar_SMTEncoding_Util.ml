@@ -3,8 +3,8 @@ let mkAssume:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.caption,Prims.string)
     FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.decl
   =
-  fun uu____9  ->
-    match uu____9 with
+  fun uu____10  ->
+    match uu____10 with
     | (tm,cap,nm) ->
         FStar_SMTEncoding_Term.Assume
           {
@@ -96,6 +96,55 @@ let mkMod:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
     FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkMod
+let mkNatToBv:
+  Prims.int -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+  fun sz  -> norng (FStar_SMTEncoding_Term.mkNatToBv sz)
+let mkBvAnd:
+  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = norng FStar_SMTEncoding_Term.mkBvAnd
+let mkBvXor:
+  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = norng FStar_SMTEncoding_Term.mkBvXor
+let mkBvOr:
+  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = norng FStar_SMTEncoding_Term.mkBvOr
+let mkBvShl:
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvShl sz)
+let mkBvShr:
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvShr sz)
+let mkBvUdiv:
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvUdiv sz)
+let mkBvMod:
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvMod sz)
+let mkBvMul:
+  Prims.int ->
+    (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+      FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = fun sz  -> norng (FStar_SMTEncoding_Term.mkBvMul sz)
+let mkBvUlt:
+  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = norng FStar_SMTEncoding_Term.mkBvUlt
+let mkBvUext:
+  Prims.int -> FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+  fun sz  -> norng (FStar_SMTEncoding_Term.mkBvUext sz)
+let mkBvToNat: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+  norng FStar_SMTEncoding_Term.mkBvToNat
 let mkITE:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
     FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.term
