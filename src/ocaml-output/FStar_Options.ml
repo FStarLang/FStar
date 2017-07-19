@@ -572,7 +572,7 @@ let rec specs:
          "Admit SMT queries, unsafe! (default 'false')");
       (FStar_Getopt.noshort, "admit_except",
         (FStar_Getopt.OneArg (((fun _0_30  -> String _0_30)), "[id]")),
-        "Admit all verification conditions, except those with query label <id>");
+        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
       (FStar_Getopt.noshort, "codegen",
         (FStar_Getopt.OneArg
            (((fun s  -> let uu____1597 = parse_codegen s in String uu____1597)),
