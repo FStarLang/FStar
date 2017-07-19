@@ -1066,7 +1066,13 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
 
   | Sig_declare_typ(lid, uvs, t) -> //NS: No checks on the qualifiers?
     let env = Env.set_range env r in
-    //assert (uvs = []);
+
+    if lid_exists env lid
+    then raise (Error (BU.format1 "The toplevel declaration %s is shadowing \
+                                   an already defined declaration \
+                                   (Each top-level name must be unique to its module)"
+                                   (Ident.text_of_lid lid), r)) ;
+
     let uvs, t =
         if uvs = []
         then check_and_gen env t (fst (U.type_u()))
@@ -1105,6 +1111,35 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
                               (Print.quals_to_string q)
                               (Print.quals_to_string q'), r))
     in
+
+    let rename_parameters lb =
+      let rename_in_typ def typ =
+        let typ = Subst.compress typ in
+        let def_bs = match (Subst.compress def).n with
+                     | Tm_abs (binders, _, _) -> binders
+                     | _ -> [] in
+        match typ with
+        | { n = Tm_arrow(val_bs, c); pos = r } -> begin
+          let has_auto_name bv =
+            BU.starts_with bv.ppname.idText Ident.reserved_prefix in
+          let rec rename_binders def_bs val_bs =
+            match def_bs, val_bs with
+            | [], _ | _, [] -> val_bs
+            | (body_bv, _) :: bt, (val_bv, aqual) :: vt ->
+              (match has_auto_name body_bv, has_auto_name val_bv with
+               | true, _ -> (val_bv, aqual)
+               | false, true -> ({ val_bv with
+                                   ppname = { val_bv.ppname with
+                                              idText = body_bv.ppname.idText } }, aqual)
+               | false, false ->
+                 if body_bv.ppname.idText <> val_bv.ppname.idText then
+                   Errors.warn body_bv.ppname.idRange
+                     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
+                                  body_bv.ppname.idText val_bv.ppname.idText);
+                 (val_bv, aqual)) :: rename_binders bt vt in
+          Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) None r end
+        | _ -> typ in
+      { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
 
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
@@ -1150,6 +1185,9 @@ and tc_decl env se: list<sigelt> * list<sigelt> =
     (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
     let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
         | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
+          // Propagate binder names into signature
+          let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
+
           //propagate the MaskedEffect tag to the qualifiers
           let quals = match e.n with
               | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
