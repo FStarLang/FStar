@@ -626,6 +626,7 @@ let shift_right_reconstruct a_h s =
   assert (a_h / pow2 s * pow2 64 == a_h * pow2 64 / pow2 s / pow2 64 * pow2 64);
   ()
 
+#set-options "--z3rlimit 200"
 let u128_div_pow2 (a: t) (s:nat{s < 64}) :
   Lemma (v a / pow2 s == U64.v a.low / pow2 s + U64.v a.high * pow2 (64 - s)) =
   Math.pow2_plus s (64-s);
