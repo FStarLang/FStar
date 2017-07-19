@@ -55,12 +55,11 @@ let min x y = if x >= y then y else x
 (* Function: standard euclidean division, the rest is always positive *)
 val div: a:int -> b:pos -> Tot (c:int{(a < 0 ==> c < 0) /\ (a >= 0 ==> c >= 0)})
 let div a b =
-  admit(); // Because Prims.op_Division is only defined when a:nat
   if a < 0 then
     begin
     slash_decr_axiom (0 - a) b;
-    if a % b = 0 then 0 - (0 - a / b)
-    else 0 - (0 - a / b) - 1
+    if a % b = 0 then 0 - (0 + (- a) / b)
+    else 0 - (0 + (- a) / b) - 1
     end
   else a / b
 

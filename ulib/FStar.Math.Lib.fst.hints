@@ -1,5 +1,5 @@
 [
-  "ê<\u0011Sò\u0012=\u0012P«ÌŽ®öO\u001b",
+  "‚jí0sÂïJÊÞñ€ÂÏ-;",
   [
     [
       "FStar.Math.Lib.lemma_div_def",
@@ -256,7 +256,22 @@
       ],
       0
     ],
-    [ "FStar.Math.Lib.div", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "FStar.Math.Lib.div",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_Modulus", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0
+    ],
     [
       "FStar.Math.Lib.div",
       2,
