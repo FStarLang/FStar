@@ -7,11 +7,18 @@ let parser_term_to_string: FStar_Parser_AST.term -> Prims.string =
   fun t  ->
     let uu____9 = FStar_Parser_ToDocument.term_to_document t in
     doc_to_string uu____9
-let map_opt f l =
-  let uu____43 =
-    FStar_Util.choose_map
-      (fun uu____53  -> fun x  -> let uu____55 = f x in ((), uu____55)) () l in
-  FStar_Pervasives_Native.snd uu____43
+let map_opt:
+  'a 'b .
+    ('a -> 'b FStar_Pervasives_Native.option) ->
+      'a Prims.list -> 'b Prims.list
+  =
+  fun f  ->
+    fun l  ->
+      let uu____43 =
+        FStar_Util.choose_map
+          (fun uu____53  -> fun x  -> let uu____55 = f x in ((), uu____55))
+          () l in
+      FStar_Pervasives_Native.snd uu____43
 let bv_as_unique_ident: FStar_Syntax_Syntax.bv -> FStar_Ident.ident =
   fun x  ->
     let unique_name =
@@ -25,14 +32,23 @@ let bv_as_unique_ident: FStar_Syntax_Syntax.bv -> FStar_Ident.ident =
       else (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText in
     FStar_Ident.mk_ident
       (unique_name, ((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
-let filter_imp a =
-  FStar_All.pipe_right a
-    (FStar_List.filter
-       (fun uu___187_127  ->
-          match uu___187_127 with
-          | (uu____134,FStar_Pervasives_Native.Some
-             (FStar_Syntax_Syntax.Implicit uu____135)) -> false
-          | uu____138 -> true))
+let filter_imp:
+  'Auu____73 .
+    ('Auu____73,FStar_Syntax_Syntax.arg_qualifier
+                  FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.tuple2 Prims.list ->
+      ('Auu____73,FStar_Syntax_Syntax.arg_qualifier
+                    FStar_Pervasives_Native.option)
+        FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun a  ->
+    FStar_All.pipe_right a
+      (FStar_List.filter
+         (fun uu___187_127  ->
+            match uu___187_127 with
+            | (uu____134,FStar_Pervasives_Native.Some
+               (FStar_Syntax_Syntax.Implicit uu____135)) -> false
+            | uu____138 -> true))
 let resugar_arg_qual:
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     FStar_Parser_AST.arg_qualifier FStar_Pervasives_Native.option
@@ -1038,21 +1054,22 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                  let uu____3872 =
                    let uu____3873 = FStar_Options.print_universes () in
                    Prims.op_Negation uu____3873 in
-                 Obj.magic
-                   (if uu____3872
-                    then FStar_Pervasives_Native.fst
-                    else
-                      (fun uu___193_3893  ->
-                         match uu___193_3893 with
-                         | ((pat,body2),univs1) ->
-                             let uu____3913 =
-                               if univs1 = ""
-                               then body2
-                               else
-                                 mk1
-                                   (FStar_Parser_AST.Labeled
-                                      (body2, univs1, true)) in
-                             (pat, uu____3913))) in
+                 fun a346  ->
+                   (Obj.magic
+                      (if uu____3872
+                       then FStar_Pervasives_Native.fst
+                       else
+                         (fun uu___193_3893  ->
+                            match uu___193_3893 with
+                            | ((pat,body2),univs1) ->
+                                let uu____3913 =
+                                  if univs1 = ""
+                                  then body2
+                                  else
+                                    mk1
+                                      (FStar_Parser_AST.Labeled
+                                         (body2, univs1, true)) in
+                                (pat, uu____3913)))) a346 in
                FStar_List.map f r in
              let body2 = resugar_term body1 in
              mk1

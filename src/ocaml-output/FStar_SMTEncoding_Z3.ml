@@ -556,13 +556,15 @@ let z3_options: Prims.unit -> Prims.string =
 type 'a job = {
   job: Prims.unit -> 'a;
   callback: 'a -> Prims.unit;}
-let __proj__Mkjob__item__job projectee =
-  match projectee with
-  | { job = __fname__job; callback = __fname__callback;_} -> __fname__job
-let __proj__Mkjob__item__callback projectee =
-  match projectee with
-  | { job = __fname__job; callback = __fname__callback;_} ->
-      __fname__callback
+let __proj__Mkjob__item__job: 'a . 'a job -> Prims.unit -> 'a =
+  fun projectee  ->
+    match projectee with
+    | { job = __fname__job; callback = __fname__callback;_} -> __fname__job
+let __proj__Mkjob__item__callback: 'a . 'a job -> 'a -> Prims.unit =
+  fun projectee  ->
+    match projectee with
+    | { job = __fname__job; callback = __fname__callback;_} ->
+        __fname__callback
 type error_kind =
   | Timeout
   | Kill
@@ -584,9 +586,14 @@ type z3job =
 let job_queue: z3job Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let pending_jobs: Prims.int FStar_ST.ref =
   FStar_Util.mk_ref (Prims.parse_int "0")
-let with_monitor m f =
-  FStar_Util.monitor_enter m;
-  (let res = f () in FStar_Util.monitor_exit m; res)
+let with_monitor:
+  'Auu____1500 'Auu____1501 .
+    'Auu____1501 -> (Prims.unit -> 'Auu____1500) -> 'Auu____1500
+  =
+  fun m  ->
+    fun f  ->
+      FStar_Util.monitor_enter m;
+      (let res = f () in FStar_Util.monitor_exit m; res)
 let z3_job:
   Prims.bool ->
     FStar_SMTEncoding_Term.error_labels ->
@@ -798,8 +805,7 @@ type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list
 let fresh_scope:
   FStar_SMTEncoding_Term.decl Prims.list Prims.list FStar_ST.ref =
   FStar_Util.mk_ref [[]]
-let mk_fresh_scope:
-  Prims.unit -> FStar_SMTEncoding_Term.decl Prims.list Prims.list =
+let mk_fresh_scope: Prims.unit -> scope_t =
   fun uu____2813  -> FStar_ST.read fresh_scope
 let bg_scope: FStar_SMTEncoding_Term.decl Prims.list FStar_ST.ref =
   FStar_Util.mk_ref []
@@ -864,16 +870,32 @@ let commit_mark: Prims.string -> Prims.unit =
     | hd1::s::tl1 ->
         FStar_ST.write fresh_scope ((FStar_List.append hd1 s) :: tl1)
     | uu____3022 -> failwith "Impossible"
-let mk_cb used_unsat_core cb uu____3097 =
-  match uu____3097 with
-  | (uc_errs,time,statistics) ->
-      if used_unsat_core
-      then
-        (match uc_errs with
-         | FStar_Util.Inl uu____3155 -> cb (uc_errs, time, statistics)
-         | FStar_Util.Inr (uu____3172,ek) ->
-             cb ((FStar_Util.Inr ([], ek)), time, statistics))
-      else cb (uc_errs, time, statistics)
+let mk_cb:
+  'Auu____3045 'Auu____3046 'Auu____3047 'Auu____3048 'Auu____3049
+    'Auu____3050 .
+    Prims.bool ->
+      ((('Auu____3050,('Auu____3049 Prims.list,'Auu____3048)
+                        FStar_Pervasives_Native.tuple2)
+          FStar_Util.either,'Auu____3047,'Auu____3046)
+         FStar_Pervasives_Native.tuple3 -> 'Auu____3045)
+        ->
+        (('Auu____3050,('Auu____3049 Prims.list,'Auu____3048)
+                         FStar_Pervasives_Native.tuple2)
+           FStar_Util.either,'Auu____3047,'Auu____3046)
+          FStar_Pervasives_Native.tuple3 -> 'Auu____3045
+  =
+  fun used_unsat_core  ->
+    fun cb  ->
+      fun uu____3097  ->
+        match uu____3097 with
+        | (uc_errs,time,statistics) ->
+            if used_unsat_core
+            then
+              (match uc_errs with
+               | FStar_Util.Inl uu____3155 -> cb (uc_errs, time, statistics)
+               | FStar_Util.Inr (uu____3172,ek) ->
+                   cb ((FStar_Util.Inr ([], ek)), time, statistics))
+            else cb (uc_errs, time, statistics)
 let mk_input: FStar_SMTEncoding_Term.decl Prims.list -> Prims.string =
   fun theory  ->
     let r =
@@ -957,7 +979,7 @@ let ask:
        FStar_Pervasives_Native.tuple2)
     ->
     FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decls_t ->
+      FStar_SMTEncoding_Term.decl Prims.list ->
         scope_t FStar_Pervasives_Native.option -> cb -> Prims.unit
   =
   fun filter1  ->

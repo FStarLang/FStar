@@ -1000,9 +1000,11 @@ let visible_at: delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool =
       | (Inlining ,FStar_Syntax_Syntax.Inline_for_extraction ) -> true
       | uu____4207 -> false
 let default_table_size: Prims.int = Prims.parse_int "200"
-let new_sigtab uu____4222 = FStar_Util.smap_create default_table_size
-let new_gamma_cache uu____4233 =
-  FStar_Util.smap_create (Prims.parse_int "100")
+let new_sigtab: 'Auu____4216 . Prims.unit -> 'Auu____4216 FStar_Util.smap =
+  fun uu____4222  -> FStar_Util.smap_create default_table_size
+let new_gamma_cache:
+  'Auu____4227 . Prims.unit -> 'Auu____4227 FStar_Util.smap =
+  fun uu____4233  -> FStar_Util.smap_create (Prims.parse_int "100")
 let initial_env:
   (env ->
      FStar_Syntax_Syntax.term ->
@@ -1610,7 +1612,7 @@ and add_sigelts: env -> FStar_Syntax_Syntax.sigelt Prims.list -> Prims.unit =
 let try_lookup_bv:
   env ->
     FStar_Syntax_Syntax.bv ->
-      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Range.range)
+      (FStar_Syntax_Syntax.typ,FStar_Range.range)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
   fun env  ->
@@ -2093,7 +2095,7 @@ let lookup_definition:
 let try_lookup_effect_lid:
   env ->
     FStar_Ident.lident ->
-      FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option
+      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
   fun env  ->
     fun ftv  ->
@@ -2110,7 +2112,8 @@ let try_lookup_effect_lid:
                    (FStar_Ident.range_of_lid ftv) t in
                FStar_Pervasives_Native.Some uu____8516)
       | uu____8517 -> FStar_Pervasives_Native.None
-let lookup_effect_lid: env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ =
+let lookup_effect_lid: env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term
+  =
   fun env  ->
     fun ftv  ->
       let uu____8546 = try_lookup_effect_lid env ftv in
@@ -2546,41 +2549,52 @@ let monad_leq:
                (fun e  ->
                   (FStar_Ident.lid_equals l1 e.msource) &&
                     (FStar_Ident.lid_equals l2 e.mtarget)))
-let wp_sig_aux decls m =
-  let uu____10200 =
-    FStar_All.pipe_right decls
-      (FStar_Util.find_opt
-         (fun uu____10226  ->
-            match uu____10226 with
-            | (d,uu____10232) ->
-                FStar_Ident.lid_equals d.FStar_Syntax_Syntax.mname m)) in
-  match uu____10200 with
-  | FStar_Pervasives_Native.None  ->
-      let uu____10243 =
-        FStar_Util.format1 "Impossible: declaration for monad %s not found"
-          m.FStar_Ident.str in
-      failwith uu____10243
-  | FStar_Pervasives_Native.Some (md,_q) ->
-      let uu____10256 =
-        inst_tscheme
-          ((md.FStar_Syntax_Syntax.univs),
-            (md.FStar_Syntax_Syntax.signature)) in
-      (match uu____10256 with
-       | (uu____10267,s) ->
-           let s1 = FStar_Syntax_Subst.compress s in
-           (match ((md.FStar_Syntax_Syntax.binders),
-                    (s1.FStar_Syntax_Syntax.n))
-            with
-            | ([],FStar_Syntax_Syntax.Tm_arrow
-               ((a,uu____10277)::(wp,uu____10279)::[],c)) when
-                FStar_Syntax_Syntax.is_teff (FStar_Syntax_Util.comp_result c)
-                -> (a, (wp.FStar_Syntax_Syntax.sort))
-            | uu____10315 -> failwith "Impossible"))
+let wp_sig_aux:
+  'Auu____10173 .
+    (FStar_Syntax_Syntax.eff_decl,'Auu____10173)
+      FStar_Pervasives_Native.tuple2 Prims.list ->
+      FStar_Ident.lident ->
+        (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
+                                  FStar_Syntax_Syntax.syntax)
+          FStar_Pervasives_Native.tuple2
+  =
+  fun decls  ->
+    fun m  ->
+      let uu____10200 =
+        FStar_All.pipe_right decls
+          (FStar_Util.find_opt
+             (fun uu____10226  ->
+                match uu____10226 with
+                | (d,uu____10232) ->
+                    FStar_Ident.lid_equals d.FStar_Syntax_Syntax.mname m)) in
+      match uu____10200 with
+      | FStar_Pervasives_Native.None  ->
+          let uu____10243 =
+            FStar_Util.format1
+              "Impossible: declaration for monad %s not found"
+              m.FStar_Ident.str in
+          failwith uu____10243
+      | FStar_Pervasives_Native.Some (md,_q) ->
+          let uu____10256 =
+            inst_tscheme
+              ((md.FStar_Syntax_Syntax.univs),
+                (md.FStar_Syntax_Syntax.signature)) in
+          (match uu____10256 with
+           | (uu____10267,s) ->
+               let s1 = FStar_Syntax_Subst.compress s in
+               (match ((md.FStar_Syntax_Syntax.binders),
+                        (s1.FStar_Syntax_Syntax.n))
+                with
+                | ([],FStar_Syntax_Syntax.Tm_arrow
+                   ((a,uu____10277)::(wp,uu____10279)::[],c)) when
+                    FStar_Syntax_Syntax.is_teff
+                      (FStar_Syntax_Util.comp_result c)
+                    -> (a, (wp.FStar_Syntax_Syntax.sort))
+                | uu____10315 -> failwith "Impossible"))
 let wp_signature:
   env ->
     FStar_Ident.lident ->
-      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
-                                FStar_Syntax_Syntax.syntax)
+      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term)
         FStar_Pervasives_Native.tuple2
   = fun env  -> fun m  -> wp_sig_aux (env.effects).decls m
 let null_wp_for_eff:
@@ -3125,8 +3139,7 @@ let effect_repr:
   env ->
     FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.universe ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-          FStar_Pervasives_Native.option
+        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   = fun env  -> fun c  -> fun u_c  -> effect_repr_aux false env c u_c
 let reify_comp:
   env ->
@@ -3377,7 +3390,7 @@ let push_module: env -> FStar_Syntax_Syntax.modul -> env =
          synth = (uu___130_11924.synth);
          is_native_tactic = (uu___130_11924.is_native_tactic)
        })
-let push_univ_vars: env_t -> FStar_Syntax_Syntax.univ_names -> env =
+let push_univ_vars: env -> FStar_Syntax_Syntax.univ_names -> env =
   fun env  ->
     fun xs  ->
       FStar_List.fold_left
@@ -3526,11 +3539,7 @@ let finish_module: env -> FStar_Syntax_Syntax.modul -> env =
          synth = (uu___133_12077.synth);
          is_native_tactic = (uu___133_12077.is_native_tactic)
        })
-let uvars_in_env:
-  env ->
-    (FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.typ)
-      FStar_Pervasives_Native.tuple2 FStar_Util.set
-  =
+let uvars_in_env: env -> FStar_Syntax_Syntax.uvars =
   fun env  ->
     let no_uvs = FStar_Syntax_Free.new_uv_set () in
     let ext out uvs = FStar_Util.set_union out uvs in
@@ -3619,8 +3628,7 @@ let bound_vars_of_bindings:
             | Binding_sig uu____12482 -> []
             | Binding_univ uu____12489 -> []
             | Binding_sig_inst uu____12490 -> []))
-let binders_of_bindings:
-  binding Prims.list -> FStar_Syntax_Syntax.binder Prims.list =
+let binders_of_bindings: binding Prims.list -> FStar_Syntax_Syntax.binders =
   fun bs  ->
     let uu____12507 =
       let uu____12510 = bound_vars_of_bindings bs in
@@ -3681,8 +3689,11 @@ let eq_gamma: env -> env -> Prims.bool =
                    match (uu____12624, uu____12625) with
                    | ((b1,uu____12643),(b2,uu____12645)) ->
                        FStar_Syntax_Syntax.bv_eq b1 b2) g g'))
-let fold_env env f a =
-  FStar_List.fold_right (fun e  -> fun a1  -> f a1 e) env.gamma a
+let fold_env: 'a . env -> ('a -> binding -> 'a) -> 'a -> 'a =
+  fun env  ->
+    fun f  ->
+      fun a  ->
+        FStar_List.fold_right (fun e  -> fun a1  -> f a1 e) env.gamma a
 let lidents: env -> FStar_Ident.lident Prims.list =
   fun env  ->
     let keys =

@@ -212,12 +212,22 @@ let check_and_gen:
       fun k  ->
         let uu____133 = tc_check_trivial_guard env t k in
         FStar_TypeChecker_Util.generalize_universes env uu____133
-let check_nogen env t k =
-  let t1 = tc_check_trivial_guard env t k in
-  let uu____162 =
-    FStar_TypeChecker_Normalize.normalize [FStar_TypeChecker_Normalize.Beta]
-      env t1 in
-  ([], uu____162)
+let check_nogen:
+  'Auu____142 .
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.typ ->
+          ('Auu____142 Prims.list,FStar_Syntax_Syntax.term)
+            FStar_Pervasives_Native.tuple2
+  =
+  fun env  ->
+    fun t  ->
+      fun k  ->
+        let t1 = tc_check_trivial_guard env t k in
+        let uu____162 =
+          FStar_TypeChecker_Normalize.normalize
+            [FStar_TypeChecker_Normalize.Beta] env t1 in
+        ([], uu____162)
 let monad_signature:
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -2770,170 +2780,206 @@ let cps_and_elaborate:
                                                                (uu____3601,
                                                                  ed2,
                                                                  lift_from_pure_opt))))))))))))))))))
-let tc_lex_t env ses quals lids =
-  match ses with
-  | {
-      FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_inductive_typ
-        (lex_t1,[],[],t,uu____3671,uu____3672);
-      FStar_Syntax_Syntax.sigrng = r; FStar_Syntax_Syntax.sigquals = [];
-      FStar_Syntax_Syntax.sigmeta = uu____3674;
-      FStar_Syntax_Syntax.sigattrs = uu____3675;_}::{
-                                                      FStar_Syntax_Syntax.sigel
-                                                        =
-                                                        FStar_Syntax_Syntax.Sig_datacon
-                                                        (lex_top1,[],_t_top,_lex_t_top,_0_39,uu____3679);
-                                                      FStar_Syntax_Syntax.sigrng
-                                                        = r1;
-                                                      FStar_Syntax_Syntax.sigquals
-                                                        = [];
-                                                      FStar_Syntax_Syntax.sigmeta
-                                                        = uu____3681;
-                                                      FStar_Syntax_Syntax.sigattrs
-                                                        = uu____3682;_}::
-      {
-        FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-          (lex_cons,[],_t_cons,_lex_t_cons,_0_40,uu____3686);
-        FStar_Syntax_Syntax.sigrng = r2; FStar_Syntax_Syntax.sigquals = [];
-        FStar_Syntax_Syntax.sigmeta = uu____3688;
-        FStar_Syntax_Syntax.sigattrs = uu____3689;_}::[]
-      when
-      ((_0_39 = (Prims.parse_int "0")) && (_0_40 = (Prims.parse_int "0"))) &&
-        (((FStar_Ident.lid_equals lex_t1 FStar_Parser_Const.lex_t_lid) &&
-            (FStar_Ident.lid_equals lex_top1 FStar_Parser_Const.lextop_lid))
-           &&
-           (FStar_Ident.lid_equals lex_cons FStar_Parser_Const.lexcons_lid))
-      ->
-      let u =
-        FStar_Syntax_Syntax.new_univ_name (FStar_Pervasives_Native.Some r) in
-      let t1 =
-        FStar_Syntax_Syntax.mk
-          (FStar_Syntax_Syntax.Tm_type (FStar_Syntax_Syntax.U_name u))
-          FStar_Pervasives_Native.None r in
-      let t2 = FStar_Syntax_Subst.close_univ_vars [u] t1 in
-      let tc =
-        {
-          FStar_Syntax_Syntax.sigel =
-            (FStar_Syntax_Syntax.Sig_inductive_typ
-               (lex_t1, [u], [], t2, [],
-                 [FStar_Parser_Const.lextop_lid;
-                 FStar_Parser_Const.lexcons_lid]));
-          FStar_Syntax_Syntax.sigrng = r;
-          FStar_Syntax_Syntax.sigquals = [];
-          FStar_Syntax_Syntax.sigmeta = FStar_Syntax_Syntax.default_sigmeta;
-          FStar_Syntax_Syntax.sigattrs = []
-        } in
-      let utop =
-        FStar_Syntax_Syntax.new_univ_name (FStar_Pervasives_Native.Some r1) in
-      let lex_top_t =
-        let uu____3754 =
-          let uu____3757 =
-            let uu____3758 =
-              let uu____3765 =
-                FStar_Syntax_Syntax.fvar
-                  (FStar_Ident.set_lid_range FStar_Parser_Const.lex_t_lid r1)
-                  FStar_Syntax_Syntax.Delta_constant
-                  FStar_Pervasives_Native.None in
-              (uu____3765, [FStar_Syntax_Syntax.U_name utop]) in
-            FStar_Syntax_Syntax.Tm_uinst uu____3758 in
-          FStar_Syntax_Syntax.mk uu____3757 in
-        uu____3754 FStar_Pervasives_Native.None r1 in
-      let lex_top_t1 = FStar_Syntax_Subst.close_univ_vars [utop] lex_top_t in
-      let dc_lextop =
-        {
-          FStar_Syntax_Syntax.sigel =
-            (FStar_Syntax_Syntax.Sig_datacon
-               (lex_top1, [utop], lex_top_t1, FStar_Parser_Const.lex_t_lid,
-                 (Prims.parse_int "0"), []));
-          FStar_Syntax_Syntax.sigrng = r1;
-          FStar_Syntax_Syntax.sigquals = [];
-          FStar_Syntax_Syntax.sigmeta = FStar_Syntax_Syntax.default_sigmeta;
-          FStar_Syntax_Syntax.sigattrs = []
-        } in
-      let ucons1 =
-        FStar_Syntax_Syntax.new_univ_name (FStar_Pervasives_Native.Some r2) in
-      let ucons2 =
-        FStar_Syntax_Syntax.new_univ_name (FStar_Pervasives_Native.Some r2) in
-      let lex_cons_t =
-        let a =
-          let uu____3783 =
-            FStar_Syntax_Syntax.mk
-              (FStar_Syntax_Syntax.Tm_type
-                 (FStar_Syntax_Syntax.U_name ucons1))
-              FStar_Pervasives_Native.None r2 in
-          FStar_Syntax_Syntax.new_bv (FStar_Pervasives_Native.Some r2)
-            uu____3783 in
-        let hd1 =
-          let uu____3785 = FStar_Syntax_Syntax.bv_to_name a in
-          FStar_Syntax_Syntax.new_bv (FStar_Pervasives_Native.Some r2)
-            uu____3785 in
-        let tl1 =
-          let uu____3787 =
-            let uu____3788 =
-              let uu____3791 =
-                let uu____3792 =
-                  let uu____3799 =
-                    FStar_Syntax_Syntax.fvar
-                      (FStar_Ident.set_lid_range FStar_Parser_Const.lex_t_lid
-                         r2) FStar_Syntax_Syntax.Delta_constant
-                      FStar_Pervasives_Native.None in
-                  (uu____3799, [FStar_Syntax_Syntax.U_name ucons2]) in
-                FStar_Syntax_Syntax.Tm_uinst uu____3792 in
-              FStar_Syntax_Syntax.mk uu____3791 in
-            uu____3788 FStar_Pervasives_Native.None r2 in
-          FStar_Syntax_Syntax.new_bv (FStar_Pervasives_Native.Some r2)
-            uu____3787 in
-        let res =
-          let uu____3808 =
-            let uu____3811 =
-              let uu____3812 =
-                let uu____3819 =
-                  FStar_Syntax_Syntax.fvar
-                    (FStar_Ident.set_lid_range FStar_Parser_Const.lex_t_lid
-                       r2) FStar_Syntax_Syntax.Delta_constant
-                    FStar_Pervasives_Native.None in
-                (uu____3819,
-                  [FStar_Syntax_Syntax.U_max
-                     [FStar_Syntax_Syntax.U_name ucons1;
-                     FStar_Syntax_Syntax.U_name ucons2]]) in
-              FStar_Syntax_Syntax.Tm_uinst uu____3812 in
-            FStar_Syntax_Syntax.mk uu____3811 in
-          uu____3808 FStar_Pervasives_Native.None r2 in
-        let uu____3825 = FStar_Syntax_Syntax.mk_Total res in
-        FStar_Syntax_Util.arrow
-          [(a, (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.imp_tag));
-          (hd1, FStar_Pervasives_Native.None);
-          (tl1, FStar_Pervasives_Native.None)] uu____3825 in
-      let lex_cons_t1 =
-        FStar_Syntax_Subst.close_univ_vars [ucons1; ucons2] lex_cons_t in
-      let dc_lexcons =
-        {
-          FStar_Syntax_Syntax.sigel =
-            (FStar_Syntax_Syntax.Sig_datacon
-               (lex_cons, [ucons1; ucons2], lex_cons_t1,
-                 FStar_Parser_Const.lex_t_lid, (Prims.parse_int "0"), []));
-          FStar_Syntax_Syntax.sigrng = r2;
-          FStar_Syntax_Syntax.sigquals = [];
-          FStar_Syntax_Syntax.sigmeta = FStar_Syntax_Syntax.default_sigmeta;
-          FStar_Syntax_Syntax.sigattrs = []
-        } in
-      let uu____3864 = FStar_TypeChecker_Env.get_range env in
-      {
-        FStar_Syntax_Syntax.sigel =
-          (FStar_Syntax_Syntax.Sig_bundle ([tc; dc_lextop; dc_lexcons], lids));
-        FStar_Syntax_Syntax.sigrng = uu____3864;
-        FStar_Syntax_Syntax.sigquals = [];
-        FStar_Syntax_Syntax.sigmeta = FStar_Syntax_Syntax.default_sigmeta;
-        FStar_Syntax_Syntax.sigattrs = []
-      }
-  | uu____3869 ->
-      let uu____3872 =
-        let uu____3873 =
-          let uu____3874 =
-            FStar_Syntax_Syntax.mk_sigelt
-              (FStar_Syntax_Syntax.Sig_bundle (ses, lids)) in
-          FStar_Syntax_Print.sigelt_to_string uu____3874 in
-        FStar_Util.format1 "Unexpected lex_t: %s\n" uu____3873 in
-      failwith uu____3872
+let tc_lex_t:
+  'Auu____3628 .
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.sigelt Prims.list ->
+        'Auu____3628 Prims.list ->
+          FStar_Ident.lident Prims.list -> FStar_Syntax_Syntax.sigelt
+  =
+  fun env  ->
+    fun ses  ->
+      fun quals  ->
+        fun lids  ->
+          match ses with
+          | {
+              FStar_Syntax_Syntax.sigel =
+                FStar_Syntax_Syntax.Sig_inductive_typ
+                (lex_t1,[],[],t,uu____3671,uu____3672);
+              FStar_Syntax_Syntax.sigrng = r;
+              FStar_Syntax_Syntax.sigquals = [];
+              FStar_Syntax_Syntax.sigmeta = uu____3674;
+              FStar_Syntax_Syntax.sigattrs = uu____3675;_}::{
+                                                              FStar_Syntax_Syntax.sigel
+                                                                =
+                                                                FStar_Syntax_Syntax.Sig_datacon
+                                                                (lex_top1,[],_t_top,_lex_t_top,_0_39,uu____3679);
+                                                              FStar_Syntax_Syntax.sigrng
+                                                                = r1;
+                                                              FStar_Syntax_Syntax.sigquals
+                                                                = [];
+                                                              FStar_Syntax_Syntax.sigmeta
+                                                                = uu____3681;
+                                                              FStar_Syntax_Syntax.sigattrs
+                                                                = uu____3682;_}::
+              {
+                FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
+                  (lex_cons,[],_t_cons,_lex_t_cons,_0_40,uu____3686);
+                FStar_Syntax_Syntax.sigrng = r2;
+                FStar_Syntax_Syntax.sigquals = [];
+                FStar_Syntax_Syntax.sigmeta = uu____3688;
+                FStar_Syntax_Syntax.sigattrs = uu____3689;_}::[]
+              when
+              ((_0_39 = (Prims.parse_int "0")) &&
+                 (_0_40 = (Prims.parse_int "0")))
+                &&
+                (((FStar_Ident.lid_equals lex_t1 FStar_Parser_Const.lex_t_lid)
+                    &&
+                    (FStar_Ident.lid_equals lex_top1
+                       FStar_Parser_Const.lextop_lid))
+                   &&
+                   (FStar_Ident.lid_equals lex_cons
+                      FStar_Parser_Const.lexcons_lid))
+              ->
+              let u =
+                FStar_Syntax_Syntax.new_univ_name
+                  (FStar_Pervasives_Native.Some r) in
+              let t1 =
+                FStar_Syntax_Syntax.mk
+                  (FStar_Syntax_Syntax.Tm_type (FStar_Syntax_Syntax.U_name u))
+                  FStar_Pervasives_Native.None r in
+              let t2 = FStar_Syntax_Subst.close_univ_vars [u] t1 in
+              let tc =
+                {
+                  FStar_Syntax_Syntax.sigel =
+                    (FStar_Syntax_Syntax.Sig_inductive_typ
+                       (lex_t1, [u], [], t2, [],
+                         [FStar_Parser_Const.lextop_lid;
+                         FStar_Parser_Const.lexcons_lid]));
+                  FStar_Syntax_Syntax.sigrng = r;
+                  FStar_Syntax_Syntax.sigquals = [];
+                  FStar_Syntax_Syntax.sigmeta =
+                    FStar_Syntax_Syntax.default_sigmeta;
+                  FStar_Syntax_Syntax.sigattrs = []
+                } in
+              let utop =
+                FStar_Syntax_Syntax.new_univ_name
+                  (FStar_Pervasives_Native.Some r1) in
+              let lex_top_t =
+                let uu____3754 =
+                  let uu____3757 =
+                    let uu____3758 =
+                      let uu____3765 =
+                        FStar_Syntax_Syntax.fvar
+                          (FStar_Ident.set_lid_range
+                             FStar_Parser_Const.lex_t_lid r1)
+                          FStar_Syntax_Syntax.Delta_constant
+                          FStar_Pervasives_Native.None in
+                      (uu____3765, [FStar_Syntax_Syntax.U_name utop]) in
+                    FStar_Syntax_Syntax.Tm_uinst uu____3758 in
+                  FStar_Syntax_Syntax.mk uu____3757 in
+                uu____3754 FStar_Pervasives_Native.None r1 in
+              let lex_top_t1 =
+                FStar_Syntax_Subst.close_univ_vars [utop] lex_top_t in
+              let dc_lextop =
+                {
+                  FStar_Syntax_Syntax.sigel =
+                    (FStar_Syntax_Syntax.Sig_datacon
+                       (lex_top1, [utop], lex_top_t1,
+                         FStar_Parser_Const.lex_t_lid, (Prims.parse_int "0"),
+                         []));
+                  FStar_Syntax_Syntax.sigrng = r1;
+                  FStar_Syntax_Syntax.sigquals = [];
+                  FStar_Syntax_Syntax.sigmeta =
+                    FStar_Syntax_Syntax.default_sigmeta;
+                  FStar_Syntax_Syntax.sigattrs = []
+                } in
+              let ucons1 =
+                FStar_Syntax_Syntax.new_univ_name
+                  (FStar_Pervasives_Native.Some r2) in
+              let ucons2 =
+                FStar_Syntax_Syntax.new_univ_name
+                  (FStar_Pervasives_Native.Some r2) in
+              let lex_cons_t =
+                let a =
+                  let uu____3783 =
+                    FStar_Syntax_Syntax.mk
+                      (FStar_Syntax_Syntax.Tm_type
+                         (FStar_Syntax_Syntax.U_name ucons1))
+                      FStar_Pervasives_Native.None r2 in
+                  FStar_Syntax_Syntax.new_bv
+                    (FStar_Pervasives_Native.Some r2) uu____3783 in
+                let hd1 =
+                  let uu____3785 = FStar_Syntax_Syntax.bv_to_name a in
+                  FStar_Syntax_Syntax.new_bv
+                    (FStar_Pervasives_Native.Some r2) uu____3785 in
+                let tl1 =
+                  let uu____3787 =
+                    let uu____3788 =
+                      let uu____3791 =
+                        let uu____3792 =
+                          let uu____3799 =
+                            FStar_Syntax_Syntax.fvar
+                              (FStar_Ident.set_lid_range
+                                 FStar_Parser_Const.lex_t_lid r2)
+                              FStar_Syntax_Syntax.Delta_constant
+                              FStar_Pervasives_Native.None in
+                          (uu____3799, [FStar_Syntax_Syntax.U_name ucons2]) in
+                        FStar_Syntax_Syntax.Tm_uinst uu____3792 in
+                      FStar_Syntax_Syntax.mk uu____3791 in
+                    uu____3788 FStar_Pervasives_Native.None r2 in
+                  FStar_Syntax_Syntax.new_bv
+                    (FStar_Pervasives_Native.Some r2) uu____3787 in
+                let res =
+                  let uu____3808 =
+                    let uu____3811 =
+                      let uu____3812 =
+                        let uu____3819 =
+                          FStar_Syntax_Syntax.fvar
+                            (FStar_Ident.set_lid_range
+                               FStar_Parser_Const.lex_t_lid r2)
+                            FStar_Syntax_Syntax.Delta_constant
+                            FStar_Pervasives_Native.None in
+                        (uu____3819,
+                          [FStar_Syntax_Syntax.U_max
+                             [FStar_Syntax_Syntax.U_name ucons1;
+                             FStar_Syntax_Syntax.U_name ucons2]]) in
+                      FStar_Syntax_Syntax.Tm_uinst uu____3812 in
+                    FStar_Syntax_Syntax.mk uu____3811 in
+                  uu____3808 FStar_Pervasives_Native.None r2 in
+                let uu____3825 = FStar_Syntax_Syntax.mk_Total res in
+                FStar_Syntax_Util.arrow
+                  [(a,
+                     (FStar_Pervasives_Native.Some
+                        FStar_Syntax_Syntax.imp_tag));
+                  (hd1, FStar_Pervasives_Native.None);
+                  (tl1, FStar_Pervasives_Native.None)] uu____3825 in
+              let lex_cons_t1 =
+                FStar_Syntax_Subst.close_univ_vars [ucons1; ucons2]
+                  lex_cons_t in
+              let dc_lexcons =
+                {
+                  FStar_Syntax_Syntax.sigel =
+                    (FStar_Syntax_Syntax.Sig_datacon
+                       (lex_cons, [ucons1; ucons2], lex_cons_t1,
+                         FStar_Parser_Const.lex_t_lid, (Prims.parse_int "0"),
+                         []));
+                  FStar_Syntax_Syntax.sigrng = r2;
+                  FStar_Syntax_Syntax.sigquals = [];
+                  FStar_Syntax_Syntax.sigmeta =
+                    FStar_Syntax_Syntax.default_sigmeta;
+                  FStar_Syntax_Syntax.sigattrs = []
+                } in
+              let uu____3864 = FStar_TypeChecker_Env.get_range env in
+              {
+                FStar_Syntax_Syntax.sigel =
+                  (FStar_Syntax_Syntax.Sig_bundle
+                     ([tc; dc_lextop; dc_lexcons], lids));
+                FStar_Syntax_Syntax.sigrng = uu____3864;
+                FStar_Syntax_Syntax.sigquals = [];
+                FStar_Syntax_Syntax.sigmeta =
+                  FStar_Syntax_Syntax.default_sigmeta;
+                FStar_Syntax_Syntax.sigattrs = []
+              }
+          | uu____3869 ->
+              let uu____3872 =
+                let uu____3873 =
+                  let uu____3874 =
+                    FStar_Syntax_Syntax.mk_sigelt
+                      (FStar_Syntax_Syntax.Sig_bundle (ses, lids)) in
+                  FStar_Syntax_Print.sigelt_to_string uu____3874 in
+                FStar_Util.format1 "Unexpected lex_t: %s\n" uu____3873 in
+              failwith uu____3872
 let tc_assume:
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->

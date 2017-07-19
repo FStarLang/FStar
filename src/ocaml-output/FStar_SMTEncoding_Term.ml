@@ -447,7 +447,11 @@ let fv_eq: fv -> fv -> Prims.bool =
   fun x  ->
     fun y  ->
       (FStar_Pervasives_Native.fst x) = (FStar_Pervasives_Native.fst y)
-let fv_sort x = FStar_Pervasives_Native.snd x
+let fv_sort:
+  'Auu____1313 'Auu____1314 .
+    ('Auu____1314,'Auu____1313) FStar_Pervasives_Native.tuple2 ->
+      'Auu____1313
+  = fun x  -> FStar_Pervasives_Native.snd x
 let freevar_eq: term -> term -> Prims.bool =
   fun x  ->
     fun y  ->
@@ -1234,7 +1238,7 @@ let fresh_constructor:
         Assume a
 let injective_constructor:
   (Prims.string,constructor_field Prims.list,sort)
-    FStar_Pervasives_Native.tuple3 -> decl Prims.list
+    FStar_Pervasives_Native.tuple3 -> decls_t
   =
   fun uu____3866  ->
     match uu____3866 with
@@ -1295,7 +1299,7 @@ let injective_constructor:
                           [proj_name; Assume a]
                         else [proj_name])) in
         FStar_All.pipe_right uu____3952 FStar_List.flatten
-let constructor_to_decl: constructor_t -> decl Prims.list =
+let constructor_to_decl: constructor_t -> decls_t =
   fun uu____4045  ->
     match uu____4045 with
     | (name,fields,sort,id,injective) ->

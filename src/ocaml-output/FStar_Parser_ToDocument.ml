@@ -1,10 +1,17 @@
 open Prims
 let should_print_fs_typ_app: Prims.bool FStar_ST.ref =
   FStar_Util.mk_ref false
-let with_fs_typ_app b printer t =
-  let b0 = FStar_ST.read should_print_fs_typ_app in
-  FStar_ST.write should_print_fs_typ_app b;
-  (let res = printer t in FStar_ST.write should_print_fs_typ_app b0; res)
+let with_fs_typ_app:
+  'Auu____14 'Auu____15 .
+    Prims.bool -> ('Auu____15 -> 'Auu____14) -> 'Auu____15 -> 'Auu____14
+  =
+  fun b  ->
+    fun printer  ->
+      fun t  ->
+        let b0 = FStar_ST.read should_print_fs_typ_app in
+        FStar_ST.write should_print_fs_typ_app b;
+        (let res = printer t in
+         FStar_ST.write should_print_fs_typ_app b0; res)
 let should_unparen: Prims.bool FStar_ST.ref = FStar_Util.mk_ref true
 let rec unparen: FStar_Parser_AST.term -> FStar_Parser_AST.term =
   fun t  ->
@@ -19,10 +26,18 @@ let rec unparen: FStar_Parser_AST.term -> FStar_Parser_AST.term =
        | uu____48 -> t)
 let str: Prims.string -> FStar_Pprint.document =
   fun s  -> FStar_Pprint.doc_of_string s
-let default_or_map n1 f x =
-  match x with
-  | FStar_Pervasives_Native.None  -> n1
-  | FStar_Pervasives_Native.Some x' -> f x'
+let default_or_map:
+  'Auu____63 'Auu____64 .
+    'Auu____64 ->
+      ('Auu____63 -> 'Auu____64) ->
+        'Auu____63 FStar_Pervasives_Native.option -> 'Auu____64
+  =
+  fun n1  ->
+    fun f  ->
+      fun x  ->
+        match x with
+        | FStar_Pervasives_Native.None  -> n1
+        | FStar_Pervasives_Native.Some x' -> f x'
 let prefix2:
   FStar_Pprint.document -> FStar_Pprint.document -> FStar_Pprint.document =
   fun prefix_  ->
@@ -44,36 +59,62 @@ let infix0:
     FStar_Pprint.document -> FStar_Pprint.document -> FStar_Pprint.document
   = FStar_Pprint.infix (Prims.parse_int "0") (Prims.parse_int "1")
 let break1: FStar_Pprint.document = FStar_Pprint.break_ (Prims.parse_int "1")
-let separate_break_map sep f l =
-  let uu____155 =
-    let uu____156 =
-      let uu____157 = FStar_Pprint.op_Hat_Hat sep break1 in
-      FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____157 in
-    FStar_Pprint.separate_map uu____156 f l in
-  FStar_Pprint.group uu____155
-let precede_break_separate_map prec sep f l =
-  let uu____194 =
-    let uu____195 = FStar_Pprint.op_Hat_Hat prec FStar_Pprint.space in
-    let uu____196 =
-      let uu____197 = FStar_List.hd l in FStar_All.pipe_right uu____197 f in
-    FStar_Pprint.precede uu____195 uu____196 in
-  let uu____198 =
-    let uu____199 = FStar_List.tl l in
-    FStar_Pprint.concat_map
-      (fun x  ->
-         let uu____205 =
-           let uu____206 =
-             let uu____207 = f x in
-             FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____207 in
-           FStar_Pprint.op_Hat_Hat sep uu____206 in
-         FStar_Pprint.op_Hat_Hat break1 uu____205) uu____199 in
-  FStar_Pprint.op_Hat_Hat uu____194 uu____198
-let concat_break_map f l =
-  let uu____232 =
-    FStar_Pprint.concat_map
-      (fun x  ->
-         let uu____236 = f x in FStar_Pprint.op_Hat_Hat uu____236 break1) l in
-  FStar_Pprint.group uu____232
+let separate_break_map:
+  'Auu____133 .
+    FStar_Pprint.document ->
+      ('Auu____133 -> FStar_Pprint.document) ->
+        'Auu____133 Prims.list -> FStar_Pprint.document
+  =
+  fun sep  ->
+    fun f  ->
+      fun l  ->
+        let uu____155 =
+          let uu____156 =
+            let uu____157 = FStar_Pprint.op_Hat_Hat sep break1 in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____157 in
+          FStar_Pprint.separate_map uu____156 f l in
+        FStar_Pprint.group uu____155
+let precede_break_separate_map:
+  'Auu____168 .
+    FStar_Pprint.document ->
+      FStar_Pprint.document ->
+        ('Auu____168 -> FStar_Pprint.document) ->
+          'Auu____168 Prims.list -> FStar_Pprint.document
+  =
+  fun prec  ->
+    fun sep  ->
+      fun f  ->
+        fun l  ->
+          let uu____194 =
+            let uu____195 = FStar_Pprint.op_Hat_Hat prec FStar_Pprint.space in
+            let uu____196 =
+              let uu____197 = FStar_List.hd l in
+              FStar_All.pipe_right uu____197 f in
+            FStar_Pprint.precede uu____195 uu____196 in
+          let uu____198 =
+            let uu____199 = FStar_List.tl l in
+            FStar_Pprint.concat_map
+              (fun x  ->
+                 let uu____205 =
+                   let uu____206 =
+                     let uu____207 = f x in
+                     FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____207 in
+                   FStar_Pprint.op_Hat_Hat sep uu____206 in
+                 FStar_Pprint.op_Hat_Hat break1 uu____205) uu____199 in
+          FStar_Pprint.op_Hat_Hat uu____194 uu____198
+let concat_break_map:
+  'Auu____214 .
+    ('Auu____214 -> FStar_Pprint.document) ->
+      'Auu____214 Prims.list -> FStar_Pprint.document
+  =
+  fun f  ->
+    fun l  ->
+      let uu____232 =
+        FStar_Pprint.concat_map
+          (fun x  ->
+             let uu____236 = f x in FStar_Pprint.op_Hat_Hat uu____236 break1)
+          l in
+      FStar_Pprint.group uu____232
 let parens_with_nesting: FStar_Pprint.document -> FStar_Pprint.document =
   fun contents  ->
     FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "0")
@@ -108,16 +149,43 @@ let soft_begin_end_with_nesting:
     let uu____266 = str "end" in
     FStar_Pprint.soft_surround (Prims.parse_int "2") (Prims.parse_int "1")
       uu____265 contents uu____266
-let separate_map_or_flow sep f l =
-  if (FStar_List.length l) < (Prims.parse_int "10")
-  then FStar_Pprint.separate_map sep f l
-  else FStar_Pprint.flow_map sep f l
-let soft_surround_separate_map n1 b void_ opening sep closing f xs =
-  if xs = []
-  then void_
-  else
-    (let uu____361 = FStar_Pprint.separate_map sep f xs in
-     FStar_Pprint.soft_surround n1 b opening uu____361 closing)
+let separate_map_or_flow:
+  'Auu____275 .
+    FStar_Pprint.document ->
+      ('Auu____275 -> FStar_Pprint.document) ->
+        'Auu____275 Prims.list -> FStar_Pprint.document
+  =
+  fun sep  ->
+    fun f  ->
+      fun l  ->
+        if (FStar_List.length l) < (Prims.parse_int "10")
+        then FStar_Pprint.separate_map sep f l
+        else FStar_Pprint.flow_map sep f l
+let soft_surround_separate_map:
+  'Auu____316 .
+    Prims.int ->
+      Prims.int ->
+        FStar_Pprint.document ->
+          FStar_Pprint.document ->
+            FStar_Pprint.document ->
+              FStar_Pprint.document ->
+                ('Auu____316 -> FStar_Pprint.document) ->
+                  'Auu____316 Prims.list -> FStar_Pprint.document
+  =
+  fun n1  ->
+    fun b  ->
+      fun void_  ->
+        fun opening  ->
+          fun sep  ->
+            fun closing  ->
+              fun f  ->
+                fun xs  ->
+                  if xs = []
+                  then void_
+                  else
+                    (let uu____361 = FStar_Pprint.separate_map sep f xs in
+                     FStar_Pprint.soft_surround n1 b opening uu____361
+                       closing)
 let doc_of_fsdoc:
   (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
                   Prims.list)
@@ -375,43 +443,130 @@ let matches_token:
           let uu____791 = FStar_String.get s (Prims.parse_int "0") in
           uu____791 = c
       | FStar_Util.Inr s' -> s = s'
-let matches_level s uu____817 =
-  match uu____817 with
-  | (assoc_levels,tokens) ->
-      let uu____842 = FStar_List.tryFind (matches_token s) tokens in
-      uu____842 <> FStar_Pervasives_Native.None
-let opinfix4 uu____876 = (Right, [FStar_Util.Inr "**"])
-let opinfix3 uu____904 =
-  (Left, [FStar_Util.Inl '*'; FStar_Util.Inl '/'; FStar_Util.Inl '%'])
-let opinfix2 uu____940 = (Left, [FStar_Util.Inl '+'; FStar_Util.Inl '-'])
-let minus_lvl uu____972 = (Left, [FStar_Util.Inr "-"])
-let opinfix1 uu____1000 = (Right, [FStar_Util.Inl '@'; FStar_Util.Inl '^'])
-let pipe_right uu____1032 = (Left, [FStar_Util.Inr "|>"])
-let opinfix0d uu____1060 = (Left, [FStar_Util.Inl '$'])
-let opinfix0c uu____1088 =
-  (Left, [FStar_Util.Inl '='; FStar_Util.Inl '<'; FStar_Util.Inl '>'])
-let equal uu____1124 = (Left, [FStar_Util.Inr "="])
-let opinfix0b uu____1152 = (Left, [FStar_Util.Inl '&'])
-let opinfix0a uu____1180 = (Left, [FStar_Util.Inl '|'])
-let colon_equals uu____1208 = (NonAssoc, [FStar_Util.Inr ":="])
-let amp uu____1236 = (Right, [FStar_Util.Inr "&"])
-let colon_colon uu____1264 = (Right, [FStar_Util.Inr "::"])
+let matches_level:
+  'Auu____799 .
+    Prims.string ->
+      ('Auu____799,(FStar_Char.char,Prims.string) FStar_Util.either
+                     Prims.list)
+        FStar_Pervasives_Native.tuple2 -> Prims.bool
+  =
+  fun s  ->
+    fun uu____817  ->
+      match uu____817 with
+      | (assoc_levels,tokens) ->
+          let uu____842 = FStar_List.tryFind (matches_token s) tokens in
+          uu____842 <> FStar_Pervasives_Native.None
+let opinfix4:
+  'Auu____865 .
+    Prims.unit ->
+      (associativity,('Auu____865,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____876  -> (Right, [FStar_Util.Inr "**"])
+let opinfix3:
+  'Auu____893 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____893) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun uu____904  ->
+    (Left, [FStar_Util.Inl '*'; FStar_Util.Inl '/'; FStar_Util.Inl '%'])
+let opinfix2:
+  'Auu____929 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____929) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____940  -> (Left, [FStar_Util.Inl '+'; FStar_Util.Inl '-'])
+let minus_lvl:
+  'Auu____961 .
+    Prims.unit ->
+      (associativity,('Auu____961,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____972  -> (Left, [FStar_Util.Inr "-"])
+let opinfix1:
+  'Auu____989 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____989) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1000  -> (Right, [FStar_Util.Inl '@'; FStar_Util.Inl '^'])
+let pipe_right:
+  'Auu____1021 .
+    Prims.unit ->
+      (associativity,('Auu____1021,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1032  -> (Left, [FStar_Util.Inr "|>"])
+let opinfix0d:
+  'Auu____1049 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____1049) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1060  -> (Left, [FStar_Util.Inl '$'])
+let opinfix0c:
+  'Auu____1077 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____1077) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun uu____1088  ->
+    (Left, [FStar_Util.Inl '='; FStar_Util.Inl '<'; FStar_Util.Inl '>'])
+let equal:
+  'Auu____1113 .
+    Prims.unit ->
+      (associativity,('Auu____1113,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1124  -> (Left, [FStar_Util.Inr "="])
+let opinfix0b:
+  'Auu____1141 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____1141) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1152  -> (Left, [FStar_Util.Inl '&'])
+let opinfix0a:
+  'Auu____1169 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____1169) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1180  -> (Left, [FStar_Util.Inl '|'])
+let colon_equals:
+  'Auu____1197 .
+    Prims.unit ->
+      (associativity,('Auu____1197,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1208  -> (NonAssoc, [FStar_Util.Inr ":="])
+let amp:
+  'Auu____1225 .
+    Prims.unit ->
+      (associativity,('Auu____1225,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1236  -> (Right, [FStar_Util.Inr "&"])
+let colon_colon:
+  'Auu____1253 .
+    Prims.unit ->
+      (associativity,('Auu____1253,Prims.string) FStar_Util.either Prims.list)
+        FStar_Pervasives_Native.tuple2
+  = fun uu____1264  -> (Right, [FStar_Util.Inr "::"])
 let level_associativity_spec:
   (associativity,(FStar_Char.char,Prims.string) FStar_Util.either Prims.list)
     FStar_Pervasives_Native.tuple2 Prims.list
   =
-  [opinfix4 ();
-  opinfix3 ();
-  opinfix2 ();
-  opinfix1 ();
-  pipe_right ();
-  opinfix0d ();
-  opinfix0c ();
-  opinfix0b ();
-  opinfix0a ();
-  colon_equals ();
-  amp ();
-  colon_colon ()]
+  [Obj.magic (opinfix4 ());
+  Obj.magic (opinfix3 ());
+  Obj.magic (opinfix2 ());
+  Obj.magic (opinfix1 ());
+  Obj.magic (pipe_right ());
+  Obj.magic (opinfix0d ());
+  Obj.magic (opinfix0c ());
+  Obj.magic (opinfix0b ());
+  Obj.magic (opinfix0a ());
+  Obj.magic (colon_equals ());
+  Obj.magic (amp ());
+  Obj.magic (colon_colon ())]
 let level_table:
   ((Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3,(FStar_Char.char,
                                                                     Prims.string)
@@ -444,47 +599,59 @@ let assign_levels:
       | uu____1655 -> failwith (Prims.strcat "Unrecognized operator " s)
 let max: Prims.int -> Prims.int -> Prims.int =
   fun k1  -> fun k2  -> if k1 > k2 then k1 else k2
-let max_level l =
-  let find_level_and_max n1 level =
-    let uu____1749 =
-      FStar_List.tryFind
-        (fun uu____1787  ->
-           match uu____1787 with
-           | (uu____1804,tokens) ->
-               tokens = (FStar_Pervasives_Native.snd level)) level_table in
-    match uu____1749 with
-    | FStar_Pervasives_Native.Some ((uu____1842,l1,uu____1844),uu____1845) ->
-        max n1 l1
-    | FStar_Pervasives_Native.None  ->
-        let uu____1896 =
-          let uu____1897 =
-            let uu____1898 =
-              FStar_List.map token_to_string
-                (FStar_Pervasives_Native.snd level) in
-            FStar_String.concat "," uu____1898 in
-          FStar_Util.format1 "Undefined associativity level %s" uu____1897 in
-        failwith uu____1896 in
-  FStar_List.fold_left find_level_and_max (Prims.parse_int "0") l
+let max_level:
+  'Auu____1693 .
+    ('Auu____1693,(FStar_Char.char,Prims.string) FStar_Util.either Prims.list)
+      FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int
+  =
+  fun l  ->
+    let find_level_and_max n1 level =
+      let uu____1749 =
+        FStar_List.tryFind
+          (fun uu____1787  ->
+             match uu____1787 with
+             | (uu____1804,tokens) ->
+                 tokens = (FStar_Pervasives_Native.snd level)) level_table in
+      match uu____1749 with
+      | FStar_Pervasives_Native.Some ((uu____1842,l1,uu____1844),uu____1845)
+          -> max n1 l1
+      | FStar_Pervasives_Native.None  ->
+          let uu____1896 =
+            let uu____1897 =
+              let uu____1898 =
+                FStar_List.map token_to_string
+                  (FStar_Pervasives_Native.snd level) in
+              FStar_String.concat "," uu____1898 in
+            FStar_Util.format1 "Undefined associativity level %s" uu____1897 in
+          failwith uu____1896 in
+    FStar_List.fold_left find_level_and_max (Prims.parse_int "0") l
 let levels:
   Prims.string ->
     (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
   = assign_levels level_associativity_spec
-let operatorInfix0ad12 uu____1945 =
-  [opinfix0a ();
-  opinfix0b ();
-  opinfix0c ();
-  opinfix0d ();
-  opinfix1 ();
-  opinfix2 ()]
+let operatorInfix0ad12:
+  'Auu____1932 .
+    Prims.unit ->
+      (associativity,(FStar_Char.char,'Auu____1932) FStar_Util.either
+                       Prims.list)
+        FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun uu____1945  ->
+    [Obj.magic (opinfix0a ());
+    Obj.magic (opinfix0b ());
+    Obj.magic (opinfix0c ());
+    Obj.magic (opinfix0d ());
+    Obj.magic (opinfix1 ());
+    Obj.magic (opinfix2 ())]
 let is_operatorInfix0ad12: FStar_Ident.ident -> Prims.bool =
   fun op  ->
     let uu____2020 =
       let uu____2033 =
         FStar_All.pipe_left matches_level (FStar_Ident.text_of_id op) in
-      FStar_List.tryFind uu____2033 (operatorInfix0ad12 ()) in
+      FStar_List.tryFind uu____2033 (Obj.magic (operatorInfix0ad12 ())) in
     uu____2020 <> FStar_Pervasives_Native.None
 let is_operatorInfix34: FStar_Ident.ident -> Prims.bool =
-  let opinfix34 = [opinfix3 (); opinfix4 ()] in
+  let opinfix34 = [Obj.magic (opinfix3 ()); Obj.magic (opinfix4 ())] in
   fun op  ->
     let uu____2137 =
       let uu____2150 =
@@ -509,60 +676,72 @@ let handleable_args_length: FStar_Ident.ident -> Prims.int =
          if FStar_List.mem op_s [".()<-"; ".[]<-"]
          then Prims.parse_int "3"
          else Prims.parse_int "0")
-let handleable_op op args =
-  match FStar_List.length args with
-  | _0_27 when _0_27 = (Prims.parse_int "0") -> true
-  | _0_28 when _0_28 = (Prims.parse_int "1") ->
-      (is_general_prefix_op op) ||
-        (FStar_List.mem (FStar_Ident.text_of_id op) ["-"; "~"])
-  | _0_29 when _0_29 = (Prims.parse_int "2") ->
-      ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
-        (FStar_List.mem (FStar_Ident.text_of_id op)
-           ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
-  | _0_30 when _0_30 = (Prims.parse_int "3") ->
-      FStar_List.mem (FStar_Ident.text_of_id op) [".()<-"; ".[]<-"]
-  | uu____2236 -> false
+let handleable_op:
+  'Auu____2223 . FStar_Ident.ident -> 'Auu____2223 Prims.list -> Prims.bool =
+  fun op  ->
+    fun args  ->
+      match FStar_List.length args with
+      | _0_27 when _0_27 = (Prims.parse_int "0") -> true
+      | _0_28 when _0_28 = (Prims.parse_int "1") ->
+          (is_general_prefix_op op) ||
+            (FStar_List.mem (FStar_Ident.text_of_id op) ["-"; "~"])
+      | _0_29 when _0_29 = (Prims.parse_int "2") ->
+          ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
+            (FStar_List.mem (FStar_Ident.text_of_id op)
+               ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
+      | _0_30 when _0_30 = (Prims.parse_int "3") ->
+          FStar_List.mem (FStar_Ident.text_of_id op) [".()<-"; ".[]<-"]
+      | uu____2236 -> false
 let comment_stack:
   (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 Prims.list
     FStar_ST.ref
   = FStar_Util.mk_ref []
-let with_comment printer tm tmrange =
-  let rec comments_before_pos acc print_pos lookahead_pos =
-    let uu____2296 = FStar_ST.read comment_stack in
-    match uu____2296 with
-    | [] -> (acc, false)
-    | (comment,crange)::cs ->
-        let uu____2330 = FStar_Range.range_before_pos crange print_pos in
-        if uu____2330
-        then
-          (FStar_ST.write comment_stack cs;
-           (let uu____2342 =
-              let uu____2343 =
-                let uu____2344 = str comment in
-                FStar_Pprint.op_Hat_Hat uu____2344 FStar_Pprint.hardline in
-              FStar_Pprint.op_Hat_Hat acc uu____2343 in
-            comments_before_pos uu____2342 print_pos lookahead_pos))
-        else
-          (let uu____2346 = FStar_Range.range_before_pos crange lookahead_pos in
-           (acc, uu____2346)) in
-  let uu____2347 =
-    let uu____2352 =
-      let uu____2353 = FStar_Range.start_of_range tmrange in
-      FStar_Range.end_of_line uu____2353 in
-    let uu____2354 = FStar_Range.end_of_range tmrange in
-    comments_before_pos FStar_Pprint.empty uu____2352 uu____2354 in
-  match uu____2347 with
-  | (comments,has_lookahead) ->
-      let printed_e = printer tm in
-      let comments1 =
-        if has_lookahead
-        then
-          let pos = FStar_Range.end_of_range tmrange in
-          let uu____2360 = comments_before_pos comments pos pos in
-          FStar_Pervasives_Native.fst uu____2360
-        else comments in
-      let uu____2366 = FStar_Pprint.op_Hat_Hat comments1 printed_e in
-      FStar_Pprint.group uu____2366
+let with_comment:
+  'Auu____2264 .
+    ('Auu____2264 -> FStar_Pprint.document) ->
+      'Auu____2264 -> FStar_Range.range -> FStar_Pprint.document
+  =
+  fun printer  ->
+    fun tm  ->
+      fun tmrange  ->
+        let rec comments_before_pos acc print_pos lookahead_pos =
+          let uu____2296 = FStar_ST.read comment_stack in
+          match uu____2296 with
+          | [] -> (acc, false)
+          | (comment,crange)::cs ->
+              let uu____2330 = FStar_Range.range_before_pos crange print_pos in
+              if uu____2330
+              then
+                (FStar_ST.write comment_stack cs;
+                 (let uu____2342 =
+                    let uu____2343 =
+                      let uu____2344 = str comment in
+                      FStar_Pprint.op_Hat_Hat uu____2344
+                        FStar_Pprint.hardline in
+                    FStar_Pprint.op_Hat_Hat acc uu____2343 in
+                  comments_before_pos uu____2342 print_pos lookahead_pos))
+              else
+                (let uu____2346 =
+                   FStar_Range.range_before_pos crange lookahead_pos in
+                 (acc, uu____2346)) in
+        let uu____2347 =
+          let uu____2352 =
+            let uu____2353 = FStar_Range.start_of_range tmrange in
+            FStar_Range.end_of_line uu____2353 in
+          let uu____2354 = FStar_Range.end_of_range tmrange in
+          comments_before_pos FStar_Pprint.empty uu____2352 uu____2354 in
+        match uu____2347 with
+        | (comments,has_lookahead) ->
+            let printed_e = printer tm in
+            let comments1 =
+              if has_lookahead
+              then
+                let pos = FStar_Range.end_of_range tmrange in
+                let uu____2360 = comments_before_pos comments pos pos in
+                FStar_Pervasives_Native.fst uu____2360
+              else comments in
+            let uu____2366 = FStar_Pprint.op_Hat_Hat comments1 printed_e in
+            FStar_Pprint.group uu____2366
 let rec place_comments_until_pos:
   Prims.int ->
     Prims.int ->
@@ -604,39 +783,53 @@ let rec place_comments_until_pos:
                 max (Prims.parse_int "1") uu____2434 in
               let uu____2436 = FStar_Pprint.repeat lnum FStar_Pprint.hardline in
               FStar_Pprint.op_Hat_Hat doc1 uu____2436
-let separate_map_with_comments prefix1 sep f xs extract_range =
-  let fold_fun uu____2497 x =
-    match uu____2497 with
-    | (last_line,doc1) ->
-        let r = extract_range x in
-        let doc2 =
-          let uu____2511 = FStar_Range.start_of_range r in
-          place_comments_until_pos (Prims.parse_int "1") last_line uu____2511
-            doc1 in
-        let uu____2512 =
-          let uu____2513 = FStar_Range.end_of_range r in
-          FStar_Range.line_of_pos uu____2513 in
-        let uu____2514 =
-          let uu____2515 =
-            let uu____2516 = f x in FStar_Pprint.op_Hat_Hat sep uu____2516 in
-          FStar_Pprint.op_Hat_Hat doc2 uu____2515 in
-        (uu____2512, uu____2514) in
-  let uu____2517 =
-    let uu____2524 = FStar_List.hd xs in
-    let uu____2525 = FStar_List.tl xs in (uu____2524, uu____2525) in
-  match uu____2517 with
-  | (x,xs1) ->
-      let init1 =
-        let uu____2541 =
-          let uu____2542 =
-            let uu____2543 = extract_range x in
-            FStar_Range.end_of_range uu____2543 in
-          FStar_Range.line_of_pos uu____2542 in
-        let uu____2544 =
-          let uu____2545 = f x in FStar_Pprint.op_Hat_Hat prefix1 uu____2545 in
-        (uu____2541, uu____2544) in
-      let uu____2546 = FStar_List.fold_left fold_fun init1 xs1 in
-      FStar_Pervasives_Native.snd uu____2546
+let separate_map_with_comments:
+  'Auu____2449 .
+    FStar_Pprint.document ->
+      FStar_Pprint.document ->
+        ('Auu____2449 -> FStar_Pprint.document) ->
+          'Auu____2449 Prims.list ->
+            ('Auu____2449 -> FStar_Range.range) -> FStar_Pprint.document
+  =
+  fun prefix1  ->
+    fun sep  ->
+      fun f  ->
+        fun xs  ->
+          fun extract_range  ->
+            let fold_fun uu____2497 x =
+              match uu____2497 with
+              | (last_line,doc1) ->
+                  let r = extract_range x in
+                  let doc2 =
+                    let uu____2511 = FStar_Range.start_of_range r in
+                    place_comments_until_pos (Prims.parse_int "1") last_line
+                      uu____2511 doc1 in
+                  let uu____2512 =
+                    let uu____2513 = FStar_Range.end_of_range r in
+                    FStar_Range.line_of_pos uu____2513 in
+                  let uu____2514 =
+                    let uu____2515 =
+                      let uu____2516 = f x in
+                      FStar_Pprint.op_Hat_Hat sep uu____2516 in
+                    FStar_Pprint.op_Hat_Hat doc2 uu____2515 in
+                  (uu____2512, uu____2514) in
+            let uu____2517 =
+              let uu____2524 = FStar_List.hd xs in
+              let uu____2525 = FStar_List.tl xs in (uu____2524, uu____2525) in
+            match uu____2517 with
+            | (x,xs1) ->
+                let init1 =
+                  let uu____2541 =
+                    let uu____2542 =
+                      let uu____2543 = extract_range x in
+                      FStar_Range.end_of_range uu____2543 in
+                    FStar_Range.line_of_pos uu____2542 in
+                  let uu____2544 =
+                    let uu____2545 = f x in
+                    FStar_Pprint.op_Hat_Hat prefix1 uu____2545 in
+                  (uu____2541, uu____2544) in
+                let uu____2546 = FStar_List.fold_left fold_fun init1 xs1 in
+                FStar_Pervasives_Native.snd uu____2546
 let rec p_decl: FStar_Parser_AST.decl -> FStar_Pprint.document =
   fun d  ->
     let uu____2833 =
@@ -1978,8 +2171,9 @@ and p_tmEq: FStar_Parser_AST.term -> FStar_Pprint.document =
   fun e  ->
     let n1 =
       max_level
-        (FStar_List.append [colon_equals (); pipe_right ()]
-           (operatorInfix0ad12 ())) in
+        (FStar_List.append
+           [Obj.magic (colon_equals ()); Obj.magic (pipe_right ())]
+           (Obj.magic (operatorInfix0ad12 ()))) in
     p_tmEq' n1 e
 and p_tmEq': Prims.int -> FStar_Parser_AST.term -> FStar_Pprint.document =
   fun curr  ->
@@ -2026,7 +2220,12 @@ and p_tmEq': Prims.int -> FStar_Parser_AST.term -> FStar_Pprint.document =
       | uu____4681 -> p_tmNoEq e
 and p_tmNoEq: FStar_Parser_AST.term -> FStar_Pprint.document =
   fun e  ->
-    let n1 = max_level [colon_colon (); amp (); opinfix3 (); opinfix4 ()] in
+    let n1 =
+      max_level
+        [Obj.magic (colon_colon ());
+        Obj.magic (amp ());
+        Obj.magic (opinfix3 ());
+        Obj.magic (opinfix4 ())] in
     p_tmNoEq' n1 e
 and p_tmNoEq': Prims.int -> FStar_Parser_AST.term -> FStar_Pprint.document =
   fun curr  ->

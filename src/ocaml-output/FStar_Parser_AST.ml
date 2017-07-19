@@ -921,18 +921,28 @@ let check_id: FStar_Ident.ident -> Prims.unit =
            (uu____3772, (id.FStar_Ident.idRange)) in
          FStar_Errors.Error uu____3767 in
        raise uu____3766)
-let at_most_one s r l =
-  match l with
-  | x::[] -> FStar_Pervasives_Native.Some x
-  | [] -> FStar_Pervasives_Native.None
-  | uu____3801 ->
-      let uu____3804 =
-        let uu____3805 =
-          let uu____3810 =
-            FStar_Util.format1 "At most one %s is allowed on declarations" s in
-          (uu____3810, r) in
-        FStar_Errors.Error uu____3805 in
-      raise uu____3804
+let at_most_one:
+  'Auu____3781 .
+    Prims.string ->
+      FStar_Range.range ->
+        'Auu____3781 Prims.list ->
+          'Auu____3781 FStar_Pervasives_Native.option
+  =
+  fun s  ->
+    fun r  ->
+      fun l  ->
+        match l with
+        | x::[] -> FStar_Pervasives_Native.Some x
+        | [] -> FStar_Pervasives_Native.None
+        | uu____3801 ->
+            let uu____3804 =
+              let uu____3805 =
+                let uu____3810 =
+                  FStar_Util.format1
+                    "At most one %s is allowed on declarations" s in
+                (uu____3810, r) in
+              FStar_Errors.Error uu____3805 in
+            raise uu____3804
 let mk_decl: decl' -> FStar_Range.range -> decoration Prims.list -> decl =
   fun d  ->
     fun r  ->
@@ -1160,41 +1170,67 @@ let mkAdmitMagic: FStar_Range.range -> term =
           Expr in
       mkExplicitApp magic_name [unit_const] r in
     let admit_magic = mk_term (Seq (admit1, magic1)) r Expr in admit_magic
-let mkWildAdmitMagic r =
-  let uu____4466 = mkAdmitMagic r in
-  ((mk_pattern PatWild r), FStar_Pervasives_Native.None, uu____4466)
-let focusBranches branches r =
-  let should_filter =
-    FStar_Util.for_some FStar_Pervasives_Native.fst branches in
-  if should_filter
-  then
-    (FStar_Errors.warn r "Focusing on only some cases";
-     (let focussed =
-        let uu____4565 =
-          FStar_List.filter FStar_Pervasives_Native.fst branches in
-        FStar_All.pipe_right uu____4565
-          (FStar_List.map FStar_Pervasives_Native.snd) in
-      let uu____4652 = let uu____4663 = mkWildAdmitMagic r in [uu____4663] in
-      FStar_List.append focussed uu____4652))
-  else
-    FStar_All.pipe_right branches
-      (FStar_List.map FStar_Pervasives_Native.snd)
-let focusLetBindings lbs r =
-  let should_filter = FStar_Util.for_some FStar_Pervasives_Native.fst lbs in
-  if should_filter
-  then
-    (FStar_Errors.warn r
-       "Focusing on only some cases in this (mutually) recursive definition";
-     FStar_List.map
-       (fun uu____4825  ->
-          match uu____4825 with
-          | (f,lb) ->
-              if f
-              then lb
-              else
-                (let uu____4853 = mkAdmitMagic r in
-                 ((FStar_Pervasives_Native.fst lb), uu____4853))) lbs)
-  else FStar_All.pipe_right lbs (FStar_List.map FStar_Pervasives_Native.snd)
+let mkWildAdmitMagic:
+  'Auu____4453 .
+    FStar_Range.range ->
+      (pattern,'Auu____4453 FStar_Pervasives_Native.option,term)
+        FStar_Pervasives_Native.tuple3
+  =
+  fun r  ->
+    let uu____4466 = mkAdmitMagic r in
+    ((mk_pattern PatWild r), FStar_Pervasives_Native.None, uu____4466)
+let focusBranches:
+  'Auu____4475 .
+    (Prims.bool,(pattern,'Auu____4475 FStar_Pervasives_Native.option,
+                  term) FStar_Pervasives_Native.tuple3)
+      FStar_Pervasives_Native.tuple2 Prims.list ->
+      FStar_Range.range ->
+        (pattern,'Auu____4475 FStar_Pervasives_Native.option,term)
+          FStar_Pervasives_Native.tuple3 Prims.list
+  =
+  fun branches  ->
+    fun r  ->
+      let should_filter =
+        FStar_Util.for_some FStar_Pervasives_Native.fst branches in
+      if should_filter
+      then
+        (FStar_Errors.warn r "Focusing on only some cases";
+         (let focussed =
+            let uu____4565 =
+              FStar_List.filter FStar_Pervasives_Native.fst branches in
+            FStar_All.pipe_right uu____4565
+              (FStar_List.map FStar_Pervasives_Native.snd) in
+          let uu____4652 =
+            let uu____4663 = mkWildAdmitMagic r in [uu____4663] in
+          FStar_List.append focussed uu____4652))
+      else
+        FStar_All.pipe_right branches
+          (FStar_List.map FStar_Pervasives_Native.snd)
+let focusLetBindings:
+  'Auu____4755 .
+    (Prims.bool,('Auu____4755,term) FStar_Pervasives_Native.tuple2)
+      FStar_Pervasives_Native.tuple2 Prims.list ->
+      FStar_Range.range ->
+        ('Auu____4755,term) FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun lbs  ->
+    fun r  ->
+      let should_filter = FStar_Util.for_some FStar_Pervasives_Native.fst lbs in
+      if should_filter
+      then
+        (FStar_Errors.warn r
+           "Focusing on only some cases in this (mutually) recursive definition";
+         FStar_List.map
+           (fun uu____4825  ->
+              match uu____4825 with
+              | (f,lb) ->
+                  if f
+                  then lb
+                  else
+                    (let uu____4853 = mkAdmitMagic r in
+                     ((FStar_Pervasives_Native.fst lb), uu____4853))) lbs)
+      else
+        FStar_All.pipe_right lbs (FStar_List.map FStar_Pervasives_Native.snd)
 let mkFsTypApp: term -> term Prims.list -> FStar_Range.range -> term =
   fun t  ->
     fun args  ->
@@ -1457,8 +1493,17 @@ let string_of_let_qualifier: let_qualifier -> Prims.string =
     | NoLetQualifier  -> ""
     | Rec  -> "rec"
     | Mutable  -> "mutable"
-let to_string_l sep f l =
-  let uu____5517 = FStar_List.map f l in FStar_String.concat sep uu____5517
+let to_string_l:
+  'Auu____5495 .
+    Prims.string ->
+      ('Auu____5495 -> Prims.string) ->
+        'Auu____5495 Prims.list -> Prims.string
+  =
+  fun sep  ->
+    fun f  ->
+      fun l  ->
+        let uu____5517 = FStar_List.map f l in
+        FStar_String.concat sep uu____5517
 let imp_to_string: imp -> Prims.string =
   fun uu___80_5523  ->
     match uu___80_5523 with | Hash  -> "#" | uu____5524 -> ""
@@ -1709,11 +1754,16 @@ let rec head_id_of_pat: pattern -> FStar_Ident.lid Prims.list =
     | PatApp (p1,uu____6036) -> head_id_of_pat p1
     | PatAscribed (p1,uu____6042) -> head_id_of_pat p1
     | uu____6043 -> []
-let lids_of_let defs =
-  FStar_All.pipe_right defs
-    (FStar_List.collect
-       (fun uu____6082  ->
-          match uu____6082 with | (p,uu____6090) -> head_id_of_pat p))
+let lids_of_let:
+  'Auu____6048 .
+    (pattern,'Auu____6048) FStar_Pervasives_Native.tuple2 Prims.list ->
+      FStar_Ident.lid Prims.list
+  =
+  fun defs  ->
+    FStar_All.pipe_right defs
+      (FStar_List.collect
+         (fun uu____6082  ->
+            match uu____6082 with | (p,uu____6090) -> head_id_of_pat p))
 let id_of_tycon: tycon -> Prims.string =
   fun uu___82_6094  ->
     match uu___82_6094 with
@@ -1773,13 +1823,19 @@ let modul_to_string: modul -> Prims.string =
         let uu____6343 =
           FStar_All.pipe_right decls (FStar_List.map decl_to_string) in
         FStar_All.pipe_right uu____6343 (FStar_String.concat "\n")
-let error msg tm r =
-  let tm1 = FStar_All.pipe_right tm term_to_string in
-  let tm2 =
-    if (FStar_String.length tm1) >= (Prims.parse_int "80")
-    then
-      let uu____6375 =
-        FStar_Util.substring tm1 (Prims.parse_int "0") (Prims.parse_int "77") in
-      Prims.strcat uu____6375 "..."
-    else tm1 in
-  raise (FStar_Errors.Error ((Prims.strcat msg (Prims.strcat "\n" tm2)), r))
+let error:
+  'Auu____6360 . Prims.string -> term -> FStar_Range.range -> 'Auu____6360 =
+  fun msg  ->
+    fun tm  ->
+      fun r  ->
+        let tm1 = FStar_All.pipe_right tm term_to_string in
+        let tm2 =
+          if (FStar_String.length tm1) >= (Prims.parse_int "80")
+          then
+            let uu____6375 =
+              FStar_Util.substring tm1 (Prims.parse_int "0")
+                (Prims.parse_int "77") in
+            Prims.strcat uu____6375 "..."
+          else tm1 in
+        raise
+          (FStar_Errors.Error ((Prims.strcat msg (Prims.strcat "\n" tm2)), r))

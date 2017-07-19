@@ -6,9 +6,20 @@ let intern_string: Prims.string -> Prims.string =
     match uu____8 with
     | FStar_Pervasives_Native.Some res -> res
     | FStar_Pervasives_Native.None  -> (FStar_Util.smap_add strings s s; s)
-let default_string_finish endm b s = FStar_Parser_Parse.STRING s
-let call_string_finish fin buf endm b =
-  let _0_26 = FStar_Bytes.close buf in fin endm b _0_26
+let default_string_finish:
+  'Auu____23 'Auu____24 .
+    'Auu____24 ->
+      'Auu____23 -> FStar_Parser_Parse.bytes -> FStar_Parser_Parse.token
+  = fun endm  -> fun b  -> fun s  -> FStar_Parser_Parse.STRING s
+let call_string_finish:
+  'Auu____51 'Auu____52 'Auu____53 .
+    ('Auu____53 -> 'Auu____52 -> FStar_Bytes.bytes -> 'Auu____51) ->
+      FStar_Bytes.bytebuf -> 'Auu____53 -> 'Auu____52 -> 'Auu____51
+  =
+  fun fin  ->
+    fun buf  ->
+      fun endm  ->
+        fun b  -> let _0_26 = FStar_Bytes.close buf in fin endm b _0_26
 let add_string: FStar_Bytes.bytebuf -> Prims.string -> Prims.unit =
   fun buf  ->
     fun x  ->

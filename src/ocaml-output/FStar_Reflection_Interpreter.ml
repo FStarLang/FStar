@@ -1,21 +1,54 @@
 open Prims
-let int1 m f ua em r args =
-  match args with
-  | (a,uu____61)::[] ->
-      let uu____78 =
-        let uu____79 = let uu____80 = ua a in f uu____80 in em uu____79 in
-      FStar_Pervasives_Native.Some uu____78
-  | uu____81 -> FStar_Pervasives_Native.None
-let int2 m f ua ub em r args =
-  match args with
-  | (a,uu____161)::(b,uu____163)::[] ->
-      let uu____190 =
-        let uu____191 =
-          let uu____192 = ua a in
-          let uu____193 = ub b in f uu____192 uu____193 in
-        em uu____191 in
-      FStar_Pervasives_Native.Some uu____190
-  | uu____194 -> FStar_Pervasives_Native.None
+let int1:
+  'a 'b .
+    FStar_Ident.lid ->
+      ('a -> 'b) ->
+        (FStar_Syntax_Syntax.term -> 'a) ->
+          ('b -> FStar_Syntax_Syntax.term) ->
+            FStar_Range.range ->
+              FStar_Syntax_Syntax.args ->
+                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  =
+  fun m  ->
+    fun f  ->
+      fun ua  ->
+        fun em  ->
+          fun r  ->
+            fun args  ->
+              match args with
+              | (a,uu____61)::[] ->
+                  let uu____78 =
+                    let uu____79 = let uu____80 = ua a in f uu____80 in
+                    em uu____79 in
+                  FStar_Pervasives_Native.Some uu____78
+              | uu____81 -> FStar_Pervasives_Native.None
+let int2:
+  'a 'b 'c .
+    FStar_Ident.lid ->
+      ('a -> 'b -> 'c) ->
+        (FStar_Syntax_Syntax.term -> 'a) ->
+          (FStar_Syntax_Syntax.term -> 'b) ->
+            ('c -> FStar_Syntax_Syntax.term) ->
+              FStar_Range.range ->
+                FStar_Syntax_Syntax.args ->
+                  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  =
+  fun m  ->
+    fun f  ->
+      fun ua  ->
+        fun ub  ->
+          fun em  ->
+            fun r  ->
+              fun args  ->
+                match args with
+                | (a,uu____161)::(b,uu____163)::[] ->
+                    let uu____190 =
+                      let uu____191 =
+                        let uu____192 = ua a in
+                        let uu____193 = ub b in f uu____192 uu____193 in
+                      em uu____191 in
+                    FStar_Pervasives_Native.Some uu____190
+                | uu____194 -> FStar_Pervasives_Native.None
 let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
   =
   let mklid nm = FStar_Reflection_Data.fstar_refl_syntax_lid nm in

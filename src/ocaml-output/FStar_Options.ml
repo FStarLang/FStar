@@ -90,14 +90,26 @@ let as_string: option_val -> Prims.string =
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____192 -> failwith "Impos: expected String"
-let as_list as_t uu___52_212 =
-  match uu___52_212 with
-  | List ts -> FStar_All.pipe_right ts (FStar_List.map as_t)
-  | uu____222 -> failwith "Impos: expected List"
-let as_option as_t uu___53_244 =
-  match uu___53_244 with
-  | Unset  -> FStar_Pervasives_Native.None
-  | v1 -> let uu____248 = as_t v1 in FStar_Pervasives_Native.Some uu____248
+let as_list:
+  'Auu____199 .
+    (option_val -> 'Auu____199) -> option_val -> 'Auu____199 Prims.list
+  =
+  fun as_t  ->
+    fun uu___52_212  ->
+      match uu___52_212 with
+      | List ts -> FStar_All.pipe_right ts (FStar_List.map as_t)
+      | uu____222 -> failwith "Impos: expected List"
+let as_option:
+  'Auu____231 .
+    (option_val -> 'Auu____231) ->
+      option_val -> 'Auu____231 FStar_Pervasives_Native.option
+  =
+  fun as_t  ->
+    fun uu___53_244  ->
+      match uu___53_244 with
+      | Unset  -> FStar_Pervasives_Native.None
+      | v1 ->
+          let uu____248 = as_t v1 in FStar_Pervasives_Native.Some uu____248
 type optionstate = option_val FStar_Util.smap
 let fstar_options: optionstate Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let peek: Prims.unit -> optionstate =
@@ -129,7 +141,8 @@ let set_option: Prims.string -> option_val -> Prims.unit =
 let set_option':
   (Prims.string,option_val) FStar_Pervasives_Native.tuple2 -> Prims.unit =
   fun uu____340  -> match uu____340 with | (k,v1) -> set_option k v1
-let with_saved_options f = push (); (let retv = f () in pop (); retv)
+let with_saved_options: 'a . (Prims.unit -> 'a) -> 'a =
+  fun f  -> push (); (let retv = f () in pop (); retv)
 let light_off_files: Prims.string Prims.list FStar_ST.ref =
   FStar_Util.mk_ref []
 let add_light_off_file: Prims.string -> Prims.unit =
@@ -243,7 +256,9 @@ let get_option: Prims.string -> option_val =
         failwith
           (Prims.strcat "Impossible: option " (Prims.strcat s " not found"))
     | FStar_Pervasives_Native.Some s1 -> s1
-let lookup_opt s c = c (get_option s)
+let lookup_opt:
+  'Auu____777 . Prims.string -> (option_val -> 'Auu____777) -> 'Auu____777 =
+  fun s  -> fun c  -> c (get_option s)
 let get_admit_smt_queries: Prims.unit -> Prims.bool =
   fun uu____794  -> lookup_opt "admit_smt_queries" as_bool
 let get_admit_except:
@@ -448,40 +463,45 @@ let display_version: Prims.unit -> Prims.unit =
         "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu____1254
         uu____1255 uu____1256 uu____1257 uu____1258 in
     FStar_Util.print_string uu____1253
-let display_usage_aux specs =
-  FStar_Util.print_string "fstar.exe [options] file[s]\n";
-  FStar_List.iter
-    (fun uu____1313  ->
-       match uu____1313 with
-       | (uu____1324,flag,p,doc) ->
-           (match p with
-            | FStar_Getopt.ZeroArgs ig ->
-                if doc = ""
-                then
-                  let uu____1335 =
-                    let uu____1336 = FStar_Util.colorize_bold flag in
-                    FStar_Util.format1 "  --%s\n" uu____1336 in
-                  FStar_Util.print_string uu____1335
-                else
-                  (let uu____1338 =
-                     let uu____1339 = FStar_Util.colorize_bold flag in
-                     FStar_Util.format2 "  --%s  %s\n" uu____1339 doc in
-                   FStar_Util.print_string uu____1338)
-            | FStar_Getopt.OneArg (uu____1340,argname) ->
-                if doc = ""
-                then
-                  let uu____1346 =
-                    let uu____1347 = FStar_Util.colorize_bold flag in
-                    let uu____1348 = FStar_Util.colorize_bold argname in
-                    FStar_Util.format2 "  --%s %s\n" uu____1347 uu____1348 in
-                  FStar_Util.print_string uu____1346
-                else
-                  (let uu____1350 =
-                     let uu____1351 = FStar_Util.colorize_bold flag in
-                     let uu____1352 = FStar_Util.colorize_bold argname in
-                     FStar_Util.format3 "  --%s %s  %s\n" uu____1351
-                       uu____1352 doc in
-                   FStar_Util.print_string uu____1350))) specs
+let display_usage_aux:
+  'Auu____1265 'Auu____1266 .
+    ('Auu____1266,Prims.string,'Auu____1265 FStar_Getopt.opt_variant,
+      Prims.string) FStar_Pervasives_Native.tuple4 Prims.list -> Prims.unit
+  =
+  fun specs  ->
+    FStar_Util.print_string "fstar.exe [options] file[s]\n";
+    FStar_List.iter
+      (fun uu____1313  ->
+         match uu____1313 with
+         | (uu____1324,flag,p,doc) ->
+             (match p with
+              | FStar_Getopt.ZeroArgs ig ->
+                  if doc = ""
+                  then
+                    let uu____1335 =
+                      let uu____1336 = FStar_Util.colorize_bold flag in
+                      FStar_Util.format1 "  --%s\n" uu____1336 in
+                    FStar_Util.print_string uu____1335
+                  else
+                    (let uu____1338 =
+                       let uu____1339 = FStar_Util.colorize_bold flag in
+                       FStar_Util.format2 "  --%s  %s\n" uu____1339 doc in
+                     FStar_Util.print_string uu____1338)
+              | FStar_Getopt.OneArg (uu____1340,argname) ->
+                  if doc = ""
+                  then
+                    let uu____1346 =
+                      let uu____1347 = FStar_Util.colorize_bold flag in
+                      let uu____1348 = FStar_Util.colorize_bold argname in
+                      FStar_Util.format2 "  --%s %s\n" uu____1347 uu____1348 in
+                    FStar_Util.print_string uu____1346
+                  else
+                    (let uu____1350 =
+                       let uu____1351 = FStar_Util.colorize_bold flag in
+                       let uu____1352 = FStar_Util.colorize_bold argname in
+                       FStar_Util.format3 "  --%s %s  %s\n" uu____1351
+                         uu____1352 doc in
+                     FStar_Util.print_string uu____1350))) specs
 let mk_spec:
   (FStar_BaseTypes.char,Prims.string,option_val FStar_Getopt.opt_variant,
     Prims.string) FStar_Pervasives_Native.tuple4 -> FStar_Getopt.opt
@@ -552,11 +572,7 @@ let add_verify_module: Prims.string -> Prims.unit =
   fun s  ->
     let uu____1519 = cons_verify_module s in
     set_option "verify_module" uu____1519
-let rec specs:
-  Prims.unit ->
-    (FStar_Char.char,Prims.string,Prims.unit FStar_Getopt.opt_variant,
-      Prims.string) FStar_Pervasives_Native.tuple4 Prims.list
-  =
+let rec specs: Prims.unit -> FStar_Getopt.opt Prims.list =
   fun uu____1532  ->
     let specs1 =
       [(FStar_Getopt.noshort, "admit_smt_queries",

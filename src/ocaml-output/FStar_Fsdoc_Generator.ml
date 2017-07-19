@@ -32,10 +32,18 @@ let __proj__Branch__item___0: mforest -> mforest FStar_Util.smap =
   fun projectee  -> match projectee with | Branch _0 -> _0
 let htree: mforest FStar_Util.smap =
   FStar_Util.smap_create (Prims.parse_int "50")
-let string_of_optiont f y xo =
-  match xo with
-  | FStar_Pervasives_Native.Some x -> f x
-  | FStar_Pervasives_Native.None  -> y
+let string_of_optiont:
+  'Auu____153 'Auu____154 .
+    ('Auu____154 -> 'Auu____153) ->
+      'Auu____153 ->
+        'Auu____154 FStar_Pervasives_Native.option -> 'Auu____153
+  =
+  fun f  ->
+    fun y  ->
+      fun xo  ->
+        match xo with
+        | FStar_Pervasives_Native.Some x -> f x
+        | FStar_Pervasives_Native.None  -> y
 let string_of_fsdoco:
   (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
                   Prims.list)
@@ -222,25 +230,34 @@ let document_decl:
               | uu____1062 -> ());
              w "")
       else ()
-let document_toplevel name topdecl =
-  match topdecl.FStar_Parser_AST.d with
-  | FStar_Parser_AST.TopLevelModule uu____1089 ->
-      (match topdecl.FStar_Parser_AST.doc with
-       | FStar_Pervasives_Native.Some (doc1,kw) ->
-           let uu____1122 =
-             FStar_List.tryFind
-               (fun uu____1136  ->
-                  match uu____1136 with | (k,v1) -> k = "summary") kw in
-           (match uu____1122 with
-            | FStar_Pervasives_Native.None  ->
-                (FStar_Pervasives_Native.None,
-                  (FStar_Pervasives_Native.Some doc1))
-            | FStar_Pervasives_Native.Some (uu____1159,summary) ->
-                ((FStar_Pervasives_Native.Some summary),
-                  (FStar_Pervasives_Native.Some doc1)))
-       | FStar_Pervasives_Native.None  ->
-           (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
-  | uu____1173 -> raise (FStar_Errors.Err "Not a TopLevelModule")
+let document_toplevel:
+  'Auu____1072 .
+    'Auu____1072 ->
+      FStar_Parser_AST.decl ->
+        (Prims.string FStar_Pervasives_Native.option,Prims.string
+                                                       FStar_Pervasives_Native.option)
+          FStar_Pervasives_Native.tuple2
+  =
+  fun name  ->
+    fun topdecl  ->
+      match topdecl.FStar_Parser_AST.d with
+      | FStar_Parser_AST.TopLevelModule uu____1089 ->
+          (match topdecl.FStar_Parser_AST.doc with
+           | FStar_Pervasives_Native.Some (doc1,kw) ->
+               let uu____1122 =
+                 FStar_List.tryFind
+                   (fun uu____1136  ->
+                      match uu____1136 with | (k,v1) -> k = "summary") kw in
+               (match uu____1122 with
+                | FStar_Pervasives_Native.None  ->
+                    (FStar_Pervasives_Native.None,
+                      (FStar_Pervasives_Native.Some doc1))
+                | FStar_Pervasives_Native.Some (uu____1159,summary) ->
+                    ((FStar_Pervasives_Native.Some summary),
+                      (FStar_Pervasives_Native.Some doc1)))
+           | FStar_Pervasives_Native.None  ->
+               (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
+      | uu____1173 -> raise (FStar_Errors.Err "Not a TopLevelModule")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____1186 =

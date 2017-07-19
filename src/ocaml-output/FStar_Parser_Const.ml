@@ -258,7 +258,7 @@ let is_name: FStar_Ident.lident -> Prims.bool =
       FStar_Util.char_at (lid.FStar_Ident.ident).FStar_Ident.idText
         (Prims.parse_int "0") in
     FStar_Util.is_upper c
-let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lident =
+let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lid =
   fun s  ->
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Tactics"] s)
       FStar_Range.dummyRange

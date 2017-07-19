@@ -247,7 +247,7 @@ let prefix_one_decl:
           then ml_mode_prefix_with_iface_decls iface1 impl
           else prefix_with_iface_decls iface1 impl
 let initialize_interface:
-  FStar_Ident.lid ->
+  FStar_Ident.lident ->
     FStar_Parser_AST.decl Prims.list ->
       FStar_ToSyntax_Env.env -> FStar_ToSyntax_Env.env
   =

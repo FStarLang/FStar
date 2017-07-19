@@ -6,10 +6,15 @@ type z3_result = (FStar_SMTEncoding_Z3.unsat_core,z3_err) FStar_Util.either
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
-let z3_result_as_replay_result uu___84_39 =
-  match uu___84_39 with
-  | FStar_Util.Inl l -> FStar_Util.Inl l
-  | FStar_Util.Inr (r,uu____54) -> FStar_Util.Inr r
+let z3_result_as_replay_result:
+  'Auu____21 'Auu____22 'Auu____23 .
+    ('Auu____23,('Auu____22,'Auu____21) FStar_Pervasives_Native.tuple2)
+      FStar_Util.either -> ('Auu____23,'Auu____22) FStar_Util.either
+  =
+  fun uu___84_39  ->
+    match uu___84_39 with
+    | FStar_Util.Inl l -> FStar_Util.Inl l
+    | FStar_Util.Inr (r,uu____54) -> FStar_Util.Inr r
 type hint_stat =
   {
   hint: FStar_Util.hint FStar_Pervasives_Native.option;
@@ -55,50 +60,54 @@ let replaying_hints:
 let hint_stats: hint_stat Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let format_hints_file_name: Prims.string -> Prims.string =
   fun src_filename  -> FStar_Util.format1 "%s.hints" src_filename
-let initialize_hints_db src_filename format_filename =
-  FStar_ST.write hint_stats [];
-  (let uu____167 = FStar_Options.record_hints () in
-   if uu____167
-   then FStar_ST.write recorded_hints (FStar_Pervasives_Native.Some [])
-   else ());
-  (let uu____177 = FStar_Options.use_hints () in
-   if uu____177
-   then
-     let norm_src_filename = FStar_Util.normalize_file_path src_filename in
-     let val_filename =
-       let uu____180 = FStar_Options.hint_file () in
-       match uu____180 with
-       | FStar_Pervasives_Native.Some fn -> fn
-       | FStar_Pervasives_Native.None  ->
-           format_hints_file_name norm_src_filename in
-     let uu____184 = FStar_Util.read_hints val_filename in
-     match uu____184 with
-     | FStar_Pervasives_Native.Some hints ->
-         let expected_digest = FStar_Util.digest_of_file norm_src_filename in
-         ((let uu____190 = FStar_Options.hint_info () in
-           if uu____190
-           then
-             let uu____191 =
-               let uu____192 = FStar_Options.hint_file () in
-               match uu____192 with
-               | FStar_Pervasives_Native.Some fn ->
-                   Prims.strcat " from '" (Prims.strcat val_filename "'")
-               | uu____196 -> "" in
-             FStar_Util.print3 "(%s) digest is %s%s.\n" norm_src_filename
-               (if hints.FStar_Util.module_digest = expected_digest
-                then "valid; using hints"
-                else "invalid; using potentially stale hints") uu____191
-           else ());
-          FStar_ST.write replaying_hints
-            (FStar_Pervasives_Native.Some (hints.FStar_Util.hints)))
-     | FStar_Pervasives_Native.None  ->
-         let uu____203 = FStar_Options.hint_info () in
-         (if uu____203
-          then
-            FStar_Util.print1 "(%s) Unable to read hint file.\n"
-              norm_src_filename
-          else ())
-   else ())
+let initialize_hints_db:
+  'Auu____154 . Prims.string -> 'Auu____154 -> Prims.unit =
+  fun src_filename  ->
+    fun format_filename  ->
+      FStar_ST.write hint_stats [];
+      (let uu____167 = FStar_Options.record_hints () in
+       if uu____167
+       then FStar_ST.write recorded_hints (FStar_Pervasives_Native.Some [])
+       else ());
+      (let uu____177 = FStar_Options.use_hints () in
+       if uu____177
+       then
+         let norm_src_filename = FStar_Util.normalize_file_path src_filename in
+         let val_filename =
+           let uu____180 = FStar_Options.hint_file () in
+           match uu____180 with
+           | FStar_Pervasives_Native.Some fn -> fn
+           | FStar_Pervasives_Native.None  ->
+               format_hints_file_name norm_src_filename in
+         let uu____184 = FStar_Util.read_hints val_filename in
+         match uu____184 with
+         | FStar_Pervasives_Native.Some hints ->
+             let expected_digest =
+               FStar_Util.digest_of_file norm_src_filename in
+             ((let uu____190 = FStar_Options.hint_info () in
+               if uu____190
+               then
+                 let uu____191 =
+                   let uu____192 = FStar_Options.hint_file () in
+                   match uu____192 with
+                   | FStar_Pervasives_Native.Some fn ->
+                       Prims.strcat " from '" (Prims.strcat val_filename "'")
+                   | uu____196 -> "" in
+                 FStar_Util.print3 "(%s) digest is %s%s.\n" norm_src_filename
+                   (if hints.FStar_Util.module_digest = expected_digest
+                    then "valid; using hints"
+                    else "invalid; using potentially stale hints") uu____191
+               else ());
+              FStar_ST.write replaying_hints
+                (FStar_Pervasives_Native.Some (hints.FStar_Util.hints)))
+         | FStar_Pervasives_Native.None  ->
+             let uu____203 = FStar_Options.hint_info () in
+             (if uu____203
+              then
+                FStar_Util.print1 "(%s) Unable to read hint file.\n"
+                  norm_src_filename
+              else ())
+       else ())
 let finalize_hints_db: Prims.string -> Prims.unit =
   fun src_filename  ->
     (let uu____211 = FStar_Options.record_hints () in
@@ -139,9 +148,11 @@ let finalize_hints_db: Prims.string -> Prims.unit =
     FStar_ST.write recorded_hints FStar_Pervasives_Native.None;
     FStar_ST.write replaying_hints FStar_Pervasives_Native.None;
     FStar_ST.write hint_stats []
-let with_hints_db fname f =
-  initialize_hints_db fname false;
-  (let result = f () in finalize_hints_db fname; result)
+let with_hints_db: 'a . Prims.string -> (Prims.unit -> 'a) -> 'a =
+  fun fname  ->
+    fun f  ->
+      initialize_hints_db fname false;
+      (let result = f () in finalize_hints_db fname; result)
 let next_hint:
   Prims.string -> Prims.int -> FStar_Util.hint FStar_Pervasives_Native.option
   =

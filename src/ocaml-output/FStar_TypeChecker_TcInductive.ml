@@ -1138,7 +1138,7 @@ let ty_positive_in_datacon:
                         failwith
                           "Unexpected data constructor type when checking positivity"))
 let check_positivity:
-  FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env_t -> Prims.bool =
+  FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env -> Prims.bool =
   fun ty  ->
     fun env  ->
       let unfolded_inductives = FStar_Util.mk_ref [] in

@@ -1,28 +1,43 @@
 open Prims
-let info_at_pos env file row col =
-  let uu____40 = FStar_TypeChecker_Common.info_at_pos file row col in
-  match uu____40 with
-  | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some info ->
-      (match info.FStar_TypeChecker_Common.identifier with
-       | FStar_Util.Inl bv ->
-           let uu____79 =
-             let uu____90 =
-               let uu____95 = FStar_Syntax_Print.nm_to_string bv in
-               FStar_Util.Inl uu____95 in
-             let uu____96 = FStar_Syntax_Syntax.range_of_bv bv in
-             (uu____90, (info.FStar_TypeChecker_Common.identifier_ty),
-               uu____96) in
-           FStar_Pervasives_Native.Some uu____79
-       | FStar_Util.Inr fv ->
-           let uu____112 =
-             let uu____123 =
-               let uu____128 = FStar_Syntax_Syntax.lid_of_fv fv in
-               FStar_Util.Inr uu____128 in
-             let uu____129 = FStar_Syntax_Syntax.range_of_fv fv in
-             (uu____123, (info.FStar_TypeChecker_Common.identifier_ty),
-               uu____129) in
-           FStar_Pervasives_Native.Some uu____112)
+let info_at_pos:
+  'Auu____11 .
+    'Auu____11 ->
+      Prims.string ->
+        Prims.int ->
+          Prims.int ->
+            ((Prims.string,FStar_Ident.lid) FStar_Util.either,FStar_Syntax_Syntax.typ,
+              FStar_Range.range) FStar_Pervasives_Native.tuple3
+              FStar_Pervasives_Native.option
+  =
+  fun env  ->
+    fun file  ->
+      fun row  ->
+        fun col  ->
+          let uu____40 = FStar_TypeChecker_Common.info_at_pos file row col in
+          match uu____40 with
+          | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+          | FStar_Pervasives_Native.Some info ->
+              (match info.FStar_TypeChecker_Common.identifier with
+               | FStar_Util.Inl bv ->
+                   let uu____79 =
+                     let uu____90 =
+                       let uu____95 = FStar_Syntax_Print.nm_to_string bv in
+                       FStar_Util.Inl uu____95 in
+                     let uu____96 = FStar_Syntax_Syntax.range_of_bv bv in
+                     (uu____90,
+                       (info.FStar_TypeChecker_Common.identifier_ty),
+                       uu____96) in
+                   FStar_Pervasives_Native.Some uu____79
+               | FStar_Util.Inr fv ->
+                   let uu____112 =
+                     let uu____123 =
+                       let uu____128 = FStar_Syntax_Syntax.lid_of_fv fv in
+                       FStar_Util.Inr uu____128 in
+                     let uu____129 = FStar_Syntax_Syntax.range_of_fv fv in
+                     (uu____123,
+                       (info.FStar_TypeChecker_Common.identifier_ty),
+                       uu____129) in
+                   FStar_Pervasives_Native.Some uu____112)
 let add_errors:
   FStar_TypeChecker_Env.env ->
     (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
@@ -235,12 +250,19 @@ let constructor_builds_the_wrong_type:
           FStar_Util.format3
             "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\""
             uu____452 uu____453 uu____454
-let constructor_fails_the_positivity_check env d l =
-  let uu____476 = FStar_Syntax_Print.term_to_string d in
-  let uu____477 = FStar_Syntax_Print.lid_to_string l in
-  FStar_Util.format2
-    "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
-    uu____476 uu____477
+let constructor_fails_the_positivity_check:
+  'Auu____463 .
+    'Auu____463 ->
+      FStar_Syntax_Syntax.term -> FStar_Ident.lid -> Prims.string
+  =
+  fun env  ->
+    fun d  ->
+      fun l  ->
+        let uu____476 = FStar_Syntax_Print.term_to_string d in
+        let uu____477 = FStar_Syntax_Print.lid_to_string l in
+        FStar_Util.format2
+          "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
+          uu____476 uu____477
 let inline_type_annotation_and_val_decl: FStar_Ident.lid -> Prims.string =
   fun l  ->
     let uu____482 = FStar_Syntax_Print.lid_to_string l in
@@ -315,19 +337,30 @@ let name_and_result:
         let uu____610 =
           FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name in
         (uu____610, (ct.FStar_Syntax_Syntax.result_typ))
-let computed_computation_type_does_not_match_annotation env e c c' =
-  let uu____648 = name_and_result c in
-  match uu____648 with
-  | (f1,r1) ->
-      let uu____661 = name_and_result c' in
-      (match uu____661 with
-       | (f2,r2) ->
-           let uu____674 = err_msg_type_strings env r1 r2 in
-           (match uu____674 with
-            | (s1,s2) ->
-                FStar_Util.format4
-                  "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-                  s1 f1 s2 f2))
+let computed_computation_type_does_not_match_annotation:
+  'Auu____623 .
+    FStar_TypeChecker_Env.env ->
+      'Auu____623 ->
+        FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+          FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+            Prims.string
+  =
+  fun env  ->
+    fun e  ->
+      fun c  ->
+        fun c'  ->
+          let uu____648 = name_and_result c in
+          match uu____648 with
+          | (f1,r1) ->
+              let uu____661 = name_and_result c' in
+              (match uu____661 with
+               | (f2,r2) ->
+                   let uu____674 = err_msg_type_strings env r1 r2 in
+                   (match uu____674 with
+                    | (s1,s2) ->
+                        FStar_Util.format4
+                          "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
+                          s1 f1 s2 f2))
 let unexpected_non_trivial_precondition_on_term:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string =
   fun env  ->

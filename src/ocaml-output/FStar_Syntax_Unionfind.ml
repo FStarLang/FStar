@@ -97,7 +97,8 @@ let new_transaction: Prims.unit -> tx =
 let commit: tx -> Prims.unit = fun tx  -> ()
 let rollback: tx -> Prims.unit =
   fun uu____187  -> match uu____187 with | TX uf -> set uf
-let update_in_tx r x = ()
+let update_in_tx: 'a . 'a FStar_ST.ref -> 'a -> Prims.unit =
+  fun r  -> fun x  -> ()
 let get_term_graph: Prims.unit -> tgraph =
   fun uu____214  -> let uu____215 = get () in uu____215.term_graph
 let get_version: Prims.unit -> FStar_Syntax_Syntax.version =
@@ -112,44 +113,40 @@ let set_term_graph: tgraph -> Prims.unit =
         version = (uu___101_226.version)
       } in
     set uu____225
-let chk_v uu____239 =
-  match uu____239 with
-  | (u,v1) ->
-      let expected = get_version () in
-      if
-        (v1.FStar_Syntax_Syntax.major = expected.FStar_Syntax_Syntax.major)
-          &&
-          (v1.FStar_Syntax_Syntax.minor <= expected.FStar_Syntax_Syntax.minor)
-      then u
-      else
-        (let uu____248 =
-           let uu____249 = version_to_string expected in
-           let uu____250 = version_to_string v1 in
-           FStar_Util.format2
-             "Incompatible version for unification variable: current version is %s; got version %s"
-             uu____249 uu____250 in
-         failwith uu____248)
+let chk_v:
+  'Auu____231 .
+    ('Auu____231,FStar_Syntax_Syntax.version) FStar_Pervasives_Native.tuple2
+      -> 'Auu____231
+  =
+  fun uu____239  ->
+    match uu____239 with
+    | (u,v1) ->
+        let expected = get_version () in
+        if
+          (v1.FStar_Syntax_Syntax.major = expected.FStar_Syntax_Syntax.major)
+            &&
+            (v1.FStar_Syntax_Syntax.minor <=
+               expected.FStar_Syntax_Syntax.minor)
+        then u
+        else
+          (let uu____248 =
+             let uu____249 = version_to_string expected in
+             let uu____250 = version_to_string v1 in
+             FStar_Util.format2
+               "Incompatible version for unification variable: current version is %s; got version %s"
+               uu____249 uu____250 in
+           failwith uu____248)
 let uvar_id: FStar_Syntax_Syntax.uvar -> Prims.int =
   fun u  ->
     let uu____255 = get_term_graph () in
     let uu____260 = chk_v u in FStar_Unionfind.puf_id uu____255 uu____260
-let from_id:
-  Prims.int ->
-    (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-       FStar_Unionfind.p_uvar,FStar_Syntax_Syntax.version)
-      FStar_Pervasives_Native.tuple2
-  =
+let from_id: Prims.int -> FStar_Syntax_Syntax.uvar =
   fun n1  ->
     let uu____277 =
       let uu____282 = get_term_graph () in
       FStar_Unionfind.puf_fromid uu____282 n1 in
     let uu____289 = get_version () in (uu____277, uu____289)
-let fresh:
-  Prims.unit ->
-    (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-       FStar_Unionfind.p_uvar,FStar_Syntax_Syntax.version)
-      FStar_Pervasives_Native.tuple2
-  =
+let fresh: Prims.unit -> FStar_Syntax_Syntax.uvar =
   fun uu____297  ->
     let uu____298 =
       let uu____303 = get_term_graph () in
@@ -206,23 +203,13 @@ let univ_uvar_id: FStar_Syntax_Syntax.universe_uvar -> Prims.int =
   fun u  ->
     let uu____456 = get_univ_graph () in
     let uu____461 = chk_v u in FStar_Unionfind.puf_id uu____456 uu____461
-let univ_from_id:
-  Prims.int ->
-    (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-       FStar_Unionfind.p_uvar,FStar_Syntax_Syntax.version)
-      FStar_Pervasives_Native.tuple2
-  =
+let univ_from_id: Prims.int -> FStar_Syntax_Syntax.universe_uvar =
   fun n1  ->
     let uu____476 =
       let uu____481 = get_univ_graph () in
       FStar_Unionfind.puf_fromid uu____481 n1 in
     let uu____488 = get_version () in (uu____476, uu____488)
-let univ_fresh:
-  Prims.unit ->
-    (FStar_Syntax_Syntax.universe FStar_Pervasives_Native.option
-       FStar_Unionfind.p_uvar,FStar_Syntax_Syntax.version)
-      FStar_Pervasives_Native.tuple2
-  =
+let univ_fresh: Prims.unit -> FStar_Syntax_Syntax.universe_uvar =
   fun uu____496  ->
     let uu____497 =
       let uu____502 = get_univ_graph () in

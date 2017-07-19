@@ -1401,10 +1401,7 @@ exception Not_found
 let uu___is_Not_found: Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Not_found  -> true | uu____2790 -> false
-let double_star:
-  FStar_Syntax_Syntax.typ ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-  =
+let double_star: FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ =
   fun typ  ->
     let star_once typ1 =
       let uu____2801 =
@@ -3187,7 +3184,7 @@ let n:
     FStar_TypeChecker_Normalize.NoDeltaSteps;
     FStar_TypeChecker_Normalize.Eager_unfolding;
     FStar_TypeChecker_Normalize.EraseUniverses]
-let star_type: env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term =
+let star_type: env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ =
   fun env  ->
     fun t  -> let uu____8648 = n env.env t in star_type' env uu____8648
 let star_expr:
@@ -3199,7 +3196,7 @@ let star_expr:
   fun env  ->
     fun t  -> let uu____8665 = n env.env t in check_n env uu____8665
 let trans_F:
-  env_ ->
+  env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =

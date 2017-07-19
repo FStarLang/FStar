@@ -2,9 +2,15 @@ open Prims
 type inst_t =
   (FStar_Ident.lident,FStar_Syntax_Syntax.universes)
     FStar_Pervasives_Native.tuple2 Prims.list
-let mk t s =
-  FStar_Syntax_Syntax.mk s FStar_Pervasives_Native.None
-    t.FStar_Syntax_Syntax.pos
+let mk:
+  'Auu____15 'Auu____16 .
+    'Auu____16 FStar_Syntax_Syntax.syntax ->
+      'Auu____15 -> 'Auu____15 FStar_Syntax_Syntax.syntax
+  =
+  fun t  ->
+    fun s  ->
+      FStar_Syntax_Syntax.mk s FStar_Pervasives_Native.None
+        t.FStar_Syntax_Syntax.pos
 let rec inst:
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
@@ -150,10 +156,7 @@ let rec inst:
 and inst_binders:
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
-    ->
-    FStar_Syntax_Syntax.binders ->
-      (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
-        FStar_Pervasives_Native.tuple2 Prims.list
+    -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders
   =
   fun s  ->
     fun bs  ->
@@ -179,7 +182,7 @@ and inst_args:
     ->
     (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
       FStar_Pervasives_Native.tuple2 Prims.list ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.aqual)
+      (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun s  ->
@@ -194,7 +197,7 @@ and inst_comp:
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      FStar_Syntax_Syntax.comp
+      FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax
   =
   fun s  ->
     fun c  ->

@@ -24,76 +24,96 @@ type ('a,'b) problem =
   reason: Prims.string Prims.list;
   loc: FStar_Range.range;
   rank: Prims.int FStar_Pervasives_Native.option;}
-let __proj__Mkproblem__item__pid projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__pid
-let __proj__Mkproblem__item__lhs projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__lhs
-let __proj__Mkproblem__item__relation projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__relation
-let __proj__Mkproblem__item__rhs projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__rhs
-let __proj__Mkproblem__item__element projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__element
-let __proj__Mkproblem__item__logical_guard projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__logical_guard
-let __proj__Mkproblem__item__scope projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__scope
-let __proj__Mkproblem__item__reason projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__reason
-let __proj__Mkproblem__item__loc projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__loc
-let __proj__Mkproblem__item__rank projectee =
-  match projectee with
-  | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
-      rhs = __fname__rhs; element = __fname__element;
-      logical_guard = __fname__logical_guard; scope = __fname__scope;
-      reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
-      -> __fname__rank
+let __proj__Mkproblem__item__pid: 'a 'b . ('a,'b) problem -> Prims.int =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__pid
+let __proj__Mkproblem__item__lhs: 'a 'b . ('a,'b) problem -> 'a =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__lhs
+let __proj__Mkproblem__item__relation: 'a 'b . ('a,'b) problem -> rel =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__relation
+let __proj__Mkproblem__item__rhs: 'a 'b . ('a,'b) problem -> 'a =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__rhs
+let __proj__Mkproblem__item__element:
+  'a 'b . ('a,'b) problem -> 'b FStar_Pervasives_Native.option =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__element
+let __proj__Mkproblem__item__logical_guard:
+  'a 'b .
+    ('a,'b) problem ->
+      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__logical_guard
+let __proj__Mkproblem__item__scope:
+  'a 'b . ('a,'b) problem -> FStar_Syntax_Syntax.binders =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__scope
+let __proj__Mkproblem__item__reason:
+  'a 'b . ('a,'b) problem -> Prims.string Prims.list =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__reason
+let __proj__Mkproblem__item__loc:
+  'a 'b . ('a,'b) problem -> FStar_Range.range =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__loc
+let __proj__Mkproblem__item__rank:
+  'a 'b . ('a,'b) problem -> Prims.int FStar_Pervasives_Native.option =
+  fun projectee  ->
+    match projectee with
+    | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
+        rhs = __fname__rhs; element = __fname__element;
+        logical_guard = __fname__logical_guard; scope = __fname__scope;
+        reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
+        -> __fname__rank
 type prob =
   | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem
   | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem
@@ -307,23 +327,42 @@ let __proj__Mkidentifier_info__item__identifier_range:
         identifier_ty = __fname__identifier_ty;
         identifier_range = __fname__identifier_range;_} ->
         __fname__identifier_range
-let insert_col_info col info col_infos =
-  let rec __insert aux rest =
-    match rest with
-    | [] -> (aux, [(col, info)])
-    | (c,i)::rest' ->
-        if col < c
-        then (aux, ((col, info) :: rest))
-        else __insert ((c, i) :: aux) rest' in
-  let uu____974 = __insert [] col_infos in
-  match uu____974 with | (l,r) -> FStar_List.append (FStar_List.rev l) r
-let find_nearest_preceding_col_info col col_infos =
-  let rec aux out uu___101_1080 =
-    match uu___101_1080 with
-    | [] -> out
-    | (c,i)::rest ->
-        if c > col then out else aux (FStar_Pervasives_Native.Some i) rest in
-  aux FStar_Pervasives_Native.None col_infos
+let insert_col_info:
+  'Auu____806 .
+    Prims.int ->
+      'Auu____806 ->
+        (Prims.int,'Auu____806) FStar_Pervasives_Native.tuple2 Prims.list ->
+          (Prims.int,'Auu____806) FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun col  ->
+    fun info  ->
+      fun col_infos  ->
+        let rec __insert aux rest =
+          match rest with
+          | [] -> (aux, [(col, info)])
+          | (c,i)::rest' ->
+              if col < c
+              then (aux, ((col, info) :: rest))
+              else __insert ((c, i) :: aux) rest' in
+        let uu____974 = __insert [] col_infos in
+        match uu____974 with
+        | (l,r) -> FStar_List.append (FStar_List.rev l) r
+let find_nearest_preceding_col_info:
+  'Auu____1041 .
+    Prims.int ->
+      (Prims.int,'Auu____1041) FStar_Pervasives_Native.tuple2 Prims.list ->
+        'Auu____1041 FStar_Pervasives_Native.option
+  =
+  fun col  ->
+    fun col_infos  ->
+      let rec aux out uu___101_1080 =
+        match uu___101_1080 with
+        | [] -> out
+        | (c,i)::rest ->
+            if c > col
+            then out
+            else aux (FStar_Pervasives_Native.Some i) rest in
+      aux FStar_Pervasives_Native.None col_infos
 type col_info =
   (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
 type row_info = col_info FStar_ST.ref FStar_Util.imap

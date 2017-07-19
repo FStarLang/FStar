@@ -43,65 +43,109 @@ let eraseTypeDeep:
     fun t  ->
       FStar_Extraction_ML_Util.eraseTypeDeep
         (FStar_Extraction_ML_Util.udelta_unfold g) t
-let record_fields fs vs =
-  FStar_List.map2 (fun f  -> fun e  -> ((f.FStar_Ident.idText), e)) fs vs
-let fail r msg =
-  (let uu____112 =
-     let uu____113 = FStar_Range.string_of_range r in
-     FStar_Util.format2 "%s: %s\n" uu____113 msg in
-   FStar_All.pipe_left FStar_Util.print_string uu____112);
-  failwith msg
-let err_uninst env t uu____152 app =
-  match uu____152 with
-  | (vars,ty) ->
-      let uu____178 =
-        let uu____179 = FStar_Syntax_Print.term_to_string t in
-        let uu____180 =
-          let uu____181 =
-            FStar_All.pipe_right vars
-              (FStar_List.map FStar_Pervasives_Native.fst) in
-          FStar_All.pipe_right uu____181 (FStar_String.concat ", ") in
-        let uu____198 =
-          FStar_Extraction_ML_Code.string_of_mlty
-            env.FStar_Extraction_ML_UEnv.currentModule ty in
-        let uu____199 = FStar_Syntax_Print.term_to_string app in
-        FStar_Util.format4
-          "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
-          uu____179 uu____180 uu____198 uu____199 in
-      fail t.FStar_Syntax_Syntax.pos uu____178
-let err_ill_typed_application env t args ty =
-  let uu____242 =
-    let uu____243 = FStar_Syntax_Print.term_to_string t in
-    let uu____244 =
-      let uu____245 =
-        FStar_All.pipe_right args
-          (FStar_List.map
-             (fun uu____263  ->
-                match uu____263 with
-                | (x,uu____269) -> FStar_Syntax_Print.term_to_string x)) in
-      FStar_All.pipe_right uu____245 (FStar_String.concat " ") in
-    let uu____272 =
-      FStar_Extraction_ML_Code.string_of_mlty
-        env.FStar_Extraction_ML_UEnv.currentModule ty in
-    FStar_Util.format3
-      "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
-      uu____243 uu____244 uu____272 in
-  fail t.FStar_Syntax_Syntax.pos uu____242
-let err_value_restriction t =
-  let uu____286 =
-    let uu____287 = FStar_Syntax_Print.tag_of_term t in
-    let uu____288 = FStar_Syntax_Print.term_to_string t in
-    FStar_Util.format2
-      "Refusing to generalize because of the value restriction: (%s) %s"
-      uu____287 uu____288 in
-  fail t.FStar_Syntax_Syntax.pos uu____286
-let err_unexpected_eff t f0 f1 =
-  let uu____314 =
-    let uu____315 = FStar_Syntax_Print.term_to_string t in
-    FStar_Util.format3 "for expression %s, Expected effect %s; got effect %s"
-      uu____315 (FStar_Extraction_ML_Util.eff_to_string f0)
-      (FStar_Extraction_ML_Util.eff_to_string f1) in
-  fail t.FStar_Syntax_Syntax.pos uu____314
+let record_fields:
+  'Auu____65 .
+    FStar_Ident.ident Prims.list ->
+      'Auu____65 Prims.list ->
+        (Prims.string,'Auu____65) FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun fs  ->
+    fun vs  ->
+      FStar_List.map2 (fun f  -> fun e  -> ((f.FStar_Ident.idText), e)) fs vs
+let fail: 'Auu____102 . FStar_Range.range -> Prims.string -> 'Auu____102 =
+  fun r  ->
+    fun msg  ->
+      (let uu____112 =
+         let uu____113 = FStar_Range.string_of_range r in
+         FStar_Util.format2 "%s: %s\n" uu____113 msg in
+       FStar_All.pipe_left FStar_Util.print_string uu____112);
+      failwith msg
+let err_uninst:
+  'Auu____126 'Auu____127 .
+    FStar_Extraction_ML_UEnv.env ->
+      FStar_Syntax_Syntax.term ->
+        ((Prims.string,'Auu____127) FStar_Pervasives_Native.tuple2 Prims.list,
+          FStar_Extraction_ML_Syntax.mlty) FStar_Pervasives_Native.tuple2 ->
+          FStar_Syntax_Syntax.term -> 'Auu____126
+  =
+  fun env  ->
+    fun t  ->
+      fun uu____152  ->
+        fun app  ->
+          match uu____152 with
+          | (vars,ty) ->
+              let uu____178 =
+                let uu____179 = FStar_Syntax_Print.term_to_string t in
+                let uu____180 =
+                  let uu____181 =
+                    FStar_All.pipe_right vars
+                      (FStar_List.map FStar_Pervasives_Native.fst) in
+                  FStar_All.pipe_right uu____181 (FStar_String.concat ", ") in
+                let uu____198 =
+                  FStar_Extraction_ML_Code.string_of_mlty
+                    env.FStar_Extraction_ML_UEnv.currentModule ty in
+                let uu____199 = FStar_Syntax_Print.term_to_string app in
+                FStar_Util.format4
+                  "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
+                  uu____179 uu____180 uu____198 uu____199 in
+              fail t.FStar_Syntax_Syntax.pos uu____178
+let err_ill_typed_application:
+  'Auu____212 'Auu____213 .
+    FStar_Extraction_ML_UEnv.env ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_Syntax_Syntax.term,'Auu____213) FStar_Pervasives_Native.tuple2
+          Prims.list -> FStar_Extraction_ML_Syntax.mlty -> 'Auu____212
+  =
+  fun env  ->
+    fun t  ->
+      fun args  ->
+        fun ty  ->
+          let uu____242 =
+            let uu____243 = FStar_Syntax_Print.term_to_string t in
+            let uu____244 =
+              let uu____245 =
+                FStar_All.pipe_right args
+                  (FStar_List.map
+                     (fun uu____263  ->
+                        match uu____263 with
+                        | (x,uu____269) ->
+                            FStar_Syntax_Print.term_to_string x)) in
+              FStar_All.pipe_right uu____245 (FStar_String.concat " ") in
+            let uu____272 =
+              FStar_Extraction_ML_Code.string_of_mlty
+                env.FStar_Extraction_ML_UEnv.currentModule ty in
+            FStar_Util.format3
+              "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
+              uu____243 uu____244 uu____272 in
+          fail t.FStar_Syntax_Syntax.pos uu____242
+let err_value_restriction:
+  'Auu____277 .
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> 'Auu____277
+  =
+  fun t  ->
+    let uu____286 =
+      let uu____287 = FStar_Syntax_Print.tag_of_term t in
+      let uu____288 = FStar_Syntax_Print.term_to_string t in
+      FStar_Util.format2
+        "Refusing to generalize because of the value restriction: (%s) %s"
+        uu____287 uu____288 in
+    fail t.FStar_Syntax_Syntax.pos uu____286
+let err_unexpected_eff:
+  'Auu____297 .
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Extraction_ML_Syntax.e_tag ->
+        FStar_Extraction_ML_Syntax.e_tag -> 'Auu____297
+  =
+  fun t  ->
+    fun f0  ->
+      fun f1  ->
+        let uu____314 =
+          let uu____315 = FStar_Syntax_Print.term_to_string t in
+          FStar_Util.format3
+            "for expression %s, Expected effect %s; got effect %s" uu____315
+            (FStar_Extraction_ML_Util.eff_to_string f0)
+            (FStar_Extraction_ML_Util.eff_to_string f1) in
+        fail t.FStar_Syntax_Syntax.pos uu____314
 let effect_as_etag:
   FStar_Extraction_ML_UEnv.env ->
     FStar_Ident.lident -> FStar_Extraction_ML_Syntax.e_tag
@@ -275,8 +319,15 @@ let is_type:
                let uu____1125 = FStar_Syntax_Print.tag_of_term t in
                FStar_Util.print2 "not a type %s (%s)\n" uu____1124 uu____1125));
        b)
-let is_type_binder env x =
-  is_arity env (FStar_Pervasives_Native.fst x).FStar_Syntax_Syntax.sort
+let is_type_binder:
+  'Auu____1132 .
+    FStar_Extraction_ML_UEnv.env ->
+      (FStar_Syntax_Syntax.bv,'Auu____1132) FStar_Pervasives_Native.tuple2 ->
+        Prims.bool
+  =
+  fun env  ->
+    fun x  ->
+      is_arity env (FStar_Pervasives_Native.fst x).FStar_Syntax_Syntax.sort
 let is_constructor: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
     let uu____1153 =
