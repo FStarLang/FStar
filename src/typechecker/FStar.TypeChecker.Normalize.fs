@@ -262,7 +262,7 @@ let rec closure_as_term cfg env t =
             | Tm_unknown
             | Tm_constant _
             | Tm_name _
-            | Tm_fvar _ -> t.tk := None; t
+            | Tm_fvar _ -> t
 
             | Tm_uvar _ ->
               if cfg.steps |> List.contains CheckNoUvars
@@ -592,6 +592,36 @@ let built_in_primitive_steps : list<primitive_step> =
     let string_of_bool rng (b:bool) : term =
         string_as_const rng (if b then "true" else "false")
     in
+    let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
+    let range_of _ args : option<term> =
+      match args with
+      | [_; (t, _)] ->
+        Some (term_of_range t.pos)
+      | _ -> None
+    in
+    let set_range_of (r:Range.range) args : option<term> =
+      match args with
+      | [_; (t, _); ({n=Tm_constant (FStar.Const.Const_range r)}, _)] ->
+        Some ({t with pos=r})
+      | _ -> None
+    in
+    let mk_range (r:Range.range) args : option<term> =
+        match args with
+      | [fn; from_line; from_col; to_line; to_col] -> begin
+        match arg_as_string fn,
+              arg_as_int from_line,
+              arg_as_int from_col,
+              arg_as_int to_line,
+              arg_as_int to_col with
+        | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
+          let r = FStar.Range.mk_range fn
+                              (FStar.Range.mk_pos from_l from_c)
+                              (FStar.Range.mk_pos to_l to_c) in
+          Some (term_of_range r)
+        | _ -> None
+        end
+      | _ -> None
+    in
     let decidable_eq (neg:bool) (rng:Range.range) (args:args) : option<term> =
         let tru = mk (Tm_constant (FC.Const_bool true)) rng in
         let fal = mk (Tm_constant (FC.Const_bool false)) rng in
@@ -629,7 +659,10 @@ let built_in_primitive_steps : list<primitive_step> =
                                     1, unary_op arg_as_string list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list arg_as_char) string_of_list');
-             (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat')]
+             (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
+             (PC.p2l ["Prims"; "range_of"], 2, range_of);
+             (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
     in
     let bounded_arith_ops =
         let bounded_int_types =
@@ -820,7 +853,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
-            t.tk := None;
             rebuild cfg env stack t
 
           | Tm_app(hd, args)
@@ -829,7 +861,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in
             let t = {t with n=Tm_app(hd, args)} in
-            t.tk := None;
             rebuild cfg env stack t //embedded terms should not be normalized, but they may have free variables
 
           | Tm_app(hd, args)
@@ -1035,7 +1066,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        let lopt = match lopt with
                         | Some rc ->
-                          let rct = 
+                          let rct =
                             if cfg.steps |> List.contains CheckNoUvars
                             then BU.map_opt rc.residual_typ (fun t -> norm cfg env' [] (SS.subst opening t))
                             else BU.map_opt rc.residual_typ (SS.subst opening) in
@@ -1127,7 +1158,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         @ List.map (fun _ -> Dummy) xs
                         @ env in
                 let def_body = norm cfg env [] def_body in
-                let lopt = 
+                let lopt =
                   match lopt with
                   | Some rc -> Some ({rc with residual_typ=BU.map_opt rc.residual_typ (norm cfg env [])})
                   | _ -> lopt in
@@ -1845,10 +1876,8 @@ let eta_expand_with_type (env:Env.env) (e:term) (t_e:typ) =
                        (Some (U.residual_comp_of_comp c))
 
 let eta_expand (env:Env.env) (t:term) : term =
-  match !t.tk, t.n with
-  | Some sort, _ ->
-      eta_expand_with_type env t (mk sort t.pos)
-  | _, Tm_name x ->
+  match t.n with
+  | Tm_name x ->
       eta_expand_with_type env t x.sort
   | _ ->
       let head, args = U.head_and_args t in

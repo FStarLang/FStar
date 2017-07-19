@@ -141,10 +141,10 @@ and comp' =
   | Total  of typ * option<universe>
   | GTotal of typ * option<universe>
   | Comp   of comp_typ
-and term = syntax<term',term'>
+and term = syntax<term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t<pat'>
-and comp = syntax<comp', unit>
+and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
@@ -193,9 +193,8 @@ and subst_elt =
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
 and uvars     = set<(uvar*typ)>
-and syntax<'a,'b> = {
+and syntax<'a> = {
     n:'a;
-    tk:memo<'b>;
     pos:Range.range;
     vars:memo<free_vars>;
 }
@@ -372,8 +371,8 @@ type modul = {
 }
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
-type mk_t = mk_t_a<term',term'>
+type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
+type mk_t = mk_t_a<term'>
 
 
 
@@ -424,18 +423,17 @@ let freenames_of_list l = List.fold_right Util.set_add l no_names
 let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-let mk (t:'a) = fun (topt:option<'b>) r -> {
+let mk (t:'a) = fun (_:option<unit>) r -> {
     n=t;
     pos=r;
-    tk=Util.mk_ref topt;
     vars=Util.mk_ref None;
 }
-let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
-let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
-let mk_Tm_app (t1:typ) (args:list<arg>) k p =
+let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
+let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
+let mk_Tm_app (t1:typ) (args:list<arg>) (k:option<unit>) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app (t1, args)) k p
+    | _ -> mk (Tm_app (t1, args)) None p
 let mk_Tm_uinst (t:term) = function
     | [] -> t
     | us ->
@@ -461,7 +459,7 @@ let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) None dummyRange
-let teff : term = mk (Tm_constant Const_effect) (Some Tm_unknown) dummyRange
+let teff : term = mk (Tm_constant Const_effect) None dummyRange
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false

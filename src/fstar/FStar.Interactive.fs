@@ -618,7 +618,7 @@ let run_lookup st symbol pos_opt requested_info =
         | Inr lid -> Ident.string_of_lid lid in
       let typ_str =
         if List.mem "type" requested_info then
-          Some (FStar.TypeChecker.Normalize.term_to_string tcenv typ)
+          Some (FStar.Syntax.Print.term_to_string typ) //every entry in the table should already be normalized
         else None in
       let doc_str =
         match name_or_lid with
@@ -954,6 +954,7 @@ let interactive_printer =
     printer_prwarning = write_message "warning";
     printer_prerror = write_message "error" }
 
+open FStar.TypeChecker.Common
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
   write_hello ();
@@ -976,7 +977,7 @@ let interactive_mode' (filename:string): unit =
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
-
+  FStar.TypeChecker.Common.insert_id_info.enable true; //enable recording identifier information in a table for the ide to query
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else

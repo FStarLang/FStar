@@ -1842,7 +1842,7 @@ let encode_top_level_let :
       let formals, extra_formals = BU.first_N nbinders formals in
       let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
       let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> U.name_binders in
-      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) (Some <| (SS.subst subst t).n) body.pos in
+      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) None body.pos in
       binders@extra_formals, body
     in
 

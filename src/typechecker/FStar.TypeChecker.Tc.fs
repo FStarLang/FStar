@@ -74,7 +74,6 @@ let is_native_tactic env (tac_lid: lident) (h: term) =
 
 let tc_check_trivial_guard env t k =
   let t, c, g = tc_check_tot_or_gtot_term env t k in
-  t.tk := Some c.res_typ.n;
   Rel.force_trivial_guard env g;
   t
 
@@ -1207,7 +1206,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
-        Common.insert_fv fv lb.lbtyp);
+        Common.insert_id_info.fv fv lb.lbtyp);
 
     if log env
     then BU.print1 "%s\n" (snd lbs |> List.map (fun lb ->
@@ -1454,6 +1453,14 @@ let tc_decls env ses =
         (* then printfn "About to elim vars from %s" (Print.sigelt_to_string se); *)
         N.elim_uvars env se) in
 
+    Common.insert_id_info.promote (fun t ->
+        N.normalize
+               [N.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
+                N.CheckNoUvars;
+                N.Beta; N.NoDeltaSteps; N.CompressUvars;
+                N.Exclude N.Zeta; N.Exclude N.Iota; N.NoFullNorm]
+              env
+              t); //update the id_info table after having removed their uvars
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se) env in
     FStar.Syntax.Unionfind.reset();
 

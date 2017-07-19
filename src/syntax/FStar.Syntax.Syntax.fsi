@@ -123,10 +123,10 @@ and comp' =
   | Total  of typ * option<universe>
   | GTotal of typ * option<universe>
   | Comp   of comp_typ
-and term = syntax<term',term'>
+and term = syntax<term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t<pat'>
-and comp = syntax<comp', unit>
+and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
@@ -175,9 +175,8 @@ and subst_elt =
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
 and uvars     = set<(uvar*typ)>
-and syntax<'a,'b> = {
+and syntax<'a> = {
     n:'a;
-    tk:memo<'b>;
     pos:Range.range;
     vars:memo<free_vars>;
 }
@@ -375,8 +374,8 @@ type modul = {
 }
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
-type mk_t = mk_t_a<term',term'>
+type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
+type mk_t = mk_t_a<term'>
 
 val contains_reflectable:  list<qualifier> -> bool
 
@@ -384,7 +383,7 @@ val withsort: 'a -> withinfo_t<'a>
 val withinfo: 'a -> Range.range -> withinfo_t<'a>
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> Tot<mk_t_a<'a,'b>>
+val mk: 'a -> Tot<mk_t_a<'a>>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
 val default_sigmeta: sig_metadata

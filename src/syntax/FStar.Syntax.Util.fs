@@ -672,14 +672,14 @@ let flat_arrow bs c =
     begin match c.n with
         | Total (tres, _) ->
           begin match (Subst.compress tres).n with
-               | Tm_arrow(bs', c') -> mk (Tm_arrow(bs@bs', c')) (!t.tk) t.pos
+               | Tm_arrow(bs', c') -> mk (Tm_arrow(bs@bs', c')) None t.pos
                | _ -> t
           end
         | _ -> t
     end
   | _ -> t
 
-let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
+let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
 

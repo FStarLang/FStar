@@ -192,7 +192,7 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
                   let tps, rest = BU.first_N (List.length tps) binders in
                   let t = match rest with
                     | [] -> U.comp_result c
-                    | _ -> mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos
+                    | _ -> mk (Tm_arrow(rest, c)) None x.sort.pos
                   in
                   tps, t
                 | _ -> [], ty
