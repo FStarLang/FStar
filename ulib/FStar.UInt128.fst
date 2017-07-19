@@ -571,6 +571,7 @@ let shift_left (a: t) (s: U32.t) : Pure t
   if (U32.lt s u32_64) then shift_left_small a s
   else shift_left_large a s
 
+#set-options "--z3rlimit 100"
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -585,6 +586,7 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
   U64.add low high
+#set-options "--z3rlimit 40"
 
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
