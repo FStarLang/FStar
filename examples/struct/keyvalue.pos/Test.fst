@@ -1369,7 +1369,7 @@ let adjacent_entries_disjoint (#t:Type) (b1 b2:B.buffer t) :
 // really only need a pointer to the beginning and a bslice at the current write
 // position
 noeq type writer =
-     { length_field: b:lbuffer 2;
+     { length_field: b:lbuffer 4;
        entries_written_buf: bslice;
        entries_written_list: unit -> GTot (list encoded_entry);
        num_entries_written: U32.t;
@@ -1385,11 +1385,13 @@ let writer_inv (h:mem) (w:writer) : Type0 =
     B.live h w.entries_scratch.p /\
     (let entries_buf = w.entries_written_buf in
      let enc_entries = as_seq h entries_buf in
-     let parsed_entries = parse_many parse_entry (U32.v w.num_entries_written) enc_entries in
+     let num_entries = U32.v w.num_entries_written in
+     let entries = w.entries_written_list () in
+     // so that total size of written data fits in a bslice
+     4 + num_entries < pow2 32 /\
      live h entries_buf /\
-     Some? parsed_entries /\
-     (let Some (entries, _) = parsed_entries in
-      w.entries_written_list () == entries))
+     List.length entries == num_entries /\
+     enc_entries == encode_many entries encode_entry num_entries)
 
 val adjacent_advance (b:bslice) (off:U32.t{U32.v off <= U32.v b.len}) :
   Lemma (buffers_adjacent (truncated_slice b off).p (advance_slice b off).p)
@@ -1413,16 +1415,15 @@ let writer_init (b:bslice) : ST (option writer)
              h0 == h1 /\
              Some? r ==>
              writer_inv h1 (Some?.v r))) =
-    if U32.lt b.len 2ul then None
+    if U32.lt b.len 4ul then None
     else
-    let w = { length_field = (truncated_slice b 2ul).p;
-              entries_written_buf = truncated_slice (advance_slice b 2ul) 0ul;
+    let w = { length_field = (truncated_slice b 4ul).p;
+              entries_written_buf = truncated_slice (advance_slice b 4ul) 0ul;
               entries_written_list = (fun _ -> []);
               num_entries_written = 0ul;
-              entries_scratch = advance_slice b 2ul } in
+              entries_scratch = advance_slice b 4ul } in
     assert (writer_valid w);
     Some w
-
 
 // TODO: implement this API
 
@@ -1435,11 +1436,58 @@ assume val writer_append (w:writer) (e:entry_st) : ST writer
                 (let ee = as_entry h1 e in
                  w'.entries_written_list () == w.entries_written_list () `List.append` [ee])))
 
-assume val writer_finish (w:writer) : ST bslice
+val join_is_concat (#t:Type) (b1 b2:B.buffer t) :
+    Lemma (requires (same_ref b1 b2 /\
+                     B.idx b1 + B.length b1 == B.idx b2))
+          (ensures (same_ref b1 b2 /\
+                    B.idx b1 + B.length b1 == B.idx b2 /\
+                    is_concat_of (B.join b1 b2) b1 b2))
+let join_is_concat #t b1 b2 = ()
+
+let writer_store_buf (w:writer) : ST bslice
+  (requires (fun h0 -> writer_inv h0 w))
+  (ensures (fun h0 b h1 -> h0 == h1 /\
+              live h1 b /\
+              writer_inv h1 w /\
+              is_concat_of b.p w.length_field w.entries_written_buf.p)) =
+  let b1 = w.length_field in
+  let b2 = w.entries_written_buf.p in
+  join_is_concat b1 b2;
+  BSlice (U32.add 4ul w.entries_written_buf.len) (B.join b1 b2)
+
+// XXX: don't have a proof that ser_u32 will not fail if given a buffer of
+// length 4 (and somehow F* doesn't prove this by unfolding the definition
+// enough)
+val writer_finish (w:writer) : ST (option bslice)
     (requires (fun h0 -> writer_inv h0 w))
-    (ensures (fun h0 b h1 ->
+    (ensures (fun h0 mb h1 ->
+                Some? mb ==>
+                begin
+                let b = Some?.v mb in
                 live h1 b /\
                 (let bs = as_seq h1 b in
                  let entries = w.entries_written_list () in
                  List.length entries == U32.v w.num_entries_written /\
-                 bs == encode_store (Store w.num_entries_written entries))))
+                 bs == encode_store (Store w.num_entries_written entries))
+                end))
+let writer_finish w =
+    let length_buf = BSlice 4ul w.length_field in
+    let r = ser_u32 w.num_entries_written length_buf in
+    match r with
+    | Some off ->
+        let b = writer_store_buf w in
+        begin
+          let h1 = get() in
+          assert (live h1 b);
+          let bs = as_seq h1 b in
+          let entries = w.entries_written_list () in
+          let enc_entries = as_seq h1 w.entries_written_buf in
+          assert (List.length entries == U32.v w.num_entries_written);
+          // this is the only required part of this proof (everything else falls
+          // out relatively easily)
+          is_concat_append b.p w.length_field w.entries_written_buf.p h1;
+          assert (bs == B.as_seq h1 w.length_field `append` enc_entries);
+          ()
+        end;
+      Some b
+    | None -> None
