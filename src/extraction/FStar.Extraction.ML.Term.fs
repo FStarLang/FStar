@@ -198,14 +198,7 @@ let rec is_type_aux env t =
       false //special case this, since we emit it during extraction even in prims, before it is in the F* scope
 
     | Tm_fvar fv ->
-      if TypeChecker.Env.is_type_constructor env.tcenv fv.fv_name.v
-      then true
-      else let (us, t), _ = FStar.TypeChecker.Env.lookup_lid env.tcenv fv.fv_name.v in
-           debug env (fun () -> BU.print3 "Looked up type of %s; got <%s>.%s"
-                             (Print.fv_to_string fv)
-                             (List.map Print.univ_to_string us |> String.concat ", ")
-                             (Print.term_to_string t));
-           is_arity env t
+      UEnv.is_type_name env fv
 
     | Tm_uvar (_, t)
     | Tm_bvar ({sort=t})
@@ -503,9 +496,10 @@ and arg_as_mlty (g:env) (a, _) : mlty =
     else erasedContent
 
 and fv_app_as_mlty (g:env) (fv:fv) (args : args) : mlty =
-    let formals, t =
-        let (_, ty), _ = TcEnv.lookup_lid g.tcenv fv.fv_name.v in
-        U.arrow_formals ty in
+    let formals, _ =
+        let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid g.tcenv fv.fv_name.v in
+        let fvty = N.normalize [N.UnfoldUntil Delta_constant] g.tcenv fvty in
+        U.arrow_formals fvty in
     let mlargs = List.map (arg_as_mlty g) args in
     let mlargs =
         let n_args = List.length args in

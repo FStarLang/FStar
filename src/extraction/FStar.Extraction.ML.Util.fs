@@ -70,22 +70,34 @@ let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
     | MLTY_Tuple ts -> MLTY_Tuple(List.map (subst_aux subst) ts)
     | MLTY_Top -> MLTY_Top
 
-let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
+let try_subst ((formals, t):mltyscheme) (args:list<mlty>) : option<mlty> =
     if List.length formals <> List.length args
-    then failwith "Substitution must be fully applied (see GitHub issue #490)"
-    else subst_aux (List.zip formals args) t
+    then None
+    else Some (subst_aux (List.zip formals args) t)
+
+let subst ts args =
+    match try_subst ts args with
+    | None ->
+      failwith "Substitution must be fully applied (see GitHub issue #490)"
+    | Some t ->
+      t
 
 let udelta_unfold (g:UEnv.env) = function
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_ty_const g n with
         | Some ts ->
-//          UEnv.debug g (fun _ -> printfn "Instantiating %A with %d formals with %d args"
-//                                     n (List.length <| fst ts) (List.length args));
-          Some (subst ts args)
+          begin
+            match try_subst ts args with
+            | None ->
+              failwith (BU.format3 "Substitution must be fully applied; got an application of %s with %s args whereas %s were expected (see GitHub issue #490)"
+                                                 (string_of_mlpath n)
+                                                 (BU.string_of_int (List.length args))
+                                                 (BU.string_of_int (List.length (fst ts))))
+            | Some r -> Some r
+          end
         | _ -> None
       end
     | _ -> None
-
 
 let eff_leq f f' = match f, f' with
     | E_PURE, _          -> true

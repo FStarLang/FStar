@@ -5,28 +5,28 @@ let find_deps_if_needed:
   =
   fun verify_mode  ->
     fun files  ->
-      let uu____12 = FStar_Options.explicit_deps () in
-      if uu____12
+      let uu____13 = FStar_Options.explicit_deps () in
+      if uu____13
       then files
       else
-        (let uu____15 = FStar_Parser_Dep.collect verify_mode files in
-         match uu____15 with
-         | (uu____29,deps,uu____31) ->
+        (let uu____17 = FStar_Parser_Dep.collect verify_mode files in
+         match uu____17 with
+         | (uu____44,deps,uu____46) ->
              (match deps with
               | [] ->
                   (FStar_Util.print_error
                      "Dependency analysis failed; reverting to using only the files provided";
                    files)
-              | uu____52 ->
+              | uu____86 ->
                   let deps1 = FStar_List.rev deps in
                   let deps2 =
                     let prims1 = FStar_Options.prims_basename () in
-                    let uu____59 =
-                      let uu____60 =
-                        let uu____61 = FStar_List.hd deps1 in
-                        FStar_Util.basename uu____61 in
-                      uu____60 = prims1 in
-                    if uu____59
+                    let uu____96 =
+                      let uu____97 =
+                        let uu____98 = FStar_List.hd deps1 in
+                        FStar_Util.basename uu____98 in
+                      uu____97 = prims1 in
+                    if uu____96
                     then FStar_List.tl deps1
                     else
                       (FStar_Util.print1_error

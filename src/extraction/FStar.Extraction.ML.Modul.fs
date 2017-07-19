@@ -113,7 +113,7 @@ let extract_typ_abbrev env fv quals attrs def =
     let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, attrs, Some (MLTD_Abbrev body)] in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
-              then env
+              then UEnv.extend_type_name env fv
               else UEnv.extend_tydef env fv td in
     env, def
 
@@ -142,9 +142,10 @@ let print_ifamily i =
         (Print.term_to_string i.ityp)
         (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals attrs: list<inductive_family> =
-    ses |> List.collect
-        (fun se -> match se.sigel with
+let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive_family> =
+    let env, ifams =
+        BU.fold_map
+        (fun env se -> match se.sigel with
             | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
@@ -156,14 +157,16 @@ let bundle_as_inductive_families env ses quals attrs: list<inductive_family> =
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
                 let attrs = extract_attrs (se.sigattrs @ attrs) in
-                [{  iname=l
-                  ; iparams=bs
-                  ; ityp=t
-                  ; idatas=datas
-                  ; iquals=se.sigquals
-                  ; iattrs = attrs  }]
-
-            | _ -> [])
+                let env = UEnv.extend_type_name env (S.lid_as_fv l Delta_constant None) in
+                env, [{   iname=l
+                        ; iparams=bs
+                        ; ityp=t
+                        ; idatas=datas
+                        ; iquals=se.sigquals
+                        ; iattrs = attrs }]
+            | _ -> env, [])
+        env ses in
+    env, List.flatten ifams
 
 type env_t = UEnv.env
 
@@ -209,8 +212,7 @@ let extract_bundle env se =
           env, [MLM_Exn ctor]
 
         | Sig_bundle(ses, _), quals ->
-          let ifams = bundle_as_inductive_families env ses quals se.sigattrs in
-//          ifams |> List.iter print_ifamily;
+          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
           let env, td = BU.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
 
@@ -315,7 +317,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
             tcenv, as_pair def_typ in
-          let lbtyp = FStar.TypeChecker.Normalize.unfold_whnf tcenv lbtyp in
+          let lbtyp = FStar.TypeChecker.Normalize.normalize [FStar.TypeChecker.Normalize.Beta;FStar.TypeChecker.Normalize.UnfoldUntil Delta_constant] tcenv lbtyp in
           let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
           //eta expansion is important; see issue #490
           extract_typ_abbrev g (right lb.lbname) quals se.sigattrs lbdef
@@ -456,7 +458,8 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
-  let g = {g with currentModule = name}  in
+  let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
+                  currentModule = name} in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in
