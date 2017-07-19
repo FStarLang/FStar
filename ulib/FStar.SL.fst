@@ -17,18 +17,13 @@ type same (h1:heap) (h2:heap) =
 type points_to (#a:Type0) (r:ref a) (v:a) (h:heap) =
   ((sel h r == v) /\ (same h (singleton_heap h r))) 
   
-type disjoint (h1:heap) (h2:heap) =
-  (empty_heap h1) \/ (empty_heap h2) \/
-  ((forall (a:Type0) (r:ref a). (h1 `contains` r) <==> (r `unused_in` h2)) 
-    /\ (forall (a:Type0) (r:ref a). (h2 `contains` r) <==> (r `unused_in` h1)))
-
 type star (p:predicate) (q:predicate) (h:heap) =
   (exists h1 h2. (p h1) /\ (q h2) /\ (disjoint h1 h2) /\ (same h (join h1 h2)))
 
-val lemma_frame_rule: p:predicate -> q:predicate -> r:predicate -> h1:heap -> h2:heap
-  -> Lemma (requires (p h1 ==> q h1) /\ (disjoint h1 h2) /\ (p h1) /\  (r h2))
-           (ensures (star p r (join h1 h2)) ==> (star q r (join h1 h2)))
-let lemma_frame_rule p q r h1 h2 = ()
+val lemma_frame_rule: p:predicate -> q:predicate -> r:predicate -> h0:heap -> h1:heap -> h2:heap
+  -> Lemma (requires (p h0 ==> q h1) /\ (disjoint h1 h2) /\ (p h0) /\ (r h2))
+           (ensures (star p r (join h0 h2)) ==> (star q r (join h1 h2)))
+let lemma_frame_rule p q r h0 h1 h2 = ()
 
 val lemma_alloc_rule: #a:Type0 -> h:heap -> v:a
   -> Lemma (requires (empty_heap h))
@@ -37,6 +32,6 @@ val lemma_alloc_rule: #a:Type0 -> h:heap -> v:a
 let lemma_alloc_rule #a h v = ()	   
 
 val lemma_sequencing_rule: p:predicate -> h:heap
- -> Lemma (requires (p h))
+ -> Lemma (requires (p h) /\ disjoint h emp)
           (ensures (star p (empty_heap) (join h emp)))
 let lemma_sequencing_rule p h = ()

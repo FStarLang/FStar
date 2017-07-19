@@ -49,6 +49,10 @@ val free_mm: #a:Type0 -> h:heap -> r:ref a{h `contains` r /\ is_mm r} -> GTot he
 
 val restrict: h:heap -> s:set nat -> GTot heap
 
+val disjoint: h1:heap -> h2:heap -> Tot Type0
+
+val join_tot: h1:heap -> h2:heap{disjoint h1 h2} -> GTot heap
+
 val join: h1:heap -> h2:heap -> GTot heap
 
 let modifies_t (s:tset nat) (h0:heap) (h1:heap) =

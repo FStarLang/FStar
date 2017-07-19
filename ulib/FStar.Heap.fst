@@ -74,17 +74,24 @@ let restrict h s =
   { h with memory = (fun r' -> if Set.mem r' s
 			    then h.memory r'
 			    else None) }
-			    
-let join h1 h2 =
-  let heap_memory = (fun n -> match (h1.memory n) with
-                              | Some v -> h1.memory n
-			      | None -> h2.memory n ) in
-  if h1.next_addr < h2.next_addr 
-  then 
-    { h2 with memory = heap_memory }
-  else
-    { h1 with memory = heap_memory }
-			      
+let disjoint h1 h2 =
+  let _ = () in
+  (forall (r:nat). (Some?(h1.memory r) <==> None?(h2.memory r))) /\
+  (forall (r:nat). (Some?(h2.memory r) <==> None?(h1.memory r)))
+
+let join_tot h1 h2 =
+  let heap_memory = (fun r' ->  match (h1.memory r', h2.memory r') with
+                              | (Some v1, None) -> Some v1 
+			      | (None, Some v2) -> Some v2) in
+  if (h1.next_addr < h2.next_addr)
+  then { h2 with memory = heap_memory }
+  else { h1 with memory = heap_memory }
+
+let join h1 h2 = 
+  if FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint h1 h2) 
+  then join_tot h1 h2
+  else emp
+  
 (*
  * update of a well-typed reference
  *)
