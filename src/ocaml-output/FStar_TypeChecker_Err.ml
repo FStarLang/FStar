@@ -42,11 +42,11 @@ let add_errors:
                       (msg, uu____210)
                     else
                       (let r' =
-                         let uu___235_213 = r in
+                         let uu___236_213 = r in
                          {
                            FStar_Range.def_range = (r.FStar_Range.use_range);
                            FStar_Range.use_range =
-                             (uu___235_213.FStar_Range.use_range)
+                             (uu___236_213.FStar_Range.use_range)
                          } in
                        let uu____214 =
                          let uu____215 = FStar_Range.file_of_range r' in
@@ -302,23 +302,28 @@ let disjunctive_pattern_vars:
       FStar_Util.format2
         "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
         uu____563 uu____564
-let name_and_result c =
-  match c.FStar_Syntax_Syntax.n with
-  | FStar_Syntax_Syntax.Total (t,uu____591) -> ("Tot", t)
-  | FStar_Syntax_Syntax.GTotal (t,uu____609) -> ("GTot", t)
-  | FStar_Syntax_Syntax.Comp ct ->
-      let uu____627 =
-        FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name in
-      (uu____627, (ct.FStar_Syntax_Syntax.result_typ))
+let name_and_result:
+  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+    (Prims.string,FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+      FStar_Pervasives_Native.tuple2
+  =
+  fun c  ->
+    match c.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Total (t,uu____586) -> ("Tot", t)
+    | FStar_Syntax_Syntax.GTotal (t,uu____598) -> ("GTot", t)
+    | FStar_Syntax_Syntax.Comp ct ->
+        let uu____610 =
+          FStar_Syntax_Print.lid_to_string ct.FStar_Syntax_Syntax.effect_name in
+        (uu____610, (ct.FStar_Syntax_Syntax.result_typ))
 let computed_computation_type_does_not_match_annotation env e c c' =
-  let uu____681 = name_and_result c in
-  match uu____681 with
+  let uu____648 = name_and_result c in
+  match uu____648 with
   | (f1,r1) ->
-      let uu____700 = name_and_result c' in
-      (match uu____700 with
+      let uu____661 = name_and_result c' in
+      (match uu____661 with
        | (f2,r2) ->
-           let uu____719 = err_msg_type_strings env r1 r2 in
-           (match uu____719 with
+           let uu____674 = err_msg_type_strings env r1 r2 in
+           (match uu____674 with
             | (s1,s2) ->
                 FStar_Util.format4
                   "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
@@ -327,53 +332,63 @@ let unexpected_non_trivial_precondition_on_term:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string =
   fun env  ->
     fun f  ->
-      let uu____734 = FStar_TypeChecker_Normalize.term_to_string env f in
+      let uu____689 = FStar_TypeChecker_Normalize.term_to_string env f in
       FStar_Util.format1
-        "Term has an unexpected non-trivial pre-condition: %s" uu____734
-let expected_pure_expression e c =
-  let uu____758 = FStar_Syntax_Print.term_to_string e in
-  let uu____759 =
-    let uu____760 = name_and_result c in
-    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____760 in
-  FStar_Util.format2
-    "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
-    uu____758 uu____759
-let expected_ghost_expression e c =
-  let uu____804 = FStar_Syntax_Print.term_to_string e in
-  let uu____805 =
-    let uu____806 = name_and_result c in
-    FStar_All.pipe_left FStar_Pervasives_Native.fst uu____806 in
-  FStar_Util.format2
-    "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
-    uu____804 uu____805
+        "Term has an unexpected non-trivial pre-condition: %s" uu____689
+let expected_pure_expression:
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> Prims.string
+  =
+  fun e  ->
+    fun c  ->
+      let uu____702 = FStar_Syntax_Print.term_to_string e in
+      let uu____703 =
+        let uu____704 = name_and_result c in
+        FStar_All.pipe_left FStar_Pervasives_Native.fst uu____704 in
+      FStar_Util.format2
+        "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
+        uu____702 uu____703
+let expected_ghost_expression:
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> Prims.string
+  =
+  fun e  ->
+    fun c  ->
+      let uu____731 = FStar_Syntax_Print.term_to_string e in
+      let uu____732 =
+        let uu____733 = name_and_result c in
+        FStar_All.pipe_left FStar_Pervasives_Native.fst uu____733 in
+      FStar_Util.format2
+        "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
+        uu____731 uu____732
 let expected_effect_1_got_effect_2:
   FStar_Ident.lident -> FStar_Ident.lident -> Prims.string =
   fun c1  ->
     fun c2  ->
-      let uu____835 = FStar_Syntax_Print.lid_to_string c1 in
-      let uu____836 = FStar_Syntax_Print.lid_to_string c2 in
+      let uu____756 = FStar_Syntax_Print.lid_to_string c1 in
+      let uu____757 = FStar_Syntax_Print.lid_to_string c2 in
       FStar_Util.format2
         "Expected a computation with effect %s; but it has effect %s"
-        uu____835 uu____836
+        uu____756 uu____757
 let failed_to_prove_specification_of:
   FStar_Syntax_Syntax.lbname -> Prims.string Prims.list -> Prims.string =
   fun l  ->
     fun lbls  ->
-      let uu____849 = FStar_Syntax_Print.lbname_to_string l in
-      let uu____850 = FStar_All.pipe_right lbls (FStar_String.concat ", ") in
+      let uu____770 = FStar_Syntax_Print.lbname_to_string l in
+      let uu____771 = FStar_All.pipe_right lbls (FStar_String.concat ", ") in
       FStar_Util.format2
         "Failed to prove specification of %s; assertions at [%s] may fail"
-        uu____849 uu____850
+        uu____770 uu____771
 let failed_to_prove_specification: Prims.string Prims.list -> Prims.string =
   fun lbls  ->
     match lbls with
     | [] ->
         "An unknown assertion in the term at this location was not provable"
-    | uu____861 ->
-        let uu____864 =
+    | uu____782 ->
+        let uu____785 =
           FStar_All.pipe_right lbls (FStar_String.concat "\n\t") in
         FStar_Util.format1 "The following problems were found:\n\t%s"
-          uu____864
+          uu____785
 let top_level_effect: Prims.string =
   "Top-level let-bindings must be total; this term may have effects"
 let cardinality_constraint_violated:
@@ -382,8 +397,8 @@ let cardinality_constraint_violated:
   =
   fun l  ->
     fun a  ->
-      let uu____879 = FStar_Syntax_Print.lid_to_string l in
-      let uu____880 = FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v in
+      let uu____800 = FStar_Syntax_Print.lid_to_string l in
+      let uu____801 = FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v in
       FStar_Util.format2
         "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
-        uu____879 uu____880
+        uu____800 uu____801
