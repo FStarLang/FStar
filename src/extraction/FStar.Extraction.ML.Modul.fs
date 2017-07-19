@@ -91,7 +91,7 @@ let extract_typ_abbrev env fv quals def =
     let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, Some (MLTD_Abbrev body)] in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
-              then env
+              then UEnv.extend_type_name env fv
               else UEnv.extend_tydef env fv td in
     env, def
 
