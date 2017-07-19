@@ -1023,7 +1023,7 @@ let sum_rounded_mod_exact n m k =
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
-  Lemma (n / k + m / k == (n + m - n % k - m % k) / k)
+  Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
 let div_sum_combine n m k =
   sum_rounded_mod_exact n m k;
   div_sum_combine1 n m k;
@@ -1034,7 +1034,8 @@ val sum_shift_carry : a:nat -> b:nat -> k:pos ->
   Lemma (a / k + (b + a%k) / k == (a + b) / k)
 let sum_shift_carry a b k =
   div_sum_combine a (b+a%k) k;
-  assert (a / k + (b + a%k) / k == (a + b - (b + a%k)%k) / k);
+//  assert (a / k + (b + a%k) / k == (a + b + (a % k - a % k) - (b + a%k) % k) / k);
+//  assert ((a + b + (a % k - a % k) - (b + a%k) % k) / k == (a + b - (b + a%k) % k) / k);
   add_mod_then_mod b a k;
   Math.lemma_mod_spec (a+b) k
 
