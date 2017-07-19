@@ -23,7 +23,7 @@ testseq: out testseq.fst
         # CH: This target is broken: the --use_native_int flag no longer exists
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --use_native_int --odir out --codegen OCaml testseq.fst
         # CH: reference to $(ULIB_ML)/native_int is now bogus, there is no such thing
-	$(OCAMLOPT) -I $(ULIB_ML)/native_int -I out/ out/FStar_Seq.ml out/TestSeq.ml -o testseq.exe
+	$(OCAMLOPT) -I $(ULIB_ML_NATIVE)/native_int -I out/ out/FStar_Seq.ml out/TestSeq.ml -o testseq.exe
 	./testseq.exe
 
 LIB=$(FSTAR_HOME)/ulib
