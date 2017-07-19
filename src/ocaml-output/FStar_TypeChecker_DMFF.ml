@@ -1416,18 +1416,19 @@ let is_monadic_arrow: FStar_Syntax_Syntax.term' -> nm =
                       FStar_Syntax_Syntax.vars = uu____2214;_})
         -> nm_of_comp n2
     | uu____2225 -> failwith "unexpected_argument: [is_monadic_arrow]"
-let is_monadic_comp c =
-  let uu____2237 = nm_of_comp c.FStar_Syntax_Syntax.n in
-  match uu____2237 with | M uu____2238 -> true | N uu____2239 -> false
+let is_monadic_comp:
+  'Auu____2228 .
+    (FStar_Syntax_Syntax.comp','Auu____2228) FStar_Syntax_Syntax.syntax ->
+      Prims.bool
+  =
+  fun c  ->
+    let uu____2237 = nm_of_comp c.FStar_Syntax_Syntax.n in
+    match uu____2237 with | M uu____2238 -> true | N uu____2239 -> false
 exception Not_found
 let uu___is_Not_found: Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Not_found  -> true | uu____2243 -> false
-let double_star:
-  FStar_Syntax_Syntax.typ ->
-    (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-      FStar_Syntax_Syntax.syntax
-  =
+let double_star: FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ =
   fun typ  ->
     let star_once typ1 =
       let uu____2253 =
@@ -1813,28 +1814,35 @@ and star_type':
             FStar_Errors.Err uu____2932 in
           raise uu____2931
       | FStar_Syntax_Syntax.Tm_delayed uu____2934 -> failwith "impossible"
-let is_monadic uu___92_2967 =
-  match uu___92_2967 with
-  | FStar_Pervasives_Native.None  -> failwith "un-annotated lambda?!"
-  | FStar_Pervasives_Native.Some (FStar_Util.Inl
-      { FStar_Syntax_Syntax.eff_name = uu____2979;
-        FStar_Syntax_Syntax.res_typ = uu____2980;
-        FStar_Syntax_Syntax.cflags = flags;
-        FStar_Syntax_Syntax.comp = uu____2982;_})
-      ->
-      FStar_All.pipe_right flags
-        (FStar_Util.for_some
-           (fun uu___91_2999  ->
-              match uu___91_2999 with
-              | FStar_Syntax_Syntax.CPS  -> true
-              | uu____3000 -> false))
-  | FStar_Pervasives_Native.Some (FStar_Util.Inr (uu____3001,flags)) ->
-      FStar_All.pipe_right flags
-        (FStar_Util.for_some
-           (fun uu___91_3014  ->
-              match uu___91_3014 with
-              | FStar_Syntax_Syntax.CPS  -> true
-              | uu____3015 -> false))
+let is_monadic:
+  'Auu____2957 .
+    (FStar_Syntax_Syntax.lcomp,('Auu____2957,FStar_Syntax_Syntax.cflags
+                                               Prims.list)
+                                 FStar_Pervasives_Native.tuple2)
+      FStar_Util.either FStar_Pervasives_Native.option -> Prims.bool
+  =
+  fun uu___92_2967  ->
+    match uu___92_2967 with
+    | FStar_Pervasives_Native.None  -> failwith "un-annotated lambda?!"
+    | FStar_Pervasives_Native.Some (FStar_Util.Inl
+        { FStar_Syntax_Syntax.eff_name = uu____2979;
+          FStar_Syntax_Syntax.res_typ = uu____2980;
+          FStar_Syntax_Syntax.cflags = flags;
+          FStar_Syntax_Syntax.comp = uu____2982;_})
+        ->
+        FStar_All.pipe_right flags
+          (FStar_Util.for_some
+             (fun uu___91_2999  ->
+                match uu___91_2999 with
+                | FStar_Syntax_Syntax.CPS  -> true
+                | uu____3000 -> false))
+    | FStar_Pervasives_Native.Some (FStar_Util.Inr (uu____3001,flags)) ->
+        FStar_All.pipe_right flags
+          (FStar_Util.for_some
+             (fun uu___91_3014  ->
+                match uu___91_3014 with
+                | FStar_Syntax_Syntax.CPS  -> true
+                | uu____3015 -> false))
 let rec is_C: FStar_Syntax_Syntax.typ -> Prims.bool =
   fun t  ->
     let uu____3019 =
@@ -3220,7 +3228,7 @@ let n:
     FStar_TypeChecker_Normalize.NoDeltaSteps;
     FStar_TypeChecker_Normalize.Eager_unfolding;
     FStar_TypeChecker_Normalize.EraseUniverses]
-let star_type: env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term =
+let star_type: env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ =
   fun env  ->
     fun t  -> let uu____6498 = n env.env t in star_type' env uu____6498
 let star_expr:
@@ -3232,7 +3240,7 @@ let star_expr:
   fun env  ->
     fun t  -> let uu____6510 = n env.env t in check_n env uu____6510
 let trans_F:
-  env_ ->
+  env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =

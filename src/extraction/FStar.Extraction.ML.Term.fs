@@ -33,7 +33,6 @@ module BU = FStar.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
-module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
 module C  = FStar.Parser.Const
 module TcEnv = FStar.TypeChecker.Env
@@ -285,6 +284,11 @@ let rec is_ml_value e =
     | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
+
+(*copied from ocaml-asttrans.fs*)
+let fresh = let c = mk_ref 0 in
+            fun (x:string) -> (incr c; (x, !c))
+
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
 let normalize_abs (t0:term) : term =
@@ -357,6 +361,20 @@ let erase (g:env) e ty (f:e_tag) : (mlexpr * e_tag * mlty) =
             else e in
     (e, f, ty)
 
+(* eta-expand `e` according to its type `t` *)
+let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
+    let fresh' id =
+        let s, i = fresh id in
+        (s ^ string_of_int i), i // actual fresh variable..
+    in
+    let ts, r = doms_and_cod t in
+    if ts = [] then e else // just quit if this is not a function type
+    let vs = List.map (fun _ -> fresh' "a") ts in
+    let vs_ts = List.zip vs ts in
+    let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) (List.zip vs ts) in
+    let body = with_ty r <| MLE_App (e, vs_es) in
+    with_ty t <| MLE_Fun (vs_ts, body)
+
 //maybe_coerce g e ty expect:
 //     Inserts an Obj.magic around e if ty </: expect
 let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
@@ -368,7 +386,7 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
                              (Code.string_of_mlexpr g.currentModule e)
                              (Code.string_of_mlty g.currentModule ty)
                              (Code.string_of_mlty g.currentModule expect));
-          with_ty expect <| MLE_Coerce (e, ty, expect)
+          eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -1129,6 +1147,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
               let expected_t = if add_unit then MLTY_Fun(ml_unit_ty, E_PURE, snd polytype) else snd polytype in
+              let polytype = fst polytype, expected_t in
               let e, _ = check_term_as_mlexpr env e f expected_t in
               let f = maybe_downgrade_eff env f expected_t in
               f, {mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true} in
@@ -1239,11 +1258,6 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         | Some t -> t in
                    with_ty t_match <| MLE_Match(e, mlbranches), f_match, t_match
             end
-
-
-(*copied from ocaml-asttrans.fs*)
-let fresh = let c = mk_ref 0 in
-            fun (x:string) -> (incr c; (x, !c))
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.

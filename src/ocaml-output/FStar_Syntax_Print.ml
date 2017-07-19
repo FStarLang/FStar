@@ -57,17 +57,29 @@ let unary_prim_ops:
   [(FStar_Parser_Const.op_Negation, "not");
   (FStar_Parser_Const.op_Minus, "-");
   (FStar_Parser_Const.not_lid, "~")]
-let is_prim_op ps f =
-  match f.FStar_Syntax_Syntax.n with
-  | FStar_Syntax_Syntax.Tm_fvar fv ->
-      FStar_All.pipe_right ps
-        (FStar_Util.for_some (FStar_Syntax_Syntax.fv_eq_lid fv))
-  | uu____109 -> false
-let get_lid f =
-  match f.FStar_Syntax_Syntax.n with
-  | FStar_Syntax_Syntax.Tm_fvar fv ->
-      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
-  | uu____126 -> failwith "get_lid"
+let is_prim_op:
+  'Auu____92 .
+    FStar_Ident.lident Prims.list ->
+      (FStar_Syntax_Syntax.term','Auu____92) FStar_Syntax_Syntax.syntax ->
+        Prims.bool
+  =
+  fun ps  ->
+    fun f  ->
+      match f.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Tm_fvar fv ->
+          FStar_All.pipe_right ps
+            (FStar_Util.for_some (FStar_Syntax_Syntax.fv_eq_lid fv))
+      | uu____109 -> false
+let get_lid:
+  'Auu____112 .
+    (FStar_Syntax_Syntax.term','Auu____112) FStar_Syntax_Syntax.syntax ->
+      FStar_Ident.lident
+  =
+  fun f  ->
+    match f.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_fvar fv ->
+        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+    | uu____126 -> failwith "get_lid"
 let is_infix_prim_op: FStar_Syntax_Syntax.term -> Prims.bool =
   fun e  ->
     is_prim_op
@@ -93,18 +105,31 @@ let is_lex_cons: exp -> Prims.bool =
   fun f  -> is_prim_op [FStar_Parser_Const.lexcons_lid] f
 let is_lex_top: exp -> Prims.bool =
   fun f  -> is_prim_op [FStar_Parser_Const.lextop_lid] f
-let is_inr uu___200_173 =
-  match uu___200_173 with
-  | FStar_Util.Inl uu____176 -> false
-  | FStar_Util.Inr uu____177 -> true
-let filter_imp a =
-  FStar_All.pipe_right a
-    (FStar_List.filter
-       (fun uu___201_208  ->
-          match uu___201_208 with
-          | (uu____212,FStar_Pervasives_Native.Some
-             (FStar_Syntax_Syntax.Implicit uu____213)) -> false
-          | uu____215 -> true))
+let is_inr:
+  'Auu____166 'Auu____167 .
+    ('Auu____167,'Auu____166) FStar_Util.either -> Prims.bool
+  =
+  fun uu___200_173  ->
+    match uu___200_173 with
+    | FStar_Util.Inl uu____176 -> false
+    | FStar_Util.Inr uu____177 -> true
+let filter_imp:
+  'Auu____180 .
+    ('Auu____180,FStar_Syntax_Syntax.arg_qualifier
+                   FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.tuple2 Prims.list ->
+      ('Auu____180,FStar_Syntax_Syntax.arg_qualifier
+                     FStar_Pervasives_Native.option)
+        FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun a  ->
+    FStar_All.pipe_right a
+      (FStar_List.filter
+         (fun uu___201_208  ->
+            match uu___201_208 with
+            | (uu____212,FStar_Pervasives_Native.Some
+               (FStar_Syntax_Syntax.Implicit uu____213)) -> false
+            | uu____215 -> true))
 let rec reconstruct_lex:
   exp ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
@@ -139,11 +164,13 @@ let rec reconstruct_lex:
         if uu____326
         then FStar_Pervasives_Native.Some []
         else FStar_Pervasives_Native.None
-let rec find f l =
-  match l with
-  | [] -> failwith "blah"
-  | hd1::tl1 ->
-      let uu____362 = f hd1 in if uu____362 then hd1 else find f tl1
+let rec find: 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a =
+  fun f  ->
+    fun l  ->
+      match l with
+      | [] -> failwith "blah"
+      | hd1::tl1 ->
+          let uu____362 = f hd1 in if uu____362 then hd1 else find f tl1
 let find_lid:
   FStar_Ident.lident ->
     (FStar_Ident.lident,Prims.string) FStar_Pervasives_Native.tuple2
@@ -156,12 +183,21 @@ let find_lid:
           (fun p  -> FStar_Ident.lid_equals x (FStar_Pervasives_Native.fst p))
           xs in
       FStar_Pervasives_Native.snd uu____376
-let infix_prim_op_to_string e =
-  let uu____395 = get_lid e in find_lid uu____395 infix_prim_ops
-let unary_prim_op_to_string e =
-  let uu____407 = get_lid e in find_lid uu____407 unary_prim_ops
-let quant_to_string t =
-  let uu____419 = get_lid t in find_lid uu____419 quants
+let infix_prim_op_to_string:
+  'Auu____386 .
+    (FStar_Syntax_Syntax.term','Auu____386) FStar_Syntax_Syntax.syntax ->
+      Prims.string
+  = fun e  -> let uu____395 = get_lid e in find_lid uu____395 infix_prim_ops
+let unary_prim_op_to_string:
+  'Auu____398 .
+    (FStar_Syntax_Syntax.term','Auu____398) FStar_Syntax_Syntax.syntax ->
+      Prims.string
+  = fun e  -> let uu____407 = get_lid e in find_lid uu____407 unary_prim_ops
+let quant_to_string:
+  'Auu____410 .
+    (FStar_Syntax_Syntax.term','Auu____410) FStar_Syntax_Syntax.syntax ->
+      Prims.string
+  = fun t  -> let uu____419 = get_lid t in find_lid uu____419 quants
 let const_to_string: FStar_Const.sconst -> Prims.string =
   fun x  ->
     match x with
@@ -215,15 +251,16 @@ let tag_of_term: FStar_Syntax_Syntax.term -> Prims.string =
          | FStar_Pervasives_Native.Some uu____613 -> "Tm_delayed-resolved")
     | FStar_Syntax_Syntax.Tm_meta uu____618 -> "Tm_meta"
     | FStar_Syntax_Syntax.Tm_unknown  -> "Tm_unknown"
-let uvar_to_string u =
-  let uu____632 = FStar_Options.hide_uvar_nums () in
-  if uu____632
-  then "?"
-  else
-    (let uu____634 =
-       let uu____635 = FStar_Unionfind.uvar_id u in
-       FStar_All.pipe_right uu____635 FStar_Util.string_of_int in
-     Prims.strcat "?" uu____634)
+let uvar_to_string: 'a . 'a FStar_Unionfind.uvar -> Prims.string =
+  fun u  ->
+    let uu____632 = FStar_Options.hide_uvar_nums () in
+    if uu____632
+    then "?"
+    else
+      (let uu____634 =
+         let uu____635 = FStar_Unionfind.uvar_id u in
+         FStar_All.pipe_right uu____635 FStar_Util.string_of_int in
+       Prims.strcat "?" uu____634)
 let rec int_of_univ:
   Prims.int ->
     FStar_Syntax_Syntax.universe ->
@@ -1244,34 +1281,40 @@ let abs_ascription_to_string:
          (FStar_Util.string_builder_append strb "Some Inr ";
           FStar_Util.string_builder_append strb (FStar_Ident.text_of_lid lid)));
     FStar_Util.string_of_string_builder strb
-let list_to_string f elts =
-  match elts with
-  | [] -> "[]"
-  | x::xs ->
-      let strb = FStar_Util.new_string_builder () in
-      (FStar_Util.string_builder_append strb "[";
-       (let uu____2034 = f x in
-        FStar_Util.string_builder_append strb uu____2034);
-       FStar_List.iter
-         (fun x1  ->
-            FStar_Util.string_builder_append strb "; ";
-            (let uu____2038 = f x1 in
-             FStar_Util.string_builder_append strb uu____2038)) xs;
-       FStar_Util.string_builder_append strb "]";
-       FStar_Util.string_of_string_builder strb)
-let set_to_string f s =
-  let elts = FStar_Util.set_elements s in
-  match elts with
-  | [] -> "{}"
-  | x::xs ->
-      let strb = FStar_Util.new_string_builder () in
-      (FStar_Util.string_builder_append strb "{";
-       (let uu____2067 = f x in
-        FStar_Util.string_builder_append strb uu____2067);
-       FStar_List.iter
-         (fun x1  ->
-            FStar_Util.string_builder_append strb ", ";
-            (let uu____2071 = f x1 in
-             FStar_Util.string_builder_append strb uu____2071)) xs;
-       FStar_Util.string_builder_append strb "}";
-       FStar_Util.string_of_string_builder strb)
+let list_to_string:
+  'a . ('a -> Prims.string) -> 'a Prims.list -> Prims.string =
+  fun f  ->
+    fun elts  ->
+      match elts with
+      | [] -> "[]"
+      | x::xs ->
+          let strb = FStar_Util.new_string_builder () in
+          (FStar_Util.string_builder_append strb "[";
+           (let uu____2034 = f x in
+            FStar_Util.string_builder_append strb uu____2034);
+           FStar_List.iter
+             (fun x1  ->
+                FStar_Util.string_builder_append strb "; ";
+                (let uu____2038 = f x1 in
+                 FStar_Util.string_builder_append strb uu____2038)) xs;
+           FStar_Util.string_builder_append strb "]";
+           FStar_Util.string_of_string_builder strb)
+let set_to_string:
+  'a . ('a -> Prims.string) -> 'a FStar_Util.set -> Prims.string =
+  fun f  ->
+    fun s  ->
+      let elts = FStar_Util.set_elements s in
+      match elts with
+      | [] -> "{}"
+      | x::xs ->
+          let strb = FStar_Util.new_string_builder () in
+          (FStar_Util.string_builder_append strb "{";
+           (let uu____2067 = f x in
+            FStar_Util.string_builder_append strb uu____2067);
+           FStar_List.iter
+             (fun x1  ->
+                FStar_Util.string_builder_append strb ", ";
+                (let uu____2071 = f x1 in
+                 FStar_Util.string_builder_append strb uu____2071)) xs;
+           FStar_Util.string_builder_append strb "}";
+           FStar_Util.string_of_string_builder strb)

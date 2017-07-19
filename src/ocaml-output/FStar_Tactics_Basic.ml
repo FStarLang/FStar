@@ -17,14 +17,18 @@ type proofstate =
 type 'a result =
   | Success of ('a,proofstate) FStar_Pervasives_Native.tuple2
   | Failed of (Prims.string,proofstate) FStar_Pervasives_Native.tuple2
-let uu___is_Success projectee =
-  match projectee with | Success _0 -> true | uu____114 -> false
-let __proj__Success__item___0 projectee =
-  match projectee with | Success _0 -> _0
-let uu___is_Failed projectee =
-  match projectee with | Failed _0 -> true | uu____145 -> false
-let __proj__Failed__item___0 projectee =
-  match projectee with | Failed _0 -> _0
+let uu___is_Success: 'a . 'a result -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Success _0 -> true | uu____114 -> false
+let __proj__Success__item___0:
+  'a . 'a result -> ('a,proofstate) FStar_Pervasives_Native.tuple2 =
+  fun projectee  -> match projectee with | Success _0 -> _0
+let uu___is_Failed: 'a . 'a result -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Failed _0 -> true | uu____145 -> false
+let __proj__Failed__item___0:
+  'a . 'a result -> (Prims.string,proofstate) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | Failed _0 -> _0
 exception Failure of Prims.string
 let uu___is_Failure: Prims.exn -> Prims.bool =
   fun projectee  ->
@@ -33,16 +37,20 @@ let __proj__Failure__item__uu___: Prims.exn -> Prims.string =
   fun projectee  -> match projectee with | Failure uu____178 -> uu____178
 type 'a tac = {
   tac_f: proofstate -> 'a result;}
-let mk_tac f = { tac_f = f }
-let run t p = t.tac_f p
-let ret x = mk_tac (fun p  -> Success (x, p))
-let bind t1 t2 =
-  mk_tac
-    (fun p  ->
-       let uu____273 = run t1 p in
-       match uu____273 with
-       | Success (a,q) -> let uu____278 = t2 a in run uu____278 q
-       | Failed (msg,q) -> Failed (msg, q))
+let mk_tac: 'a . (proofstate -> 'a result) -> 'a tac =
+  fun f  -> { tac_f = f }
+let run: 'Auu____227 . 'Auu____227 tac -> proofstate -> 'Auu____227 result =
+  fun t  -> fun p  -> t.tac_f p
+let ret: 'a . 'a -> 'a tac = fun x  -> mk_tac (fun p  -> Success (x, p))
+let bind: 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
+  fun t1  ->
+    fun t2  ->
+      mk_tac
+        (fun p  ->
+           let uu____273 = run t1 p in
+           match uu____273 with
+           | Success (a,q) -> let uu____278 = t2 a in run uu____278 q
+           | Failed (msg,q) -> Failed (msg, q))
 let goal_to_string: goal -> Prims.string =
   fun g  ->
     let g_binders =
@@ -73,8 +81,9 @@ let tacprint3:
         fun z  ->
           let uu____320 = FStar_Util.format3 s x y z in
           FStar_Util.print1 "TAC>> %s\n" uu____320
-let dump_goal ps goal =
-  let uu____334 = goal_to_string goal in tacprint uu____334
+let dump_goal: 'Auu____324 . 'Auu____324 -> goal -> Prims.unit =
+  fun ps  ->
+    fun goal  -> let uu____334 = goal_to_string goal in tacprint uu____334
 let dump_proofstate: proofstate -> Prims.string -> Prims.unit =
   fun ps  ->
     fun msg  ->
@@ -89,11 +98,15 @@ let dump_proofstate: proofstate -> Prims.string -> Prims.unit =
 let print_proof_state: Prims.string -> Prims.unit tac =
   fun msg  -> mk_tac (fun p  -> dump_proofstate p msg; Success ((), p))
 let get: proofstate tac = mk_tac (fun p  -> Success (p, p))
-let log ps f =
-  let uu____380 = FStar_ST.read tacdbg in if uu____380 then f () else ()
+let log:
+  'Auu____366 . 'Auu____366 -> (Prims.unit -> Prims.unit) -> Prims.unit =
+  fun ps  ->
+    fun f  ->
+      let uu____380 = FStar_ST.read tacdbg in if uu____380 then f () else ()
 let mlog: (Prims.unit -> Prims.unit) -> Prims.unit tac =
   fun f  -> bind get (fun ps  -> log ps f; ret ())
-let fail msg = mk_tac (fun p  -> Failed (msg, p))
+let fail: 'Auu____398 . Prims.string -> 'Auu____398 tac =
+  fun msg  -> mk_tac (fun p  -> Failed (msg, p))
 let set: proofstate -> Prims.unit tac =
   fun p  -> mk_tac (fun uu____410  -> Success ((), p))
 let solve: goal -> FStar_Syntax_Syntax.typ -> Prims.unit =
@@ -223,10 +236,14 @@ let conj_goals: goal -> goal -> goal =
               witness = (uu___84_517.witness);
               goal_ty = uu____518
             }))
-let with_cur_goal nm f =
-  bind get
-    (fun p  ->
-       match p.goals with | [] -> fail "No more goals" | hd1::tl1 -> f hd1)
+let with_cur_goal: 'a . Prims.string -> (goal -> 'a tac) -> 'a tac =
+  fun nm  ->
+    fun f  ->
+      bind get
+        (fun p  ->
+           match p.goals with
+           | [] -> fail "No more goals"
+           | hd1::tl1 -> f hd1)
 let cur_goal: goal tac =
   mk_tac
     (fun ps  ->
@@ -261,8 +278,17 @@ let replace_point:
       fun t  ->
         let uu____574 = FStar_Syntax_Util.term_eq e1 t in
         if uu____574 then e2 else t
-let treplace env e1 e2 t =
-  FStar_Syntax_Util.bottom_fold (replace_point e1 e2) t
+let treplace:
+  'Auu____581 .
+    'Auu____581 ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.term ->
+          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  =
+  fun env  ->
+    fun e1  ->
+      fun e2  ->
+        fun t  -> FStar_Syntax_Util.bottom_fold (replace_point e1 e2) t
 let grewrite_impl:
   FStar_Syntax_Syntax.typ ->
     FStar_Syntax_Syntax.typ ->
@@ -325,97 +351,110 @@ let smt: Prims.unit tac =
                     goal_ty = FStar_Syntax_Util.t_true
                   })] in
             bind uu____637 (fun uu____640  -> add_smt_goals [g])))
-let focus_cur_goal nm f =
-  bind get
-    (fun p  ->
-       match p.goals with
-       | [] -> fail "No more goals"
-       | hd1::tl1 ->
-           let q =
-             let uu___88_662 = p in
-             {
-               main_context = (uu___88_662.main_context);
-               main_goal = (uu___88_662.main_goal);
-               all_implicits = (uu___88_662.all_implicits);
-               goals = [hd1];
-               smt_goals = (uu___88_662.smt_goals);
-               transaction = (uu___88_662.transaction)
-             } in
-           let uu____663 = set q in
-           bind uu____663
-             (fun uu____665  ->
-                bind f
-                  (fun a  ->
-                     bind get
-                       (fun q'  ->
-                          let q2 =
-                            let uu___89_669 = q' in
-                            {
-                              main_context = (uu___89_669.main_context);
-                              main_goal = (uu___89_669.main_goal);
-                              all_implicits = (uu___89_669.all_implicits);
-                              goals = (FStar_List.append q'.goals tl1);
-                              smt_goals = (uu___89_669.smt_goals);
-                              transaction = (uu___89_669.transaction)
-                            } in
-                          let uu____670 = set q2 in
-                          bind uu____670 (fun uu____672  -> ret a)))))
-let cur_goal_and_rest f g =
-  bind get
-    (fun p  ->
-       match p.goals with
-       | [] -> fail "No more goals"
-       | uu____706::[] ->
-           bind f (fun a  -> ret (a, FStar_Pervasives_Native.None))
-       | hd1::tl1 ->
-           bind dismiss_all
-             (fun uu____721  ->
-                let uu____722 = add_goals [hd1] in
-                bind uu____722
-                  (fun uu____727  ->
-                     bind f
-                       (fun a  ->
-                          bind get
-                            (fun uu____735  ->
-                               match uu____735 with
-                               | { main_context = uu____740;
-                                   main_goal = uu____741;
-                                   all_implicits = uu____742;
-                                   goals = sub_goals_f;
-                                   smt_goals = uu____744;
-                                   transaction = uu____745;_} ->
-                                   bind dismiss_all
-                                     (fun uu____751  ->
-                                        let uu____752 = add_goals tl1 in
-                                        bind uu____752
-                                          (fun uu____757  ->
-                                             bind g
-                                               (fun b  ->
-                                                  let uu____762 =
-                                                    add_goals sub_goals_f in
-                                                  bind uu____762
-                                                    (fun uu____767  ->
-                                                       ret
-                                                         (a,
-                                                           (FStar_Pervasives_Native.Some
-                                                              b)))))))))))
-let or_else t1 t2 =
-  mk_tac
-    (fun p  ->
-       let uu____790 = t1.tac_f p in
-       match uu____790 with | Failed uu____793 -> t2.tac_f p | q -> q)
-let rec map t =
-  mk_tac
-    (fun ps  ->
-       let uu____811 =
-         let uu____814 =
-           let uu____820 = map t in cur_goal_and_rest t uu____820 in
-         bind uu____814
-           (fun uu___78_829  ->
-              match uu___78_829 with
-              | (hd1,FStar_Pervasives_Native.None ) -> ret [hd1]
-              | (hd1,FStar_Pervasives_Native.Some tl1) -> ret (hd1 :: tl1)) in
-       run uu____811 ps)
+let focus_cur_goal: 'a . Prims.string -> 'a tac -> 'a tac =
+  fun nm  ->
+    fun f  ->
+      bind get
+        (fun p  ->
+           match p.goals with
+           | [] -> fail "No more goals"
+           | hd1::tl1 ->
+               let q =
+                 let uu___88_662 = p in
+                 {
+                   main_context = (uu___88_662.main_context);
+                   main_goal = (uu___88_662.main_goal);
+                   all_implicits = (uu___88_662.all_implicits);
+                   goals = [hd1];
+                   smt_goals = (uu___88_662.smt_goals);
+                   transaction = (uu___88_662.transaction)
+                 } in
+               let uu____663 = set q in
+               bind uu____663
+                 (fun uu____665  ->
+                    bind f
+                      (fun a  ->
+                         bind get
+                           (fun q'  ->
+                              let q2 =
+                                let uu___89_669 = q' in
+                                {
+                                  main_context = (uu___89_669.main_context);
+                                  main_goal = (uu___89_669.main_goal);
+                                  all_implicits = (uu___89_669.all_implicits);
+                                  goals = (FStar_List.append q'.goals tl1);
+                                  smt_goals = (uu___89_669.smt_goals);
+                                  transaction = (uu___89_669.transaction)
+                                } in
+                              let uu____670 = set q2 in
+                              bind uu____670 (fun uu____672  -> ret a)))))
+let cur_goal_and_rest:
+  'a 'b .
+    'a tac ->
+      'b tac ->
+        ('a,'b FStar_Pervasives_Native.option) FStar_Pervasives_Native.tuple2
+          tac
+  =
+  fun f  ->
+    fun g  ->
+      bind get
+        (fun p  ->
+           match p.goals with
+           | [] -> fail "No more goals"
+           | uu____706::[] ->
+               bind f (fun a  -> ret (a, FStar_Pervasives_Native.None))
+           | hd1::tl1 ->
+               bind dismiss_all
+                 (fun uu____721  ->
+                    let uu____722 = add_goals [hd1] in
+                    bind uu____722
+                      (fun uu____727  ->
+                         bind f
+                           (fun a  ->
+                              bind get
+                                (fun uu____735  ->
+                                   match uu____735 with
+                                   | { main_context = uu____740;
+                                       main_goal = uu____741;
+                                       all_implicits = uu____742;
+                                       goals = sub_goals_f;
+                                       smt_goals = uu____744;
+                                       transaction = uu____745;_} ->
+                                       bind dismiss_all
+                                         (fun uu____751  ->
+                                            let uu____752 = add_goals tl1 in
+                                            bind uu____752
+                                              (fun uu____757  ->
+                                                 bind g
+                                                   (fun b  ->
+                                                      let uu____762 =
+                                                        add_goals sub_goals_f in
+                                                      bind uu____762
+                                                        (fun uu____767  ->
+                                                           ret
+                                                             (a,
+                                                               (FStar_Pervasives_Native.Some
+                                                                  b)))))))))))
+let or_else: 'a . 'a tac -> 'a tac -> 'a tac =
+  fun t1  ->
+    fun t2  ->
+      mk_tac
+        (fun p  ->
+           let uu____790 = t1.tac_f p in
+           match uu____790 with | Failed uu____793 -> t2.tac_f p | q -> q)
+let rec map: 'a . 'a tac -> 'a Prims.list tac =
+  fun t  ->
+    mk_tac
+      (fun ps  ->
+         let uu____811 =
+           let uu____814 =
+             let uu____820 = map t in cur_goal_and_rest t uu____820 in
+           bind uu____814
+             (fun uu___78_829  ->
+                match uu___78_829 with
+                | (hd1,FStar_Pervasives_Native.None ) -> ret [hd1]
+                | (hd1,FStar_Pervasives_Native.Some tl1) -> ret (hd1 :: tl1)) in
+         run uu____811 ps)
 let map_goal_term:
   (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) -> Prims.unit tac =
   fun f  ->
@@ -432,39 +471,40 @@ let map_goal_term:
              } in
            replace_cur uu____862) in
     let uu____865 = map aux in bind uu____865 (fun uu____869  -> ret ())
-let map_meta t =
-  with_cur_goal "map_meta"
-    (fun g  ->
-       let uu____882 =
-         let uu____883 = FStar_Syntax_Subst.compress g.goal_ty in
-         uu____883.FStar_Syntax_Syntax.n in
-       match uu____882 with
-       | FStar_Syntax_Syntax.Tm_meta (f,annot) ->
-           let uu____893 =
-             replace_cur
-               (let uu___91_895 = g in
-                {
-                  context = (uu___91_895.context);
-                  witness = (uu___91_895.witness);
-                  goal_ty = f
-                }) in
-           bind uu____893
-             (fun uu____896  ->
-                bind t
-                  (fun a  ->
-                     let uu____898 =
-                       map_goal_term
-                         (fun tm  ->
-                            let uu____901 = is_true tm in
-                            if uu____901
-                            then tm
-                            else
-                              FStar_Syntax_Syntax.mk
-                                (FStar_Syntax_Syntax.Tm_meta (tm, annot))
-                                FStar_Pervasives_Native.None
-                                tm.FStar_Syntax_Syntax.pos) in
-                     bind uu____898 (fun uu____907  -> ret a)))
-       | uu____908 -> fail "Not a meta")
+let map_meta: 'a . 'a tac -> 'a tac =
+  fun t  ->
+    with_cur_goal "map_meta"
+      (fun g  ->
+         let uu____882 =
+           let uu____883 = FStar_Syntax_Subst.compress g.goal_ty in
+           uu____883.FStar_Syntax_Syntax.n in
+         match uu____882 with
+         | FStar_Syntax_Syntax.Tm_meta (f,annot) ->
+             let uu____893 =
+               replace_cur
+                 (let uu___91_895 = g in
+                  {
+                    context = (uu___91_895.context);
+                    witness = (uu___91_895.witness);
+                    goal_ty = f
+                  }) in
+             bind uu____893
+               (fun uu____896  ->
+                  bind t
+                    (fun a  ->
+                       let uu____898 =
+                         map_goal_term
+                           (fun tm  ->
+                              let uu____901 = is_true tm in
+                              if uu____901
+                              then tm
+                              else
+                                FStar_Syntax_Syntax.mk
+                                  (FStar_Syntax_Syntax.Tm_meta (tm, annot))
+                                  FStar_Pervasives_Native.None
+                                  tm.FStar_Syntax_Syntax.pos) in
+                       bind uu____898 (fun uu____907  -> ret a)))
+         | uu____908 -> fail "Not a meta")
 let seq: Prims.unit tac -> Prims.unit tac -> Prims.unit tac =
   fun t1  ->
     fun t2  ->
@@ -503,10 +543,16 @@ let intros: FStar_Syntax_Syntax.binders tac =
                      bind uu____944 (fun uu____951  -> ret bs)))
        | uu____952 -> fail "Cannot intro this goal, expected a forall")
 let intros_no_names: Prims.unit tac = bind intros (fun uu____955  -> ret ())
-let mk_squash p =
-  let sq = FStar_Syntax_Util.fvar_const FStar_Parser_Const.squash_lid in
-  let uu____966 = let uu____972 = FStar_Syntax_Syntax.as_arg p in [uu____972] in
-  FStar_Syntax_Util.mk_app sq uu____966
+let mk_squash:
+  'Auu____958 .
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.term','Auu____958) FStar_Syntax_Syntax.syntax
+  =
+  fun p  ->
+    let sq = FStar_Syntax_Util.fvar_const FStar_Parser_Const.squash_lid in
+    let uu____966 =
+      let uu____972 = FStar_Syntax_Syntax.as_arg p in [uu____972] in
+    FStar_Syntax_Util.mk_app sq uu____966
 let un_squash:
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
@@ -979,15 +1025,16 @@ let destruct_equality_imp:
              FStar_Pervasives_Native.Some uu____1915
          | uu____1935 -> FStar_Pervasives_Native.None)
     | uu____1944 -> FStar_Pervasives_Native.None
-let at_most_one t =
-  bind t
-    (fun a  ->
-       bind get
-         (fun p  ->
-            match p.goals with
-            | [] -> ret a
-            | uu____1966::[] -> ret a
-            | uu____1967 -> fail "expected at most one goal remaining"))
+let at_most_one: 'a . 'a tac -> 'a tac =
+  fun t  ->
+    bind t
+      (fun a  ->
+         bind get
+           (fun p  ->
+              match p.goals with
+              | [] -> ret a
+              | uu____1966::[] -> ret a
+              | uu____1967 -> fail "expected at most one goal remaining"))
 let merge_sub_goals: Prims.unit tac =
   bind get
     (fun p  ->

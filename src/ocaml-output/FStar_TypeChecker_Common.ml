@@ -212,21 +212,40 @@ type identifier_info =
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either;
   identifier_ty: FStar_Syntax_Syntax.typ;
   identifier_range: FStar_Range.range;}
-let rec insert_col_info col info col_infos =
-  match col_infos with
-  | [] -> [(col, info)]
-  | (c,i)::rest ->
-      if col < c
-      then (col, info) :: col_infos
-      else
-        (let uu____513 = insert_col_info col info rest in (c, i) :: uu____513)
-let find_nearest_preceding_col_info col col_infos =
-  let rec aux out uu___97_549 =
-    match uu___97_549 with
-    | [] -> out
-    | (c,i)::rest ->
-        if c > col then out else aux (FStar_Pervasives_Native.Some i) rest in
-  aux FStar_Pervasives_Native.None col_infos
+let rec insert_col_info:
+  'Auu____471 .
+    Prims.int ->
+      'Auu____471 ->
+        (Prims.int,'Auu____471) FStar_Pervasives_Native.tuple2 Prims.list ->
+          (Prims.int,'Auu____471) FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun col  ->
+    fun info  ->
+      fun col_infos  ->
+        match col_infos with
+        | [] -> [(col, info)]
+        | (c,i)::rest ->
+            if col < c
+            then (col, info) :: col_infos
+            else
+              (let uu____513 = insert_col_info col info rest in (c, i) ::
+                 uu____513)
+let find_nearest_preceding_col_info:
+  'Auu____522 .
+    Prims.int ->
+      (Prims.int,'Auu____522) FStar_Pervasives_Native.tuple2 Prims.list ->
+        'Auu____522 FStar_Pervasives_Native.option
+  =
+  fun col  ->
+    fun col_infos  ->
+      let rec aux out uu___97_549 =
+        match uu___97_549 with
+        | [] -> out
+        | (c,i)::rest ->
+            if c > col
+            then out
+            else aux (FStar_Pervasives_Native.Some i) rest in
+      aux FStar_Pervasives_Native.None col_infos
 type col_info =
   (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
 type row_info = col_info FStar_ST.ref FStar_Util.imap

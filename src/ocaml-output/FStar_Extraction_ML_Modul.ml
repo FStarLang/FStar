@@ -1,61 +1,88 @@
 open Prims
-let fail_exp lid t =
-  let uu____15 =
-    let uu____18 =
-      let uu____19 =
-        let uu____29 =
-          FStar_Syntax_Syntax.fvar FStar_Parser_Const.failwith_lid
-            FStar_Syntax_Syntax.Delta_constant FStar_Pervasives_Native.None in
-        let uu____30 =
-          let uu____32 = FStar_Syntax_Syntax.iarg t in
-          let uu____33 =
-            let uu____35 =
-              let uu____36 =
-                let uu____37 =
-                  let uu____40 =
-                    let uu____41 =
-                      let uu____42 =
-                        let uu____46 =
-                          let uu____47 =
-                            let uu____48 =
-                              FStar_Syntax_Print.lid_to_string lid in
-                            Prims.strcat "Not yet implemented:" uu____48 in
-                          FStar_Bytes.string_as_unicode_bytes uu____47 in
-                        (uu____46, FStar_Range.dummyRange) in
-                      FStar_Const.Const_string uu____42 in
-                    FStar_Syntax_Syntax.Tm_constant uu____41 in
-                  FStar_Syntax_Syntax.mk uu____40 in
-                uu____37 FStar_Pervasives_Native.None FStar_Range.dummyRange in
-              FStar_All.pipe_left FStar_Syntax_Syntax.as_arg uu____36 in
-            [uu____35] in
-          uu____32 :: uu____33 in
-        (uu____29, uu____30) in
-      FStar_Syntax_Syntax.Tm_app uu____19 in
-    FStar_Syntax_Syntax.mk uu____18 in
-  uu____15 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let fail_exp:
+  'Auu____4 .
+    FStar_Ident.lident ->
+      FStar_Syntax_Syntax.typ ->
+        (FStar_Syntax_Syntax.term','Auu____4) FStar_Syntax_Syntax.syntax
+  =
+  fun lid  ->
+    fun t  ->
+      let uu____15 =
+        let uu____18 =
+          let uu____19 =
+            let uu____29 =
+              FStar_Syntax_Syntax.fvar FStar_Parser_Const.failwith_lid
+                FStar_Syntax_Syntax.Delta_constant
+                FStar_Pervasives_Native.None in
+            let uu____30 =
+              let uu____32 = FStar_Syntax_Syntax.iarg t in
+              let uu____33 =
+                let uu____35 =
+                  let uu____36 =
+                    let uu____37 =
+                      let uu____40 =
+                        let uu____41 =
+                          let uu____42 =
+                            let uu____46 =
+                              let uu____47 =
+                                let uu____48 =
+                                  FStar_Syntax_Print.lid_to_string lid in
+                                Prims.strcat "Not yet implemented:" uu____48 in
+                              FStar_Bytes.string_as_unicode_bytes uu____47 in
+                            (uu____46, FStar_Range.dummyRange) in
+                          FStar_Const.Const_string uu____42 in
+                        FStar_Syntax_Syntax.Tm_constant uu____41 in
+                      FStar_Syntax_Syntax.mk uu____40 in
+                    uu____37 FStar_Pervasives_Native.None
+                      FStar_Range.dummyRange in
+                  FStar_All.pipe_left FStar_Syntax_Syntax.as_arg uu____36 in
+                [uu____35] in
+              uu____32 :: uu____33 in
+            (uu____29, uu____30) in
+          FStar_Syntax_Syntax.Tm_app uu____19 in
+        FStar_Syntax_Syntax.mk uu____18 in
+      uu____15 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let mangle_projector_lid: FStar_Ident.lident -> FStar_Ident.lident =
   fun x  -> x
-let lident_as_mlsymbol: FStar_Ident.lident -> Prims.string =
+let lident_as_mlsymbol:
+  FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol =
   fun id  -> (id.FStar_Ident.ident).FStar_Ident.idText
-let as_pair uu___147_81 =
-  match uu___147_81 with
-  | a::b::[] -> (a, b)
-  | uu____85 -> failwith "Expected a list with 2 elements"
-let binders_as_mlty_binders env bs =
-  FStar_Util.fold_map
-    (fun env1  ->
-       fun uu____117  ->
-         match uu____117 with
-         | (bv,uu____125) ->
-             let uu____126 =
-               let uu____127 =
-                 let uu____129 =
-                   let uu____130 = FStar_Extraction_ML_UEnv.bv_as_ml_tyvar bv in
-                   FStar_Extraction_ML_Syntax.MLTY_Var uu____130 in
-                 FStar_Pervasives_Native.Some uu____129 in
-               FStar_Extraction_ML_UEnv.extend_ty env1 bv uu____127 in
-             let uu____131 = FStar_Extraction_ML_UEnv.bv_as_ml_tyvar bv in
-             (uu____126, uu____131)) env bs
+let as_pair:
+  'Auu____74 .
+    'Auu____74 Prims.list ->
+      ('Auu____74,'Auu____74) FStar_Pervasives_Native.tuple2
+  =
+  fun uu___147_81  ->
+    match uu___147_81 with
+    | a::b::[] -> (a, b)
+    | uu____85 -> failwith "Expected a list with 2 elements"
+let binders_as_mlty_binders:
+  'Auu____92 .
+    FStar_Extraction_ML_UEnv.env ->
+      (FStar_Syntax_Syntax.bv,'Auu____92) FStar_Pervasives_Native.tuple2
+        Prims.list ->
+        (FStar_Extraction_ML_UEnv.env,(Prims.string,Prims.int)
+                                        FStar_Pervasives_Native.tuple2
+                                        Prims.list)
+          FStar_Pervasives_Native.tuple2
+  =
+  fun env  ->
+    fun bs  ->
+      FStar_Util.fold_map
+        (fun env1  ->
+           fun uu____117  ->
+             match uu____117 with
+             | (bv,uu____125) ->
+                 let uu____126 =
+                   let uu____127 =
+                     let uu____129 =
+                       let uu____130 =
+                         FStar_Extraction_ML_UEnv.bv_as_ml_tyvar bv in
+                       FStar_Extraction_ML_Syntax.MLTY_Var uu____130 in
+                     FStar_Pervasives_Native.Some uu____129 in
+                   FStar_Extraction_ML_UEnv.extend_ty env1 bv uu____127 in
+                 let uu____131 = FStar_Extraction_ML_UEnv.bv_as_ml_tyvar bv in
+                 (uu____126, uu____131)) env bs
 let extract_typ_abbrev:
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.fv ->
@@ -173,70 +200,82 @@ let print_ifamily: inductive_family -> Prims.unit =
       FStar_All.pipe_right uu____382 (FStar_String.concat "\n\t\t") in
     FStar_Util.print4 "\n\t%s %s : %s { %s }\n" uu____378 uu____379 uu____380
       uu____381
-let bundle_as_inductive_families env ses quals =
-  FStar_All.pipe_right ses
-    (FStar_List.collect
-       (fun se  ->
-          match se.FStar_Syntax_Syntax.sigel with
-          | FStar_Syntax_Syntax.Sig_inductive_typ (l,_us,bs,t,_mut_i,datas)
-              ->
-              let uu____427 = FStar_Syntax_Subst.open_term bs t in
-              (match uu____427 with
-               | (bs1,t1) ->
-                   let datas1 =
-                     FStar_All.pipe_right ses
-                       (FStar_List.collect
-                          (fun se1  ->
-                             match se1.FStar_Syntax_Syntax.sigel with
-                             | FStar_Syntax_Syntax.Sig_datacon
-                                 (d,uu____440,t2,l',nparams,uu____444) when
-                                 FStar_Ident.lid_equals l l' ->
-                                 let uu____447 =
-                                   FStar_Syntax_Util.arrow_formals t2 in
-                                 (match uu____447 with
-                                  | (bs',body) ->
-                                      let uu____468 =
-                                        FStar_Util.first_N
-                                          (FStar_List.length bs1) bs' in
-                                      (match uu____468 with
-                                       | (bs_params,rest) ->
-                                           let subst1 =
-                                             FStar_List.map2
-                                               (fun uu____504  ->
-                                                  fun uu____505  ->
-                                                    match (uu____504,
-                                                            uu____505)
-                                                    with
-                                                    | ((b',uu____515),
-                                                       (b,uu____517)) ->
-                                                        let uu____522 =
-                                                          let uu____527 =
-                                                            FStar_Syntax_Syntax.bv_to_name
-                                                              b in
-                                                          (b', uu____527) in
-                                                        FStar_Syntax_Syntax.NT
-                                                          uu____522)
-                                               bs_params bs1 in
-                                           let t3 =
-                                             let uu____529 =
-                                               let uu____532 =
-                                                 FStar_Syntax_Syntax.mk_Total
-                                                   body in
-                                               FStar_Syntax_Util.arrow rest
-                                                 uu____532 in
-                                             FStar_All.pipe_right uu____529
-                                               (FStar_Syntax_Subst.subst
-                                                  subst1) in
-                                           [{ dname = d; dtyp = t3 }]))
-                             | uu____537 -> [])) in
-                   [{
-                      iname = l;
-                      iparams = bs1;
-                      ityp = t1;
-                      idatas = datas1;
-                      iquals = (se.FStar_Syntax_Syntax.sigquals)
-                    }])
-          | uu____538 -> []))
+let bundle_as_inductive_families:
+  'Auu____396 'Auu____397 .
+    'Auu____397 ->
+      FStar_Syntax_Syntax.sigelt Prims.list ->
+        'Auu____396 -> inductive_family Prims.list
+  =
+  fun env  ->
+    fun ses  ->
+      fun quals  ->
+        FStar_All.pipe_right ses
+          (FStar_List.collect
+             (fun se  ->
+                match se.FStar_Syntax_Syntax.sigel with
+                | FStar_Syntax_Syntax.Sig_inductive_typ
+                    (l,_us,bs,t,_mut_i,datas) ->
+                    let uu____427 = FStar_Syntax_Subst.open_term bs t in
+                    (match uu____427 with
+                     | (bs1,t1) ->
+                         let datas1 =
+                           FStar_All.pipe_right ses
+                             (FStar_List.collect
+                                (fun se1  ->
+                                   match se1.FStar_Syntax_Syntax.sigel with
+                                   | FStar_Syntax_Syntax.Sig_datacon
+                                       (d,uu____440,t2,l',nparams,uu____444)
+                                       when FStar_Ident.lid_equals l l' ->
+                                       let uu____447 =
+                                         FStar_Syntax_Util.arrow_formals t2 in
+                                       (match uu____447 with
+                                        | (bs',body) ->
+                                            let uu____468 =
+                                              FStar_Util.first_N
+                                                (FStar_List.length bs1) bs' in
+                                            (match uu____468 with
+                                             | (bs_params,rest) ->
+                                                 let subst1 =
+                                                   FStar_List.map2
+                                                     (fun uu____504  ->
+                                                        fun uu____505  ->
+                                                          match (uu____504,
+                                                                  uu____505)
+                                                          with
+                                                          | ((b',uu____515),
+                                                             (b,uu____517))
+                                                              ->
+                                                              let uu____522 =
+                                                                let uu____527
+                                                                  =
+                                                                  FStar_Syntax_Syntax.bv_to_name
+                                                                    b in
+                                                                (b',
+                                                                  uu____527) in
+                                                              FStar_Syntax_Syntax.NT
+                                                                uu____522)
+                                                     bs_params bs1 in
+                                                 let t3 =
+                                                   let uu____529 =
+                                                     let uu____532 =
+                                                       FStar_Syntax_Syntax.mk_Total
+                                                         body in
+                                                     FStar_Syntax_Util.arrow
+                                                       rest uu____532 in
+                                                   FStar_All.pipe_right
+                                                     uu____529
+                                                     (FStar_Syntax_Subst.subst
+                                                        subst1) in
+                                                 [{ dname = d; dtyp = t3 }]))
+                                   | uu____537 -> [])) in
+                         [{
+                            iname = l;
+                            iparams = bs1;
+                            ityp = t1;
+                            idatas = datas1;
+                            iquals = (se.FStar_Syntax_Syntax.sigquals)
+                          }])
+                | uu____538 -> []))
 type env_t = FStar_Extraction_ML_UEnv.env
 let extract_bundle:
   env_t ->

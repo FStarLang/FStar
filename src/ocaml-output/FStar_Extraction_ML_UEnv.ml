@@ -57,25 +57,33 @@ let erasableTypeNoDelta: FStar_Extraction_ML_Syntax.mlty -> Prims.bool =
        | uu____139 -> false)
 let unknownType: FStar_Extraction_ML_Syntax.mlty =
   FStar_Extraction_ML_Syntax.MLTY_Top
-let prependTick uu____150 =
-  match uu____150 with
-  | (x,n1) ->
-      if FStar_Util.starts_with x "'"
-      then (x, n1)
-      else ((Prims.strcat "'A" x), n1)
-let removeTick uu____168 =
-  match uu____168 with
-  | (x,n1) ->
-      if FStar_Util.starts_with x "'"
-      then
-        let uu____175 = FStar_Util.substring_from x (Prims.parse_int "1") in
-        (uu____175, n1)
-      else (x, n1)
+let prependTick:
+  'Auu____142 .
+    (Prims.string,'Auu____142) FStar_Pervasives_Native.tuple2 ->
+      (Prims.string,'Auu____142) FStar_Pervasives_Native.tuple2
+  =
+  fun uu____150  ->
+    match uu____150 with
+    | (x,n1) ->
+        if FStar_Util.starts_with x "'"
+        then (x, n1)
+        else ((Prims.strcat "'A" x), n1)
+let removeTick:
+  'Auu____160 .
+    (Prims.string,'Auu____160) FStar_Pervasives_Native.tuple2 ->
+      (Prims.string,'Auu____160) FStar_Pervasives_Native.tuple2
+  =
+  fun uu____168  ->
+    match uu____168 with
+    | (x,n1) ->
+        if FStar_Util.starts_with x "'"
+        then
+          let uu____175 = FStar_Util.substring_from x (Prims.parse_int "1") in
+          (uu____175, n1)
+        else (x, n1)
 let convRange: FStar_Range.range -> Prims.int = fun r  -> Prims.parse_int "0"
-let convIdent:
-  FStar_Ident.ident ->
-    (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2
-  = fun id  -> ((id.FStar_Ident.idText), (Prims.parse_int "0"))
+let convIdent: FStar_Ident.ident -> FStar_Extraction_ML_Syntax.mlident =
+  fun id  -> ((id.FStar_Ident.idText), (Prims.parse_int "0"))
 let bv_as_ml_tyvar:
   FStar_Syntax_Syntax.bv ->
     (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2
@@ -113,13 +121,21 @@ let rec lookup_ty_local:
           failwith
             (Prims.strcat "extraction: unbound type var "
                (b.FStar_Syntax_Syntax.ppname).FStar_Ident.idText)
-let tyscheme_of_td uu____270 =
-  match uu____270 with
-  | (uu____277,uu____278,uu____279,vars,body_opt) ->
-      (match body_opt with
-       | FStar_Pervasives_Native.Some (FStar_Extraction_ML_Syntax.MLTD_Abbrev
-           t) -> FStar_Pervasives_Native.Some (vars, t)
-       | uu____289 -> FStar_Pervasives_Native.None)
+let tyscheme_of_td:
+  'Auu____257 'Auu____258 'Auu____259 .
+    ('Auu____259,'Auu____258,'Auu____257,FStar_Extraction_ML_Syntax.mlidents,
+      FStar_Extraction_ML_Syntax.mltybody FStar_Pervasives_Native.option)
+      FStar_Pervasives_Native.tuple5 ->
+      FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option
+  =
+  fun uu____270  ->
+    match uu____270 with
+    | (uu____277,uu____278,uu____279,vars,body_opt) ->
+        (match body_opt with
+         | FStar_Pervasives_Native.Some
+             (FStar_Extraction_ML_Syntax.MLTD_Abbrev t) ->
+             FStar_Pervasives_Native.Some (vars, t)
+         | uu____289 -> FStar_Pervasives_Native.None)
 let lookup_ty_const:
   env ->
     FStar_Extraction_ML_Syntax.mlpath ->
@@ -152,8 +168,7 @@ let module_name_of_fv: FStar_Syntax_Syntax.fv -> Prims.string Prims.list =
 let maybe_mangle_type_projector:
   env ->
     FStar_Syntax_Syntax.fv ->
-      (FStar_Extraction_ML_Syntax.mlsymbol Prims.list,FStar_Extraction_ML_Syntax.mlsymbol)
-        FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
+      FStar_Extraction_ML_Syntax.mlpath FStar_Pervasives_Native.option
   =
   fun env  ->
     fun fv  ->

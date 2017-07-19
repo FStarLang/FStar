@@ -1,11 +1,13 @@
 open Prims
-let pruneNones l =
-  FStar_List.fold_right
-    (fun x  ->
-       fun ll  ->
-         match x with
-         | FStar_Pervasives_Native.Some xs -> xs :: ll
-         | FStar_Pervasives_Native.None  -> ll) l []
+let pruneNones:
+  'a . 'a FStar_Pervasives_Native.option Prims.list -> 'a Prims.list =
+  fun l  ->
+    FStar_List.fold_right
+      (fun x  ->
+         fun ll  ->
+           match x with
+           | FStar_Pervasives_Native.Some xs -> xs :: ll
+           | FStar_Pervasives_Native.None  -> ll) l []
 let mlconst_of_const:
   FStar_Const.sconst -> FStar_Extraction_ML_Syntax.mlconstant =
   fun sctt  ->
@@ -170,14 +172,21 @@ let join_l:
   fun r  ->
     fun fs  ->
       FStar_List.fold_left (join r) FStar_Extraction_ML_Syntax.E_PURE fs
-let mk_ty_fun uu____200 =
-  FStar_List.fold_right
-    (fun uu____203  ->
-       fun t  ->
-         match uu____203 with
-         | (uu____207,t0) ->
-             FStar_Extraction_ML_Syntax.MLTY_Fun
-               (t0, FStar_Extraction_ML_Syntax.E_PURE, t))
+let mk_ty_fun:
+  'Auu____192 .
+    Prims.unit ->
+      ('Auu____192,FStar_Extraction_ML_Syntax.mlty)
+        FStar_Pervasives_Native.tuple2 Prims.list ->
+        FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlty
+  =
+  fun uu____200  ->
+    FStar_List.fold_right
+      (fun uu____203  ->
+         fun t  ->
+           match uu____203 with
+           | (uu____207,t0) ->
+               FStar_Extraction_ML_Syntax.MLTY_Fun
+                 (t0, FStar_Extraction_ML_Syntax.E_PURE, t))
 type unfold_t =
   FStar_Extraction_ML_Syntax.mlty ->
     FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
@@ -216,7 +225,9 @@ let rec type_leq_c:
                       | uu____293 ->
                           FStar_Extraction_ML_Syntax.MLE_Fun (xs, body) in
                     let uu____297 =
-                      (mk_ty_fun ()) xs body.FStar_Extraction_ML_Syntax.mlty in
+                      Obj.magic
+                        ((mk_ty_fun ()) (Obj.magic xs)
+                           (Obj.magic body.FStar_Extraction_ML_Syntax.mlty)) in
                     FStar_Extraction_ML_Syntax.with_ty uu____297 e1 in
               (match e with
                | FStar_Pervasives_Native.Some
@@ -254,8 +265,10 @@ let rec type_leq_c:
                              let uu____341 =
                                let uu____342 =
                                  let uu____345 =
-                                   (mk_ty_fun ()) [x]
-                                     body1.FStar_Extraction_ML_Syntax.mlty in
+                                   Obj.magic
+                                     ((mk_ty_fun ()) (Obj.magic [x])
+                                        (Obj.magic
+                                           body1.FStar_Extraction_ML_Syntax.mlty)) in
                                  FStar_Extraction_ML_Syntax.with_ty uu____345 in
                                FStar_All.pipe_left uu____342
                                  (FStar_Extraction_ML_Syntax.MLE_Fun
@@ -342,10 +355,15 @@ and type_leq:
       fun t2  ->
         let uu____510 = type_leq_c g FStar_Pervasives_Native.None t1 t2 in
         FStar_All.pipe_right uu____510 FStar_Pervasives_Native.fst
-let is_type_abstraction uu___113_536 =
-  match uu___113_536 with
-  | (FStar_Util.Inl uu____542,uu____543)::uu____544 -> true
-  | uu____556 -> false
+let is_type_abstraction:
+  'Auu____525 'Auu____526 'Auu____527 .
+    (('Auu____527,'Auu____526) FStar_Util.either,'Auu____525)
+      FStar_Pervasives_Native.tuple2 Prims.list -> Prims.bool
+  =
+  fun uu___113_536  ->
+    match uu___113_536 with
+    | (FStar_Util.Inl uu____542,uu____543)::uu____544 -> true
+    | uu____556 -> false
 let is_xtuple:
   (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2 ->
     Prims.int FStar_Pervasives_Native.option
@@ -388,10 +406,17 @@ let record_field_path:
              FStar_All.pipe_right ns
                (FStar_List.map (fun id  -> id.FStar_Ident.idText)))
     | uu____618 -> failwith "impos"
-let record_fields fs vs =
-  FStar_List.map2
-    (fun f  -> fun e  -> (((f.FStar_Ident.ident).FStar_Ident.idText), e)) fs
-    vs
+let record_fields:
+  'Auu____624 .
+    FStar_Ident.lident Prims.list ->
+      'Auu____624 Prims.list ->
+        (Prims.string,'Auu____624) FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun fs  ->
+    fun vs  ->
+      FStar_List.map2
+        (fun f  -> fun e  -> (((f.FStar_Ident.ident).FStar_Ident.idText), e))
+        fs vs
 let is_xtuple_ty:
   (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2 ->
     Prims.int FStar_Pervasives_Native.option
@@ -498,11 +523,14 @@ let prims_op_equality: FStar_Extraction_ML_Syntax.mlexpr =
 let prims_op_amp_amp: FStar_Extraction_ML_Syntax.mlexpr =
   let uu____788 =
     let uu____791 =
-      (mk_ty_fun ())
-        [(("x", (Prims.parse_int "0")),
-           FStar_Extraction_ML_Syntax.ml_bool_ty);
-        (("y", (Prims.parse_int "0")), FStar_Extraction_ML_Syntax.ml_bool_ty)]
-        FStar_Extraction_ML_Syntax.ml_bool_ty in
+      Obj.magic
+        ((mk_ty_fun ())
+           (Obj.magic
+              [(("x", (Prims.parse_int "0")),
+                 FStar_Extraction_ML_Syntax.ml_bool_ty);
+              (("y", (Prims.parse_int "0")),
+                FStar_Extraction_ML_Syntax.ml_bool_ty)])
+           (Obj.magic FStar_Extraction_ML_Syntax.ml_bool_ty)) in
     FStar_Extraction_ML_Syntax.with_ty uu____791 in
   FStar_All.pipe_left uu____788
     (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_AmpAmp"))
@@ -541,15 +569,23 @@ let mlloc_of_range:
     let pos = FStar_Range.start_of_range r in
     let line = FStar_Range.line_of_pos pos in
     let uu____852 = FStar_Range.file_of_range r in (line, uu____852)
-let rec argTypes:
+let rec doms_and_cod:
+  FStar_Extraction_ML_Syntax.mlty ->
+    (FStar_Extraction_ML_Syntax.mlty Prims.list,FStar_Extraction_ML_Syntax.mlty)
+      FStar_Pervasives_Native.tuple2
+  =
+  fun t  ->
+    match t with
+    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____866,b) ->
+        let uu____868 = doms_and_cod b in
+        (match uu____868 with | (ds,c) -> ((a :: ds), c))
+    | uu____880 -> ([], t)
+let argTypes:
   FStar_Extraction_ML_Syntax.mlty ->
     FStar_Extraction_ML_Syntax.mlty Prims.list
   =
   fun t  ->
-    match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____860,b) ->
-        let uu____862 = argTypes b in a :: uu____862
-    | uu____864 -> []
+    let uu____887 = doms_and_cod t in FStar_Pervasives_Native.fst uu____887
 let rec uncurry_mlty_fun:
   FStar_Extraction_ML_Syntax.mlty ->
     (FStar_Extraction_ML_Syntax.mlty Prims.list,FStar_Extraction_ML_Syntax.mlty)
@@ -557,7 +593,7 @@ let rec uncurry_mlty_fun:
   =
   fun t  ->
     match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____875,b) ->
-        let uu____877 = uncurry_mlty_fun b in
-        (match uu____877 with | (args,res) -> ((a :: args), res))
-    | uu____889 -> ([], t)
+    | FStar_Extraction_ML_Syntax.MLTY_Fun (a,uu____902,b) ->
+        let uu____904 = uncurry_mlty_fun b in
+        (match uu____904 with | (args,res) -> ((a :: args), res))
+    | uu____916 -> ([], t)

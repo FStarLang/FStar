@@ -105,10 +105,7 @@ let rec gensyms: Prims.int -> mlident Prims.list =
         let uu____96 = gensym () in
         let uu____97 = gensyms (n1 - (Prims.parse_int "1")) in uu____96 ::
           uu____97
-let mlpath_of_lident:
-  FStar_Ident.lident ->
-    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
-  =
+let mlpath_of_lident: FStar_Ident.lident -> mlpath =
   fun x  ->
     if FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid
     then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))

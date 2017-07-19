@@ -48,10 +48,16 @@ type env_t =
     FStar_Pervasives_Native.tuple2
 type modul_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
 type stack_t = (env_t,modul_t) FStar_Pervasives_Native.tuple2 Prims.list
-let pop uu____186 msg =
-  match uu____186 with
-  | (uu____190,env) ->
-      (FStar_Universal.pop_context env msg; FStar_Options.pop ())
+let pop:
+  'Auu____177 .
+    ('Auu____177,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2 ->
+      Prims.string -> Prims.unit
+  =
+  fun uu____186  ->
+    fun msg  ->
+      match uu____186 with
+      | (uu____190,env) ->
+          (FStar_Universal.pop_context env msg; FStar_Options.pop ())
 let push:
   (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
     FStar_Pervasives_Native.tuple2 ->
@@ -139,15 +145,26 @@ let mark:
         let dsenv1 = FStar_ToSyntax_Env.mark dsenv in
         let env1 = FStar_TypeChecker_Env.mark env in
         (FStar_Options.push (); (dsenv1, env1))
-let reset_mark uu____250 =
-  match uu____250 with
-  | (uu____253,env) ->
-      let dsenv = FStar_ToSyntax_Env.reset_mark () in
-      let env1 = FStar_TypeChecker_Env.reset_mark env in
-      (FStar_Options.pop (); (dsenv, env1))
-let cleanup uu____266 =
-  match uu____266 with
-  | (dsenv,env) -> FStar_TypeChecker_Env.cleanup_interactive env
+let reset_mark:
+  'Auu____242 .
+    ('Auu____242,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2 ->
+      (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun uu____250  ->
+    match uu____250 with
+    | (uu____253,env) ->
+        let dsenv = FStar_ToSyntax_Env.reset_mark () in
+        let env1 = FStar_TypeChecker_Env.reset_mark env in
+        (FStar_Options.pop (); (dsenv, env1))
+let cleanup:
+  'Auu____260 .
+    ('Auu____260,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2 ->
+      Prims.unit
+  =
+  fun uu____266  ->
+    match uu____266 with
+    | (dsenv,env) -> FStar_TypeChecker_Env.cleanup_interactive env
 let commit_mark:
   (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
     FStar_Pervasives_Native.tuple2 ->

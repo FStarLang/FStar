@@ -18,7 +18,7 @@
 module FStar.TSet
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-abstract type set a = a -> Tot prop
+type set a = a -> Tot prop
 abstract type equal (#a:Type) (s1:set a) (s2:set a) = forall x. s1 x <==> s2 x
 
 (* destructors *)

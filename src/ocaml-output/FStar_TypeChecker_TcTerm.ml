@@ -126,9 +126,11 @@ let is_eq:
     match uu___82_47 with
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality ) -> true
     | uu____49 -> false
-let steps env =
-  [FStar_TypeChecker_Normalize.Beta;
-  FStar_TypeChecker_Normalize.Eager_unfolding]
+let steps:
+  'Auu____53 . 'Auu____53 -> FStar_TypeChecker_Normalize.step Prims.list =
+  fun env  ->
+    [FStar_TypeChecker_Normalize.Beta;
+    FStar_TypeChecker_Normalize.Eager_unfolding]
 let norm:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
@@ -205,8 +207,15 @@ let check_no_escape:
                              s)
                         | uu____130 -> fail ())) in
           aux false kt
-let push_binding env b =
-  FStar_TypeChecker_Env.push_bv env (FStar_Pervasives_Native.fst b)
+let push_binding:
+  'Auu____135 .
+    FStar_TypeChecker_Env.env ->
+      (FStar_Syntax_Syntax.bv,'Auu____135) FStar_Pervasives_Native.tuple2 ->
+        FStar_TypeChecker_Env.env
+  =
+  fun env  ->
+    fun b  ->
+      FStar_TypeChecker_Env.push_bv env (FStar_Pervasives_Native.fst b)
 let maybe_extend_subst:
   FStar_Syntax_Syntax.subst_t ->
     FStar_Syntax_Syntax.binder ->
@@ -251,7 +260,7 @@ let memo_tk:
 let value_check_expected_typ:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp) FStar_Util.either
+      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.lcomp) FStar_Util.either
         ->
         FStar_TypeChecker_Env.guard_t ->
           (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
@@ -501,22 +510,31 @@ let check_expected_effect:
                                     expected_c)
                                  (FStar_Syntax_Util.comp_result c2) in
                              (e2, expected_c, g1))))))
-let no_logical_guard env uu____490 =
-  match uu____490 with
-  | (te,kt,f) ->
-      let uu____497 = FStar_TypeChecker_Rel.guard_form f in
-      (match uu____497 with
-       | FStar_TypeChecker_Common.Trivial  -> (te, kt, f)
-       | FStar_TypeChecker_Common.NonTrivial f1 ->
-           let uu____502 =
-             let uu____503 =
-               let uu____506 =
-                 FStar_TypeChecker_Err.unexpected_non_trivial_precondition_on_term
-                   env f1 in
-               let uu____507 = FStar_TypeChecker_Env.get_range env in
-               (uu____506, uu____507) in
-             FStar_Errors.Error uu____503 in
-           raise uu____502)
+let no_logical_guard:
+  'Auu____475 'Auu____476 .
+    FStar_TypeChecker_Env.env ->
+      ('Auu____476,'Auu____475,FStar_TypeChecker_Env.guard_t)
+        FStar_Pervasives_Native.tuple3 ->
+        ('Auu____476,'Auu____475,FStar_TypeChecker_Env.guard_t)
+          FStar_Pervasives_Native.tuple3
+  =
+  fun env  ->
+    fun uu____490  ->
+      match uu____490 with
+      | (te,kt,f) ->
+          let uu____497 = FStar_TypeChecker_Rel.guard_form f in
+          (match uu____497 with
+           | FStar_TypeChecker_Common.Trivial  -> (te, kt, f)
+           | FStar_TypeChecker_Common.NonTrivial f1 ->
+               let uu____502 =
+                 let uu____503 =
+                   let uu____506 =
+                     FStar_TypeChecker_Err.unexpected_non_trivial_precondition_on_term
+                       env f1 in
+                   let uu____507 = FStar_TypeChecker_Env.get_range env in
+                   (uu____506, uu____507) in
+                 FStar_Errors.Error uu____503 in
+               raise uu____502)
 let print_expected_ty: FStar_TypeChecker_Env.env -> Prims.unit =
   fun env  ->
     let uu____514 = FStar_TypeChecker_Env.expected_typ env in
@@ -526,41 +544,55 @@ let print_expected_ty: FStar_TypeChecker_Env.env -> Prims.unit =
     | FStar_Pervasives_Native.Some t ->
         let uu____517 = FStar_Syntax_Print.term_to_string t in
         FStar_Util.print1 "Expected type is %s" uu____517
-let check_smt_pat env t bs c =
-  let uu____552 = FStar_Syntax_Util.is_smt_lemma t in
-  if uu____552
-  then
-    match c.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Comp
-        { FStar_Syntax_Syntax.comp_univs = uu____553;
-          FStar_Syntax_Syntax.effect_name = uu____554;
-          FStar_Syntax_Syntax.result_typ = uu____555;
-          FStar_Syntax_Syntax.effect_args = _pre::_post::(pats,uu____559)::[];
-          FStar_Syntax_Syntax.flags = uu____560;_}
-        ->
-        let pat_vars =
-          let uu____594 =
-            FStar_TypeChecker_Normalize.normalize
-              [FStar_TypeChecker_Normalize.Beta] env pats in
-          FStar_Syntax_Free.names uu____594 in
-        let uu____595 =
-          FStar_All.pipe_right bs
-            (FStar_Util.find_opt
-               (fun uu____607  ->
-                  match uu____607 with
-                  | (b,uu____611) ->
-                      let uu____612 = FStar_Util.set_mem b pat_vars in
-                      Prims.op_Negation uu____612)) in
-        (match uu____595 with
-         | FStar_Pervasives_Native.None  -> ()
-         | FStar_Pervasives_Native.Some (x,uu____616) ->
-             let uu____619 =
-               let uu____620 = FStar_Syntax_Print.bv_to_string x in
-               FStar_Util.format1
-                 "Pattern misses at least one bound variable: %s" uu____620 in
-             FStar_Errors.warn t.FStar_Syntax_Syntax.pos uu____619)
-    | uu____621 -> failwith "Impossible"
-  else ()
+let check_smt_pat:
+  'Auu____524 'Auu____525 .
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_Syntax_Syntax.bv,'Auu____525) FStar_Pervasives_Native.tuple2
+          Prims.list ->
+          (FStar_Syntax_Syntax.comp','Auu____524) FStar_Syntax_Syntax.syntax
+            -> Prims.unit
+  =
+  fun env  ->
+    fun t  ->
+      fun bs  ->
+        fun c  ->
+          let uu____552 = FStar_Syntax_Util.is_smt_lemma t in
+          if uu____552
+          then
+            match c.FStar_Syntax_Syntax.n with
+            | FStar_Syntax_Syntax.Comp
+                { FStar_Syntax_Syntax.comp_univs = uu____553;
+                  FStar_Syntax_Syntax.effect_name = uu____554;
+                  FStar_Syntax_Syntax.result_typ = uu____555;
+                  FStar_Syntax_Syntax.effect_args =
+                    _pre::_post::(pats,uu____559)::[];
+                  FStar_Syntax_Syntax.flags = uu____560;_}
+                ->
+                let pat_vars =
+                  let uu____594 =
+                    FStar_TypeChecker_Normalize.normalize
+                      [FStar_TypeChecker_Normalize.Beta] env pats in
+                  FStar_Syntax_Free.names uu____594 in
+                let uu____595 =
+                  FStar_All.pipe_right bs
+                    (FStar_Util.find_opt
+                       (fun uu____607  ->
+                          match uu____607 with
+                          | (b,uu____611) ->
+                              let uu____612 = FStar_Util.set_mem b pat_vars in
+                              Prims.op_Negation uu____612)) in
+                (match uu____595 with
+                 | FStar_Pervasives_Native.None  -> ()
+                 | FStar_Pervasives_Native.Some (x,uu____616) ->
+                     let uu____619 =
+                       let uu____620 = FStar_Syntax_Print.bv_to_string x in
+                       FStar_Util.format1
+                         "Pattern misses at least one bound variable: %s"
+                         uu____620 in
+                     FStar_Errors.warn t.FStar_Syntax_Syntax.pos uu____619)
+            | uu____621 -> failwith "Impossible"
+          else ()
 let guard_letrecs:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
@@ -3107,9 +3139,8 @@ and check_application_args:
              FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
             FStar_Pervasives_Native.tuple2 Prims.list ->
             FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
-              ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
-                 FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.lcomp,
-                FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple3
+              (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.lcomp,FStar_TypeChecker_Env.guard_t)
+                FStar_Pervasives_Native.tuple3
   =
   fun env  ->
     fun head1  ->
@@ -5796,10 +5827,8 @@ and tc_binder:
 and tc_binders:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binders ->
-      ((FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
-         FStar_Pervasives_Native.tuple2 Prims.list,FStar_TypeChecker_Env.env,
-        FStar_TypeChecker_Env.guard_t,FStar_Syntax_Syntax.universe Prims.list)
-        FStar_Pervasives_Native.tuple4
+      (FStar_Syntax_Syntax.binders,FStar_TypeChecker_Env.env,FStar_TypeChecker_Env.guard_t,
+        FStar_Syntax_Syntax.universes) FStar_Pervasives_Native.tuple4
   =
   fun env  ->
     fun bs  ->
@@ -5824,7 +5853,9 @@ and tc_pats:
     ((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
        FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
       FStar_Pervasives_Native.tuple2 Prims.list Prims.list ->
-      (FStar_Syntax_Syntax.args Prims.list,FStar_TypeChecker_Env.guard_t)
+      (((FStar_Syntax_Syntax.term',FStar_Syntax_Syntax.term')
+          FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
+         FStar_Pervasives_Native.tuple2 Prims.list Prims.list,FStar_TypeChecker_Env.guard_t)
         FStar_Pervasives_Native.tuple2
   =
   fun env  ->
@@ -6032,17 +6063,24 @@ let type_of_tot_term:
                   (uu____10102, uu____10104) in
                 FStar_Errors.Error uu____10099 in
               raise uu____10098))
-let level_of_type_fail env e t =
-  let uu____10125 =
-    let uu____10126 =
-      let uu____10129 =
-        let uu____10130 = FStar_Syntax_Print.term_to_string e in
-        FStar_Util.format2 "Expected a term of type 'Type'; got %s : %s"
-          uu____10130 t in
-      let uu____10131 = FStar_TypeChecker_Env.get_range env in
-      (uu____10129, uu____10131) in
-    FStar_Errors.Error uu____10126 in
-  raise uu____10125
+let level_of_type_fail:
+  'Auu____10112 .
+    FStar_TypeChecker_Env.env ->
+      FStar_Syntax_Syntax.term -> Prims.string -> 'Auu____10112
+  =
+  fun env  ->
+    fun e  ->
+      fun t  ->
+        let uu____10125 =
+          let uu____10126 =
+            let uu____10129 =
+              let uu____10130 = FStar_Syntax_Print.term_to_string e in
+              FStar_Util.format2
+                "Expected a term of type 'Type'; got %s : %s" uu____10130 t in
+            let uu____10131 = FStar_TypeChecker_Env.get_range env in
+            (uu____10129, uu____10131) in
+          FStar_Errors.Error uu____10126 in
+        raise uu____10125
 let level_of_type:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

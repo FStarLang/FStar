@@ -509,11 +509,14 @@ let __proj__Meta_monadic_lift__item___0:
     (monad_name,monad_name,(term',term') syntax)
       FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Meta_monadic_lift _0 -> _0
-let uu___is_Uvar projectee =
-  match projectee with | Uvar  -> true | uu____1865 -> false
-let uu___is_Fixed projectee =
-  match projectee with | Fixed _0 -> true | uu____1877 -> false
-let __proj__Fixed__item___0 projectee = match projectee with | Fixed _0 -> _0
+let uu___is_Uvar: 'a . 'a uvar_basis -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Uvar  -> true | uu____1865 -> false
+let uu___is_Fixed: 'a . 'a uvar_basis -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Fixed _0 -> true | uu____1877 -> false
+let __proj__Fixed__item___0: 'a . 'a uvar_basis -> 'a =
+  fun projectee  -> match projectee with | Fixed _0 -> _0
 let uu___is_Data_app: meta_source_info -> Prims.bool =
   fun projectee  ->
     match projectee with | Data_app  -> true | uu____1895 -> false
@@ -921,8 +924,10 @@ let contains_reflectable: qualifier Prims.list -> Prims.bool =
          match uu___87_3298 with
          | Reflectable uu____3299 -> true
          | uu____3300 -> false) l
-let withinfo v1 s r = { v = v1; ty = s; p = r }
-let withsort v1 s = withinfo v1 s FStar_Range.dummyRange
+let withinfo: 'a 'b . 'a -> 'b -> FStar_Range.range -> ('a,'b) withinfo_t =
+  fun v1  -> fun s  -> fun r  -> { v = v1; ty = s; p = r }
+let withsort: 'a 'b . 'a -> 'b -> ('a,'b) withinfo_t =
+  fun v1  -> fun s  -> withinfo v1 s FStar_Range.dummyRange
 let bv_eq: bv -> bv -> Prims.bool =
   fun bv1  ->
     fun bv2  ->
@@ -954,9 +959,20 @@ let set_range_of_bv: bv -> FStar_Range.range -> bv =
         index = (uu___94_3376.index);
         sort = (uu___94_3376.sort)
       }
-let syn p k f = f k p
-let mk_fvs uu____3417 = FStar_Util.mk_ref FStar_Pervasives_Native.None
-let mk_uvs uu____3429 = FStar_Util.mk_ref FStar_Pervasives_Native.None
+let syn:
+  'Auu____3383 'Auu____3384 'Auu____3385 .
+    'Auu____3385 ->
+      'Auu____3384 ->
+        ('Auu____3384 -> 'Auu____3385 -> 'Auu____3383) -> 'Auu____3383
+  = fun p  -> fun k  -> fun f  -> f k p
+let mk_fvs:
+  'Auu____3411 .
+    Prims.unit -> 'Auu____3411 FStar_Pervasives_Native.option FStar_ST.ref
+  = fun uu____3417  -> FStar_Util.mk_ref FStar_Pervasives_Native.None
+let mk_uvs:
+  'Auu____3423 .
+    Prims.unit -> 'Auu____3423 FStar_Pervasives_Native.option FStar_ST.ref
+  = fun uu____3429  -> FStar_Util.mk_ref FStar_Pervasives_Native.None
 let new_bv_set: Prims.unit -> bv FStar_Util.set =
   fun uu____3435  ->
     FStar_Util.new_set order_bv
@@ -966,12 +982,7 @@ let new_fv_set: Prims.unit -> FStar_Ident.lident FStar_Util.set =
   fun uu____3441  ->
     FStar_Util.new_set order_fv
       (fun x  -> FStar_Util.hashcode x.FStar_Ident.str)
-let new_uv_set:
-  Prims.unit ->
-    ((term',term') syntax uvar_basis FStar_Unionfind.uvar,(term',term')
-                                                            syntax)
-      FStar_Pervasives_Native.tuple2 FStar_Util.set
-  =
+let new_uv_set: Prims.unit -> uvars =
   fun uu____3446  ->
     FStar_Util.new_set
       (fun uu____3455  ->
@@ -983,11 +994,7 @@ let new_uv_set:
                uu____3533 - uu____3537)
       (fun uu____3541  ->
          match uu____3541 with | (x,uu____3551) -> FStar_Unionfind.uvar_id x)
-let new_universe_uvar_set:
-  Prims.unit ->
-    universe FStar_Pervasives_Native.option FStar_Unionfind.uvar
-      FStar_Util.set
-  =
+let new_universe_uvar_set: Prims.unit -> universe_uvar FStar_Util.set =
   fun uu____3570  ->
     FStar_Util.new_set
       (fun x  ->
@@ -995,8 +1002,8 @@ let new_universe_uvar_set:
            let uu____3580 = FStar_Unionfind.uvar_id x in
            let uu____3582 = FStar_Unionfind.uvar_id y in
            uu____3580 - uu____3582) (fun x  -> FStar_Unionfind.uvar_id x)
-let new_universe_names_fifo_set:
-  Prims.unit -> FStar_Ident.ident FStar_Util.fifo_set =
+let new_universe_names_fifo_set: Prims.unit -> univ_name FStar_Util.fifo_set
+  =
   fun uu____3593  ->
     FStar_Util.new_fifo_set
       (fun x  ->
@@ -1023,28 +1030,26 @@ let memo_no_uvs: uvars FStar_Pervasives_Native.option FStar_ST.ref =
 let memo_no_names:
   bv FStar_Util.set FStar_Pervasives_Native.option FStar_ST.ref =
   FStar_Util.mk_ref (FStar_Pervasives_Native.Some no_names)
-let freenames_of_list: bv Prims.list -> bv FStar_Util.set =
+let freenames_of_list: bv Prims.list -> freenames =
   fun l  -> FStar_List.fold_right FStar_Util.set_add l no_names
 let list_of_freenames: freenames -> bv Prims.list =
   fun fvs  -> FStar_Util.set_elements fvs
-let mk t topt r =
-  let uu____3655 = FStar_Util.mk_ref topt in
-  let uu____3659 = FStar_Util.mk_ref FStar_Pervasives_Native.None in
-  { n = t; tk = uu____3655; pos = r; vars = uu____3659 }
-let bv_to_tm: bv -> (term',term') syntax =
+let mk: 'a 'b . 'a -> ('a,'b) mk_t_a =
+  fun t  ->
+    fun topt  ->
+      fun r  ->
+        let uu____3655 = FStar_Util.mk_ref topt in
+        let uu____3659 = FStar_Util.mk_ref FStar_Pervasives_Native.None in
+        { n = t; tk = uu____3655; pos = r; vars = uu____3659 }
+let bv_to_tm: bv -> term =
   fun bv  ->
     let uu____3670 = range_of_bv bv in
     mk (Tm_bvar bv) (FStar_Pervasives_Native.Some ((bv.sort).n)) uu____3670
-let bv_to_name: bv -> (term',term') syntax =
+let bv_to_name: bv -> term =
   fun bv  ->
     let uu____3678 = range_of_bv bv in
     mk (Tm_name bv) (FStar_Pervasives_Native.Some ((bv.sort).n)) uu____3678
-let mk_Tm_app:
-  typ ->
-    arg Prims.list ->
-      term' FStar_Pervasives_Native.option ->
-        FStar_Range.range -> (term',term') syntax
-  =
+let mk_Tm_app: term -> args -> mk_t =
   fun t1  ->
     fun args  ->
       fun k  ->
@@ -1062,12 +1067,7 @@ let mk_Tm_uinst: term -> universes -> term =
            | Tm_fvar uu____3713 ->
                mk (Tm_uinst (t, us)) FStar_Pervasives_Native.None t.pos
            | uu____3718 -> failwith "Unexpected universe instantiation")
-let extend_app_n:
-  term ->
-    args ->
-      term' FStar_Pervasives_Native.option ->
-        FStar_Range.range -> (term',term') syntax
-  =
+let extend_app_n: term -> args -> mk_t =
   fun t  ->
     fun args'  ->
       fun kopt  ->
@@ -1076,15 +1076,11 @@ let extend_app_n:
           | Tm_app (head1,args) ->
               mk_Tm_app head1 (FStar_List.append args args') kopt r
           | uu____3756 -> mk_Tm_app t args' kopt r
-let extend_app:
-  term ->
-    arg ->
-      term' FStar_Pervasives_Native.option ->
-        FStar_Range.range -> (term',term') syntax
-  = fun t  -> fun arg  -> fun kopt  -> fun r  -> extend_app_n t [arg] kopt r
+let extend_app: term -> arg -> mk_t =
+  fun t  -> fun arg  -> fun kopt  -> fun r  -> extend_app_n t [arg] kopt r
 let mk_Tm_delayed:
   ((term,subst_ts) FStar_Pervasives_Native.tuple2,Prims.unit -> term)
-    FStar_Util.either -> FStar_Range.range -> (term',term') syntax
+    FStar_Util.either -> FStar_Range.range -> term
   =
   fun lr  ->
     fun pos  ->
@@ -1096,17 +1092,15 @@ let mk_Tm_delayed:
           Tm_delayed uu____3797 in
         mk uu____3796 in
       uu____3793 FStar_Pervasives_Native.None pos
-let mk_Total':
-  typ -> universe FStar_Pervasives_Native.option -> (comp',Prims.unit) syntax
-  = fun t  -> fun u  -> mk (Total (t, u)) FStar_Pervasives_Native.None t.pos
-let mk_GTotal':
-  typ -> universe FStar_Pervasives_Native.option -> (comp',Prims.unit) syntax
-  = fun t  -> fun u  -> mk (GTotal (t, u)) FStar_Pervasives_Native.None t.pos
+let mk_Total': typ -> universe FStar_Pervasives_Native.option -> comp =
+  fun t  -> fun u  -> mk (Total (t, u)) FStar_Pervasives_Native.None t.pos
+let mk_GTotal': typ -> universe FStar_Pervasives_Native.option -> comp =
+  fun t  -> fun u  -> mk (GTotal (t, u)) FStar_Pervasives_Native.None t.pos
 let mk_Total: typ -> comp =
   fun t  -> mk_Total' t FStar_Pervasives_Native.None
 let mk_GTotal: typ -> comp =
   fun t  -> mk_GTotal' t FStar_Pervasives_Native.None
-let mk_Comp: comp_typ -> (comp',Prims.unit) syntax =
+let mk_Comp: comp_typ -> comp =
   fun ct  -> mk (Comp ct) FStar_Pervasives_Native.None (ct.result_typ).pos
 let mk_lb:
   (lbname,univ_name Prims.list,FStar_Ident.lident,typ,term)
@@ -1127,7 +1121,7 @@ let mk_sigelt: sigelt' -> sigelt =
       sigmeta = default_sigmeta
     }
 let mk_subst: subst_t -> subst_t = fun s  -> s
-let extend_subst: subst_elt -> subst_elt Prims.list -> subst_elt Prims.list =
+let extend_subst: subst_elt -> subst_elt Prims.list -> subst_t =
   fun x  -> fun s  -> x :: s
 let argpos: arg -> FStar_Range.range =
   fun x  -> (FStar_Pervasives_Native.fst x).pos
@@ -1147,29 +1141,13 @@ let null_id: FStar_Ident.ident =
   FStar_Ident.mk_ident ("_", FStar_Range.dummyRange)
 let null_bv: term -> bv =
   fun k  -> { ppname = null_id; index = (Prims.parse_int "0"); sort = k }
-let mk_binder:
-  bv ->
-    (bv,arg_qualifier FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2
-  = fun a  -> (a, FStar_Pervasives_Native.None)
-let null_binder:
-  term ->
-    (bv,arg_qualifier FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2
-  =
+let mk_binder: bv -> binder = fun a  -> (a, FStar_Pervasives_Native.None)
+let null_binder: term -> binder =
   fun t  ->
     let uu____3960 = null_bv t in (uu____3960, FStar_Pervasives_Native.None)
 let imp_tag: arg_qualifier = Implicit false
-let iarg:
-  term ->
-    (term,arg_qualifier FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2
-  = fun t  -> (t, (FStar_Pervasives_Native.Some imp_tag))
-let as_arg:
-  term ->
-    (term,arg_qualifier FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2
-  = fun t  -> (t, FStar_Pervasives_Native.None)
+let iarg: term -> arg = fun t  -> (t, (FStar_Pervasives_Native.Some imp_tag))
+let as_arg: term -> arg = fun t  -> (t, FStar_Pervasives_Native.None)
 let is_null_bv: bv -> Prims.bool =
   fun b  -> (b.ppname).FStar_Ident.idText = null_id.FStar_Ident.idText
 let is_null_binder: binder -> Prims.bool =
@@ -1181,18 +1159,14 @@ let is_top_level: letbinding Prims.list -> Prims.bool =
         lbtyp = uu____3983; lbeff = uu____3984; lbdef = uu____3985;_}::uu____3986
         -> true
     | uu____3993 -> false
-let freenames_of_binders: binders -> bv FStar_Util.set =
+let freenames_of_binders: binders -> freenames =
   fun bs  ->
     FStar_List.fold_right
       (fun uu____4001  ->
          fun out  ->
            match uu____4001 with | (x,uu____4008) -> FStar_Util.set_add x out)
       bs no_names
-let binders_of_list:
-  bv Prims.list ->
-    (bv,arg_qualifier FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 Prims.list
-  =
+let binders_of_list: bv Prims.list -> binders =
   fun fvs  ->
     FStar_All.pipe_right fvs
       (FStar_List.map (fun t  -> (t, FStar_Pervasives_Native.None)))
@@ -1205,7 +1179,7 @@ let is_implicit: aqual -> Prims.bool =
     match uu___90_4032 with
     | FStar_Pervasives_Native.Some (Implicit uu____4033) -> true
     | uu____4034 -> false
-let as_implicit: Prims.bool -> arg_qualifier FStar_Pervasives_Native.option =
+let as_implicit: Prims.bool -> aqual =
   fun uu___91_4037  ->
     if uu___91_4037
     then FStar_Pervasives_Native.Some imp_tag
@@ -1272,7 +1246,7 @@ let freshen_bv: bv -> bv =
          sort = (uu___95_4178.sort)
        })
 let new_univ_name:
-  FStar_Range.range FStar_Pervasives_Native.option -> FStar_Ident.ident =
+  FStar_Range.range FStar_Pervasives_Native.option -> univ_name =
   fun ropt  ->
     let id = next_id () in
     let uu____4186 =
@@ -1316,7 +1290,7 @@ let lid_as_fv:
       fun dq  ->
         let uu____4283 = withinfo l tun (FStar_Ident.range_of_lid l) in
         { fv_name = uu____4283; fv_delta = dd; fv_qual = dq }
-let fv_to_tm: fv -> (term',term') syntax =
+let fv_to_tm: fv -> term =
   fun fv  ->
     mk (Tm_fvar fv) FStar_Pervasives_Native.None
       (FStar_Ident.range_of_lid (fv.fv_name).v)
@@ -1327,7 +1301,7 @@ let fvar:
   fun l  ->
     fun dd  ->
       fun dq  -> let uu____4314 = lid_as_fv l dd dq in fv_to_tm uu____4314
-let lid_of_fv: fv -> FStar_Ident.lident = fun fv  -> (fv.fv_name).v
+let lid_of_fv: fv -> FStar_Ident.lid = fun fv  -> (fv.fv_name).v
 let range_of_fv: fv -> FStar_Range.range =
   fun fv  ->
     let uu____4325 = lid_of_fv fv in FStar_Ident.range_of_lid uu____4325
